@@ -21,6 +21,7 @@ import {
   useNavigationState,
 } from "@app/contexts/NavigationContext";
 import type { SignatureValidationReportData } from "@app/types/validateSignature";
+import { holdUnlockPrompt } from "@app/services/unlockPromptHold";
 
 const ValidateSignature = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -32,6 +33,10 @@ const ValidateSignature = (props: BaseToolProps) => {
     setCustomWorkbenchViewData,
     clearCustomWorkbenchViewData,
   } = useToolWorkflow();
+
+  // Unlocking an encrypted upload re-saves it and drops the signatures this tool verifies, so
+  // the password is entered in the tool and sent with the original bytes instead.
+  useEffect(() => holdUnlockPrompt(), []);
 
   const REPORT_VIEW_ID = "validateSignatureReport";
   const REPORT_WORKBENCH_ID = "custom:validateSignatureReport" as const;

@@ -13546,6 +13546,11 @@ signatureDate = "Signature Date"
 certHint = "Upload a trusted X.509 certificate to validate against a custom trust source."
 title = "Validation Settings"
 
+[validateSignature.settings.password]
+hint = "Sent with the original file so its signatures are checked as signed. Unlocking the PDF first would remove them."
+label = "PDF password"
+placeholder = "Enter the PDF password"
+
 [validateSignature.signature]
 _value = "Signature"
 

@@ -71,6 +71,10 @@ import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolution
 import apiClient from "@app/services/apiClient";
 import { reportFilesRemoved } from "@app/services/failureReporting";
 import {
+  isUnlockPromptHeld,
+  subscribeToUnlockPromptHold,
+} from "@app/services/unlockPromptHold";
+import {
   addPendingUnlocks,
   setPendingUnlocks,
 } from "@app/services/pendingUnlocks";
@@ -128,6 +132,9 @@ function FileContextInner({
   const [isUnlocking, setIsUnlocking] = useState(false);
   const dismissedEncryptedFilesRef = useRef<Set<FileId>>(new Set());
   const deferredEncryptedFilesRef = useRef<Set<FileId>>(new Set());
+  // The deferred files that a tool's hold, not an editor, is keeping unprompted. Only these are
+  // offered the prompt when the hold ends: an editor that owns its prompt keeps owning it.
+  const heldByToolRef = useRef<Set<FileId>>(new Set());
   const observedFileIdsRef = useRef<Set<FileId>>(new Set());
 
   const enqueueEncryptedFiles = useCallback(
@@ -168,11 +175,33 @@ function FileContextInner({
     }
 
     if (newEncryptedIds.length > 0) {
-      enqueueEncryptedFiles(newEncryptedIds);
+      if (isUnlockPromptHeld()) {
+        for (const id of newEncryptedIds) {
+          if (deferredEncryptedFilesRef.current.has(id)) continue;
+          deferredEncryptedFilesRef.current.add(id);
+          heldByToolRef.current.add(id);
+        }
+      } else {
+        enqueueEncryptedFiles(newEncryptedIds);
+      }
     }
 
     observedFileIdsRef.current = nextIds;
   }, [state.files.ids, state.files.byId, enqueueEncryptedFiles]);
+
+  useEffect(
+    () =>
+      subscribeToUnlockPromptHold(() => {
+        if (isUnlockPromptHeld()) return;
+        const released = [...heldByToolRef.current].filter(
+          (id) => stateRef.current.files.byId[id]?.processedFile?.isEncrypted,
+        );
+        heldByToolRef.current.clear();
+        for (const id of released) deferredEncryptedFilesRef.current.delete(id);
+        enqueueEncryptedFiles(released);
+      }),
+    [enqueueEncryptedFiles],
+  );
 
   useEffect(() => {
     if (!activeEncryptedFileId && encryptedQueue.length > 0) {
@@ -245,6 +274,7 @@ function FileContextInner({
 
     dismissedEncryptedFilesRef.current.delete(fileId);
     deferredEncryptedFilesRef.current.delete(fileId);
+    heldByToolRef.current.delete(fileId);
 
     setEncryptedQueue((prevQueue) => prevQueue.filter((id) => id !== fileId));
 

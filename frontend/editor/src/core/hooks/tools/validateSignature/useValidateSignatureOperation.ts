@@ -97,6 +97,9 @@ export const useValidateSignatureOperation =
             if (params.certFile) {
               formData.append("certFile", params.certFile);
             }
+            if (params.password) {
+              formData.append("password", params.password);
+            }
 
             try {
               const response = await apiClient.post(

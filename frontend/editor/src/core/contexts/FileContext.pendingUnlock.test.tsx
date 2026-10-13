@@ -17,6 +17,7 @@ import {
   isAwaitingUnlock,
   setPendingUnlocks,
 } from "@app/services/pendingUnlocks";
+import { holdUnlockPrompt } from "@app/services/unlockPromptHold";
 
 const observed = vi.hoisted(() => ({ heldBeforeEffects: false }));
 const id = "editor-encrypted" as FileId;
@@ -135,4 +136,37 @@ describe("encrypted bytes opened by another editor", () => {
       expect(isAwaitingUnlock(id)).toBe(false);
     },
   );
+});
+
+describe("a tool that needs the original bytes", () => {
+  it("defers the unlock prompt for an upload until the tool lets go", async () => {
+    const release = holdUnlockPrompt();
+    const { result } = renderHook(() => useFileActions(), { wrapper });
+    await act(() =>
+      result.current.actions.addFiles([new File(["encrypted"], "locked.pdf")], {
+        selectFiles: false,
+      }),
+    );
+    expect(screen.queryByText("Skip unlock")).toBeNull();
+    expect(isAwaitingUnlock(id)).toBe(true);
+
+    act(() => release());
+    expect(screen.getByText("Skip unlock")).toBeVisible();
+    expect(isAwaitingUnlock(id)).toBe(true);
+  });
+
+  it("leaves a file an editor already owns unprompted when it lets go", async () => {
+    const release = holdUnlockPrompt();
+    const { result } = renderHook(() => useFileActions(), { wrapper });
+    await act(() =>
+      result.current.actions.addFiles([new File(["encrypted"], "locked.pdf")], {
+        selectFiles: false,
+        skipAutomaticPasswordPrompt: true,
+      }),
+    );
+
+    act(() => release());
+    expect(screen.queryByText("Skip unlock")).toBeNull();
+    expect(isAwaitingUnlock(id)).toBe(true);
+  });
 });
