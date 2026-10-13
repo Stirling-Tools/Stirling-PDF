@@ -138,6 +138,7 @@ class JwtServiceTest {
                                 "https://pdf.example.com/mcp",
                                 "mcp.tools.read",
                                 "client-1",
+                                1L,
                                 5);
 
         assertThrows(

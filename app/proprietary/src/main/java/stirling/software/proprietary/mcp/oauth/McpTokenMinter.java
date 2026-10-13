@@ -29,6 +29,8 @@ import stirling.software.proprietary.security.service.KeyPersistenceServiceInter
 @Conditional(McpBuiltinModeCondition.class)
 public class McpTokenMinter {
 
+    public static final String GRANT_ID_CLAIM = "grant_id";
+
     private final KeyPersistenceServiceInterface keyPersistenceService;
 
     public McpTokenMinter(KeyPersistenceServiceInterface keyPersistenceService) {
@@ -41,6 +43,7 @@ public class McpTokenMinter {
             String audience,
             String scope,
             String clientId,
+            long grantId,
             int lifetimeMinutes) {
         JwtVerificationKey activeKey = keyPersistenceService.getActiveKey();
         if (activeKey == null) {
@@ -59,6 +62,7 @@ public class McpTokenMinter {
         Map<String, Object> claims = new LinkedHashMap<>();
         claims.put("scope", scope == null ? "" : scope);
         claims.put("client_id", clientId);
+        claims.put(GRANT_ID_CLAIM, grantId);
         // Marks the token so the app's session filter refuses it.
         claims.put(JwtService.TOKEN_USE_CLAIM, JwtService.MCP_ACCESS_TOKEN_USE);
 

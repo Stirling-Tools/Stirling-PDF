@@ -45,6 +45,7 @@ import stirling.software.proprietary.mcp.oauth.McpOAuthMetadataController;
 import stirling.software.proprietary.mcp.oauth.McpOAuthRegistrationLimiter;
 import stirling.software.proprietary.mcp.oauth.McpOAuthService;
 import stirling.software.proprietary.mcp.oauth.McpTokenMinter;
+import stirling.software.proprietary.mcp.oauth.model.McpAuthorizationRequest;
 import stirling.software.proprietary.mcp.oauth.model.McpOAuthGrant;
 import stirling.software.proprietary.mcp.oauth.repository.McpAuthorizationRequestRepository;
 import stirling.software.proprietary.mcp.oauth.repository.McpOAuthClientRepository;
@@ -124,7 +125,13 @@ class McpBuiltinOAuthIntegrationTest {
     void mintedTokenCallsTools() throws Exception {
         String token =
                 tokenMinter.mintAccessToken(
-                        ISSUER, "test-user", RESOURCE_ID, "mcp.tools.read mcp.tools.write", "c", 5);
+                        ISSUER,
+                        "test-user",
+                        RESOURCE_ID,
+                        "mcp.tools.read mcp.tools.write",
+                        "c",
+                        1L,
+                        5);
         HttpResponse<String> response =
                 postMcp(token, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
         assertThat(response.statusCode()).isEqualTo(200);
@@ -140,6 +147,7 @@ class McpBuiltinOAuthIntegrationTest {
                         RESOURCE_ID,
                         "mcp.tools.read mcp.tools.write",
                         "revoked",
+                        1L,
                         5);
         HttpResponse<String> response =
                 postMcp(token, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
@@ -167,11 +175,92 @@ class McpBuiltinOAuthIntegrationTest {
         assertThat(response.statusCode()).isEqualTo(401);
     }
 
+    @Autowired private McpOAuthService oauth;
+    @Autowired private McpOAuthGrantRepository grants;
+
+    @Test
+    void reconnectingTheSameClientDoesNotReviveItsRevokedJwt() throws Exception {
+        String clientId = "reconnect";
+        var original =
+                McpOAuthGrant.builder().id(40L).username("test-user").clientId(clientId).build();
+        var current = new java.util.concurrent.atomic.AtomicReference<McpOAuthGrant>(original);
+        when(grants.findByUsernameAndClientId("test-user", clientId))
+                .thenAnswer(i -> Optional.ofNullable(current.get()));
+        when(grants.findById(40L)).thenReturn(Optional.of(original));
+        org.mockito.Mockito.doAnswer(
+                        i -> {
+                            current.set(null);
+                            return null;
+                        })
+                .when(grants)
+                .delete(original);
+        String old =
+                tokenMinter.mintAccessToken(
+                        ISSUER,
+                        "test-user",
+                        RESOURCE_ID,
+                        "mcp.tools.read mcp.tools.write",
+                        clientId,
+                        40L,
+                        5);
+        String list = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}";
+        assertThat(postMcp(old, list).statusCode()).isEqualTo(200);
+        assertThat(oauth.revokeGrant("test-user", 40L)).isTrue();
+        assertThat(postMcp(old, list).statusCode()).isEqualTo(401);
+        when(grants.save(any()))
+                .thenAnswer(
+                        i -> {
+                            McpOAuthGrant granted = i.getArgument(0);
+                            granted.setId(41L);
+                            current.set(granted);
+                            return granted;
+                        });
+        oauth.approve(
+                McpAuthorizationRequest.builder()
+                        .username("test-user")
+                        .clientId(clientId)
+                        .scope("mcp.tools.read mcp.tools.write")
+                        .redirectUri("https://client.example/callback")
+                        .status(McpAuthorizationRequest.Status.PENDING)
+                        .build());
+        assertThat(postMcp(old, list).statusCode()).isEqualTo(401);
+        String fresh =
+                tokenMinter.mintAccessToken(
+                        ISSUER,
+                        "test-user",
+                        RESOURCE_ID,
+                        "mcp.tools.read mcp.tools.write",
+                        clientId,
+                        41L,
+                        5);
+        assertThat(postMcp(fresh, list).statusCode()).isEqualTo(200);
+    }
+
+    @Test
+    void anAccessTokenWithoutItsGrantIdentityIsRejected() throws Exception {
+        String valid =
+                tokenMinter.mintAccessToken(
+                        ISSUER, "test-user", RESOURCE_ID, "mcp.tools.read", "c", 1L, 5);
+        SignedJWT source = SignedJWT.parse(valid);
+        var claims =
+                new JWTClaimsSet.Builder(source.getJWTClaimsSet())
+                        .claim(McpTokenMinter.GRANT_ID_CLAIM, null)
+                        .build();
+        var old = new SignedJWT(source.getHeader(), claims);
+        old.sign(new RSASSASigner(keyPair.getPrivate()));
+        assertThat(
+                        postMcp(
+                                        old.serialize(),
+                                        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}")
+                                .statusCode())
+                .isEqualTo(401);
+    }
+
     @Test
     void tokenForAnotherAudienceIsRejected() throws Exception {
         String token =
                 tokenMinter.mintAccessToken(
-                        ISSUER, "test-user", "https://elsewhere/mcp", "mcp.tools.read", "c", 5);
+                        ISSUER, "test-user", "https://elsewhere/mcp", "mcp.tools.read", "c", 1L, 5);
         HttpResponse<String> response =
                 postMcp(token, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}");
         assertThat(response.statusCode()).isEqualTo(401);
@@ -294,6 +383,7 @@ class McpBuiltinOAuthIntegrationTest {
                     .thenReturn(
                             Optional.of(
                                     McpOAuthGrant.builder()
+                                            .id(1L)
                                             .username("test-user")
                                             .clientId("c")
                                             .build()));
