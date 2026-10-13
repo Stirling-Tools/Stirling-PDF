@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -66,12 +67,29 @@ class ToolIODiscoveryTest {
         }
     }
 
+    @RestController
+    @RequestMapping("/api/v1/misc")
+    static class DispatchableFixtureController {
+
+        @PostMapping("/fixture-undeclared")
+        public String undeclared() {
+            return "";
+        }
+
+        @GetMapping("/fixture-get-only")
+        public String getOnly() {
+            return "";
+        }
+    }
+
     private static ToolIORegistry registry;
 
     @BeforeAll
     static void discover() {
         StaticWebApplicationContext context = new StaticWebApplicationContext();
         context.registerSingleton("fixtureController", FixtureController.class);
+        context.registerSingleton(
+                "dispatchableFixtureController", DispatchableFixtureController.class);
         RequestMappingHandlerMapping mapping = new RequestMappingHandlerMapping();
         mapping.setApplicationContext(context);
         mapping.afterPropertiesSet();
@@ -110,6 +128,24 @@ class ToolIODiscoveryTest {
         assertEquals(
                 ToolFormat.PDF,
                 spec.resolveOutput(Map.of("password", "", "ownerPassword", "")).format());
+    }
+
+    @Test
+    void knowsDispatchablePostEndpointsWhetherOrNotTheyDeclareToolIO() {
+        assertTrue(registry.isKnown("/api/v1/misc/fixture-undeclared"));
+        assertFalse(registry.isKnown("/api/v1/misc/no-such-tool"));
+    }
+
+    @Test
+    void doesNotKnowEndpointsThePipelineRunnerCannotDispatchTo() {
+        assertFalse(registry.isKnown("/api/v1/misc/fixture-get-only"));
+        // Declared, but outside InternalApiClient's allow-list.
+        assertFalse(registry.isKnown("/api/v1/fixture/rotate"));
+    }
+
+    @Test
+    void knowsEveryPathBeforeDiscoveryHasRun() {
+        assertTrue(new ToolIORegistry(null).isKnown("/api/v1/misc/anything"));
     }
 
     @Test

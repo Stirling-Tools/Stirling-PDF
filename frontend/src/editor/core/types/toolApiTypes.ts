@@ -164,13 +164,13 @@ export interface AddStampRequest {
   rotation?: number;
   stampImage?: File;
   /**
-   * The stamp text, or the QR code content when the stamp type is qr
+   * The stamp text, or the QR code content when stampType is qr; required when stampType is text or qr
    */
   stampText?: string;
   /**
-   * The stamp type (text, image or qr)
+   * The stamp type (text, image or qr). When omitted, image is used if stampImage is supplied, otherwise text.
    */
-  stampType: "text" | "image" | "qr";
+  stampType?: "text" | "image" | "qr";
 }
 export interface AddWatermarkRequest {
   /**
@@ -203,13 +203,13 @@ export interface AddWatermarkRequest {
   rotation?: number;
   watermarkImage?: File;
   /**
-   * The watermark text
+   * The watermark text, required when watermarkType is text
    */
   watermarkText?: string;
   /**
-   * The watermark type (text or image)
+   * The watermark type (text or image). When omitted, image is used if watermarkImage is supplied, otherwise text.
    */
-  watermarkType: "text" | "image";
+  watermarkType?: "text" | "image";
   /**
    * The width spacer between watermark elements
    */
@@ -306,7 +306,7 @@ export interface ContainsTextRequest {
   /**
    * The text to check for
    */
-  text?: string;
+  text: string;
 }
 export interface ConvertCbrToPdfRequest {
   /**
@@ -621,7 +621,7 @@ export interface ManualRedactPdfRequest {
    */
   convertPDFToImage?: boolean;
   /**
-   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
+   * Pages to black out completely, e.g. '1,3-5'. Omit to redact only the listed areas.
    */
   pageNumbers?: string;
   /**
@@ -755,15 +755,15 @@ export interface MetadataRequest {
     [k: string]: string | undefined;
   };
   /**
-   * The author of the document
+   * The author of the document. Omit to remove it.
    */
   author?: string;
   /**
-   * The creation date of the document (format: yyyy/MM/dd HH:mm:ss)
+   * The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.
    */
   creationDate?: string;
   /**
-   * The creator of the document
+   * The creator of the document. Omit to remove it.
    */
   creator?: string;
   /**
@@ -771,27 +771,27 @@ export interface MetadataRequest {
    */
   deleteAll?: boolean;
   /**
-   * The keywords for the document
+   * The keywords for the document. Omit to remove it.
    */
   keywords?: string;
   /**
-   * The modification date of the document (format: yyyy/MM/dd HH:mm:ss)
+   * The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.
    */
   modificationDate?: string;
   /**
-   * The producer of the document
+   * The producer of the document. Omit to remove it.
    */
   producer?: string;
   /**
-   * The subject of the document
+   * The subject of the document. Omit to remove it.
    */
   subject?: string;
   /**
-   * The title of the document
+   * The title of the document. Omit to remove it.
    */
   title?: string;
   /**
-   * The trapped status of the document
+   * The trapped status of the document. Omit to remove it, which readers treat as Unknown.
    */
   trapped?: "True" | "False" | "Unknown";
 }
@@ -801,7 +801,7 @@ export type MiscShowJavascriptRequest = Record<string, never>;
 export type MiscUnlockPdfFormsRequest = Record<string, never>;
 export interface OptimizePdfRequest {
   /**
-   * The expected output size, e.g. '100MB', '25KB', etc.
+   * Target output size, e.g. '100MB' or '25KB'. When set, the optimization level is chosen automatically to reach it; omit to compress at optimizeLevel.
    */
   expectedOutputSize?: string;
   /**
@@ -1055,9 +1055,9 @@ export interface ProcessPdfWithOcrRequest {
    */
   ocrRenderType?: "hocr" | "sandwich";
   /**
-   * Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'
+   * How to treat pages that already contain text: 'skip-text' OCRs only pages without text, 'force-ocr' rasterises and OCRs every page.
    */
-  ocrType: "skip-text" | "force-ocr" | "Normal";
+  ocrType?: "skip-text" | "force-ocr" | "Normal";
   /**
    * Remove images from the output PDF if set to true
    */
@@ -1198,9 +1198,9 @@ export interface RedactPdfRequest {
    */
   customPadding: number;
   /**
-   * List of text to redact from the PDF
+   * Newline-separated list of text to redact from the PDF
    */
-  listOfText?: string;
+  listOfText: string;
   /**
    * The color for redaction
    */
@@ -1320,9 +1320,9 @@ export interface ScalePagesRequest {
    */
   orientation?: "PORTRAIT" | "LANDSCAPE";
   /**
-   * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.
+   * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP. KEEP keeps each page's own size.
    */
-  pageSize:
+  pageSize?:
     | "A0"
     | "A1"
     | "A2"
@@ -1424,32 +1424,32 @@ export interface SignPDFWithCertRequest {
   alias?: string;
   certFile?: File;
   /**
-   * The type of the digital certificate. WINDOWS_STORE and PKCS11 are hardware-backed and only available in the desktop app.
+   * SERVER: this server's own certificate, no file or password. Signer shown is the server's organisation, not the user; self-signed by default, so other PDF readers may show it unverified. PEM needs certFile+privateKeyFile, PKCS12/PFX p12File, JKS jksFile. WINDOWS_STORE/PKCS11: desktop app only.
    */
   certType:
+    | "SERVER"
     | "PEM"
     | "PKCS12"
     | "PFX"
     | "JKS"
-    | "SERVER"
     | "WINDOWS_STORE"
     | "PKCS11";
   jksFile?: File;
   /**
-   * The location where the PDF is signed
+   * The location where the PDF is signed. Omitted from the signature when not set
    */
   location?: string;
   /**
-   * The name of the signer
+   * Signer name stored in the signature properties; the visible box shows the certificate's name instead. Omitted when not set.
    */
   name?: string;
   p12File?: File;
   /**
-   * The page number where the signature should be visible. This is required if showSignature is set to true
+   * Page (1-based) for the visible signature. Only used when showSignature is true.
    */
   pageNumber?: number;
   /**
-   * The password for the keystore / private key, or the token PIN for PKCS11
+   * Password for the PKCS12/PFX or JKS keystore or an encrypted PEM key, or the PKCS11 token PIN. Leave empty if the key has none. Not needed for SERVER or WINDOWS_STORE.
    */
   password?: string;
   /**
@@ -1462,7 +1462,7 @@ export interface SignPDFWithCertRequest {
   pkcs11Slot?: number;
   privateKeyFile?: File;
   /**
-   * The reason for signing the PDF
+   * The reason for signing the PDF. Omitted from the signature when not set
    */
   reason?: string;
   /**
@@ -1470,7 +1470,7 @@ export interface SignPDFWithCertRequest {
    */
   showLogo?: boolean;
   /**
-   * Whether to visually show the signature in the PDF file
+   * Add a visible signature box on pageNumber showing the certificate's name, the date and the reason (if set).
    */
   showSignature?: boolean;
 }
@@ -1489,7 +1489,7 @@ export interface SplitPdfByChaptersRequest {
    */
   allowDuplicates?: boolean;
   /**
-   * Maximum bookmark level required
+   * Maximum bookmark nesting level to split on: 0 splits on top-level bookmarks only, 1 also on their children, and so on
    */
   bookmarkLevel?: number;
   /**
@@ -1507,7 +1507,7 @@ export interface SplitPdfBySectionsRequest {
    */
   merge?: boolean;
   /**
-   * Pages to be split by section
+   * Pages to split when splitMode is CUSTOM (required in that mode, ignored otherwise). Supports ranges (e.g. '1,3,5-9'), 'all', or functions like '2n+1'.
    */
   pageNumbers?: string;
   /**
@@ -1548,7 +1548,7 @@ export interface SvgToPdfRequest {
 }
 export interface TimestampPdfRequest {
   /**
-   * URL of the RFC 3161 Time Stamp Authority (TSA) server. Must be one of the built-in presets (DigiCert, Sectigo, SSL.com, FreeTSA, MeSign) or an admin-configured URL in settings.yml (security.timestamp.customTsaUrls). If omitted, the server default is used.
+   * URL of the RFC 3161 Time Stamp Authority (TSA) server. Must be one of the built-in presets (DigiCert, Sectigo, SSL.com, FreeTSA, MeSign) or an admin-configured URL in settings.yml (security.timestamp.customTsaUrls). If omitted, the server default is used (security.timestamp.defaultTsaUrl, DigiCert unless changed).
    */
   tsaUrl?: string;
 }
