@@ -20,6 +20,13 @@ describe("crop mappers", () => {
         cropArea: { x: 10, y: 20, width: 300, height: 400 },
       },
     },
+    {
+      label: "single page selection",
+      overrides: {
+        pageNumbers: "3",
+        cropArea: { x: 5, y: 5, width: 100, height: 200 },
+      },
+    },
   ])("round-trips backend params ($label)", ({ overrides }) => {
     const api = cropToApiParams({ ...defaultParameters, ...overrides });
     const roundTripped = cropToApiParams({

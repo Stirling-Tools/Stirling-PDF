@@ -1,6 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
-
 export type ProviderType = "oauth2" | "saml2" | "telegram" | "googledrive";
 
 /** Value of a provider field, keyed by its `type`: text/password/textarea -> string,
@@ -39,7 +37,7 @@ const useGoogleProvider = (): Provider => {
   return {
     id: "google",
     name: "Google",
-    icon: oauthIconUrl("google.svg"),
+    icon: "google",
     type: "oauth2",
     scope: t("provider.oauth2.google.scope", "Sign-in authentication"),
     documentationUrl:
@@ -97,7 +95,7 @@ const useGitHubProvider = (): Provider => {
   return {
     id: "github",
     name: "GitHub",
-    icon: oauthIconUrl("github.svg"),
+    icon: "github",
     type: "oauth2",
     scope: t("provider.oauth2.github.scope", "Sign-in authentication"),
     documentationUrl:
@@ -819,7 +817,7 @@ const useGoogleDriveProvider = (): Provider => {
     id: "googledrive",
     category: "integration",
     name: t("provider.googledrive.name", "Google Drive"),
-    icon: "/images/google-drive.svg",
+    icon: "googledrive",
     type: "googledrive",
     scope: t("provider.googledrive.scope", "File Import"),
     documentationUrl:

@@ -4,7 +4,7 @@ import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 
 function makeCmd(type = "test"): Command {
-  return { type, apply: vi.fn(), revert: vi.fn() } as unknown as Command;
+  return { type, apply: vi.fn(), revert: vi.fn() };
 }
 
 function makeKeyedCmd(key: string): Command {
@@ -13,7 +13,7 @@ function makeKeyedCmd(key: string): Command {
     apply: vi.fn(),
     revert: vi.fn(),
     coalesceKey: () => key,
-  } as unknown as Command;
+  };
 }
 
 function makeDoc(): EditorDocument {
@@ -31,6 +31,17 @@ async function makeStore(): Promise<EditorStore> {
 }
 
 describe("EditorStore dirty tracking", () => {
+  it.each(["clearDocument", "dispose"] as const)(
+    "invalidates pending loads on %s",
+    async (method) => {
+      const store = await makeStore();
+      const token = store.beginLoad();
+      expect(store.isCurrentLoad(token)).toBe(true);
+      store[method]();
+      expect(store.isCurrentLoad(token)).toBe(false);
+      store.dispose();
+    },
+  );
   beforeEach(() => {
     vi.useFakeTimers();
   });

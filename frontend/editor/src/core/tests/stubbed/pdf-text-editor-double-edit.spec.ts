@@ -159,22 +159,19 @@ test.describe("PDF text editor - a second edit is as safe as the first", () => {
       });
       await page.waitForTimeout(1800);
 
-      const loadedColour = (await page.evaluate(COLOURED_PIXELS)) as number;
+      const loadedColour = await page.evaluate(COLOURED_PIXELS);
 
       for (const pass of [1, 2]) {
-        const run = (await page.evaluate(FIRST_RUN)) as {
-          id: string;
-          text: string;
-        } | null;
+        const run = await page.evaluate(FIRST_RUN);
         expect(
           run,
           `${c.name}: no editable run before pass ${pass}`,
         ).not.toBeNull();
 
         await appendChar(page, run!.id, String(pass));
-        const beforeSave = (await page.evaluate(PAGE_TEXT)) as string;
+        const beforeSave = await page.evaluate(PAGE_TEXT);
         await saveAndReopen(page, `${c.name.replace(/\W+/g, "-")}-${pass}`);
-        const afterReopen = (await page.evaluate(PAGE_TEXT)) as string;
+        const afterReopen = await page.evaluate(PAGE_TEXT);
 
         expect(
           strip(afterReopen).length,
@@ -191,7 +188,7 @@ test.describe("PDF text editor - a second edit is as safe as the first", () => {
         // Colour artwork (a gradient, a pattern) must not drain away. The
         // second pass is the one that historically loses a background.
         if (loadedColour > 1000) {
-          const now = (await page.evaluate(COLOURED_PIXELS)) as number;
+          const now = await page.evaluate(COLOURED_PIXELS);
           expect(
             now / loadedColour,
             `${c.name}: pass ${pass} lost the page's colour artwork`,

@@ -67,7 +67,6 @@ class ToolRecommendationServiceTest {
     @BeforeEach
     void setUp() {
         properties = new ApplicationProperties();
-        properties.getSystem().setEnableAnalytics(true);
         environment = new MockEnvironment();
         service = new ToolRecommendationService(signalService, TOOL_KEYS, properties, environment);
         lenient().when(signalService.resolveTeamScope(anyString())).thenReturn(TeamScope.none());
@@ -198,12 +197,13 @@ class ToolRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("withheld analytics consent serves no workflow history")
-        void consentGatesWorkflows() {
+        @DisplayName("external analytics being off still serves workflow history")
+        void workflowsIgnoreExternalAnalytics() {
             properties.getSystem().setEnableAnalytics(false);
+            when(signalService.userChains(eq(PRINCIPAL), anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of(chain(9, "a", "b")));
 
-            assertThat(service.getWorkflows(PRINCIPAL, 2, 6)).isEmpty();
-            verifyNoInteractions(signalService);
+            assertThat(service.getWorkflows(PRINCIPAL, 2, 6)).isNotEmpty();
         }
     }
 
@@ -321,12 +321,14 @@ class ToolRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("no analytics consent returns empty without touching any signal")
-        void withheldAnalyticsConsentShortCircuits() {
-            properties.getSystem().setEnableAnalytics(null);
+        @DisplayName("external analytics being off still ranks from usage")
+        void recommendationsIgnoreExternalAnalytics() {
+            properties.getSystem().setEnableAnalytics(false);
+            when(signalService.userFrequency(eq(PRINCIPAL), anyLong(), anyLong()))
+                    .thenReturn(Map.of("merge", 5.0));
 
-            assertThat(service.getRecommendations(PRINCIPAL, "compare", 6)).isEmpty();
-            verifyNoInteractions(signalService);
+            assertThat(toolKeys(service.getRecommendations(PRINCIPAL, null, 6)))
+                    .containsExactly("merge");
         }
 
         @Test

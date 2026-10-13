@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { HttpError } from "@app/portal/api/http";
 import { useLocation } from "react-router-dom";
 import { withBasePath } from "@app/constants/app";
 import { startConnect, startReauth } from "@app/portal/api/link";
@@ -14,6 +16,7 @@ interface ConnectHandoff {
 
 export function useConnectHandoff(reauth: boolean): ConnectHandoff {
   const { t } = useTranslation();
+  const isOwner = useAccountLinkOwner();
   const location = useLocation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +39,15 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
   }, []);
 
   const begin = useCallback(() => {
+    if (!isOwner) {
+      setError(
+        t(
+          "portal.accountLink.ownerRequired",
+          "Only the org owner can link or unlink this server.",
+        ),
+      );
+      return;
+    }
     if (inFlight.current) return;
     inFlight.current = true;
     setBusy(true);
@@ -94,19 +106,39 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
         );
         setBusy(false);
         inFlight.current = false;
-      } catch {
+      } catch (error) {
         if (!mounted.current) return;
-        setError(
-          t(
-            "portal.accountLink.modal.startFailed",
-            "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again.",
-          ),
-        );
+        if (error instanceof HttpError && error.status === 403) {
+          setError(
+            t(
+              "portal.accountLink.ownerRequired",
+              "Only the org owner can link or unlink this server.",
+            ),
+          );
+        } else if (
+          !reauth &&
+          error instanceof HttpError &&
+          error.status === 409
+        ) {
+          setError(
+            t(
+              "portal.accountLink.modal.transferPending",
+              "An ownership transfer is pending. Go to Settings → Users to finish or cancel it, then try linking again.",
+            ),
+          );
+        } else {
+          setError(
+            t(
+              "portal.accountLink.modal.startFailed",
+              "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again.",
+            ),
+          );
+        }
         setBusy(false);
         inFlight.current = false;
       }
     })();
-  }, [reauth, t, location.pathname, location.search]);
+  }, [reauth, t, location.pathname, location.search, isOwner]);
 
   return { busy, error, begin };
 }

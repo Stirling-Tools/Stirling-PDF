@@ -66,7 +66,7 @@ async function load(
       boundsX: r?.bounds.x,
       display: pg.display,
     };
-  }) as Promise<Probe>;
+  });
 }
 
 test("control fixture (CropBox==MediaBox) yields an identity transform", async ({

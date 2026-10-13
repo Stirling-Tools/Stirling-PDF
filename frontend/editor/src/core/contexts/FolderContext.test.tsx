@@ -1,5 +1,6 @@
 import React from "react";
 import { describe, expect, test, vi, beforeEach } from "vitest";
+import type { useAuth } from "@app/auth/UseSession";
 import { render, screen, waitFor, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
@@ -47,14 +48,11 @@ vi.mock("@app/services/folderSyncService", () => ({
 // FolderProvider only pulls from the server for a confirmed, non-anonymous
 // user (guests have no cloud storage). Mock useAuth as a signed-in user so the
 // pull runs; the guest-skip path is covered by its own test below.
-const { mockAuth } = vi.hoisted(() => ({
-  mockAuth: {
-    user: { id: "test-user", is_anonymous: false } as Record<
-      string,
-      unknown
-    > | null,
-    isAnonymous: false,
-  },
+const mockAuth = vi.hoisted<
+  Pick<ReturnType<typeof useAuth>, "user" | "isAnonymous">
+>(() => ({
+  user: { id: "test-user", is_anonymous: false },
+  isAnonymous: false,
 }));
 vi.mock("@app/auth/UseSession", () => ({
   useAuth: () => ({
@@ -492,7 +490,7 @@ describe("FolderContext disk subfolder resolution", () => {
       directory: MOUNT_DIR,
       createdAt: 0,
       updatedAt: 0,
-    } as FolderRecord;
+    };
   }
 
   type DiskProbeApi = {

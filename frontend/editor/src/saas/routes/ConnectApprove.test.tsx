@@ -228,7 +228,7 @@ describe("connect approval permissions", () => {
       });
       arrive();
       expect(
-        await screen.findByText("connect.renewal.wrongAccount"),
+        await screen.findByText("connect.renewal.currentOwnerRequired"),
       ).toBeInTheDocument();
       expect(screen.getByText("member@example.com")).toBeInTheDocument();
       expect(screen.queryByRole("checkbox")).toBeNull();
@@ -276,7 +276,7 @@ describe("connect approval permissions", () => {
         await screen.findByRole("button", { name: "connect.renewal.approve" }),
       );
       expect(
-        await screen.findByText("connect.renewal.wrongAccount"),
+        await screen.findByText("connect.renewal.currentOwnerRequired"),
       ).toBeInTheDocument();
       expect(
         screen.queryByRole("button", { name: "connect.renewal.approve" }),
@@ -319,7 +319,7 @@ describe("connect approval permissions", () => {
     session.user.id = "different-owner";
     view.rerender(<TestApp />);
     expect(
-      await screen.findByText("connect.renewal.wrongAccount"),
+      await screen.findByText("connect.renewal.currentOwnerRequired"),
     ).toBeInTheDocument();
     await act(async () =>
       resolveOld({ data: { ...pending, mode: "REAUTH", canApprove: true } }),

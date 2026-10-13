@@ -4,7 +4,10 @@ import {
   mockAppApis,
   seedCookieConsent,
 } from "@app/tests/helpers/api-stubs";
-import { SETTINGS_SURFACE } from "@app/tests/helpers/ui-helpers";
+import {
+  SETTINGS_SURFACE,
+  revealPickerTool,
+} from "@app/tests/helpers/ui-helpers";
 
 /**
  * Stubbed coverage for the tool tile (shown even when the endpoint is disabled, so the tool stays
@@ -49,7 +52,7 @@ test.describe("Auto Form Detection tool", () => {
     });
     await page.goto("/");
 
-    const tile = page.locator('[data-tour="tool-button-autoFormDetection"]');
+    const tile = await revealPickerTool(page, "autoFormDetection");
     await expect(tile.first()).toBeVisible({ timeout: 10_000 });
   });
 
@@ -64,10 +67,8 @@ test.describe("Auto Form Detection tool", () => {
     });
     await page.goto("/");
 
-    await page
-      .locator('[data-tour="tool-button-autoFormDetection"]')
-      .first()
-      .click();
+    const tile = await revealPickerTool(page, "autoFormDetection");
+    await tile.first().click();
     await expect(page).toHaveURL(/auto-form-detection/i);
   });
 

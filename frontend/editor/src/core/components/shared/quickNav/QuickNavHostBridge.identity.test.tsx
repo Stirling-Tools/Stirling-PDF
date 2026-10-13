@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { useAuth } from "@app/auth/UseSession";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import {
   QuickNavHostProvider,
@@ -10,15 +11,14 @@ import {
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import { QuickNavRailAccount } from "@app/components/shared/quickNav/QuickNavRailAccount";
 
-const { auth, picture, getAccountData } = vi.hoisted(() => ({
-  auth: {
-    displayName: "Ada" as string | null,
-    loading: false,
-    isAnonymous: false,
-  },
-  picture: { url: "/ada.png" as string | null, loading: false },
-  getAccountData: vi.fn(),
+const auth = vi.hoisted<
+  Pick<ReturnType<typeof useAuth>, "displayName" | "loading" | "isAnonymous">
+>(() => ({ displayName: "Ada", loading: false, isAnonymous: false }));
+const picture = vi.hoisted<{ url: string | null; loading: boolean }>(() => ({
+  url: "/ada.png",
+  loading: false,
 }));
+const getAccountData = vi.hoisted(() => vi.fn());
 
 vi.mock("@app/auth/UseSession", () => ({ useAuth: () => auth }));
 vi.mock("@app/hooks/useProfilePictureUrl", () => ({

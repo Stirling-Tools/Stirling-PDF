@@ -111,7 +111,7 @@ async function classifyStub(
   recordRunStart({
     runId,
     policyKey: CLASSIFICATION_POLICY_KEY,
-    fileId: fileId as string,
+    fileId: fileId,
     fileName,
     fileSize,
     target: "local",
@@ -153,7 +153,7 @@ async function classifyStub(
     updateRun(runId, {
       status: "COMPLETED",
       imported: true,
-      outputFileIds: [fileId as string],
+      outputFileIds: [fileId],
     });
     return { labels, confidence: result.confidence, meter };
   } catch (err) {

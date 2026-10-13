@@ -1,9 +1,11 @@
 // Define workbench values once as source of truth
 export const BASE_WORKBENCH_TYPES = [
   "viewer",
+  // Multi-file page editor: every open PDF as its own track of pages.
   "pageEditor",
   "fileEditor",
   "myFiles",
+  "signing",
 ] as const;
 
 export type BaseWorkbenchType = (typeof BASE_WORKBENCH_TYPES)[number];

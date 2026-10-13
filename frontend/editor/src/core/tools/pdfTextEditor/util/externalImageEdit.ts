@@ -1,6 +1,8 @@
 // Round-trip an image through the user's own editor: save the pixels as a PNG,
 // then hand the bytes back every time that file is re-saved.
 
+import i18n from "i18next";
+
 export interface ExternalEditPixels {
   rgba: Uint8Array | Uint8ClampedArray;
   width: number;
@@ -77,7 +79,15 @@ export async function startExternalImageEdit(
   try {
     handle = await picker({
       suggestedName,
-      types: [{ description: "PNG image", accept: { "image/png": [".png"] } }],
+      types: [
+        {
+          description: i18n.t(
+            "pdfTextEditor.externalEdit.pngFileType",
+            "PNG image",
+          ),
+          accept: { "image/png": [".png"] },
+        },
+      ],
     });
   } catch (error) {
     if (isAbort(error)) return { status: "cancelled" };

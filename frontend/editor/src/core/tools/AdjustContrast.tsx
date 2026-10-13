@@ -105,7 +105,10 @@ const AdjustContrast = (props: BaseToolProps) => {
               color: "var(--text-color-muted)",
             }}
           >
-            {`${previewIndex + 1} of ${totalSelected}`}
+            {t("common.nOfTotal", "{{current}} of {{total}}", {
+              current: previewIndex + 1,
+              total: totalSelected,
+            })}
           </div>
         )}
       </div>

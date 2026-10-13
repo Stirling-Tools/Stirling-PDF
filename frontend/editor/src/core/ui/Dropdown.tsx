@@ -122,6 +122,7 @@ function Root({
 }
 
 export interface DropdownTriggerProps {
+  popupRole?: "menu" | "dialog";
   /** A single button-like element. Receives onClick + aria props. */
   children: ReactElement<{
     onClick?: (e: React.MouseEvent) => void;
@@ -132,7 +133,7 @@ export interface DropdownTriggerProps {
   }>;
 }
 
-function Trigger({ children }: DropdownTriggerProps) {
+function Trigger({ children, popupRole = "menu" }: DropdownTriggerProps) {
   const { open, setOpen, triggerRef, menuId } = useDropdownCtx();
   if (!isValidElement(children)) {
     throw new Error(
@@ -145,7 +146,7 @@ function Trigger({ children }: DropdownTriggerProps) {
       children.props.onClick?.(e);
       setOpen(!open);
     },
-    "aria-haspopup": "menu",
+    "aria-haspopup": popupRole,
     "aria-expanded": open,
     "aria-controls": menuId,
   });
@@ -156,9 +157,24 @@ export interface DropdownMenuProps {
   className?: string;
   /** Optional min-width override (px or CSS length). */
   width?: string | number;
+  /** Move keyboard focus into a command menu when it opens. */
+  autoFocus?: boolean;
+  /** Rich popovers use dialog semantics and their own control-specific keyboard handling. */
+  role?: "menu" | "dialog";
+  ariaLabel?: string;
+  /** Prefer beside a rail trigger; fall back above/below when the viewport is too narrow. */
+  placement?: "vertical" | "side";
 }
 
-function Menu({ children, className, width }: DropdownMenuProps) {
+function Menu({
+  children,
+  className,
+  width,
+  autoFocus = false,
+  role = "menu",
+  ariaLabel,
+  placement = "vertical",
+}: DropdownMenuProps) {
   const { open, menuId, align, triggerRef, menuRef } = useDropdownCtx();
   // Fixed position tracked to the trigger. Portaling to <body> keeps the menu
   // out of any `overflow` ancestor (e.g. a table's horizontal scroll area),
@@ -170,6 +186,17 @@ function Menu({ children, className, width }: DropdownMenuProps) {
     right?: number;
     maxHeight: number;
   } | null>(null);
+  const positioned = pos !== null;
+  const focusedOnOpen = useRef(false);
+  useEffect(() => {
+    if (!open) focusedOnOpen.current = false;
+    if (open && pos && autoFocus && !focusedOnOpen.current) {
+      menuRef.current
+        ?.querySelector<HTMLButtonElement>("button:not(:disabled)")
+        ?.focus();
+      focusedOnOpen.current = true;
+    }
+  }, [open, pos, autoFocus, menuRef]);
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -179,6 +206,22 @@ function Menu({ children, className, width }: DropdownMenuProps) {
       const r = el.getBoundingClientRect();
       const gap = 4;
       const margin = 8;
+      const panelWidth = menuRef.current?.offsetWidth || 400;
+      if (
+        placement === "side" &&
+        r.right + gap + panelWidth <= window.innerWidth - margin
+      ) {
+        const panelHeight = menuRef.current?.offsetHeight || 0;
+        setPos({
+          left: r.right + gap,
+          top: Math.max(
+            margin,
+            Math.min(r.top, window.innerHeight - margin - panelHeight),
+          ),
+          maxHeight: window.innerHeight - margin * 2,
+        });
+        return;
+      }
       const spaceBelow = window.innerHeight - r.bottom - margin;
       const spaceAbove = r.top - margin;
       // Flip above when there's more room there, so a trigger near the viewport
@@ -187,7 +230,15 @@ function Menu({ children, className, width }: DropdownMenuProps) {
       const horizontal =
         align === "end"
           ? { right: window.innerWidth - r.right }
-          : { left: r.left };
+          : {
+              left:
+                placement === "side"
+                  ? Math.max(
+                      margin,
+                      Math.min(r.left, window.innerWidth - margin - panelWidth),
+                    )
+                  : r.left,
+            };
       setPos({
         ...horizontal,
         ...(below
@@ -197,14 +248,17 @@ function Menu({ children, className, width }: DropdownMenuProps) {
       });
     };
     place();
+    const observer = placement === "side" ? new ResizeObserver(place) : null;
+    if (menuRef.current) observer?.observe(menuRef.current);
     // Track the trigger while scrolling/resizing (capture catches inner scrollers).
     window.addEventListener("scroll", place, true);
     window.addEventListener("resize", place);
     return () => {
       window.removeEventListener("scroll", place, true);
       window.removeEventListener("resize", place);
+      observer?.disconnect();
     };
-  }, [open, align, triggerRef]);
+  }, [open, align, triggerRef, menuRef, placement, positioned]);
 
   if (!open || !pos) return null;
   const style: React.CSSProperties = {
@@ -216,7 +270,7 @@ function Menu({ children, className, width }: DropdownMenuProps) {
     left: pos.left ?? "auto",
     right: pos.right ?? "auto",
     maxHeight: pos.maxHeight,
-    overflowY: "auto",
+    overflowY: role === "menu" ? "auto" : undefined,
     ...(width !== undefined
       ? { minWidth: typeof width === "number" ? `${width}px` : width }
       : {}),
@@ -224,10 +278,37 @@ function Menu({ children, className, width }: DropdownMenuProps) {
   return createPortal(
     <div
       id={menuId}
-      role="menu"
+      role={role}
+      aria-label={ariaLabel}
       ref={menuRef}
       className={["sui-dd__menu", className ?? ""].filter(Boolean).join(" ")}
       style={style}
+      onKeyDown={(event) => {
+        if (
+          !autoFocus ||
+          role !== "menu" ||
+          !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)
+        )
+          return;
+        const items = Array.from(
+          event.currentTarget.querySelectorAll<HTMLButtonElement>(
+            "button:not(:disabled)",
+          ),
+        );
+        if (!items.length) return;
+        event.preventDefault();
+        const index = items.findIndex(
+          (item) => item === document.activeElement,
+        );
+        const next =
+          event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? items.length - 1
+              : (index + (event.key === "ArrowDown" ? 1 : -1) + items.length) %
+                items.length;
+        items[next].focus();
+      }}
     >
       {children}
     </div>,

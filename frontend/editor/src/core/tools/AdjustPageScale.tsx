@@ -25,7 +25,7 @@ const AdjustPageScale = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: "Settings",
+        title: t("adjustPageScale.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed
           ? base.handleSettingsReset

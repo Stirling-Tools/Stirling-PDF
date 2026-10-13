@@ -1,5 +1,7 @@
 import { MultiSelect, Select } from "@mantine/core";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { Icon } from "@app/ui/Icon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
@@ -47,6 +49,15 @@ export function LibraryToolbar({
   hideFilters = false,
 }: Props) {
   const { t } = useTranslation();
+  const localOnly = useLocalProcessingOnly();
+  useEffect(() => {
+    if (
+      localOnly &&
+      (originFilter === "cloud" || originFilter === "shared-with-me")
+    ) {
+      setOriginFilter("all");
+    }
+  }, [localOnly, originFilter, setOriginFilter]);
   return (
     <>
       {!hideFilters &&
@@ -85,7 +96,12 @@ export function LibraryToolbar({
                   value: "shared-with-me",
                   label: t("filesPage.origin.shared", "Shared"),
                 },
-              ]}
+              ].filter(
+                (source) =>
+                  !localOnly ||
+                  source.value === "all" ||
+                  source.value === "local",
+              )}
               style={{ width: 140 }}
               aria-label={t("filesPage.originFilter", "Filter by source")}
             />
@@ -129,7 +145,7 @@ export function LibraryToolbar({
         value={viewMode}
         onChange={(v) => {
           if (!(FILES_PAGE_VIEW_MODES as readonly string[]).includes(v)) return;
-          setViewMode(v as FilesPageViewMode);
+          setViewMode(v);
         }}
         aria-label={t("filesPage.viewMode.label", "View mode")}
         options={[

@@ -1,4 +1,5 @@
 import type { DropzoneProps } from "@mantine/dropzone";
+import i18n from "i18next";
 
 type DropEvent = Parameters<NonNullable<DropzoneProps["getFilesFromEvent"]>>[0];
 
@@ -31,10 +32,15 @@ async function readEntryFiles(
   return files;
 }
 
+function unreadableDropMessage(): string {
+  return i18n.t(
+    "fileUpload.droppedFileUnreadable",
+    "Could not read a dropped file.",
+  );
+}
+
 function dropErrorMessage(cause: unknown): string {
-  return cause instanceof Error
-    ? cause.message
-    : "Could not read a dropped file.";
+  return cause instanceof Error ? cause.message : unreadableDropMessage();
 }
 
 /**
@@ -63,7 +69,7 @@ export async function getDropzoneFiles(
                 const entry = item.webkitGetAsEntry?.();
                 if (entry?.isDirectory) return readEntryFiles(entry, errors);
                 const file = item.getAsFile();
-                if (!file) throw new Error("Could not read a dropped file.");
+                if (!file) throw new Error(unreadableDropMessage());
                 return [file];
               } catch (cause) {
                 errors.push(dropErrorMessage(cause));
@@ -84,7 +90,7 @@ export async function getDropzoneFiles(
   }
 
   if ("target" in event && event.target && "files" in event.target) {
-    return Array.from((event.target as HTMLInputElement).files ?? []);
+    return Array.from(event.target.files ?? []);
   }
   return [];
 }

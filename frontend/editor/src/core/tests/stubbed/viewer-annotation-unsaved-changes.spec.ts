@@ -77,28 +77,39 @@ test("undoing the only annotation disarms the unsaved-changes warning", async ({
   await expect(page.getByText("Unsaved changes").first()).not.toBeVisible();
 });
 
-test("entering manual redact mode keeps annotation work saveable", async ({
+test("entering manual redact mode preserves annotations through the save guard", async ({
   page,
 }) => {
   test.setTimeout(120_000);
   const firstPage = await loadViewer(page);
   await highlightSomeText(page, firstPage);
 
-  // Back to the picker first: switching tools while still on Annotate would
-  // trip the unsaved-changes guard.
-  await page.getByRole("button", { name: "Back to all tools" }).first().click();
-  await page.waitForTimeout(700);
-  await page.getByRole("link", { name: "Redact" }).first().click();
-  await page.waitForTimeout(700);
-  await page.getByText("Manual", { exact: true }).first().click();
+  const redact = page
+    .getByRole("button", { name: "Redact", exact: true })
+    .first();
+  await redact.click();
+  const guard = page.getByRole("dialog", {
+    name: "Unsaved Changes",
+    exact: true,
+  });
+  await expect(guard).toBeVisible();
+  await guard
+    .getByRole("button", { name: "Keep Working", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Save Changes", exact: true }).first(),
+  ).toBeEnabled();
+  await redact.click();
+  await guard
+    .getByRole("button", { name: "Save & Leave", exact: true })
+    .click();
+  await expect(guard).toBeHidden();
 
   await expect
     .poll(() => viewerCursor(page), { timeout: 15_000 })
     .toBe("crosshair");
 
-  // Manual redaction mode used to clear the shared dirty flag, disabling this
-  // button while the annotation history was still unsaved.
   await expect(
     page.getByRole("button", { name: "Save Changes" }).first(),
-  ).toBeEnabled({ timeout: 10_000 });
+  ).toBeDisabled({ timeout: 10_000 });
 });

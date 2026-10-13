@@ -96,7 +96,7 @@ export function loadPolicies(): PoliciesByKey {
   // Builder pipelines key by their own id, so the walk above misses them. Carried through as
   // stored: a tile's defaults would mark them built-in and put them on the editor uninvited.
   for (const [key, state] of Object.entries(parsed)) {
-    if (!out[key] && state) out[key] = state as PolicyState;
+    if (!out[key] && state) out[key] = state;
   }
   // Cached endpoints can come from a different frontend version.
   for (const state of Object.values(out)) {

@@ -38,21 +38,20 @@ const PATH = "C:/docs/report.pdf";
 const V1_BYTES = "%PDF-v1";
 const SAVED_CHILD_BYTES = "%PDF-v2-on-disk";
 
-const versionStub = (isLeaf: boolean): StirlingFileStub =>
-  ({
-    id: "v1" as FileId,
-    name: "report.pdf",
-    type: "application/pdf",
-    size: V1_BYTES.length,
-    lastModified: 1_000,
-    isLeaf,
-    originalFileId: "v1",
-    versionNumber: 1,
-    localFilePath: PATH,
-    // Stamped when v1 was the live file, so it predates the child's write.
-    diskSyncedSize: V1_BYTES.length,
-    diskSyncedModifiedMs: 1_000,
-  }) as StirlingFileStub;
+const versionStub = (isLeaf: boolean): StirlingFileStub => ({
+  id: "v1" as FileId,
+  name: "report.pdf",
+  type: "application/pdf",
+  size: V1_BYTES.length,
+  lastModified: 1_000,
+  isLeaf,
+  originalFileId: "v1",
+  versionNumber: 1,
+  localFilePath: PATH,
+  // Stamped when v1 was the live file, so it predates the child's write.
+  diskSyncedSize: V1_BYTES.length,
+  diskSyncedModifiedMs: 1_000,
+});
 
 beforeEach(() => {
   vi.clearAllMocks();

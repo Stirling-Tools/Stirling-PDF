@@ -41,6 +41,7 @@ import {
   measureMaxLineWidth,
   resetTextMetricsCache,
 } from "@app/tools/pdfTextEditor/util/textMetrics";
+import { MIN_WRAP_WIDTH_EM } from "@app/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import "@app/tools/pdfTextEditor/components/TextRunOverlay.css";
 
 const RENDER_MODE_INVISIBLE = 3;
@@ -311,20 +312,16 @@ interface TextRunOverlayProps {
   // Fires on blur in Wrap mode when the edited content overflows the locked box
   // width.
   onWrap?: (maxWidthPt: number) => void;
+  /** Fires when the user drags the right edge to a new width, in PDF points. */
+  onResize?: (widthPt: number) => void;
 }
 
 /**
- * Which gesture the pointer is over: the frame, or the text interior.
- *
- * There is deliberately no resize zone. Re-wrapping to an arbitrary width goes
- * through ReflowWrapCommand, whose word grouping is x-gap based - on a run
- * whose glyphs are individually positioned (letter-spaced headings, button
- * labels) every glyph becomes its own "word" and the line breaker splits
- * inside words, shredding "Open Source" into one character per line. Until
- * that grouping is token-aware, a drag handle would make the corruption a
- * one-gesture accident.
+ * Which gesture the pointer is over: the frame, the right edge, or the text
+ * interior. The right edge re-wraps the run to a new width; the rest of the
+ * frame moves it.
  */
-type EdgeZone = "move" | null;
+type EdgeZone = "move" | "resize" | null;
 
 /** Grab band around the box, in CSS px. Matches the visible ring's reach. */
 const EDGE_PX = 7;
@@ -340,12 +337,14 @@ function edgeZoneAt(
   el: HTMLElement,
   clientX: number,
   clientY: number,
+  canResize: boolean,
 ): EdgeZone {
   const r = el.getBoundingClientRect();
   const nearLeft = clientX - r.left <= EDGE_PX;
   const nearRight = r.right - clientX <= EDGE_PX;
   const nearTop = clientY - r.top <= EDGE_PX;
   const nearBottom = r.bottom - clientY <= EDGE_PX;
+  if (canResize && nearRight && !nearTop && !nearBottom) return "resize";
   if (nearTop || nearBottom || nearLeft || nearRight) return "move";
   return null;
 }
@@ -365,6 +364,7 @@ export function TextRunOverlay({
   onEdit,
   onMove,
   onWrap,
+  onResize,
 }: TextRunOverlayProps) {
   const { t } = useTranslation();
   // Subscribed, so toggling the preference re-renders every overlay.
@@ -374,7 +374,13 @@ export function TextRunOverlay({
   const [focused, setFocused] = useState(false);
   // Masking a run the user has only clicked into swaps real PDF ink for a
   // CSS approximation, so hold the pristine bitmap until an actual edit.
-  const [touched, setTouched] = useState(false);
+  const [touched, setTouchedState] = useState(false);
+  // Live copy for effects: a commit's effect can run after a newer keystroke.
+  const touchedRef = useRef(false);
+  const setTouched = (next: boolean) => {
+    touchedRef.current = next;
+    setTouchedState(next);
+  };
   const [editTick, setEditTick] = useState(0);
   const [stalled, setStalled] = useState(false);
   const editedAtRevisionRef = useRef(-1);
@@ -405,6 +411,12 @@ export function TextRunOverlay({
   // Which edge the pointer is over, so the cursor can advertise the gesture
   // before the user commits to it. Null means the text interior.
   const [edgeZone, setEdgeZone] = useState<EdgeZone>(null);
+  // Live box width while the right edge is being dragged, in CSS px.
+  const [resizeWidthPx, setResizeWidthPx] = useState<number | null>(null);
+  // Detaches an in-flight resize's window listeners, so a cancelled or
+  // unmounted resize can never commit a width on a later pointerup.
+  const endResizeRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => endResizeRef.current?.(), []);
   const originalBoundsWidthRef = useRef<number>(run.bounds.width);
   // Whether this run was a real (multi-line) paragraph when it first mounted.
 
@@ -595,7 +607,10 @@ export function TextRunOverlay({
     // the browser's, and the caret walks off the text on the page a fraction of
     // a pixel per keystroke. Any other layout would be fighting a keystroke
     // still in flight.
-    if (active && touched && !(freshExact && domText === run.text)) return;
+    // Read live: an effect committed before a keystroke still sees the old
+    // `touched` and would paint the pre-edit text over the new character.
+    if (active && touchedRef.current && !(freshExact && domText === run.text))
+      return;
     const wantSignature = freshExact ? freshExact.signature : "";
     if (!freshExact && isLinePainted(el) && domText === run.text) return;
     if (
@@ -658,8 +673,8 @@ export function TextRunOverlay({
   // fit the content.
   const wrapMode = widthMode === "wrap";
   const wrapLockWidth = Math.max(
-    originalBoundsWidthRef.current * scale,
-    fontSizePx * 4,
+    (run.wrapWidthPt ?? originalBoundsWidthRef.current) * scale,
+    fontSizePx * MIN_WRAP_WIDTH_EM,
   );
   // The mode the user picked, and nothing else. Forcing a paragraph to wrap in
   // Grow made the two modes indistinguishable for body text and contradicted
@@ -715,7 +730,10 @@ export function TextRunOverlay({
   // underneath it.
   // Wrap holds its width and pushes overflow onto new lines; widening to the
   // page edge instead is Grow's job, and doing both makes the modes identical.
-  const width = wantWrap ? wrapWidth : exact ? exactWidth : flowWidth;
+  const userWidthPx = (run.wrapWidthPt ?? 0) * scale;
+  const width = wantWrap
+    ? wrapWidth
+    : Math.max(exact ? exactWidth : flowWidth, userWidthPx);
   const height = exact ? exact.heightPx : flowHeight;
   // An exact layout is never wrapped - its lines are the PDF's own. Only the
   // plain-text fallback, where CSS flow genuinely owns the layout, may wrap.
@@ -743,6 +761,49 @@ export function TextRunOverlay({
 
   // Which dictionary the browser should load. "auto" falls back to the
   // page's own language, which is what the element would inherit anyway.
+  // The reflow lays text out along the page axis, so a turned run has no
+  // meaningful width to drag.
+  const canResize = !!onResize && !runRotation;
+  const minResizePx = fontSizePx * MIN_WRAP_WIDTH_EM;
+
+  function startResize(
+    originX: number,
+    pointerId: number,
+    commit: (widthPt: number) => void,
+  ) {
+    if (endResizeRef.current) return;
+    const startWidth = width;
+    setResizeWidthPx(startWidth);
+    const widthAt = (clientX: number) =>
+      Math.max(minResizePx, startWidth + clientX - originX);
+    const onPointerMove = (ev: PointerEvent) => {
+      if (ev.pointerId === pointerId) setResizeWidthPx(widthAt(ev.clientX));
+    };
+    const endResize = () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+      endResizeRef.current = null;
+      setResizeWidthPx(null);
+    };
+    const onPointerCancel = (ev: PointerEvent) => {
+      if (ev.pointerId === pointerId) endResize();
+    };
+    const onPointerUp = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      endResize();
+      if (Math.abs(ev.clientX - originX) < 1) {
+        onSelect(false);
+        return;
+      }
+      commit(widthAt(ev.clientX) / scale);
+    };
+    endResizeRef.current = endResize;
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerCancel);
+  }
+
   const spellcheckLang = resolveLang(
     spellcheck,
     typeof document === "undefined" ? null : document.documentElement.lang,
@@ -774,15 +835,13 @@ export function TextRunOverlay({
         // which reads back as a line the user never typed. Seat it in the
         // block it sits beside before the input applies.
         const sel = window.getSelection();
-        if (sel)
-          normalizeContainerCaret(e.currentTarget as HTMLDivElement, sel);
+        if (sel) normalizeContainerCaret(e.currentTarget, sel);
       }}
       onPaste={(e) => {
         // Paste as PLAIN TEXT.
         e.preventDefault();
         const sel = window.getSelection();
-        if (sel)
-          normalizeContainerCaret(e.currentTarget as HTMLDivElement, sel);
+        if (sel) normalizeContainerCaret(e.currentTarget, sel);
         const text = e.clipboardData?.getData("text/plain");
         if (text) document.execCommand("insertText", false, text);
       }}
@@ -793,10 +852,17 @@ export function TextRunOverlay({
         // Locked runs are inert: no select, no drag, no edit.
         if (run.locked) return;
         const zone = edgeZoneAt(
-          e.currentTarget as HTMLDivElement,
+          e.currentTarget,
           e.clientX,
           e.clientY,
+          canResize,
         );
+        if (zone === "resize" && onResize) {
+          e.preventDefault();
+          e.currentTarget.blur();
+          startResize(e.clientX, e.pointerId, onResize);
+          return;
+        }
 
         // Ctrl+drag still moves from anywhere inside, so existing muscle
         // memory keeps working; grabbing the frame is the discoverable path.
@@ -806,7 +872,7 @@ export function TextRunOverlay({
           dragOriginRef.current = { x: e.clientX, y: e.clientY };
           setDragging(true);
           setDragOffset({ x: 0, y: 0 });
-          (e.currentTarget as HTMLDivElement).blur();
+          e.currentTarget.blur();
           // Pointer events (mouse/pen/touch) with a global capture so the
           // drag keeps tracking even if the cursor leaves the overlay.
           const onPointerMove = (ev: PointerEvent) => {
@@ -852,14 +918,14 @@ export function TextRunOverlay({
           return;
         }
         pointerFocusRef.current = true;
-        (e.currentTarget as HTMLDivElement).focus({ preventScroll: true });
+        e.currentTarget.focus({ preventScroll: true });
         onSelect(false);
       }}
       onFocus={(e) => {
         setFocused(true);
         setTouched(false);
-        setMaskColor(readMaskColor(e.currentTarget as HTMLDivElement));
-        const el = e.currentTarget as HTMLDivElement;
+        setMaskColor(readMaskColor(e.currentTarget));
+        const el = e.currentTarget;
         // Remember the text at focus so blur can tell if the user edited it.
         focusTextRef.current = readOverlayText(el);
         const fromPointer = pointerFocusRef.current;
@@ -899,7 +965,7 @@ export function TextRunOverlay({
         // left. Once focus is genuinely outside the run, its selection goes
         // with it.
         {
-          const el = e.currentTarget as HTMLDivElement;
+          const el = e.currentTarget;
           const sel = window.getSelection();
           if (
             sel &&
@@ -913,7 +979,7 @@ export function TextRunOverlay({
         // Wrap mode: when the just-edited content overflows the locked box
         // width.
         if (!wantWrap || !onWrap) return;
-        const el = e.currentTarget as HTMLDivElement;
+        const el = e.currentTarget;
         const domText = readOverlayText(el);
         if (domText === focusTextRef.current) return; // not edited
         const widest = measureMaxLineWidth(domText, font);
@@ -942,7 +1008,7 @@ export function TextRunOverlay({
       onCompositionEnd={(e) => {
         composingRef.current = false;
         // Commit the composed string once, like onInput's non-IME path.
-        const el = e.currentTarget as HTMLDivElement;
+        const el = e.currentTarget;
         onEdit(readOverlayText(el).replace(/\u00A0/g, " "));
       }}
       onInput={(e) => {
@@ -950,9 +1016,8 @@ export function TextRunOverlay({
         setEditTick((n) => n + 1);
         editedAtRevisionRef.current = pageRevision ?? -1;
         // Skip intermediate IME steps; compositionend commits the result.
-        if (composingRef.current || (e.nativeEvent as InputEvent).isComposing)
-          return;
-        const el = e.currentTarget as HTMLDivElement;
+        if (composingRef.current || e.nativeEvent.isComposing) return;
+        const el = e.currentTarget;
         // Re-fit the token the user just typed into. Its painted width is the
         // PDF's advance for the ORIGINAL string, so leaving it alone lays the
         // new text out at the browser's own advances and the caret drifts off
@@ -974,14 +1039,15 @@ export function TextRunOverlay({
       onPointerMove={(e) => {
         // Only while idle: mid-drag the cursor is owned by the gesture.
         if (run.locked || dragging) return;
+        if (resizeWidthPx !== null) return;
         setEdgeZone(
-          edgeZoneAt(e.currentTarget as HTMLDivElement, e.clientX, e.clientY),
+          edgeZoneAt(e.currentTarget, e.clientX, e.clientY, canResize),
         );
       }}
       style={{
         left,
         top,
-        width,
+        width: resizeWidthPx ?? width,
         minHeight: height,
         // Live Ctrl+drag preview: follow the cursor via transform, and
         // float above siblings + dim slightly so the move reads clearly.
@@ -1051,7 +1117,7 @@ export function TextRunOverlay({
           : dragging
             ? "2px solid #2c7be5"
             : selected
-              ? edgeZone
+              ? edgeZone || resizeWidthPx !== null
                 ? "2px solid #2c7be5"
                 : "1px solid #2c7be5"
               : hovered
@@ -1063,9 +1129,11 @@ export function TextRunOverlay({
           ? "default"
           : dragging
             ? "grabbing"
-            : edgeZone === "move"
-              ? "grab"
-              : undefined,
+            : resizeWidthPx !== null || edgeZone === "resize"
+              ? "ew-resize"
+              : edgeZone === "move"
+                ? "grab"
+                : undefined,
         overflow: "hidden",
       }}
     />

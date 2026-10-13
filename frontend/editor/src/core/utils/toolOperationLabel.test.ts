@@ -7,8 +7,11 @@ import type { ToolOperation } from "@app/types/file";
 const t = ((key: string, fallback?: string) =>
   key === "home.automate.title" ? "Automate" : (fallback ?? key)) as TFunction;
 
-const op = (over: Partial<ToolOperation>): ToolOperation =>
-  ({ toolId: "automate", timestamp: 0, ...over }) as ToolOperation;
+const op = (over: Partial<ToolOperation>): ToolOperation => ({
+  toolId: "automate",
+  timestamp: 0,
+  ...over,
+});
 
 describe("toolOperationLabel", () => {
   it("prefers the operation's own label", () => {

@@ -1,4 +1,5 @@
 import { ProcessingError } from "@app/types/processing";
+import i18n from "i18next";
 
 export class ProcessingErrorHandler {
   private static readonly DEFAULT_MAX_RETRIES = 3;
@@ -133,25 +134,48 @@ export class ProcessingErrorHandler {
   ): string {
     switch (errorType) {
       case "network":
-        return "Network connection failed. Please check your internet connection and try again.";
+        return i18n.t(
+          "error.processing.network",
+          "Network connection failed. Please check your internet connection and try again.",
+        );
 
       case "memory":
-        return "Insufficient memory to process this file. Try closing other applications or processing a smaller file.";
+        return i18n.t(
+          "error.processing.memory",
+          "Insufficient memory to process this file. Try closing other applications or processing a smaller file.",
+        );
 
       case "timeout":
-        return "Processing timed out. This file may be too large or complex to process.";
+        return i18n.t(
+          "error.processing.timeout",
+          "Processing timed out. This file may be too large or complex to process.",
+        );
 
       case "cancelled":
-        return "Processing was cancelled by user.";
+        return i18n.t(
+          "error.processing.cancelled",
+          "Processing was cancelled by user.",
+        );
 
       case "corruption":
-        return "This PDF file appears to be corrupted or encrypted. Please try a different file.";
+        return i18n.t(
+          "error.processing.corruption",
+          "This PDF file appears to be corrupted or encrypted. Please try a different file.",
+        );
 
       case "parsing":
-        return `Failed to process PDF: ${originalMessage}`;
+        return i18n.t(
+          "error.processing.parsing",
+          "Failed to process PDF: {{message}}",
+          { message: originalMessage },
+        );
 
       default:
-        return `Processing failed: ${originalMessage}`;
+        return i18n.t(
+          "error.processing.failed",
+          "Processing failed: {{message}}",
+          { message: originalMessage },
+        );
     }
   }
 

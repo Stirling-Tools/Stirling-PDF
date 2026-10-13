@@ -10,7 +10,7 @@ dependencies {
     api "com.google.guava:guava:${guavaVersion}"
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
-    api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1'
+    api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260924.2'
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
     api "org.apache.commons:commons-lang3:${commonsLang3}"
@@ -25,9 +25,9 @@ dependencies {
     api 'org.snakeyaml:snakeyaml-engine:3.1.1'
     api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
-    api 'org.simplejavamail:simple-java-mail:9.3.2'
+    api 'org.simplejavamail:simple-java-mail:9.3.5'
     // MSG file support; exclude commons-math3 (only HSSF/formula needs it, MSG parsing doesn't)
-    api('org.simplejavamail:outlook-module:9.3.2') {
+    api('org.simplejavamail:outlook-module:9.3.5') {
         exclude group: 'org.apache.commons', module: 'commons-math3'
     }
     api 'jakarta.mail:jakarta.mail-api:2.1.5'

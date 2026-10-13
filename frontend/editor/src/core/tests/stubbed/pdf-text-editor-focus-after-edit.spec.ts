@@ -91,7 +91,7 @@ function runText(page: Page, id: string): Promise<string> {
     const r = (window as unknown as EditorTestWindow).__editor_store.doc
       .page(1)
       .runs.find((x) => x.id === rid);
-    return r ? (r.text as string) : "(gone)";
+    return r ? r.text : "(gone)";
   }, id);
 }
 

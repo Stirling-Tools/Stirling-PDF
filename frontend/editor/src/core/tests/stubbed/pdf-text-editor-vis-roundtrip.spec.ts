@@ -77,7 +77,7 @@ const SCAN_FN = (idx: number): Scan | { err: string } => {
 };
 
 async function scan(page: Page, idx = 0): Promise<Scan> {
-  const s = (await page.evaluate(SCAN_FN, idx)) as Scan | { err: string };
+  const s = await page.evaluate(SCAN_FN, idx);
   if ("err" in s) throw new Error(`scan(page ${idx}) failed: ${s.err}`);
   return s;
 }
@@ -90,7 +90,7 @@ async function settled(page: Page, idx = 0, tries = 60): Promise<Scan> {
   let prev = -1;
   let stable = 0;
   for (let i = 0; i < tries; i++) {
-    const ink = (await page.evaluate((j: number) => {
+    const ink = await page.evaluate((j: number) => {
       const el = document.querySelector<HTMLElement>(
         `[data-testid="pdf-editor-page-${j}"]`,
       );
@@ -105,7 +105,7 @@ async function settled(page: Page, idx = 0, tries = 60): Promise<Scan> {
       for (let k = 0; k < d.length; k += 4)
         if (d[k] < 160 && d[k + 1] < 160) n++;
       return n;
-    }, idx)) as number;
+    }, idx);
     if (ink > 0 && ink === prev) {
       stable++;
       if (stable >= 2) return scan(page, idx);

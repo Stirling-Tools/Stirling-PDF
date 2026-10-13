@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import {
   QuickNavRailBase,
   type QuickNavEntry,
@@ -55,6 +55,31 @@ describe("QuickNavRailBase — groups", () => {
 });
 
 describe("QuickNavRailBase — entry state", () => {
+  it("shows the exact signing count while preserving capped badges for other entries", () => {
+    render(
+      <QuickNavRailBase
+        groups={[
+          [
+            entry("sign", { badge: 167, badgeMax: null }),
+            entry("notifications", { badge: 167 }),
+            entry("empty", { badge: 0, badgeMax: null }),
+          ],
+        ]}
+      />,
+    );
+    expect(
+      within(screen.getByRole("button", { name: "sign" })).getByText("167"),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("button", { name: "notifications" })).getByText(
+        "9+",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("button", { name: "empty" })).queryByText("0"),
+    ).not.toBeInTheDocument();
+  });
+
   it("reports on/off for a toggle and nothing for the rest", () => {
     // Nothing here is a view you occupy, so only a real toggle has state.
     const { container } = render(

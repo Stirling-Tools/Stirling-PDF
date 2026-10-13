@@ -14,6 +14,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import stirling.software.proprietary.service.OrgOwnerService;
+
 class AccountLinkServiceTest {
 
     private AccountLinkClient client;
@@ -26,7 +28,7 @@ class AccountLinkServiceTest {
         client = mock(AccountLinkClient.class);
         store = mock(DeviceCredentialStore.class);
         cache = mock(EntitlementCache.class);
-        service = new AccountLinkService(client, store, cache);
+        service = new AccountLinkService(client, store, cache, mock(OrgOwnerService.class));
     }
 
     // The two link() tests here are gone with the JWT relay. Storing a credential and invalidating

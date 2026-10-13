@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@app/auth/context";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, InfoTooltip, Modal, Skeleton } from "@app/ui";
@@ -17,6 +18,8 @@ export function LinkAccountCard({ link, instanceName }: Props) {
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
   const email = useLinkedAccountEmail();
+  const { user } = useAuth();
+  const canLink = user?.orgOwner === true;
   const linking = link.phase === "linking";
   const linked = link.status?.linked ?? false;
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
@@ -83,6 +86,7 @@ export function LinkAccountCard({ link, instanceName }: Props) {
             )}
           </div>
         </div>
+
         {!linked && (
           <span className="portal-link__status">
             <Icon name="unlink" size={20} />
@@ -108,6 +112,7 @@ export function LinkAccountCard({ link, instanceName }: Props) {
               accent="neutral"
               leftSection={<Icon name="unlink" size={20} />}
               loading={linking}
+              disabled={!canLink}
               onClick={() => setConfirmDisconnect(true)}
             >
               {t("portal.accountLink.card.unlink", "Disconnect this instance")}
@@ -143,6 +148,14 @@ export function LinkAccountCard({ link, instanceName }: Props) {
         </Banner>
       )}
 
+      {!canLink && (
+        <p>
+          {t(
+            "portal.accountLink.ownerRequired",
+            "Only the org owner can link or unlink this server.",
+          )}
+        </p>
+      )}
       {!linked && (
         <div className="portal-link__connect">
           <p>
@@ -151,7 +164,11 @@ export function LinkAccountCard({ link, instanceName }: Props) {
               "Connect this server to use your team’s processing allowance in Stirling Cloud.",
             )}
           </p>
-          <Button loading={linking} onClick={() => openLinkModal()}>
+          <Button
+            loading={linking}
+            disabled={!canLink}
+            onClick={() => openLinkModal()}
+          >
             {t(
               "portal.accountLink.card.linkButton",
               "Connect your Stirling account",
@@ -178,6 +195,7 @@ export function LinkAccountCard({ link, instanceName }: Props) {
             </Button>
             <Button
               accent="danger"
+              disabled={!canLink}
               onClick={() => {
                 setConfirmDisconnect(false);
                 void link.unlink();

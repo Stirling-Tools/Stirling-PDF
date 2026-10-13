@@ -25,6 +25,7 @@ const state = vi.hoisted(() => ({
   addStirlingFileStubs: vi.fn().mockResolvedValue(undefined),
   setSelectedFiles: vi.fn(),
   setWorkbench: vi.fn(),
+  workbench: "fileEditor",
   getStirlingFile: vi.fn(),
   apiGet: vi.fn(),
 }));
@@ -49,16 +50,37 @@ vi.mock("@app/contexts/NavigationContext", () => ({
   useNavigationActions: () => ({
     actions: { setWorkbench: state.setWorkbench },
   }),
-  useNavigationState: () => ({ workbench: "pageEditor" }),
+  useNavigationState: () => ({ workbench: state.workbench }),
 }));
 vi.mock("@app/services/fileStorage", () => ({
   fileStorage: { getStirlingFile: state.getStirlingFile },
 }));
 vi.mock("@app/services/apiClient", () => ({ default: { get: state.apiGet } }));
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  state.workbench = "fileEditor";
+});
 
 describe("file picker caller contract", () => {
+  it("clears a caller's format and count restrictions when the next picker opens", () => {
+    const { result } = renderHook(useFilesModalContext, {
+      wrapper: FilesModalProvider,
+    });
+    act(() =>
+      result.current.openFilesModal({
+        supportedFormats: ["pdf"],
+        maxSelectable: 1,
+      }),
+    );
+    expect(result.current.supportedFormats).toEqual(["pdf"]);
+    expect(result.current.maxSelectable).toBe(1);
+    act(() => result.current.closeFilesModal());
+    act(() => result.current.openFilesModal());
+    expect(result.current.supportedFormats).toBeUndefined();
+    expect(result.current.maxSelectable).toBeNull();
+  });
+
   it("inserts readable files when a share is revoked and another local blob is missing", async () => {
     allowConsole.error(/Could not load selected file/);
     const first = new File(["first"], "First.pdf");
@@ -268,6 +290,18 @@ describe("file picker caller contract", () => {
       "uploaded",
     ]);
     expect(state.setWorkbench).toHaveBeenCalledWith("fileEditor");
+  });
+
+  it("stays in the page editor, which lays out the added files itself", async () => {
+    state.workbench = "pageEditor";
+    const upload = new File(["upload"], "Upload.pdf");
+    const { result } = renderHook(useFilesModalContext, {
+      wrapper: FilesModalProvider,
+    });
+    act(() => result.current.openFilesModal());
+    await act(() => result.current.onRecentFileSelect([], [upload]));
+    expect(state.addFiles).toHaveBeenCalledWith([upload]);
+    expect(state.setWorkbench).not.toHaveBeenCalled();
   });
 
   it("does not close a reopened picker when a previous import finishes", async () => {

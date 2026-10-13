@@ -10,6 +10,14 @@ public interface McpTool {
 
     String description();
 
+    /** Human-readable display name shown by hosts in tool lists and approval prompts. */
+    default String title() {
+        return name();
+    }
+
+    /** Behaviour hints published as the tool's {@code annotations}; directories require them. */
+    McpToolAnnotations annotations();
+
     /** The tool's {@code inputSchema} (an object JSON Schema) published in {@code tools/list}. */
     ObjectNode inputSchema();
 

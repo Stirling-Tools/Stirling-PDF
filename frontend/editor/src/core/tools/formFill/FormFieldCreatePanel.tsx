@@ -38,14 +38,17 @@ interface FormFieldCreatePanelProps {
   onApplied?: (blob: Blob) => void;
 }
 
-const TYPE_LABEL: Record<CreatableFieldType, string> = {
-  text: "Text",
-  checkbox: "Checkbox",
-  combobox: "Dropdown",
-  listbox: "List box",
-  radio: "Radio",
-  button: "Button",
-  signature: "Signature",
+const TYPE_LABEL: Record<
+  CreatableFieldType,
+  { key: string; fallback: string }
+> = {
+  text: { key: "formFill.fieldTypes.text", fallback: "Text" },
+  checkbox: { key: "formFill.fieldTypes.checkbox", fallback: "Checkbox" },
+  combobox: { key: "formFill.fieldTypes.combobox", fallback: "Dropdown" },
+  listbox: { key: "formFill.fieldTypes.listbox", fallback: "List box" },
+  radio: { key: "formFill.fieldTypes.radio", fallback: "Radio" },
+  button: { key: "formFill.fieldTypes.button", fallback: "Button" },
+  signature: { key: "formFill.fieldTypes.signature", fallback: "Signature" },
 };
 
 export function FormFieldCreatePanel({
@@ -53,6 +56,8 @@ export function FormFieldCreatePanel({
   onApplied,
 }: FormFieldCreatePanelProps) {
   const { t } = useTranslation();
+  const typeLabel = (type: CreatableFieldType) =>
+    t(TYPE_LABEL[type].key, TYPE_LABEL[type].fallback);
   const {
     creationType,
     setCreationType,
@@ -128,7 +133,7 @@ export function FormFieldCreatePanel({
                 onClick={() => setCreationType(armed ? null : type)}
                 data-testid={`form-create-type-${type}`}
               >
-                {TYPE_LABEL[type]}
+                {typeLabel(type)}
               </Button>
             );
           })}
@@ -140,7 +145,7 @@ export function FormFieldCreatePanel({
               {t(
                 "formFill.create.placing",
                 "Draw a {{type}} field on the page. Press Esc to stop.",
-                { type: TYPE_LABEL[creationType] },
+                { type: typeLabel(creationType) },
               )}
             </Text>
           </Alert>

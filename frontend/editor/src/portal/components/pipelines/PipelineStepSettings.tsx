@@ -15,10 +15,7 @@ import {
 
 import { PolicyExternalApiConfig } from "@portal/components/policies/PolicyExternalApiConfig";
 import { isIntegrationStep } from "@portal/components/pipelines/integrationStep";
-import {
-  isIngestStep,
-  type IngestStepParams,
-} from "@portal/components/pipelines/docparseStep";
+import { isIngestStep } from "@portal/components/pipelines/docparseStep";
 import { IngestStepConfig } from "@portal/components/pipelines/IngestStepConfig";
 import type { ExternalApiStepParams } from "@portal/components/policies/stepOperations";
 import "@portal/components/pipelines/PipelineStepSettings.css";
@@ -105,7 +102,7 @@ export function PipelineStepSettings({
     return (
       <IngestStepConfig
         editorInput={editorInput}
-        parameters={step.params as unknown as IngestStepParams}
+        parameters={step.params}
         onChange={(params) => onChange(params as never)}
       />
     );

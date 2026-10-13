@@ -9,6 +9,8 @@ import {
   embedBitmapImageOnPage,
   embedJpegImageOnPage,
 } from "@app/utils/pdfiumBitmapUtils";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import { copyTagMarks } from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 interface ZOrderModule {
   FPDFPage_InsertObjectAtIndex?: (
@@ -29,13 +31,6 @@ interface MatrixModule {
     f: number,
   ) => boolean;
   FPDFPageObj_SetMatrix?: (obj: number, matrix: number) => boolean;
-  pdfium?: {
-    setValue?: (ptr: number, value: number, type: string) => void;
-    wasmExports?: {
-      malloc?: (size: number) => number;
-      free?: (ptr: number) => void;
-    };
-  };
 }
 
 /** Swap an image's pixels but keep its matrix, so it fills the same box. */
@@ -142,6 +137,10 @@ export class ReplaceImageCommand implements Command {
     // The embed helpers write an axis-aligned (w,0,0,h,x,y) box, which flips
     // the image on a rotated page; the captured matrix is the truth here.
     setImageMatrix(m, objPtr, matrix);
+    // Untagged, the new image drops out of the structure tree and the Figure
+    // describing the old one points at nothing. A form's MCIDs are not the
+    // page's, so a nested original's tags cannot move to page level.
+    if (!nested) copyTagMarks(m, doc.docPtr, this.prevObjPtr, objPtr);
     // Detach only: the old object carries the original pixels for undo, so
     // destroying it would leave this command's undo entry pointing at free memory.
     if (nested) setActive(m, this.prevObjPtr, false);
@@ -239,27 +238,24 @@ function setImageMatrix(
       /* fall through to the struct setter */
     }
   }
-  writeMatrixStruct(mod, objPtr, matrix);
+  writeMatrixStruct(m, objPtr, matrix);
 }
 
 /** FS_MATRIX fallback for builds without the scalar `FPDFImageObj_SetMatrix`. */
 function writeMatrixStruct(
-  mod: MatrixModule,
+  m: WrappedPdfiumModule,
   objPtr: number,
   matrix: Affine,
 ): void {
-  const setter = mod.FPDFPageObj_SetMatrix;
-  const rt = mod.pdfium;
-  if (!setter || !rt?.setValue || !rt.wasmExports?.malloc) return;
-  const ptr = rt.wasmExports.malloc(6 * 4);
+  const setter = (m as unknown as MatrixModule).FPDFPageObj_SetMatrix;
+  if (!setter || !m.pdfium.setValue) return;
+  const ptr = scratchPtr(m, SCRATCH.imageMatrix, 6 * 4);
   if (!ptr) return;
   const values = [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f];
   try {
-    values.forEach((v, i) => rt.setValue?.(ptr + i * 4, v, "float"));
+    values.forEach((v, i) => m.pdfium.setValue(ptr + i * 4, v, "float"));
     setter(objPtr, ptr);
   } catch {
     /* best-effort */
-  } finally {
-    rt.wasmExports.free?.(ptr);
   }
 }

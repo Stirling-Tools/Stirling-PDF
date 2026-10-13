@@ -89,7 +89,7 @@ let core: RuleFile;
 const packs = new Map<string, RuleFile>();
 
 beforeAll(async () => {
-  core = (await loadCoreRules()) as RuleFile;
+  core = await loadCoreRules();
   for (const [language, load] of Object.entries(LANGUAGE_PACKS)) {
     const mod = (await load()) as { default?: RuleFile };
     packs.set(language, mod.default ?? (mod as RuleFile));

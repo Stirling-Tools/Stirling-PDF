@@ -756,20 +756,15 @@ describe("Login", () => {
   it("should disable submit button while signing in", async () => {
     const user = userEvent.setup();
 
-    vi.mocked(springAuth.signInWithPassword).mockImplementationOnce(
-      () =>
-        new Promise((resolve) =>
-          setTimeout(
-            () =>
-              resolve({
-                user: null,
-                session: null,
-                error: { message: "Error" },
-              }),
-            100,
-          ),
-        ),
-    );
+    let finishSignIn!: (
+      result: Awaited<ReturnType<typeof springAuth.signInWithPassword>>,
+    ) => void;
+    const signIn = new Promise<
+      Awaited<ReturnType<typeof springAuth.signInWithPassword>>
+    >((resolve) => {
+      finishSignIn = resolve;
+    });
+    vi.mocked(springAuth.signInWithPassword).mockReturnValueOnce(signIn);
 
     render(
       <TestWrapper>
@@ -815,7 +810,13 @@ describe("Login", () => {
     // Button should be disabled while signing in
     expect(submitButton).toBeDisabled();
 
-    // Wait for completion
+    await act(async () => {
+      finishSignIn({
+        user: null,
+        session: null,
+        error: { message: "Error" },
+      });
+    });
     await waitFor(() => {
       expect(submitButton).not.toBeDisabled();
     });

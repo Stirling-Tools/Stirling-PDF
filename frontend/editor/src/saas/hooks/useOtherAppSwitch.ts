@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { usePortalAccess } from "@app/hooks/usePortalAccess";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { HAS_PORTAL } from "@app/routes/hasPortal";
 import { saveEditorReturnPath } from "@app/services/workbenchSession";
 import { type NavFooterAppLink } from "@app/components/shared/navFooter/NavFooter";
 import { useAuth } from "@app/auth/UseSession";
@@ -17,6 +18,7 @@ export function useOtherAppSwitch(): NavFooterAppLink | null {
   const { isAnonymous } = useAuth();
   const navigate = useNavigate();
   const { actions } = useNavigationActions();
+  if (!HAS_PORTAL) return null;
   if (isAnonymous) return { app: "processor", onOpen: requestProcessorSignup };
   if (!portalAccess) return null;
   return {

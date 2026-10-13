@@ -53,7 +53,7 @@ export function createCloudTeamNavItem(t: Translate): ConfigNavItem {
 /** Billing nav section wrapping the Plan item, for leaves that group it (saas). */
 export function createCloudBillingSection(t: Translate): ConfigNavSection {
   return {
-    title: "Billing",
+    title: t("settings.billing.title", "Billing"),
     items: [createCloudPlanNavItem(t)],
   };
 }

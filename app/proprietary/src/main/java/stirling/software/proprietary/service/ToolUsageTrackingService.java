@@ -56,10 +56,8 @@ public class ToolUsageTrackingService {
         return toolKeys.isKnown(toolKey);
     }
 
-    /** Per-principal usage is profiling, so admin analytics consent gates it too. */
     static boolean isUsageDataAllowed(ApplicationProperties properties) {
-        return properties.getToolRecommendations().isEnabled()
-                && properties.getSystem().isAnalyticsEnabled();
+        return properties.getToolRecommendations().isEnabled();
     }
 
     /** Lets the controller answer 501 so the browser stops posting on a declining install. */

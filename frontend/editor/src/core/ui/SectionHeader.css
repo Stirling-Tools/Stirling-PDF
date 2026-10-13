@@ -28,6 +28,6 @@ button.sui-sectionhdr {
   flex-shrink: 0;
   transition: transform var(--motion-fast);
 }
-.sui-sectionhdr__chevron[data-collapsed="true"] {
+.sui-sectionhdr[aria-expanded="false"] .sui-sectionhdr__chevron {
   transform: rotate(-90deg);
 }

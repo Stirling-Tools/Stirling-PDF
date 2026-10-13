@@ -1,20 +1,23 @@
 export interface WetSignatureMetadata {
   type: "canvas" | "image" | "text";
-  data: string; // Base64-encoded image data or text content
+  data: string; // Base64 image data URL, including rasterized typed text
   page: number; // Zero-indexed page number
-  x: number; // X coordinate in PDF points
-  y: number; // Y coordinate in PDF points (top-left origin)
-  width: number; // Width in PDF points
-  height: number; // Height in PDF points
+  x: number; // Fraction of page width, from the left
+  y: number; // Fraction of page height, from the top
+  width: number; // Fraction of page width
+  height: number; // Fraction of page height
 }
 
 export interface SessionSummary {
+  status?: "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   sessionId: string;
   documentName: string;
   createdAt: string;
   participantCount: number;
   signedCount: number;
+  participants?: Pick<ParticipantInfo, "id" | "status" | "lastUpdated">[];
   finalized: boolean;
+  dueDate?: string;
 }
 
 export interface SessionDetail {
@@ -61,6 +64,11 @@ export interface SignRequestSummary {
   createdAt: string;
   dueDate: string;
   myStatus: "PENDING" | "NOTIFIED" | "VIEWED" | "SIGNED" | "DECLINED";
+  finalized?: boolean;
+  /** Server-evaluated access expiry, independent of the advisory due date. */
+  accessExpired?: boolean;
+  /** Closed for this participant, including non-signing roles; submitted signatures alone do not close it. */
+  closed?: boolean;
 }
 
 export interface SignRequestDetail {
@@ -71,6 +79,9 @@ export interface SignRequestDetail {
   dueDate: string;
   createdAt: string;
   myStatus: "PENDING" | "NOTIFIED" | "VIEWED" | "SIGNED" | "DECLINED";
+  finalized?: boolean;
+  canSign?: boolean;
+  participants?: SigningParticipantPreview[];
   // Signature appearance settings (read-only, configured by owner)
   showSignature?: boolean;
   pageNumber?: number;
@@ -78,3 +89,9 @@ export interface SignRequestDetail {
   location?: string;
   showLogo?: boolean;
 }
+
+/** Public participant progress; contains neither certificate credentials nor share tokens. */
+export type SigningParticipantPreview = Pick<
+  ParticipantInfo,
+  "id" | "name" | "status" | "wetSignatures"
+>;

@@ -54,6 +54,14 @@ public class GeneralUtilsTest {
     }
 
     @Test
+    void testParsePageListSkipsNullAndBlankTokens() {
+        List<Integer> result =
+                GeneralUtils.parsePageList(new String[] {null, "", "1 , 2 "}, 5, false);
+        assertEquals(
+                List.of(0, 1), result, "Null and blank tokens are ignored; parts are trimmed.");
+    }
+
+    @Test
     void testParsePageListWithAll() {
         List<Integer> result = GeneralUtils.parsePageList(new String[] {"all"}, 5, false);
         assertEquals(List.of(0, 1, 2, 3, 4), result, "'All' keyword should return all pages.");

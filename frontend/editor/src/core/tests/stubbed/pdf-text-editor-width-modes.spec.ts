@@ -1,6 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
+import { selectWrapWidthMode } from "@app/tests/stubbed/widthModeHelpers";
 
 // The sidebar promises two distinct behaviours:
 //
@@ -67,13 +68,7 @@ async function open(page: Page, mode: "grow" | "wrap"): Promise<void> {
   });
   await page.waitForTimeout(1500);
   if (mode === "wrap") {
-    await page.getByTestId("pdf-editor-tab-document").click();
-    await page.getByTestId("pdf-editor-advanced-toggle").click();
-    await page
-      .getByTestId("pdf-editor-width-mode-control")
-      .getByText("Wrap", { exact: true })
-      .click();
-    await page.getByTestId("pdf-editor-tab-selected").click();
+    await selectWrapWidthMode(page);
     await page.waitForTimeout(500);
   }
 }

@@ -164,6 +164,15 @@ test("a rotated document saves annotations without reopening", async ({
   await expect
     .poll(() => page.locator("[data-page-index]").count(), { timeout: 15_000 })
     .toBe(pageCount);
+
+  // Nothing was reopened, so no restore may hold the zoom readout.
+  const zoomBefore = await page.getByText(/%$/).first().textContent();
+  await page.getByRole("button", { name: "Zoom In" }).first().click();
+  await expect
+    .poll(async () => page.getByText(/%$/).first().textContent(), {
+      timeout: 5_000,
+    })
+    .not.toBe(zoomBefore);
 });
 
 test("rotated and landscape pages reload a tool output in place", async ({

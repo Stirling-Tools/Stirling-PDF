@@ -118,7 +118,7 @@ export const CustomIcons: StoryObj = {
     <Gallery
       heading="Our own icons"
       note="Drawn in Lucide's grammar and living in src/core/icons/svg/stirling."
-      names={[...CUSTOM].sort() as IconName[]}
+      names={[...CUSTOM].sort()}
     />
   ),
 };

@@ -30,19 +30,18 @@ vi.mock("@app/components/shared/PolicyBadges", () => ({
     return null;
   },
 }));
-const buildStub = (id: string, name: string): StirlingFileStub =>
-  ({
-    id: id as FileId,
-    name,
-    type: "application/pdf",
-    size: 1_000,
-    lastModified: 0,
-    isLeaf: true,
-    originalFileId: id,
-    versionNumber: 1,
-    // Set so useLazyThumbnail short-circuits instead of reading IndexedDB.
-    thumbnailUrl: "data:image/svg+xml,%3Csvg/%3E",
-  }) as StirlingFileStub;
+const buildStub = (id: string, name: string): StirlingFileStub => ({
+  id: id as FileId,
+  name,
+  type: "application/pdf",
+  size: 1_000,
+  lastModified: 0,
+  isLeaf: true,
+  originalFileId: id,
+  versionNumber: 1,
+  // Set so useLazyThumbnail short-circuits instead of reading IndexedDB.
+  thumbnailUrl: "data:image/svg+xml,%3Csvg/%3E",
+});
 
 describe("FileGrid item memoization", () => {
   it("re-renders only the cards whose selection changed", () => {

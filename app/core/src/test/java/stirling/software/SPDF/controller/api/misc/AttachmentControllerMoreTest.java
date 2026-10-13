@@ -48,6 +48,9 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 /**
  * Coverage for the AttachmentController endpoints not exercised by AttachmentControllerTest:
  * extract, list, rename, delete plus their validation paths and the add-attachment validation
@@ -62,6 +65,7 @@ class AttachmentControllerMoreTest {
     @Mock private AttachmentServiceInterface pdfAttachmentService;
     @Mock private ConvertPDFToPDFA convertPDFToPDFA;
     @Mock private TempFileManager tempFileManager;
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     private AttachmentController controller;
 
@@ -74,7 +78,8 @@ class AttachmentControllerMoreTest {
                         pdfDocumentFactory,
                         pdfAttachmentService,
                         convertPDFToPDFA,
-                        tempFileManager);
+                        tempFileManager,
+                        objectMapper);
         mockDocument = mock(PDDocument.class);
 
         when(tempFileManager.createManagedTempFile(anyString()))

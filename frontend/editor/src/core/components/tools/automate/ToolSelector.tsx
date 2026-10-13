@@ -69,7 +69,7 @@ export default function ToolSelector({
   const filteredToolRegistry = useMemo(() => {
     const registry: Partial<ToolRegistry> = {};
     baseFilteredTools.forEach(([key, tool]) => {
-      registry[key as ToolId] = tool;
+      registry[key] = tool;
     });
     return registry;
   }, [baseFilteredTools]);
@@ -77,7 +77,7 @@ export default function ToolSelector({
   // Transform filteredTools to the expected format for useToolSections
   const transformedFilteredTools = useMemo(() => {
     return filteredTools.map(([id, tool]) => ({
-      item: [id as ToolId, tool] as [ToolId, ToolRegistryEntry],
+      item: [id, tool] as [ToolId, ToolRegistryEntry],
     }));
   }, [filteredTools]);
 

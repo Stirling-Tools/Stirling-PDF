@@ -13,6 +13,12 @@ import type {
   AnnotationAPI,
 } from "@app/components/viewer/viewerTypes";
 
+export interface PlacedSignature {
+  id: string;
+  pageIndex: number;
+  imageSrc?: string;
+}
+
 // Signature state interface
 interface SignatureState {
   // Current signature configuration from the tool
@@ -23,6 +29,10 @@ interface SignatureState {
   signaturesApplied: boolean;
   // Size (in screen units) we want newly placed signatures to use
   placementPreviewSize: { width: number; height: number } | null;
+  placedSignatures: PlacedSignature[];
+  // Whether the viewer's signature API is mounted on a loaded document
+  isSignatureApiReady: boolean;
+  isApplyingSignatures: boolean;
 }
 
 // Signature actions interface
@@ -42,10 +52,15 @@ interface SignatureActions {
   setPlacementPreviewSize: (
     size: { width: number; height: number } | null,
   ) => void;
+  setPlacedSignatures: (placed: PlacedSignature[]) => void;
+  setSignatureApiReady: (ready: boolean) => void;
+  setApplyingSignatures: (applying: boolean) => void;
 }
 
 // Combined context interface
 interface SignatureContextValue extends SignatureState, SignatureActions {
+  /** The mounted Sign tool's Apply action; rejects when navigation must wait. */
+  applySignaturesRef: React.RefObject<(() => Promise<void>) | null>;
   signatureApiRef: React.RefObject<SignatureAPI | null>;
   annotationApiRef: React.RefObject<AnnotationAPI | null>;
   historyApiRef: React.RefObject<HistoryAPI | null>;
@@ -62,6 +77,9 @@ const initialState: SignatureState = {
   isPlacementMode: false,
   signaturesApplied: true, // Start as true (no signatures placed yet)
   placementPreviewSize: null,
+  placedSignatures: [],
+  isSignatureApiReady: false,
+  isApplyingSignatures: false,
 };
 
 // Provider component
@@ -69,6 +87,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [state, setState] = useState<SignatureState>(initialState);
+  const applySignaturesRef = useRef<(() => Promise<void>) | null>(null);
   const signatureApiRef = useRef<SignatureAPI>(null);
   const annotationApiRef = useRef<AnnotationAPI>(null);
   const historyApiRef = useRef<HistoryAPI>(null);
@@ -99,8 +118,8 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
   const deactivateDrawMode = useCallback(() => {
     if (signatureApiRef.current) {
       signatureApiRef.current.deactivateTools();
-      setPlacementMode(false);
     }
+    setPlacementMode(false);
   }, [setPlacementMode]);
 
   const activateSignaturePlacementMode = useCallback(() => {
@@ -174,10 +193,27 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     [],
   );
 
+  const setPlacedSignatures = useCallback((placed: PlacedSignature[]) => {
+    setState((prev) => ({ ...prev, placedSignatures: placed }));
+  }, []);
+
+  const setSignatureApiReady = useCallback((ready: boolean) => {
+    setState((prev) =>
+      prev.isSignatureApiReady === ready
+        ? prev
+        : { ...prev, isSignatureApiReady: ready },
+    );
+  }, []);
+
+  const setApplyingSignatures = useCallback((applying: boolean) => {
+    setState((prev) => ({ ...prev, isApplyingSignatures: applying }));
+  }, []);
+
   // No auto-activation - all modes use manual buttons
 
   const contextValue: SignatureContextValue = {
     ...state,
+    applySignaturesRef,
     signatureApiRef,
     annotationApiRef,
     historyApiRef,
@@ -194,6 +230,9 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     getImageData,
     setSignaturesApplied,
     setPlacementPreviewSize,
+    setPlacedSignatures,
+    setSignatureApiReady,
+    setApplyingSignatures,
   };
 
   return (

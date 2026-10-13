@@ -18,6 +18,7 @@
  * AnnotationLayer, and LinkLayer.
  */
 import React, { useCallback, useMemo, memo } from "react";
+import { useTranslation } from "react-i18next";
 import { useDocumentState } from "@embedpdf/core/react";
 import {
   useFormFill,
@@ -196,6 +197,7 @@ function WidgetInputInner({
   onButtonClick,
   editing,
 }: WidgetInputProps) {
+  const { t } = useTranslation();
   // Per-field value subscription — only this widget re-renders when its value changes
   const value = useFieldValue(field.name);
 
@@ -447,7 +449,11 @@ function WidgetInputInner({
             aria-invalid={!!error}
             {...captureStopProps}
           >
-            {!field.multiSelect && <option value="">— select —</option>}
+            {!field.multiSelect && (
+              <option value="">
+                {t("formFill.selectOptionPlaceholder", "— select —")}
+              </option>
+            )}
             {(field.options || []).map((opt, idx) => (
               <option key={opt} value={opt}>
                 {(field.displayOptions && field.displayOptions[idx]) || opt}

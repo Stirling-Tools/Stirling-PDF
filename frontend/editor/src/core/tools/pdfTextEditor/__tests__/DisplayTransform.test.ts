@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";

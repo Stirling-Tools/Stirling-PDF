@@ -465,8 +465,8 @@ compare_file_lists() {
             echo "New files created during test:"
             cat "${diff_file}.added" | sed 's/^> //'
 
-            # Exclude JPDFium native cache + merge seed temp files
-            # (both deleteOnExit-registered, not leaks).
+            # Exclude JPDFium extraction dirs: older versions leak one per JVM
+            # on Windows; TempFileCleanupService sweeps stale ones at startup.
             # Also exclude LibreOffice instance folders, X11 locks, and dconf caches
             # which are transient and normal during container operation.
             grep -i "tmp\|temp" "${diff_file}.added" \

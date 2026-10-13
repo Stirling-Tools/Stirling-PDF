@@ -10,6 +10,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@app/ui/Button";
+import { useTranslation } from "react-i18next";
 import "@app/ui/Toast.css";
 
 export type ToastTone = "info" | "success" | "warning" | "danger";
@@ -85,13 +86,14 @@ function ToastViewport({
   entries: ToastEntry[];
   onDismiss: (id: number) => void;
 }) {
+  const { t } = useTranslation();
   // Portal keeps toasts above any stacking context; document check is SSR safety.
   if (typeof document === "undefined") return null;
   return createPortal(
     <div
       className="sui-toast-viewport"
       role="region"
-      aria-label="Notifications"
+      aria-label={t("notifications.title", "Notifications")}
     >
       {entries.map((entry) => (
         <ToastItem key={entry.id} entry={entry} onDismiss={onDismiss} />
@@ -108,6 +110,7 @@ function ToastItem({
   entry: ToastEntry;
   onDismiss: (id: number) => void;
 }) {
+  const { t } = useTranslation();
   useEffect(() => {
     // Escape dismisses the focused toast.
     function onKey(e: KeyboardEvent) {
@@ -135,7 +138,7 @@ function ToastItem({
         shape="circle"
         className="sui-toast__close"
         onClick={() => onDismiss(entry.id)}
-        aria-label="Dismiss"
+        aria-label={t("toast.dismiss", "Dismiss")}
         leftSection={<span>×</span>}
       />
     </div>

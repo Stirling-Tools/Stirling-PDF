@@ -1,5 +1,9 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { SETTINGS_SURFACE, uploadFiles } from "@app/tests/helpers/ui-helpers";
+import {
+  SETTINGS_SURFACE,
+  revealPickerTool,
+  uploadFiles,
+} from "@app/tests/helpers/ui-helpers";
 import type { Page, Route } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs";
@@ -174,9 +178,7 @@ for (const theme of THEMES) {
     await applyTheme(page, theme);
     await stubStatus(page);
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    const tile = page
-      .locator('[data-tour="tool-button-autoFormDetection"]')
-      .first();
+    const tile = await revealPickerTool(page, "autoFormDetection");
     await expect(tile).toBeVisible({ timeout: 15_000 });
     await tile.scrollIntoViewIfNeeded();
     await settle(page);
@@ -251,9 +253,7 @@ for (const theme of THEMES) {
       r.fulfill({ json: disabledMap }),
     );
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    const tile = page
-      .locator('[data-tour="tool-button-autoFormDetection"]')
-      .first();
+    const tile = await revealPickerTool(page, "autoFormDetection");
     await expect(tile).toBeVisible({ timeout: 15_000 });
     await tile.scrollIntoViewIfNeeded();
     await settle(page);

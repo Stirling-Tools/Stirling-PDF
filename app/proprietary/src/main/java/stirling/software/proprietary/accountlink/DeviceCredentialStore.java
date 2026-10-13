@@ -26,6 +26,9 @@ public class DeviceCredentialStore {
 
     private final DeviceCredentialRepository repo;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private stirling.software.proprietary.security.repository.OrgOwnerRepository owners;
+
     public DeviceCredentialStore(DeviceCredentialRepository repo) {
         this.repo = repo;
     }
@@ -43,6 +46,7 @@ public class DeviceCredentialStore {
     /** Persists (or replaces) the credential returned by a SaaS register call. */
     @Transactional
     public void save(String deviceId, String deviceSecret, Long teamId) {
+        assertNoHandover();
         DeviceCredential cred = repo.findCredential().orElseGet(DeviceCredential::new);
         cred.setId(DeviceCredential.SINGLETON_ID);
         cred.setDeviceId(deviceId);
@@ -65,6 +69,24 @@ public class DeviceCredentialStore {
     /** Unlinks this instance locally (idempotent). */
     @Transactional
     public void clear() {
+        assertNoHandover();
         repo.findCredential().ifPresent(repo::delete);
+    }
+
+    /**
+     * Holds the ownership lock until the caller's transaction ends, including upstream revocation.
+     */
+    @Transactional
+    public void assertNoHandover() {
+        if (owners == null) return;
+        owners.lockOwner()
+                .ifPresent(
+                        owner -> {
+                            if (owner.getHandoverTargetId() != null) {
+                                throw new org.springframework.web.server.ResponseStatusException(
+                                        org.springframework.http.HttpStatus.CONFLICT,
+                                        "Finish or cancel the ownership transfer before changing the account link.");
+                            }
+                        });
     }
 }
