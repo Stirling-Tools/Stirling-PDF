@@ -59,6 +59,7 @@ public final class SaasSchemaOwnership {
                     "processing_job",
                     "processing_job_step",
                     "procurement_agreement_signature",
+                    "procurement_activity",
                     "procurement_deal",
                     "procurement_quote",
                     "saas_team_extensions",
