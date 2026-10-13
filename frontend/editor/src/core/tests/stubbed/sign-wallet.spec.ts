@@ -2,6 +2,8 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
+import { readFile } from "node:fs/promises";
+import { PDFDocument, PDFDict, PDFName, PDFNumber } from "@cantoo/pdf-lib";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
@@ -66,6 +68,31 @@ async function createTypedSignature(page: Page, name: string) {
   await expect(dialog).toBeVisible();
   await dialog.getByText("Type", { exact: true }).click();
   await page.getByTestId("signature-type-name").fill(name);
+}
+
+async function expectSavedSignatures(page: Page, count: number) {
+  const row = page.locator(".file-sidebar-file-item").first();
+  await row.hover();
+  await row.locator(".file-sidebar-kebab-btn").click();
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("menuitem", { name: "Download", exact: true }).click();
+  const downloadPath = await (await downloadPromise).path();
+  if (!downloadPath) throw new Error("Signed PDF was not downloaded");
+  const pdf = await PDFDocument.load(await readFile(downloadPath));
+  const stamps = pdf.getPages().flatMap((pdfPage) => {
+    const annotations = pdfPage.node.Annots();
+    return Array.from({ length: annotations?.size() ?? 0 }, (_, index) =>
+      annotations!.lookup(index, PDFDict),
+    ).filter(
+      (annotation) =>
+        annotation.get(PDFName.of("Subtype")) === PDFName.of("Stamp"),
+    );
+  });
+  expect(stamps).toHaveLength(count);
+  for (const stamp of stamps) {
+    expect(stamp.lookup(PDFName.of("F"), PDFNumber).asNumber()).toBe(196);
+    expect(stamp.get(PDFName.of("AP"))).toBeDefined();
+  }
 }
 
 test.describe("Sign tool signature wallet", () => {
@@ -354,12 +381,26 @@ test.describe("Sign tool signature wallet", () => {
     ).toBeVisible();
     await expect(page).toHaveURL(/\/scale-pages$/);
     await expect(pdfPage).toBeVisible();
+    await expectSavedSignatures(page, 2);
+    await pdfPage.click({ position: { x: 150, y: 420 } });
     await page.locator("#super-search-input").fill("Sign");
     await page.getByRole("option", { name: /^Sign Adds signature/ }).click();
     await expect(page.getByTestId("signature-wallet")).toBeVisible();
     await expect(page).toHaveURL(/\/sign$/);
     await expect(page.getByTestId("placed-signatures")).toContainText(
-      "On this document (2)",
+      "On this document (0)",
+    );
+    await expect(page.getByTestId("apply-signatures")).toBeDisabled();
+    await expect(page.getByTestId("placement-status")).toContainText(
+      "Pick a signature",
+    );
+    await page.getByTestId("signature-tile").first().click();
+    await expect(page.getByTestId("placement-status")).toContainText(
+      "Click the page",
+    );
+    await pdfPage.click({ position: { x: 150, y: 420 } });
+    await expect(page.getByTestId("placed-signatures")).toContainText(
+      "On this document (1)",
     );
     await page.goBack();
     await expect(page.getByTestId("unsaved-save")).toBeVisible();
@@ -372,8 +413,10 @@ test.describe("Sign tool signature wallet", () => {
     await expect(page.getByTestId("signature-wallet")).toBeVisible();
     await expect(page).toHaveURL(/\/sign$/);
     await expect(page.getByTestId("placed-signatures")).toContainText(
-      "On this document (2)",
+      "On this document (0)",
     );
+    await expect(page.getByTestId("apply-signatures")).toBeDisabled();
+    await expectSavedSignatures(page, 3);
     expect(errors).toEqual([]);
   });
 

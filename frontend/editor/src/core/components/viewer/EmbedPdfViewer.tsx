@@ -181,6 +181,7 @@ const EmbedPdfViewerContent = ({
 
   // Get signature and annotation contexts
   const {
+    applySignaturesRef,
     signatureApiRef,
     annotationApiRef,
     historyApiRef,
@@ -1017,6 +1018,9 @@ const EmbedPdfViewerContent = ({
 
   // Save changes - save annotations and redactions to file (overwrites active file)
   const applyChanges = useCallback(async () => {
+    if (applySignaturesRef.current) {
+      return applySignaturesRef.current();
+    }
     if (applyChangesInFlightRef.current) {
       return applyChangesInFlightRef.current;
     }
@@ -1122,6 +1126,7 @@ const EmbedPdfViewerContent = ({
     currentFile,
     activeFiles,
     exportActions,
+    applySignaturesRef,
     actions,
     selectors,
     historyApiRef,

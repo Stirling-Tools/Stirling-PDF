@@ -47,7 +47,9 @@ export function useNavigationUrlSync(
   // Held in a ref so neither pass below depends on it: a write that re-ran on
   // every address change would answer a Back by returning to the tool it left.
   const here = useRef(location);
-  here.current = location;
+  useEffect(() => {
+    here.current = location;
+  }, [location]);
 
   // Check if tool requires premium and redirect if needed
   const checkPremiumAndSelect = useCallback(
