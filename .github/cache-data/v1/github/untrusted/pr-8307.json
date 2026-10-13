@@ -9518,35 +9518,6 @@
       "artifact_name": "cache-untrusted-pr-8307-tauri-target-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--d5712c711afd547306155da999e3a59346d3bc07be92cee416-part-000000",
       "workflow_run_id": 38428223058
     },
-    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/frontend-dist/macos-arm64/fee5c68f5330097f04a17b1adc52cde9146a2cb660d0575cec5535249f661882-cache-e1b7946154cca207/v6": {
-      "object": "sha256:6826571f3edc60e9362b1f486c81fccb3573bfea31f235e6255e1756e6d29ff9",
-      "storage": "github-artifact",
-      "updated_at": "2026-10-11T12:51:04.263Z",
-      "source": "Stirling-Tools/Stirling-PDF",
-      "created_by": "Ludy87",
-      "size": 29752954,
-      "parts": [
-        {
-          "index": 0,
-          "object": "sha256:7a0ed3e10fc38541b34329d3b5817b52cdd04ce1323800315068760b0bcb76dc",
-          "size": 25165824,
-          "artifact_id": 11702477716,
-          "artifact_name": "cache-untrusted-pr-8307-frontend-dist-macos-arm64-fee5c68f5330097f04a17b1adc52cde9146a2cb660d0575cec5535249f661882-v6--6826571f3edc60e9362b1f486c81fccb3573bfea31f235e62-part-000000",
-          "workflow_run_id": 38139262073
-        },
-        {
-          "index": 1,
-          "object": "sha256:394e46c2d7a5fc6ca306670f508a42b6ceed7edaf0a0d79927ca9c8848a2dfa9",
-          "size": 4587130,
-          "artifact_id": 11702437937,
-          "artifact_name": "cache-untrusted-pr-8307-frontend-dist-macos-arm64-fee5c68f5330097f04a17b1adc52cde9146a2cb660d0575cec5535249f661882-v6--6826571f3edc60e9362b1f486c81fccb3573bfea31f235e62-part-000001",
-          "workflow_run_id": 38139262073
-        }
-      ],
-      "artifact_id": 11702477716,
-      "artifact_name": "cache-untrusted-pr-8307-frontend-dist-macos-arm64-fee5c68f5330097f04a17b1adc52cde9146a2cb660d0575cec5535249f661882-v6--6826571f3edc60e9362b1f486c81fccb3573bfea31f235e62-part-000000",
-      "workflow_run_id": 38139262073
-    },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-target/macos-arm64/56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-cache-e1b7946154cca207/v6": {
       "object": "sha256:08fa99202a0c2d1fbf6000c4ab77d31a33dd4bb1d32f06f9bcbb56a7a92d4158",
       "storage": "github-artifact",
@@ -10223,10 +10194,39 @@
       "artifact_id": 11830835860,
       "artifact_name": "cache-untrusted-pr-8307-frontend-dist-windows-x64-e556ce4e2a0bbc690e69563c154d35f50522bd5b2e6e31c0cd3effe92cdd15b8-v6--198e0dc50215959a380386c7e62bb65063ae6da3c3ef32ca4-part-000000",
       "workflow_run_id": 38428223058
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/frontend-dist/macos-arm64/e556ce4e2a0bbc690e69563c154d35f50522bd5b2e6e31c0cd3effe92cdd15b8-cache-e1b7946154cca207/v6": {
+      "object": "sha256:198e0dc50215959a380386c7e62bb65063ae6da3c3ef32ca484c0f8d31f29a5b",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-13T16:39:12.759Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 29697942,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:cb149941be58d5d47e7ff99c0a8c7fa5750d04cb5849084f8e30c52737d40fa2",
+          "size": 25165824,
+          "artifact_id": 11831681521,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-dist-macos-arm64-e556ce4e2a0bbc690e69563c154d35f50522bd5b2e6e31c0cd3effe92cdd15b8-v6--198e0dc50215959a380386c7e62bb65063ae6da3c3ef32ca4-part-000000",
+          "workflow_run_id": 38428223058
+        },
+        {
+          "index": 1,
+          "object": "sha256:cc6f4e79d499019d66cfb546d35917e52eccbb8079ebf21af22e991f78d67cb5",
+          "size": 4532118,
+          "artifact_id": 11831706503,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-dist-macos-arm64-e556ce4e2a0bbc690e69563c154d35f50522bd5b2e6e31c0cd3effe92cdd15b8-v6--198e0dc50215959a380386c7e62bb65063ae6da3c3ef32ca4-part-000001",
+          "workflow_run_id": 38428223058
+        }
+      ],
+      "artifact_id": 11831681521,
+      "artifact_name": "cache-untrusted-pr-8307-frontend-dist-macos-arm64-e556ce4e2a0bbc690e69563c154d35f50522bd5b2e6e31c0cd3effe92cdd15b8-v6--198e0dc50215959a380386c7e62bb65063ae6da3c3ef32ca4-part-000000",
+      "workflow_run_id": 38428223058
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-13T16:19:36.638Z",
-    "writes": 30
+    "writes": 31
   }
 }
