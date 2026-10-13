@@ -5,11 +5,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDPropertyList;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationRubberStamp;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
@@ -190,10 +192,17 @@ public class ScalePagesController {
                         (float) (rect.getWidth() / bounds.getWidth()),
                         (float) (rect.getHeight() / bounds.getHeight()));
                 transform.translate((float) -bounds.getX(), (float) -bounds.getY());
+                PDPropertyList optionalContent = stamp.getOptionalContent();
+                if (optionalContent != null) {
+                    content.beginMarkedContent(COSName.OC, optionalContent);
+                }
                 content.saveGraphicsState();
                 content.transform(transform);
                 content.drawForm(appearance);
                 content.restoreGraphicsState();
+                if (optionalContent != null) {
+                    content.endMarkedContent();
+                }
             }
         }
     }

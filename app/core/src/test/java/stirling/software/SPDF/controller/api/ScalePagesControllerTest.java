@@ -22,6 +22,8 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentGroup;
+import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentProperties;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationRubberStamp;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
@@ -401,6 +403,45 @@ class ScalePagesControllerTest {
                 BufferedImage rendered = new PDFRenderer(output).renderImage(0);
                 assertEquals(Color.WHITE.getRGB(), rendered.getRGB(75, 275));
                 assertTrue(new PDFTextStripper().getText(output).contains("Searchable text"));
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void preservesSignatureLayerVisibility(boolean enabled) throws Exception {
+        setupFactory();
+        try (PDDocument source =
+                org.apache.pdfbox.Loader.loadPDF(createSignaturePdf(true, 0, false))) {
+            PDOptionalContentGroup layer = new PDOptionalContentGroup("Signatures");
+            PDOptionalContentProperties layers = new PDOptionalContentProperties();
+            layers.addGroup(layer);
+            layers.setGroupEnabled(layer, enabled);
+            source.getDocumentCatalog().setOCProperties(layers);
+            for (PDPage page : source.getPages()) {
+                page.getAnnotations().getFirst().setOptionalContent(layer);
+            }
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            source.save(bytes);
+            try (PDDocument output =
+                    org.apache.pdfbox.Loader.loadPDF(
+                            scalePdf(bytes.toByteArray(), "KEEP", "PORTRAIT", 1))) {
+                PDOptionalContentProperties outputLayers =
+                        output.getDocumentCatalog().getOCProperties();
+                assertNotNull(outputLayers);
+                assertEquals(enabled, outputLayers.isGroupEnabled("Signatures"));
+                for (boolean visible : new boolean[] {enabled, !enabled}) {
+                    if (visible != enabled) {
+                        outputLayers.setGroupEnabled("Signatures", visible);
+                    }
+                    PDFRenderer renderer = new PDFRenderer(output);
+                    for (int page = 0; page < output.getNumberOfPages(); page++) {
+                        BufferedImage rendered = renderer.renderImage(page);
+                        assertEquals(
+                                (visible ? Color.RED : Color.WHITE).getRGB(),
+                                rendered.getRGB(75, 260));
+                    }
+                }
             }
         }
     }
