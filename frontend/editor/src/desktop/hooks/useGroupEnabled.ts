@@ -6,6 +6,7 @@ import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import { qk } from "@app/query/keys";
 import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 import type { GroupEnabledResult } from "@app/types/groupEnabled";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 
 const OFFLINE_REASON_FALLBACK =
   "Requires your Stirling-PDF server (currently offline)";
@@ -20,16 +21,17 @@ const getIsOffline = () =>
 export function useGroupEnabled(group: string): GroupEnabledResult {
   const { t } = useTranslation();
   const isOffline = useSyncExternalStore(subscribeToMonitor, getIsOffline);
+  const localOnly = useLocalProcessingOnly();
 
   const { data, isPending } = useQuery({
-    queryKey: qk.groupEnabled(group),
+    queryKey: [...qk.groupEnabled(group), localOnly],
     queryFn: () => fetchGroupEnabled(group),
     staleTime: CONFIG_STALE_TIME,
-    enabled: !isOffline,
+    enabled: localOnly || !isOffline,
   });
 
   // Before the query: a disabled query stays isPending, which would read as loading forever.
-  if (isOffline) {
+  if (isOffline && !localOnly) {
     return {
       enabled: false,
       unavailableReason: t(
