@@ -2,6 +2,9 @@ package stirling.software.SPDF.controller.api.misc;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -10,16 +13,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -36,16 +42,18 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
+import stirling.software.jpdfium.doc.PdfRepair;
+import stirling.software.jpdfium.doc.RepairResult;
 
 /**
  * Unit tests for {@link RepairController}.
  *
- * <p>The controller delegates to external binaries (Ghostscript, qpdf) for its primary repair
- * paths. Those paths shell out via the static {@code ProcessExecutor} factory and are therefore not
- * deterministically testable in a unit test. These tests keep both Ghostscript and qpdf disabled so
- * the controller always takes the pure-Java PDFBox last-resort branch, exercising file handling,
- * filename generation, the success response, and the error-propagation branches without spawning
- * any external process.
+ * <p>The controller delegates to Ghostscript for its primary repair path, which shells out via the
+ * static {@code ProcessExecutor} factory and is therefore not deterministically testable in a unit
+ * test. These tests keep Ghostscript disabled and static-mock JPDFium to decline, so the controller
+ * always takes the pure-Java PDFBox last-resort branch, exercising file handling, filename
+ * generation, the success response, and the error-propagation branches without spawning any
+ * external process or loading natives.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -61,6 +69,8 @@ class RepairControllerTest {
 
     private RepairController repairController;
 
+    private MockedStatic<PdfRepair> pdfRepairMock;
+
     @BeforeEach
     void setUp() {
         tempFileManager = new TempFileManager(new TempFileRegistry(), new ApplicationProperties());
@@ -69,7 +79,18 @@ class RepairControllerTest {
 
         // Default: no external tools available -> forces the PDFBox last-resort branch.
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
-        when(endpointConfiguration.isGroupEnabled("qpdf")).thenReturn(false);
+
+        // JPDFium is bundled so it always runs before PDFBox; fail it here so the flow
+        // reaches the last resort without loading natives.
+        pdfRepairMock = mockStatic(PdfRepair.class);
+        pdfRepairMock
+                .when(() -> PdfRepair.repairFile(any(Path.class), any(Path.class), anyInt()))
+                .thenReturn(RepairResult.Status.FAILED);
+    }
+
+    @AfterEach
+    void tearDown() {
+        pdfRepairMock.close();
     }
 
     /** Build a tiny, valid in-memory PDF as bytes. */
@@ -109,7 +130,7 @@ class RepairControllerTest {
     }
 
     @Nested
-    @DisplayName("PDFBox last-resort branch (no external tools)")
+    @DisplayName("PDFBox last-resort branch (Ghostscript disabled, JPDFium declined)")
     class PdfBoxBranch {
 
         @Test
@@ -160,7 +181,7 @@ class RepairControllerTest {
         }
 
         @Test
-        @DisplayName("does not consult qpdf/ghostscript a second time once disabled")
+        @DisplayName("consults Ghostscript once and never consults qpdf")
         void repairPdf_checksToolAvailability() throws Exception {
             MockMultipartFile input =
                     new MockMultipartFile(
@@ -173,10 +194,10 @@ class RepairControllerTest {
 
             repairController.repairPdf(pdfFileFrom(input));
 
-            // Ghostscript is checked once (skip), qpdf once (skip), then both checked again to
-            // decide the last-resort branch.
-            verify(endpointConfiguration, times(2)).isGroupEnabled("Ghostscript");
-            verify(endpointConfiguration, times(2)).isGroupEnabled("qpdf");
+            // Ghostscript is checked once for the primary attempt; JPDFium runs unconditionally
+            // (static-mocked here) and the PDFBox last resort is never gated.
+            verify(endpointConfiguration, times(1)).isGroupEnabled("Ghostscript");
+            verify(endpointConfiguration, never()).isGroupEnabled("qpdf");
         }
 
         @Test

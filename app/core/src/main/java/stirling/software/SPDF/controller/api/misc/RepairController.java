@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +25,14 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.doc.PdfRepair;
+import stirling.software.jpdfium.doc.RepairResult;
 
 @MiscApi
 @Slf4j
@@ -41,12 +43,15 @@ public class RepairController {
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
 
+    /**
+     * Flags for {@link PdfRepair#repairFile}: normalize object streams into classic xref tables
+     * (matches the old qpdf {@code --object-streams=disable}) and brute-force broken startxref
+     * offsets. JPDFium exposes no public constants for these, hence the literals.
+     */
+    private static final int JPDFIUM_REPAIR_FLAGS = 0x02 | 0x04;
+
     private boolean isGhostscriptEnabled() {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
-    }
-
-    private boolean isQpdfEnabled() {
-        return endpointConfiguration.isGroupEnabled("qpdf");
     }
 
     @AutoJobPostMapping(
@@ -58,8 +63,8 @@ public class RepairController {
     @Operation(
             summary = "Repair a PDF file",
             description =
-                    "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf"
-                            + " (fallback), or PDFBox (if no external tools available). The PDF is first saved"
+                    "This endpoint repairs a given PDF file by running Ghostscript (primary), JPDFium"
+                            + " (fallback), or PDFBox (last resort). The PDF is first saved"
                             + " to a temporary location, repaired, read back, and then returned as a response.")
     public ResponseEntity<Resource> repairPdf(@ModelAttribute PDFFile file)
             throws IOException, InterruptedException {
@@ -91,48 +96,36 @@ public class RepairController {
                         repairSuccess = true;
                     }
                 } catch (Exception e) {
-                    // Log and continue to QPDF fallback
-                    log.warn("Ghostscript repair failed, trying QPDF fallback: ", e);
+                    // Log and continue to the JPDFium fallback
+                    log.warn("Ghostscript repair failed, trying JPDFium fallback: ", e);
                 }
             }
 
-            // Fallback to QPDF if Ghostscript failed or not available
-            if (!repairSuccess && isQpdfEnabled()) {
-                List<String> qpdfCommand = new ArrayList<>();
-                qpdfCommand.add("qpdf");
-                // No --replace-input: it edits the input in place and takes no output path, so
-                // passing one made every fallback die before qpdf read a byte.
-                qpdfCommand.add("--qdf"); // Linearizes and normalizes PDF structure
-                qpdfCommand.add("--object-streams=disable"); // Can help with some corruptions
-                qpdfCommand.add(tempInputFile.getPath().toString());
-                qpdfCommand.add(tempOutputFile.getPath().toString());
-
-                try {
-                    ProcessExecutorResult qpdfResult =
-                            ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                                    .runCommandWithOutputHandling(qpdfCommand);
-
-                    // qpdf exits 3 for warnings it recovered from, which is a repaired file.
-                    repairSuccess = qpdfResult.getRc() == 0 || qpdfResult.getRc() == 3;
-                } catch (IOException | RuntimeException e) {
-                    // A non-zero exit throws rather than returning, and its stderr names temp
-                    // paths. An interrupt is left to propagate: a cancelled job is not a refusal.
-                    log.warn("QPDF repair failed: ", e);
-                }
-            }
-
-            // Use PDFBox as last resort if no external tools are available
+            // Fallback to JPDFium if Ghostscript failed or is not available. Its core stage
+            // runs the same recovery the qpdf CLI performed (tolerant open, qpdf recovery,
+            // startxref fix) in-process, so no external binary is needed.
             if (!repairSuccess) {
-                if (!isGhostscriptEnabled() && !isQpdfEnabled()) {
-                    // Basic PDFBox repair - load and save to fix structural issues
-                    try (var document = pdfDocumentFactory.load(tempInputFile.getFile())) {
-                        document.save(tempOutputFile.getFile());
-                        repairSuccess = true;
-                    }
-                } else {
-                    // Coded, so the caller can say why rather than showing a bare 500: every tool
-                    // present has tried this document and declined it.
-                    throw ExceptionUtils.createPdfUnrepairableException();
+                try {
+                    RepairResult.Status status =
+                            PdfRepair.repairFile(
+                                    tempInputFile.getPath(),
+                                    tempOutputFile.getPath(),
+                                    JPDFIUM_REPAIR_FLAGS);
+                    repairSuccess =
+                            status != RepairResult.Status.FAILED
+                                    && Files.size(tempOutputFile.getPath()) > 0;
+                } catch (RuntimeException | IOException e) {
+                    // JPDFium declined the file; fall through to the PDFBox last resort.
+                    log.warn("JPDFium repair failed: ", e);
+                }
+            }
+
+            // PDFBox last resort, never gated: Ghostscript is opportunistic, not required.
+            if (!repairSuccess) {
+                // Basic PDFBox repair - load and save to fix structural issues
+                try (var document = pdfDocumentFactory.load(tempInputFile.getFile())) {
+                    document.save(tempOutputFile.getFile());
+                    repairSuccess = true;
                 }
             }
 
@@ -141,7 +134,7 @@ public class RepairController {
                     tempOutputFile,
                     GeneralUtils.generateFilename(
                             inputFile.getOriginalFilename(), "_repaired.pdf"));
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             tempOutputFile.close();
             throw e;
         } catch (RuntimeException e) {

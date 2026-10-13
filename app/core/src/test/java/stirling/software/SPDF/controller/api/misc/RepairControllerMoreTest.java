@@ -2,7 +2,7 @@ package stirling.software.SPDF.controller.api.misc;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -40,18 +40,18 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.ExceptionUtils.PdfUnrepairableException;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
+import stirling.software.jpdfium.doc.PdfRepair;
+import stirling.software.jpdfium.doc.RepairResult;
 
 /**
- * Additional tests for {@link RepairController} covering the external-tool branches (Ghostscript
- * and qpdf). Those branches shell out via the static {@link ProcessExecutor} factory; here that
- * factory is mocked with {@code mockStatic} so no real binary runs. The mocked command-runner
- * writes a valid PDF to the output path so the file-backed response can be streamed back.
+ * Additional tests for {@link RepairController} covering the Ghostscript primary and JPDFium
+ * fallback branches. Ghostscript shells out via the static {@link ProcessExecutor} factory and
+ * JPDFium would load natives via the static {@link PdfRepair#repairFile}; both are mocked with
+ * {@code mockStatic} so no real binary runs and no natives load.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -100,16 +100,28 @@ class RepairControllerMoreTest {
         }
     }
 
-    /** Writes a valid PDF to the given output path, mimicking a successful tool run. */
-    private static void writeValidPdfTo(Path out) throws Exception {
-        byte[] pdf = buildPdfBytes(1);
-        Files.write(out, pdf);
-    }
-
     private ProcessExecutorResult resultWithRc(int rc) {
         ProcessExecutorResult result = mock(ProcessExecutorResult.class);
         when(result.getRc()).thenReturn(rc);
         return result;
+    }
+
+    /**
+     * Stubs the JPDFium file repair to return the given status without loading natives, writing
+     * real bytes to the output path on success like the native call would.
+     */
+    private static void stubJpdfiumRepair(
+            MockedStatic<PdfRepair> mockedRepair, RepairResult.Status status) throws IOException {
+        byte[] repaired = buildPdfBytes(1);
+        mockedRepair
+                .when(() -> PdfRepair.repairFile(any(Path.class), any(Path.class), anyInt()))
+                .thenAnswer(
+                        inv -> {
+                            if (status != RepairResult.Status.FAILED) {
+                                Files.write(inv.getArgument(1), repaired);
+                            }
+                            return status;
+                        });
     }
 
     @Nested
@@ -117,12 +129,12 @@ class RepairControllerMoreTest {
     class GhostscriptBranch {
 
         @Test
-        @DisplayName("Ghostscript success returns 200 and does not invoke qpdf or PDFBox")
+        @DisplayName("Ghostscript success returns 200 and does not invoke JPDFium or PDFBox")
         void ghostscriptSuccess() throws Exception {
             when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
-            when(endpointConfiguration.isGroupEnabled("qpdf")).thenReturn(true);
 
-            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class);
+                    MockedStatic<PdfRepair> mockedRepair = mockStatic(PdfRepair.class)) {
                 ProcessExecutor gsExecutor = mock(ProcessExecutor.class);
                 ProcessExecutorResult okResult = resultWithRc(0);
 
@@ -131,7 +143,7 @@ class RepairControllerMoreTest {
                         .thenAnswer(
                                 inv -> {
                                     List<String> cmd = inv.getArgument(0);
-                                    writeValidPdfTo(Path.of(cmd.get(2)));
+                                    Files.write(Path.of(cmd.get(2)), buildPdfBytes(1));
                                     return okResult;
                                 });
 
@@ -148,35 +160,27 @@ class RepairControllerMoreTest {
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 assertTrue(readResource(response.getBody()).length > 0);
 
-                // qpdf must not be consulted once Ghostscript succeeds.
-                mockedFactory.verify(
-                        () -> ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF), never());
+                // JPDFium must not be consulted once Ghostscript succeeds.
+                mockedRepair.verify(
+                        () -> PdfRepair.repairFile(any(Path.class), any(Path.class), anyInt()),
+                        never());
                 // PDFBox last-resort load must not happen either.
                 verify(pdfDocumentFactory, never()).load(any(File.class));
             }
         }
 
         @Test
-        @DisplayName("Ghostscript non-zero rc falls back to qpdf which produces output")
-        void ghostscriptNonZeroFallsBackToQpdf() throws Exception {
+        @DisplayName("Ghostscript non-zero rc falls back to JPDFium which produces output")
+        void ghostscriptNonZeroFallsBackToJpdfium() throws Exception {
             when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
-            when(endpointConfiguration.isGroupEnabled("qpdf")).thenReturn(true);
 
-            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class);
+                    MockedStatic<PdfRepair> mockedRepair = mockStatic(PdfRepair.class)) {
                 ProcessExecutor gsExecutor = mock(ProcessExecutor.class);
                 ProcessExecutorResult failResult = resultWithRc(1);
                 when(gsExecutor.runCommandWithOutputHandling(any())).thenReturn(failResult);
 
-                ProcessExecutor qpdfExecutor = mock(ProcessExecutor.class);
-                ProcessExecutorResult okResult = resultWithRc(0);
-                // qpdf command output path is the last element.
-                when(qpdfExecutor.runCommandWithOutputHandling(any()))
-                        .thenAnswer(
-                                inv -> {
-                                    List<String> cmd = inv.getArgument(0);
-                                    writeValidPdfTo(Path.of(cmd.getLast()));
-                                    return okResult;
-                                });
+                stubJpdfiumRepair(mockedRepair, RepairResult.Status.FIXED);
 
                 mockedFactory
                         .when(
@@ -184,39 +188,30 @@ class RepairControllerMoreTest {
                                         ProcessExecutor.getInstance(
                                                 ProcessExecutor.Processes.GHOSTSCRIPT))
                         .thenReturn(gsExecutor);
-                mockedFactory
-                        .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF))
-                        .thenReturn(qpdfExecutor);
 
                 ResponseEntity<Resource> response =
                         repairController.repairPdf(pdfFileFrom(inputPdf(1)));
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
-                verify(qpdfExecutor, times(1)).runCommandWithOutputHandling(any());
+                mockedRepair.verify(
+                        () -> PdfRepair.repairFile(any(Path.class), any(Path.class), anyInt()),
+                        times(1));
                 verify(pdfDocumentFactory, never()).load(any(File.class));
             }
         }
 
         @Test
-        @DisplayName("Ghostscript throwing is caught and qpdf fallback still succeeds")
-        void ghostscriptThrowsFallsBackToQpdf() throws Exception {
+        @DisplayName("Ghostscript throwing is caught and JPDFium fallback still succeeds")
+        void ghostscriptThrowsFallsBackToJpdfium() throws Exception {
             when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
-            when(endpointConfiguration.isGroupEnabled("qpdf")).thenReturn(true);
 
-            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class);
+                    MockedStatic<PdfRepair> mockedRepair = mockStatic(PdfRepair.class)) {
                 ProcessExecutor gsExecutor = mock(ProcessExecutor.class);
                 when(gsExecutor.runCommandWithOutputHandling(any()))
                         .thenThrow(new IOException("gs binary not found"));
 
-                ProcessExecutor qpdfExecutor = mock(ProcessExecutor.class);
-                ProcessExecutorResult okResult = resultWithRc(0);
-                when(qpdfExecutor.runCommandWithOutputHandling(any()))
-                        .thenAnswer(
-                                inv -> {
-                                    List<String> cmd = inv.getArgument(0);
-                                    writeValidPdfTo(Path.of(cmd.getLast()));
-                                    return okResult;
-                                });
+                stubJpdfiumRepair(mockedRepair, RepairResult.Status.FIXED);
 
                 mockedFactory
                         .when(
@@ -224,43 +219,30 @@ class RepairControllerMoreTest {
                                         ProcessExecutor.getInstance(
                                                 ProcessExecutor.Processes.GHOSTSCRIPT))
                         .thenReturn(gsExecutor);
-                mockedFactory
-                        .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF))
-                        .thenReturn(qpdfExecutor);
 
                 ResponseEntity<Resource> response =
                         repairController.repairPdf(pdfFileFrom(inputPdf(1)));
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
-                verify(qpdfExecutor, times(1)).runCommandWithOutputHandling(any());
+                mockedRepair.verify(
+                        () -> PdfRepair.repairFile(any(Path.class), any(Path.class), anyInt()),
+                        times(1));
             }
         }
     }
 
     @Nested
-    @DisplayName("qpdf-only branch (Ghostscript disabled)")
-    class QpdfOnlyBranch {
+    @DisplayName("JPDFium fallback branch (Ghostscript disabled)")
+    class JpdfiumFallbackBranch {
 
         @Test
-        @DisplayName("qpdf produces output when Ghostscript is disabled")
-        void qpdfOnlySuccess() throws Exception {
+        @DisplayName("JPDFium produces output when Ghostscript is disabled")
+        void jpdfiumSuccessWhenGhostscriptDisabled() throws Exception {
             when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
-            when(endpointConfiguration.isGroupEnabled("qpdf")).thenReturn(true);
 
-            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
-                ProcessExecutor qpdfExecutor = mock(ProcessExecutor.class);
-                ProcessExecutorResult okResult = resultWithRc(0);
-                when(qpdfExecutor.runCommandWithOutputHandling(any()))
-                        .thenAnswer(
-                                inv -> {
-                                    List<String> cmd = inv.getArgument(0);
-                                    writeValidPdfTo(Path.of(cmd.getLast()));
-                                    return okResult;
-                                });
-
-                mockedFactory
-                        .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF))
-                        .thenReturn(qpdfExecutor);
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class);
+                    MockedStatic<PdfRepair> mockedRepair = mockStatic(PdfRepair.class)) {
+                stubJpdfiumRepair(mockedRepair, RepairResult.Status.FIXED);
 
                 ResponseEntity<Resource> response =
                         repairController.repairPdf(pdfFileFrom(inputPdf(2)));
@@ -277,71 +259,21 @@ class RepairControllerMoreTest {
         }
 
         @Test
-        @DisplayName("a qpdf refusal is reported as unrepairable, not passed on verbatim")
-        void qpdfIOExceptionBecomesCoded() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
-            when(endpointConfiguration.isGroupEnabled("qpdf")).thenReturn(true);
-
-            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
-                ProcessExecutor qpdfExecutor = mock(ProcessExecutor.class);
-                when(qpdfExecutor.runCommandWithOutputHandling(any()))
-                        .thenThrow(new IOException("qpdf failed hard on /tmp/repair123.pdf"));
-
-                mockedFactory
-                        .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF))
-                        .thenReturn(qpdfExecutor);
-
-                PdfUnrepairableException thrown =
-                        assertThrows(
-                                PdfUnrepairableException.class,
-                                () -> repairController.repairPdf(pdfFileFrom(inputPdf(1))));
-
-                assertEquals(
-                        ExceptionUtils.ErrorCode.PDF_UNREPAIRABLE.getCode(), thrown.getErrorCode());
-                // qpdf names temp paths in its stderr, and a notification is persisted.
-                assertFalse(thrown.getMessage().contains("/tmp/repair123.pdf"));
-            }
-        }
-
-        @Test
-        @DisplayName("a cancelled job stays cancelled rather than reading as unrepairable")
-        void qpdfInterruptPropagates() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
-            when(endpointConfiguration.isGroupEnabled("qpdf")).thenReturn(true);
-
-            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
-                ProcessExecutor qpdfExecutor = mock(ProcessExecutor.class);
-                when(qpdfExecutor.runCommandWithOutputHandling(any()))
-                        .thenThrow(new InterruptedException("cancelled"));
-
-                mockedFactory
-                        .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF))
-                        .thenReturn(qpdfExecutor);
-
-                // The catch names IOException and RuntimeException for this reason: widening it to
-                // Exception would swallow the interrupt and file a verdict on a document nothing
-                // finished reading.
-                assertThrows(
-                        InterruptedException.class,
-                        () -> repairController.repairPdf(pdfFileFrom(inputPdf(1))));
-            }
-        }
-    }
-
-    @Nested
-    @DisplayName("No-tool error branch")
-    class NoToolErrorBranch {
-
-        @Test
-        @DisplayName("Ghostscript fails and qpdf disabled throws a processing exception")
-        void ghostscriptFailsQpdfDisabledThrows() throws Exception {
+        @DisplayName("a JPDFium refusal after Ghostscript failed falls through to PDFBox")
+        void jpdfiumDeclinesAfterGhostscriptFailsFallsThroughToPdfBox() throws Exception {
             when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
-            when(endpointConfiguration.isGroupEnabled("qpdf")).thenReturn(false);
 
-            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+            PDDocument realDoc = new PDDocument();
+            realDoc.addPage(new PDPage(PDRectangle.A4));
+            when(pdfDocumentFactory.load(any(File.class))).thenReturn(realDoc);
+
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class);
+                    MockedStatic<PdfRepair> mockedRepair = mockStatic(PdfRepair.class)) {
                 ProcessExecutor gsExecutor = mock(ProcessExecutor.class);
-                ProcessExecutorResult failResult = resultWithRc(1);
-                when(gsExecutor.runCommandWithOutputHandling(any())).thenReturn(failResult);
+                when(gsExecutor.runCommandWithOutputHandling(any()))
+                        .thenThrow(new IOException("gs failed hard"));
+
+                stubJpdfiumRepair(mockedRepair, RepairResult.Status.FAILED);
 
                 mockedFactory
                         .when(
@@ -350,13 +282,73 @@ class RepairControllerMoreTest {
                                                 ProcessExecutor.Processes.GHOSTSCRIPT))
                         .thenReturn(gsExecutor);
 
-                // Ghostscript "enabled" but unsuccessful, qpdf disabled -> not the PDFBox path.
-                assertThrows(
-                        Exception.class,
-                        () -> repairController.repairPdf(pdfFileFrom(inputPdf(1))));
+                // Nothing is gated anymore: Ghostscript failed and JPDFium declined, so the
+                // PDFBox last resort still runs.
+                ResponseEntity<Resource> response =
+                        repairController.repairPdf(pdfFileFrom(inputPdf(1)));
 
-                // PDFBox last resort only runs when BOTH tools are disabled.
-                verify(pdfDocumentFactory, never()).load(any(File.class));
+                assertEquals(HttpStatus.OK, response.getStatusCode());
+                verify(pdfDocumentFactory, times(1)).load(any(File.class));
+            }
+        }
+
+        @Test
+        @DisplayName("a JPDFium throw falls through to the PDFBox last resort")
+        void jpdfiumThrowFallsThroughToPdfBox() throws Exception {
+            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
+
+            PDDocument realDoc = new PDDocument();
+            realDoc.addPage(new PDPage(PDRectangle.A4));
+            when(pdfDocumentFactory.load(any(File.class))).thenReturn(realDoc);
+
+            try (MockedStatic<PdfRepair> mockedRepair = mockStatic(PdfRepair.class)) {
+                mockedRepair
+                        .when(
+                                () ->
+                                        PdfRepair.repairFile(
+                                                any(Path.class), any(Path.class), anyInt()))
+                        .thenThrow(new IllegalStateException("boom"));
+
+                ResponseEntity<Resource> response =
+                        repairController.repairPdf(pdfFileFrom(inputPdf(1)));
+
+                assertEquals(HttpStatus.OK, response.getStatusCode());
+                verify(pdfDocumentFactory, times(1)).load(any(File.class));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("All-tools-failed branch")
+    class AllToolsFailedBranch {
+
+        @Test
+        @DisplayName("Ghostscript fails, JPDFium declines and PDFBox errors propagates the error")
+        void allToolsFailPropagatesLoadError() throws Exception {
+            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
+
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class);
+                    MockedStatic<PdfRepair> mockedRepair = mockStatic(PdfRepair.class)) {
+                ProcessExecutor gsExecutor = mock(ProcessExecutor.class);
+                ProcessExecutorResult failResult = resultWithRc(1);
+                when(gsExecutor.runCommandWithOutputHandling(any())).thenReturn(failResult);
+
+                stubJpdfiumRepair(mockedRepair, RepairResult.Status.FAILED);
+
+                mockedFactory
+                        .when(
+                                () ->
+                                        ProcessExecutor.getInstance(
+                                                ProcessExecutor.Processes.GHOSTSCRIPT))
+                        .thenReturn(gsExecutor);
+
+                when(pdfDocumentFactory.load(any(File.class)))
+                        .thenThrow(new IOException("broken beyond repair"));
+
+                // No coded refusal anymore: the last resort runs and its error propagates.
+                assertThrows(
+                        IOException.class,
+                        () -> repairController.repairPdf(pdfFileFrom(inputPdf(1))));
             }
         }
     }
@@ -366,29 +358,30 @@ class RepairControllerMoreTest {
     class ToolGating {
 
         @Test
-        @DisplayName("both tools disabled uses PDFBox and never touches ProcessExecutor")
-        void bothDisabledUsesPdfBox() throws Exception {
+        @DisplayName(
+                "Ghostscript disabled tries JPDFium then PDFBox, never touching ProcessExecutor")
+        void ghostscriptDisabledUsesJpdfiumThenPdfBox() throws Exception {
             when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
-            when(endpointConfiguration.isGroupEnabled("qpdf")).thenReturn(false);
 
             PDDocument realDoc = new PDDocument();
             realDoc.addPage(new PDPage(PDRectangle.A4));
             when(pdfDocumentFactory.load(any(File.class))).thenReturn(realDoc);
 
-            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class);
+                    MockedStatic<PdfRepair> mockedRepair = mockStatic(PdfRepair.class)) {
+                stubJpdfiumRepair(mockedRepair, RepairResult.Status.FAILED);
+
                 ResponseEntity<Resource> response =
                         repairController.repairPdf(pdfFileFrom(inputPdf(1)));
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
+                mockedRepair.verify(
+                        () -> PdfRepair.repairFile(any(Path.class), any(Path.class), anyInt()),
+                        times(1));
                 verify(pdfDocumentFactory, times(1)).load(any(File.class));
 
                 mockedFactory.verify(
-                        () ->
-                                ProcessExecutor.getInstance(
-                                        eq(ProcessExecutor.Processes.GHOSTSCRIPT)),
-                        never());
-                mockedFactory.verify(
-                        () -> ProcessExecutor.getInstance(eq(ProcessExecutor.Processes.QPDF)),
+                        () -> ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT),
                         never());
             }
         }
