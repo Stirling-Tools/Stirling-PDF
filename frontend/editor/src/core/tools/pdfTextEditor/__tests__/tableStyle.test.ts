@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
 import {

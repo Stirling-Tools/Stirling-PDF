@@ -1,4 +1,5 @@
-import JSZip, { JSZipObject } from "jszip";
+import type JSZipClass from "jszip";
+import type { JSZipObject } from "jszip";
 import { StirlingFileStub, createStirlingFile } from "@app/types/fileContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import { fileStorage } from "@app/services/fileStorage";
@@ -15,6 +16,20 @@ interface CompressedObject {
 const getData = (zipEntry: JSZipObject): CompressedObject | undefined => {
   return (zipEntry as JSZipObject & { _data: CompressedObject })._data;
 };
+
+// JSZip is ~140 KB and only needed when the user opens a zip.
+let jsZipPromise: Promise<typeof JSZipClass> | null = null;
+
+function loadJSZip(): Promise<typeof JSZipClass> {
+  jsZipPromise ??= import("jszip")
+    .then((mod) => mod.default)
+    .catch((cause) => {
+      // Reset so a later caller can retry a failed load.
+      jsZipPromise = null;
+      throw cause;
+    });
+  return jsZipPromise;
+}
 
 export interface ZipExtractionResult {
   success: boolean;
@@ -85,6 +100,7 @@ export class ZipFileService {
       }
 
       // Load and validate ZIP contents
+      const JSZip = await loadJSZip();
       const zip = new JSZip();
       const zipContents = await zip.loadAsync(file);
 
@@ -151,6 +167,7 @@ export class ZipFileService {
     zipFilename: string,
   ): Promise<{ zipFile: File; size: number }> {
     try {
+      const JSZip = await loadJSZip();
       const zip = new JSZip();
 
       // Add each file to the ZIP
@@ -206,6 +223,7 @@ export class ZipFileService {
       }
 
       // Load ZIP contents
+      const JSZip = await loadJSZip();
       const zip = new JSZip();
       const zipContents = await zip.loadAsync(file);
 
@@ -359,6 +377,7 @@ export class ZipFileService {
    */
   async containsHtmlFiles(file: Blob | File): Promise<boolean> {
     try {
+      const JSZip = await loadJSZip();
       const zip = new JSZip();
       const zipContents = await zip.loadAsync(file);
 
@@ -443,6 +462,7 @@ export class ZipFileService {
     try {
       // Automation always extracts - but still need to count files for warning
       if (skipAutoUnzip) {
+        const JSZip = await loadJSZip();
         const zip = new JSZip();
         const zipContents = await zip.loadAsync(zipBlob);
         const fileCount = Object.values(zipContents.files).filter(
@@ -457,6 +477,7 @@ export class ZipFileService {
       }
 
       // Load ZIP and count files (single parse)
+      const JSZip = await loadJSZip();
       const zip = new JSZip();
       const zipContents = await zip.loadAsync(zipBlob);
 
@@ -571,6 +592,7 @@ export class ZipFileService {
 
     try {
       // Load ZIP contents
+      const JSZip = await loadJSZip();
       const zip = new JSZip();
       const zipContents = await zip.loadAsync(file);
 

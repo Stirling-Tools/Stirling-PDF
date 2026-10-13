@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "@app/ui";
 import {
@@ -98,8 +98,6 @@ function cycleDay(
  * and the payment and invoice sections all arrive as props and slots. That is what lets one
  * component serve the cloud, self-hosted and the desktop app, and it makes a member's read-only
  * screen a matter of passing no callbacks rather than a role check.
- *
- * <p>A chip exists only where its section does, so an omitted slot removes both.
  */
 export function BillingScreen({
   usersInUse,
@@ -133,12 +131,6 @@ export function BillingScreen({
   const { t } = useTranslation();
   const [comparing, setComparing] = useState(false);
 
-  const jump = useCallback((id: string) => {
-    document
-      .getElementById(id)
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
   const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active) && !enterpriseProcessor;
   const teamHeld = Boolean(wallet?.team?.held);
@@ -146,39 +138,6 @@ export function BillingScreen({
     pdfsProcessed === undefined
       ? wallet?.docsProcessedThisPeriod
       : pdfsProcessed;
-
-  const chips = useMemo(() => {
-    const out: Array<[string, string]> = [];
-    if (procurementSection)
-      out.push([
-        "ub-procurement",
-        t("portal.billing.chip.procurement", "Procurement"),
-      ]);
-    if (wallet || serverPlan || legacyPlan || unavailable)
-      out.push(["ub-plan", t("portal.billing.chip.plan", "Plan")]);
-    if (wallet || unavailable)
-      out.push(["ub-usage", t("portal.billing.chip.usage", "Usage")]);
-    if (wallet && paymentSection)
-      out.push(["ub-pay", t("portal.billing.chip.payment", "Payment")]);
-    if (wallet && invoicesSection)
-      out.push(["ub-inv", t("portal.billing.chip.invoices", "Invoices")]);
-    if (licenseSection)
-      out.push([
-        "ub-license",
-        t("admin.settings.premium.inputMethod.text", "License Key"),
-      ]);
-    return out;
-  }, [
-    wallet,
-    serverPlan,
-    legacyPlan,
-    unavailable,
-    procurementSection,
-    licenseSection,
-    paymentSection,
-    invoicesSection,
-    t,
-  ]);
 
   const identity = useMemo(() => {
     if (serverPlan)
@@ -360,22 +319,6 @@ export function BillingScreen({
           legacyPlan ||
           unavailable) && (
           <div className="billing-card">
-            <nav
-              className="billing-card__chips"
-              aria-label={t("portal.billing.chip.nav", "Sections")}
-            >
-              {chips.map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  className="billing-card__chip"
-                  onClick={() => jump(id)}
-                >
-                  {label}
-                </button>
-              ))}
-            </nav>
-
             {procurementSection && (
               <section
                 id="ub-procurement"

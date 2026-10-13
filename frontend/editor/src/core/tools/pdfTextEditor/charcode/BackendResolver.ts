@@ -6,6 +6,7 @@ import type {
 } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { getCachedFontProgramSha256 } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 /** Strategy 3: ask the Spring backend (PDFBox) to encode chars. */
 
@@ -368,14 +369,12 @@ export function fontIsReusable(
   // program. PDFium still answers "true" for it, but reports a length of 0 -
   // the length is the part that distinguishes a real face.
   let ok = false;
-  const out = m.pdfium.wasmExports.malloc(4);
+  const out = scratchPtr(m, SCRATCH.backendOut, 4);
   try {
     m.pdfium.setValue(out, 0, "i32");
     ok = getData(fontPtr, 0, 0, out) && m.pdfium.getValue(out, "i32") > 0;
   } catch {
     ok = false;
-  } finally {
-    m.pdfium.wasmExports.free(out);
   }
   reusableFontCache.set(fontPtr, ok);
   return ok;
@@ -529,13 +528,9 @@ function loadFontName(
   try {
     const len = fn(fontPtr, 0, 0);
     if (len <= 1) return undefined;
-    const buf = m.pdfium.wasmExports.malloc(len);
-    try {
-      fn(fontPtr, buf, len);
-      return m.pdfium.UTF8ToString(buf) || undefined;
-    } finally {
-      m.pdfium.wasmExports.free(buf);
-    }
+    const buf = scratchPtr(m, SCRATCH.readerReadTextB, len);
+    fn(fontPtr, buf, len);
+    return m.pdfium.UTF8ToString(buf) || undefined;
   } catch {
     return undefined;
   }
