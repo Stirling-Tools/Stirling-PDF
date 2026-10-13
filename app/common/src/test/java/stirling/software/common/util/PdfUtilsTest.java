@@ -20,6 +20,30 @@ import org.junit.jupiter.params.provider.CsvSource;
 class PdfUtilsTest {
 
     @ParameterizedTest
+    @CsvSource({"0", "99", "100n", "n+100"})
+    void filtersRejectInvalidSelectionsInsteadOfTreatingThemAsNoMatch(String selection)
+            throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage());
+            assertThrows(IllegalArgumentException.class, () -> PdfUtils.hasImages(doc, selection));
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> PdfUtils.hasText(doc, selection, "hello"));
+        }
+    }
+
+    @Test
+    void filtersTreatBlankSelectionsAsAllPages() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage();
+            page.setResources(new PDResources());
+            doc.addPage(page);
+            assertFalse(PdfUtils.hasImages(doc, " "));
+            assertFalse(PdfUtils.hasText(doc, " ", "hello"));
+        }
+    }
+
+    @ParameterizedTest
     @CsvSource({"A0", "A1", "A2", "A3", "A4", "A5", "A6", "LETTER", "LEGAL"})
     void textToPageSize_validSizes_returnsCorrectRectangle(String size) {
         PDRectangle result = PdfUtils.textToPageSize(size);

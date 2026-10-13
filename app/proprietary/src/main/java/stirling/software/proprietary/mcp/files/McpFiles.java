@@ -125,7 +125,12 @@ public class McpFiles {
             if (!stored) {
                 String fileId;
                 try (InputStream in = body.getInputStream()) {
-                    fileId = tempStore.storeInputStream(in, name).fileId();
+                    fileId =
+                            (user == null
+                                            ? tempStore.storeInputStream(in, name)
+                                            : tempStore.storeInputStream(
+                                                    in, name, user.getUsername()))
+                                    .fileId();
                 }
                 return new Saved(fileId, name, contentType, size, null, null, false, inline);
             }

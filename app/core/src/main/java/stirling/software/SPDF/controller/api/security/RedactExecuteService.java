@@ -53,8 +53,8 @@ class RedactExecuteService {
 
     Outcome executeWithOutcome(RedactExecuteRequest request) throws IOException {
         RedactStyle style = request.getStyle() != null ? request.getStyle() : new RedactStyle();
-        List<String> textValues = orEmpty(request.getTextValues());
-        List<String> regexPatterns = orEmpty(request.getRegexPatterns());
+        List<String> textValues = Arrays.asList(cleanStrings(request.getTextValues()));
+        List<String> regexPatterns = Arrays.asList(cleanStrings(request.getRegexPatterns()));
         List<Integer> wipePages = orEmpty(request.getWipePages());
         List<TextRange> ranges = orEmpty(request.getRanges());
         List<ImageBox> imageBoxes = orEmpty(request.getImageBoxes());

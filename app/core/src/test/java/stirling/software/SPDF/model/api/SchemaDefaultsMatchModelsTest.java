@@ -57,7 +57,8 @@ class SchemaDefaultsMatchModelsTest {
                 Schema schema = field.getAnnotation(Schema.class);
                 if (Modifier.isStatic(field.getModifiers())
                         || schema == null
-                        || schema.defaultValue().isEmpty()) {
+                        || schema.defaultValue().isEmpty()
+                        || "##default".equals(schema.defaultValue())) {
                     continue;
                 }
                 field.setAccessible(true);

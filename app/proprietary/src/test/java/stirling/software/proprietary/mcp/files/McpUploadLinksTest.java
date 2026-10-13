@@ -14,12 +14,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
+import stirling.software.common.cluster.inprocess.InProcessDistributedLock;
 import stirling.software.common.cluster.inprocess.InProcessKeyValueCache;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
@@ -42,7 +47,12 @@ class McpUploadLinksTest {
                 .thenReturn(
                         new McpFiles.Saved(
                                 "42", "big.pdf", "application/pdf", 3, null, null, false, null));
-        links = new McpUploadLinks(new InProcessKeyValueCache(), new ObjectMapper(), files);
+        links =
+                new McpUploadLinks(
+                        new InProcessKeyValueCache(),
+                        new ObjectMapper(),
+                        files,
+                        new InProcessDistributedLock());
         controller = new McpUploadController(links, files, users);
     }
 
@@ -116,5 +126,48 @@ class McpUploadLinksTest {
         String done = controller.page(link.uploadId()).getBody();
         assertTrue(done.contains("&lt;b&gt;x&lt;/b&gt;.pdf"), done);
         assertEquals(404, controller.page("A".repeat(43)).getStatusCode().value());
+    }
+
+    @Test
+    void onlyOneNodeCanClaimAnUploadLinkWhileTheOtherIsReadingIt() throws Exception {
+        var cache = org.mockito.Mockito.spy(new InProcessKeyValueCache());
+        var locks = new InProcessDistributedLock();
+        var firstRead = new AtomicBoolean(true);
+        var entered = new CountDownLatch(1);
+        var resume = new CountDownLatch(1);
+        org.mockito.Mockito.doAnswer(
+                        i -> {
+                            if (firstRead.compareAndSet(true, false)) {
+                                entered.countDown();
+                                assertTrue(resume.await(5, TimeUnit.SECONDS));
+                            }
+                            return i.callRealMethod();
+                        })
+                .when(cache)
+                .get(anyString(), anyString());
+        var first = new McpUploadLinks(cache, new ObjectMapper(), files, locks);
+        var second = new McpUploadLinks(cache, new ObjectMapper(), files, locks);
+        var link = first.create("alice");
+        try (var executor = Executors.newSingleThreadExecutor()) {
+            var claim = executor.submit(() -> first.claim(link.uploadId()));
+            try {
+                assertTrue(entered.await(5, TimeUnit.SECONDS));
+                assertTrue(second.claim(link.uploadId()).isEmpty());
+            } finally {
+                resume.countDown();
+            }
+            assertEquals(Optional.of("alice"), claim.get(5, TimeUnit.SECONDS));
+        }
+        assertTrue(second.claim(link.uploadId()).isEmpty());
+    }
+
+    @Test
+    void aCompletedUploadCannotBeReopenedByAStaleFailure() {
+        var link = links.create("alice");
+        assertEquals(Optional.of("alice"), links.claim(link.uploadId()));
+        links.complete(link.uploadId(), "alice", new McpUploadLinks.Uploaded("42", "file.pdf", 1));
+        links.reopen(link.uploadId(), "alice");
+        assertFalse(links.isOpen(link.uploadId()));
+        assertEquals("42", links.status(link.uploadId(), "alice").uploaded().fileId());
     }
 }

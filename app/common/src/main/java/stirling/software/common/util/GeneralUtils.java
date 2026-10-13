@@ -827,12 +827,20 @@ public class GeneralUtils {
         List<String> pastEnd = new ArrayList<>();
         boolean matchesAPage = false;
         for (String raw : selection.split(",")) {
-            String token = raw.replaceAll("\\s+", "");
+            String token = raw.trim();
             if (token.isEmpty()) {
                 continue;
             }
-            if ("all".equalsIgnoreCase(token) || (token.contains("n") && isNFunction(token))) {
+            if ("all".equalsIgnoreCase(token)) {
                 matchesAPage = matchesAPage || totalPages > 0;
+                continue;
+            }
+            if (token.contains("n") && isNFunction(token)) {
+                if (totalPages > 0 && !evaluateNFunc(token, totalPages).isEmpty()) {
+                    matchesAPage = true;
+                } else {
+                    pastEnd.add(token);
+                }
                 continue;
             }
             switch (classifyPageToken(token, totalPages)) {
@@ -841,8 +849,10 @@ public class GeneralUtils {
                 case MALFORMED -> malformed.add(token);
             }
         }
-        List<String> invalid =
-                !malformed.isEmpty() ? malformed : matchesAPage ? List.of() : pastEnd;
+        List<String> invalid = malformed;
+        if (invalid.isEmpty() && !matchesAPage) {
+            invalid = pastEnd.isEmpty() ? List.of(selection) : pastEnd;
+        }
         if (!invalid.isEmpty()) {
             throw new IllegalArgumentException(
                     "Invalid page selection '"
@@ -868,13 +878,13 @@ public class GeneralUtils {
                 }
                 return page <= totalPages ? PageToken.IN_RANGE : PageToken.PAST_END;
             }
-            if (token.matches("\\d+-\\d*")) {
+            if (token.matches("\\d+\\s*-\\s*\\d*")) {
                 String[] range = token.split("-", -1);
-                int start = Integer.parseInt(range[0]);
+                int start = Integer.parseInt(range[0].trim());
                 int end =
-                        range[1].isEmpty()
+                        range[1].isBlank()
                                 ? Math.max(start, totalPages)
-                                : Integer.parseInt(range[1]);
+                                : Integer.parseInt(range[1].trim());
                 if (start < 1 || end < start) {
                     return PageToken.MALFORMED;
                 }

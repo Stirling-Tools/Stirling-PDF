@@ -1,6 +1,7 @@
 package stirling.software.common.service;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +12,9 @@ import java.util.TreeMap;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -63,7 +66,7 @@ public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
                     .forEach(
                             (info, handler) -> {
                                 register(discovered, info, handler);
-                                registerDispatchable(dispatchable, info);
+                                registerDispatchable(dispatchable, info, handler);
                             });
         }
         specsByPath = Map.copyOf(discovered);
@@ -74,9 +77,18 @@ public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
                 dispatchablePaths.size());
     }
 
-    private static void registerDispatchable(Set<String> target, RequestMappingInfo info) {
+    private static void registerDispatchable(
+            Set<String> target, RequestMappingInfo info, HandlerMethod handler) {
         Set<RequestMethod> methods = info.getMethodsCondition().getMethods();
         if (!methods.isEmpty() && !methods.contains(RequestMethod.POST)) {
+            return;
+        }
+        Set<MediaType> consumes = info.getConsumesCondition().getConsumableMediaTypes();
+        if ((!consumes.isEmpty()
+                        && consumes.stream()
+                                .noneMatch(type -> type.includes(MediaType.MULTIPART_FORM_DATA)))
+                || Arrays.stream(handler.getMethod().getParameters())
+                        .anyMatch(parameter -> parameter.isAnnotationPresent(RequestBody.class))) {
             return;
         }
         for (String pattern : extractPatterns(info)) {
