@@ -397,6 +397,12 @@ class SupabaseSecurityConfigMoreTest {
             return source.getCorsConfiguration(request);
         }
 
+        @Test
+        @DisplayName("a path outside the cross-origin allow-list gets no CORS config")
+        void unlistedPathHasNoCorsConfig() {
+            assertThat(resolve(source(true), "/index.html", SELF_HOSTED)).isNull();
+        }
+
         @ParameterizedTest
         @ValueSource(
                 strings = {
