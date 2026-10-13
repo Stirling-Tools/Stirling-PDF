@@ -4,7 +4,7 @@ inputs:
   version:
     description: Task version to install
     required: false
-    default: 3.53.1
+    default: 3.54.0
 runs:
   using: composite
   steps:
