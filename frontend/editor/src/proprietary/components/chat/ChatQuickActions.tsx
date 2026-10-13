@@ -2,14 +2,11 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
-import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
+import { useAllFiles } from "@app/contexts/FileContext";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { detectFileExtension, isPdfFile } from "@app/utils/fileUtils";
 import type { StirlingFileStub } from "@app/types/fileContext";
-
-const MAX_FILE_PILLS = 3;
 
 interface QuickAction {
   key: string;
@@ -55,55 +52,6 @@ function QuickActionCard({ action }: { action: QuickAction }) {
         )}
       </Box>
     </Button>
-  );
-}
-
-function WorkbenchFilePills({
-  stubs,
-  onOpenFilesModal,
-  onRemove,
-  moreLabel,
-  removeLabel,
-}: {
-  stubs: StirlingFileStub[];
-  onOpenFilesModal: () => void;
-  onRemove: (id: StirlingFileStub["id"]) => void;
-  moreLabel: (count: number) => string;
-  removeLabel: (name: string) => string;
-}) {
-  const visible = stubs.slice(0, MAX_FILE_PILLS);
-  const overflow = Math.max(0, stubs.length - visible.length);
-  return (
-    <div className="chat-file-pills">
-      {visible.map((stub) => (
-        <span key={stub.id} className="chat-file-pill">
-          <Icon name="file" size={14} className="chat-file-pill__icon" />
-          <span className="chat-file-pill__label" title={stub.name}>
-            {stub.name}
-          </span>
-          <ActionIcon
-            type="button"
-            variant="tertiary"
-            className="chat-file-pill__remove"
-            onClick={() => onRemove(stub.id)}
-            aria-label={removeLabel(stub.name)}
-          >
-            <Icon name="x" size={12} />
-          </ActionIcon>
-        </span>
-      ))}
-      {overflow > 0 && (
-        <Button
-          type="button"
-          variant="tertiary"
-          hover={false}
-          className="chat-file-pill chat-file-pill--more"
-          onClick={onOpenFilesModal}
-        >
-          {moreLabel(overflow)}
-        </Button>
-      )}
-    </div>
   );
 }
 
@@ -155,7 +103,6 @@ export interface ChatQuickActionsProps {
 export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
   const { t } = useTranslation();
   const { fileStubs } = useAllFiles();
-  const { actions: fileActions } = useFileActions();
   const { openFilesModal } = useFilesModalContext();
 
   const summary = useMemo(() => summariseWorkbench(fileStubs), [fileStubs]);
@@ -256,25 +203,6 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
 
   return (
     <div className="chat-panel__quick-actions">
-      {summary.fileCount > 0 && (
-        <WorkbenchFilePills
-          stubs={fileStubs}
-          onOpenFilesModal={() => openFilesModal()}
-          onRemove={(id) => fileActions.removeFiles([id])}
-          moreLabel={(count) =>
-            t("chat.quickActions.moreFiles", {
-              count,
-              defaultValue: "+{{count}} more",
-            })
-          }
-          removeLabel={(name) =>
-            t("chat.quickActions.removeFile", {
-              name,
-              defaultValue: "Remove {{name}}",
-            })
-          }
-        />
-      )}
       <Text className="chat-panel__quick-actions-label">{heading}</Text>
       <Stack gap="xs">
         {actions.map((action) => (

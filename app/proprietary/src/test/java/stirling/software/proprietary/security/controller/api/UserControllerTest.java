@@ -1,6 +1,5 @@
 package stirling.software.proprietary.security.controller.api;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -16,15 +15,20 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.api.security.UserSummaryDTO;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
@@ -61,11 +65,13 @@ class UserControllerTest {
     @Mock private LoginLandingService loginLandingService;
 
     private ApplicationProperties applicationProperties;
+    private MockEnvironment environment;
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         applicationProperties = new ApplicationProperties();
+        environment = new MockEnvironment();
         applicationProperties.getPremium().setMaxUsers(10);
         applicationProperties.getMail().setEnabled(true);
 
@@ -82,7 +88,8 @@ class UserControllerTest {
                         teamMembershipService,
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.service.OrgOwnerService.class),
-                        loginLandingService);
+                        loginLandingService,
+                        environment);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -198,10 +205,6 @@ class UserControllerTest {
         verify(loginAttemptService).resetAttempts("lockeduser");
     }
 
-    // ---------------------------------------------------------------------
-    // GET /api/v1/user/users - storage.signing.userListScope scoping
-    // ---------------------------------------------------------------------
-
     private static User user(long id, String username, boolean enabled, Team team) {
         User u = new User();
         u.setId(id);
@@ -222,24 +225,32 @@ class UserControllerTest {
         return new UsernamePasswordAuthenticationToken(username, "pw");
     }
 
-    @Test
-    void listUsersDefaultScopeIsOrgWide() throws Exception {
-        // Default "org" scope returns every enabled user via findAll(), no team lookup.
+    private static UserSummaryDTO summary(long id, String username, String teamName) {
+        return new UserSummaryDTO(id, username, username, teamName, true);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"org", "team", "invalid"})
+    void listUsersSelfHostedIsInstanceWideRegardlessOfLegacySetting(String legacyScope)
+            throws Exception {
+        environment.setActiveProfiles("security");
+        environment.withProperty("storage.signing.userListScope", legacyScope);
         Team alpha = team(1L, "alpha");
-        when(userRepository.findAll())
+        when(userService.findByUsernameIgnoreCase("a@alpha.com"))
+                .thenReturn(Optional.of(user(1L, "a@alpha.com", true, alpha)));
+        when(userRepository.findEnabledSigningUsers())
                 .thenReturn(
                         List.of(
-                                user(1L, "a@alpha.com", true, alpha),
-                                user(2L, "b@alpha.com", true, alpha)));
+                                summary(1L, "a@alpha.com", "alpha"),
+                                summary(2L, "b@beta.com", "beta")));
 
         mockMvc.perform(get("/api/v1/user/users").principal(auth("a@alpha.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].username").value("a@alpha.com"))
-                .andExpect(jsonPath("$[1].username").value("b@alpha.com"));
+                .andExpect(jsonPath("$[1].username").value("b@beta.com"));
 
-        // Caller is resolved (for the anonymous-gate) but org scope still uses findAll, not team.
-        verify(userRepository, never()).findAllByTeamId(any());
+        verify(userRepository, never()).findEnabledSigningUsersByTeamId(any());
     }
 
     @Test
@@ -252,60 +263,93 @@ class UserControllerTest {
         mockMvc.perform(get("/api/v1/user/users").principal(auth("anon_abc")))
                 .andExpect(status().isForbidden());
 
-        verify(userRepository, never()).findAll();
-        verify(userRepository, never()).findAllByTeamId(any());
+        verify(userRepository, never()).findEnabledSigningUsers();
+        verify(userRepository, never()).findEnabledSigningUsersByTeamId(any());
     }
 
-    @Test
-    void listUsersOrgScopeFiltersDisabledUsers() throws Exception {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"org", "ORG", " org ", "team", "invalid"})
+    void listUsersSaasAlwaysUsesTeamScope(String configuredScope) throws Exception {
+        environment.setActiveProfiles("saas");
+        if (configuredScope != null) {
+            environment.withProperty("storage.signing.userListScope", configuredScope);
+        }
         Team alpha = team(1L, "alpha");
-        when(userRepository.findAll())
-                .thenReturn(
-                        List.of(
-                                user(1L, "enabled@alpha.com", true, alpha),
-                                user(2L, "disabled@alpha.com", false, alpha)));
+        when(userService.findByUsernameIgnoreCase("enabled@alpha.com"))
+                .thenReturn(Optional.of(user(1L, "enabled@alpha.com", true, alpha)));
+        when(userRepository.findEnabledSigningUsersByTeamId(1L))
+                .thenReturn(List.of(summary(1L, "enabled@alpha.com", "alpha")));
 
         mockMvc.perform(get("/api/v1/user/users").principal(auth("enabled@alpha.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].username").value("enabled@alpha.com"));
+
+        verify(userRepository, never()).findEnabledSigningUsers();
     }
 
     @Test
     void listUsersTeamScopeReturnsOnlyCallerTeam() throws Exception {
-        applicationProperties.getStorage().getSigning().setUserListScope("team");
+        environment.setActiveProfiles("saas");
         Team alpha = team(7L, "alpha");
         User caller = user(1L, "caller@alpha.com", true, alpha);
         when(userService.findByUsernameIgnoreCase("caller@alpha.com"))
                 .thenReturn(Optional.of(caller));
-        when(userRepository.findAllByTeamId(7L))
-                .thenReturn(List.of(caller, user(2L, "mate@alpha.com", true, alpha)));
+        when(userRepository.findEnabledSigningUsersByTeamId(7L))
+                .thenReturn(
+                        List.of(
+                                summary(1L, "caller@alpha.com", "alpha"),
+                                summary(2L, "mate@alpha.com", "alpha")));
 
         mockMvc.perform(get("/api/v1/user/users").principal(auth("caller@alpha.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].teamName").value("alpha"));
 
-        verify(userRepository).findAllByTeamId(7L);
-        verify(userRepository, never()).findAll();
+        verify(userRepository).findEnabledSigningUsersByTeamId(7L);
+        verify(userRepository, never()).findEnabledSigningUsers();
     }
 
     @Test
     void listUsersTeamScopeWithMissingCallerReturnsEmpty() throws Exception {
-        applicationProperties.getStorage().getSigning().setUserListScope("team");
+        environment.setActiveProfiles("saas");
         when(userService.findByUsernameIgnoreCase("ghost@alpha.com")).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/user/users").principal(auth("ghost@alpha.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
 
-        verify(userRepository, never()).findAllByTeamId(any());
-        verify(userRepository, never()).findAll();
+        verify(userRepository, never()).findEnabledSigningUsersByTeamId(any());
+        verify(userRepository, never()).findEnabledSigningUsers();
+    }
+
+    @Test
+    void listUsersOrgScopeWithMissingCallerReturnsEmpty() throws Exception {
+        mockMvc.perform(get("/api/v1/user/users").principal(auth("missing")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        verify(userRepository, never()).findEnabledSigningUsers();
+        verify(userRepository, never()).findEnabledSigningUsersByTeamId(any());
+    }
+
+    @Test
+    void listUsersDisabledCallerCannotEnumerateUsers() throws Exception {
+        when(userService.findByUsernameIgnoreCase("disabled"))
+                .thenReturn(Optional.of(user(1L, "disabled", false, null)));
+
+        mockMvc.perform(get("/api/v1/user/users").principal(auth("disabled")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        verify(userRepository, never()).findEnabledSigningUsers();
+        verify(userRepository, never()).findEnabledSigningUsersByTeamId(any());
     }
 
     @Test
     void listUsersTeamScopeWithNullTeamReturnsSelfOnly() throws Exception {
-        applicationProperties.getStorage().getSigning().setUserListScope("team");
+        environment.setActiveProfiles("saas");
         User caller = user(1L, "solo@nowhere.com", true, null);
         when(userService.findByUsernameIgnoreCase("solo@nowhere.com"))
                 .thenReturn(Optional.of(caller));
@@ -315,14 +359,14 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].username").value("solo@nowhere.com"));
 
-        verify(userRepository, never()).findAllByTeamId(any());
-        verify(userRepository, never()).findAll();
+        verify(userRepository, never()).findEnabledSigningUsersByTeamId(any());
+        verify(userRepository, never()).findEnabledSigningUsers();
     }
 
     @Test
     void listUsersTeamScopeOnDefaultTeamReturnsSelfOnly() throws Exception {
         // A caller on a shared system team must not enumerate its members.
-        applicationProperties.getStorage().getSigning().setUserListScope("team");
+        environment.setActiveProfiles("saas");
         Team defaultTeam = team(1L, TeamService.DEFAULT_TEAM_NAME);
         User caller = user(1L, "new@saas.com", true, defaultTeam);
         when(userService.findByUsernameIgnoreCase("new@saas.com")).thenReturn(Optional.of(caller));
@@ -332,13 +376,13 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].username").value("new@saas.com"));
 
-        verify(userRepository, never()).findAllByTeamId(any());
-        verify(userRepository, never()).findAll();
+        verify(userRepository, never()).findEnabledSigningUsersByTeamId(any());
+        verify(userRepository, never()).findEnabledSigningUsers();
     }
 
     @Test
     void listUsersTeamScopeOnInternalTeamReturnsSelfOnly() throws Exception {
-        applicationProperties.getStorage().getSigning().setUserListScope("team");
+        environment.setActiveProfiles("saas");
         Team internalTeam = team(2L, TeamService.INTERNAL_TEAM_NAME);
         User caller = user(1L, "svc@saas.com", true, internalTeam);
         when(userService.findByUsernameIgnoreCase("svc@saas.com")).thenReturn(Optional.of(caller));
@@ -348,82 +392,15 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].username").value("svc@saas.com"));
 
-        verify(userRepository, never()).findAllByTeamId(any());
-        verify(userRepository, never()).findAll();
-    }
-
-    @Test
-    void listUsersFailsClosedOnUnrecognisedScope() throws Exception {
-        // Any non-"org" value must restrict to the caller's team, not leak the instance.
-        applicationProperties.getStorage().getSigning().setUserListScope("tewm");
-        Team alpha = team(3L, "alpha");
-        when(userService.findByUsernameIgnoreCase("caller@alpha.com"))
-                .thenReturn(Optional.of(user(1L, "caller@alpha.com", true, alpha)));
-        when(userRepository.findAllByTeamId(3L))
-                .thenReturn(List.of(user(1L, "caller@alpha.com", true, alpha)));
-
-        mockMvc.perform(get("/api/v1/user/users").principal(auth("caller@alpha.com")))
-                .andExpect(status().isOk());
-
-        verify(userRepository).findAllByTeamId(3L);
-        verify(userRepository, never()).findAll();
-    }
-
-    @Test
-    void listUsersFailsClosedOnBlankScope() throws Exception {
-        applicationProperties.getStorage().getSigning().setUserListScope("   ");
-        Team alpha = team(4L, "alpha");
-        when(userService.findByUsernameIgnoreCase("caller@alpha.com"))
-                .thenReturn(Optional.of(user(1L, "caller@alpha.com", true, alpha)));
-        when(userRepository.findAllByTeamId(4L)).thenReturn(List.of());
-
-        mockMvc.perform(get("/api/v1/user/users").principal(auth("caller@alpha.com")))
-                .andExpect(status().isOk());
-
-        verify(userRepository).findAllByTeamId(4L);
-        verify(userRepository, never()).findAll();
-    }
-
-    @Test
-    void listUsersFailsClosedOnNullScope() throws Exception {
-        // A null value must also fail closed to the caller's team.
-        applicationProperties.getStorage().getSigning().setUserListScope(null);
-        Team alpha = team(9L, "alpha");
-        when(userService.findByUsernameIgnoreCase("caller@alpha.com"))
-                .thenReturn(Optional.of(user(1L, "caller@alpha.com", true, alpha)));
-        when(userRepository.findAllByTeamId(9L)).thenReturn(List.of());
-
-        mockMvc.perform(get("/api/v1/user/users").principal(auth("caller@alpha.com")))
-                .andExpect(status().isOk());
-
-        verify(userRepository).findAllByTeamId(9L);
-        verify(userRepository, never()).findAll();
-    }
-
-    @Test
-    void listUsersOrgScopeIsCaseInsensitive() throws Exception {
-        applicationProperties.getStorage().getSigning().setUserListScope("ORG");
-        when(userRepository.findAll()).thenReturn(List.of(user(1L, "a@alpha.com", true, null)));
-
-        mockMvc.perform(get("/api/v1/user/users").principal(auth("a@alpha.com")))
-                .andExpect(status().isOk());
-
-        verify(userRepository).findAll();
-        verify(userRepository, never()).findAllByTeamId(any());
+        verify(userRepository, never()).findEnabledSigningUsersByTeamId(any());
+        verify(userRepository, never()).findEnabledSigningUsers();
     }
 
     @Test
     void listUsersRequiresAuthentication() throws Exception {
         mockMvc.perform(get("/api/v1/user/users")).andExpect(status().isUnauthorized());
 
-        verify(userRepository, never()).findAll();
-        verify(userRepository, never()).findAllByTeamId(any());
-    }
-
-    @Test
-    void signingUserListScopeDefaultsToOrg() {
-        // Self-host backward-compat: default must stay "org" (saas profile flips it to "team").
-        assertEquals(
-                "org", new ApplicationProperties().getStorage().getSigning().getUserListScope());
+        verify(userRepository, never()).findEnabledSigningUsers();
+        verify(userRepository, never()).findEnabledSigningUsersByTeamId(any());
     }
 }
