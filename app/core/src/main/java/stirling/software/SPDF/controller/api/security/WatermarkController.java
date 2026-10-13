@@ -94,7 +94,8 @@ public class WatermarkController {
                     "error.watermark.text.required",
                     "watermarkText must be provided when watermarkType is 'text'");
         }
-        if ("image".equalsIgnoreCase(watermarkType) && watermarkImage == null) {
+        if ("image".equalsIgnoreCase(watermarkType)
+                && (watermarkImage == null || watermarkImage.isEmpty())) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.watermark.image.required",
                     "watermarkImage must be provided when watermarkType is 'image'");
@@ -187,7 +188,7 @@ public class WatermarkController {
 
     private static String resolveWatermarkType(String watermarkType, MultipartFile image) {
         if (watermarkType == null || watermarkType.isBlank()) {
-            return image != null ? "image" : "text";
+            return image != null && !image.isEmpty() ? "image" : "text";
         }
         if (!"text".equalsIgnoreCase(watermarkType) && !"image".equalsIgnoreCase(watermarkType)) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -307,6 +308,12 @@ public class WatermarkController {
 
         // Load the watermark image
         BufferedImage image = ImageIO.read(watermarkImage.getInputStream());
+        if (image == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    ExceptionUtils.ErrorCode.INVALID_ARGUMENT,
+                    "watermarkImage",
+                    "must be a supported image");
+        }
 
         // Compute width based on original aspect ratio
         float aspectRatio = (float) image.getWidth() / (float) image.getHeight();

@@ -117,7 +117,7 @@ public class StampController {
                     "Stamp text must be provided when stamp type is 'text'");
         }
         if ("image".equalsIgnoreCase(stampType)) {
-            if (stampImage == null) {
+            if ((stampImage == null || stampImage.isEmpty())) {
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.stamp.image.required",
                         "Stamp image file must be provided when stamp type is 'image'");
@@ -218,7 +218,7 @@ public class StampController {
 
     private static String resolveStampType(String stampType, MultipartFile stampImage) {
         if (stampType == null || stampType.isBlank()) {
-            return stampImage != null ? "image" : "text";
+            return stampImage != null && !stampImage.isEmpty() ? "image" : "text";
         }
         if (!"text".equalsIgnoreCase(stampType) && !"image".equalsIgnoreCase(stampType)) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -487,6 +487,12 @@ public class StampController {
 
         // Load the stamp image
         BufferedImage image = ImageIO.read(stampImage.getInputStream());
+        if (image == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    ExceptionUtils.ErrorCode.INVALID_ARGUMENT,
+                    "stampImage",
+                    "must be a supported image");
+        }
 
         // Compute width based on original aspect ratio
         float aspectRatio = (float) image.getWidth() / (float) image.getHeight();

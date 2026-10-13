@@ -343,6 +343,12 @@ public class AutoRotateController {
         int pageCount = document.getNumberOfPages();
         Set<Integer> seen = new HashSet<>();
         for (PageRotation entry : rotations) {
+            if (entry == null) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        ExceptionUtils.ErrorCode.INVALID_ARGUMENT,
+                        "pageRotations",
+                        "entries must not be null");
+            }
             Integer pageNumber = entry.getPageNumber();
             Integer angle = entry.getRotation();
             if (pageNumber == null
