@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -43,6 +45,8 @@ import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.model.WorkflowStatus;
 import stirling.software.proprietary.workflow.model.WorkflowType;
+import stirling.software.proprietary.workflow.notification.SigningInvitationEvent;
+import stirling.software.proprietary.workflow.notification.SigningResponseEvent;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
 
@@ -59,6 +63,7 @@ class WorkflowSessionServiceTest {
     @Mock private ObjectMapper objectMapper;
     @Mock private ApplicationProperties applicationProperties;
     @Mock private MetadataEncryptionService metadataEncryptionService;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     @Mock private LicenseServiceInterface licenseService;
     @Mock private stirling.software.common.service.CustomPDFDocumentFactory pdfDocumentFactory;
@@ -195,6 +200,7 @@ class WorkflowSessionServiceTest {
     void signDocument_transitionsParticipantToSigned() {
         User user = user("alice");
         WorkflowParticipant participant = pendingParticipant(user);
+        participant.setId(5L);
         sessionWithParticipant("s1", participant);
 
         when(metadataEncryptionService.encrypt(any())).thenReturn("enc:pw");
@@ -209,6 +215,7 @@ class WorkflowSessionServiceTest {
                 ArgumentCaptor.forClass(WorkflowParticipant.class);
         verify(workflowParticipantRepository).save(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(ParticipantStatus.SIGNED);
+        verify(eventPublisher).publishEvent(new SigningResponseEvent(5L, null));
     }
 
     // -------------------------------------------------------------------------
@@ -271,7 +278,8 @@ class WorkflowSessionServiceTest {
                         realEncryption,
                         validator,
                         licenseService,
-                        pdfDocumentFactory);
+                        pdfDocumentFactory,
+                        eventPublisher);
 
         User user = user("dave");
         WorkflowParticipant participant = pendingParticipant(user);
@@ -578,6 +586,51 @@ class WorkflowSessionServiceTest {
         ArgumentCaptor<WorkflowSession> captor = ArgumentCaptor.forClass(WorkflowSession.class);
         verify(workflowSessionRepository).save(captor.capture());
         assertThat(captor.getValue().getDocumentName()).isEqualTo("uploaded.pdf");
+    }
+
+    @Test
+    void createSession_invitesEveryParticipantOnceSaved() throws IOException {
+        MockMultipartFile file =
+                new MockMultipartFile("file", "doc.pdf", "application/pdf", new byte[] {1});
+        WorkflowCreationRequest request = new WorkflowCreationRequest();
+        request.setWorkflowType(WorkflowType.SIGNING);
+        request.setParticipantUserIds(List.of(20L));
+        request.setParticipantEmails(List.of("guest@example.com"));
+        when(pdfDocumentFactory.load(
+                        any(org.springframework.web.multipart.MultipartFile.class), eq(true)))
+                .thenAnswer(
+                        invocation -> {
+                            var document = new org.apache.pdfbox.pdmodel.PDDocument();
+                            document.addPage(new org.apache.pdfbox.pdmodel.PDPage());
+                            return document;
+                        });
+
+        when(storageProvider.store(any(), any()))
+                .thenReturn(
+                        StoredObject.builder()
+                                .storageKey("k")
+                                .originalFilename("doc.pdf")
+                                .contentType("application/pdf")
+                                .sizeBytes(1L)
+                                .build());
+        when(storedFileRepository.save(any())).thenReturn(new StoredFile());
+        WorkflowSession savedSession = new WorkflowSession();
+        savedSession.setSessionId("s-3");
+        savedSession.setParticipants(new ArrayList<>());
+        when(workflowSessionRepository.save(any())).thenReturn(savedSession);
+        when(userRepository.findById(20L)).thenReturn(Optional.of(user("bob@example.com")));
+        AtomicLong ids = new AtomicLong(100L);
+        when(workflowParticipantRepository.save(any()))
+                .thenAnswer(
+                        i -> {
+                            WorkflowParticipant saved = i.getArgument(0);
+                            saved.setId(ids.getAndIncrement());
+                            return saved;
+                        });
+
+        service.createSession(user("alice"), file, request);
+
+        verify(eventPublisher).publishEvent(new SigningInvitationEvent("s-3", List.of(100L, 101L)));
     }
 
     // -------------------------------------------------------------------------

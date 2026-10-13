@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -41,6 +42,7 @@ import stirling.software.proprietary.workflow.dto.WorkflowSessionResponse;
 import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
+import stirling.software.proprietary.workflow.notification.SigningResponseEvent;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
 import stirling.software.proprietary.workflow.service.MetadataEncryptionService;
@@ -68,6 +70,7 @@ public class WorkflowParticipantController {
     private final ObjectMapper objectMapper;
     private final MetadataEncryptionService metadataEncryptionService;
     private final CertificateSubmissionValidator certificateSubmissionValidator;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final DateTimeFormatter ISO_UTC =
             DateTimeFormatter.ISO_INSTANT.withZone(ZoneOffset.UTC);
@@ -164,6 +167,7 @@ public class WorkflowParticipantController {
             // Update status to SIGNED
             participant.setStatus(ParticipantStatus.SIGNED);
             participant = participantRepository.save(participant);
+            eventPublisher.publishEvent(new SigningResponseEvent(participant.getId(), null));
 
             log.info(
                     "Participant {} submitted signature for session {}",
@@ -212,6 +216,7 @@ public class WorkflowParticipantController {
         }
 
         participant = participantRepository.save(participant);
+        eventPublisher.publishEvent(new SigningResponseEvent(participant.getId(), reason));
 
         log.info(
                 "Participant {} declined workflow session {}",
@@ -222,39 +227,28 @@ public class WorkflowParticipantController {
     }
 
     @Operation(
-            summary = "Get original PDF for review",
-            description = "Participant downloads the original document")
+            summary = "Get the session PDF",
+            description =
+                    "Participant downloads the original document, or the signed document once the"
+                            + " owner has finalized the session")
     @GetMapping(value = "/document", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> getDocument(@RequestParam("token") @NotBlank String token) {
 
         workflowSessionService.ensureSigningEnabled();
 
-        WorkflowParticipant participant =
-                participantRepository
-                        .findByShareToken(token)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Invalid or expired participant token"));
-
-        if (participant.isExpired()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
-        }
-
         try {
-            WorkflowSession session = participant.getWorkflowSession();
-            byte[] pdf = workflowSessionService.getOriginalFile(session.getSessionId());
+            WorkflowSessionService.ParticipantDocument document =
+                    workflowSessionService.getParticipantDocument(token);
 
             return ResponseEntity.ok()
                     .header(
                             HttpHeaders.CONTENT_DISPOSITION,
                             ContentDisposition.attachment()
-                                    .filename(session.getDocumentName(), StandardCharsets.UTF_8)
+                                    .filename(document.filename(), StandardCharsets.UTF_8)
                                     .build()
                                     .toString())
                     .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
-                    .body(pdf);
+                    .body(document.content());
 
         } catch (IOException e) {
             log.error("Error retrieving document for participant", e);

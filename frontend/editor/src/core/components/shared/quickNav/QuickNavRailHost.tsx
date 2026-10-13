@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { useState } from "react";
 import { SignMenu } from "@app/components/shared/signing/SignMenu";
 import { requestSigningIntent } from "@app/utils/pendingSigningIntent";
@@ -32,6 +33,7 @@ const ACCOUNT_ANCHOR = "account";
 
 export function QuickNavRailHost() {
   const { t } = useTranslation();
+  const localOnly = useLocalProcessingOnly();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const host = useQuickNavHost();
@@ -112,7 +114,7 @@ export function QuickNavRailHost() {
   const editor: QuickNavEntry = {
     id: "editor",
     label: t("quickNav.editor", "Editor"),
-    icon: <Icon name="pencil" size={SIZE} filled={inEditor} />,
+    icon: <Icon name="pencil" size={SIZE} />,
     // The library and reading are places of their own, not the editor with a
     // different centre.
     current:
@@ -133,7 +135,7 @@ export function QuickNavRailHost() {
   const processor: QuickNavEntry = {
     id: "processor",
     label: t("quickNav.processor", "Processor"),
-    icon: <Icon name="cpu" size={SIZE} filled={inPortal} />,
+    icon: <Icon name="cpu" size={SIZE} />,
     current: inPortal,
     disabled:
       HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous,
@@ -160,7 +162,7 @@ export function QuickNavRailHost() {
   const surfaces: QuickNavEntry[] = [
     reader,
     editor,
-    ...(HAS_PORTAL ? [processor] : []),
+    ...(HAS_PORTAL && !localOnly ? [processor] : []),
   ];
 
   const within: QuickNavEntry[] = [
@@ -195,7 +197,7 @@ export function QuickNavRailHost() {
         else go("/files");
       },
     },
-    ...(canCreateProcessingFolders
+    ...(canCreateProcessingFolders && !localOnly
       ? [
           {
             id: "createProcessingFolder",
@@ -290,7 +292,10 @@ export function QuickNavRailHost() {
 
   return (
     <QuickNavRailContainer
-      groups={[surfaces, within]}
+      groups={[
+        surfaces,
+        localOnly ? within.filter((entry) => entry.id !== "automate") : within,
+      ]}
       onReturnHome={() => guarded(goToStartupView)}
       identity={host?.identity ?? null}
       onOpenAccount={openAccount}
