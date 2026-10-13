@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -73,12 +74,26 @@ class McpOAuthServiceTest {
         when(clients.save(any())).thenAnswer(McpOAuthServiceTest::firstArg);
         when(clients.findById(anyString())).thenReturn(Optional.empty());
         when(authorizations.save(any())).thenAnswer(McpOAuthServiceTest::firstArg);
-        when(grants.save(any())).thenAnswer(McpOAuthServiceTest::firstArg);
+        when(grants.save(any()))
+                .thenAnswer(
+                        i -> {
+                            McpOAuthGrant grant = i.getArgument(0);
+                            grant.setId(1L);
+                            return grant;
+                        });
+        when(refreshTokens.consume(anyString(), any())).thenReturn(1);
+        when(grants.touch(anyLong(), any())).thenReturn(1);
         when(grants.findByUsernameAndClientId(anyString(), anyString()))
                 .thenReturn(Optional.empty());
         when(authorizations.transition(any(), any(), any())).thenReturn(1);
         when(tokenMinter.mintAccessToken(
-                        anyString(), anyString(), anyString(), anyString(), anyString(), anyInt()))
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyLong(),
+                        anyInt()))
                 .thenReturn("signed.jwt.value");
 
         service =
@@ -323,12 +338,12 @@ class McpOAuthServiceTest {
                         .build();
         when(refreshTokens.findById(stored.getTokenHash())).thenReturn(Optional.of(stored));
         when(grants.findByUsernameAndClientId(USER, CIMD_ID))
-                .thenReturn(Optional.of(McpOAuthGrant.builder().username(USER).build()));
+                .thenReturn(Optional.of(McpOAuthGrant.builder().id(1L).username(USER).build()));
 
         Map<String, Object> token = service.refresh("old-refresh", CIMD_ID);
 
-        assertTrue(stored.getConsumedAt() != null, "kept as consumed, so a replay is caught");
-        verify(refreshTokens).save(stored);
+        verify(refreshTokens).consume(eq(stored.getTokenHash()), any());
+        verify(grants).touch(eq(1L), any());
         assertEquals(scope, token.get("scope"));
         assertTrue(token.containsKey("refresh_token"));
         verify(tokenMinter)
@@ -338,6 +353,7 @@ class McpOAuthServiceTest {
                         eq(ISSUER + "/mcp"),
                         eq(scope),
                         eq(CIMD_ID),
+                        eq(1L),
                         anyInt());
     }
 
@@ -409,7 +425,13 @@ class McpOAuthServiceTest {
     private void verifyNoTokenMinted() {
         verify(tokenMinter, never())
                 .mintAccessToken(
-                        anyString(), anyString(), anyString(), anyString(), anyString(), anyInt());
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyLong(),
+                        anyInt());
     }
 
     @Test
@@ -633,7 +655,8 @@ class McpOAuthServiceTest {
         McpAuthorizationRequest request = pending(null);
         request.setCodeChallenge(s256(VERIFIER));
         service.approve(request);
-        McpOAuthGrant grant = McpOAuthGrant.builder().username(USER).clientId("client-1").build();
+        McpOAuthGrant grant =
+                McpOAuthGrant.builder().id(1L).username(USER).clientId("client-1").build();
         when(grants.findByUsernameAndClientId(USER, "client-1")).thenReturn(Optional.of(grant));
         return request;
     }
@@ -664,5 +687,58 @@ class McpOAuthServiceTest {
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    @Test
+    void aRefreshLosingTheConsumptionRaceCannotMintTokens() {
+        McpRefreshToken stored =
+                McpRefreshToken.builder()
+                        .tokenHash(McpOAuthService.sha256Hex("raced"))
+                        .clientId("client-1")
+                        .username(USER)
+                        .expiresAt(Instant.now().plusSeconds(300))
+                        .build();
+        when(refreshTokens.findById(stored.getTokenHash())).thenReturn(Optional.of(stored));
+        when(grants.findByUsernameAndClientId(USER, "client-1"))
+                .thenReturn(Optional.of(McpOAuthGrant.builder().id(1L).username(USER).build()));
+        when(refreshTokens.consume(eq(stored.getTokenHash()), any())).thenReturn(0);
+        assertThrows(McpOAuthException.class, () -> service.refresh("raced", "client-1"));
+        verify(refreshTokens).deleteByUsernameAndClientId(USER, "client-1");
+        verify(grants).deleteByUsernameAndClientId(USER, "client-1");
+        verifyNoTokenMinted();
+    }
+
+    @Test
+    void replayingARefreshTokenAlsoRevokesTheAccessGrant() {
+        McpRefreshToken stored =
+                McpRefreshToken.builder()
+                        .tokenHash(McpOAuthService.sha256Hex("replay"))
+                        .clientId("client-1")
+                        .username(USER)
+                        .consumedAt(Instant.now())
+                        .expiresAt(Instant.now().plusSeconds(300))
+                        .build();
+        when(refreshTokens.findById(stored.getTokenHash())).thenReturn(Optional.of(stored));
+        assertThrows(McpOAuthException.class, () -> service.refresh("replay", "client-1"));
+        verify(grants).deleteByUsernameAndClientId(USER, "client-1");
+        verify(authorizations).deleteByUsernameAndClientId(USER, "client-1");
+    }
+
+    @Test
+    void aGrantRevokedDuringRefreshCannotBeRecreatedByUpdatingItsLastUse() {
+        McpRefreshToken stored =
+                McpRefreshToken.builder()
+                        .tokenHash(McpOAuthService.sha256Hex("revoked"))
+                        .clientId("client-1")
+                        .username(USER)
+                        .expiresAt(Instant.now().plusSeconds(300))
+                        .build();
+        when(refreshTokens.findById(stored.getTokenHash())).thenReturn(Optional.of(stored));
+        when(grants.findByUsernameAndClientId(USER, "client-1"))
+                .thenReturn(Optional.of(McpOAuthGrant.builder().id(1L).username(USER).build()));
+        when(grants.touch(eq(1L), any())).thenReturn(0);
+        assertThrows(McpOAuthException.class, () -> service.refresh("revoked", "client-1"));
+        verify(grants, never()).save(any());
+        verifyNoTokenMinted();
     }
 }

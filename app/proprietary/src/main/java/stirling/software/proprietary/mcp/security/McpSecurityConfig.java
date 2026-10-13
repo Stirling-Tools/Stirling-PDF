@@ -350,7 +350,10 @@ public class McpSecurityConfig {
                 throw new BadJwtException(result.getErrors().iterator().next().getDescription());
             }
             // Revoking a connected app must end its access tokens too, not just refreshes.
-            if (!oauth.isGrantActive(jwt.getSubject(), jwt.getClaimAsString("client_id"))) {
+            if (!oauth.isGrantActive(
+                    jwt.getSubject(),
+                    jwt.getClaimAsString("client_id"),
+                    jwt.getClaimAsString(McpTokenMinter.GRANT_ID_CLAIM))) {
                 throw new BadJwtException("Access for this app has been revoked.");
             }
             return jwt;

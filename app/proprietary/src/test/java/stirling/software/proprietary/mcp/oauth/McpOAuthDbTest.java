@@ -3,6 +3,7 @@ package stirling.software.proprietary.mcp.oauth;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -13,6 +14,9 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +24,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.mcp.oauth.model.McpAuthorizationRequest;
@@ -46,6 +54,7 @@ class McpOAuthDbTest {
     @Autowired private McpRefreshTokenRepository refreshTokens;
 
     private McpOAuthService service;
+    @Autowired private PlatformTransactionManager transactions;
 
     @BeforeEach
     void setUp() {
@@ -54,7 +63,13 @@ class McpOAuthDbTest {
         props.getMcp().getAuth().setResourceId("https://pdf.example.com/mcp");
         McpTokenMinter minter = mock(McpTokenMinter.class);
         when(minter.mintAccessToken(
-                        anyString(), anyString(), anyString(), anyString(), anyString(), anyInt()))
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyLong(),
+                        anyInt()))
                 .thenReturn("signed.jwt.value");
         McpClientMetadataFetcher fetcher = mock(McpClientMetadataFetcher.class);
         when(fetcher.fetch(CIMD_ID))
@@ -94,9 +109,6 @@ class McpOAuthDbTest {
 
         Map<String, Object> refreshed = service.refresh(refresh, CIMD_ID);
         assertThat(refreshed.get("refresh_token")).isNotEqualTo(refresh);
-        assertThatThrownBy(() -> service.refresh(refresh, CIMD_ID))
-                .isInstanceOf(McpOAuthException.class);
-
         Long grantId = grants.findByUsernameAndClientId(USER, CIMD_ID).get().getId();
         assertThat(service.revokeGrant(USER, grantId)).isTrue();
         assertThat(refreshTokens.findAll()).isEmpty();
@@ -143,6 +155,76 @@ class McpOAuthDbTest {
         assertThat(clients.findAll())
                 .extracting(McpOAuthClient::getClientId)
                 .containsExactlyInAnyOrder("used", "fresh");
+    }
+
+    @Test
+    void replayingARotatedTokenRevokesItsStandingGrant() {
+        McpAuthorizationRequest pending =
+                service.createAuthorization(
+                        CIMD_ID,
+                        USER,
+                        REDIRECT,
+                        "state",
+                        "offline_access",
+                        "https://pdf.example.com/mcp",
+                        s256(VERIFIER),
+                        "S256");
+        service.approve(pending);
+        Map<String, Object> tokens =
+                service.exchangeCode(pending.getCode(), CIMD_ID, REDIRECT, VERIFIER);
+        String original = tokens.get("refresh_token").toString();
+        service.refresh(original, CIMD_ID);
+        assertThatThrownBy(() -> service.refresh(original, CIMD_ID))
+                .isInstanceOf(McpOAuthException.class);
+        assertThat(grants.findByUsernameAndClientId(USER, CIMD_ID)).isEmpty();
+        assertThat(refreshTokens.findAll()).isEmpty();
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void twoTransactionsCannotConsumeTheSameRefreshToken() throws Exception {
+        var tx = new TransactionTemplate(transactions);
+        String hash = "concurrent-refresh-hash";
+        tx.executeWithoutResult(
+                status -> refreshTokens.save(refreshToken(hash, Instant.now().plusSeconds(300))));
+        var read = new CountDownLatch(2);
+        var start = new CountDownLatch(1);
+        java.util.concurrent.Callable<Integer> attempt =
+                () ->
+                        tx.execute(
+                                status -> {
+                                    assertThat(
+                                                    refreshTokens
+                                                            .findById(hash)
+                                                            .orElseThrow()
+                                                            .getConsumedAt())
+                                            .isNull();
+                                    read.countDown();
+                                    try {
+                                        if (!start.await(5, TimeUnit.SECONDS)) {
+                                            throw new AssertionError(
+                                                    "Concurrent refresh did not start");
+                                        }
+                                    } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                        throw new AssertionError(e);
+                                    }
+                                    return refreshTokens.consume(hash, Instant.now());
+                                });
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            var a = pool.submit(attempt);
+            var b = pool.submit(attempt);
+            try {
+                assertThat(read.await(5, TimeUnit.SECONDS)).isTrue();
+            } finally {
+                start.countDown();
+            }
+            assertThat(List.of(a.get(10, TimeUnit.SECONDS), b.get(10, TimeUnit.SECONDS)))
+                    .containsExactlyInAnyOrder(0, 1);
+            assertThat(refreshTokens.findById(hash).orElseThrow().getConsumedAt()).isNotNull();
+        } finally {
+            tx.executeWithoutResult(status -> refreshTokens.deleteById(hash));
+        }
     }
 
     private static McpOAuthClient client(String id, Instant createdAt, Instant lastUsedAt) {

@@ -68,7 +68,7 @@ public class McpOAuthService {
     private final McpRefreshTokenRepository refreshTokens;
     private final McpTokenMinter tokenMinter;
     private final McpClientMetadataFetcher metadataFetcher;
-    private final Cache<String, Boolean> activeGrants =
+    private final Cache<String, Long> activeGrants =
             Caffeine.newBuilder()
                     .maximumSize(10_000)
                     .expireAfterWrite(Duration.ofSeconds(10))
@@ -398,11 +398,18 @@ public class McpOAuthService {
     }
 
     /** Whether a token's grant still stands; cached briefly as every /mcp call asks. */
-    public boolean isGrantActive(String username, String clientId) {
-        if (username == null || clientId == null) {
+    public boolean isGrantActive(String username, String clientId, String grantId) {
+        if (username == null || clientId == null || grantId == null) {
             return false;
         }
-        return activeGrants.get(grantKey(username, clientId), k -> hasGrant(username, clientId));
+        Long current =
+                activeGrants.get(
+                        grantKey(username, clientId),
+                        k ->
+                                grants.findByUsernameAndClientId(username, clientId)
+                                        .map(McpOAuthGrant::getId)
+                                        .orElse(-1L));
+        return current > 0 && grantId.equals(current.toString());
     }
 
     private static String grantKey(String username, String clientId) {
@@ -433,6 +440,7 @@ public class McpOAuthService {
         grant.setScope(request.getScope());
         grant.setLastUsedAt(now);
         grants.save(grant);
+        activeGrants.invalidate(grantKey(request.getUsername(), request.getClientId()));
 
         request.setCode(randomId());
         request.setStatus(McpAuthorizationRequest.Status.APPROVED);
@@ -501,9 +509,12 @@ public class McpOAuthService {
         if (!verifyPkce(request.getCodeChallenge(), codeVerifier)) {
             throw McpOAuthException.invalidGrant("PKCE verification failed.");
         }
-        if (grants.findByUsernameAndClientId(request.getUsername(), clientId).isEmpty()) {
-            throw McpOAuthException.invalidGrant("Access for this client has been revoked.");
-        }
+        McpOAuthGrant grant =
+                grants.findByUsernameAndClientId(request.getUsername(), clientId)
+                        .orElseThrow(
+                                () ->
+                                        McpOAuthException.invalidGrant(
+                                                "Access for this client has been revoked."));
         // Conditional update, so two concurrent redemptions cannot both mint a token.
         if (authorizations.transition(
                         request.getAuthorizationId(),
@@ -522,7 +533,11 @@ public class McpOAuthService {
                         });
 
         return issueTokens(
-                request.getUsername(), clientId, request.getScope(), request.getResource());
+                request.getUsername(),
+                clientId,
+                request.getScope(),
+                request.getResource(),
+                grant.getId());
     }
 
     /** Refresh-token grant. The presented token is rotated out. */
@@ -537,7 +552,7 @@ public class McpOAuthService {
                                 () -> McpOAuthException.invalidGrant("Unknown refresh token."));
         if (stored.getConsumedAt() != null) {
             // A rotated token came back: assume theft and end every session for this client.
-            refreshTokens.deleteByUsernameAndClientId(stored.getUsername(), stored.getClientId());
+            revokeClientSessions(stored);
             log.warn(
                     "MCP refresh token reused for client {}; its sessions were revoked",
                     sanitize(stored.getClientId()));
@@ -557,24 +572,38 @@ public class McpOAuthService {
             refreshTokens.delete(stored);
             throw McpOAuthException.invalidGrant("Access for this client has been revoked.");
         }
-        // Kept as consumed until it expires, so a replay is recognised.
-        stored.setConsumedAt(Instant.now());
-        refreshTokens.save(stored);
-        grant.get().setLastUsedAt(Instant.now());
-        grants.save(grant.get());
+        Instant now = Instant.now();
+        if (refreshTokens.consume(hash, now) != 1) {
+            revokeClientSessions(stored);
+            throw McpOAuthException.invalidGrant("Refresh token has already been used.");
+        }
+        if (grants.touch(grant.get().getId(), now) != 1) {
+            throw McpOAuthException.invalidGrant("Access for this client has been revoked.");
+        }
         return issueTokens(
                 stored.getUsername(),
                 stored.getClientId(),
                 stored.getScope(),
-                stored.getResource());
+                stored.getResource(),
+                grant.get().getId());
+    }
+
+    private void revokeClientSessions(McpRefreshToken token) {
+        String username = token.getUsername();
+        String clientId = token.getClientId();
+        refreshTokens.deleteByUsernameAndClientId(username, clientId);
+        authorizations.deleteByUsernameAndClientId(username, clientId);
+        grants.deleteByUsernameAndClientId(username, clientId);
+        activeGrants.invalidate(grantKey(username, clientId));
     }
 
     private Map<String, Object> issueTokens(
-            String username, String clientId, String scope, String resource) {
+            String username, String clientId, String scope, String resource, long grantId) {
         String audience = (resource == null || resource.isBlank()) ? audience() : resource;
         int minutes = builtin().getAccessTokenMinutes();
         String accessToken =
-                tokenMinter.mintAccessToken(issuer(), username, audience, scope, clientId, minutes);
+                tokenMinter.mintAccessToken(
+                        issuer(), username, audience, scope, clientId, grantId, minutes);
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("access_token", accessToken);

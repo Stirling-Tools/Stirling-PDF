@@ -14,6 +14,14 @@ import stirling.software.proprietary.mcp.oauth.model.McpRefreshToken;
 @Repository
 public interface McpRefreshTokenRepository extends JpaRepository<McpRefreshToken, String> {
 
+    /** Consumes an unexpired refresh token once, across every server node. */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Transactional
+    @Query(
+            "update McpRefreshToken t set t.consumedAt = :now where t.tokenHash = :hash"
+                    + " and t.consumedAt is null and t.expiresAt > :now")
+    int consume(@Param("hash") String tokenHash, @Param("now") Instant now);
+
     @Modifying
     @Transactional
     void deleteByUsernameAndClientId(String username, String clientId);
