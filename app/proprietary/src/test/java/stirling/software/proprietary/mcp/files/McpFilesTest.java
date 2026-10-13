@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -44,6 +45,7 @@ class McpFilesTest {
     @BeforeEach
     void setUp() throws Exception {
         props.getSecurity().setEnableLogin(true);
+        owner.setUsername("alice");
         props.getSystem().setFrontendUrl("https://app.example.com/");
         file.setId(7L);
         file.setOriginalFilename("out.pdf");
@@ -61,6 +63,9 @@ class McpFilesTest {
                 .thenReturn(share);
         when(storage.storeTemporaryFile(eq(owner), any(), any())).thenReturn(file);
         when(tempStore.storeInputStream(any(InputStream.class), anyString()))
+                .thenReturn(new FileStorage.StoredFile("tmp-1", PDF.length));
+        when(tempStore.storeInputStream(
+                        any(InputStream.class), anyString(), nullable(String.class)))
                 .thenReturn(new FileStorage.StoredFile("tmp-1", PDF.length));
     }
 

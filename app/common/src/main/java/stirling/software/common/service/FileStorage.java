@@ -92,7 +92,13 @@ public class FileStorage {
 
     public StoredFile storeInputStream(InputStream inputStream, String originalName)
             throws IOException {
-        FileStore.Stored stored = fileStore.store(inputStream, originalName, resolveOwner());
+        return storeInputStream(inputStream, originalName, resolveOwner());
+    }
+
+    /** Stores on behalf of an authenticated owner supplied by a credential outside the session. */
+    public StoredFile storeInputStream(InputStream inputStream, String originalName, String owner)
+            throws IOException {
+        FileStore.Stored stored = fileStore.store(inputStream, originalName, owner);
         log.debug("Stored input stream with ID: {}", stored.fileId());
         return new StoredFile(stored.fileId(), stored.size());
     }

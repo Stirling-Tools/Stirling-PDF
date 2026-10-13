@@ -33,6 +33,7 @@ import stirling.software.common.cluster.JobStore;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationMeta;
+import stirling.software.proprietary.mcp.tools.McpParameterCheck;
 import stirling.software.proprietary.mcp.tools.McpPipelineStep;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.controller.PolicyController;
@@ -687,7 +688,8 @@ public class McpAutomations {
                         step.parameters() == null || !step.parameters().isObject()
                                 ? Map.of()
                                 : mapper.convertValue(
-                                        step.parameters(),
+                                        McpParameterCheck.canonical(
+                                                step.meta().paramSchema(), step.parameters()),
                                         new TypeReference<Map<String, Object>>() {});
                 steps.add(new PipelineStep(step.meta().endpointPath(), parameters));
             }
