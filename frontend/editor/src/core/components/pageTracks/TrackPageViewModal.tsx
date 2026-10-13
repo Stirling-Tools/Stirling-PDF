@@ -12,6 +12,7 @@ import {
   isSourcePage,
   sourcePageKey,
 } from "@app/components/pageTracks/types";
+import { isPageImage } from "@app/components/pageTracks/trackFileKind";
 import { BlankPagePreview } from "@app/components/pageTracks/BlankPagePreview";
 import { TrackThumbnailStore } from "@app/components/pageTracks/hooks/useTrackThumbnails";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
@@ -63,6 +64,11 @@ export function TrackPageViewModal({
     if (!file) {
       setFailed(true);
       return;
+    }
+    if (isPageImage(file)) {
+      const url = URL.createObjectURL(file);
+      setHiRes(url);
+      return () => URL.revokeObjectURL(url);
     }
     void (async () => {
       try {

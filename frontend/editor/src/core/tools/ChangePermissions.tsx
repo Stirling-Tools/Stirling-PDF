@@ -3,6 +3,7 @@ import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
 import { useChangePermissionsParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
 import { useChangePermissionsOperation } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
+import { usePermissionExtraction } from "@app/hooks/tools/changePermissions/usePermissionExtraction";
 import { useChangePermissionsTips } from "@app/components/tooltips/useChangePermissionsTips";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
@@ -16,6 +17,13 @@ const ChangePermissions = (props: BaseToolProps) => {
     useChangePermissionsParameters,
     useChangePermissionsOperation,
     props,
+    { skipResetParamsOnFirstFiles: true },
+  );
+
+  const permissions = usePermissionExtraction(
+    base.selectedFiles.length === 1 ? base.selectedFiles[0] : undefined,
+    base.params.setParameters,
+    !base.operation.isLoading && !base.hasResults,
   );
 
   return createToolFlow({
@@ -35,7 +43,10 @@ const ChangePermissions = (props: BaseToolProps) => {
           <ChangePermissionsSettings
             parameters={base.params.parameters}
             onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading}
+            disabled={base.endpointLoading || base.operation.isLoading}
+            isLoading={permissions.isLoading}
+            hasReadError={permissions.hasError}
+            multipleFiles={base.selectedFiles.length > 1}
           />
         ),
       },
@@ -47,6 +58,7 @@ const ChangePermissions = (props: BaseToolProps) => {
       onClick: base.handleExecute,
       endpointEnabled: base.endpointEnabled,
       paramsValid: base.params.validateParameters(),
+      disabled: permissions.isLoading,
     },
     review: {
       isVisible: base.hasResults,

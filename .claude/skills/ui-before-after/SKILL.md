@@ -53,7 +53,7 @@ gh pr diff <pr> --name-only        # or: git diff --name-only <base>...HEAD
 Map changed frontend files to URLs generically:
 - **Tools**: a changed `components/tools/<toolDir>/…` or `hooks/tools/<tool>/…` →
   toolId → URL via the repo's own rule `getToolUrlPath` in
-  [toolsTaxonomy.ts:200](frontend/editor/src/core/data/toolsTaxonomy.ts): `/` + the
+  [toolsTaxonomy.ts:200](../../../frontend/editor/src/core/data/toolsTaxonomy.ts): `/` + the
   id kebab-cased (`addPageNumbers` → `/add-page-numbers`).
 - **Pages/routes**: changed `filesPage/*` → `/files`, etc.
 - `--all`: enumerate every tool in the registry instead of just changed ones.

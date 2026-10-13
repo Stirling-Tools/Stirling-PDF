@@ -159,7 +159,8 @@ for (const file of [fixture, ...corpus]) {
   }, testInfo) => {
     test.setTimeout(180_000);
     const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(error.message));
+    const onPageError = (error: Error) => errors.push(error.message);
+    page.on("pageerror", onPageError);
     await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("pdf-editor-root")).toBeVisible();
     await page.getByTestId("pdf-editor-file-input").setInputFiles(file);
@@ -247,7 +248,10 @@ for (const file of [fixture, ...corpus]) {
       path: saved,
       contentType: "application/pdf",
     });
+    // WebKit reports the old page's blob reads cut off by the reload as errors.
+    page.off("pageerror", onPageError);
     await page.reload({ waitUntil: "domcontentloaded" });
+    page.on("pageerror", onPageError);
     await page.getByTestId("pdf-editor-file-input").setInputFiles(saved);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
