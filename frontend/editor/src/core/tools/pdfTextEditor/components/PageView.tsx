@@ -124,8 +124,9 @@ export function PageView({
   // Raw-PDF -> display (CropBox/rotation) transform for this page. Identity for
   // normal pages, so every overlay/click computation below is unchanged there.
   const transform = DisplayTransform.fromData(page.display);
-  const visibleFiredRef = useRef(false);
-  const firstRenderFiredRef = useRef(false);
+  // Per document: a newly opened file reuses this view for its page of the same index.
+  const visibleDocRef = useRef<typeof document | null>(null);
+  const firstRenderedDocRef = useRef<typeof document | null>(null);
   const [rendering, setRendering] = useState(false);
   const [paintedRevision, setPaintedRevision] = useState(-1);
   const [renderError, setRenderError] = useState<string | null>(null);
@@ -137,12 +138,12 @@ export function PageView({
   useEffect(() => {
     const el = containerRef.current;
     if (!el || !onFirstVisible) return;
-    if (visibleFiredRef.current) return;
+    if (visibleDocRef.current === document) return;
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting && !visibleFiredRef.current) {
-            visibleFiredRef.current = true;
+          if (entry.isIntersecting && visibleDocRef.current !== document) {
+            visibleDocRef.current = document;
             onFirstVisible(page.pageIndex);
             observer.disconnect();
           }
@@ -152,7 +153,7 @@ export function PageView({
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [page.pageIndex, onFirstVisible]);
+  }, [document, page.pageIndex, onFirstVisible]);
 
   // Near-viewport observer drives rendering with a wide rootMargin so the
   // bitmap is ready just before the page scrolls in.
@@ -198,8 +199,8 @@ export function PageView({
         if (ctx) ctx.putImageData(image, 0, 0);
         setRendering(false);
         setPaintedRevision(page.revision);
-        if (!firstRenderFiredRef.current) {
-          firstRenderFiredRef.current = true;
+        if (firstRenderedDocRef.current !== document) {
+          firstRenderedDocRef.current = document;
           onFirstRendered?.(page.pageIndex);
         }
       })
@@ -212,8 +213,8 @@ export function PageView({
         setRenderError(msg);
         // Flip the first-rendered flag on error too, so the loading
         // overlay dismisses instead of leaving the user on a spinner.
-        if (!firstRenderFiredRef.current) {
-          firstRenderFiredRef.current = true;
+        if (firstRenderedDocRef.current !== document) {
+          firstRenderedDocRef.current = document;
           onFirstRendered?.(page.pageIndex);
         }
       });

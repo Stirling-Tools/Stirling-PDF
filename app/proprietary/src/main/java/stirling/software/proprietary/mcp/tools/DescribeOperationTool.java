@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import stirling.software.proprietary.mcp.McpCallContext;
 import stirling.software.proprietary.mcp.McpTool;
+import stirling.software.proprietary.mcp.McpToolAnnotations;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationMeta;
 
@@ -30,6 +31,16 @@ public class DescribeOperationTool implements McpTool {
     @Override
     public String name() {
         return "stirling_describe_operation";
+    }
+
+    @Override
+    public String title() {
+        return "Describe a Stirling operation";
+    }
+
+    @Override
+    public McpToolAnnotations annotations() {
+        return McpToolAnnotations.READ_ONLY;
     }
 
     @Override

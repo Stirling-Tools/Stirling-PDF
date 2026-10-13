@@ -62,11 +62,15 @@ function queueStubThumbUpdate(
  * Show the stub's thumbnail if present; otherwise pull bytes from IndexedDB,
  * generate one, persist it, and update the stub. Server-only files with no
  * cached bytes silently stay placeholder-only.
+ *
+ * Generation waits for `enabled` — callers pass the row's in-viewport state so
+ * a long list only queues work for rows the user can actually reach.
  */
 export function useLazyThumbnail(
   fileId: FileId,
   size: number,
   thumbnailUrl?: string,
+  enabled = true,
 ): string | undefined {
   const [thumb, setThumb] = useState<string | undefined>(thumbnailUrl);
   const attempted = useRef(false);
@@ -80,6 +84,7 @@ export function useLazyThumbnail(
   useEffect(() => {
     if (thumbnailUrl || attempted.current || size >= THUMBNAIL_SIZE_LIMIT)
       return;
+    if (!enabled) return;
     attempted.current = true;
     let cancelled = false;
 
@@ -105,7 +110,7 @@ export function useLazyThumbnail(
     return () => {
       cancelled = true;
     };
-  }, [fileId, size, thumbnailUrl, indexedDB, updateStirlingFileStub]);
+  }, [fileId, size, thumbnailUrl, indexedDB, updateStirlingFileStub, enabled]);
 
   return thumb;
 }
