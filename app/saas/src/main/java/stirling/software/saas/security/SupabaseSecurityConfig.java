@@ -33,6 +33,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -194,7 +195,15 @@ public class SupabaseSecurityConfig {
         }
         String jwks = issuer + "/.well-known/jwks.json";
         log.info("Configuring JWT decoder with JWKS: {}", jwks);
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwks).build();
+        // Supabase's newer asymmetric signing keys are ES256; legacy ones RS256.
+        NimbusJwtDecoder decoder =
+                NimbusJwtDecoder.withJwkSetUri(jwks)
+                        .jwsAlgorithms(
+                                algorithms -> {
+                                    algorithms.add(SignatureAlgorithm.RS256);
+                                    algorithms.add(SignatureAlgorithm.ES256);
+                                })
+                        .build();
         // Defence-in-depth: signature verification already binds the token to this Supabase
         // project's JWKS, but enforcing iss/exp/aud explicitly catches tokens that smuggle
         // through (e.g. JWKS reuse across projects, clock-skew abuse, missing aud).
@@ -281,6 +290,17 @@ public class SupabaseSecurityConfig {
                                     "Missing/invalid audience: " + expectedAudienceOrNull,
                                     null));
                 }
+            }
+
+            // Tokens Supabase issues to connected apps (Claude, ChatGPT) are for /mcp only, which
+            // has its own decoder; API callers use API keys and the web app user sessions.
+            String clientId = token.getClaimAsString("client_id");
+            if (clientId != null && !clientId.isBlank()) {
+                errors.add(
+                        new OAuth2Error(
+                                "invalid_token",
+                                "App tokens are only valid for MCP; use an API key or sign in",
+                                null));
             }
 
             return errors.isEmpty()
@@ -396,7 +416,12 @@ public class SupabaseSecurityConfig {
                         "Accept",
                         "Origin",
                         "X-API-KEY",
-                        "X-Browser-Id"));
+                        "X-Browser-Id",
+                        // MCP Streamable HTTP headers, for browser-based MCP clients
+                        "MCP-Protocol-Version",
+                        "Mcp-Method",
+                        "Mcp-Name",
+                        "Mcp-Session-Id"));
         cfg.setExposedHeaders(
                 List.of(
                         "WWW-Authenticate",

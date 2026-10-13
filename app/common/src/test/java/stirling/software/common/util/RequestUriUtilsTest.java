@@ -201,6 +201,21 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsPublicAuthEndpoint_mcpAuthorizationServer() {
+        // Clients reach discovery, registration and token with no credentials at all.
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/.well-known/oauth-authorization-server", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/.well-known/jwks.json", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/oauth/register", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/uploads/abc", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/uploads", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/api/v1/mcp/oauth/token", "/app"));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/oauth/authorizations", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/oauth/grants", ""));
+    }
+
+    @Test
     void testIsPublicAuthEndpoint_withContextPath() {
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/login", "/app"));
     }
@@ -267,6 +282,17 @@ class RequestUriUtilsTest {
         // Guard against future additions like /share/<token>/download becoming accidentally public
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/abc123/download", ""));
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/abc/admin", ""));
+    }
+
+    @Test
+    void testIsShareLinkDownload_onlyTheTokenDownloadPath() {
+        String link = "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f";
+        assertTrue(RequestUriUtils.isShareLinkDownload(link, ""));
+        assertTrue(RequestUriUtils.isShareLinkDownload("/app" + link, "/app"));
+        assertFalse(RequestUriUtils.isShareLinkDownload(link + "/metadata", ""));
+        assertFalse(
+                RequestUriUtils.isShareLinkDownload(
+                        "/share/00dcac3a-fc7a-4989-9c4f-97745484d62f", ""));
     }
 
     @Test

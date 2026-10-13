@@ -1,0 +1,25 @@
+{
+  "name": "stirling-mcp-conformance",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Conformance and output-correctness checks for the Stirling PDF MCP server using the official MCP clients.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node run-all.mjs",
+    "protocol": "node protocol.mjs",
+    "sdk-v1": "node sdk-v1.mjs",
+    "eras": "node eras.mjs",
+    "correctness": "node correctness.mjs",
+    "fixtures": "node fixtures.mjs",
+    "check": "node --check lib.mjs && node --check protocol.mjs && node --check sdk-v1.mjs && node --check eras.mjs && node --check run-all.mjs && node --check inspect.mjs && node --check fixtures.mjs && node --check correctness.mjs"
+  },
+  "dependencies": {
+    "@cantoo/pdf-lib": "2.8.2",
+    "@modelcontextprotocol/client": "2.3.1",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "pdfjs-dist": "5.5.207"
+  }
+}

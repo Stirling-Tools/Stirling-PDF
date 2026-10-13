@@ -1,5 +1,6 @@
 package stirling.software.proprietary.mcp.tools;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -40,7 +41,7 @@ public class StirlingDownloadTool implements McpTool {
 
     @Override
     public String title() {
-        return "Download a result file";
+        return "Get a result file's contents";
     }
 
     @Override
@@ -50,9 +51,10 @@ public class StirlingDownloadTool implements McpTool {
 
     @Override
     public String description() {
-        return "Fetch a stored file's content by fileId (e.g. an operation result), returned inline"
-                + " as base64. Only for clients that cannot open the result's download link."
-                + " Argument: { fileId: <id> }.";
+        return "Read a stored file's content by fileId (e.g. an operation result). Text results"
+                + " (txt, md, csv, html, xml, json) come back as text you can read and quote, such"
+                + " as the text pdf-to-text or OCR extracted; other files come back as base64 for"
+                + " clients that cannot open the download link. Argument: { fileId: <id> }.";
     }
 
     @Override
@@ -71,7 +73,9 @@ public class StirlingDownloadTool implements McpTool {
     public ObjectNode call(JsonNode arguments, McpCallContext context) {
         if (!context.hasScope("mcp.tools.read")) {
             return McpResponses.error(
-                    mapper, "Insufficient scope: stirling_download requires 'mcp.tools.read'.");
+                    mapper,
+                    "Insufficient scope: stirling_download requires 'mcp.tools.read'.",
+                    McpResponses.Failure.INSUFFICIENT_SCOPE);
         }
         String fileId = McpToolSupport.textArg(arguments, "fileId");
         if (fileId == null) {
@@ -89,6 +93,12 @@ public class StirlingDownloadTool implements McpTool {
                                 + maxInline
                                 + " bytes. Use the result's download link instead.");
             }
+            String mimeType =
+                    MediaTypeFactory.getMediaType(file.name())
+                            .orElse(MediaType.APPLICATION_OCTET_STREAM)
+                            .toString();
+            String uri = "stirling://file/" + fileId;
+            boolean text = "text".equals(McpZipParts.outputKind(mimeType, file.name()));
             return McpResponses.result(
                     mapper,
                     false,
@@ -99,13 +109,17 @@ public class StirlingDownloadTool implements McpTool {
                                     + " ("
                                     + file.bytes().length
                                     + " bytes) included inline below."),
-                    McpResponses.resourceBlock(
-                            mapper,
-                            "stirling://file/" + fileId,
-                            MediaTypeFactory.getMediaType(file.name())
-                                    .orElse(MediaType.APPLICATION_OCTET_STREAM)
-                                    .toString(),
-                            Base64.getEncoder().encodeToString(file.bytes())));
+                    text
+                            ? McpResponses.textResourceBlock(
+                                    mapper,
+                                    uri,
+                                    mimeType,
+                                    new String(file.bytes(), StandardCharsets.UTF_8))
+                            : McpResponses.resourceBlock(
+                                    mapper,
+                                    uri,
+                                    mimeType,
+                                    Base64.getEncoder().encodeToString(file.bytes())));
         } catch (McpFiles.McpFileException e) {
             return McpResponses.error(mapper, e.getMessage());
         }

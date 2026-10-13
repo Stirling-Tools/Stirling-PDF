@@ -204,7 +204,12 @@ public class SecurityConfiguration {
                         "X-API-KEY",
                         "X-CSRF-TOKEN",
                         "X-XSRF-TOKEN",
-                        "X-Browser-Id"));
+                        "X-Browser-Id",
+                        // MCP Streamable HTTP headers, for browser-based MCP clients
+                        "MCP-Protocol-Version",
+                        "Mcp-Method",
+                        "Mcp-Name",
+                        "Mcp-Session-Id"));
 
         cfg.setExposedHeaders(
                 List.of(

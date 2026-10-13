@@ -20,6 +20,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
@@ -59,6 +60,9 @@ public class McpSecurityConfig {
 
     private static final String BASE_PATH = "/mcp";
 
+    /** RFC 9728 protected-resource metadata; clients insert the resource path after it. */
+    private static final String RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
+
     public McpSecurityConfig(
             ApplicationProperties applicationProperties,
             @Lazy UserService userService,
@@ -79,8 +83,10 @@ public class McpSecurityConfig {
     @PostConstruct
     void validateConfigOnStartup() {
         log.info("MCP server enabled - validating configuration:");
-        for (McpConfigValidator.Finding finding :
-                McpConfigValidator.validate(applicationProperties.getMcp())) {
+        List<McpConfigValidator.Finding> findings =
+                new ArrayList<>(McpConfigValidator.validate(applicationProperties.getMcp()));
+        findings.addAll(McpConfigValidator.validateResults(applicationProperties));
+        for (McpConfigValidator.Finding finding : findings) {
             if (finding.severity() == McpConfigValidator.Severity.WARN) {
                 log.warn("MCP config: {}", finding.message());
             } else {
@@ -110,7 +116,14 @@ public class McpSecurityConfig {
      */
     private SecurityFilterChain apiKeyFilterChain(HttpSecurity http) throws Exception {
         applyCors(http);
-        http.securityMatcher(BASE_PATH, BASE_PATH + "/**")
+        // Claim the discovery paths too, or they fall through to the app chain and answer 401.
+        http.securityMatcher(
+                        BASE_PATH,
+                        BASE_PATH + "/**",
+                        RESOURCE_METADATA_PATH,
+                        RESOURCE_METADATA_PATH + "/**",
+                        "/.well-known/oauth-authorization-server",
+                        "/.well-known/oauth-authorization-server/**")
                 // CSRF intentionally disabled: /mcp is a stateless JSON-RPC API authenticated by an
                 // out-of-band X-API-KEY header (or Authorization: Bearer <key>). No cookies, no
                 // session, no form submissions; a browser cannot trick a victim into sending the
@@ -118,7 +131,14 @@ public class McpSecurityConfig {
                 // generically; the SessionCreationPolicy.STATELESS below is the relevant guarantee.
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(a -> a.anyRequest().authenticated())
+                .authorizeHttpRequests(
+                        a ->
+                                a.requestMatchers(HttpMethod.GET, "/.well-known/**")
+                                        .permitAll()
+                                        .anyRequest()
+                                        .authenticated())
+                .addFilterBefore(
+                        new McpNoOAuthMetadataFilter(), AnonymousAuthenticationFilter.class)
                 .exceptionHandling(
                         e ->
                                 e.authenticationEntryPoint(
@@ -130,7 +150,7 @@ public class McpSecurityConfig {
                                             response.setContentType("application/json");
                                             response.getWriter()
                                                     .write(
-                                                            "{\"error\":\"unauthorized\",\"message\":\"Provide a valid Stirling API key via the X-API-KEY header (or Authorization: Bearer <key>).\"}");
+                                                            "{\"error\":\"unauthorized\",\"message\":\"Provide a valid Stirling API key via the X-API-KEY header (or Authorization: Bearer <key>). This server runs MCP in API-key mode and publishes no OAuth metadata; clients that only support OAuth need mcp.auth.mode=oauth.\"}");
                                         }))
                 .addFilterBefore(
                         new McpRequestSizeFilter(
@@ -146,13 +166,16 @@ public class McpSecurityConfig {
     private SecurityFilterChain oauthFilterChain(
             HttpSecurity http, JwtDecoder mcpJwtDecoder, ApplicationProperties.Mcp.Auth auth)
             throws Exception {
-        String metadataPath = "/.well-known/oauth-protected-resource";
+        String metadataPath = RESOURCE_METADATA_PATH;
         applyCors(http);
         // RFC 9728 section 3.1: clients derive the metadata URL by inserting the well-known
         // segment before the resource path, so /mcp is discovered at {metadataPath}/mcp. Claim
         // the subpaths too; otherwise they fall through to another filter chain whose default
         // Spring Security metadata filter serves a document without authorization_servers.
-        http.securityMatcher(BASE_PATH, BASE_PATH + "/**", metadataPath, metadataPath + "/**")
+        List<String> matchers =
+                new ArrayList<>(
+                        List.of(BASE_PATH, BASE_PATH + "/**", metadataPath, metadataPath + "/**"));
+        http.securityMatcher(matchers.toArray(String[]::new))
                 // CSRF intentionally disabled: /mcp is a stateless JSON-RPC resource server
                 // authenticated by OAuth2 Bearer JWTs (Authorization header). No cookies, no
                 // session, no form submissions; CSRF requires browser-attached ambient credentials
@@ -163,8 +186,7 @@ public class McpSecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         a ->
-                                a.requestMatchers(
-                                                HttpMethod.GET, metadataPath, metadataPath + "/**")
+                                a.requestMatchers(HttpMethod.GET, "/.well-known/**")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
@@ -178,7 +200,8 @@ public class McpSecurityConfig {
                         new McpUserBindingFilter(
                                 userService,
                                 auth.getUsernameClaim(),
-                                auth.isRequireExistingAccount()),
+                                auth.isRequireExistingAccount(),
+                                auth.isAutoProvisionUsers()),
                         BearerTokenAuthenticationFilter.class)
                 .oauth2ResourceServer(
                         oauth2 ->
@@ -238,7 +261,14 @@ public class McpSecurityConfig {
         NimbusJwtDecoder decoder =
                 jwksUri.isBlank()
                         ? NimbusJwtDecoder.withIssuerLocation(auth.getIssuerUri()).build()
-                        : NimbusJwtDecoder.withJwkSetUri(jwksUri).build();
+                        // Supabase's newer signing keys are ES256; older IdPs sign with RS256.
+                        : NimbusJwtDecoder.withJwkSetUri(jwksUri)
+                                .jwsAlgorithms(
+                                        algorithms -> {
+                                            algorithms.add(SignatureAlgorithm.RS256);
+                                            algorithms.add(SignatureAlgorithm.ES256);
+                                        })
+                                .build();
         OAuth2TokenValidator<Jwt> defaultValidators =
                 JwtValidators.createDefaultWithIssuer(auth.getIssuerUri());
         OAuth2TokenValidator<Jwt> combined =
