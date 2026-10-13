@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { connectionModeService } from "@app/services/connectionModeService";
 import type { ConnectionMode } from "@app/services/connectionModeService";
 import { useServerFolderBlock as useCoreServerFolderBlock } from "@core/hooks/useServerFolderBlock";
@@ -11,6 +12,7 @@ import { useServerFolderBlock as useCoreServerFolderBlock } from "@core/hooks/us
 export function useServerFolderBlock(): string | null {
   const { t } = useTranslation();
   const coreReason = useCoreServerFolderBlock();
+  const localOnly = useLocalProcessingOnly();
   // Seeded from the cache so a remount answers on its first frame; the effect covers
   // the first-ever load and later mode switches.
   const [mode, setMode] = useState<ConnectionMode | null>(() =>
@@ -33,6 +35,11 @@ export function useServerFolderBlock(): string | null {
   // any mode where the item would be blocked, signing in or connecting a server IS the
   // way out — unlike the core reasons, which in local mode point at a storage setting
   // that doesn't exist.
+  if (localOnly)
+    return t(
+      "desktopPrivacy.blocked",
+      "Your administrator requires documents to stay on this device. This feature is unavailable.",
+    );
   if (mode === "local" || mode === null) {
     return t(
       "filesPage.serverFolderNeedsConnection",

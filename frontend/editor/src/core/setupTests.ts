@@ -46,7 +46,7 @@ class LocalStorageMock implements Storage {
   }
 }
 
-Object.defineProperty(window, "localStorage", {
+Object.defineProperty(globalThis, "localStorage", {
   value: new LocalStorageMock(),
   writable: true,
 });
@@ -157,7 +157,7 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock matchMedia for responsive components
-Object.defineProperty(window, "matchMedia", {
+Object.defineProperty(globalThis, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({
     matches: false,

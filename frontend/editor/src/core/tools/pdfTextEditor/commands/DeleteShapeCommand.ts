@@ -5,6 +5,7 @@ import type { Page } from "@app/tools/pdfTextEditor/model/Page";
 import type { ShapeObject } from "@app/tools/pdfTextEditor/model/ShapeObject";
 import type { PageRuleSnapshot } from "@app/tools/pdfTextEditor/types";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 interface PageInsertModule {
   FPDFPage_InsertObjectAtIndex?: (
@@ -148,18 +149,12 @@ function insertOnPage(
 }
 
 function readDrawMode(m: WrappedPdfiumModule, objPtr: number): DrawMode | null {
-  const fillModePtr = m.pdfium.wasmExports.malloc(4);
-  const strokePtr = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!m.FPDFPath_GetDrawMode(objPtr, fillModePtr, strokePtr)) return null;
-    return {
-      fillMode: m.pdfium.getValue(fillModePtr, "i32"),
-      stroke: m.pdfium.getValue(strokePtr, "i32") !== 0,
-    };
-  } finally {
-    m.pdfium.wasmExports.free(fillModePtr);
-    m.pdfium.wasmExports.free(strokePtr);
-  }
+  const buf = scratchPtr(m, SCRATCH.shapeDrawMode, 8);
+  if (!m.FPDFPath_GetDrawMode(objPtr, buf, buf + 4)) return null;
+  return {
+    fillMode: m.pdfium.getValue(buf, "i32"),
+    stroke: m.pdfium.getValue(buf + 4, "i32") !== 0,
+  };
 }
 
 function indexOnPage(
