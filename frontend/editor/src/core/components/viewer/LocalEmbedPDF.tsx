@@ -814,6 +814,27 @@ function EditingBridges({
   );
 }
 
+/** Absolutely positioned, so any loading content painted after it must be positioned to stay visible. */
+function ViewerLoadingPoster({ url }: { url?: string }) {
+  if (!url) return null;
+  return (
+    <img
+      data-testid="viewer-loading-poster"
+      src={url}
+      alt=""
+      aria-hidden
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        objectFit: "contain",
+        background: "var(--mantine-color-body)",
+      }}
+    />
+  );
+}
+
 export function LocalEmbedPDF({
   file,
   url,
@@ -1320,22 +1341,7 @@ export function LocalEmbedPDF({
   if (isLoading || !engine || (hasInput && !isInputReady)) {
     return (
       <Center h="100%" w="100%" style={{ position: "relative" }}>
-        {posterUrl && (
-          <img
-            data-testid="viewer-loading-poster"
-            src={posterUrl}
-            alt=""
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              background: "var(--mantine-color-body)",
-            }}
-          />
-        )}
+        <ViewerLoadingPoster url={posterUrl} />
         <Stack align="center" gap="md" style={{ position: "relative" }}>
           <Loader size="lg" />
           <Text c="dimmed" size="sm">
@@ -1524,23 +1530,16 @@ export function LocalEmbedPDF({
               <Center
                 style={{ height: "100%", width: "100%", position: "relative" }}
               >
-                <ToolLoadingFallback />
-                {posterUrl && (
-                  <img
-                    data-testid="viewer-loading-poster"
-                    src={posterUrl}
-                    alt=""
-                    aria-hidden
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                      background: "var(--mantine-color-body)",
-                    }}
-                  />
-                )}
+                <ViewerLoadingPoster url={posterUrl} />
+                <div
+                  style={{
+                    position: "relative",
+                    height: "100%",
+                    width: "100%",
+                  }}
+                >
+                  <ToolLoadingFallback />
+                </div>
               </Center>
             }
           >
