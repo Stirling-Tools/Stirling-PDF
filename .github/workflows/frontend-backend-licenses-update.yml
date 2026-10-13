@@ -65,10 +65,19 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Checkout trusted setup-bot action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-setup-bot-action
+          sparse-checkout: .github/actions/setup-bot
+          persist-credentials: false
+
       - name: Setup GitHub App Bot
         if: (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)) && github.actor != 'dependabot[bot]'
         id: setup-bot
-        uses: ./.github/actions/setup-bot
+        uses: ./trusted-setup-bot-action/.github/actions/setup-bot
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -342,10 +351,19 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Checkout trusted setup-bot action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-setup-bot-action
+          sparse-checkout: .github/actions/setup-bot
+          persist-credentials: false
+
       - name: Setup GitHub App Bot
         if: (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)) && github.actor != 'dependabot[bot]'
         id: setup-bot
-        uses: ./.github/actions/setup-bot
+        uses: ./trusted-setup-bot-action/.github/actions/setup-bot
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -358,8 +376,17 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-license-report-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
 
++      - name: Checkout trusted Java action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-java-action
+          sparse-checkout: .github/actions/java
+          persist-credentials: false
+
       - name: Set up JDK 25
-        uses: ./.github/actions/java
+        uses: ./trusted-java-action/.github/actions/java
         with:
           java-version: "25"
 
