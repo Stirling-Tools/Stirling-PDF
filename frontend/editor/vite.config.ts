@@ -1,12 +1,14 @@
 import react from "@vitejs/plugin-react-swc";
 import { compression, defineAlgorithm } from "vite-plugin-compression2";
+import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path, { resolve } from "node:path";
 import { constants, brotliCompress, gzip } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
-import type { Connect, PluginOption } from "vite";
+import type { Connect, PluginOption, Rollup } from "vite";
+import type { PreRenderedAsset } from "rollup";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
@@ -16,62 +18,275 @@ const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// UV_THREADPOOL_SIZE is set by the build entrypoints (the Taskfiles and the
+// frontend Dockerfile): loading this config already touches the pool, so it
+// cannot be set here.
+
+// One list so the plugin's regex and the walk cannot drift.
+const COMPRESSION_EXCLUDED_EXTENSIONS = [
+  ".gz",
+  ".br",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".avif",
+  ".ico",
+  ".woff",
+  ".woff2",
+];
+const COMPRESSION_EXCLUDE_REGEX = new RegExp(
+  `\\.(${COMPRESSION_EXCLUDED_EXTENSIONS.map((e) => e.slice(1)).join("|")})$`,
+);
+const EXCLUDED_EXTENSION_SET = new Set(COMPRESSION_EXCLUDED_EXTENSIONS);
+
+// Cloudflare's extension-based cache list omits .mjs, so pdf.js's hashed worker
+// assets would bypass its edge cache. Renaming at emission also lets Rollup
+// rewrite the `new URL(..., import.meta.url)` references; worker sub-builds need
+// the same option because they do not inherit the main build's output options.
+const mjsToJsAssetFileNames = (assetInfo: PreRenderedAsset) =>
+  assetInfo.names.some((name) => name.endsWith(".mjs"))
+    ? "assets/[name]-[hash].js"
+    : "assets/[name]-[hash][extname]";
+
+// A variant only earns its place when it is meaningfully smaller than the source
+// it shadows; the encoders happily emit a sidecar larger than a small or already
+// compressed file. The bundler pass drops non-shrinking variants too
+// (skipIfLargerOrEqual) and this walk treats its output as fresh, so the two
+// passes agree in practice.
+const MIN_COMPRESSION_RATIO = 0.98;
+
+/** True when `sibling` exists and is at least as new as the source. */
+async function isFresh(
+  sibling: string,
+  sourceMtimeMs: number,
+): Promise<boolean> {
+  try {
+    return (await fs.stat(sibling)).mtimeMs >= sourceMtimeMs;
+  } catch {
+    return false;
+  }
+}
+
+/** Writes through a same-directory temp file so a reader never sees a partial sidecar. */
+async function writeVariant(target: string, bytes: Uint8Array): Promise<void> {
+  const temp = `${target}.${process.pid}.${randomUUID()}.tmp`;
+  await fs.writeFile(temp, bytes);
+  await fs.rename(temp, target);
+}
+
+async function writeVariantIfSmaller(
+  target: string,
+  encoded: Uint8Array,
+  sourceLength: number,
+): Promise<void> {
+  if (encoded.length < sourceLength * MIN_COMPRESSION_RATIO) {
+    await writeVariant(target, encoded);
+  } else {
+    // Never leave a variant that shadows the source without a real saving.
+    await fs.rm(target, { force: true });
+  }
+}
+
+/** Compresses one file under `distDir`; paths outside it are ignored. */
+async function compressFile(file: string, distDir: string): Promise<void> {
+  const resolved = path.resolve(file);
+  if (!resolved.startsWith(`${path.resolve(distDir)}${path.sep}`)) return;
+
+  const ext = path.extname(resolved).toLowerCase();
+  if (EXCLUDED_EXTENSION_SET.has(ext)) return;
+
+  const gzPath = `${resolved}.gz`;
+  const brPath = `${resolved}.br`;
+
+  // The bundler pass wrote some siblings; the walk runs over an existing dist,
+  // so a stale one has to be replaced rather than trusted. Each encoding is
+  // checked independently: a fresh .br next to a stale .gz is not a pair.
+  const source = await fs.stat(resolved);
+  const [gzFresh, brFresh] = await Promise.all([
+    isFresh(gzPath, source.mtimeMs),
+    isFresh(brPath, source.mtimeMs),
+  ]);
+  if (gzFresh && brFresh) return;
+
+  // A source that shrank below the threshold must not keep serving the variants
+  // left over from when it was larger.
+  if (source.size < 1024) {
+    await Promise.all([
+      fs.rm(gzPath, { force: true }),
+      fs.rm(brPath, { force: true }),
+    ]);
+    return;
+  }
+
+  const content = await fs.readFile(resolved);
+  const [gzipped, brotlied] = await Promise.all([
+    gzipPromise(content, { level: 9 }),
+    brotliPromise(content, {
+      params: {
+        [constants.BROTLI_PARAM_QUALITY]: 11,
+      },
+    }),
+  ]);
+  await Promise.all([
+    writeVariantIfSmaller(gzPath, gzipped, content.length),
+    writeVariantIfSmaller(brPath, brotlied, content.length),
+  ]);
+}
+
+// Batching bounds the zlib queue: 16 files with both encoders in flight is up
+// to 32 jobs against the 16-thread libuv pool set by the build entrypoints.
+const COMPRESSION_BATCH_FILES = 16;
+
+async function compressFiles(files: string[], distDir: string): Promise<void> {
+  for (let i = 0; i < files.length; i += COMPRESSION_BATCH_FILES) {
+    await Promise.all(
+      files
+        .slice(i, i + COMPRESSION_BATCH_FILES)
+        .map((f) => compressFile(f, distDir)),
+    );
+  }
+}
+
+type ManualChunkMeta = Parameters<Rollup.GetManualChunk>[1];
+
+const startupModulesByOutput = new WeakMap<ManualChunkMeta, Set<string>>();
+
+/**
+ * The modules the entry imports statically: these load before first render, so
+ * a chunk every page loads should hold only them. Memoized per output because
+ * Rollup hands manualChunks the module graph once per output.
+ */
+function startupModules(meta: ManualChunkMeta): Set<string> {
+  let modules = startupModulesByOutput.get(meta);
+  if (modules) return modules;
+  modules = new Set();
+  const queue = [...meta.getModuleIds()].filter(
+    (id) => meta.getModuleInfo(id)?.isEntry,
+  );
+  for (const id of queue) {
+    if (modules.has(id)) continue;
+    modules.add(id);
+    queue.push(...(meta.getModuleInfo(id)?.importedIds ?? []));
+  }
+  startupModulesByOutput.set(meta, modules);
+  return modules;
+}
+
+/**
+ * The npm package a normalized module id belongs to, or null for app code. Ids
+ * are absolute paths, often through a pnpm store, so the package is the segment
+ * after the last node_modules. Matching on that segment, rather than a raw path
+ * substring, keeps a directory that merely looks like a package from steering
+ * the split.
+ */
+function packageNameOf(id: string): string | null {
+  const marker = "node_modules/";
+  const index = id.lastIndexOf(marker);
+  // Reject a match inside a longer directory name such as "my-node_modules".
+  if (index === -1 || (index > 0 && id[index - 1] !== "/")) return null;
+  const [first, second] = id.slice(index + marker.length).split("/");
+  if (!first) return null;
+  return first.startsWith("@") ? `${first}/${second ?? ""}` : first;
+}
+
+function inScope(pkg: string, scope: string): boolean {
+  return pkg === scope || pkg.startsWith(`${scope}/`);
+}
+
+// react-markdown and its remark/micromark/mdast/hast closure is heavy and only
+// needed when a disclaimer, document or chat message renders. Matching on the
+// package name keeps an app file named like one of these out of the chunk.
+const MARKDOWN_PACKAGE_PREFIXES = [
+  "remark-",
+  "rehype-",
+  "micromark",
+  "mdast-",
+  "hast-",
+  "unist-",
+  "estree-util-",
+  "style-to-",
+  "character-entities",
+  "vfile",
+] as const;
+const MARKDOWN_PACKAGES = new Set([
+  "react-markdown",
+  "unified",
+  "parse-entities",
+  "decode-named-character-reference",
+  "markdown-table",
+  "devlop",
+  "longest-streak",
+  "ccount",
+  "zwitch",
+  "trough",
+  "bail",
+  "is-plain-obj",
+  "property-information",
+  "space-separated-tokens",
+  "comma-separated-tokens",
+  "trim-lines",
+  "html-url-attributes",
+  "@ungap/structured-clone",
+]);
+
+function isMarkdownPackage(pkg: string): boolean {
+  return (
+    MARKDOWN_PACKAGES.has(pkg) ||
+    MARKDOWN_PACKAGE_PREFIXES.some((prefix) => pkg.startsWith(prefix))
+  );
+}
+
 function compressStaticCopyPlugin(): PluginOption {
   return {
     name: "compress-static-copy",
     apply: "build" as const,
     async closeBundle() {
       const distDir = path.resolve(__dirname, "dist");
-      const targets = ["pdfium", "vendor", "pdfjs"];
 
-      const excludedExtensions = [
-        ".gz",
-        ".br",
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".webp",
-        ".woff",
-        ".woff2",
-      ];
-
-      async function walkAndCompress(dirOrFile: string) {
-        let stat;
+      // The plugin's include list skips .wasm and viteStaticCopy output never
+      // reaches it, so the walk has to cover the rest of dist. HTML, sitemap.xml
+      // and robots.txt stay with the prerender hook, which rewrites them in a
+      // concurrent closeBundle.
+      const files: string[] = [];
+      const walk = async (dir: string) => {
+        let entries;
         try {
-          stat = await fs.stat(dirOrFile);
+          entries = await fs.readdir(dir, { withFileTypes: true });
         } catch {
           return;
         }
-
-        if (stat.isFile()) {
-          const ext = path.extname(dirOrFile).toLowerCase();
-          if (stat.size >= 1024 && !excludedExtensions.includes(ext)) {
-            const content = await fs.readFile(dirOrFile);
-
-            // Gzip (level 9)
-            const gzipped = await gzipPromise(content, { level: 9 });
-            await fs.writeFile(`${dirOrFile}.gz`, gzipped);
-
-            // Brotli (quality 11)
-            const brotlied = await brotliPromise(content, {
-              params: {
-                [constants.BROTLI_PARAM_QUALITY]: 11,
-              },
-            });
-            await fs.writeFile(`${dirOrFile}.br`, brotlied);
-          }
-        } else if (stat.isDirectory()) {
-          const files = await fs.readdir(dirOrFile);
-          for (const file of files) {
-            await walkAndCompress(path.join(dirOrFile, file));
-          }
+        for (const entry of entries) {
+          const p = path.join(dir, entry.name);
+          if (entry.isDirectory()) await walk(p);
+          else if (
+            !entry.name.endsWith(".html") &&
+            entry.name !== "sitemap.xml" &&
+            entry.name !== "robots.txt"
+          )
+            files.push(p);
         }
-      }
+      };
 
-      for (const target of targets) {
-        await walkAndCompress(path.join(distDir, target));
-      }
+      await walk(distDir);
+
+      await compressFiles(files, distDir);
+
+      // The TTFs are only ever requested through the backend, which serves the
+      // .br/.gz siblings and falls back to its own classpath copy of the raw
+      // file. Shipping the raw set in dist would duplicate ~100 MB for nothing.
+      // NotoSans-Regular.ttf stays: the text editor's Unicode fallback fetches
+      // it directly, and static hosts have no classpath to fall back to.
+      const fontsDir = path.join(distDir, "fonts");
+      const fontEntries = await fs.readdir(fontsDir).catch(() => []);
+      await Promise.all(
+        fontEntries
+          .filter(
+            (name) => name.endsWith(".ttf") && name !== "NotoSans-Regular.ttf",
+          )
+          .map((name) => fs.rm(path.join(fontsDir, name), { force: true })),
+      );
     },
   };
 }
@@ -91,7 +306,11 @@ function compressStaticCopyPlugin(): PluginOption {
 // origin serves the page (correct for self-hosted Docker). Indexing signals
 // (canonical, JSON-LD, sitemap) need VITE_OG_BASE_URL specifically - see below.
 // Logic lives in scripts/og-prerender.mjs so it can be unit-tested without a full build.
-function prerenderOgPlugin(isSaas: boolean): PluginOption {
+function prerenderOgPlugin(options: {
+  isSaas: boolean;
+  precompress: boolean;
+}): PluginOption {
+  const { isSaas, precompress } = options;
   // SaaS (stirling.com) prerenders the marketing cards from a dedicated
   // manifest; every other flavour uses the tool-registry manifest.
   const manifestFile = isSaas
@@ -153,12 +372,26 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
             : " (root-relative URLs, no landing body)"),
       );
 
+      // prerenderOg rewrote index.html, so the bundler's siblings for the
+      // original shell are stale.
+      await Promise.all(
+        ["index.html.br", "index.html.gz"].map((name) =>
+          fs.rm(path.join(distDir, name), { force: true }),
+        ),
+      );
+
+      const lateFiles: string[] = [path.join(distDir, "index.html")];
+
       // Sitemaps are an indexing instruction, so they need the canonical origin,
       // not just any absolute one. Self-hosted and preview builds skip it.
       const sitemap = buildSitemap(manifest, { canonicalBase });
       if (sitemap) {
-        await fs.writeFile(path.join(distDir, "sitemap.xml"), sitemap);
+        const sitemapPath = path.join(distDir, "sitemap.xml");
+        await fs.writeFile(sitemapPath, sitemap);
+        lateFiles.push(sitemapPath);
         // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
+        // Static hosts only: packaged builds exclude dist/robots.txt and serve it
+        // from RobotsController, gated on system.googlevisibility.
         const robotsPath = path.join(distDir, "robots.txt");
         try {
           let robots = await fs.readFile(robotsPath, "utf8");
@@ -172,6 +405,38 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
           // no robots.txt in dist - nothing to link
         }
         console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
+      }
+      // Rewritten above when the sitemap points at it.
+      const robotsPath = path.join(distDir, "robots.txt");
+      try {
+        await fs.access(robotsPath);
+        lateFiles.push(robotsPath);
+      } catch {
+        // absent
+      }
+      // These are written here, and closeBundle hooks run concurrently, so the
+      // walk in the other plugin cannot compress them reliably.
+      const walkHtml = async (dir: string) => {
+        let entries;
+        try {
+          entries = await fs.readdir(dir, { withFileTypes: true });
+        } catch {
+          return;
+        }
+        for (const entry of entries) {
+          const p = path.join(dir, entry.name);
+          if (entry.isDirectory()) await walkHtml(p);
+          else if (entry.name.endsWith(".html") && entry.name !== "index.html")
+            lateFiles.push(p);
+        }
+      };
+      await walkHtml(distDir);
+      // The HTML, sitemap and robots.txt written above skip the other plugin's
+      // walk, so they are compressed here (desktop is embedded and compressed by
+      // Tauri). The siblings only serve static hosts: Jetty gzips the Spring
+      // responses in memory, so it never reads them.
+      if (precompress) {
+        await compressFiles(lateFiles, distDir);
       }
     },
   };
@@ -282,7 +547,9 @@ export default defineConfig(async ({ mode, command }) => {
   };
 
   // Shared between `vite` (dev) and `vite preview` (production-build serve, used
-  // in CI/E2E) so the live test suite still resolves /api → :8080.
+  // in CI/E2E) so the live test suite still resolves /api → :8080. /fonts is
+  // deliberately absent: the stubbed suite runs backend-free and proxying font
+  // requests would turn a static 404 into a connection error.
   const backendProxyConfig =
     effectiveMode === "desktop"
       ? undefined
@@ -321,25 +588,33 @@ export default defineConfig(async ({ mode, command }) => {
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
-      compression({
-        threshold: 1024,
-        exclude: [/\.(png|jpg|jpeg|gif|webp|woff|woff2)$/],
-        algorithms: [
-          defineAlgorithm("gzip", { level: 9 }),
-          defineAlgorithm("brotliCompress", {
-            params: {
-              [constants.BROTLI_PARAM_QUALITY]: 11,
-            },
-          }),
-        ],
-      }),
-      // Set ANALYZE=true to emit dist/stats.html (treemap) alongside the
-      // build; rollup-plugin-visualizer is ESM-only so we import dynamically.
+      // Desktop/mobile output is embedded in the Tauri binary, which brotli-
+      // compresses every asset itself and never negotiates encodings, so the
+      // .br/.gz siblings would only add their full size (tens of MB) to the
+      // bundle. Web flavours keep both encodings for the HTTP server.
+      ...(effectiveMode === "desktop"
+        ? []
+        : [
+            compression({
+              threshold: 1024,
+              exclude: [COMPRESSION_EXCLUDE_REGEX],
+              algorithms: [
+                defineAlgorithm("gzip", { level: 9 }),
+                defineAlgorithm("brotliCompress", {
+                  params: {
+                    [constants.BROTLI_PARAM_QUALITY]: 11,
+                  },
+                }),
+              ],
+            }),
+          ]),
+      // ANALYZE=true emits dist/stats.json; the visualizer is ESM-only, hence
+      // the dynamic import.
       ...(process.env.ANALYZE === "true"
         ? [
             (await import("rollup-plugin-visualizer")).visualizer({
-              filename: "dist/stats.html",
-              template: "treemap",
+              filename: "dist/stats.json",
+              template: "raw-data",
               gzipSize: true,
               brotliSize: true,
               emitFile: false,
@@ -348,12 +623,6 @@ export default defineConfig(async ({ mode, command }) => {
         : []),
       viteStaticCopy({
         targets: [
-          {
-            // node_modules is hoisted to the workspace root (frontend/), so
-            // these paths walk up one level from editor/.
-            src: "../node_modules/@embedpdf/pdfium/dist/pdfium.wasm",
-            dest: "pdfium",
-          },
           {
             // Copy jscanify vendor files to dist
             src: "public/vendor/jscanify/*",
@@ -379,20 +648,37 @@ export default defineConfig(async ({ mode, command }) => {
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
           },
-          {
-            // Fallback TrueType fonts for PDFium (Noto Sans, CJK, Arabic, etc.)
-            src: "../../app/core/src/main/resources/static/fonts/*.ttf",
-            dest: "fonts",
-          },
+          // The compression pass writes the .br/.gz siblings the backend JAR
+          // serves from classpath:/static/fonts/; desktop is embedded and gets
+          // them from the bundled backend instead.
+          ...(effectiveMode === "desktop"
+            ? []
+            : [
+                {
+                  src: "../../app/core/src/main/resources/static/fonts/*.ttf",
+                  dest: "fonts",
+                },
+              ]),
         ],
       }),
-      compressStaticCopyPlugin(),
-      prerenderOgPlugin(effectiveMode === "saas"),
+      ...(effectiveMode === "desktop" ? [] : [compressStaticCopyPlugin()]),
+      prerenderOgPlugin({
+        isSaas: effectiveMode === "saas",
+        precompress: effectiveMode !== "desktop",
+      }),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.
     worker: {
       plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
+      // Worker sub-builds do not inherit the main build's output options, so
+      // without this a worker asset referenced from inside a worker is emitted
+      // as .mjs again (see mjsToJsAssetFileNames above).
+      rollupOptions: {
+        output: {
+          assetFileNames: mjsToJsAssetFileNames,
+        },
+      },
     },
     server: {
       host: true,
@@ -422,30 +708,80 @@ export default defineConfig(async ({ mode, command }) => {
         resolveDependencies: (filename, deps, { hostType }) =>
           hostType === "html" ? [filename, ...deps] : deps,
       },
+      // The real precompression runs below, so Vite's gzip measurement is
+      // wasted CI time.
+      reportCompressedSize: false,
+      // Minifies better than esbuild for this esnext target.
+      cssMinify: "lightningcss" as const,
       rollupOptions: {
         output: {
-          manualChunks(id: string) {
-            if (id.includes("node_modules")) {
-              if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
-              if (id.includes("@embedpdf")) return "vendor-embedpdf";
-              if (id.includes("react") || id.includes("@mantine")) {
-                return "vendor-ui";
-              }
-              if (id.includes("@supabase")) return "vendor-supabase";
-              if (id.includes("posthog-js") || id.includes("@posthog"))
-                return "vendor-posthog";
-              if (id.includes("@cantoo/pdf-lib") || id.includes("pdf-lib"))
-                return "vendor-pdflib";
-              if (
-                id.includes("recharts") ||
-                id.includes("d3") ||
-                id.includes("decimal.js")
-              )
-                return "vendor-charts";
-              if (id.includes("jszip") || id.includes("pako"))
-                return "vendor-zip";
-              if (id.includes("i18next")) return "vendor-i18n";
+          assetFileNames: mjsToJsAssetFileNames,
+          manualChunks(id: string, meta: ManualChunkMeta) {
+            if (id.includes("material-symbols-icons.json"))
+              return "vendor-iconset";
+            // An asset URL import compiles to a single string. Filed by package
+            // name it joins that package's vendor chunk, and its importer then
+            // loads the whole chunk: the startup WASM warm-up imports pdfium's
+            // URL, which would pull all of embedpdf into the initial load.
+            if (id.includes("?url")) return undefined;
+            // Left to Rollup, this lands in the first dynamic-importing vendor
+            // chunk and the entry then statically imports that whole chunk.
+            if (id.includes("vite/preload-helper")) return "vendor-preload";
+
+            const pkg = packageNameOf(id);
+            if (!pkg) return undefined;
+
+            if (pkg === "pdfjs-dist") return "vendor-pdfjs";
+            // Only the lazily opened viewer needs the engine and the plugins;
+            // the startup graph needs just the pdfium glue and the shared
+            // enums, so they get their own chunks.
+            if (pkg === "@embedpdf/engines") return "vendor-embedpdf";
+            if (pkg === "@embedpdf/pdfium") return "vendor-pdfium";
+            if (
+              pkg === "@embedpdf/core" ||
+              pkg === "@embedpdf/models" ||
+              pkg === "@embedpdf/utils" ||
+              pkg === "@embedpdf/plugin-spread"
+            ) {
+              return "vendor-embedpdf-core";
             }
+            if (inScope(pkg, "@embedpdf")) return "vendor-embedpdf";
+            // Without its own chunk the portal's static import drags the
+            // markdown pipeline into vendor-ui, which the editor preloads.
+            if (isMarkdownPackage(pkg)) return "vendor-markdown";
+            // Splitting these out keeps icon changes from invalidating all of
+            // vendor-ui.
+            if (pkg === "@mui/icons-material") return "vendor-mui-icons";
+            if (pkg === "@iconify/react") return "vendor-iconify";
+            // These packages are mutually circular: splitting them breaks
+            // module init order at runtime. Only startup modules land in
+            // vendor-ui; libraries only some screens use (the markdown
+            // renderer, the date pickers) go with the screens that import them.
+            if (
+              pkg.includes("react") ||
+              pkg === "scheduler" ||
+              inScope(pkg, "@mantine") ||
+              inScope(pkg, "@mui") ||
+              inScope(pkg, "@emotion") ||
+              inScope(pkg, "@iconify")
+            ) {
+              return startupModules(meta).has(id) ? "vendor-ui" : undefined;
+            }
+            if (inScope(pkg, "@supabase")) return "vendor-supabase";
+            if (pkg === "posthog-js" || inScope(pkg, "@posthog"))
+              return "vendor-posthog";
+            if (pkg === "@cantoo/pdf-lib" || pkg === "pdf-lib")
+              return "vendor-pdflib";
+            if (
+              pkg === "recharts" ||
+              pkg === "d3" ||
+              pkg.startsWith("d3-") ||
+              pkg === "decimal.js"
+            ) {
+              return "vendor-charts";
+            }
+            if (pkg === "jszip" || pkg === "pako") return "vendor-zip";
+            if (pkg.includes("i18next")) return "vendor-i18n";
           },
         },
       },
