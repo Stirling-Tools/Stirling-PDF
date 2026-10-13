@@ -5,7 +5,7 @@
   "description": "Conformance and output-correctness checks for the Stirling PDF MCP server using the official MCP clients.",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13.0 || >=24"
   },
   "scripts": {
     "test": "node run-all.mjs",
@@ -20,6 +20,6 @@
     "@cantoo/pdf-lib": "2.8.2",
     "@modelcontextprotocol/client": "2.3.1",
     "@modelcontextprotocol/sdk": "1.32.1",
-    "pdfjs-dist": "5.5.207"
+    "pdfjs-dist": "6.3.289"
   }
 }
