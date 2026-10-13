@@ -89,6 +89,8 @@ public class PdfUtils {
     }
 
     public boolean hasImages(PDDocument document, String pagesToCheck) throws IOException {
+        pagesToCheck = pagesToCheck == null || pagesToCheck.isBlank() ? "all" : pagesToCheck;
+        GeneralUtils.requireValidPageSelection(pagesToCheck, document.getNumberOfPages());
         String[] pageOrderArr = pagesToCheck.split(",");
         List<Integer> pageList =
                 GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
@@ -105,6 +107,11 @@ public class PdfUtils {
 
     public boolean hasText(PDDocument document, String pageNumbersToCheck, String phrase)
             throws IOException {
+        pageNumbersToCheck =
+                pageNumbersToCheck == null || pageNumbersToCheck.isBlank()
+                        ? "all"
+                        : pageNumbersToCheck;
+        GeneralUtils.requireValidPageSelection(pageNumbersToCheck, document.getNumberOfPages());
         String[] pageOrderArr = pageNumbersToCheck.split(",");
         List<Integer> pageList =
                 GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());

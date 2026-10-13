@@ -1,6 +1,7 @@
 name: Build and Test Workflow
 
-# Top-level PR / merge-queue gate. Detects which paths changed and dispatches
+# PR / merge-queue gate, including stacked PRs targeting feature branches.
+# Detects which paths changed and dispatches
 # to the dedicated reusable workflows under .github/workflows/. Each child
 # workflow keeps its own setup/teardown so this file stays a routing layer.
 #
@@ -10,7 +11,6 @@ name: Build and Test Workflow
 
 on:
   pull_request:
-    branches: ["main"]
   merge_group:
     branches: ["main"]
   workflow_dispatch:
