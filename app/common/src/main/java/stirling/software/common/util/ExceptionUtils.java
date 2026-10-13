@@ -765,6 +765,17 @@ public class ExceptionUtils {
     }
 
     /**
+     * The redaction engine could not run or check its own result, and named no page, so its output
+     * is withheld.
+     */
+    public static ToolFailedException createRedactionUnverifiableException(Throwable cause) {
+        return new ToolFailedException(
+                getMessage(ErrorCode.REDACTION_UNVERIFIABLE),
+                cause,
+                ErrorCode.REDACTION_UNVERIFIABLE.getCode());
+    }
+
+    /**
      * A step refused its input on type alone, before running.
      *
      * @param actual the extension, never the filename: this message is persisted on a failure
@@ -1344,6 +1355,12 @@ public class ExceptionUtils {
                 "E077",
                 "error.redactionUnverified",
                 "Redaction could not be verified on page {0}, so no file was returned."),
+
+        // The redaction engine could not run or check its result; it reports no page for this.
+        REDACTION_UNVERIFIABLE(
+                "E083",
+                "error.redactionUnverifiable",
+                "Redaction could not be verified, so no file was returned."),
 
         // Raised before a step runs, by whoever knows both what the step accepts and what it was
         // handed. Distinct from PDF_NOT_PDF, which speaks only for steps that want a PDF.

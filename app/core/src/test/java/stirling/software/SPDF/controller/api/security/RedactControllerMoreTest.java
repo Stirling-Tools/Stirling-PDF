@@ -49,6 +49,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.jpdfium.exception.RedactUnverifiableException;
 import stirling.software.jpdfium.redact.PdfRedactor;
 import stirling.software.jpdfium.redact.RedactOptions;
 import stirling.software.jpdfium.redact.RedactResult;
@@ -257,6 +258,30 @@ class RedactControllerMoreTest {
                                 e ->
                                         assertThat(((ToolFailedException) e).getErrorCode())
                                                 .isEqualTo("E077"));
+            }
+        }
+
+        @Test
+        @DisplayName("an engine that could not check its redaction fails the request, no fallback")
+        void unverifiableRedactionFailsTheRequest() throws IOException {
+            byte[] bytes = singlePageTextPdf("public CONFIDENTIAL data");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("CONFIDENTIAL");
+            request.setRedactColor("#000000");
+
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), any(RedactOptions.class)))
+                        .thenThrow(new RedactUnverifiableException("text page unavailable"));
+
+                assertThatThrownBy(() -> controller.redactPdf(request))
+                        .isInstanceOf(ToolFailedException.class)
+                        .satisfies(
+                                e ->
+                                        assertThat(((ToolFailedException) e).getErrorCode())
+                                                .isEqualTo("E083"));
             }
         }
 

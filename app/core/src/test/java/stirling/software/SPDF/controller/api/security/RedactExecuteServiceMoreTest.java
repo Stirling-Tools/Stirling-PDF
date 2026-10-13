@@ -51,6 +51,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.jpdfium.exception.RedactUnverifiableException;
 import stirling.software.jpdfium.redact.PdfRedactor;
 import stirling.software.jpdfium.redact.RedactOptions;
 import stirling.software.jpdfium.redact.RedactResult;
@@ -322,6 +323,28 @@ class RedactExecuteServiceMoreTest {
                                 e ->
                                         assertThat(((ToolFailedException) e).getErrorCode())
                                                 .isEqualTo("E077"));
+            }
+        }
+
+        @Test
+        @DisplayName("an engine that could not check its redaction fails the request, no overlay")
+        void unverifiableRedactionFailsTheRequest() throws IOException {
+            byte[] pdf = singlePageTextPdf("Hide the SECRET word");
+            factoryReturns(pdf);
+
+            RedactExecuteRequest req = requestFor(pdf);
+            req.setTextValues(List.of("SECRET"));
+
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), any(RedactOptions.class)))
+                        .thenThrow(new RedactUnverifiableException("text page unavailable"));
+
+                assertThatThrownBy(() -> service.execute(req))
+                        .isInstanceOf(ToolFailedException.class)
+                        .satisfies(
+                                e ->
+                                        assertThat(((ToolFailedException) e).getErrorCode())
+                                                .isEqualTo("E083"));
             }
         }
 

@@ -266,6 +266,7 @@ public class RedactController {
                     throw e;
                 } catch (Exception e) {
                     tempOutput.close();
+                    TextRedactionService.rejectUnverifiable(e);
                     log.warn(
                             "JPDFium native redaction fell back to manual redaction service: {}",
                             e.getMessage());

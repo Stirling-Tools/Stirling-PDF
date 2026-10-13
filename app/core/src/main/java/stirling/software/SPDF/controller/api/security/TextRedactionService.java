@@ -26,6 +26,7 @@ import stirling.software.SPDF.utils.text.TextFinderUtils;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.exception.JPDFiumException;
 import stirling.software.jpdfium.redact.PdfRedactor;
 import stirling.software.jpdfium.redact.RedactOptions;
 import stirling.software.jpdfium.redact.RedactResult;
@@ -47,6 +48,18 @@ class TextRedactionService {
                         .collect(Collectors.joining(", "));
         if (!failedPages.isEmpty()) {
             throw ExceptionUtils.createRedactionUnverifiedException(failedPages);
+        }
+    }
+
+    /**
+     * Throws when JPDFium refused to vouch for its redaction. Callers fall back to a weaker
+     * redaction on any other failure, and doing so here would return text JPDFium could not prove
+     * was removed.
+     */
+    static void rejectUnverifiable(Exception e) throws ToolFailedException {
+        if (e instanceof JPDFiumException engineError
+                && (engineError.isRedactUnverifiable() || engineError.isRedactIncomplete())) {
+            throw ExceptionUtils.createRedactionUnverifiableException(e);
         }
     }
 
@@ -174,6 +187,7 @@ class TextRedactionService {
         } catch (ToolFailedException e) {
             throw e;
         } catch (Exception e) {
+            rejectUnverifiable(e);
             log.warn(
                     "JPDFium native text replacement failed, falling back to box-only redaction mode: {}",
                     e.getMessage());

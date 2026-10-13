@@ -219,7 +219,7 @@ public enum FailureKind {
             FailureSeverity.ERROR,
             FailureRemedy.NEEDS_FILE_FIX,
             FailureScope.FILE,
-            errorCodes("E044", "E051", "E052", "E060", "E077"),
+            errorCodes("E044", "E051", "E052", "E060", "E077", "E083"),
             fallback("A tool this step relies on could not process this document."),
             global(OPEN_IN_TOOL, OWNER, SECONDARY),
             global(VIEW_FILE, OWNER, SECONDARY),
