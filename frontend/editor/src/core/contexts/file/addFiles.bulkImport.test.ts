@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { FileContextState } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";

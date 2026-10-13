@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { estimatedBillWithPending } from "@app/billing/pendingUsage";
 import { subscribedWallet } from "@app/billing/walletFixtures";

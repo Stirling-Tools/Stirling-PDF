@@ -72,9 +72,13 @@ export type TrackEditorAction =
     }
   /** A blank page after each of these, sized and turned like it. */
   | { type: "insertBlankAfter"; pageIds: string[] }
+  | { type: "duplicate"; pageIds: string[] }
   /** Swaps a page with its neighbour in the same track. */
   | { type: "shiftPage"; pageId: string; by: -1 | 1 }
   | { type: "dropTracks"; fileIds: FileId[] }
+  /** Renames a track everywhere it appears, history included: a name is not a
+   *  page edit, so undo must not bring the old one back. */
+  | { type: "renameTrack"; fileId: FileId; name: string }
   /** Drops the just-saved split tracks and records the order their new files
    *  should take, so sync slots each one back where its track sat. */
   | {
@@ -575,6 +579,27 @@ export function trackEditorReducer(
       };
     }
 
+    case "renameTrack": {
+      const { fileId, name } = action;
+      const track = state.present.tracks[fileId];
+      if (!track || track.name === name) return state;
+      const rename = (workspace: TrackWorkspace): TrackWorkspace => {
+        const target = workspace.tracks[fileId];
+        if (!target || target.name === name) return workspace;
+        return {
+          ...workspace,
+          tracks: { ...workspace.tracks, [fileId]: { ...target, name } },
+        };
+      };
+      return {
+        ...state,
+        present: rename(state.present),
+        baseline: rename(state.baseline),
+        past: state.past.map(rename),
+        future: state.future.map(rename),
+      };
+    }
+
     case "dropTracks": {
       const drop = new Set(action.fileIds);
       if (!state.present.order.some((id) => drop.has(id))) return state;
@@ -653,6 +678,19 @@ export function trackEditorReducer(
         if (!pages.some((p) => after.has(p.id))) return pages;
         return pages.flatMap((p) =>
           after.has(p.id) ? [p, blankPageLike(p, `tp-${seq++}`)] : [p],
+        );
+      });
+      if (next === state.present) return state;
+      return { ...withEdit(state, next), seq };
+    }
+
+    case "duplicate": {
+      const duplicated = new Set(action.pageIds);
+      let seq = state.seq;
+      const next = mapTracks(state.present, (pages) => {
+        if (!pages.some((p) => duplicated.has(p.id))) return pages;
+        return pages.flatMap((p) =>
+          duplicated.has(p.id) ? [p, { ...p, id: `tp-${seq++}` }] : [p],
         );
       });
       if (next === state.present) return state;

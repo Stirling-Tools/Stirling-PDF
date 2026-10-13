@@ -3,18 +3,27 @@ package stirling.software.proprietary.security.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+
+import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.mail.BodyPart;
 import jakarta.mail.MessagingException;
+import jakarta.mail.Part;
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.api.Email;
@@ -163,5 +172,44 @@ public class EmailServiceTest {
         } catch (MessagingException e) {
             assertEquals("Invalid Addresses", e.getMessage());
         }
+    }
+
+    @Test
+    void sendBrandedEmailAttachesTheLockupInlineAfterTheHtmlBody() throws Exception {
+        when(applicationProperties.getMail()).thenReturn(mailProperties);
+        when(mailProperties.getFrom()).thenReturn("no-reply@stirling-software.com");
+        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage((Session) null));
+
+        emailService.sendBrandedEmail(
+                "test@example.com", "Signed", "<p><img src=\"cid:stirling-logo\"></p>");
+
+        ArgumentCaptor<MimeMessage> sent = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mailSender).send(sent.capture());
+        MimeMessage message = sent.getValue();
+        message.saveChanges();
+        MimeMultipart related = (MimeMultipart) message.getContent();
+        assertTrue(related.getContentType().startsWith("multipart/related"));
+        assertEquals(2, related.getCount());
+
+        BodyPart html = related.getBodyPart(0);
+        assertTrue(html.isMimeType("text/html"));
+        MimeBodyPart logo = (MimeBodyPart) related.getBodyPart(1);
+        assertEquals("<" + EmailService.BRAND_LOGO_CONTENT_ID + ">", logo.getContentID());
+        assertEquals(Part.INLINE, logo.getDisposition());
+        assertTrue(logo.isMimeType("image/png"));
+        byte[] png = logo.getInputStream().readAllBytes();
+        assertEquals((byte) 0x89, png[0]);
+        assertEquals("PNG", new String(png, 1, 3, StandardCharsets.US_ASCII));
+    }
+
+    @Test
+    void sendBrandedEmailRejectsABlankRecipient() {
+        MessagingException e =
+                assertThrows(
+                        MessagingException.class,
+                        () -> emailService.sendBrandedEmail(" ", "Signed", "<p>x</p>"));
+
+        assertEquals("Invalid recipient email address", e.getMessage());
+        verifyNoInteractions(mailSender);
     }
 }

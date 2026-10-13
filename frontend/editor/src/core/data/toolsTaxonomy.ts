@@ -16,7 +16,6 @@ import {
   ToolKind,
 } from "@app/types/toolId";
 import { ProprietaryToolId } from "@app/types/proprietaryToolId";
-import { PrototypeToolId } from "@app/types/prototypeToolId";
 
 export enum SubcategoryId {
   AI = "ai",
@@ -82,7 +81,6 @@ export type ProprietaryToolRegistry = Record<
   ProprietaryToolId,
   ToolRegistryEntry
 >;
-export type PrototypeToolRegistry = Record<PrototypeToolId, ToolRegistryEntry>;
 
 export const SUBCATEGORY_ORDER: SubcategoryId[] = [
   // First: AI steps are the ones a user is least likely to know exist.

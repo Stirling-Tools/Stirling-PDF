@@ -85,6 +85,15 @@
   min-width: 0;
 }
 
+.trackNameInput {
+  flex: 0 1 18rem;
+  min-width: 6rem;
+}
+
+.trackNameInput input {
+  font-weight: 600;
+}
+
 .trackMeta {
   font-size: 0.75rem;
   color: var(--c-text-muted);
