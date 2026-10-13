@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, vi } from "vitest";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";

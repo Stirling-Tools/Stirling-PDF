@@ -38,6 +38,8 @@ interface TeamMember {
   email: string;
   role: string;
   joinedAt: string;
+  /** Also the member's avatar storage path prefix. */
+  supabaseId?: string | null;
 }
 
 interface TeamInvitation {

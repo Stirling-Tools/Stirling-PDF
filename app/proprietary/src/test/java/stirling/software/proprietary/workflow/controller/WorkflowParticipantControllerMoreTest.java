@@ -3,8 +3,10 @@ package stirling.software.proprietary.workflow.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -15,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
@@ -28,6 +32,7 @@ import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.model.WorkflowStatus;
+import stirling.software.proprietary.workflow.notification.SigningResponseEvent;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
 import stirling.software.proprietary.workflow.service.MetadataEncryptionService;
@@ -43,6 +48,7 @@ class WorkflowParticipantControllerMoreTest {
     @Mock private WorkflowParticipantRepository participantRepository;
     @Mock private MetadataEncryptionService metadataEncryptionService;
     @Mock private CertificateSubmissionValidator certificateSubmissionValidator;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     private WorkflowParticipantController controller;
 
@@ -60,7 +66,8 @@ class WorkflowParticipantControllerMoreTest {
                         participantRepository,
                         new ObjectMapper(),
                         metadataEncryptionService,
-                        certificateSubmissionValidator);
+                        certificateSubmissionValidator,
+                        eventPublisher);
     }
 
     private WorkflowSession activeSession() {
@@ -216,6 +223,7 @@ class WorkflowParticipantControllerMoreTest {
                     .isInstanceOf(ResponseStatusException.class)
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                     .isEqualTo(HttpStatus.CONFLICT);
+            verifyNoInteractions(eventPublisher);
         }
 
         @Test
@@ -244,6 +252,7 @@ class WorkflowParticipantControllerMoreTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(p.getStatus()).isEqualTo(ParticipantStatus.SIGNED);
+            verify(eventPublisher).publishEvent(new SigningResponseEvent(5L, null));
         }
     }
 
@@ -290,6 +299,7 @@ class WorkflowParticipantControllerMoreTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(p.getStatus()).isEqualTo(ParticipantStatus.DECLINED);
             verify(workflowSessionService).addParticipantNotification(5L, "Declined: not me");
+            verify(eventPublisher).publishEvent(new SigningResponseEvent(5L, "not me"));
         }
 
         @Test
@@ -302,6 +312,7 @@ class WorkflowParticipantControllerMoreTest {
             controller.declineParticipation(TOKEN, null);
 
             verify(workflowSessionService).addParticipantNotification(5L, "Declined participation");
+            verify(eventPublisher).publishEvent(new SigningResponseEvent(5L, null));
         }
     }
 
@@ -314,8 +325,9 @@ class WorkflowParticipantControllerMoreTest {
     class GetDocument {
 
         @Test
-        void invalidToken_throwsForbidden() {
-            when(participantRepository.findByShareToken("bad")).thenReturn(Optional.empty());
+        void rejectedToken_propagatesTheServiceStatus() throws Exception {
+            when(workflowSessionService.getParticipantDocument("bad"))
+                    .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
 
             assertThatThrownBy(() -> controller.getDocument("bad"))
                     .isInstanceOf(ResponseStatusException.class)
@@ -324,27 +336,29 @@ class WorkflowParticipantControllerMoreTest {
         }
 
         @Test
-        void expiredParticipant_throwsForbidden() {
-            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
-            p.setExpiresAt(java.time.LocalDateTime.now().minusDays(1));
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
-
-            assertThatThrownBy(() -> controller.getDocument(TOKEN))
-                    .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                    .isEqualTo(HttpStatus.FORBIDDEN);
-        }
-
-        @Test
-        void validParticipant_returnsPdf() throws Exception {
-            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
-            when(workflowSessionService.getOriginalFile("s1")).thenReturn(new byte[] {1, 2, 3});
+        void returnsTheServiceDocumentUnderItsFilename() throws Exception {
+            when(workflowSessionService.getParticipantDocument(TOKEN))
+                    .thenReturn(
+                            new WorkflowSessionService.ParticipantDocument(
+                                    new byte[] {1, 2, 3}, "doc_shared_signed.pdf"));
 
             ResponseEntity<byte[]> response = controller.getDocument(TOKEN);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).containsExactly(1, 2, 3);
+            assertThat(response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION))
+                    .contains("doc_shared_signed.pdf");
+        }
+
+        @Test
+        void unreadableDocument_isServerError() throws Exception {
+            when(workflowSessionService.getParticipantDocument(TOKEN))
+                    .thenThrow(new IOException("disk gone"));
+
+            assertThatThrownBy(() -> controller.getDocument(TOKEN))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

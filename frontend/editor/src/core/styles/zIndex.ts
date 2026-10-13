@@ -14,9 +14,6 @@ export const Z_INDEX_OVER_SETTINGS_MODAL = 1500;
 
 export const Z_INDEX_FILE_MANAGER_MODAL = 1200;
 
-// Chat FAB overlay — sits above normal app chrome (fullscreen surface: 1000)
-// but below all modals (automate: 1100, file manager: 1200, config: 1400).
-export const Z_INDEX_CHAT_FAB_OVERLAY = 1050;
 export const Z_INDEX_OVER_FILE_MANAGER_MODAL = 1300;
 
 export const Z_INDEX_AUTOMATE_MODAL = 1100;
