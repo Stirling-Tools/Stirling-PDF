@@ -11,7 +11,6 @@ import java.nio.file.Path;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -33,7 +32,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
-import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -52,7 +50,6 @@ class FlattenControllerTest {
     }
 
     @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
     @InjectMocks private FlattenController controller;
 
@@ -92,18 +89,22 @@ class FlattenControllerTest {
 
     @Test
     void flatten_formsOnly_withAcroForm() throws Exception {
-        MockMultipartFile file = createPdf();
+        MockMultipartFile file = createPdfWithForm();
         FlattenRequest request = new FlattenRequest();
         request.setFileInput(file);
         request.setFlattenOnlyForms(true);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
-
         ResponseEntity<Resource> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(drainBody(response)).isNotEmpty();
+        byte[] out = drainBody(response);
+        assertThat(out).isNotEmpty();
+        try (PDDocument flattened = Loader.loadPDF(out)) {
+            assertThat(flattened.getNumberOfPages()).isEqualTo(1);
+            // JPDFium burns widget appearances into page content but leaves the dead
+            // field dictionaries behind; with no widgets left the form is non-interactive.
+            assertThat(flattened.getPage(0).getAnnotations()).isEmpty();
+        }
     }
 
     @Test
@@ -113,47 +114,23 @@ class FlattenControllerTest {
         request.setFileInput(file);
         request.setFlattenOnlyForms(true);
 
-        // Mock doc without acro form
-        PDDocument doc = mock(PDDocument.class);
-        PDDocumentCatalog catalog = mock(PDDocumentCatalog.class);
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(doc.getDocumentCatalog()).thenReturn(catalog);
-        when(catalog.getAcroForm()).thenReturn(null);
-
         ResponseEntity<Resource> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(doc).close();
-    }
-
-    @Test
-    void flatten_formsOnly_withEmptyAcroForm() throws Exception {
-        MockMultipartFile file = createPdf();
-        FlattenRequest request = new FlattenRequest();
-        request.setFileInput(file);
-        request.setFlattenOnlyForms(true);
-
-        PDDocument doc = mock(PDDocument.class);
-        PDDocumentCatalog catalog = mock(PDDocumentCatalog.class);
-        PDAcroForm form = mock(PDAcroForm.class);
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(doc.getDocumentCatalog()).thenReturn(catalog);
-        when(catalog.getAcroForm()).thenReturn(form);
-
-        ResponseEntity<Resource> response = controller.flatten(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(form).flatten();
+        assertThat(drainBody(response)).isNotEmpty();
     }
 
     @Test
     void flatten_ioException() throws Exception {
-        MockMultipartFile file = createPdf();
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput",
+                        "corrupt.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "not a pdf".getBytes());
         FlattenRequest request = new FlattenRequest();
         request.setFileInput(file);
         request.setFlattenOnlyForms(true);
-
-        when(pdfDocumentFactory.load(file)).thenThrow(new IOException("corrupt"));
 
         assertThatThrownBy(() -> controller.flatten(request)).isInstanceOf(IOException.class);
     }
@@ -165,17 +142,15 @@ class FlattenControllerTest {
         request.setFileInput(file);
         request.setFlattenOnlyForms(null);
 
-        // When flattenOnlyForms is null/false, it does full flatten (render to image)
-        // This requires real PDF rendering, so we use a real doc
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        PDDocument newDoc = new PDDocument();
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
-
+        // When flattenOnlyForms is null/false, it does full flatten (page rasterization)
         ResponseEntity<Resource> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(drainBody(response)).isNotEmpty();
+        byte[] out = drainBody(response);
+        assertThat(out).isNotEmpty();
+        try (PDDocument flattened = Loader.loadPDF(out)) {
+            assertThat(flattened.getNumberOfPages()).isEqualTo(1);
+        }
     }
 
     @Test
@@ -185,14 +160,17 @@ class FlattenControllerTest {
         request.setFileInput(file);
         request.setFlattenOnlyForms(false);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        PDDocument newDoc = new PDDocument();
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
-
         ResponseEntity<Resource> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        byte[] out = drainBody(response);
+        assertThat(out).isNotEmpty();
+        try (PDDocument flattened = Loader.loadPDF(out)) {
+            assertThat(flattened.getNumberOfPages()).isEqualTo(1);
+            // Rasterized pages carry no extractable text
+            String text = new org.apache.pdfbox.text.PDFTextStripper().getText(flattened);
+            assertThat(text.trim()).isEmpty();
+        }
     }
 
     @Test
@@ -202,11 +180,6 @@ class FlattenControllerTest {
         request.setFileInput(file);
         request.setFlattenOnlyForms(false);
         request.setRenderDpi(150);
-
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        PDDocument newDoc = new PDDocument();
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
         ResponseEntity<Resource> response = controller.flatten(request);
 
@@ -221,13 +194,31 @@ class FlattenControllerTest {
         request.setFlattenOnlyForms(false);
         request.setRenderDpi(10); // Below minimum of 72
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        PDDocument newDoc = new PDDocument();
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
-
         ResponseEntity<Resource> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    private MockMultipartFile createPdfWithForm() throws IOException {
+        Path path = tempDir.resolve("form.pdf");
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            doc.addPage(page);
+            PDAcroForm acroForm = new PDAcroForm(doc);
+            doc.getDocumentCatalog().setAcroForm(acroForm);
+            org.apache.pdfbox.pdmodel.interactive.form.PDTextField field =
+                    new org.apache.pdfbox.pdmodel.interactive.form.PDTextField(acroForm);
+            field.setPartialName("name");
+            org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget widget =
+                    new org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget();
+            widget.setRectangle(new PDRectangle(50, 700, 200, 20));
+            widget.setPage(page);
+            page.getAnnotations().add(widget);
+            field.getWidgets().add(widget);
+            acroForm.getFields().add(field);
+            doc.save(path.toFile());
+        }
+        return new MockMultipartFile(
+                "fileInput", "form.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
     }
 }
