@@ -10,6 +10,7 @@ import {
   embedJpegImageOnPage,
 } from "@app/utils/pdfiumBitmapUtils";
 import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import { copyTagMarks } from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 interface ZOrderModule {
   FPDFPage_InsertObjectAtIndex?: (
@@ -136,6 +137,10 @@ export class ReplaceImageCommand implements Command {
     // The embed helpers write an axis-aligned (w,0,0,h,x,y) box, which flips
     // the image on a rotated page; the captured matrix is the truth here.
     setImageMatrix(m, objPtr, matrix);
+    // Untagged, the new image drops out of the structure tree and the Figure
+    // describing the old one points at nothing. A form's MCIDs are not the
+    // page's, so a nested original's tags cannot move to page level.
+    if (!nested) copyTagMarks(m, doc.docPtr, this.prevObjPtr, objPtr);
     // Detach only: the old object carries the original pixels for undo, so
     // destroying it would leave this command's undo entry pointing at free memory.
     if (nested) setActive(m, this.prevObjPtr, false);
