@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 
 import { useFilesPage } from "@app/contexts/FilesPageContext";
 import { useFolders } from "@app/contexts/FolderContext";
@@ -13,6 +14,7 @@ export function useLibraryRefresh(): {
   refresh: () => Promise<void>;
 } {
   const { t } = useTranslation();
+  const localOnly = useLocalProcessingOnly();
   const folders = useFolders();
   const { refresh, bumpDiskRevision } = useFilesPage();
   const [refreshing, setRefreshing] = useState(false);
@@ -22,7 +24,9 @@ export function useLibraryRefresh(): {
     try {
       // pullFromServer bumps the folder revision, which the FolderProvider's effect
       // reacts to by re-running refresh() - no need to await folders.refresh() here.
-      const result = await folders.pullFromServer();
+      const result = localOnly
+        ? { ok: true as const }
+        : await folders.pullFromServer();
       if (!result.ok && result.reason !== "endpoint-missing") {
         folders.setError(
           result.reason === "network"
@@ -41,7 +45,7 @@ export function useLibraryRefresh(): {
     } finally {
       setRefreshing(false);
     }
-  }, [folders, refresh, bumpDiskRevision, t]);
+  }, [folders, refresh, bumpDiskRevision, t, localOnly]);
 
   return { refreshing, refresh: run };
 }
