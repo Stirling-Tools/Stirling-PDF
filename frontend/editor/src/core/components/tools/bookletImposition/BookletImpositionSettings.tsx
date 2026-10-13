@@ -94,11 +94,11 @@ const BookletImpositionSettings = ({
             options={[
               {
                 value: "FIRST",
-                label: t("bookletImposition.duplexPass.first", "1st Pass"),
+                label: t("bookletImposition.duplexPass.first", "First Pass"),
               },
               {
                 value: "SECOND",
-                label: t("bookletImposition.duplexPass.second", "2nd Pass"),
+                label: t("bookletImposition.duplexPass.second", "Second Pass"),
               },
             ]}
             disabled={disabled}
