@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -77,10 +77,12 @@ describe("RunLocationGate", () => {
     expect(window.localStorage.getItem(SEEN_KEY)).toBe("true");
   });
 
-  it("records the choice before the desktop step and downloads on request", () => {
+  it("records the choice before the desktop step and downloads on request", async () => {
     renderAt("/");
     choose("On your computer");
     expect(window.localStorage.getItem(SEEN_KEY)).toBe("true");
+    // The step detects the visitor's OS asynchronously on mount; let that settle.
+    await act(async () => {});
     expect(
       screen.getByRole("heading", { name: "Get the desktop app" }),
     ).toBeInTheDocument();
