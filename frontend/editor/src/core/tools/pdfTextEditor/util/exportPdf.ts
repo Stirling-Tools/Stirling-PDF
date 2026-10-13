@@ -1,5 +1,6 @@
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { applyStructureEdits } from "@app/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
+import { repairStructure } from "@app/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
 import { preserveShadings } from "@app/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
 import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
 import {
@@ -39,6 +40,19 @@ export async function exportToBlob(
   // Throws rather than dropping them: a description the user wrote that the
   // saved file silently lacks is worse than a save that reports it failed.
   bytes = await applyStructureEdits(bytes, structureEdits);
+
+  // After the edits: when the content an element described was deleted, the
+  // repair removes the ParentTree slot an edit to that element is addressed by,
+  // and the edit would then fail the save.
+  const regenerated = doc.regeneratedPages();
+  if (regenerated.length > 0) {
+    try {
+      const repaired = await repairStructure(bytes, { pages: regenerated });
+      if (repaired) bytes = repaired;
+    } catch {
+      /* the unrepaired tags are what every save wrote before this pass */
+    }
+  }
 
   // Re-checked after the repairs: `PdfiumSave.serialize` validated its own
   // output, but the passes since may have swapped in a different buffer, and
