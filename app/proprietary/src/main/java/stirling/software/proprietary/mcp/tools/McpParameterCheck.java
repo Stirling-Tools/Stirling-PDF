@@ -10,7 +10,7 @@ import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 
 /** Checks call parameters against the operation's published schema before anything runs. */
-final class McpParameterCheck {
+public final class McpParameterCheck {
 
     private static final String MAIN_INPUT = "fileInput";
     private static final JsonNode MISSING_PARAMETERS = JsonNodeFactory.instance.objectNode();
@@ -66,7 +66,7 @@ final class McpParameterCheck {
      * The parameters with each allowed value spelled as the schema spells it. Matching ignores
      * case, but endpoints compare exactly, so "server" must reach them as "SERVER".
      */
-    static JsonNode canonical(JsonNode schema, JsonNode parameters) {
+    public static JsonNode canonical(JsonNode schema, JsonNode parameters) {
         JsonNode properties = schema == null ? null : schema.get("properties");
         if (properties == null || parameters == null || !parameters.isObject()) {
             return parameters;

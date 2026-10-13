@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import stirling.software.common.cluster.DistributedLock;
 import stirling.software.common.cluster.KeyValueCache;
 
 import tools.jackson.databind.JsonNode;
@@ -33,11 +34,14 @@ public class McpUploadLinks {
     private final KeyValueCache cache;
     private final ObjectMapper mapper;
     private final McpFiles files;
+    private final DistributedLock locks;
 
-    public McpUploadLinks(KeyValueCache cache, ObjectMapper mapper, McpFiles files) {
+    public McpUploadLinks(
+            KeyValueCache cache, ObjectMapper mapper, McpFiles files, DistributedLock locks) {
         this.cache = cache;
         this.mapper = mapper;
         this.files = files;
+        this.locks = locks;
     }
 
     public record Link(String uploadId, String url) {}
@@ -63,17 +67,32 @@ public class McpUploadLinks {
 
     /** Claims an unused link for one upload and returns its owner; empty if used or expired. */
     public Optional<String> claim(String token) {
-        Optional<String> owner =
-                entry(token)
-                        .filter(e -> "open".equals(e.path("state").asText()))
-                        .map(e -> e.path("user").asText());
-        owner.ifPresent(user -> put(token, user, "uploading"));
-        return owner;
+        if (token == null || !TOKEN.matcher(token).matches()) {
+            return Optional.empty();
+        }
+        Optional<DistributedLock.LockHandle> acquired =
+                locks.tryAcquire(NAMESPACE + ":" + token, Duration.ofSeconds(30));
+        if (acquired.isEmpty()) {
+            return Optional.empty();
+        }
+        try (DistributedLock.LockHandle held = acquired.get()) {
+            Optional<String> owner =
+                    entry(token)
+                            .filter(e -> "open".equals(e.path("state").asText()))
+                            .map(e -> e.path("user").asText());
+            owner.ifPresent(user -> put(token, user, "uploading"));
+            return owner;
+        }
     }
 
     /** Opens a claimed link again after a failed upload, so the user can retry. */
     public void reopen(String token, String username) {
-        put(token, username, "open");
+        if (entry(token)
+                .filter(e -> "uploading".equals(e.path("state").asText()))
+                .filter(e -> username.equals(e.path("user").asText()))
+                .isPresent()) {
+            put(token, username, "open");
+        }
     }
 
     private void put(String token, String username, String state) {

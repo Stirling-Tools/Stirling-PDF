@@ -46,8 +46,6 @@ import tools.jackson.databind.node.ObjectNode;
 public class McpOperationExecutor {
 
     private static final String COMPLIANCE_OP = "validate-compliance";
-    // Set by the redaction endpoints (RedactController.MATCHES_HEADER).
-    private static final String REDACTION_MATCHES_HEADER = "X-Stirling-Redaction-Matches";
     private static final long GROWTH_WARN_FACTOR = 10;
     private static final long MIN_WARN_BYTES = 512 * 1024;
     // ErrorCode.COMPLIANCE_NOT_MET, sent as the problem's errorCode.
@@ -112,7 +110,6 @@ public class McpOperationExecutor {
             return call.error();
         }
         ObjectNode result = buildResult(meta, call.response(), user, context);
-        addRedactionCount(result, call.response());
         McpResultNotes.apply(mapper, meta, result, call.response().getHeaders(), parameters);
         if (COMPLIANCE_OP.equals(meta.id())) {
             markCompliant(result);
@@ -193,6 +190,7 @@ public class McpOperationExecutor {
             User user,
             McpCallContext context) {
         List<McpInputFiles.Input> current = inputs;
+        ArrayNode reports = mapper.createArrayNode();
         for (int i = 0; i < steps.size(); i++) {
             OperationMeta meta = steps.get(i).meta();
             String where = "Step " + (i + 1) + " of " + steps.size() + " (" + meta.id() + "): ";
@@ -210,7 +208,7 @@ public class McpOperationExecutor {
                 McpResultNotes.apply(
                         mapper, meta, result, call.response().getHeaders(), parameters.get(i));
                 prefixText(result, "Ran " + stepCount(steps) + ": " + stepIds(steps) + ". ");
-                return result;
+                return withPipelineReports(result, reports);
             }
             List<McpInputFiles.Input> next = new ArrayList<>();
             for (List<McpInputFiles.Input> batch : batches) {
@@ -224,6 +222,8 @@ public class McpOperationExecutor {
                 if (problem != null) {
                     return McpResponses.error(mapper, where + on + problem);
                 }
+                collectPipelineReport(
+                        reports, i + 1, meta, batch, call.response(), parameters.get(i));
                 next.addAll(produced);
                 if (next.size() > McpZipParts.MAX_PARTS) {
                     return McpResponses.error(
@@ -235,11 +235,55 @@ public class McpOperationExecutor {
                 }
             }
             if (last) {
-                return storedFiles(steps, next, user);
+                return withPipelineReports(storedFiles(steps, next, user), reports);
             }
             current = next;
         }
         return McpResponses.error(mapper, "The pipeline has no steps.");
+    }
+
+    private void collectPipelineReport(
+            ArrayNode reports,
+            int step,
+            OperationMeta meta,
+            List<McpInputFiles.Input> inputs,
+            ResponseEntity<Resource> response,
+            JsonNode parameters) {
+        ObjectNode notes = McpResponses.text(mapper, "");
+        ObjectNode report = notes.putObject("structuredContent");
+        McpResultNotes.apply(mapper, meta, notes, response.getHeaders(), parameters);
+        if (!report.isEmpty()) {
+            report.put("step", step).put("operation", meta.id());
+            if (inputs.size() == 1) {
+                report.put("input", inputs.getFirst().name());
+            }
+            reports.add(report);
+        }
+    }
+
+    private static ObjectNode withPipelineReports(ObjectNode result, ArrayNode reports) {
+        if (reports.isEmpty() || !(result.get("structuredContent") instanceof ObjectNode card)) {
+            return result;
+        }
+        card.set("stepReports", reports);
+        for (JsonNode report : reports) {
+            for (JsonNode warning : report.path("warnings")) {
+                String text =
+                        "Step "
+                                + report.path("step").asInt()
+                                + " ("
+                                + report.path("operation").asText()
+                                + "): "
+                                + warning.asText();
+                ArrayNode warnings =
+                        card.get("warnings") instanceof ArrayNode existing
+                                ? existing
+                                : card.putArray("warnings");
+                warnings.add(text);
+                prefixText(result, "Warning: " + text + " ");
+            }
+        }
+        return result;
     }
 
     private static String stepCount(List<McpPipelineStep> steps) {
@@ -591,39 +635,6 @@ public class McpOperationExecutor {
         return result;
     }
 
-    /** Redaction reports how many matches it covered; zero must not read as success. */
-    private static void addRedactionCount(ObjectNode result, ResponseEntity<Resource> response) {
-        String header = response.getHeaders().getFirst(REDACTION_MATCHES_HEADER);
-        if (header == null || !(result.get("structuredContent") instanceof ObjectNode card)) {
-            return;
-        }
-        long matches;
-        try {
-            matches = Long.parseLong(header.trim());
-        } catch (NumberFormatException e) {
-            return;
-        }
-        card.putObject("redaction").put("matches", matches);
-        if (matches == 0) {
-            String warning =
-                    "Nothing matched, so nothing was redacted. The file is unchanged; check the"
-                            + " search text (and wholeWordSearch or regex) before telling the user"
-                            + " it is redacted.";
-            card.putArray("warnings").add(warning);
-            JsonNode first = result.path("content").path(0);
-            if (first instanceof ObjectNode block && block.has("text")) {
-                block.put("text", "Warning: " + warning + " " + block.get("text").asText());
-            }
-        } else {
-            JsonNode first = result.path("content").path(0);
-            if (first instanceof ObjectNode block && block.has("text")) {
-                block.put(
-                        "text",
-                        "Redacted " + matches + " match(es). " + block.get("text").asText());
-            }
-        }
-    }
-
     /** Why an operation can finish with nothing to return, in words an agent can act on. */
     static String noOutputReason(String operation) {
         if (operation.equals("pdf-to-xlsx") || operation.equals("pdf-to-csv")) {
@@ -652,7 +663,12 @@ public class McpOperationExecutor {
                         + McpResponses.humanSize(out)
                         + "), usually because pages were rendered as images or full fonts were"
                         + " embedded.";
-        ((ObjectNode) result.get("structuredContent")).putArray("warnings").add(warning);
+        ObjectNode card = (ObjectNode) result.get("structuredContent");
+        ArrayNode warnings =
+                card.get("warnings") instanceof ArrayNode existing
+                        ? existing
+                        : card.putArray("warnings");
+        warnings.add(warning);
         JsonNode first = result.path("content").path(0);
         if (first instanceof ObjectNode block && block.has("text")) {
             block.put("text", block.get("text").asText() + " Warning: " + warning);

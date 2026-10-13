@@ -648,4 +648,125 @@ class McpPipelineTest {
         when(provider.getIfAvailable()).thenReturn(bean);
         return provider;
     }
+
+    private void redactionResponse(String matches) {
+        var meta = op("auto-redact", OperationCategory.SECURITY, "/api/v1/security/auto-redact");
+        when(catalog.findByOperationId(meta.id())).thenReturn(Optional.of(meta));
+        var response = pdf("UNCHANGED");
+        var headers = new HttpHeaders();
+        headers.putAll(response.getHeaders());
+        headers.set("X-Stirling-Redaction-Matches", matches);
+        when(api.post(eq(meta.endpointPath()), any()))
+                .thenReturn(ResponseEntity.ok().headers(headers).body(response.getBody()));
+    }
+
+    @Test
+    void aFinalRedactionStepReportsThatNothingMatched() throws Exception {
+        redactionResponse("0");
+        ObjectNode result = run(steps("auto-redact"));
+        assertFalse(result.path("isError").asBoolean(false), result.toString());
+        assertTrue(text(result).contains("nothing was redacted"), text(result));
+        assertEquals(0, result.at("/structuredContent/redaction/matches").asInt(-1));
+        assertEquals(1, result.at("/structuredContent/warnings").size());
+    }
+
+    @Test
+    void anIntermediateRedactionWarningSurvivesFollowingSteps() throws Exception {
+        redactionResponse("0");
+        when(api.post(eq("/api/v1/misc/compress-pdf"), any())).thenReturn(pdf("SMALL"));
+        ObjectNode result = run(steps("auto-redact", "compress-pdf"));
+        assertFalse(result.path("isError").asBoolean(false), result.toString());
+        assertTrue(text(result).contains("nothing was redacted"), text(result));
+        assertEquals(0, result.at("/structuredContent/stepReports/0/redaction/matches").asInt(-1));
+        assertEquals(
+                "auto-redact", result.at("/structuredContent/stepReports/0/operation").asText());
+    }
+
+    @Test
+    void anIntermediateAccessibilityWarningSurvivesFollowingSteps() throws Exception {
+        var meta = op("pdf-to-ua", OperationCategory.CONVERT, "/api/v1/convert/pdf/pdfua");
+        when(catalog.findByOperationId(meta.id())).thenReturn(Optional.of(meta));
+        var response = pdf("TAGGED");
+        var headers = new HttpHeaders();
+        headers.putAll(response.getHeaders());
+        headers.set(McpResultNotes.UA_DECLARED, "false");
+        headers.set(McpResultNotes.UA_FAILURES, "2");
+        headers.set(McpResultNotes.UA_ALT_NEEDED, "3");
+        when(api.post(eq(meta.endpointPath()), any()))
+                .thenReturn(ResponseEntity.ok().headers(headers).body(response.getBody()));
+        when(api.post(eq("/api/v1/misc/compress-pdf"), any())).thenReturn(pdf("SMALL"));
+        ObjectNode result = run(steps("pdf-to-ua", "compress-pdf"));
+        assertTrue(text(result).contains("3 figure(s) need alt text"), text(result));
+        assertFalse(result.at("/structuredContent/stepReports/0/report/declared").asBoolean(true));
+    }
+
+    @Test
+    void eachFanOutResultKeepsItsRedactionCountAndWarning() throws Exception {
+        redactionResponse("0");
+        when(catalog.findByOperationId("split-pages"))
+                .thenReturn(
+                        Optional.of(
+                                op(
+                                        "split-pages",
+                                        OperationCategory.PAGES,
+                                        "/api/v1/general/split-pages")));
+        when(api.post(eq("/api/v1/general/split-pages"), any()))
+                .thenReturn(zip("a.pdf", "PART-A", "b.pdf", "PART-B"));
+        when(files.save(eq(alice), any(byte[].class), anyString(), anyString(), eq(true)))
+                .thenAnswer(
+                        i ->
+                                new McpFiles.Saved(
+                                        "id-" + i.getArgument(2),
+                                        i.getArgument(2),
+                                        "application/pdf",
+                                        9,
+                                        null,
+                                        null,
+                                        false,
+                                        null));
+        ObjectNode result = run(steps("split-pages", "auto-redact"));
+        assertFalse(result.path("isError").asBoolean(false), result.toString());
+        assertEquals(2, result.at("/structuredContent/stepReports").size());
+        assertEquals(2, result.at("/structuredContent/warnings").size());
+        assertEquals("a.pdf", result.at("/structuredContent/stepReports/0/input").asText());
+        assertEquals("b.pdf", result.at("/structuredContent/stepReports/1/input").asText());
+    }
+
+    @Test
+    void savingUsesTheSameEnumSpellingAsTheChatTest() throws Exception {
+        stubSaveEcho();
+        ObjectNode schema = mapper.createObjectNode();
+        schema.putObject("properties")
+                .putObject("certType")
+                .put("type", "string")
+                .putArray("enum")
+                .add("SERVER");
+        OperationMeta meta =
+                new OperationMeta(
+                        "cert-sign",
+                        OperationCategory.SECURITY,
+                        "cert-sign",
+                        schema,
+                        "mcp.tools.write",
+                        OperationMeta.Target.JAVA_ENDPOINT,
+                        "/api/v1/security/cert-sign",
+                        null);
+        when(catalog.findByOperationId(meta.id())).thenReturn(Optional.of(meta));
+        when(api.post(eq(meta.endpointPath()), any())).thenReturn(pdf("SIGNED"));
+        var steps = steps("cert-sign");
+        ((ObjectNode) steps.get(0).get("parameters")).put("certType", "server");
+        ObjectNode chat = run(steps);
+        assertFalse(chat.path("isError").asBoolean(false), chat.toString());
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<MultiValueMap> sent = ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(api).post(eq(meta.endpointPath()), sent.capture());
+        assertEquals("SERVER", sent.getValue().getFirst("certType"));
+        ObjectNode args = mapper.createObjectNode().put("name", "Sign documents");
+        args.set("steps", steps);
+        ObjectNode saved = new StirlingSaveAutomationTool(mapper, automations).call(args, context);
+        assertFalse(saved.path("isError").asBoolean(false), saved.toString());
+        ArgumentCaptor<Policy> policy = ArgumentCaptor.forClass(Policy.class);
+        verify(policies).savePolicy(policy.capture());
+        assertEquals("SERVER", policy.getValue().steps().getFirst().parameters().get("certType"));
+    }
 }

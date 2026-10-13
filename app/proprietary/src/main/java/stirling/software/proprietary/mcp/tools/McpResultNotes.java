@@ -32,6 +32,7 @@ final class McpResultNotes {
                 || !(result.get("structuredContent") instanceof ObjectNode card)) {
             return;
         }
+        redaction(result, card, headers);
         toolReport(mapper, meta, result, card, headers);
         accessibility(result, card, headers);
         if ("add-password".equals(meta.id()) && !hasText(parameters, "password")) {
@@ -44,6 +45,30 @@ final class McpResultNotes {
                             : "No password was set, so the file opens without one and most"
                                     + " readers ignore its restrictions. Do not call it password"
                                     + " protected.");
+        }
+    }
+
+    private static void redaction(ObjectNode result, ObjectNode card, HttpHeaders headers) {
+        String header = headers == null ? null : headers.getFirst("X-Stirling-Redaction-Matches");
+        if (header == null) {
+            return;
+        }
+        long matches;
+        try {
+            matches = Long.parseLong(header.trim());
+        } catch (NumberFormatException e) {
+            return;
+        }
+        card.putObject("redaction").put("matches", matches);
+        if (matches == 0) {
+            warn(
+                    result,
+                    card,
+                    "Nothing matched, so nothing was redacted. The file is unchanged; check the"
+                            + " search text (and wholeWordSearch or regex) before telling the user"
+                            + " it is redacted.");
+        } else {
+            prefix(result, "Redacted " + matches + " match(es). ");
         }
     }
 
