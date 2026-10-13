@@ -8,7 +8,7 @@ on:
         type: string
       java-version:
         required: false
-        default: '25'
+        default: "25"
         type: string
   push:
     branches: ["main"]
@@ -40,14 +40,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Checkout trusted cache action
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
-          path: trusted-cache-action
-          sparse-checkout: .github/actions/cache-the-planet
-          persist-credentials: false
+      # - name: Checkout trusted cache action
+      #   uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      #   with:
+      #     repository: ${{ github.repository }}
+      #     ref: ${{ github.event.pull_request.base.sha || github.sha }}
+      #     path: trusted-cache-action
+      #     sparse-checkout: .github/actions/cache-the-planet
+      #     persist-credentials: false
 
       - name: Checkout trusted Java action
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -60,7 +60,8 @@ jobs:
 
       - name: Restore Gradle cache github-artifact
         id: cache
-        uses: ./trusted-cache-action/.github/actions/cache-the-planet
+        # uses: ./trusted-cache-action/.github/actions/cache-the-planet
+        uses: ./.github/actions/cache-the-planet
         with:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
