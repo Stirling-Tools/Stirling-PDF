@@ -274,8 +274,9 @@ i18n_and_locales: |
   Keep interpolation placeholders intact; do not rename or reorder them.
   Backend user messages live in messages_*.properties keyed from code, not in
   string literals.
-  Format money and numbers with the en-US locale explicitly rather than the host
-  default. A past regression rendered hyphenated locale tags as blank (#7687).
+  Format user-facing money and numbers with the active i18n locale, and use en-US
+  only when no locale is available. Do not rely on the host default. A past
+  regression rendered hyphenated locale tags as blank (#7687).
 
 wasm: |
   Apply to every WASM runtime, wrapper, worker, queue, buffer, and engine caller.
