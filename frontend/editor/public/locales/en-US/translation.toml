@@ -11154,7 +11154,7 @@ tags = "Redact,Hide,black out,black,marker,hidden,auto redact,manual redact"
 title = "Redact"
 
 [redact.auto]
-caseSensitiveLabel = "Match Case"
+caseSensitiveLabel = "Case Sensitive Matching"
 colorLabel = "Box Color"
 convertPDFToImageLabel = "Convert PDF to PDF-Image"
 customPaddingLabel = "Custom Extra Padding"
@@ -11192,7 +11192,7 @@ title = "Redaction Method"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
-title = "Match Case"
+title = "Case Sensitive Matching"
 
 [redact.tooltip.advanced.color]
 text = "Customize the appearance of redaction boxes. Black is standard, but you can choose any color. Padding adds extra space around the found text."

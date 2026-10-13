@@ -71,7 +71,7 @@ const RedactAdvancedSettings = ({
       />
 
       <Checkbox
-        label={t("redact.auto.caseSensitiveLabel", "Match Case")}
+        label={t("redact.auto.caseSensitiveLabel", "Case Sensitive Matching")}
         checked={parameters.caseSensitive}
         onChange={(e) =>
           onParameterChange("caseSensitive", e.currentTarget.checked)

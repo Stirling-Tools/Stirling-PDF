@@ -155,7 +155,7 @@ describe("RedactAdvancedSettings", () => {
     },
     {
       paramName: "caseSensitive" as const,
-      label: "Match Case",
+      label: "Case Sensitive Matching",
       initialValue: false,
       expectedValue: true,
     },
