@@ -16,6 +16,7 @@ import {
   type LayoutWord,
 } from "@app/tools/pdfTextEditor/commands/scanLayout";
 import { createBitmapImageObject } from "@app/utils/pdfiumBitmapUtils";
+import type { TagMark } from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
   emitFillRect,
   emitTextLine,
@@ -596,6 +597,7 @@ function emitInvisible(
   word: ScanWord,
   x: number,
   baseline: number,
+  tagMarks: readonly TagMark[],
 ): number[] {
   const ptrs = emitTextLine({
     doc,
@@ -608,6 +610,7 @@ function emitInvisible(
     originalFontPtr: state.fontPtr,
     fallbackFamily: "Helvetica",
     renderMode: INVISIBLE,
+    tagMarks,
   });
   opaqueStroke(doc.module, ptrs);
   return ptrs;
@@ -796,6 +799,7 @@ export function renderScanEdit(
         originalFontPtr: 0,
         fallbackFamily: st.family,
         renderMode: INVISIBLE,
+        tagMarks: run.tagMarks,
       });
       opaqueStroke(m, hidden);
       state.created.push(soft, ...hidden);
@@ -879,7 +883,15 @@ export function renderScanEdit(
       m.FPDFPage_InsertObject(page.pagePtr, img);
       state.created.push(img);
     }
-    const hidden = emitInvisible(doc, page, state, sw, k.x, k.baseline);
+    const hidden = emitInvisible(
+      doc,
+      page,
+      state,
+      sw,
+      k.x,
+      k.baseline,
+      run.tagMarks,
+    );
     state.created.push(...hidden);
     state.textPtrs.push(...hidden);
   }
@@ -907,6 +919,7 @@ export function renderScanEdit(
           word,
           word.x,
           line.baseline,
+          run.tagMarks,
         );
         word.ptr = back[0] ?? 0;
         word.extraPtrs = back.slice(1);
