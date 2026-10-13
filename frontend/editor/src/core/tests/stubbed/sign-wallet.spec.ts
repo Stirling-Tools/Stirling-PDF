@@ -347,12 +347,24 @@ test.describe("Sign tool signature wallet", () => {
 
   test("saving unapplied signatures keeps tool switching and browser history usable", async ({
     page,
+    browserName,
   }) => {
-    const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(error.stack ?? error.message));
     await page.setViewportSize({ width: 1135, height: 1134 });
     await useBrowserStorage(page);
     await openSign(page);
+
+    const errors: string[] = [];
+    page.on("pageerror", (error) => {
+      // WebKit reports deferred ResizeObserver notifications as a page error.
+      if (
+        browserName === "webkit" &&
+        error.message ===
+          "ResizeObserver loop completed with undelivered notifications."
+      ) {
+        return;
+      }
+      errors.push(error.stack || error.message);
+    });
     await startFromIntro(page, "Draw");
     const pad = page.getByTestId("signature-draw-pad");
     await expect(pad).toBeVisible();
