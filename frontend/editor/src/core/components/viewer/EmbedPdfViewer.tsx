@@ -492,6 +492,12 @@ const EmbedPdfViewerContent = ({
     setRedactionMode,
   } = useRedaction();
 
+  // Resubscribing to history emits its current state as though an edit occurred.
+  const redactionsAppliedRef = useRef(redactionsApplied);
+  useLayoutEffect(() => {
+    redactionsAppliedRef.current = redactionsApplied;
+  }, [redactionsApplied]);
+
   // Ref for redaction pending tracker API
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
 
@@ -942,7 +948,7 @@ const EmbedPdfViewerContent = ({
         hasAnnotationChangesRef.current = false;
         const hasPendingRedactions =
           (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
-        if (!hasPendingRedactions && !redactionsApplied) {
+        if (!hasPendingRedactions && !redactionsAppliedRef.current) {
           setHasUnsavedChanges(false);
         }
         return;
@@ -962,7 +968,7 @@ const EmbedPdfViewerContent = ({
       // their own claim on the flag.
       const hasPendingRedactions =
         (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
-      if (!hasPendingRedactions && !redactionsApplied) {
+      if (!hasPendingRedactions && !redactionsAppliedRef.current) {
         setHasUnsavedChanges(false);
       }
     };
@@ -973,12 +979,7 @@ const EmbedPdfViewerContent = ({
         unsubscribe();
       }
     };
-  }, [
-    historyApiRef.current,
-    setHasUnsavedChanges,
-    redactionsApplied,
-    redactionTrackerRef,
-  ]);
+  }, [historyApiRef.current, setHasUnsavedChanges, redactionTrackerRef]);
 
   // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {
@@ -1018,14 +1019,12 @@ const EmbedPdfViewerContent = ({
 
   // Save changes - save annotations and redactions to file (overwrites active file)
   const applyChanges = useCallback(async () => {
-    if (applySignaturesRef.current) {
-      return applySignaturesRef.current();
-    }
     if (applyChangesInFlightRef.current) {
       return applyChangesInFlightRef.current;
     }
 
     if (!currentFile || activeFileIds.length === 0) return;
+    const applySignatures = applySignaturesRef.current;
 
     const saveChanges = async () => {
       console.log(
@@ -1044,8 +1043,16 @@ const EmbedPdfViewerContent = ({
 
       if (hadPendingRedactions) {
         console.log("[Viewer] Committing pending redactions before export");
-        redactionTrackerRef.current?.commitAllPending();
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await redactionTrackerRef.current?.commitAllPending();
+      }
+
+      if (applySignatures) {
+        await applySignatures();
+        savedHistoryRevisionRef.current = historyRevisionRef.current;
+        hasAnnotationChangesRef.current = false;
+        setHasUnsavedChanges(false);
+        setRedactionsApplied(false);
+        return;
       }
 
       // Step 1: Export PDF with annotations using EmbedPDF

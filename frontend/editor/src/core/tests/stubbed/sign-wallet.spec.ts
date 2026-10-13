@@ -78,7 +78,8 @@ async function expectSavedSignatures(page: Page, count: number) {
   await page.getByRole("menuitem", { name: "Download", exact: true }).click();
   const downloadPath = await (await downloadPromise).path();
   if (!downloadPath) throw new Error("Signed PDF was not downloaded");
-  const pdf = await PDFDocument.load(await readFile(downloadPath));
+  const bytes = new Uint8Array(await readFile(downloadPath));
+  const pdf = await PDFDocument.load(bytes);
   const stamps = pdf.getPages().flatMap((pdfPage) => {
     const annotations = pdfPage.node.Annots();
     return Array.from({ length: annotations?.size() ?? 0 }, (_, index) =>
@@ -93,6 +94,7 @@ async function expectSavedSignatures(page: Page, count: number) {
     expect(stamp.lookup(PDFName.of("F"), PDFNumber).asNumber()).toBe(196);
     expect(stamp.get(PDFName.of("AP"))).toBeDefined();
   }
+  return bytes;
 }
 
 test.describe("Sign tool signature wallet", () => {
@@ -418,6 +420,65 @@ test.describe("Sign tool signature wallet", () => {
     await expect(page.getByTestId("apply-signatures")).toBeDisabled();
     await expectSavedSignatures(page, 3);
     expect(errors).toEqual([]);
+  });
+
+  test("Save & Leave applies pending text redactions before saving signatures", async ({
+    page,
+  }) => {
+    await useBrowserStorage(page);
+    await seedBrowserSignature(page, "My signature");
+    await openSign(page);
+    await page
+      .getByRole("button", { name: "My signature", exact: true })
+      .click();
+    await expect(page.getByTestId("placement-status")).toContainText(
+      "Click the page",
+    );
+    const pdfPage = page.locator("[data-page-index]").first();
+    await pdfPage.click({ position: { x: 150, y: 300 } });
+    await expect(page.getByTestId("apply-signatures")).toBeEnabled();
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("placement-status")).toContainText(
+      "Pick a signature",
+    );
+    await expect(pdfPage.locator(".pdf-selection-layer")).toBeAttached();
+    const box = await pdfPage.boundingBox();
+    if (!box) throw new Error("PDF page has no bounding box");
+    const y = box.y + box.height * 0.092;
+    await page.mouse.move(box.x + box.width * 0.15, y);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.6, y, { steps: 15 });
+    await page.mouse.up();
+    const redact = page
+      .locator('[data-text-selection-menu] button[aria-label="Redact"]')
+      .first();
+    await expect(redact).toBeVisible();
+    await redact.click();
+    await expect(page.getByText(/Apply Redactions/).first()).toBeVisible();
+    await page
+      .getByRole("button", { name: "Exit Redaction Mode", exact: true })
+      .click();
+    await page.locator("#super-search-input").fill("Sign");
+    await page.getByRole("option", { name: /^Sign Adds signature/ }).click();
+    await expect(page.getByTestId("signature-wallet")).toBeVisible();
+
+    await page.locator("#super-search-input").fill("Adjust page size");
+    await page.getByRole("option", { name: /Adjust page size/ }).click();
+    await page.getByTestId("unsaved-save").click();
+    await expect(page).toHaveURL(/\/scale-pages$/);
+    const bytes = await expectSavedSignatures(page, 1);
+    const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const document = await getDocument({ data: bytes }).promise;
+    try {
+      const text = await (await document.getPage(1)).getTextContent();
+      const content = text.items
+        .map((item) => ("str" in item ? item.str : ""))
+        .join(" ");
+      expect(content).not.toContain("document for word");
+      expect(content).toContain("as");
+    } finally {
+      await document.destroy();
+    }
   });
 
   test("deleting the last saved signature preserves document controls", async ({
