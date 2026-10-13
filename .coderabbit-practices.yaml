@@ -400,8 +400,7 @@ tests_and_evidence: |
   Preserve established compact Shenandoah unless regression evidence supports a change.
   Remeasure winners without profiling instrumentation.
   Report workload, baseline, architecture, repeated results, correctness, and trade-offs.
-  Never add a sleep to make an e2e test pass; several failures were real
-  synchronization bugs (#8289, #8161, #8080, #8132). Wait on real state.
+  Wait on real state, not sleeps (see historic_regressions).
 
 build_and_deployment: |
   The Taskfile is the command surface. task check runs lint, typecheck, and tests;
