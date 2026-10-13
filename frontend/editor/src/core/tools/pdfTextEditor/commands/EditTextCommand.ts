@@ -42,6 +42,7 @@ import type {
   TextRun,
 } from "@app/tools/pdfTextEditor/model/TextRun";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 import {
   captureScanEdit,
   isScanRun,
@@ -660,6 +661,7 @@ export class EditTextCommand implements Command {
             fontSize: rem.fontSize,
             fill: run.fill,
             ...inkFromRun(run),
+            tagMarks: run.tagMarks,
             originalFontPtr: 0,
             charSpacingPt: run.charSpacingPt,
             fallbackFamily,
@@ -882,6 +884,7 @@ export class EditTextCommand implements Command {
         // omitting this forced every restored object back to fill: undo on
         // invisible OCR text stamped visible glyphs over the scan.
         ...inkFromRun(run),
+        tagMarks: run.tagMarks,
       });
       if (ptrs.length === 0) continue;
       lineAnchorPtrs.push(ptrs[0]);
@@ -1026,6 +1029,7 @@ export class EditTextCommand implements Command {
           fontSize: run.fontSize,
           fill: run.fill,
           ...inkFromRun(run),
+          tagMarks: run.tagMarks,
           originalFontPtr: reuseFontPtr,
           originalFontSubset: run.fontSubset,
           charSpacingPt: run.charSpacingPt,
@@ -1166,6 +1170,7 @@ export class EditTextCommand implements Command {
           fontSize: run.fontSize,
           fill: run.fill,
           ...inkFromRun(run),
+          tagMarks: run.tagMarks,
           originalFontPtr: 0,
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
@@ -1263,6 +1268,7 @@ export class EditTextCommand implements Command {
             fontSize: line.fontSize,
             fill: run.fill,
             ...inkFromRun(run),
+            tagMarks: run.tagMarks,
             originalFontPtr: 0,
             charSpacingPt: run.charSpacingPt,
             fallbackFamily,
@@ -1496,24 +1502,14 @@ function boundsFromPtr(
   ptr: number,
   fallbackX: number,
 ): { x: number; right: number } {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) {
-      return { x: fallbackX, right: fallbackX };
-    }
-    return {
-      x: m.pdfium.getValue(l, "float"),
-      right: m.pdfium.getValue(r, "float"),
-    };
-  } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
+  const buf = scratchPtr(m, SCRATCH.editBbox, 16);
+  if (!m.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
+    return { x: fallbackX, right: fallbackX };
   }
+  return {
+    x: m.pdfium.getValue(buf, "float"),
+    right: m.pdfium.getValue(buf + 8, "float"),
+  };
 }
 
 function keptLeadingBaselines(

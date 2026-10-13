@@ -31,10 +31,9 @@ test.describe("5. Merge Tool", () => {
       await expect(mergeButton).toBeVisible();
       await expect(mergeButton).toBeDisabled();
 
-      // Step 4: Verify the file upload drop zone is visible
-      // (input[type="file"] is excluded — it is hidden in the FileSidebar)
+      // Step 4: Verify the landing page's upload action is displayed
       await expect(
-        page.locator('[class*="upload"], [class*="dropzone"]').first(),
+        page.getByRole("button", { name: /^Add Files$/i }).first(),
       ).toBeVisible();
     });
   });
