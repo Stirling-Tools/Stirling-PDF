@@ -51,10 +51,14 @@ public class InternalApiClient {
     // ConsignO). They reach outside the JVM, so the namespace is deliberately kept to tools that
     // dereference an admin-owned connection rather than a caller-supplied host — see
     // ApiConnectionResolver.
+    //
+    // Of `/api/v1/form/*` only filling and listing fields are dispatchable; the editor's own
+    // field editing endpoints stay out.
     private static final Pattern ALLOWED_ENDPOINT_PATH =
             Pattern.compile(
                     "^/api/v1/(general|misc|security|convert|filter|integration|docparse)(/[A-Za-z0-9_-]+)+$"
-                            + "|^/api/v1/ai/tools(/[A-Za-z0-9_-]+)+$");
+                            + "|^/api/v1/ai/tools(/[A-Za-z0-9_-]+)+$"
+                            + "|^/api/v1/form/(fill|fields)$");
 
     /**
      * Marker propagated on every internal sub-step dispatch so the saas PAYG interceptor classifies
@@ -156,15 +160,13 @@ public class InternalApiClient {
             }
         }
 
-        // A no-file ai/tools call (e.g. create-pdf-from-html-agent) sends only string params, so
-        // without this RestTemplate would use urlencoded instead of the multipart the controller
-        // expects. File-bearing calls get the right multipart content-type from RestTemplate.
-        boolean isAiTool = endpointPath.startsWith("/api/v1/ai/tools/");
+        // A no-file call (e.g. create-pdf-from-html-agent, url-to-pdf) holds only strings, which
+        // RestTemplate would send urlencoded; tool endpoints all expect multipart.
         boolean hasFilePart =
                 body.values().stream()
                         .flatMap(java.util.List::stream)
                         .anyMatch(Resource.class::isInstance);
-        if (isAiTool && !hasFilePart) {
+        if (!hasFilePart) {
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         }
         HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
@@ -247,8 +249,13 @@ public class InternalApiClient {
         return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
     }
 
+    /** Whether {@link #post} would dispatch to this path rather than refuse it. */
+    public static boolean isDispatchable(String endpointPath) {
+        return endpointPath != null && ALLOWED_ENDPOINT_PATH.matcher(endpointPath).matches();
+    }
+
     private void validateUrl(String endpointPath) {
-        if (endpointPath == null || !ALLOWED_ENDPOINT_PATH.matcher(endpointPath).matches()) {
+        if (!isDispatchable(endpointPath)) {
             log.warn("Blocked internal API request to disallowed path: {}", endpointPath);
             throw new SecurityException(
                     "Internal API dispatch not permitted for endpoint: " + endpointPath);

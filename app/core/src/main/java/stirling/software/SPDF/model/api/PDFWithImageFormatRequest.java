@@ -16,5 +16,5 @@ public class PDFWithImageFormatRequest extends PDFFile {
             allowableValues = {"png", "jpeg", "gif"},
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "png")
-    private String format;
+    private String format = "png";
 }

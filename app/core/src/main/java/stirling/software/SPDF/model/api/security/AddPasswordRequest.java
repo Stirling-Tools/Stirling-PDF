@@ -13,15 +13,17 @@ public class AddPasswordRequest extends PDFFile {
 
     @Schema(
             description =
-                    "The owner password to be added to the PDF file (Restricts what can be done"
-                            + " with the document once it is opened)",
+                    "Password needed to change or lift the prevent* restrictions. Set one that"
+                            + " differs from password for the restrictions to hold: if empty, the"
+                            + " open password (or an empty one) is used, so anyone who can open the"
+                            + " file can lift them.",
             format = "password")
     private String ownerPassword;
 
     @Schema(
             description =
-                    "The password to be added to the PDF file (Restricts the opening of the"
-                            + " document itself.)",
+                    "Password needed to open the PDF. Leave empty so anyone can open it, for"
+                            + " example when only adding restrictions with an ownerPassword.",
             format = "password")
     private String password;
 
@@ -34,30 +36,30 @@ public class AddPasswordRequest extends PDFFile {
     private int keyLength = 256;
 
     @Schema(description = "Whether document assembly is prevented", defaultValue = "false")
-    private Boolean preventAssembly;
+    private Boolean preventAssembly = false;
 
     @Schema(description = "Whether content extraction is prevented", defaultValue = "false")
-    private Boolean preventExtractContent;
+    private Boolean preventExtractContent = false;
 
     @Schema(
             description = "Whether content extraction for accessibility is prevented",
             defaultValue = "false")
-    private Boolean preventExtractForAccessibility;
+    private Boolean preventExtractForAccessibility = false;
 
     @Schema(description = "Whether form filling is prevented", defaultValue = "false")
-    private Boolean preventFillInForm;
+    private Boolean preventFillInForm = false;
 
     @Schema(description = "Whether document modification is prevented", defaultValue = "false")
-    private Boolean preventModify;
+    private Boolean preventModify = false;
 
     @Schema(
             description = "Whether modification of annotations is prevented",
             defaultValue = "false")
-    private Boolean preventModifyAnnotations;
+    private Boolean preventModifyAnnotations = false;
 
     @Schema(description = "Whether printing of the document is prevented", defaultValue = "false")
-    private Boolean preventPrinting;
+    private Boolean preventPrinting = false;
 
     @Schema(description = "Whether faithful printing is prevented", defaultValue = "false")
-    private Boolean preventPrintingFaithful;
+    private Boolean preventPrintingFaithful = false;
 }

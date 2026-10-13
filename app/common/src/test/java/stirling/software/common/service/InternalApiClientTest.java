@@ -239,6 +239,16 @@ class InternalApiClientTest {
     }
 
     @Test
+    void postAllowsOnlyFillingAndListingFormFields() {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        // The editor's field editing endpoints stay out of internal dispatch.
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/form/edit-fields", body));
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/form/fill/x", body));
+        assertTrue(InternalApiClient.isDispatchable("/api/v1/form/fill"));
+        assertTrue(InternalApiClient.isDispatchable("/api/v1/form/fields"));
+    }
+
+    @Test
     void postAcceptsAiToolsSubnamespace() throws Exception {
         // Agent tool paths like /api/v1/ai/tools/pdf-comment-agent are on the allowlist and
         // should be dispatchable by the orchestrator's plan executor.

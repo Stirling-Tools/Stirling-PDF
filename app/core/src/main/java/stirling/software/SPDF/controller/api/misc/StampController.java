@@ -108,9 +108,14 @@ public class StampController {
                     "error.invalid.filepath", "Invalid PDF file path: " + pdfFileName);
         }
 
-        String stampType = request.getStampType();
         String stampText = request.getStampText();
         MultipartFile stampImage = request.getStampImage();
+        String stampType = resolveStampType(request.getStampType(), stampImage);
+        if ("text".equalsIgnoreCase(stampType) && (stampText == null || stampText.isBlank())) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.stamp.text.required",
+                    "Stamp text must be provided when stamp type is 'text'");
+        }
         if ("image".equalsIgnoreCase(stampType)) {
             if (stampImage == null) {
                 throw ExceptionUtils.createIllegalArgumentException(
@@ -211,6 +216,19 @@ public class StampController {
         }
     }
 
+    private static String resolveStampType(String stampType, MultipartFile stampImage) {
+        if (stampType == null || stampType.isBlank()) {
+            return stampImage != null ? "image" : "text";
+        }
+        if (!"text".equalsIgnoreCase(stampType) && !"image".equalsIgnoreCase(stampType)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.stamp.type.invalid",
+                    "Invalid stampType ''{0}'': must be ''text'' or ''image''",
+                    stampType);
+        }
+        return stampType;
+    }
+
     private void addTextStamp(
             PDPageContentStream contentStream,
             String stampText,
@@ -232,9 +250,9 @@ public class StampController {
         resourceDir =
                 switch (alphabet) {
                     case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
-                    case "japanese" -> "static/fonts/Meiryo.ttf";
-                    case "korean" -> "static/fonts/malgun.ttf";
-                    case "chinese" -> "static/fonts/SimSun.ttf";
+                    case "japanese" -> "static/fonts/NotoSansJP-Regular.ttf";
+                    case "korean" -> "static/fonts/NotoSansKR-Regular.ttf";
+                    case "chinese" -> "static/fonts/NotoSansSC-Regular.ttf";
                     case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
                     case "roman" -> "static/fonts/NotoSans-Regular.ttf";
                     default -> "static/fonts/NotoSans-Regular.ttf";

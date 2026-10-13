@@ -14,71 +14,79 @@ import stirling.software.common.model.api.PDFFile;
 public class MetadataRequest extends PDFFile {
 
     @Schema(
-            description = "Delete all metadata if set to true",
+            description =
+                    "True removes all metadata (standard, custom and XMP) and ignores the other"
+                            + " fields",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean deleteAll;
+    private Boolean deleteAll = false;
 
     @Schema(
-            description = "The author of the document",
-            defaultValue = "author",
+            description = "The author of the document. Omit to remove it.",
+            example = "author",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String author;
 
     @Schema(
-            description = "The creation date of the document (format: yyyy/MM/dd HH:mm:ss)",
+            description =
+                    "The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to"
+                            + " remove it.",
             pattern = "yyyy/MM/dd HH:mm:ss",
-            defaultValue = "2023/10/01 12:00:00",
+            example = "2023/10/01 12:00:00",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String creationDate;
 
     @Schema(
-            description = "The creator of the document",
-            defaultValue = "creator",
+            description = "The creator of the document. Omit to remove it.",
+            example = "creator",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String creator;
 
     @Schema(
-            description = "The keywords for the document",
-            defaultValue = "keywords",
+            description = "The keywords for the document. Omit to remove it.",
+            example = "keywords",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String keywords;
 
     @Schema(
-            description = "The modification date of the document (format: yyyy/MM/dd HH:mm:ss)",
+            description =
+                    "The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to"
+                            + " remove it.",
             pattern = "yyyy/MM/dd HH:mm:ss",
-            defaultValue = "2023/10/01 12:00:00",
+            example = "2023/10/01 12:00:00",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String modificationDate;
 
     @Schema(
-            description = "The producer of the document",
-            defaultValue = "producer",
+            description = "The producer of the document. Omit to remove it.",
+            example = "producer",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String producer;
 
     @Schema(
-            description = "The subject of the document",
-            defaultValue = "subject",
+            description = "The subject of the document. Omit to remove it.",
+            example = "subject",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String subject;
 
     @Schema(
-            description = "The title of the document",
-            defaultValue = "title",
+            description = "The title of the document. Omit to remove it.",
+            example = "title",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String title;
 
     @Schema(
-            description = "The trapped status of the document",
-            defaultValue = "False",
+            description =
+                    "The trapped status of the document. Omit to remove it, which readers treat"
+                            + " as Unknown.",
             allowableValues = {"True", "False", "Unknown"},
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String trapped;
 
     @Schema(
             description =
-                    "Map list of key and value of custom parameters. Note these must start with"
-                            + " customKey and customValue if they are non-standard")
+                    "Custom metadata to add or update, e.g. {\"Department\":\"Finance\"}. Custom"
+                            + " keys already in the file and not listed are kept. Keys customKeyN"
+                            + " and customValueN (same N) in this map also work as a pair.")
     private Map<String, String> allRequestParams;
 }

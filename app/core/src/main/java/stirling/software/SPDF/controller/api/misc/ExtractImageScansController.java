@@ -76,11 +76,14 @@ public class ExtractImageScansController {
             produces = ToolFormat.IMAGE,
             arity = ToolArity.SIMO)
     @Operation(
-            summary = "Extract image scans from an input file",
+            summary =
+                    "Cut several photos scanned on one page or image into separate cropped PNGs,"
+                            + " straightening tilted ones",
             description =
-                    "This endpoint extracts image scans from a given file based on certain"
-                            + " parameters. Users can specify angle threshold, tolerance, minimum area,"
-                            + " minimum contour area, and border size.")
+                    "Finds each photo against the scanner background on every page (PDF pages are"
+                            + " rendered first) or on an image file, crops it out and straightens"
+                            + " it when it is tilted by at least angleThreshold degrees. Returns"
+                            + " one PNG, or a zip when several photos are found.")
     public ResponseEntity<Resource> extractImageScans(
             @ModelAttribute ExtractImageScansRequest request)
             throws IOException, InterruptedException {

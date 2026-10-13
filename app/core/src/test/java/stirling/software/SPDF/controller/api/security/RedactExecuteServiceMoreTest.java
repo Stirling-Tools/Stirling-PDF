@@ -481,19 +481,31 @@ class RedactExecuteServiceMoreTest {
         }
 
         @Test
-        @DisplayName("wipePages ignores out-of-range and non-positive page numbers")
-        void wipePagesOutOfRangeIgnored() throws IOException {
+        @DisplayName("wipePages rejects pages that don't exist instead of wiping nothing")
+        void wipePagesOutOfRangeRejected() throws IOException {
             byte[] pdf = singlePageTextPdf("survives the wipe");
             factoryReturns(pdf);
 
             RedactExecuteRequest req = requestFor(pdf);
-            // page 0 dropped (non-positive), page 99 dropped (out of range) -> nothing wiped.
             req.setWipePages(new ArrayList<>(List.of(0, 99)));
-            // keep a real target so we are past the no-targets guard via imageBoxes.
 
-            try (TempFile out = service.execute(req)) {
-                assertThat(extractText(out)).contains("survives the wipe");
-            }
+            assertThatThrownBy(() -> service.execute(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("[0, 99]");
+        }
+
+        @Test
+        @DisplayName("an invalid regex is rejected instead of matching nothing")
+        void invalidRegexRejected() throws IOException {
+            byte[] pdf = singlePageTextPdf("text");
+            factoryReturns(pdf);
+
+            RedactExecuteRequest req = requestFor(pdf);
+            req.setRegexPatterns(new ArrayList<>(List.of("(")));
+
+            assertThatThrownBy(() -> service.execute(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("not a valid regular expression");
         }
 
         @Test

@@ -40,6 +40,7 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.RegexPatternUtils;
@@ -84,9 +85,20 @@ public class WatermarkController {
         if (pdfFileName != null && (pdfFileName.contains("..") || pdfFileName.startsWith("/"))) {
             throw new SecurityException("Invalid file path in pdfFile");
         }
-        String watermarkType = request.getWatermarkType();
         String watermarkText = request.getWatermarkText();
         MultipartFile watermarkImage = request.getWatermarkImage();
+        String watermarkType = resolveWatermarkType(request.getWatermarkType(), watermarkImage);
+        if ("text".equalsIgnoreCase(watermarkType)
+                && (watermarkText == null || watermarkText.isBlank())) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.watermark.text.required",
+                    "watermarkText must be provided when watermarkType is 'text'");
+        }
+        if ("image".equalsIgnoreCase(watermarkType) && watermarkImage == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.watermark.image.required",
+                    "watermarkImage must be provided when watermarkType is 'image'");
+        }
         if (watermarkImage != null) {
             String watermarkImageFileName = watermarkImage.getOriginalFilename();
             if (watermarkImageFileName != null
@@ -171,6 +183,19 @@ public class WatermarkController {
                         tempFileManager);
             }
         }
+    }
+
+    private static String resolveWatermarkType(String watermarkType, MultipartFile image) {
+        if (watermarkType == null || watermarkType.isBlank()) {
+            return image != null ? "image" : "text";
+        }
+        if (!"text".equalsIgnoreCase(watermarkType) && !"image".equalsIgnoreCase(watermarkType)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.watermark.type.invalid",
+                    "Invalid watermarkType ''{0}'': must be ''text'' or ''image''",
+                    watermarkType);
+        }
+        return watermarkType;
     }
 
     /**

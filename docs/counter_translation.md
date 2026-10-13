@@ -1,38 +1,37 @@
-# `counter_translation.py`
+# `counter_translation_v3.py`
 
 ## Overview
 
-The script [`scripts/counter_translation.py`](../scripts/counter_translation.py) checks the translation progress of the property files in the directory `app/core/src/main/resources/`.
-It compares each `messages_*.properties` file with the English reference file `messages_en_US.properties` and calculates a percentage of completion for each language.
+The script [`scripts/counter_translation_v3.py`](../scripts/counter_translation_v3.py) checks the translation progress of TOML files in `frontend/editor/public/locales/`.
+It compares each locale's `translation.toml` file with the English reference file `en-US/translation.toml` and calculates a percentage of completion for each language.
 
-In addition to console output, the script automatically updates the progress badges in the project’s `README.md` and maintains the configuration file [`scripts/ignore_translation.toml`](../scripts/ignore_translation.toml), which lists translation keys to be ignored for each language.
+In addition to console output, the script maintains the configuration file [`scripts/ignore_translation.toml`](../scripts/ignore_translation.toml), which lists translation keys to be ignored for each language.
 
 ## Requirements
 
 - Python 3.10 or newer (requires `tomlkit`).
 - Must be executed **from the project root directory** so all relative paths are resolved correctly.
-- Write permissions for `README.md` and `scripts/ignore_translation.toml`.
+- Write permissions for `scripts/ignore_translation.toml`.
 
 ## Default usage
 
 ```bash
-python scripts/counter_translation.py
+python scripts/counter_translation_v3.py
 ```
 
 This command:
 
-1. scans `app/core/src/main/resources/` for all `messages_*.properties` files,
+1. scans `frontend/editor/public/locales/` for all locale `translation.toml` files,
 2. calculates the translation progress for each file,
-3. updates the badges in `README.md`,
-4. reformats `scripts/ignore_translation.toml` (sorted, multi-line arrays).
+3. reformats `scripts/ignore_translation.toml` (sorted, multi-line arrays).
 
 ## Check a single language
 
 ```bash
-python scripts/counter_translation.py --lang messages_fr_FR.properties
+python scripts/counter_translation_v3.py --lang fr-FR
 ```
 
-- The specified file can be given as a relative (to the resources folder) or absolute path.
+- Specify a locale such as `fr-FR`, or a path to its `translation.toml` file.
 - The result is printed to the console (e.g. `fr_FR: 87% translated`).
 - With `--show-missing-keys`, all untranslated keys are listed as well.
 
@@ -41,7 +40,7 @@ python scripts/counter_translation.py --lang messages_fr_FR.properties
 For scripts or CI pipelines, the output can be reduced to just the percentage value:
 
 ```bash
-python scripts/counter_translation.py --lang messages_fr_FR.properties --show-percentage
+python scripts/counter_translation_v3.py --lang fr-FR --show-percentage
 ```
 
 The console will then only print `87` (without the percent symbol or any extra text).
@@ -55,10 +54,10 @@ The console will then only print `87` (without the percent symbol or any extra t
 ## Integration in Pull Requests
 
 Whenever translations are updated, this script should be executed.
-The updated badges and the modified `ignore_translation.toml` should be committed together with the changed `messages_*.properties` files.
+The updated badges and the modified `ignore_translation.toml` should be committed together with the changed `translation.toml` files.
 
 ## Troubleshooting
 
-- **File not found**: Check the path or use `--lang` with an absolute path.
-- **Line error**: The script reports the specific line in both files—this usually means a missing `=` or an unmatched line.
+- **File not found**: Check the path or use `--lang` with a valid locale or path.
+- **Line error**: The script reports syntax errors in the TOML files.
 - **Incorrect percentages in README**: Make sure the script was run from the project root and that write permissions are available.

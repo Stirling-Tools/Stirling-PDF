@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// comment-lint - the comment-quality gate. Standard: devGuide/CODE_COMMENTS.md
+// comment-lint - the comment-quality gate. Standard: docs/developer/CODE_COMMENTS.md
 //
 // Owns .java and engine .py directly, and delegates .ts/.tsx to oxlint (see
 // comment-lint-oxlint-plugin.mjs) so the frontend is judged against real comment
@@ -611,7 +611,7 @@ function publish(findings, scope) {
   }
 
   process.stdout.write(
-    "\nThe standard is devGuide/CODE_COMMENTS.md. A comment must carry information the\n" +
+    "\nThe standard is docs/developer/CODE_COMMENTS.md. A comment must carry information the\n" +
       "code cannot; if a reader could derive it from the code in front of them, delete it.\n" +
       "If a finding is genuinely wrong, put `comment-lint-allow: CMT00X` on the line above.\n",
   );

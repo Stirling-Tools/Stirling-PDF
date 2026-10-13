@@ -251,6 +251,7 @@ class PolicyControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
             assertThat(response.getBody().getJobId()).isEqualTo("run-1");
+            verify(policyValidator).validateRunnableSteps(definitionWithStep().steps());
         }
 
         @Test
@@ -276,6 +277,25 @@ class PolicyControllerTest {
                             e ->
                                     assertThat(((ResponseStatusException) e).getStatusCode())
                                             .isEqualTo(HttpStatus.BAD_REQUEST));
+        }
+
+        @Test
+        @DisplayName("rejects unknown operations or too many steps before anything runs")
+        void rejectsUnrunnableSteps() {
+            doThrow(new IllegalArgumentException("pipeline cannot run - step 1: Unknown operation"))
+                    .when(policyValidator)
+                    .validateRunnableSteps(any());
+
+            assertThatThrownBy(
+                            () -> controller.run(definitionWithStep(), null, new PolicyRunFiles()))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(
+                            e -> {
+                                ResponseStatusException rse = (ResponseStatusException) e;
+                                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                                assertThat(rse.getReason()).contains("Unknown operation");
+                            });
+            verify(policyRunner, never()).runAdHoc(any(), any(), any());
         }
 
         @Test

@@ -298,7 +298,7 @@ storage:
   # Encryption at rest for stored files (AES-256, per-team keys). Requires a Pro or
   # Enterprise licence. Key setup, cluster requirements, the encrypt-existing migration,
   # the revocation kill switch and master-key rotation are documented in
-  # devGuide/STORAGE_ENCRYPTION_AT_REST.md
+  # docs/developer/STORAGE_ENCRYPTION_AT_REST.md
   # WARNING: back up the master key (configs/file-encryption.key by default) - losing it
   # makes every encrypted stored file permanently unrecoverable.
   encryption:
@@ -438,6 +438,7 @@ policies:
   # Stirling's own config directory is always off-limits, and folder access is always
   # disabled in SaaS mode.
   allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
+  maxSteps: 50 # Most steps one pipeline (saved or run ad hoc) may chain; longer ones are rejected. 0 = unlimited
   scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due
   storageFolderSweepSeconds: 60 # Seconds between safety-net sweeps of server processing folders (arrivals sweep immediately)
   watchReconcileSeconds: 300 # How often (seconds) folder-watch re-syncs watches and re-runs as a safety net for missed events

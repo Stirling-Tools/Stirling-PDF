@@ -1,13 +1,7 @@
 import "fake-indexeddb/auto";
 import { useState } from "react";
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { AppProviders } from "@app/components/AppProviders";
@@ -94,14 +88,24 @@ function renderApp(late = false) {
 }
 
 async function expectSettledInReader() {
-  await waitFor(() => expect(seen.pathname).toBe("/reader"));
+  await vi.waitFor(() => expect(seen.pathname).toBe("/reader"));
   // Settled there, not just passing through on the way back to the editor.
-  await act(() => new Promise((r) => setTimeout(r, 1000)));
+  await act(() => vi.advanceTimersByTimeAsync(1000));
   expect(seen).toEqual({ pathname: "/reader", readerMode: true });
 }
 
 describe("default startup view: Reader", () => {
   beforeEach(() => {
+    // setImmediate stays real: React's scheduler and fake-indexeddb run on it.
+    vi.useFakeTimers({
+      toFake: [
+        "setTimeout",
+        "clearTimeout",
+        "setInterval",
+        "clearInterval",
+        "Date",
+      ],
+    });
     // The full provider tree settles asynchronously outside act().
     allowConsole.error(/not wrapped in act/);
     localStorage.clear();
@@ -109,6 +113,10 @@ describe("default startup view: Reader", () => {
       "stirlingpdf_preferences",
       JSON.stringify({ defaultStartupView: "read" }),
     );
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it.each([
@@ -119,7 +127,7 @@ describe("default startup view: Reader", () => {
     async (_label, late) => {
       renderApp(late);
       if (late) {
-        await waitFor(() => expect(seen.readerMode).toBe(true));
+        await vi.waitFor(() => expect(seen.readerMode).toBe(true));
         act(() => showPage());
       }
       await expectSettledInReader();
@@ -133,7 +141,7 @@ describe("default startup view: Reader", () => {
       .mockReturnValue([{ type: "reload" } as PerformanceNavigationTiming]);
     try {
       renderApp();
-      await act(() => new Promise((r) => setTimeout(r, 1500)));
+      await act(() => vi.advanceTimersByTimeAsync(1500));
       expect(seen).toEqual({ pathname: "/", readerMode: false });
     } finally {
       navigation.mockRestore();
@@ -144,7 +152,7 @@ describe("default startup view: Reader", () => {
     renderApp();
     await expectSettledInReader();
     act(() => backToTools());
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(seen).toEqual({ pathname: "/", readerMode: false }),
     );
     fireEvent.click(document.querySelector(".quick-nav-brand-button")!);
@@ -155,7 +163,7 @@ describe("default startup view: Reader", () => {
     renderApp();
     await expectSettledInReader();
     act(() => selectTool("compress"));
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(seen).toEqual({ pathname: "/compress", readerMode: false }),
     );
 
@@ -163,7 +171,7 @@ describe("default startup view: Reader", () => {
     await expectSettledInReader();
 
     act(() => goBack());
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(seen).toEqual({ pathname: "/compress", readerMode: false }),
     );
   }, 15000);
@@ -172,9 +180,9 @@ describe("default startup view: Reader", () => {
     renderApp();
     await expectSettledInReader();
     act(() => backToTools());
-    await waitFor(() => expect(seen.readerMode).toBe(false));
+    await vi.waitFor(() => expect(seen.readerMode).toBe(false));
     act(() => goToSettings());
-    await waitFor(() => expect(seen.pathname).toBe("/settings/general"));
+    await vi.waitFor(() => expect(seen.pathname).toBe("/settings/general"));
 
     fireEvent.click(document.querySelector(".quick-nav-brand-button")!);
     await expectSettledInReader();
@@ -184,7 +192,7 @@ describe("default startup view: Reader", () => {
     renderApp();
     await expectSettledInReader();
     act(() => selectTool("compress"));
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(seen).toEqual({ pathname: "/compress", readerMode: false }),
     );
 
@@ -203,7 +211,7 @@ describe("default startup view: Reader", () => {
       renderApp();
       await expectSettledInReader();
       act(() => selectTool("multiTool"));
-      await waitFor(() => {
+      await vi.waitFor(() => {
         expect(seen).toEqual({ pathname: "/multi-tool", readerMode: false });
         expect(navigation.workbench).toBe("pageEditor");
       });
@@ -222,14 +230,16 @@ describe("default startup view: Reader", () => {
       }
 
       fireEvent.click(document.querySelector(".quick-nav-brand-button")!);
-      await waitFor(() => expect(navigation.showNavigationWarning).toBe(true));
+      await vi.waitFor(() =>
+        expect(navigation.showNavigationWarning).toBe(true),
+      );
       expect(seen).toEqual({ pathname: "/multi-tool", readerMode: false });
       expect(navigation.selectedTool).toBe("multiTool");
       expect(navigation.workbench).toBe("pageEditor");
 
       if (decision === "cancel") {
         fireEvent.click(screen.getByRole("button", { name: "keepWorking" }));
-        await waitFor(() =>
+        await vi.waitFor(() =>
           expect(navigation.showNavigationWarning).toBe(false),
         );
         expect(seen).toEqual({ pathname: "/multi-tool", readerMode: false });

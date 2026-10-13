@@ -15,15 +15,10 @@ public class RearrangePagesRequest extends PDFWithPageNums {
     @Schema(
             implementation = SortTypes.class,
             description =
-                    "The custom mode for page rearrangement. Valid values are:\n"
-                            + "CUSTOM: Uses order defined in PageNums "
-                            + "DUPLICATE: Duplicate pages n times (if Page order defined as 4, then duplicates each page 4 times)"
-                            + "REVERSE_ORDER: Reverses the order of all pages.\n"
-                            + "DUPLEX_SORT: Sorts pages as if all fronts were scanned then all backs in reverse (1, n, 2, n-1, ...). "
-                            + "BOOKLET_SORT: Arranges pages for booklet printing (last, first, second, second last, ...).\n"
-                            + "ODD_EVEN_SPLIT: Splits and arranges pages into odd and even numbered pages.\n"
-                            + "REMOVE_FIRST: Removes the first page.\n"
-                            + "REMOVE_LAST: Removes the last page.\n"
-                            + "REMOVE_FIRST_AND_LAST: Removes both the first and the last pages.\n")
+                    "Omit or CUSTOM to use pageNumbers. Or: REVERSE_ORDER, DUPLEX_SORT"
+                            + " (input: all fronts, then backs reversed), BOOKLET_SORT,"
+                            + " SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even pages),"
+                            + " REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST,"
+                            + " DUPLICATE (each page N times; N in pageNumbers, default 2)")
     private String customMode;
 }

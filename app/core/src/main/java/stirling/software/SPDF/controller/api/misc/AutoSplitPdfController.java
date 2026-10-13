@@ -283,11 +283,16 @@ public class AutoSplitPdfController {
     @MultiFileResponse
     @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
-            summary = "Auto split PDF pages into separate documents",
+            summary =
+                    "Split only at Stirling QR-code divider sheets; without them use split-pages or"
+                            + " split-by-size-or-count",
             description =
-                    "This endpoint accepts a PDF file, scans each page for a specific QR code, and"
-                            + " splits the document at the QR code boundaries. The output is a zip file"
-                            + " containing each separate PDF document.")
+                    "Looks for divider pages carrying the Stirling PDF QR code (inserted between"
+                            + " documents before scanning) and starts a new document at each one;"
+                            + " dividers after page 1 are left out. Returns a zip of the parts. A"
+                            + " PDF without dividers comes back as one unsplit document. With"
+                            + " duplexMode=true the page after each divider (its back) is"
+                            + " skipped too.")
     public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();

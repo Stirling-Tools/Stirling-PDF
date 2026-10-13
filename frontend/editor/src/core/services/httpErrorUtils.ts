@@ -74,7 +74,10 @@ export function extractAxiosErrorMessage(error: unknown): {
           ids: ids.join(", "),
         });
       }
-      const message = (data as { message?: unknown })?.message;
+      // Spring problem responses carry the reason in `detail`.
+      const message =
+        (data as { message?: unknown })?.message ??
+        (data as { detail?: unknown })?.detail;
       if (message) return message as string;
       if (typeof raw === "string") return raw;
       try {

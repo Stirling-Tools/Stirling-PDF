@@ -496,8 +496,8 @@ class RedactControllerMoreTest {
 
             TempFile resultTemp = mock(TempFile.class);
             when(resultTemp.getFile()).thenReturn(outFile);
-            when(redactExecuteService.execute(any(RedactExecuteRequest.class)))
-                    .thenReturn(resultTemp);
+            when(redactExecuteService.executeWithOutcome(any(RedactExecuteRequest.class)))
+                    .thenReturn(new RedactExecuteService.Outcome(resultTemp, 0, false));
 
             RedactExecuteRequest request = new RedactExecuteRequest();
             request.setFileInput(pdfFile(singlePageTextPdf("in")));
@@ -505,7 +505,8 @@ class RedactControllerMoreTest {
             ResponseEntity<Resource> response = controller.executeRedaction(request);
 
             assertThat(response.getStatusCode().value()).isEqualTo(200);
-            verify(redactExecuteService, times(1)).execute(any(RedactExecuteRequest.class));
+            verify(redactExecuteService, times(1))
+                    .executeWithOutcome(any(RedactExecuteRequest.class));
         }
 
         @Test
