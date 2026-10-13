@@ -13,14 +13,18 @@ public class FlattenRequest extends PDFFile {
 
     @Schema(
             description =
-                    "True to flatten only the forms, false to flatten full PDF (Convert page to"
-                            + " image)",
+                    "True only locks form fields (merges them into the page, text stays"
+                            + " selectable). False turns every page into an image, so text can no"
+                            + " longer be selected.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
     private Boolean flattenOnlyForms = false;
 
     @Schema(
-            description = "Optional DPI for page rendering when flattening the full document.",
+            description =
+                    "DPI for the page images when flattenOnlyForms is false (300 if omitted,"
+                            + " capped by the server's maximum DPI). Ignored when"
+                            + " flattenOnlyForms is true.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             minimum = "72")
     private Integer renderDpi;

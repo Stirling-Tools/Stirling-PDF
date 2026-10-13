@@ -57,9 +57,11 @@ public class PdfVectorExportController {
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @ToolIO(accepts = ToolFormat.POSTSCRIPT, produces = ToolFormat.PDF)
     @Operation(
-            summary = "Convert PostScript formats to PDF",
+            summary = "Convert PostScript (.ps, .eps) to PDF; XPS and PCL input is not supported",
             description =
-                    "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript.")
+                    "Converts PostScript (PS, EPS, EPSF) to PDF with Ghostscript; prepress=true"
+                            + " applies Ghostscript's prepress settings. outputFormat is ignored"
+                            + " here. XPS, PCL and PXL files cannot be converted.")
     public ResponseEntity<Resource> convertGhostscriptInputsToPdf(
             @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
 

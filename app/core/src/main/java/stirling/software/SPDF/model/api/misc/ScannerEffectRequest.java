@@ -38,7 +38,11 @@ public class ScannerEffectRequest {
     @NotNull(message = "File input is required")
     private MultipartFile fileInput;
 
-    @Schema(description = "Scan quality preset", example = "high")
+    @Schema(
+            description =
+                    "Scan quality preset. Sets brightness, contrast, blur, noise and resolution"
+                            + " unless advancedEnabled is true.",
+            example = "high")
     @NotNull(message = "Quality is required")
     private Quality quality = Quality.high;
 
@@ -49,6 +53,40 @@ public class ScannerEffectRequest {
     @Schema(description = "Colorspace for output image", example = "grayscale")
     private Colorspace colorspace = Colorspace.grayscale;
 
+    @Schema(
+            description =
+                    "Must be true for brightness, contrast, blur, noise and resolution to apply;"
+                            + " when false the quality preset replaces them. Border, rotation,"
+                            + " rotate, rotateVariance, colorspace and yellowish always apply.",
+            example = "false")
+    private boolean advancedEnabled = false;
+
+    @Schema(
+            description = "Brightness multiplier (1.0 = no change). Needs advancedEnabled=true.",
+            example = "1.0")
+    private float brightness = 1.0f;
+
+    @Schema(
+            description = "Contrast multiplier (1.0 = no change). Needs advancedEnabled=true.",
+            example = "1.0")
+    private float contrast = 1.0f;
+
+    @Schema(
+            description = "Blur amount (0 = none, higher = more blur). Needs advancedEnabled=true.",
+            example = "1.0")
+    private float blur = 1.0f;
+
+    @Schema(
+            description =
+                    "Noise amount (0 = none, higher = more noise). Needs advancedEnabled=true.",
+            example = "8.0")
+    private float noise = 8.0f;
+
+    @Schema(
+            description = "Rendering resolution in DPI. Needs advancedEnabled=true.",
+            example = "300")
+    private int resolution = 300;
+
     @Schema(description = "Border thickness in pixels", example = "20")
     private int border = 20;
 
@@ -58,26 +96,8 @@ public class ScannerEffectRequest {
     @Schema(description = "Random rotation variance in degrees", example = "2")
     private int rotateVariance = 2;
 
-    @Schema(description = "Brightness multiplier (1.0 = no change)", example = "1.0")
-    private float brightness = 1.0f;
-
-    @Schema(description = "Contrast multiplier (1.0 = no change)", example = "1.0")
-    private float contrast = 1.0f;
-
-    @Schema(description = "Blur amount (0 = none, higher = more blur)", example = "1.0")
-    private float blur = 1.0f;
-
-    @Schema(description = "Noise amount (0 = none, higher = more noise)", example = "8.0")
-    private float noise = 8.0f;
-
     @Schema(description = "Simulate yellowed paper", example = "false")
     private boolean yellowish = false;
-
-    @Schema(description = "Rendering resolution in DPI", example = "300")
-    private int resolution = 300;
-
-    @Schema(description = "Whether advanced settings are enabled", example = "false")
-    private boolean advancedEnabled = false;
 
     public int getRotationValue() {
         return switch (rotation) {
