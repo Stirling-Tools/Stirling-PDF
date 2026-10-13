@@ -1,23 +1,12 @@
 import { MultiSelect } from "@app/ui/MultiSelect";
 import { useTranslation } from "react-i18next";
-import { LEGACY_PII_PATTERNS, PII_PRESETS } from "@app/data/policyDefinitions";
+import { PII_PRESETS } from "@app/data/policyDefinitions";
 import type { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
 
-const PRESET_PATTERN_ENTRIES = PII_PRESETS.flatMap((p) =>
-  [p.pattern, ...(LEGACY_PII_PATTERNS[p.value] ?? [])].map(
-    (pattern) => [pattern, p.value] as const,
-  ),
-);
-
-/**
- * Every preset regex, legacy forms included — used to separate preset words
- * from custom ones, so re-saving a policy replaces a legacy form.
- */
-export const PRESET_PATTERNS = new Set(
-  PRESET_PATTERN_ENTRIES.map(([pattern]) => pattern),
-);
+/** The set of preset regexes — used to separate preset words from custom ones. */
+export const PRESET_PATTERNS = new Set(PII_PRESETS.map((p) => p.pattern));
 const PATTERN_BY_VALUE = new Map(PII_PRESETS.map((p) => [p.value, p.pattern]));
-const VALUE_BY_PATTERN = new Map(PRESET_PATTERN_ENTRIES);
+const VALUE_BY_PATTERN = new Map(PII_PRESETS.map((p) => [p.pattern, p.value]));
 
 interface PolicyPiiFieldProps {
   parameters: RedactParameters;

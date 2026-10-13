@@ -107,6 +107,13 @@ export const useRedactAdvancedTips = (): TooltipContent => {
         ),
       },
       {
+        title: t("redact.tooltip.advanced.caseSensitive.title", "Match Case"),
+        description: t(
+          "redact.tooltip.advanced.caseSensitive.text",
+          "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals.",
+        ),
+      },
+      {
         title: t(
           "redact.tooltip.advanced.convert.title",
           "Convert to PDF-Image",

@@ -173,6 +173,7 @@ public class RedactController {
 
         boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
         boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
+        boolean caseSensitive = Boolean.TRUE.equals(request.getCaseSensitive());
 
         if (useRegex) {
             for (String term : terms) {
@@ -213,8 +214,8 @@ public class RedactController {
                         RedactOptions.builder()
                                 .addWords(terms)
                                 .useRegex(useRegex)
-                                .caseSensitive(useRegex)
                                 .wholeWord(wholeWordSearchBool)
+                                .caseSensitive(caseSensitive)
                                 .boxColor(boxColorInt)
                                 .padding(request.getCustomPadding())
                                 .removeContent(true)
@@ -269,7 +270,8 @@ public class RedactController {
                                     document,
                                     terms.toArray(new String[0]),
                                     useRegex,
-                                    wholeWordSearchBool);
+                                    wholeWordSearchBool,
+                                    caseSensitive);
                     TempFile finalized =
                             manualRedactionService.finalizeRedaction(
                                     document,

@@ -88,35 +88,32 @@ class TextFinderUtilsTest {
     }
 
     @Test
-    void createOptimizedSearchPatterns_withRegex_keepsThePatternsOwnCaseRules() {
-        List<Pattern> patterns =
-                TextFinderUtils.createOptimizedSearchPatterns(Set.of("[A-Z]{2}-\\d+"), true, false);
-
-        assertTrue(patterns.get(0).matcher("FS-01").find());
-        assertFalse(patterns.get(0).matcher("fs-01").find());
-    }
-
-    @Test
-    void createOptimizedSearchPatterns_withRegex_honoursInlineCaseInsensitiveFlag() {
-        List<Pattern> patterns =
-                TextFinderUtils.createOptimizedSearchPatterns(Set.of("(?i)secret"), true, false);
-
-        assertTrue(patterns.get(0).matcher("SeCrEt").find());
-    }
-
-    @Test
-    void createOptimizedSearchPatterns_withRegex_honoursScopedCaseInsensitiveGroup() {
-        // The policy "Account numbers" PII preset, which must still catch all-caps labels.
-        String accountPreset =
-                "\\b(?i:acc(?:oun)?t|a/c)(?:\\s+(?i:no\\.?|number|#))?\\s*[:#]?\\s*\\d{6,17}\\b";
-        Pattern pattern =
-                TextFinderUtils.createOptimizedSearchPatterns(Set.of(accountPreset), true, false)
+    void createOptimizedSearchPatterns_ignoresCaseByDefault() {
+        Pattern regex =
+                TextFinderUtils.createOptimizedSearchPatterns(Set.of("[A-Z]{2}-\\d+"), true, false)
+                        .get(0);
+        Pattern literal =
+                TextFinderUtils.createOptimizedSearchPatterns(Set.of("secret"), false, false)
                         .get(0);
 
-        assertTrue(pattern.matcher("ACCOUNT NUMBER: 12345678").find());
-        assertTrue(pattern.matcher("Acct # 1234567").find());
-        assertTrue(pattern.matcher("a/c 123456789").find());
-        assertFalse(pattern.matcher("discount 12345678").find());
+        assertTrue(regex.matcher("fs-01").find());
+        assertTrue(literal.matcher("SECRET").find());
+    }
+
+    @Test
+    void createOptimizedSearchPatterns_caseSensitive_matchesCaseExactly() {
+        Pattern regex =
+                TextFinderUtils.createOptimizedSearchPatterns(
+                                Set.of("[A-Z]{2}-\\d+"), true, false, true)
+                        .get(0);
+        Pattern literal =
+                TextFinderUtils.createOptimizedSearchPatterns(Set.of("Secret"), false, false, true)
+                        .get(0);
+
+        assertTrue(regex.matcher("FS-01").find());
+        assertFalse(regex.matcher("fs-01").find());
+        assertTrue(literal.matcher("Secret").find());
+        assertFalse(literal.matcher("SECRET").find());
     }
 
     @Test

@@ -71,11 +71,12 @@ class TextRedactionServiceExtraTest {
         }
 
         @Test
-        @DisplayName("a regex keeps its own case rules, so [A-Z] does not match lowercase")
-        void regexIsCaseSensitive() throws IOException {
+        @DisplayName("case-sensitive search leaves text in another case alone")
+        void caseSensitiveRegex() throws IOException {
             try (PDDocument doc = buildDoc("ticket FS-01 and fs-02")) {
                 Map<Integer, List<PDFText>> result =
-                        service.findTextToRedact(doc, new String[] {"[A-Z]{2}-\\d+"}, true, false);
+                        service.findTextToRedact(
+                                doc, new String[] {"[A-Z]{2}-\\d+"}, true, false, true);
                 assertThat(result.get(0)).hasSize(1);
                 assertThat(result.get(0).get(0).getText()).isEqualTo("FS-01");
             }
