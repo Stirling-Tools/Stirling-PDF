@@ -181,8 +181,8 @@ function readMemberInk(
   } catch {
     /* keep the run-level value */
   }
-  const buf = scratchPtr(m, SCRATCH.outlineRGBAW, 20);
   try {
+    const buf = scratchPtr(m, SCRATCH.outlineRGBAW, 20);
     let stroke: RGBA | null = null;
     if (
       mod.FPDFPageObj_GetStrokeColor?.(ptr, buf, buf + 4, buf + 8, buf + 12)

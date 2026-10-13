@@ -1298,8 +1298,8 @@ export function measureObjBoxPt(
   m: WrappedPdfiumModule,
   objPtr: number,
 ): { x: number; y: number; width: number; height: number } | null {
-  const buf = scratchPtr(m, SCRATCH.editMeasureBox, 16);
   try {
+    const buf = scratchPtr(m, SCRATCH.editMeasureBox, 16);
     if (!m.FPDFPageObj_GetBounds(objPtr, buf, buf + 4, buf + 8, buf + 12))
       return null;
     const left = m.pdfium.getValue(buf, "float");

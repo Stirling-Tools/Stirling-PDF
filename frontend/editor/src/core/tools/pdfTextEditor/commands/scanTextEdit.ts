@@ -393,8 +393,8 @@ function scanPixelSpan(
         q.bounds.width * q.bounds.height - p.bounds.width * p.bounds.height,
     )[0];
   if (!under) return 0;
-  const buf = scratchPtr(m, SCRATCH.scanImageSize, 8);
   try {
+    const buf = scratchPtr(m, SCRATCH.scanImageSize, 8);
     if (!m.FPDFImageObj_GetImagePixelSize(under.pdfiumObjPtr, buf, buf + 4))
       return 0;
     const pixels = m.pdfium.getValue(buf, "i32");

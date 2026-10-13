@@ -116,8 +116,8 @@ export function readObjFill(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   objPtr: number,
 ): RGBA | null {
-  const buf = scratchPtr(m, SCRATCH.colourRGBA, 16);
   try {
+    const buf = scratchPtr(m, SCRATCH.colourRGBA, 16);
     if (!m.FPDFPageObj_GetFillColor(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
       return null;
     }

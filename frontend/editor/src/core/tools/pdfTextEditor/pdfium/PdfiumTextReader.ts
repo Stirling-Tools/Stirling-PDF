@@ -596,10 +596,10 @@ interface RulePaint {
 
 // What a path paints, or null when it paints nothing (a clip, or a leftover).
 function readPaint(m: WrappedPdfiumModule, objPtr: number): RulePaint | null {
-  const buf = scratchPtr(m, SCRATCH.readerRuleDrawMode, 8);
   let fillMode = 1;
   let stroked = false;
   try {
+    const buf = scratchPtr(m, SCRATCH.readerRuleDrawMode, 8);
     if (m.FPDFPath_GetDrawMode(objPtr, buf, buf + 4)) {
       fillMode = m.pdfium.getValue(buf, "i32");
       stroked = m.pdfium.getValue(buf + 4, "i32") !== 0;
@@ -639,8 +639,8 @@ function readRGBA(
   objPtr: number,
   read: ColorReader,
 ): RGBA | null {
-  const buf = scratchPtr(m, SCRATCH.readerRuleColour, 16);
   try {
+    const buf = scratchPtr(m, SCRATCH.readerRuleColour, 16);
     if (!read(objPtr, buf, buf + 4, buf + 8, buf + 12)) return null;
     return {
       r: m.pdfium.getValue(buf, "i32") & 0xff,
@@ -656,8 +656,8 @@ function readRGBA(
 function readStrokeWidth(m: WrappedPdfiumModule, objPtr: number): number {
   const get = (m as unknown as RulePaintModule).FPDFPageObj_GetStrokeWidth;
   if (!get) return 0;
-  const w = scratchPtr(m, SCRATCH.readerRuleStrokeWidth, 4);
   try {
+    const w = scratchPtr(m, SCRATCH.readerRuleStrokeWidth, 4);
     if (!get(objPtr, w)) return 0;
     const raw = m.pdfium.getValue(w, "float");
     return Number.isFinite(raw) && raw > 0 ? raw : 0;
@@ -688,9 +688,9 @@ function ruleEdgesFromPath(
   }
   // A one- or two-point path has no edge a bounding box would not already give.
   if (count < 3) return [];
-  const buf = scratchPtr(m, SCRATCH.readerSegmentPoint, 8);
   const out: PageRect[] = [];
   try {
+    const buf = scratchPtr(m, SCRATCH.readerSegmentPoint, 8);
     let prev: { x: number; y: number } | null = null;
     let subpathStart: { x: number; y: number } | null = null;
     for (let i = 0; i < count; i++) {
