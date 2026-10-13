@@ -29,7 +29,10 @@ interface SignaturePlacementOverlayProps {
 export const SignaturePlacementOverlay: React.FC<
   SignaturePlacementOverlayProps
 > = ({ containerRef, isActive, signatureConfig }) => {
-  const [preview, setPreview] = useState<SignaturePreview | null>(null);
+  const [previewResult, setPreviewResult] = useState<{
+    preview: SignaturePreview | null;
+    signatureConfig: SignParameters | null;
+  }>({ preview: null, signatureConfig: null });
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null);
   const { placementSize, setPlacementSize } = useSignature();
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
@@ -48,15 +51,16 @@ export const SignaturePlacementOverlay: React.FC<
     let cancelled = false;
 
     const buildPreview = async () => {
+      const previewConfig = signatureConfig ?? null;
       try {
-        const value = await buildSignaturePreview(signatureConfig ?? null);
+        const value = await buildSignaturePreview(previewConfig);
         if (!cancelled) {
-          setPreview(value);
+          setPreviewResult({ preview: value, signatureConfig: previewConfig });
         }
       } catch (error) {
         console.error("Failed to build signature preview:", error);
         if (!cancelled) {
-          setPreview(null);
+          setPreviewResult({ preview: null, signatureConfig: previewConfig });
         }
       }
     };
@@ -67,6 +71,11 @@ export const SignaturePlacementOverlay: React.FC<
       cancelled = true;
     };
   }, [signatureConfig]);
+
+  const preview =
+    previewResult.signatureConfig === signatureConfig
+      ? previewResult.preview
+      : null;
 
   useEffect(() => {
     const element = containerRef.current;
