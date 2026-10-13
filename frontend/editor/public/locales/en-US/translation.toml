@@ -11461,6 +11461,7 @@ settings = "Settings"
 [replaceColor.options]
 cmyk = "Convert to CMYK"
 custom = "Custom"
+grayscale = "Convert to grayscale"
 highContrast = "High contrast"
 invertAll = "Invert all colors"
 
@@ -11477,6 +11478,10 @@ title = "Custom Colors"
 [replaceColor.tooltip.description]
 text = "Transform PDF colors to improve readability and accessibility. Choose from high contrast presets, invert all colors, or create custom color schemes."
 title = "Description"
+
+[replaceColor.tooltip.grayscale]
+text = "Convert all colors in the PDF to shades of gray. Text and vector graphics stay sharp and selectable, unlike a scanned copy."
+title = "Convert to Grayscale"
 
 [replaceColor.tooltip.header]
 title = "Replace & Invert Color Settings Overview"

@@ -41,6 +41,10 @@ const ReplaceColorSettings = ({
       value: "COLOR_SPACE_CONVERSION",
       label: t("replaceColor.options.cmyk", "Convert to CMYK"),
     },
+    {
+      value: "GRAYSCALE",
+      label: t("replaceColor.options.grayscale", "Convert to grayscale"),
+    },
   ];
 
   const highContrastOptions = [

@@ -13,6 +13,7 @@ import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.misc.ColorSpaceConversionStrategy;
 import stirling.software.common.util.misc.CustomColorReplaceStrategy;
+import stirling.software.common.util.misc.GrayscaleConversionStrategy;
 import stirling.software.common.util.misc.InvertFullColorStrategy;
 import stirling.software.common.util.misc.ReplaceAndInvertColorStrategy;
 
@@ -82,6 +83,19 @@ class ReplaceAndInvertColorFactoryTest {
         assertTrue(
                 strategy instanceof ColorSpaceConversionStrategy,
                 "Expected ColorSpaceConversionStrategy for COLOR_SPACE_CONVERSION");
+    }
+
+    @Test
+    void whenGrayscale_thenReturnsGrayscaleConversionStrategy() {
+        ReplaceAndInvert option = ReplaceAndInvert.GRAYSCALE;
+
+        ReplaceAndInvertColorStrategy strategy =
+                factory.replaceAndInvert(file, option, null, null, null);
+
+        assertNotNull(strategy);
+        assertTrue(
+                strategy instanceof GrayscaleConversionStrategy,
+                "Expected GrayscaleConversionStrategy for GRAYSCALE");
     }
 
     @Test

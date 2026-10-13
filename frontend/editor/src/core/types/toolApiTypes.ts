@@ -1287,7 +1287,8 @@ export interface ReplaceAndInvertColorRequest {
     | "HIGH_CONTRAST_COLOR"
     | "CUSTOM_COLOR"
     | "FULL_INVERSION"
-    | "COLOR_SPACE_CONVERSION";
+    | "COLOR_SPACE_CONVERSION"
+    | "GRAYSCALE";
   /**
    * If CUSTOM_COLOR option selected, then pick the custom color for text. Expected color value should be 24bit decimal value of a color
    */

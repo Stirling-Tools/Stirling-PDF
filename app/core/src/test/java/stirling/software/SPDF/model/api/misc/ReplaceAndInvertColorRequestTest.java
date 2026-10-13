@@ -107,14 +107,15 @@ class ReplaceAndInvertColorRequestTest {
     class ReplaceAndInvertEnum {
 
         @Test
-        @DisplayName("values() exposes all four constants")
+        @DisplayName("values() exposes all five constants")
         void valuesExposesAll() {
             assertThat(ReplaceAndInvert.values())
                     .containsExactly(
                             ReplaceAndInvert.HIGH_CONTRAST_COLOR,
                             ReplaceAndInvert.CUSTOM_COLOR,
                             ReplaceAndInvert.FULL_INVERSION,
-                            ReplaceAndInvert.COLOR_SPACE_CONVERSION);
+                            ReplaceAndInvert.COLOR_SPACE_CONVERSION,
+                            ReplaceAndInvert.GRAYSCALE);
         }
 
         @Test

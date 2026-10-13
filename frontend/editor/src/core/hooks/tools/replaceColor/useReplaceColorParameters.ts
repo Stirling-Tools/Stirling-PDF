@@ -9,7 +9,8 @@ export interface ReplaceColorParameters extends BaseParameters {
     | "HIGH_CONTRAST_COLOR"
     | "CUSTOM_COLOR"
     | "FULL_INVERSION"
-    | "COLOR_SPACE_CONVERSION";
+    | "COLOR_SPACE_CONVERSION"
+    | "GRAYSCALE";
   highContrastColorCombination:
     | "WHITE_TEXT_ON_BLACK"
     | "BLACK_TEXT_ON_WHITE"

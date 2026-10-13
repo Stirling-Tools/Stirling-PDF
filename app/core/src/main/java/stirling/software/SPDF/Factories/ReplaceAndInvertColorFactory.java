@@ -11,6 +11,7 @@ import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.misc.ColorSpaceConversionStrategy;
 import stirling.software.common.util.misc.CustomColorReplaceStrategy;
+import stirling.software.common.util.misc.GrayscaleConversionStrategy;
 import stirling.software.common.util.misc.InvertFullColorStrategy;
 import stirling.software.common.util.misc.ReplaceAndInvertColorStrategy;
 
@@ -50,6 +51,8 @@ public class ReplaceAndInvertColorFactory {
             case FULL_INVERSION -> new InvertFullColorStrategy(file, replaceAndInvertOption);
             case COLOR_SPACE_CONVERSION ->
                     new ColorSpaceConversionStrategy(file, replaceAndInvertOption, tempFileManager);
+            case GRAYSCALE ->
+                    new GrayscaleConversionStrategy(file, replaceAndInvertOption, tempFileManager);
         };
     }
 }

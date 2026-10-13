@@ -5,4 +5,5 @@ public enum ReplaceAndInvert {
     CUSTOM_COLOR,
     FULL_INVERSION,
     COLOR_SPACE_CONVERSION,
+    GRAYSCALE,
 }

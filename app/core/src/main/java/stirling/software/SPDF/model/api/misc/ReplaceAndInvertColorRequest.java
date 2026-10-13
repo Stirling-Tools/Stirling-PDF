@@ -21,7 +21,8 @@ public class ReplaceAndInvertColorRequest extends PDFFile {
                 "HIGH_CONTRAST_COLOR",
                 "CUSTOM_COLOR",
                 "FULL_INVERSION",
-                "COLOR_SPACE_CONVERSION"
+                "COLOR_SPACE_CONVERSION",
+                "GRAYSCALE"
             })
     private ReplaceAndInvert replaceAndInvertOption;
 
