@@ -806,7 +806,8 @@ function EditingBridges({
       {redactionActive && <RedactionAPIBridge />}
       {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
       <SignatureAPIBridge ref={signatureApiRef} isSignMode={isSignMode} />
-      {redactionActive && <RedactionPendingTracker ref={redactionTrackerRef} />}
+      {/* Pending redactions must remain available to Save & Leave in other editing tools. */}
+      <RedactionPendingTracker ref={redactionTrackerRef} />
       {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
     </>
   );
