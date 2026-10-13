@@ -81,8 +81,12 @@ class SchemaDefaultsMatchModelsTest {
         if (value == null) {
             return false;
         }
-        String actual = normalise(String.valueOf(value));
-        String expected = normalise(documented);
+        String actual = String.valueOf(value);
+        String expected = documented;
+        if (value instanceof java.util.List<?>) {
+            actual = normalise(actual);
+            expected = normalise(expected);
+        }
         if (actual.equalsIgnoreCase(expected)) {
             return true;
         }

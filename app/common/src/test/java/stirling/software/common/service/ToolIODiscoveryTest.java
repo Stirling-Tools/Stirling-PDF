@@ -73,6 +73,12 @@ class ToolIODiscoveryTest {
     @RequestMapping("/api/v1/misc")
     static class DispatchableFixtureController {
 
+        @PostMapping("/fixture-session/{sessionId}/finalize")
+        @ToolIO(produces = ToolFormat.PDF)
+        public String finalizeSession() {
+            return "";
+        }
+
         @PostMapping("/fixture-undeclared")
         public String undeclared() {
             return "";
@@ -171,6 +177,16 @@ class ToolIODiscoveryTest {
         assertFalse(registry.isKnown("/api/v1/misc/fixture-request-body"));
         assertTrue(registry.isKnown("/api/v1/misc/fixture-generator"));
         assertTrue(registry.isKnown("/api/v1/misc/fixture-any-content"));
+    }
+
+    @Test
+    void matchesConcreteVariableRoutesWithoutAcceptingUnrelatedPaths() {
+        String concrete = "/api/v1/misc/fixture-session/abc/finalize";
+        assertTrue(registry.isKnown(concrete));
+        assertEquals(ToolFormat.PDF, registry.find(concrete).orElseThrow().produces());
+        assertFalse(registry.isKnown("/api/v1/misc/fixture-session/{sessionId}/finalize"));
+        assertFalse(registry.isKnown(concrete + "/extra"));
+        assertFalse(registry.isKnown("/api/v1/misc/fixture-session/abc/other"));
     }
 
     @Test
