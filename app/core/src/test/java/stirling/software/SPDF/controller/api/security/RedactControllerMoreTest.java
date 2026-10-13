@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -43,8 +46,12 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.jpdfium.redact.PdfRedactor;
+import stirling.software.jpdfium.redact.RedactOptions;
+import stirling.software.jpdfium.redact.RedactResult;
 
 /**
  * End-to-end coverage tests for {@link RedactController} that drive the controller against real
@@ -214,6 +221,43 @@ class RedactControllerMoreTest {
             byte[] out = drainBody(response);
             assertThat(pdfText(out)).doesNotContain("CONFIDENTIAL");
             assertThat(pdfText(out)).contains("public");
+        }
+
+        @Test
+        @DisplayName("a page the engine could not verify fails the request instead of returning it")
+        void unverifiedPageFailsTheRequest() throws IOException {
+            byte[] bytes = singlePageTextPdf("public CONFIDENTIAL data");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("CONFIDENTIAL");
+            request.setRedactColor("#000000");
+
+            RedactResult unverified =
+                    new RedactResult(
+                            null,
+                            List.of(new RedactResult.PageResult(0, 1, -1)),
+                            0L,
+                            false,
+                            null,
+                            List.of(),
+                            List.of(),
+                            0,
+                            0,
+                            List.of());
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), any(RedactOptions.class)))
+                        .thenReturn(unverified);
+
+                assertThatThrownBy(() -> controller.redactPdf(request))
+                        .isInstanceOf(ToolFailedException.class)
+                        .hasMessageContaining("page 1")
+                        .satisfies(
+                                e ->
+                                        assertThat(((ToolFailedException) e).getErrorCode())
+                                                .isEqualTo("E077"));
+            }
         }
 
         @Test
