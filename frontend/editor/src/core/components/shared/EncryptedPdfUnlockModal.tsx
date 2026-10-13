@@ -11,7 +11,7 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { type KeyboardEventHandler } from "react";
+import { useEffect, useState, type KeyboardEventHandler } from "react";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 
 interface EncryptedPdfUnlockModalProps {
@@ -26,11 +26,15 @@ interface EncryptedPdfUnlockModalProps {
   confirmLabel?: string;
   /** Session unlocking preserves the original; notification retries may instead remove protection. */
   sessionUnlock?: boolean;
+  /** Elevation preserves existing viewing access when the dialog is cancelled. */
+  ownerUnlock?: boolean;
   testIdPrefix?: string;
   onPasswordChange: (value: string) => void;
   onUnlock: () => void;
-  /** Creates an unprotected copy using the entered password, without changing the original. */
+  /** Removes the opening password with owner authority while retaining stored restrictions. */
   onRemovePassword?: () => void;
+  /** Explicitly removes encryption and restrictions after owner verification. */
+  onRemoveProtection?: () => void;
   /** Only needed alongside a non-zero {@link EncryptedPdfUnlockModalProps.remainingCount}. */
   onUnlockAll?: () => void;
   onSkip: () => void;
@@ -45,14 +49,20 @@ const EncryptedPdfUnlockModal = ({
   remainingCount = 0,
   confirmLabel,
   sessionUnlock = false,
+  ownerUnlock = false,
   testIdPrefix,
   onPasswordChange,
   onUnlock,
   onRemovePassword,
+  onRemoveProtection,
   onUnlockAll,
   onSkip,
 }: EncryptedPdfUnlockModalProps) => {
   const { t } = useTranslation();
+  const [optionsOpened, setOptionsOpened] = useState(false);
+  useEffect(() => {
+    if (!opened) setOptionsOpened(false);
+  }, [opened]);
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === "Enter" && !isProcessing && password.length > 0) {
@@ -70,15 +80,17 @@ const EncryptedPdfUnlockModal = ({
       title={
         <Group component="span" gap={6} wrap="nowrap">
           <span>
-            {sessionUnlock
-              ? t("encryptedPdfUnlock.sessionTitle", "Unlock PDF")
-              : t("encryptedPdfUnlock.title", "Remove password to continue")}
+            {ownerUnlock
+              ? t("encryptedPdfUnlock.ownerTitle", "Enter permissions password")
+              : sessionUnlock
+                ? t("encryptedPdfUnlock.sessionTitle", "Unlock PDF")
+                : t("encryptedPdfUnlock.title", "Remove password to continue")}
           </span>
           {sessionUnlock && (
             <Tooltip
               label={t(
                 "encryptedPdfUnlock.sessionDetails",
-                "Access ends when you close the file or leave the session. Supported tools keep PDF results protected; merged PDFs use the first protected file's settings. Closing this dialog keeps the saved copy in your library. Use Remove Password to create an unprotected copy.",
+                "Access ends when you close the file or leave the session. Supported tools preserve protection. Closing this dialog keeps the saved copy in your library. Removing the opening password requires the permissions password and retains restrictions.",
               )}
               multiline
               w={280}
@@ -112,7 +124,7 @@ const EncryptedPdfUnlockModal = ({
       }}
       data-testid={testIdPrefix ? `${testIdPrefix}-modal` : undefined}
       closeOnClickOutside={!isProcessing}
-      closeOnEscape={!isProcessing}
+      closeOnEscape={!isProcessing && !optionsOpened}
       zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
     >
       <Stack gap="md">
@@ -144,7 +156,14 @@ const EncryptedPdfUnlockModal = ({
         )}
 
         <PasswordInput
-          label={t("encryptedPdfUnlock.password.label", "PDF password")}
+          label={
+            ownerUnlock
+              ? t(
+                  "encryptedPdfUnlock.ownerPassword",
+                  "Permissions password (owner)",
+                )
+              : t("encryptedPdfUnlock.password.label", "PDF password")
+          }
           placeholder={t(
             "encryptedPdfUnlock.password.placeholder",
             "Enter the PDF password",
@@ -200,6 +219,8 @@ const EncryptedPdfUnlockModal = ({
               </Button>
               {sessionUnlock && onRemovePassword && (
                 <Menu
+                  opened={optionsOpened}
+                  onChange={setOptionsOpened}
                   position="bottom-end"
                   withinPortal
                   zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE + 1}
@@ -229,10 +250,29 @@ const EncryptedPdfUnlockModal = ({
                       <Text size="xs" c="dimmed">
                         {t(
                           "encryptedPdfUnlock.createCopy",
-                          "Create an unprotected copy",
+                          "Remove opening password; retain restrictions",
                         )}
                       </Text>
                     </Menu.Item>
+                    {onRemoveProtection && (
+                      <Menu.Item
+                        disabled={isProcessing || password.length === 0}
+                        onClick={onRemoveProtection}
+                      >
+                        <Text size="sm">
+                          {t(
+                            "encryptedPdfUnlock.removeProtection",
+                            "Create an unprotected copy",
+                          )}
+                        </Text>
+                        <Text size="xs">
+                          {t(
+                            "encryptedPdfUnlock.removeProtectionDetails",
+                            "Removes both passwords and all restrictions. Requires the permissions password.",
+                          )}
+                        </Text>
+                      </Menu.Item>
+                    )}
                   </Menu.Dropdown>
                 </Menu>
               )}

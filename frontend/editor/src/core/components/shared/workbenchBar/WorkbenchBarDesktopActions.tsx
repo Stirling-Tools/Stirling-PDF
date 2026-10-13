@@ -54,7 +54,7 @@ export default function WorkbenchBarDesktopActions({
             hover={false}
             className="workbench-bar-action-icon"
             onClick={onPrint}
-            disabled={exportDisabled}
+            disabled={exportDisabled || !onPrint}
             aria-label={t("workbenchBar.print", "Print PDF")}
           >
             <Icon name="printer" size={"1rem"} />

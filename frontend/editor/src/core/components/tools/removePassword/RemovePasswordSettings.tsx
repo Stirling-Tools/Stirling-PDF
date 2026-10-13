@@ -1,4 +1,4 @@
-import { Stack, PasswordInput } from "@mantine/core";
+import { Stack, PasswordInput, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
 
@@ -20,9 +20,18 @@ const RemovePasswordSettings = ({
 
   return (
     <Stack gap="md">
+      <Text size="sm">
+        {t(
+          "encryptedPdfUnlock.removeOpeningDetails",
+          "Removes the password needed to open the PDF. Requires the permissions password and retains document restrictions with that password.",
+        )}
+      </Text>
       <Stack gap="sm">
         <PasswordInput
-          label={t("removePassword.password.label", "Current Password")}
+          label={t(
+            "removePassword.password.label",
+            "Permissions password (owner)",
+          )}
           placeholder={t(
             "removePassword.password.placeholder",
             "Enter current password",

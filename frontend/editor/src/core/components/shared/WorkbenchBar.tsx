@@ -1,3 +1,6 @@
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { pdfAllows } from "@app/services/pdfSessionUnlock";
+import { PdfPermissionFlag } from "@embedpdf/models";
 import React, {
   useCallback,
   useEffect,
@@ -333,6 +336,10 @@ export default function WorkbenchBar({
     ],
   );
 
+  const printAccess = usePdfAccess(activeFileId);
+  const canPrint =
+    pdfAllows(printAccess, PdfPermissionFlag.Print) &&
+    pdfAllows(printAccess, PdfPermissionFlag.PrintHighQuality);
   const handlePrint = useCallback(() => {
     viewerContext?.printActions?.print?.();
   }, [viewerContext]);
@@ -397,7 +404,7 @@ export default function WorkbenchBar({
     downloadLabel: downloadTooltip,
     downloadIconName: icons.download,
     saveAsIconName: icons.saveAs,
-    onPrint: handlePrint,
+    onPrint: canPrint ? handlePrint : undefined,
     onExport: handleExportAll,
     onClose: handleClose,
   };

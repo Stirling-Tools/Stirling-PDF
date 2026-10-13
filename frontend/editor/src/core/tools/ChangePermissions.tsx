@@ -1,3 +1,4 @@
+import { Stack, PasswordInput, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
@@ -40,14 +41,36 @@ const ChangePermissions = (props: BaseToolProps) => {
           : undefined,
         tooltip: changePermissionsTips,
         content: (
-          <ChangePermissionsSettings
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading || base.operation.isLoading}
-            isLoading={permissions.isLoading}
-            hasReadError={permissions.hasError}
-            multipleFiles={base.selectedFiles.length > 1}
-          />
+          <Stack>
+            <PasswordInput
+              label={t(
+                "encryptedPdfUnlock.ownerPassword",
+                "Permissions password (owner)",
+              )}
+              value={base.params.parameters.ownerPassword ?? ""}
+              onChange={(e) =>
+                base.params.updateParameter(
+                  "ownerPassword",
+                  e.currentTarget.value,
+                )
+              }
+              disabled={base.operation.isLoading}
+            />
+            <Text size="xs">
+              {t(
+                "encryptedPdfUnlock.permissionsOutput",
+                "The result will open without a password. Keep the permissions password to change its restrictions later. Use Add Password to also require a password to open.",
+              )}
+            </Text>
+            <ChangePermissionsSettings
+              parameters={base.params.parameters}
+              onParameterChange={base.params.updateParameter}
+              disabled={base.endpointLoading || base.operation.isLoading}
+              isLoading={permissions.isLoading}
+              hasReadError={permissions.hasError}
+              multipleFiles={base.selectedFiles.length > 1}
+            />
+          </Stack>
         ),
       },
     ],
@@ -57,7 +80,9 @@ const ChangePermissions = (props: BaseToolProps) => {
       loadingText: t("loading"),
       onClick: base.handleExecute,
       endpointEnabled: base.endpointEnabled,
-      paramsValid: base.params.validateParameters(),
+      paramsValid:
+        base.params.validateParameters() &&
+        !!base.params.parameters.ownerPassword,
       disabled: permissions.isLoading,
     },
     review: {

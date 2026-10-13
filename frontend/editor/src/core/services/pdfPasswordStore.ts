@@ -10,8 +10,12 @@ export interface PdfAccess {
   /** Older servers omit these; native exports must reject unverifiable protection. */
   encryptionKeyLength?: number;
   encryptionRevision?: number;
+  credentialFingerprint?: string;
   canModify: boolean;
   canAssemble: boolean;
+  canExtract?: boolean;
+  canPrint?: boolean;
+  canPrintFaithful?: boolean;
   pageCount: number;
 }
 

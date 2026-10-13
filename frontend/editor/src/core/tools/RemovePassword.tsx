@@ -51,7 +51,10 @@ const RemovePassword = (props: BaseToolProps) => {
     review: {
       isVisible: base.hasResults,
       operation: base.operation,
-      title: t("removePassword.results.title", "Decrypted PDFs"),
+      title: t(
+        "removePassword.results.title",
+        "PDFs without an opening password",
+      ),
       onFileClick: base.handleThumbnailClick,
       onUndo: base.handleUndo,
     },

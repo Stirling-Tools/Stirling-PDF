@@ -81,10 +81,7 @@ import {
 } from "@app/services/pendingUnlocks";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
 import apiClient from "@app/services/apiClient";
-import {
-  buildRemovePasswordFormData,
-  REMOVE_PASSWORD_ENDPOINT,
-} from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
+import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
 
 // Inner provider component that has access to IndexedDB
 function FileContextInner({
@@ -375,6 +372,10 @@ function FileContextInner({
 
   const handleUnlockSkip = useCallback(() => {
     if (activeEncryptedFileId) {
+      if (getPdfAccess(activeEncryptedFileId)) {
+        setActiveEncryptedFileId(null);
+        return;
+      }
       const pending = pendingAdmissions.current.get(activeEncryptedFileId);
       if (pending) {
         pendingAdmissions.current.delete(activeEncryptedFileId);
@@ -617,6 +618,14 @@ function FileContextInner({
       if (filesRef.current.get(fileId) !== file) {
         return;
       }
+      if (getPdfAccess(file)?.encrypted && !access.ownerAuthenticated) {
+        throw new Error(
+          t(
+            "encryptedPdfUnlock.ownerRequired",
+            "Enter the permissions password to allow restricted actions.",
+          ),
+        );
+      }
       rememberPdfAccess(file, access);
       bindPdfAccess(file, fileId);
       const metadata = await generateProcessedFileMetadata(file);
@@ -650,7 +659,11 @@ function FileContextInner({
   );
 
   const runPasswordRemoval = useCallback(
-    async (fileId: FileId, password: string): Promise<void> => {
+    async (
+      fileId: FileId,
+      password: string,
+      removeRestrictions = false,
+    ): Promise<void> => {
       const file = filesRef.current.get(fileId);
       const pending = pendingAdmissions.current.get(fileId);
       const sourceStub = pending?.stub ?? stateRef.current.files.byId[fileId];
@@ -663,7 +676,9 @@ function FileContextInner({
         );
       }
       const response = await apiClient.post<Blob>(
-        REMOVE_PASSWORD_ENDPOINT,
+        removeRestrictions
+          ? "/api/v1/security/remove-pdf-protection"
+          : "/api/v1/security/remove-pdf-opening-password",
         buildRemovePasswordFormData({ password }, file),
         {
           responseType: "blob",
@@ -673,21 +688,27 @@ function FileContextInner({
       if (filesRef.current.get(fileId) !== file) return;
       const copy = new File(
         [response.data],
-        `${file.name.replace(/\.pdf$/i, "")}_unprotected.pdf`,
+        `${file.name.replace(/\.pdf$/i, "")}_${removeRestrictions ? "unprotected" : "opening_password_removed"}.pdf`,
         {
           type: "application/pdf",
         },
       );
-      const metadata = await generateProcessedFileMetadata(copy);
-      if (filesRef.current.get(fileId) !== file) return;
-      if (metadata?.isEncrypted) {
+      const copyAccess = await unlockPdfForSession(copy, "");
+      if (removeRestrictions && copyAccess.encrypted)
         throw new Error(
           t(
-            "removePassword.error.failed",
-            "An error occurred while removing the password from the PDF.",
+            "encryptedPdfUnlock.securityChangeFailed",
+            "Unable to change protection. Check the permissions password and the new security settings.",
           ),
         );
-      }
+      rememberPdfAccess(copy, copyAccess);
+      const generatedMetadata = await generateProcessedFileMetadata(copy);
+      const metadata = {
+        ...generatedMetadata,
+        pages: generatedMetadata?.pages ?? [],
+        isEncrypted: copyAccess.encrypted,
+      };
+      if (filesRef.current.get(fileId) !== file) return;
       const stub = createChildStub(
         sourceStub,
         { toolId: "removePassword", timestamp: Date.now() },
@@ -718,7 +739,7 @@ function FileContextInner({
   );
 
   const handleUnlockSubmit = useCallback(
-    async (removePassword = false) => {
+    async (removePassword = false, removeRestrictions = false) => {
       if (!activeEncryptedFileId || isUnlocking) return;
       if (unlockPassword.length === 0) {
         setUnlockError(
@@ -731,7 +752,11 @@ function FileContextInner({
       setUnlockError(null);
       try {
         if (removePassword) {
-          await runPasswordRemoval(activeEncryptedFileId, unlockPassword);
+          await runPasswordRemoval(
+            activeEncryptedFileId,
+            unlockPassword,
+            removeRestrictions,
+          );
         } else {
           await runSessionUnlock(activeEncryptedFileId, unlockPassword);
         }
@@ -739,9 +764,14 @@ function FileContextInner({
           stateRef.current.files.byId[activeEncryptedFileId]?.name;
         alert({
           alertType: "success",
-          title: removePassword
-            ? t("encryptedPdfUnlock.copyCreated", "Unprotected copy created")
-            : t("encryptedPdfUnlock.sessionSuccessTitle", "PDF unlocked"),
+          title: removeRestrictions
+            ? t(
+                "encryptedPdfUnlock.protectionRemoved",
+                "Unprotected copy created",
+              )
+            : removePassword
+              ? t("encryptedPdfUnlock.copyCreated", "Opening password removed")
+              : t("encryptedPdfUnlock.sessionSuccessTitle", "PDF unlocked"),
           body: removePassword
             ? t(
                 "encryptedPdfUnlock.originalProtected",
@@ -1059,6 +1089,9 @@ function FileContextInner({
         />
         <EncryptedPdfUnlockModal
           sessionUnlock
+          ownerUnlock={
+            !!activeEncryptedFileId && !!getPdfAccess(activeEncryptedFileId)
+          }
           opened={isUnlockModalOpen}
           fileName={activeEncryptedStub?.name}
           password={unlockPassword}
@@ -1068,6 +1101,7 @@ function FileContextInner({
           onPasswordChange={setUnlockPassword}
           onUnlock={() => void handleUnlockSubmit()}
           onRemovePassword={() => void handleUnlockSubmit(true)}
+          onRemoveProtection={() => void handleUnlockSubmit(true, true)}
           onUnlockAll={handleUnlockAll}
           onSkip={handleUnlockSkip}
         />

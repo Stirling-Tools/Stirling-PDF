@@ -52,7 +52,11 @@ const ChangePermissionsSettings = ({
       )}
       <Stack gap="xs">
         {(
-          Object.keys(parameters) as Array<keyof ChangePermissionsParameters>
+          Object.keys(parameters).filter((key) =>
+            key.startsWith("prevent"),
+          ) as Array<
+            Exclude<keyof ChangePermissionsParameters, "ownerPassword">
+          >
         ).map((key) => (
           <Checkbox
             key={key}

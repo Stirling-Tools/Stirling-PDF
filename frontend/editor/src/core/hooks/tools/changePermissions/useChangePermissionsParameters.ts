@@ -5,6 +5,7 @@ import {
 } from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface ChangePermissionsParameters extends BaseParameters {
+  ownerPassword?: string;
   preventAssembly: boolean;
   preventExtractContent: boolean;
   preventExtractForAccessibility: boolean;

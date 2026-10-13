@@ -30,6 +30,7 @@ import "@app/components/viewer/TextSelectionMenu.css";
 export type TextSelectionMenuProps = SelectionSelectionMenuProps & {
   documentId?: string;
   readOnly?: boolean;
+  canCopy?: boolean;
 };
 
 export function TextSelectionMenu(props: TextSelectionMenuProps) {
@@ -49,6 +50,7 @@ function TextSelectionMenuInner({
   placement,
   documentId,
   readOnly = false,
+  canCopy = false,
 }: TextSelectionMenuProps & { documentId: string }) {
   const { t } = useTranslation();
   const { provides: selection } = useSelectionCapability();
@@ -120,7 +122,7 @@ function TextSelectionMenuInner({
   }, [selected, showAbove]);
 
   const handleCopy = useCallback(() => {
-    if (documentId) {
+    if (documentId && canCopy) {
       selection?.copyToClipboard(documentId);
       selection?.clear(documentId);
       alert({
@@ -129,7 +131,7 @@ function TextSelectionMenuInner({
         durationMs: 2000,
       });
     }
-  }, [selection, documentId, t]);
+  }, [selection, documentId, t, canCopy]);
 
   const openAnnotateUi = useCallback(() => {
     handleToolSelectForced?.("annotate");
@@ -323,6 +325,7 @@ function TextSelectionMenuInner({
               type="button"
               className="embedpdf-text-selection-btn"
               onClick={handleCopy}
+              disabled={!canCopy}
               aria-label={t("viewer.copyText", "Copy")}
             >
               <Icon name="copy" size={20} />

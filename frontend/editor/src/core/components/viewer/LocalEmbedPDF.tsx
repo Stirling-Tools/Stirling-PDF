@@ -105,6 +105,8 @@ import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvent
 import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
 import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
 import { isStirlingFile } from "@app/types/fileContext";
+import { pdfAllows } from "@app/services/pdfSessionUnlock";
+import { PdfPermissionFlag } from "@embedpdf/models";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import {
   DocumentRestoreBridge,
@@ -409,6 +411,7 @@ interface PageLayerOptions {
   formEditingActive: boolean;
   enableAnnotations: boolean;
   annotationsReadOnly: boolean;
+  canCopy: boolean;
   enableRedaction: boolean;
   showBakedAnnotations: boolean;
   onAnnotationMenuAnchor: (anchor: AnnotationMenuAnchor | null) => void;
@@ -446,7 +449,8 @@ function PageTextSelection({
   documentId,
   pageIndex,
   readOnly,
-}: PageLayerProps & { readOnly: boolean }) {
+  canCopy,
+}: PageLayerProps & { readOnly: boolean; canCopy: boolean }) {
   return (
     <>
       <div
@@ -462,7 +466,11 @@ function PageTextSelection({
           pageIndex={pageIndex}
           background="var(--pdf-selection-bg)"
           selectionMenu={(props) => (
-            <TextSelectionMenu {...props} readOnly={readOnly} />
+            <TextSelectionMenu
+              {...props}
+              readOnly={readOnly}
+              canCopy={canCopy}
+            />
           )}
         />
       </div>
@@ -603,6 +611,7 @@ function PageLayers({
   formEditingActive,
   enableAnnotations,
   annotationsReadOnly,
+  canCopy,
   enableRedaction,
   showBakedAnnotations,
   onAnnotationMenuAnchor,
@@ -622,6 +631,7 @@ function PageLayers({
         documentId={documentId}
         pageIndex={pageIndex}
         readOnly={annotationsReadOnly}
+        canCopy={canCopy}
       />
       <FormFillLayers
         enabled={enableFormFill}
@@ -892,7 +902,7 @@ export function LocalEmbedPDF({
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const pdfAccess = usePdfAccess(file ?? fileId);
-  const annotationsReadOnly = Boolean(pdfAccess?.encrypted);
+  const annotationsReadOnly = !pdfAccess || pdfAccess.encrypted;
   const showAnnotations = enableAnnotations || annotationsReadOnly;
   const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
@@ -1012,6 +1022,7 @@ export function LocalEmbedPDF({
   } | null>(null);
   const initialDocumentOpenedRef = useRef(false);
   const openedContentKeyRef = useRef<string | null>(null);
+  const openedOwnerAccessRef = useRef(false);
   // Anchors survive deselection per annotation id, so a delete that happens
   // while no menu is open (keyboard, sidebar) still has somewhere to appear.
   const annotationAnchorsByIdRef = useRef<Map<string, AnnotationMenuAnchor>>(
@@ -1050,7 +1061,11 @@ export function LocalEmbedPDF({
   // Reads bytes on the main thread for the worker, and lands bytes plus URL in
   // one commit so the registry rebuilds once per replacement.
   useEffect(() => {
-    if (fileStableKey && shouldSkipBytes?.(fileStableKey)) {
+    if (
+      fileStableKey &&
+      shouldSkipBytes?.(fileStableKey) &&
+      openedOwnerAccessRef.current === Boolean(pdfAccess?.ownerAuthenticated)
+    ) {
       // The live document already shows this save; swapping the bytes would
       // reopen it and lose the scroll position for no visual gain.
       return;
@@ -1064,7 +1079,14 @@ export function LocalEmbedPDF({
     ) => {
       // A repeat run for the same content (a rename, a FileContext churn) must
       // not reopen the document.
-      if (!contentKey || openedContentKeyRef.current === contentKey) return;
+      if (
+        !contentKey ||
+        (openedContentKeyRef.current === contentKey &&
+          openedOwnerAccessRef.current ===
+            Boolean(pdfAccess?.ownerAuthenticated))
+      )
+        return;
+      openedOwnerAccessRef.current = Boolean(pdfAccess?.ownerAuthenticated);
       openedContentKeyRef.current = contentKey;
       if (!initialDocumentOpenedRef.current) {
         initialDocumentOpenedRef.current = true;
@@ -1117,7 +1139,13 @@ export function LocalEmbedPDF({
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [file ? fileStableKey : null, url, shouldSkipBytes, exportFileName]);
+  }, [
+    file ? fileStableKey : null,
+    url,
+    shouldSkipBytes,
+    exportFileName,
+    pdfAccess?.ownerAuthenticated,
+  ]);
 
   useEffect(() => {
     // A pending revocation belongs to a previous mount of this effect; cancel
@@ -1473,6 +1501,7 @@ export function LocalEmbedPDF({
     formEditingActive,
     enableAnnotations: showAnnotations,
     annotationsReadOnly,
+    canCopy: pdfAllows(pdfAccess, PdfPermissionFlag.CopyContents),
     enableRedaction,
     showBakedAnnotations,
     onAnnotationMenuAnchor: handleAnnotationMenuAnchor,
@@ -1527,7 +1556,9 @@ export function LocalEmbedPDF({
           />
           <ZoomAPIBridge />
           <ScrollAPIBridge />
-          <SelectionAPIBridge />
+          <SelectionAPIBridge
+            canCopy={pdfAllows(pdfAccess, PdfPermissionFlag.CopyContents)}
+          />
           <FormCreationInteractionLock />
           <PanAPIBridge />
           <SpreadAPIBridge />
@@ -1557,11 +1588,16 @@ export function LocalEmbedPDF({
           <ExportAPIBridge disabled={pdfAccess?.encrypted} />
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />
-          <PrintAPIBridge file={file} url={pdfUrl} fileName={fileName} />
+          <PrintAPIBridge
+            canPrint={
+              pdfAllows(pdfAccess, PdfPermissionFlag.Print) &&
+              pdfAllows(pdfAccess, PdfPermissionFlag.PrintHighQuality)
+            }
+          />
           <DocumentPermissionsAPIBridge
-            isEncrypted={pdfAccess?.encrypted}
+            isEncrypted={pdfAccess?.encrypted ?? true}
             isOwnerUnlocked={pdfAccess?.ownerAuthenticated}
-            permissions={pdfAccess?.permissions}
+            permissions={pdfAccess?.permissions ?? 0}
           />
           <DocumentReadyWrapper
             fallback={

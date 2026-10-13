@@ -12,6 +12,7 @@ import { isSignupRequiredError } from "@app/utils/toolErrorHandler";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
+  changePdfSecurity,
 } from "@app/services/pdfSessionUnlock";
 
 /** An input that did not survive the batch, with the error it failed on. */
@@ -87,10 +88,18 @@ export const useToolApiCalls = <TParams = void>() => {
           const workingFile = await prepareUnlockedFile(file, endpoint);
           const formData = config.buildFormData(params, workingFile);
           console.debug("[processFiles] POST", { endpoint, name: file.name });
-          const response = await apiClient.post(endpoint, formData, {
-            responseType: "blob",
-            cancelToken: cancelTokenRef.current?.token,
-          });
+          const response =
+            endpoint === "/api/v1/security/add-password" ||
+            endpoint === "/api/v1/security/remove-password"
+              ? {
+                  data: await changePdfSecurity(file, formData, endpoint),
+                  status: 200,
+                  headers: undefined,
+                }
+              : await apiClient.post(endpoint, formData, {
+                  responseType: "blob",
+                  cancelToken: cancelTokenRef.current?.token,
+                });
           console.debug("[processFiles] Response OK", {
             name: file.name,
             status: response.status,

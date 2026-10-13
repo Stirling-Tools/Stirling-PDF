@@ -46,7 +46,7 @@ export default function WorkbenchBarMobileActions({
         {showPrint && (
           <Menu.Item
             leftSection={<Icon name="printer" size={"1.1rem"} />}
-            disabled={exportDisabled}
+            disabled={exportDisabled || !onPrint}
             onClick={onPrint}
           >
             {t("workbenchBar.print", "Print PDF")}

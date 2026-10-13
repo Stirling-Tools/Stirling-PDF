@@ -4,35 +4,6 @@ import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";
-
-function RemovePasswordAction() {
-  const { t } = useTranslation();
-  const { handleToolSelect } = useToolWorkflowActions();
-  return (
-    <Tooltip
-      label={t(
-        "encryptedPdfUnlock.removePasswordHelp",
-        "Open Remove Password to create an unprotected copy.",
-      )}
-      multiline
-      w={230}
-      withArrow
-      events={{ hover: true, focus: true, touch: true }}
-    >
-      <ActionIcon
-        variant="tertiary"
-        accent="neutral"
-        size="sm"
-        style={{ flexShrink: 0 }}
-        aria-label={t("removePassword.submit", "Remove Password")}
-        onClick={() => handleToolSelect("removePassword")}
-      >
-        <Icon name="lock-open" size={16} />
-      </ActionIcon>
-    </Tooltip>
-  );
-}
 
 /** Protected inputs remain visible in the Files list even when this tool cannot process them. */
 export function ProtectedPdfToolNotice({
@@ -49,7 +20,7 @@ export function ProtectedPdfToolNotice({
           <Tooltip
             label={t(
               "encryptedPdfUnlock.toolUnavailable",
-              "Unlocked for viewing, but this tool cannot preserve its password protection. Use Remove Password to create an unprotected copy first.",
+              "This tool cannot yet preserve this document's protection. The protected original remains available for viewing.",
             )}
             multiline
             w={260}
@@ -81,7 +52,6 @@ export function ProtectedPdfToolNotice({
           >
             <PrivateContent>{file.name}</PrivateContent>
           </Text>
-          <RemovePasswordAction />
         </Group>
       ))}
     </Stack>

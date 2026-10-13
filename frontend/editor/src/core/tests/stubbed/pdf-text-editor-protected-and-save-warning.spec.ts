@@ -48,6 +48,7 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
               permissions: -4,
               encryptionKeyLength: 256,
               encryptionRevision: 6,
+              credentialFingerprint: "original-credentials",
               canModify: true,
               canAssemble: true,
               pageCount: 1,
@@ -115,6 +116,7 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
         await page.getByTestId("pdf-editor-save-risk-confirm").click();
         const download = await downloadPromise;
         expect(download.suggestedFilename()).toBe("encrypted_edited.pdf");
+        await download.saveAs(test.info().outputPath("encrypted_edited.pdf"));
         await expect(page.getByRole("dialog")).toHaveCount(0);
         await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden();
         expect(inspections).toBe(2);

@@ -27,6 +27,7 @@ const access: PdfAccess = {
   permissions: -4,
   encryptionKeyLength: 256,
   encryptionRevision: 6,
+  credentialFingerprint: "source-credentials",
   canModify: true,
   canAssemble: true,
   pageCount: 2,
@@ -94,6 +95,8 @@ describe("session PDF access", () => {
     { encryptionRevision: 4 },
     { ownerAuthenticated: true },
     { encryptionKeyLength: undefined },
+    { credentialFingerprint: "replaced-owner" },
+    { credentialFingerprint: undefined },
   ])("rejects a native export with changed protection: %j", async (changed) => {
     const output = new File(["export"], "edited.pdf");
     post.mockResolvedValueOnce({ data: { ...access, ...changed } });
@@ -165,9 +168,13 @@ describe("session PDF access", () => {
   });
 
   it.each([
-    ["/api/v1/security/auto-redact", access, "does not yet support"],
+    ["/api/v1/security/auto-redact", access, "cannot yet preserve"],
     [rotate, { ...access, signed: true }, "digital signatures"],
-    [rotate, { ...access, canAssemble: false }, "restricts"],
+    [
+      rotate,
+      { ...access, canAssemble: false, permissions: -4 & ~1024 },
+      "permissions password",
+    ],
   ])(
     "rejects unsupported or restricted processing before decrypting",
     async (endpoint, permission, message) => {
@@ -182,7 +189,7 @@ describe("session PDF access", () => {
     },
   );
 
-  it("decrypts a mixed-password merge independently and inherits its first protected input", async () => {
+  it("rejects mixed protected inputs without admitting an output", async () => {
     const first = createStirlingFile(new File(["a"], "first.pdf"));
     const second = createStirlingFile(new File(["b"], "second.pdf"));
     rememberPdfAccess(first, access);
@@ -191,21 +198,14 @@ describe("session PDF access", () => {
     const merge = "/api/v1/general/merge-pdfs";
     await prepareUnlockedFile(first, merge);
     await prepareUnlockedFile(second, merge);
-    const [result] = await protectUnlockedResults(
-      [new File(["merged"], "merged.pdf")],
-      [first, second],
-      merge,
-    );
-    expect((post.mock.calls[0][1] as FormData).get("password")).toBe(
-      access.password,
-    );
-    expect((post.mock.calls[1][1] as FormData).get("password")).toBe(
-      "second-password",
-    );
-    const restore = post.mock.calls[2][1] as FormData;
-    expect(restore.get("sourceFile")).toBe(first);
-    expect(restore.get("password")).toBe(access.password);
-    expect(getPdfAccess(result)).toEqual(access);
+    await expect(
+      protectUnlockedResults(
+        [new File(["merged"], "merged.pdf")],
+        [first, second],
+        merge,
+      ),
+    ).rejects.toThrow("output protection policy");
+    expect(post).toHaveBeenCalledTimes(2);
   });
 
   it("returns no partial output if protection restoration fails", async () => {

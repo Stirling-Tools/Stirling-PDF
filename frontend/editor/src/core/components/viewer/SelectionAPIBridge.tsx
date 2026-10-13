@@ -12,7 +12,7 @@ import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId"
 /**
  * Connects the PDF selection plugin to the shared ViewerContext.
  */
-export function SelectionAPIBridge() {
+export function SelectionAPIBridge({ canCopy = false }: { canCopy?: boolean }) {
   const { provides: selection } = useSelectionCapability();
   const { plugin: selectionPlugin } = useSelectionPlugin();
   const { registerBridge } = useViewer();
@@ -129,8 +129,9 @@ export function SelectionAPIBridge() {
     };
 
     const buildApi = () => ({
-      copyToClipboard: () =>
-        selection.copyToClipboard(activeDocumentId ?? undefined),
+      copyToClipboard: () => {
+        if (canCopy) selection.copyToClipboard(activeDocumentId ?? undefined);
+      },
       getFormattedSelection: () =>
         selection.getFormattedSelection(activeDocumentId ?? undefined),
       selectAll: async (totalPages: number) => {
@@ -183,7 +184,7 @@ export function SelectionAPIBridge() {
     // Fallback: subscribe to the plugin's copy event for navigator.clipboard writes
     const unsubCopy = selection.onCopyToClipboard(
       ({ text }: { text: string }) => {
-        if (text) {
+        if (text && canCopy) {
           navigator.clipboard.writeText(text).catch(() => {
             /* ignore */
           });
@@ -193,7 +194,8 @@ export function SelectionAPIBridge() {
 
     const handleCopy = (event: ClipboardEvent) => {
       if (!hasSelectionRef.current || !selectedTextRef.current) return;
-      event.clipboardData?.setData("text/plain", selectedTextRef.current);
+      if (canCopy)
+        event.clipboardData?.setData("text/plain", selectedTextRef.current);
       event.preventDefault();
     };
 
@@ -203,7 +205,8 @@ export function SelectionAPIBridge() {
         event.key === "c" &&
         hasSelectionRef.current
       ) {
-        selection.copyToClipboard(activeDocumentId ?? undefined);
+        event.preventDefault();
+        if (canCopy) selection.copyToClipboard(activeDocumentId ?? undefined);
       }
     };
 
@@ -247,6 +250,7 @@ export function SelectionAPIBridge() {
     activeDocumentId,
     documentReady,
     registerBridge,
+    canCopy,
   ]);
 
   return null;

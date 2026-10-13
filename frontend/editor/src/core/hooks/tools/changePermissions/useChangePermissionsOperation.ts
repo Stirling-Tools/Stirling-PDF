@@ -15,17 +15,16 @@ import {
   validateChangePermissionsParameters,
 } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
 
-// Change Permissions reuses the Add Password endpoint but sends only the
-// prevent* subset of the request model (no password or keyLength).
+// No keyLength distinguishes a permissions-only step from Add Password.
 const ENDPOINT = "/api/v1/security/add-password" satisfies ToolEndpoint;
 type AddPasswordApiParams = ToolApiParams[typeof ENDPOINT];
 
-// Convert the tool's UI parameters into the add-password request body. Only the
-// prevent* permission flags are sent; password and keyLength are optional on the
-// model and left unset, so the endpoint changes permissions without encrypting.
 export const changePermissionsToApiParams = (
   parameters: ChangePermissionsParameters,
 ): AddPasswordApiParams => ({
+  ...(parameters.ownerPassword
+    ? { ownerPassword: parameters.ownerPassword }
+    : {}),
   preventAssembly: parameters.preventAssembly ?? false,
   preventExtractContent: parameters.preventExtractContent ?? false,
   preventExtractForAccessibility:
@@ -42,6 +41,9 @@ export const changePermissionsToApiParams = (
 export const changePermissionsFromApiParams = (
   apiParams: AddPasswordApiParams,
 ): Partial<ChangePermissionsParameters> => ({
+  ...(apiParams.ownerPassword
+    ? { ownerPassword: apiParams.ownerPassword }
+    : {}),
   preventAssembly:
     apiParams.preventAssembly ?? defaultParameters.preventAssembly,
   preventExtractContent:
@@ -84,9 +86,7 @@ export const changePermissionsOperationConfig = defineSingleFileTool({
   // fields, so it is this tool and not Add Password; keyLength, always sent by Add Password,
   // is the reliable tell even when a password happens to be blank.
   claimsStoredStep: (apiParams) =>
-    !("password" in apiParams) &&
-    !("ownerPassword" in apiParams) &&
-    !("keyLength" in apiParams),
+    !("password" in apiParams) && !("keyLength" in apiParams),
 });
 
 export const useChangePermissionsOperation = () => {

@@ -4,6 +4,7 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
 export interface PrintAPIBridgeProps {
+  canPrint?: boolean;
   file?: File | Blob;
   url?: string | null;
   fileName?: string;
@@ -12,7 +13,7 @@ export interface PrintAPIBridgeProps {
 /**
  * Connects the PDF print plugin to the shared ViewerContext.
  */
-export function PrintAPIBridge(_props: PrintAPIBridgeProps) {
+export function PrintAPIBridge({ canPrint = false }: PrintAPIBridgeProps) {
   const { provides: print } = usePrintCapability();
   const { registerBridge } = useViewer();
   const documentReady = useDocumentReady();
@@ -23,7 +24,9 @@ export function PrintAPIBridge(_props: PrintAPIBridgeProps) {
       registerBridge("print", {
         state: {},
         api: {
-          print: () => print.print(),
+          print: () => {
+            if (canPrint) print.print();
+          },
         },
       });
     }
@@ -31,7 +34,7 @@ export function PrintAPIBridge(_props: PrintAPIBridgeProps) {
     return () => {
       registerBridge("print", null);
     };
-  }, [print, documentReady, registerBridge]);
+  }, [print, documentReady, registerBridge, canPrint]);
 
   return null;
 }

@@ -9,7 +9,7 @@ const SCAN = path.join(
 );
 
 for (const source of ["workbench", "disk"] as const) {
-  test(`unlocked ${source} scan explains OCR and offers Remove Password`, async ({
+  test(`unlocked ${source} scan explains that OCR cannot preserve protection`, async ({
     page,
   }) => {
     const ocrRequests: string[] = [];
@@ -60,25 +60,18 @@ for (const source of ["workbench", "disk"] as const) {
     await expect(ocr).toBeVisible();
     await expect(ocr).toBeDisabled();
     await expect(hint.getByRole("note")).toHaveText(
-      "OCR cannot keep this PDF's password protection. Use Remove Password to create an unprotected copy first.",
+      "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing.",
     );
-    await expect(ocr).toHaveAccessibleDescription(/password protection/);
+    await expect(ocr).toHaveAccessibleDescription(/protection/);
     const removePassword = hint.getByRole("button", {
       name: "Remove Password",
       exact: true,
     });
-    await expect(removePassword).toBeVisible();
+    await expect(removePassword).toHaveCount(0);
     await page.getByTestId("pdf-editor-root").screenshot({
       path: test.info().outputPath("protected-ocr-sidebar.png"),
     });
-    await removePassword.click();
-    await expect(page).toHaveURL(/\/remove-password$/);
-    await expect(
-      page.getByRole("textbox", { name: "Current Password", exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByText("✓ scanned-no-ocr-encrypted.pdf", { exact: true }),
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/pdf-text-editor$/);
     expect(ocrRequests).toEqual([]);
   });
 }

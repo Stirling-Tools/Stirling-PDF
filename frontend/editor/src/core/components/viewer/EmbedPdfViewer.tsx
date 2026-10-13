@@ -1828,6 +1828,42 @@ const EmbedPdfViewerContent = ({
         </Center>
       ) : (
         <>
+          {pdfAccess?.encrypted && (
+            <Stack gap="xs" p="sm" role="status">
+              <Text size="sm">
+                {pdfAccess.ownerAuthenticated
+                  ? t(
+                      "encryptedPdfUnlock.ownerAccess",
+                      "Permissions password verified for this session. Stored document restrictions remain unchanged.",
+                    )
+                  : t(
+                      "encryptedPdfUnlock.restrictionsActive",
+                      "Document permissions are being respected. Restricted actions require the permissions password.",
+                    )}
+              </Text>
+              <Text size="xs">
+                {t(
+                  "encryptedPdfUnlock.protectedToolLimit",
+                  "Some editing tools cannot yet preserve protection. Low-quality-only printing is not supported.",
+                )}
+              </Text>
+              {!pdfAccess.ownerAuthenticated &&
+                currentFile &&
+                isStirlingFile(currentFile) && (
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      actions.openEncryptedUnlockPrompt(currentFile.fileId)
+                    }
+                  >
+                    {t(
+                      "encryptedPdfUnlock.ownerTitle",
+                      "Enter permissions password",
+                    )}
+                  </Button>
+                )}
+            </Stack>
+          )}
           {/* EmbedPDF Viewer */}
           <Box
             ref={pdfContainerRef}
@@ -1863,12 +1899,16 @@ const EmbedPdfViewerContent = ({
                       : undefined
               }
               enableAnnotations={
-                shouldEnableAnnotations && !pdfAccess?.encrypted
+                shouldEnableAnnotations && !!pdfAccess && !pdfAccess.encrypted
               }
               isSignMode={selectedTool === "sign"}
               showBakedAnnotations={isAnnotationsVisible}
-              enableRedaction={shouldEnableRedaction && !pdfAccess?.encrypted}
-              enableFormFill={shouldEnableFormFill && !pdfAccess?.encrypted}
+              enableRedaction={
+                shouldEnableRedaction && !!pdfAccess && !pdfAccess.encrypted
+              }
+              enableFormFill={
+                shouldEnableFormFill && !!pdfAccess && !pdfAccess.encrypted
+              }
               formEditingActive={isFormFillToolActive}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}

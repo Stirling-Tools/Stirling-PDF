@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { expectConsole } from "@app/tests/failOnConsole";
+import { rememberUnprotectedPdf } from "@app/tests/utils/testFileHelpers";
 import type { StirlingFile } from "@app/types/fileContext";
 
 // One bad file in a batch must come back named, with its error: the caller reports each one,
@@ -21,7 +22,12 @@ const { useToolApiCalls } =
   await import("@app/hooks/tools/shared/useToolApiCalls");
 
 const file = (name: string, id: string): StirlingFile =>
-  ({ name, fileId: id, size: 10 }) as unknown as StirlingFile;
+  Object.assign(
+    rememberUnprotectedPdf(
+      new File(["test"], name, { type: "application/pdf" }),
+    ),
+    { fileId: id },
+  ) as StirlingFile;
 
 function run(files: StirlingFile[]) {
   const { processFiles } = renderHook(() => useToolApiCalls()).result.current;

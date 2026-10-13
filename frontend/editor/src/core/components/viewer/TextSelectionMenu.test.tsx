@@ -98,6 +98,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe("TextSelectionMenu", () => {
   const defaultProps = {
+    canCopy: true,
     rect: { origin: { x: 100, y: 100 }, size: { width: 80, height: 20 } },
     menuWrapperProps: {
       style: {},
@@ -130,6 +131,18 @@ describe("TextSelectionMenu", () => {
         ],
       },
     ]);
+  });
+
+  test("does not copy when document permissions deny extraction", () => {
+    render(
+      <TestWrapper>
+        <TextSelectionMenu {...defaultProps} canCopy={false} />
+      </TestWrapper>,
+    );
+    const copy = screen.getByRole("button", { name: "Copy" });
+    expect(copy).toBeDisabled();
+    fireEvent.click(copy);
+    expect(mockCopyToClipboard).not.toHaveBeenCalled();
   });
 
   test("renders all 7 action buttons when selected", () => {

@@ -192,6 +192,18 @@ describe("protected tool replacements", () => {
                 pageCount: 1,
               },
       });
+      if (decision === "remove-password")
+        vi.mocked(apiClient.post).mockResolvedValueOnce({
+          data: {
+            encrypted: true,
+            signed: false,
+            ownerAuthenticated: false,
+            permissions: -8,
+            canModify: true,
+            canAssemble: true,
+            pageCount: 1,
+          },
+        });
       fireEvent.change(screen.getByLabelText("PDF password"), {
         target: { value: "secret" },
       });
@@ -211,7 +223,7 @@ describe("protected tool replacements", () => {
       ).toMatchObject({
         derivedFromTool: true,
         sourceFileIds: [id],
-        processedFile: { isEncrypted: decision === "unlock" },
+        processedFile: { isEncrypted: true },
       });
     },
   );
@@ -287,13 +299,25 @@ afterEach(() => {
 });
 
 describe("encrypted bytes opened by another editor", () => {
-  it("returns an unprotected copy to the opening editor and preserves the original", async () => {
+  it("returns a restricted copy with no opening password and preserves the original", async () => {
     const persist = vi
       .spyOn(fileStorage, "persistVersionedOutputs")
       .mockResolvedValue();
-    vi.mocked(apiClient.post).mockResolvedValueOnce({
-      data: new Blob(["unprotected output"]),
-    });
+    vi.mocked(apiClient.post)
+      .mockResolvedValueOnce({
+        data: new Blob(["restricted output"]),
+      })
+      .mockResolvedValueOnce({
+        data: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: false,
+          permissions: -8,
+          canModify: true,
+          canAssemble: true,
+          pageCount: 1,
+        },
+      });
     const { result } = renderHook(
       () => ({ ...useFileActions(), selectors: useFileSelectors() }),
       { wrapper },
@@ -310,7 +334,7 @@ describe("encrypted bytes opened by another editor", () => {
       fireEvent.click(screen.getByText("Remove Password"));
     });
     const [copy] = await loading;
-    expect(copy.name).toBe("locked_unprotected.pdf");
+    expect(copy.name).toBe("locked_opening_password_removed.pdf");
     expect(copy.fileId).not.toBe(id);
     expect(result.current.selectors.getAllFileIds()).toEqual([copy.fileId]);
     expect(
@@ -327,11 +351,19 @@ describe("encrypted bytes opened by another editor", () => {
     );
     expect(original.name).toBe("locked.pdf");
     expect(original.size).toBe("encrypted original".length);
-    expect(getPdfAccess(copy)).toBeUndefined();
+    expect(getPdfAccess(copy)).toMatchObject({
+      encrypted: true,
+      password: "",
+      ownerAuthenticated: false,
+    });
     expect(getPdfAccess(original)).toBeUndefined();
     expect(isAwaitingUnlock(id)).toBe(false);
-    const [endpoint, form] = vi.mocked(apiClient.post).mock.calls.at(-1)!;
-    expect(endpoint).toBe("/api/v1/security/remove-password");
+    const [endpoint, form] = vi
+      .mocked(apiClient.post)
+      .mock.calls.find(
+        ([path]) => path === "/api/v1/security/remove-pdf-opening-password",
+      )!;
+    expect(endpoint).toBe("/api/v1/security/remove-pdf-opening-password");
     expect((form as FormData).get("password")).toBe("secret");
     persist.mockRestore();
   });

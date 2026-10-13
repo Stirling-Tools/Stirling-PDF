@@ -175,11 +175,11 @@ describe("AddPasswordSettings", () => {
     // Verify that translation keys are being called
     expect(mockT).toHaveBeenCalledWith(
       "addPassword.passwords.user.label",
-      "User Password",
+      "Password to open",
     );
     expect(mockT).toHaveBeenCalledWith(
       "addPassword.passwords.owner.label",
-      "Owner Password",
+      "Permissions password (owner)",
     );
   });
 

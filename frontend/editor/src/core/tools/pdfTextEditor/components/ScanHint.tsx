@@ -1,7 +1,6 @@
 import { useId } from "react";
-import { Stack, Text, Tooltip } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
 
@@ -30,7 +29,6 @@ export function ScanHint({
   ocrRunning,
   ocrAvailable,
   ocrBlockedReason,
-  onRemovePassword,
 }: ScanHintProps) {
   const { t } = useTranslation();
   const reasonId = useId();
@@ -63,28 +61,6 @@ export function ScanHint({
           <Text id={reasonId} size="xs" ta="center" role="note">
             {ocrBlockedReason}
           </Text>
-          {onRemovePassword && (
-            <Tooltip
-              label={t(
-                "encryptedPdfUnlock.removePasswordHelp",
-                "Open Remove Password to create an unprotected copy.",
-              )}
-              multiline
-              w={230}
-              withArrow
-              events={{ hover: true, focus: true, touch: true }}
-            >
-              <Button
-                size="sm"
-                variant="tertiary"
-                leftSection={<Icon name="lock-open" size={16} />}
-                onClick={onRemovePassword}
-                disabled={ocrRunning}
-              >
-                {t("removePassword.submit", "Remove Password")}
-              </Button>
-            </Tooltip>
-          )}
         </Stack>
       )}
       {ocrAvailable === false && !ocrRunning && (

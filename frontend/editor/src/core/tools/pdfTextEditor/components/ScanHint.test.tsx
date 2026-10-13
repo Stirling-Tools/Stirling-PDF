@@ -14,11 +14,11 @@ function scanPage(hasText = false): PageSnapshot {
 }
 
 describe("scan hint action", () => {
-  it("keeps OCR visible, explains protection, and offers Remove Password", () => {
+  it("keeps OCR visible, explains protection, without offering a password removal workaround", () => {
     const onRunOcr = vi.fn();
     const onRemovePassword = vi.fn();
     const reason =
-      "OCR cannot keep this PDF's password protection. Use Remove Password to create an unprotected copy first.";
+      "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing.";
     render(
       <MantineProvider env="test">
         <ScanHint
@@ -41,10 +41,10 @@ describe("scan hint action", () => {
     ).not.toBeInTheDocument();
     fireEvent.click(ocr);
     expect(onRunOcr).not.toHaveBeenCalled();
-    fireEvent.click(
-      screen.getByRole("button", { name: "removePassword.submit" }),
-    );
-    expect(onRemovePassword).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByRole("button", { name: "removePassword.submit" }),
+    ).not.toBeInTheDocument();
+    expect(onRemovePassword).not.toHaveBeenCalled();
   });
 
   it("runs the supplied OCR action in one click", () => {

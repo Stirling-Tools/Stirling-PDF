@@ -1,4 +1,4 @@
-import { Stack, PasswordInput, Select } from "@mantine/core";
+import { Stack, PasswordInput, Select, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPasswordParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -21,10 +21,15 @@ const AddPasswordSettings = ({
 
   return (
     <Stack gap="md">
-      {/* Password Settings */}
+      <Text size="sm">
+        {t(
+          "encryptedPdfUnlock.newProtection",
+          "These settings replace the document's protection. Restrictions need a permissions password different from the opening password. A permissions password without selected restrictions does not limit ordinary actions.",
+        )}
+      </Text>
       <Stack gap="sm">
         <PasswordInput
-          label={t("addPassword.passwords.user.label", "User Password")}
+          label={t("addPassword.passwords.user.label", "Password to open")}
           placeholder={t(
             "addPassword.passwords.user.placeholder",
             "Enter user password",
@@ -34,7 +39,10 @@ const AddPasswordSettings = ({
           disabled={disabled}
         />
         <PasswordInput
-          label={t("addPassword.passwords.owner.label", "Owner Password")}
+          label={t(
+            "addPassword.passwords.owner.label",
+            "Permissions password (owner)",
+          )}
           placeholder={t(
             "addPassword.passwords.owner.placeholder",
             "Enter owner password",
