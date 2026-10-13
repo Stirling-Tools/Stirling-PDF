@@ -58,6 +58,7 @@ export function spanOf(
     fill: BLACK,
     originalFontPtr: 0,
     fallbackFamily: family,
+    tagMarks: [],
   });
   const span = measureObjSpanPt(doc.module, ptrs);
   for (const p of ptrs) removeAndDestroyObject(doc.module, page.pagePtr, p);
@@ -160,6 +161,9 @@ export function placeText(
     fill: p.fill,
     originalFontPtr: 0,
     fallbackFamily: p.family,
+    // The invisible OCR layer carries the run's tags; tagging this visible
+    // copy as well would have assistive technology read the words twice.
+    tagMarks: [],
     // Fill and stroke (Tr 2): blur makes scanned strokes heavier than any bold.
     ...(p.weight
       ? { renderMode: 2, stroke: p.fill, strokeWidth: p.weight }
