@@ -1,5 +1,6 @@
 /**
- * A deliberately small read-only view over raw PDF bytes.
+ * A deliberately small view over raw PDF bytes, plus the splicing helpers
+ * the passes build their revision objects with.
  *
  * PDFium's public API cannot express some of the repairs the editor needs
  * (see `pdfdoc/passes/*`), so those passes work on the file itself. This is
@@ -23,13 +24,19 @@ const MAX_OBJECT_BYTES = 32 * 1024 * 1024;
 const WHITESPACE = new Set([" ", "\t", "\r", "\n", "\f", "\0"]);
 const DELIMITER = new Set(["(", ")", "<", ">", "[", "]", "{", "}", "/", "%"]);
 
-/** Span of a dictionary entry's value inside an object body. */
+/** Span of a value inside an object body. */
 export interface ValueSpan {
   /** Index of the first character of the value. */
   start: number;
   /** Index one past the last character of the value. */
   end: number;
   text: string;
+}
+
+export interface NumberTreeEntry {
+  /** The object whose body holds the value. */
+  objNum: number;
+  span: ValueSpan;
 }
 
 interface ObjectSource {
@@ -338,46 +345,82 @@ export class RawPdf {
    * the page's own entry produces a file that opens but renders nothing.
    */
   valueSpan(body: string, key: string): ValueSpan | null {
-    const open = body.indexOf("<<");
-    if (open < 0) return null;
-    let i = open + 2;
-    let depth = 1;
-    while (i < body.length) {
-      const ch = body[i];
-      if (ch === "%") {
-        while (i < body.length && body[i] !== "\n" && body[i] !== "\r") i += 1;
-        continue;
-      }
-      if (ch === "(") {
-        i = skipLiteralString(body, i);
-        continue;
-      }
-      if (ch === "<" && body[i + 1] === "<") {
-        depth += 1;
-        i += 2;
-        continue;
-      }
-      if (ch === ">" && body[i + 1] === ">") {
-        depth -= 1;
-        i += 2;
-        if (depth === 0) return null;
-        continue;
-      }
-      if (ch === "[" || ch === "]") {
-        i += 1;
-        continue;
-      }
-      if (ch === "/" && depth === 1) {
-        const nameEnd = scanNameEnd(body, i + 1);
-        if (body.slice(i + 1, nameEnd) === key) {
-          const start = skipWhitespace(body, nameEnd);
-          const end = scanValueEnd(body, start);
-          return { start, end, text: body.slice(start, end) };
+    const entry = findEntry(body, key);
+    return entry
+      ? {
+          start: entry.start,
+          end: entry.end,
+          text: body.slice(entry.start, entry.end),
         }
-        i = nameEnd;
-        continue;
+      : null;
+  }
+
+  /**
+   * Find the value a number tree (ISO 32000-1 7.9.7) holds for `key`. The
+   * tree is `/treeKey` in the body of object `holderNum`, written directly or
+   * by reference. The span is into the body of the returned object, so a
+   * caller can splice a replacement into it and append that object.
+   */
+  numberTreeEntry(
+    holderNum: number,
+    treeKey: string,
+    key: number,
+  ): NumberTreeEntry | null {
+    const holder = this.objectBody(holderNum);
+    const span = holder ? this.valueSpan(holder, treeKey) : null;
+    if (!holder || !span) return null;
+    const ref = span.text.match(/^(\d+)\s+\d+\s+R\b/);
+    if (!ref)
+      return this.searchNumberTree(holderNum, span.start, key, new Set());
+    return this.searchNumberTree(parseInt(ref[1], 10), 0, key, new Set());
+  }
+
+  private searchNumberTree(
+    objNum: number,
+    nodeStart: number,
+    key: number,
+    seen: Set<number>,
+  ): NumberTreeEntry | null {
+    // A direct node shares its holder's number, so only indirect ones can cycle.
+    if (nodeStart === 0) {
+      if (seen.has(objNum) || seen.size > 64) return null;
+      seen.add(objNum);
+    }
+    const body = this.objectBody(objNum);
+    if (!body) return null;
+    const node = body.slice(nodeStart);
+
+    const nums = this.valueSpan(node, "Nums");
+    const pairs = nums ? arrayItems(nums.text) : null;
+    if (nums && pairs) {
+      for (let i = 0; i + 1 < pairs.length; i += 2) {
+        if (pairs[i].text !== String(key)) continue;
+        const value = pairs[i + 1];
+        const at = nodeStart + nums.start;
+        return {
+          objNum,
+          span: {
+            start: at + value.start,
+            end: at + value.end,
+            text: value.text,
+          },
+        };
       }
-      i += 1;
+    }
+
+    const kids = this.valueSpan(node, "Kids");
+    for (const m of kids?.text.matchAll(/(\d+)\s+\d+\s+R/g) ?? []) {
+      const kidNum = parseInt(m[1], 10);
+      const kid = this.objectBody(kidNum);
+      const limits = kid ? this.valueSpan(kid, "Limits") : null;
+      const [lo, hi] = limits
+        ? [...limits.text.matchAll(/-?\d+/g)].map(Number)
+        : [];
+      // /Limits is only an index; without both bounds, search the kid anyway.
+      if (lo !== undefined && hi !== undefined && (key < lo || key > hi))
+        continue;
+      const found = this.searchNumberTree(kidNum, 0, key, seen);
+      if (found) return found;
     }
     return null;
   }
@@ -588,6 +631,116 @@ export function spliceValue(
     replacement +
     body.slice(span.end)
   );
+}
+
+/**
+ * Set `/Key` in the body's outermost dictionary to `value`, a serialised PDF
+ * object, adding the entry when absent. Null when the body has no complete
+ * dictionary to put it in.
+ */
+export function setDictEntry(
+  body: string,
+  key: string,
+  value: string,
+): string | null {
+  const entry = findEntry(body, key);
+  if (entry) {
+    return spliceValue(
+      body,
+      {
+        start: entry.start,
+        end: entry.end,
+        text: body.slice(entry.start, entry.end),
+      },
+      value,
+    );
+  }
+  const open = body.indexOf("<<");
+  if (open < 0) return null;
+  const close = scanValueEnd(body, open);
+  if (body.slice(close - 2, close) !== ">>") return null;
+  return `${body.slice(0, close - 2)} /${key} ${value} ${body.slice(close - 2)}`;
+}
+
+/** Drop `/Key` and its value from the body's outermost dictionary. */
+export function removeDictEntry(body: string, key: string): string {
+  const entry = findEntry(body, key);
+  return entry ? body.slice(0, entry.keyStart) + body.slice(entry.end) : body;
+}
+
+/**
+ * The elements of a serialised array, each as one complete object: an
+ * indirect reference is one element, not three. Spans are into `text`. Null
+ * when `text` is not an array this can read.
+ */
+export function arrayItems(text: string): ValueSpan[] | null {
+  if (text[0] !== "[") return null;
+  const items: ValueSpan[] = [];
+  let i = 1;
+  for (;;) {
+    i = skipWhitespace(text, i);
+    if (text[i] === "%") {
+      while (i < text.length && text[i] !== "\n" && text[i] !== "\r") i += 1;
+      continue;
+    }
+    if (i >= text.length) return null;
+    if (text[i] === "]") return items;
+    const end = scanValueEnd(text, i);
+    // A token the scanner cannot consume, such as a stray `)`, would loop forever.
+    if (end <= i) return null;
+    items.push({ start: i, end, text: text.slice(i, end) });
+    i = end;
+  }
+}
+
+interface Entry {
+  keyStart: number;
+  start: number;
+  end: number;
+}
+
+function findEntry(body: string, key: string): Entry | null {
+  const open = body.indexOf("<<");
+  if (open < 0) return null;
+  let i = open + 2;
+  let depth = 1;
+  while (i < body.length) {
+    const ch = body[i];
+    if (ch === "%") {
+      while (i < body.length && body[i] !== "\n" && body[i] !== "\r") i += 1;
+      continue;
+    }
+    if (ch === "(") {
+      i = skipLiteralString(body, i);
+      continue;
+    }
+    if (ch === "<" && body[i + 1] === "<") {
+      depth += 1;
+      i += 2;
+      continue;
+    }
+    if (ch === ">" && body[i + 1] === ">") {
+      depth -= 1;
+      i += 2;
+      if (depth === 0) return null;
+      continue;
+    }
+    if (ch === "[" || ch === "]") {
+      i += 1;
+      continue;
+    }
+    if (ch === "/" && depth === 1) {
+      const nameEnd = scanNameEnd(body, i + 1);
+      if (body.slice(i + 1, nameEnd) === key) {
+        const start = skipWhitespace(body, nameEnd);
+        return { keyStart: i, start, end: scanValueEnd(body, start) };
+      }
+      i = nameEnd;
+      continue;
+    }
+    i += 1;
+  }
+  return null;
 }
 
 function skipWhitespace(text: string, at: number): number {
