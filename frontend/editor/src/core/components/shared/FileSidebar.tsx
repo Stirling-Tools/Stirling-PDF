@@ -942,6 +942,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // Which file is currently open in the viewer - stable ID, never index-derived.
     const viewedWorkbenchId =
       currentWorkbench === "viewer" ? activeFileId : null;
+    // Rows are memoized on their props, so the click handlers must keep a stable
+    // identity; read the viewed file through this mirror instead of depending on it.
+    const viewedWorkbenchIdRef = useRef(viewedWorkbenchId);
+    viewedWorkbenchIdRef.current = viewedWorkbenchId;
 
     const handleFileClick = useCallback(
       async (fileId: FileId) => {
@@ -972,7 +976,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         if (workbenchFileId) {
           // If this is the file currently open in the viewer, route through the
           // navigation guard so the save modal fires when there are unsaved changes.
-          const isCurrentlyViewed = workbenchFileId === viewedWorkbenchId;
+          const isCurrentlyViewed =
+            workbenchFileId === viewedWorkbenchIdRef.current;
           if (isCurrentlyViewed) {
             requestNavigation(() => {
               void fileActions.removeFiles([workbenchFileId], false);
@@ -1006,7 +1011,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         lostFileIds,
         t,
         store,
-        viewedWorkbenchId,
         fileActions,
         navActions,
         currentWorkbench,
@@ -1021,7 +1025,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         if (!stub) return;
 
         const isCurrentlyViewed = !!(
-          viewedWorkbenchId && viewedWorkbenchId === (stub.id as string)
+          viewedWorkbenchIdRef.current &&
+          viewedWorkbenchIdRef.current === (stub.id as string)
         );
 
         if (isCurrentlyViewed) {
@@ -1049,7 +1054,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           setPendingViewFileId(stub.id);
         };
 
-        if (currentWorkbench === "viewer" && viewedWorkbenchId) {
+        if (currentWorkbench === "viewer" && viewedWorkbenchIdRef.current) {
           requestNavigation(() => {
             void performSwitch();
           });
@@ -1059,7 +1064,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [
         allFileStubs,
-        viewedWorkbenchId,
         store,
         fileActions,
         navActions,
