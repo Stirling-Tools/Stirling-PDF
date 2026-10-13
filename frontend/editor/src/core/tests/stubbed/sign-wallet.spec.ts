@@ -316,6 +316,67 @@ test.describe("Sign tool signature wallet", () => {
     await expect(page.getByTestId("signature-wallet")).toBeHidden();
   });
 
+  test("saving unapplied signatures keeps tool switching and browser history usable", async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.stack ?? error.message));
+    await page.setViewportSize({ width: 1135, height: 1134 });
+    await useBrowserStorage(page);
+    await openSign(page);
+    await startFromIntro(page, "Draw");
+    const pad = page.getByTestId("signature-draw-pad");
+    await expect(pad).toBeVisible();
+    const box = await pad.boundingBox();
+    if (!box) throw new Error("Signature pad has no bounding box");
+    await page.mouse.move(box.x + 80, box.y + 80);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 200, box.y + 130, { steps: 10 });
+    await page.mouse.up();
+    await page.getByTestId("use-signature").click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+    const pdfPage = page.locator("[data-page-index]").first();
+    await expect(pdfPage).toBeVisible();
+    await pdfPage.click({ position: { x: 150, y: 180 } });
+    await pdfPage.click({ position: { x: 150, y: 300 } });
+    await expect(page.getByTestId("placed-signatures")).toContainText(
+      "On this document (2)",
+    );
+    await expect(page.getByTestId("apply-signatures")).toBeEnabled();
+
+    await page.locator("#super-search-input").fill("Adjust page size");
+    await page.getByRole("option", { name: /Adjust page size/ }).click();
+    await expect(page.getByTestId("unsaved-save")).toBeVisible();
+    await page.getByTestId("unsaved-save").click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await expect(
+      page.getByLabel("Scale Factor", { exact: true }),
+    ).toBeVisible();
+    await expect(page).toHaveURL(/\/scale-pages$/);
+    await expect(pdfPage).toBeVisible();
+    await page.locator("#super-search-input").fill("Sign");
+    await page.getByRole("option", { name: /^Sign Adds signature/ }).click();
+    await expect(page.getByTestId("signature-wallet")).toBeVisible();
+    await expect(page).toHaveURL(/\/sign$/);
+    await expect(page.getByTestId("placed-signatures")).toContainText(
+      "On this document (2)",
+    );
+    await page.goBack();
+    await expect(page.getByTestId("unsaved-save")).toBeVisible();
+    await page.getByTestId("unsaved-save").click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await expect(
+      page.getByLabel("Scale Factor", { exact: true }),
+    ).toBeVisible();
+    await page.goForward();
+    await expect(page.getByTestId("signature-wallet")).toBeVisible();
+    await expect(page).toHaveURL(/\/sign$/);
+    await expect(page.getByTestId("placed-signatures")).toContainText(
+      "On this document (2)",
+    );
+    expect(errors).toEqual([]);
+  });
+
   test("deleting the last saved signature preserves document controls", async ({
     page,
   }) => {
