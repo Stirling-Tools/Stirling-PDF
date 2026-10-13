@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import type { FileId } from "@app/types/file";
