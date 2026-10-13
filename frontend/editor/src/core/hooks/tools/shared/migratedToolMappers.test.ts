@@ -138,6 +138,7 @@ describe("redact mappers", () => {
       wordsToRedact: ["foo", "bar"],
       useRegex: true,
       wholeWordSearch: false,
+      caseSensitive: false,
       redactColor: "#ff0000",
       customPadding: 0.2,
       convertPDFToImage: false,
@@ -147,6 +148,7 @@ describe("redact mappers", () => {
       listOfText: "foo\nbar",
       useRegex: true,
       wholeWordSearch: false,
+      caseSensitive: false,
       redactColor: "ff0000", // '#' stripped for the backend
       customPadding: 0.2,
       convertPDFToImage: false,
