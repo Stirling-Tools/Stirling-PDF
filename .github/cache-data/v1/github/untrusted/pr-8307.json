@@ -8548,65 +8548,65 @@
       "workflow_run_id": 38428223058
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/cargo-registry/windows-x64/56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-cache-e1b7946154cca207/v6": {
-      "object": "sha256:b858abb1dc38e03aeede21468d05273142ccd4868fe9642b9cf41f83a15a4143",
+      "object": "sha256:5df9049461ee4aaed423b733bcdb082ce33325ce623d55f337dba7062d7e2d89",
       "storage": "github-artifact",
-      "updated_at": "2026-10-11T12:37:18.960Z",
+      "updated_at": "2026-10-13T16:23:49.259Z",
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
-      "size": 142365670,
+      "size": 142364476,
       "parts": [
         {
           "index": 0,
-          "object": "sha256:4f59ddab68e10c7a5285eea1e6dfdac44e84bce2cdd475145bb366d881e57051",
+          "object": "sha256:6e77f90e961fac58d1a7c6c8e8e3abd98642a08c1dc88ff90e665879acd51549",
           "size": 25165824,
-          "artifact_id": 11702461206,
-          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--b858abb1dc38e03aeede21468d05273142ccd4868fe9642b-part-000000",
-          "workflow_run_id": 38139262073
+          "artifact_id": 11831020095,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000000",
+          "workflow_run_id": 38428223058
         },
         {
           "index": 1,
-          "object": "sha256:b36a28f060fc0d895ea29d5c51b94f977e1b366141b2da791bba51cbca6966b5",
+          "object": "sha256:e5d244e1b347ab6ea91e1d0efa597b2ff8e3b1f664bb8cffa123365c79dfc333",
           "size": 25165824,
-          "artifact_id": 11702600940,
-          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--b858abb1dc38e03aeede21468d05273142ccd4868fe9642b-part-000001",
-          "workflow_run_id": 38139262073
+          "artifact_id": 11830483112,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000001",
+          "workflow_run_id": 38428223058
         },
         {
           "index": 2,
-          "object": "sha256:014a50ee0b2a5ef2a18c3cae3d6dbb0a085cd2db4c19c4a1626f80a7592b27cc",
+          "object": "sha256:38c8c04a7c92b4199bfe6a751e5377db8569fba74fbb900580696c74a8579ce6",
           "size": 25165824,
-          "artifact_id": 11702496048,
-          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--b858abb1dc38e03aeede21468d05273142ccd4868fe9642b-part-000002",
-          "workflow_run_id": 38139262073
+          "artifact_id": 11829614397,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000002",
+          "workflow_run_id": 38428223058
         },
         {
           "index": 3,
-          "object": "sha256:69205371bb415cf6becd4c5c40efab4f386dfb903a1f9cfaa2278f12b129a9a0",
+          "object": "sha256:68eafbcf8a812d0bc1f3643382daa2fc5ce60a7f0d7cfeae3684dcac2ab49db5",
           "size": 25165824,
-          "artifact_id": 11702965372,
-          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--b858abb1dc38e03aeede21468d05273142ccd4868fe9642b-part-000003",
-          "workflow_run_id": 38139262073
+          "artifact_id": 11829883937,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000003",
+          "workflow_run_id": 38428223058
         },
         {
           "index": 4,
-          "object": "sha256:5b04b7f84ece1e9c4f4192e56fd2b99ef5aa9fde6b52a992f37540ae71ac2e73",
+          "object": "sha256:0620c3f5584e3d7d05f0e54315e767ee84835459ebfcd4be4689586bdc48a965",
           "size": 25165824,
-          "artifact_id": 11703200122,
-          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--b858abb1dc38e03aeede21468d05273142ccd4868fe9642b-part-000004",
-          "workflow_run_id": 38139262073
+          "artifact_id": 11829464517,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000004",
+          "workflow_run_id": 38428223058
         },
         {
           "index": 5,
-          "object": "sha256:c74e748fa18a3d1e1ecd25f84cc5fb66ab2c1f872dbe8ee8756922357bc584a3",
-          "size": 16536550,
-          "artifact_id": 11702541016,
-          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--b858abb1dc38e03aeede21468d05273142ccd4868fe9642b-part-000005",
-          "workflow_run_id": 38139262073
+          "object": "sha256:b18d680e81fba344fb4d556153c08417bcda570ad8d4b4f3b2afb9d65b14e491",
+          "size": 16535356,
+          "artifact_id": 11830493020,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000005",
+          "workflow_run_id": 38428223058
         }
       ],
-      "artifact_id": 11702461206,
-      "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--b858abb1dc38e03aeede21468d05273142ccd4868fe9642b-part-000000",
-      "workflow_run_id": 38139262073
+      "artifact_id": 11831020095,
+      "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000000",
+      "workflow_run_id": 38428223058
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/frontend-dist/windows-x64/fee5c68f5330097f04a17b1adc52cde9146a2cb660d0575cec5535249f661882-cache-e1b7946154cca207/v6": {
       "object": "sha256:6826571f3edc60e9362b1f486c81fccb3573bfea31f235e6255e1756e6d29ff9",
@@ -10248,6 +10248,6 @@
   },
   "monitoring": {
     "window_started_at": "2026-10-13T16:19:36.638Z",
-    "writes": 15
+    "writes": 16
   }
 }
