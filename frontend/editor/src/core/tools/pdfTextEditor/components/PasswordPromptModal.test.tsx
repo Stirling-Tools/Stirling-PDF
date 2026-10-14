@@ -18,7 +18,8 @@ describe("password retry dismissal", () => {
       </MantineProvider>
     );
     const { rerender } = render(modal(true));
-    expect(screen.queryByTestId("pdf-editor-password-cancel")).toBeNull();
+    expect(screen.getByTestId("pdf-editor-password-cancel")).toBeDisabled();
+    fireEvent.click(screen.getByTestId("pdf-editor-password-cancel"));
     expect(document.querySelector(".mantine-Modal-close")).toBeNull();
     fireEvent.keyDown(document.body, { key: "Escape" });
     const overlay = document.querySelector(".mantine-Modal-overlay");

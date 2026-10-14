@@ -55,9 +55,9 @@ async function uploadEncryptedFile(page: Page, filePath: string) {
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
 }
 
-const MODAL_TITLE = /^Unlock PDF/;
-const PASSWORD_PLACEHOLDER = "Enter the PDF password";
-const UNLOCK_BUTTON_TEXT = /^Unlock$/;
+const MODAL_TITLE = /^Open PDF/;
+const PASSWORD_LABEL = "Password to open";
+const UNLOCK_BUTTON_TEXT = /^Open PDF$/;
 
 /**
  * Fill the password field and wait until the modal has registered it: the
@@ -66,7 +66,7 @@ const UNLOCK_BUTTON_TEXT = /^Unlock$/;
  * remount mid open-transition and drop a one-shot fill, leaving it disabled.
  */
 async function fillPassword(page: Page, password: string): Promise<void> {
-  const field = page.getByPlaceholder(PASSWORD_PLACEHOLDER);
+  const field = page.getByLabel(PASSWORD_LABEL, { exact: true });
   const unlock = page.getByRole("button", { name: UNLOCK_BUTTON_TEXT });
   await expect(async () => {
     await field.fill(password);
@@ -101,34 +101,21 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(page.getByRole("heading", { name: MODAL_TITLE })).toBeVisible({
       timeout: 10000,
     });
-    await expect(page.getByPlaceholder(PASSWORD_PLACEHOLDER)).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Cancel opening" }),
-    ).toHaveCount(0);
+      page.getByLabel(PASSWORD_LABEL, { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Cancel", exact: true }),
+    ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "More options", exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }),
-    ).toBeVisible();
+    ).toBeDisabled();
     await expect(
-      page.getByText("Unlock for this session.", { exact: true }),
+      page.getByText("Create an unprotected copy", { exact: true }),
     ).toHaveCount(0);
-    const details = page.getByRole("heading").getByRole("button", {
-      name: "About session unlocking",
-    });
-    await page.getByPlaceholder(PASSWORD_PLACEHOLDER).focus();
-    await page.keyboard.press("Shift+Tab");
-    await page.keyboard.press("Shift+Tab");
-    await expect(details).toBeFocused();
-    const sessionDetails = page.getByRole("tooltip").filter({
-      hasText: "Access ends when you close the file",
-    });
-    await expect(sessionDetails).toContainText(
-      "Closing this dialog keeps the saved copy in your library.",
-    );
-    await page.getByPlaceholder(PASSWORD_PLACEHOLDER).focus();
-    await expect(sessionDetails).toBeHidden();
   });
 
   test("explicit removal of all protection creates a usable copy and retains the protected source", async ({
@@ -140,27 +127,42 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       removals++;
       return route.fulfill({ contentType: "application/pdf", body: sample });
     });
+    await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
+      const copy = (route.request().postData() ?? "").includes(
+        "encrypted_unprotected.pdf",
+      );
+      return route.fulfill({
+        json: {
+          encrypted: !copy,
+          requiresOpeningPassword: !copy,
+          signed: false,
+          ownerAuthenticated: !copy,
+          permissions: -4,
+          canModify: true,
+          canAssemble: true,
+          pageCount: 1,
+        },
+      });
+    });
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
-    const dialog = page.getByRole("dialog");
-    await dialog
-      .getByRole("button", { name: "More options", exact: true })
-      .click();
-    await expect(
-      page.getByRole("menuitem", { name: /Create an unprotected copy/ }),
-    ).toBeDisabled();
-    await page.keyboard.press("Escape");
-    await expect(dialog).toBeVisible();
     await fillPassword(page, "testpass123");
-    await dialog
-      .getByRole("button", { name: "More options", exact: true })
+    await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
+    await page
+      .getByRole("button", { name: "Manage protection", exact: true })
       .click();
     await page
-      .getByRole("menuitem", { name: /Create an unprotected copy/ })
+      .getByRole("button", { name: "Create an unprotected copy", exact: true })
       .click();
-    await expect(dialog).toBeHidden();
     await expect(
-      page.getByText("Unprotected copy created", { exact: true }),
+      page.getByText(
+        "The copy will have no passwords or restrictions. The original stays protected.",
+      ),
     ).toBeVisible();
+    expect(removals).toBe(0);
+    await page
+      .getByRole("button", { name: "Create an unprotected copy", exact: true })
+      .click();
+    await expect(page.getByRole("dialog")).toBeHidden();
     await expect(page.locator('[data-page-index="0"] img').first()).toBeVisible(
       { timeout: 30_000 },
     );
@@ -247,7 +249,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(
       page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
     ).toBeHidden({ timeout: 10000 });
-    await expect(page.getByText("PDF unlocked", { exact: true })).toBeVisible({
+    await expect(
+      page.getByText("Permissions verified", { exact: true }).first(),
+    ).toBeVisible({
       timeout: 5000,
     });
     await expect(page.locator('[data-page-index="0"]').first()).toBeVisible({
@@ -307,7 +311,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       .getByRole("button", { name: "Why encrypted.pdf is unavailable" })
       .hover();
     const details = page.getByRole("tooltip").filter({
-      hasText: "This tool cannot yet preserve this document's protection",
+      hasText: "This tool cannot yet preserve this PDF's protection",
     });
     await expect(details).toBeVisible();
     await notice.getByText("encrypted.pdf", { exact: true }).click();
@@ -404,7 +408,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     ).toBeVisible({ timeout: 10000 });
 
     await fillPassword(page, "testpass123");
-    await page.getByPlaceholder(PASSWORD_PLACEHOLDER).press("Enter");
+    await page.getByLabel(PASSWORD_LABEL, { exact: true }).press("Enter");
 
     await expect(
       page.getByRole("heading", { name: MODAL_TITLE, exact: true }),

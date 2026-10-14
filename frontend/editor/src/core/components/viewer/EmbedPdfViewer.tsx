@@ -26,6 +26,7 @@ import type {
 } from "@app/components/viewer/DocumentRestoreBridge";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
+import { PdfProtectionStatus } from "@app/components/viewer/PdfProtectionStatus";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
 import { ThumbnailSidebar } from "@app/components/viewer/ThumbnailSidebar";
@@ -1828,41 +1829,8 @@ const EmbedPdfViewerContent = ({
         </Center>
       ) : (
         <>
-          {pdfAccess?.encrypted && (
-            <Stack gap="xs" p="sm" role="status">
-              <Text size="sm">
-                {pdfAccess.ownerAuthenticated
-                  ? t(
-                      "encryptedPdfUnlock.ownerAccess",
-                      "Permissions password verified for this session. Stored document restrictions remain unchanged.",
-                    )
-                  : t(
-                      "encryptedPdfUnlock.restrictionsActive",
-                      "Document permissions are being respected. Restricted actions require the permissions password.",
-                    )}
-              </Text>
-              <Text size="xs">
-                {t(
-                  "encryptedPdfUnlock.protectedToolLimit",
-                  "Some editing tools cannot yet preserve protection. Low-quality-only printing is not supported.",
-                )}
-              </Text>
-              {!pdfAccess.ownerAuthenticated &&
-                currentFile &&
-                isStirlingFile(currentFile) && (
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-                      actions.openEncryptedUnlockPrompt(currentFile.fileId)
-                    }
-                  >
-                    {t(
-                      "encryptedPdfUnlock.ownerTitle",
-                      "Enter permissions password",
-                    )}
-                  </Button>
-                )}
-            </Stack>
+          {currentFile && isStirlingFile(currentFile) && (
+            <PdfProtectionStatus key={currentFile.fileId} file={currentFile} />
           )}
           {/* EmbedPDF Viewer */}
           <Box

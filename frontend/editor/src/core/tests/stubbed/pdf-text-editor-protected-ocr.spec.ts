@@ -36,9 +36,9 @@ for (const source of ["workbench", "disk"] as const) {
       await page.goto("/editor");
       await page.getByTestId("file-input").setInputFiles(SCAN);
       await page
-        .getByPlaceholder("Enter the PDF password")
+        .getByLabel("Password to open", { exact: true })
         .fill("scan-password");
-      await page.getByRole("button", { name: "Unlock", exact: true }).click();
+      await page.getByRole("button", { name: "Open PDF", exact: true }).click();
       await expect(page.getByRole("dialog")).toHaveCount(0);
       await page
         .getByRole("link", { name: "PDF Text Editor", exact: true })

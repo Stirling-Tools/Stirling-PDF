@@ -1,4 +1,4 @@
-import { Stack, PasswordInput, Text } from "@mantine/core";
+import { Stack, PasswordInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
@@ -8,6 +8,8 @@ import { usePermissionExtraction } from "@app/hooks/tools/changePermissions/useP
 import { useChangePermissionsTips } from "@app/components/tooltips/useChangePermissionsTips";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 
 const ChangePermissions = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -26,6 +28,14 @@ const ChangePermissions = (props: BaseToolProps) => {
     base.params.setParameters,
     !base.operation.isLoading && !base.hasResults,
   );
+  usePdfAccess(base.selectedFiles[0]);
+  const protectedInput =
+    base.selectedFiles.length > 0 &&
+    base.selectedFiles.every((file) => getPdfAccess(file)?.encrypted === true);
+  const needsOpeningPassword = base.selectedFiles.some((file) => {
+    const access = getPdfAccess(file);
+    return access?.encrypted && access.requiresOpeningPassword !== false;
+  });
 
   return createToolFlow({
     files: {
@@ -42,11 +52,40 @@ const ChangePermissions = (props: BaseToolProps) => {
         tooltip: changePermissionsTips,
         content: (
           <Stack>
+            {needsOpeningPassword && (
+              <PasswordInput
+                label={t(
+                  "encryptedPdfUnlock.resultOpeningPassword",
+                  "Password to open the updated PDF",
+                )}
+                description={t(
+                  "encryptedPdfUnlock.replaceOpeningHint",
+                  "Enter the current opening password to keep it, or choose a new one.",
+                )}
+                value={base.params.parameters.password ?? ""}
+                onChange={(e) =>
+                  base.params.updateParameter("password", e.currentTarget.value)
+                }
+                disabled={base.operation.isLoading}
+                required
+              />
+            )}
             <PasswordInput
               label={t(
-                "encryptedPdfUnlock.ownerPassword",
-                "Permissions password (owner)",
+                "encryptedPdfUnlock.newOwnerPassword",
+                "New permissions password",
               )}
+              description={
+                protectedInput
+                  ? t(
+                      "encryptedPdfUnlock.keepOwnerHint",
+                      "Leave blank to keep the existing permissions password.",
+                    )
+                  : t(
+                      "encryptedPdfUnlock.newOwnerHint",
+                      "Required to change these restrictions later.",
+                    )
+              }
               value={base.params.parameters.ownerPassword ?? ""}
               onChange={(e) =>
                 base.params.updateParameter(
@@ -56,12 +95,6 @@ const ChangePermissions = (props: BaseToolProps) => {
               }
               disabled={base.operation.isLoading}
             />
-            <Text size="xs">
-              {t(
-                "encryptedPdfUnlock.permissionsOutput",
-                "The result will open without a password. Keep the permissions password to change its restrictions later. Use Add Password to also require a password to open.",
-              )}
-            </Text>
             <ChangePermissionsSettings
               parameters={base.params.parameters}
               onParameterChange={base.params.updateParameter}
@@ -82,10 +115,15 @@ const ChangePermissions = (props: BaseToolProps) => {
       endpointEnabled: base.endpointEnabled,
       paramsValid:
         base.params.validateParameters() &&
-        !!base.params.parameters.ownerPassword,
+        (protectedInput || !!base.params.parameters.ownerPassword) &&
+        (!needsOpeningPassword || !!base.params.parameters.password),
       disabled: permissions.isLoading,
     },
     review: {
+      protectionSummary: t(
+        "encryptedPdfUnlock.protectionSaved",
+        "Protection saved",
+      ),
       isVisible: base.hasResults,
       operation: base.operation,
       title: t("changePermissions.results.title", "Modified PDFs"),

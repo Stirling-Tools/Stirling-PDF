@@ -1,26 +1,28 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import path from "node:path";
+import fs from "node:fs";
 
 const fixture = path.join(
   import.meta.dirname,
   "../test-fixtures/owner-only-restricted.pdf",
 );
+const sample = fs.readFileSync(
+  path.join(import.meta.dirname, "../test-fixtures/sample.pdf"),
+);
 
-test("owner-only PDF opens without prompting and elevation retains the original on cancellation", async ({
-  page,
-}) => {
+test.beforeEach(async ({ page }) => {
   await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
     const body = route.request().postData() ?? "";
     const password = /name="password"\r\n\r\n([^\r]*)/.exec(body)?.[1] ?? "";
-    if (password && password !== "owner-test-password") {
+    if (password && password !== "owner-test-password")
       return route.fulfill({
         status: 400,
         json: { type: "/errors/pdf-password", status: 400 },
       });
-    }
     return route.fulfill({
       json: {
         encrypted: true,
+        requiresOpeningPassword: false,
         signed: false,
         ownerAuthenticated: password === "owner-test-password",
         permissions: 0,
@@ -33,55 +35,112 @@ test("owner-only PDF opens without prompting and elevation retains the original 
       },
     });
   });
-  await page.goto("/annotate");
+});
+
+test("restricted compression prompts at execution, preserves settings on cancel, and continues after verification", async ({
+  page,
+}) => {
+  let compressions = 0;
+  await page.route("**/api/v1/security/prepare-pdf-session", (route) =>
+    route.fulfill({ contentType: "application/pdf", body: sample }),
+  );
+  await page.route("**/api/v1/misc/compress-pdf", (route) => {
+    compressions++;
+    return route.fulfill({ contentType: "application/pdf", body: sample });
+  });
+  await page.route("**/api/v1/security/restore-pdf-protection", (route) =>
+    route.fulfill({
+      contentType: "application/pdf",
+      body: fs.readFileSync(fixture),
+    }),
+  );
+  await page.goto("/compress");
   await page.getByTestId("files-button").click();
   await page.getByTestId("file-input").setInputFiles(fixture);
-  const firstPage = page.locator('[data-page-index="0"]').first();
-  await expect(firstPage).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('[data-page-index="0"]').first()).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  const elevate = page.getByRole("button", {
-    name: "Enter permissions password",
-    exact: true,
-  });
-  await expect(elevate).toBeVisible();
-  await firstPage.click();
-  await page.keyboard.press("Control+a");
-  const copy = page
-    .locator("[data-text-selection-menu]")
-    .getByRole("button", { name: "Copy", exact: true });
-  await expect(copy).toBeDisabled();
-  await elevate.click();
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Close", exact: true })
-    .click();
-  await expect(firstPage).toBeVisible();
-  await expect(elevate).toBeVisible();
-  await elevate.click();
-  await page.getByPlaceholder("Enter the PDF password").fill("incorrect");
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Unlock", exact: true })
-    .click();
-  await expect(page.getByRole("dialog").getByRole("alert")).toBeVisible();
-  await page
-    .getByPlaceholder("Enter the PDF password")
-    .fill("owner-test-password");
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Unlock", exact: true })
-    .click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Compress", exact: true }).click();
   await expect(
-    page.getByText(
-      "Permissions password verified for this session. Stored document restrictions remain unchanged.",
-    ),
+    page.getByText("This PDF requires permission to use Compress."),
   ).toBeVisible();
-  await expect(firstPage).toBeVisible();
-  await firstPage.click();
-  await page.keyboard.press("Control+a");
-  await expect(copy).toBeEnabled();
+  expect(compressions).toBe(0);
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Compress", exact: true }).click();
+  await page
+    .getByLabel("Permissions password", { exact: true })
+    .fill("incorrect");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Highlight", exact: true }),
+    page.getByRole("alert").filter({ hasText: "Incorrect password" }),
+  ).toBeVisible();
+  expect(compressions).toBe(0);
+  await page
+    .getByLabel("Permissions password", { exact: true })
+    .fill("owner-test-password");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(
+    page.getByText("Protection retained", { exact: true }),
+  ).toBeVisible();
+  expect(compressions).toBe(1);
+  await page
+    .getByRole("button", { name: "Manage protection", exact: true })
+    .click();
+  await expect(page.getByText("Not required", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Remove opening password", exact: true }),
+  ).toBeDisabled();
+});
+
+test("unsupported tools explain the limitation without suggesting a password will enable the tool", async ({
+  page,
+}) => {
+  await page.goto("/redact");
+  await page.getByTestId("files-button").click();
+  await page.getByTestId("file-input").setInputFiles(fixture);
+  await expect(
+    page
+      .getByText("This tool cannot yet preserve this PDF's protection.", {
+        exact: true,
+      })
+      .first(),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: "Enter permissions password",
+      exact: true,
+    }),
   ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Manage protection", exact: true })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Verify permissions for this session",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByLabel("Permissions password", { exact: true })
+    .fill("owner-test-password");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(
+    page.getByText("Permissions verified", { exact: true }).first(),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByText("This tool cannot yet preserve this PDF's protection.", {
+        exact: true,
+      })
+      .first(),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Manage protection", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Create an unprotected copy",
+      exact: true,
+    }),
+  ).toBeVisible();
 });

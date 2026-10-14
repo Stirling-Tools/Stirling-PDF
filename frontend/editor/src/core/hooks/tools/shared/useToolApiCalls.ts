@@ -13,7 +13,12 @@ import {
   prepareUnlockedFile,
   protectUnlockedResults,
   changePdfSecurity,
+  unlockPdfForSession,
 } from "@app/services/pdfSessionUnlock";
+import {
+  getPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfPasswordStore";
 
 /** An input that did not survive the batch, with the error it failed on. */
 export interface FailedInput {
@@ -113,6 +118,28 @@ export const useToolApiCalls = <TParams = void>() => {
             config.responseHandler,
             config.preserveBackendFilename ? response.headers : undefined,
           );
+          if (
+            endpoint === "/api/v1/security/add-password" ||
+            endpoint === "/api/v1/security/remove-password"
+          ) {
+            const password =
+              endpoint === "/api/v1/security/remove-password"
+                ? getPdfAccess(file)?.password ||
+                  String(formData.get("password") || "")
+                : String(
+                    formData.get("ownerPassword") ||
+                      (!formData.has("keyLength") &&
+                        getPdfAccess(file)?.password) ||
+                      formData.get("password") ||
+                      getPdfAccess(file)?.password ||
+                      "",
+                  );
+            for (const output of responseFiles)
+              rememberPdfAccess(
+                output,
+                await unlockPdfForSession(output, password),
+              );
+          }
           // Guard: some endpoints may return an empty/0-byte file with 200
           const empty = isEmptyOutput(responseFiles);
           if (empty) {
@@ -165,6 +192,7 @@ export const useToolApiCalls = <TParams = void>() => {
       }
 
       if (failedFiles.length > 0 && processedFiles.length === 0) {
+        if (failedInputs.length === 1) throw failedInputs[0].error;
         throw new Error(
           `Failed to process all files: ${failedFiles.join(", ")}`,
         );

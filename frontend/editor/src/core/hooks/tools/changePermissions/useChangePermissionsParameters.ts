@@ -6,6 +6,7 @@ import {
 
 export interface ChangePermissionsParameters extends BaseParameters {
   ownerPassword?: string;
+  password?: string;
   preventAssembly: boolean;
   preventExtractContent: boolean;
   preventExtractForAccessibility: boolean;

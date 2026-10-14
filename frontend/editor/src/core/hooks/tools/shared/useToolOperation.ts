@@ -12,6 +12,7 @@ import { toolAcceptsFile } from "@app/utils/toolIOCompat";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
+  preflightPdfOperation,
 } from "@app/services/pdfSessionUnlock";
 import { useToolState } from "@app/hooks/tools/shared/useToolState";
 import {
@@ -325,6 +326,18 @@ export const useToolOperation = <TParams>(
 
       try {
         assertFilesNotBlocked(policyIds);
+        const permitted = await preflightPdfOperation(
+          validFiles,
+          runtimeEndpoint,
+          config.toolType !== ToolType.singleFile &&
+            config.operationType !== "extractPages",
+          (file) =>
+            fileActions.requestPdfOwnerAccess(
+              file.fileId,
+              t(`${config.operationType}.title`, config.operationType),
+            ),
+        );
+        if (!permitted) return;
         let processedFiles: File[];
         let successSourceIds: FileId[] = [];
         let unprocessedSourceIds: FileId[] = [];

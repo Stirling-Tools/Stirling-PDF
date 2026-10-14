@@ -15,6 +15,12 @@ export function ProtectedPdfToolNotice({
   if (!files.length) return null;
   return (
     <Stack gap="xs" role="list">
+      <Text size="sm" role="status">
+        {t(
+          "encryptedPdfUnlock.unsupportedTool",
+          "This tool cannot yet preserve this PDF's protection.",
+        )}
+      </Text>
       {files.map((file) => (
         <Group key={file.id} gap={6} wrap="nowrap" role="listitem">
           <Tooltip

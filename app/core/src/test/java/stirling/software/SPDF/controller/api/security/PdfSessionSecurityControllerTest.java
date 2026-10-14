@@ -117,6 +117,52 @@ class PdfSessionSecurityControllerTest {
         return request;
     }
 
+    @Test
+    void distinguishesOpeningPasswordsFromPermissionsPasswords() throws Exception {
+        assertTrue(controller.inspect(request(pdf(true, 256), OWNER)).requiresOpeningPassword());
+        var ownerOnly = protectedPdf("", OWNER, 256, new AccessPermission());
+        assertFalse(controller.inspect(request(ownerOnly, OWNER)).requiresOpeningPassword());
+        assertFalse(controller.inspect(request(pdf(false, 256), "")).requiresOpeningPassword());
+    }
+
+    @Test
+    void changingPermissionsRetainsTheVerifiedOwnerForAnOwnerOnlyPdf() throws Exception {
+        var update = new AddPasswordRequest();
+        update.setFileInput(upload(protectedPdf("", OWNER, 256, new AccessPermission())));
+        update.setPreventModify(true);
+        try (var stream = controller.changePermissions(update, OWNER).getBody().getInputStream()) {
+            var bytes = stream.readAllBytes();
+            var reader = controller.inspect(request(bytes, ""));
+            assertTrue(reader.encrypted());
+            assertFalse(reader.canModify());
+            assertFalse(reader.requiresOpeningPassword());
+            assertTrue(controller.inspect(request(bytes, OWNER)).ownerAuthenticated());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"128", "256"})
+    void changingPermissionsCannotSilentlyRemoveAnOpeningPassword(int bits) throws Exception {
+        var update = new AddPasswordRequest();
+        update.setFileInput(upload(pdf(true, bits)));
+        update.setPreventModify(true);
+        assertThrows(
+                ResponseStatusException.class, () -> controller.changePermissions(update, OWNER));
+        update.setPassword(USER);
+        assertThrows(
+                ResponseStatusException.class, () -> controller.changePermissions(update, USER));
+        try (var stream = controller.changePermissions(update, OWNER).getBody().getInputStream()) {
+            var bytes = stream.readAllBytes();
+            assertThrows(InvalidPasswordException.class, () -> Loader.loadPDF(bytes));
+            try (var output = Loader.loadPDF(bytes, USER)) {
+                assertTrue(output.getEncryption().getVersion() >= 4);
+                assertEquals(bits, output.getEncryption().getLength());
+            }
+            assertFalse(controller.inspect(request(bytes, USER)).canModify());
+            assertTrue(controller.inspect(request(bytes, OWNER)).ownerAuthenticated());
+        }
+    }
+
     @ParameterizedTest
     @CsvSource({"40", "128", "256"})
     void unrestrictedUserPasswordDoesNotAuthenticateTheOwner(int bits) throws Exception {

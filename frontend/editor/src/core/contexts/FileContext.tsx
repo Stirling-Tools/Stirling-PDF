@@ -130,6 +130,16 @@ function FileContextInner({
   const [unlockPassword, setUnlockPassword] = useState("");
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const ownerRequests = useRef(
+    new Map<
+      FileId,
+      {
+        action: string;
+        promise: Promise<boolean>;
+        resolve: (allowed: boolean) => void;
+      }
+    >(),
+  );
   const observedFileIdsRef = useRef<Set<FileId>>(new Set());
   const admissionResults = useRef(
     new Map<FileId, Promise<boolean | StirlingFile>>(),
@@ -267,6 +277,8 @@ function FileContextInner({
 
   const cancelPendingAdmissions = useCallback((ids: readonly FileId[]) => {
     for (const id of ids) {
+      ownerRequests.current.get(id)?.resolve(false);
+      ownerRequests.current.delete(id);
       const pending = pendingAdmissions.current.get(id);
       if (!pending) continue;
       pendingAdmissions.current.delete(id);
@@ -372,6 +384,8 @@ function FileContextInner({
 
   const handleUnlockSkip = useCallback(() => {
     if (activeEncryptedFileId) {
+      ownerRequests.current.get(activeEncryptedFileId)?.resolve(false);
+      ownerRequests.current.delete(activeEncryptedFileId);
       if (getPdfAccess(activeEncryptedFileId)) {
         setActiveEncryptedFileId(null);
         return;
@@ -654,16 +668,22 @@ function FileContextInner({
       }
       pendingAdmissions.current.delete(fileId);
       pending?.resolve(true);
+      ownerRequests.current.get(fileId)?.resolve(true);
+      ownerRequests.current.delete(fileId);
     },
     [t],
   );
 
-  const runPasswordRemoval = useCallback(
-    async (
-      fileId: FileId,
-      password: string,
-      removeRestrictions = false,
-    ): Promise<void> => {
+  const runUnprotectedCopy = useCallback(
+    async (fileId: FileId): Promise<void> => {
+      const access = getPdfAccess(fileId);
+      if (!access?.ownerAuthenticated)
+        throw new Error(
+          t(
+            "encryptedPdfUnlock.ownerRequired",
+            "Enter the permissions password to continue.",
+          ),
+        );
       const file = filesRef.current.get(fileId);
       const pending = pendingAdmissions.current.get(fileId);
       const sourceStub = pending?.stub ?? stateRef.current.files.byId[fileId];
@@ -676,10 +696,8 @@ function FileContextInner({
         );
       }
       const response = await apiClient.post<Blob>(
-        removeRestrictions
-          ? "/api/v1/security/remove-pdf-protection"
-          : "/api/v1/security/remove-pdf-opening-password",
-        buildRemovePasswordFormData({ password }, file),
+        "/api/v1/security/remove-pdf-protection",
+        buildRemovePasswordFormData({ password: access.password }, file),
         {
           responseType: "blob",
           suppressErrorToast: true,
@@ -688,13 +706,13 @@ function FileContextInner({
       if (filesRef.current.get(fileId) !== file) return;
       const copy = new File(
         [response.data],
-        `${file.name.replace(/\.pdf$/i, "")}_${removeRestrictions ? "unprotected" : "opening_password_removed"}.pdf`,
+        `${file.name.replace(/\.pdf$/i, "")}_unprotected.pdf`,
         {
           type: "application/pdf",
         },
       );
       const copyAccess = await unlockPdfForSession(copy, "");
-      if (removeRestrictions && copyAccess.encrypted)
+      if (copyAccess.encrypted)
         throw new Error(
           t(
             "encryptedPdfUnlock.securityChangeFailed",
@@ -738,87 +756,60 @@ function FileContextInner({
     [t, dispatchWithUnlock, indexedDB],
   );
 
-  const handleUnlockSubmit = useCallback(
-    async (removePassword = false, removeRestrictions = false) => {
-      if (!activeEncryptedFileId || isUnlocking) return;
-      if (unlockPassword.length === 0) {
-        setUnlockError(
-          t("encryptedPdfUnlock.required", "Enter the password to continue."),
-        );
-        return;
-      }
+  const runUnprotectedCopyRef = useRef(runUnprotectedCopy);
+  runUnprotectedCopyRef.current = runUnprotectedCopy;
 
-      setIsUnlocking(true);
-      setUnlockError(null);
-      try {
-        if (removePassword) {
-          await runPasswordRemoval(
-            activeEncryptedFileId,
-            unlockPassword,
-            removeRestrictions,
-          );
-        } else {
-          await runSessionUnlock(activeEncryptedFileId, unlockPassword);
-        }
-        const fileName =
-          stateRef.current.files.byId[activeEncryptedFileId]?.name;
+  const handleUnlockSubmit = useCallback(async () => {
+    if (!activeEncryptedFileId || isUnlocking) return;
+    if (unlockPassword.length === 0) {
+      setUnlockError(
+        t("encryptedPdfUnlock.required", "Enter the password to continue."),
+      );
+      return;
+    }
+
+    setIsUnlocking(true);
+    setUnlockError(null);
+    try {
+      const requestedAction = ownerRequests.current.has(activeEncryptedFileId);
+      await runSessionUnlock(activeEncryptedFileId, unlockPassword);
+      const fileName = stateRef.current.files.byId[activeEncryptedFileId]?.name;
+      if (!requestedAction)
         alert({
           alertType: "success",
-          title: removeRestrictions
+          title: getPdfAccess(activeEncryptedFileId)?.ownerAuthenticated
             ? t(
-                "encryptedPdfUnlock.protectionRemoved",
-                "Unprotected copy created",
+                "encryptedPdfUnlock.permissionsVerified",
+                "Permissions verified",
               )
-            : removePassword
-              ? t("encryptedPdfUnlock.copyCreated", "Opening password removed")
-              : t("encryptedPdfUnlock.sessionSuccessTitle", "PDF unlocked"),
-          body: removePassword
-            ? t(
-                "encryptedPdfUnlock.originalProtected",
-                "The original PDF stays protected.",
-              )
-            : fileName
-              ? t("encryptedPdfUnlock.sessionSuccessBodyWithName", {
-                  defaultValue:
-                    "Unlocked {{fileName}} for this session. Password protection is retained.",
-                  fileName,
-                })
-              : t(
-                  "encryptedPdfUnlock.sessionSuccessBody",
-                  "Unlocked for this session. Password protection is retained.",
-                ),
+            : t("encryptedPdfUnlock.sessionSuccessTitle", "PDF opened"),
+          body: fileName
+            ? t("encryptedPdfUnlock.sessionSuccessBodyWithName", {
+                defaultValue: "Protection retained for {{fileName}}.",
+                fileName,
+              })
+            : t(
+                "encryptedPdfUnlock.sessionSuccessBody",
+                "Protection retained.",
+              ),
           expandable: false,
           isPersistentPopup: false,
         });
-        setActiveEncryptedFileId(null);
-      } catch (error) {
-        const errorMessage = await handlePasswordError(
-          error,
-          t("encryptedPdfUnlock.incorrectPassword", "Incorrect password"),
-          removePassword
-            ? t(
-                "removePassword.error.failed",
-                "An error occurred while removing the password from the PDF.",
-              )
-            : t(
-                "encryptedPdfUnlock.sessionFailed",
-                "Unable to unlock this PDF. Please try again.",
-              ),
-        );
-        setUnlockError(errorMessage);
-      } finally {
-        setIsUnlocking(false);
-      }
-    },
-    [
-      activeEncryptedFileId,
-      unlockPassword,
-      isUnlocking,
-      runSessionUnlock,
-      runPasswordRemoval,
-      t,
-    ],
-  );
+      setActiveEncryptedFileId(null);
+    } catch (error) {
+      const errorMessage = await handlePasswordError(
+        error,
+        t("encryptedPdfUnlock.incorrectPassword", "Incorrect password"),
+        t(
+          "encryptedPdfUnlock.sessionFailed",
+          "Unable to verify this password. Please try again.",
+        ),
+      );
+      setUnlockError(errorMessage);
+    } finally {
+      setIsUnlocking(false);
+    }
+  }, [activeEncryptedFileId, unlockPassword, isUnlocking, runSessionUnlock, t]);
 
   const handleUnlockAll = useCallback(async () => {
     if (!activeEncryptedFileId) return;
@@ -955,6 +946,9 @@ function FileContextInner({
         dispatch({ type: "REORDER_FILES", payload: { orderedFileIds } });
       },
       clearAllFiles: async () => {
+        for (const request of ownerRequests.current.values())
+          request.resolve(false);
+        ownerRequests.current.clear();
         cancelPendingAdmissions([...pendingAdmissions.current.keys()]);
         clearPdfAccess();
         lifecycleManager.cleanupAllFiles();
@@ -965,6 +959,9 @@ function FileContextInner({
         // IndexedDB should only be cleared when explicitly requested by user
       },
       clearAllData: async () => {
+        for (const request of ownerRequests.current.values())
+          request.resolve(false);
+        ownerRequests.current.clear();
         cancelPendingAdmissions([...pendingAdmissions.current.keys()]);
         clearPdfAccess();
         // First clear all files from memory
@@ -993,6 +990,21 @@ function FileContextInner({
       scheduleCleanup: (fileId: FileId, delay?: number) =>
         lifecycleManager.scheduleCleanup(fileId, delay, stateRef),
       openEncryptedUnlockPrompt: promptEncryptedUnlock,
+      requestPdfOwnerAccess: (fileId, action) => {
+        if (!filesRef.current.has(fileId)) return Promise.resolve(false);
+        if (getPdfAccess(fileId)?.ownerAuthenticated)
+          return Promise.resolve(true);
+        const existing = ownerRequests.current.get(fileId);
+        if (existing) return existing.promise;
+        let resolve!: (allowed: boolean) => void;
+        const promise = new Promise<boolean>((settle) => {
+          resolve = settle;
+        });
+        ownerRequests.current.set(fileId, { action, promise, resolve });
+        promptEncryptedUnlock(fileId);
+        return promise;
+      },
+      createUnprotectedCopy: (fileId) => runUnprotectedCopyRef.current(fileId),
     }),
     [
       baseActions,
@@ -1066,6 +1078,9 @@ function FileContextInner({
       // StrictMode can replay effects after files hydrate; only an actual unmount owns cleanup.
       queueMicrotask(() => {
         if (!mountedRef.current) {
+          for (const request of ownerRequests.current.values())
+            request.resolve(false);
+          ownerRequests.current.clear();
           for (const pending of pendingAdmissions.current.values())
             pending.resolve(false);
           pendingAdmissions.current.clear();
@@ -1092,6 +1107,11 @@ function FileContextInner({
           ownerUnlock={
             !!activeEncryptedFileId && !!getPdfAccess(activeEncryptedFileId)
           }
+          actionLabel={
+            activeEncryptedFileId
+              ? ownerRequests.current.get(activeEncryptedFileId)?.action
+              : undefined
+          }
           opened={isUnlockModalOpen}
           fileName={activeEncryptedStub?.name}
           password={unlockPassword}
@@ -1100,8 +1120,6 @@ function FileContextInner({
           remainingCount={encryptedQueue.length}
           onPasswordChange={setUnlockPassword}
           onUnlock={() => void handleUnlockSubmit()}
-          onRemovePassword={() => void handleUnlockSubmit(true)}
-          onRemoveProtection={() => void handleUnlockSubmit(true, true)}
           onUnlockAll={handleUnlockAll}
           onSkip={handleUnlockSkip}
         />

@@ -55,7 +55,10 @@ const ChangePermissionsSettings = ({
           Object.keys(parameters).filter((key) =>
             key.startsWith("prevent"),
           ) as Array<
-            Exclude<keyof ChangePermissionsParameters, "ownerPassword">
+            Exclude<
+              keyof ChangePermissionsParameters,
+              "ownerPassword" | "password"
+            >
           >
         ).map((key) => (
           <Checkbox

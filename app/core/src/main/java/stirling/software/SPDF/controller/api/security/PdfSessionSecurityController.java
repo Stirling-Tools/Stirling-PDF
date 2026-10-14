@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -59,7 +60,8 @@ public class PdfSessionSecurityController {
             boolean canExtract,
             boolean canPrint,
             boolean canPrintFaithful,
-            String credentialFingerprint) {}
+            String credentialFingerprint,
+            boolean requiresOpeningPassword) {}
 
     /** Authenticate without saving, changing metadata, or removing encryption. */
     @Operation(hidden = true)
@@ -83,8 +85,45 @@ public class PdfSessionSecurityController {
                     permission.canExtractContent(),
                     permission.canPrint(),
                     permission.canPrintFaithful(),
-                    PdfSessionPermissions.credentialFingerprint(document));
+                    PdfSessionPermissions.credentialFingerprint(document),
+                    document.isEncrypted() && requiresOpeningPassword(request.getFileInput()));
         }
+    }
+
+    private boolean requiresOpeningPassword(MultipartFile file) throws IOException {
+        try (PDDocument ignored = pdfDocumentFactory.load(file, "", true)) {
+            return false;
+        } catch (InvalidPasswordException e) {
+            return true;
+        }
+    }
+
+    /**
+     * Changes restrictions with owner authority, retaining the owner credential unless replaced.
+     */
+    @Operation(hidden = true)
+    @PostMapping(value = "/change-pdf-permissions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Resource> changePermissions(
+            @ModelAttribute AddPasswordRequest request,
+            @RequestParam(defaultValue = "") String sourcePassword)
+            throws IOException {
+        try (PDDocument source =
+                pdfDocumentFactory.load(request.getFileInput(), sourcePassword, true)) {
+            PdfSessionPermissions.requireOwner(source);
+            if (source.isEncrypted()) {
+                if (requiresOpeningPassword(request.getFileInput())
+                        && (request.getPassword() == null || request.getPassword().isEmpty())) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Choose the opening password for the updated PDF");
+                }
+                if (request.getOwnerPassword() == null || request.getOwnerPassword().isEmpty()) {
+                    request.setOwnerPassword(sourcePassword);
+                }
+                request.setKeyLength(source.getEncryption().getLength());
+            }
+        }
+        return setProtection(request, sourcePassword);
     }
 
     /**
@@ -171,6 +210,10 @@ public class PdfSessionSecurityController {
             PdfSessionPermissions.requireOwner(document);
             var protection = new StandardProtectionPolicy(owner, reader, permissions);
             protection.setEncryptionKeyLength(request.getKeyLength());
+            if (document.isEncrypted()
+                    && request.getKeyLength() == document.getEncryption().getLength()) {
+                protection.setPreferAES(document.getEncryption().getVersion() >= 4);
+            }
             document.protect(protection);
             var output = tempFileManager.createManagedTempFile(".pdf");
             try {

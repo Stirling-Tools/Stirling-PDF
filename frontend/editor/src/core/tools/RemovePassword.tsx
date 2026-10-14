@@ -1,11 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import RemovePasswordSettings from "@app/components/tools/removePassword/RemovePasswordSettings";
 import { useRemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
 import { useRemovePasswordOperation } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
 import { useRemovePasswordTips } from "@app/components/tooltips/useRemovePasswordTips";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { Text } from "@mantine/core";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 
 const RemovePassword = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -17,6 +19,16 @@ const RemovePassword = (props: BaseToolProps) => {
     useRemovePasswordOperation,
     props,
   );
+  usePdfAccess(base.selectedFiles[0]);
+  const nothingToRemove =
+    base.selectedFiles.length > 0 &&
+    base.selectedFiles.every((file) => {
+      const access = getPdfAccess(file);
+      return (
+        access &&
+        (!access.encrypted || access.requiresOpeningPassword === false)
+      );
+    });
 
   return createToolFlow({
     files: {
@@ -25,30 +37,40 @@ const RemovePassword = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t("removePassword.password.stepTitle", "Remove Password"),
+        title: t("encryptedPdfUnlock.removeOpening", "Remove opening password"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.hasResults
           ? base.handleSettingsReset
           : undefined,
         tooltip: removePasswordTips,
         content: (
-          <RemovePasswordSettings
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading}
-          />
+          <Text size="sm">
+            {nothingToRemove
+              ? t(
+                  "encryptedPdfUnlock.noOpeningPassword",
+                  "This PDF already opens without a password.",
+                )
+              : t(
+                  "encryptedPdfUnlock.removeOpeningConsequence",
+                  "Removes the opening password. Restrictions remain.",
+                )}
+          </Text>
         ),
       },
     ],
     executeButton: {
-      text: t("removePassword.submit", "Remove Password"),
+      text: t("encryptedPdfUnlock.removeOpening", "Remove opening password"),
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
       endpointEnabled: base.endpointEnabled,
-      paramsValid: base.params.validateParameters(),
+      paramsValid: !nothingToRemove,
     },
     review: {
+      protectionSummary: t(
+        "encryptedPdfUnlock.openingPasswordRemoved",
+        "Opening password removed. Restrictions retained.",
+      ),
       isVisible: base.hasResults,
       operation: base.operation,
       title: t(

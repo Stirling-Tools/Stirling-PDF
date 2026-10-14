@@ -14,7 +14,10 @@ import {
   useFileSelectors,
 } from "@app/contexts/FileContext";
 import apiClient from "@app/services/apiClient";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import {
+  getPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfPasswordStore";
 import { fileStorage } from "@app/services/fileStorage";
 import { generateProcessedFileMetadata } from "@app/contexts/file/fileActions";
 import {
@@ -59,13 +62,11 @@ vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
     opened,
     onSkip,
     onUnlock,
-    onRemovePassword,
     onPasswordChange,
   }: {
     opened: boolean;
     onSkip: () => void;
     onUnlock: () => void;
-    onRemovePassword: () => void;
     onPasswordChange: (password: string) => void;
   }) =>
     opened ? (
@@ -76,7 +77,6 @@ vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
           onChange={(event) => onPasswordChange(event.target.value)}
         />
         <button onClick={onUnlock}>Unlock</button>
-        <button onClick={onRemovePassword}>Remove Password</button>
       </>
     ) : null,
 }));
@@ -141,7 +141,7 @@ describe("protected tool replacements", () => {
   });
   afterEach(() => vi.restoreAllMocks());
 
-  it.each(["cancel", "unlock", "remove-password"])(
+  it.each(["cancel", "unlock"])(
     "retains inputs until %s settles the output",
     async (decision) => {
       const { result } = renderHook(
@@ -179,40 +179,21 @@ describe("protected tool replacements", () => {
         return;
       }
       vi.mocked(apiClient.post).mockResolvedValueOnce({
-        data:
-          decision === "remove-password"
-            ? new Blob(["plain"])
-            : {
-                encrypted: true,
-                signed: false,
-                ownerAuthenticated: true,
-                permissions: -4,
-                canModify: true,
-                canAssemble: true,
-                pageCount: 1,
-              },
+        data: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: true,
+          permissions: -4,
+          canModify: true,
+          canAssemble: true,
+          pageCount: 1,
+        },
       });
-      if (decision === "remove-password")
-        vi.mocked(apiClient.post).mockResolvedValueOnce({
-          data: {
-            encrypted: true,
-            signed: false,
-            ownerAuthenticated: false,
-            permissions: -8,
-            canModify: true,
-            canAssemble: true,
-            pageCount: 1,
-          },
-        });
       fireEvent.change(screen.getByLabelText("PDF password"), {
         target: { value: "secret" },
       });
       await act(async () => {
-        fireEvent.click(
-          screen.getByText(
-            decision === "unlock" ? "Unlock" : "Remove Password",
-          ),
-        );
+        fireEvent.click(screen.getByText("Unlock"));
         await consuming;
       });
       const accepted = await consuming;
@@ -299,108 +280,107 @@ afterEach(() => {
 });
 
 describe("encrypted bytes opened by another editor", () => {
-  it("returns a restricted copy with no opening password and preserves the original", async () => {
+  it("creates an unprotected version only from verified owner access", async () => {
+    observed.isEncrypted = false;
     const persist = vi
       .spyOn(fileStorage, "persistVersionedOutputs")
       .mockResolvedValue();
+    const { result } = renderHook(
+      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+      { wrapper },
+    );
+    await act(async () => {
+      await result.current.actions.addFiles([
+        new File(["original"], "locked.pdf"),
+      ]);
+    });
+    const file = result.current.selectors.getFile(id)!;
+    await expect(
+      result.current.actions.createUnprotectedCopy(file.fileId),
+    ).rejects.toThrow("encryptedPdfUnlock.ownerRequired");
+    rememberPdfAccess(file, {
+      password: "owner",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: true,
+      permissions: 0,
+      canModify: true,
+      canAssemble: true,
+      pageCount: 1,
+    });
     vi.mocked(apiClient.post)
-      .mockResolvedValueOnce({
-        data: new Blob(["restricted output"]),
-      })
+      .mockResolvedValueOnce({ data: new Blob(["unprotected"]) })
       .mockResolvedValueOnce({
         data: {
-          encrypted: true,
+          encrypted: false,
           signed: false,
           ownerAuthenticated: false,
-          permissions: -8,
+          permissions: -4,
           canModify: true,
           canAssemble: true,
           pageCount: 1,
         },
       });
-    const { result } = renderHook(
-      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
-      { wrapper },
+    await act(async () =>
+      result.current.actions.createUnprotectedCopy(file.fileId),
     );
-    const original = new File(["encrypted original"], "locked.pdf");
-    let loading!: ReturnType<typeof result.current.actions.addFiles>;
-    await act(async () => {
-      loading = result.current.actions.addFiles([original]);
-    });
-    fireEvent.change(screen.getByLabelText("PDF password"), {
-      target: { value: "secret" },
-    });
-    await act(async () => {
-      fireEvent.click(screen.getByText("Remove Password"));
-    });
-    const [copy] = await loading;
-    expect(copy.name).toBe("locked_opening_password_removed.pdf");
-    expect(copy.fileId).not.toBe(id);
-    expect(result.current.selectors.getAllFileIds()).toEqual([copy.fileId]);
-    expect(
-      result.current.selectors.getStirlingFileStub(copy.fileId),
-    ).toMatchObject({
-      parentFileId: id,
-      versionNumber: 2,
-      toolHistory: [{ toolId: "removePassword" }],
-    });
+    const copy = result.current.selectors.getFiles(
+      result.current.selectors.getAllFileIds(),
+    )[0];
+    expect(copy.name).toBe("locked_unprotected.pdf");
+    expect(getPdfAccess(copy)?.encrypted).toBe(false);
     expect(persist).toHaveBeenCalledWith(
-      [id],
+      [file.fileId],
       [copy],
-      [expect.objectContaining({ parentFileId: id })],
+      [expect.objectContaining({ parentFileId: file.fileId })],
     );
-    expect(original.name).toBe("locked.pdf");
-    expect(original.size).toBe("encrypted original".length);
-    expect(getPdfAccess(copy)).toMatchObject({
-      encrypted: true,
-      password: "",
-      ownerAuthenticated: false,
-    });
-    expect(getPdfAccess(original)).toBeUndefined();
-    expect(isAwaitingUnlock(id)).toBe(false);
-    const [endpoint, form] = vi
-      .mocked(apiClient.post)
-      .mock.calls.find(
-        ([path]) => path === "/api/v1/security/remove-pdf-opening-password",
-      )!;
-    expect(endpoint).toBe("/api/v1/security/remove-pdf-opening-password");
-    expect((form as FormData).get("password")).toBe("secret");
+    expect(file.size).toBe("original".length);
     persist.mockRestore();
   });
 
-  it("keeps a failed password removal pending without creating an output", async () => {
-    const persist = vi
-      .spyOn(fileStorage, "persistVersionedOutputs")
-      .mockResolvedValue();
-    vi.mocked(apiClient.post).mockRejectedValueOnce(
-      new Error("Incorrect password"),
-    );
+  it("settles an action's permission request when cancelled or the file is closed", async () => {
+    observed.isEncrypted = false;
     const { result } = renderHook(
       () => ({ ...useFileActions(), selectors: useFileSelectors() }),
       { wrapper },
     );
-    let loading!: ReturnType<typeof result.current.actions.addFiles>;
     await act(async () => {
-      loading = result.current.actions.addFiles([
-        new File(["encrypted"], "locked.pdf"),
+      await result.current.actions.addFiles([
+        new File(["original"], "locked.pdf"),
       ]);
     });
-    fireEvent.change(screen.getByLabelText("PDF password"), {
-      target: { value: "wrong" },
+    const file = result.current.selectors.getFile(id)!;
+    rememberPdfAccess(file, {
+      password: "",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: false,
+      permissions: 0,
+      canModify: false,
+      canAssemble: false,
+      pageCount: 1,
     });
-    await act(async () => {
-      fireEvent.click(screen.getByText("Remove Password"));
+    let pending!: Promise<boolean>;
+    act(() => {
+      pending = result.current.actions.requestPdfOwnerAccess(
+        file.fileId,
+        "Compress",
+      );
     });
-    expect(result.current.selectors.getAllFileIds()).toEqual([]);
-    expect(isAwaitingUnlock(id)).toBe(true);
-    expect(persist).not.toHaveBeenCalled();
-    await act(async () => {
-      fireEvent.click(screen.getByText("Cancel opening"));
+    await act(async () => fireEvent.click(screen.getByText("Cancel opening")));
+    await expect(pending).resolves.toBe(false);
+    expect(result.current.selectors.getFile(file.fileId)).toBe(file);
+    act(() => {
+      pending = result.current.actions.requestPdfOwnerAccess(
+        file.fileId,
+        "Compress",
+      );
     });
-    await expect(loading).resolves.toEqual([]);
-    persist.mockRestore();
+    await act(async () =>
+      result.current.actions.removeFiles([file.fileId], false),
+    );
+    await expect(pending).resolves.toBe(false);
   });
-
   it("cancelling while persistence finishes does not return a file to the caller", async () => {
     let finishWrite!: () => void;
     observed.afterDispatch = () =>

@@ -1,17 +1,6 @@
-import {
-  Modal,
-  Stack,
-  Text,
-  PasswordInput,
-  Group,
-  Tooltip,
-  Menu,
-} from "@mantine/core";
+import { Modal, Stack, Text, PasswordInput, Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState, type KeyboardEventHandler } from "react";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 
 interface EncryptedPdfUnlockModalProps {
@@ -20,26 +9,19 @@ interface EncryptedPdfUnlockModalProps {
   password: string;
   errorMessage?: string | null;
   isProcessing: boolean;
-  /** How many other locked files are queued behind this one. Omit where there is only ever one. */
   remainingCount?: number;
-  /** Confirm wording, where the caller's own reads better than the default. */
   confirmLabel?: string;
-  /** Session unlocking preserves the original; notification retries may instead remove protection. */
   sessionUnlock?: boolean;
-  /** Elevation preserves existing viewing access when the dialog is cancelled. */
   ownerUnlock?: boolean;
+  actionLabel?: string;
   testIdPrefix?: string;
   onPasswordChange: (value: string) => void;
   onUnlock: () => void;
-  /** Removes the opening password with owner authority while retaining stored restrictions. */
-  onRemovePassword?: () => void;
-  /** Explicitly removes encryption and restrictions after owner verification. */
-  onRemoveProtection?: () => void;
-  /** Only needed alongside a non-zero {@link EncryptedPdfUnlockModalProps.remainingCount}. */
   onUnlockAll?: () => void;
   onSkip: () => void;
 }
 
+/** Authentication only; changing a document's protection belongs in its protection settings. */
 const EncryptedPdfUnlockModal = ({
   opened,
   fileName,
@@ -50,234 +32,110 @@ const EncryptedPdfUnlockModal = ({
   confirmLabel,
   sessionUnlock = false,
   ownerUnlock = false,
+  actionLabel,
   testIdPrefix,
   onPasswordChange,
   onUnlock,
-  onRemovePassword,
-  onRemoveProtection,
   onUnlockAll,
   onSkip,
 }: EncryptedPdfUnlockModalProps) => {
   const { t } = useTranslation();
-  const [optionsOpened, setOptionsOpened] = useState(false);
-  useEffect(() => {
-    if (!opened) setOptionsOpened(false);
-  }, [opened]);
-
-  const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
-    if (event.key === "Enter" && !isProcessing && password.length > 0) {
-      event.preventDefault();
-      onUnlock();
-    }
-  };
-
+  const title = ownerUnlock
+    ? t("encryptedPdfUnlock.ownerTitle", "Enter permissions password")
+    : sessionUnlock
+      ? t("encryptedPdfUnlock.sessionTitle", "Open PDF")
+      : t("encryptedPdfUnlock.title", "Enter PDF password");
   return (
     <Modal
       opened={opened}
-      onClose={() => {
-        if (!isProcessing) onSkip();
-      }}
-      title={
-        <Group component="span" gap={6} wrap="nowrap">
-          <span>
-            {ownerUnlock
-              ? t("encryptedPdfUnlock.ownerTitle", "Enter permissions password")
-              : sessionUnlock
-                ? t("encryptedPdfUnlock.sessionTitle", "Unlock PDF")
-                : t("encryptedPdfUnlock.title", "Remove password to continue")}
-          </span>
-          {sessionUnlock && (
-            <Tooltip
-              label={t(
-                "encryptedPdfUnlock.sessionDetails",
-                "Access ends when you close the file or leave the session. Supported tools preserve protection. Closing this dialog keeps the saved copy in your library. Removing the opening password requires the permissions password and retains restrictions.",
-              )}
-              multiline
-              w={280}
-              withArrow
-              events={{ hover: true, focus: true, touch: true }}
-              zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE + 1}
-            >
-              <ActionIcon
-                variant="quiet"
-                accent="neutral"
-                size="sm"
-                aria-label={t(
-                  "encryptedPdfUnlock.sessionDetailsLabel",
-                  "About session unlocking",
-                )}
-              >
-                <Icon name="info" size={16} />
-              </ActionIcon>
-            </Tooltip>
-          )}
-        </Group>
-      }
+      onClose={onSkip}
+      title={title}
       centered
       size="sm"
-      padding="md"
-      radius="md"
-      styles={{ body: { paddingTop: "var(--mantine-spacing-md)" } }}
       withCloseButton={!isProcessing}
-      closeButtonProps={{
-        "aria-label": t("close", "Close"),
-      }}
-      data-testid={testIdPrefix ? `${testIdPrefix}-modal` : undefined}
       closeOnClickOutside={!isProcessing}
-      closeOnEscape={!isProcessing && !optionsOpened}
+      closeOnEscape={!isProcessing}
+      closeButtonProps={{ "aria-label": t("close", "Close") }}
       zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
+      data-testid={testIdPrefix ? `${testIdPrefix}-modal` : undefined}
     >
       <Stack gap="md">
-        <Group
-          gap="sm"
-          wrap="nowrap"
-          p="sm"
-          style={{
-            background: "var(--c-surface-raised)",
-            borderRadius: "var(--mantine-radius-md)",
-          }}
-        >
-          <Icon
-            name="lock"
-            size={20}
-            style={{ color: "var(--c-text-muted)", flexShrink: 0 }}
-          />
-          <Text size="sm" fw={500} style={{ overflowWrap: "anywhere" }}>
-            {fileName}
-          </Text>
-        </Group>
-        {!sessionUnlock && (
-          <Text size="sm" c="dimmed">
+        <Text size="sm" fw={500} style={{ overflowWrap: "anywhere" }}>
+          {fileName}
+        </Text>
+        {actionLabel && (
+          <Text size="sm">
             {t(
-              "encryptedPdfUnlock.passwordHint",
-              "Enter the PDF password to continue.",
+              "encryptedPdfUnlock.authoriseAction",
+              "This PDF requires permission to use {{action}}.",
+              { action: actionLabel },
             )}
           </Text>
         )}
-
         <PasswordInput
           label={
             ownerUnlock
-              ? t(
-                  "encryptedPdfUnlock.ownerPassword",
-                  "Permissions password (owner)",
-                )
-              : t("encryptedPdfUnlock.password.label", "PDF password")
+              ? t("encryptedPdfUnlock.ownerPassword", "Permissions password")
+              : sessionUnlock
+                ? t("encryptedPdfUnlock.openingPassword", "Password to open")
+                : t("encryptedPdfUnlock.password.label", "PDF password")
           }
-          placeholder={t(
-            "encryptedPdfUnlock.password.placeholder",
-            "Enter the PDF password",
-          )}
+          placeholder={
+            !sessionUnlock
+              ? t(
+                  "encryptedPdfUnlock.password.placeholder",
+                  "Enter the PDF password",
+                )
+              : undefined
+          }
           value={password}
           onChange={(event) => onPasswordChange(event.currentTarget.value)}
-          onKeyDown={handleKeyDown}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !isProcessing && password.length > 0) {
+              event.preventDefault();
+              onUnlock();
+            }
+          }}
           disabled={isProcessing}
-          size="md"
-          radius="md"
           error={errorMessage || undefined}
           errorProps={{ role: "alert" }}
           autoFocus
           data-autofocus
           data-testid={testIdPrefix ? `${testIdPrefix}-input` : undefined}
         />
-
         <Group justify="flex-end" gap="sm">
-          {!sessionUnlock && (
+          <Button
+            variant="secondary"
+            accent="neutral"
+            onClick={onSkip}
+            disabled={isProcessing}
+            data-testid={testIdPrefix ? `${testIdPrefix}-cancel` : undefined}
+          >
+            {t("cancel", "Cancel")}
+          </Button>
+          {remainingCount > 0 && onUnlockAll && (
             <Button
               variant="secondary"
-              accent="neutral"
-              onClick={onSkip}
-              disabled={isProcessing}
-              data-testid={testIdPrefix ? `${testIdPrefix}-cancel` : undefined}
+              onClick={onUnlockAll}
+              loading={isProcessing}
+              disabled={!password}
             >
-              {t("encryptedPdfUnlock.skip", "Skip for now")}
+              {t("encryptedPdfUnlock.unlockAll", "Use for all ({{count}})", {
+                count: remainingCount + 1,
+              })}
             </Button>
           )}
-          <Group gap="xs">
-            {remainingCount > 0 && onUnlockAll && (
-              <Button
-                variant="secondary"
-                onClick={onUnlockAll}
-                loading={isProcessing}
-                disabled={password.length === 0}
-              >
-                {t("encryptedPdfUnlock.unlockAll", "Use for all ({{count}})", {
-                  count: remainingCount + 1,
-                })}
-              </Button>
-            )}
-            <Button.Group>
-              <Button
-                onClick={onUnlock}
-                loading={isProcessing}
-                disabled={password.length === 0}
-                data-testid={
-                  testIdPrefix ? `${testIdPrefix}-submit` : undefined
-                }
-              >
-                {confirmLabel ?? t("encryptedPdfUnlock.unlock", "Unlock")}
-              </Button>
-              {sessionUnlock && onRemovePassword && (
-                <Menu
-                  opened={optionsOpened}
-                  onChange={setOptionsOpened}
-                  position="bottom-end"
-                  withinPortal
-                  zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE + 1}
-                >
-                  <Menu.Target>
-                    <Button
-                      disabled={isProcessing}
-                      px="xs"
-                      aria-label={t(
-                        "encryptedPdfUnlock.moreOptions",
-                        "More options",
-                      )}
-                      style={{ borderInlineStartColor: "var(--c-border)" }}
-                    >
-                      <Icon name="chevron-down" size={16} />
-                    </Button>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Item
-                      leftSection={<Icon name="lock-open" size={16} />}
-                      disabled={isProcessing || password.length === 0}
-                      onClick={onRemovePassword}
-                    >
-                      <Text size="sm">
-                        {t("removePassword.submit", "Remove Password")}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {t(
-                          "encryptedPdfUnlock.createCopy",
-                          "Remove opening password; retain restrictions",
-                        )}
-                      </Text>
-                    </Menu.Item>
-                    {onRemoveProtection && (
-                      <Menu.Item
-                        disabled={isProcessing || password.length === 0}
-                        onClick={onRemoveProtection}
-                      >
-                        <Text size="sm">
-                          {t(
-                            "encryptedPdfUnlock.removeProtection",
-                            "Create an unprotected copy",
-                          )}
-                        </Text>
-                        <Text size="xs">
-                          {t(
-                            "encryptedPdfUnlock.removeProtectionDetails",
-                            "Removes both passwords and all restrictions. Requires the permissions password.",
-                          )}
-                        </Text>
-                      </Menu.Item>
-                    )}
-                  </Menu.Dropdown>
-                </Menu>
-              )}
-            </Button.Group>
-          </Group>
+          <Button
+            onClick={onUnlock}
+            loading={isProcessing}
+            disabled={!password}
+            data-testid={testIdPrefix ? `${testIdPrefix}-submit` : undefined}
+          >
+            {confirmLabel ??
+              (ownerUnlock
+                ? t("encryptedPdfUnlock.continue", "Continue")
+                : t("encryptedPdfUnlock.openPdf", "Open PDF"))}
+          </Button>
         </Group>
       </Stack>
     </Modal>

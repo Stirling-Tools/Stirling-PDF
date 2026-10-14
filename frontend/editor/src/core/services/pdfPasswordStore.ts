@@ -4,6 +4,7 @@ import type { FileId } from "@app/types/file";
 export interface PdfAccess {
   password: string;
   encrypted: boolean;
+  requiresOpeningPassword?: boolean;
   signed: boolean;
   ownerAuthenticated: boolean;
   permissions: number;
