@@ -54,6 +54,11 @@ public class StirlingDownloadTool implements McpTool {
     }
 
     @Override
+    public String analyticsCategory() {
+        return "files";
+    }
+
+    @Override
     public String description() {
         return "Fetch a stored file's content by fileId (e.g. an operation result), returned inline"
                 + " as base64. Recommended only when a result was too large to be returned inline."
