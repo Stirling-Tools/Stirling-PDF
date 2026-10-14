@@ -26,6 +26,13 @@ const LICENSE_ALIASES: Record<string, LicenseDisplay> = {
     short: "Apache-2.0",
     spdxId: "Apache-2.0",
   },
+  // spring-session-core names its license "Broadcom Foundation License" in the
+  // pom, but the published jar embeds META-INF/LICENSE.txt byte-identical to
+  // the standard Apache-2.0 text, so the About link points at Apache-2.0.
+  "broadcom foundation license": {
+    short: "Broadcom Foundation License",
+    spdxId: "Apache-2.0",
+  },
   mit: { short: "MIT", spdxId: "MIT" },
   "mit license": { short: "MIT", spdxId: "MIT" },
   "the mit license": { short: "MIT", spdxId: "MIT" },

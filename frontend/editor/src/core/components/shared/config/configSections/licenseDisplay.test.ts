@@ -45,6 +45,13 @@ describe("resolveLicenseDisplay", () => {
     });
   });
 
+  it("links the Broadcom Foundation License name to the Apache-2.0 text it ships", () => {
+    expect(resolveLicenseDisplay("Broadcom Foundation License")).toEqual({
+      short: "Broadcom Foundation License",
+      spdxId: "Apache-2.0",
+    });
+  });
+
   it("derives about links from single and compound displays", () => {
     expect(resolveAboutLinks(resolveLicenseDisplay("MIT license"))).toEqual([
       { spdxId: "MIT", short: "MIT" },
