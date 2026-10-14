@@ -13638,6 +13638,7 @@ closeSidebar = "Close comments sidebar"
 deleteAnnotationAndComment = "Delete annotation & comment"
 deleteDescription = "This annotation has a comment attached. You can remove just the comment from the sidebar while keeping the annotation, or delete everything."
 deleteTitle = "Remove annotation from comments?"
+exportCsv = "Export as CSV"
 goToLink = "Go to link"
 hint = "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page."
 locateAnnotation = "Locate in document"
@@ -13655,6 +13656,14 @@ typeComment = "Comment"
 typeInsertText = "Insert Text"
 typeReplaceText = "Replace Text"
 viewComment = "View comment"
+
+[viewer.comments.csv]
+author = "Author"
+comment = "Comment"
+date = "Date"
+inReplyTo = "In reply to"
+page = "Page"
+thread = "Thread"
 
 [viewer.error]
 noFileProvided = "Error: No file provided to viewer"

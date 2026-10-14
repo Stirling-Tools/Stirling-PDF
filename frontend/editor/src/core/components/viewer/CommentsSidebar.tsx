@@ -39,6 +39,13 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
+import {
+  buildCommentsCsv,
+  commentsCsvFileName,
+  type CommentCsvEntry,
+  type CommentCsvThread,
+} from "@app/components/viewer/commentsCsv";
+import { downloadTextAsFile } from "@app/utils/downloadUtils";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 
 /** PDF subtypes that are inherently standalone comment annotations (not linked to other annotations). */
@@ -54,6 +61,9 @@ function isStandaloneCommentType(type: number | undefined): boolean {
 
 const ANNOTATE_PANEL_ID = "annotate" as const;
 const TEXT_COMMENT_TOOL_ID = "textComment" as const;
+
+// Without it Excel reads the CSV in the system codepage and mangles non-ASCII text.
+const EXCEL_UTF8_BOM = "\uFEFF";
 
 type StirlingAnnotationCustomData = Record<string, unknown> & {
   annotationToolId?: string;
@@ -79,17 +89,22 @@ function getStirlingAnnotationMetadata(
   return ann as StirlingAnnotationMetadata;
 }
 
-/** Format annotation date for display (e.g. "Mar 11, 6:05 PM"). */
-function formatCommentDate(obj: PdfAnnotationObject): string {
+function getCommentDate(obj: PdfAnnotationObject): Date | null {
   const metadata = getStirlingAnnotationMetadata(obj);
   const raw =
     metadata.modifiedDate ??
     metadata.creationDate ??
     metadata.customData?.modifiedDate ??
     metadata.M;
-  if (raw == null) return "";
+  if (raw == null) return null;
   const d = raw instanceof Date ? raw : new Date(raw);
-  if (Number.isNaN(d.getTime())) return "";
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Format annotation date for display (e.g. "Mar 11, 6:05 PM"). */
+function formatCommentDate(obj: PdfAnnotationObject): string {
+  const d = getCommentDate(obj);
+  if (!d) return "";
   return d.toLocaleString(undefined, {
     month: "short",
     day: "numeric",
@@ -100,6 +115,7 @@ function formatCommentDate(obj: PdfAnnotationObject): string {
 
 interface CommentsSidebarProps {
   documentId: string;
+  fileName: string;
   visible: boolean;
   rightOffset: string;
 }
@@ -125,6 +141,17 @@ function getAuthorName(
   const stored = (obj?.author ?? "Guest").trim() || "Guest";
   if (PLACEHOLDER_AUTHORS.has(stored)) return currentDisplayName || "Guest";
   return stored;
+}
+
+function toCommentCsvEntry(
+  obj: PdfAnnotationObject,
+  currentDisplayName: string,
+): CommentCsvEntry {
+  return {
+    author: getAuthorName(obj, currentDisplayName),
+    date: getCommentDate(obj),
+    text: (obj.contents ?? "").trim(),
+  };
 }
 
 /** Replies store an explicit author; only allow edit when it matches the current comment author name. */
@@ -316,12 +343,14 @@ function MoreActionsMenu({ children }: { children: ReactNode }) {
 interface CommentsHeaderActionsProps {
   readerMode: boolean;
   onAdd: () => void;
+  onExportCsv: () => void;
   onClearAll: () => void;
 }
 
 function CommentsHeaderActions({
   readerMode,
   onAdd,
+  onExportCsv,
   onClearAll,
 }: CommentsHeaderActionsProps) {
   const { t } = useTranslation();
@@ -344,6 +373,12 @@ function CommentsHeaderActions({
         </Tooltip>
       )}
       <MoreActionsMenu>
+        <Menu.Item
+          leftSection={<Icon name="download" size={18} />}
+          onClick={onExportCsv}
+        >
+          {t("viewer.comments.exportCsv", "Export as CSV")}
+        </Menu.Item>
         <Menu.Item
           leftSection={<Icon name="trash" size={18} />}
           color="red"
@@ -1036,6 +1071,7 @@ function ClearAllCommentsModal({
 
 export function CommentsSidebar({
   documentId,
+  fileName,
   visible,
   rightOffset,
 }: CommentsSidebarProps) {
@@ -1368,6 +1404,37 @@ export function CommentsSidebar({
     navActions?.setHasUnsavedChanges(true);
   }, [byPage, provides, navActions]);
 
+  const handleExportCsv = useCallback(() => {
+    const threads: CommentCsvThread[] = Object.keys(byPage)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .flatMap((pageIndex) =>
+        byPage[pageIndex].map((entry) => ({
+          page: pageIndex + 1,
+          comment: toCommentCsvEntry(entry.annotation.object, displayName),
+          replies: (entry.replies ?? []).map((reply) =>
+            toCommentCsvEntry(reply.object, displayName),
+          ),
+        })),
+      );
+    const csv = buildCommentsCsv(
+      {
+        page: t("viewer.comments.csv.page", "Page"),
+        thread: t("viewer.comments.csv.thread", "Thread"),
+        author: t("viewer.comments.csv.author", "Author"),
+        date: t("viewer.comments.csv.date", "Date"),
+        comment: t("viewer.comments.csv.comment", "Comment"),
+        inReplyTo: t("viewer.comments.csv.inReplyTo", "In reply to"),
+      },
+      threads,
+    );
+    downloadTextAsFile(
+      EXCEL_UTF8_BOM + csv,
+      commentsCsvFileName(fileName),
+      "text/csv;charset=utf-8",
+    );
+  }, [byPage, displayName, fileName, t]);
+
   const handleSendMainComment = useCallback(
     (pageIndex: number, annotationId: string, value: string) => {
       const trimmed = value.trim();
@@ -1498,6 +1565,7 @@ export function CommentsSidebar({
             <CommentsHeaderActions
               readerMode={readerMode}
               onAdd={handleAddComment}
+              onExportCsv={handleExportCsv}
               onClearAll={() => setClearAllModalOpen(true)}
             />
           ) : null

@@ -738,6 +738,7 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
 interface DocumentCommentsProps {
   enabled: boolean;
   documentId: string;
+  fileName: string;
   authorName: string;
   visible: boolean;
   rightOffset: string;
@@ -746,6 +747,7 @@ interface DocumentCommentsProps {
 function DocumentComments({
   enabled,
   documentId,
+  fileName,
   authorName,
   visible,
   rightOffset,
@@ -755,6 +757,7 @@ function DocumentComments({
     <CommentAuthorProvider displayName={authorName}>
       <CommentsSidebar
         documentId={documentId}
+        fileName={fileName}
         visible={visible}
         rightOffset={rightOffset}
       />
@@ -1587,6 +1590,7 @@ export function LocalEmbedPDF({
                 <DocumentComments
                   enabled={enableAnnotations}
                   documentId={documentId}
+                  fileName={exportFileName}
                   authorName={commentAuthorName}
                   visible={isCommentsSidebarVisible}
                   rightOffset={commentsSidebarRightOffset}
