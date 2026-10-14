@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { FrontendThirdPartyLicensesSection } from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
 
@@ -76,5 +76,35 @@ describe("third-party licenses layout", () => {
     expect(cards[0].textContent).toContain("@atlaskit/pragmatic-drag-and-drop");
     expect(cards[0].textContent).toContain("2.0.2");
     expect(cards[0].textContent).toContain("Apache-2.0");
+  });
+
+  it("offers a reset when the search matches nothing", () => {
+    viewport.phone = false;
+    renderSection();
+
+    const search = screen.getByPlaceholderText(
+      "Search dependencies",
+    ) as HTMLInputElement;
+    fireEvent.change(search, { target: { value: "zzz-no-such-dependency" } });
+
+    expect(screen.getByText("No matching dependencies.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Clear search" }));
+
+    expect(search.value).toBe("");
+    expect(screen.queryByText("No matching dependencies.")).toBeNull();
+  });
+
+  it("widens and wraps the version column instead of clipping it", () => {
+    viewport.phone = false;
+    const { container } = renderSection();
+
+    const versionHeader = screen.getByRole("columnheader", { name: "Version" });
+    expect(versionHeader.style.width).toBe("20%");
+    const versionCell = container.querySelector(
+      "tbody tr[data-index] td:nth-child(2)",
+    );
+    expect(versionCell?.firstElementChild?.getAttribute("style")).toContain(
+      "overflow-wrap: anywhere",
+    );
   });
 });

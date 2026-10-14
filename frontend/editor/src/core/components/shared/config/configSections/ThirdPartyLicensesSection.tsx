@@ -16,6 +16,7 @@ import {
 } from "@mantine/core";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { isAxiosError } from "axios";
+import { Button } from "@app/ui/Button";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import apiClient from "@app/services/apiClient";
 import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @app alias root
@@ -47,6 +48,30 @@ interface LicensesResponse {
 
 interface LicensesSectionBodyProps {
   dependencies: Dependency[];
+}
+
+// A typo leaves the user on an empty list with the search box as the only way
+// back, so the empty state carries its own reset.
+function EmptyLicensesState({
+  label,
+  onClear,
+}: {
+  label: string;
+  onClear?: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Stack align="center" gap="xs" py="xl">
+      <Text ta="center" c="dimmed">
+        {label}
+      </Text>
+      {onClear ? (
+        <Button variant="secondary" size="sm" onClick={onClear}>
+          {t("settings.licenses.clearSearch", "Clear search")}
+        </Button>
+      ) : null}
+    </Stack>
+  );
 }
 
 function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
@@ -94,6 +119,13 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
     dependencies.length === 0
       ? t("settings.licenses.empty", "No dependencies found.")
       : t("settings.licenses.noMatch", "No matching dependencies.");
+  const isEmpty = filteredDependencies.length === 0;
+  const emptyState = (
+    <EmptyLicensesState
+      label={emptyLabel}
+      onClear={query.trim().length > 0 ? () => setQuery("") : undefined}
+    />
+  );
 
   return (
     <Stack gap="lg">
@@ -133,9 +165,10 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
           <div
             ref={scrollRef}
             style={{
-              // A phone card is taller than a table row, so the list gets a
-              // viewport-relative height instead of the table's fixed 480px.
-              height: isPhone ? "min(560px, 62vh)" : 480,
+              // An empty result hugs its message; a populated list keeps the
+              // fixed scroll height. A phone card is taller than a table row,
+              // so the phone list uses a viewport-relative height instead.
+              height: isEmpty ? "auto" : isPhone ? "min(560px, 62vh)" : 480,
               overflowY: "auto",
               overflowX: "auto",
             }}
@@ -143,9 +176,7 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
             {isPhone ? (
               <div>
                 {filteredDependencies.length === 0 ? (
-                  <Text ta="center" c="dimmed" py="xl">
-                    {emptyLabel}
-                  </Text>
+                  emptyState
                 ) : (
                   <>
                     {topPad > 0 && <div style={{ height: topPad }} />}
@@ -187,13 +218,13 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
               >
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th style={{ width: "40%" }}>
+                    <Table.Th style={{ width: "38%" }}>
                       {t("settings.licenses.module", "Module")}
                     </Table.Th>
-                    <Table.Th style={{ width: "15%" }}>
+                    <Table.Th style={{ width: "20%" }}>
                       {t("settings.licenses.version", "Version")}
                     </Table.Th>
-                    <Table.Th style={{ width: "45%" }}>
+                    <Table.Th style={{ width: "42%" }}>
                       {t("settings.licenses.license", "License")}
                     </Table.Th>
                   </Table.Tr>
@@ -201,11 +232,7 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
                 <Table.Tbody>
                   {filteredDependencies.length === 0 ? (
                     <Table.Tr>
-                      <Table.Td colSpan={3}>
-                        <Text ta="center" c="dimmed" py="xl">
-                          {emptyLabel}
-                        </Text>
-                      </Table.Td>
+                      <Table.Td colSpan={3}>{emptyState}</Table.Td>
                     </Table.Tr>
                   ) : (
                     <>
@@ -437,9 +464,9 @@ function VirtualLicenseRow({
         <Text
           size="sm"
           c="dimmed"
-          truncate="end"
-          maw="100%"
-          style={{ display: "block" }}
+          // Rows folding two releases together can carry a long value, and a
+          // version that truncates is unreadable in a way a wrapped one is not.
+          style={{ display: "block", overflowWrap: "anywhere" }}
           title={dependency.moduleVersion || "-"}
         >
           {dependency.moduleVersion || "-"}
