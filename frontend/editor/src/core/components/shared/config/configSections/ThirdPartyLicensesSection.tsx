@@ -396,7 +396,14 @@ function VirtualLicenseRow({
         )}
       </Table.Td>
       <Table.Td>
-        <Text size="sm" c="dimmed">
+        <Text
+          size="sm"
+          c="dimmed"
+          truncate="end"
+          maw="100%"
+          style={{ display: "block" }}
+          title={dependency.moduleVersion || "-"}
+        >
           {dependency.moduleVersion || "-"}
         </Text>
       </Table.Td>
