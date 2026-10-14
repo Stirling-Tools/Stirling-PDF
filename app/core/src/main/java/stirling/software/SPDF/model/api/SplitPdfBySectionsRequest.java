@@ -26,8 +26,10 @@ public class SplitPdfBySectionsRequest extends PDFFile {
     @Schema(
             implementation = SplitTypes.class,
             description =
-                    "Which pages to split into sections (default SPLIT_ALL); CUSTOM splits"
-                            + " only pageNumbers")
+                    "Which pages to split (default SPLIT_ALL). SPLIT_ALL splits every page;"
+                            + " SPLIT_ALL_EXCEPT_FIRST, SPLIT_ALL_EXCEPT_LAST and"
+                            + " SPLIT_ALL_EXCEPT_FIRST_AND_LAST keep those pages whole; CUSTOM"
+                            + " splits only pageNumbers.")
     private String splitMode;
 
     @Schema(
