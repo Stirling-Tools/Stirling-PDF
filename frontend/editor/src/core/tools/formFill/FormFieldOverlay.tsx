@@ -649,6 +649,7 @@ export function FormFieldOverlay({
     state,
     forFileId,
     mode,
+    saving,
   } = useFormFill();
   // While the editor owns the page the outlines and handles do the interacting; these widgets
   // are here to show what the field looks like, not to be typed into.
@@ -804,6 +805,7 @@ export function FormFieldOverlay({
         pointerEvents: "none", // allow click-through except on widgets
         zIndex: 5, // above TilingLayer, below LinkLayer
       }}
+      inert={saving}
       data-form-overlay-page={pageIndex}
     >
       {pageFields.map((field: FormField) =>

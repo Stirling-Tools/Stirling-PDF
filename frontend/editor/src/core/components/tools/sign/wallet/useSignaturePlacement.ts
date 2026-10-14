@@ -101,7 +101,7 @@ export function useSignaturePlacement({
   onActivate,
   onDeactivate,
 }: SignaturePlacementOptions) {
-  const { isPlacementMode } = useSignature();
+  const { isPlacementMode, isApplyingSignatures } = useSignature();
   const [armedKey, setArmedKey] = useState<string | null>(null);
   const activation = useRetriedActivation(onActivate, isPlacementMode);
 
@@ -124,6 +124,10 @@ export function useSignaturePlacement({
     onDeactivate();
     onParameterChange("signatureData", undefined);
   }, [activation, onDeactivate, onParameterChange]);
+
+  useEffect(() => {
+    if (isApplyingSignatures && armedKey !== null) stop();
+  }, [isApplyingSignatures, armedKey, stop]);
 
   useEscapeKey(armedKey !== null, stop);
   useRearmOnFileSwitch(armedKey !== null, onActivate);
