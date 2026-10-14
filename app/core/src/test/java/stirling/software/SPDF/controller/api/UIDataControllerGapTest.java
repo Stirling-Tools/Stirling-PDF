@@ -189,6 +189,41 @@ class UIDataControllerGapTest {
                 }
             }
         }
+
+        @Test
+        @DisplayName("native notices still load when the generated report is malformed")
+        void nativeNoticesSurviveMalformedReport(@TempDir Path tempDir) throws Exception {
+            Files.createDirectories(tempDir.resolve("static"));
+            // Jackson 3 reports this with an unchecked JacksonException, not an IOException.
+            Files.writeString(tempDir.resolve("static/3rdPartyLicenses.json"), "{invalid json");
+            Path licensesDir = Files.createDirectories(tempDir.resolve("licenses"));
+            Files.writeString(
+                    licensesDir.resolve("NOTICE.txt"),
+                    "1. Temp Native Codec\n"
+                            + "   - Copyright (c) 2026 Temp\n"
+                            + "   - License: Temp License (see TEMP-LICENSE.txt)\n");
+            Files.writeString(licensesDir.resolve("TEMP-LICENSE.txt"), "Temp full text.");
+            ClassLoader original = Thread.currentThread().getContextClassLoader();
+            try (URLClassLoader isolated =
+                    new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null)) {
+                Thread.currentThread().setContextClassLoader(isolated);
+                try {
+                    ResponseEntity<UIDataController.LicensesData> response =
+                            controller(userService).getLicensesData();
+
+                    assertEquals(HttpStatus.OK, response.getStatusCode());
+                    UIDataController.LicensesData body = response.getBody();
+                    assertNotNull(body);
+                    List<Dependency> deps = body.getDependencies();
+                    assertNotNull(deps);
+                    assertEquals(1, deps.size());
+                    assertEquals("Temp Native Codec", deps.get(0).getModuleName());
+                    assertNotNull(deps.get(0).getModuleLicenseText());
+                } finally {
+                    Thread.currentThread().setContextClassLoader(original);
+                }
+            }
+        }
     }
 
     @Nested

@@ -96,6 +96,7 @@ public final class NativeLicenseLoader {
         StringBuilder copyright = new StringBuilder();
         StringBuilder licenseValue = null;
         boolean inCopyright = false;
+        boolean inTitle = false;
         for (String raw : lines) {
             Matcher header = SECTION_HEADER.matcher(raw);
             if (header.matches()) {
@@ -104,6 +105,7 @@ public final class NativeLicenseLoader {
                 copyright.setLength(0);
                 licenseValue = null;
                 inCopyright = false;
+                inTitle = true;
                 continue;
             }
             if (name == null) {
@@ -116,10 +118,18 @@ public final class NativeLicenseLoader {
                 copyright.setLength(0);
                 licenseValue = null;
                 inCopyright = false;
+                inTitle = false;
+                continue;
+            }
+            if (inTitle && !trimmed.startsWith("-")) {
+                // A section title may wrap onto the lines below it; everything up
+                // to the first metadata bullet still names the component.
+                name = name + " " + trimmed;
                 continue;
             }
             if (trimmed.startsWith("-")) {
                 inCopyright = false;
+                inTitle = false;
                 Matcher copyrightLead = COPYRIGHT_LEAD.matcher(trimmed);
                 Matcher licenseLead = LICENSE_LEAD.matcher(trimmed);
                 if (copyrightLead.matches()) {
@@ -156,32 +166,50 @@ public final class NativeLicenseLoader {
         if (value.isEmpty()) {
             return;
         }
-        String licenseFile = referencedFile(value);
+        List<String> licenseFiles = referencedFiles(value);
         Dependency dependency = new Dependency();
         dependency.setModuleName(name);
         dependency.setModuleLicense(stripFileReferences(value));
-        if (licenseFile != null) {
-            String text = readSiblingText(noticeUrl, licenseFile);
-            if (text != null) {
+        if (!licenseFiles.isEmpty()) {
+            List<String> texts = new ArrayList<>();
+            for (String file : licenseFiles) {
+                String text = readSiblingText(noticeUrl, file);
+                if (text == null) {
+                    continue;
+                }
+                // Every referenced file keeps a heading so a multi-text notice
+                // still shows which text came from where.
+                texts.add(licenseFiles.size() > 1 ? "--- " + file + " ---\n" + text : text);
+            }
+            if (!texts.isEmpty()) {
                 String copyrightText = copyright.toString().trim();
+                String combined = String.join("\n\n", texts);
                 // A missing sibling is already reported by readSiblingText; leaving the text
                 // unset keeps the UI from presenting copyright alone as the license.
                 dependency.setModuleLicenseText(
                         copyrightText.isEmpty()
-                                ? text
-                                : "Copyright " + copyrightText + "\n\n" + text);
+                                ? combined
+                                : "Copyright " + copyrightText + "\n\n" + combined);
             }
         }
         dependencies.add(dependency);
     }
 
-    private static String referencedFile(String licenseValue) {
+    private static List<String> referencedFiles(String licenseValue) {
+        List<String> files = new ArrayList<>();
         Matcher see = SEE_FILE.matcher(licenseValue);
-        if (see.find()) {
-            return see.group(1);
+        while (see.find()) {
+            if (!files.contains(see.group(1))) {
+                files.add(see.group(1));
+            }
         }
         Matcher fullText = FULL_TEXT_FILE.matcher(licenseValue);
-        return fullText.find() ? fullText.group(1) : null;
+        while (fullText.find()) {
+            if (!files.contains(fullText.group(1))) {
+                files.add(fullText.group(1));
+            }
+        }
+        return files;
     }
 
     private static String stripFileReferences(String licenseValue) {

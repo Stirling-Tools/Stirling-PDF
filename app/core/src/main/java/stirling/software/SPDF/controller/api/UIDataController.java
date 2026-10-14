@@ -32,6 +32,7 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 
+import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
@@ -99,12 +100,17 @@ public class UIDataController {
                 Map<String, List<Dependency>> licenseData =
                         objectMapper.readValue(
                                 is, new TypeReference<Map<String, List<Dependency>>>() {});
-                List<Dependency> dependencies = licenseData.get("dependencies");
-                if (dependencies != null) {
-                    combined.addAll(dependencies);
+                // A report containing JSON null parses without error but yields no map.
+                if (licenseData != null) {
+                    List<Dependency> dependencies = licenseData.get("dependencies");
+                    if (dependencies != null) {
+                        combined.addAll(dependencies);
+                    }
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | JacksonException e) {
+            // Jackson 3 reports malformed JSON with an unchecked JacksonException,
+            // which must not suppress the native notices loaded below.
             log.error("Failed to load licenses data", e);
         }
         try {

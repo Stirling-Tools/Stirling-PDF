@@ -59,8 +59,10 @@ class NativeLicenseLoaderTest {
 
     @Test
     void parsesNoticeSectionsWithWrappedCopyrights() throws Exception {
-        List<Dependency> dependencies =
-                NativeLicenseLoader.loadNativeLicenses(isolatedLoader("native-licenses"));
+        List<Dependency> dependencies;
+        try (URLClassLoader loader = isolatedLoader("native-licenses")) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
 
         Map<String, Dependency> byName =
                 dependencies.stream().collect(Collectors.toMap(Dependency::getModuleName, d -> d));
@@ -90,8 +92,10 @@ class NativeLicenseLoaderTest {
 
     @Test
     void parsesWrappedFileReferencesAndFilelessLicenses() throws Exception {
-        List<Dependency> dependencies =
-                NativeLicenseLoader.loadNativeLicenses(isolatedLoader("native-licenses"));
+        List<Dependency> dependencies;
+        try (URLClassLoader loader = isolatedLoader("native-licenses")) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
 
         Map<String, Dependency> byName =
                 dependencies.stream().collect(Collectors.toMap(Dependency::getModuleName, d -> d));
@@ -114,8 +118,10 @@ class NativeLicenseLoaderTest {
 
     @Test
     void discoversNoticesFromAnyJarUsingTheLayout() throws Exception {
-        List<Dependency> dependencies =
-                NativeLicenseLoader.loadNativeLicenses(isolatedLoader("vips-sim"));
+        List<Dependency> dependencies;
+        try (URLClassLoader loader = isolatedLoader("vips-sim")) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
 
         assertEquals(1, dependencies.size());
         assertEquals("Simulated Vips Native Codec", dependencies.get(0).getModuleName());
@@ -221,17 +227,48 @@ class NativeLicenseLoaderTest {
     }
 
     @Test
+    void parsesWrappedTitlesAndMultiFileNotices() throws Exception {
+        List<Dependency> dependencies;
+        try (URLClassLoader loader = isolatedLoader("notice-edge")) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
+
+        Map<String, Dependency> byName =
+                dependencies.stream().collect(Collectors.toMap(Dependency::getModuleName, d -> d));
+        assertEquals(2, byName.size());
+
+        Dependency magick = byName.get("ImageMagick / MagickCore");
+        assertNotNull(magick, "a title wrapped onto the next line is joined");
+        assertEquals("ImageMagick License", magick.getModuleLicense());
+        assertTrue(magick.getModuleLicenseText().contains("ImageMagick license text."));
+
+        Dependency dual = byName.get("Dual Text Codec");
+        assertNotNull(dual);
+        String text = dual.getModuleLicenseText();
+        assertNotNull(text);
+        assertTrue(text.contains("--- DUAL-BSD.txt ---"), "each file keeps a heading");
+        assertTrue(text.contains("Dual BSD text."));
+        assertTrue(text.contains("--- DUAL-PATENT.txt ---"));
+        assertTrue(text.contains("Dual patent text."));
+        assertEquals("BSD 3-Clause plus patent grant", dual.getModuleLicense());
+    }
+
+    @Test
     void noNoticeOnTheClasspathReturnsEmptyList() throws Exception {
-        List<Dependency> dependencies =
-                NativeLicenseLoader.loadNativeLicenses(new URLClassLoader(new URL[0], null));
+        List<Dependency> dependencies;
+        try (URLClassLoader loader = new URLClassLoader(new URL[0], null)) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
 
         assertTrue(dependencies.isEmpty());
     }
 
     @Test
     void malformedNoticeReturnsEmptyList() throws Exception {
-        List<Dependency> dependencies =
-                NativeLicenseLoader.loadNativeLicenses(isolatedLoader("malformed"));
+        List<Dependency> dependencies;
+        try (URLClassLoader loader = isolatedLoader("malformed")) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
 
         assertTrue(dependencies.isEmpty());
     }
@@ -244,9 +281,11 @@ class NativeLicenseLoaderTest {
                 "1. Component Without Text\n"
                         + "   - Copyright (c) 2024 Someone\n"
                         + "   - License: BSD 3-Clause (see MISSING-FILE.txt)\n");
-        URLClassLoader loader = new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null);
-
-        List<Dependency> dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        List<Dependency> dependencies;
+        try (URLClassLoader loader =
+                new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null)) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
 
         assertEquals(1, dependencies.size());
         assertNull(
