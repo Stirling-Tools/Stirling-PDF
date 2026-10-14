@@ -89,6 +89,14 @@ describe("useAdjustPageScaleParameters", () => {
       expected: true,
     },
     {
+      description: "with custom page size missing a width",
+      setup: (hook: AdjustPageScaleParametersHook) => {
+        hook.updateParameter("pageSize", PageSize.CUSTOM);
+        hook.updateParameter("customWidth", 0);
+      },
+      expected: false,
+    },
+    {
       description: "with invalid scale factor 0",
       setup: (hook: AdjustPageScaleParametersHook) => {
         hook.updateParameter("scaleFactor", 0);

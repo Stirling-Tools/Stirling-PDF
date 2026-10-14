@@ -311,6 +311,56 @@ class ScalePagesControllerTest {
 
     @ParameterizedTest
     @CsvSource({
+        "in, 8.5, 11, 612, 792",
+        "mm, 210, 297, 595.28, 841.89",
+        "cm, 20, 10, 566.93, 283.46"
+    })
+    void testScalePages_CustomSize(
+            String unit, float width, float height, float expectedWidth, float expectedHeight)
+            throws Exception {
+        setupFactory();
+        ScalePagesRequest request = customSizeRequest(unit, width, height);
+        request.setOrientation("LANDSCAPE");
+
+        try (PDDocument output =
+                org.apache.pdfbox.Loader.loadPDF(drainBody(controller.scalePages(request)))) {
+            PDRectangle mediaBox = output.getPage(0).getMediaBox();
+            assertEquals(expectedWidth, mediaBox.getWidth(), 0.01);
+            assertEquals(expectedHeight, mediaBox.getHeight(), 0.01);
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            value = {"mm, , 100", "mm, 0, 100", "mm, -5, 100", "in, 201, 10", "ft, 1, 1"},
+            nullValues = "")
+    void testScalePages_CustomSizeRejectsInvalidInput(String unit, Float width, Float height)
+            throws Exception {
+        setupFactory();
+        ScalePagesRequest request = customSizeRequest(unit, width, height);
+
+        assertThrows(IllegalArgumentException.class, () -> controller.scalePages(request));
+    }
+
+    private ScalePagesRequest customSizeRequest(String unit, Float width, Float height)
+            throws IOException {
+        ScalePagesRequest request = new ScalePagesRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput",
+                        "test.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        createRealPdf(PDRectangle.A4, 1)));
+        request.setPageSize("CUSTOM");
+        request.setCustomUnit(unit);
+        request.setCustomWidth(width);
+        request.setCustomHeight(height);
+        request.setScaleFactor(1.0f);
+        return request;
+    }
+
+    @ParameterizedTest
+    @CsvSource({
         "0, false, KEEP, PORTRAIT, 1",
         "0, false, A4, PORTRAIT, 0.5",
         "0, true, A4, LANDSCAPE, 1.2",

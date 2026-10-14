@@ -48,6 +48,25 @@ describe("buildAdjustPageScaleFormData", () => {
     expect(formData.get("pageSize")).toBe("LEGAL");
   });
 
+  it("sends the custom dimensions only when pageSize is CUSTOM", () => {
+    const custom = buildAdjustPageScaleFormData(
+      {
+        ...defaultParameters,
+        pageSize: PageSize.CUSTOM,
+        customWidth: 100,
+        customHeight: 50,
+        customUnit: "cm",
+      },
+      stubFile(),
+    );
+    expect(custom.get("customWidth")).toBe("100");
+    expect(custom.get("customHeight")).toBe("50");
+    expect(custom.get("customUnit")).toBe("cm");
+
+    const preset = buildAdjustPageScaleFormData(defaultParameters, stubFile());
+    expect(preset.has("customWidth")).toBe(false);
+  });
+
   it("attaches the uploaded file under fileInput", () => {
     const file = stubFile();
     const formData = buildAdjustPageScaleFormData(defaultParameters, file);

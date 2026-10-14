@@ -19,4 +19,26 @@ public class ScalePagesRequest extends PDFWithPageSize {
                     "The scale of the content on the pages of the output PDF. Acceptable values are"
                             + " floats.")
     private float scaleFactor;
+
+    @Schema(
+            minimum = "0",
+            exclusiveMinimum = true,
+            description =
+                    "Width of the output pages in customUnit. Required when pageSize is CUSTOM;"
+                            + " at most 200 inches.")
+    private Float customWidth;
+
+    @Schema(
+            minimum = "0",
+            exclusiveMinimum = true,
+            description =
+                    "Height of the output pages in customUnit. Required when pageSize is CUSTOM;"
+                            + " at most 200 inches.")
+    private Float customHeight;
+
+    @Schema(
+            defaultValue = "mm",
+            allowableValues = {"mm", "cm", "in"},
+            description = "Unit of customWidth and customHeight.")
+    private String customUnit = "mm";
 }

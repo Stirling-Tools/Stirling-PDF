@@ -1457,9 +1457,19 @@ class SanitizePdfParams(ApiModel):
     remove_xmp_metadata: bool = Field(False, description="Remove XMP metadata from the PDF")
 
 
+class CustomUnit(StrEnum):
+    """
+    Unit of customWidth and customHeight.
+    """
+
+    mm = "mm"
+    cm = "cm"
+    in_ = "in"
+
+
 class Orientation1(StrEnum):
     """
-    Orientation to apply to the target page size. Ignored when pageSize is KEEP.
+    Orientation to apply to the target page size. Ignored when pageSize is KEEP or CUSTOM.
     """
 
     portrait = "PORTRAIT"
@@ -1468,7 +1478,7 @@ class Orientation1(StrEnum):
 
 class PageSize(StrEnum):
     """
-    The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.
+    The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP, CUSTOM.
     """
 
     a0 = "A0"
@@ -1481,6 +1491,7 @@ class PageSize(StrEnum):
     letter = "LETTER"
     legal = "LEGAL"
     keep = "KEEP"
+    custom = "CUSTOM"
 
 
 class ScalePagesParams(ApiModel):
@@ -1488,12 +1499,24 @@ class ScalePagesParams(ApiModel):
     This operation takes an input PDF file and the size to scale the pages to in the output PDF file. Input:PDF Output:PDF Type:SISO
     """
 
+    custom_height: float | None = Field(
+        None,
+        description="Height of the output pages in customUnit. Required when pageSize is CUSTOM; at most 200 inches.",
+        gt=0.0,
+    )
+    custom_unit: CustomUnit = Field(CustomUnit.mm, description="Unit of customWidth and customHeight.")
+    custom_width: float | None = Field(
+        None,
+        description="Width of the output pages in customUnit. Required when pageSize is CUSTOM; at most 200 inches.",
+        gt=0.0,
+    )
     orientation: Orientation1 = Field(
         Orientation1.portrait,
-        description="Orientation to apply to the target page size. Ignored when pageSize is KEEP.",
+        description="Orientation to apply to the target page size. Ignored when pageSize is KEEP or CUSTOM.",
     )
     page_size: PageSize = Field(
-        ..., description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP."
+        ...,
+        description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP, CUSTOM.",
     )
     scale_factor: float = Field(
         1, description="The scale of the content on the pages of the output PDF. Acceptable values are floats.", ge=0.0

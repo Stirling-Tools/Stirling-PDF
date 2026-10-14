@@ -5,6 +5,7 @@ import AdjustPageScaleSettings from "@app/components/tools/adjustPageScale/Adjus
 import {
   AdjustPageScaleParameters,
   PageSize,
+  defaultParameters as hookDefaultParameters,
 } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 
 // Mock useTranslation with predictable return values
@@ -22,6 +23,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe("AdjustPageScaleSettings", () => {
   const defaultParameters: AdjustPageScaleParameters = {
+    ...hookDefaultParameters,
     scaleFactor: 1.0,
     pageSize: PageSize.KEEP,
     orientation: "PORTRAIT",
@@ -50,6 +52,7 @@ describe("AdjustPageScaleSettings", () => {
 
   test("should render with custom parameters", () => {
     const customParameters: AdjustPageScaleParameters = {
+      ...hookDefaultParameters,
       scaleFactor: 2.5,
       pageSize: PageSize.A4,
       orientation: "LANDSCAPE",
@@ -67,5 +70,23 @@ describe("AdjustPageScaleSettings", () => {
     // Component renders successfully with custom parameters
     expect(screen.getByText("Scale Factor")).toBeInTheDocument();
     expect(screen.getByText("Target Page Size")).toBeInTheDocument();
+    expect(screen.queryByText("Width")).not.toBeInTheDocument();
+  });
+
+  test("shows width, height and unit inputs for a custom page size", () => {
+    render(
+      <TestWrapper>
+        <AdjustPageScaleSettings
+          parameters={{ ...defaultParameters, pageSize: PageSize.CUSTOM }}
+          onParameterChange={mockOnParameterChange}
+        />
+      </TestWrapper>,
+    );
+
+    expect(screen.getByText("Width")).toBeInTheDocument();
+    expect(screen.getByText("Height")).toBeInTheDocument();
+    expect(
+      screen.getByRole("radiogroup", { name: "Unit" }),
+    ).toBeInTheDocument();
   });
 });

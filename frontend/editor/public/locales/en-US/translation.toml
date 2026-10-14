@@ -519,6 +519,11 @@ submit = "Adjust Page Scale"
 tags = "resize,modify,dimension,adapt"
 title = "Adjust Page Scale"
 
+[adjustPageScale.customSize]
+height = "Height"
+unit = "Unit"
+width = "Width"
+
 [adjustPageScale.error]
 failed = "An error occurred while adjusting the page scale."
 
@@ -528,6 +533,7 @@ landscape = "Landscape"
 portrait = "Portrait"
 
 [adjustPageScale.pageSize]
+custom = "Custom"
 keep = "Keep Original Size"
 label = "Target Page Size"
 legal = "Legal"

@@ -19,6 +19,11 @@ export const adjustPageScaleToApiParams = (
   scaleFactor: parameters.scaleFactor,
   pageSize: parameters.pageSize,
   orientation: parameters.orientation,
+  ...(parameters.pageSize === PageSize.CUSTOM && {
+    customWidth: parameters.customWidth,
+    customHeight: parameters.customHeight,
+    customUnit: parameters.customUnit,
+  }),
 });
 
 export const adjustPageScaleFromApiParams = (
@@ -27,6 +32,9 @@ export const adjustPageScaleFromApiParams = (
   scaleFactor: apiParams.scaleFactor,
   pageSize: apiParams.pageSize as PageSize,
   orientation: apiParams.orientation,
+  customWidth: apiParams.customWidth,
+  customHeight: apiParams.customHeight,
+  customUnit: apiParams.customUnit,
 });
 
 export const buildAdjustPageScaleFormData = (

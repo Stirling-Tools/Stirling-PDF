@@ -15,20 +15,29 @@ export enum PageSize {
   A6 = "A6",
   LETTER = "LETTER",
   LEGAL = "LEGAL",
+  CUSTOM = "CUSTOM",
 }
 
 export type Orientation = "PORTRAIT" | "LANDSCAPE";
+
+export type CustomSizeUnit = "mm" | "cm" | "in";
 
 export interface AdjustPageScaleParameters extends BaseParameters {
   scaleFactor: number;
   pageSize: PageSize;
   orientation: Orientation;
+  customWidth: number;
+  customHeight: number;
+  customUnit: CustomSizeUnit;
 }
 
 export const defaultParameters: AdjustPageScaleParameters = {
   scaleFactor: 1.0,
   pageSize: PageSize.KEEP,
   orientation: "PORTRAIT",
+  customWidth: 210,
+  customHeight: 297,
+  customUnit: "mm",
 };
 
 export type AdjustPageScaleParametersHook =
@@ -39,6 +48,13 @@ export type AdjustPageScaleParametersHook =
 export function validateAdjustPageScaleParameters(
   params: AdjustPageScaleParameters,
 ): boolean {
+  if (params.pageSize === PageSize.CUSTOM) {
+    return (
+      params.scaleFactor > 0 &&
+      params.customWidth > 0 &&
+      params.customHeight > 0
+    );
+  }
   return params.scaleFactor > 0;
 }
 

@@ -1331,11 +1331,23 @@ export interface SanitizePdfRequest {
 }
 export interface ScalePagesRequest {
   /**
-   * Orientation to apply to the target page size. Ignored when pageSize is KEEP.
+   * Height of the output pages in customUnit. Required when pageSize is CUSTOM; at most 200 inches.
+   */
+  customHeight?: number;
+  /**
+   * Unit of customWidth and customHeight.
+   */
+  customUnit?: "mm" | "cm" | "in";
+  /**
+   * Width of the output pages in customUnit. Required when pageSize is CUSTOM; at most 200 inches.
+   */
+  customWidth?: number;
+  /**
+   * Orientation to apply to the target page size. Ignored when pageSize is KEEP or CUSTOM.
    */
   orientation?: "PORTRAIT" | "LANDSCAPE";
   /**
-   * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.
+   * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP, CUSTOM.
    */
   pageSize:
     | "A0"
@@ -1347,7 +1359,8 @@ export interface ScalePagesRequest {
     | "A6"
     | "LETTER"
     | "LEGAL"
-    | "KEEP";
+    | "KEEP"
+    | "CUSTOM";
   /**
    * The scale of the content on the pages of the output PDF. Acceptable values are floats.
    */
