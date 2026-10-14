@@ -13,6 +13,7 @@ export interface RedactParameters extends BaseParameters {
   wordsToRedact: string[];
   useRegex: boolean;
   wholeWordSearch: boolean;
+  caseSensitive: boolean;
   redactColor: string;
   customPadding: number;
   convertPDFToImage: boolean;
@@ -23,6 +24,7 @@ export const defaultParameters: RedactParameters = {
   wordsToRedact: [],
   useRegex: false,
   wholeWordSearch: false,
+  caseSensitive: false,
   redactColor: "#000000",
   customPadding: 0.1,
   convertPDFToImage: false,
