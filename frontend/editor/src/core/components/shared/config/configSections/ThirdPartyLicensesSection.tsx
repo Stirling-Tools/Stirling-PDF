@@ -19,11 +19,15 @@ import apiClient from "@app/services/apiClient";
 import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @app alias root
 import {
   dedupeDependencies,
+  resolveAboutLinks,
   resolveLicenseDisplay,
   resolveModuleLicenseUrl,
   resolveModuleUrl,
 } from "@app/components/shared/config/configSections/licenseDisplay";
-import type { DependencyRow } from "@app/components/shared/config/configSections/licenseDisplay";
+import type {
+  DependencyRow,
+  LicenseAboutLink,
+} from "@app/components/shared/config/configSections/licenseDisplay";
 
 export interface Dependency {
   moduleName?: string;
@@ -206,7 +210,15 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
 
 const SPDX_LICENSE_PAGE = "https://spdx.org/licenses";
 
-function AboutLink({ spdxId, short }: { spdxId: string; short: string }) {
+function AboutLink({
+  spdxId,
+  short,
+  text,
+}: {
+  spdxId: string;
+  short: string;
+  text?: string;
+}) {
   const { t } = useTranslation();
   return (
     <Anchor
@@ -219,8 +231,42 @@ function AboutLink({ spdxId, short }: { spdxId: string; short: string }) {
         short,
       })}
     >
-      {t("settings.licenses.licenseAbout", "About")}
+      {text ?? t("settings.licenses.licenseAbout", "About")}
     </Anchor>
+  );
+}
+
+// A dual-licensed row keeps its full label and gets one explainer link per
+// known part, so neither alternative hides behind the other.
+function AboutLinks({ links }: { links: LicenseAboutLink[] }) {
+  const { t } = useTranslation();
+  if (links.length === 0) {
+    return null;
+  }
+  if (links.length === 1) {
+    return <AboutLink spdxId={links[0].spdxId} short={links[0].short} />;
+  }
+  return (
+    <>
+      {links.map((link, index) => (
+        <span key={link.spdxId}>
+          {index > 0 ? (
+            <Text size="xs" c="dimmed" span>
+              {" · "}
+            </Text>
+          ) : null}
+          <AboutLink
+            spdxId={link.spdxId}
+            short={link.short}
+            text={t(
+              "settings.licenses.licenseAboutCompound",
+              "About {{short}}",
+              { short: link.short },
+            )}
+          />
+        </span>
+      ))}
+    </>
   );
 }
 
@@ -236,9 +282,7 @@ function LicenseCell({
     dependency.moduleLicense,
     dependency.moduleName,
   );
-  const about = display.spdxId ? (
-    <AboutLink spdxId={display.spdxId} short={display.short} />
-  ) : null;
+  const links = resolveAboutLinks(display);
   if (dependency.moduleLicenseText) {
     return (
       <span>
@@ -251,13 +295,13 @@ function LicenseCell({
         >
           {display.short}
         </Anchor>
-        {about ? (
+        {links.length > 0 ? (
           <Text size="xs" c="dimmed" span>
             {" "}
             ·{" "}
           </Text>
         ) : null}
-        {about}
+        <AboutLinks links={links} />
       </span>
     );
   }
@@ -274,26 +318,26 @@ function LicenseCell({
       >
         {display.short}
       </Anchor>
-      {about ? (
+      {links.length > 0 ? (
         <Text size="xs" c="dimmed" span>
           {" "}
           ·{" "}
         </Text>
       ) : null}
-      {about}
+      <AboutLinks links={links} />
     </span>
   ) : (
     <span>
       <Text size="sm" truncate="end" maw={240} title={full} span>
         {display.short}
       </Text>
-      {about ? (
+      {links.length > 0 ? (
         <Text size="xs" c="dimmed" span>
           {" "}
           ·{" "}
         </Text>
       ) : null}
-      {about}
+      <AboutLinks links={links} />
     </span>
   );
 }
@@ -348,6 +392,9 @@ function LicenseModal({
   const selectedDisplay = dependency
     ? resolveLicenseDisplay(dependency.moduleLicense, dependency.moduleName)
     : null;
+  const selectedLinks = selectedDisplay
+    ? resolveAboutLinks(selectedDisplay)
+    : [];
   return (
     <Modal
       opened={dependency !== null}
@@ -362,12 +409,9 @@ function LicenseModal({
         <Text size="sm" mt="xs" style={{ whiteSpace: "pre-wrap" }}>
           {dependency?.moduleLicenseText}
         </Text>
-        {selectedDisplay?.spdxId ? (
+        {selectedLinks.length > 0 ? (
           <div style={{ marginTop: 8 }}>
-            <AboutLink
-              spdxId={selectedDisplay.spdxId}
-              short={selectedDisplay.short}
-            />
+            <AboutLinks links={selectedLinks} />
           </div>
         ) : null}
       </ScrollArea.Autosize>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   dedupeDependencies,
+  resolveAboutLinks,
   resolveLicenseDisplay,
   resolveModuleLicenseUrl,
   resolveModuleUrl,
@@ -16,13 +17,36 @@ function dependency(
 }
 
 describe("resolveLicenseDisplay", () => {
-  it("keeps compound expressions unchanged without an explainer link", () => {
+  it("keeps compound labels intact and links only fully-known OR/AND parts", () => {
     expect(resolveLicenseDisplay("Apache-2.0 OR MIT")).toEqual({
       short: "Apache-2.0 OR MIT",
+      spdxIds: ["Apache-2.0", "MIT"],
+    });
+    expect(resolveLicenseDisplay("MIT AND Apache-2.0")).toEqual({
+      short: "MIT AND Apache-2.0",
+      spdxIds: ["MIT", "Apache-2.0"],
+    });
+    expect(resolveLicenseDisplay("MIT OR Some Unknown License")).toEqual({
+      short: "MIT OR Some Unknown License",
     });
     expect(resolveLicenseDisplay("Apache-2.0 WITH LLVM-exception")).toEqual({
       short: "Apache-2.0 WITH LLVM-exception",
     });
+  });
+
+  it("derives about links from single and compound displays", () => {
+    expect(resolveAboutLinks(resolveLicenseDisplay("MIT license"))).toEqual([
+      { spdxId: "MIT", short: "MIT" },
+    ]);
+    expect(
+      resolveAboutLinks(resolveLicenseDisplay("MIT OR Apache-2.0")),
+    ).toEqual([
+      { spdxId: "MIT", short: "MIT" },
+      { spdxId: "Apache-2.0", short: "Apache-2.0" },
+    ]);
+    expect(
+      resolveAboutLinks(resolveLicenseDisplay("Some Unknown License")),
+    ).toEqual([]);
   });
 
   it("agrees the only/or-later label with its SPDX id", () => {

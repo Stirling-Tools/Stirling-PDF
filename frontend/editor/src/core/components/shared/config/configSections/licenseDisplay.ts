@@ -3,12 +3,14 @@ import type { Dependency } from "@app/components/shared/config/configSections/Th
 interface LicenseDisplay {
   short: string;
   spdxId?: string;
+  spdxIds?: string[];
 }
 
 // Exact names seen in the generated license report and the native NOTICE files,
 // normalized by normalizeLicenseName. Anything not listed here keeps its full
-// text and gets no explainer link, so compound expressions (OR/AND/WITH) and
-// unknown names are never silently rewritten.
+// text: OR/AND compounds whose every part is known get one explainer link per
+// part, while WITH/slash compounds and unknown names get none and are never
+// silently rewritten.
 const LICENSE_ALIASES: Record<string, LicenseDisplay> = {
   "apache 2": { short: "Apache-2.0", spdxId: "Apache-2.0" },
   "apache 2.0": { short: "Apache-2.0", spdxId: "Apache-2.0" },
@@ -146,8 +148,26 @@ function normalizeLicenseName(license: string): string {
 }
 
 // SPDX expressions distinguish alternatives and exceptions, so anything the
-// alias map does not know keeps its full text and gets no explainer link.
+// alias map does not know keeps its full text. Only top-level OR/AND splits
+// qualify for per-part links: WITH names an exception on one license and "/"
+// joins names reviewers asked to keep verbatim, so those stay linkless.
 const COMPOUND_LICENSE_PATTERN = /\bor\b|\band\b|\bwith\b|\//i;
+const OR_AND_SPLIT_PATTERN = /\s+\bor\b\s+|\s+\band\b\s+/i;
+
+function compoundDisplay(full: string): LicenseDisplay {
+  if (!OR_AND_SPLIT_PATTERN.test(full)) {
+    return { short: full };
+  }
+  const ids: string[] = [];
+  for (const part of full.split(OR_AND_SPLIT_PATTERN)) {
+    const alias = LICENSE_ALIASES[normalizeLicenseName(part)];
+    if (!alias?.spdxId) {
+      return { short: full };
+    }
+    ids.push(alias.spdxId);
+  }
+  return { short: full, spdxIds: ids };
+}
 
 export function resolveLicenseDisplay(
   license: string | undefined,
@@ -170,9 +190,26 @@ export function resolveLicenseDisplay(
     return alias;
   }
   if (COMPOUND_LICENSE_PATTERN.test(full)) {
-    return { short: full };
+    return compoundDisplay(full);
   }
   return { short: full };
+}
+
+export interface LicenseAboutLink {
+  spdxId: string;
+  short: string;
+}
+
+// A single license keeps its short label; a compound gets one link per part
+// with the SPDX id as its own label, so no part hides behind another.
+export function resolveAboutLinks(display: LicenseDisplay): LicenseAboutLink[] {
+  if (display.spdxIds) {
+    return display.spdxIds.map((spdxId) => ({ spdxId, short: spdxId }));
+  }
+  if (display.spdxId) {
+    return [{ spdxId: display.spdxId, short: display.short }];
+  }
+  return [];
 }
 
 // A bare license name shared by unrelated projects cannot select an SPDX
