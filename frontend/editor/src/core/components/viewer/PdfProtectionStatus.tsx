@@ -168,16 +168,6 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                   <Group key={label} justify="space-between">
                     <Text size="sm">{label}</Text>
                     <Group gap={6}>
-                      <Text size="sm">
-                        {lowResolutionOnly
-                          ? t(
-                              "encryptedPdfUnlock.lowResolutionOnly",
-                              "Low resolution only",
-                            )
-                          : allowed
-                            ? t("encryptedPdfUnlock.allowed", "Allowed")
-                            : t("encryptedPdfUnlock.restricted", "Restricted")}
-                      </Text>
                       {access.ownerAuthenticated &&
                         (!allowed || lowResolutionOnly) && (
                           <Tooltip
@@ -204,6 +194,16 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                             />
                           </Tooltip>
                         )}
+                      <Text size="sm">
+                        {lowResolutionOnly
+                          ? t(
+                              "encryptedPdfUnlock.lowResolutionOnly",
+                              "Low resolution only",
+                            )
+                          : allowed
+                            ? t("encryptedPdfUnlock.allowed", "Allowed")
+                            : t("encryptedPdfUnlock.restricted", "Restricted")}
+                      </Text>
                     </Group>
                   </Group>
                 );
