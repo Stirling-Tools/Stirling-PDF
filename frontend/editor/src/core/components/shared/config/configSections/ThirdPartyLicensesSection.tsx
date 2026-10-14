@@ -264,7 +264,7 @@ function AboutLinks({ links }: { links: LicenseAboutLink[] }) {
         <span key={link.spdxId}>
           {index > 0 ? (
             <Text size="xs" c="dimmed" span>
-              {" · "}
+              {" - "}
             </Text>
           ) : null}
           <AboutLink
@@ -309,8 +309,7 @@ function LicenseCell({
         </Anchor>
         {links.length > 0 ? (
           <Text size="xs" c="dimmed" span>
-            {" "}
-            ·{" "}
+            {" - "}
           </Text>
         ) : null}
         <AboutLinks links={links} />
@@ -332,8 +331,7 @@ function LicenseCell({
       </Anchor>
       {links.length > 0 ? (
         <Text size="xs" c="dimmed" span>
-          {" "}
-          ·{" "}
+          {" - "}
         </Text>
       ) : null}
       <AboutLinks links={links} />
@@ -345,8 +343,7 @@ function LicenseCell({
       </Text>
       {links.length > 0 ? (
         <Text size="xs" c="dimmed" span>
-          {" "}
-          ·{" "}
+          {" - "}
         </Text>
       ) : null}
       <AboutLinks links={links} />
