@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -11,7 +11,9 @@ import {
   Stack,
   Table,
   Text,
+  TextInput,
 } from "@mantine/core";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { isAxiosError } from "axios";
 import apiClient from "@app/services/apiClient";
 import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @app alias root
@@ -53,6 +55,34 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
       dependency.moduleUrl ?? "url",
     ].join(":");
 
+  const [query, setQuery] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const filteredDependencies = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) {
+      return sortedDependencies;
+    }
+    return sortedDependencies.filter((dependency) =>
+      [
+        dependency.moduleName,
+        dependency.moduleVersion,
+        dependency.moduleLicense,
+      ].some((field) => field?.toLowerCase().includes(needle)),
+    );
+  }, [sortedDependencies, query]);
+
+  // Native notices add dozens of rows per jar, so only mount the visible slice.
+  const virtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
+    count: filteredDependencies.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 56,
+    overscan: 8,
+  });
+  const virtualItems = virtualizer.getVirtualItems();
+  const topPad = virtualItems[0]?.start ?? 0;
+  const bottomPad =
+    virtualizer.getTotalSize() - (virtualItems.at(-1)?.end ?? 0);
+
   return (
     <Stack gap="lg">
       <Paper withBorder p="md" radius="md">
@@ -68,60 +98,91 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
                   "The list is shown directly in the UI from the release bundle or backend endpoint.",
                 )}
               </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t("settings.licenses.showingCount", "{{count}} dependencies", {
+                  count: filteredDependencies.length,
+                })}
+              </Text>
             </div>
           </Group>
+          <TextInput
+            placeholder={t(
+              "settings.licenses.searchPlaceholder",
+              "Search dependencies",
+            )}
+            aria-label={t(
+              "settings.licenses.searchPlaceholder",
+              "Search dependencies",
+            )}
+            value={query}
+            onChange={(event) => setQuery(event.currentTarget.value)}
+          />
 
-          <Table
-            highlightOnHover
-            withRowBorders
-            verticalSpacing="sm"
-            horizontalSpacing="md"
-          >
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>{t("settings.licenses.module", "Module")}</Table.Th>
-                <Table.Th>{t("settings.licenses.version", "Version")}</Table.Th>
-                <Table.Th>{t("settings.licenses.license", "License")}</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {sortedDependencies.length === 0 ? (
+          <ScrollArea h={480} viewportRef={scrollRef}>
+            <Table
+              highlightOnHover
+              withRowBorders
+              verticalSpacing="sm"
+              horizontalSpacing="md"
+              stickyHeader
+            >
+              <Table.Thead>
                 <Table.Tr>
-                  <Table.Td colSpan={3}>
-                    <Text ta="center" c="dimmed" py="xl">
-                      {t("settings.licenses.empty", "No dependencies found.")}
-                    </Text>
-                  </Table.Td>
+                  <Table.Th>{t("settings.licenses.module", "Module")}</Table.Th>
+                  <Table.Th>
+                    {t("settings.licenses.version", "Version")}
+                  </Table.Th>
+                  <Table.Th>
+                    {t("settings.licenses.license", "License")}
+                  </Table.Th>
                 </Table.Tr>
-              ) : (
-                sortedDependencies.map((dependency) => (
-                  <Table.Tr key={getDependencyKey(dependency)}>
-                    <Table.Td>
-                      {getModuleUrl(dependency) ? (
-                        <Anchor
-                          href={getModuleUrl(dependency)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {dependency.moduleName || "-"}
-                        </Anchor>
-                      ) : (
-                        <Text size="sm">{dependency.moduleName || "-"}</Text>
-                      )}
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm" c="dimmed">
-                        {dependency.moduleVersion || "-"}
+              </Table.Thead>
+              <Table.Tbody>
+                {filteredDependencies.length === 0 ? (
+                  <Table.Tr>
+                    <Table.Td colSpan={3}>
+                      <Text ta="center" c="dimmed" py="xl">
+                        {t("settings.licenses.empty", "No dependencies found.")}
                       </Text>
                     </Table.Td>
-                    <Table.Td>
-                      <LicenseCell dependency={dependency} />
-                    </Table.Td>
                   </Table.Tr>
-                ))
-              )}
-            </Table.Tbody>
-          </Table>
+                ) : (
+                  <>
+                    {topPad > 0 && (
+                      <Table.Tr key="spacer-top">
+                        <Table.Td
+                          colSpan={3}
+                          style={{ height: topPad, padding: 0, border: 0 }}
+                        />
+                      </Table.Tr>
+                    )}
+                    {virtualItems.map((virtualRow) => {
+                      const dependency = filteredDependencies[virtualRow.index];
+                      if (!dependency) {
+                        return null;
+                      }
+                      return (
+                        <VirtualLicenseRow
+                          key={`${getDependencyKey(dependency)}:${virtualRow.index}`}
+                          dependency={dependency}
+                          index={virtualRow.index}
+                          measureElement={virtualizer.measureElement}
+                        />
+                      );
+                    })}
+                    {bottomPad > 0 && (
+                      <Table.Tr key="spacer-bottom">
+                        <Table.Td
+                          colSpan={3}
+                          style={{ height: bottomPad, padding: 0, border: 0 }}
+                        />
+                      </Table.Tr>
+                    )}
+                  </>
+                )}
+              </Table.Tbody>
+            </Table>
+          </ScrollArea>
         </Stack>
       </Paper>
     </Stack>
@@ -161,6 +222,42 @@ function LicenseCell({ dependency }: { dependency: Dependency }) {
     </Anchor>
   ) : (
     <Text size="sm">{dependency.moduleLicense || "-"}</Text>
+  );
+}
+
+function VirtualLicenseRow({
+  dependency,
+  index,
+  measureElement,
+}: {
+  dependency: Dependency;
+  index: number;
+  measureElement: (element: HTMLTableRowElement | null) => void;
+}) {
+  return (
+    <Table.Tr data-index={index} ref={measureElement}>
+      <Table.Td>
+        {getModuleUrl(dependency) ? (
+          <Anchor
+            href={getModuleUrl(dependency)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {dependency.moduleName || "-"}
+          </Anchor>
+        ) : (
+          <Text size="sm">{dependency.moduleName || "-"}</Text>
+        )}
+      </Table.Td>
+      <Table.Td>
+        <Text size="sm" c="dimmed">
+          {dependency.moduleVersion || "-"}
+        </Text>
+      </Table.Td>
+      <Table.Td>
+        <LicenseCell dependency={dependency} />
+      </Table.Td>
+    </Table.Tr>
   );
 }
 

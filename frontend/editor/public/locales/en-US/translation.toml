@@ -11918,6 +11918,8 @@ listDescription = "The list is shown directly in the UI from the release bundle 
 listTitle = "Bundled dependencies"
 loadError = "Failed to load third-party licenses"
 module = "Module"
+searchPlaceholder = "Search dependencies"
+showingCount = "{{count}} dependencies"
 version = "Version"
 
 [settings.licensingAnalytics]
