@@ -28,6 +28,7 @@ export const redactToApiParams = (
   listOfText: parameters.wordsToRedact.join("\n"),
   useRegex: parameters.useRegex,
   wholeWordSearch: parameters.wholeWordSearch,
+  caseSensitive: parameters.caseSensitive,
   // The backend expects the hex colour without the leading '#'.
   redactColor: parameters.redactColor.replace("#", ""),
   customPadding: parameters.customPadding,
@@ -43,6 +44,7 @@ export const redactFromApiParams = (
   useRegex: apiParams.useRegex ?? defaultParameters.useRegex,
   wholeWordSearch:
     apiParams.wholeWordSearch ?? defaultParameters.wholeWordSearch,
+  caseSensitive: apiParams.caseSensitive ?? defaultParameters.caseSensitive,
   redactColor: apiParams.redactColor
     ? `#${apiParams.redactColor}`
     : defaultParameters.redactColor,
