@@ -111,6 +111,9 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 56,
     overscan: 8,
+    // Index keys would pin a measured tall row's cached height onto whatever row
+    // takes its index after filtering; reuse the stable React row key instead.
+    getItemKey: (index) => getDependencyKey(filteredDependencies[index]),
   });
   const virtualItems = virtualizer.getVirtualItems();
   const topPad = virtualItems[0]?.start ?? 0;
