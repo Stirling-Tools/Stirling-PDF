@@ -14,25 +14,19 @@ import stirling.software.common.model.api.PDFFile;
 public class OverlayImageRequest extends PDFFile {
 
     @Schema(
-            description =
-                    "The image to draw: raster (PNG, JPEG, etc.) or SVG, which stays vector. It is"
-                            + " drawn at its native size, 1 pixel = 1 point.",
+            description = "The image to draw (raster or SVG), at native size",
             requiredMode = Schema.RequiredMode.REQUIRED,
             format = "binary")
     private MultipartFile imageFile;
 
     @Schema(
-            description =
-                    "X of the image's lower-left corner, in PDF points from the page's left edge"
-                            + " (72 points = 1 inch).",
+            description = "X of the image's lower-left corner, in points from the left edge",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "0")
     private float x;
 
     @Schema(
-            description =
-                    "Y of the image's lower-left corner, in PDF points from the page's bottom edge"
-                            + " (72 points = 1 inch).",
+            description = "Y of the image's lower-left corner, in points from the bottom edge",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "0")
     private float y;

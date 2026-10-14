@@ -14,34 +14,26 @@ import stirling.software.common.model.api.PDFFile;
 public class OverlayPdfsRequest extends PDFFile {
 
     @Schema(
-            description =
-                    "PDF files drawn onto the base PDF's pages. overlayMode decides which overlay"
-                            + " page lands on which base page.",
+            description = "PDFs drawn onto the base PDF's pages, in the order set by overlayMode",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile[] overlayFiles;
 
     @Schema(
             description =
-                    "SequentialOverlay: overlay pages go one per base page and start over when"
-                            + " used up, so a 1-page letterhead repeats on every page."
-                            + " InterleavedOverlay: page 1 of each overlay file in turn."
-                            + " FixedRepeatOverlay: see counts.",
+                    "SequentialOverlay repeats the overlay pages in order (e.g. a"
+                            + " letterhead on every page). InterleavedOverlay takes each overlay file"
+                            + " in turn. FixedRepeatOverlay uses counts.",
             allowableValues = {"SequentialOverlay", "InterleavedOverlay", "FixedRepeatOverlay"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String overlayMode;
 
     @Schema(
-            description =
-                    "Required for FixedRepeatOverlay: one count per overlay file. Each file"
-                            + " in turn covers the next count x (its page count) base pages,"
-                            + " showing its first page; later pages get no overlay.",
+            description = "FixedRepeatOverlay only: one repeat count per overlay file",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private int[] counts;
 
     @Schema(
-            description =
-                    "0 = foreground, drawn over the page content. 1 = background, drawn behind it"
-                            + " (e.g. a letterhead); an opaque page such as a scan hides it.",
+            description = "0 = foreground (over the content), 1 = background (behind it)",
             allowableValues = {"0", "1"},
             requiredMode = Schema.RequiredMode.REQUIRED,
             type = "number")
