@@ -1,11 +1,9 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.awt.image.BufferedImage;
@@ -14,8 +12,6 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -29,8 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -40,18 +34,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 /**
- * Additional branch coverage for {@link CropController}: the Ghostscript routing decision (enabled
- * vs disabled when removeDataOutsideCrop is set), the Ghostscript execution path with the external
- * process mocked, and the large-image sampling-step branch of detectContentBounds. The gs binary is
- * never invoked.
+ * Additional branch coverage for {@link CropController}: the JPDFium routing decision (removeData
+ * runs the content-removing crop regardless of Ghostscript availability), the per-page selection
+ * behavior of the JPDFium path, and the large-image sampling-step branch of detectContentBounds.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -61,7 +52,6 @@ class CropControllerMoreTest {
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
     @InjectMocks private CropController cropController;
 
     @BeforeEach
@@ -106,121 +96,76 @@ class CropControllerMoreTest {
         return f;
     }
 
+    private static void assertRect(
+            PDRectangle actual, float x, float y, float width, float height) {
+        // PDRectangle does not override equals, so compare components.
+        assertThat(actual.getLowerLeftX()).isEqualTo(x);
+        assertThat(actual.getLowerLeftY()).isEqualTo(y);
+        assertThat(actual.getWidth()).isEqualTo(width);
+        assertThat(actual.getHeight()).isEqualTo(height);
+    }
+
     @Nested
-    @DisplayName("Ghostscript routing")
-    class GhostscriptRouting {
+    @DisplayName("JPDFium routing")
+    class JpdfiumRouting {
 
         @Test
-        @DisplayName(
-                "removeDataOutsideCrop with Ghostscript disabled falls back to the PDFBox path")
-        void disabledFallsBackToPdfBox() throws Exception {
-            MockMultipartFile file = pdf(1);
+        @DisplayName("removeDataOutsideCrop runs the JPDFium path, not the PDFBox path")
+        void removeDataRunsJpdfium() throws Exception {
+            MockMultipartFile file = pdf(3);
             CropPdfForm request = form(file, true);
 
-            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
-            PDDocument source = mock(PDDocument.class);
-            PDDocument out = mock(PDDocument.class);
-            when(pdfDocumentFactory.load(request)).thenReturn(source);
-            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(source)).thenReturn(out);
+            when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
 
             ResponseEntity<Resource> response = cropController.cropPdf(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            // PDFBox path constructs a new document; gs path would not.
-            verify(pdfDocumentFactory).createNewDocumentBasedOnOldDocument(source);
-            verify(source).close();
-            verify(out).close();
-        }
-
-        @Test
-        @DisplayName("removeDataOutsideCrop with Ghostscript enabled runs the gs command path")
-        void enabledRunsGhostscript() throws Exception {
-            MockMultipartFile file = pdf(2);
-            CropPdfForm request = form(file, true);
-
-            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
-            // Real document so setCropBox + save() succeed inside the gs branch.
-            when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
-            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
-                    .thenAnswer(invocation -> new PDDocument());
-
-            ProcessExecutor executor = mock(ProcessExecutor.class);
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT))
-                        .thenReturn(executor);
-                // Identity Ghostscript: the mock copies its input to the -o
-                // path so the merge step reads back a valid document.
-                when(executor.runCommandWithOutputHandling(any()))
-                        .thenAnswer(
-                                invocation -> {
-                                    List<String> command = invocation.getArgument(0);
-                                    Path in = Path.of(command.get(command.size() - 1));
-                                    Path out = Path.of(command.get(command.indexOf("-o") + 1));
-                                    Files.copy(in, out, StandardCopyOption.REPLACE_EXISTING);
-                                    return null;
-                                });
-
-                ResponseEntity<Resource> response = cropController.cropPdf(request);
-
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-                assertThat(response.getBody()).isNotNull();
-                verify(executor).runCommandWithOutputHandling(any());
+            assertThat(response.getBody()).isNotNull();
+            byte[] body = response.getBody().getInputStream().readAllBytes();
+            try (PDDocument out = Loader.loadPDF(body)) {
+                assertThat(out.getNumberOfPages()).isEqualTo(3);
+                // All pages selected: every page hard-cropped to the request rect.
+                for (int i = 0; i < 3; i++) {
+                    assertRect(out.getPage(i).getMediaBox(), 20f, 20f, 200f, 300f);
+                }
             }
         }
 
         @Test
-        @DisplayName("Ghostscript processes only selected pages and merges pristine originals")
-        void ghostscriptMergesUnselectedPagesPristine() throws Exception {
+        @DisplayName("JPDFium crops only selected pages and leaves the rest pristine")
+        void jpdfiumKeepsUnselectedPagesPristine() throws Exception {
             MockMultipartFile file = pdf(3);
             CropPdfForm request = form(file, true);
             request.setPageNumbers("2");
 
-            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
             when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
-            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
-                    .thenAnswer(invocation -> new PDDocument());
 
-            ProcessExecutor executor = mock(ProcessExecutor.class);
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT))
-                        .thenReturn(executor);
-                when(executor.runCommandWithOutputHandling(any()))
-                        .thenAnswer(
-                                invocation -> {
-                                    List<String> command = invocation.getArgument(0);
-                                    Path in = Path.of(command.get(command.size() - 1));
-                                    Path out = Path.of(command.get(command.indexOf("-o") + 1));
-                                    Files.copy(in, out, StandardCopyOption.REPLACE_EXISTING);
-                                    return null;
-                                });
+            ResponseEntity<Resource> response = cropController.cropPdf(request);
 
-                ResponseEntity<Resource> response = cropController.cropPdf(request);
-
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-                assertThat(response.getBody()).isNotNull();
-                verify(executor).runCommandWithOutputHandling(any());
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            byte[] body = response.getBody().getInputStream().readAllBytes();
+            try (PDDocument out = Loader.loadPDF(body)) {
+                assertThat(out.getNumberOfPages()).isEqualTo(3);
+                assertRect(out.getPage(1).getMediaBox(), 20f, 20f, 200f, 300f);
+                assertRect(out.getPage(0).getMediaBox(), 0f, 0f, 612f, 792f);
+                assertRect(out.getPage(2).getMediaBox(), 0f, 0f, 612f, 792f);
             }
         }
 
         @Test
-        @DisplayName("Ghostscript interruption is wrapped and surfaced")
-        void interruptedIsWrapped() throws Exception {
+        @DisplayName("JPDFium failure is wrapped and surfaced as IOException")
+        void jpdfiumFailureIsWrapped() throws Exception {
             MockMultipartFile file = pdf(1);
             CropPdfForm request = form(file, true);
 
-            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
-            when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
+            // A source that saves nothing: JPDFium cannot open the empty
+            // bytes and the controller must wrap that in an IOException.
+            PDDocument source = mock(PDDocument.class);
+            when(pdfDocumentFactory.load(request)).thenReturn(source);
 
-            ProcessExecutor executor = mock(ProcessExecutor.class);
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT))
-                        .thenReturn(executor);
-                when(executor.runCommandWithOutputHandling(any()))
-                        .thenThrow(new InterruptedException("stop"));
-
-                org.junit.jupiter.api.Assertions.assertThrows(
-                        Exception.class, () -> cropController.cropPdf(request));
-            }
+            org.junit.jupiter.api.Assertions.assertThrows(
+                    IOException.class, () -> cropController.cropPdf(request));
         }
     }
 
