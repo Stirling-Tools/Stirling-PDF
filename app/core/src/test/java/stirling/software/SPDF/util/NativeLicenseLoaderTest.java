@@ -274,6 +274,32 @@ class NativeLicenseLoaderTest {
     }
 
     @Test
+    void hostileFileReferencesAreNeverRead(@TempDir Path tempDir) throws Exception {
+        Path licensesDir = Files.createDirectories(tempDir.resolve("licenses"));
+        Files.writeString(
+                licensesDir.resolve("NOTICE.txt"),
+                "1. Crafty Codec\n"
+                        + "   - Copyright (c) 2024 Someone\n"
+                        + "   - License: BSD 3-Clause (see ../evil.txt)\n"
+                        + "2. Craftier Codec\n"
+                        + "   - Copyright (c) 2024 Someone Else\n"
+                        + "   - License: MIT License (see file:/etc/passwd)\n");
+        Files.writeString(tempDir.resolve("evil.txt"), "you should never read this");
+        List<Dependency> dependencies;
+        try (URLClassLoader loader =
+                new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null)) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
+
+        assertEquals(2, dependencies.size());
+        for (Dependency dependency : dependencies) {
+            assertNull(
+                    dependency.getModuleLicenseText(),
+                    "traversal and scheme references must not be resolved");
+        }
+    }
+
+    @Test
     void missingSiblingLicenseTextLeavesTextUnset(@TempDir Path tempDir) throws Exception {
         Path licensesDir = Files.createDirectories(tempDir.resolve("licenses"));
         Files.writeString(

@@ -220,7 +220,17 @@ public final class NativeLicenseLoader {
                 .replaceAll("\\s{2,}", " ");
     }
 
+    // NOTICE files come from any jar on the classpath and the endpoint is unauthenticated,
+    // so only plain sibling filenames may be read. Anything else could escape the notice
+    // directory (../) or switch schemes entirely (file:/C:/) and leak local files.
     private static String readSiblingText(URL noticeUrl, String licenseFile) {
+        if (!licenseFile.matches("[A-Za-z0-9._+-]+") || licenseFile.startsWith(".")) {
+            log.warn(
+                    "Ignoring suspicious native license reference {} beside {}",
+                    licenseFile,
+                    noticeUrl);
+            return null;
+        }
         try (InputStream in = new URL(noticeUrl, licenseFile).openStream()) {
             return new String(in.readAllBytes(), StandardCharsets.UTF_8).strip();
         } catch (IOException e) {

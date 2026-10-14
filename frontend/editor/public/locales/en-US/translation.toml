@@ -11924,6 +11924,8 @@ module = "Module"
 noMatch = "No matching dependencies."
 searchPlaceholder = "Search dependencies"
 showingCount = "{{count}} dependencies"
+showingCount_one = "{{count}} dependency"
+showingCount_other = "{{count}} dependencies"
 version = "Version"
 
 [settings.licensingAnalytics]
