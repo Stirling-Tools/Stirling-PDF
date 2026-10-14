@@ -38,21 +38,55 @@ interface LicensesSectionBodyProps {
 const getModuleUrl = (dependency: Dependency) =>
   dependency.moduleUrl || dependency.moduleLicenseUrl;
 
+function compareVersions(left: string, right: string): number {
+  const leftParts = left.split(".");
+  const rightParts = right.split(".");
+  const length = Math.max(leftParts.length, rightParts.length);
+  for (let index = 0; index < length; index++) {
+    const leftChunk = leftParts[index] ?? "";
+    const rightChunk = rightParts[index] ?? "";
+    const leftNumber = Number.parseInt(leftChunk, 10);
+    const rightNumber = Number.parseInt(rightChunk, 10);
+    if (!Number.isNaN(leftNumber) && !Number.isNaN(rightNumber)) {
+      if (leftNumber !== rightNumber) {
+        return leftNumber - rightNumber;
+      }
+    } else if (leftChunk !== rightChunk) {
+      return leftChunk < rightChunk ? -1 : 1;
+    }
+  }
+  return 0;
+}
+
 function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
   const { t } = useTranslation();
-  const sortedDependencies = useMemo(
-    () =>
-      [...dependencies].sort((a, b) =>
-        (a.moduleName || "").localeCompare(b.moduleName || ""),
-      ),
-    [dependencies],
-  );
+  // The license report lists one row per resolved artifact, so the same module shows up at
+  // several versions; a notice names each module once, at the newest version seen.
+  const sortedDependencies = useMemo(() => {
+    const byModule = new Map<string, Dependency>();
+    for (const dependency of dependencies) {
+      const name = (dependency.moduleName || "").toLowerCase();
+      const current = byModule.get(name);
+      if (
+        !current ||
+        compareVersions(
+          dependency.moduleVersion ?? "",
+          current.moduleVersion ?? "",
+        ) > 0
+      ) {
+        byModule.set(name, dependency);
+      }
+    }
+    return [...byModule.values()].sort((a, b) =>
+      (a.moduleName || "").localeCompare(b.moduleName || ""),
+    );
+  }, [dependencies]);
 
   const getDependencyKey = (dependency: Dependency) =>
     [
       dependency.moduleName ?? "module",
       dependency.moduleVersion ?? "version",
-      dependency.moduleUrl ?? "url",
+      dependency.moduleLicense ?? "license",
     ].join(":");
 
   const [query, setQuery] = useState("");
@@ -118,7 +152,10 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
             onChange={(event) => setQuery(event.currentTarget.value)}
           />
 
-          <ScrollArea h={480} viewportRef={scrollRef}>
+          <div
+            ref={scrollRef}
+            style={{ height: 480, overflowY: "auto", overflowX: "hidden" }}
+          >
             <Table
               highlightOnHover
               withRowBorders
@@ -163,7 +200,7 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
                       }
                       return (
                         <VirtualLicenseRow
-                          key={`${getDependencyKey(dependency)}:${virtualRow.index}`}
+                          key={getDependencyKey(dependency)}
                           dependency={dependency}
                           index={virtualRow.index}
                           measureElement={virtualizer.measureElement}
@@ -182,7 +219,7 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
                 )}
               </Table.Tbody>
             </Table>
-          </ScrollArea>
+          </div>
         </Stack>
       </Paper>
     </Stack>
