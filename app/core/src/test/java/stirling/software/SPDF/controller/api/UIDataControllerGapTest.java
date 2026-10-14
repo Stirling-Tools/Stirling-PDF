@@ -10,6 +10,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -160,6 +162,32 @@ class UIDataControllerGapTest {
             assertFalse(deps.isEmpty());
             // Each parsed dependency should at least carry a module name.
             assertNotNull(deps.get(0).getModuleName());
+        }
+
+        @Test
+        @DisplayName("native notices still load when the generated report is missing")
+        void nativeNoticesSurviveMissingReport() throws Exception {
+            URL fixture = Path.of("src/test/resources", "vips-sim").toUri().toURL();
+            ClassLoader original = Thread.currentThread().getContextClassLoader();
+            try (URLClassLoader isolated = new URLClassLoader(new URL[] {fixture}, null)) {
+                Thread.currentThread().setContextClassLoader(isolated);
+                try {
+                    ResponseEntity<UIDataController.LicensesData> response =
+                            controller(userService).getLicensesData();
+
+                    assertEquals(HttpStatus.OK, response.getStatusCode());
+                    UIDataController.LicensesData body = response.getBody();
+                    assertNotNull(body);
+                    // The generated JSON is invisible under the fixture loader,
+                    // so only the fixture notice may come back.
+                    List<Dependency> deps = body.getDependencies();
+                    assertNotNull(deps);
+                    assertEquals(1, deps.size());
+                    assertEquals("Simulated Vips Native Codec", deps.get(0).getModuleName());
+                } finally {
+                    Thread.currentThread().setContextClassLoader(original);
+                }
+            }
         }
     }
 

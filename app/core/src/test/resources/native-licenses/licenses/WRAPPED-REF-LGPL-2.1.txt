@@ -1,0 +1,2 @@
+Wrapped file reference library license text, resolved through a
+file reference wrapped onto the next notice line.

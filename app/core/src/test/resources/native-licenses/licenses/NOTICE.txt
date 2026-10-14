@@ -9,4 +9,14 @@
 
 3. Vips Style Image Library
    - Copyright (c) 2010, Vips Style Contributors.
-   - License: LGPL 2.1 (see VIPS-STYLE-LGPL-2.1.txt)
+   - License: GNU Lesser General Public License v2.1 or later (see VIPS-STYLE-LGPL-2.1.txt)
+
+4. Wrapped File Reference Library
+   - Copyright (c) 2020, Wrapped Ref Contributors.
+   - License: GNU Lesser General Public License v2.1 or later
+     (see WRAPPED-REF-LGPL-2.1.txt)
+
+5. Multi License Stack
+   - Copyright (c) 2021, Stack Contributors.
+   - License: Apache-2.0 OR MIT (stack crates),
+     BSD-3-Clause (tiny parts). Texts live beside the notice.

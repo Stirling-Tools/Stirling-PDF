@@ -92,34 +92,33 @@ public class UIDataController {
     @Operation(summary = "Get third-party licenses data")
     public ResponseEntity<LicensesData> getLicensesData() {
         LicensesData data = new LicensesData();
-        Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
-
-        try (InputStream is = resource.getInputStream()) {
-            Map<String, List<Dependency>> licenseData =
-                    objectMapper.readValue(
-                            is, new TypeReference<Map<String, List<Dependency>>>() {});
-            List<Dependency> dependencies = licenseData.get("dependencies");
-            List<Dependency> combined =
-                    dependencies != null ? new ArrayList<>(dependencies) : new ArrayList<>();
-            try {
-                combined.addAll(
-                        NativeLicenseLoader.loadNativeLicenses(
-                                getClass().getClassLoader(), resolveJpdfiumVersion()));
-            } catch (RuntimeException e) {
-                log.warn("Unable to load JPDFium native licenses", e);
+        List<Dependency> combined = new ArrayList<>();
+        try {
+            Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
+            try (InputStream is = resource.getInputStream()) {
+                Map<String, List<Dependency>> licenseData =
+                        objectMapper.readValue(
+                                is, new TypeReference<Map<String, List<Dependency>>>() {});
+                List<Dependency> dependencies = licenseData.get("dependencies");
+                if (dependencies != null) {
+                    combined.addAll(dependencies);
+                }
             }
-            data.setDependencies(combined);
         } catch (IOException e) {
             log.error("Failed to load licenses data", e);
-            data.setDependencies(Collections.emptyList());
         }
+        try {
+            // Resource discovery follows the thread context loader, which hosted
+            // runtimes and tests both control.
+            combined.addAll(
+                    NativeLicenseLoader.loadNativeLicenses(
+                            Thread.currentThread().getContextClassLoader()));
+        } catch (RuntimeException e) {
+            log.warn("Unable to load JPDFium native licenses", e);
+        }
+        data.setDependencies(combined);
 
         return ResponseEntity.ok(data);
-    }
-
-    private static String resolveJpdfiumVersion() {
-        Package pkg = stirling.software.jpdfium.PdfDocument.class.getPackage();
-        return pkg != null ? pkg.getImplementationVersion() : null;
     }
 
     @GetMapping("/pipeline")
