@@ -83,8 +83,8 @@ Add `--project=stubbed-firefox`/`-webkit` only if cross-browser layout matters.
   `/*__DATA__*/` … `/*__END__*/` markers with one `views[]` entry per view
   (`{id,title,light,dark,viewport,notes}`) and an empty `findings` object you'll
   fill in step 5. Keep `light`/`dark` as relative paths while iterating; build the
-  final standalone copy with them as `data:image/png;base64,...` before publishing
-  it (step 9).
+  final standalone copy with them as `data:` URIs (step 9, which also covers
+  encoding them down).
 - The toggle slider answers the "one big image + flip light/dark for all" request:
   it shows a single large screenshot, and switching the slider re-themes every view.
 
@@ -128,8 +128,21 @@ https://htmlpreview.github.io/?<raw-url>
 
 Pass the raw URL (htmlpreview also rewrites `github.com/<o>/<r>/blob/<ref>/<path>`
 to raw by itself). The report must be one **self-contained** file: images inlined
-as `data:image/png;base64,...`, because relative `screenshots/...` paths resolve
-against nothing once htmlpreview serves the file on its own.
+as `data:` URIs, because relative `screenshots/...` paths resolve against nothing
+once htmlpreview serves the file on its own.
+
+Base64 is essentially the whole file, so compress before inlining. Measured on 12
+1920x1080 shots: raw PNG 2.4 MiB (99% of it image payload), the same shots as
+`cwebp -q 80` 0.63 MiB at 99.78% SSIM, as `pngquant --quality=70-90 --strip`
+0.74 MiB at 99.87%, as JPEG q80 1.4 MiB - JPEG is worse than both, do not use it.
+
+```
+cwebp -q 80 screenshots/<area>/<view>_light.png -o /tmp/<view>_light.webp   # or pngquant --quality=70-90 --strip
+```
+
+Point the manifest's `light`/`dark` at `data:image/webp;base64,...` (or
+`data:image/png;base64,...` for pngquant output); both render in every current
+browser, and a quality below `-q 80` is not worth the artefacts on UI text.
 
 Commit it to the long-lived `ui-walkthrough-reports` branch, never to the feature
 branch: the report is a build artifact and the feature branch's diff must stay
