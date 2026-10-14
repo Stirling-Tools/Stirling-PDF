@@ -47,18 +47,11 @@ public class OverlayImageController {
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary =
-                    "Draw an image at native size (1px=1pt) at x,y on page 1 or all pages; for"
-                            + " size, corner or pages use add-stamp",
+            summary = "Overlay an image at x,y on the first or every page",
             description =
-                    "Draws the image with its lower-left corner at (x, y), in PDF points from the"
-                            + " bottom-left of the page (72 points = 1 inch), at its native size"
-                            + " (1 pixel = 1 point). It goes on page 1 only, or on every page when"
-                            + " everyPage is true. Raster formats (PNG, JPEG, etc.) and SVG are"
-                            + " supported; SVG stays vector. To place a logo or signature at a"
-                            + " chosen size, corner or pages, use add-stamp with stampType=image,"
-                            + " stampImage, fontSize (image height in points), position,"
-                            + " pageNumbers and opacity=1.")
+                    "Draws a raster or SVG image at native size (1 px = 1 pt), lower-left"
+                            + " corner at (x, y) in points from the bottom-left. To set size,"
+                            + " position or pages, use add-stamp with stampType=image.")
     public ResponseEntity<Resource> overlayImage(@ModelAttribute OverlayImageRequest request) {
         MultipartFile pdfFile = request.getFileInput();
         MultipartFile imageFile = request.getImageFile();

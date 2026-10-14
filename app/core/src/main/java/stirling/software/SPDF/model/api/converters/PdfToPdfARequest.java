@@ -13,10 +13,9 @@ public class PdfToPdfARequest extends PDFFile {
 
     @Schema(
             description =
-                    "Target standard. pdfa, pdfa-2 and pdfa-2b = PDF/A-2b (the usual archive"
-                            + " choice); pdfa-1 = PDF/A-1b; pdfa-3 and pdfa-3b = PDF/A-3b, which"
-                            + " allows file attachments such as e-invoice XML; pdfa-1a/2a/3a also"
-                            + " tag the document (level A); pdfx = PDF/X for print.",
+                    "pdfa = PDF/A-2b, the usual archive choice. pdfa-3/3b allows"
+                            + " attachments such as e-invoice XML; the 'a' variants also tag the"
+                            + " document. pdfx = PDF/X for print.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {
                 "pdfa", "pdfa-1", "pdfa-2", "pdfa-2b", "pdfa-3", "pdfa-3b", "pdfa-1a", "pdfa-2a",
