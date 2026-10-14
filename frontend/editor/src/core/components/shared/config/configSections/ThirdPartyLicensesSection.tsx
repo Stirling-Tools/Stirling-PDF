@@ -134,15 +134,23 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
               stickyHeader
               // Collapsed borders disable thead stickiness, so the header
               // scrolls away; separate with zero spacing renders identically.
-              style={{ borderCollapse: "separate", borderSpacing: 0 }}
+              // Fixed layout pins column widths to the header cells, so
+              // filtering and virtualization cannot shift them around.
+              style={{
+                borderCollapse: "separate",
+                borderSpacing: 0,
+                tableLayout: "fixed",
+              }}
             >
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>{t("settings.licenses.module", "Module")}</Table.Th>
-                  <Table.Th>
+                  <Table.Th style={{ width: "40%" }}>
+                    {t("settings.licenses.module", "Module")}
+                  </Table.Th>
+                  <Table.Th style={{ width: "15%" }}>
                     {t("settings.licenses.version", "Version")}
                   </Table.Th>
-                  <Table.Th>
+                  <Table.Th style={{ width: "45%" }}>
                     {t("settings.licenses.license", "License")}
                   </Table.Th>
                 </Table.Tr>
