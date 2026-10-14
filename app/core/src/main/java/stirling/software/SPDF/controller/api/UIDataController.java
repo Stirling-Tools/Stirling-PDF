@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.Dependency;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.SPDF.service.SharedSignatureService;
+import stirling.software.SPDF.util.NativeLicenseLoader;
 import stirling.software.common.annotations.api.UiDataApi;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -97,13 +98,28 @@ public class UIDataController {
             Map<String, List<Dependency>> licenseData =
                     objectMapper.readValue(
                             is, new TypeReference<Map<String, List<Dependency>>>() {});
-            data.setDependencies(licenseData.get("dependencies"));
+            List<Dependency> dependencies = licenseData.get("dependencies");
+            List<Dependency> combined =
+                    dependencies != null ? new ArrayList<>(dependencies) : new ArrayList<>();
+            try {
+                combined.addAll(
+                        NativeLicenseLoader.loadNativeLicenses(
+                                getClass().getClassLoader(), resolveJpdfiumVersion()));
+            } catch (RuntimeException e) {
+                log.warn("Unable to load JPDFium native licenses", e);
+            }
+            data.setDependencies(combined);
         } catch (IOException e) {
             log.error("Failed to load licenses data", e);
             data.setDependencies(Collections.emptyList());
         }
 
         return ResponseEntity.ok(data);
+    }
+
+    private static String resolveJpdfiumVersion() {
+        Package pkg = stirling.software.jpdfium.PdfDocument.class.getPackage();
+        return pkg != null ? pkg.getImplementationVersion() : null;
     }
 
     @GetMapping("/pipeline")

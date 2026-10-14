@@ -1,0 +1,12 @@
+1. Test Component
+   - Copyright (c) 2016, Test Component Contributors. All rights reserved.
+   - License: BSD 3-Clause (see TEST-COMPONENT-BSD-3.txt)
+
+2. Wrapped Copyright Library
+   - Copyright (c) 2015, OpenJPEG, entirely written by
+     the OpenJPEG authors under a permissive license.
+   - License: BSD 2-Clause (see WRAPPED-BSD-2.txt)
+
+3. Vips Style Image Library
+   - Copyright (c) 2010, Vips Style Contributors.
+   - License: LGPL 2.1 (see VIPS-STYLE-LGPL-2.1.txt)

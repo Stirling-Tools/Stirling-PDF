@@ -5,7 +5,9 @@ import {
   Anchor,
   Group,
   Loader,
+  Modal,
   Paper,
+  ScrollArea,
   Stack,
   Table,
   Text,
@@ -20,6 +22,7 @@ interface Dependency {
   moduleVersion?: string;
   moduleLicense?: string;
   moduleLicenseUrl?: string;
+  moduleLicenseText?: string;
 }
 
 interface LicensesResponse {
@@ -112,17 +115,7 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
                       </Text>
                     </Table.Td>
                     <Table.Td>
-                      {dependency.moduleLicenseUrl ? (
-                        <Anchor
-                          href={dependency.moduleLicenseUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {dependency.moduleLicense || "-"}
-                        </Anchor>
-                      ) : (
-                        <Text size="sm">{dependency.moduleLicense || "-"}</Text>
-                      )}
+                      <LicenseCell dependency={dependency} />
                     </Table.Td>
                   </Table.Tr>
                 ))
@@ -132,6 +125,42 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
         </Stack>
       </Paper>
     </Stack>
+  );
+}
+
+function LicenseCell({ dependency }: { dependency: Dependency }) {
+  const [opened, setOpened] = useState(false);
+  if (dependency.moduleLicenseText) {
+    return (
+      <>
+        <Anchor component="button" onClick={() => setOpened(true)}>
+          {dependency.moduleLicense || "-"}
+        </Anchor>
+        <Modal
+          opened={opened}
+          onClose={() => setOpened(false)}
+          title={dependency.moduleName || "-"}
+          size="lg"
+        >
+          <ScrollArea.Autosize mah={420}>
+            <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+              {dependency.moduleLicenseText}
+            </Text>
+          </ScrollArea.Autosize>
+        </Modal>
+      </>
+    );
+  }
+  return dependency.moduleLicenseUrl ? (
+    <Anchor
+      href={dependency.moduleLicenseUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {dependency.moduleLicense || "-"}
+    </Anchor>
+  ) : (
+    <Text size="sm">{dependency.moduleLicense || "-"}</Text>
   );
 }
 
