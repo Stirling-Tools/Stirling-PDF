@@ -149,7 +149,8 @@ jobs:
     secrets: inherit
 
   check-generateOpenApiDocs:
-    if: needs.files-changed.outputs.openapi == 'true'
+    if: |
+      !cancelled() && needs.files-changed.outputs.openapi == 'true'
     needs: [files-changed, gradle-cache-prime, files-hash]
     permissions:
       contents: write
@@ -217,7 +218,8 @@ jobs:
       use_shared_cache: true
 
   check-licence:
-    if: needs.files-changed.outputs.build == 'true'
+    if: |
+      !cancelled() && needs.files-changed.outputs.build == 'true'
     needs: [files-changed, gradle-cache-prime, files-hash]
     with:
       gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
@@ -247,6 +249,7 @@ jobs:
   # the critical path once the e2e matrix was sharded.
   test-build-docker-images:
     if: |
+      !cancelled() &&
       github.event_name == 'pull_request' &&
       needs.files-changed.outputs.project == 'true' && false
     needs: [files-changed]
@@ -280,7 +283,8 @@ jobs:
       use_shared_cache: true
 
   ai-engine:
-    if: needs.files-changed.outputs.engine == 'true' && false
+    if: |
+      !cancelled() && needs.files-changed.outputs.engine == 'true'
     needs: [files-changed]
     permissions:
       contents: read
@@ -308,6 +312,7 @@ jobs:
       use_shared_cache: true
 
   pre-commit:
+    if: ${{ !cancelled() }}
     permissions:
       contents: write
     uses: ./.github/workflows/pre_commit.yml
@@ -326,7 +331,7 @@ jobs:
   # for whatever did record. Advisory only - intentionally NOT in
   # all-checks-passed, so a flaky aggregate run never blocks merging.
   coverage-aggregate:
-    if: ${{!cancelled()}}
+    if: ${{ !cancelled() }}
     needs:
       - build
       - playwright-e2e-live
