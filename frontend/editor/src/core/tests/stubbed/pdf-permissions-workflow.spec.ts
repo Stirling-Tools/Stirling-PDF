@@ -87,6 +87,19 @@ test("restricted compression prompts at execution, preserves settings on cancel,
     .getByRole("button", { name: "Manage protection", exact: true })
     .click();
   await expect(page.getByText("Not required", { exact: true })).toBeVisible();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Close", exact: true })
+    .press("Tab");
+  await expect(
+    page.getByRole("button", {
+      name: "Printing unlocked for this session",
+      exact: true,
+    }),
+  ).toBeFocused();
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "Unlocked for this session using your permissions password.",
+  );
   await expect(
     page.getByRole("button", { name: "Remove opening password", exact: true }),
   ).toBeDisabled();

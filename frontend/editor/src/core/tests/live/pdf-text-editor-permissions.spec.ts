@@ -86,6 +86,12 @@ test("an owner can edit while the saved PDF remains restricted in a fresh reader
   await page
     .getByRole("button", { name: "Manage protection", exact: true })
     .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Editing unlocked for this session",
+      exact: true,
+    }),
+  ).toHaveCount(0);
   await page
     .getByRole("button", {
       name: "Verify permissions for this session",
@@ -97,6 +103,22 @@ test("an owner can edit while the saved PDF remains restricted in a fresh reader
   await expect(
     page.getByText("Permissions unlocked for this session", { exact: true }),
   ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Manage protection", exact: true })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Editing unlocked for this session",
+      exact: true,
+    })
+    .hover();
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "Unlocked for this session using your permissions password.",
+  );
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Close", exact: true })
+    .click();
   await openTextEditor(page);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible();
   const run = page

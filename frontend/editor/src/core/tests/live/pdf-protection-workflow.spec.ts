@@ -88,6 +88,18 @@ test("two passwords stay distinct through protection, permissions, opening-passw
   await page
     .getByRole("button", { name: "Manage protection", exact: true })
     .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Printing unlocked for this session",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: "Copying content unlocked for this session",
+      exact: true,
+    }),
+  ).toHaveCount(0);
   await page
     .getByRole("button", { name: "Change Permissions", exact: true })
     .click();

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Group, Modal, Stack, Text } from "@mantine/core";
+import { Group, Modal, Stack, Text, Tooltip } from "@mantine/core";
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
@@ -157,26 +157,57 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                   "Restrictions for recipients",
                 )}
               </Text>
-              {permissions.map(([label, flag]) => (
-                <Group key={label} justify="space-between">
-                  <Text size="sm">{label}</Text>
-                  <Text size="sm">
-                    {access.permissions & flag
-                      ? flag === PdfPermissionFlag.Print &&
-                        access.encryptionRevision !== 2 &&
-                        !(
-                          access.permissions &
-                          PdfPermissionFlag.PrintHighQuality
-                        )
-                        ? t(
-                            "encryptedPdfUnlock.lowResolutionOnly",
-                            "Low resolution only",
-                          )
-                        : t("encryptedPdfUnlock.allowed", "Allowed")
-                      : t("encryptedPdfUnlock.restricted", "Restricted")}
-                  </Text>
-                </Group>
-              ))}
+              {permissions.map(([label, flag]) => {
+                const allowed = (access.permissions & flag) !== 0;
+                const lowResolutionOnly =
+                  allowed &&
+                  flag === PdfPermissionFlag.Print &&
+                  access.encryptionRevision !== 2 &&
+                  !(access.permissions & PdfPermissionFlag.PrintHighQuality);
+                return (
+                  <Group key={label} justify="space-between">
+                    <Text size="sm">{label}</Text>
+                    <Group gap={6}>
+                      <Text size="sm">
+                        {lowResolutionOnly
+                          ? t(
+                              "encryptedPdfUnlock.lowResolutionOnly",
+                              "Low resolution only",
+                            )
+                          : allowed
+                            ? t("encryptedPdfUnlock.allowed", "Allowed")
+                            : t("encryptedPdfUnlock.restricted", "Restricted")}
+                      </Text>
+                      {access.ownerAuthenticated &&
+                        (!allowed || lowResolutionOnly) && (
+                          <Tooltip
+                            label={t(
+                              "encryptedPdfUnlock.unlockedForSession",
+                              "Unlocked for this session using your permissions password.",
+                            )}
+                            multiline
+                            w={240}
+                            withArrow
+                            events={{ hover: true, focus: true, touch: true }}
+                            zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE + 1}
+                          >
+                            <Button
+                              size="sm"
+                              variant="quiet"
+                              accent="neutral"
+                              leftSection={<Icon name="lock-open" size={14} />}
+                              aria-label={t(
+                                "encryptedPdfUnlock.actionUnlocked",
+                                "{{action}} unlocked for this session",
+                                { action: label },
+                              )}
+                            />
+                          </Tooltip>
+                        )}
+                    </Group>
+                  </Group>
+                );
+              })}
               {access.signed && (
                 <Text size="sm">
                   {t(
