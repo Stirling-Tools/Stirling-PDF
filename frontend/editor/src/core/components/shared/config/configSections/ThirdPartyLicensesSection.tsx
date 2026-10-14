@@ -229,13 +229,105 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
   );
 }
 
+const SPDX_LICENSE_PAGE = "https://spdx.org/licenses";
+
+function resolveLicenseDisplay(license: string | undefined): {
+  short: string;
+  spdxId?: string;
+} {
+  const full = license || "-";
+  const name = full.toLowerCase();
+  if (name === "mit" || name.includes("mit license")) {
+    return { short: "MIT", spdxId: "MIT" };
+  }
+  if (
+    name.includes("apache license") ||
+    name.includes("apache-2.0") ||
+    name.includes("apache 2.0")
+  ) {
+    return { short: "Apache-2.0", spdxId: "Apache-2.0" };
+  }
+  if (
+    name.includes("bsd 3-clause") ||
+    name.includes("bsd-3-clause") ||
+    name.includes("bsd 3 clause")
+  ) {
+    return { short: "BSD-3-Clause", spdxId: "BSD-3-Clause" };
+  }
+  if (
+    name.includes("bsd 2-clause") ||
+    name.includes("bsd-2-clause") ||
+    name.includes("bsd 2 clause")
+  ) {
+    return { short: "BSD-2-Clause", spdxId: "BSD-2-Clause" };
+  }
+  if (name.includes("lesser general public license")) {
+    const later = name.includes("or later") ? "-or-later" : "-only";
+    if (name.includes("3.0") || name.includes("v3")) {
+      return { short: "LGPL-3.0+", spdxId: `LGPL-3.0${later}` };
+    }
+    if (name.includes("2.0") && !name.includes("2.1")) {
+      return { short: "LGPL-2.0", spdxId: `LGPL-2.0${later}` };
+    }
+    return { short: "LGPL-2.1+", spdxId: `LGPL-2.1${later}` };
+  }
+  if (name.includes("general public license")) {
+    const later = name.includes("or later") ? "-or-later" : "-only";
+    if (name.includes("3.0") || name.includes("v3")) {
+      return { short: "GPL-3.0+", spdxId: `GPL-3.0${later}` };
+    }
+    return { short: "GPL-2.0+", spdxId: `GPL-2.0${later}` };
+  }
+  if (name.includes("eclipse public license")) {
+    return name.includes("2.0")
+      ? { short: "EPL-2.0", spdxId: "EPL-2.0" }
+      : { short: "EPL-1.0", spdxId: "EPL-1.0" };
+  }
+  if (name.includes("mozilla public license")) {
+    return { short: "MPL-2.0", spdxId: "MPL-2.0" };
+  }
+  if (name.includes("libpng")) {
+    return { short: "libpng", spdxId: "Libpng" };
+  }
+  if (name.includes("libtiff")) {
+    return { short: "libtiff", spdxId: "libtiff" };
+  }
+  if (name.includes("ijg")) {
+    return { short: "IJG", spdxId: "IJG" };
+  }
+  if (name.includes("zlib")) {
+    return { short: "Zlib", spdxId: "Zlib" };
+  }
+  return { short: full };
+}
+
 function LicenseCell({ dependency }: { dependency: Dependency }) {
   const [opened, setOpened] = useState(false);
+  const full = dependency.moduleLicense || "-";
+  const display = resolveLicenseDisplay(dependency.moduleLicense);
+  const about = display.spdxId ? (
+    <Anchor
+      href={`${SPDX_LICENSE_PAGE}/${display.spdxId}.html`}
+      target="_blank"
+      rel="noopener noreferrer"
+      size="xs"
+      c="dimmed"
+      title={`About ${display.short}`}
+    >
+      About
+    </Anchor>
+  ) : null;
   if (dependency.moduleLicenseText) {
     return (
       <>
-        <Anchor component="button" onClick={() => setOpened(true)}>
-          {dependency.moduleLicense || "-"}
+        <Anchor
+          component="button"
+          onClick={() => setOpened(true)}
+          truncate="end"
+          maw={240}
+          title={full}
+        >
+          {display.short}
         </Anchor>
         <Modal
           opened={opened}
@@ -247,21 +339,45 @@ function LicenseCell({ dependency }: { dependency: Dependency }) {
             <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
               {dependency.moduleLicenseText}
             </Text>
+            {about ? <div style={{ marginTop: 8 }}>{about}</div> : null}
           </ScrollArea.Autosize>
         </Modal>
       </>
     );
   }
   return dependency.moduleLicenseUrl ? (
-    <Anchor
-      href={dependency.moduleLicenseUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      {dependency.moduleLicense || "-"}
-    </Anchor>
+    <span>
+      <Anchor
+        href={dependency.moduleLicenseUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        truncate="end"
+        maw={240}
+        title={full}
+      >
+        {display.short}
+      </Anchor>
+      {about ? (
+        <Text size="xs" c="dimmed" span>
+          {" "}
+          ·{" "}
+        </Text>
+      ) : null}
+      {about}
+    </span>
   ) : (
-    <Text size="sm">{dependency.moduleLicense || "-"}</Text>
+    <span>
+      <Text size="sm" truncate="end" maw={240} title={full} span>
+        {display.short}
+      </Text>
+      {about ? (
+        <Text size="xs" c="dimmed" span>
+          {" "}
+          ·{" "}
+        </Text>
+      ) : null}
+      {about}
+    </span>
   );
 }
 
