@@ -81,7 +81,6 @@ public class SecurityConfiguration {
 
     private final ApplicationProperties applicationProperties;
     private final ApplicationProperties.Security securityProperties;
-    private final AppConfig appConfig;
     private final UserAuthenticationFilter userAuthenticationFilter;
     private final JwtServiceInterface jwtService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -103,7 +102,6 @@ public class SecurityConfiguration {
             @Lazy UserService userService,
             @Qualifier("loginEnabled") boolean loginEnabledValue,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
-            AppConfig appConfig,
             ApplicationProperties applicationProperties,
             ApplicationProperties.Security securityProperties,
             UserAuthenticationFilter userAuthenticationFilter,
@@ -124,7 +122,6 @@ public class SecurityConfiguration {
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
         this.runningProOrHigher = runningProOrHigher;
-        this.appConfig = appConfig;
         this.applicationProperties = applicationProperties;
         this.securityProperties = securityProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
@@ -334,9 +331,9 @@ public class SecurityConfiguration {
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(
                                                     securityProperties,
-                                                    appConfig,
                                                     jwtService,
-                                                    aiUserDataService))
+                                                    aiUserDataService,
+                                                    applicationProperties))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
                                     .deleteCookies("JSESSIONID", "remember-me", "stirling_jwt"));

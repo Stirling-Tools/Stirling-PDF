@@ -22,7 +22,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
@@ -48,7 +47,6 @@ class SecurityConfigurationTest {
 
     private CustomUserDetailsService userDetailsService;
     private UserService userService;
-    private AppConfig appConfig;
     private UserAuthenticationFilter userAuthenticationFilter;
     private JwtServiceInterface jwtService;
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -69,7 +67,6 @@ class SecurityConfigurationTest {
                 userService,
                 loginEnabled,
                 true,
-                appConfig,
                 applicationProperties,
                 securityProperties,
                 userAuthenticationFilter,
@@ -90,7 +87,6 @@ class SecurityConfigurationTest {
     void setUp() {
         userDetailsService = mock(CustomUserDetailsService.class);
         userService = mock(UserService.class);
-        appConfig = mock(AppConfig.class);
         userAuthenticationFilter = mock(UserAuthenticationFilter.class);
         jwtService = mock(JwtServiceInterface.class);
         jwtAuthenticationEntryPoint = mock(JwtAuthenticationEntryPoint.class);
