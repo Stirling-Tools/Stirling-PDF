@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
+import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useIsPhone } from "@app/hooks/useIsMobile";
@@ -109,6 +110,14 @@ export function PdfViewerToolbar({
 
   const handleZoomIn = () => {
     zoomActions.zoomIn();
+  };
+
+  const handleFitWidth = () => {
+    zoomActions.requestZoom(ZoomMode.FitWidth);
+  };
+
+  const handleFitPage = () => {
+    zoomActions.requestZoom(ZoomMode.FitPage);
   };
 
   const handlePageNavigation = (page: number) => {
@@ -377,6 +386,34 @@ export function PdfViewerToolbar({
           >
             {displayZoomPercent}%
           </span>
+          <Tooltip
+            content={t("viewer.fitWidth", "Fit to width")}
+            position="top"
+            arrow
+          >
+            <ActionIcon
+              variant="tertiary"
+              size={buttonSize}
+              onClick={handleFitWidth}
+              aria-label={t("viewer.fitWidth", "Fit to width")}
+            >
+              <Icon name="move-horizontal" size={18} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip
+            content={t("viewer.fitPage", "Fit to page")}
+            position="top"
+            arrow
+          >
+            <ActionIcon
+              variant="tertiary"
+              size={buttonSize}
+              onClick={handleFitPage}
+              aria-label={t("viewer.fitPage", "Fit to page")}
+            >
+              <Icon name="scan" size={18} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
       )}
 
@@ -429,6 +466,18 @@ export function PdfViewerToolbar({
               onClick={handleZoomIn}
             >
               {t("viewer.zoomIn", "Zoom in")} ({displayZoomPercent}%)
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<Icon name="move-horizontal" size={18} />}
+              onClick={handleFitWidth}
+            >
+              {t("viewer.fitWidth", "Fit to width")}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<Icon name="scan" size={18} />}
+              onClick={handleFitPage}
+            >
+              {t("viewer.fitPage", "Fit to page")}
             </Menu.Item>
 
             <Menu.Divider />
