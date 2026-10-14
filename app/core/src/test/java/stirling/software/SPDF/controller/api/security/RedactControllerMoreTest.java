@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -321,6 +322,74 @@ class RedactControllerMoreTest {
             String text = pdfText(drainBody(response));
             assertThat(text).doesNotContain("111-22-3333");
             assertThat(text).doesNotContain("444-55-6666");
+        }
+
+        @Test
+        @DisplayName("matching ignores case unless caseSensitive is set")
+        void ignoresCaseByDefault() throws IOException {
+            byte[] bytes = singlePageTextPdf("ticket FS-01 and fs-02 here");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("[A-Z]{2}-\\d+");
+            request.setUseRegex(true);
+            request.setRedactColor("#000000");
+
+            String text = pdfText(drainBody(controller.redactPdf(request)));
+            assertThat(text).doesNotContain("FS-01");
+            assertThat(text).doesNotContain("fs-02");
+        }
+
+        @Test
+        @DisplayName("caseSensitive leaves text in another case in place")
+        void caseSensitive() throws IOException {
+            byte[] bytes = singlePageTextPdf("ticket FS-01 and fs-02 here");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("[A-Z]{2}-\\d+");
+            request.setUseRegex(true);
+            request.setCaseSensitive(true);
+            request.setRedactColor("#000000");
+
+            String text = pdfText(drainBody(controller.redactPdf(request)));
+            assertThat(text).doesNotContain("FS-01");
+            assertThat(text).contains("fs-02");
+        }
+
+        @Test
+        @DisplayName("JPDFium receives caseSensitive=false by default")
+        void jpdfiumIgnoresCaseByDefault() throws IOException {
+            assertThat(jpdfiumOptionsFor(null).caseSensitive()).isFalse();
+        }
+
+        @Test
+        @DisplayName("JPDFium receives caseSensitive=true when it is set")
+        void jpdfiumReceivesCaseSensitive() throws IOException {
+            assertThat(jpdfiumOptionsFor(true).caseSensitive()).isTrue();
+        }
+
+        /** The options the controller hands JPDFium; the call then fails so the fallback runs. */
+        private RedactOptions jpdfiumOptionsFor(Boolean caseSensitive) throws IOException {
+            byte[] bytes = singlePageTextPdf("ticket FS-01 and fs-02 here");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("[A-Z]{2}-\\d+");
+            request.setUseRegex(true);
+            request.setCaseSensitive(caseSensitive);
+            request.setRedactColor("#000000");
+
+            ArgumentCaptor<RedactOptions> options = ArgumentCaptor.forClass(RedactOptions.class);
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), options.capture()))
+                        .thenThrow(new IllegalStateException("native redaction unavailable"));
+                drainBody(controller.redactPdf(request));
+            }
+            return options.getValue();
         }
 
         @Test

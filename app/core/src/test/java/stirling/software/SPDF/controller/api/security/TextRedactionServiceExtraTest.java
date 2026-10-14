@@ -75,6 +75,18 @@ class TextRedactionServiceExtraTest {
         }
 
         @Test
+        @DisplayName("case-sensitive search leaves text in another case alone")
+        void caseSensitiveRegex() throws IOException {
+            try (PDDocument doc = buildDoc("ticket FS-01 and fs-02")) {
+                Map<Integer, List<PDFText>> result =
+                        service.findTextToRedact(
+                                doc, new String[] {"[A-Z]{2}-\\d+"}, true, false, true);
+                assertThat(result.get(0)).hasSize(1);
+                assertThat(result.get(0).get(0).getText()).isEqualTo("FS-01");
+            }
+        }
+
+        @Test
         @DisplayName("two distinct literal terms both produce hits on the page")
         void twoDistinctTerms() throws IOException {
             try (PDDocument doc = buildDoc("alpha then bravo then charlie")) {
