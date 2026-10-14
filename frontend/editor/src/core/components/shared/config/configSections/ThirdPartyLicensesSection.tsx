@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   Alert,
   Anchor,
+  Box,
   Group,
   Loader,
   Modal,
@@ -15,6 +16,7 @@ import {
 } from "@mantine/core";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { isAxiosError } from "axios";
+import { useIsPhone } from "@app/hooks/useIsMobile";
 import apiClient from "@app/services/apiClient";
 import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @app alias root
 import {
@@ -49,6 +51,7 @@ interface LicensesSectionBodyProps {
 
 function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
   const { t } = useTranslation();
+  const isPhone = useIsPhone();
   const sortedDependencies = useMemo(
     () => dedupeDependencies(dependencies),
     [dependencies],
@@ -73,7 +76,7 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
   }, [sortedDependencies, query]);
 
   // Native notices add dozens of rows per jar, so only mount the visible slice.
-  const virtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
+  const virtualizer = useVirtualizer<HTMLDivElement, HTMLElement>({
     count: filteredDependencies.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 56,
@@ -87,9 +90,14 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
   const bottomPad =
     virtualizer.getTotalSize() - (virtualItems.at(-1)?.end ?? 0);
 
+  const emptyLabel =
+    dependencies.length === 0
+      ? t("settings.licenses.empty", "No dependencies found.")
+      : t("settings.licenses.noMatch", "No matching dependencies.");
+
   return (
     <Stack gap="lg">
-      <Paper withBorder p="md" radius="md">
+      <Paper withBorder p={isPhone ? "sm" : "md"} radius="md">
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <div>
@@ -124,71 +132,30 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
 
           <div
             ref={scrollRef}
-            style={{ height: 480, overflowY: "auto", overflowX: "auto" }}
+            style={{
+              // A phone card is taller than a table row, so the list gets a
+              // viewport-relative height instead of the table's fixed 480px.
+              height: isPhone ? "min(560px, 62vh)" : 480,
+              overflowY: "auto",
+              overflowX: "auto",
+            }}
           >
-            <Table
-              highlightOnHover
-              withRowBorders
-              verticalSpacing="sm"
-              horizontalSpacing="md"
-              stickyHeader
-              // Collapsed borders disable thead stickiness, so the header
-              // scrolls away; separate with zero spacing renders identically.
-              // Fixed layout pins column widths to the header cells, so
-              // filtering and virtualization cannot shift them around.
-              style={{
-                borderCollapse: "separate",
-                borderSpacing: 0,
-                tableLayout: "fixed",
-              }}
-            >
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th style={{ width: "40%" }}>
-                    {t("settings.licenses.module", "Module")}
-                  </Table.Th>
-                  <Table.Th style={{ width: "15%" }}>
-                    {t("settings.licenses.version", "Version")}
-                  </Table.Th>
-                  <Table.Th style={{ width: "45%" }}>
-                    {t("settings.licenses.license", "License")}
-                  </Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
+            {isPhone ? (
+              <div>
                 {filteredDependencies.length === 0 ? (
-                  <Table.Tr>
-                    <Table.Td colSpan={3}>
-                      <Text ta="center" c="dimmed" py="xl">
-                        {dependencies.length === 0
-                          ? t(
-                              "settings.licenses.empty",
-                              "No dependencies found.",
-                            )
-                          : t(
-                              "settings.licenses.noMatch",
-                              "No matching dependencies.",
-                            )}
-                      </Text>
-                    </Table.Td>
-                  </Table.Tr>
+                  <Text ta="center" c="dimmed" py="xl">
+                    {emptyLabel}
+                  </Text>
                 ) : (
                   <>
-                    {topPad > 0 && (
-                      <Table.Tr key="spacer-top">
-                        <Table.Td
-                          colSpan={3}
-                          style={{ height: topPad, padding: 0, border: 0 }}
-                        />
-                      </Table.Tr>
-                    )}
+                    {topPad > 0 && <div style={{ height: topPad }} />}
                     {virtualItems.map((virtualRow) => {
                       const dependency = filteredDependencies[virtualRow.index];
                       if (!dependency) {
                         return null;
                       }
                       return (
-                        <VirtualLicenseRow
+                        <PhoneLicenseRow
                           key={dependency.rowId}
                           dependency={dependency}
                           index={virtualRow.index}
@@ -197,18 +164,88 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
                         />
                       );
                     })}
-                    {bottomPad > 0 && (
-                      <Table.Tr key="spacer-bottom">
-                        <Table.Td
-                          colSpan={3}
-                          style={{ height: bottomPad, padding: 0, border: 0 }}
-                        />
-                      </Table.Tr>
-                    )}
+                    {bottomPad > 0 && <div style={{ height: bottomPad }} />}
                   </>
                 )}
-              </Table.Tbody>
-            </Table>
+              </div>
+            ) : (
+              <Table
+                highlightOnHover
+                withRowBorders
+                verticalSpacing="sm"
+                horizontalSpacing="md"
+                stickyHeader
+                // Collapsed borders disable thead stickiness, so the header
+                // scrolls away; separate with zero spacing renders identically.
+                // Fixed layout pins column widths to the header cells, so
+                // filtering and virtualization cannot shift them around.
+                style={{
+                  borderCollapse: "separate",
+                  borderSpacing: 0,
+                  tableLayout: "fixed",
+                }}
+              >
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th style={{ width: "40%" }}>
+                      {t("settings.licenses.module", "Module")}
+                    </Table.Th>
+                    <Table.Th style={{ width: "15%" }}>
+                      {t("settings.licenses.version", "Version")}
+                    </Table.Th>
+                    <Table.Th style={{ width: "45%" }}>
+                      {t("settings.licenses.license", "License")}
+                    </Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {filteredDependencies.length === 0 ? (
+                    <Table.Tr>
+                      <Table.Td colSpan={3}>
+                        <Text ta="center" c="dimmed" py="xl">
+                          {emptyLabel}
+                        </Text>
+                      </Table.Td>
+                    </Table.Tr>
+                  ) : (
+                    <>
+                      {topPad > 0 && (
+                        <Table.Tr key="spacer-top">
+                          <Table.Td
+                            colSpan={3}
+                            style={{ height: topPad, padding: 0, border: 0 }}
+                          />
+                        </Table.Tr>
+                      )}
+                      {virtualItems.map((virtualRow) => {
+                        const dependency =
+                          filteredDependencies[virtualRow.index];
+                        if (!dependency) {
+                          return null;
+                        }
+                        return (
+                          <VirtualLicenseRow
+                            key={dependency.rowId}
+                            dependency={dependency}
+                            index={virtualRow.index}
+                            onSelect={setSelected}
+                            measureRef={virtualizer.measureElement}
+                          />
+                        );
+                      })}
+                      {bottomPad > 0 && (
+                        <Table.Tr key="spacer-bottom">
+                          <Table.Td
+                            colSpan={3}
+                            style={{ height: bottomPad, padding: 0, border: 0 }}
+                          />
+                        </Table.Tr>
+                      )}
+                    </>
+                  )}
+                </Table.Tbody>
+              </Table>
+            )}
           </div>
           <LicenseModal
             dependency={selected}
@@ -285,9 +322,11 @@ function AboutLinks({ links }: { links: LicenseAboutLink[] }) {
 function LicenseCell({
   dependency,
   onSelect,
+  wrap = false,
 }: {
   dependency: DependencyRow;
   onSelect: (dependency: DependencyRow) => void;
+  wrap?: boolean;
 }) {
   const full = dependency.moduleLicense || "-";
   const display = resolveLicenseDisplay(
@@ -295,23 +334,34 @@ function LicenseCell({
     dependency.moduleName,
   );
   const links = resolveAboutLinks(display);
+  // A phone card has no fixed column to clip against, so the label wraps there
+  // instead of being truncated to 240px like a table cell.
+  const clip = wrap
+    ? {
+        style: {
+          overflowWrap: "anywhere" as const,
+          textAlign: "left" as const,
+        },
+      }
+    : { truncate: "end" as const, maw: 240 };
+  const separator =
+    links.length > 0 ? (
+      <Text size="xs" c="dimmed" span>
+        {" - "}
+      </Text>
+    ) : null;
   if (dependency.moduleLicenseText) {
     return (
       <span>
         <Anchor
           component="button"
           onClick={() => onSelect(dependency)}
-          truncate="end"
-          maw={240}
           title={full}
+          {...clip}
         >
           {display.short}
         </Anchor>
-        {links.length > 0 ? (
-          <Text size="xs" c="dimmed" span>
-            {" - "}
-          </Text>
-        ) : null}
+        {separator}
         <AboutLinks links={links} />
       </span>
     );
@@ -323,29 +373,20 @@ function LicenseCell({
         href={licenseHref}
         target="_blank"
         rel="noopener noreferrer"
-        truncate="end"
-        maw={240}
         title={full}
+        {...clip}
       >
         {display.short}
       </Anchor>
-      {links.length > 0 ? (
-        <Text size="xs" c="dimmed" span>
-          {" - "}
-        </Text>
-      ) : null}
+      {separator}
       <AboutLinks links={links} />
     </span>
   ) : (
     <span>
-      <Text size="sm" truncate="end" maw={240} title={full} span>
+      <Text size="sm" title={full} span {...clip}>
         {display.short}
       </Text>
-      {links.length > 0 ? (
-        <Text size="xs" c="dimmed" span>
-          {" - "}
-        </Text>
-      ) : null}
+      {separator}
       <AboutLinks links={links} />
     </span>
   );
@@ -360,7 +401,7 @@ function VirtualLicenseRow({
   dependency: DependencyRow;
   index: number;
   onSelect: (dependency: DependencyRow) => void;
-  measureRef: (element: HTMLTableRowElement | null) => void;
+  measureRef: (element: HTMLElement | null) => void;
 }) {
   return (
     // Measured heights keep the virtualizer honest: table padding and wrapped
@@ -411,6 +452,59 @@ function VirtualLicenseRow({
   );
 }
 
+// Narrow viewports get a card per dependency instead of the three-column
+// table: at phone widths the fixed 15% version column truncates to nothing and
+// the module and license labels collide.
+function PhoneLicenseRow({
+  dependency,
+  index,
+  onSelect,
+  measureRef,
+}: {
+  dependency: DependencyRow;
+  index: number;
+  onSelect: (dependency: DependencyRow) => void;
+  measureRef: (element: HTMLElement | null) => void;
+}) {
+  const moduleUrl = resolveModuleUrl(dependency);
+  return (
+    // The gap lives inside the measured element: the virtualizer stacks items
+    // edge to edge, so an outer margin would desync the offsets.
+    <div ref={measureRef} data-index={index} style={{ paddingBottom: 8 }}>
+      <Paper withBorder radius="sm" p="sm">
+        {moduleUrl ? (
+          <Anchor
+            href={moduleUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            fw={600}
+            size="sm"
+            title={dependency.moduleName || "-"}
+            style={{ display: "block", overflowWrap: "anywhere" }}
+          >
+            {dependency.moduleName || "-"}
+          </Anchor>
+        ) : (
+          <Text
+            fw={600}
+            size="sm"
+            title={dependency.moduleName || "-"}
+            style={{ overflowWrap: "anywhere" }}
+          >
+            {dependency.moduleName || "-"}
+          </Text>
+        )}
+        <Text size="xs" c="dimmed">
+          {dependency.moduleVersion || "-"}
+        </Text>
+        <Box mt={4}>
+          <LicenseCell dependency={dependency} onSelect={onSelect} wrap />
+        </Box>
+      </Paper>
+    </div>
+  );
+}
+
 function LicenseModal({
   dependency,
   onClose,
@@ -431,7 +525,7 @@ function LicenseModal({
       title={dependency?.moduleName || "-"}
       size="lg"
     >
-      <ScrollArea.Autosize mah={420}>
+      <ScrollArea.Autosize mah="min(420px, 70vh)">
         <Text size="sm" c="dimmed">
           {dependency?.moduleLicense || "-"}
         </Text>
