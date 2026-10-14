@@ -201,7 +201,7 @@ const SettingsPageInner: React.FC = () => {
   const fullBleed = activeItem?.fullBleed ?? false;
 
   return (
-    <div className="settings-page" data-tour="settings-modal">
+    <div className="settings-page">
       <QuickNavHostBridge
         requestNavigation={requestNavigation}
         onGoToStartupView={goToStartupView}
@@ -335,7 +335,6 @@ const SettingsPageInner: React.FC = () => {
 
       <div
         className="settings-page__main modal-content"
-        data-tour="settings-content-area"
         style={
           isMobile && mobilePane !== "content" ? { display: "none" } : undefined
         }

@@ -24,7 +24,6 @@ import ToolPanelModePrompt from "@app/components/tools/ToolPanelModePrompt";
 import { useTourOrchestration } from "@app/contexts/TourOrchestrationContext";
 import { useAdminTourOrchestration } from "@app/contexts/AdminTourOrchestrationContext";
 import { getTourSteps } from "@app/components/onboarding/tourRegistry";
-import { removeAllGlows } from "@app/components/onboarding/tourGlow";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useServerExperience } from "@app/hooks/useServerExperience";
 import "@app/components/onboarding/OnboardingTour.css";
@@ -161,11 +160,6 @@ export default function Onboarding() {
       clearTourRequest();
     }
   }, [externalTourRequested, requestedTourType, actions, clearTourRequest]);
-
-  useEffect(() => {
-    if (!isTourOpen) removeAllGlows();
-    return () => removeAllGlows();
-  }, [isTourOpen]);
 
   const finishTour = useCallback(() => {
     setIsTourOpen(false);

@@ -1,3 +1,5 @@
+import type { StepType } from "@reactour/tour";
+
 /**
  * Waits for a CSS selector to appear in the DOM using MutationObserver.
  * Resolves immediately if already present; resolves after timeoutMs if it
@@ -55,7 +57,7 @@ export async function revealPickerTool(
 
   const existing = document.querySelector<HTMLElement>(selector);
   if (existing && existing.getClientRects().length > 0) {
-    existing.scrollIntoView({ block: "center", behavior: "smooth" });
+    existing.scrollIntoView({ block: "center", behavior: "instant" });
     await waitForHighlightable(selector, timeoutMs);
     return;
   }
@@ -70,7 +72,7 @@ export async function revealPickerTool(
     for (let step = 0; step < maxSteps; step += 1) {
       const found = document.querySelector<HTMLElement>(selector);
       if (found) {
-        found.scrollIntoView({ block: "center", behavior: "smooth" });
+        found.scrollIntoView({ block: "center", behavior: "instant" });
         await waitForHighlightable(selector, timeoutMs);
         return;
       }
@@ -91,7 +93,7 @@ export async function revealPickerTool(
 
   const finalFound = document.querySelector<HTMLElement>(selector);
   if (finalFound) {
-    finalFound.scrollIntoView({ block: "center", behavior: "smooth" });
+    finalFound.scrollIntoView({ block: "center", behavior: "instant" });
   }
 
   await waitForHighlightable(selector, timeoutMs);
@@ -165,3 +167,43 @@ export function waitForHighlightable(
     mutationObserver.observe(document.body, { childList: true, subtree: true });
   });
 }
+
+type PopoverPlacement = Extract<
+  NonNullable<StepType["position"]>,
+  (...args: never[]) => unknown
+>;
+
+// Reactour hands a position function the popover's own width and height, and
+// the target's padded edges as top/left/right/bottom.
+const POPOVER_GAP = 16;
+
+/**
+ * Places the popover inside the bottom of a target too large to sit beside, so
+ * it covers the least of what the step is pointing at.
+ */
+export const insideBottom: PopoverPlacement = (props) => [
+  Math.max(8, (props.left + props.right) / 2 - props.width / 2),
+  Math.max(8, Math.min(props.bottom, props.windowHeight) - props.height - 24),
+];
+
+/**
+ * Beside a tall target on whichever side has room, centred on the visible part
+ * of it. Reactour's own left/right align to the target's top, which for a
+ * full-height panel pins the popover to a corner of the screen.
+ */
+export const besideCentered: PopoverPlacement = (props, prevRect) => {
+  const fitsLeft = props.left >= props.width + POPOVER_GAP;
+  const fitsRight =
+    props.windowWidth - props.right >= props.width + POPOVER_GAP;
+  if (!fitsLeft && !fitsRight) return insideBottom(props, prevRect);
+  const roomLeft = props.left;
+  const roomRight = props.windowWidth - props.right;
+  const x =
+    fitsLeft && (roomLeft >= roomRight || !fitsRight)
+      ? props.left - props.width - POPOVER_GAP
+      : props.right + POPOVER_GAP;
+  const visibleTop = Math.max(props.top, 0);
+  const visibleBottom = Math.min(props.bottom, props.windowHeight);
+  const y = (visibleTop + visibleBottom) / 2 - props.height / 2;
+  return [x, Math.min(Math.max(8, y), props.windowHeight - props.height - 8)];
+};
