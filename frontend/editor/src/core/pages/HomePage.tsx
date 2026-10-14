@@ -43,7 +43,6 @@ import {
 } from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { READER_PATH } from "@app/routes/readerRoute";
-import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
@@ -154,9 +153,7 @@ export default function HomePage() {
     }
   }, [location.key, processingFolderCreation.open]);
 
-  // Settings is its own page; it restores the recorded origin on Back.
   const openSettings = useCallback(() => {
-    rememberSettingsOrigin();
     navigate("/settings");
   }, [navigate]);
 
