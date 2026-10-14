@@ -13,9 +13,8 @@ public class OptimizePdfRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Compression level from 1 (lightest) to 9 (strongest); higher levels shrink"
-                            + " the file more but may reduce image quality. Or set"
-                            + " expectedOutputSize instead, which picks the level automatically.",
+                    "Compression level from 1 (lightest) to 9 (strongest). Or set"
+                            + " expectedOutputSize to pick one automatically.",
             type = "integer",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "5",

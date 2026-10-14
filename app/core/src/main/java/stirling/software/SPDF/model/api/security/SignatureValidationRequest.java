@@ -15,9 +15,8 @@ public class SignatureValidationRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Optional X.509 certificate (.cer/.crt/.pem, DER or PEM) to check signatures"
-                            + " against. When given it is the only trust anchor: a signature is"
-                            + " trusted only if its certificate chains to it.",
+                    "Optional X.509 certificate (PEM or DER). If given, only signatures"
+                            + " chaining to it are trusted.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private MultipartFile certFile;
 }
