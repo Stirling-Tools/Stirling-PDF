@@ -652,6 +652,16 @@ const EmbedPdfViewerContent = ({
   // consume/undo paths below pass it back as a FileId.
   const currentFileStableId =
     currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
+  // Version replacement can remove the active id; toolbar actions must follow the displayed fallback.
+  useEffect(() => {
+    if (
+      !previewFile &&
+      currentFileStableId &&
+      currentFileStableId !== activeFileId
+    ) {
+      setActiveFileId(currentFileStableId);
+    }
+  }, [previewFile, currentFileStableId, activeFileId, setActiveFileId]);
   const fileWithUrl = useFileWithUrl(currentFile, currentFileId);
 
   // Lineage root of the open document: saves and tool outputs add a child record,

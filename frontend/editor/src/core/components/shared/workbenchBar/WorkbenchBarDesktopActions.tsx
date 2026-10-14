@@ -26,6 +26,7 @@ export default function WorkbenchBarDesktopActions({
   downloadIconName,
   saveAsIconName,
   onPrint,
+  printDisabledReason,
   onExport,
   onClose,
   enforcingProgress,
@@ -59,7 +60,9 @@ export default function WorkbenchBarDesktopActions({
           >
             <Icon name="printer" size={"1rem"} />
           </ActionIcon>,
-          tooltipFor(t("workbenchBar.print", "Print PDF")),
+          tooltipFor(
+            printDisabledReason ?? t("workbenchBar.print", "Print PDF"),
+          ),
         )}
 
       {/* Saving, and closing what was saved: only where a document is open. */}

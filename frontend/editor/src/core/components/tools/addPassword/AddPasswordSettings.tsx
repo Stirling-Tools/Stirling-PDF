@@ -1,4 +1,4 @@
-import { Stack, PasswordInput, Select } from "@mantine/core";
+import { Stack, PasswordInput, Select, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPasswordParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -25,20 +25,24 @@ const AddPasswordSettings = ({
     <Stack gap="md">
       <Stack gap="sm">
         <PasswordInput
-          label={t(
-            "encryptedPdfUnlock.newOpeningPassword",
-            "New password to open",
+          size="xs"
+          label={
+            showOwnerPassword
+              ? t("encryptedPdfUnlock.openingPassword", "Password to open")
+              : undefined
+          }
+          aria-label={t(
+            "encryptedPdfUnlock.openingPassword",
+            "Password to open",
           )}
-          placeholder={t(
-            "encryptedPdfUnlock.chooseOpeningPassword",
-            "Choose a password to open the PDF",
-          )}
+          placeholder={t("encryptedPdfUnlock.enterPassword", "Enter password")}
           value={parameters.password}
           onChange={(e) => onParameterChange("password", e.target.value)}
           disabled={disabled}
         />
         {showOwnerPassword && (
           <PasswordInput
+            size="xs"
             label={t(
               "encryptedPdfUnlock.newOwnerPassword",
               "New permissions password",
@@ -55,8 +59,13 @@ const AddPasswordSettings = ({
       </Stack>
 
       <details>
-        <summary>{t("encryptedPdfUnlock.advanced", "Advanced")}</summary>
+        <summary>
+          <Text component="span" size="xs">
+            {t("encryptedPdfUnlock.advanced", "Advanced")}
+          </Text>
+        </summary>
         <Select
+          size="xs"
           label={t(
             "addPassword.encryption.keyLength.label",
             "Encryption Key Length",

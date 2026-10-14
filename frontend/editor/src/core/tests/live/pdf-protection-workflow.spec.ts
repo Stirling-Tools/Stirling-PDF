@@ -37,7 +37,7 @@ test("two passwords stay distinct through protection, permissions, opening-passw
   await page
     .getByTestId("file-input")
     .setInputFiles(path.join(fixtures, "sample.pdf"));
-  await page.getByLabel("New password to open", { exact: true }).fill(reader);
+  await page.getByLabel("Password to open", { exact: true }).fill(reader);
   await expect(
     page.getByRole("textbox", {
       name: "New permissions password",
@@ -91,6 +91,7 @@ test("two passwords stay distinct through protection, permissions, opening-passw
   await page
     .getByRole("button", { name: "Change Permissions", exact: true })
     .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Change Permissions", exact: true }),
   ).toBeDisabled();
@@ -203,6 +204,11 @@ test("two passwords stay distinct through protection, permissions, opening-passw
   await expect(
     page.getByRole("button", { name: "Manage protection", exact: true }),
   ).toHaveCount(0);
+  await page.getByRole("button", { name: "Print PDF", exact: true }).click();
+  await expect(page.locator('iframe[title="Print Document"]')).toHaveAttribute(
+    "src",
+    /^blob:/,
+  );
 });
 
 test("a protected merge is rejected before asking for passwords or processing files", async ({
@@ -347,5 +353,130 @@ for (const action of [
     await expect(
       page.getByRole("button", { name: "Print PDF", exact: true }),
     ).toBeEnabled();
+  });
+}
+
+test("a PDF with only an opening password opens and prints after removing its opening requirement", async ({
+  page,
+}) => {
+  await page.goto("/add-password");
+  await page
+    .getByTestId("file-input")
+    .setInputFiles(path.join(fixtures, "sample.pdf"));
+  await page.getByLabel("Password to open", { exact: true }).fill(reader);
+  const protectedResponse = page.waitForResponse(
+    "**/api/v1/security/set-pdf-protection",
+  );
+  await page
+    .getByRole("button", { name: "Save protection", exact: true })
+    .click();
+  const result = await protectedResponse;
+  expect(result.ok()).toBe(true);
+  expect(await inspect(page, await result.body(), reader)).toMatchObject({
+    encrypted: true,
+    requiresOpeningPassword: true,
+    canPrint: true,
+  });
+  await expect(
+    page.getByText("Protection saved", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Manage protection", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Remove opening password", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const removedResponse = page.waitForResponse(
+    "**/api/v1/security/remove-pdf-opening-password",
+  );
+  await page
+    .getByRole("button", { name: "Remove opening password", exact: true })
+    .click();
+  const removed = await removedResponse;
+  expect(removed.ok()).toBe(true);
+  expect(await inspect(page, await removed.body(), "")).toMatchObject({
+    requiresOpeningPassword: false,
+    canPrint: true,
+  });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Print PDF", exact: true }).click();
+  await expect(page.locator('iframe[title="Print Document"]')).toHaveAttribute(
+    "src",
+    /^blob:/,
+  );
+});
+
+test("replacing the permissions password requires the old password and invalidates it on the saved copy", async ({
+  page,
+}) => {
+  await page.goto("/change-permissions");
+  await page
+    .getByTestId("file-input")
+    .setInputFiles(path.join(fixtures, "owner-only-restricted.pdf"));
+  await expect(page.getByText("Protected PDF", { exact: true })).toBeVisible();
+  await page
+    .getByRole("checkbox", { name: "Change permissions password", exact: true })
+    .check();
+  await page
+    .getByRole("textbox", { name: "New permissions password", exact: true })
+    .fill(owner);
+  await page
+    .getByRole("button", { name: "Change Permissions", exact: true })
+    .click();
+  await expect(
+    page.getByRole("dialog", {
+      name: "Enter permissions password",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Permissions password", { exact: true })
+    .fill("owner-test-password");
+  const changedResponse = page.waitForResponse(
+    "**/api/v1/security/change-pdf-permissions",
+  );
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  const changed = await changedResponse;
+  expect(changed.ok()).toBe(true);
+  const buffer = await changed.body();
+  expect(await inspect(page, buffer, owner)).toMatchObject({
+    ownerAuthenticated: true,
+  });
+  expect(await inspect(page, buffer, "")).toMatchObject({
+    ownerAuthenticated: false,
+    canPrint: false,
+  });
+  const oldCredential = await page.request.post(
+    "/api/v1/security/inspect-pdf-security",
+    {
+      multipart: {
+        fileInput: { name: "updated.pdf", mimeType: "application/pdf", buffer },
+        password: "owner-test-password",
+      },
+    },
+  );
+  expect(oldCredential.ok()).toBe(false);
+});
+
+for (const tool of ["annotate", "form-fill", "redact"]) {
+  test(`${tool} explains that protected editing is unsupported before offering an editable output`, async ({
+    page,
+  }) => {
+    await page.goto(`/${tool}`);
+    await page
+      .getByTestId("file-input")
+      .setInputFiles(path.join(fixtures, "owner-only-restricted.pdf"));
+    await expect(
+      page
+        .getByText("This tool cannot yet preserve this PDF's protection.", {
+          exact: true,
+        })
+        .first(),
+    ).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Print PDF", exact: true }),
+    ).toBeDisabled();
   });
 }

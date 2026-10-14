@@ -153,6 +153,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             />
             {hasRestrictions && (
               <PasswordInput
+                size="xs"
                 label={t(
                   "encryptedPdfUnlock.newOwnerPassword",
                   "New permissions password",

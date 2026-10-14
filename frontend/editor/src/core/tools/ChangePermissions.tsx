@@ -67,6 +67,7 @@ const ChangePermissions = (props: BaseToolProps) => {
           <Stack>
             {needsOpeningPassword && (
               <PasswordInput
+                size="xs"
                 label={t(
                   "encryptedPdfUnlock.resultOpeningPassword",
                   "Password to open the updated PDF",
@@ -121,6 +122,7 @@ const ChangePermissions = (props: BaseToolProps) => {
             )}
             {showOwnerPassword && (
               <PasswordInput
+                size="xs"
                 label={t(
                   "encryptedPdfUnlock.newOwnerPassword",
                   "New permissions password",

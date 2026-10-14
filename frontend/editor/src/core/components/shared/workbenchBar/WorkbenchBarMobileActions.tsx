@@ -17,6 +17,7 @@ export default function WorkbenchBarMobileActions({
   downloadIconName,
   saveAsIconName,
   onPrint,
+  printDisabledReason,
   onExport,
   onClose,
 }: WorkbenchBarActionsProps) {
@@ -48,6 +49,7 @@ export default function WorkbenchBarMobileActions({
             leftSection={<Icon name="printer" size={"1.1rem"} />}
             disabled={exportDisabled || !onPrint}
             onClick={onPrint}
+            title={printDisabledReason}
           >
             {t("workbenchBar.print", "Print PDF")}
           </Menu.Item>
