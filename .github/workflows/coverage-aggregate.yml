@@ -64,6 +64,7 @@ jobs:
           sparse-checkout: .github/actions/java
           persist-credentials: false
 
+      # gradle: It is not cacheable; `gradlew classes -PnoSpotless` recreates the data, which makes the cache inconsistent.
       - name: Restore Gradle cache github-artifact
         id: cache
         uses: ./.github/actions/cache-the-planet

@@ -20,6 +20,22 @@ on:
         required: false
         type: boolean
         default: false
+      gradle-hash:
+        required: true
+        type: string
+      java-version:
+        required: false
+        default: '25'
+        type: string
+      uv-hash:
+        required: true
+        type: string
+      cargo-hash:
+        required: true
+        type: string
+      frontend-dist-hash:
+        required: true
+        type: string
   push:
     branches: ["main"]
   schedule:
@@ -36,6 +52,13 @@ on:
 
 permissions:
   contents: read
+
+env:
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
+  UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
+  UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
+  NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
+  CARGO_HOME: ${{ github.workspace }}/.cache/cargo
 
 jobs:
   pick:
@@ -73,39 +96,59 @@ jobs:
           sparse-checkout: .github/actions/java
           persist-credentials: false
 
-      - name: Restore cache Gradle User Home
-        if: inputs.use_shared_cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore cache artifact
+        id: cache
+        uses: ./.github/actions/cache-the-planet
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
+          multi-cache: |
+            cargo-registry:
+              path: .cache/cargo/registry
+            cargo-git:
+              path: .cache/cargo/git
+            cargo-bin:
+              path: .cache/cargo/bin
+            frontend-dist:
+              path: frontend/editor/dist
+            frontend-node-modules:
+              path: frontend/node_modules
+            npm-cache:
+              path: .cache/npm
+            gradle-caches:
+              path: .cache/gradle-java-${{ inputs.java-version }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
+            tauri-target:
+              path: frontend/editor/src-tauri/target
+            enterprise-setup-uv-cache:
+              path: .cache/setup-uv-cache
+            enterprise-uv-python-dir:
+              path: .cache/uv-python-dir
+          key: |
+            gradle-caches=${{ inputs.gradle-hash }}
+            gradle-wrapper=${{ inputs.gradle-hash }}
+            cargo-registry=${{ inputs.cargo-hash }}
+            cargo-git=${{ inputs.cargo-hash }}
+            cargo-bin=${{ inputs.cargo-hash }}
+            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            frontend-dist=${{ inputs.frontend-dist-hash }}
+            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            tauri-target=${{ inputs.frontend-dist-hash }}
+            enterprise-setup-uv-cache=${{ inputs.uv-hash }}
+            enterprise-uv-python-dir=${{ inputs.uv-hash }}
 
-      - name: Restore cache Gradle
-        if: inputs.use_shared_cache == false
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-playwright-e2e-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-
-      - name: Set up JDK 25
+      - name: Set up JDK ${{ inputs.java-version }}
         uses: ./trusted-java-action/.github/actions/java
         with:
-          java-version: "25"
+          java-version: ${{ inputs.java-version }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+
       - name: Install Playwright (chromium only)
         run: task e2e:install -- chromium
+
       - name: Build frontend (needed for playwright's vite preview webServer)
         # Enterprise tests target :8080 (Spring Boot's bundled frontend), but
         # playwright's webServer config still launches `vite preview --port 5173`
@@ -157,6 +200,7 @@ jobs:
       - name: Bring up Keycloak (OAuth realm)
         working-directory: testing/compose
         run: docker compose -f docker-compose-keycloak-oauth.yml up -d --no-deps keycloak-oauth-db keycloak-oauth
+
       - name: Wait for Keycloak (OAuth) ready
         working-directory: testing/compose
         run: |
@@ -169,6 +213,7 @@ jobs:
           done
           docker compose -f docker-compose-keycloak-oauth.yml logs --tail=200 keycloak-oauth
           exit 1
+
       - name: Boot Stirling-PDF (frontend baked in, OAuth env)
         env:
           SECURITY_ENABLELOGIN: "true"
@@ -188,11 +233,13 @@ jobs:
           nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid
           wait_for_backend
+
       - name: Run enterprise OAuth Playwright tests
         id: oauth-tests
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-oauth.json
         run: task e2e:enterprise -- --grep "OAuth"
+
       - name: Stop backend + tear down OAuth Keycloak
         if: always()
         run: |
@@ -204,6 +251,7 @@ jobs:
       - name: Bring up Keycloak (SAML realm)
         working-directory: testing/compose
         run: docker compose -f docker-compose-keycloak-saml.yml up -d --no-deps keycloak-saml-db keycloak-saml
+
       - name: Wait for Keycloak (SAML) ready
         working-directory: testing/compose
         run: |
@@ -213,6 +261,7 @@ jobs:
           done
           docker compose -f docker-compose-keycloak-saml.yml logs --tail=200 keycloak-saml
           exit 1
+
       - name: Generate SAML SP certs + fetch Keycloak IdP cert
         # The .pem/.crt/.key files are gitignored (test-only certs); the
         # docker-based start-saml-test.sh generates them at runtime, so do
@@ -236,6 +285,7 @@ jobs:
           test -s saml-public-cert.crt
           test -s keycloak-saml-cert.pem
           echo "✓ SAML certs prepared"
+
       - name: Boot Stirling-PDF (frontend baked in, SAML env)
         env:
           SECURITY_ENABLELOGIN: "true"
@@ -263,11 +313,13 @@ jobs:
           nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid
           wait_for_backend
+
       - name: Run enterprise SAML Playwright tests
         id: saml-tests
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-saml.json
         run: task e2e:enterprise -- --grep "SAML"
+
       - name: Stop backend + tear down SAML Keycloak
         if: always()
         run: |
@@ -284,6 +336,7 @@ jobs:
         run: |
           rm -f app/core/configs/stirling-pdf-DB*.mv.db
           rm -rf app/core/configs/backup
+
       - name: Boot Stirling-PDF (frontend baked in, premium only)
         env:
           SECURITY_INITIALLOGIN_USERNAME: admin
@@ -295,22 +348,26 @@ jobs:
           nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid
           wait_for_backend
+
       - name: Run enterprise feature Playwright tests
         id: feature-tests
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-feature.json
         run: task e2e:enterprise -- --grep "Enterprise license"
+
       - name: Print backend log on failure
         if: failure()
         run: |
           echo "::group::Enterprise backend log"
           tail -500 /tmp/backend.log || true
           echo "::endgroup::"
+
       - name: Stop backend (final)
         if: always()
         run: |
           source /tmp/helpers.sh
           stop_backend
+
       - name: Flag flaky tests
         # Runs regardless of the test outcomes: a flaky test (passed on retry)
         # leaves its step green, so this is the only place it surfaces. Merges
@@ -324,6 +381,7 @@ jobs:
           "${{ github.workspace }}/frontend/playwright-report/results-oauth.json"
           "${{ github.workspace }}/frontend/playwright-report/results-saml.json"
           "${{ github.workspace }}/frontend/playwright-report/results-feature.json"
+
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -370,21 +428,69 @@ jobs:
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
+
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Restore cache artifact
+        id: cache
+        uses: ./.github/actions/cache-the-planet
+        with:
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
+          multi-cache: |
+            cargo-registry:
+              path: .cache/cargo/registry
+            cargo-git:
+              path: .cache/cargo/git
+            cargo-bin:
+              path: .cache/cargo/bin
+            frontend-dist:
+              path: frontend/editor/dist
+            frontend-node-modules:
+              path: frontend/node_modules
+            npm-cache:
+              path: .cache/npm
+            gradle-caches:
+              path: .cache/gradle-java-${{ inputs.java-version }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
+            tauri-target:
+              path: frontend/editor/src-tauri/target
+            enterprise-setup-uv-cache:
+              path: .cache/setup-uv-cache
+            enterprise-uv-python-dir:
+              path: .cache/uv-python-dir
+          key: |
+            gradle-caches=${{ inputs.gradle-hash }}
+            gradle-wrapper=${{ inputs.gradle-hash }}
+            cargo-registry=${{ inputs.cargo-hash }}
+            cargo-git=${{ inputs.cargo-hash }}
+            cargo-bin=${{ inputs.cargo-hash }}
+            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            frontend-dist=${{ inputs.frontend-dist-hash }}
+            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            tauri-target=${{ inputs.frontend-dist-hash }}
+            enterprise-setup-uv-cache=${{ inputs.uv-hash }}
+            enterprise-uv-python-dir=${{ inputs.uv-hash }}
+
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          enable-cache: true
+          enable-cache: false
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
+          cache-local-path: .cache/setup-uv-cache
+
       - name: Install behave test deps
         run: |
           uv sync --project engine --locked --group cucumber
+
       - name: Build the multi-node image
         working-directory: testing/compose
         run: docker compose $MN_FILES build
+
       - name: Bring up the cluster and wait for both nodes healthy
         working-directory: testing/compose
         run: |
@@ -398,20 +504,25 @@ jobs:
           echo "::error::nodes did not become healthy"
           docker compose $MN_FILES logs --tail=200 stirling-1 stirling-2
           exit 1
+
       - name: Seed the cluster (teams, users, S3 connection, policy)
         working-directory: testing/compose
         run: docker compose $MN_FILES --profile seed run --rm seed
+
       - name: Run multi-node regression (implemented guarantees)
         working-directory: testing/cucumber
         # -e overrides behave.ini's exclusion of features/multinode; ~@known_gap skips any tracked-gap scenarios.
         run: uv run --project ../../engine --locked --group cucumber python -m behave features/multinode -e "features/enterprise" --tags="~@known_gap ~@destructive" --no-capture -f plain
+
       - name: Run multi-node failover (destructive)
         working-directory: testing/cucumber
         run: uv run --project ../../engine --locked --group cucumber python -m behave features/multinode -e "features/enterprise" --tags="@destructive ~@known_gap" --no-capture -f plain
+
       - name: Dump node logs on failure
         if: failure()
         working-directory: testing/compose
         run: docker compose $MN_FILES logs --tail=400 stirling-1 stirling-2
+        
       - name: Tear down
         if: always()
         working-directory: testing/compose
