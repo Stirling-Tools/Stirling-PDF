@@ -74,3 +74,20 @@ the agreement. The companion Deno tests exercise invoice-date resolution and the
 acceptance migration with PostgreSQL. Before rollout, exercise the existing purchase
 journey once in Stripe test mode and verify the actual Keygen expiry; unit tests mock
 these external services.
+
+## Local preview development
+
+The companion repository's `npm run dev:prepare` command resolves a disposable
+Supabase branch, provisions the empty Stripe mirror schema and writes this
+repository's ignored `app/.env.saas.local`. See its
+[preview setup guide](https://github.com/Stirling-Tools/Stirling-PDF-SaaS/blob/codex/saas-enterprise-plan/docs/PREVIEW_DEVELOPMENT.md).
+Start `task backend:dev:saas` and `task frontend:dev:saas` afterwards. Both use the
+same project settings; the database connection uses the IPv4 session pooler with
+verified TLS. Java accepts Supabase ES256 and RS256 signing keys.
+
+The first Java dev boot creates inherited tables that are intentionally managed by
+Hibernate. SaaS migration-owned tables are excluded, including `file_run_events`.
+The subscription mirror is mapped explicitly to `public.billing_subscriptions`.
+Stripe function secrets are unnecessary for login, trials and PDF processing; the
+empty Stripe schema is necessary for wallet reads. Real purchases and licence
+issuance remain separate integration checks.
