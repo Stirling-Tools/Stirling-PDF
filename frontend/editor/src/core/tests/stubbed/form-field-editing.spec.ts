@@ -471,4 +471,187 @@ test.describe("Form field editor", () => {
 
     await expect(commit).toBeDisabled();
   });
+
+  test("Create and Modify share a draft and Ctrl+S saves both", async ({
+    page,
+  }) => {
+    await stubFormEndpoints(page, STUB_FIELDS);
+    await openFormTool(page);
+    await selectMode(page, "Modify");
+    await page.getByTestId("form-modify-row-firstName").click();
+    await page.getByLabel("Label", { exact: true }).fill("Given name");
+    await selectMode(page, "Create");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByTestId("form-create-commit")).toContainText("1");
+    await page.getByTestId("form-create-type-text").click();
+    await drawField(page);
+    await selectMode(page, "Modify");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByTestId("form-modify-commit")).toContainText("2");
+    await expect(
+      page.locator('[data-testid^="form-pending-row-"]'),
+    ).toHaveCount(1);
+    await page.keyboard.press("ControlOrMeta+s");
+    const batch = await readEditBatch(page);
+    expect(batch.add).toHaveLength(1);
+    expect(batch.modify).toEqual([
+      { targetName: "firstName", label: "Given name" },
+    ]);
+    await expect(
+      page.locator('[data-testid^="form-pending-row-"]'),
+    ).toHaveCount(0);
+    await expect(page.getByTestId("form-modify-commit")).toBeDisabled();
+  });
+
+  test("a failed save keeps the design draft and its active tab", async ({
+    page,
+  }) => {
+    await stubFormEndpoints(page, STUB_FIELDS);
+    await page.route("**/api/v1/form/edit-fields**", (route) =>
+      route.fulfill({
+        status: 400,
+        json: { detail: "Field could not be saved" },
+      }),
+    );
+    await openFormTool(page);
+    await selectMode(page, "Modify");
+    await page.getByTestId("form-modify-row-firstName").click();
+    await page.getByLabel("Label", { exact: true }).fill("Keep this draft");
+    await selectMode(page, "Fill");
+    await page.getByTestId("unsaved-save").click();
+    await expect(
+      page.getByText("Field could not be saved", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
+      "Keep this draft",
+    );
+    await expect(page.getByTestId("form-modify-commit")).toBeEnabled();
+    await selectMode(page, "Fill");
+    await page.getByTestId("unsaved-discard").click();
+    await selectMode(page, "Modify");
+    await expect(page.getByTestId("form-modify-commit")).toBeDisabled();
+  });
+
+  test("Fill edits require a decision before entering design and flatten alone enables Save", async ({
+    page,
+  }) => {
+    await stubFormEndpoints(page, STUB_FIELDS);
+    await openFormTool(page);
+    await page
+      .getByRole("textbox", { name: "First name", exact: true })
+      .fill("Unsaved answer");
+    await selectMode(page, "Create");
+    await expect(page.getByTestId("unsaved-save")).toBeVisible();
+    await page
+      .getByRole("button", { name: "Keep Working", exact: true })
+      .click();
+    await expect(
+      page.getByRole("textbox", { name: "First name", exact: true }),
+    ).toHaveValue("Unsaved answer");
+    await selectMode(page, "Modify");
+    await page.getByTestId("unsaved-discard").click();
+    await selectMode(page, "Fill");
+    await expect(
+      page.getByRole("textbox", { name: "First name", exact: true }),
+    ).toHaveValue("");
+    await expect(
+      page.getByRole("button", { name: "Save", exact: true }),
+    ).toBeDisabled();
+    await page.getByLabel("Flatten after filling", { exact: true }).check();
+    await expect(
+      page.getByRole("button", { name: "Save", exact: true }),
+    ).toBeEnabled();
+  });
+
+  test("saving remains busy until the replacement fields are loaded", async ({
+    page,
+  }) => {
+    await stubFormEndpoints(page, STUB_FIELDS);
+    await openFormTool(page);
+    await selectMode(page, "Modify");
+    await page.getByTestId("form-modify-row-firstName").click();
+    await page.getByLabel("Label", { exact: true }).fill("Fresh label");
+    let release!: () => void;
+    const ready = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let requested = false;
+    await page.route(
+      "**/api/v1/form/fields-with-coordinates",
+      async (route) => {
+        requested = true;
+        await ready;
+        await route.fulfill({
+          json: STUB_FIELDS.map((field) => ({
+            ...field,
+            label: "Fresh label",
+          })),
+        });
+      },
+    );
+    await page.getByTestId("form-modify-commit").click();
+    try {
+      await expect.poll(() => requested).toBe(true);
+      await expect(page.getByTestId("form-modify-commit")).toBeDisabled();
+      await expect(page.getByTestId("form-modify-commit")).toContainText("1");
+    } finally {
+      release();
+    }
+    await expect(page.getByTestId("form-modify-commit")).toContainText("0");
+    await expect(page.getByTestId("form-modify-row-firstName")).toContainText(
+      "Fresh label",
+    );
+  });
+  test("saving the second open PDF completes and keeps the form panel usable", async ({
+    page,
+  }) => {
+    const captured = await stubFormEndpoints(page, STUB_FIELDS);
+    await page.goto("/form-fill");
+    await uploadFiles(page, [
+      path.join(import.meta.dirname, "../test-fixtures/compare_sample_a.pdf"),
+      SAMPLE_PDF,
+    ]);
+    const row = page.getByRole("listitem").filter({ hasText: "sample.pdf" });
+    await row.hover();
+    await row
+      .getByRole("button", { name: "Open in Viewer", exact: true })
+      .click();
+    await selectMode(page, "Modify");
+    await page.getByTestId("form-modify-row-firstName").click();
+    await page.getByLabel("Label", { exact: true }).fill("Second document");
+    await page.getByTestId("form-modify-commit").click();
+    await expect.poll(() => captured["edit-fields"]).toBeTruthy();
+    expect((await readEditBatch(page)).modify).toEqual([
+      { targetName: "firstName", label: "Second document" },
+    ]);
+    await expect(page.getByTestId("form-modify-commit")).toContainText("0");
+    await selectMode(page, "Fill");
+    await page
+      .getByRole("textbox", { name: "First name", exact: true })
+      .fill("Still editable");
+    await expect(
+      page.getByRole("button", { name: "Save", exact: true }),
+    ).toBeEnabled();
+  });
+  test("leaving the form tool saves its design draft through the navigation dialog", async ({
+    page,
+  }) => {
+    await stubFormEndpoints(page, STUB_FIELDS);
+    await openFormTool(page);
+    await selectMode(page, "Modify");
+    await page.getByTestId("form-modify-row-firstName").click();
+    await page
+      .getByLabel("Label", { exact: true })
+      .fill("Saved before leaving");
+    await page
+      .getByRole("button", { name: "Back to all tools", exact: true })
+      .click();
+    await page.getByTestId("unsaved-save").click();
+    const batch = await readEditBatch(page);
+    expect(batch.modify).toEqual([
+      { targetName: "firstName", label: "Saved before leaving" },
+    ]);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(modeTab(page, "Modify")).toHaveCount(0);
+  });
 });
