@@ -19,7 +19,9 @@ public class SplitPdfBySizeOrCountRequest extends PDFFile {
     private int splitType;
 
     @Schema(
-            description = "A size such as '10MB' for splitType 0; a whole number for 1 and 2",
+            description =
+                    "For splitType 0 a size like '500KB' or '10MB' (a bare number means"
+                            + " MB); for 1 and 2 a whole number",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "10MB")
     private String splitValue = "10MB";
