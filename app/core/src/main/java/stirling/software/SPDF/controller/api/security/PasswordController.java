@@ -111,16 +111,10 @@ public class PasswordController {
                             produces = ToolFormat.PDF,
                             arity = ToolArity.SISO))
     @Operation(
-            summary =
-                    "Add an open password and/or an owner password with restrictions (no printing,"
-                            + " copying, editing)",
+            summary = "Add a password and permission restrictions to a PDF",
             description =
-                    "password is needed to open the file; ownerPassword is needed to change the"
-                            + " restrictions set by the prevent* flags. The restrictions only hold"
-                            + " with an ownerPassword that differs from password: without one the"
-                            + " open password (or an empty one) is also the owner password, so"
-                            + " anyone who can open the file can lift them. With no passwords the"
-                            + " file opens freely.")
+                    "password is needed to open the file. The prevent* restrictions only"
+                            + " hold when ownerPassword is set and differs from password.")
     public ResponseEntity<Resource> addPassword(@ModelAttribute AddPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();

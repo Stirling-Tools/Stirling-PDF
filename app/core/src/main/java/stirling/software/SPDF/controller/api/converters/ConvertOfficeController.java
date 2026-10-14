@@ -275,13 +275,10 @@ public class ConvertOfficeController {
     @ToolIO(accepts = ToolFormat.ANY, produces = ToolFormat.PDF)
     @Operation(
             summary =
-                    "Convert Word, Excel, PowerPoint, OpenDocument, RTF, CSV or text files to PDF",
+                    "Convert office documents (Word, Excel, PowerPoint, OpenDocument) to" + " PDF",
             description =
-                    "Converts office documents to PDF with Stirling Office Convert or LibreOffice,"
-                            + " depending on the server: Word (doc, docx), Excel (xls, xlsx),"
-                            + " PowerPoint (ppt, pptx), OpenDocument (odt, ods, odp, odg), RTF,"
-                            + " CSV/TSV and plain text. Other formats LibreOffice reads, such as"
-                            + " HTML, need LibreOffice on the server; for web pages prefer"
+                    "Converts doc/docx, xls/xlsx, ppt/pptx, odt/ods/odp/odg, RTF, CSV and"
+                            + " text. Other formats need LibreOffice on the server; for web pages use"
                             + " html-to-pdf.")
     public ResponseEntity<Resource> processFileToPDF(
             @ModelAttribute GeneralFile generalFile,

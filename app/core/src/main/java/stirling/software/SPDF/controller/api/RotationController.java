@@ -42,13 +42,11 @@ public class RotationController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary =
-                    "Rotate all pages clockwise by 90, 180 or 270 degrees; for chosen pages use"
-                            + " auto-rotate-pdf pageRotations",
+            summary = "Rotate all pages by 90, 180 or 270 degrees clockwise",
             description =
-                    "Adds the given clockwise angle (a multiple of 90) to the rotation of every"
-                            + " page. To rotate only some pages, call auto-rotate-pdf with"
-                            + " pageRotations, e.g. [{\"pageNumber\":3,\"rotation\":90}].")
+                    "Adds the angle (a multiple of 90) to every page's rotation. For"
+                            + " per-page rotation in automated workflows, use auto-rotate-pdf with"
+                            + " pageRotations.")
     public ResponseEntity<Resource> rotatePDF(@ModelAttribute RotatePDFRequest request)
             throws IOException {
         MultipartFile pdfFile = request.getFileInput();

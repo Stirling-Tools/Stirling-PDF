@@ -13,9 +13,8 @@ public class RedactPdfRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Text to redact, one term per line (newline-separated, not comma-separated)."
-                            + " Each line is matched on its own; with useRegex=true each line is a"
-                            + " regex.",
+                    "Text to redact, one term per line (not comma-separated); each line is"
+                            + " a regex when useRegex=true",
             example = "text\ntext2",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String listOfText;
@@ -46,10 +45,7 @@ public class RedactPdfRequest extends PDFFile {
     private float customPadding = 0f;
 
     @Schema(
-            description =
-                    "Turn every page into an image after redacting, so nothing under the boxes"
-                            + " can be extracted even if text removal fell back to boxes. All text"
-                            + " becomes unselectable.",
+            description = "Turn pages into images so nothing under the boxes can be extracted",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean convertPDFToImage = Boolean.FALSE;
