@@ -189,7 +189,7 @@ public final class RegexPatternUtils {
         } catch (PatternSyntaxException e) {
             // Patterns can be user input such as auto-redact search terms, so the pattern text
             // stays out of the log; getMessage() would include it.
-            log.debug(
+            log.warn(
                     "Invalid regex pattern with flags {}: {} near index {}",
                     flags,
                     e.getDescription(),
