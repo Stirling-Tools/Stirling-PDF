@@ -45,12 +45,11 @@ async function inspect(page: Page, buffer: Buffer, password: string) {
 }
 
 for (const entry of ["workbench", "editor upload"] as const) {
-  test(`a fresh reader cannot edit an owner-restricted PDF through ${entry}`, async ({
+  test(`a fresh reader follows the owner policy through ${entry}`, async ({
     page,
   }) => {
-    expect(
-      await inspect(page, await fs.readFile(restricted), ""),
-    ).toMatchObject({
+    const access = await inspect(page, await fs.readFile(restricted), "");
+    expect(access).toMatchObject({
       encrypted: true,
       ownerAuthenticated: false,
       canModify: false,
@@ -66,21 +65,36 @@ for (const entry of ["workbench", "editor upload"] as const) {
       await page.goto("/pdf-text-editor");
       await page.getByTestId("pdf-editor-file-input").setInputFiles(restricted);
     }
-    await expect(page.getByText(deniedMessage, { exact: true })).toBeVisible();
-    await expect(page.getByTestId("pdf-editor-page-0")).toHaveCount(0);
-    await expect(page.locator('[data-testid^="pdf-editor-run-"]')).toHaveCount(
-      0,
-    );
+    if (access.honorOwnerPasswords !== false) {
+      await expect(
+        page.getByText(deniedMessage, { exact: true }),
+      ).toBeVisible();
+      await expect(page.getByTestId("pdf-editor-page-0")).toHaveCount(0);
+      await expect(
+        page.locator('[data-testid^="pdf-editor-run-"]'),
+      ).toHaveCount(0);
+    } else {
+      await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible();
+      await expect(
+        page
+          .locator('[data-testid^="pdf-editor-run-"][contenteditable="true"]')
+          .first(),
+      ).toBeVisible();
+      await expect(page.getByText(deniedMessage, { exact: true })).toHaveCount(
+        0,
+      );
+    }
   });
 }
 
-test("an owner can edit while the saved PDF remains restricted in a fresh reader session", async ({
+test("permitted text edits preserve protection and a fresh reader follows the server policy", async ({
   page,
   browser,
 }) => {
   test.setTimeout(120_000);
   const source = await fs.readFile(restricted);
   const sourceAccess = await inspect(page, source, owner);
+  const honorOwnerPasswords = sourceAccess.honorOwnerPasswords !== false;
   await page.goto("/editor");
   await page.getByTestId("file-input").setInputFiles(restricted);
   await page
@@ -92,28 +106,41 @@ test("an owner can edit while the saved PDF remains restricted in a fresh reader
       exact: true,
     }),
   ).toHaveCount(0);
+  if (honorOwnerPasswords) {
+    await page
+      .getByRole("button", {
+        name: "Verify permissions for this session",
+        exact: true,
+      })
+      .click();
+    await page.getByLabel("Permissions password", { exact: true }).fill(owner);
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    await expect(
+      page.getByText("Permissions unlocked for this session", { exact: true }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Manage protection", exact: true })
+      .click();
+  } else {
+    await expect(
+      page.getByRole("button", {
+        name: "Verify permissions for this session",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+  }
   await page
     .getByRole("button", {
-      name: "Verify permissions for this session",
-      exact: true,
-    })
-    .click();
-  await page.getByLabel("Permissions password", { exact: true }).fill(owner);
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await expect(
-    page.getByText("Permissions unlocked for this session", { exact: true }),
-  ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Manage protection", exact: true })
-    .click();
-  await page
-    .getByRole("button", {
-      name: "Editing unlocked for this session",
+      name: honorOwnerPasswords
+        ? "Editing unlocked for this session"
+        : "Editing restriction ignored",
       exact: true,
     })
     .hover();
   await expect(page.getByRole("tooltip")).toHaveText(
-    "Unlocked for this session using your permissions password.",
+    honorOwnerPasswords
+      ? "Unlocked for this session using your permissions password."
+      : "Permissions are ignored by this server's settings. The PDF's protection is unchanged.",
   );
   await page
     .getByRole("dialog")
@@ -159,10 +186,17 @@ test("an owner can edit while the saved PDF remains restricted in a fresh reader
     await readerPage
       .getByTestId("pdf-editor-file-input")
       .setInputFiles(savedPath);
-    await expect(
-      readerPage.getByText(deniedMessage, { exact: true }),
-    ).toBeVisible();
-    await expect(readerPage.getByTestId("pdf-editor-page-0")).toHaveCount(0);
+    if (honorOwnerPasswords) {
+      await expect(
+        readerPage.getByText(deniedMessage, { exact: true }),
+      ).toBeVisible();
+      await expect(readerPage.getByTestId("pdf-editor-page-0")).toHaveCount(0);
+    } else {
+      await expect(readerPage.getByTestId("pdf-editor-page-0")).toBeVisible();
+      await expect(
+        readerPage.getByText(deniedMessage, { exact: true }),
+      ).toHaveCount(0);
+    }
   } finally {
     await readerContext.close();
   }

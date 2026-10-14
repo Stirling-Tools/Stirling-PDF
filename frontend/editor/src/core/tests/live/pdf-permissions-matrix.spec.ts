@@ -133,7 +133,7 @@ async function assertCopyAccess(page: Page, allowed: boolean) {
 }
 
 for (const restriction of restrictions) {
-  test(`${restriction.label}: setting on and off preserves credentials and updates reader access`, async ({
+  test(`${restriction.label}: setting on and off preserves protection and follows the server policy`, async ({
     page,
   }) => {
     const readerContexts: BrowserContext[] = [];
@@ -159,6 +159,7 @@ for (const restriction of restrictions) {
       expect(result.ok()).toBe(true);
       const protectedBytes = await result.body();
       const readerAccess = await inspect(page, protectedBytes);
+      const honorOwnerPasswords = readerAccess.honorOwnerPasswords !== false;
       expect(readerAccess).toMatchObject({
         encrypted: true,
         ownerAuthenticated: false,
@@ -190,8 +191,9 @@ for (const restriction of restrictions) {
         exact: true,
       });
       if (
-        restriction.bit === PdfPermissionFlag.Print ||
-        restriction.bit === PdfPermissionFlag.PrintHighQuality
+        honorOwnerPasswords &&
+        (restriction.bit === PdfPermissionFlag.Print ||
+          restriction.bit === PdfPermissionFlag.PrintHighQuality)
       ) {
         await expect(printButton).toBeDisabled();
         await printButton.locator("..").hover();
@@ -221,32 +223,49 @@ for (const restriction of restrictions) {
             },
           },
         );
-        expect(denied.status()).toBe(403);
+        expect(denied.status()).toBe(honorOwnerPasswords ? 403 : 200);
       }
       if (restriction.bit === PdfPermissionFlag.CopyContents)
-        await assertCopyAccess(page, false);
+        await assertCopyAccess(page, !honorOwnerPasswords);
 
       await page
         .getByRole("checkbox", { name: restriction.label, exact: true })
         .uncheck();
+      const savedOwner = honorOwnerPasswords
+        ? owner
+        : "matrix-replacement-owner";
+      if (!honorOwnerPasswords) {
+        await page
+          .getByRole("textbox", {
+            name: "New permissions password",
+            exact: true,
+          })
+          .fill(savedOwner);
+      }
+      const changedResponse = page.waitForResponse(
+        "**/api/v1/security/change-pdf-permissions",
+      );
       await page
         .getByRole("button", {
           name: /^Change Permissions(?: \(this file\))?$/,
         })
         .click();
-      await expect(
-        page.getByRole("dialog", {
-          name: "Enter permissions password",
-          exact: true,
-        }),
-      ).toBeVisible();
-      await page
-        .getByLabel("Permissions password", { exact: true })
-        .fill(owner);
-      const changedResponse = page.waitForResponse(
-        "**/api/v1/security/change-pdf-permissions",
-      );
-      await page.getByRole("button", { name: "Continue", exact: true }).click();
+      if (honorOwnerPasswords) {
+        await expect(
+          page.getByRole("dialog", {
+            name: "Enter permissions password",
+            exact: true,
+          }),
+        ).toBeVisible();
+        await page
+          .getByLabel("Permissions password", { exact: true })
+          .fill(owner);
+        await page
+          .getByRole("button", { name: "Continue", exact: true })
+          .click();
+      } else {
+        await expect(page.getByRole("dialog")).toHaveCount(0);
+      }
       const changed = await changedResponse;
       expect(changed.ok()).toBe(true);
       const allowedBytes = await changed.body();
@@ -257,7 +276,7 @@ for (const restriction of restrictions) {
       });
       for (const other of restrictions)
         expect((allowed.permissions & other.bit) !== 0, other.label).toBe(true);
-      expect(await inspect(page, allowedBytes, owner)).toMatchObject({
+      expect(await inspect(page, allowedBytes, savedOwner)).toMatchObject({
         ownerAuthenticated: true,
       });
       await expect(

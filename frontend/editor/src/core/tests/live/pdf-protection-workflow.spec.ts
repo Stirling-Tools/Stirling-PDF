@@ -256,12 +256,14 @@ for (const action of [
   "Change Permissions",
   "Create an unprotected copy",
 ] as const) {
-  test(`${action} requires the existing permissions password in a fresh session`, async ({
+  test(`${action} follows the owner policy in a fresh session`, async ({
     page,
   }) => {
     const buffer = fs.readFileSync(
       path.join(fixtures, "owner-only-restricted.pdf"),
     );
+    const honorOwnerPasswords =
+      (await inspect(page, buffer, "")).honorOwnerPasswords !== false;
     const endpoint =
       action === "Change Permissions"
         ? "change-pdf-permissions"
@@ -277,7 +279,9 @@ for (const action of [
         sourcePassword: "",
       },
     });
-    expect(denied.status()).toBe(403);
+    expect(denied.status()).toBe(
+      honorOwnerPasswords ? 403 : action === "Change Permissions" ? 400 : 200,
+    );
     let changes = 0;
     page.on("request", (request) => {
       if (request.url().endsWith(`/api/v1/security/${endpoint}`)) changes++;
@@ -289,6 +293,51 @@ for (const action of [
       buffer,
     });
     await expect(page.locator('[data-page-index="0"]').first()).toBeVisible();
+    if (!honorOwnerPasswords) {
+      await expect(
+        page.getByRole("button", { name: "Print PDF", exact: true }),
+      ).toBeEnabled();
+      await expect(
+        page.getByText("Required to apply changes", { exact: true }),
+      ).toHaveCount(0);
+      if (action === "Change Permissions") {
+        await expect(
+          page.getByRole("button", { name: action, exact: true }),
+        ).toBeDisabled();
+        await page
+          .getByRole("textbox", {
+            name: "New permissions password",
+            exact: true,
+          })
+          .fill(owner);
+      } else {
+        await page
+          .getByRole("button", { name: "Manage protection", exact: true })
+          .click();
+        await page.getByRole("button", { name: action, exact: true }).click();
+      }
+      const response = page.waitForResponse(`**/api/v1/security/${endpoint}`);
+      await page.getByRole("button", { name: action, exact: true }).click();
+      const result = await response;
+      expect(result.ok()).toBe(true);
+      expect(changes).toBe(1);
+      await expect(
+        page.getByRole("dialog", {
+          name: "Enter permissions password",
+          exact: true,
+        }),
+      ).toHaveCount(0);
+      const output = await result.body();
+      expect(await inspect(page, output, "")).toMatchObject({
+        encrypted: action === "Change Permissions",
+      });
+      if (action === "Change Permissions") {
+        expect(await inspect(page, output, owner)).toMatchObject({
+          ownerAuthenticated: true,
+        });
+      }
+      return;
+    }
     await expect(
       page.getByRole("button", { name: "Print PDF", exact: true }),
     ).toBeDisabled();
@@ -419,36 +468,58 @@ test("a PDF with only an opening password opens and prints after removing its op
   );
 });
 
-test("replacing the permissions password requires the old password and invalidates it on the saved copy", async ({
+test("replacing the permissions password follows the owner policy and invalidates the old credential", async ({
   page,
 }) => {
+  const honorOwnerPasswords =
+    (
+      await inspect(
+        page,
+        fs.readFileSync(path.join(fixtures, "owner-only-restricted.pdf")),
+        "",
+      )
+    ).honorOwnerPasswords !== false;
   await page.goto("/change-permissions");
   await page
     .getByTestId("file-input")
     .setInputFiles(path.join(fixtures, "owner-only-restricted.pdf"));
   await expect(page.getByText("Protected PDF", { exact: true })).toBeVisible();
-  await page
-    .getByRole("checkbox", { name: "Change permissions password", exact: true })
-    .check();
+  if (honorOwnerPasswords) {
+    await page
+      .getByRole("checkbox", {
+        name: "Change permissions password",
+        exact: true,
+      })
+      .check();
+  }
   await page
     .getByRole("textbox", { name: "New permissions password", exact: true })
     .fill(owner);
-  await page
-    .getByRole("button", { name: "Change Permissions", exact: true })
-    .click();
-  await expect(
-    page.getByRole("dialog", {
-      name: "Enter permissions password",
-      exact: true,
-    }),
-  ).toBeVisible();
-  await page
-    .getByLabel("Permissions password", { exact: true })
-    .fill("owner-test-password");
   const changedResponse = page.waitForResponse(
     "**/api/v1/security/change-pdf-permissions",
   );
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Change Permissions", exact: true })
+    .click();
+  if (honorOwnerPasswords) {
+    await expect(
+      page.getByRole("dialog", {
+        name: "Enter permissions password",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await page
+      .getByLabel("Permissions password", { exact: true })
+      .fill("owner-test-password");
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+  } else {
+    await expect(
+      page.getByRole("dialog", {
+        name: "Enter permissions password",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+  }
   const changed = await changedResponse;
   expect(changed.ok()).toBe(true);
   const buffer = await changed.body();
@@ -475,6 +546,14 @@ for (const tool of ["annotate", "form-fill", "redact"]) {
   test(`${tool} explains that protected editing is unsupported before offering an editable output`, async ({
     page,
   }) => {
+    const honorOwnerPasswords =
+      (
+        await inspect(
+          page,
+          fs.readFileSync(path.join(fixtures, "owner-only-restricted.pdf")),
+          "",
+        )
+      ).honorOwnerPasswords !== false;
     await page.goto(`/${tool}`);
     await page
       .getByTestId("file-input")
@@ -489,6 +568,6 @@ for (const tool of ["annotate", "form-fill", "redact"]) {
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Print PDF", exact: true }),
-    ).toBeDisabled();
+    ).toBeEnabled({ enabled: !honorOwnerPasswords });
   });
 }
