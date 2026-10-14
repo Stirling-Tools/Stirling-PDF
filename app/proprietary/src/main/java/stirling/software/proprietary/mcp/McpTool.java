@@ -21,6 +21,11 @@ public interface McpTool {
     /** The tool's {@code inputSchema} (an object JSON Schema) published in {@code tools/list}. */
     ObjectNode inputSchema();
 
+    /** Grouping label for analytics ({@code $mcp_tool_category}); null for none. */
+    default String analyticsCategory() {
+        return null;
+    }
+
     /** Execute the tool; the controller wraps any thrown exception as an MCP internal error. */
     ObjectNode call(JsonNode arguments, McpCallContext context);
 }
