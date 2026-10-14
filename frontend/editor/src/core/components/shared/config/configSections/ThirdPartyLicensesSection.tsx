@@ -16,7 +16,8 @@ import {
 } from "@mantine/core";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { isAxiosError } from "axios";
-import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@app/ui/Icon";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import apiClient from "@app/services/apiClient";
 import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @app alias root
@@ -48,30 +49,6 @@ interface LicensesResponse {
 
 interface LicensesSectionBodyProps {
   dependencies: Dependency[];
-}
-
-// A typo leaves the user on an empty list with the search box as the only way
-// back, so the empty state carries its own reset.
-function EmptyLicensesState({
-  label,
-  onClear,
-}: {
-  label: string;
-  onClear?: () => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <Stack align="center" gap="xs" py="xl">
-      <Text ta="center" c="dimmed">
-        {label}
-      </Text>
-      {onClear ? (
-        <Button variant="secondary" size="sm" onClick={onClear}>
-          {t("settings.licenses.clearSearch", "Clear search")}
-        </Button>
-      ) : null}
-    </Stack>
-  );
 }
 
 function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
@@ -120,12 +97,6 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
       ? t("settings.licenses.empty", "No dependencies found.")
       : t("settings.licenses.noMatch", "No matching dependencies.");
   const isEmpty = filteredDependencies.length === 0;
-  const emptyState = (
-    <EmptyLicensesState
-      label={emptyLabel}
-      onClear={query.trim().length > 0 ? () => setQuery("") : undefined}
-    />
-  );
 
   return (
     <Stack gap="lg">
@@ -160,6 +131,24 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
             )}
             value={query}
             onChange={(event) => setQuery(event.currentTarget.value)}
+            rightSectionPointerEvents="all"
+            rightSection={
+              // A typo otherwise strands the user on an empty list with this
+              // field as the only way back.
+              query.trim().length > 0 ? (
+                <ActionIcon
+                  variant="quiet"
+                  size="sm"
+                  aria-label={t(
+                    "settings.licenses.clearSearch",
+                    "Clear search",
+                  )}
+                  onClick={() => setQuery("")}
+                >
+                  <Icon name="x" size="1rem" />
+                </ActionIcon>
+              ) : null
+            }
           />
 
           <div
@@ -176,7 +165,9 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
             {isPhone ? (
               <div>
                 {filteredDependencies.length === 0 ? (
-                  emptyState
+                  <Text ta="center" c="dimmed" py="xl">
+                    {emptyLabel}
+                  </Text>
                 ) : (
                   <>
                     {topPad > 0 && <div style={{ height: topPad }} />}
@@ -232,7 +223,11 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
                 <Table.Tbody>
                   {filteredDependencies.length === 0 ? (
                     <Table.Tr>
-                      <Table.Td colSpan={3}>{emptyState}</Table.Td>
+                      <Table.Td colSpan={3}>
+                        <Text ta="center" c="dimmed" py="xl">
+                          {emptyLabel}
+                        </Text>
+                      </Table.Td>
                     </Table.Tr>
                   ) : (
                     <>

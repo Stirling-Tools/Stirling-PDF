@@ -78,17 +78,23 @@ describe("third-party licenses layout", () => {
     expect(cards[0].textContent).toContain("Apache-2.0");
   });
 
-  it("offers a reset when the search matches nothing", () => {
+  it("clears the search from the field when nothing matches", () => {
     viewport.phone = false;
     renderSection();
 
     const search = screen.getByPlaceholderText(
       "Search dependencies",
     ) as HTMLInputElement;
+    expect(screen.queryByRole("button", { name: "Clear search" })).toBeNull();
+
     fireEvent.change(search, { target: { value: "zzz-no-such-dependency" } });
 
     expect(screen.getByText("No matching dependencies.")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Clear search" }));
+    const clear = screen.getByRole("button", { name: "Clear search" });
+    // The reset lives in the field, not as a button under the empty state.
+    expect(search.parentElement?.contains(clear)).toBe(true);
+
+    fireEvent.click(clear);
 
     expect(search.value).toBe("");
     expect(screen.queryByText("No matching dependencies.")).toBeNull();
