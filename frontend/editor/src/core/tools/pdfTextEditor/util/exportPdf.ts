@@ -47,7 +47,10 @@ export async function exportToBlob(
   const regenerated = doc.regeneratedPages();
   if (regenerated.length > 0) {
     try {
-      const repaired = await repairStructure(bytes, { pages: regenerated });
+      const repaired = await repairStructure(bytes, {
+        pages: regenerated,
+        original: doc.openedBytes,
+      });
       if (repaired) bytes = repaired;
     } catch {
       /* the unrepaired tags are what every save wrote before this pass */

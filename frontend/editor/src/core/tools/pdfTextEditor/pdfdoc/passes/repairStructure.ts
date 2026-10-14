@@ -27,9 +27,14 @@ const REF = /^(\d+)\s+\d+\s+R$/;
 interface McidSite {
   stream: number;
   mcid: number;
-  /** Span of the MCID's number in the stream's text. */
-  start: number;
-  end: number;
+  /** Where the MCID's number is in the stream's text; null when a named property list holds it. */
+  number: { start: number; end: number } | null;
+}
+
+interface PageSites {
+  refs: number[];
+  texts: string[];
+  sites: McidSite[];
 }
 
 /** Changes to one element's /K for one page. */
@@ -54,10 +59,12 @@ interface PageRepair {
  */
 export async function repairStructure(
   bytes: Uint8Array,
-  opts: { pages: number[] },
+  opts: { pages: number[]; original: Uint8Array },
 ): Promise<Uint8Array | null> {
   const pdf = await RawPdf.parse(bytes);
   if (!pdf || pdf.encrypted) return null;
+  const before =
+    opts.original.length > 0 ? await RawPdf.parse(opts.original) : null;
   const catalog = pdf.objectBody(pdf.rootNum);
   const treeRoot = catalog ? pdf.dictRef(catalog, "StructTreeRoot") : null;
   if (treeRoot === null) return null;
@@ -70,7 +77,16 @@ export async function repairStructure(
   for (const pageIndex of new Set(opts.pages)) {
     const pageNum = pdf.pageNumberAt(pageIndex);
     if (pageNum === null) continue;
-    const repair = await planPage(pdf, treeRoot, pageNum, sharedStreams);
+    const beforeNum = before?.pageNumberAt(pageIndex) ?? null;
+    const beforeSites =
+      before && beforeNum !== null ? await pageSites(before, beforeNum) : null;
+    const repair = await planPage(
+      pdf,
+      treeRoot,
+      pageNum,
+      sharedStreams,
+      new Set(beforeSites?.sites.map((s) => s.mcid)),
+    );
     if (!repair) continue;
 
     for (const [num, text] of repair.streams) {
@@ -125,21 +141,15 @@ async function planPage(
   treeRoot: number,
   pageNum: number,
   sharedStreams: Set<number>,
+  mcidsBefore: ReadonlySet<number>,
 ): Promise<PageRepair | null> {
   const page = pdf.objectBody(pageNum);
   const key = page ? pdf.dictInt(page, "StructParents") : null;
   if (!page || key === null) return null;
-  const refs = pdf.contentRefs(page);
+  const read = await pageSites(pdf, pageNum);
   // Renumbering a stream another page also draws would corrupt that page.
-  if (refs.length === 0 || refs.some((r) => sharedStreams.has(r))) return null;
-
-  const texts: string[] = [];
-  for (const ref of refs) {
-    const data = await pdf.streamData(ref);
-    if (!data) return null;
-    texts.push(toLatin1(data));
-  }
-  const sites = texts.flatMap((text, stream) => mcidSites(text, stream));
+  if (!read || read.refs.some((r) => sharedStreams.has(r))) return null;
+  const { refs, texts, sites } = read;
 
   const entry = pdf.numberTreeEntry(treeRoot, "ParentTree", key);
   if (!entry) return null;
@@ -166,9 +176,12 @@ async function planPage(
 
   const present = new Set(sites.map((s) => s.mcid));
   let next = Math.max(slots.length - 1, ...present) + 1;
-  const seen = new Set<number>();
+  // A named occurrence keeps its MCID: renumbering it means editing a property
+  // list that other BDCs may name too, so the inline repeats move instead.
+  const seen = new Set(sites.filter((s) => !s.number).map((s) => s.mcid));
   const renumbered: { site: McidSite; mcid: number }[] = [];
   for (const site of sites) {
+    if (!site.number) continue;
     if (!seen.has(site.mcid)) {
       seen.add(site.mcid);
       continue;
@@ -188,7 +201,7 @@ async function planPage(
 
   for (let mcid = 0; mcid < slots.length; mcid++) {
     const num = owner(mcid);
-    if (num === null || present.has(mcid)) continue;
+    if (num === null || present.has(mcid) || !mcidsBefore.has(mcid)) continue;
     slots[mcid] = "null";
     changesFor(num).removed.add(mcid);
   }
@@ -199,11 +212,12 @@ async function planPage(
   texts.forEach((text, stream) => {
     const here = renumbered
       .filter((r) => r.site.stream === stream)
-      .sort((a, b) => b.site.start - a.site.start);
+      .map((r) => ({ at: r.site.number!, mcid: r.mcid }))
+      .sort((a, b) => b.at.start - a.at.start);
     if (here.length === 0) return;
     let out = text;
-    for (const { site, mcid } of here) {
-      out = out.slice(0, site.start) + String(mcid) + out.slice(site.end);
+    for (const { at, mcid } of here) {
+      out = out.slice(0, at.start) + String(mcid) + out.slice(at.end);
     }
     streams.set(refs[stream], out);
   });
@@ -216,11 +230,52 @@ async function planPage(
   };
 }
 
-/** Every `BDC` carrying an inline MCID, in content order. */
-function mcidSites(text: string, stream: number): McidSite[] {
+/** The page's content streams and every MCID they carry, or null when a stream cannot be read. */
+async function pageSites(
+  pdf: RawPdf,
+  pageNum: number,
+): Promise<PageSites | null> {
+  const page = pdf.objectBody(pageNum);
+  const refs = page ? pdf.contentRefs(page) : [];
+  if (refs.length === 0) return null;
+  const texts: string[] = [];
+  for (const ref of refs) {
+    const data = await pdf.streamData(ref);
+    if (!data) return null;
+    texts.push(toLatin1(data));
+  }
+  const resources = pdf.pageInherited(pageNum, "Resources");
+  const properties = resources ? pdf.resolve(resources, "Properties") : null;
+  const namedMcid = (name: string): number | null => {
+    const list = properties ? pdf.resolve(properties, name) : null;
+    return list ? pdf.dictInt(list, "MCID") : null;
+  };
+  return {
+    refs,
+    texts,
+    sites: texts.flatMap((text, stream) => mcidSites(text, stream, namedMcid)),
+  };
+}
+
+/**
+ * Every `BDC` carrying an MCID, in content order: inline (`/P <</MCID 0>> BDC`)
+ * or through a named property list (`/P /MC0 BDC`), which PDFium keeps in that
+ * form when it regenerates a page.
+ */
+function mcidSites(
+  text: string,
+  stream: number,
+  namedMcid: (name: string) => number | null,
+): McidSite[] {
   const sites: McidSite[] = [];
   for (const op of parseOps(text)) {
     if (op.op !== "BDC") continue;
+    const properties = op.operands[1];
+    if (properties?.startsWith("/")) {
+      const mcid = namedMcid(properties.slice(1));
+      if (mcid !== null) sites.push({ stream, mcid, number: null });
+      continue;
+    }
     const tokens = tokenize(text.slice(op.start, op.end));
     let depth = 0;
     for (let i = 0; i < tokens.length; i++) {
@@ -236,8 +291,10 @@ function mcidSites(text: string, stream: number): McidSite[] {
         sites.push({
           stream,
           mcid: parseInt(number.text, 10),
-          start: op.start + number.start,
-          end: op.start + number.end,
+          number: {
+            start: op.start + number.start,
+            end: op.start + number.end,
+          },
         });
         break;
       }

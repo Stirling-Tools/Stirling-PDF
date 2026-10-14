@@ -82,8 +82,12 @@ const WORD = (mcid: number, text: string) =>
   `/P <</MCID ${mcid}>> BDC BT /F1 12 Tf 10 10 Td (${text}) Tj ET EMC\n`;
 const FIGURE_CONTENT = "/Figure <</MCID 1>> BDC 0 0 10 10 re f EMC\n";
 
-async function repaired(bytes: Uint8Array): Promise<RawPdf> {
-  const out = await repairStructure(bytes, { pages: [0] });
+/** `original` defaults to `bytes`: the same page before the edit, so nothing reads as deleted. */
+async function repaired(
+  bytes: Uint8Array,
+  original: Uint8Array = bytes,
+): Promise<RawPdf> {
+  const out = await repairStructure(bytes, { pages: [0], original });
   expect(out).not.toBeNull();
   return (await RawPdf.parse(out!))!;
 }
@@ -176,30 +180,97 @@ describe("repairStructure: repeated MCIDs", () => {
   });
 
   test("leaves repeats of an MCID no element owns alone", async () => {
-    const out = await repairStructure(
-      taggedPdf(WORD(0, "a") + FIGURE_CONTENT + WORD(7, "b") + WORD(7, "c")),
-      { pages: [0] },
+    const bytes = taggedPdf(
+      WORD(0, "a") + FIGURE_CONTENT + WORD(7, "b") + WORD(7, "c"),
     );
-    expect(out).toBeNull();
+    expect(
+      await repairStructure(bytes, { pages: [0], original: bytes }),
+    ).toBeNull();
   });
+});
+
+/** Moves the page's MCIDs into named property lists, on the page or inherited from /Pages. */
+function namedProperties(where: "page" | "inherited"): FixtureObject[] {
+  const resources =
+    "/Resources << /Properties << /MC0 << /MCID 0 >> /MC1 12 0 R >> >>";
+  return [
+    where === "page"
+      ? {
+          num: PAGE,
+          body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents [20 0 R] /StructParents 0 ${resources} >>`,
+        }
+      : {
+          num: 2,
+          body: `<< /Type /Pages /Kids [${PAGE} 0 R] /Count 1 ${resources} >>`,
+        },
+    { num: 12, body: "<< /MCID 1 >>" },
+  ];
+}
+
+const NAMED_WORD = "/P /MC0 BDC BT /F1 12 Tf 10 10 Td (kept) Tj ET EMC\n";
+const NAMED_FIGURE = "/Figure /MC1 BDC 0 0 10 10 re f EMC\n";
+
+describe("repairStructure: named property lists", () => {
+  test.each(["page", "inherited"] as const)(
+    "reads MCIDs named in the %s /Properties",
+    async (where) => {
+      const original = taggedPdf(
+        NAMED_WORD + NAMED_FIGURE,
+        namedProperties(where),
+      );
+      const pdf = await repaired(
+        taggedPdf(
+          NAMED_WORD + NAMED_FIGURE + WORD(0, "copy"),
+          namedProperties(where),
+        ),
+        original,
+      );
+      expect(kids(pdf, FIGURE)).toBe("1");
+      // The named occurrence keeps MCID 0; the inline repeat moves.
+      expect(kids(pdf, P)).toBe("[0 2]");
+      expect(parentArray(pdf)).toBe(`[${P} 0 R ${FIGURE} 0 R ${P} 0 R]`);
+      expect(await contentMcids(pdf)).toEqual([2]);
+    },
+  );
 });
 
 describe("repairStructure: deleted content", () => {
   test("removes an MCID the page no longer has from its element and the ParentTree", async () => {
-    const pdf = await repaired(taggedPdf(WORD(0, "only the text is left")));
+    const pdf = await repaired(
+      taggedPdf(WORD(0, "only the text is left")),
+      taggedPdf(WORD(0, "a") + FIGURE_CONTENT),
+    );
     expect(kids(pdf, FIGURE)).toBe("[]");
     expect(parentArray(pdf)).toBe(`[${P} 0 R null]`);
     // The description belongs to the element, which survives.
     expect(pdf.objectBody(FIGURE)).toContain("/Alt (A square)");
   });
+
+  test("never removes an MCID it could not read before the edit", async () => {
+    // A name missing from /Properties is unreadable in both versions.
+    const bytes = taggedPdf(
+      WORD(0, "a") + "/Figure /Missing BDC 0 0 10 10 re f EMC\n",
+    );
+    expect(
+      await repairStructure(bytes, { pages: [0], original: bytes }),
+    ).toBeNull();
+  });
+
+  test("removes nothing without the original to compare against", async () => {
+    expect(
+      await repairStructure(taggedPdf(WORD(0, "only the text is left")), {
+        pages: [0],
+        original: new Uint8Array(0),
+      }),
+    ).toBeNull();
+  });
 });
 
 describe("repairStructure: what it leaves alone", () => {
   test("returns null for a page whose tags are already sound", async () => {
+    const bytes = taggedPdf(WORD(0, "a") + FIGURE_CONTENT);
     expect(
-      await repairStructure(taggedPdf(WORD(0, "a") + FIGURE_CONTENT), {
-        pages: [0],
-      }),
+      await repairStructure(bytes, { pages: [0], original: bytes }),
     ).toBeNull();
   });
 
@@ -216,14 +287,15 @@ describe("repairStructure: what it leaves alone", () => {
       ],
       1,
     );
-    expect(await repairStructure(bytes, { pages: [0] })).toBeNull();
+    expect(
+      await repairStructure(bytes, { pages: [0], original: bytes }),
+    ).toBeNull();
   });
 
   test("only looks at the pages it is given", async () => {
+    const bytes = taggedPdf(WORD(0, "a") + WORD(0, "b"));
     expect(
-      await repairStructure(taggedPdf(WORD(0, "a") + WORD(0, "b")), {
-        pages: [],
-      }),
+      await repairStructure(bytes, { pages: [], original: bytes }),
     ).toBeNull();
   });
 });
@@ -320,5 +392,84 @@ describe("repairStructure on the editor's own output", () => {
     for (const mcid of paragraph.mcids) {
       expect(ownerType(pdf, mcid)).toBe("P");
     }
+  });
+
+  test("editing one paragraph leaves the page's named-form tags alone", async () => {
+    // Elements 8 (edited P, MCID 0), 10 (untouched P, MCID 1) and 9 (Figure, MCID 2),
+    // every MCID held in a named property list.
+    const bytes = buildClassicPdf(
+      [
+        {
+          num: 1,
+          body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 5 0 R /MarkInfo << /Marked true >> >>",
+        },
+        { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+        {
+          num: 3,
+          body:
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 20 0 R /StructParents 0 " +
+            "/Resources << /Font << /F1 4 0 R >> /Properties << /MC0 << /MCID 0 >> /MC1 << /MCID 1 >> /MC2 << /MCID 2 >> >> >> >>",
+        },
+        {
+          num: 4,
+          body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        },
+        {
+          num: 5,
+          body: "<< /Type /StructTreeRoot /K 7 0 R /ParentTree 6 0 R /ParentTreeNextKey 1 >>",
+        },
+        { num: 6, body: "<< /Nums [0 [8 0 R 10 0 R 9 0 R]] >>" },
+        {
+          num: 7,
+          body: "<< /Type /StructElem /S /Document /P 5 0 R /K [8 0 R 10 0 R 9 0 R] >>",
+        },
+        {
+          num: 8,
+          body: "<< /Type /StructElem /S /P /P 7 0 R /Pg 3 0 R /K 0 >>",
+        },
+        {
+          num: 9,
+          body: "<< /Type /StructElem /S /Figure /P 7 0 R /Pg 3 0 R /K 2 /Alt (A square) >>",
+        },
+        {
+          num: 10,
+          body: "<< /Type /StructElem /S /P /P 7 0 R /Pg 3 0 R /K 1 >>",
+        },
+        {
+          num: 20,
+          body: streamBody(
+            "",
+            "/P /MC0 BDC BT /F1 14 Tf 72 700 Td (Edited paragraph) Tj ET EMC\n" +
+              "/P /MC1 BDC BT /F1 14 Tf 72 650 Td (Untouched paragraph) Tj ET EMC\n" +
+              "/Figure /MC2 BDC 72 500 50 50 re f EMC\n",
+          ),
+        },
+      ],
+      1,
+    );
+    const doc = await EditorDocument.open(bytes);
+    opened.push(doc);
+    const m = doc.module;
+    const page = doc.page(0);
+    const [old] = objectsWithMcid(m, page.pagePtr, 0);
+    for (const [i, word] of ["Edited", "again"].entries()) {
+      const ptr = newText(doc, word, 72 + i * 80);
+      copyTagMarks(m, doc.docPtr, old, ptr);
+      m.FPDFPage_InsertObject(page.pagePtr, ptr);
+    }
+    m.FPDFPage_RemoveObject(page.pagePtr, old);
+    m.FPDFPageObj_Destroy(old);
+    page.markDirty();
+    page.markNeedsGenerate();
+
+    const { blob } = await exportToBlob(doc, "named.pdf");
+    const pdf = (await RawPdf.parse(new Uint8Array(await blob.arrayBuffer())))!;
+    // PDFium writes the untouched sequences back in named form.
+    expect(await contentText(pdf)).toContain("/MC1 BDC");
+    expect(kids(pdf, 10)).toBe("1");
+    expect(kids(pdf, 9)).toBe("2");
+    expect(ownerType(pdf, 1)).toBe("P");
+    expect(ownerType(pdf, 2)).toBe("Figure");
+    expect(kids(pdf, 8)).toMatch(/^\[0 \d+\]$/);
   });
 });
