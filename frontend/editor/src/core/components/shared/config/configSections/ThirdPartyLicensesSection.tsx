@@ -377,12 +377,20 @@ function VirtualLicenseRow({
             target="_blank"
             rel="noopener noreferrer"
             truncate="end"
+            maw="100%"
+            style={{ display: "block" }}
             title={dependency.moduleName || "-"}
           >
             {dependency.moduleName || "-"}
           </Anchor>
         ) : (
-          <Text size="sm" truncate="end" title={dependency.moduleName || "-"}>
+          <Text
+            size="sm"
+            truncate="end"
+            maw="100%"
+            style={{ display: "block" }}
+            title={dependency.moduleName || "-"}
+          >
             {dependency.moduleName || "-"}
           </Text>
         )}
