@@ -591,6 +591,7 @@ export function ChatPanel({
               />
             </div>
           )}
+          <div className="chat-panel-messages__tail" />
         </ScrollArea>
 
         {showQuickActions && (
