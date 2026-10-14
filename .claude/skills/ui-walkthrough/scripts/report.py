@@ -25,7 +25,7 @@ import tempfile
 from pathlib import Path
 
 DATA_RE = re.compile(r"/\*__DATA__\*/.*?/\*__END__\*/", re.S)
-SCRIPT_RE = re.compile(r"<script[^>]*>(.*?)</script>", re.S)
+SCRIPT_RE = re.compile(r"<script[^>]*>(.*?)</script>", re.S | re.IGNORECASE)
 THEMES = ("light", "dark")
 FINDING_GROUPS = ("visual", "ux", "behavior", "a11y", "perf", "native")
 SEVERITIES = ("high", "med", "low")
@@ -410,7 +410,7 @@ def self_test(html: str, *, allow_relative: bool = False) -> list[Issue]:
             )
     for bad in re.findall(r"""src=["'](https?://[^"']+)["']""", html):
         issues.append(Issue("error", "external-asset", f"external asset '{bad}' is not self-contained"))
-    if not re.search(r"<script", html):
+    if not re.search(r"<script", html, re.IGNORECASE):
         issues.append(Issue("error", "no-script", "the report has no behaviour"))
     node = shutil.which("node")
     if node:

@@ -254,6 +254,12 @@ class SelfTestTests(unittest.TestCase):
         )
         self.assertIn("script-syntax", codes(report.self_test(html)))
 
+    def test_a_script_tag_in_upper_case_is_still_checked(self):
+        html = self.good_html().replace(
+            "</body>", "<SCRIPT>function ( {</SCRIPT></body>", 1
+        )
+        self.assertIn("script-syntax", codes(report.self_test(html)))
+
     def test_a_second_data_binding_is_an_error(self):
         html = self.good_html() + "<script>window.__WALKTHROUGH__ = {};</script>"
         self.assertIn("data-binding", codes(report.self_test(html)))
