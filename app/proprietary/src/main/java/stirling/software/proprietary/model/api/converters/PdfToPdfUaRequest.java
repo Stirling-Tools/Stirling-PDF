@@ -64,10 +64,8 @@ public class PdfToPdfUaRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Alt text for figures, one key=description per line. Keys are the 'key'"
-                            + " values in accessibility-report's figuresNeedingDescription, for"
-                            + " example \"0:12=Bar chart of quarterly revenue\". Descriptions are"
-                            + " never invented, so without these an illustrated document is not"
-                            + " declared PDF/UA.")
+                    "Alt text for figures, one key=description per line, e.g. \"0:12=Bar"
+                            + " chart of revenue\". Keys come from accessibility-report's"
+                            + " figuresNeedingDescription.")
     private String altText;
 }

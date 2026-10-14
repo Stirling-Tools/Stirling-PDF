@@ -13,17 +13,13 @@ public class AddPasswordRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Password needed to change or lift the prevent* restrictions. Set one that"
-                            + " differs from password for the restrictions to hold: if empty, the"
-                            + " open password (or an empty one) is used, so anyone who can open the"
-                            + " file can lift them.",
+                    "Password needed to change the prevent* restrictions. Must differ from"
+                            + " password for them to hold.",
             format = "password")
     private String ownerPassword;
 
     @Schema(
-            description =
-                    "Password needed to open the PDF. Leave empty so anyone can open it, for"
-                            + " example when only adding restrictions with an ownerPassword.",
+            description = "Password needed to open the PDF. Leave empty to only add restrictions.",
             format = "password")
     private String password;
 

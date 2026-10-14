@@ -31,19 +31,16 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
 
     @Schema(
             description =
-                    "Text drawn on each numbered page, e.g. 'Page {n} of {total}'. {n}=page"
-                            + " number (from startingNumber, counting numbered pages only),"
-                            + " {total}=pages in the document, {filename}=file name without"
-                            + " extension.",
+                    "Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n}"
+                            + " (counts numbered pages only, from startingNumber), {total} (all pages"
+                            + " in the file), {filename}.",
             example = "Page {n} of {total}",
             defaultValue = "{n}",
             requiredMode = RequiredMode.NOT_REQUIRED)
     private String customText = "{n}";
 
     @Schema(
-            description =
-                    "Which pages to number (e.g. '1,3-5,7' or 'all'). Other pages get no number"
-                            + " and are not counted by {n}.",
+            description = "Which pages to number (e.g. '1,3-5,7' or 'all')",
             defaultValue = "all",
             requiredMode = RequiredMode.NOT_REQUIRED)
     private String pagesToNumber = "all";

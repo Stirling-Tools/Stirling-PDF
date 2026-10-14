@@ -15,10 +15,9 @@ public class RearrangePagesRequest extends PDFWithPageNums {
     @Schema(
             implementation = SortTypes.class,
             description =
-                    "Omit or CUSTOM to use pageNumbers. Or: REVERSE_ORDER, DUPLEX_SORT"
-                            + " (input: all fronts, then backs reversed), BOOKLET_SORT,"
-                            + " SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even pages),"
-                            + " REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST,"
-                            + " DUPLICATE (each page N times; N in pageNumbers, default 2)")
+                    "Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT"
+                            + " (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT,"
+                            + " ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST,"
+                            + " REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).")
     private String customMode;
 }

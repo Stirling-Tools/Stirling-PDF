@@ -36,27 +36,20 @@ public class RedactExecuteRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Text ranges to redact by specifying a start and end anchor phrase. All"
-                            + " content between the two phrases (inclusive) is redacted. Anchors"
-                            + " work best when short and unique. They must appear"
-                            + " verbatim in the document. Overlay only: the content stays in the"
-                            + " file unless style.convertToImage=true.")
+                    "Text from a start to an end anchor phrase (inclusive). Boxes only"
+                            + " unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).")
     private List<TextRange> ranges = new ArrayList<>();
 
     @Schema(
             description =
-                    "Rectangular areas to black out, each defined by a page number and bounding"
-                            + " box coordinates. Overlay only: the content underneath stays in the"
-                            + " file unless style.convertToImage=true or"
-                            + " style.strategy=IMAGE_FINALIZE.")
+                    "Rectangular areas to black out, by page and bounding box. Boxes only"
+                            + " unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).")
     private List<ImageBox> imageBoxes = new ArrayList<>();
 
     @Schema(
             description =
-                    "1-indexed pages whose images get boxed over. Pass an empty list for every"
-                            + " page; omit or pass null to skip. Overlay only: the images stay in"
-                            + " the file unless style.convertToImage=true or"
-                            + " style.strategy=IMAGE_FINALIZE.")
+                    "1-indexed pages whose images get boxed over; an empty list means every"
+                            + " page, null skips it.")
     private List<Integer> redactImagePages;
 
     @Schema(description = "Redaction style options")
@@ -129,17 +122,14 @@ public class RedactExecuteRequest extends PDFFile {
         private float padding = 0f;
 
         @Schema(
-                description =
-                        "Rasterize every page of the output, so no text or covered content can be"
-                                + " extracted. All text becomes unselectable.",
+                description = "Rasterize every page so no covered content can be extracted",
                 defaultValue = "false")
         private boolean convertToImage = false;
 
         @Schema(
                 description =
-                        "AUTO removes matched text where it can; OVERLAY_ONLY only draws boxes, so"
-                                + " the text stays extractable; IMAGE_FINALIZE also rasterizes"
-                                + " every page, like convertToImage.",
+                        "AUTO removes matched text; OVERLAY_ONLY only draws boxes;"
+                                + " IMAGE_FINALIZE also rasterizes pages",
                 defaultValue = "AUTO")
         private RedactionStrategy strategy = RedactionStrategy.AUTO;
     }

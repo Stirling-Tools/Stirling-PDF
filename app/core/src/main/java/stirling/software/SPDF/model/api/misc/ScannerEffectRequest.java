@@ -39,9 +39,7 @@ public class ScannerEffectRequest {
     private MultipartFile fileInput;
 
     @Schema(
-            description =
-                    "Scan quality preset. Sets brightness, contrast, blur, noise and resolution"
-                            + " unless advancedEnabled is true.",
+            description = "Scan quality preset, used unless advancedEnabled is true",
             example = "high")
     @NotNull(message = "Quality is required")
     private Quality quality = Quality.high;
@@ -55,9 +53,9 @@ public class ScannerEffectRequest {
 
     @Schema(
             description =
-                    "Must be true for brightness, contrast, blur, noise and resolution to apply;"
-                            + " when false the quality preset replaces them. Border, rotation,"
-                            + " rotate, rotateVariance, colorspace and yellowish always apply.",
+                    "Use brightness, contrast, blur, noise and resolution instead of the"
+                            + " quality preset. Border, rotation, colorspace and yellowish always"
+                            + " apply.",
             example = "false")
     private boolean advancedEnabled = false;
 

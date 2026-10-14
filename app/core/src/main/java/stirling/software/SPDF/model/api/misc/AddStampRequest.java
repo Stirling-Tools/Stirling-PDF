@@ -23,17 +23,12 @@ public class AddStampRequest extends PDFWithPageNums {
 
     @Schema(
             description =
-                    "The stamp text, required when stampType is text. \\n starts a new line."
-                            + " Filled in per page: @page, @total_pages, @date (yyyy-MM-dd),"
-                            + " @date{dd/MM/yyyy}, @time, @filename, @title, @author, @uuid."
-                            + " Write @@ for a literal @.")
+                    "The stamp text, required when stampType is text. \\n starts a new"
+                            + " line. Supports @page, @total_pages, @date, @date{dd/MM/yyyy}, @time,"
+                            + " @filename, @title, @author and @uuid (@@ for a literal @).")
     private String stampText;
 
-    @Schema(
-            description =
-                    "The stamp image (PNG, JPEG, etc.), required when stampType is image. Drawn"
-                            + " fontSize points high, keeping its aspect ratio, at position on"
-                            + " each selected page.")
+    @Schema(description = "The stamp image, required when stampType is image")
     private MultipartFile stampImage;
 
     @Schema(
@@ -47,45 +42,37 @@ public class AddStampRequest extends PDFWithPageNums {
 
     @Schema(
             description =
-                    "Text size in points. For an image stamp, the image height in points (width"
-                            + " follows its aspect ratio).",
+                    "Text size in points; for an image stamp, the image height (width keeps"
+                            + " its aspect ratio)",
             defaultValue = "40")
     private float fontSize = 40f;
 
-    @Schema(
-            description =
-                    "The opacity of the stamp text or image (0.0 - 1.0). Use 1 for a fully"
-                            + " opaque logo or signature.",
-            defaultValue = "0.5")
+    @Schema(description = "The opacity of the stamp (0.0 - 1.0)", defaultValue = "0.5")
     private float opacity = 0.5f;
 
-    @Schema(
-            description = "Hex colour of the stamp text, e.g. #FF0000 for red",
-            defaultValue = "#d3d3d3")
+    @Schema(description = "Hex colour of the stamp text, e.g. #FF0000", defaultValue = "#d3d3d3")
     private String customColor = "#d3d3d3";
 
     @Schema(description = "The rotation of the stamp in degrees", defaultValue = "0")
     private float rotation = 0f;
 
     @Schema(
-            description =
-                    "Font script for stampText, which must match it: roman for Latin text,"
-                            + " arabic, japanese, korean, chinese or thai.",
+            description = "Font script matching stampText; roman for Latin text",
             allowableValues = {"roman", "arabic", "japanese", "korean", "chinese", "thai"},
             defaultValue = "roman")
     private String alphabet = "roman";
 
     @Schema(
             description =
-                    "X in PDF points from the page's left edge. Replaces position only when"
-                            + " overrideX and overrideY are both 0 or more; -1 means not set.",
+                    "X in points from the left edge; with overrideY, replaces position. -1"
+                            + " = not set.",
             defaultValue = "-1")
     private float overrideX = -1f;
 
     @Schema(
             description =
-                    "Y in PDF points from the page's bottom edge. Replaces position only when"
-                            + " overrideX and overrideY are both 0 or more; -1 means not set.",
+                    "Y in points from the bottom edge; with overrideX, replaces position."
+                            + " -1 = not set.",
             defaultValue = "-1")
     private float overrideY = -1f;
 

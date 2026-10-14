@@ -11,7 +11,7 @@ export interface AccessibilityReportRequest {
 }
 export interface AddAttachmentRequest {
   /**
-   * Files of any type to embed in the PDF as attachments (up to 50 MB each, 200 MB in total).
+   * Files to attach to the PDF (up to 50 MB each, 200 MB in total)
    */
   attachments: File[];
   /**
@@ -31,7 +31,7 @@ export interface AddPageNumbersRequest {
    */
   customMargin?: "small" | "medium" | "large" | "x-large";
   /**
-   * Text drawn on each numbered page, e.g. 'Page {n} of {total}'. {n}=page number (from startingNumber, counting numbered pages only), {total}=pages in the document, {filename}=file name without extension.
+   * Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n} (counts numbered pages only, from startingNumber), {total} (all pages in the file), {filename}.
    */
   customText?: string;
   /**
@@ -51,7 +51,7 @@ export interface AddPageNumbersRequest {
    */
   pageNumbers?: string;
   /**
-   * Which pages to number (e.g. '1,3-5,7' or 'all'). Other pages get no number and are not counted by {n}.
+   * Which pages to number (e.g. '1,3-5,7' or 'all')
    */
   pagesToNumber?: string;
   /**
@@ -73,11 +73,11 @@ export interface AddPasswordRequest {
    */
   keyLength?: 40 | 128 | 256;
   /**
-   * Password needed to change or lift the prevent* restrictions. Set one that differs from password for the restrictions to hold: if empty, the open password (or an empty one) is used, so anyone who can open the file can lift them.
+   * Password needed to change the prevent* restrictions. Must differ from password for them to hold.
    */
   ownerPassword?: string;
   /**
-   * Password needed to open the PDF. Leave empty so anyone can open it, for example when only adding restrictions with an ownerPassword.
+   * Password needed to open the PDF. Leave empty to only add restrictions.
    */
   password?: string;
   /**
@@ -115,11 +115,11 @@ export interface AddPasswordRequest {
 }
 export interface AddStampRequest {
   /**
-   * Font script for stampText, which must match it: roman for Latin text, arabic, japanese, korean, chinese or thai.
+   * Font script matching stampText; roman for Latin text
    */
   alphabet?: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
   /**
-   * Hex colour of the stamp text, e.g. #FF0000 for red
+   * Hex colour of the stamp text, e.g. #FF0000
    */
   customColor?: string;
   /**
@@ -127,19 +127,19 @@ export interface AddStampRequest {
    */
   customMargin?: "small" | "medium" | "large" | "x-large";
   /**
-   * Text size in points. For an image stamp, the image height in points (width follows its aspect ratio).
+   * Text size in points; for an image stamp, the image height (width keeps its aspect ratio)
    */
   fontSize?: number;
   /**
-   * The opacity of the stamp text or image (0.0 - 1.0). Use 1 for a fully opaque logo or signature.
+   * The opacity of the stamp (0.0 - 1.0)
    */
   opacity?: number;
   /**
-   * X in PDF points from the page's left edge. Replaces position only when overrideX and overrideY are both 0 or more; -1 means not set.
+   * X in points from the left edge; with overrideY, replaces position. -1 = not set.
    */
   overrideX?: number;
   /**
-   * Y in PDF points from the page's bottom edge. Replaces position only when overrideX and overrideY are both 0 or more; -1 means not set.
+   * Y in points from the bottom edge; with overrideX, replaces position. -1 = not set.
    */
   overrideY?: number;
   /**
@@ -156,7 +156,7 @@ export interface AddStampRequest {
   rotation?: number;
   stampImage?: File;
   /**
-   * The stamp text, required when stampType is text. \n starts a new line. Filled in per page: @page, @total_pages, @date (yyyy-MM-dd), @date{dd/MM/yyyy}, @time, @filename, @title, @author, @uuid. Write @@ for a literal @.
+   * The stamp text, required when stampType is text. \n starts a new line. Supports @page, @total_pages, @date, @date{dd/MM/yyyy}, @time, @filename, @title, @author and @uuid (@@ for a literal @).
    */
   stampText?: string;
   /**
@@ -166,19 +166,19 @@ export interface AddStampRequest {
 }
 export interface AddWatermarkRequest {
   /**
-   * Font script for watermarkText, which must match it: chinese, japanese, korean, arabic or thai, otherwise roman for Latin text. Characters the chosen font lacks make the call fail.
+   * Font script matching watermarkText; roman for Latin text
    */
   alphabet?: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
   /**
-   * Flatten every page to an image after watermarking, so the watermark can't be removed as a separate object. Text is no longer selectable or searchable.
+   * Turn pages into images so the watermark is hard to remove; text becomes unselectable
    */
   convertPDFToImage?: boolean;
   /**
-   * Hex colour of the watermark text, e.g. #FF0000 for red
+   * Hex colour of the watermark text, e.g. #FF0000
    */
   customColor?: string;
   /**
-   * Text size in points. For an image watermark, the height of each image in points.
+   * Text size in points; for an image watermark, the image height
    */
   fontSize?: number;
   /**
@@ -455,11 +455,11 @@ export interface DeleteAttachmentRequest {
 }
 export interface EditTableOfContentsRequest {
   /**
-   * The complete new outline as a JSON array of {title, pageNumber (1-based), children[]}, where children nests the same shape and may be omitted. Page numbers out of range point to the first or last page.
+   * The full new outline as a JSON array of {title, pageNumber, children[]}
    */
   bookmarkData?: string;
   /**
-   * Not used: existing bookmarks are always replaced by bookmarkData. To add to them, read the current ones with extract-bookmarks and send the full list.
+   * Ignored: existing bookmarks are always replaced. To add to them, read them with extract-bookmarks and send the full list.
    */
   replaceExisting?: boolean;
 }
@@ -564,11 +564,11 @@ export interface FileSizeRequest {
 export type FlattenPortfolioRequest = Record<string, never>;
 export interface FlattenRequest {
   /**
-   * True only locks form fields (merges them into the page, text stays selectable). False turns every page into an image, so text can no longer be selected.
+   * True flattens only form fields; false turns every page into an image
    */
   flattenOnlyForms?: boolean;
   /**
-   * DPI for the page images when flattenOnlyForms is false (300 if omitted, capped by the server's maximum DPI). Ignored when flattenOnlyForms is true.
+   * DPI for the page images when flattening full pages (default 300)
    */
   renderDpi?: number;
 }
@@ -648,11 +648,11 @@ export interface IntegrationPurviewReadLabelRequest {
 export type ListAttachmentsRequest = Record<string, never>;
 export interface ManualRedactPdfRequest {
   /**
-   * Turn every page into an image after drawing the boxes, so the covered text and images are really gone. Without it the boxes only sit on top and the content can still be extracted. All text becomes unselectable.
+   * Turn pages into images so covered content is really removed; text becomes unselectable
    */
   convertPDFToImage?: boolean;
   /**
-   * Pages to cover completely with a box, e.g. '1,3-5'. Not the pages of the areas: omit to redact only the listed areas.
+   * Pages to cover entirely, e.g. '1,3-5'. Omit to redact only the listed areas.
    */
   pageNumbers?: string;
   /**
@@ -660,12 +660,12 @@ export interface ManualRedactPdfRequest {
    */
   pageRedactionColor?: string;
   /**
-   * Areas to cover with boxes: page (from 1), x and y of the top-left corner measured from the page's top-left, width and height, in points. The content underneath stays in the file unless convertPDFToImage=true.
+   * Areas to cover: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
    */
   redactions: RedactionArea[];
 }
 /**
- * Areas to cover with boxes: page (from 1), x and y of the top-left corner measured from the page's top-left, width and height, in points. The content underneath stays in the file unless convertPDFToImage=true.
+ * Areas to cover: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
  */
 export interface RedactionArea {
   /**
@@ -777,11 +777,11 @@ export interface MergePdfsRequest {
 }
 export interface MetadataRequest {
   /**
-   * Custom metadata to add or update, e.g. {"Department":"Finance"}. Custom keys already in the file and not listed are kept. Keys customKeyN and customValueN (same N) in this map also work as a pair.
+   * Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept. customKeyN/customValueN pairs also work.
    */
   allRequestParams?: {
     /**
-     * Custom metadata to add or update, e.g. {"Department":"Finance"}. Custom keys already in the file and not listed are kept. Keys customKeyN and customValueN (same N) in this map also work as a pair.
+     * Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept. customKeyN/customValueN pairs also work.
      */
     [k: string]: string | undefined;
   };
@@ -798,7 +798,7 @@ export interface MetadataRequest {
    */
   creator?: string;
   /**
-   * True removes all metadata (standard, custom and XMP) and ignores the other fields
+   * True removes all metadata, including XMP, and ignores the other fields
    */
   deleteAll?: boolean;
   /**
@@ -860,7 +860,7 @@ export interface OptimizePdfRequest {
    */
   normalize?: boolean;
   /**
-   * Compression level from 1 (lightest) to 9 (strongest); higher levels shrink the file more but may reduce image quality. Or set expectedOutputSize instead, which picks the level automatically.
+   * Compression level from 1 (lightest) to 9 (strongest). Or set expectedOutputSize to pick one automatically.
    */
   optimizeLevel?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 }
@@ -871,32 +871,32 @@ export interface OverlayImageRequest {
   everyPage?: boolean;
   imageFile: File;
   /**
-   * X of the image's lower-left corner, in PDF points from the page's left edge (72 points = 1 inch).
+   * X of the image's lower-left corner, in points from the left edge
    */
   x?: number;
   /**
-   * Y of the image's lower-left corner, in PDF points from the page's bottom edge (72 points = 1 inch).
+   * Y of the image's lower-left corner, in points from the bottom edge
    */
   y?: number;
 }
 export interface OverlayPdfsRequest {
   /**
-   * Required for FixedRepeatOverlay: one count per overlay file. Each file in turn covers the next count x (its page count) base pages, showing its first page; later pages get no overlay.
+   * FixedRepeatOverlay only: one repeat count per overlay file
    */
   counts?: number[];
   /**
-   * PDF files drawn onto the base PDF's pages. overlayMode decides which overlay page lands on which base page.
+   * PDFs drawn onto the base PDF's pages, in the order set by overlayMode
    */
   overlayFiles: File[];
   /**
-   * SequentialOverlay: overlay pages go one per base page and start over when used up, so a 1-page letterhead repeats on every page. InterleavedOverlay: page 1 of each overlay file in turn. FixedRepeatOverlay: see counts.
+   * SequentialOverlay repeats the overlay pages in order (e.g. a letterhead on every page). InterleavedOverlay takes each overlay file in turn. FixedRepeatOverlay uses counts.
    */
   overlayMode:
     | "SequentialOverlay"
     | "InterleavedOverlay"
     | "FixedRepeatOverlay";
   /**
-   * 0 = foreground, drawn over the page content. 1 = background, drawn behind it (e.g. a letterhead); an opaque page such as a scan hides it.
+   * 0 = foreground (over the content), 1 = background (behind it)
    */
   overlayPosition: 0 | 1;
 }
@@ -960,7 +960,7 @@ export interface PageSizeRequest {
 }
 export interface PdfToPdfARequest {
   /**
-   * Target standard. pdfa, pdfa-2 and pdfa-2b = PDF/A-2b (the usual archive choice); pdfa-1 = PDF/A-1b; pdfa-3 and pdfa-3b = PDF/A-3b, which allows file attachments such as e-invoice XML; pdfa-1a/2a/3a also tag the document (level A); pdfx = PDF/X for print.
+   * pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B; pdfx = PDF/X.
    */
   outputFormat:
     | "pdfa"
@@ -984,7 +984,7 @@ export interface PdfToPdfARequest {
 }
 export interface PdfToPdfUaRequest {
   /**
-   * Alt text for figures, one key=description per line. Keys are the 'key' values in accessibility-report's figuresNeedingDescription, for example "0:12=Bar chart of quarterly revenue". Descriptions are never invented, so without these an illustrated document is not declared PDF/UA.
+   * Alt text for figures, one key=description per line, e.g. "0:12=Bar chart of revenue". Keys come from accessibility-report's figuresNeedingDescription.
    */
   altText?: string;
   /**
@@ -1110,7 +1110,7 @@ export interface ProcessPdfWithOcrRequest {
 }
 export interface RearrangePagesRequest {
   /**
-   * Omit or CUSTOM to use pageNumbers. Or: REVERSE_ORDER, DUPLEX_SORT (input: all fronts, then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even pages), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (each page N times; N in pageNumbers, default 2)
+   * Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
    */
   customMode?:
     | "CUSTOM"
@@ -1130,15 +1130,15 @@ export interface RearrangePagesRequest {
 }
 export interface RedactExecuteRequest {
   /**
-   * Rectangular areas to black out, each defined by a page number and bounding box coordinates. Overlay only: the content underneath stays in the file unless style.convertToImage=true or style.strategy=IMAGE_FINALIZE.
+   * Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
    */
   imageBoxes?: ImageBox[];
   /**
-   * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document. Overlay only: the content stays in the file unless style.convertToImage=true.
+   * Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
    */
   ranges?: TextRange[];
   /**
-   * 1-indexed pages whose images get boxed over. Pass an empty list for every page; omit or pass null to skip. Overlay only: the images stay in the file unless style.convertToImage=true or style.strategy=IMAGE_FINALIZE.
+   * 1-indexed pages whose images get boxed over; an empty list means every page, null skips it.
    */
   redactImagePages?: number[];
   /**
@@ -1156,7 +1156,7 @@ export interface RedactExecuteRequest {
   wipePages?: number[];
 }
 /**
- * Rectangular areas to black out, each defined by a page number and bounding box coordinates. Overlay only: the content underneath stays in the file unless style.convertToImage=true or style.strategy=IMAGE_FINALIZE.
+ * Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
  */
 export interface ImageBox {
   /**
@@ -1181,7 +1181,7 @@ export interface ImageBox {
   y2: number;
 }
 /**
- * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document. Overlay only: the content stays in the file unless style.convertToImage=true.
+ * Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
  */
 export interface TextRange {
   /**
@@ -1202,7 +1202,7 @@ export interface RedactStyle {
    */
   color?: string;
   /**
-   * Rasterize every page of the output, so no text or covered content can be extracted. All text becomes unselectable.
+   * Rasterize every page so no covered content can be extracted
    */
   convertToImage?: boolean;
   /**
@@ -1210,13 +1210,13 @@ export interface RedactStyle {
    */
   padding?: number;
   /**
-   * AUTO removes matched text where it can; OVERLAY_ONLY only draws boxes, so the text stays extractable; IMAGE_FINALIZE also rasterizes every page, like convertToImage.
+   * AUTO removes matched text; OVERLAY_ONLY only draws boxes; IMAGE_FINALIZE also rasterizes pages
    */
   strategy?: "AUTO" | "OVERLAY_ONLY" | "IMAGE_FINALIZE";
 }
 export interface RedactPdfRequest {
   /**
-   * Turn every page into an image after redacting, so nothing under the boxes can be extracted even if text removal fell back to boxes. All text becomes unselectable.
+   * Turn pages into images so nothing under the boxes can be extracted
    */
   convertPDFToImage?: boolean;
   /**
@@ -1224,7 +1224,7 @@ export interface RedactPdfRequest {
    */
   customPadding?: number;
   /**
-   * Text to redact, one term per line (newline-separated, not comma-separated). Each line is matched on its own; with useRegex=true each line is a regex.
+   * Text to redact, one term per line (not comma-separated); each line is a regex when useRegex=true
    */
   listOfText: string;
   /**
@@ -1344,7 +1344,7 @@ export interface ScalePagesRequest {
 }
 export interface ScannerEffectRequest {
   /**
-   * Must be true for brightness, contrast, blur, noise and resolution to apply; when false the quality preset replaces them. Border, rotation, rotate, rotateVariance, colorspace and yellowish always apply.
+   * Use brightness, contrast, blur, noise and resolution instead of the quality preset. Border, rotation, colorspace and yellowish always apply.
    */
   advancedEnabled?: boolean;
   /**
@@ -1372,7 +1372,7 @@ export interface ScannerEffectRequest {
    */
   noise?: number;
   /**
-   * Scan quality preset. Sets brightness, contrast, blur, noise and resolution unless advancedEnabled is true.
+   * Scan quality preset, used unless advancedEnabled is true
    */
   quality: "low" | "medium" | "high";
   /**
@@ -1515,7 +1515,7 @@ export interface SplitPdfBySectionsRequest {
    */
   pageNumbers?: string;
   /**
-   * Which pages to cut into sections (omit for SPLIT_ALL): SPLIT_ALL, SPLIT_ALL_EXCEPT_FIRST, SPLIT_ALL_EXCEPT_LAST, SPLIT_ALL_EXCEPT_FIRST_AND_LAST, or CUSTOM (only the pages in pageNumbers). Other pages are kept whole.
+   * Which pages to split (default SPLIT_ALL). SPLIT_ALL splits every page; SPLIT_ALL_EXCEPT_FIRST, SPLIT_ALL_EXCEPT_LAST and SPLIT_ALL_EXCEPT_FIRST_AND_LAST keep those pages whole; CUSTOM splits only pageNumbers.
    */
   splitMode?:
     | "CUSTOM"
@@ -1530,11 +1530,11 @@ export interface SplitPdfBySectionsRequest {
 }
 export interface SplitPdfBySizeOrCountRequest {
   /**
-   * 0 = max size per file (splitValue '10MB'), 1 = pages per file (splitValue '5'), 2 = number of files (splitValue '3')
+   * 0 = by file size, 1 = by pages per file, 2 = by number of files
    */
   splitType?: 0 | 1 | 2;
   /**
-   * For splitType 0 a size such as '10MB' or '500KB' (a bare number means MB); for 1 and 2 a whole number such as '5'
+   * For splitType 0 a size like '500KB' or '10MB' (a bare number means MB); for 1 and 2 a whole number
    */
   splitValue?: string;
 }

@@ -27,25 +27,17 @@ public class AddWatermarkRequest extends PDFFile {
     @Schema(description = "The watermark text, required when watermarkType is text")
     private String watermarkText;
 
-    @Schema(
-            description =
-                    "The watermark image (PNG, JPEG, etc.), required when watermarkType is image."
-                            + " Tiled across every page, each copy fontSize points high.")
+    @Schema(description = "The watermark image, required when watermarkType is image")
     private MultipartFile watermarkImage;
 
     @Schema(
-            description =
-                    "Font script for watermarkText, which must match it: chinese, japanese,"
-                            + " korean, arabic or thai, otherwise roman for Latin text. Characters"
-                            + " the chosen font lacks make the call fail.",
+            description = "Font script matching watermarkText; roman for Latin text",
             allowableValues = {"roman", "arabic", "japanese", "korean", "chinese", "thai"},
             defaultValue = "roman")
     private String alphabet = "roman";
 
     @Schema(
-            description =
-                    "Text size in points. For an image watermark, the height of each image in"
-                            + " points.",
+            description = "Text size in points; for an image watermark, the image height",
             defaultValue = "12")
     @DecimalMin(value = "1.0", message = "Font size must be at least 1.0")
     private float fontSize = 12f;
@@ -57,15 +49,14 @@ public class AddWatermarkRequest extends PDFFile {
     private float opacity = 0.5f;
 
     @Schema(
-            description = "Hex colour of the watermark text, e.g. #FF0000 for red",
+            description = "Hex colour of the watermark text, e.g. #FF0000",
             defaultValue = "#d3d3d3")
     private String customColor = "#d3d3d3";
 
     @Schema(
             description =
-                    "Flatten every page to an image after watermarking, so the watermark can't be"
-                            + " removed as a separate object. Text is no longer selectable or"
-                            + " searchable.",
+                    "Turn pages into images so the watermark is hard to remove; text"
+                            + " becomes unselectable",
             defaultValue = "false")
     private Boolean convertPDFToImage = false;
 

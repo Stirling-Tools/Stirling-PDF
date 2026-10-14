@@ -66,19 +66,11 @@ public class MetadataController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary =
-                    "Replace a PDF's metadata; standard fields you leave out are removed (current"
-                            + " values: get-info-on-pdf)",
+            summary = "Update a PDF's metadata",
             description =
-                    "Writes title, author, subject, keywords, creator, producer, creation and"
-                            + " modification dates and trapped in one go. Any of these fields not"
-                            + " sent is cleared, so to change one field send the current values of"
-                            + " the others too (read them with get-info-on-pdf). Dates must be"
-                            + " yyyy/MM/dd HH:mm:ss (get-info-on-pdf prints yyyy-MM-dd); a date in"
-                            + " any other format is cleared too. Custom keys in allRequestParams"
-                            + " are added or updated and other existing custom keys are kept."
-                            + " deleteAll=true removes all metadata, including XMP, and ignores"
-                            + " the other fields.")
+                    "Standard fields left out are cleared, so send the current values of"
+                            + " the others too (see get-info-on-pdf). Dates use yyyy/MM/dd HH:mm:ss."
+                            + " deleteAll=true removes all metadata.")
     public ResponseEntity<Resource> metadata(@ModelAttribute MetadataRequest request)
             throws IOException {
 
