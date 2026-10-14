@@ -105,7 +105,10 @@ import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvent
 import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
 import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
 import { isStirlingFile } from "@app/types/fileContext";
-import { pdfAllows } from "@app/services/pdfSessionUnlock";
+import {
+  hasPdfPermissionOverride,
+  pdfAllows,
+} from "@app/services/pdfSessionUnlock";
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import {
@@ -1014,15 +1017,17 @@ export function LocalEmbedPDF({
     buffer: ArrayBuffer;
     name: string;
     password?: string;
+    honorOwnerPasswords?: boolean;
   } | null>(null);
   const [pendingDocument, setPendingDocument] = useState<{
     buffer: ArrayBuffer;
     name: string;
     password?: string;
+    honorOwnerPasswords?: boolean;
   } | null>(null);
   const initialDocumentOpenedRef = useRef(false);
   const openedContentKeyRef = useRef<string | null>(null);
-  const openedOwnerAccessRef = useRef(false);
+  const openedPermissionOverrideRef = useRef(false);
   // Anchors survive deselection per annotation id, so a delete that happens
   // while no menu is open (keyboard, sidebar) still has somewhere to appear.
   const annotationAnchorsByIdRef = useRef<Map<string, AnnotationMenuAnchor>>(
@@ -1064,7 +1069,8 @@ export function LocalEmbedPDF({
     if (
       fileStableKey &&
       shouldSkipBytes?.(fileStableKey) &&
-      openedOwnerAccessRef.current === Boolean(pdfAccess?.ownerAuthenticated)
+      openedPermissionOverrideRef.current ===
+        hasPdfPermissionOverride(pdfAccess)
     ) {
       // The live document already shows this save; swapping the bytes would
       // reopen it and lose the scroll position for no visual gain.
@@ -1082,18 +1088,28 @@ export function LocalEmbedPDF({
       if (
         !contentKey ||
         (openedContentKeyRef.current === contentKey &&
-          openedOwnerAccessRef.current ===
-            Boolean(pdfAccess?.ownerAuthenticated))
+          openedPermissionOverrideRef.current ===
+            hasPdfPermissionOverride(pdfAccess))
       )
         return;
-      openedOwnerAccessRef.current = Boolean(pdfAccess?.ownerAuthenticated);
+      openedPermissionOverrideRef.current = hasPdfPermissionOverride(pdfAccess);
       openedContentKeyRef.current = contentKey;
       if (!initialDocumentOpenedRef.current) {
         initialDocumentOpenedRef.current = true;
-        setInitialDocument({ buffer, name, password: pdfAccess?.password });
+        setInitialDocument({
+          buffer,
+          name,
+          password: pdfAccess?.password,
+          honorOwnerPasswords: pdfAccess?.honorOwnerPasswords,
+        });
         return;
       }
-      setPendingDocument({ buffer, name, password: pdfAccess?.password });
+      setPendingDocument({
+        buffer,
+        name,
+        password: pdfAccess?.password,
+        honorOwnerPasswords: pdfAccess?.honorOwnerPasswords,
+      });
     };
     const fail = (source: string) => (err: unknown) => {
       console.error(
@@ -1145,6 +1161,7 @@ export function LocalEmbedPDF({
     shouldSkipBytes,
     exportFileName,
     pdfAccess?.ownerAuthenticated,
+    pdfAccess?.honorOwnerPasswords,
   ]);
 
   useEffect(() => {
@@ -1213,6 +1230,10 @@ export function LocalEmbedPDF({
               buffer: initialSource.buffer,
               name: initialSource.name,
               password: initialSource.password,
+              permissions: {
+                enforceDocumentPermissions:
+                  initialSource.honorOwnerPasswords !== false,
+              },
             },
           ]
         : [{ url: initialSource.url, name: initialSource.name }];
@@ -1597,6 +1618,7 @@ export function LocalEmbedPDF({
           <DocumentPermissionsAPIBridge
             isEncrypted={pdfAccess?.encrypted ?? true}
             isOwnerUnlocked={pdfAccess?.ownerAuthenticated}
+            honorOwnerPasswords={pdfAccess?.honorOwnerPasswords}
             permissions={pdfAccess?.permissions ?? 0}
           />
           <DocumentReadyWrapper

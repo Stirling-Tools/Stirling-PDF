@@ -5,7 +5,7 @@ import { useRemovePasswordOperation } from "@app/hooks/tools/removePassword/useR
 import { useRemovePasswordTips } from "@app/components/tooltips/useRemovePasswordTips";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { Text } from "@mantine/core";
+import { PasswordInput, Stack, Text } from "@mantine/core";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import { getPdfAccess } from "@app/services/pdfPasswordStore";
 
@@ -20,6 +20,14 @@ const RemovePassword = (props: BaseToolProps) => {
     props,
   );
   usePdfAccess(base.selectedFiles[0]);
+  const needsNewOwnerPassword = base.selectedFiles.some((file) => {
+    const access = getPdfAccess(file);
+    return (
+      access?.encrypted &&
+      access.honorOwnerPasswords === false &&
+      !access.ownerAuthenticated
+    );
+  });
   const nothingToRemove =
     base.selectedFiles.length > 0 &&
     base.selectedFiles.every((file) => {
@@ -44,17 +52,41 @@ const RemovePassword = (props: BaseToolProps) => {
           : undefined,
         tooltip: removePasswordTips,
         content: (
-          <Text size="sm">
-            {nothingToRemove
-              ? t(
-                  "encryptedPdfUnlock.noOpeningPassword",
-                  "This PDF already opens without a password.",
-                )
-              : t(
-                  "encryptedPdfUnlock.removeOpeningConsequence",
-                  "Removes the opening password. Restrictions remain.",
+          <Stack gap="sm">
+            <Text size="sm">
+              {nothingToRemove
+                ? t(
+                    "encryptedPdfUnlock.noOpeningPassword",
+                    "This PDF already opens without a password.",
+                  )
+                : t(
+                    "encryptedPdfUnlock.removeOpeningConsequence",
+                    "Removes the opening password. Restrictions remain.",
+                  )}
+            </Text>
+            {!nothingToRemove && needsNewOwnerPassword && (
+              <PasswordInput
+                size="xs"
+                label={t(
+                  "encryptedPdfUnlock.newOwnerPassword",
+                  "New permissions password",
                 )}
-          </Text>
+                description={t(
+                  "encryptedPdfUnlock.replaceUnknownOwner",
+                  "Choose a new password to replace the existing permissions password.",
+                )}
+                value={base.params.parameters.newOwnerPassword ?? ""}
+                onChange={(event) =>
+                  base.params.updateParameter(
+                    "newOwnerPassword",
+                    event.currentTarget.value,
+                  )
+                }
+                disabled={base.operation.isLoading}
+                required
+              />
+            )}
+          </Stack>
         ),
       },
     ],
@@ -64,7 +96,9 @@ const RemovePassword = (props: BaseToolProps) => {
       loadingText: t("loading"),
       onClick: base.handleExecute,
       endpointEnabled: base.endpointEnabled,
-      paramsValid: !nothingToRemove,
+      paramsValid:
+        !nothingToRemove &&
+        (!needsNewOwnerPassword || !!base.params.parameters.newOwnerPassword),
     },
     review: {
       protectionSummary: t(

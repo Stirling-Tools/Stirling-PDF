@@ -6,6 +6,7 @@ import {
 
 export interface RemovePasswordParameters extends BaseParameters {
   password: string;
+  newOwnerPassword?: string;
 }
 
 export type RemovePasswordParametersHook =

@@ -9,7 +9,16 @@ import {
 import type { StirlingFile } from "@app/types/fileContext";
 import { PdfPermissionFlag } from "@embedpdf/models";
 
-/** Stored restrictions apply until the server verifies the permissions credential. */
+/** An override grants actions without changing the document's actual authentication role. */
+export function hasPdfPermissionOverride(
+  access: Partial<PdfAccess> | undefined,
+): boolean {
+  return (
+    access?.ownerAuthenticated === true || access?.honorOwnerPasswords === false
+  );
+}
+
+/** Applies the server policy and authenticated access to the document's stored restrictions. */
 export function pdfAllows(
   access: PdfAccess | undefined,
   flag: PdfPermissionFlag,
@@ -27,7 +36,7 @@ export function pdfAllows(
     flag = PdfPermissionFlag.Print;
   return (
     !access.encrypted ||
-    access.ownerAuthenticated ||
+    hasPdfPermissionOverride(access) ||
     (access.permissions & flag) !== 0
   );
 }
@@ -117,7 +126,7 @@ export async function preflightPdfOperation(
   for (const file of protectedFiles) {
     const access = getPdfAccess(file)!;
     const needsOwner = endpoint?.includes("password")
-      ? !access.ownerAuthenticated
+      ? !hasPdfPermissionOverride(access)
       : !pdfAllows(access, operationPermission(endpoint));
     if (needsOwner && !(await requestOwner(file))) return false;
   }
@@ -185,7 +194,7 @@ export function assertPdfSessionEditable(
     );
   if (
     access?.encrypted &&
-    !access.ownerAuthenticated &&
+    !hasPdfPermissionOverride(access) &&
     access.canModify !== true
   )
     throw new Error(
@@ -338,7 +347,7 @@ export async function changePdfSecurity(
   const settingProtection = endpoint === "/api/v1/security/add-password";
   if (settingProtection) {
     const access = await ensurePdfAccess(file);
-    if (access.encrypted && !access.ownerAuthenticated)
+    if (access.encrypted && !hasPdfPermissionOverride(access))
       throw new Error(
         i18n.t(
           "encryptedPdfUnlock.ownerRequired",
@@ -348,7 +357,7 @@ export async function changePdfSecurity(
     form.set("sourcePassword", access.password);
   } else {
     const access = await ensurePdfAccess(file);
-    if (access.ownerAuthenticated) form.set("password", access.password);
+    if (hasPdfPermissionOverride(access)) form.set("password", access.password);
   }
   return requestWorkingPdf(
     settingProtection

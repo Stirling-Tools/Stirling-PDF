@@ -66,7 +66,10 @@ import ZipWarningModal from "@app/components/shared/ZipWarningModal";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
 import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
-import { unlockPdfForSession } from "@app/services/pdfSessionUnlock";
+import {
+  hasPdfPermissionOverride,
+  unlockPdfForSession,
+} from "@app/services/pdfSessionUnlock";
 import {
   bindPdfAccess,
   clearPdfAccess,
@@ -677,7 +680,7 @@ function FileContextInner({
   const runUnprotectedCopy = useCallback(
     async (fileId: FileId): Promise<void> => {
       const access = getPdfAccess(fileId);
-      if (!access?.ownerAuthenticated)
+      if (!access || !hasPdfPermissionOverride(access))
         throw new Error(
           t(
             "encryptedPdfUnlock.ownerRequired",
@@ -992,7 +995,7 @@ function FileContextInner({
       openEncryptedUnlockPrompt: promptEncryptedUnlock,
       requestPdfOwnerAccess: (fileId, action) => {
         if (!filesRef.current.has(fileId)) return Promise.resolve(false);
-        if (getPdfAccess(fileId)?.ownerAuthenticated)
+        if (hasPdfPermissionOverride(getPdfAccess(fileId)))
           return Promise.resolve(true);
         const existing = ownerRequests.current.get(fileId);
         if (existing) return existing.promise;

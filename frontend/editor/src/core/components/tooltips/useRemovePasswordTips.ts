@@ -12,7 +12,7 @@ export const useRemovePasswordTips = (): TooltipContent => {
       {
         description: t(
           "encryptedPdfUnlock.removeOpeningHelp",
-          "Requires the permissions password. The PDF will open without a password, while its restrictions remain.",
+          "Removes only the opening password. Use Create an unprotected copy to remove passwords and restrictions.",
         ),
       },
     ],

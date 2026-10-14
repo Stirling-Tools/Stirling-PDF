@@ -45,7 +45,16 @@ const ChangePermissions = (props: BaseToolProps) => {
     base.selectedFiles.every(
       (file) => getPdfAccess(file)?.ownerAuthenticated === true,
     );
+  const needsNewOwnerPassword = base.selectedFiles.some((file) => {
+    const access = getPdfAccess(file);
+    return (
+      access?.encrypted &&
+      access.honorOwnerPasswords === false &&
+      !access.ownerAuthenticated
+    );
+  });
   const showOwnerPassword =
+    needsNewOwnerPassword ||
     !protectedInput ||
     replaceOwnerPassword ||
     !!base.params.parameters.ownerPassword;
@@ -84,7 +93,7 @@ const ChangePermissions = (props: BaseToolProps) => {
                 required
               />
             )}
-            {protectedInput && (
+            {protectedInput && !needsNewOwnerPassword && (
               <>
                 <Group justify="space-between" gap="xs">
                   <Text size="sm">
@@ -128,12 +137,17 @@ const ChangePermissions = (props: BaseToolProps) => {
                   "New permissions password",
                 )}
                 description={
-                  protectedInput
+                  protectedInput && !needsNewOwnerPassword
                     ? undefined
-                    : t(
-                        "encryptedPdfUnlock.newOwnerHint",
-                        "Required to change these restrictions later.",
-                      )
+                    : protectedInput
+                      ? t(
+                          "encryptedPdfUnlock.replaceUnknownOwner",
+                          "Choose a new password to replace the existing permissions password.",
+                        )
+                      : t(
+                          "encryptedPdfUnlock.newOwnerHint",
+                          "Required to change these restrictions later.",
+                        )
                 }
                 value={base.params.parameters.ownerPassword ?? ""}
                 onChange={(e) =>

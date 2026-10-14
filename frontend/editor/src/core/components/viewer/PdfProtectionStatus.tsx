@@ -9,6 +9,7 @@ import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import type { StirlingFile } from "@app/types/fileContext";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+import { hasPdfPermissionOverride } from "@app/services/pdfSessionUnlock";
 
 /** Persistent document settings; authentication is requested only when an action needs it. */
 export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
@@ -168,13 +169,21 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                   <Group key={label} justify="space-between">
                     <Text size="sm">{label}</Text>
                     <Group gap={6}>
-                      {access.ownerAuthenticated &&
+                      {hasPdfPermissionOverride(access) &&
                         (!allowed || lowResolutionOnly) && (
                           <Tooltip
-                            label={t(
-                              "encryptedPdfUnlock.unlockedForSession",
-                              "Unlocked for this session using your permissions password.",
-                            )}
+                            label={
+                              access.honorOwnerPasswords === false &&
+                              !access.ownerAuthenticated
+                                ? t(
+                                    "encryptedPdfUnlock.ignoredByServer",
+                                    "Permissions are ignored by this server's settings. The PDF's protection is unchanged.",
+                                  )
+                                : t(
+                                    "encryptedPdfUnlock.unlockedForSession",
+                                    "Unlocked for this session using your permissions password.",
+                                  )
+                            }
                             multiline
                             w={240}
                             withArrow
@@ -186,11 +195,20 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                               variant="quiet"
                               accent="neutral"
                               leftSection={<Icon name="lock-open" size={14} />}
-                              aria-label={t(
-                                "encryptedPdfUnlock.actionUnlocked",
-                                "{{action}} unlocked for this session",
-                                { action: label },
-                              )}
+                              aria-label={
+                                access.honorOwnerPasswords === false &&
+                                !access.ownerAuthenticated
+                                  ? t(
+                                      "encryptedPdfUnlock.actionIgnored",
+                                      "{{action}} restriction ignored",
+                                      { action: label },
+                                    )
+                                  : t(
+                                      "encryptedPdfUnlock.actionUnlocked",
+                                      "{{action}} unlocked for this session",
+                                      { action: label },
+                                    )
+                              }
                             />
                           </Tooltip>
                         )}
@@ -216,7 +234,7 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                   )}
                 </Text>
               )}
-              {!access.ownerAuthenticated && (
+              {!hasPdfPermissionOverride(access) && (
                 <Button
                   onClick={async () => {
                     close();

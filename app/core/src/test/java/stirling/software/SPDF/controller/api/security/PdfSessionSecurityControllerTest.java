@@ -28,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -40,6 +41,7 @@ class PdfSessionSecurityControllerTest {
     @TempDir Path directory;
     private PdfSessionSecurityController controller;
     private CustomPDFDocumentFactory factory;
+    private ApplicationProperties properties;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -71,8 +73,10 @@ class PdfSessionSecurityControllerTest {
                         })
                 .when(tempFiles)
                 .deleteTempFile(any(java.io.File.class));
+        properties = new ApplicationProperties();
         controller =
-                new PdfSessionSecurityController(factory, tempFiles, JsonMapper.builder().build());
+                new PdfSessionSecurityController(
+                        factory, tempFiles, JsonMapper.builder().build(), properties);
     }
 
     private byte[] pdf(boolean encrypted, int bits) throws IOException {
@@ -90,6 +94,92 @@ class PdfSessionSecurityControllerTest {
             }
             document.save(output);
             return output.toByteArray();
+        }
+    }
+
+    @Test
+    void honorsOwnerPasswordsByDefaultAndReportsPolicyWithoutChangingAuthentication()
+            throws Exception {
+        var original = pdf(true, 256);
+        var info = controller.inspect(request(original, USER));
+        assertTrue(info.honorOwnerPasswords());
+        assertFalse(info.ownerAuthenticated());
+        assertThrows(
+                ResponseStatusException.class,
+                () -> controller.removeProtection(request(original, USER)));
+        properties.getSecurity().setHonorOwnerPasswords(false);
+        var bypass = controller.inspect(request(original, USER));
+        assertFalse(bypass.honorOwnerPasswords());
+        assertFalse(bypass.ownerAuthenticated());
+        assertEquals(info.permissions(), bypass.permissions());
+        assertEquals(info.credentialFingerprint(), bypass.credentialFingerprint());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"40", "128", "256"})
+    void bypassesRestrictionsButStillRequiresOpeningPassword(int bits) throws Exception {
+        properties.getSecurity().setHonorOwnerPasswords(false);
+        var original = pdf(true, bits);
+        assertThrows(
+                InvalidPasswordException.class, () -> controller.inspect(request(original, "")));
+        assertThrows(
+                InvalidPasswordException.class,
+                () ->
+                        controller.prepare(
+                                request(original, "wrong"), "/api/v1/general/split-pages"));
+        assertThrows(
+                InvalidPasswordException.class,
+                () -> controller.removeProtection(request(original, "")));
+        try (var stream =
+                        controller
+                                .prepare(request(original, USER), "/api/v1/general/split-pages")
+                                .getBody()
+                                .getInputStream();
+                var working = Loader.loadPDF(stream.readAllBytes())) {
+            assertFalse(working.isEncrypted());
+        }
+        try (var stream =
+                        controller
+                                .removeProtection(request(original, USER))
+                                .getBody()
+                                .getInputStream();
+                var copy = Loader.loadPDF(stream.readAllBytes())) {
+            assertFalse(copy.isEncrypted());
+        }
+        assertTrue(controller.inspect(request(original, USER)).encrypted());
+    }
+
+    @Test
+    void bypassCannotSilentlyReplaceUnknownOwnerWithReaderPassword() throws Exception {
+        properties.getSecurity().setHonorOwnerPasswords(false);
+        var original = pdf(true, 256);
+        var update = new AddPasswordRequest();
+        update.setFileInput(upload(original));
+        update.setPassword(USER);
+        update.setPreventModify(true);
+        assertThrows(
+                ResponseStatusException.class, () -> controller.changePermissions(update, USER));
+        update.setOwnerPassword("replacement-owner");
+        try (var stream = controller.changePermissions(update, USER).getBody().getInputStream()) {
+            byte[] bytes = stream.readAllBytes();
+            assertFalse(controller.inspect(request(bytes, USER)).canModify());
+            assertFalse(controller.inspect(request(bytes, USER)).ownerAuthenticated());
+            assertTrue(
+                    controller.inspect(request(bytes, "replacement-owner")).ownerAuthenticated());
+        }
+        assertThrows(
+                ResponseStatusException.class,
+                () -> controller.removeOpeningPassword(request(original, USER), ""));
+        try (var stream =
+                controller
+                        .removeOpeningPassword(request(original, USER), "replacement-owner")
+                        .getBody()
+                        .getInputStream()) {
+            byte[] bytes = stream.readAllBytes();
+            assertFalse(controller.inspect(request(bytes, "")).requiresOpeningPassword());
+            assertFalse(controller.inspect(request(bytes, "")).canPrint());
+            assertTrue(
+                    controller.inspect(request(bytes, "replacement-owner")).ownerAuthenticated());
         }
     }
 
@@ -171,7 +261,7 @@ class PdfSessionSecurityControllerTest {
         assertTrue(controller.inspect(request(original, OWNER)).ownerAuthenticated());
         assertThrows(
                 ResponseStatusException.class,
-                () -> controller.removeOpeningPassword(request(original, USER)));
+                () -> controller.removeOpeningPassword(request(original, USER), ""));
     }
 
     @Test
@@ -237,7 +327,7 @@ class PdfSessionSecurityControllerTest {
         byte[] original = pdf(true, 256);
         try (var stream =
                 controller
-                        .removeOpeningPassword(request(original, OWNER))
+                        .removeOpeningPassword(request(original, OWNER), "")
                         .getBody()
                         .getInputStream()) {
             byte[] result = stream.readAllBytes();

@@ -7,6 +7,8 @@ export interface PdfAccess {
   requiresOpeningPassword?: boolean;
   signed: boolean;
   ownerAuthenticated: boolean;
+  /** Server policy at inspection time; older servers default to enforcing restrictions. */
+  honorOwnerPasswords?: boolean;
   permissions: number;
   /** Older servers omit these; native exports must reject unverifiable protection. */
   encryptionKeyLength?: number;

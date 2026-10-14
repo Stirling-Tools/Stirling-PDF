@@ -27,6 +27,7 @@ import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.SPDF.service.PdfSessionPermissions;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.TempFile;
@@ -42,6 +43,7 @@ public class PdfSessionSecurityController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final ObjectMapper objectMapper;
+    private final ApplicationProperties applicationProperties;
 
     /**
      * Passwords are never returned; permissions describe the authenticated access to the original
@@ -61,7 +63,8 @@ public class PdfSessionSecurityController {
             boolean canPrint,
             boolean canPrintFaithful,
             String credentialFingerprint,
-            boolean requiresOpeningPassword) {}
+            boolean requiresOpeningPassword,
+            boolean honorOwnerPasswords) {}
 
     /** Authenticate without saving, changing metadata, or removing encryption. */
     @Operation(hidden = true)
@@ -86,7 +89,8 @@ public class PdfSessionSecurityController {
                     permission.canPrint(),
                     permission.canPrintFaithful(),
                     PdfSessionPermissions.credentialFingerprint(document),
-                    document.isEncrypted() && requiresOpeningPassword(request.getFileInput()));
+                    document.isEncrypted() && requiresOpeningPassword(request.getFileInput()),
+                    applicationProperties.getSecurity().isHonorOwnerPasswords());
         }
     }
 
@@ -99,7 +103,8 @@ public class PdfSessionSecurityController {
     }
 
     /**
-     * Changes restrictions with owner authority, retaining the owner credential unless replaced.
+     * Retains a verified owner credential; bypassing an unknown credential requires its
+     * replacement.
      */
     @Operation(hidden = true)
     @PostMapping(value = "/change-pdf-permissions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -109,7 +114,8 @@ public class PdfSessionSecurityController {
             throws IOException {
         try (PDDocument source =
                 pdfDocumentFactory.load(request.getFileInput(), sourcePassword, true)) {
-            PdfSessionPermissions.requireOwner(source);
+            PdfSessionPermissions.requireOwner(
+                    source, applicationProperties.getSecurity().isHonorOwnerPasswords());
             if (source.isEncrypted()) {
                 if (requiresOpeningPassword(request.getFileInput())
                         && (request.getPassword() == null || request.getPassword().isEmpty())) {
@@ -118,6 +124,11 @@ public class PdfSessionSecurityController {
                             "Choose the opening password for the updated PDF");
                 }
                 if (request.getOwnerPassword() == null || request.getOwnerPassword().isEmpty()) {
+                    if (!PdfSessionPermissions.isOwnerAuthenticated(source)) {
+                        throw new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST,
+                                "Choose a new permissions password to replace the unknown password");
+                    }
                     request.setOwnerPassword(sourcePassword);
                 }
                 request.setKeyLength(source.getEncryption().getLength());
@@ -136,7 +147,10 @@ public class PdfSessionSecurityController {
             throws IOException {
         try (PDDocument document =
                 pdfDocumentFactory.load(request.getFileInput(), request.getPassword(), true)) {
-            PdfSessionPermissions.requireOperation(document, endpoint);
+            PdfSessionPermissions.requireOperation(
+                    document,
+                    endpoint,
+                    applicationProperties.getSecurity().isHonorOwnerPasswords());
             document.setAllSecurityToBeRemoved(true);
             return WebResponseUtils.pdfDocToWebResponse(
                     document, request.getFileInput().getOriginalFilename(), tempFileManager);
@@ -144,21 +158,33 @@ public class PdfSessionSecurityController {
     }
 
     /**
-     * Removes the opening password with owner authority, retaining a known permissions password.
+     * Retains restrictions and a verified permissions password, or an explicitly chosen
+     * replacement.
      */
     @Operation(hidden = true)
     @PostMapping(
             value = "/remove-pdf-opening-password",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Resource> removeOpeningPassword(
-            @ModelAttribute PDFPasswordRequest request) throws IOException {
+            @ModelAttribute PDFPasswordRequest request,
+            @RequestParam(defaultValue = "") String newOwnerPassword)
+            throws IOException {
         try (PDDocument document =
                 pdfDocumentFactory.load(request.getFileInput(), request.getPassword(), true)) {
-            PdfSessionPermissions.requireOwner(document);
+            PdfSessionPermissions.requireOwner(
+                    document, applicationProperties.getSecurity().isHonorOwnerPasswords());
             if (document.isEncrypted()) {
+                String owner =
+                        PdfSessionPermissions.isOwnerAuthenticated(document)
+                                ? request.getPassword()
+                                : newOwnerPassword;
+                if (owner.isEmpty()) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Choose a new permissions password to retain restrictions");
+                }
                 var permissions = new AccessPermission(document.getEncryption().getPermissions());
-                var protection =
-                        new StandardProtectionPolicy(request.getPassword(), "", permissions);
+                var protection = new StandardProtectionPolicy(owner, "", permissions);
                 protection.setEncryptionKeyLength(document.getEncryption().getLength());
                 protection.setPreferAES(document.getEncryption().getVersion() >= 4);
                 document.protect(protection);
@@ -207,7 +233,8 @@ public class PdfSessionSecurityController {
         }
         try (PDDocument document =
                 pdfDocumentFactory.load(request.getFileInput(), sourcePassword, true)) {
-            PdfSessionPermissions.requireOwner(document);
+            PdfSessionPermissions.requireOwner(
+                    document, applicationProperties.getSecurity().isHonorOwnerPasswords());
             var protection = new StandardProtectionPolicy(owner, reader, permissions);
             protection.setEncryptionKeyLength(request.getKeyLength());
             if (document.isEncrypted()
@@ -304,14 +331,15 @@ public class PdfSessionSecurityController {
         }
     }
 
-    /** Creates an explicitly unprotected copy only after verifying owner authority. */
+    /** Creates an explicitly unprotected copy subject to the server's owner-password policy. */
     @Operation(hidden = true)
     @PostMapping(value = "/remove-pdf-protection", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Resource> removeProtection(@ModelAttribute PDFPasswordRequest request)
             throws IOException {
         try (PDDocument document =
                 pdfDocumentFactory.load(request.getFileInput(), request.getPassword(), true)) {
-            PdfSessionPermissions.requireOwner(document);
+            PdfSessionPermissions.requireOwner(
+                    document, applicationProperties.getSecurity().isHonorOwnerPasswords());
             document.setAllSecurityToBeRemoved(true);
             return WebResponseUtils.pdfDocToWebResponse(
                     document, "unprotected.pdf", tempFileManager);

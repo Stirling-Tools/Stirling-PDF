@@ -56,7 +56,8 @@ public final class PdfSessionPermissions {
     /**
      * Rejects unsupported operations and restrictions before temporary decrypted bytes are created.
      */
-    public static void requireOperation(PDDocument document, String endpoint) throws IOException {
+    public static void requireOperation(
+            PDDocument document, String endpoint, boolean honorOwnerPasswords) throws IOException {
         var permission = document.getCurrentAccessPermission();
         boolean permitted =
                 switch (endpoint) {
@@ -85,17 +86,18 @@ public final class PdfSessionPermissions {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "Signed protected PDFs support viewing only");
         }
-        if (!isOwnerAuthenticated(document) && !permitted) {
+        if (honorOwnerPasswords && !isOwnerAuthenticated(document) && !permitted) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "This operation requires the permissions password");
         }
     }
 
     /**
-     * Security changes require owner authentication, including unrestricted encrypted documents.
+     * The server policy controls owner authentication; signature-preservation limits always apply.
      */
-    public static void requireOwner(PDDocument document) throws IOException {
-        if (document.isEncrypted() && !isOwnerAuthenticated(document)) {
+    public static void requireOwner(PDDocument document, boolean honorOwnerPasswords)
+            throws IOException {
+        if (honorOwnerPasswords && document.isEncrypted() && !isOwnerAuthenticated(document)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Changing PDF protection requires the permissions password");

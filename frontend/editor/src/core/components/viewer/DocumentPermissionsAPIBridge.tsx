@@ -20,19 +20,23 @@ function hasPermissionFlag(
 interface DocumentPermissionsAPIBridgeProps {
   isEncrypted?: boolean;
   isOwnerUnlocked?: boolean;
+  honorOwnerPasswords?: boolean;
   permissions?: number;
 }
 
 export function DocumentPermissionsAPIBridge({
   isEncrypted = false,
   isOwnerUnlocked = false,
+  honorOwnerPasswords = true,
   permissions = PdfPermissionFlag.AllowAll,
 }: DocumentPermissionsAPIBridgeProps) {
   const { registerBridge } = useViewer();
   const documentReady = useDocumentReady();
 
   const effectivePermissions =
-    !isEncrypted || isOwnerUnlocked ? PdfPermissionFlag.AllowAll : permissions;
+    !isEncrypted || isOwnerUnlocked || !honorOwnerPasswords
+      ? PdfPermissionFlag.AllowAll
+      : permissions;
 
   const state = useMemo<DocumentPermissionsState>(
     () => ({

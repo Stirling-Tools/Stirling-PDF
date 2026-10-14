@@ -17,7 +17,10 @@ import {
   assertPdfSessionEditable,
   preflightPdfOperation,
   changePdfSecurity,
+  hasPdfPermissionOverride,
+  pdfAllows,
 } from "@app/services/pdfSessionUnlock";
+import { PdfPermissionFlag } from "@embedpdf/models";
 
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
 const post = vi.mocked(apiClient.post);
@@ -43,6 +46,71 @@ beforeEach(() => {
 afterEach(clearPdfAccess);
 
 describe("session PDF access", () => {
+  it.each([undefined, true, false])(
+    "uses the server owner policy (%s) without changing authentication",
+    async (honorOwnerPasswords) => {
+      const file = createStirlingFile(
+        new File(["encrypted"], "restricted.pdf"),
+      );
+      const reader = {
+        ...access,
+        permissions: 0,
+        canModify: false,
+        honorOwnerPasswords,
+      };
+      rememberPdfAccess(file, reader);
+      const requestOwner = vi.fn().mockResolvedValue(false);
+      const bypass = honorOwnerPasswords === false;
+      expect(hasPdfPermissionOverride(reader)).toBe(bypass);
+      for (const flag of [
+        PdfPermissionFlag.Print,
+        PdfPermissionFlag.PrintHighQuality,
+        PdfPermissionFlag.CopyContents,
+        PdfPermissionFlag.ModifyContents,
+        PdfPermissionFlag.ModifyAnnotations,
+        PdfPermissionFlag.FillForms,
+        PdfPermissionFlag.AssembleDocument,
+        PdfPermissionFlag.ExtractForAccessibility,
+      ]) {
+        expect(pdfAllows(reader, flag)).toBe(bypass);
+      }
+      expect(
+        await preflightPdfOperation([file], rotate, false, requestOwner),
+      ).toBe(bypass);
+      expect(
+        await preflightPdfOperation(
+          [file],
+          "/api/v1/security/add-password",
+          false,
+          requestOwner,
+        ),
+      ).toBe(bypass);
+      if (bypass) {
+        expect(requestOwner).not.toHaveBeenCalled();
+        expect(() => assertPdfSessionEditable(reader)).not.toThrow();
+      } else {
+        expect(requestOwner).toHaveBeenCalledTimes(2);
+        expect(() => assertPdfSessionEditable(reader)).toThrow();
+      }
+      expect(getPdfAccess(file)?.ownerAuthenticated).toBe(false);
+      expect(() =>
+        assertPdfSessionEditable({ ...reader, signed: true }),
+      ).toThrow();
+    },
+  );
+
+  it("uses the opening credential for bypassed security changes and keeps the replacement owner explicit", async () => {
+    const file = new File(["encrypted"], "restricted.pdf");
+    rememberPdfAccess(file, { ...access, honorOwnerPasswords: false });
+    post.mockResolvedValue({ data: new Blob(["result"]) });
+    const form = new FormData();
+    form.set("newOwnerPassword", "replacement");
+    await changePdfSecurity(file, form, "/api/v1/security/remove-password");
+    expect(form.get("password")).toBe(access.password);
+    expect(form.get("newOwnerPassword")).toBe("replacement");
+    expect(getPdfAccess(file)?.ownerAuthenticated).toBe(false);
+  });
+
   it("requests owner authority before a restricted operation and stops on cancellation", async () => {
     const file = createStirlingFile(new File(["encrypted"], "restricted.pdf"));
     rememberPdfAccess(file, { ...access, permissions: 0 });

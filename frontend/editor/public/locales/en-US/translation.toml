@@ -1617,6 +1617,7 @@ title = "Restart Required"
 [admin.settings.security]
 authentication = "Authentication"
 description = "Configure authentication, login behavior, and security policies."
+pdfPermissions = "PDF permissions"
 title = "Security"
 
 [admin.settings.security.audit]
@@ -1664,6 +1665,10 @@ label = "Disable CSRF Protection"
 [admin.settings.security.enableLogin]
 description = "Require users to log in before accessing the application"
 label = "Enable Login"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs."
+label = "Honor PDF permissions"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Advanced Settings"
@@ -4473,6 +4478,7 @@ description = "Select the Edit Table of Contents tool to load its workspace."
 title = "Open the tool to start editing"
 
 [encryptedPdfUnlock]
+actionIgnored = "{{action}} restriction ignored"
 actionUnlocked = "{{action}} unlocked for this session"
 advanced = "Advanced"
 allowed = "Allowed"
@@ -4486,6 +4492,7 @@ copying = "Copying content"
 differentPasswordHint = "Use a different password to change restrictions."
 editing = "Editing"
 enterPassword = "Enter password"
+ignoredByServer = "Permissions are ignored by this server's settings. The PDF's protection is unchanged."
 incorrectPassword = "Incorrect password"
 lowQualityPrintUnsupported = "This PDF allows low-quality printing only, which this viewer does not support."
 lowResolutionOnly = "Low resolution only"
@@ -4514,10 +4521,11 @@ recipientRestrictions = "Restrictions for recipients"
 removeOpening = "Remove opening password"
 removeOpeningConsequence = "Removes the opening password. Restrictions remain."
 removeOpeningDetails = "Removes the opening password. Restrictions remain."
-removeOpeningHelp = "Requires the permissions password. The PDF will open without a password, while its restrictions remain."
+removeOpeningHelp = "Removes only the opening password. Use Create an unprotected copy to remove passwords and restrictions."
 removeProtection = "Create an unprotected copy"
 replaceOpeningHint = "Enter the current opening password to keep it, or choose a new one."
 replaceProtection = "These settings replace the PDF's current protection."
+replaceUnknownOwner = "Choose a new password to replace the existing permissions password."
 required = "Enter the password to continue."
 requiredStatus = "Required"
 requiredToApply = "Required to apply changes"
