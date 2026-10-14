@@ -1515,7 +1515,7 @@ export interface SplitPdfBySectionsRequest {
    */
   pageNumbers?: string;
   /**
-   * Which pages to split into sections (default SPLIT_ALL); CUSTOM splits only pageNumbers
+   * Which pages to split (default SPLIT_ALL). SPLIT_ALL splits every page; SPLIT_ALL_EXCEPT_FIRST, SPLIT_ALL_EXCEPT_LAST and SPLIT_ALL_EXCEPT_FIRST_AND_LAST keep those pages whole; CUSTOM splits only pageNumbers.
    */
   splitMode?:
     | "CUSTOM"

@@ -1660,7 +1660,7 @@ class SplitPdfByChaptersParams(ApiModel):
 
 class SplitMode(StrEnum):
     """
-    Which pages to split into sections (default SPLIT_ALL); CUSTOM splits only pageNumbers
+    Which pages to split (default SPLIT_ALL). SPLIT_ALL splits every page; SPLIT_ALL_EXCEPT_FIRST, SPLIT_ALL_EXCEPT_LAST and SPLIT_ALL_EXCEPT_FIRST_AND_LAST keep those pages whole; CUSTOM splits only pageNumbers.
     """
 
     custom = "CUSTOM"
@@ -1683,7 +1683,8 @@ class SplitPdfBySectionsParams(ApiModel):
         examples=["1,3,5-9"],
     )
     split_mode: SplitMode | None = Field(
-        None, description="Which pages to split into sections (default SPLIT_ALL); CUSTOM splits only pageNumbers"
+        None,
+        description="Which pages to split (default SPLIT_ALL). SPLIT_ALL splits every page; SPLIT_ALL_EXCEPT_FIRST, SPLIT_ALL_EXCEPT_LAST and SPLIT_ALL_EXCEPT_FIRST_AND_LAST keep those pages whole; CUSTOM splits only pageNumbers.",
     )
     vertical_divisions: int = Field(1, description="Number of vertical divisions for each PDF page", ge=0, le=50)
 
