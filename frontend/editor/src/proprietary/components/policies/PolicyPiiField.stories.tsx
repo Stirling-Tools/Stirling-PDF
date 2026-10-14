@@ -9,6 +9,7 @@ const BASE_PARAMETERS: RedactParameters = {
   wordsToRedact: [],
   useRegex: false,
   wholeWordSearch: false,
+  caseSensitive: false,
   redactColor: "#000000",
   customPadding: 0.1,
   convertPDFToImage: true,

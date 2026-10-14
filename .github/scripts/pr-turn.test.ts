@@ -44,6 +44,9 @@ function fakeGitHub(items: TurnItem[] = [], { labelled = false, alreadyRemoved =
       return { repository: { pullRequest: { timelineItems } } } as T;
     },
     rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async () => assert.fail("no permission lookups"),
+      },
       issues: {
         createComment: async () => assert.fail("no comments"),
         addLabels: async ({ issue_number, labels }) => calls.push(`label #${issue_number} ${labels.join(",")}`),
@@ -51,6 +54,8 @@ function fakeGitHub(items: TurnItem[] = [], { labelled = false, alreadyRemoved =
           if (alreadyRemoved) throw Object.assign(new Error("Label does not exist"), { status: 404 });
           return calls.push(`unlabel #${issue_number} ${name}`);
         },
+        listComments: async () => assert.fail("no comment reads"),
+        updateComment: async () => assert.fail("no comment edits"),
       },
       pulls: {
         get: async () => {
@@ -59,6 +64,7 @@ function fakeGitHub(items: TurnItem[] = [], { labelled = false, alreadyRemoved =
           return { data: { mergeable: null, mergeable_state: "unknown", labels, head: { ref: BRANCH, repo: { full_name: FORK } } } };
         },
         update: async () => assert.fail("no closes"),
+        listFiles: async () => assert.fail("no file lists"),
       },
     },
   };
