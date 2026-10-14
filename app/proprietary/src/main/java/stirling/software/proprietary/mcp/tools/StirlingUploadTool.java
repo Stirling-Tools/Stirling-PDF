@@ -49,6 +49,11 @@ public class StirlingUploadTool implements McpTool {
     }
 
     @Override
+    public String analyticsCategory() {
+        return "files";
+    }
+
+    @Override
     public String description() {
         return "Store a file server-side and get back a fileId to reuse across operations."
                 + " Recommended only for large files or multi-step workflows; for a single"

@@ -36,16 +36,20 @@ export function useNavigationUrlSync(
   const { config } = useAppConfig();
   const premiumEnabled = config?.premiumEnabled;
   const navigate = useNavigate();
-  const { pathname, search } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
   const hasInitialized = useRef(false);
   const prevSelectedTool = useRef<ToolId | null>(null);
+  const lastReadLocation = useRef<typeof location | null>(null);
   // A pixel is a move, not a render.
   const countedPath = useRef<string | null>(null);
 
   // Held in a ref so neither pass below depends on it: a write that re-ran on
   // every address change would answer a Back by returning to the tool it left.
-  const here = useRef({ pathname, search });
-  here.current = { pathname, search };
+  const here = useRef(location);
+  useEffect(() => {
+    here.current = location;
+  }, [location]);
 
   // Check if tool requires premium and redirect if needed
   const checkPremiumAndSelect = useCallback(
@@ -73,6 +77,7 @@ export function useNavigationUrlSync(
     // Fire pixel for initial page load
     firePixel(window.location.pathname);
 
+    lastReadLocation.current = here.current;
     const route = parseToolRoute(registry, here.current);
     if (route.toolId) {
       // URL specifies a tool — navigate to it (URL takes precedence over startup view preference)
@@ -100,17 +105,19 @@ export function useNavigationUrlSync(
   useEffect(() => {
     if (!enableSync) return;
     if (!hasInitialized.current) return;
+    // A guard may keep the old selection while its warning is open. Replaying
+    // that visit would replace the pending navigation and trigger another render.
+    if (lastReadLocation.current === location) return;
     // A selection the pass below has not pushed yet is in flight, not stale:
     // reconciling it against the address it is leaving would cancel the move.
     if (prevSelectedTool.current !== selectedTool) return;
+    lastReadLocation.current = location;
 
     if (countedPath.current !== pathname) {
       countedPath.current = pathname;
       firePixel(window.location.pathname);
     }
 
-    // Disagreement is the trigger, not arrival: a Back can land on the address a
-    // tool was picked from, where the path is unchanged but the selection is not.
     const route = parseToolRoute(registry, here.current);
     if (route.toolId === selectedTool) return;
     if (route.toolId) {
@@ -119,7 +126,7 @@ export function useNavigationUrlSync(
       clearToolSelection();
     }
   }, [
-    pathname,
+    location,
     selectedTool,
     clearToolSelection,
     registry,
@@ -147,7 +154,7 @@ export function useNavigationUrlSync(
         // selection moves off it (cleared below).
         if (startupTool !== selectedTool) {
           const target = toolRoute(selectedTool, registry, here.current);
-          if (target) navigate(target); // Pushed: picking a tool is a navigation
+          if (target) navigate(target);
         }
       } else if (previous !== null) {
         // Only a tool's own address is this hook's to clear: the library and the
