@@ -151,9 +151,21 @@ const COMPOUND_LICENSE_PATTERN = /\bor\b|\band\b|\bwith\b|\//i;
 
 export function resolveLicenseDisplay(
   license: string | undefined,
+  moduleName?: string,
 ): LicenseDisplay {
   const full = license || "-";
-  const alias = LICENSE_ALIASES[normalizeLicenseName(full)];
+  const normalized = normalizeLicenseName(full);
+  if (moduleName) {
+    const override = MODULE_LICENSE_OVERRIDES.find(
+      (entry) =>
+        moduleName.startsWith(entry.modulePrefix) &&
+        normalized === entry.license,
+    );
+    if (override) {
+      return override.display;
+    }
+  }
+  const alias = LICENSE_ALIASES[normalized];
   if (alias) {
     return alias;
   }
@@ -161,6 +173,86 @@ export function resolveLicenseDisplay(
     return { short: full };
   }
   return { short: full };
+}
+
+// A bare license name shared by unrelated projects cannot select an SPDX
+// page on its own. TwelveMonkeys is the only carrier of "The BSD License" in
+// the generated report and its LICENSE.txt is the BSD 3-clause text, so the
+// override is scoped to that project's modules instead of the bare name.
+const MODULE_LICENSE_OVERRIDES: Array<{
+  modulePrefix: string;
+  license: string;
+  display: LicenseDisplay;
+}> = [
+  {
+    modulePrefix: "com.twelvemonkeys",
+    license: "the bsd license",
+    display: { short: "BSD-3-Clause", spdxId: "BSD-3-Clause" },
+  },
+];
+
+// License files the generated report leaves URL-less, keyed by exact module
+// coordinate. Both locations verified against the jai-imageio GitHub org:
+// the core repo holds LICENSE.txt on master, the jpeg2000 repo holds both
+// named files at its root.
+const MODULE_LICENSE_URLS: Record<string, string> = {
+  "com.github.jai-imageio:jai-imageio-core":
+    "https://github.com/jai-imageio/jai-imageio-core/blob/master/LICENSE.txt",
+  "com.github.jai-imageio:jai-imageio-jpeg2000":
+    "https://github.com/jai-imageio/jai-imageio-jpeg2000/tree/master",
+};
+
+export function resolveModuleLicenseUrl(
+  dependency: Dependency,
+): string | undefined {
+  return (
+    dependency.moduleLicenseUrl ||
+    (dependency.moduleName
+      ? MODULE_LICENSE_URLS[dependency.moduleName]
+      : undefined)
+  );
+}
+
+// Project homepages for entries carrying neither a module nor a license URL,
+// keyed by the exact native notice title (or Maven coordinate).
+const MODULE_HOMEPAGES: Record<string, string> = {
+  PDFium: "https://pdfium.googlesource.com/pdfium/",
+  QPDF: "https://github.com/qpdf/qpdf",
+  libvips: "https://github.com/libvips/libvips",
+  "GLib / GObject": "https://docs.gtk.org/glib/",
+  libheif: "https://github.com/strukturag/libheif",
+  "libjxl (JPEG XL reference implementation)":
+    "https://github.com/libjxl/libjxl",
+  libwebp: "https://developers.google.com/speed/webp",
+  "libjpeg-turbo": "https://libjpeg-turbo.org/",
+  libpng: "http://www.libpng.org/",
+  libtiff: "http://www.libtiff.org/",
+  FreeType: "https://freetype.org/",
+  HarfBuzz: "https://harfbuzz.github.io/",
+  "Little CMS (lcms2)": "https://www.littlecms.com/",
+  "ICU (International Components for Unicode)": "https://icu.unicode.org/",
+  zlib: "https://zlib.net/",
+  zstd: "https://facebook.github.io/zstd/",
+  "libde265 (H.265/HEVC decoder, used for HEIC decoding)":
+    "https://github.com/strukturag/libde265",
+  "Kvazaar (H.265/HEVC encoder, used for HEIC encoding on Linux/macOS)":
+    "https://github.com/ultravideo/Kvazaar",
+  "OpenJPEG (JPEG 2000 codec, used for JPEG2000-in-HEIF)":
+    "https://www.openjpeg.org/",
+  "com.github.jai-imageio:jai-imageio-core":
+    "https://github.com/jai-imageio/jai-imageio-core",
+  "com.github.jai-imageio:jai-imageio-jpeg2000":
+    "https://github.com/jai-imageio/jai-imageio-jpeg2000",
+};
+
+export function resolveModuleUrl(dependency: Dependency): string | undefined {
+  return (
+    dependency.moduleUrl ||
+    (dependency.moduleName
+      ? MODULE_HOMEPAGES[dependency.moduleName]
+      : undefined) ||
+    dependency.moduleLicenseUrl
+  );
 }
 
 export interface DependencyRow extends Dependency {

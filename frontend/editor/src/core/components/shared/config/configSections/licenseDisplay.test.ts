@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   dedupeDependencies,
   resolveLicenseDisplay,
+  resolveModuleLicenseUrl,
+  resolveModuleUrl,
 } from "@app/components/shared/config/configSections/licenseDisplay";
 import type { Dependency } from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
 
@@ -55,6 +57,79 @@ describe("resolveLicenseDisplay", () => {
     expect(resolveLicenseDisplay("Unicode License / ICU License")).toEqual({
       short: "Unicode License / ICU License",
     });
+  });
+
+  it("maps The BSD License to BSD-3-Clause for TwelveMonkeys modules only", () => {
+    expect(
+      resolveLicenseDisplay(
+        "The BSD License",
+        "com.twelvemonkeys.imageio:imageio-core",
+      ),
+    ).toEqual({ short: "BSD-3-Clause", spdxId: "BSD-3-Clause" });
+    expect(resolveLicenseDisplay("The BSD License")).toEqual({
+      short: "The BSD License",
+    });
+    expect(
+      resolveLicenseDisplay("The BSD License", "com.example:other"),
+    ).toEqual({ short: "The BSD License" });
+  });
+});
+
+describe("resolveModuleLicenseUrl", () => {
+  it("links the jai-imageio license files the report leaves URL-less", () => {
+    expect(
+      resolveModuleLicenseUrl(
+        dependency("com.github.jai-imageio:jai-imageio-core", "LICENSE.txt"),
+      ),
+    ).toBe(
+      "https://github.com/jai-imageio/jai-imageio-core/blob/master/LICENSE.txt",
+    );
+    expect(
+      resolveModuleLicenseUrl(
+        dependency(
+          "com.github.jai-imageio:jai-imageio-jpeg2000",
+          "LICENSE-JJ2000.txt, LICENSE-Sun.txt",
+        ),
+      ),
+    ).toBe("https://github.com/jai-imageio/jai-imageio-jpeg2000/tree/master");
+  });
+
+  it("prefers the report URL when present", () => {
+    expect(
+      resolveModuleLicenseUrl({
+        ...dependency("com.github.jai-imageio:jai-imageio-core"),
+        moduleLicenseUrl: "https://example.com/license",
+      }),
+    ).toBe("https://example.com/license");
+  });
+});
+
+describe("resolveModuleUrl", () => {
+  it("links native components to their homepages", () => {
+    expect(
+      resolveModuleUrl(
+        dependency("ICU (International Components for Unicode)"),
+      ),
+    ).toBe("https://icu.unicode.org/");
+    expect(resolveModuleUrl(dependency("zstd"))).toBe(
+      "https://facebook.github.io/zstd/",
+    );
+  });
+
+  it("prefers the module URL, then the homepage, then the license URL", () => {
+    expect(
+      resolveModuleUrl({
+        ...dependency("zstd"),
+        moduleLicenseUrl: "https://example.com/license",
+      }),
+    ).toBe("https://facebook.github.io/zstd/");
+    expect(
+      resolveModuleUrl({
+        ...dependency("unknown-module"),
+        moduleLicenseUrl: "https://example.com/license",
+      }),
+    ).toBe("https://example.com/license");
+    expect(resolveModuleUrl(dependency("unknown-module"))).toBeUndefined();
   });
 });
 

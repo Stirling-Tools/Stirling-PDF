@@ -20,6 +20,8 @@ import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // o
 import {
   dedupeDependencies,
   resolveLicenseDisplay,
+  resolveModuleLicenseUrl,
+  resolveModuleUrl,
 } from "@app/components/shared/config/configSections/licenseDisplay";
 import type { DependencyRow } from "@app/components/shared/config/configSections/licenseDisplay";
 
@@ -40,9 +42,6 @@ interface LicensesResponse {
 interface LicensesSectionBodyProps {
   dependencies: Dependency[];
 }
-
-const getModuleUrl = (dependency: Dependency) =>
-  dependency.moduleUrl || dependency.moduleLicenseUrl;
 
 function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
   const { t } = useTranslation();
@@ -178,7 +177,6 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
                           key={dependency.rowId}
                           dependency={dependency}
                           index={virtualRow.index}
-                          measureElement={virtualizer.measureElement}
                           onSelect={setSelected}
                         />
                       );
@@ -234,27 +232,40 @@ function LicenseCell({
   onSelect: (dependency: DependencyRow) => void;
 }) {
   const full = dependency.moduleLicense || "-";
-  const display = resolveLicenseDisplay(dependency.moduleLicense);
+  const display = resolveLicenseDisplay(
+    dependency.moduleLicense,
+    dependency.moduleName,
+  );
   const about = display.spdxId ? (
     <AboutLink spdxId={display.spdxId} short={display.short} />
   ) : null;
   if (dependency.moduleLicenseText) {
     return (
-      <Anchor
-        component="button"
-        onClick={() => onSelect(dependency)}
-        truncate="end"
-        maw={240}
-        title={full}
-      >
-        {display.short}
-      </Anchor>
+      <span>
+        <Anchor
+          component="button"
+          onClick={() => onSelect(dependency)}
+          truncate="end"
+          maw={240}
+          title={full}
+        >
+          {display.short}
+        </Anchor>
+        {about ? (
+          <Text size="xs" c="dimmed" span>
+            {" "}
+            ·{" "}
+          </Text>
+        ) : null}
+        {about}
+      </span>
     );
   }
-  return dependency.moduleLicenseUrl ? (
+  const licenseHref = resolveModuleLicenseUrl(dependency);
+  return licenseHref ? (
     <span>
       <Anchor
-        href={dependency.moduleLicenseUrl}
+        href={licenseHref}
         target="_blank"
         rel="noopener noreferrer"
         truncate="end"
@@ -290,27 +301,29 @@ function LicenseCell({
 function VirtualLicenseRow({
   dependency,
   index,
-  measureElement,
   onSelect,
 }: {
   dependency: DependencyRow;
   index: number;
-  measureElement: (element: HTMLTableRowElement | null) => void;
   onSelect: (dependency: DependencyRow) => void;
 }) {
   return (
-    <Table.Tr data-index={index} ref={measureElement}>
+    <Table.Tr data-index={index} style={{ height: 56 }}>
       <Table.Td>
-        {getModuleUrl(dependency) ? (
+        {resolveModuleUrl(dependency) ? (
           <Anchor
-            href={getModuleUrl(dependency)}
+            href={resolveModuleUrl(dependency)}
             target="_blank"
             rel="noopener noreferrer"
+            truncate="end"
+            title={dependency.moduleName || "-"}
           >
             {dependency.moduleName || "-"}
           </Anchor>
         ) : (
-          <Text size="sm">{dependency.moduleName || "-"}</Text>
+          <Text size="sm" truncate="end" title={dependency.moduleName || "-"}>
+            {dependency.moduleName || "-"}
+          </Text>
         )}
       </Table.Td>
       <Table.Td>
@@ -333,7 +346,7 @@ function LicenseModal({
   onClose: () => void;
 }) {
   const selectedDisplay = dependency
-    ? resolveLicenseDisplay(dependency.moduleLicense)
+    ? resolveLicenseDisplay(dependency.moduleLicense, dependency.moduleName)
     : null;
   return (
     <Modal
