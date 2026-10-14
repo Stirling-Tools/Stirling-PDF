@@ -303,9 +303,11 @@ public class ProcurementService {
         }
         if (deal.getTrialStartedAt() == null) {
             deal.setTrialStartedAt(LocalDateTime.now(ZoneOffset.UTC));
-            deal.setLicenseRef(licenses.issueTrialLicense(teamId, leaderEmail(teamId), endsAt));
             if (deal.getStage() == null || ProcurementDeal.STAGE_EXPLORING.equals(deal.getStage()))
                 deal.setStage(ProcurementDeal.STAGE_TRIAL);
+        }
+        if (deal.getLicenseRef() == null) {
+            deal.setLicenseRef(licenses.issueTrialLicense(teamId, leaderEmail(teamId), endsAt));
         } else {
             licenses.extendLicense(deal.getLicenseRef(), endsAt);
         }
@@ -642,7 +644,9 @@ public class ProcurementService {
      */
     @Transactional
     public ProcurementDeal markLive(Long teamId) {
-        ProcurementDeal deal = dealRepo.findByTeamId(teamId).orElseThrow();
+        ProcurementDeal deal =
+                dealRepo.findByTeamIdForUpdate(teamId)
+                        .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
         LocalDateTime start = LocalDateTime.now(ZoneOffset.UTC);
         return markLive(
                 teamId,
@@ -680,10 +684,13 @@ public class ProcurementService {
         }
         if (deal.getEnterprisePeriodStart() != null
                 && period.periodStart().isBefore(deal.getEnterprisePeriodStart())) return false;
+        if (period.subscriptionId().equals(deal.getTerminatedSubscriptionId())
+                && period.periodStart().equals(deal.getEnterprisePeriodStart())) return false;
         if (!paid && ProcurementDeal.STAGE_LIVE.equals(deal.getStage())) return false;
         deal.setEnterprisePeriodStart(period.periodStart());
         deal.setEnterprisePeriodEnd(period.periodEnd());
         deal.setEnterpriseAccessUntil(paid ? period.periodEnd() : period.accessUntil());
+        deal.setTerminatedSubscriptionId(null);
         return true;
     }
 
@@ -697,6 +704,7 @@ public class ProcurementService {
         LocalDateTime endedAt = LocalDateTime.now(ZoneOffset.UTC);
         if (deal.getEnterprisePeriodStart() == null) deal.setEnterprisePeriodStart(endedAt);
         deal.setEnterpriseAccessUntil(endedAt);
+        deal.setTerminatedSubscriptionId(subscriptionId);
         if (deal.getLicenseRef() != null) licenses.suspendLicense(deal.getLicenseRef());
         dealRepo.save(deal);
     }

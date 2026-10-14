@@ -13,16 +13,21 @@ stored when the job opens, so closing or refunding it after expiry cannot charge
 
 ## Persistence and deployment
 
-Deploy the companion Stirling-PDF-SaaS migration
-`20261012000000_enterprise_team_entitlement.sql` before this backend. It adds three UTC
-timestamps to `procurement_deal` and one coverage flag to `payg_shadow_charge`. Quotes,
-trial dates, document counters and the staff audit table already exist.
+Deploy the companion Stirling-PDF-SaaS migrations
+`20261012000000_enterprise_team_entitlement.sql` and
+`20261014000000_procurement_termination_marker.sql` before this backend. They add three
+UTC timestamps and a terminated-subscription marker to `procurement_deal`, and one
+coverage flag to `payg_shadow_charge`. Quotes, trial dates, document counters and the
+staff audit table already exist.
 
 Deploy the companion `accept-procurement-quote` and `stripe-webhook` changes together
 with the backend. The callbacks now require dates verified against the actual Stripe
 invoice line. Initial unpaid access ends at the invoice due date; paid access ends at
 the purchased service period's end. Delayed or duplicate callbacks cannot add a fresh
 year from their delivery date. Cancellation affects only the matching subscription.
+Its marker prevents paid or unpaid callbacks for the cancelled period from restoring
+access. A later purchased period or accepted replacement subscription clears the
+marker. An ordinary unpaid cutoff can still recover when payment arrives.
 
 Existing paid deals need their current invoice period reconciled before they gain SaaS
 Enterprise access. Replay the current paid invoice through the updated webhook, or

@@ -97,6 +97,10 @@ public class ProcurementDeal implements Serializable {
     @Column(name = "subscription_id", length = 255)
     private String subscriptionId;
 
+    /** Blocks cancelled-period replays without treating an unpaid cutoff as termination. */
+    @Column(name = "terminated_subscription_id", length = 255)
+    private String terminatedSubscriptionId;
+
     /**
      * The last Stripe invoice whose payment was applied to this deal. Distinguishes a redelivered
      * {@code invoice.paid} for a payment already handled from a genuine renewal, which has to
