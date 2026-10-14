@@ -36,15 +36,14 @@ public class RedactExecuteRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Text ranges to redact, from a start to an end anchor phrase"
-                            + " (inclusive). Anchors must appear verbatim and work best short and"
-                            + " unique. Boxes only unless style.convertToImage=true.")
+                    "Text from a start to an end anchor phrase (inclusive). Boxes only"
+                            + " unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).")
     private List<TextRange> ranges = new ArrayList<>();
 
     @Schema(
             description =
                     "Rectangular areas to black out, by page and bounding box. Boxes only"
-                            + " unless rasterized.")
+                            + " unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).")
     private List<ImageBox> imageBoxes = new ArrayList<>();
 
     @Schema(

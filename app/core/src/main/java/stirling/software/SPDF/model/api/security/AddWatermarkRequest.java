@@ -31,7 +31,7 @@ public class AddWatermarkRequest extends PDFFile {
     private MultipartFile watermarkImage;
 
     @Schema(
-            description = "Font script matching watermarkText",
+            description = "Font script matching watermarkText; roman for Latin text",
             allowableValues = {"roman", "arabic", "japanese", "korean", "chinese", "thai"},
             defaultValue = "roman")
     private String alphabet = "roman";
@@ -55,8 +55,8 @@ public class AddWatermarkRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Turn pages into images so the watermark can't be removed; text becomes"
-                            + " unselectable",
+                    "Turn pages into images so the watermark is hard to remove; text"
+                            + " becomes unselectable",
             defaultValue = "false")
     private Boolean convertPDFToImage = false;
 

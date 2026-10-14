@@ -84,6 +84,7 @@ public class MetadataRequest extends PDFFile {
     @Schema(
             description =
                     "Custom metadata to add or update, e.g. {\"Department\":\"Finance\"}."
-                            + " Existing custom keys are kept.")
+                            + " Existing custom keys are kept. customKeyN/customValueN pairs also"
+                            + " work.")
     private Map<String, String> allRequestParams;
 }

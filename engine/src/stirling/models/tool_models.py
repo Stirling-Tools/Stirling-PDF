@@ -87,7 +87,7 @@ class AddPageNumbersParams(ApiModel):
     custom_margin: CustomMargin = Field(CustomMargin.medium, description="Custom margin: small/medium/large/x-large")
     custom_text: str = Field(
         "{n}",
-        description="Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n}, {total}, {filename}.",
+        description="Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n} (counts numbered pages only, from startingNumber), {total} (all pages in the file), {filename}.",
         examples=["Page {n} of {total}"],
     )
     font_color: str = Field("#000000", description="Hex colour for page numbers (e.g. #FF0000)", examples=["#000000"])
@@ -145,7 +145,7 @@ class AddPasswordParams(ApiModel):
 
 class Alphabet(StrEnum):
     """
-    Font script matching stampText
+    Font script matching stampText; roman for Latin text
     """
 
     roman = "roman"
@@ -197,12 +197,14 @@ class AddStampParams(ApiModel):
     This endpoint adds a stamp to a given PDF file. Users can specify the stamp type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO
     """
 
-    alphabet: Alphabet = Field(Alphabet.roman, description="Font script matching stampText")
+    alphabet: Alphabet = Field(Alphabet.roman, description="Font script matching stampText; roman for Latin text")
     custom_color: str = Field("#d3d3d3", description="Hex colour of the stamp text, e.g. #FF0000")
     custom_margin: CustomMargin1 = Field(
         CustomMargin1.medium, description="Margin between the stamp and the page edge when placed by position"
     )
-    font_size: float = Field(40, description="Text size in points; for an image stamp, the image height")
+    font_size: float = Field(
+        40, description="Text size in points; for an image stamp, the image height (width keeps its aspect ratio)"
+    )
     opacity: float = Field(0.5, description="The opacity of the stamp (0.0 - 1.0)")
     override_x: float = Field(
         -1, description="X in points from the left edge; with overrideY, replaces position. -1 = not set."
@@ -231,7 +233,7 @@ class AddStampParams(ApiModel):
 
 class Alphabet1(StrEnum):
     """
-    Font script matching watermarkText
+    Font script matching watermarkText; roman for Latin text
     """
 
     roman = "roman"
@@ -256,9 +258,9 @@ class AddWatermarkParams(ApiModel):
     This endpoint adds a watermark to a given PDF file. Users can specify the watermark type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO
     """
 
-    alphabet: Alphabet1 = Field(Alphabet1.roman, description="Font script matching watermarkText")
+    alphabet: Alphabet1 = Field(Alphabet1.roman, description="Font script matching watermarkText; roman for Latin text")
     convert_pdf_to_image: bool = Field(
-        False, description="Turn pages into images so the watermark can't be removed; text becomes unselectable"
+        False, description="Turn pages into images so the watermark is hard to remove; text becomes unselectable"
     )
     custom_color: str = Field("#d3d3d3", description="Hex colour of the watermark text, e.g. #FF0000")
     font_size: float = Field(12, description="Text size in points; for an image watermark, the image height", ge=1.0)
@@ -315,7 +317,7 @@ class DetectionMode(StrEnum):
 
 class AutoSplitPdfParams(ApiModel):
     """
-    Starts a new document at each divider page and returns a zip of the parts. A PDF without dividers comes back unsplit; use split-pages or split-by-size-or-count for those. Input:PDF Output:PDF Type:SIMO
+    Splits at each divider page and returns a zip of the parts; divider pages are dropped. duplexMode=true also drops each divider's back page. With no dividers you get one file; use split-pages or split-by-size-or-count instead. Input:PDF Output:PDF Type:SIMO
     """
 
     duplex_mode: bool = Field(
@@ -556,7 +558,9 @@ class EditTableOfContentsParams(ApiModel):
         ],
     )
     replace_existing: bool | None = Field(
-        None, description="Ignored: existing bookmarks are always replaced", examples=[True]
+        None,
+        description="Ignored: existing bookmarks are always replaced. To add to them, read them with extract-bookmarks and send the full list.",
+        examples=[True],
     )
 
 
@@ -669,7 +673,7 @@ class ExtractSingleAttachmentParams(ApiModel):
 
 class FileToPdfParams(ApiModel):
     """
-    Converts doc/docx, xls/xlsx, ppt/pptx, odt/ods/odp/odg, RTF, CSV and text. Other formats need LibreOffice on the server; for web pages use html-to-pdf. Input:ANY Output:PDF Type:SISO
+    Converts Word, Excel, PowerPoint, OpenDocument, RTF, CSV and text files with LibreOffice, or Stirling Office Convert when useStirlingOfficeConvert=true or the admin setting is on. For web pages use html-to-pdf. Input:ANY Output:PDF Type:SISO
     """
 
     use_stirling_office_convert: bool | None = None
@@ -704,7 +708,7 @@ class HtmlToPdfParams(ApiModel):
 
 class ImageBox(ApiModel):
     """
-    Rectangular areas to black out, by page and bounding box. Boxes only unless rasterized.
+    Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
     """
 
     page_index: int = Field(..., description="0-indexed page number (first page = 0).")
@@ -1060,7 +1064,7 @@ class PdfToMarkdownParams(ApiModel):
 
 class OutputFormat1(StrEnum):
     """
-    pdfa = PDF/A-2b, the usual archive choice. pdfa-3/3b allows attachments such as e-invoice XML; the 'a' variants also tag the document. pdfx = PDF/X for print.
+    pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B; pdfx = PDF/X.
     """
 
     pdfa = "pdfa"
@@ -1082,7 +1086,7 @@ class PdfToPdfaParams(ApiModel):
 
     output_format: OutputFormat1 = Field(
         ...,
-        description="pdfa = PDF/A-2b, the usual archive choice. pdfa-3/3b allows attachments such as e-invoice XML; the 'a' variants also tag the document. pdfx = PDF/X for print.",
+        description="pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B; pdfx = PDF/X.",
     )
     pdf_ua: bool = Field(
         False,
@@ -1166,7 +1170,7 @@ class Profile1(StrEnum):
 
 class PdfToUaParams(ApiModel):
     """
-    Tags the document, marks decorative content as artifacts, embeds fonts and applies the document-level requirements of PDF/UA, then validates the result. A conformance declaration is written only if validation passes. Figures without alt text block it unless altText is given or figurePolicy=mark-decorative. Input:PDF Output:PDF Type:SISO
+    Tags the document, marks decorative content as artifacts and embeds fonts, then validates. PDF/UA is declared only if validation passes (see the X-Stirling-UA-Declared header). Figures without alt text block it unless altText is given or figurePolicy=mark-decorative. Input:PDF Output:PDF Type:SISO
     """
 
     alt_text: str | None = Field(
@@ -1267,7 +1271,7 @@ class PdfToXmlParams(ApiModel):
 
 class CustomMode(StrEnum):
     """
-    Omit or CUSTOM to use pageNumbers. DUPLEX_SORT expects all fronts, then backs reversed. DUPLICATE repeats each page N times (N in pageNumbers, default 2).
+    Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
     """
 
     custom = "CUSTOM"
@@ -1289,7 +1293,7 @@ class RearrangePagesParams(ApiModel):
 
     custom_mode: CustomMode | None = Field(
         None,
-        description="Omit or CUSTOM to use pageNumbers. DUPLEX_SORT expects all fronts, then backs reversed. DUPLICATE repeats each page N times (N in pageNumbers, default 2).",
+        description="Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).",
     )
     page_numbers: str = Field(
         "all",
@@ -1558,7 +1562,7 @@ class ScannerEffectParams(ApiModel):
 
     advanced_enabled: bool | None = Field(
         None,
-        description="Use brightness, contrast, blur, noise and resolution instead of the quality preset",
+        description="Use brightness, contrast, blur, noise and resolution instead of the quality preset. Border, rotation, colorspace and yellowish always apply.",
         examples=[False],
     )
     blur: float | None = Field(
@@ -1606,7 +1610,10 @@ class SplitBySizeOrCountParams(ApiModel):
     split_type: SplitType = Field(
         SplitType.integer_0, description="0 = by file size, 1 = by pages per file, 2 = by number of files"
     )
-    split_value: str = Field("10MB", description="A size such as '10MB' for splitType 0; a whole number for 1 and 2")
+    split_value: str = Field(
+        "10MB",
+        description="For splitType 0 a size like '500KB' or '10MB' (a bare number means MB); for 1 and 2 a whole number",
+    )
 
 
 class PageSize1(StrEnum):
@@ -1660,7 +1667,7 @@ class SplitPdfByChaptersParams(ApiModel):
 
 class SplitMode(StrEnum):
     """
-    Which pages to split into sections (default SPLIT_ALL); CUSTOM splits only pageNumbers
+    Which pages to split (default SPLIT_ALL). SPLIT_ALL splits every page; SPLIT_ALL_EXCEPT_FIRST, SPLIT_ALL_EXCEPT_LAST and SPLIT_ALL_EXCEPT_FIRST_AND_LAST keep those pages whole; CUSTOM splits only pageNumbers.
     """
 
     custom = "CUSTOM"
@@ -1683,7 +1690,8 @@ class SplitPdfBySectionsParams(ApiModel):
         examples=["1,3,5-9"],
     )
     split_mode: SplitMode | None = Field(
-        None, description="Which pages to split into sections (default SPLIT_ALL); CUSTOM splits only pageNumbers"
+        None,
+        description="Which pages to split (default SPLIT_ALL). SPLIT_ALL splits every page; SPLIT_ALL_EXCEPT_FIRST, SPLIT_ALL_EXCEPT_LAST and SPLIT_ALL_EXCEPT_FIRST_AND_LAST keep those pages whole; CUSTOM splits only pageNumbers.",
     )
     vertical_divisions: int = Field(1, description="Number of vertical divisions for each PDF page", ge=0, le=50)
 
@@ -1701,7 +1709,7 @@ class SvgToPdfParams(ApiModel):
 
 class TextRange(ApiModel):
     """
-    Text ranges to redact, from a start to an end anchor phrase (inclusive). Anchors must appear verbatim and work best short and unique. Boxes only unless style.convertToImage=true.
+    Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
     """
 
     end_string: str = Field(
@@ -1751,7 +1759,7 @@ class UpdateMetadataParams(ApiModel):
 
     all_request_params: dict[str, str] | None = Field(
         None,
-        description='Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept.',
+        description='Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept. customKeyN/customValueN pairs also work.',
     )
     author: str | None = Field(None, description="The author of the document. Omit to remove it.", examples=["author"])
     creation_date: str | None = Field(
@@ -1808,7 +1816,7 @@ class OutputFormat6(StrEnum):
 
 class VectorToPdfParams(ApiModel):
     """
-    Converts PS, EPS and EPSF with Ghostscript. XPS and PCL are not supported. Input:POSTSCRIPT Output:PDF Type:SISO
+    Converts PS, EPS and EPSF with Ghostscript; outputFormat is ignored. XPS and PCL are not supported. Input:POSTSCRIPT Output:PDF Type:SISO
     """
 
     output_format: OutputFormat6 = Field(OutputFormat6.eps, description="Target vector format extension")
@@ -1849,11 +1857,12 @@ class RedactExecuteParams(ApiModel):
     """
 
     image_boxes: list[ImageBox] | None = Field(
-        None, description="Rectangular areas to black out, by page and bounding box. Boxes only unless rasterized."
+        None,
+        description="Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).",
     )
     ranges: list[TextRange] | None = Field(
         None,
-        description="Text ranges to redact, from a start to an end anchor phrase (inclusive). Anchors must appear verbatim and work best short and unique. Boxes only unless style.convertToImage=true.",
+        description="Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).",
     )
     redact_image_pages: list[int] | None = Field(
         None, description="1-indexed pages whose images get boxed over; an empty list means every page, null skips it."

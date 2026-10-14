@@ -31,7 +31,7 @@ export interface AddPageNumbersRequest {
    */
   customMargin?: "small" | "medium" | "large" | "x-large";
   /**
-   * Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n}, {total}, {filename}.
+   * Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n} (counts numbered pages only, from startingNumber), {total} (all pages in the file), {filename}.
    */
   customText?: string;
   /**
@@ -115,7 +115,7 @@ export interface AddPasswordRequest {
 }
 export interface AddStampRequest {
   /**
-   * Font script matching stampText
+   * Font script matching stampText; roman for Latin text
    */
   alphabet?: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
   /**
@@ -127,7 +127,7 @@ export interface AddStampRequest {
    */
   customMargin?: "small" | "medium" | "large" | "x-large";
   /**
-   * Text size in points; for an image stamp, the image height
+   * Text size in points; for an image stamp, the image height (width keeps its aspect ratio)
    */
   fontSize?: number;
   /**
@@ -166,11 +166,11 @@ export interface AddStampRequest {
 }
 export interface AddWatermarkRequest {
   /**
-   * Font script matching watermarkText
+   * Font script matching watermarkText; roman for Latin text
    */
   alphabet?: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
   /**
-   * Turn pages into images so the watermark can't be removed; text becomes unselectable
+   * Turn pages into images so the watermark is hard to remove; text becomes unselectable
    */
   convertPDFToImage?: boolean;
   /**
@@ -459,7 +459,7 @@ export interface EditTableOfContentsRequest {
    */
   bookmarkData?: string;
   /**
-   * Ignored: existing bookmarks are always replaced
+   * Ignored: existing bookmarks are always replaced. To add to them, read them with extract-bookmarks and send the full list.
    */
   replaceExisting?: boolean;
 }
@@ -777,11 +777,11 @@ export interface MergePdfsRequest {
 }
 export interface MetadataRequest {
   /**
-   * Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept.
+   * Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept. customKeyN/customValueN pairs also work.
    */
   allRequestParams?: {
     /**
-     * Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept.
+     * Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept. customKeyN/customValueN pairs also work.
      */
     [k: string]: string | undefined;
   };
@@ -960,7 +960,7 @@ export interface PageSizeRequest {
 }
 export interface PdfToPdfARequest {
   /**
-   * pdfa = PDF/A-2b, the usual archive choice. pdfa-3/3b allows attachments such as e-invoice XML; the 'a' variants also tag the document. pdfx = PDF/X for print.
+   * pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B; pdfx = PDF/X.
    */
   outputFormat:
     | "pdfa"
@@ -1110,7 +1110,7 @@ export interface ProcessPdfWithOcrRequest {
 }
 export interface RearrangePagesRequest {
   /**
-   * Omit or CUSTOM to use pageNumbers. DUPLEX_SORT expects all fronts, then backs reversed. DUPLICATE repeats each page N times (N in pageNumbers, default 2).
+   * Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
    */
   customMode?:
     | "CUSTOM"
@@ -1130,11 +1130,11 @@ export interface RearrangePagesRequest {
 }
 export interface RedactExecuteRequest {
   /**
-   * Rectangular areas to black out, by page and bounding box. Boxes only unless rasterized.
+   * Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
    */
   imageBoxes?: ImageBox[];
   /**
-   * Text ranges to redact, from a start to an end anchor phrase (inclusive). Anchors must appear verbatim and work best short and unique. Boxes only unless style.convertToImage=true.
+   * Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
    */
   ranges?: TextRange[];
   /**
@@ -1156,7 +1156,7 @@ export interface RedactExecuteRequest {
   wipePages?: number[];
 }
 /**
- * Rectangular areas to black out, by page and bounding box. Boxes only unless rasterized.
+ * Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
  */
 export interface ImageBox {
   /**
@@ -1181,7 +1181,7 @@ export interface ImageBox {
   y2: number;
 }
 /**
- * Text ranges to redact, from a start to an end anchor phrase (inclusive). Anchors must appear verbatim and work best short and unique. Boxes only unless style.convertToImage=true.
+ * Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
  */
 export interface TextRange {
   /**
@@ -1344,7 +1344,7 @@ export interface ScalePagesRequest {
 }
 export interface ScannerEffectRequest {
   /**
-   * Use brightness, contrast, blur, noise and resolution instead of the quality preset
+   * Use brightness, contrast, blur, noise and resolution instead of the quality preset. Border, rotation, colorspace and yellowish always apply.
    */
   advancedEnabled?: boolean;
   /**
@@ -1515,7 +1515,7 @@ export interface SplitPdfBySectionsRequest {
    */
   pageNumbers?: string;
   /**
-   * Which pages to split into sections (default SPLIT_ALL); CUSTOM splits only pageNumbers
+   * Which pages to split (default SPLIT_ALL). SPLIT_ALL splits every page; SPLIT_ALL_EXCEPT_FIRST, SPLIT_ALL_EXCEPT_LAST and SPLIT_ALL_EXCEPT_FIRST_AND_LAST keep those pages whole; CUSTOM splits only pageNumbers.
    */
   splitMode?:
     | "CUSTOM"
@@ -1534,7 +1534,7 @@ export interface SplitPdfBySizeOrCountRequest {
    */
   splitType?: 0 | 1 | 2;
   /**
-   * A size such as '10MB' for splitType 0; a whole number for 1 and 2
+   * For splitType 0 a size like '500KB' or '10MB' (a bare number means MB); for 1 and 2 a whole number
    */
   splitValue?: string;
 }

@@ -41,7 +41,9 @@ public class AddStampRequest extends PDFWithPageNums {
     private int position = 5;
 
     @Schema(
-            description = "Text size in points; for an image stamp, the image height",
+            description =
+                    "Text size in points; for an image stamp, the image height (width keeps"
+                            + " its aspect ratio)",
             defaultValue = "40")
     private float fontSize = 40f;
 
@@ -55,7 +57,7 @@ public class AddStampRequest extends PDFWithPageNums {
     private float rotation = 0f;
 
     @Schema(
-            description = "Font script matching stampText",
+            description = "Font script matching stampText; roman for Latin text",
             allowableValues = {"roman", "arabic", "japanese", "korean", "chinese", "thai"},
             defaultValue = "roman")
     private String alphabet = "roman";
