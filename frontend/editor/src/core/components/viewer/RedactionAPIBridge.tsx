@@ -32,7 +32,6 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
   const { selectedTool } = useNavigationState();
   const {
     redactionApiRef,
-    setPendingCount,
     setActiveType,
     setIsRedacting,
     setBridgeReady,
@@ -67,11 +66,10 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
   // Sync EmbedPDF state to our context
   useEffect(() => {
     if (state) {
-      setPendingCount(state.pendingCount ?? 0);
       setActiveType(state.activeType ?? null);
       setIsRedacting(state.isRedacting ?? false);
     }
-  }, [state, setPendingCount, setActiveType, setIsRedacting]);
+  }, [state, setActiveType, setIsRedacting]);
 
   // Synchronize manual redaction color with EmbedPDF
   // Manual redaction uses the 'redact' annotation tool internally
