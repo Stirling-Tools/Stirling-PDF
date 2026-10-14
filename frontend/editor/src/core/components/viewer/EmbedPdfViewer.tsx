@@ -62,7 +62,11 @@ import {
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
-import { FORM_APPLY_EVENT } from "@app/tools/formFill/formFillEvents";
+import { useDocumentLoadWaiter } from "@app/components/viewer/useDocumentLoadWaiter";
+import {
+  FORM_APPLY_EVENT,
+  type FormApplyDetail,
+} from "@app/tools/formFill/formFillEvents";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
 import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
@@ -184,6 +188,7 @@ const EmbedPdfViewerContent = ({
 
   // Get signature and annotation contexts
   const {
+    applySignaturesRef,
     signatureApiRef,
     annotationApiRef,
     historyApiRef,
@@ -484,6 +489,8 @@ const EmbedPdfViewerContent = ({
   ]);
 
   const formApplyInProgressRef = useRef(false);
+  const { waitForDocument, documentReady, documentFailed } =
+    useDocumentLoadWaiter();
   const applyChangesInFlightRef = useRef<Promise<void> | null>(null);
 
   // Get redaction context
@@ -497,6 +504,12 @@ const EmbedPdfViewerContent = ({
 
   const { handleToolSelectForced } = useToolWorkflow();
   const { workingRevision } = useDocumentEditSession();
+
+  // Resubscribing to history emits its current state as though an edit occurred.
+  const redactionsAppliedRef = useRef(redactionsApplied);
+  useLayoutEffect(() => {
+    redactionsAppliedRef.current = redactionsApplied;
+  }, [redactionsApplied]);
 
   // Ref for redaction pending tracker API
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
@@ -948,7 +961,7 @@ const EmbedPdfViewerContent = ({
         hasAnnotationChangesRef.current = false;
         const hasPendingRedactions =
           (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
-        if (!hasPendingRedactions && !redactionsApplied) {
+        if (!hasPendingRedactions && !redactionsAppliedRef.current) {
           setHasUnsavedChanges(false);
         }
         return;
@@ -968,7 +981,7 @@ const EmbedPdfViewerContent = ({
       // their own claim on the flag.
       const hasPendingRedactions =
         (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
-      if (!hasPendingRedactions && !redactionsApplied) {
+      if (!hasPendingRedactions && !redactionsAppliedRef.current) {
         setHasUnsavedChanges(false);
       }
     };
@@ -979,12 +992,7 @@ const EmbedPdfViewerContent = ({
         unsubscribe();
       }
     };
-  }, [
-    historyApiRef.current,
-    setHasUnsavedChanges,
-    redactionsApplied,
-    redactionTrackerRef,
-  ]);
+  }, [historyApiRef.current, setHasUnsavedChanges, redactionTrackerRef]);
 
   // A dirty annotation surfaces the Annotate panel, which carries the save
   // action. Keyed on the edit revision rather than the dirty flag: the flag stays
@@ -1016,7 +1024,7 @@ const EmbedPdfViewerContent = ({
 
   // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {
-    if (previewFile) {
+    if (previewFile || isFormFillToolActive) {
       return;
     }
 
@@ -1044,6 +1052,7 @@ const EmbedPdfViewerContent = ({
   }, [
     historyApiRef,
     previewFile,
+    isFormFillToolActive,
     registerUnsavedChangesChecker,
     unregisterUnsavedChangesChecker,
     isManualRedactMode,
@@ -1057,6 +1066,7 @@ const EmbedPdfViewerContent = ({
     }
 
     if (!currentFile || activeFileIds.length === 0) return;
+    const applySignatures = applySignaturesRef.current;
 
     const saveChanges = async () => {
       console.log(
@@ -1075,8 +1085,16 @@ const EmbedPdfViewerContent = ({
 
       if (hadPendingRedactions) {
         console.log("[Viewer] Committing pending redactions before export");
-        redactionTrackerRef.current?.commitAllPending();
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await redactionTrackerRef.current?.commitAllPending();
+      }
+
+      if (applySignatures) {
+        await applySignatures();
+        savedHistoryRevisionRef.current = historyRevisionRef.current;
+        hasAnnotationChangesRef.current = false;
+        setHasUnsavedChanges(false);
+        setRedactionsApplied(false);
+        return;
       }
 
       // Step 1: Export PDF with annotations using EmbedPDF
@@ -1157,6 +1175,7 @@ const EmbedPdfViewerContent = ({
     currentFile,
     activeFiles,
     exportActions,
+    applySignaturesRef,
     actions,
     selectors,
     historyApiRef,
@@ -1169,10 +1188,13 @@ const EmbedPdfViewerContent = ({
   // Apply form fill changes - reload the filled PDF into the viewer
   const handleFormApply = useCallback(
     async (filledBlob: Blob) => {
-      if (formApplyInProgressRef.current) return;
-      if (!currentFile || activeFileIds.length === 0) return;
+      if (formApplyInProgressRef.current)
+        throw new Error("A form save is already in progress.");
+      if (!currentFile || activeFileIds.length === 0)
+        throw new Error("No PDF is open.");
 
       formApplyInProgressRef.current = true;
+      let savedFileKey: string | null = null;
       try {
         console.log(
           "[Viewer] Applying form fill changes - reloading filled PDF",
@@ -1199,20 +1221,43 @@ const EmbedPdfViewerContent = ({
         );
 
         const newFileId = stubs[0]?.id;
-        if (newFileId) setActiveFileId(newFileId);
+        savedFileKey = getFormFillFileId(stirlingFiles[0]);
+        if (!newFileId || !savedFileKey)
+          throw new Error("Saved file ID not found");
+        const loaded = waitForDocument(savedFileKey);
 
         // Replace the current file in context
-        await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+        await Promise.all([
+          actions
+            .consumeFiles([currentFileId], stirlingFiles, stubs)
+            .then(() => {
+              // Selecting an unpersisted ID falls back to another open PDF and remounts the viewer.
+              setActiveFileId(newFileId);
+              return fetchFormFields(
+                stirlingFiles[0],
+                getFormFillFileId(stirlingFiles[0]) ?? undefined,
+              );
+            }),
+          loaded,
+        ]);
 
         console.log("[Viewer] Form fill changes applied successfully");
       } catch (error) {
+        if (savedFileKey) documentFailed(savedFileKey, error);
         console.error("[Viewer] Apply form changes failed:", error);
+        throw error;
       } finally {
         formApplyInProgressRef.current = false;
       }
     },
     [
       currentFile,
+      currentFileStableId,
+      selectedTool,
+      fetchFormFields,
+      waitForDocument,
+      documentFailed,
+      setActiveFileId,
       activeFiles,
       actions,
       selectors,
@@ -1222,15 +1267,14 @@ const EmbedPdfViewerContent = ({
   );
 
   useEffect(() => {
+    if (previewFile) return;
     const handler = (e: Event) => {
-      const blob = (e as CustomEvent).detail?.blob;
-      if (blob) {
-        handleFormApply(blob);
-      }
+      const detail = (e as CustomEvent<FormApplyDetail>).detail;
+      detail.complete(handleFormApply(detail.blob));
     };
     window.addEventListener(FORM_APPLY_EVENT, handler);
     return () => window.removeEventListener(FORM_APPLY_EVENT, handler);
-  }, [handleFormApply]);
+  }, [handleFormApply, previewFile]);
 
   // Apply layer visibility changes - reload the modified PDF into the viewer
   const layerApplyInProgressRef = useRef(false);
@@ -1343,7 +1387,7 @@ const EmbedPdfViewerContent = ({
 
   // Register navigation warning handlers so the global modal can call our save/discard logic
   useEffect(() => {
-    if (previewFile) return;
+    if (previewFile || isFormFillToolActive) return;
 
     registerNavigationWarningHandlers({
       onApplyAndContinue: async () => {
@@ -1365,6 +1409,7 @@ const EmbedPdfViewerContent = ({
     return () => unregisterNavigationWarningHandlers();
   }, [
     previewFile,
+    isFormFillToolActive,
     applyChanges,
     discardAndSaveApplied,
     registerNavigationWarningHandlers,
@@ -1761,6 +1806,7 @@ const EmbedPdfViewerContent = ({
     if (
       currentFile &&
       !isCurrentFileEncrypted &&
+      !formApplyInProgressRef.current &&
       (fileChanged || providerChanged)
     ) {
       console.log("[FormFill] Fetching form fields for:", currentFileId);
@@ -1867,6 +1913,8 @@ const EmbedPdfViewerContent = ({
               onPageLayout={handleViewerPageLayout}
               onDocumentSwapped={handleDocumentSwapped}
               onDocumentSwapFailed={handleDocumentSwapFailed}
+              onDocumentReady={documentReady}
+              onDocumentLoadFailed={documentFailed}
               restorePending={restorePending}
               restoreRequest={restoreRequest}
               onRestoreEvent={handleRestoreEvent}
