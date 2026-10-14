@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { computeReadAloudHighlightRect } from "@app/components/viewer/readAloudHighlight";
+import {
+  READ_ALOUD_FROM_SELECTION_EVENT,
+  findReadAloudStartIndex,
+  type ReadAloudFromSelectionDetail,
+} from "@app/components/viewer/readAloudFromSelection";
 import { useFileSelectors } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useStopReadAloudOnNavigation } from "@app/components/viewer/useStopReadAloudOnNavigation";
@@ -568,6 +573,56 @@ export function useViewerReadAloud(defaultLanguage?: string) {
     highlightWord(wordIndex, words, pageNumber);
   }, [isReadingAloud, highlightWord]);
 
+  const startReading = useCallback(
+    async (
+      pageNumber: number,
+      findStartCharIndex?: (spokenText: string) => number,
+    ) => {
+      try {
+        const selectedFiles = selectors.getSelectedFiles();
+        const currentFile =
+          selectedFiles[viewer.activeFileIndex] ?? selectedFiles[0];
+        if (!currentFile) return;
+        currentFileRef.current = currentFile;
+        totalPagesRef.current = viewer.getScrollState().totalPages || 0;
+
+        setIsReadingAloud(true);
+        currentPageNumberRef.current = pageNumber;
+        const pageData = await readPage(currentFile, pageNumber);
+        if (!pageData) {
+          currentFileRef.current = null;
+          setIsReadingAloud(false);
+          cleanupReadingSession();
+          return;
+        }
+
+        window.speechSynthesis.cancel();
+        speakFromCharIndex(
+          pageData.spokenText,
+          pageData.words,
+          findStartCharIndex?.(pageData.spokenText) ?? 0,
+          pageNumber,
+          speechRateRef.current,
+          speechLanguageRef.current,
+        );
+      } catch (error) {
+        console.error("Read aloud failed", error);
+        currentFileRef.current = null;
+        clearHighlights();
+        setIsReadingAloud(false);
+        cleanupReadingSession();
+      }
+    },
+    [
+      clearHighlights,
+      cleanupReadingSession,
+      readPage,
+      selectors,
+      speakFromCharIndex,
+      viewer,
+    ],
+  );
+
   const handleReadAloud = useCallback(async () => {
     if (typeof window === "undefined" || !window.speechSynthesis) {
       return;
@@ -588,54 +643,42 @@ export function useViewerReadAloud(defaultLanguage?: string) {
       return;
     }
 
-    try {
-      const selectedFiles = selectors.getSelectedFiles();
-      const currentFile =
-        selectedFiles[viewer.activeFileIndex] ?? selectedFiles[0];
-      if (!currentFile) return;
-      currentFileRef.current = currentFile;
-      totalPagesRef.current = viewer.getScrollState().totalPages || 0;
-
-      setIsReadingAloud(true);
-      try {
-        const currentPage = viewer.getScrollState().currentPage || 1;
-        currentPageNumberRef.current = currentPage;
-        const pageData = await readPage(currentFile, currentPage);
-        if (!pageData) {
-          currentFileRef.current = null;
-          setIsReadingAloud(false);
-          cleanupReadingSession();
-          return;
-        }
-
-        window.speechSynthesis.cancel();
-        speakFromCharIndex(
-          pageData.spokenText,
-          pageData.words,
-          0,
-          currentPage,
-          speechRateRef.current,
-          speechLanguageRef.current,
-        );
-      } finally {
-        // readPage handles pdf worker cleanup
-      }
-    } catch (error) {
-      console.error("Read aloud failed", error);
-      currentFileRef.current = null;
-      clearHighlights();
-      setIsReadingAloud(false);
-      cleanupReadingSession();
-    }
+    await startReading(viewer.getScrollState().currentPage || 1);
   }, [
     clearHighlights,
     cleanupReadingSession,
-    highlightWord,
     isReadingAloud,
-    selectors,
-    speakFromCharIndex,
+    startReading,
     viewer,
   ]);
+
+  useEffect(() => {
+    const handleReadFromSelection = (event: Event) => {
+      const { pageNumber, selectedText, approximatePosition } = (
+        event as CustomEvent<ReadAloudFromSelectionDetail>
+      ).detail;
+      // cancel() fires the old utterance's end or error asynchronously, which
+      // would advance the page or tear down the session started below.
+      if (utteranceRef.current) {
+        utteranceRef.current.onend = null;
+        utteranceRef.current.onerror = null;
+      }
+      restartingSpeechRef.current = false;
+      stopReadingAloud();
+      void startReading(pageNumber, (spokenText) =>
+        findReadAloudStartIndex(spokenText, selectedText, approximatePosition),
+      );
+    };
+    window.addEventListener(
+      READ_ALOUD_FROM_SELECTION_EVENT,
+      handleReadFromSelection,
+    );
+    return () =>
+      window.removeEventListener(
+        READ_ALOUD_FROM_SELECTION_EVENT,
+        handleReadFromSelection,
+      );
+  }, [startReading, stopReadingAloud]);
 
   const handleSpeechRateChange = useCallback(
     (nextRate: number) => {

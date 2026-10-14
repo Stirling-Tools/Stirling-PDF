@@ -25,6 +25,11 @@ import {
 import { MARKUP_ANNOTATION_COLORS } from "@app/components/viewer/annotationDefaults";
 import { alert } from "@app/components/toast";
 import { getExternalHref } from "@app/utils/externalUrl";
+import {
+  READ_ALOUD_FROM_SELECTION_EVENT,
+  glyphPositionRatio,
+  type ReadAloudFromSelectionDetail,
+} from "@app/components/viewer/readAloudFromSelection";
 import "@app/components/viewer/TextSelectionMenu.css";
 
 export type TextSelectionMenuProps = SelectionSelectionMenuProps & {
@@ -241,6 +246,37 @@ function TextSelectionMenuInner({
     [documentId, selection, annotationProvides, navActions, openAnnotateUi],
   );
 
+  const canReadAloud =
+    typeof window !== "undefined" && "speechSynthesis" in window;
+
+  const handleReadAloudFromHere = useCallback(() => {
+    const state = selection?.getState(documentId);
+    if (!selection || !state?.selection) return;
+    const { page, index } = state.selection.start;
+    const dispatch = (selectedText: string) => {
+      window.dispatchEvent(
+        new CustomEvent<ReadAloudFromSelectionDetail>(
+          READ_ALOUD_FROM_SELECTION_EVENT,
+          {
+            detail: {
+              pageNumber: page + 1,
+              selectedText,
+              approximatePosition: glyphPositionRatio(
+                state.geometry[page],
+                index,
+              ),
+            },
+          },
+        ),
+      );
+      selection.clear(documentId);
+    };
+    selection.getSelectedText(documentId).wait(
+      (texts) => dispatch(texts[0] ?? ""),
+      () => dispatch(""),
+    );
+  }, [selection, documentId]);
+
   const handleRedact = useCallback(() => {
     if (!documentId) return;
     const selections = selection?.getFormattedSelection(documentId) ?? [];
@@ -423,6 +459,25 @@ function TextSelectionMenuInner({
               <Icon name="file-x" size={20} />
             </button>
           </Tooltip>
+
+          {canReadAloud && (
+            <Tooltip
+              label={t("viewer.readAloudFromHere", "Read aloud from here")}
+              withArrow
+            >
+              <button
+                type="button"
+                className="embedpdf-text-selection-btn"
+                onClick={handleReadAloudFromHere}
+                aria-label={t(
+                  "viewer.readAloudFromHere",
+                  "Read aloud from here",
+                )}
+              >
+                <Icon name="volume-2" size={20} />
+              </button>
+            </Tooltip>
+          )}
         </div>
       </div>,
       document.body,
