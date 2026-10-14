@@ -1104,7 +1104,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
     log "Using _JVM_OPTS (ConcGCThreads=${CONC_GC_THREADS})"
   else
     log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true -Djpdfium.native.download=true"
   fi
 
   # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)
