@@ -20,8 +20,8 @@ import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // o
 import {
   dedupeDependencies,
   resolveLicenseDisplay,
-  textFingerprint,
 } from "@app/components/shared/config/configSections/licenseDisplay";
+import type { DependencyRow } from "@app/components/shared/config/configSections/licenseDisplay";
 
 export interface Dependency {
   moduleName?: string;
@@ -29,6 +29,7 @@ export interface Dependency {
   moduleVersion?: string;
   moduleLicense?: string;
   moduleLicenseUrl?: string;
+  /** Full license text the backend parsed from a bundled notice file. Present on native-component entries; generated-report entries carry moduleLicenseUrl instead. */
   moduleLicenseText?: string;
 }
 
@@ -50,13 +51,7 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
     [dependencies],
   );
 
-  const getDependencyKey = (dependency: Dependency) =>
-    [
-      dependency.moduleName ?? "module",
-      dependency.moduleVersion ?? "version",
-      dependency.moduleLicense ?? "license",
-      textFingerprint(dependency.moduleLicenseText),
-    ].join(":");
+  const [selected, setSelected] = useState<DependencyRow | null>(null);
 
   const [query, setQuery] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -80,9 +75,9 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 56,
     overscan: 8,
-    // Index keys would pin a measured tall row's cached height onto whatever row
-    // takes its index after filtering; reuse the stable React row key instead.
-    getItemKey: (index) => getDependencyKey(filteredDependencies[index]),
+    // Ordinal row IDs stay valid however filtering reshuffles indexes.
+    getItemKey: (index) =>
+      filteredDependencies[index]?.rowId ?? `license-index-${index}`,
   });
   const virtualItems = virtualizer.getVirtualItems();
   const topPad = virtualItems[0]?.start ?? 0;
@@ -151,7 +146,15 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
                   <Table.Tr>
                     <Table.Td colSpan={3}>
                       <Text ta="center" c="dimmed" py="xl">
-                        {t("settings.licenses.empty", "No dependencies found.")}
+                        {dependencies.length === 0
+                          ? t(
+                              "settings.licenses.empty",
+                              "No dependencies found.",
+                            )
+                          : t(
+                              "settings.licenses.noMatch",
+                              "No matching dependencies.",
+                            )}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -172,10 +175,11 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
                       }
                       return (
                         <VirtualLicenseRow
-                          key={getDependencyKey(dependency)}
+                          key={dependency.rowId}
                           dependency={dependency}
                           index={virtualRow.index}
                           measureElement={virtualizer.measureElement}
+                          onSelect={setSelected}
                         />
                       );
                     })}
@@ -192,6 +196,10 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
               </Table.Tbody>
             </Table>
           </div>
+          <LicenseModal
+            dependency={selected}
+            onClose={() => setSelected(null)}
+          />
         </Stack>
       </Paper>
     </Stack>
@@ -200,51 +208,47 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
 
 const SPDX_LICENSE_PAGE = "https://spdx.org/licenses";
 
-function LicenseCell({ dependency }: { dependency: Dependency }) {
+function AboutLink({ spdxId, short }: { spdxId: string; short: string }) {
   const { t } = useTranslation();
-  const [opened, setOpened] = useState(false);
-  const full = dependency.moduleLicense || "-";
-  const display = resolveLicenseDisplay(dependency.moduleLicense);
-  const about = display.spdxId ? (
+  return (
     <Anchor
-      href={`${SPDX_LICENSE_PAGE}/${display.spdxId}.html`}
+      href={`${SPDX_LICENSE_PAGE}/${spdxId}.html`}
       target="_blank"
       rel="noopener noreferrer"
       size="xs"
       c="dimmed"
       title={t("settings.licenses.licenseAboutTitle", "About {{short}}", {
-        short: display.short,
+        short,
       })}
     >
       {t("settings.licenses.licenseAbout", "About")}
     </Anchor>
+  );
+}
+
+function LicenseCell({
+  dependency,
+  onSelect,
+}: {
+  dependency: DependencyRow;
+  onSelect: (dependency: DependencyRow) => void;
+}) {
+  const full = dependency.moduleLicense || "-";
+  const display = resolveLicenseDisplay(dependency.moduleLicense);
+  const about = display.spdxId ? (
+    <AboutLink spdxId={display.spdxId} short={display.short} />
   ) : null;
   if (dependency.moduleLicenseText) {
     return (
-      <>
-        <Anchor
-          component="button"
-          onClick={() => setOpened(true)}
-          truncate="end"
-          maw={240}
-          title={full}
-        >
-          {display.short}
-        </Anchor>
-        <Modal
-          opened={opened}
-          onClose={() => setOpened(false)}
-          title={dependency.moduleName || "-"}
-          size="lg"
-        >
-          <ScrollArea.Autosize mah={420}>
-            <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-              {dependency.moduleLicenseText}
-            </Text>
-            {about ? <div style={{ marginTop: 8 }}>{about}</div> : null}
-          </ScrollArea.Autosize>
-        </Modal>
-      </>
+      <Anchor
+        component="button"
+        onClick={() => onSelect(dependency)}
+        truncate="end"
+        maw={240}
+        title={full}
+      >
+        {display.short}
+      </Anchor>
     );
   }
   return dependency.moduleLicenseUrl ? (
@@ -287,10 +291,12 @@ function VirtualLicenseRow({
   dependency,
   index,
   measureElement,
+  onSelect,
 }: {
-  dependency: Dependency;
+  dependency: DependencyRow;
   index: number;
   measureElement: (element: HTMLTableRowElement | null) => void;
+  onSelect: (dependency: DependencyRow) => void;
 }) {
   return (
     <Table.Tr data-index={index} ref={measureElement}>
@@ -313,9 +319,46 @@ function VirtualLicenseRow({
         </Text>
       </Table.Td>
       <Table.Td>
-        <LicenseCell dependency={dependency} />
+        <LicenseCell dependency={dependency} onSelect={onSelect} />
       </Table.Td>
     </Table.Tr>
+  );
+}
+
+function LicenseModal({
+  dependency,
+  onClose,
+}: {
+  dependency: DependencyRow | null;
+  onClose: () => void;
+}) {
+  const selectedDisplay = dependency
+    ? resolveLicenseDisplay(dependency.moduleLicense)
+    : null;
+  return (
+    <Modal
+      opened={dependency !== null}
+      onClose={onClose}
+      title={dependency?.moduleName || "-"}
+      size="lg"
+    >
+      <ScrollArea.Autosize mah={420}>
+        <Text size="sm" c="dimmed">
+          {dependency?.moduleLicense || "-"}
+        </Text>
+        <Text size="sm" mt="xs" style={{ whiteSpace: "pre-wrap" }}>
+          {dependency?.moduleLicenseText}
+        </Text>
+        {selectedDisplay?.spdxId ? (
+          <div style={{ marginTop: 8 }}>
+            <AboutLink
+              spdxId={selectedDisplay.spdxId}
+              short={selectedDisplay.short}
+            />
+          </div>
+        ) : null}
+      </ScrollArea.Autosize>
+    </Modal>
   );
 }
 

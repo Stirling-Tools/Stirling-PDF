@@ -28,7 +28,6 @@ const LICENSE_ALIASES: Record<string, LicenseDisplay> = {
   "mit license": { short: "MIT", spdxId: "MIT" },
   "the mit license": { short: "MIT", spdxId: "MIT" },
   "mit-0": { short: "MIT-0", spdxId: "MIT-0" },
-  "mit/old mit license": { short: "MIT", spdxId: "MIT" },
   "bsd 3-clause": { short: "BSD-3-Clause", spdxId: "BSD-3-Clause" },
   "bsd-3-clause": { short: "BSD-3-Clause", spdxId: "BSD-3-Clause" },
   "bsd 3 clause": { short: "BSD-3-Clause", spdxId: "BSD-3-Clause" },
@@ -135,7 +134,6 @@ const LICENSE_ALIASES: Record<string, LicenseDisplay> = {
   // No SPDX page exists for the Bouncy Castle licence, so shorten the label only.
   "bouncy castle licence": { short: "BouncyCastle" },
   "freetype license / ftl": { short: "FTL", spdxId: "FTL" },
-  "unicode license / icu license": { short: "ICU", spdxId: "ICU" },
   "zlib license": { short: "Zlib", spdxId: "Zlib" },
   "libpng license": { short: "libpng", spdxId: "Libpng" },
   "libtiff license": { short: "libtiff", spdxId: "libtiff" },
@@ -165,31 +163,25 @@ export function resolveLicenseDisplay(
   return { short: full };
 }
 
-// Same name, version, and license can still carry different full texts, so
-// rows are fingerprinted by text content; the hash keeps keys distinct
-// without stuffing kilobytes of license text into React keys.
-export function textFingerprint(text: string | undefined): string {
-  if (!text) {
-    return "notext";
-  }
-  let hash = 5381;
-  for (let index = 0; index < text.length; index += 1) {
-    hash = ((hash << 5) + hash + text.charCodeAt(index)) | 0;
-  }
-  return `text${(hash >>> 0).toString(16)}`;
+export interface DependencyRow extends Dependency {
+  rowId: string;
 }
 
 // The license report lists one row per resolved artifact, so the same module
-// shows up at several versions; a notice names each module once per license,
-// and records carrying the full license text win over textless ones. Records
-// with genuinely different texts are all kept, mirroring the backend merge.
-export function dedupeDependencies(dependencies: Dependency[]): Dependency[] {
+// shows up at several versions; a notice names each module once per license.
+// Grouped rows display every represented version instead of keeping one, and
+// records carrying the full license text win over textless ones. Records with
+// genuinely different texts are all kept, mirroring the backend merge.
+export function dedupeDependencies(
+  dependencies: Dependency[],
+): DependencyRow[] {
   const byGroup = new Map<string, Dependency[]>();
   for (const dependency of dependencies) {
-    const key = [
+    // Tuple identity keeps ["ab", "c"] and ["a", "bc"] distinct.
+    const key = JSON.stringify([
       (dependency.moduleName || "").toLowerCase(),
       (dependency.moduleLicense || "").toLowerCase(),
-    ].join("");
+    ]);
     const group = byGroup.get(key);
     if (group) {
       group.push(dependency);
@@ -199,10 +191,19 @@ export function dedupeDependencies(dependencies: Dependency[]): Dependency[] {
   }
   const deduplicated: Dependency[] = [];
   for (const group of byGroup.values()) {
+    const versions: string[] = [];
+    const seenVersions = new Set<string>();
     const withText: Dependency[] = [];
     const seenTexts = new Set<string>();
     let bare: Dependency | undefined;
     for (const dependency of group) {
+      if (
+        dependency.moduleVersion &&
+        !seenVersions.has(dependency.moduleVersion)
+      ) {
+        seenVersions.add(dependency.moduleVersion);
+        versions.push(dependency.moduleVersion);
+      }
       if (dependency.moduleLicenseText) {
         if (!seenTexts.has(dependency.moduleLicenseText)) {
           seenTexts.add(dependency.moduleLicenseText);
@@ -212,9 +213,22 @@ export function dedupeDependencies(dependencies: Dependency[]): Dependency[] {
         bare ??= dependency;
       }
     }
-    deduplicated.push(...(withText.length > 0 ? withText : bare ? [bare] : []));
+    const rows = withText.length > 0 ? withText : bare ? [bare] : [];
+    const aggregatedVersions = versions.join(", ");
+    for (const row of rows) {
+      deduplicated.push(
+        versions.length > 1
+          ? { ...row, moduleVersion: aggregatedVersions }
+          : row,
+      );
+    }
   }
-  return deduplicated.sort((a, b) =>
-    (a.moduleName || "").localeCompare(b.moduleName || ""),
-  );
+  // Ordinal IDs stay stable while the underlying list is unchanged and never
+  // collide however similar two texts are.
+  return deduplicated
+    .sort((a, b) => (a.moduleName || "").localeCompare(b.moduleName || ""))
+    .map((dependency, index) => ({
+      ...dependency,
+      rowId: `license-row-${index}`,
+    }));
 }

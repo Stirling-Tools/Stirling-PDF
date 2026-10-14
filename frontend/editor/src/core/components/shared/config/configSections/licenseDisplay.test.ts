@@ -47,6 +47,15 @@ describe("resolveLicenseDisplay", () => {
       short: "BouncyCastle",
     });
   });
+
+  it("preserves slash-separated licenses verbatim with no SPDX link", () => {
+    expect(resolveLicenseDisplay("MIT/Old MIT License")).toEqual({
+      short: "MIT/Old MIT License",
+    });
+    expect(resolveLicenseDisplay("Unicode License / ICU License")).toEqual({
+      short: "Unicode License / ICU License",
+    });
+  });
 });
 
 describe("dedupeDependencies", () => {
@@ -58,12 +67,13 @@ describe("dedupeDependencies", () => {
     expect(result).toHaveLength(2);
   });
 
-  it("collapses same-name same-license version rows", () => {
+  it("collapses same-name same-license version rows and shows all versions", () => {
     const result = dedupeDependencies([
       { ...dependency("logback-classic", "EPL-1.0"), moduleVersion: "1.5.38" },
       { ...dependency("logback-classic", "EPL-1.0"), moduleVersion: "1.6.3" },
     ]);
     expect(result).toHaveLength(1);
+    expect(result[0]?.moduleVersion).toBe("1.5.38, 1.6.3");
   });
 
   it("prefers the record carrying the full license text", () => {
@@ -81,5 +91,24 @@ describe("dedupeDependencies", () => {
       dependency("PDFium", "BSD-3-Clause", "text B"),
     ]);
     expect(result).toHaveLength(2);
+  });
+
+  it("assigns distinct row ids to hash-colliding texts", () => {
+    const result = dedupeDependencies([
+      dependency("PDFium", "BSD-3-Clause", "Ab"),
+      dependency("PDFium", "BSD-3-Clause", "BA"),
+    ]);
+    expect(result).toHaveLength(2);
+    expect(result[0]?.rowId).not.toBe(result[1]?.rowId);
+  });
+
+  it("keeps row ids stable for the same input", () => {
+    const input = [
+      dependency("PDFium", "BSD-3-Clause", "text A"),
+      dependency("QPDF", "Apache-2.0"),
+    ];
+    const first = dedupeDependencies(input).map((row) => row.rowId);
+    const second = dedupeDependencies(input).map((row) => row.rowId);
+    expect(first).toEqual(second);
   });
 });
