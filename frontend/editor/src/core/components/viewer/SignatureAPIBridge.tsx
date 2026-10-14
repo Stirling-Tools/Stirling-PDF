@@ -597,6 +597,7 @@ export const SignatureAPIBridge = forwardRef<
       }
 
       const annotation = event.annotation as StampAnnotation;
+      if (annotation.type !== PdfAnnotationSubtype.STAMP) return;
       const annotationId: string | undefined = annotation?.id;
       if (!annotationId) {
         return;
