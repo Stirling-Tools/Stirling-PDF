@@ -32,6 +32,7 @@ import stirling.software.SPDF.pdf.parser.PageColumnLayout;
 import stirling.software.SPDF.pdf.parser.PageImageLocator;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.common.util.TempFile;
 
 @Service
@@ -148,6 +149,8 @@ class RedactExecuteService {
                     convertToImage,
                     !needsOverlayOnly);
 
+        } catch (ToolFailedException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Execute redaction failed: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to perform PDF redaction: " + e.getMessage(), e);
@@ -205,7 +208,8 @@ class RedactExecuteService {
      * Attempts content-stream text removal for all text/regex targets. Returns {@code true} if the
      * document fell back to overlay-only mode.
      */
-    private boolean applyTextRemoval(PDDocument document, RedactExecuteRequest request) {
+    private boolean applyTextRemoval(PDDocument document, RedactExecuteRequest request)
+            throws ToolFailedException {
         try {
             boolean fallback = false;
 
@@ -238,6 +242,8 @@ class RedactExecuteService {
                 log.info("[redact/execute] content-stream text removal applied successfully");
             }
             return fallback;
+        } catch (ToolFailedException e) {
+            throw e;
         } catch (Exception e) {
             log.warn(
                     "[redact/execute] text removal failed, falling back to overlay: {}",
