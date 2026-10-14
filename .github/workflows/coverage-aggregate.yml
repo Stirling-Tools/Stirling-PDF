@@ -72,13 +72,13 @@ jobs:
           token: ${{ github.token }}
           disable-download: true
           multi-cache: |
-            coverage-aggregate-setup-uv-cache:
+            coverage-setup-uv-cache:
               path: .cache/setup-uv-cache
-            coverage-aggregate-uv-python-dir:
+            coverage-uv-python-dir:
               path: .cache/uv-python-dir
           key: |
-            coverage-aggregate-setup-uv-cache=${{ inputs.uv-hash }}
-            coverage-aggregate-uv-python-dir=${{ inputs.uv-hash }}
+            coverage-setup-uv-cache=${{ inputs.uv-hash }}
+            coverage-uv-python-dir=${{ inputs.uv-hash }}
 
       - name: Set up JDK 25
         uses: ./trusted-java-action/.github/actions/java
