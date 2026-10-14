@@ -31,7 +31,7 @@ export interface AddPageNumbersRequest {
    */
   customMargin?: "small" | "medium" | "large" | "x-large";
   /**
-   * Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n} (counts numbered pages only, from startingNumber), {total}, {filename}.
+   * Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n} (counts numbered pages only, from startingNumber), {total} (all pages in the file), {filename}.
    */
   customText?: string;
   /**
@@ -170,7 +170,7 @@ export interface AddWatermarkRequest {
    */
   alphabet?: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
   /**
-   * Turn pages into images so the watermark can't be removed; text becomes unselectable
+   * Turn pages into images so the watermark is hard to remove; text becomes unselectable
    */
   convertPDFToImage?: boolean;
   /**
@@ -960,7 +960,7 @@ export interface PageSizeRequest {
 }
 export interface PdfToPdfARequest {
   /**
-   * pdfa, pdfa-2 and pdfa-2b = PDF/A-2b, the usual archive choice; pdfa-1 = PDF/A-1b; pdfa-3 and pdfa-3b = PDF/A-3b, which allows attachments such as e-invoice XML; pdfa-1a/2a/3a also tag the document; pdfx = PDF/X for print.
+   * pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B; pdfx = PDF/X.
    */
   outputFormat:
     | "pdfa"
@@ -1110,7 +1110,7 @@ export interface ProcessPdfWithOcrRequest {
 }
 export interface RearrangePagesRequest {
   /**
-   * Omit or CUSTOM to use pageNumbers. REVERSE_ORDER reverses all pages; DUPLEX_SORT expects all fronts, then backs reversed; BOOKLET_SORT and SIDE_STITCH_BOOKLET_SORT order pages for booklet printing; ODD_EVEN_SPLIT puts odd pages then even; REMOVE_FIRST, REMOVE_LAST and REMOVE_FIRST_AND_LAST drop those pages; DUPLICATE repeats each page N times (N in pageNumbers, default 2).
+   * Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
    */
   customMode?:
     | "CUSTOM"
@@ -1130,11 +1130,11 @@ export interface RearrangePagesRequest {
 }
 export interface RedactExecuteRequest {
   /**
-   * Rectangular areas to black out, by page and bounding box. Boxes only unless rasterized.
+   * Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
    */
   imageBoxes?: ImageBox[];
   /**
-   * Text ranges to redact, from a start to an end anchor phrase (inclusive). Anchors must appear verbatim and work best short and unique. Boxes only unless style.convertToImage=true.
+   * Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
    */
   ranges?: TextRange[];
   /**
@@ -1156,7 +1156,7 @@ export interface RedactExecuteRequest {
   wipePages?: number[];
 }
 /**
- * Rectangular areas to black out, by page and bounding box. Boxes only unless rasterized.
+ * Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
  */
 export interface ImageBox {
   /**
@@ -1181,7 +1181,7 @@ export interface ImageBox {
   y2: number;
 }
 /**
- * Text ranges to redact, from a start to an end anchor phrase (inclusive). Anchors must appear verbatim and work best short and unique. Boxes only unless style.convertToImage=true.
+ * Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
  */
 export interface TextRange {
   /**
@@ -1534,7 +1534,7 @@ export interface SplitPdfBySizeOrCountRequest {
    */
   splitType?: 0 | 1 | 2;
   /**
-   * A size such as '10MB' for splitType 0; a whole number for 1 and 2
+   * For splitType 0 a size like '500KB' or '10MB' (a bare number means MB); for 1 and 2 a whole number
    */
   splitValue?: string;
 }

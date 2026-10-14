@@ -285,10 +285,10 @@ public class AutoSplitPdfController {
     @Operation(
             summary = "Split a PDF at Stirling QR-code divider pages",
             description =
-                    "Starts a new document at each divider page and returns a zip of the"
-                            + " parts. A PDF without dividers comes back unsplit; use split-pages or"
-                            + " split-by-size-or-count for those. duplexMode=true also skips each"
-                            + " divider's back page.")
+                    "Splits at each divider page and returns a zip of the parts; divider"
+                            + " pages are dropped. duplexMode=true also drops each divider's back"
+                            + " page. With no dividers you get one file; use split-pages or"
+                            + " split-by-size-or-count instead.")
     public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();

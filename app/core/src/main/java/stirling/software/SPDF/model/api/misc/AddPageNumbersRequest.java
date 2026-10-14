@@ -32,8 +32,8 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
     @Schema(
             description =
                     "Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n}"
-                            + " (counts numbered pages only, from startingNumber), {total},"
-                            + " {filename}.",
+                            + " (counts numbered pages only, from startingNumber), {total} (all pages"
+                            + " in the file), {filename}.",
             example = "Page {n} of {total}",
             defaultValue = "{n}",
             requiredMode = RequiredMode.NOT_REQUIRED)
