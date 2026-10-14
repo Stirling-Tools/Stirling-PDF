@@ -1,4 +1,4 @@
-import type { Page, Route } from "@playwright/test";
+import type { BrowserContext, Page, Route } from "@playwright/test";
 
 /**
  * Shared Playwright API stubs for Stirling-PDF E2E tests.
@@ -142,6 +142,23 @@ export interface MockAppApiOptions {
   endpointsAvailability?: Record<string, { enabled: boolean }>;
   /** Backend probe status. Set to `"DOWN"` to exercise offline-mode UI. */
   backendStatus?: "UP" | "DOWN";
+}
+
+/**
+ * Answers every `/api/v1` request no other route claims with the empty 500 the
+ * dev proxy sends when no backend is listening. A request that reaches the proxy
+ * instead hits whatever backend runs locally, and in CI a large upload can hang
+ * there and crash the Chromium renderer.
+ *
+ * Register it before any other route on the context, so it is the last handler
+ * Playwright tries.
+ */
+export async function fulfillUnstubbedApis(
+  context: BrowserContext,
+): Promise<void> {
+  await context.route("**/api/v1/**", (route: Route) =>
+    route.fulfill({ status: 500, contentType: "text/plain", body: "" }),
+  );
 }
 
 /**

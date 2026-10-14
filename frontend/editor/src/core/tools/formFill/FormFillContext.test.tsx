@@ -8,6 +8,7 @@ import React from "react";
 import {
   FormFillProvider,
   useFormFill,
+  useAllFormValues,
 } from "@app/tools/formFill/FormFillContext";
 import type { FieldEditResult } from "@app/tools/formFill/types";
 
@@ -77,7 +78,9 @@ describe("FormFillContext staged-edit ownership", () => {
       ]),
     );
     await act(async () => {
-      await hook.current.commitModifications(blob());
+      await hook.current.commitDesign(blob(), (updated) =>
+        hook.current.fetchFields(updated, "file-A-edited"),
+      );
     });
     expect(hook.current.skippedEdits).toHaveLength(1);
 
@@ -154,7 +157,9 @@ describe("FormFillContext staged-edit ownership", () => {
       ]),
     );
     await act(async () => {
-      await hook.current.commitModifications(blob());
+      await hook.current.commitDesign(blob(), (updated) =>
+        hook.current.fetchFields(updated, "file-A-edited"),
+      );
     });
 
     // The commit's own re-fetch keeps the report...
@@ -172,103 +177,154 @@ describe("FormFillContext staged-edit ownership", () => {
   });
 });
 
-describe("FormFillContext bundled field list", () => {
+describe("FormFillContext shared design draft", () => {
   beforeEach(() => {
     applyFieldEdits.mockReset();
     fetchFields.mockReset();
     fetchFields.mockResolvedValue([]);
   });
 
-  const bundled = [
-    { name: "bundled", type: "text", widgets: [{ pageIndex: 0, x: 1, y: 2 }] },
-  ] as unknown as FieldEditResult["fields"];
+  it("retains both design tabs and saves adds, modifications and deletions together", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    act(() => hook.current.setMode("create"));
+    act(() =>
+      hook.current.addPendingField({
+        type: "text",
+        name: "new",
+        pageIndex: 0,
+        x: 1,
+        y: 2,
+        width: 100,
+        height: 20,
+      }),
+    );
+    act(() => hook.current.setMode("modify"));
+    act(() => hook.current.stageModification("existing", { label: "Renamed" }));
+    act(() => hook.current.stageModification("deleted", { label: "Ignored" }));
+    act(() => hook.current.toggleFieldDeleted("deleted"));
+    act(() => hook.current.setMode("create"));
+    expect(hook.current.pendingFields).toHaveLength(1);
+    expect(hook.current.modifiedFields.existing.label).toBe("Renamed");
+    applyFieldEdits.mockResolvedValue(result([]));
+    let finish!: () => void;
+    const persisted = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    const apply = vi.fn(() => persisted);
+    let saving!: Promise<void>;
+    act(() => {
+      saving = hook.current.commitDesign(blob(), apply);
+    });
+    await waitFor(() => expect(apply).toHaveBeenCalled());
+    expect(hook.current.hasUncommittedChanges).toBe(true);
+    expect(applyFieldEdits.mock.calls[0][1]).toEqual({
+      add: [expect.objectContaining({ name: "new" })],
+      modify: [{ targetName: "existing", label: "Renamed" }],
+      delete: ["deleted"],
+    });
+    await act(async () => {
+      finish();
+      await saving;
+    });
+    expect(hook.current.hasUncommittedChanges).toBe(false);
+    expect(hook.current.canUndo).toBe(false);
+  });
 
-  async function commitWith(
-    hook: { current: ReturnType<typeof useFormFill> },
-    edited: Blob,
-    fields: FieldEditResult["fields"],
-  ) {
-    // The viewer switches to pdfbox whenever the form tool is open, which is when commits happen.
+  it("keeps the draft and undo history when persistence fails", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    act(() =>
+      hook.current.stageModification("existing", { label: "Retry me" }),
+    );
+    applyFieldEdits.mockResolvedValue(result([]));
+    await act(async () => {
+      await expect(
+        hook.current.commitDesign(blob(), async () => {
+          throw new Error("Storage failed");
+        }),
+      ).rejects.toThrow("Storage failed");
+    });
+    expect(hook.current.modifiedFields.existing.label).toBe("Retry me");
+    expect(hook.current.canUndo).toBe(true);
+    act(() => hook.current.discardDesign());
+    expect(hook.current.hasUncommittedChanges).toBe(false);
+    expect(hook.current.canUndo).toBe(false);
+  });
+
+  it("does not reapply edits already persisted when the preview fails to reopen", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    act(() => hook.current.stageModification("existing", { label: "Saved" }));
+    applyFieldEdits.mockResolvedValue(result([]));
+    await act(async () => {
+      await expect(
+        hook.current.commitDesign(blob(), async (updated) => {
+          await hook.current.fetchFields(updated, "file-A-edited");
+          throw new Error("Preview failed");
+        }),
+      ).rejects.toThrow("Preview failed");
+    });
+    expect(hook.current.hasUncommittedChanges).toBe(false);
+    expect(hook.current.canUndo).toBe(false);
+  });
+
+  it("uses a bundled field list during persistence and never reuses it afterwards", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
     act(() => hook.current.setProviderMode("pdfbox"));
     await act(async () => {
       await hook.current.fetchFields(blob(), "file-A");
     });
-    act(() => hook.current.stageModification("f", { x: 1 }));
-    applyFieldEdits.mockResolvedValue({
-      blob: edited,
-      skipped: [],
-      skippedTotal: 0,
-      fields,
-    });
+    act(() => hook.current.stageModification("existing", { label: "Renamed" }));
+    const fields = [{ name: "bundled", type: "text", value: "", widgets: [] }];
+    applyFieldEdits.mockResolvedValue({ ...result([]), fields });
+    const before = fetchFields.mock.calls.length;
     await act(async () => {
-      await hook.current.commitModifications(blob());
-    });
-  }
-
-  it("skips the follow-up request when the commit already returned the fields", async () => {
-    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
-    const edited = blob();
-    await commitWith(hook, edited, bundled);
-    const callsBefore = fetchFields.mock.calls.length;
-
-    await act(async () => {
-      await hook.current.fetchFields(edited, "file-A-edited");
-    });
-
-    // The whole point: no second upload for the post-commit fetch.
-    expect(fetchFields.mock.calls).toHaveLength(callsBefore);
-    await waitFor(() =>
-      expect(hook.current.state.fields.map((f) => f.name)).toEqual(["bundled"]),
-    );
-  });
-
-  it("still asks the backend when the commit returned no fields", async () => {
-    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
-    const edited = blob();
-    await commitWith(hook, edited, undefined);
-    const callsBefore = fetchFields.mock.calls.length;
-
-    await act(async () => {
-      await hook.current.fetchFields(edited, "file-A-edited");
-    });
-
-    expect(fetchFields.mock.calls.length).toBe(callsBefore + 1);
-  });
-
-  it("ignores a bundle whose size does not match the file being fetched", async () => {
-    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
-    await commitWith(hook, blob(), bundled);
-    const callsBefore = fetchFields.mock.calls.length;
-
-    // A different document must never adopt the previous commit's field list.
-    await act(async () => {
-      await hook.current.fetchFields(
-        new Blob(["%PDF-1.4 a longer unrelated document"]),
-        "file-B",
+      await hook.current.commitDesign(blob(), (updated) =>
+        hook.current.fetchFields(updated, "file-A-edited"),
       );
     });
-
-    expect(fetchFields.mock.calls.length).toBe(callsBefore + 1);
-  });
-
-  it("does not reuse the bundle for a second fetch", async () => {
-    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
-    const edited = blob();
-    await commitWith(hook, edited, bundled);
-
+    expect(fetchFields).toHaveBeenCalledTimes(before);
+    expect(hook.current.state.fields).toEqual(fields);
     await act(async () => {
-      await hook.current.fetchFields(edited, "file-A-edited");
+      await hook.current.fetchFields(blob(), "file-A-edited");
     });
-    const afterFirst = fetchFields.mock.calls.length;
-    await act(async () => {
-      await hook.current.fetchFields(edited, "file-A-edited");
-    });
-
-    expect(fetchFields.mock.calls.length).toBe(afterFirst + 1);
+    expect(fetchFields).toHaveBeenCalledTimes(before + 1);
   });
 });
 
 describe("FormFillContext value retention", () => {
+  it("does not mark filled values clean before the PDF is persisted", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    act(() => hook.current.setValue("who", "Ada"));
+    await act(async () => {
+      await hook.current.submitForm(blob());
+    });
+    expect(hook.current.state.isDirty).toBe(true);
+    act(() => hook.current.discardValues());
+    expect(hook.current.getValue("who")).toBe("");
+    expect(hook.current.state.isDirty).toBe(false);
+  });
+
+  it("updates value subscribers on every edit", () => {
+    const { result: hook } = renderHook(
+      () => ({ form: useFormFill(), values: useAllFormValues() }),
+      { wrapper },
+    );
+    act(() => hook.current.form.setValue("who", "Ada"));
+    act(() => hook.current.form.setValue("who", "Grace"));
+    expect(hook.current.values.who).toBe("Grace");
+  });
+
   beforeEach(() => {
     applyFieldEdits.mockReset();
     fetchFields.mockReset();

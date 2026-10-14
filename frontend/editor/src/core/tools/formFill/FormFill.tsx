@@ -50,7 +50,9 @@ import {
 import type { FormMode } from "@app/tools/formFill/types";
 import { FormFieldCreatePanel } from "@app/tools/formFill/FormFieldCreatePanel";
 import { FormFieldModifyPanel } from "@app/tools/formFill/FormFieldModifyPanel";
+import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 import { dispatchFormApply } from "@app/tools/formFill/formFillEvents";
+import { useFormAutoMode } from "@app/tools/formFill/useFormAutoMode";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 // ---------------------------------------------------------------------------
@@ -67,6 +69,11 @@ interface ModeTabDef {
 // Main FormFill component
 // ---------------------------------------------------------------------------
 
+async function applyFormChanges(blob: Blob): Promise<void> {
+  assertFilesNotBlocked();
+  await dispatchFormApply(blob);
+}
+
 const FormFill = (_props: BaseToolProps) => {
   const { t } = useTranslation();
   const {
@@ -74,6 +81,8 @@ const FormFill = (_props: BaseToolProps) => {
     registerUnsavedChangesChecker,
     unregisterUnsavedChangesChecker,
     setHasUnsavedChanges,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
   } = useNavigation();
   const { state: fileState } = useFileState();
 
@@ -87,9 +96,14 @@ const FormFill = (_props: BaseToolProps) => {
     mode,
     setMode,
     hasUncommittedChanges,
-    forFileId,
-    commitNewFields,
-    commitModifications,
+    commitDesign,
+    discardDesign,
+    discardValues,
+    pendingFields,
+    modifiedFields,
+    deletedFieldNames,
+    saving,
+    setSaving,
     setCreationType,
     setSelectedField,
     setPreviewing,
@@ -126,15 +140,10 @@ const FormFill = (_props: BaseToolProps) => {
   const { scrollActions, activeFileId } = useViewer();
 
   const [flatten, setFlatten] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const [lastSavedFlatten, setLastSavedFlatten] = useState<boolean | null>(
-    null,
-  );
-  const flattenChanged =
-    lastSavedFlatten !== null && flatten !== lastSavedFlatten;
+  const flattenChanged = flatten;
 
   const savingRef = useRef(false);
 
@@ -157,29 +166,8 @@ const FormFill = (_props: BaseToolProps) => {
   const activeFieldRef = useRef<HTMLDivElement>(null);
   useFieldShortcuts();
 
-  // A document with nothing to fill lands on Create: Fill would show an empty panel and leave
-  // the user hunting for the tab that does what they came for. Decided once per document, and
-  // only after the field list has settled - fields arrive a beat after the fetch reports done,
-  // so deciding immediately sends a form that does have fields to the wrong tab.
-  const autoModeFileRef = useRef<string | null>(null);
-  const fieldCountRef = useRef(0);
-  fieldCountRef.current = formState.fields.length;
-  const modeRef = useRef(mode);
-  modeRef.current = mode;
-  useEffect(() => {
-    if (formState.loading || !forFileId) return undefined;
-    if (autoModeFileRef.current === forFileId) return undefined;
-    const settle = window.setTimeout(() => {
-      autoModeFileRef.current = forFileId;
-      if (fieldCountRef.current === 0 && modeRef.current === "fill") {
-        setMode("create");
-      }
-    }, 300);
-    return () => window.clearTimeout(settle);
-  }, [formState.loading, formState.fields.length, forFileId, setMode]);
-
   const isDirtyRef = useRef(formState.isDirty);
-  isDirtyRef.current = formState.isDirty;
+  isDirtyRef.current = formState.isDirty || flatten;
 
   // Fields drawn or edited but never applied are lost on navigation, so the app's existing
   // leave-warning needs to hear about them the way other tools report theirs.
@@ -187,15 +175,24 @@ const FormFill = (_props: BaseToolProps) => {
   hasUncommittedRef.current = hasUncommittedChanges;
   useEffect(() => {
     registerUnsavedChangesChecker(
-      () => hasUncommittedRef.current || isDirtyRef.current,
+      () =>
+        hasUncommittedRef.current || isDirtyRef.current || savingRef.current,
     );
     return () => unregisterUnsavedChangesChecker();
   }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
   // requestNavigation gates on this flag rather than on the checker above.
   useEffect(() => {
-    setHasUnsavedChanges(hasUncommittedChanges || formState.isDirty);
-  }, [hasUncommittedChanges, formState.isDirty, setHasUnsavedChanges]);
+    setHasUnsavedChanges(
+      hasUncommittedChanges || formState.isDirty || flatten || saving,
+    );
+  }, [
+    hasUncommittedChanges,
+    formState.isDirty,
+    flatten,
+    saving,
+    setHasUnsavedChanges,
+  ]);
 
   // Subscribing read: getFiles() during render doesn't re-run when the workbench
   // changes, so the panel kept showing the pre-hydration (or pre-version) file.
@@ -257,6 +254,7 @@ const FormFill = (_props: BaseToolProps) => {
   }, [currentFile, allValues]);
 
   const isActive = selectedTool === "formFill";
+  useFormAutoMode(getFormFillFileId(currentFile), isActive);
 
   // Arming lives in an app-level provider, so leaving the tool would otherwise keep the page
   // in crosshair mode and stage fields for whatever the user opened next.
@@ -276,107 +274,127 @@ const FormFill = (_props: BaseToolProps) => {
     }
   }, [formState.activeFieldName]);
 
-  const handleSave = useCallback(async () => {
-    // Ref-based guard prevents concurrent saves that cause file duplication
-    if (savingRef.current) return;
-    if (!currentFile || !isStirlingFile(currentFile)) return;
-
-    if (!validateForm()) {
+  const handleSave = useCallback(async (): Promise<boolean> => {
+    if (
+      savingRef.current ||
+      formState.loading ||
+      !currentFile ||
+      !isStirlingFile(currentFile)
+    )
+      return false;
+    if (mode === "fill" && !validateForm()) {
       setSaveError(
         t("formFill.requiredFieldsError", "Please fill in all required fields"),
       );
-      return;
+      return false;
     }
-
     savingRef.current = true;
     setSaving(true);
     setSaveError(null);
-
     try {
-      const filledBlob = await submitForm(currentFile, flatten);
-
-      // Track the flatten value at save so toggling it later re-enables Save
-      setLastSavedFlatten(flatten);
-
-      // Route through the viewer's handleFormApply: a direct consumeFiles call
-      // loses the viewer's file tracking, and with it scroll position and rotation.
-      dispatchFormApply(filledBlob);
+      assertFilesNotBlocked();
+      if (mode === "fill") {
+        await applyFormChanges(await submitForm(currentFile, flatten));
+        setFlatten(false);
+      } else {
+        await commitDesign(currentFile, applyFormChanges);
+      }
+      return true;
     } catch (err) {
       const status = isAxiosError(err) ? err.response?.status : undefined;
-      const message =
-        status === 413
-          ? "File too large. Try reducing the PDF size first."
-          : (await serverMessage(err)) ||
-            (status === 400
-              ? "Invalid form data. Please check all fields."
-              : undefined) ||
-            (err instanceof Error ? err.message : undefined) ||
-            "Failed to save filled form";
-      setSaveError(message);
-      console.error("[FormFill] Save failed:", err);
+      setSaveError(
+        (await serverMessage(err)) ||
+          (status === 413
+            ? "File too large. Try reducing the PDF size first."
+            : undefined) ||
+          (err instanceof Error ? err.message : undefined) ||
+          t("formFill.applyFailed", "Could not apply the changes"),
+      );
+      return false;
     } finally {
       savingRef.current = false;
       setSaving(false);
     }
-  }, [currentFile, submitForm, flatten, validateForm]);
+  }, [
+    formState.loading,
+    currentFile,
+    mode,
+    validateForm,
+    t,
+    setSaving,
+    submitForm,
+    flatten,
+    commitDesign,
+  ]);
 
-  const applyCurrentMode = useCallback(async () => {
-    if (!currentFile) return;
-    if (mode === "create") {
-      dispatchFormApply(await commitNewFields(currentFile));
-      return;
+  const discardCurrentDraft = useCallback(() => {
+    if (mode === "fill") {
+      discardValues();
+      setFlatten(false);
+    } else {
+      discardDesign();
     }
-    if (mode === "modify") {
-      dispatchFormApply(await commitModifications(currentFile));
-      return;
-    }
-    await handleSave();
-  }, [mode, currentFile, commitNewFields, commitModifications, handleSave]);
+    setSaveError(null);
+  }, [mode, discardValues, discardDesign]);
 
-  // Switching tabs throws away that tab's working state, so it asks first. Owned here rather
-  // than through the app-wide warning handlers, which hold a single registration app-wide.
+  useEffect(() => {
+    if (!isActive) return;
+    registerNavigationWarningHandlers({
+      onApplyAndContinue: async () => {
+        if (!(await handleSave()))
+          throw new Error("Form changes could not be saved.");
+      },
+      onDiscardAndContinue: async () => {
+        discardCurrentDraft();
+      },
+    });
+    return () => unregisterNavigationWarningHandlers();
+  }, [
+    isActive,
+    handleSave,
+    discardCurrentDraft,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
+  ]);
+
   const [pendingMode, setPendingMode] = useState<FormMode | null>(null);
-  const [switching, setSwitching] = useState(false);
-
   const requestMode = useCallback(
     (next: FormMode) => {
-      if (next === mode) return;
-      if (hasUncommittedChanges) {
+      if (next === mode || saving || formState.loading) return;
+      const crossesSurface = (mode === "fill") !== (next === "fill");
+      if (
+        crossesSurface &&
+        (formState.isDirty || flatten || hasUncommittedChanges)
+      ) {
         setPendingMode(next);
         return;
       }
+      setSaveError(null);
       setMode(next);
     },
-    [mode, hasUncommittedChanges, setMode],
+    [
+      mode,
+      saving,
+      formState.loading,
+      formState.isDirty,
+      flatten,
+      hasUncommittedChanges,
+      setMode,
+    ],
   );
 
   const discardAndSwitch = useCallback(() => {
-    const next = pendingMode;
+    if (savingRef.current) return;
+    discardCurrentDraft();
+    if (pendingMode) setMode(pendingMode);
     setPendingMode(null);
-    if (next) setMode(next);
-  }, [pendingMode, setMode]);
+  }, [discardCurrentDraft, pendingMode, setMode]);
 
   const applyAndSwitch = useCallback(async () => {
-    const next = pendingMode;
-    setSwitching(true);
-    try {
-      await applyCurrentMode();
-      setPendingMode(null);
-      if (next) setMode(next);
-    } catch (err) {
-      // Swallowing this left the dialog open with no explanation when the backend refused a
-      // name, so the reason it gives has to reach the user.
-      setSaveError(
-        (await serverMessage(err)) ||
-          (err instanceof Error ? err.message : null) ||
-          t("formFill.applyFailed", "Could not apply the changes"),
-      );
-      setPendingMode(null);
-      console.error("[FormFill] Could not apply before switching tabs:", err);
-    } finally {
-      setSwitching(false);
-    }
-  }, [pendingMode, applyCurrentMode, setMode, t]);
+    const saved = await handleSave();
+    if (saved && pendingMode) setMode(pendingMode);
+    setPendingMode(null);
+  }, [handleSave, pendingMode, setMode]);
 
   // Keyboard shortcut: Ctrl+S to save
   const flattenChangedRef = useRef(flattenChanged);
@@ -386,7 +404,12 @@ const FormFill = (_props: BaseToolProps) => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
-        if (isDirtyRef.current || flattenChangedRef.current) handleSave();
+        if (
+          isDirtyRef.current ||
+          flattenChangedRef.current ||
+          hasUncommittedRef.current
+        )
+          void handleSave();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -396,14 +419,14 @@ const FormFill = (_props: BaseToolProps) => {
   // Data loss prevention: warn on beforeunload if dirty
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (formState.isDirty) {
+      if (formState.isDirty || flatten || hasUncommittedChanges || saving) {
         e.preventDefault();
         e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [formState.isDirty]);
+  }, [formState.isDirty, flatten, hasUncommittedChanges, saving]);
 
   const handleRefresh = useCallback(() => {
     if (currentFile) {
@@ -490,14 +513,22 @@ const FormFill = (_props: BaseToolProps) => {
     );
   }
 
-  // const currentModeDef = MODE_TABS.find((t) => t.id === mode)!;
+  const changeCount =
+    pendingFields.length +
+    deletedFieldNames.length +
+    Object.keys(modifiedFields).filter(
+      (name) => !deletedFieldNames.includes(name),
+    ).length;
+  const designProps = { currentFile, onSave: handleSave, saving, changeCount };
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} inert={saving}>
       <UnsavedChangesDialog
         opened={pendingMode !== null}
-        saving={switching}
-        onKeepWorking={() => setPendingMode(null)}
+        saving={saving}
+        onKeepWorking={() => {
+          if (!savingRef.current) setPendingMode(null);
+        }}
         onDiscard={discardAndSwitch}
         onSave={applyAndSwitch}
       />
@@ -523,11 +554,25 @@ const FormFill = (_props: BaseToolProps) => {
         />
       </div>
 
+      {saveError && (
+        <Alert color="red" variant="light" p="xs" radius="sm">
+          <Text size="xs">{saveError}</Text>
+        </Alert>
+      )}
+      {mode !== "fill" && formState.loading && (
+        <Text size="xs">
+          {t("formFill.analyzingFields", "Analysing form fields...")}
+        </Text>
+      )}
+      {mode !== "fill" && formState.error && (
+        <Alert color="red">{formState.error}</Alert>
+      )}
+
       {/* ---- Create mode ---- */}
-      {mode === "create" && <FormFieldCreatePanel currentFile={currentFile} />}
+      {mode === "create" && <FormFieldCreatePanel {...designProps} />}
 
       {/* ---- Modify mode ---- */}
-      {mode === "modify" && <FormFieldModifyPanel currentFile={currentFile} />}
+      {mode === "modify" && <FormFieldModifyPanel {...designProps} />}
 
       {/* ---- Fill Form content ---- */}
       {mode === "fill" && (
@@ -627,7 +672,10 @@ const FormFill = (_props: BaseToolProps) => {
                       size="sm"
                       onClick={handleSave}
                       loading={saving}
-                      disabled={!formState.isDirty && !flattenChanged}
+                      disabled={
+                        formState.loading ||
+                        (!formState.isDirty && !flattenChanged)
+                      }
                     >
                       {t("formFill.save", "Save")}
                     </Button>
@@ -685,11 +733,6 @@ const FormFill = (_props: BaseToolProps) => {
                 </div>
 
                 {/* Error message */}
-                {saveError && (
-                  <Alert color="red" variant="light" p="xs" radius="sm">
-                    <Text size="xs">{saveError}</Text>
-                  </Alert>
-                )}
               </>
             )}
 
@@ -807,9 +850,11 @@ const FormFill = (_props: BaseToolProps) => {
                 {(formState.isDirty || flattenChanged) && (
                   <span className={styles.unsavedDot} />
                 )}
-                {formState.isDirty || flattenChanged
-                  ? t("formFill.unsavedChanges", "Unsaved changes")
-                  : t("formFill.allSaved", "All saved")}
+                {saving
+                  ? t("formFill.saving", "Saving...")
+                  : formState.isDirty || flattenChanged
+                    ? t("formFill.unsavedChanges", "Unsaved changes")
+                    : t("formFill.allSaved", "All saved")}
               </span>
               <span>{t("formFill.saveShortcut", "Ctrl+S to save")}</span>
             </div>
