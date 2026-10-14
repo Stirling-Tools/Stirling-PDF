@@ -1,5 +1,4 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { flushSync } from "react-dom";
 import { Center, Box, LoadingOverlay } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import {
@@ -189,18 +188,8 @@ const FileEditor = ({
 
       newOrder.splice(insertIndex, 0, ...filesToMove);
 
-      // flushSync commits the reorder inside the view transition so its snapshots capture both layouts.
-      const applyReorder = () => reorderFiles(newOrder);
-      const docWithViewTransition = document as Document & {
-        startViewTransition?: (cb: () => void) => unknown;
-      };
-      if (typeof docWithViewTransition.startViewTransition === "function") {
-        docWithViewTransition.startViewTransition(() => {
-          flushSync(applyReorder);
-        });
-      } else {
-        applyReorder();
-      }
+      // View transitions can crash WebKitGTK when accelerated compositing is unavailable.
+      reorderFiles(newOrder);
 
       const moveCount = filesToMove.length;
       showStatus(
