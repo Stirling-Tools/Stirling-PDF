@@ -51,6 +51,7 @@ import { FormFieldCreatePanel } from "@app/tools/formFill/FormFieldCreatePanel";
 import { FormFieldModifyPanel } from "@app/tools/formFill/FormFieldModifyPanel";
 import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 import { dispatchFormApply } from "@app/tools/formFill/formFillEvents";
+import { useFormAutoMode } from "@app/tools/formFill/useFormAutoMode";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 // ---------------------------------------------------------------------------
@@ -94,7 +95,6 @@ const FormFill = (_props: BaseToolProps) => {
     mode,
     setMode,
     hasUncommittedChanges,
-    forFileId,
     commitDesign,
     discardDesign,
     discardValues,
@@ -164,26 +164,6 @@ const FormFill = (_props: BaseToolProps) => {
   }, [allValues]);
   const activeFieldRef = useRef<HTMLDivElement>(null);
   useFieldShortcuts();
-
-  const autoModeFileRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (
-      saving ||
-      formState.loading ||
-      !forFileId ||
-      autoModeFileRef.current === forFileId
-    )
-      return;
-    autoModeFileRef.current = forFileId;
-    if (formState.fields.length === 0 && mode === "fill") setMode("create");
-  }, [
-    saving,
-    formState.loading,
-    formState.fields.length,
-    forFileId,
-    mode,
-    setMode,
-  ]);
 
   const isDirtyRef = useRef(formState.isDirty);
   isDirtyRef.current = formState.isDirty || flatten;
@@ -267,6 +247,7 @@ const FormFill = (_props: BaseToolProps) => {
   }, [currentFile, allValues]);
 
   const isActive = selectedTool === "formFill";
+  useFormAutoMode(getFormFillFileId(currentFile), isActive);
 
   // Arming lives in an app-level provider, so leaving the tool would otherwise keep the page
   // in crosshair mode and stage fields for whatever the user opened next.

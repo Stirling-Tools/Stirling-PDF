@@ -59,6 +59,7 @@ import {
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
+import { useDocumentLoadWaiter } from "@app/components/viewer/useDocumentLoadWaiter";
 import {
   FORM_APPLY_EVENT,
   type FormApplyDetail,
@@ -484,19 +485,8 @@ const EmbedPdfViewerContent = ({
   ]);
 
   const formApplyInProgressRef = useRef(false);
-  const formSwapRef = useRef<{
-    resolve: () => void;
-    reject: (error: Error) => void;
-  } | null>(null);
-  useEffect(
-    () => () => {
-      formSwapRef.current?.reject(
-        new Error("The viewer closed before the form finished saving."),
-      );
-      formSwapRef.current = null;
-    },
-    [],
-  );
+  const { waitForDocument, documentReady, documentFailed } =
+    useDocumentLoadWaiter();
   const applyChangesInFlightRef = useRef<Promise<void> | null>(null);
 
   // Get redaction context
@@ -1157,6 +1147,7 @@ const EmbedPdfViewerContent = ({
         throw new Error("No PDF is open.");
 
       formApplyInProgressRef.current = true;
+      let savedFileKey: string | null = null;
       try {
         console.log(
           "[Viewer] Applying form fill changes - reloading filled PDF",
@@ -1182,31 +1173,33 @@ const EmbedPdfViewerContent = ({
           selectedTool ?? "multiTool",
         );
 
-        const swapped = new Promise<void>((resolve, reject) => {
-          formSwapRef.current = { resolve, reject };
-        });
         const newFileId = stubs[0]?.id;
-        if (newFileId) setActiveFileId(newFileId);
+        savedFileKey = getFormFillFileId(stirlingFiles[0]);
+        if (!newFileId || !savedFileKey)
+          throw new Error("Saved file ID not found");
+        const loaded = waitForDocument(savedFileKey);
 
         // Replace the current file in context
         await Promise.all([
           actions
             .consumeFiles([currentFileId], stirlingFiles, stubs)
-            .then(() =>
-              fetchFormFields(
+            .then(() => {
+              // Selecting an unpersisted ID falls back to another open PDF and remounts the viewer.
+              setActiveFileId(newFileId);
+              return fetchFormFields(
                 stirlingFiles[0],
                 getFormFillFileId(stirlingFiles[0]) ?? undefined,
-              ),
-            ),
-          swapped,
+              );
+            }),
+          loaded,
         ]);
 
         console.log("[Viewer] Form fill changes applied successfully");
       } catch (error) {
+        if (savedFileKey) documentFailed(savedFileKey, error);
         console.error("[Viewer] Apply form changes failed:", error);
         throw error;
       } finally {
-        formSwapRef.current = null;
         formApplyInProgressRef.current = false;
       }
     },
@@ -1215,6 +1208,9 @@ const EmbedPdfViewerContent = ({
       currentFileStableId,
       selectedTool,
       fetchFormFields,
+      waitForDocument,
+      documentFailed,
+      setActiveFileId,
       activeFiles,
       actions,
       selectors,
@@ -1530,7 +1526,6 @@ const EmbedPdfViewerContent = ({
   ]);
 
   const handleDocumentSwapped = useCallback((documentId: string) => {
-    formSwapRef.current?.resolve();
     documentSwappedRef.current = true;
     replacementLayoutReadyRef.current = false;
     replacementTotalPagesRef.current = 0;
@@ -1546,9 +1541,6 @@ const EmbedPdfViewerContent = ({
     setRestoreTick((tick) => tick + 1);
   }, []);
   const handleDocumentSwapFailed = useCallback(() => {
-    formSwapRef.current?.reject(
-      new Error("The saved PDF could not be opened."),
-    );
     abandonRestore();
   }, [abandonRestore]);
 
@@ -1874,6 +1866,8 @@ const EmbedPdfViewerContent = ({
               onPageLayout={handleViewerPageLayout}
               onDocumentSwapped={handleDocumentSwapped}
               onDocumentSwapFailed={handleDocumentSwapFailed}
+              onDocumentReady={documentReady}
+              onDocumentLoadFailed={documentFailed}
               restorePending={restorePending}
               restoreRequest={restoreRequest}
               onRestoreEvent={handleRestoreEvent}

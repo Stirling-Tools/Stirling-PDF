@@ -602,6 +602,37 @@ test.describe("Form field editor", () => {
       "Fresh label",
     );
   });
+  test("saving the second open PDF completes and keeps the form panel usable", async ({
+    page,
+  }) => {
+    const captured = await stubFormEndpoints(page, STUB_FIELDS);
+    await page.goto("/form-fill");
+    await uploadFiles(page, [
+      path.join(import.meta.dirname, "../test-fixtures/compare_sample_a.pdf"),
+      SAMPLE_PDF,
+    ]);
+    const row = page.getByRole("listitem").filter({ hasText: "sample.pdf" });
+    await row.hover();
+    await row
+      .getByRole("button", { name: "Open in Viewer", exact: true })
+      .click();
+    await selectMode(page, "Modify");
+    await page.getByTestId("form-modify-row-firstName").click();
+    await page.getByLabel("Label", { exact: true }).fill("Second document");
+    await page.getByTestId("form-modify-commit").click();
+    await expect.poll(() => captured["edit-fields"]).toBeTruthy();
+    expect((await readEditBatch(page)).modify).toEqual([
+      { targetName: "firstName", label: "Second document" },
+    ]);
+    await expect(page.getByTestId("form-modify-commit")).toContainText("0");
+    await selectMode(page, "Fill");
+    await page
+      .getByRole("textbox", { name: "First name", exact: true })
+      .fill("Still editable");
+    await expect(
+      page.getByRole("button", { name: "Save", exact: true }),
+    ).toBeEnabled();
+  });
   test("leaving the form tool saves its design draft through the navigation dialog", async ({
     page,
   }) => {
