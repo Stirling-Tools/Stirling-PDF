@@ -17,8 +17,13 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { isAxiosError } from "axios";
 import apiClient from "@app/services/apiClient";
 import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @app alias root
+import {
+  dedupeDependencies,
+  resolveLicenseDisplay,
+  textFingerprint,
+} from "@app/components/shared/config/configSections/licenseDisplay";
 
-interface Dependency {
+export interface Dependency {
   moduleName?: string;
   moduleUrl?: string;
   moduleVersion?: string;
@@ -38,55 +43,19 @@ interface LicensesSectionBodyProps {
 const getModuleUrl = (dependency: Dependency) =>
   dependency.moduleUrl || dependency.moduleLicenseUrl;
 
-function compareVersions(left: string, right: string): number {
-  const leftParts = left.split(".");
-  const rightParts = right.split(".");
-  const length = Math.max(leftParts.length, rightParts.length);
-  for (let index = 0; index < length; index++) {
-    const leftChunk = leftParts[index] ?? "";
-    const rightChunk = rightParts[index] ?? "";
-    const leftNumber = Number.parseInt(leftChunk, 10);
-    const rightNumber = Number.parseInt(rightChunk, 10);
-    if (!Number.isNaN(leftNumber) && !Number.isNaN(rightNumber)) {
-      if (leftNumber !== rightNumber) {
-        return leftNumber - rightNumber;
-      }
-    } else if (leftChunk !== rightChunk) {
-      return leftChunk < rightChunk ? -1 : 1;
-    }
-  }
-  return 0;
-}
-
 function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
   const { t } = useTranslation();
-  // The license report lists one row per resolved artifact, so the same module shows up at
-  // several versions; a notice names each module once, at the newest version seen.
-  const sortedDependencies = useMemo(() => {
-    const byModule = new Map<string, Dependency>();
-    for (const dependency of dependencies) {
-      const name = (dependency.moduleName || "").toLowerCase();
-      const current = byModule.get(name);
-      if (
-        !current ||
-        compareVersions(
-          dependency.moduleVersion ?? "",
-          current.moduleVersion ?? "",
-        ) > 0
-      ) {
-        byModule.set(name, dependency);
-      }
-    }
-    return [...byModule.values()].sort((a, b) =>
-      (a.moduleName || "").localeCompare(b.moduleName || ""),
-    );
-  }, [dependencies]);
+  const sortedDependencies = useMemo(
+    () => dedupeDependencies(dependencies),
+    [dependencies],
+  );
 
   const getDependencyKey = (dependency: Dependency) =>
     [
       dependency.moduleName ?? "module",
       dependency.moduleVersion ?? "version",
       dependency.moduleLicense ?? "license",
+      textFingerprint(dependency.moduleLicenseText),
     ].join(":");
 
   const [query, setQuery] = useState("");
@@ -157,7 +126,7 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
 
           <div
             ref={scrollRef}
-            style={{ height: 480, overflowY: "auto", overflowX: "hidden" }}
+            style={{ height: 480, overflowY: "auto", overflowX: "auto" }}
           >
             <Table
               highlightOnHover
@@ -231,77 +200,8 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
 
 const SPDX_LICENSE_PAGE = "https://spdx.org/licenses";
 
-function resolveLicenseDisplay(license: string | undefined): {
-  short: string;
-  spdxId?: string;
-} {
-  const full = license || "-";
-  const name = full.toLowerCase();
-  if (name === "mit" || name.includes("mit license")) {
-    return { short: "MIT", spdxId: "MIT" };
-  }
-  if (
-    name.includes("apache license") ||
-    name.includes("apache-2.0") ||
-    name.includes("apache 2.0")
-  ) {
-    return { short: "Apache-2.0", spdxId: "Apache-2.0" };
-  }
-  if (
-    name.includes("bsd 3-clause") ||
-    name.includes("bsd-3-clause") ||
-    name.includes("bsd 3 clause")
-  ) {
-    return { short: "BSD-3-Clause", spdxId: "BSD-3-Clause" };
-  }
-  if (
-    name.includes("bsd 2-clause") ||
-    name.includes("bsd-2-clause") ||
-    name.includes("bsd 2 clause")
-  ) {
-    return { short: "BSD-2-Clause", spdxId: "BSD-2-Clause" };
-  }
-  if (name.includes("lesser general public license")) {
-    const later = name.includes("or later") ? "-or-later" : "-only";
-    if (name.includes("3.0") || name.includes("v3")) {
-      return { short: "LGPL-3.0+", spdxId: `LGPL-3.0${later}` };
-    }
-    if (name.includes("2.0") && !name.includes("2.1")) {
-      return { short: "LGPL-2.0", spdxId: `LGPL-2.0${later}` };
-    }
-    return { short: "LGPL-2.1+", spdxId: `LGPL-2.1${later}` };
-  }
-  if (name.includes("general public license")) {
-    const later = name.includes("or later") ? "-or-later" : "-only";
-    if (name.includes("3.0") || name.includes("v3")) {
-      return { short: "GPL-3.0+", spdxId: `GPL-3.0${later}` };
-    }
-    return { short: "GPL-2.0+", spdxId: `GPL-2.0${later}` };
-  }
-  if (name.includes("eclipse public license")) {
-    return name.includes("2.0")
-      ? { short: "EPL-2.0", spdxId: "EPL-2.0" }
-      : { short: "EPL-1.0", spdxId: "EPL-1.0" };
-  }
-  if (name.includes("mozilla public license")) {
-    return { short: "MPL-2.0", spdxId: "MPL-2.0" };
-  }
-  if (name.includes("libpng")) {
-    return { short: "libpng", spdxId: "Libpng" };
-  }
-  if (name.includes("libtiff")) {
-    return { short: "libtiff", spdxId: "libtiff" };
-  }
-  if (name.includes("ijg")) {
-    return { short: "IJG", spdxId: "IJG" };
-  }
-  if (name.includes("zlib")) {
-    return { short: "Zlib", spdxId: "Zlib" };
-  }
-  return { short: full };
-}
-
 function LicenseCell({ dependency }: { dependency: Dependency }) {
+  const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   const full = dependency.moduleLicense || "-";
   const display = resolveLicenseDisplay(dependency.moduleLicense);
@@ -312,9 +212,11 @@ function LicenseCell({ dependency }: { dependency: Dependency }) {
       rel="noopener noreferrer"
       size="xs"
       c="dimmed"
-      title={`About ${display.short}`}
+      title={t("settings.licenses.licenseAboutTitle", "About {{short}}", {
+        short: display.short,
+      })}
     >
-      About
+      {t("settings.licenses.licenseAbout", "About")}
     </Anchor>
   ) : null;
   if (dependency.moduleLicenseText) {
