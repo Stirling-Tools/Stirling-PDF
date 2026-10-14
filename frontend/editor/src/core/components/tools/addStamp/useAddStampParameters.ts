@@ -5,7 +5,7 @@ import {
 } from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface AddStampParameters extends BaseParameters {
-  stampType?: "text" | "image";
+  stampType?: "text" | "image" | "qr";
   stampText: string;
   stampImage?: File;
   alphabet: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
@@ -20,6 +20,8 @@ export interface AddStampParameters extends BaseParameters {
   pageNumbers: string;
   _activePill: "fontSize" | "rotation" | "opacity";
 }
+
+export const MAX_QR_CONTENT_LENGTH = 1000; // Mirrors StampController.MAX_QR_CONTENT_LENGTH
 
 export const defaultParameters: AddStampParameters = {
   stampType: "text",
@@ -45,6 +47,12 @@ export function validateAddStampParameters(
   if (!params.stampType) return false;
   if (params.stampType === "text") {
     return params.stampText.trim().length > 0;
+  }
+  if (params.stampType === "qr") {
+    return (
+      params.stampText.trim().length > 0 &&
+      params.stampText.length <= MAX_QR_CONTENT_LENGTH
+    );
   }
   return params.stampImage !== undefined;
 }

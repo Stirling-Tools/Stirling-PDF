@@ -15,7 +15,10 @@ import {
   Paper,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
+import {
+  AddStampParameters,
+  MAX_QR_CONTENT_LENGTH,
+} from "@app/components/tools/addStamp/useAddStampParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { getDefaultFontSizeForAlphabet } from "@app/components/tools/addStamp/StampPreviewUtils";
@@ -235,10 +238,13 @@ const StampSetupSettings = ({
         </Text>
         <ButtonSelector
           value={parameters.stampType}
-          onChange={(v: "text" | "image") => onParameterChange("stampType", v)}
+          onChange={(v: "text" | "image" | "qr") =>
+            onParameterChange("stampType", v)
+          }
           options={[
             { value: "text", label: t("watermark.type.1", "Text") },
             { value: "image", label: t("watermark.type.2", "Image") },
+            { value: "qr", label: t("AddStampRequest.qrCode", "QR Code") },
           ]}
           disabled={disabled}
           textClassName={styles.modeToggleButtonText}
@@ -661,6 +667,24 @@ const StampSetupSettings = ({
             }}
           />
         </>
+      )}
+
+      {parameters.stampType === "qr" && (
+        <Textarea
+          label={t("AddStampRequest.qrContent", "QR Code Content")}
+          description={t(
+            "AddStampRequest.qrContentDescription",
+            "Text or link to encode. Dynamic variables such as @filename and @page_number are supported.",
+          )}
+          value={parameters.stampText}
+          onChange={(e) =>
+            onParameterChange("stampText", e.currentTarget.value)
+          }
+          autosize
+          minRows={2}
+          maxLength={MAX_QR_CONTENT_LENGTH}
+          disabled={disabled}
+        />
       )}
 
       {parameters.stampType === "image" && (

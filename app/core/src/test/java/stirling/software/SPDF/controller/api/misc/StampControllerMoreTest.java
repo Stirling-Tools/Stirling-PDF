@@ -18,6 +18,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,6 +32,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.RGBLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.qrcode.QRCodeReader;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
 import stirling.software.common.model.ApplicationProperties;
@@ -317,6 +323,55 @@ class StampControllerMoreTest {
             req.setStampType("IMAGE");
             req.setStampImage(pngImage("logo.png"));
             assertValidPdf(stampController.addStamp(req), 1);
+        }
+    }
+
+    @Nested
+    @DisplayName("QR code stamp")
+    class QrStamp {
+
+        @Test
+        @DisplayName("draws a QR code that decodes back to the resolved stamp text")
+        void qrStampDecodesToContent() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("https://stirlingpdf.com/@filename");
+            req.setFontSize(200f);
+            req.setOpacity(1f);
+
+            BufferedImage rendered;
+            try (InputStream is = stampController.addStamp(req).getBody().getInputStream();
+                    PDDocument result = Loader.loadPDF(is.readAllBytes())) {
+                rendered = new PDFRenderer(result).renderImageWithDPI(0, 144);
+            }
+            int width = rendered.getWidth();
+            int height = rendered.getHeight();
+            int[] pixels = rendered.getRGB(0, 0, width, height, null, 0, width);
+            BinaryBitmap bitmap =
+                    new BinaryBitmap(
+                            new HybridBinarizer(new RGBLuminanceSource(width, height, pixels)));
+            assertThat(new QRCodeReader().decode(bitmap).getText())
+                    .isEqualTo("https://stirlingpdf.com/input");
+        }
+
+        @Test
+        @DisplayName("blank QR content is rejected")
+        void rejectsBlankContent() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("   ");
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("QR content over the length limit is rejected")
+        void rejectsOverlongContent() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("a".repeat(1001));
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 

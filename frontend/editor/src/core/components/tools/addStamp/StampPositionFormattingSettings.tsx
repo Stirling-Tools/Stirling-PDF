@@ -110,7 +110,7 @@ const StampPositionFormattingSettings = ({
         </Tooltip>
         <Tooltip
           content={
-            parameters.stampType === "image"
+            parameters.stampType !== "text"
               ? t("AddStampRequest.imageSize", "Image Size")
               : t("AddStampRequest.fontSize", "Font Size")
           }
@@ -118,7 +118,7 @@ const StampPositionFormattingSettings = ({
         >
           <ActionIcon
             aria-label={
-              parameters.stampType === "image"
+              parameters.stampType !== "text"
                 ? t("AddStampRequest.imageSize", "Image Size")
                 : t("AddStampRequest.fontSize", "Font Size")
             }
@@ -137,7 +137,7 @@ const StampPositionFormattingSettings = ({
       {parameters._activePill === "fontSize" && (
         <Stack gap="xs">
           <Text className={styles.labelText}>
-            {parameters.stampType === "image"
+            {parameters.stampType !== "text"
               ? t("AddStampRequest.imageSize", "Image Size")
               : t("AddStampRequest.fontSize", "Font Size")}
           </Text>
@@ -229,7 +229,7 @@ const StampPositionFormattingSettings = ({
         </Stack>
       )}
 
-      {parameters.stampType !== "image" && (
+      {parameters.stampType === "text" && (
         <ColorInput
           label={t("AddStampRequest.customColor", "Custom Text Color")}
           value={parameters.customColor}

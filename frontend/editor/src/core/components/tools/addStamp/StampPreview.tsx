@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
@@ -421,6 +422,23 @@ export default function StampPreview({
             <img
               src={imageMeta.url}
               alt={t("addStamp.stampPreviewAlt", "Stamp preview")}
+              className={styles.stampImage}
+            />
+            {itemHandles}
+          </div>
+        )}
+
+        {parameters.stampType === "qr" && (
+          <div
+            className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable}`}
+            style={style.item}
+            onPointerDown={(e) => handlePointerDown(e, "move")}
+            data-user-content-preview=""
+          >
+            <QRCodeSVG
+              value={parameters.stampText}
+              level="M"
+              marginSize={2}
               className={styles.stampImage}
             />
             {itemHandles}
