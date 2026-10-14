@@ -40,15 +40,15 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            setup-uv-cache:
+            pre-commit-setup-uv-cache:
               path: .cache/setup-uv-cache
-            uv-python-dir:
+            pre-commit-uv-python-dir:
               path: .cache/uv-python-dir
             npm-cache:
               path: .cache/npm
           key: |
-            setup-uv-cache=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
-            uv-python-dir=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
+            pre-commit-setup-uv-cache=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
+            pre-commit-uv-python-dir=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
 
       - name: Install uv
