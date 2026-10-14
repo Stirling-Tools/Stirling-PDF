@@ -35,6 +35,8 @@ jobs:
       - name: Restore engine caches
         uses: ./.github/actions/cache-the-planet
         with:
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
           multi-cache: |
             setup-uv-cache:
               path: .cache/setup-uv-cache
