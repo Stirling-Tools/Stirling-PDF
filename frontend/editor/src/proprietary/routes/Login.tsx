@@ -148,8 +148,9 @@ export default function Login() {
   }, [searchParams]);
 
   const hasSsoLoginError = Boolean(errorFromState || errorFromQuery);
-  // /login?all is the escape hatch past SSO auto-login for local accounts.
-  const showAllLoginOptions = searchParams.has("all");
+  // /login?all is how a local admin reaches the password form when SSO
+  // auto-login would otherwise redirect straight to the provider.
+  const skipSsoAutoLogin = searchParams.has("all");
 
   // Shared login state + sign-in handlers + provider fetch. Editor-specific
   // behaviour (auto-login, redirects, first-time setup) is layered on here.
@@ -182,10 +183,7 @@ export default function Login() {
   });
 
   const isUserPassAllowed = login.isUserPassAllowed;
-  const isSsoOnlyMode = !login.isUserPassAllowed && !showAllLoginOptions;
-  const formState = showAllLoginOptions
-    ? { ...login, isUserPassAllowed: true }
-    : login;
+  const isSsoOnlyMode = !login.isUserPassAllowed;
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -258,12 +256,12 @@ export default function Login() {
   }, [backendProbe.loginDisabled, navigate]);
 
   // The email/password form is always shown when username/password auth is
-  // allowed; SSO-only mode hides it unless ?all asks for every option.
+  // allowed; SSO-only mode hides it.
   useEffect(() => {
     const userPassAllowed =
       login.loginMethod === "all" || login.loginMethod === "normal";
-    setShowEmailForm(userPassAllowed || showAllLoginOptions);
-  }, [login.loginMethod, showAllLoginOptions]);
+    setShowEmailForm(userPassAllowed);
+  }, [login.loginMethod]);
 
   // Auto-login to SSO when enabled and only one SSO option exists
   useEffect(() => {
@@ -288,16 +286,12 @@ export default function Login() {
     }
 
     if (
-      showAllLoginOptions ||
+      skipSsoAutoLogin ||
       hasSsoLoginError ||
       blockedByErrors ||
       blockedByAttempts ||
       blockedByLogout
     ) {
-      return;
-    }
-
-    if (login.isUserPassAllowed) {
       return;
     }
 
@@ -317,9 +311,8 @@ export default function Login() {
     login.loginMethod,
     login.providers,
     login.signInWithProvider,
-    login.isUserPassAllowed,
     hasSsoLoginError,
-    showAllLoginOptions,
+    skipSsoAutoLogin,
   ]);
 
   // Handle query params (email prefill, success messages, and session expiry)
@@ -487,7 +480,7 @@ export default function Login() {
   return (
     <AuthLayout>
       <SpringLoginForm
-        state={formState}
+        state={login}
         logoSrc={loginHeader}
         logoDarkSrc={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
         showEmailForm={showEmailForm}

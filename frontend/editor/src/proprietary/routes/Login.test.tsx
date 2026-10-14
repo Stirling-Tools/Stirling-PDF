@@ -874,6 +874,16 @@ describe("Login", () => {
   });
 
   describe("SSO auto-login", () => {
+    const mockLoginConfig = (loginMethod: string) =>
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: {
+          enableLogin: true,
+          ssoAutoLogin: true,
+          loginMethod,
+          providerList: { "/oauth2/authorization/authentik": "Authentik" },
+        },
+      });
+
     const renderAt = (entry: string) =>
       render(
         <TestWrapper>
@@ -885,27 +895,20 @@ describe("Login", () => {
 
     beforeEach(() => {
       sessionStorage.clear();
-      vi.mocked(apiClient.get).mockResolvedValue({
-        data: {
-          enableLogin: true,
-          ssoAutoLogin: true,
-          loginMethod: "oauth2",
-          providerList: { "/oauth2/authorization/authentik": "Authentik" },
-        },
-      });
       vi.mocked(springAuth.signInWithOAuth).mockResolvedValue({ error: null });
     });
 
-    it("redirects to the only SSO provider", async () => {
+    it("redirects to the only provider even when password login is allowed", async () => {
+      mockLoginConfig("all");
       renderAt("/login");
 
       await waitFor(() => {
         expect(springAuth.signInWithOAuth).toHaveBeenCalled();
       });
-      expect(document.getElementById("email")).not.toBeInTheDocument();
     });
 
-    it("stays on the page with every option under ?all", async () => {
+    it("stays on the page with the email form under ?all", async () => {
+      mockLoginConfig("all");
       renderAt("/login?all");
 
       await waitFor(() => {
@@ -913,6 +916,17 @@ describe("Login", () => {
         expect(document.getElementById("email")).toBeInTheDocument();
         expect(document.getElementById("password")).toBeInTheDocument();
       });
+      expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
+    });
+
+    it("stays on the page in SSO-only mode under ?all", async () => {
+      mockLoginConfig("oauth2");
+      renderAt("/login?all");
+
+      await waitFor(() => {
+        expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+      });
+      expect(document.getElementById("email")).not.toBeInTheDocument();
       expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
     });
   });
