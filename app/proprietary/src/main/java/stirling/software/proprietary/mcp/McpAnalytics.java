@@ -58,7 +58,8 @@ public class McpAnalytics {
     private final ObjectProvider<PostHogService> postHog;
     private final ObjectProvider<McpToolCatalog> catalog;
     private final ApplicationProperties applicationProperties;
-    // Usernames seen today per auth method; held in memory only, sent as counts.
+    // Usernames seen today per auth method, in memory only and sent as counts.
+    // Per node and lost on restart, so multi-node totals overcount users seen on several nodes.
     private final Map<String, Set<String>> dailyUsers = new ConcurrentHashMap<>();
     // Client info per session so tool calls carry it; bounded LRU, best effort per node.
     private final Map<String, ClientInfo> sessionClients =
@@ -230,10 +231,6 @@ public class McpAnalytics {
                     putClient(props, client);
                 }
             }
-            String userAgent = request.getHeader("User-Agent");
-            if (userAgent != null) {
-                props.put("$mcp_client_user_agent", truncate(userAgent, 200));
-            }
         }
         return props;
     }
@@ -276,17 +273,14 @@ public class McpAnalytics {
         }
     }
 
-    // Issued by us on initialize; anything else the client sends is ignored.
+    // Format-checked only so ids issued by another node still work; a forged id only
+    // relabels the caller's own events.
     private static String sessionId(HttpServletRequest request) {
         if (request.getAttribute(SESSION_ATTRIBUTE) instanceof String issued) {
             return issued;
         }
         String header = request.getHeader(SESSION_HEADER);
         return header != null && SESSION_ID.matcher(header).matches() ? header : null;
-    }
-
-    private static String truncate(String value, int max) {
-        return value.length() <= max ? value : value.substring(0, max);
     }
 
     private static HttpServletRequest currentRequest() {

@@ -467,6 +467,19 @@ class McpServerControllerTest {
     }
 
     @Test
+    void userAgent_isNotSent() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("User-Agent", "client/1.0 (alice@example.com)");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        controller.handle(
+                mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}"));
+
+        Map<String, Object> props = capturedProperties("$mcp_tools_list");
+        assertNull(props.get("$mcp_client_user_agent"));
+        assertTrue(!props.toString().contains("alice"), "user agent must not be sent");
+    }
+
+    @Test
     void toolError_sendsFlagButNoMessage() throws Exception {
         McpServerController single =
                 controllerWith(
