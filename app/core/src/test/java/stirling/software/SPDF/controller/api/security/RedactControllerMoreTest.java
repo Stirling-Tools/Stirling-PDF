@@ -47,10 +47,13 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.jpdfium.exception.RedactUnverifiableException;
 import stirling.software.jpdfium.redact.PdfRedactor;
 import stirling.software.jpdfium.redact.RedactOptions;
+import stirling.software.jpdfium.redact.RedactResult;
 
 /**
  * End-to-end coverage tests for {@link RedactController} that drive the controller against real
@@ -220,6 +223,67 @@ class RedactControllerMoreTest {
             byte[] out = drainBody(response);
             assertThat(pdfText(out)).doesNotContain("CONFIDENTIAL");
             assertThat(pdfText(out)).contains("public");
+        }
+
+        @Test
+        @DisplayName("a page the engine could not verify fails the request instead of returning it")
+        void unverifiedPageFailsTheRequest() throws IOException {
+            byte[] bytes = singlePageTextPdf("public CONFIDENTIAL data");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("CONFIDENTIAL");
+            request.setRedactColor("#000000");
+
+            RedactResult unverified =
+                    new RedactResult(
+                            null,
+                            List.of(new RedactResult.PageResult(0, 1, -1)),
+                            0L,
+                            false,
+                            null,
+                            List.of(),
+                            List.of(),
+                            0,
+                            0,
+                            List.of());
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), any(RedactOptions.class)))
+                        .thenReturn(unverified);
+
+                assertThatThrownBy(() -> controller.redactPdf(request))
+                        .isInstanceOf(ToolFailedException.class)
+                        .hasMessageContaining("page 1")
+                        .satisfies(
+                                e ->
+                                        assertThat(((ToolFailedException) e).getErrorCode())
+                                                .isEqualTo("E077"));
+            }
+        }
+
+        @Test
+        @DisplayName("an engine that could not check its redaction fails the request, no fallback")
+        void unverifiableRedactionFailsTheRequest() throws IOException {
+            byte[] bytes = singlePageTextPdf("public CONFIDENTIAL data");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("CONFIDENTIAL");
+            request.setRedactColor("#000000");
+
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), any(RedactOptions.class)))
+                        .thenThrow(new RedactUnverifiableException("text page unavailable"));
+
+                assertThatThrownBy(() -> controller.redactPdf(request))
+                        .isInstanceOf(ToolFailedException.class)
+                        .satisfies(
+                                e ->
+                                        assertThat(((ToolFailedException) e).getErrorCode())
+                                                .isEqualTo("E083"));
+            }
         }
 
         @Test
