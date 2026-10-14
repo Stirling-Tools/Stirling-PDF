@@ -119,12 +119,11 @@ public final class NativeLicenseLoader {
         dependency.setModuleVersion(toolkitVersion);
         dependency.setModuleLicense(licenseName);
         String text = readSiblingText(noticeUrl, licenseFile);
-        if (copyright.isEmpty()) {
-            dependency.setModuleLicenseText(text);
-        } else if (text == null) {
-            dependency.setModuleLicenseText("Copyright " + copyright);
-        } else {
-            dependency.setModuleLicenseText("Copyright " + copyright + "\n\n" + text);
+        if (text != null) {
+            // A missing sibling is already reported by readSiblingText; leaving the text
+            // unset keeps the UI from presenting copyright alone as the license.
+            dependency.setModuleLicenseText(
+                    copyright.isEmpty() ? text : "Copyright " + copyright + "\n\n" + text);
         }
         return dependency;
     }

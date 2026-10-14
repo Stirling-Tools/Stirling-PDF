@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import stirling.software.SPDF.model.Dependency;
 
@@ -93,5 +95,23 @@ class NativeLicenseLoaderTest {
                 NativeLicenseLoader.loadNativeLicenses(isolatedLoader("malformed"), "9.9.9");
 
         assertTrue(dependencies.isEmpty());
+    }
+
+    @Test
+    void missingSiblingLicenseTextLeavesTextUnset(@TempDir Path tempDir) throws Exception {
+        Path licensesDir = Files.createDirectories(tempDir.resolve("licenses"));
+        Files.writeString(
+                licensesDir.resolve("NOTICE.txt"),
+                "1. Component Without Text\n"
+                        + "   - Copyright (c) 2024 Someone\n"
+                        + "   - License: BSD 3-Clause (see MISSING-FILE.txt)\n");
+        URLClassLoader loader = new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null);
+
+        List<Dependency> dependencies = NativeLicenseLoader.loadNativeLicenses(loader, "9.9.9");
+
+        assertEquals(1, dependencies.size());
+        assertNull(
+                dependencies.get(0).getModuleLicenseText(),
+                "copyright alone must not stand in for the license text");
     }
 }
