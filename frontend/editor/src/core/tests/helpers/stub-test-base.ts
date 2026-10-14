@@ -1,6 +1,7 @@
 import { test as base, expect } from "@playwright/test";
 import {
   bypassOnboarding,
+  fulfillUnstubbedApis,
   mockAppApis,
   seedCookieConsent,
   type MockAppApiOptions,
@@ -14,7 +15,8 @@ import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
  *   1. Has the cookie-consent cookie seeded (banner never renders)
  *   2. Has onboarding flags set in localStorage (modal never renders)
  *   3. Has all bootstrap API endpoints stubbed via `mockAppApis()`
- *   4. Has already navigated to `/` by default (set `autoGoto: false` to skip)
+ *   4. Gets an empty 500 for any other `/api/v1` call, never the dev proxy
+ *   5. Has already navigated to `/` by default (set `autoGoto: false` to skip)
  *
  * Usage:
  *   import { test, expect } from "@app/tests/helpers/stub-test-base";
@@ -61,6 +63,13 @@ export const test = base.extend<StubFixtures>({
   autoGoto: ["/editor", { option: true }],
   seedJwt: [false, { option: true }],
   filesViewMode: [null, { option: true }],
+
+  // Set up with the context, before any hook adds its own context routes, so
+  // the fallback stays the last handler tried.
+  context: async ({ context }, use) => {
+    await fulfillUnstubbedApis(context);
+    await use(context);
+  },
 
   page: async (
     { page, stubOptions, autoGoto, seedJwt, filesViewMode },
