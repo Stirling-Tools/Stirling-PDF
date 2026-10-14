@@ -126,6 +126,64 @@ class SplitPdfBySizeControllerTest {
         assertThat(pageCountsOf(outputs)).containsExactly(2, 2, 1);
     }
 
+    private List<String> entryNamesOf(Resource zipResource) throws IOException {
+        List<String> names = new ArrayList<>();
+        try (ZipInputStream zis =
+                new ZipInputStream(new ByteArrayInputStream(zipResource.getContentAsByteArray()))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                names.add(entry.getName());
+            }
+        }
+        return names;
+    }
+
+    private SplitPdfBySizeOrCountRequest pageCountRequest(
+            int numPages, int pagesPerFile, String outputNames) throws IOException {
+        SplitPdfBySizeOrCountRequest request = new SplitPdfBySizeOrCountRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput",
+                        "input.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        createPdf(numPages)));
+        request.setSplitType(1);
+        request.setSplitValue(String.valueOf(pagesPerFile));
+        request.setOutputNames(outputNames);
+        return request;
+    }
+
+    @Test
+    @DisplayName("Should name page-count outputs from the supplied names in order")
+    void shouldUseOutputNames() throws Exception {
+        SplitPdfBySizeOrCountRequest request =
+                pageCountRequest(15, 3, "FileA\nFileB\nFileC\nFileD\nFileE");
+
+        ResponseEntity<Resource> response = controller.autoSplitPdf(request);
+
+        assertThat(entryNamesOf(response.getBody()))
+                .containsExactly("FileA.pdf", "FileB.pdf", "FileC.pdf", "FileD.pdf", "FileE.pdf");
+        assertThat(pageCountsOf(unzip(response.getBody()))).containsExactly(3, 3, 3, 3, 3);
+    }
+
+    @Test
+    @DisplayName("Should sanitise, de-duplicate and fall back to default output names")
+    void shouldSanitiseAndFallBackOutputNames() throws Exception {
+        SplitPdfBySizeOrCountRequest request =
+                pageCountRequest(6, 1, "  ../a/b.PDF \r\n\n  \nReport\nreport\ninput_6");
+
+        ResponseEntity<Resource> response = controller.autoSplitPdf(request);
+
+        assertThat(entryNamesOf(response.getBody()))
+                .containsExactly(
+                        ".._a_b.pdf",
+                        "Report.pdf",
+                        "report_2.pdf",
+                        "input_6.pdf",
+                        "input_5.pdf",
+                        "input_6_2.pdf");
+    }
+
     @Test
     @DisplayName("Should split by document count into 3 even documents")
     void shouldSplitByDocCount() throws Exception {

@@ -47,6 +47,7 @@ export const splitToApiParams = (
 ): SplitApiParams => {
   // Use BY_PAGES as default if no method is selected
   const method = parameters.method || SPLIT_METHODS.BY_PAGES;
+  const outputNames = parameters.outputNames?.trim() || undefined;
 
   switch (method) {
     case SPLIT_METHODS.BY_PAGES:
@@ -65,11 +66,11 @@ export const splitToApiParams = (
       return sections;
     }
     case SPLIT_METHODS.BY_SIZE:
-      return { splitType: 0, splitValue: parameters.splitValue };
+      return { splitType: 0, splitValue: parameters.splitValue, outputNames };
     case SPLIT_METHODS.BY_PAGE_COUNT:
-      return { splitType: 1, splitValue: parameters.splitValue };
+      return { splitType: 1, splitValue: parameters.splitValue, outputNames };
     case SPLIT_METHODS.BY_DOC_COUNT:
-      return { splitType: 2, splitValue: parameters.splitValue };
+      return { splitType: 2, splitValue: parameters.splitValue, outputNames };
     case SPLIT_METHODS.BY_CHAPTERS:
       return {
         bookmarkLevel: Number(parameters.bookmarkLevel || "1"),
@@ -145,6 +146,7 @@ export const splitFromApiParams = (
     return {
       method: methodBySplitType[apiParams.splitType as 0 | 1 | 2],
       splitValue: apiParams.splitValue ?? "",
+      outputNames: apiParams.outputNames ?? "",
     };
   }
   if ("duplexMode" in apiParams) {
