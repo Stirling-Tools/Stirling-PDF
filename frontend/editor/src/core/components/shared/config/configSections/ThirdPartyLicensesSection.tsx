@@ -182,6 +182,7 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
                           dependency={dependency}
                           index={virtualRow.index}
                           onSelect={setSelected}
+                          measureRef={virtualizer.measureElement}
                         />
                       );
                     })}
@@ -346,13 +347,18 @@ function VirtualLicenseRow({
   dependency,
   index,
   onSelect,
+  measureRef,
 }: {
   dependency: DependencyRow;
   index: number;
   onSelect: (dependency: DependencyRow) => void;
+  measureRef: (element: HTMLTableRowElement | null) => void;
 }) {
   return (
-    <Table.Tr data-index={index} style={{ height: 56 }}>
+    // Measured heights keep the virtualizer honest: table padding and wrapped
+    // license links make real rows taller than the 56px estimate, and without
+    // measuring the position math drifts further with every scrolled row.
+    <Table.Tr ref={measureRef} data-index={index} style={{ height: 56 }}>
       <Table.Td>
         {resolveModuleUrl(dependency) ? (
           <Anchor
