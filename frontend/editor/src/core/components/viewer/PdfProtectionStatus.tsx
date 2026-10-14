@@ -76,8 +76,8 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
           <Text size="xs">
             {access.ownerAuthenticated
               ? t(
-                  "encryptedPdfUnlock.permissionsVerified",
-                  "Permissions verified",
+                  "encryptedPdfUnlock.permissionsUnlocked",
+                  "Permissions unlocked for this session",
                 )
               : t("encryptedPdfUnlock.protectedPdf", "Protected PDF")}
           </Text>
@@ -103,6 +103,14 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
           <Text fw={500} size="sm" style={{ overflowWrap: "anywhere" }}>
             {file.name}
           </Text>
+          {access.ownerAuthenticated && (
+            <Text size="sm">
+              {t(
+                "encryptedPdfUnlock.verifiedPasswordInUse",
+                "Using the permissions password verified for this session.",
+              )}
+            </Text>
+          )}
           {confirmCopy ? (
             <>
               <Text size="sm">
@@ -143,6 +151,12 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                     : t("encryptedPdfUnlock.requiredStatus", "Required")}
                 </Text>
               </Group>
+              <Text size="sm" fw={500}>
+                {t(
+                  "encryptedPdfUnlock.recipientRestrictions",
+                  "Restrictions for recipients",
+                )}
+              </Text>
               {permissions.map(([label, flag]) => (
                 <Group key={label} justify="space-between">
                   <Text size="sm">{label}</Text>

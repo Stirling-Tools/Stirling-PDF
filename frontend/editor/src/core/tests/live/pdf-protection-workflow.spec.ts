@@ -101,8 +101,32 @@ test("two passwords stay distinct through protection, permissions, opening-passw
     })
     .fill(reader);
   await expect(
-    page.getByLabel("New permissions password", { exact: true }),
-  ).toHaveValue("");
+    page.getByRole("textbox", {
+      name: "New permissions password",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Verified for this session", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("checkbox", { name: "Change permissions password", exact: true })
+    .check();
+  await expect(
+    page.getByRole("button", { name: "Change Permissions", exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole("textbox", { name: "New permissions password", exact: true })
+    .fill("unused-replacement-password");
+  await page
+    .getByRole("checkbox", { name: "Change permissions password", exact: true })
+    .uncheck();
+  await expect(
+    page.getByRole("textbox", {
+      name: "New permissions password",
+      exact: true,
+    }),
+  ).toHaveCount(0);
   const changed = page.waitForResponse(
     "**/api/v1/security/change-pdf-permissions",
   );
@@ -209,3 +233,119 @@ test("a protected merge is rejected before asking for passwords or processing fi
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(operations).toBe(0);
 });
+
+for (const action of [
+  "Change Permissions",
+  "Create an unprotected copy",
+] as const) {
+  test(`${action} requires the existing permissions password in a fresh session`, async ({
+    page,
+  }) => {
+    const buffer = fs.readFileSync(
+      path.join(fixtures, "owner-only-restricted.pdf"),
+    );
+    const endpoint =
+      action === "Change Permissions"
+        ? "change-pdf-permissions"
+        : "remove-pdf-protection";
+    const denied = await page.request.post(`/api/v1/security/${endpoint}`, {
+      multipart: {
+        fileInput: {
+          name: "restricted.pdf",
+          mimeType: "application/pdf",
+          buffer,
+        },
+        password: "",
+        sourcePassword: "",
+      },
+    });
+    expect(denied.status()).toBe(403);
+    let changes = 0;
+    page.on("request", (request) => {
+      if (request.url().endsWith(`/api/v1/security/${endpoint}`)) changes++;
+    });
+    await page.goto("/change-permissions");
+    await page.getByTestId("file-input").setInputFiles({
+      name: "restricted.pdf",
+      mimeType: "application/pdf",
+      buffer,
+    });
+    await expect(page.locator('[data-page-index="0"]').first()).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Print PDF", exact: true }),
+    ).toBeDisabled();
+    await expect(
+      page.getByText("Protected PDF", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Required to apply changes", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("textbox", {
+        name: "New permissions password",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    if (action === "Create an unprotected copy") {
+      await page
+        .getByRole("button", { name: "Manage protection", exact: true })
+        .click();
+      await expect(
+        page.getByText("Restrictions for recipients", { exact: true }),
+      ).toBeVisible();
+      await page.getByRole("button", { name: action, exact: true }).click();
+    }
+    await page.getByRole("button", { name: action, exact: true }).click();
+    await expect(
+      page.getByRole("dialog", {
+        name: "Enter permissions password",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Cancel", exact: true }).click();
+    expect(changes).toBe(0);
+    await expect(
+      page.getByRole("button", { name: "Print PDF", exact: true }),
+    ).toBeDisabled();
+    await page.getByRole("button", { name: action, exact: true }).click();
+    await page
+      .getByLabel("Permissions password", { exact: true })
+      .fill("incorrect");
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    await expect(
+      page.getByRole("alert").filter({ hasText: "Incorrect password" }),
+    ).toBeVisible();
+    expect(changes).toBe(0);
+    await page
+      .getByLabel("Permissions password", { exact: true })
+      .fill("owner-test-password");
+    const response = page.waitForResponse(`**/api/v1/security/${endpoint}`);
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    const result = await response;
+    expect(result.ok()).toBe(true);
+    expect(changes).toBe(1);
+    const output = await result.body();
+    if (action === "Change Permissions") {
+      expect(await inspect(page, output, "")).toMatchObject({
+        encrypted: true,
+        ownerAuthenticated: false,
+        canPrint: false,
+      });
+      expect(await inspect(page, output, "owner-test-password")).toMatchObject({
+        ownerAuthenticated: true,
+      });
+      await expect(
+        page.getByText("Permissions unlocked for this session", {
+          exact: true,
+        }),
+      ).toBeVisible();
+    } else {
+      expect(await inspect(page, output, "")).toMatchObject({
+        encrypted: false,
+      });
+    }
+    await expect(
+      page.getByRole("button", { name: "Print PDF", exact: true }),
+    ).toBeEnabled();
+  });
+}

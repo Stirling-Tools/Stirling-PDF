@@ -125,7 +125,9 @@ test("unsupported tools explain the limitation without suggesting a password wil
     .fill("owner-test-password");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(
-    page.getByText("Permissions verified", { exact: true }).first(),
+    page
+      .getByText("Permissions unlocked for this session", { exact: true })
+      .first(),
   ).toBeVisible();
   await expect(
     page

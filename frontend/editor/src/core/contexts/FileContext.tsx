@@ -779,8 +779,8 @@ function FileContextInner({
           alertType: "success",
           title: getPdfAccess(activeEncryptedFileId)?.ownerAuthenticated
             ? t(
-                "encryptedPdfUnlock.permissionsVerified",
-                "Permissions verified",
+                "encryptedPdfUnlock.permissionsUnlocked",
+                "Permissions unlocked for this session",
               )
             : t("encryptedPdfUnlock.sessionSuccessTitle", "PDF opened"),
           body: fileName

@@ -250,7 +250,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
     ).toBeHidden({ timeout: 10000 });
     await expect(
-      page.getByText("Permissions verified", { exact: true }).first(),
+      page
+        .getByText("Permissions unlocked for this session", { exact: true })
+        .first(),
     ).toBeVisible({
       timeout: 5000,
     });
