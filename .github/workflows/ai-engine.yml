@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -43,8 +43,8 @@ jobs:
             uv-python-dir:
               path: .cache/uv-python-dir
           key: |
-            setup-uv-cache=${{ hashFiles('engine/pyproject.toml', 'engine/uv.lock') }}
-            uv-python-dir=${{ hashFiles('engine/pyproject.toml', 'engine/uv.lock') }}
+            setup-uv-cache=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
+            uv-python-dir=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
