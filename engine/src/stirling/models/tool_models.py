@@ -87,7 +87,7 @@ class AddPageNumbersParams(ApiModel):
     custom_margin: CustomMargin = Field(CustomMargin.medium, description="Custom margin: small/medium/large/x-large")
     custom_text: str = Field(
         "{n}",
-        description="Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n}, {total}, {filename}.",
+        description="Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n} (counts numbered pages only, from startingNumber), {total}, {filename}.",
         examples=["Page {n} of {total}"],
     )
     font_color: str = Field("#000000", description="Hex colour for page numbers (e.g. #FF0000)", examples=["#000000"])
@@ -145,7 +145,7 @@ class AddPasswordParams(ApiModel):
 
 class Alphabet(StrEnum):
     """
-    Font script matching stampText
+    Font script matching stampText; roman for Latin text
     """
 
     roman = "roman"
@@ -197,12 +197,14 @@ class AddStampParams(ApiModel):
     This endpoint adds a stamp to a given PDF file. Users can specify the stamp type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO
     """
 
-    alphabet: Alphabet = Field(Alphabet.roman, description="Font script matching stampText")
+    alphabet: Alphabet = Field(Alphabet.roman, description="Font script matching stampText; roman for Latin text")
     custom_color: str = Field("#d3d3d3", description="Hex colour of the stamp text, e.g. #FF0000")
     custom_margin: CustomMargin1 = Field(
         CustomMargin1.medium, description="Margin between the stamp and the page edge when placed by position"
     )
-    font_size: float = Field(40, description="Text size in points; for an image stamp, the image height")
+    font_size: float = Field(
+        40, description="Text size in points; for an image stamp, the image height (width keeps its aspect ratio)"
+    )
     opacity: float = Field(0.5, description="The opacity of the stamp (0.0 - 1.0)")
     override_x: float = Field(
         -1, description="X in points from the left edge; with overrideY, replaces position. -1 = not set."
@@ -231,7 +233,7 @@ class AddStampParams(ApiModel):
 
 class Alphabet1(StrEnum):
     """
-    Font script matching watermarkText
+    Font script matching watermarkText; roman for Latin text
     """
 
     roman = "roman"
@@ -256,7 +258,7 @@ class AddWatermarkParams(ApiModel):
     This endpoint adds a watermark to a given PDF file. Users can specify the watermark type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO
     """
 
-    alphabet: Alphabet1 = Field(Alphabet1.roman, description="Font script matching watermarkText")
+    alphabet: Alphabet1 = Field(Alphabet1.roman, description="Font script matching watermarkText; roman for Latin text")
     convert_pdf_to_image: bool = Field(
         False, description="Turn pages into images so the watermark can't be removed; text becomes unselectable"
     )
@@ -315,7 +317,7 @@ class DetectionMode(StrEnum):
 
 class AutoSplitPdfParams(ApiModel):
     """
-    Starts a new document at each divider page and returns a zip of the parts. A PDF without dividers comes back unsplit; use split-pages or split-by-size-or-count for those. Input:PDF Output:PDF Type:SIMO
+    Starts a new document at each divider page and returns a zip of the parts. A PDF without dividers comes back unsplit; use split-pages or split-by-size-or-count for those. duplexMode=true also skips each divider's back page. Input:PDF Output:PDF Type:SIMO
     """
 
     duplex_mode: bool = Field(
@@ -556,7 +558,9 @@ class EditTableOfContentsParams(ApiModel):
         ],
     )
     replace_existing: bool | None = Field(
-        None, description="Ignored: existing bookmarks are always replaced", examples=[True]
+        None,
+        description="Ignored: existing bookmarks are always replaced. To add to them, read them with extract-bookmarks and send the full list.",
+        examples=[True],
     )
 
 
@@ -1060,7 +1064,7 @@ class PdfToMarkdownParams(ApiModel):
 
 class OutputFormat1(StrEnum):
     """
-    pdfa = PDF/A-2b, the usual archive choice. pdfa-3/3b allows attachments such as e-invoice XML; the 'a' variants also tag the document. pdfx = PDF/X for print.
+    pdfa, pdfa-2 and pdfa-2b = PDF/A-2b, the usual archive choice; pdfa-1 = PDF/A-1b; pdfa-3 and pdfa-3b = PDF/A-3b, which allows attachments such as e-invoice XML; pdfa-1a/2a/3a also tag the document; pdfx = PDF/X for print.
     """
 
     pdfa = "pdfa"
@@ -1082,7 +1086,7 @@ class PdfToPdfaParams(ApiModel):
 
     output_format: OutputFormat1 = Field(
         ...,
-        description="pdfa = PDF/A-2b, the usual archive choice. pdfa-3/3b allows attachments such as e-invoice XML; the 'a' variants also tag the document. pdfx = PDF/X for print.",
+        description="pdfa, pdfa-2 and pdfa-2b = PDF/A-2b, the usual archive choice; pdfa-1 = PDF/A-1b; pdfa-3 and pdfa-3b = PDF/A-3b, which allows attachments such as e-invoice XML; pdfa-1a/2a/3a also tag the document; pdfx = PDF/X for print.",
     )
     pdf_ua: bool = Field(
         False,
@@ -1166,7 +1170,7 @@ class Profile1(StrEnum):
 
 class PdfToUaParams(ApiModel):
     """
-    Tags the document, marks decorative content as artifacts, embeds fonts and applies the document-level requirements of PDF/UA, then validates the result. A conformance declaration is written only if validation passes. Figures without alt text block it unless altText is given or figurePolicy=mark-decorative. Input:PDF Output:PDF Type:SISO
+    Tags the document, marks decorative content as artifacts, embeds fonts and applies the document-level requirements of PDF/UA, then validates the result. A conformance declaration is written only if validation passes; the X-Stirling-UA-Declared header says whether it was. Figures without alt text block it unless altText is given or figurePolicy=mark-decorative. Input:PDF Output:PDF Type:SISO
     """
 
     alt_text: str | None = Field(
@@ -1267,7 +1271,7 @@ class PdfToXmlParams(ApiModel):
 
 class CustomMode(StrEnum):
     """
-    Omit or CUSTOM to use pageNumbers. DUPLEX_SORT expects all fronts, then backs reversed. DUPLICATE repeats each page N times (N in pageNumbers, default 2).
+    Omit or CUSTOM to use pageNumbers. REVERSE_ORDER reverses all pages; DUPLEX_SORT expects all fronts, then backs reversed; BOOKLET_SORT and SIDE_STITCH_BOOKLET_SORT order pages for booklet printing; ODD_EVEN_SPLIT puts odd pages then even; REMOVE_FIRST, REMOVE_LAST and REMOVE_FIRST_AND_LAST drop those pages; DUPLICATE repeats each page N times (N in pageNumbers, default 2).
     """
 
     custom = "CUSTOM"
@@ -1289,7 +1293,7 @@ class RearrangePagesParams(ApiModel):
 
     custom_mode: CustomMode | None = Field(
         None,
-        description="Omit or CUSTOM to use pageNumbers. DUPLEX_SORT expects all fronts, then backs reversed. DUPLICATE repeats each page N times (N in pageNumbers, default 2).",
+        description="Omit or CUSTOM to use pageNumbers. REVERSE_ORDER reverses all pages; DUPLEX_SORT expects all fronts, then backs reversed; BOOKLET_SORT and SIDE_STITCH_BOOKLET_SORT order pages for booklet printing; ODD_EVEN_SPLIT puts odd pages then even; REMOVE_FIRST, REMOVE_LAST and REMOVE_FIRST_AND_LAST drop those pages; DUPLICATE repeats each page N times (N in pageNumbers, default 2).",
     )
     page_numbers: str = Field(
         "all",
@@ -1558,7 +1562,7 @@ class ScannerEffectParams(ApiModel):
 
     advanced_enabled: bool | None = Field(
         None,
-        description="Use brightness, contrast, blur, noise and resolution instead of the quality preset",
+        description="Use brightness, contrast, blur, noise and resolution instead of the quality preset. Border, rotation, colorspace and yellowish always apply.",
         examples=[False],
     )
     blur: float | None = Field(
@@ -1752,7 +1756,7 @@ class UpdateMetadataParams(ApiModel):
 
     all_request_params: dict[str, str] | None = Field(
         None,
-        description='Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept.',
+        description='Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept. customKeyN/customValueN pairs also work.',
     )
     author: str | None = Field(None, description="The author of the document. Omit to remove it.", examples=["author"])
     creation_date: str | None = Field(
@@ -1809,7 +1813,7 @@ class OutputFormat6(StrEnum):
 
 class VectorToPdfParams(ApiModel):
     """
-    Converts PS, EPS and EPSF with Ghostscript. XPS and PCL are not supported. Input:POSTSCRIPT Output:PDF Type:SISO
+    Converts PS, EPS and EPSF with Ghostscript; outputFormat is ignored. XPS and PCL are not supported. Input:POSTSCRIPT Output:PDF Type:SISO
     """
 
     output_format: OutputFormat6 = Field(OutputFormat6.eps, description="Target vector format extension")

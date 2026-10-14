@@ -61,7 +61,8 @@ public class ConvertPdfToPdfUa {
                     "Tags the document, marks decorative content as artifacts, embeds fonts"
                             + " and applies the document-level requirements of PDF/UA, then validates"
                             + " the result. A conformance declaration is written only if validation"
-                            + " passes. Figures without alt text block it unless altText is given or"
+                            + " passes; the X-Stirling-UA-Declared header says whether it was."
+                            + " Figures without alt text block it unless altText is given or"
                             + " figurePolicy=mark-decorative.")
     public ResponseEntity<Resource> pdfToPdfUa(@ModelAttribute PdfToPdfUaRequest request)
             throws IOException {

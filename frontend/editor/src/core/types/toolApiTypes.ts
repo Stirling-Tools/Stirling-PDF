@@ -31,7 +31,7 @@ export interface AddPageNumbersRequest {
    */
   customMargin?: "small" | "medium" | "large" | "x-large";
   /**
-   * Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n}, {total}, {filename}.
+   * Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n} (counts numbered pages only, from startingNumber), {total}, {filename}.
    */
   customText?: string;
   /**
@@ -115,7 +115,7 @@ export interface AddPasswordRequest {
 }
 export interface AddStampRequest {
   /**
-   * Font script matching stampText
+   * Font script matching stampText; roman for Latin text
    */
   alphabet?: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
   /**
@@ -127,7 +127,7 @@ export interface AddStampRequest {
    */
   customMargin?: "small" | "medium" | "large" | "x-large";
   /**
-   * Text size in points; for an image stamp, the image height
+   * Text size in points; for an image stamp, the image height (width keeps its aspect ratio)
    */
   fontSize?: number;
   /**
@@ -166,7 +166,7 @@ export interface AddStampRequest {
 }
 export interface AddWatermarkRequest {
   /**
-   * Font script matching watermarkText
+   * Font script matching watermarkText; roman for Latin text
    */
   alphabet?: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
   /**
@@ -459,7 +459,7 @@ export interface EditTableOfContentsRequest {
    */
   bookmarkData?: string;
   /**
-   * Ignored: existing bookmarks are always replaced
+   * Ignored: existing bookmarks are always replaced. To add to them, read them with extract-bookmarks and send the full list.
    */
   replaceExisting?: boolean;
 }
@@ -777,11 +777,11 @@ export interface MergePdfsRequest {
 }
 export interface MetadataRequest {
   /**
-   * Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept.
+   * Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept. customKeyN/customValueN pairs also work.
    */
   allRequestParams?: {
     /**
-     * Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept.
+     * Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept. customKeyN/customValueN pairs also work.
      */
     [k: string]: string | undefined;
   };
@@ -960,7 +960,7 @@ export interface PageSizeRequest {
 }
 export interface PdfToPdfARequest {
   /**
-   * pdfa = PDF/A-2b, the usual archive choice. pdfa-3/3b allows attachments such as e-invoice XML; the 'a' variants also tag the document. pdfx = PDF/X for print.
+   * pdfa, pdfa-2 and pdfa-2b = PDF/A-2b, the usual archive choice; pdfa-1 = PDF/A-1b; pdfa-3 and pdfa-3b = PDF/A-3b, which allows attachments such as e-invoice XML; pdfa-1a/2a/3a also tag the document; pdfx = PDF/X for print.
    */
   outputFormat:
     | "pdfa"
@@ -1110,7 +1110,7 @@ export interface ProcessPdfWithOcrRequest {
 }
 export interface RearrangePagesRequest {
   /**
-   * Omit or CUSTOM to use pageNumbers. DUPLEX_SORT expects all fronts, then backs reversed. DUPLICATE repeats each page N times (N in pageNumbers, default 2).
+   * Omit or CUSTOM to use pageNumbers. REVERSE_ORDER reverses all pages; DUPLEX_SORT expects all fronts, then backs reversed; BOOKLET_SORT and SIDE_STITCH_BOOKLET_SORT order pages for booklet printing; ODD_EVEN_SPLIT puts odd pages then even; REMOVE_FIRST, REMOVE_LAST and REMOVE_FIRST_AND_LAST drop those pages; DUPLICATE repeats each page N times (N in pageNumbers, default 2).
    */
   customMode?:
     | "CUSTOM"
@@ -1344,7 +1344,7 @@ export interface ScalePagesRequest {
 }
 export interface ScannerEffectRequest {
   /**
-   * Use brightness, contrast, blur, noise and resolution instead of the quality preset
+   * Use brightness, contrast, blur, noise and resolution instead of the quality preset. Border, rotation, colorspace and yellowish always apply.
    */
   advancedEnabled?: boolean;
   /**

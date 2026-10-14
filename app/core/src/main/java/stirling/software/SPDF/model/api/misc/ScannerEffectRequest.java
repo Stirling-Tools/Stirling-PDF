@@ -54,7 +54,8 @@ public class ScannerEffectRequest {
     @Schema(
             description =
                     "Use brightness, contrast, blur, noise and resolution instead of the"
-                            + " quality preset",
+                            + " quality preset. Border, rotation, colorspace and yellowish always"
+                            + " apply.",
             example = "false")
     private boolean advancedEnabled = false;
 

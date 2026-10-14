@@ -31,7 +31,7 @@ public class AddWatermarkRequest extends PDFFile {
     private MultipartFile watermarkImage;
 
     @Schema(
-            description = "Font script matching watermarkText",
+            description = "Font script matching watermarkText; roman for Latin text",
             allowableValues = {"roman", "arabic", "japanese", "korean", "chinese", "thai"},
             defaultValue = "roman")
     private String alphabet = "roman";
