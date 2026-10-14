@@ -14,7 +14,6 @@ permissions:
 
 env:
   UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
-  UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
 
 jobs:
   engine:
@@ -40,11 +39,8 @@ jobs:
           multi-cache: |
             ai-engine-setup-uv-cache:
               path: .cache/setup-uv-cache
-            ai-engine-uv-python-dir:
-              path: .cache/uv-python-dir
           key: |
             ai-engine-setup-uv-cache=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
-            ai-engine-uv-python-dir=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
