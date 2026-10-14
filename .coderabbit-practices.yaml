@@ -12,11 +12,11 @@ applicability: |
 sources_of_truth: |
   AGENTS.md is the repository contract: Taskfile commands, comment rules, frontend
   layering, FileContext, tool hooks, translations, and stack pinning.
-  devGuide/CODE_COMMENTS.md is the authority for comments; task comment-lint
+  docs/developer/CODE_COMMENTS.md is the authority for comments; task comment-lint
   enforces its mechanical half on added lines inside task pre-commit.
-  devGuide/EXCEPTION_HANDLING_GUIDE.md is the authority for error handling and for
+  docs/developer/EXCEPTION_HANDLING_GUIDE.md is the authority for error handling and for
   user-facing message keys stored in messages_*.properties.
-  devGuide/STORAGE_ENCRYPTION_AT_REST.md defines the at-rest encryption contract.
+  docs/developer/STORAGE_ENCRYPTION_AT_REST.md defines the at-rest encryption contract.
   frontend/editor/DeveloperGuide.md explains the frontend layering and override
   architecture. When a rule here and a source disagree, the source wins.
 
@@ -34,7 +34,7 @@ style: |
   Prefer cohesive implementations, domain types, precise names, and local style.
   Avoid redundant wrappers, duplicated helpers, speculative abstractions, boolean
   mode parameters, vague names, and catch-all fallback chains.
-  Comments must follow devGuide/CODE_COMMENTS.md. A comment earns its place only as
+  Comments must follow docs/developer/CODE_COMMENTS.md. A comment earns its place only as
   a contract, a why, a hazard, or a map, and must say something the code cannot.
   Put contract docs on the reachable surface: types, exported hooks, layer seams.
   Never narrate the next line, banner a section, or leave commented-out code.
