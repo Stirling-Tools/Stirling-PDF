@@ -872,4 +872,48 @@ describe("Login", () => {
       "/share/abc123",
     );
   });
+
+  describe("SSO auto-login", () => {
+    const renderAt = (entry: string) =>
+      render(
+        <TestWrapper>
+          <MemoryRouter initialEntries={[entry]}>
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+
+    beforeEach(() => {
+      sessionStorage.clear();
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: {
+          enableLogin: true,
+          ssoAutoLogin: true,
+          loginMethod: "oauth2",
+          providerList: { "/oauth2/authorization/authentik": "Authentik" },
+        },
+      });
+      vi.mocked(springAuth.signInWithOAuth).mockResolvedValue({ error: null });
+    });
+
+    it("redirects to the only SSO provider", async () => {
+      renderAt("/login");
+
+      await waitFor(() => {
+        expect(springAuth.signInWithOAuth).toHaveBeenCalled();
+      });
+      expect(document.getElementById("email")).not.toBeInTheDocument();
+    });
+
+    it("stays on the page with every option under ?all", async () => {
+      renderAt("/login?all");
+
+      await waitFor(() => {
+        expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+        expect(document.getElementById("email")).toBeInTheDocument();
+        expect(document.getElementById("password")).toBeInTheDocument();
+      });
+      expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
+    });
+  });
 });

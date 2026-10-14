@@ -148,6 +148,8 @@ export default function Login() {
   }, [searchParams]);
 
   const hasSsoLoginError = Boolean(errorFromState || errorFromQuery);
+  // /login?all is the escape hatch past SSO auto-login for local accounts.
+  const showAllLoginOptions = searchParams.has("all");
 
   // Shared login state + sign-in handlers + provider fetch. Editor-specific
   // behaviour (auto-login, redirects, first-time setup) is layered on here.
@@ -180,7 +182,10 @@ export default function Login() {
   });
 
   const isUserPassAllowed = login.isUserPassAllowed;
-  const isSsoOnlyMode = !login.isUserPassAllowed;
+  const isSsoOnlyMode = !login.isUserPassAllowed && !showAllLoginOptions;
+  const formState = showAllLoginOptions
+    ? { ...login, isUserPassAllowed: true }
+    : login;
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -253,12 +258,12 @@ export default function Login() {
   }, [backendProbe.loginDisabled, navigate]);
 
   // The email/password form is always shown when username/password auth is
-  // allowed; SSO-only mode hides it.
+  // allowed; SSO-only mode hides it unless ?all asks for every option.
   useEffect(() => {
     const userPassAllowed =
       login.loginMethod === "all" || login.loginMethod === "normal";
-    setShowEmailForm(userPassAllowed);
-  }, [login.loginMethod]);
+    setShowEmailForm(userPassAllowed || showAllLoginOptions);
+  }, [login.loginMethod, showAllLoginOptions]);
 
   // Auto-login to SSO when enabled and only one SSO option exists
   useEffect(() => {
@@ -283,6 +288,7 @@ export default function Login() {
     }
 
     if (
+      showAllLoginOptions ||
       hasSsoLoginError ||
       blockedByErrors ||
       blockedByAttempts ||
@@ -313,6 +319,7 @@ export default function Login() {
     login.signInWithProvider,
     login.isUserPassAllowed,
     hasSsoLoginError,
+    showAllLoginOptions,
   ]);
 
   // Handle query params (email prefill, success messages, and session expiry)
@@ -480,7 +487,7 @@ export default function Login() {
   return (
     <AuthLayout>
       <SpringLoginForm
-        state={login}
+        state={formState}
         logoSrc={loginHeader}
         logoDarkSrc={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
         showEmailForm={showEmailForm}
