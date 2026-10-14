@@ -164,7 +164,10 @@ function compoundDisplay(full: string): LicenseDisplay {
     if (!alias?.spdxId) {
       return { short: full };
     }
-    ids.push(alias.spdxId);
+    // Repeated alternatives link once; identical ids would also collide as keys.
+    if (!ids.includes(alias.spdxId)) {
+      ids.push(alias.spdxId);
+    }
   }
   return { short: full, spdxIds: ids };
 }
@@ -298,9 +301,9 @@ export interface DependencyRow extends Dependency {
 
 // The license report lists one row per resolved artifact, so the same module
 // shows up at several versions; a notice names each module once per license.
-// Grouped rows display every represented version instead of keeping one, and
-// records carrying the full license text win over textless ones. Records with
-// genuinely different texts are all kept, mirroring the backend merge.
+// Versions aggregate only within records that already agree on everything else:
+// a version is never borrowed onto a row carrying a different license text, and
+// a textless record keeps its own versions instead of inventing a relationship.
 export function dedupeDependencies(
   dependencies: Dependency[],
 ): DependencyRow[] {
@@ -320,35 +323,40 @@ export function dedupeDependencies(
   }
   const deduplicated: Dependency[] = [];
   for (const group of byGroup.values()) {
-    const versions: string[] = [];
-    const seenVersions = new Set<string>();
-    const withText: Dependency[] = [];
-    const seenTexts = new Set<string>();
-    let bare: Dependency | undefined;
+    interface VersionSlot {
+      row: Dependency;
+      versions: string[];
+      seen: Set<string>;
+    }
+    const textSlots = new Map<string, VersionSlot>();
+    let bare: VersionSlot | undefined;
     for (const dependency of group) {
+      const slot = dependency.moduleLicenseText
+        ? (() => {
+            const existing = textSlots.get(dependency.moduleLicenseText);
+            if (existing) return existing;
+            const created: VersionSlot = {
+              row: dependency,
+              versions: [],
+              seen: new Set(),
+            };
+            textSlots.set(dependency.moduleLicenseText, created);
+            return created;
+          })()
+        : (bare ??= { row: dependency, versions: [], seen: new Set() });
       if (
         dependency.moduleVersion &&
-        !seenVersions.has(dependency.moduleVersion)
+        !slot.seen.has(dependency.moduleVersion)
       ) {
-        seenVersions.add(dependency.moduleVersion);
-        versions.push(dependency.moduleVersion);
-      }
-      if (dependency.moduleLicenseText) {
-        if (!seenTexts.has(dependency.moduleLicenseText)) {
-          seenTexts.add(dependency.moduleLicenseText);
-          withText.push(dependency);
-        }
-      } else {
-        bare ??= dependency;
+        slot.seen.add(dependency.moduleVersion);
+        slot.versions.push(dependency.moduleVersion);
       }
     }
-    const rows = withText.length > 0 ? withText : bare ? [bare] : [];
-    const aggregatedVersions = versions.join(", ");
-    for (const row of rows) {
+    for (const slot of [...textSlots.values(), ...(bare ? [bare] : [])]) {
       deduplicated.push(
-        versions.length > 1
-          ? { ...row, moduleVersion: aggregatedVersions }
-          : row,
+        slot.versions.length > 0
+          ? { ...slot.row, moduleVersion: slot.versions.join(", ") }
+          : slot.row,
       );
     }
   }

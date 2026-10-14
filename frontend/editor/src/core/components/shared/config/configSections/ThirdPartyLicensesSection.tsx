@@ -132,6 +132,9 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
               verticalSpacing="sm"
               horizontalSpacing="md"
               stickyHeader
+              // Collapsed borders disable thead stickiness, so the header
+              // scrolls away; separate with zero spacing renders identically.
+              style={{ borderCollapse: "separate", borderSpacing: 0 }}
             >
               <Table.Thead>
                 <Table.Tr>

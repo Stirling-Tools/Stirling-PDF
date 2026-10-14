@@ -175,13 +175,36 @@ describe("dedupeDependencies", () => {
     expect(result[0]?.moduleVersion).toBe("1.5.38, 1.6.3");
   });
 
-  it("prefers the record carrying the full license text", () => {
+  it("keeps a versioned textless record instead of lending its version", () => {
     const result = dedupeDependencies([
-      dependency("PDFium", "BSD-3-Clause"),
+      { ...dependency("PDFium", "BSD-3-Clause"), moduleVersion: "1.0" },
       dependency("PDFium", "BSD-3-Clause", "full text"),
     ]);
-    expect(result).toHaveLength(1);
-    expect(result[0]?.moduleLicenseText).toBe("full text");
+    expect(result).toHaveLength(2);
+    const bare = result.find((row) => !row.moduleLicenseText);
+    const text = result.find((row) => row.moduleLicenseText === "full text");
+    expect(bare?.moduleVersion).toBe("1.0");
+    expect(text?.moduleVersion).toBeUndefined();
+  });
+
+  it("attributes each version to the text it arrived with", () => {
+    const result = dedupeDependencies([
+      {
+        ...dependency("PDFium", "BSD-3-Clause", "text A"),
+        moduleVersion: "1.0",
+      },
+      {
+        ...dependency("PDFium", "BSD-3-Clause", "text B"),
+        moduleVersion: "2.0",
+      },
+    ]);
+    expect(result).toHaveLength(2);
+    expect(
+      result.find((row) => row.moduleLicenseText === "text A")?.moduleVersion,
+    ).toBe("1.0");
+    expect(
+      result.find((row) => row.moduleLicenseText === "text B")?.moduleVersion,
+    ).toBe("2.0");
   });
 
   it("keeps differing texts for the same component", () => {
