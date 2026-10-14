@@ -6,6 +6,9 @@ import { useCompressOperation } from "@app/hooks/tools/compress/useCompressOpera
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useCompressTips } from "@app/components/tooltips/useCompressTips";
+import { useUnreducedOutputs } from "@app/hooks/tools/compress/useUnreducedOutputs";
+import { Banner } from "@app/ui/Banner";
+import { Icon } from "@app/ui/Icon";
 
 const Compress = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -16,6 +19,35 @@ const Compress = (props: BaseToolProps) => {
     useCompressParameters,
     useCompressOperation,
     props,
+  );
+
+  const { unreduced, total, recordInputs } = useUnreducedOutputs(
+    base.operation.outputFileIds,
+  );
+
+  const handleExecute = () => {
+    recordInputs(base.selectedFiles);
+    return base.handleExecute();
+  };
+
+  const noReductionNotice = unreduced > 0 && (
+    <Banner
+      tone="warning"
+      icon={<Icon name="triangle-alert" />}
+      description={
+        total === 1
+          ? t(
+              "compress.noReduction.single",
+              "Compression ran successfully, but this file can't be compressed any further.",
+            )
+          : t("compress.noReduction.multiple", {
+              count: unreduced,
+              total,
+              defaultValue:
+                "Compression ran successfully, but {{count}} of {{total}} files can't be compressed any further.",
+            })
+      }
+    />
   );
 
   return createToolFlow({
@@ -44,7 +76,7 @@ const Compress = (props: BaseToolProps) => {
       text: t("compress.submit", "Compress"),
       isVisible: !base.hasResults,
       loadingText: t("loading"),
-      onClick: base.handleExecute,
+      onClick: handleExecute,
       endpointEnabled: base.endpointEnabled,
       paramsValid: base.params.validateParameters(),
     },
@@ -54,6 +86,7 @@ const Compress = (props: BaseToolProps) => {
       title: t("compress.title", "Compression Results"),
       onFileClick: base.handleThumbnailClick,
       onUndo: base.handleUndo,
+      notice: noReductionNotice,
     },
   });
 };
