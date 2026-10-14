@@ -210,16 +210,16 @@ public enum FailureKind {
 
     /**
      * A tool the step shells out to ran and did not deliver: OCRmyPDF or qpdf exited non-zero,
-     * LibreOffice produced no PDF/A. E051 is also the bucket unrecognised Ghostscript output falls
-     * into, so it carries killed processes and full disks too; the retry offered first clears
-     * those.
+     * LibreOffice produced no PDF/A, the redaction engine could not verify its own result. E051 is
+     * also the bucket unrecognised Ghostscript output falls into, so it carries killed processes
+     * and full disks too; the retry offered first clears those.
      */
     STEP_TOOL_FAILED(
             FailureStage.INTERNAL,
             FailureSeverity.ERROR,
             FailureRemedy.NEEDS_FILE_FIX,
             FailureScope.FILE,
-            errorCodes("E044", "E051", "E052", "E060"),
+            errorCodes("E044", "E051", "E052", "E060", "E077", "E083"),
             fallback("A tool this step relies on could not process this document."),
             global(OPEN_IN_TOOL, OWNER, SECONDARY),
             global(VIEW_FILE, OWNER, SECONDARY),
