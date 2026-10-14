@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.PostHogService;
+import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -47,7 +48,6 @@ public class McpAnalytics {
     public static final String SESSION_HEADER = "Mcp-Session-Id";
     private static final String SESSION_ATTRIBUTE = "stirling.mcp.sessionId";
     private static final Pattern SESSION_ID = Pattern.compile("ses_[0-9a-f]{32}");
-    private static final Pattern QUOTED = Pattern.compile("'[^']*'");
     private static final int MAX_SESSIONS = 10_000;
 
     private static final String SOURCE = "posthog_mcp_analytics";
@@ -56,6 +56,7 @@ public class McpAnalytics {
             Pattern.compile("[A-Za-z0-9][A-Za-z0-9 ._/()-]{0,63}");
 
     private final ObjectProvider<PostHogService> postHog;
+    private final ObjectProvider<McpToolCatalog> catalog;
     private final ApplicationProperties applicationProperties;
     // Usernames seen today per auth method; held in memory only, sent as counts.
     private final Map<String, Set<String>> dailyUsers = new ConcurrentHashMap<>();
@@ -73,8 +74,11 @@ public class McpAnalytics {
     private record ClientInfo(String name, String version) {}
 
     public McpAnalytics(
-            ObjectProvider<PostHogService> postHog, ApplicationProperties applicationProperties) {
+            ObjectProvider<PostHogService> postHog,
+            ObjectProvider<McpToolCatalog> catalog,
+            ApplicationProperties applicationProperties) {
         this.postHog = postHog;
+        this.catalog = catalog;
         this.applicationProperties = applicationProperties;
     }
 
@@ -182,17 +186,20 @@ public class McpAnalytics {
             props.put("$mcp_error_type", "exception");
             props.put("$mcp_error_message", failure.getClass().getSimpleName());
         } else if (toolError) {
+            // No message: tool error text can echo user input such as file ids.
             props.put("$mcp_error_type", "tool_error");
-            String message = redact(errorText(result));
-            if (message != null) {
-                props.put("$mcp_error_message", message);
-            }
         }
-        // Operation names come from our catalog; drop anything that is not a plain token.
-        if (arguments != null) {
-            putSafe(props, "stirling_operation", arguments.path("operation").asText(null));
+        String operation = arguments == null ? null : arguments.path("operation").asText(null);
+        if (isCatalogOperation(operation)) {
+            props.put("stirling_operation", operation);
         }
         capture("$mcp_tool_call", props);
+    }
+
+    // Only catalog ids are sent, so free text typed as an operation never leaves the server.
+    private boolean isCatalogOperation(String id) {
+        McpToolCatalog c = id == null ? null : catalog.getIfAvailable();
+        return c != null && c.findByOperationId(id).isPresent();
     }
 
     private Map<String, Object> baseProperties() {
@@ -276,24 +283,6 @@ public class McpAnalytics {
         }
         String header = request.getHeader(SESSION_HEADER);
         return header != null && SESSION_ID.matcher(header).matches() ? header : null;
-    }
-
-    private static String errorText(ObjectNode result) {
-        for (JsonNode block : result.path("content")) {
-            if ("text".equals(block.path("type").asText(null))) {
-                return block.path("text").asText(null);
-            }
-        }
-        return null;
-    }
-
-    // First line only, quoted values (file ids, operation names) blanked out.
-    private static String redact(String message) {
-        if (message == null || message.isBlank()) {
-            return null;
-        }
-        String firstLine = message.lines().findFirst().orElse("").trim();
-        return truncate(QUOTED.matcher(firstLine).replaceAll("'?'"), 200);
     }
 
     private static String truncate(String value, int max) {

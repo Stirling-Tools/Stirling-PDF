@@ -85,7 +85,7 @@ public class DescribeOperationTool implements McpTool {
         }
         OperationMeta meta = catalog.findByOperationId(opId).orElse(null);
         if (meta == null) {
-            return McpResponses.error(mapper, "Unknown or disabled operation '" + opId + "'");
+            return McpResponses.error(mapper, "Unknown or disabled operation: " + opId);
         }
 
         ObjectNode payload = mapper.createObjectNode();

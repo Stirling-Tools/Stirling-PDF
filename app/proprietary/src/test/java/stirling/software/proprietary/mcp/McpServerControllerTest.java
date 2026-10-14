@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -35,6 +36,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.PostHogService;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
+import stirling.software.proprietary.mcp.catalog.OperationCategory;
+import stirling.software.proprietary.mcp.catalog.OperationMeta;
 import stirling.software.proprietary.mcp.tools.DescribeOperationTool;
 import stirling.software.proprietary.mcp.tools.McpOperationExecutor;
 import stirling.software.proprietary.mcp.tools.McpResponses;
@@ -54,6 +57,7 @@ class McpServerControllerTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final PostHogService postHog = mock(PostHogService.class);
+    private final McpToolCatalog analyticsCatalog = mock(McpToolCatalog.class);
     private McpAnalytics analytics;
     private ApplicationProperties appProps;
     private final McpServerController controller = buildController();
@@ -77,7 +81,23 @@ class McpServerControllerTest {
         @SuppressWarnings("unchecked")
         ObjectProvider<PostHogService> postHogProvider = mock(ObjectProvider.class);
         when(postHogProvider.getIfAvailable()).thenReturn(postHog);
-        analytics = new McpAnalytics(postHogProvider, props);
+        // Tools see no catalog (error paths); analytics knows compress-pdf only.
+        when(analyticsCatalog.findByOperationId("compress-pdf"))
+                .thenReturn(
+                        Optional.of(
+                                new OperationMeta(
+                                        "compress-pdf",
+                                        OperationCategory.MISC,
+                                        "Compress a PDF",
+                                        mapper.createObjectNode(),
+                                        "mcp.tools.write",
+                                        OperationMeta.Target.JAVA_ENDPOINT,
+                                        "/api/v1/misc/compress-pdf",
+                                        null)));
+        @SuppressWarnings("unchecked")
+        ObjectProvider<McpToolCatalog> catalogProvider = mock(ObjectProvider.class);
+        when(catalogProvider.getIfAvailable()).thenReturn(analyticsCatalog);
+        analytics = new McpAnalytics(postHogProvider, catalogProvider, props);
         return new McpServerController(mapper, props, tools, analytics);
     }
 
@@ -334,7 +354,7 @@ class McpServerControllerTest {
         assertEquals("compress-pdf", props.get("stirling_operation"));
         assertEquals(true, props.get("$mcp_is_error"));
         assertEquals("tool_error", props.get("$mcp_error_type"));
-        assertEquals("MCP catalog is not available", props.get("$mcp_error_message"));
+        assertNull(props.get("$mcp_error_message"), "tool error text is never sent");
         assertEquals("catalog", props.get("$mcp_tool_category"));
         assertNull(props.get("$mcp_tool_description"), "static per version, not sent");
         assertNull(props.get("$mcp_server_version"), "app_version already covers it");
@@ -447,18 +467,33 @@ class McpServerControllerTest {
     }
 
     @Test
-    void toolError_messageIsFirstLineWithQuotedValuesRedacted() throws Exception {
+    void toolError_sendsFlagButNoMessage() throws Exception {
         McpServerController single =
                 controllerWith(
                         args ->
                                 McpResponses.error(
-                                        mapper,
-                                        "Unknown or inaccessible fileId 'abc-secret'.\n- ops"));
+                                        mapper, "Cannot open /srv/data/acme-contract.pdf"));
         single.handle(toolCall("fake_tool"));
 
         Map<String, Object> props = capturedProperties("$mcp_tool_call");
-        assertEquals("Unknown or inaccessible fileId '?'.", props.get("$mcp_error_message"));
+        assertEquals(true, props.get("$mcp_is_error"));
+        assertEquals("tool_error", props.get("$mcp_error_type"));
+        assertNull(props.get("$mcp_error_message"));
+        assertTrue(!props.toString().contains("acme-contract"), "error text must not be sent");
         assertEquals("test", props.get("$mcp_tool_category"));
+    }
+
+    @Test
+    void toolCall_operationOutsideCatalog_isNotSent() throws Exception {
+        controller.handle(
+                mapper.readTree(
+                        "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\","
+                                + "\"params\":{\"name\":\"stirling_describe_operation\","
+                                + "\"arguments\":{\"operation\":\"john smith contract\"}}}"));
+
+        Map<String, Object> props = capturedProperties("$mcp_tool_call");
+        assertNull(props.get("stirling_operation"));
+        assertTrue(!props.toString().contains("john smith"), "free text must not be sent");
     }
 
     @Test
