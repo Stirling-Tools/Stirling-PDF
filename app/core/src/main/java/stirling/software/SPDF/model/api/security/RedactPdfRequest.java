@@ -30,6 +30,12 @@ public class RedactPdfRequest extends PDFFile {
     private Boolean wholeWordSearch;
 
     @Schema(
+            description = "Whether matching is case-sensitive, for plain text and regex alike",
+            defaultValue = "false",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    private Boolean caseSensitive;
+
+    @Schema(
             description = "The color for redaction",
             defaultValue = "#000000",
             requiredMode = Schema.RequiredMode.REQUIRED)
