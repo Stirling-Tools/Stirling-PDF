@@ -74,7 +74,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Checkout trusted workflow files
+      - name: Checkout PR
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Get PR data
@@ -184,11 +184,11 @@ jobs:
       - name: Checkout PR
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Checkout untrusted PR source
+      - name: Checkout PR
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/pull/${{ needs.check-comment.outputs.pr_number }}/merge
-          path: pr-source
+          # untrusted tree gets built below - never leave credentials in .git/config
           persist-credentials: false
 
       - name: Set up Docker Buildx
@@ -208,8 +208,8 @@ jobs:
       - name: Build and push PR-specific image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          context: ./pr-source
-          file: ./pr-source/docker/embedded/Dockerfile
+          context: .
+          file: ./docker/embedded/Dockerfile
           push: true
           tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:pr-${{ needs.check-comment.outputs.pr_number }}
           build-args: |
@@ -220,8 +220,8 @@ jobs:
         if: needs.check-comment.outputs.enable_engine == 'true'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          context: ./pr-source
-          file: ./pr-source/docker/engine/Dockerfile
+          context: .
+          file: ./docker/engine/Dockerfile
           push: true
           tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
           platforms: linux/amd64
