@@ -30,6 +30,8 @@ const LICENSE_ALIASES: Record<string, LicenseDisplay> = {
   "mit license": { short: "MIT", spdxId: "MIT" },
   "the mit license": { short: "MIT", spdxId: "MIT" },
   "mit-0": { short: "MIT-0", spdxId: "MIT-0" },
+  // ISC is its own SPDX id, not a variant of MIT.
+  isc: { short: "ISC", spdxId: "ISC" },
   "bsd 3-clause": { short: "BSD-3-Clause", spdxId: "BSD-3-Clause" },
   "bsd-3-clause": { short: "BSD-3-Clause", spdxId: "BSD-3-Clause" },
   "bsd 3 clause": { short: "BSD-3-Clause", spdxId: "BSD-3-Clause" },
@@ -160,7 +162,12 @@ function compoundDisplay(full: string): LicenseDisplay {
   }
   const ids: string[] = [];
   for (const part of full.split(OR_AND_SPLIT_PATTERN)) {
-    const alias = LICENSE_ALIASES[normalizeLicenseName(part)];
+    const name = normalizeLicenseName(part);
+    // Package metadata often parenthesizes SPDX expressions, so an exact
+    // miss retries without grouping parens; the label keeps them verbatim.
+    const alias =
+      LICENSE_ALIASES[name] ??
+      LICENSE_ALIASES[normalizeLicenseName(part.replace(/[()]/g, ""))];
     if (!alias?.spdxId) {
       return { short: full };
     }

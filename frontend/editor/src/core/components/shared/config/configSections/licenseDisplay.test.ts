@@ -32,6 +32,17 @@ describe("resolveLicenseDisplay", () => {
     expect(resolveLicenseDisplay("Apache-2.0 WITH LLVM-exception")).toEqual({
       short: "Apache-2.0 WITH LLVM-exception",
     });
+    expect(resolveLicenseDisplay("(Apache-2.0 AND MIT)")).toEqual({
+      short: "(Apache-2.0 AND MIT)",
+      spdxIds: ["Apache-2.0", "MIT"],
+    });
+  });
+
+  it("links bare ISC to its own SPDX page", () => {
+    expect(resolveLicenseDisplay("ISC")).toEqual({
+      short: "ISC",
+      spdxId: "ISC",
+    });
   });
 
   it("derives about links from single and compound displays", () => {
