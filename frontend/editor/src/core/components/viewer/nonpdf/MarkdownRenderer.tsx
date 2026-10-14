@@ -1,12 +1,38 @@
-import React, { Component, Suspense, lazy, useState } from "react";
+import React, {
+  Component,
+  Suspense,
+  lazy,
+  useState,
+  type ComponentType,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
+
+type MarkdownRendererImplComponent = ComponentType<{ content: string }>;
+
+// Set once the chunk has loaded, so a block mounted after that renders markdown in
+// its first commit instead of committing the raw text and swapping it out.
+let loadedMarkdownRendererImpl: MarkdownRendererImplComponent | undefined;
 
 // react-markdown + remark-gfm + micromark are ~120 KB gz and only needed when a
 // markdown document is open (viewer) or a chat message arrives, so the heavy
 // module is its own chunk while callers keep the synchronous signature.
 const loadMarkdownRendererImpl = () =>
-  import("@app/components/viewer/nonpdf/MarkdownRendererImpl");
+  import("@app/components/viewer/nonpdf/MarkdownRendererImpl").then(
+    (module) => {
+      loadedMarkdownRendererImpl = module.default;
+      return module;
+    },
+  );
+
+/**
+ * Starts loading the renderer, so markdown rendered later appears without the
+ * raw-text stand-in.
+ * */
+export function preloadMarkdownRenderer(): void {
+  if (loadedMarkdownRendererImpl) return;
+  loadMarkdownRendererImpl().catch(() => undefined);
+}
 
 function rawMarkdown(content: string): React.ReactNode {
   return <div style={{ whiteSpace: "pre-wrap" }}>{content}</div>;
@@ -39,9 +65,10 @@ function MarkdownBlock({ content }: { content: string }) {
   // first render loses its state, so a lazy built inside it would be recreated
   // on every retry and suspend forever. React also caches a lazy's rejected
   // import, so the retry below swaps in a fresh one.
-  const [MarkdownRendererImpl, setMarkdownRendererImpl] = useState(() =>
-    lazy(loadMarkdownRendererImpl),
-  );
+  const [MarkdownRendererImpl, setMarkdownRendererImpl] =
+    useState<MarkdownRendererImplComponent>(
+      () => loadedMarkdownRendererImpl ?? lazy(loadMarkdownRendererImpl),
+    );
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
 
