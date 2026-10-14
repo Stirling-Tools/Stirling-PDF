@@ -12,8 +12,7 @@ import stirling.software.common.model.api.PDFFile;
 public class EditTableOfContentsRequest extends PDFFile {
 
     @Schema(
-            description =
-                    "The full new outline as a JSON array of {title, pageNumber," + " children[]}",
+            description = "The full new outline as a JSON array of {title, pageNumber, children[]}",
             type = "string",
             example =
                     "[{\\\"title\\\":\\\"Chapter 1\\\",\\\"pageNumber\\\":1,\\\"children\\\":[{\\\"title\\\":\\\"Section 1.1\\\",\\\"pageNumber\\\":2}]}]")

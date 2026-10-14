@@ -48,7 +48,7 @@ public class AutoRenameController {
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Rename a PDF after its title or first heading",
+            summary = "Rename a PDF after its largest heading text",
             description =
                     "Uses the largest text near the start as the file name; the pages are"
                             + " unchanged. Keeps the original name if no text is found.")
