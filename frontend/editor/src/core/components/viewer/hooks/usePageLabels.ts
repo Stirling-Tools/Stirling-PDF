@@ -38,8 +38,9 @@ export function usePageLabels(
       setLabels(cached);
       return;
     }
-    if (!enabled) return;
     setLabels(null);
+    // A replacement document must not show the previous labels while it opens.
+    if (!enabled) return;
     let cancelled = false;
     void (async () => {
       try {
