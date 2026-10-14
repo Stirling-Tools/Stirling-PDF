@@ -3,9 +3,9 @@
  */
 import {
   RawPdf,
+  referencedObject,
   removeDictEntry,
   setDictEntry,
-  arrayItems,
 } from "@app/tools/pdfTextEditor/pdfdoc/raw";
 import {
   appendRevision,
@@ -108,16 +108,12 @@ function elementFor(
   const key = pdf.dictInt(page, "StructParents");
   if (key === null) return "the page has no /StructParents";
 
-  const entry = pdf.numberTreeEntry(treeRoot, "ParentTree", key);
-  if (!entry) return "the ParentTree has no entry for the page";
-  const ref = entry.span.text.match(/^(\d+)\s+\d+\s+R\b/);
-  const list = ref ? pdf.objectBody(parseInt(ref[1], 10)) : entry.span.text;
-  const items = list ? arrayItems(list.trim()) : null;
-  if (!items) return "the page's ParentTree entry is not an array";
+  const tree = pdf.parentTreeArray(treeRoot, key);
+  if (!tree) return "the ParentTree has no entry for the page";
+  if (!tree.items) return "the page's ParentTree entry is not an array";
 
-  const owner = items[edit.mcid]?.text.match(/^(\d+)\s+\d+\s+R$/);
-  if (!owner) return "no structure element owns this MCID";
-  const num = parseInt(owner[1], 10);
+  const num = referencedObject(tree.items[edit.mcid]?.text ?? "");
+  if (num === null) return "no structure element owns this MCID";
   const body = pdf.objectBody(num);
   if (!body || pdf.dictName(body, "S") === null) {
     return "the ParentTree points at something that is not a structure element";

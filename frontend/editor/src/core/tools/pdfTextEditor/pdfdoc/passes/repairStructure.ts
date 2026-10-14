@@ -10,6 +10,7 @@ import { parseOps, tokenize } from "@app/tools/pdfTextEditor/pdfdoc/contentOps";
 import {
   RawPdf,
   arrayItems,
+  referencedObject,
   setDictEntry,
   spliceValue,
   type NumberTreeEntry,
@@ -63,11 +64,11 @@ export async function repairStructure(
 ): Promise<Uint8Array | null> {
   const pdf = await RawPdf.parse(bytes);
   if (!pdf || pdf.encrypted) return null;
-  const before =
-    opts.original.length > 0 ? await RawPdf.parse(opts.original) : null;
   const catalog = pdf.objectBody(pdf.rootNum);
   const treeRoot = catalog ? pdf.dictRef(catalog, "StructTreeRoot") : null;
   if (treeRoot === null) return null;
+  const before =
+    opts.original.length > 0 ? await RawPdf.parse(opts.original) : null;
 
   const sharedStreams = streamsUsedByMoreThanOnePage(pdf);
   const objects: RevisionObject[] = [];
@@ -151,19 +152,12 @@ async function planPage(
   if (!read || read.refs.some((r) => sharedStreams.has(r))) return null;
   const { refs, texts, sites } = read;
 
-  const entry = pdf.numberTreeEntry(treeRoot, "ParentTree", key);
-  if (!entry) return null;
-  const arrayRef = entry.span.text.match(REF);
-  const arrayText = arrayRef
-    ? pdf.objectBody(parseInt(arrayRef[1], 10))?.trim()
-    : entry.span.text;
-  const items = arrayText ? arrayItems(arrayText) : null;
-  if (!items) return null;
-  const slots = items.map((item) => item.text);
-  const owner = (mcid: number): number | null => {
-    const m = slots[mcid]?.match(REF);
-    return m ? parseInt(m[1], 10) : null;
-  };
+  const tree = pdf.parentTreeArray(treeRoot, key);
+  if (!tree?.items) return null;
+  const entry = tree.entry;
+  const slots = tree.items.map((item) => item.text);
+  const owner = (mcid: number): number | null =>
+    referencedObject(slots[mcid] ?? "");
 
   const elements = new Map<number, KidChanges>();
   const changesFor = (num: number): KidChanges => {

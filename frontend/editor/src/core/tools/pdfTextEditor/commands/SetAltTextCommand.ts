@@ -25,9 +25,12 @@ export class SetAltTextCommand implements Command {
 
   apply(doc: EditorDocument): void {
     const structure = doc.structure(this.pageIndex);
-    if (!structure.element(this.mcid)) {
+    // Refused here, not at save: a description the save cannot write would
+    // fail every later save, the user's other edits included.
+    const refusal = structure.cannotDescribe(this.mcid);
+    if (refusal) {
       throw new RolledBackError(
-        new Error(`No structure element owns MCID ${this.mcid}`),
+        new Error(`MCID ${this.mcid} cannot take a description: ${refusal}`),
       );
     }
     if (this.previous === undefined) {

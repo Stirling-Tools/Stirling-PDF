@@ -74,6 +74,20 @@ describe("RawPdf.parse", () => {
   });
 });
 
+describe("RawPdf.encrypted", () => {
+  it.each([
+    ["by reference", "/Encrypt 9 0 R"],
+    ["written directly", "/Encrypt << /Filter /Standard /V 1 /R 2 >>"],
+  ])("sees an /Encrypt dictionary %s", async (_, entry) => {
+    const plain = toLatin1(singleContentPdf());
+    const bytes = fromLatin1(
+      plain.replace("trailer\n<<", `trailer\n<< ${entry}`),
+    );
+    expect((await RawPdf.parse(bytes))?.encrypted).toBe(true);
+    expect((await RawPdf.parse(singleContentPdf()))?.encrypted).toBe(false);
+  });
+});
+
 describe("RawPdf.valueSpan", () => {
   it("reads a value from the outermost dictionary only", async () => {
     const pdf = await RawPdf.parse(singleContentPdf());
@@ -293,6 +307,35 @@ describe("RawPdf.numberTreeEntry", () => {
       { num: 7, body: "<< /Kids [6 0 R] >>" },
     );
     expect(pdf.numberTreeEntry(5, "ParentTree", 0)).toBeNull();
+  });
+
+  it("honours /Limits and /Kids written as references", async () => {
+    const pdf = await treePdf(
+      { num: 5, body: "<< /ParentTree 6 0 R >>" },
+      { num: 6, body: "<< /Kids 20 0 R >>" },
+      { num: 20, body: "[7 0 R 8 0 R]" },
+      { num: 7, body: "<< /Limits 21 0 R /Nums [0 [10 0 R] 3 (decoy)] >>" },
+      { num: 21, body: "[0 1]" },
+      { num: 8, body: "<< /Limits 22 0 R /Nums [3 [12 0 R]] >>" },
+      { num: 22, body: "[2 4]" },
+    );
+    expect(pdf.numberTreeEntry(5, "ParentTree", 3)?.span.text).toBe("[12 0 R]");
+  });
+
+  it("searches a tree wider than a few dozen nodes", async () => {
+    const leaves = Array.from({ length: 100 }, (_, i) => ({
+      num: 100 + i,
+      body: `<< /Nums [${i} [${i + 1000} 0 R]] >>`,
+    }));
+    const kids = leaves.map((l) => `${l.num} 0 R`).join(" ");
+    const pdf = await treePdf(
+      { num: 5, body: "<< /ParentTree 6 0 R >>" },
+      { num: 6, body: `<< /Kids [${kids}] >>` },
+      ...leaves,
+    );
+    expect(pdf.numberTreeEntry(5, "ParentTree", 99)?.span.text).toBe(
+      "[1099 0 R]",
+    );
   });
 
   it("returns null when the holder has no such tree", async () => {

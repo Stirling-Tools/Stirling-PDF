@@ -25,6 +25,9 @@ const WHITESPACE = new Set([" ", "\t", "\r", "\n", "\f", "\0"]);
 const DELIMITER = new Set(["(", ")", "<", ">", "[", "]", "{", "}", "/", "%"]);
 
 /** Span of a value inside an object body. */
+/** Deeper than any real number tree; bounds a malformed one without a cycle. */
+const MAX_NUMBER_TREE_DEPTH = 32;
+
 export interface ValueSpan {
   /** Index of the first character of the value. */
   start: number;
@@ -37,6 +40,17 @@ export interface NumberTreeEntry {
   /** The object whose body holds the value. */
   objNum: number;
   span: ValueSpan;
+}
+
+/**
+ * A page's ParentTree value (ISO 32000-1 14.7.4.4). Slot n of `items` names
+ * the element that owns MCID n on the page; `items` is null when the value is
+ * not an array.
+ */
+export interface ParentTreeArray {
+  /** Where the page's value sits: the array itself, or a reference to it. */
+  entry: NumberTreeEntry;
+  items: ValueSpan[] | null;
 }
 
 interface ObjectSource {
@@ -168,7 +182,7 @@ export class RawPdf {
       usesXrefStream,
       startXref,
       trailerId,
-      encrypted: /\/Encrypt\s+\d+\s+\d+\s+R/.test(src),
+      encrypted: /\/Encrypt\s*(?:\d+\s+\d+\s+R|<<)/.test(src),
       objects,
     });
     await pdf.indexObjectStreams();
@@ -371,8 +385,17 @@ export class RawPdf {
     if (!holder || !span) return null;
     const ref = span.text.match(/^(\d+)\s+\d+\s+R\b/);
     if (!ref)
-      return this.searchNumberTree(holderNum, span.start, key, new Set());
-    return this.searchNumberTree(parseInt(ref[1], 10), 0, key, new Set());
+      return this.searchNumberTree(holderNum, span.start, key, new Set(), 0);
+    return this.searchNumberTree(parseInt(ref[1], 10), 0, key, new Set(), 0);
+  }
+
+  /** The ParentTree value for `/StructParents key`, or null when the tree has none. */
+  parentTreeArray(treeRoot: number, key: number): ParentTreeArray | null {
+    const entry = this.numberTreeEntry(treeRoot, "ParentTree", key);
+    if (!entry) return null;
+    const ref = referencedObject(entry.span.text);
+    const list = ref === null ? entry.span.text : this.objectBody(ref)?.trim();
+    return { entry, items: list ? arrayItems(list) : null };
   }
 
   private searchNumberTree(
@@ -380,10 +403,12 @@ export class RawPdf {
     nodeStart: number,
     key: number,
     seen: Set<number>,
+    depth: number,
   ): NumberTreeEntry | null {
+    if (depth > MAX_NUMBER_TREE_DEPTH) return null;
     // A direct node shares its holder's number, so only indirect ones can cycle.
     if (nodeStart === 0) {
-      if (seen.has(objNum) || seen.size > 64) return null;
+      if (seen.has(objNum)) return null;
       seen.add(objNum);
     }
     const body = this.objectBody(objNum);
@@ -408,18 +433,22 @@ export class RawPdf {
       }
     }
 
-    const kids = this.valueSpan(node, "Kids");
-    for (const m of kids?.text.matchAll(/(\d+)\s+\d+\s+R/g) ?? []) {
+    const kids = this.resolve(node, "Kids");
+    for (const m of kids?.matchAll(/(\d+)\s+\d+\s+R/g) ?? []) {
       const kidNum = parseInt(m[1], 10);
       const kid = this.objectBody(kidNum);
-      const limits = kid ? this.valueSpan(kid, "Limits") : null;
-      const [lo, hi] = limits
-        ? [...limits.text.matchAll(/-?\d+/g)].map(Number)
-        : [];
+      const limits = kid ? this.resolve(kid, "Limits") : null;
+      const [lo, hi] = (limits ? arrayItems(limits.trim()) : null)?.map((b) =>
+        Number(b.text),
+      ) ?? [NaN, NaN];
       // /Limits is only an index; without both bounds, search the kid anyway.
-      if (lo !== undefined && hi !== undefined && (key < lo || key > hi))
+      if (
+        Number.isInteger(lo) &&
+        Number.isInteger(hi) &&
+        (key < lo || key > hi)
+      )
         continue;
-      const found = this.searchNumberTree(kidNum, 0, key, seen);
+      const found = this.searchNumberTree(kidNum, 0, key, seen, depth + 1);
       if (found) return found;
     }
     return null;
@@ -673,6 +702,12 @@ export function removeDictEntry(body: string, key: string): string {
  * indirect reference is one element, not three. Spans are into `text`. Null
  * when `text` is not an array this can read.
  */
+/** `12 0 R` -> 12; null for anything that is not a single reference. */
+export function referencedObject(text: string): number | null {
+  const m = text.match(/^(\d+)\s+\d+\s+R$/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
 export function arrayItems(text: string): ValueSpan[] | null {
   if (text[0] !== "[") return null;
   const items: ValueSpan[] = [];

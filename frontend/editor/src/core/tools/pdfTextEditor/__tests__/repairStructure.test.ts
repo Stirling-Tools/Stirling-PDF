@@ -287,9 +287,13 @@ describe("repairStructure: what it leaves alone", () => {
       ],
       1,
     );
+    const parse = vi.spyOn(RawPdf, "parse");
     expect(
       await repairStructure(bytes, { pages: [0], original: bytes }),
     ).toBeNull();
+    // The original is only needed for a tagged file.
+    expect(parse).toHaveBeenCalledTimes(1);
+    parse.mockRestore();
   });
 
   test("only looks at the pages it is given", async () => {

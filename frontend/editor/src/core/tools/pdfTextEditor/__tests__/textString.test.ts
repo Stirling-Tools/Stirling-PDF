@@ -7,7 +7,10 @@ import {
   appendRevision,
   plainObject,
 } from "@app/tools/pdfTextEditor/pdfdoc/revision";
-import { encodeTextString } from "@app/tools/pdfTextEditor/pdfdoc/textString";
+import {
+  decodeTextString,
+  encodeTextString,
+} from "@app/tools/pdfTextEditor/pdfdoc/textString";
 import {
   buildClassicPdf,
   streamBody,
@@ -120,5 +123,44 @@ describe("encodeTextString", () => {
     ["empty", ""],
   ])("PDFium reads back %s exactly", async (_label, alt) => {
     expect(await readAlt(await withAlt(alt))).toBe(alt);
+  });
+});
+
+describe("decodeTextString", () => {
+  test.each([
+    ["plain ASCII", "Bar chart (Q3)"],
+    ["Latin-1 beyond ASCII", "Caf\u00e9"],
+    ["CJK", "\u6536\u5165"],
+    ["astral", "\u{1F4C8} up"],
+  ])("reads back what encodeTextString writes: %s", (_, text) => {
+    expect(decodeTextString(encodeTextString(text))).toBe(text);
+  });
+
+  test("reads literal escapes, balanced parentheses and octal codes", () => {
+    expect(decodeTextString("(a\\(b\\) (c) \\101\\\\ \\n)")).toBe(
+      "a(b) (c) A\\ \n",
+    );
+  });
+
+  test("joins a line continued with a backslash", () => {
+    expect(decodeTextString("(one \\\ntwo)")).toBe("one two");
+  });
+
+  test("reads hex, padding a missing final digit", () => {
+    expect(decodeTextString("<48 69 2>")).toBe("Hi ");
+  });
+
+  test("maps PDFDocEncoding where it differs from Latin-1", () => {
+    expect(decodeTextString("<80A0>")).toBe("\u2022\u20ac");
+  });
+
+  test("reads UTF-8 behind its byte order mark", () => {
+    expect(decodeTextString("<EFBBBFC3A9>")).toBe("\u00e9");
+  });
+
+  test("returns null for anything that is not a string", () => {
+    expect(decodeTextString("/Name")).toBeNull();
+    expect(decodeTextString("<< /A 1 >>")).toBeNull();
+    expect(decodeTextString("(unterminated")).toBeNull();
   });
 });

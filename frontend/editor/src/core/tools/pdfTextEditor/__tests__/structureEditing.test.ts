@@ -17,6 +17,9 @@ import { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { PageStructure } from "@app/tools/pdfTextEditor/model/PageStructure";
 import { StructureEditError } from "@app/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
 import { readPageStructure } from "@app/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
+import { readFileStructure } from "@app/tools/pdfTextEditor/pdfdoc/readFileStructure";
+import { RawPdf } from "@app/tools/pdfTextEditor/pdfdoc/raw";
+import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
 import { PdfiumTextReader } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import {
   HistoryStack,
@@ -167,6 +170,88 @@ describe("reading the structure tree", () => {
   });
 });
 
+/**
+ * Page 0: Figure (element 8, MCID 0) and the start of a paragraph (element 9,
+ * MCID 5) that continues on page 1 as MCID 0, so PDFium lists the paragraph
+ * as [5, 0] on both pages. `slot0` is what page 0's ParentTree has at MCID 0.
+ */
+function spanningPdf(slot0 = "8 0 R"): Uint8Array {
+  const page0 =
+    "/Figure <</MCID 0>> BDC 0 0 10 10 re f EMC /P <</MCID 5>> BDC 0 0 5 5 re f EMC\n";
+  const page1 = "/P <</MCID 0>> BDC 0 0 5 5 re f EMC\n";
+  return buildClassicPdf(
+    [
+      {
+        num: 1,
+        body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 5 0 R /MarkInfo << /Marked true >> >>",
+      },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>" },
+      {
+        num: 3,
+        body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] /Contents 20 0 R /StructParents 0 >>",
+      },
+      {
+        num: 4,
+        body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] /Contents 21 0 R /StructParents 1 >>",
+      },
+      {
+        num: 5,
+        body: "<< /Type /StructTreeRoot /K 7 0 R /ParentTree 6 0 R /RoleMap << /Chart /Figure >> >>",
+      },
+      {
+        num: 6,
+        body: `<< /Nums [0 [${slot0} null null null null 9 0 R] 1 [9 0 R]] >>`,
+      },
+      {
+        num: 7,
+        body: "<< /Type /StructElem /S /Document /P 5 0 R /K [8 0 R 9 0 R] >>",
+      },
+      {
+        num: 8,
+        // UTF-16BE for "Chart", under a custom role the RoleMap makes a Figure.
+        body: "<< /Type /StructElem /S /Chart /P 7 0 R /Pg 3 0 R /K 0 /Alt <FEFF00430068006100720074> >>",
+      },
+      {
+        num: 9,
+        body: "<< /Type /StructElem /S /P /P 7 0 R /Pg 3 0 R /K [5 << /Type /MCR /Pg 4 0 R /MCID 0 >>] >>",
+      },
+      { num: 20, body: streamBody("", page0) },
+      { num: 21, body: streamBody("", page1) },
+    ],
+    1,
+  );
+}
+
+describe("reading tags from the file's ParentTree", () => {
+  test("gives each page's MCIDs to the element its ParentTree names", async () => {
+    const structure = (await readFileStructure(spanningPdf()))!;
+    expect(structure.get(0)).toEqual([
+      { type: "Figure", alt: "Chart", actualText: null, mcids: [0] },
+      { type: "P", alt: null, actualText: null, mcids: [5] },
+    ]);
+    expect(structure.get(1)).toEqual([
+      { type: "P", alt: null, actualText: null, mcids: [0] },
+    ]);
+  });
+
+  test("describes the figure, not the paragraph that spans the page break", async () => {
+    const doc = await open(spanningPdf());
+    expect(doc.structure(0).alt(0)).toBe("Chart");
+    new HistoryStack().execute(
+      new SetAltTextCommand({ pageIndex: 0, mcid: 0, alt: "Revenue chart" }),
+      doc,
+    );
+    const pdf = (await RawPdf.parse(await savedBytes(doc)))!;
+    expect(pdf.objectBody(8)).toContain("/Alt (Revenue chart)");
+    expect(pdf.objectBody(9)).not.toContain("/Alt");
+  });
+
+  test("refuses an MCID only another page's content carries", async () => {
+    const doc = await open(spanningPdf("null"));
+    expect(doc.structure(0).cannotDescribe(0)).toMatch(/no structure element/);
+  });
+});
+
 describe("PageStructure", () => {
   const figure = {
     type: "Figure",
@@ -196,6 +281,24 @@ describe("PageStructure", () => {
     expect(() =>
       new PageStructure([figure]).setEdit(9, { mcid: 9, alt: "x" }),
     ).toThrow();
+  });
+
+  test("describes figures and formulas but not elements that hold text", () => {
+    const s = new PageStructure([
+      figure,
+      { type: "Formula", alt: null, actualText: null, mcids: [5] },
+      { type: "P", alt: null, actualText: null, mcids: [6] },
+    ]);
+    expect(s.cannotDescribe(3)).toBeNull();
+    expect(s.cannotDescribe(5)).toBeNull();
+    expect(s.cannotDescribe(6)).toMatch(/P element/);
+    expect(s.cannotDescribe(9)).toMatch(/no structure element/);
+  });
+
+  test("refuses every description when the save cannot write them", () => {
+    expect(
+      new PageStructure([figure], "the file is encrypted").cannotDescribe(3),
+    ).toBe("the file is encrypted");
   });
 });
 
@@ -231,12 +334,16 @@ describe("SetAltTextCommand", () => {
     expect(doc.structure(0).alt(FIGURE_MCID)).toBe(FIGURE_ALT);
   });
 
-  test("rolls back cleanly for content no element owns", async () => {
+  test.each([
+    ["content no element owns", 42],
+    // The sample's paragraph: an /Alt there would replace its text.
+    ["a paragraph", 1],
+  ])("rolls back cleanly for %s", async (_, mcid) => {
     const doc = await openSample();
     const error = (() => {
       try {
         new HistoryStack().execute(
-          new SetAltTextCommand({ pageIndex: 0, mcid: 42, alt: "x" }),
+          new SetAltTextCommand({ pageIndex: 0, mcid, alt: "x" }),
           doc,
         );
       } catch (e) {
@@ -245,6 +352,21 @@ describe("SetAltTextCommand", () => {
     })();
     expect(error).toBeInstanceOf(HistoryStepError);
     expect((error as HistoryStepError).documentIntact).toBe(true);
+    expect(doc.structureEdits()).toEqual([]);
+  });
+
+  test("refuses a description in an encrypted file, which the save could not write", async () => {
+    const plain = await openSample();
+    expect(plain.module.EPDF_SetEncryption(plain.docPtr, "", "owner", -4)).toBe(
+      true,
+    );
+    const doc = await open(PdfiumSave.serialize(plain));
+    expect(() =>
+      new HistoryStack().execute(
+        new SetAltTextCommand({ pageIndex: 0, mcid: FIGURE_MCID, alt: "x" }),
+        doc,
+      ),
+    ).toThrow(HistoryStepError);
     expect(doc.structureEdits()).toEqual([]);
   });
 });
