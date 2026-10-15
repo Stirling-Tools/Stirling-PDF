@@ -18,6 +18,7 @@ import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId"
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useRedaction } from "@app/contexts/RedactionContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import {
   defaultParameters,
   RedactParameters,
@@ -30,6 +31,7 @@ import "@app/components/viewer/TextSelectionMenu.css";
 export type TextSelectionMenuProps = SelectionSelectionMenuProps & {
   documentId?: string;
   readOnly?: boolean;
+  canCopy?: boolean;
 };
 
 export function TextSelectionMenu(props: TextSelectionMenuProps) {
@@ -49,6 +51,7 @@ function TextSelectionMenuInner({
   placement,
   documentId,
   readOnly = false,
+  canCopy = false,
 }: TextSelectionMenuProps & { documentId: string }) {
   const { t } = useTranslation();
   const { provides: selection } = useSelectionCapability();
@@ -64,6 +67,7 @@ function TextSelectionMenuInner({
     manualRedactColor,
   } = useRedaction();
   const { actions: navActions } = useNavigationActions();
+  const { selectionActions } = useViewer();
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{
@@ -119,17 +123,21 @@ function TextSelectionMenuInner({
     };
   }, [selected, showAbove]);
 
+  // Copies through the selection bridge rather than the plugin: the plugin
+  // writes only via navigator.clipboard, which does not exist over plain HTTP.
   const handleCopy = useCallback(() => {
-    if (documentId) {
-      selection?.copyToClipboard(documentId);
-      selection?.clear(documentId);
+    if (!documentId || !canCopy) return;
+    void selectionActions.copyToClipboard().then((copied) => {
+      if (copied) selection?.clear(documentId);
       alert({
-        alertType: "neutral",
-        title: t("common.copied", "Copied to clipboard"),
+        alertType: copied ? "neutral" : "error",
+        title: copied
+          ? t("common.copied", "Copied to clipboard")
+          : t("common.copyFailed", "Copy failed"),
         durationMs: 2000,
       });
-    }
-  }, [selection, documentId, t]);
+    });
+  }, [selectionActions, selection, documentId, t, canCopy]);
 
   const openAnnotateUi = useCallback(() => {
     handleToolSelectForced?.("annotate");
@@ -323,6 +331,7 @@ function TextSelectionMenuInner({
               type="button"
               className="embedpdf-text-selection-btn"
               onClick={handleCopy}
+              disabled={!canCopy}
               aria-label={t("viewer.copyText", "Copy")}
             >
               <Icon name="copy" size={20} />

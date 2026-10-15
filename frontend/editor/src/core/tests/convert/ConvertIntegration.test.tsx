@@ -49,19 +49,6 @@ import {
 } from "@app/types/fileContext";
 import { MantineProvider } from "@mantine/core";
 
-// Mock axios (for static methods like CancelToken, isCancel)
-vi.mock("axios", () => ({
-  default: {
-    CancelToken: {
-      source: vi.fn(() => ({
-        token: "mock-cancel-token",
-        cancel: vi.fn(),
-      })),
-    },
-    isCancel: vi.fn(() => false),
-  },
-}));
-
 // Mock our apiClient service
 vi.mock("../../services/apiClient", () => ({
   default: {
@@ -232,6 +219,17 @@ describe("Convert Tool Integration Tests", () => {
   });
 
   test("filters mixed inputs using current params and protection without consuming skipped files", async () => {
+    const thumbnail = {
+      thumbnail: "data:image/png;base64,fake-thumbnail",
+      pageCount: 1,
+    };
+    vi.spyOn(
+      thumbnailUtils,
+      "generateThumbnailPairWithMetadata",
+    ).mockResolvedValue({ unrotated: thumbnail, rotated: thumbnail });
+    vi.spyOn(thumbnailUtils, "generateThumbnailForFile").mockResolvedValue(
+      thumbnail.thumbnail,
+    );
     mockedApiClient.post.mockResolvedValue({
       data: new Blob(["output"]),
       headers: {},
@@ -334,19 +332,35 @@ describe("Convert Tool Integration Tests", () => {
     expect(fileStorage.persistVersionedOutputs).toHaveBeenCalledTimes(2);
     expect(result.current.convert.errorMessage).toBe("noValidFiles");
 
+    mockedApiClient.post.mockResolvedValueOnce({
+      data: new Blob(["protected output"], { type: "application/pdf" }),
+    });
+    mockedApiClient.post.mockResolvedValueOnce({
+      data: {
+        encrypted: true,
+        ownerAuthenticated: false,
+        permissions: -4,
+        requiresOpeningPassword: false,
+        signed: false,
+        keyLength: 256,
+      },
+    });
     await act(async () => {
       await result.current.unlock.executeOperation({ password: "secret" }, [
         image,
         locked,
       ]);
     });
-    expect(mockedApiClient.post).toHaveBeenCalledTimes(3);
+    expect(mockedApiClient.post).toHaveBeenCalledTimes(4);
     expect(mockedApiClient.post.mock.calls[2][0]).toBe(
-      "/api/v1/security/remove-password",
+      "/api/v1/security/remove-pdf-passwords",
     );
     expect(
       (mockedApiClient.post.mock.calls[2][1] as FormData).get("password"),
     ).toBe("secret");
+    expect(
+      (mockedApiClient.post.mock.calls[2][1] as FormData).get("sourcePassword"),
+    ).toBe("test");
     expect(
       (mockedApiClient.post.mock.calls[2][1] as FormData).getAll("fileInput"),
     ).toEqual([locked]);

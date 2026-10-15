@@ -35,6 +35,7 @@ import { defaultParameters as compressParameters } from "@app/hooks/tools/compre
 import {
   rememberPdfAccess,
   clearPdfAccess,
+  forgetPdfAccess,
 } from "@app/services/pdfPasswordStore";
 
 const workspace = {
@@ -205,6 +206,7 @@ beforeEach(() => {
 describe("tool file selection", () => {
   test("explains why an unlocked protected PDF is excluded", async () => {
     workspace.fileStubs[0].processedFile = { pages: [], isEncrypted: true };
+    act(() => forgetPdfAccess([workspace.files[0].fileId]));
     rememberPdfAccess(workspace.files[0], {
       password: "secret",
       encrypted: true,
@@ -241,7 +243,7 @@ describe("tool file selection", () => {
       });
       act(() => removePassword.focus());
       const help = await screen.findByText(
-        "Open Remove Password to create an unprotected copy.",
+        "Open Remove Password to choose which passwords to remove.",
       );
       await waitFor(() => expect(help).toBeVisible());
       await userEvent.click(removePassword);
@@ -349,11 +351,14 @@ describe("tool file selection", () => {
       screen.queryByRole("button", { name: "Sort" }),
     ).not.toBeInTheDocument();
 
-    const secondPdf = createTestStirlingFile(
-      "second.pdf",
-      "pdf",
-      "application/pdf",
-    );
+    let secondPdf!: StirlingFile;
+    act(() => {
+      secondPdf = createTestStirlingFile(
+        "second.pdf",
+        "pdf",
+        "application/pdf",
+      );
+    });
     const secondStub = createNewStirlingFileStub(secondPdf, secondPdf.fileId);
     workspace.files.push(secondPdf);
     workspace.fileStubs.push(secondStub);
@@ -365,6 +370,7 @@ describe("tool file selection", () => {
     expect(screen.getByRole("button", { name: "Sort" })).toBeEnabled();
 
     secondStub.processedFile = { pages: [], isEncrypted: true };
+    act(() => forgetPdfAccess([secondPdf.fileId]));
     view.rerender(renderMerge());
     expect(screen.getByRole("button", { name: /Merge PDFs/ })).toBeDisabled();
     expect(
@@ -426,6 +432,7 @@ describe("tool file selection", () => {
     expect(onFileClick).toHaveBeenCalledWith(workspace.files[1].fileId);
 
     workspace.fileStubs[0].processedFile = { pages: [], isEncrypted: true };
+    act(() => forgetPdfAccess([workspace.files[0].fileId]));
     view.rerender(renderTool(<Compress />));
     expect(pdf).toHaveAttribute("data-tool-skipped", "true");
     workspace.fileStubs[0].processedFile.isEncrypted = false;
@@ -478,6 +485,7 @@ describe("tool file selection", () => {
     expect(screen.getByRole("button", { name: "Compress" })).toBeEnabled();
 
     workspace.fileStubs[0].processedFile = { pages: [], isEncrypted: true };
+    act(() => forgetPdfAccess([workspace.files[0].fileId]));
     view.rerender(
       <MantineProvider>
         <Compress />

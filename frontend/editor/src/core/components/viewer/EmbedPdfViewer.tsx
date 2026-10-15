@@ -26,6 +26,7 @@ import type {
 } from "@app/components/viewer/DocumentRestoreBridge";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
+import { PdfProtectionStatus } from "@app/components/viewer/PdfProtectionStatus";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import { canPrintPdf } from "@app/services/pdfPermissions";
 import { PdfPreviewUnlockGate } from "@app/components/viewer/PdfPreviewUnlockGate";
@@ -660,6 +661,26 @@ const EmbedPdfViewerContent = ({
   // consume/undo paths below pass it back as a FileId.
   const currentFileStableId =
     currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
+  const previousActiveFileIdsRef = useRef(activeFileIds);
+  // Follow removals, but do not overwrite a save's new id before its bytes enter FileContext.
+  useEffect(() => {
+    const previousActiveFileIds = previousActiveFileIdsRef.current;
+    previousActiveFileIdsRef.current = activeFileIds;
+    if (
+      !previewFile &&
+      currentFileStableId &&
+      currentFileStableId !== activeFileId &&
+      (!activeFileId || previousActiveFileIds.some((id) => id === activeFileId))
+    ) {
+      setActiveFileId(currentFileStableId);
+    }
+  }, [
+    previewFile,
+    currentFileStableId,
+    activeFileId,
+    activeFileIds,
+    setActiveFileId,
+  ]);
   const fileWithUrl = useFileWithUrl(currentFile, currentFileId);
 
   // Lineage root of the open document: saves and tool outputs add a child record,
@@ -957,7 +978,7 @@ const EmbedPdfViewerContent = ({
       return;
     }
 
-    const updateHasChanges = () => {
+    const updateHasChanges = (historyChanged: boolean) => {
       const canUndo = historyApi.canUndo?.() ?? false;
       if (!canUndo && savedHistoryRevisionRef.current === 0) {
         historyRevisionRef.current = 0;
@@ -969,6 +990,7 @@ const EmbedPdfViewerContent = ({
         }
         return;
       }
+      if (!historyChanged) return;
       historyRevisionRef.current += 1;
       if (suppressHistoryDirtyRef.current) return;
       // A revision equal to the save point means the annotations match the
@@ -989,7 +1011,12 @@ const EmbedPdfViewerContent = ({
       }
     };
 
-    const unsubscribe = historyApi.subscribe(updateHasChanges);
+    // Reconnecting after a permissions check emits the existing history, not a new edit.
+    let subscribing = true;
+    const unsubscribe = historyApi.subscribe(() => {
+      updateHasChanges(!subscribing);
+    });
+    subscribing = false;
     return () => {
       if (typeof unsubscribe === "function") {
         unsubscribe();
@@ -1869,6 +1896,9 @@ const EmbedPdfViewerContent = ({
         </Center>
       ) : (
         <>
+          {currentFile && isStirlingFile(currentFile) && (
+            <PdfProtectionStatus key={currentFile.fileId} file={currentFile} />
+          )}
           {/* EmbedPDF Viewer */}
           <Box
             ref={pdfContainerRef}
@@ -1907,12 +1937,16 @@ const EmbedPdfViewerContent = ({
                       : undefined
               }
               enableAnnotations={
-                shouldEnableAnnotations && !pdfAccess?.encrypted
+                shouldEnableAnnotations && !!pdfAccess && !pdfAccess.encrypted
               }
               isSignMode={selectedTool === "sign"}
               showBakedAnnotations={isAnnotationsVisible}
-              enableRedaction={shouldEnableRedaction && !pdfAccess?.encrypted}
-              enableFormFill={shouldEnableFormFill && !pdfAccess?.encrypted}
+              enableRedaction={
+                shouldEnableRedaction && !!pdfAccess && !pdfAccess.encrypted
+              }
+              enableFormFill={
+                shouldEnableFormFill && !!pdfAccess && !pdfAccess.encrypted
+              }
               formEditingActive={isFormFillToolActive}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}

@@ -17,7 +17,7 @@ vi.mock("@app/utils/thumbnailUtils", () => ({
   generateThumbnailForFile: vi.fn(),
 }));
 vi.mock("@app/services/fileAnalyzer", () => ({
-  FileAnalyzer: { isPDFUserPasswordProtected: async () => false },
+  FileAnalyzer: { isPDFEncrypted: async () => false },
 }));
 
 import { addFiles } from "@app/contexts/file/fileActions";

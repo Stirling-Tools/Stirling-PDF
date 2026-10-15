@@ -8,7 +8,9 @@ async function unlockFixture(page: Page, filename: string, pageCount: number) {
   await page.route("**/api/v1/security/inspect-pdf-security", (route) =>
     route.fulfill({
       json: {
-        encrypted: true,
+        encrypted:
+          route.request().postData()?.includes(`filename="${filename}"`) ??
+          false,
         signed: false,
         ownerAuthenticated: true,
         permissions: -4,
@@ -26,13 +28,13 @@ async function unlockFixture(page: Page, filename: string, pageCount: number) {
   const dialog = page.getByRole("dialog");
   await expect(async () => {
     await dialog
-      .getByPlaceholder("Enter the PDF password")
+      .getByLabel("Password to open", { exact: true })
       .fill("annotation-test");
     await expect(
-      dialog.getByRole("button", { name: "Unlock", exact: true }),
+      dialog.getByRole("button", { name: "Open PDF", exact: true }),
     ).toBeEnabled({ timeout: 1000 });
   }).toPass();
-  await dialog.getByRole("button", { name: "Unlock", exact: true }).click();
+  await dialog.getByRole("button", { name: "Open PDF", exact: true }).click();
   await expect(dialog).toBeHidden();
 }
 
@@ -58,7 +60,7 @@ test("unlocked annotations render before opening comments and remain read-only",
     page.getByRole("button", { name: "Highlight", exact: true }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Remove Password", exact: true }),
+    page.getByRole("button", { name: "Manage protection", exact: true }),
   ).toBeVisible();
 
   await page.getByRole("button", { name: "Comments", exact: true }).click();
