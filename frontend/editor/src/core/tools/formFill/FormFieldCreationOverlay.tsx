@@ -72,6 +72,7 @@ export function FormFieldCreationOverlay({
     previewing,
     state,
     forFileId,
+    saving,
   } = useFormFill();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -106,7 +107,8 @@ export function FormFieldCreationOverlay({
   // Precompute snap edges once (not on every pointermove).
   const snapTargets = useMemo(() => collectSnapTargets(snapRects), [snapRects]);
 
-  const active = mode === "create" && creationType != null && !previewing;
+  const active =
+    mode === "create" && creationType != null && !previewing && !saving;
 
   // Stale-file guard: don't draw on a page whose fields belong to another file.
   const fileMismatch =

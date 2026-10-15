@@ -258,14 +258,14 @@ public class CertSignController {
                         validateFilePresent(
                                 p12File, "PKCS12 keystore", "PKCS12/PFX keystore file is required");
                 ks = KeyStore.getInstance("PKCS12");
-                ks.load(p12File.getInputStream(), keystorePassword.toCharArray());
+                loadKeyStore(ks, p12File, keystorePassword, "PKCS12 keystore");
                 break;
             case "JKS":
                 jksfile =
                         validateFilePresent(
                                 jksfile, "JKS keystore", "JKS keystore file is required");
                 ks = KeyStore.getInstance("JKS");
-                ks.load(jksfile.getInputStream(), keystorePassword.toCharArray());
+                loadKeyStore(ks, jksfile, keystorePassword, "JKS keystore");
                 break;
             case "SERVER":
                 if (serverCertificateService == null) {
@@ -361,6 +361,29 @@ public class CertSignController {
         return file;
     }
 
+    // A wrong password surfaces as an IOException caused by UnrecoverableKeyException.
+    private static void loadKeyStore(KeyStore ks, MultipartFile file, String password, String label)
+            throws IOException, NoSuchAlgorithmException, CertificateException {
+        try (InputStream in = file.getInputStream()) {
+            ks.load(in, password.toCharArray());
+        } catch (IOException e) {
+            if (e.getCause() instanceof UnrecoverableKeyException) {
+                throw wrongPassword(label);
+            }
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    label + " - the file could not be read as a " + label);
+        }
+    }
+
+    private static IllegalArgumentException wrongPassword(String label) {
+        return ExceptionUtils.createIllegalArgumentException(
+                "error.invalidArgument",
+                "Invalid argument: {0}",
+                "password - the " + label + " password is incorrect or missing");
+    }
+
     private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
             throws IOException, OperatorCreationException, PKCSException {
         try (PEMParser pemParser =
@@ -372,11 +395,19 @@ public class CertSignController {
                 InputDecryptorProvider decProv =
                         new JceOpenSSLPKCS8DecryptorProviderBuilder()
                                 .build(requirePemPassword(password));
-                pkInfo = pkcs8EncryptedPrivateKeyInfo.decryptPrivateKeyInfo(decProv);
+                try {
+                    pkInfo = pkcs8EncryptedPrivateKeyInfo.decryptPrivateKeyInfo(decProv);
+                } catch (PKCSException e) {
+                    throw wrongPassword("PEM private key");
+                }
             } else if (pemObject instanceof PEMEncryptedKeyPair pemEncryptedKeyPair) {
                 PEMDecryptorProvider decProv =
                         new JcePEMDecryptorProviderBuilder().build(requirePemPassword(password));
-                pkInfo = pemEncryptedKeyPair.decryptKeyPair(decProv).getPrivateKeyInfo();
+                try {
+                    pkInfo = pemEncryptedKeyPair.decryptKeyPair(decProv).getPrivateKeyInfo();
+                } catch (IOException e) {
+                    throw wrongPassword("PEM private key");
+                }
             } else if (pemObject instanceof PEMKeyPair pemKeyPair) {
                 pkInfo = pemKeyPair.getPrivateKeyInfo();
             } else if (pemObject instanceof PrivateKeyInfo privateKeyInfo) {
