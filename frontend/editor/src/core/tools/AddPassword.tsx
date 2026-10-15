@@ -175,6 +175,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                     : undefined
                 }
                 required
+                autoComplete="new-password"
                 disabled={addPasswordOperation.isLoading}
               />
             )}

@@ -1,5 +1,6 @@
 import { test, expect } from "@app/tests/helpers/test-base";
-import { login, skipOnboarding } from "@app/tests/helpers/login";
+import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
+import { skipOnboarding } from "@app/tests/helpers/login";
 import type { Page } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs/promises";
@@ -12,10 +13,7 @@ const owner = "owner-test-password";
 const deniedMessage = "This action requires the permissions password.";
 
 test.beforeEach(async ({ page }) => {
-  await skipOnboarding(page);
-  const config = await page.request.get("/api/v1/config/app-config");
-  expect(config.ok()).toBe(true);
-  if ((await config.json()).enableLogin) await login(page);
+  await loadLiveAppConfig(page);
 });
 
 async function openTextEditor(page: Page) {
@@ -30,6 +28,7 @@ async function inspect(page: Page, buffer: Buffer, password: string) {
   const response = await page.request.post(
     "/api/v1/security/inspect-pdf-security",
     {
+      headers: await liveApiHeaders(page),
       multipart: {
         fileInput: {
           name: "restricted.pdf",

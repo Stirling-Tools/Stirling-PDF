@@ -1,5 +1,5 @@
 import { test, expect } from "@app/tests/helpers/test-base";
-import { login, skipOnboarding } from "@app/tests/helpers/login";
+import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
 import type { Page } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs";
@@ -9,16 +9,14 @@ const reader = "opening-test-password";
 const owner = "permissions-test-password";
 
 test.beforeEach(async ({ page }) => {
-  await skipOnboarding(page);
-  const config = await page.request.get("/api/v1/config/app-config");
-  expect(config.ok()).toBe(true);
-  if ((await config.json()).enableLogin) await login(page);
+  await loadLiveAppConfig(page);
 });
 
 async function inspect(page: Page, buffer: Buffer, password: string) {
   const response = await page.request.post(
     "/api/v1/security/inspect-pdf-security",
     {
+      headers: await liveApiHeaders(page),
       multipart: {
         fileInput: { name: "result.pdf", mimeType: "application/pdf", buffer },
         password,
@@ -190,6 +188,7 @@ for (const action of [
         ? "change-pdf-permissions"
         : "remove-pdf-protection";
     const denied = await page.request.post(`/api/v1/security/${endpoint}`, {
+      headers: await liveApiHeaders(page),
       multipart: {
         fileInput: {
           name: "restricted.pdf",
@@ -448,6 +447,7 @@ test("replacing the permissions password follows the owner policy and invalidate
   const oldCredential = await page.request.post(
     "/api/v1/security/inspect-pdf-security",
     {
+      headers: await liveApiHeaders(page),
       multipart: {
         fileInput: { name: "updated.pdf", mimeType: "application/pdf", buffer },
         password: "owner-test-password",

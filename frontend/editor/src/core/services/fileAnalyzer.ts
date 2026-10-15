@@ -97,11 +97,8 @@ export class FileAnalyzer {
     const access = getPdfAccess(file);
     if (access) return access.encrypted;
     if (!(await hasEncryptMarker(file))) return false;
-    if (
-      file.size < LARGE_PDF_PARSE_LIMIT &&
-      (await this.requiresOpeningPassword(file))
-    )
-      return true;
+    if (file.size >= LARGE_PDF_PARSE_LIMIT) return true;
+    if (await this.requiresOpeningPassword(file)) return true;
     try {
       return (await ensurePdfAccess(file)).encrypted;
     } catch {

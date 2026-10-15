@@ -124,6 +124,7 @@ const ChangePermissions = (props: BaseToolProps) => {
                 }
                 disabled={base.operation.isLoading}
                 required
+                autoComplete="new-password"
               />
             )}
             <ChangePermissionsSettings

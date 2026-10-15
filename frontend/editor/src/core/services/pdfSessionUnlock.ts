@@ -1,5 +1,5 @@
 import apiClient from "@app/services/apiClient";
-import axios from "axios";
+import axios, { type CancelToken } from "axios";
 import i18n from "i18next";
 import {
   getPdfAccess,
@@ -71,16 +71,21 @@ async function requestWorkingPdf(
   endpoint: string,
   form: FormData,
   message: string,
+  cancelToken?: CancelToken,
 ): Promise<Blob> {
   try {
     const response = await apiClient.post<Blob>(endpoint, form, {
       responseType: "blob",
       suppressErrorToast: true,
+      cancelToken,
     });
     return response.data;
-  } catch {
+  } catch (error) {
     // Axios errors carry the password-bearing request form into tool logs and failure history.
-    throw new Error(message);
+    const sanitized = axios.isCancel(error)
+      ? new axios.CanceledError("Operation cancelled")
+      : new Error(message);
+    throw sanitized;
   }
 }
 
@@ -375,6 +380,7 @@ export async function changePdfSecurity(
   file: File,
   form: FormData,
   endpoint: string,
+  cancelToken?: CancelToken,
 ): Promise<Blob> {
   const settingProtection = endpoint === "/api/v1/security/add-password";
   if (settingProtection) {
@@ -422,5 +428,6 @@ export async function changePdfSecurity(
       "encryptedPdfUnlock.securityChangeFailed",
       "Unable to change protection. Check the permissions password and the new security settings.",
     ),
+    cancelToken,
   );
 }

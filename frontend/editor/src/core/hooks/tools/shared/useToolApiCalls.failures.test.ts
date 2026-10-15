@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
+import type { AxiosRequestConfig } from "axios";
 import { expectConsole } from "@app/tests/failOnConsole";
 import { rememberUnprotectedPdf } from "@app/tests/utils/testFileHelpers";
 import type { StirlingFile } from "@app/types/fileContext";
@@ -48,6 +49,43 @@ beforeEach(() => {
 });
 
 describe("processFiles failure reporting", () => {
+  it.each(["add-password", "remove-password"])(
+    "cancels %s without processing the remaining batch or marking files as failed",
+    async (operation) => {
+      post.mockImplementation(
+        (_endpoint: string, _form: FormData, config: AxiosRequestConfig) =>
+          new Promise((_resolve, reject) => {
+            config.cancelToken?.promise.then(reject);
+          }),
+      );
+      const { result } = renderHook(() => useToolApiCalls());
+      const markFileError = vi.fn();
+      const processing = result.current.processFiles(
+        undefined,
+        [file("a.pdf", "a"), file("b.pdf", "b")],
+        {
+          endpoint: `/api/v1/security/${operation}`,
+          buildFormData: () => {
+            const form = new FormData();
+            form.set("keyLength", "256");
+            return form;
+          },
+        },
+        vi.fn(),
+        vi.fn(),
+        markFileError,
+      );
+      const cancelled = expect(processing).rejects.toThrow(
+        "Operation was cancelled",
+      );
+      await vi.waitFor(() => expect(post).toHaveBeenCalledOnce());
+      result.current.cancelOperation();
+      await cancelled;
+      expect(post).toHaveBeenCalledOnce();
+      expect(markFileError).not.toHaveBeenCalled();
+    },
+  );
+
   it("stops at a signup gate without labelling the files as failed", async () => {
     const blocked = {
       response: { status: 401, data: { error: "SIGNUP_REQUIRED" } },

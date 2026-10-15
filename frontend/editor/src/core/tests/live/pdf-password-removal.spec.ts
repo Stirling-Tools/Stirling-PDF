@@ -1,5 +1,5 @@
 import { test, expect } from "@app/tests/helpers/test-base";
-import { login, skipOnboarding } from "@app/tests/helpers/login";
+import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
 import type { Page, Response } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs/promises";
@@ -9,10 +9,7 @@ const owner = "removal-owner";
 const fixture = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
 
 test.beforeEach(async ({ page }) => {
-  await skipOnboarding(page);
-  const response = await page.request.get("/api/v1/config/app-config");
-  expect(response.ok()).toBe(true);
-  if ((await response.json()).enableLogin) await login(page);
+  await loadLiveAppConfig(page);
 });
 
 async function protectedPdf(
@@ -23,6 +20,7 @@ async function protectedPdf(
   const response = await page.request.post(
     "/api/v1/security/set-pdf-protection",
     {
+      headers: await liveApiHeaders(page),
       multipart: {
         fileInput: {
           name: "sample.pdf",
@@ -43,6 +41,7 @@ async function protectedPdf(
 
 async function inspect(page: Page, buffer: Buffer, password: string) {
   return page.request.post("/api/v1/security/inspect-pdf-security", {
+    headers: await liveApiHeaders(page),
     multipart: {
       fileInput: { name: "result.pdf", mimeType: "application/pdf", buffer },
       password,

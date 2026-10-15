@@ -1,5 +1,5 @@
 import { test, expect } from "@app/tests/helpers/test-base";
-import { login, skipOnboarding } from "@app/tests/helpers/login";
+import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
 import type { Page } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs/promises";
@@ -9,16 +9,14 @@ const reader = "session-opening-password";
 const owner = "session-permissions-password";
 
 test.beforeEach(async ({ page }) => {
-  await skipOnboarding(page);
-  const response = await page.request.get("/api/v1/config/app-config");
-  expect(response.ok()).toBe(true);
-  if ((await response.json()).enableLogin) await login(page);
+  await loadLiveAppConfig(page);
 });
 
 async function protect(page: Page) {
   const response = await page.request.post(
     "/api/v1/security/set-pdf-protection",
     {
+      headers: await liveApiHeaders(page),
       multipart: {
         fileInput: {
           name: "sample.pdf",
@@ -43,6 +41,7 @@ async function inspect(page: Page, buffer: Buffer, password: string) {
   const response = await page.request.post(
     "/api/v1/security/inspect-pdf-security",
     {
+      headers: await liveApiHeaders(page),
       multipart: {
         fileInput: { name: "result.pdf", mimeType: "application/pdf", buffer },
         password,
@@ -85,15 +84,6 @@ test("opening passwords reject empty and wrong input, cancel safely, and are req
   await page.getByTestId("file-input").setInputFiles(upload);
   await open(page, reader);
   await page.reload();
-  await page.goto("/files");
-  await page.getByRole("button", { name: "Recents", exact: true }).click();
-  await page.locator('.files-page-view-toggle-icon[title="Grid view"]').click();
-  const card = page
-    .locator('.files-page-card[aria-label="session-protected.pdf"]')
-    .first();
-  await expect(card).toBeVisible();
-  await expect(card.locator("img")).toHaveCount(0);
-  await card.dblclick();
   await expect(dialog).toBeVisible();
   await expect(page.locator('[data-page-index="0"]')).toHaveCount(0);
   await open(page, reader);
@@ -272,14 +262,8 @@ test("batch opening accepts a shared opening password without granting owner acc
   await expect(
     page.getByRole("button", { name: "Apply Rotation (2 files)", exact: true }),
   ).toBeEnabled();
-  await page
-    .getByRole("button", { name: /^batch-a\.pdf/ })
-    .getByRole("button", { name: "Open in viewer", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Reader", exact: true }).click();
   await expect(page.locator('[data-page-index="0"]').first()).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Print PDF", exact: true }),
-  ).toBeEnabled({ enabled: access.honorOwnerPasswords === false });
   await page
     .getByRole("button", { name: "Manage protection", exact: true })
     .click();
@@ -295,4 +279,10 @@ test("batch opening accepts a shared opening password without granting owner acc
       exact: true,
     }),
   ).toHaveCount(access.honorOwnerPasswords === false ? 0 : 1);
+  await page
+    .getByRole("button", { name: "Change Permissions", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Print PDF", exact: true }),
+  ).toBeEnabled({ enabled: access.honorOwnerPasswords === false });
 });

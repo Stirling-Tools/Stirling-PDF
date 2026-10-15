@@ -61,8 +61,8 @@ export const useToolApiCalls = <TParams = void>() => {
       const failedFiles: string[] = [];
       const total = validFiles.length;
 
-      // Create cancel token for this operation
-      cancelTokenRef.current = axios.CancelToken.source();
+      const cancellation = axios.CancelToken.source();
+      cancelTokenRef.current = cancellation;
 
       // Params are the same for every file, so resolve the endpoint once. A null
       // endpoint means the tool has no backend call (e.g. client-side tools) and
@@ -97,13 +97,18 @@ export const useToolApiCalls = <TParams = void>() => {
             endpoint === "/api/v1/security/add-password" ||
             endpoint === "/api/v1/security/remove-password"
               ? {
-                  data: await changePdfSecurity(file, formData, endpoint),
+                  data: await changePdfSecurity(
+                    file,
+                    formData,
+                    endpoint,
+                    cancellation.token,
+                  ),
                   status: 200,
                   headers: undefined,
                 }
               : await apiClient.post(endpoint, formData, {
                   responseType: "blob",
-                  cancelToken: cancelTokenRef.current?.token,
+                  cancelToken: cancellation.token,
                 });
           console.debug("[processFiles] Response OK", {
             name: file.name,

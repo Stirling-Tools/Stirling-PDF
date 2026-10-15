@@ -1104,12 +1104,14 @@ export function LocalEmbedPDF({
   useEffect(() => {
     if (
       fileStableKey &&
-      shouldSkipBytes?.(fileStableKey) &&
       openedPermissionOverrideRef.current ===
-        hasPdfPermissionOverride(pdfAccess)
+        hasPdfPermissionOverride(pdfAccess) &&
+      (openedContentKeyRef.current === fileStableKey ||
+        shouldSkipBytes?.(fileStableKey))
     ) {
       // The live document already shows this save; swapping the bytes would
       // reopen it and lose the scroll position for no visual gain.
+      openedContentKeyRef.current = fileStableKey;
       return;
     }
     let cancelled = false;

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import apiClient from "@app/services/apiClient";
+import axios from "axios";
 import JSZip from "jszip";
 import { zipFileService } from "@app/services/zipFileService";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
@@ -48,6 +49,30 @@ beforeEach(() => {
 afterEach(clearPdfAccess);
 
 describe("session PDF access", () => {
+  it("preserves cancellation classification without retaining password-bearing requests", async () => {
+    const file = new File(["encrypted"], "restricted.pdf");
+    rememberPdfAccess(file, { ...access, ownerAuthenticated: true });
+    const form = new FormData();
+    form.set("ownerPassword", "secret");
+    const original = Object.assign(new axios.CanceledError("cancelled"), {
+      config: { data: form },
+      request: { form },
+    });
+    post.mockRejectedValueOnce(original);
+    const cancellation = axios.CancelToken.source();
+    const error = await changePdfSecurity(
+      file,
+      form,
+      "/api/v1/security/add-password",
+      cancellation.token,
+    ).catch((error: unknown) => error);
+    expect(axios.isCancel(error)).toBe(true);
+    expect(error).not.toHaveProperty("config");
+    expect(error).not.toHaveProperty("request");
+    expect(error).not.toHaveProperty("cause");
+    expect(post.mock.calls[0][2]?.cancelToken).toBe(cancellation.token);
+  });
+
   it.each([undefined, true, false])(
     "uses the server owner policy (%s) without changing authentication",
     async (honorOwnerPasswords) => {

@@ -1,5 +1,6 @@
 import { test, expect } from "@app/tests/helpers/test-base";
-import { login, skipOnboarding } from "@app/tests/helpers/login";
+import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
+import { skipOnboarding } from "@app/tests/helpers/login";
 import type { BrowserContext, Page } from "@playwright/test";
 import { PdfPermissionFlag } from "@embedpdf/models";
 import path from "node:path";
@@ -39,16 +40,14 @@ const restrictions = [
 ] as const;
 
 test.beforeEach(async ({ page }) => {
-  await skipOnboarding(page);
-  const config = await page.request.get("/api/v1/config/app-config");
-  expect(config.ok()).toBe(true);
-  if ((await config.json()).enableLogin) await login(page);
+  await loadLiveAppConfig(page);
 });
 
 async function inspect(page: Page, buffer: Buffer, password = "") {
   const response = await page.request.post(
     "/api/v1/security/inspect-pdf-security",
     {
+      headers: await liveApiHeaders(page),
       multipart: {
         fileInput: { name: "result.pdf", mimeType: "application/pdf", buffer },
         password,
@@ -212,6 +211,7 @@ for (const restriction of restrictions) {
         const denied = await page.request.post(
           "/api/v1/security/prepare-pdf-session",
           {
+            headers: await liveApiHeaders(page),
             multipart: {
               fileInput: {
                 name: "restricted.pdf",
@@ -276,6 +276,7 @@ for (const restriction of restrictions) {
         const permitted = await page.request.post(
           "/api/v1/security/prepare-pdf-session",
           {
+            headers: await liveApiHeaders(page),
             multipart: {
               fileInput: {
                 name: "allowed.pdf",
