@@ -438,7 +438,7 @@ export default function StampPreview({
             <QRCodeSVG
               value={parameters.stampText}
               level="M"
-              marginSize={2}
+              marginSize={4}
               className={styles.stampImage}
             />
             {itemHandles}

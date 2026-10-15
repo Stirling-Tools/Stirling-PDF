@@ -81,7 +81,7 @@ public class StampController {
     // Placeholder for escaped @ symbol (using Unicode private use area)
     private static final String ESCAPED_AT_PLACEHOLDER = "\uE000ESCAPED_AT\uE000";
     private static final int MAX_QR_CONTENT_LENGTH = 1000;
-    private static final int QR_QUIET_ZONE_MODULES = 2;
+    private static final int QR_QUIET_ZONE_MODULES = 4;
 
     /**
      * Initialize data binder for multipart file uploads. This method registers a custom editor for
