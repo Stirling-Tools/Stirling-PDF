@@ -246,8 +246,9 @@ public final class SimpleSchemaGenerator {
                         : property;
         if (doc.allowableValues().length > 0 && !target.has("enum")) {
             ArrayNode values = target.putArray("enum");
+            String valueType = target.path("type").asText();
             for (String value : doc.allowableValues()) {
-                values.add(value);
+                addTyped(values, value, valueType);
             }
         } else if (doc.implementation().isEnum()
                 && "string".equals(target.path("type").asText())
@@ -294,6 +295,20 @@ public final class SimpleSchemaGenerator {
         ObjectNode holder = mapper.createObjectNode();
         setTyped(holder, "v", text, itemType);
         return holder.has("v") ? out.add(holder.get("v")) : null;
+    }
+
+    // Integer fields list allowableValues as strings; strict validators reject 1 against ["1"].
+    private static void addTyped(ArrayNode values, String value, String type) {
+        try {
+            switch (type) {
+                case "integer" -> values.add(Long.parseLong(value.trim()));
+                case "number" -> values.add(Double.parseDouble(value.trim()));
+                case "boolean" -> values.add(Boolean.parseBoolean(value.trim()));
+                default -> values.add(value);
+            }
+        } catch (NumberFormatException e) {
+            values.add(value);
+        }
     }
 
     private static void setTyped(ObjectNode node, String key, String value, String type) {
