@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { Text } from "@mantine/core";
 import {
   AddStampParameters,
   isQrContentWithinLimit,
@@ -444,8 +445,27 @@ export default function StampPreview({
                 level="M"
                 marginSize={4}
                 className={styles.stampImage}
+                title={t("AddStampRequest.qrCode", "QR Code")}
               />
               {itemHandles}
+            </div>
+          )}
+
+        {/* Over-limit QR content renders no code, so say why instead of
+            leaving an empty preview; the setup-step error is collapsed away */}
+        {parameters.stampType === "qr" &&
+          parameters.stampText.trim().length > 0 &&
+          !isQrContentWithinLimit(parameters.stampText) && (
+            <div
+              className={styles.qrOverLimitNotice}
+              data-qr-over-limit-notice=""
+            >
+              <Text c="red" size="sm" ta="center">
+                {t(
+                  "AddStampRequest.qrContentTooLong",
+                  "Too long to fit in a QR code. Shorten the content.",
+                )}
+              </Text>
             </div>
           )}
 

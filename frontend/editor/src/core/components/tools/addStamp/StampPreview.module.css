@@ -50,6 +50,18 @@
   pointer-events: none;
 }
 
+/* QR over-limit notice: centered message replacing the unrenderable code */
+.qrOverLimitNotice {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
 /* Text stamp styles */
 .textLine {
   white-space: pre;
