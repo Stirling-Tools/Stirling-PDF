@@ -8,12 +8,15 @@ export type DesktopTargetId =
   | "windowsArm64"
   | "linuxDeb"
   | "linuxRpm"
-  | "linuxAppImage";
+  | "linuxAppImage"
+  | "linuxArm64";
 
 export interface DesktopTarget {
   id: DesktopTargetId;
   platform: DesktopPlatform;
   url: string;
+  /** No installer is built for this machine; `url` is the install guide instead. */
+  guide?: boolean;
 }
 
 export const DESKTOP_TARGETS: readonly DesktopTarget[] = [
@@ -35,6 +38,12 @@ export const DESKTOP_TARGETS: readonly DesktopTarget[] = [
     platform: "linux",
     url: DOWNLOAD_URLS.LINUX_APPIMAGE,
   },
+  {
+    id: "linuxArm64",
+    platform: "linux",
+    url: DOWNLOAD_URLS.LINUX_DOCS,
+    guide: true,
+  },
 ];
 
 export function getDesktopTarget(id: DesktopTargetId): DesktopTarget {
@@ -49,9 +58,11 @@ export interface PlatformHints {
 }
 
 /**
- * Best guess at the installer for this machine. Client hints are the only
- * source of the CPU architecture, so without them Windows defaults to x64, the
- * common case. Phones and unknown platforms fall back to the Mac build.
+ * Best guess at the installer for this machine. The architecture comes from
+ * client hints, or for Linux the user agent too (Firefox names aarch64 there);
+ * without either, Windows and Linux default to x64, the common case. Arm Linux,
+ * which has no build, gets the install guide. Phones and unknown platforms fall
+ * back to the Mac build.
  */
 export function pickDesktopTarget(
   userAgent: string,
@@ -60,6 +71,8 @@ export function pickDesktopTarget(
   const platform = (hints.platform ?? "").toLowerCase();
   const ua = userAgent.toLowerCase();
   const isArm = (hints.architecture ?? "").toLowerCase().includes("arm");
+  const linuxTarget: DesktopTargetId =
+    isArm || /aarch64|arm64|armv\d/.test(ua) ? "linuxArm64" : "linuxDeb";
 
   if (
     platform.includes("windows") ||
@@ -68,10 +81,10 @@ export function pickDesktopTarget(
     return isArm ? "windowsArm64" : "windowsX64";
   }
   if (platform.includes("linux") || platform.includes("chrome os")) {
-    return "linuxDeb";
+    return linuxTarget;
   }
   if (!platform && /linux|x11/.test(ua) && !ua.includes("android")) {
-    return "linuxDeb";
+    return linuxTarget;
   }
   return "mac";
 }

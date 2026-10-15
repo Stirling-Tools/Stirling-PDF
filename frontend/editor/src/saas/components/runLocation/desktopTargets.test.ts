@@ -35,6 +35,17 @@ describe("pickDesktopTarget", () => {
     expect(pickDesktopTarget(LINUX_UA)).toBe("linuxDeb");
   });
 
+  it("sends Arm Linux, which has no build, to the install guide", () => {
+    expect(
+      pickDesktopTarget(LINUX_UA, { platform: "Linux", architecture: "arm" }),
+    ).toBe("linuxArm64");
+    expect(
+      pickDesktopTarget(
+        "Mozilla/5.0 (X11; Linux aarch64; rv:131.0) Gecko/20100101 Firefox/131.0",
+      ),
+    ).toBe("linuxArm64");
+  });
+
   it("does not mistake Android for desktop Linux", () => {
     expect(pickDesktopTarget(ANDROID_UA)).toBe("mac");
   });
