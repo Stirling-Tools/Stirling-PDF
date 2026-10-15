@@ -17,6 +17,8 @@ import java.nio.file.Files;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -29,8 +31,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.SsrfProtectionService;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.FileToPdf;
 import stirling.software.common.util.GeneralUtils;
@@ -160,5 +164,28 @@ class ConvertMarkdownToPdfTest {
     void tableAttributeProvider_setsClassOnTableBlock() {
         TableAttributeProvider provider = new TableAttributeProvider();
         assertNotNull(provider);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {"```js\nfirst()\n    second()\n```\n", "    first()\n        second()\n"})
+    void renderHtml_codeBlockKeepsLineBreaksAndWrapsAfterSanitizing(String markdown) {
+        CustomHtmlSanitizer sanitizer =
+                new CustomHtmlSanitizer(
+                        mock(SsrfProtectionService.class), new ApplicationProperties());
+
+        String html = sanitizer.sanitize(ConvertMarkdownToPdf.renderHtml(markdown));
+
+        assertEquals(
+                "<pre style=\"white-space:pre-wrap;word-wrap:break-word\">"
+                        + "<code>first()\n    second()\n</code></pre>\n",
+                html);
+    }
+
+    @Test
+    void renderHtml_leavesParagraphsAndInlineCodeUnstyled() {
+        assertEquals(
+                "<p>one\ntwo <code>x</code></p>\n",
+                ConvertMarkdownToPdf.renderHtml("one\ntwo `x`"));
     }
 }
