@@ -57,6 +57,7 @@ export function PdfViewerToolbar({
   const [displayZoomPercent, setDisplayZoomPercent] = useState(
     () => zoomState.zoomPercent || 100,
   );
+  const [zoomLevel, setZoomLevel] = useState(() => zoomState.level);
   const [isDualPageActive, setIsDualPageActive] = useState(
     spreadState.isDualPage,
   );
@@ -80,19 +81,26 @@ export function PdfViewerToolbar({
     const unregister = registerImmediateZoomUpdate((percent) => {
       if (zoomRestorePendingRef.current) return;
       setDisplayZoomPercent(percent);
+      setZoomLevel(getZoomState().level);
     });
     if (!zoomRestorePendingRef.current) {
       setDisplayZoomPercent(zoomState.zoomPercent || 100);
+      setZoomLevel(zoomState.level);
     }
     return () => {
       unregister?.();
     };
   }, [
     registerImmediateZoomUpdate,
+    getZoomState,
     zoomState.zoomPercent,
+    zoomState.level,
     zoomRestorePendingRef,
     zoomRestoreSettledTick,
   ]);
+
+  const isFitWidthActive = zoomLevel === ZoomMode.FitWidth;
+  const isFitPageActive = zoomLevel === ZoomMode.FitPage;
 
   useEffect(() => {
     const unregister = registerImmediateSpreadUpdate((_mode, isDual) => {
@@ -392,12 +400,13 @@ export function PdfViewerToolbar({
             arrow
           >
             <ActionIcon
-              variant="tertiary"
+              variant={isFitWidthActive ? "primary" : "tertiary"}
               size={buttonSize}
               onClick={handleFitWidth}
               aria-label={t("viewer.fitWidth", "Fit to width")}
+              aria-pressed={isFitWidthActive}
             >
-              <Icon name="move-horizontal" size={18} />
+              <Icon name="arrow-left-right" size={18} />
             </ActionIcon>
           </Tooltip>
           <Tooltip
@@ -406,10 +415,11 @@ export function PdfViewerToolbar({
             arrow
           >
             <ActionIcon
-              variant="tertiary"
+              variant={isFitPageActive ? "primary" : "tertiary"}
               size={buttonSize}
               onClick={handleFitPage}
               aria-label={t("viewer.fitPage", "Fit to page")}
+              aria-pressed={isFitPageActive}
             >
               <Icon name="scan" size={18} />
             </ActionIcon>
@@ -468,13 +478,17 @@ export function PdfViewerToolbar({
               {t("viewer.zoomIn", "Zoom in")} ({displayZoomPercent}%)
             </Menu.Item>
             <Menu.Item
-              leftSection={<Icon name="move-horizontal" size={18} />}
+              leftSection={<Icon name="arrow-left-right" size={18} />}
+              rightSection={isFitWidthActive && <Icon name="check" size={16} />}
+              aria-current={isFitWidthActive || undefined}
               onClick={handleFitWidth}
             >
               {t("viewer.fitWidth", "Fit to width")}
             </Menu.Item>
             <Menu.Item
               leftSection={<Icon name="scan" size={18} />}
+              rightSection={isFitPageActive && <Icon name="check" size={16} />}
+              aria-current={isFitPageActive || undefined}
               onClick={handleFitPage}
             >
               {t("viewer.fitPage", "Fit to page")}
