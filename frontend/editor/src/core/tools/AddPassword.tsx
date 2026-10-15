@@ -158,10 +158,6 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                   "encryptedPdfUnlock.newOwnerPassword",
                   "New permissions password",
                 )}
-                description={t(
-                  "encryptedPdfUnlock.differentPasswordHint",
-                  "Use a different password to change restrictions.",
-                )}
                 value={addPasswordParams.parameters.ownerPassword}
                 onChange={(event) =>
                   addPasswordParams.updateParameter(

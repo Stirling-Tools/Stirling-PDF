@@ -67,11 +67,13 @@ for (const source of ["workbench", "disk"] as const) {
       name: "Remove Password",
       exact: true,
     });
-    await expect(removePassword).toHaveCount(0);
+    await expect(removePassword).toBeVisible();
     await page.getByTestId("pdf-editor-root").screenshot({
       path: test.info().outputPath("protected-ocr-sidebar.png"),
     });
     await expect(page).toHaveURL(/\/pdf-text-editor$/);
     expect(ocrRequests).toEqual([]);
+    await removePassword.click();
+    await expect(page).toHaveURL(/\/remove-password$/);
   });
 }

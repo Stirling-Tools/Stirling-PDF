@@ -239,7 +239,7 @@ test("removing an opening password retains the blank owner field even when enfor
 }) => {
   const original = await protect(page, opening);
   await upload(page, original, "/remove-password");
-  const dialog = page.getByRole("dialog", { name: "Open PDF", exact: true });
+  const dialog = page.getByRole("dialog", { name: /^Open PDF/ });
   await expect(dialog).toBeVisible();
   await dialog.getByLabel("Password to open", { exact: true }).fill("wrong");
   await dialog.getByRole("button", { name: "Open PDF", exact: true }).click();

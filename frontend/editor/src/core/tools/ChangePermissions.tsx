@@ -115,14 +115,6 @@ const ChangePermissions = (props: BaseToolProps) => {
                   "encryptedPdfUnlock.newOwnerPassword",
                   "New permissions password",
                 )}
-                description={
-                  protectedInput
-                    ? undefined
-                    : t(
-                        "encryptedPdfUnlock.newOwnerHint",
-                        "Required to change these restrictions later.",
-                      )
-                }
                 value={base.params.parameters.ownerPassword ?? ""}
                 onChange={(e) =>
                   base.params.updateParameter(

@@ -141,7 +141,7 @@ describe("RemovePasswordSettings", () => {
 
     expect(mockT).toHaveBeenCalledWith(
       "removePassword.password.label",
-      "Permissions password (owner)",
+      "Current Password",
     );
     expect(mockT).toHaveBeenCalledWith(
       "removePassword.password.placeholder",

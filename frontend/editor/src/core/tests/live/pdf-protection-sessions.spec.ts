@@ -54,7 +54,7 @@ async function inspect(page: Page, buffer: Buffer, password: string) {
 }
 
 async function open(page: Page, password: string) {
-  const dialog = page.getByRole("dialog", { name: "Open PDF", exact: true });
+  const dialog = page.getByRole("dialog", { name: /^Open PDF/ });
   await dialog.getByLabel("Password to open", { exact: true }).fill(password);
   await dialog.getByRole("button", { name: "Open PDF", exact: true }).click();
   await expect(dialog).toBeHidden();
@@ -72,7 +72,7 @@ test("opening passwords reject empty and wrong input, cancel safely, and are req
     buffer,
   };
   await page.getByTestId("file-input").setInputFiles(upload);
-  const dialog = page.getByRole("dialog", { name: "Open PDF", exact: true });
+  const dialog = page.getByRole("dialog", { name: /^Open PDF/ });
   await expect(
     dialog.getByRole("button", { name: "Open PDF", exact: true }),
   ).toBeDisabled();
@@ -263,7 +263,7 @@ test("batch opening accepts a shared opening password without granting owner acc
     { name: "batch-a.pdf", mimeType: "application/pdf", buffer },
     { name: "batch-b.pdf", mimeType: "application/pdf", buffer },
   ]);
-  const dialog = page.getByRole("dialog", { name: "Open PDF", exact: true });
+  const dialog = page.getByRole("dialog", { name: /^Open PDF/ });
   await dialog.getByLabel("Password to open", { exact: true }).fill(reader);
   await dialog
     .getByRole("button", { name: "Use for all (2)", exact: true })

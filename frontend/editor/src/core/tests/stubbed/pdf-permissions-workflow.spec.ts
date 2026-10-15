@@ -87,10 +87,11 @@ test("restricted compression prompts at execution, preserves settings on cancel,
     .getByRole("button", { name: "Manage protection", exact: true })
     .click();
   await expect(page.getByText("Not required", { exact: true })).toBeVisible();
-  await page
+  const close = page
     .getByRole("dialog")
-    .getByRole("button", { name: "Close", exact: true })
-    .press("Tab");
+    .getByRole("button", { name: "Close", exact: true });
+  await expect(close).toBeFocused();
+  await close.press("Tab");
   await expect(
     page.getByRole("button", {
       name: "Printing unlocked for this session",
@@ -105,18 +106,22 @@ test("restricted compression prompts at execution, preserves settings on cancel,
   ).toBeEnabled();
 });
 
-test("unsupported tools explain the limitation without suggesting a password will enable the tool", async ({
+test("unsupported tools keep the explanation in a tooltip and offer Remove Password", async ({
   page,
 }) => {
   await page.goto("/redact");
   await page.getByTestId("files-button").click();
   await page.getByTestId("file-input").setInputFiles(fixture);
+  const notice = page.getByTestId("tool-file-list");
+  await expect(notice.getByRole("status")).toHaveCount(0);
+  await notice.getByRole("button", { name: /Why .* is unavailable/ }).hover();
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "This tool doesn't support encrypted PDFs. Remove the password first.",
+  );
+  await notice.getByText("owner-only-restricted.pdf", { exact: true }).click();
+  await expect(page.getByRole("tooltip")).toBeHidden();
   await expect(
-    page
-      .getByText("This tool cannot yet preserve this PDF's protection.", {
-        exact: true,
-      })
-      .first(),
+    notice.getByRole("button", { name: "Remove Password" }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", {
@@ -143,11 +148,7 @@ test("unsupported tools explain the limitation without suggesting a password wil
       .first(),
   ).toBeVisible();
   await expect(
-    page
-      .getByText("This tool cannot yet preserve this PDF's protection.", {
-        exact: true,
-      })
-      .first(),
+    notice.getByRole("button", { name: /Why .* is unavailable/ }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Manage protection", exact: true })

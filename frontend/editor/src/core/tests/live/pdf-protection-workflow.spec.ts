@@ -45,6 +45,9 @@ test("saving protection opens the result as a reader and changing permissions pr
     name: "New permissions password",
     exact: true,
   });
+  await expect(
+    page.getByText("Use a different password to change restrictions."),
+  ).toHaveCount(0);
   await ownerInput.fill(reader);
   await expect(
     page.getByText("The two passwords must be different."),
@@ -472,13 +475,25 @@ for (const tool of ["annotate", "form-fill", "redact"]) {
     await page
       .getByTestId("file-input")
       .setInputFiles(path.join(fixtures, "owner-only-restricted.pdf"));
-    await expect(
-      page
-        .getByText("This tool cannot yet preserve this PDF's protection.", {
+    if (tool === "form-fill") {
+      await expect(
+        page.getByText("This tool cannot yet preserve this PDF's protection.", {
           exact: true,
-        })
-        .first(),
-    ).toBeVisible();
+        }),
+      ).toBeVisible();
+    } else {
+      const notice = page.getByTestId("tool-file-list");
+      await expect(notice.getByRole("status")).toHaveCount(0);
+      await notice
+        .getByRole("button", { name: /Why .* is unavailable/ })
+        .hover();
+      await expect(page.getByRole("tooltip")).toHaveText(
+        "This tool doesn't support encrypted PDFs. Remove the password first.",
+      );
+      await expect(
+        notice.getByRole("button", { name: "Remove Password" }),
+      ).toBeVisible();
+    }
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Print PDF", exact: true }),

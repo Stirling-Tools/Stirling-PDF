@@ -58,7 +58,7 @@ async function upload(page: Page, buffer: Buffer, opening = true) {
     buffer,
   });
   if (opening) {
-    const dialog = page.getByRole("dialog", { name: "Open PDF", exact: true });
+    const dialog = page.getByRole("dialog", { name: /^Open PDF/ });
     await dialog.getByLabel("Password to open", { exact: true }).fill(reader);
     await dialog.getByRole("button", { name: "Open PDF", exact: true }).click();
     await expect(dialog).toBeHidden();

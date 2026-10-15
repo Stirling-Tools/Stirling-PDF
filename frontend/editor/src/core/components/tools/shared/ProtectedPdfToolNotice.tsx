@@ -1,9 +1,38 @@
-import { Group, Stack, Text, Tooltip } from "@mantine/core";
+import { Group, Stack, Text } from "@mantine/core";
+import { Tooltip } from "@app/components/shared/Tooltip";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import type { StirlingFileStub } from "@app/types/fileContext";
+import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";
+
+function RemovePasswordAction() {
+  const { t } = useTranslation();
+  const { handleToolSelect } = useToolWorkflowActions();
+  return (
+    <Tooltip
+      content={t(
+        "encryptedPdfUnlock.removePasswordHelp",
+        "Open Remove Password to create an unprotected copy.",
+      )}
+      position="top"
+      maxWidth={230}
+      arrow
+    >
+      <ActionIcon
+        variant="tertiary"
+        accent="neutral"
+        size="sm"
+        style={{ flexShrink: 0 }}
+        aria-label={t("removePassword.submit", "Remove Password")}
+        onClick={() => handleToolSelect("removePassword")}
+      >
+        <Icon name="lock-open" size={16} />
+      </ActionIcon>
+    </Tooltip>
+  );
+}
 
 /** Protected inputs remain visible in the Files list even when this tool cannot process them. */
 export function ProtectedPdfToolNotice({
@@ -15,23 +44,16 @@ export function ProtectedPdfToolNotice({
   if (!files.length) return null;
   return (
     <Stack gap="xs" role="list">
-      <Text size="sm" role="status">
-        {t(
-          "encryptedPdfUnlock.unsupportedTool",
-          "This tool cannot yet preserve this PDF's protection.",
-        )}
-      </Text>
       {files.map((file) => (
         <Group key={file.id} gap={6} wrap="nowrap" role="listitem">
           <Tooltip
-            label={t(
+            content={t(
               "encryptedPdfUnlock.toolUnavailable",
-              "This tool cannot yet preserve this document's protection. The protected original remains available for viewing.",
+              "This tool doesn't support encrypted PDFs. Remove the password first.",
             )}
-            multiline
-            w={260}
-            withArrow
-            events={{ hover: true, focus: true, touch: true }}
+            position="top"
+            maxWidth={260}
+            arrow
           >
             <ActionIcon
               variant="quiet"
@@ -58,6 +80,7 @@ export function ProtectedPdfToolNotice({
           >
             <PrivateContent>{file.name}</PrivateContent>
           </Text>
+          <RemovePasswordAction />
         </Group>
       ))}
     </Stack>

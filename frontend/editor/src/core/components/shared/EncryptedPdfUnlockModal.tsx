@@ -1,5 +1,8 @@
 import { Modal, Stack, Text, PasswordInput, Group } from "@mantine/core";
+import { Tooltip } from "@app/components/shared/Tooltip";
 import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 
@@ -50,10 +53,43 @@ const EncryptedPdfUnlockModal = ({
   return (
     <Modal
       opened={opened}
-      onClose={onSkip}
-      title={title}
+      onClose={() => {
+        if (!isProcessing) onSkip();
+      }}
+      title={
+        <Group component="span" gap={6} wrap="nowrap">
+          <span>{title}</span>
+          {sessionUnlock && !ownerUnlock && (
+            <Tooltip
+              content={t(
+                "encryptedPdfUnlock.sessionDetails",
+                "Unlock for this session. The PDF stays protected. Remove Password creates an unprotected copy.",
+              )}
+              position="top"
+              maxWidth={280}
+              arrow
+              containerStyle={{ zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE + 1 }}
+            >
+              <ActionIcon
+                variant="quiet"
+                accent="neutral"
+                size="sm"
+                aria-label={t(
+                  "encryptedPdfUnlock.sessionDetailsLabel",
+                  "About session unlocking",
+                )}
+              >
+                <Icon name="info" size={16} />
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </Group>
+      }
       centered
       size="sm"
+      padding="md"
+      radius="md"
+      styles={{ body: { paddingTop: "var(--mantine-spacing-md)" } }}
       withCloseButton={!isProcessing}
       closeOnClickOutside={!isProcessing}
       closeOnEscape={!isProcessing}
@@ -62,9 +98,24 @@ const EncryptedPdfUnlockModal = ({
       data-testid={testIdPrefix ? `${testIdPrefix}-modal` : undefined}
     >
       <Stack gap="md">
-        <Text size="sm" fw={500} style={{ overflowWrap: "anywhere" }}>
-          {fileName}
-        </Text>
+        <Group
+          gap="sm"
+          wrap="nowrap"
+          p="sm"
+          style={{
+            background: "var(--c-surface-raised)",
+            borderRadius: "var(--mantine-radius-md)",
+          }}
+        >
+          <Icon
+            name="lock"
+            size={20}
+            style={{ color: "var(--c-text-muted)", flexShrink: 0 }}
+          />
+          <Text size="sm" fw={500} style={{ overflowWrap: "anywhere" }}>
+            {fileName}
+          </Text>
+        </Group>
         {(preservationReason || actionLabel) && (
           <Text size="sm">
             {preservationReason ||
@@ -100,6 +151,8 @@ const EncryptedPdfUnlockModal = ({
             }
           }}
           disabled={isProcessing}
+          size="md"
+          radius="md"
           error={errorMessage || undefined}
           errorProps={{ role: "alert" }}
           autoFocus

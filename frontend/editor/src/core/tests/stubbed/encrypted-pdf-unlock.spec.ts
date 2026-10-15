@@ -116,6 +116,15 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(
       page.getByText("Create an unprotected copy", { exact: true }),
     ).toHaveCount(0);
+    const details = page.getByRole("button", {
+      name: "About session unlocking",
+    });
+    await details.focus();
+    await expect(page.getByRole("tooltip")).toHaveText(
+      "Unlock for this session. The PDF stays protected. Remove Password creates an unprotected copy.",
+    );
+    await page.getByLabel(PASSWORD_LABEL, { exact: true }).focus();
+    await expect(page.getByRole("tooltip")).toBeHidden();
   });
 
   test("explicit removal of all protection creates a usable copy and retains the protected source", async ({
@@ -313,15 +322,27 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       .getByRole("button", { name: "Why encrypted.pdf is unavailable" })
       .hover();
     const details = page.getByRole("tooltip").filter({
-      hasText: "This tool cannot yet preserve this PDF's protection",
+      hasText:
+        "This tool doesn't support encrypted PDFs. Remove the password first.",
     });
     await expect(details).toBeVisible();
     await notice.getByText("encrypted.pdf", { exact: true }).click();
     await expect(details).toBeHidden();
+    const removePassword = notice.getByRole("button", {
+      name: "Remove Password",
+    });
+    await removePassword.hover();
+    await expect(page.getByRole("tooltip")).toHaveText(
+      "Open Remove Password to create an unprotected copy.",
+    );
+    await removePassword.click();
+    await expect(page).toHaveURL(/\/remove-password$/);
+    await expect(page.getByTestId("tool-file-list")).toContainText(
+      "encrypted.pdf",
+    );
     await expect(
-      notice.getByRole("button", { name: "Remove Password" }),
-    ).toHaveCount(0);
-    await expect(page).toHaveURL(/\/ocr$/);
+      page.getByLabel("Password to open", { exact: true }),
+    ).toBeVisible();
   });
 
   for (const legacy of [false, true]) {

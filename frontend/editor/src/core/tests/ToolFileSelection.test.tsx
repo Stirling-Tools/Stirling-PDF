@@ -233,12 +233,18 @@ describe("tool file selection", () => {
           .focus(),
       );
       expect(await screen.findByRole("tooltip")).toHaveTextContent(
-        "This tool cannot yet preserve this document's protection.",
+        "This tool doesn't support encrypted PDFs. Remove the password first.",
       );
-      expect(
-        screen.queryByRole("button", { name: "Remove Password" }),
-      ).not.toBeInTheDocument();
-      expect(handleToolSelect).not.toHaveBeenCalled();
+      const removePassword = screen.getByRole("button", {
+        name: "Remove Password",
+      });
+      act(() => removePassword.focus());
+      const help = await screen.findByText(
+        "Open Remove Password to create an unprotected copy.",
+      );
+      await waitFor(() => expect(help).toBeVisible());
+      await userEvent.click(removePassword);
+      expect(handleToolSelect).toHaveBeenCalledWith("removePassword");
     } finally {
       act(() => clearPdfAccess());
     }
