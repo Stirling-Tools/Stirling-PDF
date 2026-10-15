@@ -62,7 +62,14 @@ async function gotrue(
 export default function OAuthConsent() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { session, loading: sessionLoading, displayName } = useAuth();
+  const {
+    session,
+    loading: sessionLoading,
+    displayName,
+    isAnonymous,
+  } = useAuth();
+  // A guest session can't own a connected app: the app's calls would be refused.
+  const signedIn = Boolean(session) && !isAnonymous;
   const { t } = useTranslation();
 
   const [details, setDetails] = useState<AuthorizationDetails | null>(null);
@@ -89,7 +96,7 @@ export default function OAuthConsent() {
 
   // Load the pending authorization once a session is available.
   useEffect(() => {
-    if (sessionLoading || !session || !authorizationId) {
+    if (sessionLoading || !session || !signedIn || !authorizationId) {
       return;
     }
     if (loadedIdRef.current === authorizationId) return;
@@ -141,7 +148,7 @@ export default function OAuthConsent() {
         setLoadingDetails(false);
       }
     })();
-  }, [sessionLoading, session, authorizationId, t]);
+  }, [sessionLoading, session, signedIn, authorizationId, t]);
 
   const decide = useCallback(
     async (action: "approve" | "deny") => {
@@ -240,7 +247,7 @@ export default function OAuthConsent() {
   }
 
   // Not signed in: round-trip through login and come back here.
-  if (!sessionLoading && !session) {
+  if (!sessionLoading && !signedIn) {
     const next = `${location.pathname}${location.search}`;
     return (
       <AuthLayout>

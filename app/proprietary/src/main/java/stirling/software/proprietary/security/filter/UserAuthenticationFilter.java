@@ -298,7 +298,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // For API routes, only skip filter for these public endpoints
+        // For API routes, only skip filter for these public endpoints. MCP OAuth endpoints are
+        // listed here because the anonymous-user check above would 401 them first.
         String[] publicApiPatterns = {
             contextPath + "/api/v1/info/status",
             contextPath + "/api/v1/auth/login",
@@ -306,7 +307,13 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             contextPath + "/api/v1/auth/me",
             contextPath + "/api/v1/invite/validate",
             contextPath + "/api/v1/invite/accept",
-            contextPath + "/api/v1/ui-data/footer-info"
+            contextPath + "/api/v1/ui-data/footer-info",
+            contextPath + "/api/v1/mcp/oauth/register",
+            contextPath + "/api/v1/mcp/oauth/token",
+            contextPath + "/api/v1/mcp/uploads/",
+            contextPath + "/.well-known/oauth-authorization-server",
+            contextPath + "/.well-known/openid-configuration",
+            contextPath + "/.well-known/jwks.json"
         };
 
         for (String pattern : publicApiPatterns) {

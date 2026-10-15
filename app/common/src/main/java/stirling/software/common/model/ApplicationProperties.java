@@ -556,9 +556,6 @@ public class ApplicationProperties {
          */
         private boolean scopesEnabled = true;
 
-        /** How often to refresh the AI capabilities manifest from the engine. */
-        private int engineCapabilityRefreshMinutes = 5;
-
         /**
          * Tool allow-list (operation ids, e.g. {@code compress-pdf}). When non-empty, ONLY these
          * operations are exposed over MCP; everything else is hidden, undescribable, and
@@ -575,19 +572,58 @@ public class ApplicationProperties {
         /** Max MCP request body size in bytes; inline file uploads ride in the JSON-RPC body. */
         private long maxRequestBytes = 10L * 1024 * 1024;
 
-        /** Results up to this size return inline as base64; larger ones return a fileId only. */
+        /** Largest file {@code stirling_download} returns inline as base64. */
         private long maxInlineResponseBytes = 10L * 1024 * 1024;
+
+        /** How long tool results stay downloadable before storage deletes them. */
+        private int resultTtlMinutes = 60;
+
+        /** Keep results as the user's temporary stored files; false = the shared temp store. */
+        private boolean storeResults = true;
+
+        /** Result download links: private (sign-in), public (anyone with the link) or off. */
+        private String downloadLinks = "private";
+
+        /** Also return results as base64: auto (only without stored files), always or never. */
+        private String inlineResults = "auto";
+
+        /** Wait this long for an operation, then hand back a job id to poll (0 = always wait). */
+        private int syncWaitSeconds = 100;
+
+        /** Tool calls each user may make per minute (0 = unlimited). */
+        private int rateLimitPerMinute = 60;
+
+        /** Let chat apps run multi-step pipelines and use the team's saved automations. */
+        private boolean automationsEnabled = true;
+
+        /** Most steps one pipeline call may chain. */
+        private int maxPipelineSteps = 10;
+
+        /** Serve the in-chat widget (MCP Apps) and the file picker tool. */
+        private boolean widgetEnabled = true;
+
+        /**
+         * Attachment hosts (HTTPS): suffix, {@code *} in one label, or lone {@code *}. Empty = off.
+         */
+        private List<String> fileUrlAllowedHosts =
+                new ArrayList<>(
+                        List.of(
+                                "oaiusercontent.com",
+                                "openai.com",
+                                "chatgpt.com",
+                                // ChatGPT serves attachments from regional Azure blob accounts.
+                                "oaisdmntpr*.blob.core.windows.net"));
+
+        /** Max size of a file fetched from a chat app's download URL. */
+        private long maxFileUrlBytes = 100L * 1024 * 1024;
 
         private Auth auth = new Auth();
 
         @Data
         public static class Auth {
             /**
-             * Authentication mode for the MCP endpoint. {@code oauth} (default) runs a full OAuth2
-             * resource server (JWT, RFC 8707 audience, RFC 9728 metadata). {@code apikey} accepts a
-             * Stirling per-user API key via the {@code X-API-KEY} header (or {@code Authorization:
-             * Bearer <key>}) and binds the request to that user - the low-friction self-host path,
-             * no external IdP required.
+             * {@code oauth} (default): resource server for an external IdP. {@code builtin}: also
+             * Stirling's own OAuth 2.1 authorization server. {@code apikey}: X-API-KEY, no OAuth.
              */
             private String mode = "oauth";
 
@@ -631,6 +667,39 @@ public class ApplicationProperties {
              * without a local account.
              */
             private boolean requireExistingAccount = true;
+
+            /** Create a disabled account for an unknown IdP subject instead of a 403. */
+            private boolean autoProvisionUsers = false;
+
+            private Builtin builtin = new Builtin();
+
+            /** Built-in authorization server settings ({@code mode: builtin}). */
+            @Data
+            public static class Builtin {
+
+                /** Token issuer. Blank derives it from resourceId minus the trailing /mcp. */
+                private String issuer = "";
+
+                /**
+                 * RFC 7591 dynamic client registration; clients that cannot pre-register need it.
+                 */
+                private boolean allowDynamicRegistration = true;
+
+                /** Accept https client_id URLs as Client ID Metadata Documents. */
+                private boolean allowClientMetadataDocuments = true;
+
+                /** Access-token lifetime in minutes. */
+                private int accessTokenMinutes = 60;
+
+                /** Refresh-token lifetime in days. Zero disables refresh tokens. */
+                private int refreshTokenDays = 30;
+
+                /** Authorization-code lifetime in seconds; also bounds the consent screen. */
+                private int authorizationCodeSeconds = 300;
+
+                /** Per-IP hourly cap on dynamic client registrations. */
+                private int registrationsPerHourPerIp = 20;
+            }
         }
     }
 
@@ -1491,7 +1560,7 @@ public class ApplicationProperties {
 
         @Data
         public static class Sharing {
-            private boolean enabled = false;
+            private boolean enabled = true;
             private boolean linkEnabled = true;
             private boolean emailEnabled = false;
             private int linkExpirationDays = 3;

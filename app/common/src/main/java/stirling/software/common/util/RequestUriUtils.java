@@ -203,6 +203,14 @@ public class RequestUriUtils {
                         "/api/v1/ui-data/footer-info") // Public footer configuration
                 || trimmedUri.startsWith("/api/v1/invite/validate")
                 || trimmedUri.startsWith("/api/v1/invite/accept")
+                // Built-in MCP authorization server: clients arrive with no credentials.
+                || trimmedUri.startsWith("/.well-known/oauth-authorization-server")
+                || trimmedUri.startsWith("/.well-known/openid-configuration")
+                || trimmedUri.startsWith("/.well-known/jwks.json")
+                || trimmedUri.startsWith("/api/v1/mcp/oauth/register")
+                || trimmedUri.startsWith("/api/v1/mcp/oauth/token")
+                // MCP upload links: the one-time link in the path is the credential.
+                || trimmedUri.startsWith("/api/v1/mcp/uploads/")
                 // Health Endpoints
                 || trimmedUri.startsWith("/actuator/health")
                 || trimmedUri.startsWith("/health")
@@ -221,6 +229,11 @@ public class RequestUriUtils {
                 || SHARE_LINK_API_PATTERN.matcher(trimmedUri).matches()
                 // Invite-accept SPA bootstrap; data APIs remain protected
                 || INVITE_LINK_PATTERN.matcher(trimmedUri).matches();
+    }
+
+    /** Share-link download, which serves public links anonymously and private ones signed in. */
+    public static boolean isShareLinkDownload(String requestURI, String contextPath) {
+        return SHARE_LINK_API_PATTERN.matcher(stripContextPath(contextPath, requestURI)).matches();
     }
 
     private static String stripContextPath(String contextPath, String requestURI) {
