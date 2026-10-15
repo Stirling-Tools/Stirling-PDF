@@ -89,4 +89,19 @@ describe("adjustPageScale mappers", () => {
 
     expect(roundTripped).toEqual(api);
   });
+
+  test("keeps the custom defaults when the backend used a preset size", () => {
+    const api = adjustPageScaleToApiParams({
+      ...defaultParameters,
+      pageSize: PageSize.A4,
+    });
+    const restored = {
+      ...defaultParameters,
+      ...adjustPageScaleFromApiParams(api),
+    };
+
+    expect(restored.customWidth).toBe(defaultParameters.customWidth);
+    expect(restored.customHeight).toBe(defaultParameters.customHeight);
+    expect(restored.customUnit).toBe(defaultParameters.customUnit);
+  });
 });
