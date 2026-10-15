@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -16,7 +17,6 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -28,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
+import stirling.software.SPDF.service.PdfProtectionService;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
@@ -42,6 +43,7 @@ class PdfSessionSecurityControllerTest {
     private PdfSessionSecurityController controller;
     private CustomPDFDocumentFactory factory;
     private ApplicationProperties properties;
+    private PdfProtectionService protectionService;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -74,22 +76,32 @@ class PdfSessionSecurityControllerTest {
                 .when(tempFiles)
                 .deleteTempFile(any(java.io.File.class));
         properties = new ApplicationProperties();
+        protectionService = spy(new PdfProtectionService(JsonMapper.builder().build()));
         controller =
-                new PdfSessionSecurityController(
-                        factory, tempFiles, JsonMapper.builder().build(), properties);
+                new PdfSessionSecurityController(factory, tempFiles, protectionService, properties);
     }
 
     private byte[] pdf(boolean encrypted, int bits) throws IOException {
+        return pdf(encrypted, bits, true, USER, OWNER, 1);
+    }
+
+    private byte[] pdf(
+            boolean encrypted, int bits, boolean aes, String user, String owner, int pages)
+            throws IOException {
         try (var document = new PDDocument();
                 var output = new ByteArrayOutputStream()) {
-            document.addPage(new PDPage());
+            for (int page = 0; page < pages; page++) {
+                var pdfPage = new PDPage();
+                pdfPage.setRotation(90);
+                document.addPage(pdfPage);
+            }
             if (encrypted) {
                 var permissions = new AccessPermission();
                 permissions.setCanPrint(false);
                 permissions.setCanExtractContent(false);
-                var policy = new StandardProtectionPolicy(OWNER, USER, permissions);
+                var policy = new StandardProtectionPolicy(owner, user, permissions);
                 policy.setEncryptionKeyLength(bits);
-                policy.setPreferAES(true);
+                policy.setPreferAES(aes);
                 document.protect(policy);
             }
             document.save(output);
@@ -572,14 +584,25 @@ class PdfSessionSecurityControllerTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"128,false", "128,true", "256,false", "256,true"})
-    void restoresBothPasswordsAndRestrictionsFromEitherCredential(int bits, boolean owner)
-            throws Exception {
-        assumeQpdfAvailable();
-        byte[] original = pdf(true, bits);
+    @CsvSource({
+        "40,false,false",
+        "40,false,true",
+        "128,false,false",
+        "128,false,true",
+        "128,true,false",
+        "128,true,true",
+        "256,true,false",
+        "256,true,true"
+    })
+    void restoresBothPasswordsAndRestrictionsFromEitherCredential(
+            int bits, boolean aes, boolean owner) throws Exception {
+        byte[] original = pdf(true, bits, aes, USER, OWNER, 1);
+        var sourceUpload = upload(original);
         var response =
                 controller.restore(
-                        upload(pdf(false, bits)), upload(original), owner ? OWNER : USER);
+                        upload(pdf(false, bits, aes, USER, OWNER, 3)),
+                        sourceUpload,
+                        owner ? OWNER : USER);
         byte[] protectedBytes;
         try (var body = response.getBody().getInputStream()) {
             protectedBytes = body.readAllBytes();
@@ -593,8 +616,11 @@ class PdfSessionSecurityControllerTest {
             assertFalse(user.getCurrentAccessPermission().canPrint());
             assertFalse(user.getCurrentAccessPermission().canExtractContent());
             assertEquals(bits, user.getEncryption().getLength());
+            assertEquals(3, user.getNumberOfPages());
+            assertEquals(90, user.getPage(0).getRotation());
             assertTrue(administrator.getCurrentAccessPermission().isOwnerPermission());
         }
+        assertArrayEquals(original, sourceUpload.getBytes());
         try (var remaining = Files.list(directory)) {
             assertEquals(0, remaining.count());
         }
@@ -603,7 +629,6 @@ class PdfSessionSecurityControllerTest {
     @ParameterizedTest
     @CsvSource({"permissions,false", "permissions,true", "length,true", "revision,true"})
     void rejectsChangedOutputProtection(String changed, boolean owner) throws Exception {
-        assumeQpdfAvailable();
         when(factory.load(any(InputStream.class), anyString(), eq(true)))
                 .thenAnswer(
                         inv -> {
@@ -631,15 +656,68 @@ class PdfSessionSecurityControllerTest {
         }
     }
 
-    private void assumeQpdfAvailable() throws Exception {
-        boolean qpdfAvailable;
-        try {
-            qpdfAvailable = new ProcessBuilder("qpdf", "--version").start().waitFor() == 0;
-        } catch (IOException unavailable) {
-            qpdfAvailable = false;
+    @ParameterizedTest
+    @CsvSource({"128,false", "128,true", "256,false", "256,true"})
+    void preservesEscapedAndUnicodePasswords(int bits, boolean owner) throws Exception {
+        String readerPassword = bits == 256 ? " café\"読者\" " : " reader\n\"password\" ";
+        String ownerPassword = bits == 256 ? " 管理者\\\"owner\" " : " owner\\\n\"password\" ";
+        var response =
+                controller.restore(
+                        upload(pdf(false, 256)),
+                        upload(pdf(true, bits, true, readerPassword, ownerPassword, 1)),
+                        owner ? ownerPassword : readerPassword);
+        byte[] protectedBytes;
+        try (var body = response.getBody().getInputStream()) {
+            protectedBytes = body.readAllBytes();
         }
-        Assumptions.assumeTrue(
-                qpdfAvailable, "qpdf must be on PATH for protection integration tests");
+        try (var reader = Loader.loadPDF(protectedBytes, readerPassword);
+                var administrator = Loader.loadPDF(protectedBytes, ownerPassword)) {
+            assertFalse(reader.getCurrentAccessPermission().canExtractContent());
+            assertTrue(administrator.getCurrentAccessPermission().isOwnerPermission());
+        }
+    }
+
+    @Test
+    void nativeFailureReturnsNoResultAndCleansTemporaryFiles() throws Exception {
+        assertThrows(
+                IOException.class,
+                () ->
+                        controller.restore(
+                                upload("invalid PDF".getBytes(StandardCharsets.UTF_8)),
+                                upload(pdf(true, 256)),
+                                USER));
+        try (var remaining = Files.list(directory)) {
+            assertEquals(0, remaining.count());
+        }
+        var validResponse =
+                controller.restore(upload(pdf(false, 256)), upload(pdf(true, 256)), USER);
+        try (var body = validResponse.getBody().getInputStream();
+                var document = Loader.loadPDF(body.readAllBytes(), USER)) {
+            assertTrue(document.isEncrypted());
+        }
+    }
+
+    @Test
+    void missingNativeSupportReturnsNoResultAndCleansTemporaryFiles() throws Exception {
+        doThrow(new IOException("Native PDF protection is unavailable"))
+                .when(protectionService)
+                .restore(any(), any(), anyString(), any());
+        assertThrows(
+                IOException.class,
+                () -> controller.restore(upload(pdf(false, 256)), upload(pdf(true, 256)), USER));
+        try (var remaining = Files.list(directory)) {
+            assertEquals(0, remaining.count());
+        }
+    }
+
+    @Test
+    void wrongPasswordDoesNotStartNativeProcessing() throws Exception {
+        assertThrows(
+                InvalidPasswordException.class,
+                () ->
+                        controller.restore(
+                                upload(pdf(false, 256)), upload(pdf(true, 256)), "incorrect"));
+        verifyNoInteractions(protectionService);
     }
 
     @Test

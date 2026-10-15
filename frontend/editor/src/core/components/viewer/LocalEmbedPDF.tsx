@@ -1677,7 +1677,10 @@ export function LocalEmbedPDF({
             password={pdfAccess?.password}
             onPasswordRequired={onPasswordRequired}
           />
-          <ExportAPIBridge disabled={pdfAccess?.encrypted} />
+          <ExportAPIBridge
+            originalFile={pdfAccess?.encrypted ? file : undefined}
+            disabled={pdfAccess?.encrypted && !file}
+          />
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />
           <PrintAPIBridge

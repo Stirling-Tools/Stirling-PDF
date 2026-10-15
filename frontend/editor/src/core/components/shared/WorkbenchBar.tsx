@@ -237,7 +237,9 @@ export default function WorkbenchBar({
         const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
         if (!buffer) return;
         const fileToExport =
-          selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
+          activeFiles.find(
+            (file) => isStirlingFile(file) && file.fileId === activeFileId,
+          ) ?? activeFiles[0];
         if (!fileToExport) return;
         const stub = isStirlingFile(fileToExport)
           ? selectors.getStirlingFileStub(fileToExport.fileId)
@@ -329,6 +331,7 @@ export default function WorkbenchBar({
       currentView,
       selectedFiles,
       activeFiles,
+      activeFileId,
       viewerContext,
       viewFileActions,
       selectors,

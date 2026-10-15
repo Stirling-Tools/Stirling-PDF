@@ -2,8 +2,6 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
@@ -27,16 +25,14 @@ import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.SPDF.service.PdfPasswordRoles;
 import stirling.software.SPDF.service.PdfPermissionSecurityHandler;
+import stirling.software.SPDF.service.PdfProtectionService;
 import stirling.software.SPDF.service.PdfSessionPermissions;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
-
-import tools.jackson.databind.ObjectMapper;
 
 /** Stateless helpers for interactive unlocking. No endpoint retains credentials or documents. */
 @SecurityApi
@@ -44,7 +40,7 @@ import tools.jackson.databind.ObjectMapper;
 public class PdfSessionSecurityController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
-    private final ObjectMapper objectMapper;
+    private final PdfProtectionService protectionService;
     private final ApplicationProperties applicationProperties;
 
     /**
@@ -364,7 +360,7 @@ public class PdfSessionSecurityController {
             @RequestParam MultipartFile fileInput,
             @RequestParam MultipartFile sourceFile,
             @RequestParam String password)
-            throws IOException, InterruptedException {
+            throws IOException {
         int sourcePermissions;
         int sourceKeyLength;
         int sourceRevision;
@@ -382,26 +378,11 @@ public class PdfSessionSecurityController {
         TempFile output = tempFileManager.createManagedTempFile(".pdf");
         boolean transferred = false;
         try (TempFile input = new TempFile(tempFileManager, ".pdf");
-                TempFile source = new TempFile(tempFileManager, ".pdf");
-                TempFile job = new TempFile(tempFileManager, ".json")) {
+                TempFile source = new TempFile(tempFileManager, ".pdf")) {
             fileInput.transferTo(input.getFile());
             sourceFile.transferTo(source.getFile());
-            // A JSON job keeps passwords (including newlines) out of command arguments and process
-            // logs.
-            objectMapper.writeValue(
-                    job.getFile(),
-                    Map.of(
-                            "inputFile", input.getAbsolutePath(),
-                            "outputFile", output.getAbsolutePath(),
-                            "copyEncryption", source.getAbsolutePath(),
-                            "encryptionFilePassword", password));
-            var result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                            .runCommandWithOutputHandling(
-                                    List.of("qpdf", "--job-json-file=" + job.getAbsolutePath()));
-            if ((result.getRc() != 0 && result.getRc() != 3) || Files.size(output.getPath()) == 0)
-                throw new IOException(
-                        "Unable to restore PDF protection; no unprotected result was returned");
+            protectionService.restore(
+                    input.getPath(), source.getPath(), password, output.getPath());
             try (var stream = Files.newInputStream(output.getPath());
                     PDDocument protectedDocument =
                             pdfDocumentFactory.load(stream, password, true)) {
