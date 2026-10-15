@@ -35,6 +35,7 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   FILE_OPERATION: "var(--mantine-color-cyan-6)",
   PDF_PROCESS: "var(--mantine-color-violet-6)",
   UI_DATA: "var(--mantine-color-teal-6)",
+  MCP_TOOL_CALL: "var(--mantine-color-grape-6)",
   HTTP_REQUEST: "var(--mantine-color-indigo-6)",
 };
 

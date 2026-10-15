@@ -45,6 +45,25 @@ class SecretMaskerTest {
         }
 
         @Test
+        @DisplayName("should mask snake_case OAuth keys but not lookalike words")
+        void shouldMaskSnakeCaseOAuthKeys() {
+            Map<String, Object> result =
+                    SecretMasker.mask(
+                            Map.of(
+                                    "refresh_token", "r",
+                                    "code_verifier", "v",
+                                    "client_secret", "s",
+                                    "accessToken", "a",
+                                    "author", "kept"));
+
+            assertEquals(SecretMasker.REDACTED, result.get("refresh_token"));
+            assertEquals(SecretMasker.REDACTED, result.get("code_verifier"));
+            assertEquals(SecretMasker.REDACTED, result.get("client_secret"));
+            assertEquals(SecretMasker.REDACTED, result.get("accessToken"));
+            assertEquals("kept", result.get("author"));
+        }
+
+        @Test
         @DisplayName("should mask keys case-insensitively and with special characters")
         void shouldMaskKeysCaseInsensitive() {
             Map<String, Object> input =
