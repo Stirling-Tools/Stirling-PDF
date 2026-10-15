@@ -146,7 +146,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
         const request = new Request(route.request().url(), {
           method: "POST",
           headers: route.request().headers(),
-          body: route.request().postDataBuffer()!,
+          body: new Uint8Array(route.request().postDataBuffer()!),
         });
         const form = await request.formData();
         expect(form.get("splitType")).toBe("1");
@@ -160,7 +160,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
         const request = new Request(route.request().url(), {
           method: "POST",
           headers: route.request().headers(),
-          body: route.request().postDataBuffer()!,
+          body: new Uint8Array(route.request().postDataBuffer()!),
         });
         const form = await request.formData();
         expect(form.get("password")).toBe("james");

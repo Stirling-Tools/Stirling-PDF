@@ -254,7 +254,7 @@ async function splitArchive(count: number): Promise<File> {
     zip.file(`pages/page-${page}.pdf`, `%PDF-1.7\npage ${page}`);
   }
   return new File(
-    [await zip.generateAsync({ type: "uint8array" })],
+    [await zip.generateAsync({ type: "arraybuffer" })],
     "split.zip",
     {
       type: "application/zip",
@@ -264,12 +264,16 @@ async function splitArchive(count: number): Promise<File> {
 
 describe("protected split archives", () => {
   beforeEach(() => {
-    vi.spyOn(Blob.prototype, "arrayBuffer").mockImplementation(function () {
-      return readBlobBytes(this);
-    });
-    vi.spyOn(File.prototype, "arrayBuffer").mockImplementation(function () {
-      return readBlobBytes(this);
-    });
+    vi.spyOn(Blob.prototype, "arrayBuffer").mockImplementation(
+      function (this: Blob) {
+        return readBlobBytes(this);
+      },
+    );
+    vi.spyOn(File.prototype, "arrayBuffer").mockImplementation(
+      function (this: File) {
+        return readBlobBytes(this);
+      },
+    );
   });
   afterEach(() => vi.restoreAllMocks());
 
@@ -344,7 +348,7 @@ describe("protected split archives", () => {
     const zip = new JSZip();
     zip.file("content.txt", "unprotected content");
     const output = new File(
-      [await zip.generateAsync({ type: "uint8array" })],
+      [await zip.generateAsync({ type: "arraybuffer" })],
       "result.zip",
       { type: "application/zip" },
     );
