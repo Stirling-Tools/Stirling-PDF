@@ -1052,14 +1052,14 @@ export function LocalEmbedPDF({
     name: string;
     fileKey: string;
     password?: string;
-    honorOwnerPasswords?: boolean;
+    enforcePermissions: boolean;
   } | null>(null);
   const [pendingDocument, setPendingDocument] = useState<{
     buffer: ArrayBuffer;
     name: string;
     fileKey: string;
     password?: string;
-    honorOwnerPasswords?: boolean;
+    enforcePermissions: boolean;
   } | null>(null);
   const initialDocumentOpenedRef = useRef(false);
   const openedContentKeyRef = useRef<string | null>(null);
@@ -1139,7 +1139,7 @@ export function LocalEmbedPDF({
           name,
           fileKey: contentKey,
           password: pdfAccess?.password,
-          honorOwnerPasswords: pdfAccess?.honorOwnerPasswords,
+          enforcePermissions: !hasPdfPermissionOverride(pdfAccess),
         });
         return;
       }
@@ -1148,7 +1148,7 @@ export function LocalEmbedPDF({
         name,
         fileKey: contentKey,
         password: pdfAccess?.password,
-        honorOwnerPasswords: pdfAccess?.honorOwnerPasswords,
+        enforcePermissions: !hasPdfPermissionOverride(pdfAccess),
       });
     };
     const fail = (source: string) => (err: unknown) => {
@@ -1293,8 +1293,7 @@ export function LocalEmbedPDF({
               name: initialSource.name,
               password: initialSource.password,
               permissions: {
-                enforceDocumentPermissions:
-                  initialSource.honorOwnerPasswords !== false,
+                enforceDocumentPermissions: initialSource.enforcePermissions,
               },
             },
           ]

@@ -8,6 +8,7 @@ import { useDocumentState } from "@embedpdf/core/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { copyText } from "@app/utils/copyText";
 
 /**
  * Connects the PDF selection plugin to the shared ViewerContext.
@@ -129,9 +130,8 @@ export function SelectionAPIBridge({ canCopy = false }: { canCopy?: boolean }) {
     };
 
     const buildApi = () => ({
-      copyToClipboard: () => {
-        if (canCopy) selection.copyToClipboard(activeDocumentId ?? undefined);
-      },
+      copyToClipboard: () =>
+        canCopy ? copyText(selectedTextRef.current) : Promise.resolve(false),
       getFormattedSelection: () =>
         selection.getFormattedSelection(activeDocumentId ?? undefined),
       selectAll: async (totalPages: number) => {
@@ -181,33 +181,13 @@ export function SelectionAPIBridge({ canCopy = false }: { canCopy?: boolean }) {
       }
     });
 
-    // Fallback: subscribe to the plugin's copy event for navigator.clipboard writes
-    const unsubCopy = selection.onCopyToClipboard(
-      ({ text }: { text: string }) => {
-        if (text && canCopy) {
-          navigator.clipboard.writeText(text).catch(() => {
-            /* ignore */
-          });
-        }
-      },
-    );
-
+    // Ctrl+C is served here rather than from keydown: writing clipboardData in
+    // the copy event works over plain HTTP, where navigator.clipboard is absent.
     const handleCopy = (event: ClipboardEvent) => {
       if (!hasSelectionRef.current || !selectedTextRef.current) return;
       if (canCopy)
         event.clipboardData?.setData("text/plain", selectedTextRef.current);
       event.preventDefault();
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        (event.ctrlKey || event.metaKey) &&
-        event.key === "c" &&
-        hasSelectionRef.current
-      ) {
-        event.preventDefault();
-        if (canCopy) selection.copyToClipboard(activeDocumentId ?? undefined);
-      }
     };
 
     // Right-click anywhere inside a PDF page: suppress the browser's "Copy
@@ -233,14 +213,11 @@ export function SelectionAPIBridge({ canCopy = false }: { canCopy?: boolean }) {
     };
 
     document.addEventListener("copy", handleCopy);
-    document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("contextmenu", handleContextMenu);
 
     return () => {
       unsubChange?.();
-      unsubCopy?.();
       document.removeEventListener("copy", handleCopy);
-      document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("contextmenu", handleContextMenu);
       registerBridge("selection", null);
     };

@@ -37,6 +37,7 @@ const pending = (fileKey: string) => ({
   fileKey,
   buffer: new ArrayBuffer(1),
   name: "form.pdf",
+  enforcePermissions: true,
 });
 
 describe("form save document completion", () => {
@@ -48,14 +49,14 @@ describe("form save document completion", () => {
 
   it.each(
     [undefined, "session-password"].flatMap((password) =>
-      [undefined, true, false].map((honorOwnerPasswords) => ({
+      [true, false].map((enforcePermissions) => ({
         password,
-        honorOwnerPasswords,
+        enforcePermissions,
       })),
     ),
   )(
-    "waits for the saved document's loaded task and ignores unrelated document events (password: $password, honorOwnerPasswords: $honorOwnerPasswords)",
-    async ({ password, honorOwnerPasswords }) => {
+    "waits for the saved document's loaded task and ignores unrelated document events (password: $password, enforcePermissions: $enforcePermissions)",
+    async ({ password, enforcePermissions }) => {
       const load = deferred<void>();
       mocks.open.mockReturnValue({
         toPromise: async () => ({
@@ -72,7 +73,7 @@ describe("form save document completion", () => {
       const replacement = {
         ...pending("B-saved"),
         password,
-        honorOwnerPasswords,
+        enforcePermissions,
       };
       render(
         <DocumentSwapBridge
@@ -87,7 +88,7 @@ describe("form save document completion", () => {
         name: replacement.name,
         password,
         permissions: {
-          enforceDocumentPermissions: honorOwnerPasswords !== false,
+          enforceDocumentPermissions: enforcePermissions,
         },
         autoActivate: false,
       });

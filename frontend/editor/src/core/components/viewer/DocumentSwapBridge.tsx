@@ -6,7 +6,8 @@ interface PendingDocument {
   name: string;
   fileKey: string;
   password?: string;
-  honorOwnerPasswords?: boolean;
+  /** False once owner access is verified or the server ignores PDF restrictions. */
+  enforcePermissions: boolean;
 }
 
 interface DocumentSwapBridgeProps {
@@ -47,7 +48,7 @@ export function DocumentSwapBridge({
             name: pending.name,
             password: pending.password,
             permissions: {
-              enforceDocumentPermissions: pending.honorOwnerPasswords !== false,
+              enforceDocumentPermissions: pending.enforcePermissions,
             },
             autoActivate: false,
           })
