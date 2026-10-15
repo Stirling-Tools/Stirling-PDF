@@ -233,7 +233,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       page.getByLabel(PASSWORD_LABEL, { exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Cancel", exact: true }),
+      page.getByRole("button", { name: "Close", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "More options", exact: true }),

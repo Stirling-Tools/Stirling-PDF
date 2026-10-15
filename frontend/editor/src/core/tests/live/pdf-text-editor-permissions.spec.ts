@@ -87,7 +87,7 @@ for (const entry of ["workbench", "editor upload"] as const) {
       await expect(
         dialog.getByLabel("Password to open", { exact: true }),
       ).toHaveCount(0);
-      await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+      await dialog.getByRole("button", { name: "Close", exact: true }).click();
       await expect(page.getByTestId("pdf-editor-page-0")).toHaveCount(0);
       await verify.click();
       await dialog

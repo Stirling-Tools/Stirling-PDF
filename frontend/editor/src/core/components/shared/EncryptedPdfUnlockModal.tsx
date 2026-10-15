@@ -22,11 +22,12 @@ interface EncryptedPdfUnlockModalProps {
   testIdPrefix?: string;
   onPasswordChange: (value: string) => void;
   onUnlock: () => void;
+  onRemovePassword?: () => void;
   onUnlockAll?: () => void;
   onSkip: () => void;
 }
 
-/** Authentication only; changing a document's protection belongs in its protection settings. */
+/** Removal is offered only by callers that can preserve the PDF's other protection. */
 const EncryptedPdfUnlockModal = ({
   opened,
   fileName,
@@ -42,6 +43,7 @@ const EncryptedPdfUnlockModal = ({
   testIdPrefix,
   onPasswordChange,
   onUnlock,
+  onRemovePassword,
   onUnlockAll,
   onSkip,
 }: EncryptedPdfUnlockModalProps) => {
@@ -143,16 +145,7 @@ const EncryptedPdfUnlockModal = ({
           data-autofocus
           data-testid={testIdPrefix ? `${testIdPrefix}-input` : undefined}
         />
-        <Group justify="flex-end" gap="sm">
-          <Button
-            variant="secondary"
-            accent="neutral"
-            onClick={onSkip}
-            disabled={isProcessing}
-            data-testid={testIdPrefix ? `${testIdPrefix}-cancel` : undefined}
-          >
-            {t("cancel", "Cancel")}
-          </Button>
+        <Group justify="flex-end" gap="sm" wrap="nowrap">
           {remainingCount > 0 && onUnlockAll && (
             <Button
               variant="secondary"
@@ -163,6 +156,15 @@ const EncryptedPdfUnlockModal = ({
               {t("encryptedPdfUnlock.unlockAll", "Use for all ({{count}})", {
                 count: remainingCount + 1,
               })}
+            </Button>
+          )}
+          {sessionUnlock && !ownerUnlock && onRemovePassword && (
+            <Button
+              variant="secondary"
+              onClick={onRemovePassword}
+              disabled={isProcessing || !password}
+            >
+              {t("removePassword.submit", "Remove Password")}
             </Button>
           )}
           <Button

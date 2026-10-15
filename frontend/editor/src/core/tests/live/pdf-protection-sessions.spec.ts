@@ -79,7 +79,7 @@ test("opening passwords reject empty and wrong input, cancel safely, and are req
   await dialog.getByRole("button", { name: "Open PDF", exact: true }).click();
   await expect(dialog.getByRole("alert")).toContainText("Incorrect password");
   await expect(page.locator('[data-page-index="0"]')).toHaveCount(0);
-  await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(dialog).toBeHidden();
   await page.getByTestId("file-input").setInputFiles(upload);
   await open(page, reader);
@@ -117,7 +117,7 @@ test("restricted processing preserves both passwords and prompts only when enfor
     });
     await expect(dialog).toBeVisible();
     expect(preparations).toBe(0);
-    await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+    await dialog.getByRole("button", { name: "Close", exact: true }).click();
     await expect(apply).toBeEnabled();
     await apply.click();
     await dialog

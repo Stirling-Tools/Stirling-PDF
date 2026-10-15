@@ -73,9 +73,7 @@ describe("editor permissions verification", () => {
       screen.getByLabelText("Permissions password", { exact: true }),
       { target: { value: "discard-this" } },
     );
-    fireEvent.click(
-      screen.getByRole("button", { name: "Cancel", exact: true }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Close", exact: true }));
     expect(onVerified).not.toHaveBeenCalled();
     expect(getPdfAccess(file)?.ownerAuthenticated).toBe(false);
     fireEvent.click(

@@ -67,6 +67,135 @@ async function upload(page: Page, buffer: Buffer, opening = true) {
   ).toBeVisible();
 }
 
+for (const permissions of [false, true]) {
+  test(`load-time removal keeps separate owner protection: ${permissions}`, async ({
+    page,
+  }) => {
+    const original = await protectedPdf(page, true, permissions);
+    await page.goto("/editor");
+    await page.getByTestId("file-input").setInputFiles({
+      name: "load-time.pdf",
+      mimeType: "application/pdf",
+      buffer: original,
+    });
+    const dialog = page.getByRole("dialog");
+    const remove = dialog.getByRole("button", {
+      name: "Remove Password",
+      exact: true,
+    });
+    const open = dialog.getByRole("button", { name: "Open PDF", exact: true });
+    await expect(remove).toBeDisabled();
+    await expect(
+      dialog.getByRole("button", { name: "Cancel", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      dialog.getByRole("button", { name: "Close", exact: true }),
+    ).toBeVisible();
+    await expect
+      .poll(async () => {
+        const [removeBounds, openBounds] = await Promise.all([
+          remove.boundingBox(),
+          open.boundingBox(),
+        ]);
+        return Math.abs(removeBounds!.y - openBounds!.y);
+      })
+      .toBeLessThan(1);
+    await dialog
+      .getByLabel("Password to open", { exact: true })
+      .fill("wrong-password");
+    await remove.click();
+    await expect(dialog.getByRole("alert")).toContainText("Incorrect password");
+    await dialog.getByLabel("Password to open", { exact: true }).fill(reader);
+    const removalResponse = page.waitForResponse(
+      "**/api/v1/security/remove-pdf-passwords",
+    );
+    await remove.click();
+    if (permissions) {
+      await expect(
+        dialog.getByRole("heading", {
+          name: "Enter permissions password",
+          exact: true,
+        }),
+      ).toBeVisible();
+      await expect(dialog.getByText(/This will not remove it/)).toBeVisible();
+      await expect(
+        dialog.getByLabel("Permissions password", { exact: true }),
+      ).toHaveValue("");
+      await dialog
+        .getByLabel("Permissions password", { exact: true })
+        .fill(reader);
+      await dialog
+        .getByRole("button", { name: "Continue", exact: true })
+        .click();
+      await expect(dialog.getByRole("alert")).toContainText(
+        "Enter the permissions password",
+      );
+      await dialog
+        .getByLabel("Permissions password", { exact: true })
+        .fill(owner);
+      await dialog
+        .getByRole("button", { name: "Continue", exact: true })
+        .click();
+    }
+    const response = await removalResponse;
+    expect(response.ok()).toBe(true);
+    const saved = await response.body();
+    await expect(dialog).toBeHidden();
+    await expect(
+      page.getByText("load-time_password_removed.pdf", { exact: true }).first(),
+    ).toBeVisible();
+    const result = await inspect(page, saved, "");
+    expect(result.ok()).toBe(true);
+    expect(await result.json()).toMatchObject({
+      encrypted: permissions,
+      requiresOpeningPassword: false,
+      hasOwnerPassword: permissions,
+      canPrint: !permissions,
+    });
+    if (permissions) {
+      expect(
+        (await (await inspect(page, saved, owner)).json()).ownerAuthenticated,
+      ).toBe(true);
+    }
+    expect(
+      (await (await inspect(page, original, reader)).json())
+        .requiresOpeningPassword,
+    ).toBe(true);
+  });
+}
+
+test("closing load-time owner verification leaves the protected source unchanged", async ({
+  page,
+}) => {
+  const original = await protectedPdf(page, true, true);
+  let removals = 0;
+  page.on("request", (request) => {
+    if (request.url().endsWith("/remove-pdf-passwords")) removals++;
+  });
+  await page.goto("/editor");
+  await page.getByTestId("file-input").setInputFiles({
+    name: "cancel-removal.pdf",
+    mimeType: "application/pdf",
+    buffer: original,
+  });
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Password to open", { exact: true }).fill(reader);
+  await dialog
+    .getByRole("button", { name: "Remove Password", exact: true })
+    .click();
+  await expect(
+    dialog.getByLabel("Permissions password", { exact: true }),
+  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(dialog).toBeHidden();
+  expect(removals).toBe(0);
+  await expect(page.locator('[data-page-index="0"]')).toHaveCount(0);
+  expect(
+    (await (await inspect(page, original, reader)).json())
+      .requiresOpeningPassword,
+  ).toBe(true);
+});
+
 for (const remove of ["opening", "owner", "both"] as const) {
   test(`removing ${remove} keeps every blank password and refreshes print access`, async ({
     page,
@@ -210,7 +339,7 @@ test("wrong role credentials cannot remove protection and cancelled verification
     .click();
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "Cancel", exact: true })
+    .getByRole("button", { name: "Close", exact: true })
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(

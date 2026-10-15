@@ -64,7 +64,7 @@ test("restricted compression prompts at execution, preserves settings on cancel,
     page.getByText("This PDF requires permission to use Compress."),
   ).toBeVisible();
   expect(compressions).toBe(0);
-  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await page.getByRole("button", { name: "Close", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "Compress", exact: true }).click();
   await page
