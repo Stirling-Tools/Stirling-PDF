@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.ledger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,7 +25,13 @@ class FolderIdentitiesTest {
     @Test
     void identityAgreesAcrossASymlinkedAliasOfTheDirectory() throws IOException {
         Path real = Files.createDirectories(tempDir.resolve("real"));
-        Path alias = Files.createSymbolicLink(tempDir.resolve("alias"), real);
+        Path alias;
+        try {
+            alias = Files.createSymbolicLink(tempDir.resolve("alias"), real);
+        } catch (IOException | UnsupportedOperationException e) {
+            assumeTrue(false, "Symbolic links are not supported in this test environment: " + e);
+            return;
+        }
         Files.writeString(real.resolve("doc.pdf"), "data");
 
         String viaReal =
