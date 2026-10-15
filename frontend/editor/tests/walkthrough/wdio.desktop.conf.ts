@@ -8,7 +8,10 @@
  * is found.
  */
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import { resolveTauriBinary } from "./adapters/tauri-desktop";
+import {
+  ensureNoRunningInstance,
+  resolveTauriBinary,
+} from "./adapters/tauri-desktop";
 
 const appBinaryPath = resolveTauriBinary();
 
@@ -26,6 +29,12 @@ export const config = {
   connectionRetryTimeout: 120_000,
   connectionRetryCount: 2,
   mochaOpts: { ui: "bdd", timeout: 180_000 },
+  // The embedded service spawns the app when the session starts, so the
+  // already-running check must run here in the launcher — inside a scenario
+  // it would find the test's own app process and abort every run.
+  onPrepare: () => {
+    ensureNoRunningInstance();
+  },
   services: [
     [
       "@wdio/tauri-service",

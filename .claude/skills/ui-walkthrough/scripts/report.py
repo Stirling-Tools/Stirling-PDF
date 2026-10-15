@@ -238,6 +238,23 @@ def prepare(manifest: dict, base: Path, *, quality: int) -> list[Note]:
             if hint:
                 notes.append(Note("info", "image-encoding", hint, where))
             view[theme] = uri
+        for capture in view.get("captures") or []:
+            if not isinstance(capture, dict):
+                continue
+            ref = capture.get("image")
+            if not _text(ref) or _is_data_uri(ref):
+                continue
+            path = Path(str(ref))
+            path = path if path.is_absolute() else base / path
+            where = f"views[{index}].captures[].image"
+            if not path.exists():
+                notes.append(Note("error", "missing-image", f"'{ref}' does not exist", where))
+                capture["image"] = None
+                continue
+            uri, hint = _encode_image(path, quality)
+            if hint:
+                notes.append(Note("info", "image-encoding", hint, where))
+            capture["image"] = uri
     return notes
 
 

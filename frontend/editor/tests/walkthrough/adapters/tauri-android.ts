@@ -9,7 +9,8 @@
  * the installed app, the walkthrough stays partial by design.
  */
 import { execFileSync } from "node:child_process";
-import { get } from "node:http";
+import { get as httpGet } from "node:http";
+import { get as httpsGet } from "node:https";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import type { CaptureRecord } from "../capture-manifest";
 
@@ -25,11 +26,23 @@ export interface MobilePrereqs {
 }
 
 function probeUrl(url: string, timeoutMs = 3000): Promise<boolean> {
+  let get: typeof httpGet;
+  try {
+    get = new URL(url).protocol === "https:" ? httpsGet : httpGet;
+  } catch {
+    return Promise.resolve(false);
+  }
   return new Promise((resolvePromise) => {
-    const request = get(url, (response) => {
-      response.resume();
-      resolvePromise(true);
-    });
+    let request: ReturnType<typeof httpGet>;
+    try {
+      request = get(url, (response) => {
+        response.resume();
+        resolvePromise(true);
+      });
+    } catch {
+      resolvePromise(false);
+      return;
+    }
     request.on("error", () => resolvePromise(false));
     request.setTimeout(timeoutMs, () => {
       request.destroy();

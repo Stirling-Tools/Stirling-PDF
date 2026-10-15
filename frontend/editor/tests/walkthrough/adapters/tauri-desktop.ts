@@ -34,18 +34,22 @@ export function srcTauriDir(from = __dirname): string {
   return resolve(from, "..", "..", "..", "src-tauri");
 }
 
-/** Candidate executables, release before debug; env override wins. */
+/** Candidate executables, debug before release; env override wins. */
 export function candidateBinaries(srcTauri = srcTauriDir()): string[] {
   const override = process.env[TAURI_BINARY_ENV];
   const target = (profile: string, binary: string): string =>
     join(srcTauri, "target", profile, binary);
+  // Debug first: captures are built with `cargo build --features
+  // ui-walkthrough` (debug). A release binary is usually a normal build
+  // without the embedded WebDriver plugin, so preferring it would hand WDIO
+  // an app it cannot drive.
   const perOs =
     process.platform === "win32"
-      ? [target("release", WINDOWS_EXE), target("debug", WINDOWS_EXE)]
+      ? [target("debug", WINDOWS_EXE), target("release", WINDOWS_EXE)]
       : process.platform === "darwin"
         ? [
-            target("release", UNIX_BIN),
             target("debug", UNIX_BIN),
+            target("release", UNIX_BIN),
             join(
               srcTauri,
               "target",
@@ -55,12 +59,28 @@ export function candidateBinaries(srcTauri = srcTauriDir()): string[] {
               MACOS_BUNDLE_BIN,
             ),
           ]
-        : [target("release", UNIX_BIN), target("debug", UNIX_BIN)];
+        : [target("debug", UNIX_BIN), target("release", UNIX_BIN)];
   return override ? [override, ...perOs] : perOs;
 }
 
-/** First existing candidate, else throw listing every path searched. */
+/**
+ * Explicit override, else the debug-first candidates. An override that
+ * names a missing file fails the run instead of silently capturing some
+ * other build than the operator selected.
+ */
 export function resolveTauriBinary(srcTauri = srcTauriDir()): string {
+  const override = process.env[TAURI_BINARY_ENV];
+  if (override) {
+    if (!existsSync(override)) {
+      throw new Error(
+        `TAURI_APP_BINARY points at a missing file: ${override}. ` +
+          `Build it first ` +
+          `(cd frontend/editor/src-tauri && cargo build --features ui-walkthrough) ` +
+          `or fix the path. Searched: ${override}`,
+      );
+    }
+    return override;
+  }
   const candidates = candidateBinaries(srcTauri);
   const hit = candidates.find((path) => existsSync(path));
   if (!hit) {
@@ -169,6 +189,48 @@ export interface WebviewPerfSnapshot {
   unavailable: string[];
 }
 
+/** Bounded longtask observation window. Deliberate measurement, not a UI sleep. */
+const LONGTASK_OBSERVE_MS = 2000;
+
+interface LongtaskProbe {
+  __wtLongtasks?: number[];
+  __wtLongtaskObserver?: { disconnect(): void };
+}
+
+/**
+ * Arm a `longtask` PerformanceObserver in the page. `longtask` entries are
+ * observer-only: reading them back with `getEntriesByType` reports zero
+ * even while the page janks, so a zero from that call is a lie. Returns
+ * false when the WebView cannot observe `longtask` at all.
+ */
+async function startLongtaskObservation(
+  browser: DesktopBrowser,
+): Promise<boolean> {
+  const started = await browser.execute(() => {
+    const probe = window as unknown as Window & LongtaskProbe;
+    try {
+      if (typeof PerformanceObserver === "undefined") return false;
+      const supported = (
+        PerformanceObserver as unknown as {
+          supportedEntryTypes?: string[];
+        }
+      ).supportedEntryTypes;
+      if (Array.isArray(supported) && !supported.includes("longtask"))
+        return false;
+      probe.__wtLongtasks = [];
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries())
+          probe.__wtLongtasks?.push(entry.duration);
+      });
+      observer.observe({ type: "longtask", buffered: true });
+      probe.__wtLongtaskObserver = observer;
+      return true;
+    } catch {
+      return false;
+    }
+  });
+  return started === true;
+}
 /**
  * One bounded WebView snapshot via plain WebDriver execute (no plugin
  * needed). Native/process memory is not visible from here and stays
@@ -183,25 +245,53 @@ export async function snapshotWebviewPerf(
   let domNodes: number | null = null;
   let jsHeapBytes: number | null = null;
   let longTasks: number | null = null;
+  let observing = false;
   try {
-    const sample = (await browser.execute(() => ({
-      nodes: document.getElementsByTagName("*").length,
-      heap:
-        typeof (
-          performance as Performance & { memory?: { usedJSHeapSize?: number } }
-        ).memory?.usedJSHeapSize === "number"
-          ? (
-              performance as Performance & {
-                memory: { usedJSHeapSize: number };
-              }
-            ).memory.usedJSHeapSize
-          : null,
-      tasks: performance.getEntriesByType("longtask").length,
-    }))) as { nodes?: unknown; heap?: unknown; tasks?: unknown } | null;
+    observing = await startLongtaskObservation(browser);
+  } catch (error) {
+    unavailable.push(`WebView execute failed: ${(error as Error).message}`);
+    return { domNodes, jsHeapBytes, longTasks, unavailable };
+  }
+  if (!observing) {
+    unavailable.push("long tasks (WebView reports no longtask observer)");
+  } else {
+    await new Promise((resolve) => setTimeout(resolve, LONGTASK_OBSERVE_MS));
+  }
+  try {
+    const sample = (await browser.execute(() => {
+      const probe = window as unknown as Window & LongtaskProbe;
+      let tasks: number | null = null;
+      try {
+        probe.__wtLongtaskObserver?.disconnect();
+      } catch {
+        /* a dead observer still leaves whatever it already recorded */
+      }
+      if (Array.isArray(probe.__wtLongtasks))
+        tasks = probe.__wtLongtasks.length;
+      probe.__wtLongtasks = [];
+      probe.__wtLongtaskObserver = undefined;
+      return {
+        nodes: document.getElementsByTagName("*").length,
+        heap:
+          typeof (
+            performance as Performance & {
+              memory?: { usedJSHeapSize?: number };
+            }
+          ).memory?.usedJSHeapSize === "number"
+            ? (
+                performance as Performance & {
+                  memory: { usedJSHeapSize: number };
+                }
+              ).memory.usedJSHeapSize
+            : null,
+        tasks,
+      };
+    })) as { nodes?: unknown; heap?: unknown; tasks?: unknown } | null;
     if (sample && typeof sample.nodes === "number") domNodes = sample.nodes;
     if (sample && typeof sample.heap === "number") jsHeapBytes = sample.heap;
     else unavailable.push("JS heap (WebView exposes no memory API)");
-    if (sample && typeof sample.tasks === "number") longTasks = sample.tasks;
+    if (observing && sample && typeof sample.tasks === "number")
+      longTasks = sample.tasks;
   } catch (error) {
     unavailable.push(`WebView execute failed: ${(error as Error).message}`);
   }

@@ -174,7 +174,22 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     $("lbl-dark").classList.toggle("on", state.theme === "dark");
   }
 
-  function srcFor(v) { return v[state.theme] || null; }
+  // A native capture carries its own pixels in captures[].image; web views
+  // without captures keep the theme-specific light/dark behavior.
+  function captureSrc(v) {
+    var caps = v.captures || [], i, c;
+    for (i = 0; i < caps.length; i++) {
+      c = caps[i];
+      if (c && c.status === "captured" && c.image && c.theme === state.theme)
+        return c.image;
+    }
+    for (i = 0; i < caps.length; i++) {
+      c = caps[i];
+      if (c && c.status === "captured" && c.image) return c.image;
+    }
+    return null;
+  }
+  function srcFor(v) { return captureSrc(v) || v[state.theme] || null; }
 
   var GROUPS = [["visual", "Visual & consistency"], ["ux", "UX & ease of use"],
     ["behavior", "Behaviour"], ["a11y", "Accessibility"], ["perf", "Performance"],
@@ -236,9 +251,9 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     (v.captures || []).forEach(function (c) {
       var li = document.createElement("li");
       li.textContent = "· [" + (c.runtime || "?") + " / " + (c.platform || "?") +
-        " / " + (c.theme || "?") + "] " + (c.status || "missing") +
-        (c.status === "captured" ? "" : " — " + (c.reason || "no reason recorded")) +
-        (c.image ? " (" + c.image + ")" : "");
+        " / " + (c.theme || "?") + " / backend:" + (c.backendMode || "?") +
+        " / native:" + (c.nativeMode || "?") + "] " + (c.status || "missing") +
+        (c.status === "captured" ? "" : " — " + (c.reason || "no reason recorded"));
       notes.appendChild(li);
     });
     fs.forEach(function (f) {

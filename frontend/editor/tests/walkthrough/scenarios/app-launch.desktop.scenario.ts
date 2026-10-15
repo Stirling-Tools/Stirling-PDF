@@ -12,7 +12,6 @@ import { strict as assert } from "node:assert";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import {
   captureDesktop,
-  ensureNoRunningInstance,
   snapshotWebviewPerf,
   waitForReady,
 } from "../adapters/tauri-desktop";
@@ -32,8 +31,6 @@ const OUT_ROOT =
 
 describe("tauri desktop proof", () => {
   it("launches the built app, shows the main window, and captures it", async () => {
-    ensureNoRunningInstance();
-
     const title = await waitForReady(browser);
     assert.match(
       title,
