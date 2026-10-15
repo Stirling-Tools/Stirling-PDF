@@ -148,6 +148,9 @@ export default function Login() {
   }, [searchParams]);
 
   const hasSsoLoginError = Boolean(errorFromState || errorFromQuery);
+  // /login?all is how a local admin reaches the password form when SSO
+  // auto-login would otherwise redirect straight to the provider.
+  const skipSsoAutoLogin = searchParams.has("all");
 
   // Shared login state + sign-in handlers + provider fetch. Editor-specific
   // behaviour (auto-login, redirects, first-time setup) is layered on here.
@@ -181,6 +184,11 @@ export default function Login() {
 
   const isUserPassAllowed = login.isUserPassAllowed;
   const isSsoOnlyMode = !login.isUserPassAllowed;
+  // Visitors who can only sign in with a password: the admin of a fresh
+  // install (default credentials) and a local account just created from an
+  // invite (messageType). Redirecting them to the IdP strands them there.
+  const awaitsPasswordSignIn =
+    isUserPassAllowed && (isFirstTimeSetup || searchParams.has("messageType"));
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -283,15 +291,13 @@ export default function Login() {
     }
 
     if (
+      skipSsoAutoLogin ||
+      awaitsPasswordSignIn ||
       hasSsoLoginError ||
       blockedByErrors ||
       blockedByAttempts ||
       blockedByLogout
     ) {
-      return;
-    }
-
-    if (login.isUserPassAllowed) {
       return;
     }
 
@@ -311,8 +317,9 @@ export default function Login() {
     login.loginMethod,
     login.providers,
     login.signInWithProvider,
-    login.isUserPassAllowed,
     hasSsoLoginError,
+    skipSsoAutoLogin,
+    awaitsPasswordSignIn,
   ]);
 
   // Handle query params (email prefill, success messages, and session expiry)
