@@ -67,6 +67,11 @@ public class StirlingUploadTool implements McpTool {
     }
 
     @Override
+    public String analyticsCategory() {
+        return "files";
+    }
+
+    @Override
     public String description() {
         return "Store a file on the Stirling PDF server and get back a fileId that any Stirling"
                 + " tool accepts. Use it to keep one file across several operations, or to give an"

@@ -37,6 +37,11 @@ public class StirlingAiTool extends AbstractCategoryTool {
     }
 
     @Override
+    public String analyticsCategory() {
+        return "ai";
+    }
+
+    @Override
     public String description() {
         return "Stirling's AI document tools: build a designed PDF (invoice, letter, report) from"
                 + " structured content with no input file, audit a PDF's maths, add AI review"

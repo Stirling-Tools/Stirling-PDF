@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -48,7 +49,8 @@ class McpServerControllerModernTest {
                 List.of(
                         new StirlingSelectFileTool(mapper, null, null),
                         new DescribeOperationTool(mapper, none)),
-                new McpWidget(mapper, props));
+                new McpWidget(mapper, props),
+                mock(McpAnalytics.class));
     }
 
     private ObjectNode request(String method, String version) {
@@ -159,7 +161,11 @@ class McpServerControllerModernTest {
         ApplicationProperties props = new ApplicationProperties();
         McpServerController c =
                 new McpServerController(
-                        mapper, props, List.of(asking), new McpWidget(mapper, props));
+                        mapper,
+                        props,
+                        List.of(asking),
+                        new McpWidget(mapper, props),
+                        mock(McpAnalytics.class));
         ObjectNode first = request("tools/call", V);
         ((ObjectNode) first.get("params")).put("name", "asker");
         ((ObjectNode) first.get("params").get("_meta"))
