@@ -20,7 +20,7 @@ npx tsx tests/walkthrough/perf/cli.ts \
 
 | File | Owns |
 |---|---|
-| `cli.ts` | Flag parsing, scenario loading, backend preflight and stub backend, collector + optional Lighthouse, derived findings, fragment writing, manifest merge, `report.py validate` |
+| `cli.ts` | Flag parsing, scenario loading, backend preflight and stub backend, collector + optional Lighthouse, derived findings and claims, fragment writing, manifest merge, `report.py validate` |
 | `backend.ts` | The preflight probe (`/api/v1/config/app-config`), the `live`/`stubbed`/`unavailable` state, and the wording of the run limitations |
 | `stub-backend.ts` | The repo's `appApiStubs` table served over `node:http`, mirroring `mockAppApis` and its dead-proxy 500 |
 | `scenarios/editor-cycle.ts` | The built-in scenarios: `editor-settings-cycle`, `editor-picker-scroll` |
@@ -32,7 +32,7 @@ npx tsx tests/walkthrough/perf/cli.ts \
 | `assemble.ts` | Sample sets → one `performance.interactions[]` entry, plus the pictures |
 | `charts.ts` | The four SVG charts and their PNG rasteriser |
 | `collect-lighthouse.ts` | The desktop/mobile Lighthouse runs, their generated `--config-path` (settle window and desktop settings), diagnostics and preview |
-| `findings.ts` | The verdicts derived from the recorded numbers, grouped the way the viewer groups them |
+| `findings.ts` | The verdicts and claims derived from the recorded numbers, grouped the way the viewer groups them |
 | `types.ts` | The fragment shapes and the minimal page surface a scenario sees |
 | `serialize.ts` | `assertSerializable`, for page functions |
 | `selftest.ts` | Unit checks plus a real browser rasterise and a `report.py` round-trip |
@@ -122,16 +122,20 @@ stay thumbnail-sized in the report; traces and CPU profiles stay on disk.
 ## Into the report
 
 The fragment is
-`{performance: {interactions: [...]}, lighthouse: {runs: [...]}, findings: {perf: [...], a11y: [...], behavior: [...]}}`,
+`{performance: {interactions: [...]}, lighthouse: {runs: [...]}, findings: {perf: [...], a11y: [...], behavior: [...]}, claims: [...]}`,
 which is the shape `report.py validate` checks and the template's Performance,
-Lighthouse and Findings tabs read. `--manifest` merges the fragment into a
+Lighthouse and Findings tabs read. Each interaction's `metrics` also carries a
+`states` map (`measured` / `unsupported` / `blocked` / `not-collected` /
+`not-applicable`), so a counter the browser could not supply is distinguishable
+from one that came back clean. `--manifest` merges the fragment into a
 capture manifest so one report carries the screenshots and the measurements —
 appending the derived findings to `manifest.findings`, per group, without
-replacing an author finding that carries the same title;
-`--validate` runs `report.py validate` on the merge and fails the run when the
-merge does not validate. `npx tsx tests/walkthrough/perf/selftest.ts` covers
-the reductions, the probe's sandbox behaviour, the derived findings, the chart
-rasteriser and a manifest round-trip through `report.py`.
+replacing an author finding that carries the same title, and appending the
+derived claims to `manifest.claims` without replacing one with the same claim
+text; `--validate` runs `report.py validate` on the merge and fails the run when
+the merge does not validate. `npx tsx tests/walkthrough/perf/selftest.ts` covers
+the reductions, the probe's sandbox behaviour, the derived findings, the derived
+claims, the chart rasteriser and a manifest round-trip through `report.py`.
 
 ## Derived findings
 
@@ -156,6 +160,36 @@ Nothing fires on a number that was not recorded, and a rule that cannot see its
 measurement stays silent rather than guessing. The Findings tab prints the
 `kind` chip and the evidence line with every finding and rolls the totals up
 above the groups, so a regression is never visible only on another tab.
+
+## Derived claims
+
+Findings say what was noticed; claims say what the numbers were supposed to
+settle. `deriveClaims` walks the same measurements and returns one entry per
+statement the change implies, so a report cannot quote a heap figure correctly
+and still imply the reuse it was written to demonstrate:
+
+| Claim | Settled by |
+|---|---|
+| Retained JS heap returns to its baseline after the cycles | `memory.jsHeapFinalMB - memory.jsHeapBaselineMB` under 5 MB |
+| The slowest recorded interaction stays inside the INP budget | `latency.durationMs` at or under 200 ms |
+| The main thread is not blocked during the cycle | `rendering.blockingMs` at or under zero |
+| The audited route meets the Lighthouse performance budget | every `lighthouse.runs[].scores.performance` at or over 90 |
+| Raster storage is reused across cycles rather than reallocated | **never measured here** — reuse is a property of the renderer's raster pool and needs allocation counters or pool instrumentation, so this claim is always `not-measured` and says why |
+
+A claim whose metric was never recorded comes back `not-measured` with the
+missing key named in its note and `key=absent` entries in `evidence`, so the
+claim names what was missing instead of arriving evidence-free; one the
+measurement contradicts comes back `unsupported` with the numbers that
+contradicted it in `evidence`. The supported/unsupported split only happens
+where a number exists — the status is derived, so it cannot be asserted, and the
+merge dedupes by claim text the way findings dedupe by title.
+
+`metrics.states` records the same distinction per metric key: `measured` for a
+value that was recorded, `unsupported` for one the browser exposes but this
+window could not use, `blocked` for the CDP counters that need a snapshot that
+never arrived, and `not-collected` for the latency keys when no interaction was
+timed. A `measured` state without a value, or a non-measured state carrying one,
+is a validation error or warning in `report.py`, so the two cannot drift apart.
 
 ## Budget, honestly stated
 
