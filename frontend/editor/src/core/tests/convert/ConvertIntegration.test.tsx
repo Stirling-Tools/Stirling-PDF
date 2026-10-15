@@ -49,19 +49,6 @@ import {
 } from "@app/types/fileContext";
 import { MantineProvider } from "@mantine/core";
 
-// Mock axios (for static methods like CancelToken, isCancel)
-vi.mock("axios", () => ({
-  default: {
-    CancelToken: {
-      source: vi.fn(() => ({
-        token: "mock-cancel-token",
-        cancel: vi.fn(),
-      })),
-    },
-    isCancel: vi.fn(() => false),
-  },
-}));
-
 // Mock our apiClient service
 vi.mock("../../services/apiClient", () => ({
   default: {

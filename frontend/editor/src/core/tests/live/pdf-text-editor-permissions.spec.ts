@@ -72,6 +72,43 @@ for (const entry of ["workbench", "editor upload"] as const) {
       await expect(
         page.locator('[data-testid^="pdf-editor-run-"]'),
       ).toHaveCount(0);
+      const verify = page.getByRole("button", {
+        name: "Enter permissions password",
+        exact: true,
+      });
+      await verify.click();
+      const dialog = page.getByRole("dialog", {
+        name: "Enter permissions password",
+        exact: true,
+      });
+      await expect(
+        dialog.getByLabel("Permissions password", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        dialog.getByLabel("Password to open", { exact: true }),
+      ).toHaveCount(0);
+      await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+      await expect(page.getByTestId("pdf-editor-page-0")).toHaveCount(0);
+      await verify.click();
+      await dialog
+        .getByLabel("Permissions password", { exact: true })
+        .fill("incorrect-password");
+      await dialog
+        .getByRole("button", { name: "Continue", exact: true })
+        .click();
+      await expect(
+        dialog.getByText("Incorrect password", { exact: true }),
+      ).toBeVisible();
+      await expect(page.getByTestId("pdf-editor-page-0")).toHaveCount(0);
+      await dialog
+        .getByLabel("Permissions password", { exact: true })
+        .fill(owner);
+      await dialog
+        .getByRole("button", { name: "Continue", exact: true })
+        .click();
+      await expect(dialog).toBeHidden();
+      await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible();
+      await expect(page.getByTestId("pdf-editor-error")).toHaveCount(0);
     } else {
       await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible();
       await expect(
@@ -82,6 +119,12 @@ for (const entry of ["workbench", "editor upload"] as const) {
       await expect(page.getByText(deniedMessage, { exact: true })).toHaveCount(
         0,
       );
+      await expect(
+        page.getByRole("button", {
+          name: "Enter permissions password",
+          exact: true,
+        }),
+      ).toHaveCount(0);
     }
   });
 }

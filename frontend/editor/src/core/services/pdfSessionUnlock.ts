@@ -152,6 +152,7 @@ function operationPermission(endpoint: string | undefined): PdfPermissionFlag {
 export async function unlockPdfForSession(
   file: File,
   password: string,
+  cancelToken?: CancelToken,
 ): Promise<PdfAccess> {
   const form = new FormData();
   form.append("fileInput", file);
@@ -160,8 +161,12 @@ export async function unlockPdfForSession(
     const response = await apiClient.post<Omit<PdfAccess, "password">>(
       "/api/v1/security/inspect-pdf-security",
       form,
-      { suppressErrorToast: true },
+      {
+        suppressErrorToast: true,
+        ...(cancelToken ? { cancelToken } : {}),
+      },
     );
+    cancelToken?.throwIfRequested();
     if (
       typeof response.data?.encrypted !== "boolean" ||
       typeof response.data?.ownerAuthenticated !== "boolean" ||
@@ -170,6 +175,8 @@ export async function unlockPdfForSession(
       throw new Error("Unable to verify PDF security");
     return { ...response.data, password };
   } catch (error) {
+    if (axios.isCancel(error))
+      throw new axios.CanceledError("Operation cancelled");
     const sanitized = new Error(
       error instanceof Error ? error.message : "Unable to unlock this PDF.",
     );

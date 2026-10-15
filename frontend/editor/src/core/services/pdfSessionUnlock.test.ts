@@ -49,6 +49,24 @@ beforeEach(() => {
 afterEach(clearPdfAccess);
 
 describe("session PDF access", () => {
+  it("sanitizes cancelled inspections without losing cancellation classification", async () => {
+    const file = new File(["encrypted"], "restricted.pdf");
+    const cancellation = axios.CancelToken.source();
+    const original = Object.assign(new axios.CanceledError("cancelled"), {
+      config: { data: "password-bearing form" },
+    });
+    post.mockRejectedValueOnce(original);
+    const error = await unlockPdfForSession(
+      file,
+      "secret",
+      cancellation.token,
+    ).catch((failure: unknown) => failure);
+    expect(axios.isCancel(error)).toBe(true);
+    expect(error).not.toHaveProperty("config");
+    expect(error).not.toHaveProperty("cause");
+    expect(post.mock.calls[0][2]?.cancelToken).toBe(cancellation.token);
+  });
+
   it("preserves cancellation classification without retaining password-bearing requests", async () => {
     const file = new File(["encrypted"], "restricted.pdf");
     rememberPdfAccess(file, { ...access, ownerAuthenticated: true });

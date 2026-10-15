@@ -90,6 +90,7 @@ export const useToolApiCalls = <TParams = void>() => {
         onStatus(`Processing ${file.name} (${i + 1}/${total})`);
 
         try {
+          cancellation.token.throwIfRequested();
           const workingFile = await prepareUnlockedFile(file, endpoint);
           const formData = config.buildFormData(params, workingFile);
           console.debug("[processFiles] POST", { endpoint, name: file.name });
@@ -143,7 +144,7 @@ export const useToolApiCalls = <TParams = void>() => {
             for (const output of responseFiles)
               rememberPdfAccess(
                 output,
-                await unlockPdfForSession(output, password),
+                await unlockPdfForSession(output, password, cancellation.token),
               );
           }
           // Guard: some endpoints may return an empty/0-byte file with 200
@@ -165,9 +166,13 @@ export const useToolApiCalls = <TParams = void>() => {
             }
             continue;
           }
-          processedFiles.push(
-            ...(await protectUnlockedResults(responseFiles, [file], endpoint)),
+          const protectedFiles = await protectUnlockedResults(
+            responseFiles,
+            [file],
+            endpoint,
           );
+          cancellation.token.throwIfRequested();
+          processedFiles.push(...protectedFiles);
           // record source id as successful
           successSourceIds.push(file.fileId);
           console.debug("[processFiles] Success", {
