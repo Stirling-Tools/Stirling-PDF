@@ -15,10 +15,13 @@
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import { deflateSync } from "node:zlib";
 import { createContext, runInContext } from "node:vm";
 import { chromium } from "playwright";
+// oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
+import type { BackendState } from "./backend";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import {
   breakdownChart,
@@ -29,6 +32,8 @@ import {
 } from "./charts";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import { resolveLighthouse } from "./collect-lighthouse";
+// oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
+import { deriveFindings } from "./findings";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import {
   domStats,
@@ -51,7 +56,7 @@ import {
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import { assertSerializable } from "./serialize";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import type { CdpSnapshot, PageProbe } from "./types";
+import type { CdpSnapshot, PageProbe, PerfInteraction } from "./types";
 
 const HERE = import.meta.dirname;
 const REPORT_PY = resolve(
@@ -699,7 +704,7 @@ function lighthouseResolver(): void {
 }
 
 /** The measured fragment must survive report.py unchanged. */
-function fragmentRoundTrip(): void {
+async function fragmentRoundTrip(): Promise<void> {
   const dir = mkdtempSync(join(tmpdir(), "wt-roundtrip-"));
   try {
     writePng(join(dir, "view-light.png"));
@@ -719,7 +724,19 @@ function fragmentRoundTrip(): void {
           captures: [],
         },
       ],
-      findings: {},
+      findings: {
+        perf: [
+          {
+            severity: "low",
+            kind: "observation",
+            title: "self-test finding",
+            detail: "written by the harness self-test",
+            evidence: "metrics.selftest=1",
+            confidence: "the self-test wrote it",
+            source: "performance harness",
+          },
+        ],
+      },
       performance: {
         interactions: [
           {
@@ -783,6 +800,7 @@ function fragmentRoundTrip(): void {
         selfTest.status === 0,
         (selfTest.stdout ?? selfTest.stderr ?? "").trim(),
       );
+      await findingsTabRenders(reportPath);
     }
 
     const broken = JSON.parse(JSON.stringify(manifest)) as typeof manifest;
@@ -805,11 +823,255 @@ function fragmentRoundTrip(): void {
   }
 }
 
+/**
+ * The verdicts must follow the recorded numbers, not a mood: a clean
+ * measurement derives nothing, a crowded one names what it saw, and a backend
+ * that did not answer is reported as a gap instead of being blamed on the app.
+ */
+function findings(): void {
+  const healthy: BackendState = {
+    ok: true,
+    endpoint: "http://127.0.0.1:8080/api/v1/config/app-config",
+    detail: "answered 200",
+  };
+  const offline: BackendState = {
+    ok: false,
+    endpoint: "http://127.0.0.1:8080/api/v1/config/app-config",
+    detail: "did not answer (fetch failed)",
+  };
+  const interaction = (metrics: Record<string, unknown>): PerfInteraction => ({
+    id: "selftest",
+    name: "self-test interaction",
+    platform: "desktop-web",
+    window: "self-test window",
+    provenance: { instrumentation: "selftest" },
+    metrics,
+    pictures: { recovery: "pic-recovery.png", timeline: "pic-timeline.png" },
+  });
+  const count = (derived: ReturnType<typeof deriveFindings>): number =>
+    derived.perf.length + derived.a11y.length + derived.behavior.length;
+
+  const quiet = deriveFindings({
+    interaction: interaction({
+      "memory.jsHeapBaselineMB": 40,
+      "memory.jsHeapFinalMB": 41,
+      "dom.baselineNodes": 1000,
+      "dom.finalNodes": 1010,
+      "rendering.blockingMs": 0,
+      "latency.durationMs": 20,
+    }),
+    cycles: 5,
+    lighthouse: [],
+    backend: healthy,
+  });
+  equal(
+    "a measurement inside every budget derives no finding",
+    count(quiet),
+    0,
+  );
+
+  const crowded = deriveFindings({
+    interaction: interaction({
+      "memory.jsHeapBaselineMB": 24.5,
+      "memory.jsHeapPeakMB": 63.4,
+      "memory.jsHeapFinalMB": 54.2,
+      "dom.baselineNodes": 227,
+      "dom.finalNodes": 7723,
+      "rendering.blockingMs": 371,
+      "rendering.longTaskCount": 7,
+      "rendering.longestTaskMs": 153,
+      "latency.durationMs": 640,
+      "latency.event": "click",
+      "latency.inputDelayMs": 12,
+      "latency.processingMs": 600,
+      unavailable: ["layout shifts were not measured"],
+    }),
+    cycles: 5,
+    lighthouse: [],
+    backend: healthy,
+  });
+  const heap = crowded.perf.find((finding) =>
+    finding.title.startsWith("JS heap ends"),
+  );
+  const latency = crowded.perf.find((finding) =>
+    finding.title.startsWith("Slowest interaction"),
+  );
+  const gap = crowded.perf.find((finding) => finding.kind === "gap");
+  check("a heap that never returns to baseline is named", heap !== undefined);
+  equal(
+    "retention over 3 MB per cycle is high severity",
+    heap?.severity,
+    "high",
+  );
+  equal("retention is a regression, not a budget", heap?.kind, "regression");
+  check(
+    "the retention finding carries the numbers it was read from",
+    heap?.evidence.includes("memory.jsHeapFinalMB") === true,
+    heap?.evidence,
+  );
+  equal(
+    "the retention finding points at the recovery curve",
+    heap?.picture,
+    "pic-recovery.png",
+  );
+  equal("a 640 ms interaction is high severity", latency?.severity, "high");
+  check(
+    "the slow interaction quotes its INP context",
+    latency?.detail.includes("200 ms") === true,
+  );
+  check(
+    "DOM growth is observed separately from the heap",
+    crowded.perf.some((finding) =>
+      finding.title.startsWith("DOM ends 7496 nodes"),
+    ),
+  );
+  check(
+    "an area the browser could not measure is a gap",
+    gap !== undefined && gap.detail.includes("layout shifts"),
+  );
+  check(
+    "a healthy backend is never blamed for the numbers",
+    !crowded.perf.some((finding) => finding.title.includes("error state")),
+  );
+  check(
+    "not running Lighthouse is not itself a finding when the backend answered",
+    !crowded.perf.some(
+      (finding) =>
+        finding.kind === "gap" && finding.title.startsWith("No Lighthouse"),
+    ),
+  );
+
+  const skipped = deriveFindings({
+    interaction: interaction({}),
+    cycles: 5,
+    lighthouse: [],
+    backend: offline,
+  });
+  check(
+    "a backend that did not answer is a finding, not a footnote",
+    skipped.perf.some((finding) => finding.title.includes("error state")),
+  );
+  check(
+    "the skipped audit is recorded as a gap",
+    skipped.perf.some(
+      (finding) =>
+        finding.kind === "gap" && finding.title.startsWith("No Lighthouse run"),
+    ),
+  );
+
+  const audit = (
+    scores: Record<string, number>,
+  ): ReturnType<typeof deriveFindings> =>
+    deriveFindings({
+      interaction: interaction({}),
+      cycles: 5,
+      lighthouse: [
+        {
+          route: "/editor",
+          formFactor: "desktop",
+          mode: "selftest",
+          platform: "desktop-web",
+          environment: {
+            lighthouse: "selftest",
+            limitations: "local dev server",
+          },
+          scores,
+        },
+      ],
+      backend: healthy,
+    });
+  const scored = audit({
+    performance: 42,
+    accessibility: 88,
+    "best-practices": 95,
+  });
+  equal(
+    "a Lighthouse category below budget lands in its viewer group",
+    scored.a11y.length,
+    1,
+  );
+  check(
+    "the accessibility score is named with its value",
+    scored.a11y[0]?.title === "Lighthouse accessibility 88 (desktop /editor)",
+    scored.a11y[0]?.title,
+  );
+  equal(
+    "a 42 performance score is high severity",
+    scored.perf.find((finding) => finding.kind === "budget")?.severity,
+    "high",
+  );
+  check(
+    "a category above budget is not a finding",
+    scored.behavior.length === 0,
+  );
+  check(
+    "the audit's own limitations become the finding's confidence",
+    scored.a11y[0]?.confidence === "local dev server",
+    scored.a11y[0]?.confidence,
+  );
+  check(
+    "an audit of the error state says so",
+    deriveFindings({
+      interaction: interaction({}),
+      cycles: 5,
+      lighthouse: [
+        {
+          route: "/editor",
+          formFactor: "desktop",
+          mode: "selftest",
+          platform: "desktop-web",
+          environment: { lighthouse: "selftest" },
+          scores: { performance: 42 },
+        },
+      ],
+      backend: offline,
+    }).perf.some((finding) =>
+      finding.title.startsWith("These scores describe"),
+    ),
+  );
+}
+
+/**
+ * The Findings tab is the surface the verdicts have to actually reach, and a
+ * template change that throws only shows up in a browser.
+ */
+async function findingsTabRenders(reportPath: string): Promise<void> {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await page.goto(pathToFileURL(reportPath).href);
+    await page.getByRole("button", { name: "Findings" }).click();
+    const pane = page.locator("#summary-pane");
+    await pane.locator(".rollup").waitFor();
+    const roll = await pane.locator(".rollup").innerText();
+    check(
+      "the Findings tab rolls up what was measured",
+      roll.includes("1 measured interaction(s)") &&
+        roll.includes("1 Lighthouse run(s)"),
+      roll,
+    );
+    equal(
+      "a finding's kind is rendered as a chip",
+      (await pane.locator(".card .kind").first().innerText()).toLowerCase(),
+      "observation",
+    );
+    check(
+      "a finding's evidence is rendered with it",
+      (await pane.locator(".card .evidence").first().innerText()).includes(
+        "metrics.selftest=1",
+      ),
+    );
+  } finally {
+    await browser.close();
+  }
+}
+
 reductions();
 probeScript();
+findings();
 await chartsAndRaster();
 lighthouseResolver();
-fragmentRoundTrip();
+await fragmentRoundTrip();
 
 process.stdout.write(`\n${passed} checks passed, ${failures.length} failed\n`);
 if (failures.length) {

@@ -8,6 +8,9 @@
  * the "non-empty dict" requirements are a contract, not a convention.
  */
 
+// oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
+import type { DerivedFindings } from "./findings";
+
 export const PICTURE_KEYS = [
   "timeline",
   "breakdown",
@@ -49,6 +52,8 @@ export interface LighthouseRun {
 export interface PerfFragment {
   performance: { interactions: PerfInteraction[] };
   lighthouse: { runs: LighthouseRun[] };
+  /** Findings derived from the measurements, appended to the manifest's own. */
+  findings: DerivedFindings;
 }
 
 /** In-page probe state installed before the app boots. */

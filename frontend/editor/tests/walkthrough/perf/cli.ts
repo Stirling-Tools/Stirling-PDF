@@ -4,7 +4,11 @@
  *
  * This is the entry point `SKILL.md` steps 6–8 call. It never fabricates a
  * number: an area the browser cannot measure is written to `metrics.unavailable`
- * and Lighthouse is skipped with a recorded reason when no runner is installed.
+ * and Lighthouse is skipped with a recorded reason when no runner is installed
+ * or the audited route has no backend to render against (`--lighthouse-force`
+ * audits the error state anyway). Findings derived from the measurements are
+ * appended to the manifest, so the report's Findings tab carries the verdicts
+ * without anyone having to write them up afterwards.
  *
  * Usage (from `frontend/`, so `playwright` and `@app/*` resolve):
  *   npx tsx editor/tests/walkthrough/perf/cli.ts \
@@ -25,7 +29,20 @@ import {
   SAMPLE_INTERVAL_MS,
 } from "./collect-web";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import { resolveLighthouse, runLighthouse } from "./collect-lighthouse";
+import { probeBackend } from "./backend";
+// oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
+import {
+  backendSkipReason,
+  resolveLighthouse,
+  runLighthouse,
+} from "./collect-lighthouse";
+// oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
+import {
+  deriveFindings,
+  type DerivedFindings,
+  type FindingGroup,
+  type PerfFinding,
+} from "./findings";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import { BUILTIN_SCENARIOS } from "./scenarios";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
@@ -55,6 +72,7 @@ interface Cli {
   trace: boolean;
   cpuProfile: boolean;
   lighthouse: boolean;
+  lighthouseForce: boolean;
   lighthouseBin: string;
   buildLabel: string;
   instrumentation: string;
@@ -84,6 +102,7 @@ function parseCli(): Cli {
       "cpu-profile": { type: "boolean", default: true },
       "no-cpu-profile": { type: "boolean", default: false },
       lighthouse: { type: "boolean", default: false },
+      "lighthouse-force": { type: "boolean", default: false },
       "lighthouse-bin": { type: "string" },
       "build-label": { type: "string" },
       instrumentation: { type: "string" },
@@ -118,6 +137,7 @@ function parseCli(): Cli {
     trace: Boolean(values.trace),
     cpuProfile: Boolean(values["cpu-profile"]) && !values["no-cpu-profile"],
     lighthouse: Boolean(values.lighthouse),
+    lighthouseForce: Boolean(values["lighthouse-force"]),
     lighthouseBin: String(values["lighthouse-bin"] ?? ""),
     buildLabel: String(values["build-label"] ?? "unspecified build"),
     instrumentation: String(
@@ -150,10 +170,38 @@ async function loadScenario(spec: string): Promise<Scenario> {
   return scenario;
 }
 
+/**
+ * Appends derived findings to the manifest's own, per viewer group. An author
+ * finding with the same title wins: the point of the merge is to add the
+ * verdicts nobody wrote, not to restate the ones somebody did.
+ */
+function mergeFindings(
+  manifest: Record<string, unknown>,
+  derived: DerivedFindings,
+): void {
+  const findings = (manifest.findings ?? {}) as Record<string, unknown>;
+  for (const group of Object.keys(derived) as FindingGroup[]) {
+    const items: PerfFinding[] = derived[group];
+    if (items.length === 0) continue;
+    const existing = Array.isArray(findings[group])
+      ? (findings[group] as { title?: unknown }[])
+      : [];
+    const titles = new Set(
+      existing.map((finding) => String(finding?.title ?? "")),
+    );
+    findings[group] = [
+      ...existing,
+      ...items.filter((finding) => !titles.has(finding.title)),
+    ];
+  }
+  manifest.findings = findings;
+}
+
 function mergeIntoManifest(
   manifestPath: string,
   interaction: PerfInteraction,
   runs: LighthouseRun[],
+  derived: DerivedFindings,
 ): Record<string, unknown> {
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<
     string,
@@ -167,6 +215,7 @@ function mergeIntoManifest(
   lighthouse.runs = [...(lighthouse.runs ?? []), ...runs];
   manifest.performance = performance;
   if (runs.length > 0) manifest.lighthouse = lighthouse;
+  mergeFindings(manifest, derived);
   return manifest;
 }
 
@@ -180,6 +229,16 @@ async function main(): Promise<void> {
   mkdirSync(cli.out, { recursive: true });
   const pictureDir = join(cli.out, "pictures");
   const artifactDir = join(cli.out, "artifacts");
+
+  // Probed once, before anything is measured: the answer decides whether the
+  // numbers describe the feature or the app's error state, and it is recorded
+  // as evidence rather than remembered.
+  const backend = await probeBackend(cli.baseUrl);
+  process.stderr.write(
+    `[perf] backend ${backend.endpoint} ${backend.detail}${
+      backend.ok ? "" : " — the route renders its error state"
+    }\n`,
+  );
 
   const collectOptions = {
     scenario,
@@ -210,6 +269,7 @@ async function main(): Promise<void> {
       sampleIntervalMs: SAMPLE_INTERVAL_MS,
       browserVersion: browser.version(),
       pictureDir,
+      backend,
     });
     for (const note of result.unavailable)
       process.stderr.write(`[perf] unavailable: ${note}\n`);
@@ -226,6 +286,11 @@ async function main(): Promise<void> {
         "Lighthouse (no runner installed: set LIGHTHOUSE_BIN or add a lighthouse dependency)",
       );
       process.stderr.write(`[perf] ${notes[notes.length - 1]}\n`);
+    } else if (!backend.ok && !cli.lighthouseForce) {
+      // An audit of an error screen scores the error screen. The run is skipped
+      // and said so, so the gap is a recorded finding instead of a mystery.
+      notes.push(backendSkipReason(backend));
+      process.stderr.write(`[perf] ${notes[notes.length - 1]}\n`);
     } else {
       const url = new URL(scenario.route, cli.baseUrl).toString();
       const result = await runLighthouse({
@@ -236,6 +301,7 @@ async function main(): Promise<void> {
         outDir: cli.out,
         binary: bin,
         chromePath: process.env.CHROME_PATH,
+        backend,
       });
       runs.push(...result.runs);
       notes.push(...result.unavailable, ...result.notes);
@@ -246,9 +312,25 @@ async function main(): Promise<void> {
     }
   }
 
+  // The verdict on what was just measured. Derived here rather than written by
+  // hand so the Findings tab cannot be more optimistic than the numbers.
+  const findings = deriveFindings({
+    interaction,
+    cycles: cli.cycles,
+    lighthouse: runs,
+    backend,
+  });
+  for (const group of Object.keys(findings) as FindingGroup[]) {
+    for (const finding of findings[group])
+      process.stderr.write(
+        `[perf] finding (${group}, ${finding.severity}): ${finding.title}\n`,
+      );
+  }
+
   const fragment: PerfFragment & { notes: string[] } = {
     performance: { interactions: [interaction] },
     lighthouse: { runs },
+    findings,
     notes,
   };
   const fragmentPath = join(cli.out, "perf.fragment.json");
@@ -256,7 +338,7 @@ async function main(): Promise<void> {
 
   let mergedPath: string | null = null;
   if (cli.manifest) {
-    const merged = mergeIntoManifest(cli.manifest, interaction, runs);
+    const merged = mergeIntoManifest(cli.manifest, interaction, runs, findings);
     mergedPath = cli.merged ?? join(cli.out, "manifest.merged.json");
     mkdirSync(dirname(mergedPath), { recursive: true });
     writeFileSync(mergedPath, `${JSON.stringify(merged, null, 2)}\n`);
@@ -293,6 +375,14 @@ async function main(): Promise<void> {
           formFactor: run.formFactor,
           scores: run.scores,
         })),
+        findings: Object.fromEntries(
+          (Object.keys(findings) as FindingGroup[]).map((group) => [
+            group,
+            findings[group].map(
+              (finding) => `${finding.severity} ${finding.title}`,
+            ),
+          ]),
+        ),
         fragment: fragmentPath,
         merged: mergedPath,
       },

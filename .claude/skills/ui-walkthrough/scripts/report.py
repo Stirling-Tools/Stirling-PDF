@@ -33,6 +33,7 @@ DATA_RE_READ = re.compile(r"window\.__WALKTHROUGH__\s*=\s*(\{.*?\});?\s*</script
 THEMES = ("light", "dark")
 FINDING_GROUPS = ("visual", "ux", "behavior", "a11y", "perf", "native")
 SEVERITIES = ("high", "med", "low")
+FINDING_KINDS = ("regression", "budget", "gap", "observation")
 # The viewer's contract: report.py fails a build that loses one of these.
 TEMPLATE_IDS = (
     "feature-title", "feature-sub", "coverage-banner", "rail", "stage-img", "missing",
@@ -325,6 +326,17 @@ def validate(manifest: object, *, source: str = "") -> list[Note]:
                 )
             if not _text(finding.get("confidence")):
                 note("warning", "finding-without-confidence", "state confidence and limits", where)
+            kind = finding.get("kind")
+            if _text(kind) and kind not in FINDING_KINDS:
+                note(
+                    "warning",
+                    "unknown-finding-kind",
+                    f"kind '{kind}' is not one of {FINDING_KINDS}; the viewer shows it verbatim",
+                    where,
+                )
+            source = finding.get("source")
+            if source is not None and not _text(source):
+                note("error", "bad-finding-source", "source must be text when present", where)
 
     summary = coverage_summary(manifest)
     if not isinstance(manifest.get("coverage"), dict):

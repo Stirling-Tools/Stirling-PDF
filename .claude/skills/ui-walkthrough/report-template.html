@@ -103,6 +103,14 @@
   .sev.high { background: var(--hi); } .sev.med { background: var(--med); } .sev.low { background: var(--low); }
   .finding .fix { color: var(--muted); font-size: 12.5px; }
   .finding .fix b { color: var(--text); font-weight: 600; }
+  .card .kind { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted);
+                border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; flex: none; }
+  .card .evidence { color: var(--muted); font-size: 12px; margin-top: 6px; overflow-wrap: anywhere; }
+  .card .evidence b { color: var(--text); font-weight: 600; }
+  .rollup { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; color: var(--muted);
+            font-size: 12.5px; margin-bottom: 12px; }
+  .rollup button { font: inherit; color: var(--accent); background: none; border: 0; padding: 0;
+                   cursor: pointer; text-decoration: underline; }
 
   /* Summary tab */
   .summary { padding: 20px 28px; overflow-y: auto; }
@@ -381,6 +389,12 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     var title = document.createElement("b");
     title.textContent = f.title || "";
     head.appendChild(sev); head.appendChild(title);
+    if (f.kind) {
+      var kind = document.createElement("span");
+      kind.className = "kind";
+      kind.textContent = f.kind;
+      head.appendChild(kind);
+    }
     if (f.view) { head.appendChild(document.createTextNode(" ")); head.appendChild(jumpButton(f.view)); }
     card.appendChild(head);
     var detail = document.createElement("div");
@@ -400,7 +414,60 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
       fixWrap.appendChild(fix);
       card.appendChild(fixWrap);
     }
+    // The measurement and its limits travel with the verdict: a finding whose
+    // evidence cannot be seen is an opinion.
+    if (f.evidence || f.source || f.confidence) {
+      var evidence = document.createElement("div");
+      evidence.className = "evidence";
+      if (f.evidence) {
+        var evLabel = document.createElement("b");
+        evLabel.textContent = "Evidence: ";
+        evidence.appendChild(evLabel);
+        evidence.appendChild(document.createTextNode(text(f.evidence)));
+      }
+      if (f.source) evidence.appendChild(document.createTextNode(
+        (f.evidence ? " · " : "") + text(f.source)));
+      if (f.confidence) evidence.appendChild(document.createTextNode(
+        " · " + text(f.confidence)));
+      card.appendChild(evidence);
+    }
     return card;
+  }
+
+  /** A button that switches tab, so a roll-up line can point at the numbers. */
+  function tabLink(label, tab) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.onclick = function () { setTab(tab); };
+    return b;
+  }
+
+  function renderRollUp(pane) {
+    var findings = D.findings || {};
+    var all = [];
+    GROUPS.forEach(function (g) { all = all.concat(findings[g[0]] || []); });
+    var counts = {};
+    var untyped = 0;
+    all.forEach(function (f) {
+      if (f.kind) { counts[f.kind] = (counts[f.kind] || 0) + 1; } else { untyped += 1; }
+    });
+    var interactions = (D.performance && D.performance.interactions) || [];
+    var runs = (D.lighthouse && D.lighthouse.runs) || [];
+    var kinds = Object.keys(counts).sort().map(function (k) {
+      return counts[k] + " " + k;
+    }).join(", ");
+    if (untyped) kinds += (kinds ? "; " : "") + untyped + " without a kind";
+    var strip = document.createElement("div");
+    strip.className = "rollup";
+    var line = document.createElement("span");
+    line.textContent = all.length + " finding(s) from " + interactions.length +
+      " measured interaction(s) and " + runs.length + " Lighthouse run(s)" +
+      (kinds ? ": " + kinds : "");
+    strip.appendChild(line);
+    if (interactions.length) strip.appendChild(tabLink("performance measurements", "perf"));
+    if (runs.length) strip.appendChild(tabLink("Lighthouse runs", "lighthouse"));
+    pane.appendChild(strip);
   }
 
   function renderSummary() {
@@ -420,6 +487,7 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
       arr.forEach(function (f) { pane.appendChild(findingCard(f)); });
     }
     var s = D.coverageSummary || null;
+    renderRollUp(pane);
     if (s && !s.complete) {
       var note = document.createElement("div");
       note.className = "empty";

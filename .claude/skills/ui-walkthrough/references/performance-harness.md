@@ -20,7 +20,8 @@ npx tsx tests/walkthrough/perf/cli.ts \
 
 | File | Owns |
 |---|---|
-| `cli.ts` | Flag parsing, scenario loading, collector + optional Lighthouse, fragment writing, manifest merge, `report.py validate` |
+| `cli.ts` | Flag parsing, scenario loading, backend preflight, collector + optional Lighthouse, derived findings, fragment writing, manifest merge, `report.py validate` |
+| `backend.ts` | The preflight probe (`/api/v1/config/app-config`) and the wording of the error-state caveat |
 | `scenarios/editor-cycle.ts` | The built-in scenarios: `editor-settings-cycle`, `editor-picker-scroll` |
 | `scenarios/text-editor-cycle.ts` | `text-editor-raster-cycle`: load a document into the PDF text editor, zoom, scroll, leave |
 | `scenarios/index.ts` | `BUILTIN_SCENARIOS`, the list `cli.ts` resolves `--scenario` ids against |
@@ -30,6 +31,7 @@ npx tsx tests/walkthrough/perf/cli.ts \
 | `assemble.ts` | Sample sets → one `performance.interactions[]` entry, plus the pictures |
 | `charts.ts` | The four SVG charts and their PNG rasteriser |
 | `collect-lighthouse.ts` | The desktop/mobile Lighthouse runs, diagnostics and preview |
+| `findings.ts` | The verdicts derived from the recorded numbers, grouped the way the viewer groups them |
 | `types.ts` | The fragment shapes and the minimal page surface a scenario sees |
 | `serialize.ts` | `assertSerializable`, for page functions |
 | `selftest.ts` | Unit checks plus a real browser rasterise and a `report.py` round-trip |
@@ -118,14 +120,40 @@ stay thumbnail-sized in the report; traces and CPU profiles stay on disk.
 
 ## Into the report
 
-The fragment is `{performance: {interactions: [...]}, lighthouse: {runs: [...]}}`,
-which is exactly the shape `report.py validate` checks and the template's
-Performance and Lighthouse tabs read. `--manifest` merges the fragment into a
-capture manifest so one report carries the screenshots and the measurements;
+The fragment is
+`{performance: {interactions: [...]}, lighthouse: {runs: [...]}, findings: {perf: [...], a11y: [...], behavior: [...]}}`,
+which is the shape `report.py validate` checks and the template's Performance,
+Lighthouse and Findings tabs read. `--manifest` merges the fragment into a
+capture manifest so one report carries the screenshots and the measurements —
+appending the derived findings to `manifest.findings`, per group, without
+replacing an author finding that carries the same title;
 `--validate` runs `report.py validate` on the merge and fails the run when the
 merge does not validate. `npx tsx tests/walkthrough/perf/selftest.ts` covers
-the reductions, the probe's sandbox behaviour, the chart rasteriser and a
-manifest round-trip through `report.py`.
+the reductions, the probe's sandbox behaviour, the derived findings, the chart
+rasteriser and a manifest round-trip through `report.py`.
+
+## Derived findings
+
+The numbers already exist; what is missing at the end of a long walkthrough is
+the verdict. `findings.ts` reads the recorded metrics and the Lighthouse runs
+and emits findings with `severity`, `kind` (`regression` / `budget` / `gap` /
+`observation`), the `evidence` it was read from, a picture where one exists, and
+a `confidence` that states what the measurement cannot prove:
+
+| Measured | Finding |
+|---|---|
+| `memory.jsHeapFinalMB` at least 5 MB over its baseline | retention, `regression`, high at 15 MB or 3 MB per cycle, pointing at the recovery curve |
+| `dom.finalNodes` 150+ over baseline | DOM growth, `observation` — a modal left open explains it as easily as a leak |
+| `rendering.blockingMs` over zero | long tasks, `observation`, med at 200 ms |
+| `latency.durationMs` at or over 200 ms | the slowest interaction, citing web-vitals' INP boundary |
+| `metrics.unavailable` | one `gap` per unmeasured area |
+| Lighthouse category under 90 | `budget` in that category's viewer group (a11y and best-practices included) |
+| no Lighthouse run, backend down | `gap`, with the reason the audit was skipped |
+
+Nothing fires on a number that was not recorded, and a rule that cannot see its
+measurement stays silent rather than guessing. The Findings tab prints the
+`kind` chip and the evidence line with every finding and rolls the totals up
+above the groups, so a regression is never visible only on another tab.
 
 ## Budget, honestly stated
 
@@ -145,11 +173,13 @@ apply. Against a dev server whose backend is not answering, the audit loads the
 app's "backend not found" screen and scores that: the page looks enormously
 slow, and none of the numbers describe the feature.
 
-`runLighthouse` therefore probes `/api/v1/config/app-config` before auditing
-and, when it fails, prepends the reason to every run's `diagnostics` and
-returns it in `notes` (the CLI prints it as `lighthouse caveat`). The audit
-still runs — a labelled bad audit beats a silent one — but the caveat leads the
-diagnostics list because a score list that starts with a metric hides it, and
-`environment.limitations` is rendered under the environment line. Treat a
-caveat as a blocker for using the scores: run the audit against a route that
-renders (a real backend, or a build that needs none) and re-run.
+`cli.ts` therefore probes `/api/v1/config/app-config` once, before it measures
+anything: the answer decides whether the numbers describe the feature or the
+error screen, it is recorded in `metrics["harness.backend"]` and as an
+`unavailable` note on the interaction, and it is evidence for the derived
+findings rather than a note someone has to remember. When the probe fails the
+Lighthouse block is skipped — `--lighthouse-force` audits anyway, and every run
+then carries the caveat in its diagnostics. Either way the skip is a `gap`
+finding, not silence. Treat a caveat as a blocker for using the scores: run the
+audit against a route that renders (a real backend, or a build that needs none)
+and re-run.

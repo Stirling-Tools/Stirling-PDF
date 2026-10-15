@@ -123,6 +123,30 @@ class ValidateTests(unittest.TestCase):
             "perf-finding-without-evidence", codes(report.validate(manifest(findings=no_evidence)))
         )
 
+    def test_finding_kind_and_source_rules(self):
+        unknown_kind = {"perf": [{"severity": "low", "kind": "hunch", "evidence": "x=1"}]}
+        notes = report.validate(manifest(findings=unknown_kind))
+        self.assertIn("unknown-finding-kind", codes(notes))
+        self.assertEqual(report.errors(notes), [])
+
+        bad_source = {"perf": [{"severity": "low", "evidence": "x=1", "source": ["harness"]}]}
+        self.assertIn(
+            "bad-finding-source", codes(report.validate(manifest(findings=bad_source)))
+        )
+
+        good = {
+            "perf": [
+                {
+                    "severity": "low",
+                    "kind": "regression",
+                    "source": "performance harness",
+                    "evidence": "x=1",
+                    "confidence": "written by the self-test",
+                }
+            ]
+        }
+        self.assertEqual(report.errors(report.validate(manifest(findings=good))), [])
+
     def test_performance_runs_need_identity_and_provenance(self):
         performance = {"interactions": [{"id": "open"}]}
         notes = codes(report.validate(manifest(performance=performance)))

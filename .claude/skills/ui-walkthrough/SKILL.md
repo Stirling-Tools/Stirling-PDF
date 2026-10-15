@@ -223,7 +223,7 @@ npx tsx tests/walkthrough/perf/cli.ts ... --lighthouse
 - Every form factor that fails (missing CLI, non-zero exit, unreadable report, `runtimeError`) is recorded as a reason, not as a result.
 - Each run keeps its JSON and HTML report as artifacts, and the template embeds a small preview plus the category scores, the environment line (Lighthouse and Chrome versions, throttling, network) and the diagnostics.
 - Audit only reachable entry points: a page-load audit covers the route it loaded, not a dialog or a populated document state. Say which one it was.
-- **An audit of an error state is not an audit of the feature.** Lighthouse brings its own browser, so the capture harness's request stubs do not apply: against a dev server whose backend is not answering, the audit scores the app's error screen and every number in it is meaningless. The runner probes `/api/v1/config/app-config` and, when it fails, prepends that fact to the run's diagnostics and the fragment's notes. The template renders `environment.limitations` under the environment line for this reason. When a caveat appears, run the audit against a route that actually renders (real backend, or a build that needs none) before putting the scores in the report, and never copy the numbers without the caveat.
+- **An audit of an error state is not an audit of the feature.** Lighthouse brings its own browser, so the capture harness's request stubs do not apply: against a dev server whose backend is not answering, the audit scores the app's error screen and every number in it is meaningless. The harness probes `/api/v1/config/app-config` once, before it measures anything, and skips the audit when the answer is not a success (`--lighthouse-force` audits it anyway, caveats included). The skip is recorded as a finding — a gap with the reason — rather than as silence.
 
 ### 9. Review pass 1 — visual and consistency
 
@@ -236,6 +236,8 @@ Judge discoverability, step count, affordances, empty states, error recovery, de
 ### 11. Review pass 3 — performance and native
 
 Turn the recorded evidence into findings under `findings.perf` (and `findings.native` for Tauri-specific evidence). Each one needs its provenance block and a picture or raw-evidence reference — the validator rejects a performance finding without evidence.
+
+The perf harness derives its own verdicts (heap retention, DOM growth, long tasks, interaction latency, unmeasured areas, Lighthouse category scores and the skipped-audit gap) and appends them to `findings.{perf,a11y,behavior}` when it merges the fragment, grouped the way the viewer groups them. An author-written finding with the same title wins, so write the ones the harness cannot see and leave the arithmetic to it. The Findings tab is the single surface for everything worth noting: it carries those derived verdicts with their evidence, and a roll-up line saying how many findings came from how many measured interactions and audits.
 
 ### 12. If `--fix`
 
@@ -293,6 +295,7 @@ Findings live under `findings.{visual,ux,behavior,a11y,perf,native}`:
 ```json
 {
   "severity": "high | med | low",
+  "kind": "regression | budget | gap | observation",
   "view": "01_empty",
   "title": "short label",
   "detail": "what is wrong and why it matters",
@@ -305,13 +308,14 @@ Findings live under `findings.{visual,ux,behavior,a11y,perf,native}`:
   "baseline": "…", "peak": "…", "recovered": "…",
   "repeatedCycles": "…", "cause": "measured hotspot or suspected cause",
   "evidence": "path or URL to the raw measurement",
+  "source": "performance harness | Lighthouse | manual review",
   "picture": "mainThread",
   "confidence": "high | medium | low",
   "limitations": "what this evidence cannot show"
 }
 ```
 
-Only `severity`, `view` and `title` are always required; the provenance fields are what make a performance, accessibility or native finding usable, and the validator rejects performance findings with neither evidence nor a picture.
+Only `severity`, `view` and `title` are always required; the provenance fields are what make a performance, accessibility or native finding usable, and the validator rejects performance findings with neither evidence nor a picture. `kind` is optional and says how the finding got here — a `regression`, a score under a `budget`, a `gap` where something was not measured, or an `observation` that is worth naming but is not a verdict. An unrecognised `kind` is a warning, because the viewer prints it verbatim rather than dropping the finding.
 
 ## Gotchas
 

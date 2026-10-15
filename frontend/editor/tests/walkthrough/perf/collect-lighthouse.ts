@@ -12,6 +12,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
+import { errorStateNote, type BackendState } from "./backend";
+// oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import type { FormFactor, LighthouseRun } from "./types";
 
 export interface LighthouseOptions {
@@ -25,8 +27,8 @@ export interface LighthouseOptions {
   binary?: string;
   /** Chrome binary for Lighthouse; falls back to LH's own discovery. */
   chromePath?: string;
-  /** Validity caveat prepended to every run's diagnostics. */
-  stateNote?: string;
+  /** Whether the audited route's own backend answered before the audit. */
+  backend: BackendState;
   timeoutMs?: number;
 }
 
@@ -45,31 +47,16 @@ const AUDIT_IDS = [
   "interactive",
 ] as const;
 
-/** The app fetches this before it renders; a failure leaves it in its error state. */
-const CONFIG_PATH = "/api/v1/config/app-config";
-
 /**
- * A page-load audit only describes the feature if the feature rendered.
- * Lighthouse brings its own browser, so the capture harness's request stubs
- * do not apply: against a dev server with no backend behind it the audit
- * scores the app's error screen, which reads as an extremely slow page.
+ * Why an audit of an erroring page is not a measurement. The audit still runs
+ * when `--lighthouse-force` asks for it: a build that does not need a backend
+ * is a real case, and its scores then carry the same caveat in their diagnostics.
  */
-async function auditedStateNote(url: string): Promise<string | null> {
-  const endpoint = new URL(CONFIG_PATH, url).toString();
-  let reason: string;
-  try {
-    const response = await fetch(endpoint, {
-      signal: AbortSignal.timeout(5_000),
-    });
-    if (response.ok) return null;
-    reason = `answered ${response.status}`;
-  } catch (error) {
-    reason = `did not answer (${(error as Error).message})`;
-  }
+export function backendSkipReason(backend: BackendState): string {
   return (
-    `${endpoint} ${reason}: the audited page rendered its error state, so these ` +
-    `scores describe that state and not the feature. Serve the audited route ` +
-    `with a backend (or a build that does not need one) before trusting them.`
+    `Lighthouse: skipped — ${backend.endpoint} ${backend.detail}, so an audit ` +
+    `would score the error screen instead of the feature ` +
+    `(--lighthouse-force audits it anyway)`
   );
 }
 
@@ -178,6 +165,7 @@ function runOne(
   binary: string,
   options: LighthouseOptions,
   formFactor: FormFactor,
+  stateNote: string | null,
 ): LighthouseRun | string {
   // Lighthouse appends its own extension when more than one output format is
   // requested, so this is a base path: the files land as <base>.report.json and
@@ -249,7 +237,7 @@ function runOne(
   // The validity caveat and the page's own console errors lead the
   // diagnostics: a score list that starts with a metric hides both.
   const diagnosticLines = [
-    ...(options.stateNote ? [options.stateNote] : []),
+    ...(stateNote ? [stateNote] : []),
     ...consoleFailures(report),
     ...diagnostics(report),
   ];
@@ -305,12 +293,11 @@ export async function runLighthouse(
       notes: [],
     };
   }
-  const stateNote = options.stateNote ?? (await auditedStateNote(options.url));
-  const scoped = stateNote ? { ...options, stateNote } : options;
+  const stateNote = options.backend.ok ? null : errorStateNote(options.backend);
   const runs: LighthouseRun[] = [];
   const unavailable: string[] = [];
   for (const formFactor of ["desktop", "mobile"] as FormFactor[]) {
-    const outcome = runOne(binary, scoped, formFactor);
+    const outcome = runOne(binary, options, formFactor, stateNote);
     if (typeof outcome === "string") unavailable.push(outcome);
     else runs.push(outcome);
   }
