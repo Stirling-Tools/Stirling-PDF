@@ -28,13 +28,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
-import stirling.software.SPDF.service.PdfProtectionService;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-
-import tools.jackson.databind.json.JsonMapper;
+import stirling.software.jpdfium.doc.PdfSecurity;
+import stirling.software.jpdfium.exception.JPDFiumException;
 
 class PdfSessionSecurityControllerTest {
     private static final String USER = " reader password ";
@@ -43,7 +42,6 @@ class PdfSessionSecurityControllerTest {
     private PdfSessionSecurityController controller;
     private CustomPDFDocumentFactory factory;
     private ApplicationProperties properties;
-    private PdfProtectionService protectionService;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -76,9 +74,7 @@ class PdfSessionSecurityControllerTest {
                 .when(tempFiles)
                 .deleteTempFile(any(java.io.File.class));
         properties = new ApplicationProperties();
-        protectionService = spy(new PdfProtectionService(JsonMapper.builder().build()));
-        controller =
-                new PdfSessionSecurityController(factory, tempFiles, protectionService, properties);
+        controller = new PdfSessionSecurityController(factory, tempFiles, properties);
     }
 
     private byte[] pdf(boolean encrypted, int bits) throws IOException {
@@ -699,12 +695,15 @@ class PdfSessionSecurityControllerTest {
 
     @Test
     void missingNativeSupportReturnsNoResultAndCleansTemporaryFiles() throws Exception {
-        doThrow(new IOException("Native PDF protection is unavailable"))
-                .when(protectionService)
-                .restore(any(), any(), anyString(), any());
-        assertThrows(
-                IOException.class,
-                () -> controller.restore(upload(pdf(false, 256)), upload(pdf(true, 256)), USER));
+        try (var security = mockStatic(PdfSecurity.class)) {
+            security.when(() -> PdfSecurity.copyEncryption(any(), any(), any(), anyString()))
+                    .thenThrow(new JPDFiumException("Native PDF protection is unavailable"));
+            assertThrows(
+                    IOException.class,
+                    () ->
+                            controller.restore(
+                                    upload(pdf(false, 256)), upload(pdf(true, 256)), USER));
+        }
         try (var remaining = Files.list(directory)) {
             assertEquals(0, remaining.count());
         }
@@ -712,12 +711,14 @@ class PdfSessionSecurityControllerTest {
 
     @Test
     void wrongPasswordDoesNotStartNativeProcessing() throws Exception {
-        assertThrows(
-                InvalidPasswordException.class,
-                () ->
-                        controller.restore(
-                                upload(pdf(false, 256)), upload(pdf(true, 256)), "incorrect"));
-        verifyNoInteractions(protectionService);
+        try (var security = mockStatic(PdfSecurity.class)) {
+            assertThrows(
+                    InvalidPasswordException.class,
+                    () ->
+                            controller.restore(
+                                    upload(pdf(false, 256)), upload(pdf(true, 256)), "incorrect"));
+            security.verifyNoInteractions();
+        }
     }
 
     @Test

@@ -25,7 +25,6 @@ import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.SPDF.service.PdfPasswordRoles;
 import stirling.software.SPDF.service.PdfPermissionSecurityHandler;
-import stirling.software.SPDF.service.PdfProtectionService;
 import stirling.software.SPDF.service.PdfSessionPermissions;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.model.ApplicationProperties;
@@ -33,6 +32,8 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.doc.PdfSecurity;
+import stirling.software.jpdfium.exception.JPDFiumException;
 
 /** Stateless helpers for interactive unlocking. No endpoint retains credentials or documents. */
 @SecurityApi
@@ -40,7 +41,6 @@ import stirling.software.common.util.WebResponseUtils;
 public class PdfSessionSecurityController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
-    private final PdfProtectionService protectionService;
     private final ApplicationProperties applicationProperties;
 
     /**
@@ -381,8 +381,12 @@ public class PdfSessionSecurityController {
                 TempFile source = new TempFile(tempFileManager, ".pdf")) {
             fileInput.transferTo(input.getFile());
             sourceFile.transferTo(source.getFile());
-            protectionService.restore(
-                    input.getPath(), source.getPath(), password, output.getPath());
+            try {
+                PdfSecurity.copyEncryption(
+                        input.getPath(), output.getPath(), source.getPath(), password);
+            } catch (JPDFiumException e) {
+                throw new IOException("Unable to restore PDF protection", e);
+            }
             try (var stream = Files.newInputStream(output.getPath());
                     PDDocument protectedDocument =
                             pdfDocumentFactory.load(stream, password, true)) {
