@@ -3,15 +3,25 @@ import type { FileId } from "@app/types/file";
 /** Session-only access to encrypted bytes. Never serialize this object or include it in tool parameters. */
 export interface PdfAccess {
   password: string;
+  openingPassword?: string;
+  openingAuthenticated?: boolean;
+  hasOwnerPassword?: boolean;
   encrypted: boolean;
+  requiresOpeningPassword?: boolean;
   signed: boolean;
   ownerAuthenticated: boolean;
+  /** Server policy at inspection time; older servers default to enforcing restrictions. */
+  honorOwnerPasswords?: boolean;
   permissions: number;
   /** Older servers omit these; native exports must reject unverifiable protection. */
   encryptionKeyLength?: number;
   encryptionRevision?: number;
+  credentialFingerprint?: string;
   canModify: boolean;
   canAssemble: boolean;
+  canExtract?: boolean;
+  canPrint?: boolean;
+  canPrintFaithful?: boolean;
   pageCount: number;
 }
 
@@ -34,12 +44,21 @@ export function getPdfAccess(
   return blob ? accessByFile.get(blob) : undefined;
 }
 
-/** Retain access for the current session, without changing the original file. */
-export function rememberPdfAccess(file: Blob, access: PdfAccess): void {
-  accessByFile.set(file, access);
+/** Retain access without changing the file; returns the identity used by preview cleanup. */
+export function rememberPdfAccess(file: Blob, access: PdfAccess): PdfAccess {
+  const storedAccess = {
+    ...access,
+    openingPassword: access.encrypted
+      ? access.openingAuthenticated || !access.ownerAuthenticated
+        ? access.password
+        : (access.openingPassword ?? accessByFile.get(file)?.openingPassword)
+      : undefined,
+  };
+  accessByFile.set(file, storedAccess);
   if ("fileId" in file && typeof file.fileId === "string")
     filesById.set(file.fileId, file);
   publish();
+  return storedAccess;
 }
 
 /** Bind a newly assigned FileContext identity to credentials already attached to its bytes. */

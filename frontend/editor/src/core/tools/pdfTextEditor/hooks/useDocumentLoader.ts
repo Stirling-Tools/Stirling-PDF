@@ -7,8 +7,15 @@ import {
 } from "@app/services/pdfiumService";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
-import { assertPdfSessionEditable } from "@app/services/pdfSessionUnlock";
+import {
+  getPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfPasswordStore";
+import {
+  assertPdfSessionEditable,
+  ensurePdfAccess,
+  unlockPdfForSession,
+} from "@app/services/pdfSessionUnlock";
 import { detectSaveRisks } from "@app/tools/pdfTextEditor/util/documentRisks";
 
 const EAGER_PAGE_LIMIT = 5;
@@ -43,11 +50,24 @@ export function useDocumentLoader(store: EditorStore) {
         await yieldToBrowser();
         const doc = await EditorDocument.open(bytes, documentPassword);
         try {
+          const access =
+            password === undefined
+              ? await ensurePdfAccess(file)
+              : await unlockPdfForSession(file, password);
+          if (!store.isCurrentLoad(token)) {
+            doc.dispose();
+            return;
+          }
+          assertPdfSessionEditable(access);
           const risks = detectSaveRisks(doc);
+          if (risks.encrypted !== access.encrypted)
+            throw new Error("Unable to verify PDF security");
           assertPdfSessionEditable({
+            ...access,
             encrypted: risks.encrypted,
             signed: risks.signatures > 0,
           });
+          rememberPdfAccess(file, access);
         } catch (error) {
           doc.dispose();
           throw error;

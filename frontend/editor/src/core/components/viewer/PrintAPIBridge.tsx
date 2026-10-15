@@ -13,7 +13,7 @@ export interface PrintAPIBridgeProps {
 /**
  * Connects the PDF print plugin to the shared ViewerContext.
  */
-export function PrintAPIBridge({ canPrint = true }: PrintAPIBridgeProps) {
+export function PrintAPIBridge({ canPrint = false }: PrintAPIBridgeProps) {
   const { provides: print } = usePrintCapability();
   const { registerBridge } = useViewer();
   const documentReady = useDocumentReady();

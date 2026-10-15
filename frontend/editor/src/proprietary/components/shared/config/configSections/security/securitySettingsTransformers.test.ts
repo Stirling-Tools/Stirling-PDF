@@ -4,11 +4,34 @@ import apiClient from "@app/services/apiClient";
 import {
   fetchConnectionsSettings,
   saveConnectionsSettings,
+  fetchSecuritySettings,
+  saveSecuritySettings,
 } from "@app/components/shared/config/configSections/security/securitySettingsTransformers";
 
 vi.mock("@app/services/apiClient", () => ({
   default: { get: vi.fn() },
 }));
+
+describe("PDF owner-password policy", () => {
+  it("keeps an explicit disabled setting through pending changes and save", async () => {
+    vi.mocked(apiClient.get).mockImplementation(async (url) => ({
+      data: url.endsWith("/security")
+        ? {
+            honorOwnerPasswords: true,
+            _pending: { honorOwnerPasswords: false },
+          }
+        : {},
+    }));
+    const settings = await fetchSecuritySettings();
+    expect(settings.honorOwnerPasswords).toBe(true);
+    expect(settings._pending?.honorOwnerPasswords).toBe(false);
+    expect(
+      saveSecuritySettings({ honorOwnerPasswords: false }).deltaSettings[
+        "security.honorOwnerPasswords"
+      ],
+    ).toBe(false);
+  });
+});
 
 describe("SSO auto-login security setting", () => {
   beforeEach(() => vi.clearAllMocks());

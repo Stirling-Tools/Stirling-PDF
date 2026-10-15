@@ -46,9 +46,16 @@ describe("form save document completion", () => {
     mocks.active = { status: "loading", error: null };
   });
 
-  it.each([undefined, "session-password"])(
-    "waits for the saved document's loaded task and ignores unrelated document events (password: %s)",
-    async (password) => {
+  it.each(
+    [undefined, "session-password"].flatMap((password) =>
+      [undefined, true, false].map((honorOwnerPasswords) => ({
+        password,
+        honorOwnerPasswords,
+      })),
+    ),
+  )(
+    "waits for the saved document's loaded task and ignores unrelated document events (password: $password, honorOwnerPasswords: $honorOwnerPasswords)",
+    async ({ password, honorOwnerPasswords }) => {
       const load = deferred<void>();
       mocks.open.mockReturnValue({
         toPromise: async () => ({
@@ -62,7 +69,11 @@ describe("form save document completion", () => {
       void saved.then(completed);
       result.current.documentReady("A");
       result.current.documentFailed("A", new Error("unrelated"));
-      const replacement = { ...pending("B-saved"), password };
+      const replacement = {
+        ...pending("B-saved"),
+        password,
+        honorOwnerPasswords,
+      };
       render(
         <DocumentSwapBridge
           pending={replacement}
@@ -75,6 +86,9 @@ describe("form save document completion", () => {
         buffer: replacement.buffer,
         name: replacement.name,
         password,
+        permissions: {
+          enforceDocumentPermissions: honorOwnerPasswords !== false,
+        },
         autoActivate: false,
       });
       expect(completed).not.toHaveBeenCalled();

@@ -48,6 +48,7 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
               permissions: -4,
               encryptionKeyLength: 256,
               encryptionRevision: 6,
+              credentialFingerprint: "original-credentials",
               canModify: true,
               canAssemble: true,
               pageCount: 1,
@@ -59,9 +60,11 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
           .locator('[data-testid="file-input"]')
           .setInputFiles(ENCRYPTED);
         await page
-          .getByPlaceholder("Enter the PDF password")
+          .getByLabel("Password to open", { exact: true })
           .fill(ENCRYPTED_PASSWORD);
-        await page.getByRole("button", { name: "Unlock", exact: true }).click();
+        await page
+          .getByRole("button", { name: "Open PDF", exact: true })
+          .click();
         await expect(page.getByRole("dialog")).toHaveCount(0);
         await page
           .getByRole("link", { name: "PDF Text Editor", exact: true })
@@ -115,6 +118,7 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
         await page.getByTestId("pdf-editor-save-risk-confirm").click();
         const download = await downloadPromise;
         expect(download.suggestedFilename()).toBe("encrypted_edited.pdf");
+        await download.saveAs(test.info().outputPath("encrypted_edited.pdf"));
         await expect(page.getByRole("dialog")).toHaveCount(0);
         await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden();
         expect(inspections).toBe(2);
@@ -143,9 +147,9 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
     await page.goto("/editor");
     await page.locator('[data-testid="file-input"]').setInputFiles(ENCRYPTED);
     await page
-      .getByPlaceholder("Enter the PDF password")
+      .getByLabel("Password to open", { exact: true })
       .fill(ENCRYPTED_PASSWORD);
-    await page.getByRole("button", { name: "Unlock", exact: true }).click();
+    await page.getByRole("button", { name: "Open PDF", exact: true }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page
       .getByRole("link", { name: "PDF Text Editor", exact: true })
@@ -153,7 +157,7 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
       .click();
     await expect(
       page.getByText(
-        /Session unlocking supports viewing it, but processing signed PDFs is not supported yet/,
+        "This signed PDF can be viewed, but cannot be edited here.",
       ),
     ).toBeVisible();
     await expect(page.getByTestId("pdf-editor-page-0")).toHaveCount(0);

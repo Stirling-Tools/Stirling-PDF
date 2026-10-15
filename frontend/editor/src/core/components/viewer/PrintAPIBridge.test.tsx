@@ -48,6 +48,26 @@ it.each([
     encrypted: true,
     ownerAuthenticated: false,
     permissions: PdfPermissionFlag.Print,
+    allowed: false,
+  },
+  {
+    encrypted: true,
+    ownerAuthenticated: false,
+    permissions: PdfPermissionFlag.Print,
+    encryptionRevision: 2,
+    allowed: true,
+  },
+  {
+    encrypted: true,
+    ownerAuthenticated: false,
+    permissions: PdfPermissionFlag.Print | PdfPermissionFlag.PrintHighQuality,
+    allowed: true,
+  },
+  {
+    encrypted: true,
+    ownerAuthenticated: false,
+    permissions: 0,
+    honorOwnerPasswords: false,
     allowed: true,
   },
   { encrypted: true, ownerAuthenticated: true, permissions: 0, allowed: true },
@@ -96,6 +116,6 @@ it.each([false, true])(
     expect(bridge.api.getEffectivePermission(PdfPermissionFlag.Print)).toBe(
       owner,
     );
-    expect(bridge.api.hasPermission(PdfPermissionFlag.Print)).toBe(false);
+    expect(bridge.api.hasPermission(PdfPermissionFlag.Print)).toBe(owner);
   },
 );

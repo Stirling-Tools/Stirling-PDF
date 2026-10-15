@@ -146,7 +146,7 @@ describe("editor inline OCR", () => {
         source === "native" ? null : ("source-id" as FileId),
       );
       expect(result.current.available).toBe(true);
-      expect(result.current.blockedReason).toContain("password protection");
+      expect(result.current.blockedReason).toContain("protection");
       await act(() => result.current.runOcr());
       expect(mocks.checkCredits).not.toHaveBeenCalled();
       expect(mocks.exportPdf).not.toHaveBeenCalled();
@@ -169,7 +169,7 @@ describe("editor inline OCR", () => {
     await act(() => result.current.runOcr());
     expect(mocks.post).not.toHaveBeenCalled();
     expect(onComplete).not.toHaveBeenCalled();
-    expect(store.getState().error).toContain("password protection");
+    expect(store.getState().error).toContain("protection");
   });
 
   it("rejects OCR output if source protection changes while the request is pending", async () => {
@@ -189,7 +189,7 @@ describe("editor inline OCR", () => {
     expect(onComplete).not.toHaveBeenCalled();
     expect(store.getState()).toMatchObject({
       loading: false,
-      error: expect.stringContaining("password protection"),
+      error: expect.stringContaining("protection"),
     });
   });
 
@@ -197,7 +197,7 @@ describe("editor inline OCR", () => {
     const { result } = await setup();
     expect(result.current.blockedReason).toBeNull();
     act(protectSource);
-    expect(result.current.blockedReason).toContain("password protection");
+    expect(result.current.blockedReason).toContain("protection");
   });
 
   it("posts the current editor bytes through the app client and applies the OCR PDF", async () => {

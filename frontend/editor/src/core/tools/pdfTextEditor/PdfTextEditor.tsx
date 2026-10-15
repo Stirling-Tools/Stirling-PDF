@@ -42,6 +42,7 @@ import { SaveRiskModal } from "@app/tools/pdfTextEditor/components/SaveRiskModal
 import { DiscardChangesModal } from "@app/tools/pdfTextEditor/components/DiscardChangesModal";
 import { HelpOverlay } from "@app/tools/pdfTextEditor/components/HelpOverlay";
 import { PasswordPromptModal } from "@app/tools/pdfTextEditor/components/PasswordPromptModal";
+import { PermissionsPasswordButton } from "@app/tools/pdfTextEditor/components/PermissionsPasswordButton";
 import { EditorPanelActions } from "@app/tools/pdfTextEditor/components/EditorPanelActions";
 import { EditorSidebar } from "@app/tools/pdfTextEditor/components/EditorSidebar";
 import { MobileEditorSheets } from "@app/tools/pdfTextEditor/components/MobileEditorSheets";
@@ -751,7 +752,19 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     >
       {state.error && (
         <Alert color="red" m="sm" data-testid="pdf-editor-error">
-          {state.error}
+          <Stack gap="xs">
+            <Text size="sm">{state.error}</Text>
+            <PermissionsPasswordButton
+              file={
+                pendingDiskFileRef.current ??
+                (sourceFileId ? selectors.getFile(sourceFileId) : null)
+              }
+              onVerified={(file) => {
+                if (pendingDiskFileRef.current === file) loadDiskFile(file);
+                else void load(file);
+              }}
+            />
+          </Stack>
         </Alert>
       )}
       <EditorFileInputs onPickPdf={onPickPdf} onPickImage={handleInsertImage} />

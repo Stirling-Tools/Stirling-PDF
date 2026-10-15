@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import apiClient from "@app/services/apiClient";
+import axios from "axios";
 import JSZip from "jszip";
 import { zipFileService } from "@app/services/zipFileService";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
@@ -17,7 +18,12 @@ import {
   unlockPdfForSession,
   verifyEditedPdfProtection,
   assertPdfSessionEditable,
+  preflightPdfOperation,
+  changePdfSecurity,
+  hasPdfPermissionOverride,
+  pdfAllows,
 } from "@app/services/pdfSessionUnlock";
+import { PdfPermissionFlag } from "@embedpdf/models";
 
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
 const post = vi.mocked(apiClient.post);
@@ -29,6 +35,7 @@ const access: PdfAccess = {
   permissions: -4,
   encryptionKeyLength: 256,
   encryptionRevision: 6,
+  credentialFingerprint: "source-credentials",
   canModify: true,
   canAssemble: true,
   pageCount: 2,
@@ -42,6 +49,222 @@ beforeEach(() => {
 afterEach(clearPdfAccess);
 
 describe("session PDF access", () => {
+  it("sanitizes cancelled inspections without losing cancellation classification", async () => {
+    const file = new File(["encrypted"], "restricted.pdf");
+    const cancellation = axios.CancelToken.source();
+    const original = Object.assign(new axios.CanceledError("cancelled"), {
+      config: { data: "password-bearing form" },
+    });
+    post.mockRejectedValueOnce(original);
+    const error = await unlockPdfForSession(
+      file,
+      "secret",
+      cancellation.token,
+    ).catch((failure: unknown) => failure);
+    expect(axios.isCancel(error)).toBe(true);
+    expect(error).not.toHaveProperty("config");
+    expect(error).not.toHaveProperty("cause");
+    expect(post.mock.calls[0][2]?.cancelToken).toBe(cancellation.token);
+  });
+
+  it("preserves cancellation classification without retaining password-bearing requests", async () => {
+    const file = new File(["encrypted"], "restricted.pdf");
+    rememberPdfAccess(file, { ...access, ownerAuthenticated: true });
+    const form = new FormData();
+    form.set("ownerPassword", "secret");
+    const original = Object.assign(new axios.CanceledError("cancelled"), {
+      config: { data: form },
+      request: { form },
+    });
+    post.mockRejectedValueOnce(original);
+    const cancellation = axios.CancelToken.source();
+    const error = await changePdfSecurity(
+      file,
+      form,
+      "/api/v1/security/add-password",
+      cancellation.token,
+    ).catch((error: unknown) => error);
+    expect(axios.isCancel(error)).toBe(true);
+    expect(error).not.toHaveProperty("config");
+    expect(error).not.toHaveProperty("request");
+    expect(error).not.toHaveProperty("cause");
+    expect(post.mock.calls[0][2]?.cancelToken).toBe(cancellation.token);
+  });
+
+  it.each([undefined, true, false])(
+    "uses the server owner policy (%s) without changing authentication",
+    async (honorOwnerPasswords) => {
+      const file = createStirlingFile(
+        new File(["encrypted"], "restricted.pdf"),
+      );
+      const reader = {
+        ...access,
+        permissions: 0,
+        canModify: false,
+        honorOwnerPasswords,
+      };
+      rememberPdfAccess(file, reader);
+      const requestOwner = vi.fn().mockResolvedValue(false);
+      const bypass = honorOwnerPasswords === false;
+      expect(hasPdfPermissionOverride(reader)).toBe(bypass);
+      for (const flag of [
+        PdfPermissionFlag.Print,
+        PdfPermissionFlag.PrintHighQuality,
+        PdfPermissionFlag.CopyContents,
+        PdfPermissionFlag.ModifyContents,
+        PdfPermissionFlag.ModifyAnnotations,
+        PdfPermissionFlag.FillForms,
+        PdfPermissionFlag.AssembleDocument,
+        PdfPermissionFlag.ExtractForAccessibility,
+      ]) {
+        expect(pdfAllows(reader, flag)).toBe(bypass);
+      }
+      expect(
+        await preflightPdfOperation([file], rotate, false, requestOwner),
+      ).toBe(bypass);
+      expect(
+        await preflightPdfOperation(
+          [file],
+          "/api/v1/security/add-password",
+          false,
+          requestOwner,
+        ),
+      ).toBe(bypass);
+      if (bypass) {
+        expect(requestOwner).not.toHaveBeenCalled();
+        expect(() => assertPdfSessionEditable(reader)).not.toThrow();
+      } else {
+        expect(requestOwner).toHaveBeenCalledTimes(2);
+        expect(() => assertPdfSessionEditable(reader)).toThrow();
+      }
+      expect(getPdfAccess(file)?.ownerAuthenticated).toBe(false);
+      expect(() =>
+        assertPdfSessionEditable({ ...reader, signed: true }),
+      ).toThrow();
+    },
+  );
+
+  it("keeps removal selections separate from cached credentials in bypass mode", async () => {
+    const file = new File(["encrypted"], "restricted.pdf");
+    rememberPdfAccess(file, { ...access, honorOwnerPasswords: false });
+    post.mockResolvedValue({ data: new Blob(["result"]) });
+    const form = new FormData();
+    form.set("password", "");
+    form.set("ownerPassword", "selected-owner");
+    await changePdfSecurity(file, form, "/api/v1/security/remove-password");
+    expect(form.get("password")).toBe("");
+    expect(form.get("sourcePassword")).toBe(access.password);
+    expect(form.get("retainedOpeningPassword")).toBe(access.password);
+    expect(form.get("ownerPassword")).toBe("selected-owner");
+    expect(post.mock.calls[0][0]).toBe("/api/v1/security/remove-pdf-passwords");
+    expect(getPdfAccess(file)?.ownerAuthenticated).toBe(false);
+  });
+
+  it("retains the opening credential after separately authenticating the owner", () => {
+    const file = new File(["encrypted"], "restricted.pdf");
+    rememberPdfAccess(file, { ...access, openingAuthenticated: true });
+    expect(getPdfAccess(file)?.ownerAuthenticated).toBe(false);
+    rememberPdfAccess(file, {
+      ...access,
+      password: "owner",
+      ownerAuthenticated: true,
+      openingAuthenticated: false,
+    });
+    expect(getPdfAccess(file)?.openingPassword).toBe(access.password);
+    expect(getPdfAccess(file)?.password).toBe("owner");
+  });
+
+  it("does not infer removal from a cached owner credential or request an unrelated owner prompt", async () => {
+    const file = createStirlingFile(new File(["encrypted"], "restricted.pdf"));
+    rememberPdfAccess(file, { ...access, ownerAuthenticated: true });
+    const requestOwner = vi.fn();
+    expect(
+      await preflightPdfOperation(
+        [file],
+        "/api/v1/security/remove-password",
+        false,
+        requestOwner,
+      ),
+    ).toBe(true);
+    expect(requestOwner).not.toHaveBeenCalled();
+    post.mockResolvedValue({ data: new Blob(["result"]) });
+    const form = new FormData();
+    form.set("password", "selected-opening");
+    await changePdfSecurity(file, form, "/api/v1/security/remove-password");
+    expect(form.get("password")).toBe("selected-opening");
+    expect(form.has("ownerPassword")).toBe(false);
+  });
+
+  it("requests owner authority before a restricted operation and stops on cancellation", async () => {
+    const file = createStirlingFile(new File(["encrypted"], "restricted.pdf"));
+    rememberPdfAccess(file, { ...access, permissions: 0 });
+    const requestOwner = vi.fn().mockResolvedValue(false);
+    expect(
+      await preflightPdfOperation([file], rotate, false, requestOwner),
+    ).toBe(false);
+    expect(requestOwner).toHaveBeenCalledWith(file);
+    expect(post).not.toHaveBeenCalled();
+    requestOwner.mockImplementation(async () => {
+      rememberPdfAccess(file, { ...access, ownerAuthenticated: true });
+      return true;
+    });
+    expect(
+      await preflightPdfOperation([file], rotate, false, requestOwner),
+    ).toBe(true);
+  });
+
+  it("rejects an unsupported tool or protected merge before asking for a password", async () => {
+    const files = ["first", "second"].map((name) =>
+      createStirlingFile(new File(["encrypted"], `${name}.pdf`)),
+    );
+    files.forEach((file) =>
+      rememberPdfAccess(file, { ...access, permissions: 0 }),
+    );
+    const requestOwner = vi.fn();
+    await expect(
+      preflightPdfOperation(
+        files,
+        "/api/v1/security/auto-redact",
+        false,
+        requestOwner,
+      ),
+    ).rejects.toThrow("cannot yet preserve");
+    await expect(
+      preflightPdfOperation(
+        files,
+        "/api/v1/general/merge-pdfs",
+        true,
+        requestOwner,
+      ),
+    ).rejects.toThrow("Process them individually");
+    expect(requestOwner).not.toHaveBeenCalled();
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("changes permissions in place using the verified owner rather than requiring a new owner password", async () => {
+    const file = new File(["encrypted"], "restricted.pdf");
+    rememberPdfAccess(file, { ...access, ownerAuthenticated: true });
+    post.mockResolvedValue({ data: new Blob(["protected result"]) });
+    const form = new FormData();
+    form.set("preventModify", "true");
+    await changePdfSecurity(file, form, "/api/v1/security/add-password");
+    expect(post.mock.calls[0][0]).toBe(
+      "/api/v1/security/change-pdf-permissions",
+    );
+    expect(form.get("sourcePassword")).toBe(access.password);
+    expect(form.has("ownerPassword")).toBe(false);
+  });
+
+  it("reuses verified owner access for opening-password removal", async () => {
+    const file = new File(["encrypted"], "restricted.pdf");
+    rememberPdfAccess(file, { ...access, ownerAuthenticated: true });
+    post.mockResolvedValue({ data: new Blob(["result"]) });
+    const form = new FormData();
+    await changePdfSecurity(file, form, "/api/v1/security/remove-password");
+    expect(form.get("sourcePassword")).toBe(access.password);
+    expect(form.has("password")).toBe(false);
+    expect(post.mock.calls[0][0]).toBe("/api/v1/security/remove-pdf-passwords");
+  });
   it("authenticates without rewriting bytes or retaining credentials before adoption", async () => {
     const original = createStirlingFile(new File(["encrypted"], "locked.pdf"));
     const { password, ...info } = access;
@@ -96,6 +319,8 @@ describe("session PDF access", () => {
     { encryptionRevision: 4 },
     { ownerAuthenticated: true },
     { encryptionKeyLength: undefined },
+    { credentialFingerprint: "replaced-owner" },
+    { credentialFingerprint: undefined },
   ])("rejects a native export with changed protection: %j", async (changed) => {
     const output = new File(["export"], "edited.pdf");
     post.mockResolvedValueOnce({ data: { ...access, ...changed } });
@@ -109,7 +334,10 @@ describe("session PDF access", () => {
     const output = new File(["export"], "edited.pdf");
     post.mockResolvedValueOnce({ data: access });
     await verifyEditedPdfProtection(output, access);
-    expect(getPdfAccess(output)).toEqual(access);
+    expect(getPdfAccess(output)).toEqual({
+      ...access,
+      openingPassword: access.password,
+    });
     await expect(
       verifyEditedPdfProtection(output, { ...access, signed: true }),
     ).rejects.toThrow("digital signatures");
@@ -135,7 +363,10 @@ describe("session PDF access", () => {
     const first = createStirlingFile(new File(["one"], "locked.pdf"));
     const second = createStirlingFile(new File(["two"], "locked.pdf"));
     rememberPdfAccess(first, access);
-    expect(getPdfAccess(first.fileId)).toEqual(access);
+    expect(getPdfAccess(first.fileId)).toEqual({
+      ...access,
+      openingPassword: access.password,
+    });
     expect(getPdfAccess(second)).toBeUndefined();
     expect(Object.keys(first)).not.toContain("password");
     forgetPdfAccess([first.fileId]);
@@ -151,7 +382,10 @@ describe("session PDF access", () => {
     expect(working).not.toBe(original);
     expect(working.name).toBe(original.name);
     expect(getPdfAccess(working)).toBeUndefined();
-    expect(getPdfAccess(original.fileId)).toEqual(access);
+    expect(getPdfAccess(original.fileId)).toEqual({
+      ...access,
+      openingPassword: access.password,
+    });
   });
 
   it("requires a fresh unlock when different bytes replace an existing file identity", () => {
@@ -167,9 +401,13 @@ describe("session PDF access", () => {
   });
 
   it.each([
-    ["/api/v1/security/auto-redact", access, "does not yet support"],
+    ["/api/v1/security/auto-redact", access, "cannot yet preserve"],
     [rotate, { ...access, signed: true }, "digital signatures"],
-    [rotate, { ...access, canAssemble: false }, "restricts"],
+    [
+      rotate,
+      { ...access, canAssemble: false, permissions: -4 & ~1024 },
+      "permissions password",
+    ],
   ])(
     "rejects unsupported or restricted processing before decrypting",
     async (endpoint, permission, message) => {
@@ -184,7 +422,7 @@ describe("session PDF access", () => {
     },
   );
 
-  it("decrypts a mixed-password merge independently and inherits its first protected input", async () => {
+  it("rejects mixed protected inputs without admitting an output", async () => {
     const first = createStirlingFile(new File(["a"], "first.pdf"));
     const second = createStirlingFile(new File(["b"], "second.pdf"));
     rememberPdfAccess(first, access);
@@ -193,21 +431,14 @@ describe("session PDF access", () => {
     const merge = "/api/v1/general/merge-pdfs";
     await prepareUnlockedFile(first, merge);
     await prepareUnlockedFile(second, merge);
-    const [result] = await protectUnlockedResults(
-      [new File(["merged"], "merged.pdf")],
-      [first, second],
-      merge,
-    );
-    expect((post.mock.calls[0][1] as FormData).get("password")).toBe(
-      access.password,
-    );
-    expect((post.mock.calls[1][1] as FormData).get("password")).toBe(
-      "second-password",
-    );
-    const restore = post.mock.calls[2][1] as FormData;
-    expect(restore.get("sourceFile")).toBe(first);
-    expect(restore.get("password")).toBe(access.password);
-    expect(getPdfAccess(result)).toEqual(access);
+    await expect(
+      protectUnlockedResults(
+        [new File(["merged"], "merged.pdf")],
+        [first, second],
+        merge,
+      ),
+    ).rejects.toThrow("output protection policy");
+    expect(post).toHaveBeenCalledTimes(2);
   });
 
   it("returns no partial output if protection restoration fails", async () => {
