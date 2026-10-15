@@ -192,7 +192,17 @@ function FileContextInner({
   useEffect(
     () =>
       subscribeToUnlockPromptHold(() => {
-        if (isUnlockPromptHeld()) return;
+        if (isUnlockPromptHeld()) {
+          // Files already queued behind the open prompt would otherwise surface mid-hold.
+          setEncryptedQueue((queue) => {
+            for (const id of queue) {
+              deferredEncryptedFilesRef.current.add(id);
+              heldByToolRef.current.add(id);
+            }
+            return [];
+          });
+          return;
+        }
         const released = [...heldByToolRef.current].filter(
           (id) => stateRef.current.files.byId[id]?.processedFile?.isEncrypted,
         );
@@ -204,7 +214,11 @@ function FileContextInner({
   );
 
   useEffect(() => {
-    if (!activeEncryptedFileId && encryptedQueue.length > 0) {
+    if (
+      !isUnlockPromptHeld() &&
+      !activeEncryptedFileId &&
+      encryptedQueue.length > 0
+    ) {
       setActiveEncryptedFileId(encryptedQueue[0]);
       setEncryptedQueue((prev) => prev.slice(1));
     }
