@@ -28,7 +28,7 @@ beforeEach(() => {
 describe("renameStoredFile", () => {
   it("carries the last viewed page over to the new name", async () => {
     updateFileMetadata.mockResolvedValue(true);
-    setLastViewedPage(OLD_KEY, 6);
+    setLastViewedPage({ fileId: stub.id, quickKey: OLD_KEY }, 6);
     const updateStub = vi.fn();
 
     await expect(renameStoredFile(stub, "final.pdf", updateStub)).resolves.toBe(
@@ -45,7 +45,7 @@ describe("renameStoredFile", () => {
 
   it("leaves the page where it was when storage refuses the rename", async () => {
     updateFileMetadata.mockResolvedValue(false);
-    setLastViewedPage(OLD_KEY, 6);
+    setLastViewedPage({ fileId: stub.id, quickKey: OLD_KEY }, 6);
     const updateStub = vi.fn();
 
     await expect(renameStoredFile(stub, "final.pdf", updateStub)).resolves.toBe(

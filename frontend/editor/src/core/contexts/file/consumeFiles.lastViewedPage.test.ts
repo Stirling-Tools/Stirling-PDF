@@ -33,7 +33,7 @@ describe("consumeFiles", () => {
     const filesRef = {
       current: new Map<FileId, File>([[input.fileId, input]]),
     };
-    setLastViewedPage(input.quickKey, 8);
+    setLastViewedPage(input, 8);
 
     await consumeFiles(
       [input.fileId],

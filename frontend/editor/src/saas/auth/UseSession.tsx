@@ -23,6 +23,10 @@ import {
   type ProfilePictureMetadata,
 } from "@app/services/avatarSyncService";
 import {
+  resumeLastViewedPages,
+  suspendLastViewedPages,
+} from "@app/services/lastViewedPageStore";
+import {
   resumeWorkbenchSession,
   suspendWorkbenchSession,
 } from "@app/services/workbenchSession";
@@ -390,6 +394,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // workbench record here and stop recording, so the teardown that follows cannot
       // write it back for whoever signs in next.
       suspendWorkbenchSession();
+      // Same reason: the next person must not learn which documents were read here.
+      suspendLastViewedPages();
 
       const { error } = await supabase.auth.signOut();
 
@@ -399,6 +405,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // The sign-out did not happen and the session stands, so keep recording:
         // otherwise a still-signed-in user silently stops persisting their workbench.
         resumeWorkbenchSession();
+        resumeLastViewedPages();
       } else {
         console.debug("[Auth Debug] Signed out successfully");
         updateSession(null);
@@ -407,6 +414,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("[Auth Debug] Unexpected error during sign out:", err);
       setError(err as AuthError);
       resumeWorkbenchSession();
+      resumeLastViewedPages();
     }
   };
 

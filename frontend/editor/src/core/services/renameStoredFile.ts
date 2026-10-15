@@ -23,10 +23,10 @@ export async function renameStoredFile(
   if (!saved) return false;
   // Rebuilt from the name rather than read from the stub: a version's stub
   // carries its parent's quickKey until it is reloaded from storage.
-  moveLastViewedPage(
-    `${stub.name}|${stub.size}|${stub.lastModified}`,
+  moveLastViewedPage(`${stub.name}|${stub.size}|${stub.lastModified}`, {
+    fileId: stub.id,
     quickKey,
-  );
+  });
   updateStub(stub.id, { name, quickKey });
   return true;
 }

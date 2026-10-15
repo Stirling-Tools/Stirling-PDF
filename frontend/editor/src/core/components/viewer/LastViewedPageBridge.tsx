@@ -9,14 +9,14 @@ import {
   moveLastViewedPage,
   resumeLastViewedPages,
   setLastViewedPage,
+  type LastViewedFile,
 } from "@app/services/lastViewedPageStore";
 
 const SAVE_DEBOUNCE_MS = 500;
 
 interface LastViewedPageBridgeProps {
-  /** The file's quickKey, so reopening it from disk under a new FileId still
-   *  restores. Null remembers and restores nothing, e.g. for a preview file. */
-  fileKey: string | null;
+  /** Null remembers and restores nothing, e.g. for a preview file. */
+  file: LastViewedFile | null;
   restorePending: boolean;
 }
 
@@ -26,32 +26,37 @@ interface LastViewedPageBridgeProps {
  * position DocumentRestoreBridge carries over.
  */
 export function LastViewedPageBridge({
-  fileKey,
+  file,
   restorePending,
 }: LastViewedPageBridgeProps) {
   const activeDocumentId = useActiveDocumentId();
   const documentReady = useDocumentReady();
   const restoreClaimedRef = useRef(false);
-  const lastFileKeyRef = useRef(fileKey);
+  const lastFileRef = useRef(file);
 
   useEffect(() => resumeLastViewedPages(), []);
 
-  // The mount follows one lineage, so a new key here is the same file renamed,
-  // versioned or reloaded from disk.
+  // Only the same record under a new key (a rename or a disk reload) moves its
+  // entry. A mount can switch between versions of one lineage that all stay in
+  // the workspace, and those keep their own; consumeFiles moves a new version's.
+  const fileId = file?.fileId;
+  const quickKey = file?.quickKey;
   useEffect(() => {
-    if (!fileKey) return;
-    if (lastFileKeyRef.current)
-      moveLastViewedPage(lastFileKeyRef.current, fileKey);
-    lastFileKeyRef.current = fileKey;
-  }, [fileKey]);
+    if (!fileId || !quickKey) return;
+    const last = lastFileRef.current;
+    if (last && last.fileId === fileId && last.quickKey !== quickKey) {
+      moveLastViewedPage(last.quickKey, { fileId, quickKey });
+    }
+    lastFileRef.current = { fileId, quickKey };
+  }, [fileId, quickKey]);
 
-  if (!activeDocumentId || !documentReady || !fileKey) return null;
+  if (!activeDocumentId || !documentReady || !file) return null;
 
   return (
     <LastViewedPageBridgeInner
       key={activeDocumentId}
       documentId={activeDocumentId}
-      fileKey={fileKey}
+      file={file}
       restorePending={restorePending}
       restoreClaimedRef={restoreClaimedRef}
     />
@@ -60,18 +65,18 @@ export function LastViewedPageBridge({
 
 function LastViewedPageBridgeInner({
   documentId,
-  fileKey,
+  file,
   restorePending,
   restoreClaimedRef,
 }: {
   documentId: string;
-  fileKey: string;
+  file: LastViewedFile;
   restorePending: boolean;
   restoreClaimedRef: RefObject<boolean>;
 }) {
   const { provides: scroll } = useScrollCapability();
-  const fileKeyRef = useRef(fileKey);
-  fileKeyRef.current = fileKey;
+  const fileRef = useRef(file);
+  fileRef.current = file;
   const restorePendingRef = useRef(restorePending);
   restorePendingRef.current = restorePending;
 
@@ -82,7 +87,7 @@ function LastViewedPageBridgeInner({
       restoreClaimedRef.current = true;
       // Something else has already positioned this document.
       if (restorePendingRef.current || event.pageNumber > 1) return;
-      const page = getLastViewedPage(fileKeyRef.current);
+      const page = getLastViewedPage(fileRef.current.quickKey);
       if (page === null || page > event.totalPages) return;
       scroll
         .forDocument(documentId)
@@ -97,8 +102,7 @@ function LastViewedPageBridgeInner({
     const save = () => {
       if (timer !== null) clearTimeout(timer);
       timer = null;
-      if (pendingPage !== null)
-        setLastViewedPage(fileKeyRef.current, pendingPage);
+      if (pendingPage !== null) setLastViewedPage(fileRef.current, pendingPage);
       pendingPage = null;
     };
     const unsubscribe = scroll.onPageChange((event) => {

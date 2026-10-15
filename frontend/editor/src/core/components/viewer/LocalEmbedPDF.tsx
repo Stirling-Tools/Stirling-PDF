@@ -117,6 +117,7 @@ import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPer
 import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
 import { InitialDocumentLoadBridge } from "@app/components/viewer/InitialDocumentLoadBridge";
 import { LastViewedPageBridge } from "@app/components/viewer/LastViewedPageBridge";
+import type { LastViewedFile } from "@app/services/lastViewedPageStore";
 import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
 import { useFontFallbackConfig } from "@app/hooks/useFontFallbackConfig";
 import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
@@ -189,8 +190,8 @@ interface LocalEmbedPDFProps {
   restorePending?: boolean;
   restoreRequest?: DocumentRestoreRequest | null;
   onRestoreEvent?: (event: DocumentRestoreEvent) => void;
-  /** quickKey the last viewed page is remembered under; null remembers nothing. */
-  lastViewedPageKey?: string | null;
+  /** File the last viewed page is remembered for; null remembers nothing. */
+  lastViewedPageFile?: LastViewedFile | null;
 }
 
 interface ViewerPageContainerProps {
@@ -858,7 +859,7 @@ export function LocalEmbedPDF({
   restorePending = false,
   restoreRequest = null,
   onRestoreEvent,
-  lastViewedPageKey = null,
+  lastViewedPageFile = null,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -1548,7 +1549,7 @@ export function LocalEmbedPDF({
             onEvent={onRestoreEvent}
           />
           <LastViewedPageBridge
-            fileKey={lastViewedPageKey}
+            file={lastViewedPageFile}
             restorePending={restorePending}
           />
           <ZoomAPIBridge />

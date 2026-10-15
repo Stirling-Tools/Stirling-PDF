@@ -20,7 +20,7 @@ async function freshFileStorage() {
     );
     const stub = createNewStirlingFileStub(file, file.fileId);
     await fileStorage.storeStirlingFile(file, stub);
-    pages.setLastViewedPage(file.quickKey, 5);
+    pages.setLastViewedPage(file, 5);
     return file;
   };
   return { fileStorage, store, pages };

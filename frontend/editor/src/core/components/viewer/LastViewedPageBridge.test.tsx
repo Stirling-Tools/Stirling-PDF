@@ -4,7 +4,9 @@ import { LastViewedPageBridge } from "@app/components/viewer/LastViewedPageBridg
 import {
   getLastViewedPage,
   setLastViewedPage,
+  type LastViewedFile,
 } from "@app/services/lastViewedPageStore";
+import type { FileId } from "@app/types/file";
 
 const fixture = vi.hoisted(() => {
   const emitter = <T,>() => {
@@ -52,9 +54,15 @@ vi.mock("@embedpdf/plugin-scroll/react", () => ({
   useScrollCapability: () => ({ provides: fixture.scroll }),
 }));
 
-const FILE_A = "report.pdf|2048|1700000000000";
-const FILE_A_RENAMED = "final report.pdf|2048|1700000000000";
-const FILE_B = "notes.pdf|512|1700000000000";
+function file(fileId: string, quickKey: string): LastViewedFile {
+  return { fileId: fileId as FileId, quickKey };
+}
+
+const FILE_A = file("a", "report.pdf|2048|1700000000000");
+const FILE_A_REOPENED = file("a-reopened", FILE_A.quickKey);
+const FILE_A_RENAMED = file("a", "final report.pdf|2048|1700000000000");
+const FILE_A_V1 = file("a-v1", "report.pdf|1024|1600000000000");
+const FILE_B = file("b", "notes.pdf|512|1700000000000");
 
 function layoutReady(documentId: string, totalPages = 10, pageNumber = 1) {
   act(() => fixture.layoutReady.emit({ documentId, pageNumber, totalPages }));
@@ -75,7 +83,7 @@ afterEach(() => vi.useRealTimers());
 describe("LastViewedPageBridge", () => {
   it("reopens a file at its remembered page once its layout is ready", () => {
     setLastViewedPage(FILE_A, 7);
-    render(<LastViewedPageBridge fileKey={FILE_A} restorePending={false} />);
+    render(<LastViewedPageBridge file={FILE_A} restorePending={false} />);
     expect(fixture.scrollToPage).not.toHaveBeenCalled();
 
     layoutReady("first");
@@ -86,20 +94,27 @@ describe("LastViewedPageBridge", () => {
   it("restores a file reopened from disk, which arrives under a new FileId", () => {
     vi.useFakeTimers();
     const firstOpen = render(
-      <LastViewedPageBridge fileKey={FILE_A} restorePending={false} />,
+      <LastViewedPageBridge file={FILE_A} restorePending={false} />,
     );
     layoutReady("first");
     pageChange("first", 8);
     firstOpen.unmount();
 
     fixture.activeDocumentId = "reopened";
-    render(<LastViewedPageBridge fileKey={FILE_A} restorePending={false} />);
+    render(
+      <LastViewedPageBridge file={FILE_A_REOPENED} restorePending={false} />,
+    );
     layoutReady("reopened");
 
     expect(fixture.scrollToPage).toHaveBeenCalledExactlyOnceWith("reopened", 8);
   });
 
-  it.each([
+  it.each<
+    [
+      string,
+      { totalPages?: number; pageNumber?: number; restorePending?: boolean },
+    ]
+  >([
     ["the page is past the end", { totalPages: 5 }],
     ["something already moved the document", { pageNumber: 3 }],
     ["a carried restore is in flight", { restorePending: true }],
@@ -107,7 +122,7 @@ describe("LastViewedPageBridge", () => {
     setLastViewedPage(FILE_A, 7);
     render(
       <LastViewedPageBridge
-        fileKey={FILE_A}
+        file={FILE_A}
         restorePending={overrides.restorePending ?? false}
       />,
     );
@@ -119,14 +134,14 @@ describe("LastViewedPageBridge", () => {
 
   it("does not restore a replacement document", () => {
     const view = render(
-      <LastViewedPageBridge fileKey={FILE_A} restorePending={false} />,
+      <LastViewedPageBridge file={FILE_A} restorePending={false} />,
     );
     layoutReady("first");
 
     setLastViewedPage(FILE_B, 4);
     fixture.activeDocumentId = "second";
     view.rerender(
-      <LastViewedPageBridge fileKey={FILE_B} restorePending={false} />,
+      <LastViewedPageBridge file={FILE_B} restorePending={false} />,
     );
     layoutReady("second");
 
@@ -135,47 +150,64 @@ describe("LastViewedPageBridge", () => {
 
   it("saves the settled page once scrolling pauses", () => {
     vi.useFakeTimers();
-    render(<LastViewedPageBridge fileKey={FILE_A} restorePending={false} />);
+    render(<LastViewedPageBridge file={FILE_A} restorePending={false} />);
     layoutReady("first");
 
     pageChange("first", 2);
     pageChange("other", 9);
     pageChange("first", 3);
-    expect(getLastViewedPage(FILE_A)).toBeNull();
+    expect(getLastViewedPage(FILE_A.quickKey)).toBeNull();
 
     act(() => vi.advanceTimersByTime(500));
-    expect(getLastViewedPage(FILE_A)).toBe(3);
+    expect(getLastViewedPage(FILE_A.quickKey)).toBe(3);
   });
 
   it("keeps the remembered page through page changes seen before the restore", () => {
     vi.useFakeTimers();
     setLastViewedPage(FILE_A, 6);
-    render(<LastViewedPageBridge fileKey={FILE_A} restorePending={false} />);
+    render(<LastViewedPageBridge file={FILE_A} restorePending={false} />);
 
     pageChange("first", 1);
     act(() => vi.advanceTimersByTime(500));
 
-    expect(getLastViewedPage(FILE_A)).toBe(6);
+    expect(getLastViewedPage(FILE_A.quickKey)).toBe(6);
   });
 
-  it("carries the position over when the file takes a new key", () => {
+  it("leaves each version its own position when the viewer switches between them", () => {
+    setLastViewedPage(FILE_A, 7);
+    setLastViewedPage(FILE_A_V1, 3);
+    const view = render(
+      <LastViewedPageBridge file={FILE_A} restorePending={false} />,
+    );
+    layoutReady("first");
+
+    fixture.activeDocumentId = "older";
+    view.rerender(
+      <LastViewedPageBridge file={FILE_A_V1} restorePending={false} />,
+    );
+
+    expect(getLastViewedPage(FILE_A.quickKey)).toBe(7);
+    expect(getLastViewedPage(FILE_A_V1.quickKey)).toBe(3);
+  });
+
+  it("carries the position over when the same record takes a new key", () => {
     setLastViewedPage(FILE_A, 7);
     const view = render(
-      <LastViewedPageBridge fileKey={FILE_A} restorePending={false} />,
+      <LastViewedPageBridge file={FILE_A} restorePending={false} />,
     );
     layoutReady("first");
 
     view.rerender(
-      <LastViewedPageBridge fileKey={FILE_A_RENAMED} restorePending={false} />,
+      <LastViewedPageBridge file={FILE_A_RENAMED} restorePending={false} />,
     );
 
-    expect(getLastViewedPage(FILE_A)).toBeNull();
-    expect(getLastViewedPage(FILE_A_RENAMED)).toBe(7);
+    expect(getLastViewedPage(FILE_A.quickKey)).toBeNull();
+    expect(getLastViewedPage(FILE_A_RENAMED.quickKey)).toBe(7);
   });
 
   it("saves a pending page when the tab is closed", () => {
     vi.useFakeTimers();
-    render(<LastViewedPageBridge fileKey={FILE_A} restorePending={false} />);
+    render(<LastViewedPageBridge file={FILE_A} restorePending={false} />);
     layoutReady("first");
 
     pageChange("first", 4);
@@ -183,19 +215,19 @@ describe("LastViewedPageBridge", () => {
       window.dispatchEvent(new Event("pagehide"));
     });
 
-    expect(getLastViewedPage(FILE_A)).toBe(4);
+    expect(getLastViewedPage(FILE_A.quickKey)).toBe(4);
   });
 
   it("saves a pending page when the viewer closes", () => {
     vi.useFakeTimers();
     const view = render(
-      <LastViewedPageBridge fileKey={FILE_A} restorePending={false} />,
+      <LastViewedPageBridge file={FILE_A} restorePending={false} />,
     );
     layoutReady("first");
 
     pageChange("first", 5);
     view.unmount();
 
-    expect(getLastViewedPage(FILE_A)).toBe(5);
+    expect(getLastViewedPage(FILE_A.quickKey)).toBe(5);
   });
 });

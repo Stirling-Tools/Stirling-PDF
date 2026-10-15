@@ -663,20 +663,6 @@ export async function consumeFiles(
     );
   }
 
-  // A new version is the same document to the reader, so it takes over the
-  // page its parent was left at. Runs before the outputs land in filesRef.
-  outputStirlingFileStubs.forEach((stub, i) => {
-    const parent = stub.parentFileId
-      ? filesRef.current.get(stub.parentFileId)
-      : undefined;
-    if (parent) {
-      moveLastViewedPage(
-        createQuickKey(parent),
-        outputStirlingFiles[i].quickKey,
-      );
-    }
-  });
-
   // Store StirlingFiles in filesRef using their existing IDs (no ID generation needed)
   for (let i = 0; i < outputStirlingFiles.length; i++) {
     const stirlingFile = outputStirlingFiles[i];
@@ -703,6 +689,16 @@ export async function consumeFiles(
     outputStirlingFiles,
     outputStirlingFileStubs,
   );
+
+  // A new version is the same document to the reader, so it takes over the
+  // page its parent was left at.
+  outputStirlingFileStubs.forEach((stub, i) => {
+    const parent = stub.parentFileId
+      ? filesRef.current.get(stub.parentFileId)
+      : undefined;
+    if (parent)
+      moveLastViewedPage(createQuickKey(parent), outputStirlingFiles[i]);
+  });
 
   // Dispatch the consume action with pre-created stubs (no processing needed)
   dispatch({
