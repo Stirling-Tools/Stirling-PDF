@@ -1,12 +1,5 @@
-import {
-  Modal,
-  Stack,
-  Text,
-  PasswordInput,
-  Group,
-  Tooltip,
-  Menu,
-} from "@mantine/core";
+import { Modal, Stack, Text, PasswordInput, Group } from "@mantine/core";
+import { Tooltip } from "@app/components/shared/Tooltip";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
@@ -76,15 +69,14 @@ const EncryptedPdfUnlockModal = ({
           </span>
           {sessionUnlock && (
             <Tooltip
-              label={t(
+              content={t(
                 "encryptedPdfUnlock.sessionDetails",
-                "Access ends when you close the file or leave the session. Supported tools keep PDF results protected; merged PDFs use the first protected file's settings. Closing this dialog keeps the saved copy in your library. Use Remove Password to create an unprotected copy.",
+                "Unlock for this session. The PDF stays protected. Remove Password creates an unprotected copy.",
               )}
-              multiline
-              w={280}
-              withArrow
-              events={{ hover: true, focus: true, touch: true }}
-              zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE + 1}
+              position="top"
+              maxWidth={280}
+              arrow
+              containerStyle={{ zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE + 1 }}
             >
               <ActionIcon
                 variant="quiet"
@@ -174,70 +166,36 @@ const EncryptedPdfUnlockModal = ({
               {t("encryptedPdfUnlock.skip", "Skip for now")}
             </Button>
           )}
-          <Group gap="xs">
-            {remainingCount > 0 && onUnlockAll && (
-              <Button
-                variant="secondary"
-                onClick={onUnlockAll}
-                loading={isProcessing}
-                disabled={password.length === 0}
-              >
-                {t("encryptedPdfUnlock.unlockAll", "Use for all ({{count}})", {
-                  count: remainingCount + 1,
-                })}
-              </Button>
-            )}
-            <Button.Group>
-              <Button
-                onClick={onUnlock}
-                loading={isProcessing}
-                disabled={password.length === 0}
-                data-testid={
-                  testIdPrefix ? `${testIdPrefix}-submit` : undefined
-                }
-              >
-                {confirmLabel ?? t("encryptedPdfUnlock.unlock", "Unlock")}
-              </Button>
-              {sessionUnlock && onRemovePassword && (
-                <Menu
-                  position="bottom-end"
-                  withinPortal
-                  zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE + 1}
-                >
-                  <Menu.Target>
-                    <Button
-                      disabled={isProcessing}
-                      px="xs"
-                      aria-label={t(
-                        "encryptedPdfUnlock.moreOptions",
-                        "More options",
-                      )}
-                      style={{ borderInlineStartColor: "var(--c-border)" }}
-                    >
-                      <Icon name="chevron-down" size={16} />
-                    </Button>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Item
-                      leftSection={<Icon name="lock-open" size={16} />}
-                      disabled={isProcessing || password.length === 0}
-                      onClick={onRemovePassword}
-                    >
-                      <Text size="sm">
-                        {t("removePassword.submit", "Remove Password")}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {t(
-                          "encryptedPdfUnlock.createCopy",
-                          "Create an unprotected copy",
-                        )}
-                      </Text>
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              )}
-            </Button.Group>
-          </Group>
+          {remainingCount > 0 && onUnlockAll && (
+            <Button
+              variant="secondary"
+              onClick={onUnlockAll}
+              loading={isProcessing}
+              disabled={password.length === 0}
+            >
+              {t("encryptedPdfUnlock.unlockAll", "Use for all ({{count}})", {
+                count: remainingCount + 1,
+              })}
+            </Button>
+          )}
+          {sessionUnlock && onRemovePassword && (
+            <Button
+              variant="secondary"
+              onClick={onRemovePassword}
+              disabled={isProcessing || password.length === 0}
+            >
+              {t("removePassword.submit", "Remove Password")}
+            </Button>
+          )}
+          <Button
+            variant="primary"
+            onClick={onUnlock}
+            loading={isProcessing}
+            disabled={password.length === 0}
+            data-testid={testIdPrefix ? `${testIdPrefix}-submit` : undefined}
+          >
+            {confirmLabel ?? t("encryptedPdfUnlock.unlock", "Unlock")}
+          </Button>
         </Group>
       </Stack>
     </Modal>

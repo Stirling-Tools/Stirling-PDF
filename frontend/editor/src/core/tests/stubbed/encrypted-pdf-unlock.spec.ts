@@ -107,6 +107,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     ).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "More options", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Remove Password", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }),
@@ -122,10 +125,10 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await page.keyboard.press("Shift+Tab");
     await expect(details).toBeFocused();
     const sessionDetails = page.getByRole("tooltip").filter({
-      hasText: "Access ends when you close the file",
+      hasText: "Unlock for this session.",
     });
-    await expect(sessionDetails).toContainText(
-      "Closing this dialog keeps the saved copy in your library.",
+    await expect(sessionDetails).toHaveText(
+      "Unlock for this session. The PDF stays protected. Remove Password creates an unprotected copy.",
     );
     await page.getByPlaceholder(PASSWORD_PLACEHOLDER).focus();
     await expect(sessionDetails).toBeHidden();
@@ -142,19 +145,14 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     });
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     const dialog = page.getByRole("dialog");
-    await dialog
-      .getByRole("button", { name: "More options", exact: true })
-      .click();
-    await expect(
-      page.getByRole("menuitem", { name: /Remove Password/ }),
-    ).toBeDisabled();
-    await page.keyboard.press("Escape");
-    await expect(dialog).toBeVisible();
+    const removePassword = dialog.getByRole("button", {
+      name: "Remove Password",
+      exact: true,
+    });
+    await expect(removePassword).toBeDisabled();
     await fillPassword(page, "testpass123");
-    await dialog
-      .getByRole("button", { name: "More options", exact: true })
-      .click();
-    await page.getByRole("menuitem", { name: /Remove Password/ }).click();
+    await expect(removePassword).toBeEnabled();
+    await removePassword.click();
     await expect(dialog).toBeHidden();
     await expect(
       page.getByText("Unprotected copy created", { exact: true }),
@@ -301,7 +299,8 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       .getByRole("button", { name: "Why encrypted.pdf is unavailable" })
       .hover();
     const details = page.getByRole("tooltip").filter({
-      hasText: "this tool cannot preserve its password protection",
+      hasText:
+        "This tool doesn't support encrypted PDFs. Remove the password first.",
     });
     await expect(details).toBeVisible();
     await notice.getByText("encrypted.pdf", { exact: true }).click();

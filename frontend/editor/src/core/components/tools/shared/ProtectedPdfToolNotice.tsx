@@ -1,4 +1,5 @@
-import { Group, Stack, Text, Tooltip } from "@mantine/core";
+import { Group, Stack, Text } from "@mantine/core";
+import { Tooltip } from "@app/components/shared/Tooltip";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
@@ -11,14 +12,13 @@ function RemovePasswordAction() {
   const { handleToolSelect } = useToolWorkflowActions();
   return (
     <Tooltip
-      label={t(
+      content={t(
         "encryptedPdfUnlock.removePasswordHelp",
         "Open Remove Password to create an unprotected copy.",
       )}
-      multiline
-      w={230}
-      withArrow
-      events={{ hover: true, focus: true, touch: true }}
+      position="top"
+      maxWidth={230}
+      arrow
     >
       <ActionIcon
         variant="tertiary"
@@ -47,14 +47,13 @@ export function ProtectedPdfToolNotice({
       {files.map((file) => (
         <Group key={file.id} gap={6} wrap="nowrap" role="listitem">
           <Tooltip
-            label={t(
+            content={t(
               "encryptedPdfUnlock.toolUnavailable",
-              "Unlocked for viewing, but this tool cannot preserve its password protection. Use Remove Password to create an unprotected copy first.",
+              "This tool doesn't support encrypted PDFs. Remove the password first.",
             )}
-            multiline
-            w={260}
-            withArrow
-            events={{ hover: true, focus: true, touch: true }}
+            position="top"
+            maxWidth={260}
+            arrow
           >
             <ActionIcon
               variant="quiet"

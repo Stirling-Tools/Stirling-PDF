@@ -1,5 +1,6 @@
 import { useId } from "react";
-import { Stack, Text, Tooltip } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
+import { Tooltip } from "@app/components/shared/Tooltip";
 import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
@@ -65,14 +66,13 @@ export function ScanHint({
           </Text>
           {onRemovePassword && (
             <Tooltip
-              label={t(
+              content={t(
                 "encryptedPdfUnlock.removePasswordHelp",
                 "Open Remove Password to create an unprotected copy.",
               )}
-              multiline
-              w={230}
-              withArrow
-              events={{ hover: true, focus: true, touch: true }}
+              position="top"
+              maxWidth={230}
+              arrow
             >
               <Button
                 size="sm"
