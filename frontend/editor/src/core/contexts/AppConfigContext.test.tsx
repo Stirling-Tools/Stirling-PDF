@@ -24,7 +24,9 @@ describe("AppConfigContext", () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    // reset (not restore): unconsumed mockResolved/RejectedValueOnce queues
+    // leak into later tests, and restore no longer wipes them on vitest 4.
+    vi.resetAllMocks();
   });
 
   const wrapper = ({ children }: { children: ReactNode }) => (
