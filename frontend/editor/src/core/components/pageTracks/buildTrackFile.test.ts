@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -9,14 +9,24 @@ import {
   TrackWorkspace,
 } from "@app/components/pageTracks/types";
 import {
+  buildTrackFile,
   buildSelectedPagesFiles,
   policyIdsForPages,
 } from "@app/components/pageTracks/buildTrackFile";
+import apiClient from "@app/services/apiClient";
+import {
+  clearPdfAccess,
+  getPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfPasswordStore";
+import { convertImageToPdf } from "@app/utils/imageToPdfUtils";
 
 const exportPDFMultiFile = vi.hoisted(() => vi.fn());
 vi.mock("@app/services/pdfExportService", () => ({
   pdfExportService: { exportPDFMultiFile },
 }));
+vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@app/utils/imageToPdfUtils", () => ({ convertImageToPdf: vi.fn() }));
 
 const A = "file-a" as FileId;
 const B = "file-b" as FileId;
@@ -85,6 +95,82 @@ const exportedPageIds = (call: number): string[] =>
   (exportPDFMultiFile.mock.calls[call][0] as PDFDocument).pages.map(
     (page) => page.id,
   );
+
+const readText = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
+
+describe("buildTrackFile with images and protected PDFs", () => {
+  beforeEach(() => {
+    clearPdfAccess();
+    vi.clearAllMocks();
+    exportPDFMultiFile.mockResolvedValue({ blob: new Blob(["merged"]) });
+  });
+  afterEach(clearPdfAccess);
+
+  it.each([A, B])(
+    "converts image pages and restores PDF protection with %s as the anchor",
+    async (anchor) => {
+      const image = new File(["image"], "photo.png", { type: "image/png" });
+      const protectedPdf = new File(["encrypted"], "locked.pdf", {
+        type: "application/pdf",
+      });
+      const imagePdf = new File(["image PDF"], "photo.pdf", {
+        type: "application/pdf",
+      });
+      const access = {
+        password: "password",
+        encrypted: true,
+        signed: false,
+        ownerAuthenticated: false,
+        permissions: -4,
+        canModify: true,
+        canAssemble: true,
+        pageCount: 1,
+      };
+      rememberPdfAccess(protectedPdf, access);
+      vi.mocked(convertImageToPdf).mockResolvedValue(imagePdf);
+      vi.mocked(apiClient.post)
+        .mockResolvedValueOnce({ data: new Blob(["decrypted"]) })
+        .mockResolvedValueOnce({ data: new Blob(["protected result"]) });
+      const files = new Map([
+        [A, image],
+        [B, protectedPdf],
+      ]);
+      const built = await buildTrackFile(
+        {
+          fileId: anchor,
+          name: files.get(anchor)!.name,
+          isNew: false,
+          pages: [sourcePage("image", A, 1), sourcePage("pdf", B, 1)],
+        },
+        {
+          getFile: (id) => files.get(id),
+          getStub: (id) =>
+            ({ id, name: files.get(id)!.name }) as StirlingFileStub,
+        },
+      );
+
+      const sources = exportPDFMultiFile.mock.calls[0][1] as Map<string, File>;
+      expect(sources.get(A)).toBe(imagePdf);
+      expect(await readText(sources.get(B)!)).toBe("decrypted");
+      expect(convertImageToPdf).toHaveBeenCalledExactlyOnceWith(image, {
+        pageFormat: "keep",
+      });
+      expect(apiClient.post).toHaveBeenCalledTimes(2);
+      const [endpoint, form] = vi.mocked(apiClient.post).mock.calls[1];
+      expect(endpoint).toBe("/api/v1/security/restore-pdf-protection");
+      expect((form as FormData).get("sourceFile")).toBe(protectedPdf);
+      expect(await readText(built!.file)).toBe("protected result");
+      expect(built!.file.name).toBe(anchor === A ? "photo.pdf" : "locked.pdf");
+      expect(getPdfAccess(built!.file)).toEqual(access);
+    },
+  );
+});
 
 describe("buildSelectedPagesFiles", () => {
   beforeEach(() => {

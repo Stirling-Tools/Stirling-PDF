@@ -16,6 +16,8 @@ import {
 } from "@app/types/toolIO";
 import { detectFileExtension, getFileFormats } from "@app/utils/fileUtils";
 import type { StirlingFileStub } from "@app/types/fileContext";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { supportsSessionUnlock } from "@app/services/pdfSessionUnlock";
 
 export type ToolDiagnosticSeverity = "ERROR" | "WARN" | "INFO";
 
@@ -267,10 +269,22 @@ export function toolAcceptsFormat(
  */
 export function toolAcceptsFile(
   operation: string | undefined,
-  file: Pick<StirlingFileStub, "name" | "type" | "processedFile">,
+  file: Pick<StirlingFileStub, "name" | "type" | "processedFile"> & {
+    id?: string;
+  },
 ): boolean {
   const spec = operation ? toolIOFor(operation) : undefined;
-  const formats = getFileFormats(file);
+  const formats =
+    getPdfAccess(file.id) && supportsSessionUnlock(operation)
+      ? getFileFormats({
+          ...file,
+          processedFile: {
+            ...file.processedFile,
+            pages: file.processedFile?.pages ?? [],
+            isEncrypted: false,
+          },
+        })
+      : getFileFormats(file);
   if (
     formats.includes("PDF_ENCRYPTED") &&
     (!spec || !acceptsFormat(spec, "PDF_ENCRYPTED"))

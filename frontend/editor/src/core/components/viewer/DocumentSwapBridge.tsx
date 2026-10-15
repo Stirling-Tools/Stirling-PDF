@@ -5,6 +5,7 @@ interface PendingDocument {
   buffer: ArrayBuffer;
   name: string;
   fileKey: string;
+  password?: string;
 }
 
 interface DocumentSwapBridgeProps {
@@ -43,6 +44,7 @@ export function DocumentSwapBridge({
           .openDocumentBuffer({
             buffer: pending.buffer,
             name: pending.name,
+            password: pending.password,
             autoActivate: false,
           })
           .toPromise(),

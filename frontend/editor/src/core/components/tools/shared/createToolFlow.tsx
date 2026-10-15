@@ -124,6 +124,7 @@ export function createToolFlow<TParams = unknown>(
             isCollapsed: config.files.isCollapsed,
             minFiles: config.files.minFiles,
             onCollapsedClick: config.files.onCollapsedClick,
+            showUnavailableFiles: !config.review.isVisible,
           })}
 
         {/* Middle Steps */}
