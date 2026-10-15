@@ -128,7 +128,7 @@ The report gets a dedicated Lighthouse section: audit summary (category scores, 
 
 Tauri targets use platform-appropriate collectors and are never substituted with Chromium-only metrics: separate WebView, app/native and backend measurements where available; record emulator/simulator versus physical device; capture native IPC and file-operation spans; include background/resume in mobile resource-lifetime checks; mark unsupported metrics explicitly; escalate to native profiling only when the lightweight evidence needs explaining. Do not compare emulator CPU percentages with physical-device results, or unrelated hosts as before/after.
 
-Limitations to state plainly in the report: a Lighthouse mobile configuration is not an Android/iOS Tauri test; a browser audit of a desktop-mode build is not native desktop profiling; page-load TBT does not establish responsiveness during printing, editing or export; automated accessibility results do not replace keyboard, VoiceOver/TalkBack, focus or native-dialog verification; unavailable native metrics are marked unavailable, not substituted with browser results.
+Limitations to state plainly in the report: a Lighthouse run is a browser page-load audit, so a mobile configuration is not an Android/iOS Tauri test and a desktop configuration is not native desktop profiling; page-load TBT does not establish responsiveness during printing, editing or export; a run whose audited page rendered an error state measures that state; automated accessibility results do not replace keyboard, VoiceOver/TalkBack, focus or native-dialog verification; unavailable native metrics are marked unavailable, not substituted with browser results.
 
 ## What this repo gives you (use it, don't reinvent)
 
@@ -136,6 +136,7 @@ Limitations to state plainly in the report: a Lighthouse mobile configuration is
 - **Helpers.** `frontend/editor/src/core/tests/helpers/ui-helpers.ts` exports `uploadFiles`, `openSettings`, `waitForModalOpen`, `dismissTourTooltip`; `stub-test-base` provides the `autoGoto`, `seedJwt` and `viewport` fixtures. There is no shared `settle` export — the reference spec defines its own local `settle(page)` for Mantine portals, and so should yours.
 - **Config.** `frontend/editor/playwright.config.ts` defines the `stubbed`, `stubbed-desktop`, `stubbed-firefox`, `stubbed-webkit`, `live-setup`, `live` and `enterprise` projects. There is no mobile project: mobile web is the same stubbed project with a mobile viewport and touch enabled.
 - **The report template.** `report-template.html` next to this file — self-contained, keyboard navigable, no external assets.
+- **The performance harness.** `frontend/editor/tests/walkthrough/perf/` — Chromium CDP counters, `PerformanceObserver` streams and a React commit hook behind one CLI, emitting `performance.interactions[]` and `lighthouse.runs[]` plus rasterised pictures. `references/performance-harness.md` explains its contracts.
 - **The mechanics.** `scripts/report.py` (validate/build/self-test/publish/link), with tests in `scripts/test_report.py`.
 - **Capture output is gitignored.** Root `.gitignore` ignores `frontend/editor/screenshots/`, so generated PNGs never reach a commit.
 
@@ -182,6 +183,24 @@ For every view record what produced the pixels: build mode (`dev`/`production`),
 
 ### 6. Record the performance evidence
 
+`frontend/editor/tests/walkthrough/perf/` is the harness. It drives one scenario through Chromium with CDP counters, `PerformanceObserver` streams and a React commit hook, then writes a manifest fragment:
+
+```bash
+cd frontend/editor
+npx tsx tests/walkthrough/perf/cli.ts \
+  --out captures/perf --base-url http://localhost:5173 --route /editor \
+  --scenario editor-settings-cycle --cycles 5 --idle-baseline 4000 \
+  --build-label "dev server, stubbed API" \
+  --manifest captures/manifest.json --validate
+```
+
+- Run it from `frontend/editor`: that is where the `@app/*` aliases resolve, and the scenario imports this repo's stubbed API helpers.
+- `--scenario` is a built-in id (`editor-settings-cycle`, `editor-picker-scroll`) or a path to a module exporting `scenario`. A scenario performs one open/use/close cycle; the harness repeats it and measures the whole window.
+- Output: `<out>/perf.fragment.json` (`performance.interactions[]`), four pictures under `<out>/pictures/`, and any trace or CPU profile under `<out>/artifacts/`. `--manifest` merges the fragment into an existing walkthrough manifest (`--merged`, default `<out>/manifest.merged.json`) and `--validate` then runs `report.py validate` on the merge.
+- `--trace` collects a DevTools-loadable Chrome trace, `--no-cpu-profile` skips the V8 profile. Both add overhead to the very window being measured, so skip them unless a finding needs the raw artifact.
+- Every metric the collector cannot obtain is listed in `metrics.unavailable` and never rendered as a zero; a worker target that was never alive in the window is reported the same way, because "no worker observed" and "no worker used" are different claims.
+- `npx tsx tests/walkthrough/perf/selftest.ts` checks the reductions, the in-page probe contract and the picture rasteriser.
+
 Follow the bounded policy above: per runtime/platform, one representative critical interaction plus a short resource-lifetime check, five open/use/close cycles, cheap counters at 500–1,000 ms, a short detailed trace, collectors stopped afterwards. Record the results under `performance.interactions[]` with `metrics` for the seven areas, `provenance`, and one picture per question — timeline, work breakdown, React rendering, resource recovery. Missing metrics stay `unavailable`.
 
 Generate the pictures from the recorded data or capture real profiler views; never synthesize a decorative heatmap that is not backed by measurements. For the work breakdown, show wall-clock phases and CPU attribution separately and never stack overlapping spans into a misleading 100 % chart.
@@ -193,6 +212,18 @@ Record the responsiveness table for the document-processing scenarios above, per
 ### 8. Run the Lighthouse audits
 
 Audit the affected web entry point in desktop and mobile configurations against a production-like build, with auth and fixture state seeded reproducibly. Store the original HTML/JSON reports outside the walkthrough HTML, then add the audit summary, diagnostics, accessibility findings and comparability caveats to the manifest under `lighthouse.runs[]`. State the audit mode and the limitations; a Lighthouse score is never the finding.
+
+The perf harness runs both form factors when asked:
+
+```bash
+npx tsx tests/walkthrough/perf/cli.ts ... --lighthouse
+```
+
+- It resolves the CLI from `LIGHTHOUSE_BIN`, then `frontend/node_modules/.bin/lighthouse`. **This repo has no Lighthouse dependency, and the `lighthouse` on a developer's `PATH` is often an unrelated tool of the same name** — check `lighthouse --version` before trusting it. With no runner found the audit is recorded as unavailable; a score is never invented.
+- Every form factor that fails (missing CLI, non-zero exit, unreadable report, `runtimeError`) is recorded as a reason, not as a result.
+- Each run keeps its JSON and HTML report as artifacts, and the template embeds a small preview plus the category scores, the environment line (Lighthouse and Chrome versions, throttling, network) and the diagnostics.
+- Audit only reachable entry points: a page-load audit covers the route it loaded, not a dialog or a populated document state. Say which one it was.
+- **An audit of an error state is not an audit of the feature.** Lighthouse brings its own browser, so the capture harness's request stubs do not apply: against a dev server whose backend is not answering, the audit scores the app's error screen and every number in it is meaningless. The runner probes `/api/v1/config/app-config` and, when it fails, prepends that fact to the run's diagnostics and the fragment's notes. The template renders `environment.limitations` under the environment line for this reason. When a caveat appears, run the audit against a route that actually renders (real backend, or a build that needs none) before putting the scores in the report, and never copy the numbers without the caveat.
 
 ### 9. Review pass 1 — visual and consistency
 

@@ -557,6 +557,12 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
       env.textContent = [run.platform, e.lighthouse, e.chrome, e.throttling, e.network]
         .filter(Boolean).join("  ·  ");
       card.appendChild(env);
+      if (e.limitations) {
+        var limits = document.createElement("div");
+        limits.className = "empty";
+        limits.textContent = "Limitations: " + text(e.limitations);
+        card.appendChild(limits);
+      }
       if (run.scores && typeof run.scores === "object") metricList(card, run.scores);
       (run.diagnostics || []).forEach(function (d) {
         var line = document.createElement("div");

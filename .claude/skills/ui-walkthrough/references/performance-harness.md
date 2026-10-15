@@ -1,0 +1,138 @@
+# Performance harness
+
+`frontend/editor/tests/walkthrough/perf/` collects the bounded performance
+evidence the walkthrough report asks for: DOM, React, memory, CPU, rendering,
+network and resource measurements for one interaction, plus the desktop and
+mobile Lighthouse audits. It is Node + Playwright + tsx, driven from
+`frontend/editor` so the `@app/*` aliases and this repo's stubbed API helpers
+resolve.
+
+```bash
+cd frontend/editor
+npx tsx tests/walkthrough/perf/cli.ts \
+  --out captures/perf --base-url http://localhost:5173 --route /editor \
+  --scenario editor-settings-cycle --cycles 5 \
+  --build-label "dev server, proprietary mode, stubbed API" \
+  --manifest captures/manifest.json --validate
+```
+
+## Files
+
+| File | Owns |
+|---|---|
+| `cli.ts` | Flag parsing, scenario loading, collector + optional Lighthouse, fragment writing, manifest merge, `report.py validate` |
+| `scenarios/editor-cycle.ts` | The built-in scenarios: `editor-settings-cycle`, `editor-picker-scroll` |
+| `collect-web.ts` | Browser, context, stubs, CDP recorder, sampling cadence, artifacts |
+| `probe.ts` | The in-page scripts: observers at boot, commit-hook wrap after mount, drain |
+| `metrics.ts` | Pure reductions over the recorded samples (no browser) |
+| `assemble.ts` | Sample sets → one `performance.interactions[]` entry, plus the pictures |
+| `charts.ts` | The four SVG charts and their PNG rasteriser |
+| `collect-lighthouse.ts` | The desktop/mobile Lighthouse runs, diagnostics and preview |
+| `types.ts` | The fragment shapes and the minimal page surface a scenario sees |
+| `serialize.ts` | `assertSerializable`, for page functions |
+| `selftest.ts` | Unit checks plus a real browser rasterise and a `report.py` round-trip |
+
+## Writing a scenario
+
+`types.ts` exports `Scenario`. A scenario performs **one** open/use/close
+cycle and returns a short description of what it did; the collector repeats it
+`--cycles` times and measures the whole window, so a scenario must not loop.
+
+- Wait on real conditions (`waitForSelector`, `waitForFunction`), never on a
+  timer: a sleep inside a scenario lands in the measurement it is polluting.
+- `page.waitForFunction(fn, arg, options)` — Playwright reads the second
+  argument as the page-function argument, so an options object in second
+  position is silently ignored and the 30 s default applies. Pass `null`
+  first, as the built-in scenarios do.
+- Wrap every page function in `assertSerializable(...)`. Page functions are
+  serialized with `Function.prototype.toString()`, and esbuild's `keepNames`
+  (which tsx uses) rewrites an inner function declaration into a
+  `__name(fn, "fn")` call that only exists in the bundler's scope: the
+  function then dies in the page with `ReferenceError: __name is not defined`,
+  often after doing part of its work, which is how a broken measurement ends
+  up looking like a real zero.
+- Prefer test ids and state-based selectors over positional ones. A
+  `>> nth=1` in the tool picker lands on whatever `aria-disabled` row happens
+  to be second.
+- `--scenario <path>` loads a module exporting `scenario` (or a default
+  scenario), for features whose flow is not the editor's.
+
+## What is measured, and where it comes from
+
+| Manifest key | Source |
+|---|---|
+| `dom.baselineNodes/peakNodes/finalNodes`, `dom.documents`, `dom.frames` | CDP `Performance.getMetrics`: `Nodes`, `Documents`, `Frames` |
+| `memory.jsHeapBaselineMB/PeakMB/FinalMB`, `memory.retainedFraction` | CDP `JSHeapUsedSize`, cross-checked against `performance.memory` when the browser exposes it |
+| `cpu.taskDurationMs`, `cpu.scriptDurationMs`, `cpu.scriptShareOfTask` | CDP `TaskDuration` and `ScriptDuration` deltas |
+| `cpu.hotspots` | self time from the V8 profile's `nodes[].hitCount`, top eight |
+| `rendering.layoutCount`, `recalcStyleCount`, `layoutMs`, `recalcStyleMs`, `framesRendered` | CDP `LayoutCount`, `RecalcStyleCount`, `LayoutDuration`, `RecalcStyleDuration`, `Frames` |
+| `rendering.longTaskCount`, `longestTaskMs`, `longTaskTotalMs`, `blockingMs` | `longtask` `PerformanceObserver`; blocking is the sum of `duration - 50 ms` for tasks over 50 ms |
+| `latency.*` | the longest `event` timing entry: input delay, processing and total duration |
+| `react.commits`, `renderTotalMs`, `renderMaxMs` | `onCommitFiberRoot`, reading `actualDuration` off `arguments[1]` |
+| `network.requests`, `knownBytes`, `unknownSizeRequests` | `resource` timing entries; a TAO-less cross-origin response reports 0 bytes and is counted as unknown rather than as free |
+| `resources.workerTargets`, `workerUrls` | CDP `Target.getTargets` before and after the cycles |
+
+Three constraints make those numbers real, and each one is the fix for a
+failure that produced a plausible-looking zero:
+
+- **Observers are armed at boot and retained.** Timing observers only see
+  entries emitted after they are armed, so the init script runs before the app
+  loads; and an observer nothing references is collectable, after which it
+  reports nothing at all.
+- **The probe never creates `window.__REACT_DEVTOOLS_GLOBAL_HOOK__`.** The dev
+  server's React refresh preamble reads the hook that exists when it runs, and
+  a probe-created hook without the refresh runtime's shape breaks module
+  evaluation. Commits are counted by wrapping `onCommitFiberRoot` *after* the
+  app has mounted (`PROBE_COMMITS_SCRIPT`), with a property getter/setter so a
+  later re-injection by refresh tooling cannot cut the probe out — React calls
+  the hook as `onCommitFiberRoot(rendererID, root, priority, didError)`, so
+  the root is `arguments[1]`.
+- **A metric that cannot be collected is `unavailable`.** `metrics.unavailable`
+  carries the reason; nothing is reported as 0 because it was not measured.
+
+## Pictures
+
+`charts.ts` draws the four pictures from the recorded data — interaction
+timeline with phase markers, work breakdown, per-cycle rendering activity, and
+resource recovery (DOM nodes and JS heap over the samples) — and rasterises
+each SVG to PNG by screenshotting it in a real browser. The report template
+renders raster data URIs only, so an SVG data URI would be dropped. Pictures
+stay thumbnail-sized in the report; traces and CPU profiles stay on disk.
+
+## Into the report
+
+The fragment is `{performance: {interactions: [...]}, lighthouse: {runs: [...]}}`,
+which is exactly the shape `report.py validate` checks and the template's
+Performance and Lighthouse tabs read. `--manifest` merges the fragment into a
+capture manifest so one report carries the screenshots and the measurements;
+`--validate` runs `report.py validate` on the merge and fails the run when the
+merge does not validate. `npx tsx tests/walkthrough/perf/selftest.ts` covers
+the reductions, the probe's sandbox behaviour, the chart rasteriser and a
+manifest round-trip through `report.py`.
+
+## Budget, honestly stated
+
+Sampling runs at 750 ms with a hard cap of 40 samples; the idle baseline and
+recovery windows default to 4 s each; the CPU profile and the Chrome trace, if
+requested, cover the cycle window only. Counters and the profile are collected
+by the same browser that drives the UI, so the numbers include instrumentation
+overhead — the `provenance.note` says so, and a dev server is not a production
+build. Compare runs within the same build mode and instrumentation, or label
+the comparison descriptive.
+
+## Auditing an error state
+
+Lighthouse launches its own browser (`--chrome-flags=--headless=new`), so the
+Playwright request stubs this harness installs in the capture path do not
+apply. Against a dev server whose backend is not answering, the audit loads the
+app's "backend not found" screen and scores that: the page looks enormously
+slow, and none of the numbers describe the feature.
+
+`runLighthouse` therefore probes `/api/v1/config/app-config` before auditing
+and, when it fails, prepends the reason to every run's `diagnostics` and
+returns it in `notes` (the CLI prints it as `lighthouse caveat`). The audit
+still runs — a labelled bad audit beats a silent one — but the caveat leads the
+diagnostics list because a score list that starts with a metric hides it, and
+`environment.limitations` is rendered under the environment line. Treat a
+caveat as a blocker for using the scores: run the audit against a route that
+renders (a real backend, or a build that needs none) and re-run.

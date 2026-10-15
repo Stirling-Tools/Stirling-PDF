@@ -1,0 +1,17 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    "paths": {
+      "@app/*": [
+        "../../../src/desktop/*",
+        "../../../src/proprietary/*",
+        "../../../src/core/*"
+      ],
+      "@proprietary/*": ["../../../src/proprietary/*"],
+      "@core/*": ["../../../src/core/*"]
+    }
+  },
+  "include": ["."]
+}
