@@ -10,7 +10,10 @@
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { chromium } from "playwright";
+// oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
+import { appApiStubs } from "@app/tests/helpers/api-stubs";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import {
   backendLimitations,
@@ -33,6 +36,12 @@ export interface LighthouseOptions {
   chromePath?: string;
   /** Whether the audited route's own backend answered before the audit. */
   backend: BackendState;
+  /**
+   * How long the trace stays open after the load event (`pauseAfterLoadMs`).
+   * The app clears its i18next splash after load, so the 1000 ms Lighthouse
+   * default screenshots the loading screen instead of the route.
+   */
+  settleMs: number;
   timeoutMs?: number;
 }
 
@@ -63,6 +72,138 @@ export function backendSkipReason(backend: BackendState): string {
     `API stubs could not stand in for it, so an audit would score the error ` +
     `screen instead of the feature (--lighthouse-force audits it anyway)`
   );
+}
+
+export const DEFAULT_SETTLE_MS = 5_000;
+
+/**
+ * Lighthouse's desktop preset, repeated because `--config-path` makes the CLI
+ * ignore `--preset=desktop`. Values mirror `core/config/desktop-config.js` of
+ * the installed Lighthouse.
+ */
+const DESKTOP_PRESET = {
+  formFactor: "desktop",
+  throttling: {
+    rttMs: 40,
+    throughputKbps: 10_240,
+    cpuSlowdownMultiplier: 1,
+    requestLatencyMs: 0,
+    downloadThroughputKbps: 0,
+    uploadThroughputKbps: 0,
+  },
+  screenEmulation: {
+    mobile: false,
+    width: 1350,
+    height: 940,
+    deviceScaleFactor: 1,
+    disabled: false,
+  },
+  emulatedUserAgent:
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
+    "(KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+};
+
+/**
+ * The Lighthouse config an audit runs with. `pauseAfterLoadMs` is the only wait
+ * the CLI offers past the load event, and it is the difference between a
+ * screenshot of the route and a screenshot of the app's splash.
+ */
+export function settleConfigModule(
+  settleMs: number,
+  formFactor: FormFactor,
+): string {
+  const settings: Record<string, unknown> = { pauseAfterLoadMs: settleMs };
+  // The mobile defaults are already Lighthouse's own: only desktop has to be
+  // stated, since the preset it came from is bypassed.
+  if (formFactor === "desktop") Object.assign(settings, DESKTOP_PRESET);
+  const body = JSON.stringify(settings, null, 2).split("\n").join("\n  ");
+  return [
+    "// Generated per audit by the perf harness; see settleConfigModule.",
+    "module.exports = {",
+    '  extends: "lighthouse:default",',
+    `  settings: ${body},`,
+    "};",
+    "",
+  ].join("\n");
+}
+
+/** Writes the audit config for one form factor and returns its absolute path. */
+export function writeSettleConfig(
+  outDir: string,
+  formFactor: FormFactor,
+  settleMs: number,
+): string {
+  const path = resolve(outDir, `lighthouse-${formFactor}-config.cjs`);
+  writeFileSync(path, settleConfigModule(settleMs, formFactor));
+  return path;
+}
+
+/**
+ * A screenshot of the audited route, taken by the harness.
+ *
+ * Lighthouse's `final-screenshot` comes from the trace's screenshot frames,
+ * which stop in the first seconds of the load: on a dev server the app is still
+ * showing its i18next splash there, so the preview was a black screen reading
+ * "Loading..." however long the trace stayed open. This drives the same route
+ * with the same stubs the audit's page saw and screenshots it once the splash
+ * has cleared, which is the picture a reader expects beside the scores.
+ *
+ * Returns `undefined` when the route cannot be captured, so a caller can fall
+ * back and say so.
+ */
+export async function captureRoutePreview(
+  url: string,
+  formFactor: FormFactor,
+  outBasePath: string,
+): Promise<string | undefined> {
+  const mobile = formFactor === "mobile";
+  const browser = await chromium.launch({
+    args: ["--no-sandbox", "--disable-gpu"],
+  });
+  try {
+    const context = await browser.newContext({
+      viewport: mobile
+        ? { width: 412, height: 823 }
+        : { width: 1350, height: 940 },
+      deviceScaleFactor: 1,
+      isMobile: mobile,
+      hasTouch: mobile,
+    });
+    const page = await context.newPage();
+    for (const stub of appApiStubs()) {
+      await page.route(stub.glob, (route) =>
+        route.fulfill({ json: stub.body }),
+      );
+    }
+    await page.goto(url, { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(
+      () => {
+        const root = document.getElementById("root");
+        return Boolean(root && root.childElementCount > 0);
+      },
+      null,
+      { timeout: 120_000 },
+    );
+    // Both the splash and a lazily loaded route's own spinner say "loading", and
+    // the route is what the audit scored, so neither belongs in the preview.
+    await page.waitForFunction(
+      () => !/\bloading\b/i.test(document.body.innerText ?? ""),
+      null,
+      { timeout: 120_000 },
+    );
+    await page.evaluate(
+      () =>
+        new Promise<void>((done) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => done())),
+        ),
+    );
+    const shot = await page.screenshot({ type: "jpeg", quality: 65 });
+    const outPath = `${outBasePath}.jpg`;
+    writeFileSync(outPath, shot);
+    return outPath;
+  } finally {
+    await browser.close();
+  }
 }
 
 /** Console errors the audit itself recorded, first line only. */
@@ -166,11 +307,11 @@ function previewFrom(
   return outPath;
 }
 
-function runOne(
+async function runOne(
   binary: string,
   options: LighthouseOptions,
   formFactor: FormFactor,
-): LighthouseRun | string {
+): Promise<LighthouseRun | string> {
   // Lighthouse appends its own extension when more than one output format is
   // requested, so this is a base path: the files land as <base>.report.json and
   // <base>.report.html, and asking for the bare path finds nothing.
@@ -188,7 +329,13 @@ function runOne(
     "--only-categories=performance,accessibility,best-practices,seo",
     "--chrome-flags=--headless=new --no-sandbox --disable-gpu",
   ];
-  if (formFactor === "desktop") args.push("--preset=desktop");
+  // A requested settle needs a config file, and a config file replaces the
+  // preset, so the desktop settings travel in the config instead.
+  if (options.settleMs > 0) {
+    args.push(
+      `--config-path=${writeSettleConfig(options.outDir, formFactor, options.settleMs)}`,
+    );
+  } else if (formFactor === "desktop") args.push("--preset=desktop");
   if (options.chromePath) {
     args.push(`--chrome-path=${options.chromePath}`);
   }
@@ -236,7 +383,12 @@ function runOne(
     if (score !== null) scores[category] = score;
   }
 
-  const preview = previewFrom(report, previewPath);
+  const captured = await captureRoutePreview(
+    options.url,
+    formFactor,
+    previewPath,
+  ).catch(() => undefined);
+  const preview = captured ?? previewFrom(report, previewPath);
   const artifacts = [jsonPath, htmlPath].filter((path) => existsSync(path));
   // A forced audit of an erroring page has to say so in the run's own numbers;
   // every other backend state is already recorded in the limitations.
@@ -281,6 +433,14 @@ function runOne(
       ),
       limitations: [
         "a Lighthouse run is a browser page-load audit: it is not a Tauri, Android or iOS test, and page-load timing does not describe responsiveness during printing, editing or export",
+        captured
+          ? "the preview image is the harness's own capture of the audited route after the app finished booting, not Lighthouse's screenshot, which the trace takes while a dev server is still showing the app's splash"
+          : "the preview image is Lighthouse's own screenshot: the harness could not capture the route itself, and Lighthouse takes that screenshot before a dev server renders the route",
+        ...(options.settleMs > 0
+          ? [
+              `the trace stayed open ${options.settleMs} ms past the load event (pauseAfterLoadMs) so the app's own boot could finish; Lighthouse stops gathering 1000 ms after load by default`,
+            ]
+          : []),
         ...backendLimitations(options.backend),
       ].join("; "),
     },
@@ -308,7 +468,7 @@ export async function runLighthouse(
   const runs: LighthouseRun[] = [];
   const unavailable: string[] = [];
   for (const formFactor of ["desktop", "mobile"] as FormFactor[]) {
-    const outcome = runOne(binary, options, formFactor);
+    const outcome = await runOne(binary, options, formFactor);
     if (typeof outcome === "string") unavailable.push(outcome);
     else runs.push(outcome);
   }

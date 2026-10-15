@@ -12,3 +12,12 @@ export const BUILTIN_SCENARIOS = [
   ...EDITOR_SCENARIOS,
   ...TEXT_EDITOR_SCENARIOS,
 ];
+
+/**
+ * The route a run is measured at. `--route` is an override for the rare case
+ * where the route has to be forced; a scenario's own route is the endpoint its
+ * cycle actually exercises, so it wins whenever no override was passed.
+ */
+export function resolveRoute(cliRoute: string, scenarioRoute: string): string {
+  return cliRoute || scenarioRoute;
+}

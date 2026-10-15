@@ -31,7 +31,12 @@ import {
   timelineChart,
 } from "./charts";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import { resolveLighthouse } from "./collect-lighthouse";
+import {
+  captureRoutePreview,
+  DEFAULT_SETTLE_MS,
+  resolveLighthouse,
+  writeSettleConfig,
+} from "./collect-lighthouse";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import { deriveFindings } from "./findings";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
@@ -53,6 +58,8 @@ import {
   PROBE_SCRIPT,
   splitResourceSizes,
 } from "./probe";
+// oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
+import { BUILTIN_SCENARIOS, resolveRoute } from "./scenarios";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import { assertSerializable } from "./serialize";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
@@ -705,6 +712,142 @@ function lighthouseResolver(): void {
   }
 }
 
+interface AuditConfigModule {
+  extends: string;
+  settings: {
+    pauseAfterLoadMs: number;
+    formFactor?: string;
+    screenEmulation?: { width: number };
+    throttling?: { rttMs: number };
+  };
+}
+
+async function loadAuditConfig(path: string): Promise<AuditConfigModule> {
+  const loaded = (await import(pathToFileURL(path).href)) as {
+    default: AuditConfigModule;
+  };
+  return loaded.default;
+}
+
+/**
+ * The audit has to look at the route the scenario exercises, on an app the
+ * scenario left rendered: Lighthouse stops gathering 1000 ms after the load
+ * event, which on a dev server is still the i18next splash. Raising that wait
+ * needs a config file, and `--config-path` makes the CLI ignore `--preset`, so
+ * the desktop settings travel in the generated config instead.
+ */
+async function auditSetup(): Promise<void> {
+  equal(
+    "the default settle window outlasts the app's boot",
+    DEFAULT_SETTLE_MS,
+    5_000,
+  );
+  check(
+    "a builtin scenario names the endpoint its cycle exercises",
+    BUILTIN_SCENARIOS.some((scenario) => scenario.route === "/pdf-text-editor"),
+    BUILTIN_SCENARIOS.map((scenario) => scenario.route).join(", "),
+  );
+  for (const scenario of BUILTIN_SCENARIOS) {
+    equal(
+      `no --route leaves ${scenario.id} on its own route`,
+      resolveRoute("", scenario.route),
+      scenario.route,
+    );
+  }
+  equal(
+    "--route overrides a scenario's own route",
+    resolveRoute("/somewhere-else", "/pdf-text-editor"),
+    "/somewhere-else",
+  );
+
+  const dir = mkdtempSync(join(tmpdir(), "wt-settle-"));
+  try {
+    const desktop = await loadAuditConfig(
+      writeSettleConfig(dir, "desktop", DEFAULT_SETTLE_MS),
+    );
+    equal(
+      "the audit config extends Lighthouse's own defaults",
+      desktop.extends,
+      "lighthouse:default",
+    );
+    equal(
+      "the audit config keeps the trace open for the settle window",
+      desktop.settings.pauseAfterLoadMs,
+      DEFAULT_SETTLE_MS,
+    );
+    equal(
+      "the desktop audit keeps its own screen emulation",
+      desktop.settings.screenEmulation?.width,
+      1350,
+    );
+    equal(
+      "the desktop audit keeps its own form factor",
+      desktop.settings.formFactor,
+      "desktop",
+    );
+    equal(
+      "the desktop audit keeps its own throttling",
+      desktop.settings.throttling?.rttMs,
+      40,
+    );
+    const mobile = await loadAuditConfig(
+      writeSettleConfig(dir, "mobile", 2_000),
+    );
+    equal(
+      "the mobile audit changes nothing but the settle window",
+      Object.keys(mobile.settings).join(","),
+      "pauseAfterLoadMs",
+    );
+    equal(
+      "and that window is the one it asked for",
+      mobile.settings.pauseAfterLoadMs,
+      2_000,
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/**
+ * The preview has to show the route, not the app's splash. Lighthouse's own
+ * screenshot comes from the trace, whose frames stop while a dev server is still
+ * booting, so the harness captures the audited route itself; this proves that
+ * capture really renders the route and returns a JPEG `report.py` can inline.
+ */
+async function previewCapture(): Promise<void> {
+  const dir = mkdtempSync(join(tmpdir(), "wt-preview-"));
+  try {
+    const base = join(dir, "preview");
+    // The capture waits for `#root` to have children and for the splash text to
+    // clear, so the fixture has to satisfy both or this would wait out its own
+    // timeout instead of failing.
+    const html = '<div id="root"><h1>ready</h1></div>';
+    const captured = await captureRoutePreview(
+      `data:text/html,${encodeURIComponent(html)}`,
+      "desktop",
+      base,
+    );
+    equal(
+      "the harness screenshots the audited route itself",
+      captured,
+      `${base}.jpg`,
+    );
+    const bytes = captured ? readFileSync(captured) : Buffer.alloc(0);
+    equal(
+      "the capture is a JPEG, which report.py inlines",
+      bytes.subarray(0, 2).toString("hex"),
+      "ffd8",
+    );
+    check(
+      "the capture is a rendered page, not an empty image",
+      bytes.length > 1_000,
+      `${bytes.length} bytes`,
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 /** The measured fragment must survive report.py unchanged. */
 async function fragmentRoundTrip(): Promise<void> {
   const dir = mkdtempSync(join(tmpdir(), "wt-roundtrip-"));
@@ -1173,6 +1316,8 @@ findings();
 await stubBackend();
 await chartsAndRaster();
 lighthouseResolver();
+await auditSetup();
+await previewCapture();
 await fragmentRoundTrip();
 
 process.stdout.write(`\n${passed} checks passed, ${failures.length} failed\n`);

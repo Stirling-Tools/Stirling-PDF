@@ -10,7 +10,7 @@ resolve.
 ```bash
 cd frontend/editor
 npx tsx tests/walkthrough/perf/cli.ts \
-  --out captures/perf --base-url http://localhost:5173 --route /editor \
+  --out captures/perf --base-url http://localhost:5173 \
   --scenario editor-settings-cycle --cycles 5 \
   --build-label "dev server, proprietary mode, stubbed API" \
   --manifest captures/manifest.json --validate
@@ -25,13 +25,13 @@ npx tsx tests/walkthrough/perf/cli.ts \
 | `stub-backend.ts` | The repo's `appApiStubs` table served over `node:http`, mirroring `mockAppApis` and its dead-proxy 500 |
 | `scenarios/editor-cycle.ts` | The built-in scenarios: `editor-settings-cycle`, `editor-picker-scroll` |
 | `scenarios/text-editor-cycle.ts` | `text-editor-raster-cycle`: load a document into the PDF text editor, zoom, scroll, leave |
-| `scenarios/index.ts` | `BUILTIN_SCENARIOS`, the list `cli.ts` resolves `--scenario` ids against |
+| `scenarios/index.ts` | `BUILTIN_SCENARIOS`, the list `cli.ts` resolves `--scenario` ids against, and `resolveRoute` |
 | `collect-web.ts` | Browser, context, stubs, CDP recorder, sampling cadence, artifacts |
 | `probe.ts` | The in-page scripts: observers at boot, commit-hook wrap after mount, drain |
 | `metrics.ts` | Pure reductions over the recorded samples (no browser) |
 | `assemble.ts` | Sample sets → one `performance.interactions[]` entry, plus the pictures |
 | `charts.ts` | The four SVG charts and their PNG rasteriser |
-| `collect-lighthouse.ts` | The desktop/mobile Lighthouse runs, diagnostics and preview |
+| `collect-lighthouse.ts` | The desktop/mobile Lighthouse runs, their generated `--config-path` (settle window and desktop settings), diagnostics and preview |
 | `findings.ts` | The verdicts derived from the recorded numbers, grouped the way the viewer groups them |
 | `types.ts` | The fragment shapes and the minimal page surface a scenario sees |
 | `serialize.ts` | `assertSerializable`, for page functions |
@@ -194,3 +194,34 @@ somewhere else fails honestly instead of producing numbers from a screen nobody
 looked at. `--lighthouse-force` still audits when nothing answered, and those
 runs carry the error-state caveat in their diagnostics. Treat that caveat as a
 blocker for using the scores: fix the API route and re-run.
+
+## Auditing the route the scenario exercises
+
+The interaction and the audit both run the **scenario's own route**
+(`--scenario text-editor-raster-cycle` measures `/pdf-text-editor`); `--route` is
+an override for the rare case where a route has to be forced. An audit that
+silently fell back to `/editor` would score a page the change never touched.
+
+Lighthouse's screenshot and trace are also taken when gathering stops, and the
+CLI's default is 1000 ms after the load event (`pauseAfterLoadMs`). On a dev
+server that is still the app's i18next splash, which is how an audit of a route
+ends up showing a black screen reading "Loading...". The harness therefore
+generates a Lighthouse config per audit (`lighthouse-<formFactor>-config.cjs` in
+the artifact dir) that extends `lighthouse:default` and raises `pauseAfterLoadMs`
+to `--lighthouse-settle-ms` (default 5000, `0` disables the config entirely).
+`--config-path` makes the CLI ignore `--preset`, so the desktop config also
+carries the desktop preset's `formFactor`, `screenEmulation` and throttling
+values; the mobile defaults are Lighthouse's own and are left alone. The wait is
+recorded in the run's limitations, so a reviewer knows the numbers were taken on
+a settled page rather than a splash.
+
+The settle window cannot fix the preview on its own. Lighthouse's
+`final-screenshot` is the last frame of the trace's own screenshot stream, and
+those frames stop within the first few seconds of the load regardless of
+`pauseAfterLoadMs` — measured on a dev server, the last frame at 3 s was still
+the splash. So the harness screenshots the audited route itself, with the same
+`appApiStubs` the audit's page was served, waiting for `#root` to have children
+and for the splash text to clear (never a fixed delay) before writing
+`lighthouse-<formFactor>-preview.jpg`. That file is the run's `preview`;
+Lighthouse's own frame is used only if the capture fails, and the run's
+limitations say which one a reviewer is looking at.

@@ -41,6 +41,7 @@ import {
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import {
   backendSkipReason,
+  DEFAULT_SETTLE_MS,
   resolveLighthouse,
   runLighthouse,
 } from "./collect-lighthouse";
@@ -52,7 +53,7 @@ import {
   type PerfFinding,
 } from "./findings";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import { BUILTIN_SCENARIOS } from "./scenarios";
+import { BUILTIN_SCENARIOS, resolveRoute } from "./scenarios";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import type {
   LighthouseRun,
@@ -82,6 +83,7 @@ interface Cli {
   lighthouse: boolean;
   lighthouseForce: boolean;
   lighthouseBin: string;
+  lighthouseSettleMs: number;
   noStubBackend: boolean;
   stubBackendPort: number;
   buildLabel: string;
@@ -114,6 +116,7 @@ function parseCli(): Cli {
       lighthouse: { type: "boolean", default: false },
       "lighthouse-force": { type: "boolean", default: false },
       "lighthouse-bin": { type: "string" },
+      "lighthouse-settle-ms": { type: "string" },
       "no-stub-backend": { type: "boolean", default: false },
       "stub-backend-port": { type: "string" },
       "build-label": { type: "string" },
@@ -148,11 +151,18 @@ function parseCli(): Cli {
     );
   if (values.validate && !values.manifest)
     die("--validate needs --manifest <manifest.json> to validate");
+  const lighthouseSettleMs = Number(
+    values["lighthouse-settle-ms"] ?? DEFAULT_SETTLE_MS,
+  );
+  if (!Number.isInteger(lighthouseSettleMs) || lighthouseSettleMs < 0)
+    die(
+      `--lighthouse-settle-ms must be a non-negative whole number of ms, got ${String(values["lighthouse-settle-ms"])}`,
+    );
 
   return {
     out: resolve(String(values.out ?? "captures/perf")),
     baseUrl: String(values["base-url"] ?? "http://localhost:5173"),
-    route: String(values.route ?? "/editor"),
+    route: values.route ? String(values.route) : "",
     platform: String(values.platform ?? "desktop-web"),
     scenario: String(values.scenario ?? BUILTIN_SCENARIOS[0].id),
     cycles,
@@ -162,6 +172,7 @@ function parseCli(): Cli {
     lighthouse: Boolean(values.lighthouse),
     lighthouseForce: Boolean(values["lighthouse-force"]),
     lighthouseBin: String(values["lighthouse-bin"] ?? ""),
+    lighthouseSettleMs,
     noStubBackend: Boolean(values["no-stub-backend"]),
     stubBackendPort,
     buildLabel: String(values["build-label"] ?? "unspecified build"),
@@ -296,7 +307,7 @@ async function main(): Promise<void> {
   const cli = parseCli();
   const scenario = await loadScenario(cli.scenario);
   if (cli.platform) scenario.platform = cli.platform;
-  if (cli.route) scenario.route = cli.route;
+  scenario.route = resolveRoute(cli.route, scenario.route);
   if (!cli.fixture) cli.fixture = scenario.fixture;
 
   mkdirSync(cli.out, { recursive: true });
@@ -373,6 +384,7 @@ async function main(): Promise<void> {
         binary: bin,
         chromePath: process.env.CHROME_PATH,
         backend,
+        settleMs: cli.lighthouseSettleMs,
       });
       runs.push(...result.runs);
       notes.push(...result.unavailable, ...result.notes);
