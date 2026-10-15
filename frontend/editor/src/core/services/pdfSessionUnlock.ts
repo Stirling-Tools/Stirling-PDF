@@ -7,6 +7,7 @@ import {
   type PdfAccess,
 } from "@app/services/pdfPasswordStore";
 import type { StirlingFile } from "@app/types/fileContext";
+import { zipFileService } from "@app/services/zipFileService";
 
 const SUPPORTED_ENDPOINTS = new Set([
   "/api/v1/general/rotate-pdf",
@@ -162,7 +163,40 @@ export async function prepareUnlockedFile(
   return new File([bytes], file.name, { type: "application/pdf" });
 }
 
-/** Restore protection before a PDF can reach downloads or storage. For merges, the first protected input defines output protection. */
+function protectionRestoreError(): Error {
+  return new Error(
+    i18n.t(
+      "encryptedPdfUnlock.restoreFailed",
+      "Unable to preserve PDF protection. No unprotected result was saved.",
+    ),
+  );
+}
+
+async function protectPdfOutput(
+  output: File,
+  source: File,
+  access: PdfAccess,
+): Promise<File> {
+  if (
+    output.type !== "application/pdf" &&
+    !output.name.toLowerCase().endsWith(".pdf")
+  )
+    throw protectionRestoreError();
+  const form = new FormData();
+  form.append("fileInput", output);
+  form.append("sourceFile", source);
+  form.append("password", access.password);
+  const bytes = await requestWorkingPdf(
+    "/api/v1/security/restore-pdf-protection",
+    form,
+    protectionRestoreError().message,
+  );
+  const file = new File([bytes], output.name, { type: "application/pdf" });
+  rememberPdfAccess(file, { ...access, signed: false });
+  return file;
+}
+
+/** Restore protection before results reach downloads or storage, including every PDF in a ZIP. Merges inherit the first protected input. */
 export async function protectUnlockedResults(
   outputs: File[],
   inputs: readonly File[],
@@ -174,33 +208,27 @@ export async function protectUnlockedResults(
   const access = getPdfAccess(source)!;
   const protectedFiles: File[] = [];
   for (const output of outputs) {
-    if (
-      output.type !== "application/pdf" &&
-      !output.name.toLowerCase().endsWith(".pdf")
-    )
-      throw new Error(
-        i18n.t(
-          "encryptedPdfUnlock.restoreFailed",
-          "Unable to preserve PDF protection. No unprotected result was saved.",
-        ),
+    if (await zipFileService.isZipResponse(output)) {
+      const extracted = await zipFileService.extractAllFiles(output);
+      if (
+        !extracted.success ||
+        extracted.errors.length > 0 ||
+        extracted.extractedCount !== extracted.totalFiles ||
+        extracted.extractedFiles.length === 0
+      )
+        throw protectionRestoreError();
+      const protectedEntries: File[] = [];
+      for (const entry of extracted.extractedFiles) {
+        protectedEntries.push(await protectPdfOutput(entry, source, access));
+      }
+      const { zipFile } = await zipFileService.createZipFromFiles(
+        protectedEntries,
+        output.name,
       );
-    const form = new FormData();
-    form.append("fileInput", output);
-    form.append("sourceFile", source);
-    form.append("password", access.password);
-    const bytes = await requestWorkingPdf(
-      "/api/v1/security/restore-pdf-protection",
-      form,
-      i18n.t(
-        "encryptedPdfUnlock.restoreFailed",
-        "Unable to preserve PDF protection. No unprotected result was saved.",
-      ),
-    );
-    const file = new File([bytes], output.name, {
-      type: "application/pdf",
-    });
-    rememberPdfAccess(file, { ...access, signed: false });
-    protectedFiles.push(file);
+      protectedFiles.push(zipFile);
+    } else {
+      protectedFiles.push(await protectPdfOutput(output, source, access));
+    }
   }
   return protectedFiles;
 }

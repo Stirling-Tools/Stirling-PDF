@@ -82,3 +82,20 @@ it.each(["switch", "unmount"])(
     expect(mock.prompt).not.toHaveBeenCalled();
   },
 );
+
+it("requests the preview unlock prompt without a library file ID", () => {
+  const prompt = vi.fn();
+  const view = render(<PdfPasswordBridge onPasswordRequired={prompt} />);
+  expect(prompt).toHaveBeenCalledOnce();
+  view.rerender(<PdfPasswordBridge onPasswordRequired={prompt} />);
+  expect(prompt).toHaveBeenCalledOnce();
+  expect(mock.prompt).not.toHaveBeenCalled();
+});
+
+it("returns a rejected preview credential to the preview prompt", async () => {
+  const prompt = vi.fn();
+  mock.loaded.mockRejectedValueOnce(new Error("password rejected"));
+  render(<PdfPasswordBridge password="stale" onPasswordRequired={prompt} />);
+  await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
+  expect(mock.prompt).not.toHaveBeenCalled();
+});

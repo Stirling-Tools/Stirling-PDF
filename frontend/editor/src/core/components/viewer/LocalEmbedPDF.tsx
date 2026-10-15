@@ -106,6 +106,7 @@ import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
 import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
 import { isStirlingFile } from "@app/types/fileContext";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { canPrintPdf } from "@app/services/pdfPermissions";
 import {
   DocumentRestoreBridge,
   type DocumentRestoreEvent,
@@ -120,6 +121,7 @@ import {
 import { RedactionAPIBridge } from "@app/components/viewer/RedactionAPIBridge";
 import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
 import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
+import { InitialDocumentLoadBridge } from "@app/components/viewer/InitialDocumentLoadBridge";
 import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
 import { useFontFallbackConfig } from "@app/hooks/useFontFallbackConfig";
 import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
@@ -184,6 +186,11 @@ interface LocalEmbedPDFProps {
   onDocumentSwapped?: (documentId: string) => void;
   /** Fires when the swap bridge fails to open or activate a replacement document. */
   onDocumentSwapFailed?: (error: unknown) => void;
+  /** Includes initial loads after a remount; keyed to the requested file's bytes. */
+  onDocumentReady?: (fileKey: string) => void;
+  /** Includes byte-read failures, engine errors and cancelled loads. */
+  onDocumentLoadFailed?: (fileKey: string, error: unknown) => void;
+  onPasswordRequired?: () => void;
   /** True while a view restore is in flight; gates the per-page layout hook. */
   restorePending?: boolean;
   restoreRequest?: DocumentRestoreRequest | null;
@@ -846,7 +853,8 @@ function EditingBridges({
       {redactionActive && <RedactionAPIBridge />}
       {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
       <SignatureAPIBridge ref={signatureApiRef} isSignMode={isSignMode} />
-      {redactionActive && <RedactionPendingTracker ref={redactionTrackerRef} />}
+      {/* Pending redactions must remain available to Save & Leave in other editing tools. */}
+      <RedactionPendingTracker ref={redactionTrackerRef} />
       {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
     </>
   );
@@ -884,6 +892,9 @@ export function LocalEmbedPDF({
   onPageLayout,
   onDocumentSwapped,
   onDocumentSwapFailed,
+  onDocumentReady,
+  onDocumentLoadFailed,
+  onPasswordRequired,
   restorePending = false,
   restoreRequest = null,
   onRestoreEvent,
@@ -988,6 +999,30 @@ export function LocalEmbedPDF({
   // FileContext produces new File object references for the same file content.
   const fileStableKey =
     fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
+  const loadOwnerRef = useRef<{ key: string | null; generation: number }>({
+    key: null,
+    generation: 0,
+  });
+  useEffect(() => {
+    const key = fileStableKey ?? url ?? null;
+    const generation = loadOwnerRef.current.generation + 1;
+    loadOwnerRef.current = { key, generation };
+    return () => {
+      // React may replay the effect for the same source. That is a retry, not a cancelled save.
+      queueMicrotask(() => {
+        if (
+          key &&
+          (loadOwnerRef.current.generation === generation ||
+            loadOwnerRef.current.key !== key)
+        ) {
+          onDocumentLoadFailed?.(
+            key,
+            new Error("The document load was cancelled."),
+          );
+        }
+      });
+    };
+  }, [fileStableKey, url, onDocumentLoadFailed]);
 
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
   const exportFileName = useMemo(() => {
@@ -1002,11 +1037,13 @@ export function LocalEmbedPDF({
   const [initialDocument, setInitialDocument] = useState<{
     buffer: ArrayBuffer;
     name: string;
+    fileKey: string;
     password?: string;
   } | null>(null);
   const [pendingDocument, setPendingDocument] = useState<{
     buffer: ArrayBuffer;
     name: string;
+    fileKey: string;
     password?: string;
   } | null>(null);
   const initialDocumentOpenedRef = useRef(false);
@@ -1067,12 +1104,25 @@ export function LocalEmbedPDF({
       openedContentKeyRef.current = contentKey;
       if (!initialDocumentOpenedRef.current) {
         initialDocumentOpenedRef.current = true;
-        setInitialDocument({ buffer, name, password: pdfAccess?.password });
+        setInitialDocument({
+          buffer,
+          name,
+          fileKey: contentKey,
+          password: pdfAccess?.password,
+        });
         return;
       }
-      setPendingDocument({ buffer, name, password: pdfAccess?.password });
+      setPendingDocument({
+        buffer,
+        name,
+        fileKey: contentKey,
+        password: pdfAccess?.password,
+      });
     };
     const fail = (source: string) => (err: unknown) => {
+      if (cancelled) return;
+      const key = fileStableKey ?? url;
+      if (key) onDocumentLoadFailed?.(key, err);
       console.error(
         `[LocalEmbedPDF] Failed to read ${source} arrayBuffer:`,
         err,
@@ -1116,7 +1166,13 @@ export function LocalEmbedPDF({
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [file ? fileStableKey : null, url, shouldSkipBytes, exportFileName]);
+  }, [
+    file ? fileStableKey : null,
+    url,
+    shouldSkipBytes,
+    exportFileName,
+    onDocumentLoadFailed,
+  ]);
 
   useEffect(() => {
     // A pending revocation belongs to a previous mount of this effect; cancel
@@ -1136,27 +1192,45 @@ export function LocalEmbedPDF({
   }, []);
 
   const [swapAnnouncement, setSwapAnnouncement] = useState<string | null>(null);
+  const handleDocumentReady = useCallback(
+    (fileKey: string) => {
+      onDocumentReady?.(fileKey);
+    },
+    [onDocumentReady],
+  );
+  const handleDocumentLoadFailed = useCallback(
+    (fileKey: string, error: unknown) => {
+      onDocumentLoadFailed?.(fileKey, error);
+    },
+    [onDocumentLoadFailed],
+  );
 
   const handleDocumentSwapped = useCallback(
-    (documentId: string) => {
+    (documentId: string, fileKey: string) => {
+      onDocumentReady?.(fileKey);
       onDocumentSwapped?.(documentId);
-      setPendingDocument(null);
+      setPendingDocument((pending) =>
+        pending?.fileKey === fileKey ? null : pending,
+      );
       setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
       setTimeout(() => setSwapAnnouncement(null), 3000);
     },
-    [onDocumentSwapped, t],
+    [onDocumentReady, onDocumentSwapped, t],
   );
   const handleDocumentSwapFailed = useCallback(
-    (error: unknown) => {
+    (fileKey: string, error: unknown) => {
       // The outgoing document stays active; the replacement never landed.
       console.warn(
         "[LocalEmbedPDF] Replacement document failed to open:",
         error,
       );
-      onDocumentSwapFailed?.(error);
-      setPendingDocument(null);
+      onDocumentLoadFailed?.(fileKey, error);
+      if (fileKey === fileStableKey) onDocumentSwapFailed?.(error);
+      setPendingDocument((pending) =>
+        pending?.fileKey === fileKey ? null : pending,
+      );
     },
-    [onDocumentSwapFailed],
+    [onDocumentLoadFailed, onDocumentSwapFailed, fileStableKey],
   );
 
   useEffect(() => {
@@ -1286,6 +1360,11 @@ export function LocalEmbedPDF({
     wasmUrl: pdfiumWasmUrl,
     fontFallback: fontFallbackConfig,
   });
+
+  useEffect(() => {
+    const key = fileStableKey ?? url;
+    if (error && key) onDocumentLoadFailed?.(key, error);
+  }, [error, fileStableKey, url, onDocumentLoadFailed]);
 
   const [engineTimeout, setEngineTimeout] = useState(false);
   useEffect(() => {
@@ -1514,6 +1593,11 @@ export function LocalEmbedPDF({
           plugins={plugins}
           onInitialized={handleInitialized}
         >
+          <InitialDocumentLoadBridge
+            fileKey={initialDocument?.fileKey ?? url ?? null}
+            onReady={handleDocumentReady}
+            onFailed={handleDocumentLoadFailed}
+          />
           <DocumentSwapBridge
             pending={pendingDocument}
             onSwapped={handleDocumentSwapped}
@@ -1552,11 +1636,20 @@ export function LocalEmbedPDF({
           <PdfPasswordBridge
             fileId={file && isStirlingFile(file) ? file.fileId : undefined}
             password={pdfAccess?.password}
+            onPasswordRequired={onPasswordRequired}
           />
-          <ExportAPIBridge disabled={pdfAccess?.encrypted} />
+          <ExportAPIBridge
+            originalFile={pdfAccess?.encrypted ? file : undefined}
+            disabled={pdfAccess?.encrypted && !file}
+          />
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />
-          <PrintAPIBridge file={file} url={pdfUrl} fileName={fileName} />
+          <PrintAPIBridge
+            file={file}
+            url={pdfUrl}
+            fileName={fileName}
+            canPrint={canPrintPdf(pdfAccess)}
+          />
           <DocumentPermissionsAPIBridge
             isEncrypted={pdfAccess?.encrypted}
             isOwnerUnlocked={pdfAccess?.ownerAuthenticated}

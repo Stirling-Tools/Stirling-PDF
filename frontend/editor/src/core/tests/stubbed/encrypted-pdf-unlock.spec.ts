@@ -7,13 +7,15 @@ import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import fs from "fs";
 import { createHash } from "node:crypto";
+import { PDFDocument } from "@cantoo/pdf-lib";
+import JSZip from "jszip";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
 import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");
 
-function mockUnlockSuccess(page: Page) {
+function mockUnlockSuccess(page: Page, pageCount = 1) {
   return page.route("**/api/v1/security/inspect-pdf-security", (route) =>
     route.fulfill({
       status: 200,
@@ -25,7 +27,7 @@ function mockUnlockSuccess(page: Page) {
         permissions: -4,
         canModify: true,
         canAssemble: true,
-        pageCount: 1,
+        pageCount,
       }),
     }),
   );
@@ -93,6 +95,132 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     }
   });
 
+  test("Viewer Download preserves the original encrypted PDF", async ({
+    page,
+  }, testInfo) => {
+    const source = path.join(FIXTURES_DIR, "encrypted-ten-pages.pdf");
+    await mockUnlockSuccess(page, 10);
+    await uploadEncryptedFile(page, source);
+    await fillPassword(page, "james");
+    await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await expect(page.locator('[data-page-index="0"] img').first()).toBeVisible(
+      { timeout: 30_000 },
+    );
+
+    const downloadPromise = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: /download|export/i })
+      .first()
+      .click();
+    const download = await downloadPromise;
+    const destination = testInfo.outputPath("protected-viewer-download.pdf");
+    await download.saveAs(destination);
+    expect(download.suggestedFilename()).toBe("encrypted-ten-pages.pdf");
+    expect(fs.readFileSync(destination)).toEqual(fs.readFileSync(source));
+  });
+
+  test("Split keeps ten protected results in a downloadable ZIP", async ({
+    page,
+  }, testInfo) => {
+    const plain = await PDFDocument.create();
+    for (let index = 0; index < 10; index++) plain.addPage([300, 400]);
+    const workingPdf = Buffer.from(await plain.save());
+    const singlePage = await PDFDocument.create();
+    singlePage.addPage([300, 400]);
+    const splitPage = await singlePage.save();
+    singlePage.encrypt({ userPassword: "james", ownerPassword: "james" });
+    const protectedPage = Buffer.from(await singlePage.save());
+    const zip = new JSZip();
+    for (let index = 1; index <= 10; index++)
+      zip.file(`page-${index}.pdf`, splitPage);
+    const splitZip = await zip.generateAsync({ type: "nodebuffer" });
+    const restoredNames: string[] = [];
+    await mockUnlockSuccess(page, 10);
+    await page.route("**/api/v1/security/remove-password", (route) =>
+      route.fulfill({ contentType: "application/pdf", body: workingPdf }),
+    );
+    await page.route(
+      "**/api/v1/general/split-by-size-or-count",
+      async (route) => {
+        const request = new Request(route.request().url(), {
+          method: "POST",
+          headers: route.request().headers(),
+          body: new Uint8Array(route.request().postDataBuffer()!),
+        });
+        const form = await request.formData();
+        expect(form.get("splitType")).toBe("1");
+        expect(form.get("splitValue")).toBe("1");
+        await route.fulfill({ contentType: "application/zip", body: splitZip });
+      },
+    );
+    await page.route(
+      "**/api/v1/security/restore-pdf-protection",
+      async (route) => {
+        const request = new Request(route.request().url(), {
+          method: "POST",
+          headers: route.request().headers(),
+          body: new Uint8Array(route.request().postDataBuffer()!),
+        });
+        const form = await request.formData();
+        expect(form.get("password")).toBe("james");
+        const source = form.get("sourceFile") as File;
+        expect(source.name).toBe("encrypted-ten-pages.pdf");
+        restoredNames.push((form.get("fileInput") as File).name);
+        await route.fulfill({
+          contentType: "application/pdf",
+          body: protectedPage,
+        });
+      },
+    );
+    await page.goto("/split?bypassOnboarding=true");
+    await uploadEncryptedFile(
+      page,
+      path.join(FIXTURES_DIR, "encrypted-ten-pages.pdf"),
+    );
+    await fillPassword(page, "james");
+    await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await page
+      .getByText(/Page Count/i)
+      .first()
+      .click();
+    await page.getByPlaceholder("e.g. 5, 10").fill("1");
+    await page.getByRole("button", { name: "Split", exact: true }).click();
+    await expect.poll(() => restoredNames.length).toBe(10);
+    await page
+      .locator("label")
+      .filter({ hasText: /^Active Files$/ })
+      .click();
+    await expect(
+      page.getByText("result.zip", { exact: true }).first(),
+    ).toBeVisible();
+
+    const downloadPromise = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: /download|export/i })
+      .first()
+      .click();
+    const download = await downloadPromise;
+    const destination = testInfo.outputPath("protected-split.zip");
+    await download.saveAs(destination);
+    const downloadedZip = await JSZip.loadAsync(fs.readFileSync(destination));
+    const entries = Object.values(downloadedZip.files).filter(
+      (entry) => !entry.dir,
+    );
+    expect(entries).toHaveLength(10);
+    expect(entries.map((entry) => entry.name).sort()).toEqual(
+      restoredNames.sort(),
+    );
+    for (const entry of entries) {
+      const bytes = await entry.async("nodebuffer");
+      expect(bytes).toEqual(protectedPage);
+      await expect(PDFDocument.load(bytes)).rejects.toThrow(/encrypted/i);
+      const document = await PDFDocument.load(bytes, { password: "james" });
+      expect(document.getPageCount()).toBe(1);
+    }
+  });
+
   test("modal renders with title, password input, and action buttons", async ({
     page,
   }) => {
@@ -107,6 +235,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     ).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "More options", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Remove Password", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }),
@@ -122,10 +253,10 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await page.keyboard.press("Shift+Tab");
     await expect(details).toBeFocused();
     const sessionDetails = page.getByRole("tooltip").filter({
-      hasText: "Access ends when you close the file",
+      hasText: "Unlock for this session.",
     });
-    await expect(sessionDetails).toContainText(
-      "Closing this dialog keeps the saved copy in your library.",
+    await expect(sessionDetails).toHaveText(
+      "Unlock for this session. The PDF stays protected. Remove Password creates an unprotected copy.",
     );
     await page.getByPlaceholder(PASSWORD_PLACEHOLDER).focus();
     await expect(sessionDetails).toBeHidden();
@@ -142,19 +273,14 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     });
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     const dialog = page.getByRole("dialog");
-    await dialog
-      .getByRole("button", { name: "More options", exact: true })
-      .click();
-    await expect(
-      page.getByRole("menuitem", { name: /Remove Password/ }),
-    ).toBeDisabled();
-    await page.keyboard.press("Escape");
-    await expect(dialog).toBeVisible();
+    const removePassword = dialog.getByRole("button", {
+      name: "Remove Password",
+      exact: true,
+    });
+    await expect(removePassword).toBeDisabled();
     await fillPassword(page, "testpass123");
-    await dialog
-      .getByRole("button", { name: "More options", exact: true })
-      .click();
-    await page.getByRole("menuitem", { name: /Remove Password/ }).click();
+    await expect(removePassword).toBeEnabled();
+    await removePassword.click();
     await expect(dialog).toBeHidden();
     await expect(
       page.getByText("Unprotected copy created", { exact: true }),
@@ -257,6 +383,18 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       )
       .toBeGreaterThan(0);
     expect(removalRequests).toEqual([]);
+    await page
+      .locator("label")
+      .filter({ hasText: /^Active Files$/ })
+      .click();
+    const unlockedIndicator = page
+      .getByTestId("file-thumbnail")
+      .getByRole("img", { name: "PDF unlocked", exact: true });
+    await expect(unlockedIndicator).toBeVisible();
+    await unlockedIndicator.hover();
+    await expect(page.getByRole("tooltip")).toHaveText(
+      "Unlocked for this session. Password protection is retained.",
+    );
   });
 
   test("incorrect password keeps the modal open with an inline error", async ({
@@ -301,7 +439,8 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       .getByRole("button", { name: "Why encrypted.pdf is unavailable" })
       .hover();
     const details = page.getByRole("tooltip").filter({
-      hasText: "this tool cannot preserve its password protection",
+      hasText:
+        "This tool doesn't support encrypted PDFs. Remove the password first.",
     });
     await expect(details).toBeVisible();
     await notice.getByText("encrypted.pdf", { exact: true }).click();

@@ -14,7 +14,7 @@ import {
   useFileSelectors,
 } from "@app/contexts/FileContext";
 import apiClient from "@app/services/apiClient";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess, bindPdfAccess } from "@app/services/pdfPasswordStore";
 import { fileStorage } from "@app/services/fileStorage";
 import { generateProcessedFileMetadata } from "@app/contexts/file/fileActions";
 import {
@@ -509,4 +509,89 @@ describe("encrypted bytes opened by another editor", () => {
     });
     await expect(loading).resolves.toEqual([]);
   });
+});
+
+describe("preview session credentials", () => {
+  const previewSecurity = {
+    encrypted: true,
+    signed: false,
+    ownerAuthenticated: false,
+    permissions: 0,
+    canModify: false,
+    canAssemble: false,
+    pageCount: 1,
+  };
+  afterEach(cleanup);
+
+  it("unlocks without publishing or persisting a file, then forgets access on close", async () => {
+    vi.mocked(apiClient.post).mockResolvedValueOnce({ data: previewSecurity });
+    const { result } = renderHook(
+      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+      { wrapper },
+    );
+    const preview = new File(["protected"], "preview.pdf");
+    const lifetime = new AbortController();
+    await act(() =>
+      result.current.actions.unlockPreviewPdf(
+        preview,
+        " secret ",
+        lifetime.signal,
+      ),
+    );
+    expect(getPdfAccess(preview)).toEqual({
+      ...previewSecurity,
+      password: " secret ",
+    });
+    expect(result.current.selectors.getAllFileIds()).toEqual([]);
+    expect(result.current.selectors.getFiles()).toEqual([]);
+    act(() => lifetime.abort());
+    expect(getPdfAccess(preview)).toBeUndefined();
+  });
+
+  it("does not retain a password when authentication finishes after the preview closes", async () => {
+    let finish!: (response: { data: typeof previewSecurity }) => void;
+    vi.mocked(apiClient.post).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const { result } = renderHook(useFileActions, { wrapper });
+    const preview = new File(["protected"], "preview.pdf");
+    const lifetime = new AbortController();
+    const unlocking = result.current.actions.unlockPreviewPdf(
+      preview,
+      "secret",
+      lifetime.signal,
+    );
+    lifetime.abort();
+    await act(async () => {
+      finish({ data: previewSecurity });
+      await unlocking;
+    });
+    expect(getPdfAccess(preview)).toBeUndefined();
+  });
+});
+
+it("preserves a preview credential after its bytes are admitted to FileContext", async () => {
+  vi.mocked(apiClient.post).mockResolvedValueOnce({
+    data: {
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: true,
+      permissions: -4,
+      canModify: true,
+      canAssemble: true,
+      pageCount: 1,
+    },
+  });
+  const { result } = renderHook(useFileActions, { wrapper });
+  const preview = new File(["protected"], "preview.pdf");
+  const lifetime = new AbortController();
+  await act(() =>
+    result.current.actions.unlockPreviewPdf(preview, "secret", lifetime.signal),
+  );
+  const admitted = createStirlingFile(preview, id);
+  bindPdfAccess(admitted, id);
+  act(() => lifetime.abort());
+  expect(getPdfAccess(id)?.password).toBe("secret");
 });

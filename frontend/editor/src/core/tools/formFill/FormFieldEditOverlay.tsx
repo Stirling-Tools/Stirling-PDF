@@ -211,6 +211,7 @@ export function FormFieldEditOverlay({
     pendingFields,
     updatePendingField,
     previewing,
+    saving,
   } = useFormFill();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -508,6 +509,7 @@ export function FormFieldEditOverlay({
   useEffect(() => {
     if (mode !== "modify" || !selectedField) return;
     const onKey = (e: KeyboardEvent) => {
+      if (saving) return;
       // Read only: every page's overlay runs this, so writing the shared flag here
       // would let an idle page clear the flag of the page actually being dragged.
       const dragging = interactionRef.current != null;
@@ -571,6 +573,7 @@ export function FormFieldEditOverlay({
     return () => window.removeEventListener("keydown", onKey);
   }, [
     mode,
+    saving,
     setSelectedField,
     selectedField,
     selectedSingleWidget,
@@ -643,6 +646,7 @@ export function FormFieldEditOverlay({
 
   return (
     <div
+      inert={saving}
       ref={rootRef}
       data-testid={`form-edit-overlay-${pageIndex}`}
       onPointerDown={(e) => {

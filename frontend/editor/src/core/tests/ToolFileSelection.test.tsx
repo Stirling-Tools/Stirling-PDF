@@ -231,7 +231,7 @@ describe("tool file selection", () => {
           .focus(),
       );
       expect(await screen.findByRole("tooltip")).toHaveTextContent(
-        "Use Remove Password to create an unprotected copy first.",
+        "This tool doesn't support encrypted PDFs. Remove the password first.",
       );
       const removePassword = screen.getByRole("button", {
         name: "Remove Password",
