@@ -27,7 +27,7 @@ import {
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import { resolveLighthouse, runLighthouse } from "./collect-lighthouse";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import { BUILTIN_SCENARIOS } from "./scenarios/editor-cycle";
+import { BUILTIN_SCENARIOS } from "./scenarios";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import type {
   LighthouseRun,

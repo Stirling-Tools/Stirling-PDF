@@ -22,6 +22,8 @@ npx tsx tests/walkthrough/perf/cli.ts \
 |---|---|
 | `cli.ts` | Flag parsing, scenario loading, collector + optional Lighthouse, fragment writing, manifest merge, `report.py validate` |
 | `scenarios/editor-cycle.ts` | The built-in scenarios: `editor-settings-cycle`, `editor-picker-scroll` |
+| `scenarios/text-editor-cycle.ts` | `text-editor-raster-cycle`: load a document into the PDF text editor, zoom, scroll, leave |
+| `scenarios/index.ts` | `BUILTIN_SCENARIOS`, the list `cli.ts` resolves `--scenario` ids against |
 | `collect-web.ts` | Browser, context, stubs, CDP recorder, sampling cadence, artifacts |
 | `probe.ts` | The in-page scripts: observers at boot, commit-hook wrap after mount, drain |
 | `metrics.ts` | Pure reductions over the recorded samples (no browser) |
@@ -56,6 +58,16 @@ cycle and returns a short description of what it did; the collector repeats it
   to be second.
 - `--scenario <path>` loads a module exporting `scenario` (or a default
   scenario), for features whose flow is not the editor's.
+- A scenario that loads a file uses `locator.setInputFiles(path)` on the same
+  hidden input the app does; `text-editor-raster-cycle` reads its document from
+  `WALKTHROUGH_FIXTURE`, falling back to
+  `src/core/tests/test-fixtures/user-sample.pdf`.
+- The context is created with the collector's `--base-url`, so a scenario
+  navigates with route paths (`page.goto("/pdf-text-editor")`).
+- A measurement is only as good as the state it starts from. The PDF text
+  editor restores the open document when the route is re-entered, so a scenario
+  that needs a fresh empty state must run in its own page rather than reloading
+  (this is why the capture spec splits load-outcome views into a second test).
 
 ## What is measured, and where it comes from
 
@@ -89,6 +101,11 @@ failure that produced a plausible-looking zero:
   the root is `arguments[1]`.
 - **A metric that cannot be collected is `unavailable`.** `metrics.unavailable`
   carries the reason; nothing is reported as 0 because it was not measured.
+- **The same metric can be available on one route and not another.** The commit
+  count works on `/editor` and came back empty on `/pdf-text-editor` with the
+  same build and probe, so `react.commits` and `latency.*` were `unavailable`
+  in the text-editor run. Read the list before quoting a metric; an empty
+  `react.commits` is not evidence that the page did not render.
 
 ## Pictures
 

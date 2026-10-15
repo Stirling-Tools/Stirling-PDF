@@ -174,6 +174,8 @@ export interface ScenarioLocator {
   click(options?: { timeout?: number }): Promise<void>;
   isVisible(): Promise<boolean>;
   count(): Promise<number>;
+  /** Tools load their document through a hidden input, as the app does. */
+  setInputFiles(path: string): Promise<void>;
   waitFor(options?: {
     state?: "visible" | "attached" | "hidden";
     timeout?: number;

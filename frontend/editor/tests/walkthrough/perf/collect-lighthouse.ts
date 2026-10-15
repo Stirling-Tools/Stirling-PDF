@@ -258,7 +258,9 @@ function runOne(
     route: options.route,
     formFactor,
     mode: options.mode,
-    platform: options.platform,
+    // A mobile form factor is a mobile-web audit: labelling it with the
+    // scenario's desktop platform hides the missing mobile evidence.
+    platform: formFactor === "mobile" ? "mobile-web" : options.platform,
     environment: {
       lighthouse: `lighthouse ${report.lighthouseVersion ?? "unknown"}`,
       chrome: report.userAgent ?? "chrome version not reported",

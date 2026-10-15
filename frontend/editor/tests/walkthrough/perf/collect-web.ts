@@ -267,7 +267,12 @@ export async function collectWebInteraction(
   const unavailable: string[] = [];
   mkdirSync(options.artifactDir, { recursive: true });
 
-  const context = await browser.newContext(contextOptions(options.scenario));
+  const context = await browser.newContext({
+    ...contextOptions(options.scenario),
+    // Scenarios navigate with route paths, so the origin has to be on the
+    // context rather than repeated in every goto.
+    baseURL: options.baseUrl,
+  });
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
   await cdp.send("Performance.enable");
@@ -308,10 +313,15 @@ export async function collectWebInteraction(
 
     // Playwright reads a second argument as the page-function argument, not an
     // options object, so the timeout has to be passed as the third.
-    const countingCommits = await page
-      .evaluate(PROBE_COMMITS_SCRIPT)
-      .catch(() => false);
-    if (countingCommits !== true) {
+    // react-refresh installs the devtools hook lazily, so give it a bounded
+    // window of attempts before reporting the commit count unavailable.
+    let countingCommits = false;
+    for (let attempt = 0; attempt < 20 && !countingCommits; attempt += 1) {
+      countingCommits =
+        (await page.evaluate(PROBE_COMMITS_SCRIPT).catch(() => false)) === true;
+      if (!countingCommits) await delay(250);
+    }
+    if (!countingCommits) {
       unavailable.push(
         "React commit count (no devtools hook to wrap on the page)",
       );

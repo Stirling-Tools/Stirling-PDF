@@ -162,7 +162,7 @@ Create `frontend/editor/src/core/tests/stubbed/<feature>-walkthrough.spec.ts` mo
 
 - Stub the APIs the feature calls, seed the fixtures, then drive the UI the way a user would.
 - Wait for a real condition (`expect(locator)`, `expect.poll`, `waitForFunction`) rather than a timeout; use the local `settle(page)` helper before shooting a Mantine portal.
-- Prefer stable test-ids over translated accessible names.
+- Prefer stable test-ids over translated accessible names. One exception: a `data-testid` on a Mantine `Modal` root is `visibility: hidden` for as long as the modal is open and stays attached after it closes, so `toBeVisible` on it never passes — assert a testid on an element *inside* the modal content, and assert that one is gone after closing.
 - Shoot each view in `light` and `dark` (and RTL unless `--no-rtl`), naming files `NN_<view>_<theme>.png`.
 - Add `--project=stubbed-firefox` / `-webkit` only when cross-browser layout matters.
 - Run it: `npx playwright test --project=stubbed <feature>-walkthrough.spec.ts`.
@@ -195,7 +195,7 @@ npx tsx tests/walkthrough/perf/cli.ts \
 ```
 
 - Run it from `frontend/editor`: that is where the `@app/*` aliases resolve, and the scenario imports this repo's stubbed API helpers.
-- `--scenario` is a built-in id (`editor-settings-cycle`, `editor-picker-scroll`) or a path to a module exporting `scenario`. A scenario performs one open/use/close cycle; the harness repeats it and measures the whole window.
+- `--scenario` is a built-in id (`editor-settings-cycle`, `editor-picker-scroll`, `text-editor-raster-cycle`) or a path to a module exporting `scenario`. A scenario performs one open/use/close cycle; the harness repeats it and measures the whole window. Run one scenario per affected route on each platform you can actually reach.
 - Output: `<out>/perf.fragment.json` (`performance.interactions[]`), four pictures under `<out>/pictures/`, and any trace or CPU profile under `<out>/artifacts/`. `--manifest` merges the fragment into an existing walkthrough manifest (`--merged`, default `<out>/manifest.merged.json`) and `--validate` then runs `report.py validate` on the merge.
 - `--trace` collects a DevTools-loadable Chrome trace, `--no-cpu-profile` skips the V8 profile. Both add overhead to the very window being measured, so skip them unless a finding needs the raw artifact.
 - Every metric the collector cannot obtain is listed in `metrics.unavailable` and never rendered as a zero; a worker target that was never alive in the window is reported the same way, because "no worker observed" and "no worker used" are different claims.
