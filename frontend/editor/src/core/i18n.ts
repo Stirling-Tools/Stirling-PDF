@@ -73,6 +73,23 @@ i18n
     },
   });
 
+/**
+ * Resolves once the first locale is loaded. Callers that render on load must
+ * wait for it: `useSuspense` means a first render that starts before the
+ * translations arrive suspends, and React then holds that commit behind its
+ * ~300 ms retry throttle, which costs more time than the fetch it waits for.
+ *
+ * Resolves on failure too - i18next emits `initialized` even when a locale file
+ * 404s - so this only hangs on a request that never settles.
+ */
+export const i18nReady: Promise<void> = i18n.isInitialized
+  ? Promise.resolve()
+  : new Promise((resolve) => {
+      i18n.on("initialized", () => {
+        resolve();
+      });
+    });
+
 // Set document direction based on language
 i18n.on("languageChanged", (lng) => {
   const isRTL = rtlLanguages.includes(lng);

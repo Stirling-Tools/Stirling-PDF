@@ -15,7 +15,7 @@ import ReactDOM from "react-dom/client";
 import { ColorSchemeScript } from "@mantine/core";
 import { BrowserRouter } from "react-router-dom";
 import App from "@app/App";
-import "@app/i18n"; // Initialize i18next
+import { i18nReady } from "@app/i18n"; // Initialize i18next and expose its readiness
 import { BASE_PATH } from "@app/constants/app";
 import { applyDevWorktreeLabel } from "@app/utils/applyDevWorktreeLabel";
 
@@ -27,11 +27,17 @@ if (!container) {
 }
 
 const root = ReactDOM.createRoot(container); // Finds the root DOM element
-root.render(
-  <React.StrictMode>
-    <ColorSchemeScript />
-    <BrowserRouter basename={BASE_PATH}>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>,
-);
+
+// Rendered once the first locale is in memory rather than immediately: a first
+// render that suspends on the locale file is held behind React's ~300 ms retry
+// throttle, which is slower than waiting for the translations outright.
+void i18nReady.then(() => {
+  root.render(
+    <React.StrictMode>
+      <ColorSchemeScript />
+      <BrowserRouter basename={BASE_PATH}>
+        <App />
+      </BrowserRouter>
+    </React.StrictMode>,
+  );
+});
