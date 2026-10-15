@@ -6,6 +6,7 @@ import { type IconKey } from "@app/components/tools/automate/iconMap";
  * but a saved AutomationConfig stores an icon by name.
  */
 export function iconKeyForSuggestedAutomation(id: string): IconKey {
+  if (id.startsWith("server-")) return "StorageIcon";
   switch (id) {
     case "secure-pdf-ingestion":
     case "secure-workflow":

@@ -114,35 +114,39 @@ public class UIDataController {
         List<Map<String, String>> pipelineConfigsWithNames = new ArrayList<>();
 
         if (new java.io.File(runtimePathConfig.getPipelineDefaultWebUiConfigs()).exists()) {
+            List<Path> jsonFiles = List.of();
             try (Stream<Path> paths =
                     Files.walk(Path.of(runtimePathConfig.getPipelineDefaultWebUiConfigs()))) {
-                List<Path> jsonFiles =
+                jsonFiles =
                         paths.filter(Files::isRegularFile)
                                 .filter(p -> p.toString().endsWith(".json"))
+                                .sorted()
                                 .toList();
+            } catch (IOException e) {
+                log.error("Failed to list pipeline configs", e);
+            }
 
-                for (Path jsonFile : jsonFiles) {
-                    String content = Files.readString(jsonFile, StandardCharsets.UTF_8);
-                    pipelineConfigs.add(content);
-                }
-
-                for (int i = 0; i < jsonFiles.size(); i++) {
-                    String config = pipelineConfigs.get(i);
+            for (Path jsonFile : jsonFiles) {
+                try {
+                    String config = Files.readString(jsonFile, StandardCharsets.UTF_8);
                     Map<String, Object> jsonContent =
                             objectMapper.readValue(
                                     config, new TypeReference<Map<String, Object>>() {});
-                    String name = (String) jsonContent.get("name");
-                    if (name == null || name.isEmpty()) {
-                        String filename = jsonFiles.get(i).getFileName().toString();
-                        name = filename.substring(0, filename.lastIndexOf('.'));
-                    }
+                    String name =
+                            jsonContent.get("name") instanceof String s && !s.isEmpty()
+                                    ? s
+                                    : jsonFile.getFileName()
+                                            .toString()
+                                            .replaceFirst("\\.json$", "");
+                    pipelineConfigs.add(config);
                     Map<String, String> configWithName = new HashMap<>();
                     configWithName.put("json", config);
                     configWithName.put("name", name);
                     pipelineConfigsWithNames.add(configWithName);
+                } catch (IOException | RuntimeException e) {
+                    log.warn(
+                            "Skipping unreadable pipeline config {}: {}", jsonFile, e.getMessage());
                 }
-            } catch (IOException e) {
-                log.error("Failed to load pipeline configs", e);
             }
         }
 

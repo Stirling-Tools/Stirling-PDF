@@ -48,10 +48,10 @@ public class GeneralUtils {
     private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
     private final Set<String> DEFAULT_VALID_PIPELINE =
             Set.of(
-                    "OCR images.json",
-                    "Prepare-pdfs-for-email.json",
-                    "Pre-publish-sanitization.json",
-                    "split-rotate-auto-rename.json");
+                    "OCR images.json.example",
+                    "Prepare-pdfs-for-email.json.example",
+                    "Pre-publish-sanitization.json.example",
+                    "split-rotate-auto-rename.json.example");
 
     private final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
     private final String PYTHON_SCRIPTS_DIR = "python";
@@ -1005,8 +1005,8 @@ public class GeneralUtils {
     }
 
     /*
-     * Extracts the default pipeline configurations from the classpath to the installation path.
-     * Creates directories if needed and copies default JSON files.
+     * Extracts the example pipeline configurations from the classpath to the installation path.
+     * They are written as *.json.example so the UI ignores them until an admin renames one.
      *
      * <p>Existing files will be overwritten atomically (when supported). In case of unsupported
      * atomic moves, falls back to non-atomic replace.
@@ -1032,6 +1032,20 @@ public class GeneralUtils {
                 throw new IOException("Resource not found: " + res.getPath());
             }
             copyResourceToFile(res, target);
+            removeUneditedLegacyCopy(
+                    res, pipelineDir.resolve(name.replaceFirst("\\.example$", "")));
+        }
+    }
+
+    // Older releases extracted the examples as live *.json; drop those unless an admin edited them
+    private void removeUneditedLegacyCopy(ClassPathResource res, Path legacy) throws IOException {
+        if (!Files.isRegularFile(legacy)) {
+            return;
+        }
+        try (InputStream in = res.getInputStream()) {
+            if (Arrays.equals(in.readAllBytes(), Files.readAllBytes(legacy))) {
+                Files.delete(legacy);
+            }
         }
     }
 
