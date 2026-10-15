@@ -1,13 +1,13 @@
-import { useEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { usePrintCapability } from "@embedpdf/plugin-print/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
 export interface PrintAPIBridgeProps {
-  canPrint?: boolean;
   file?: File | Blob;
   url?: string | null;
   fileName?: string;
+  canPrint?: boolean;
 }
 
 /**
@@ -18,14 +18,16 @@ export function PrintAPIBridge({ canPrint = false }: PrintAPIBridgeProps) {
   const { registerBridge } = useViewer();
   const documentReady = useDocumentReady();
 
-  useEffect(() => {
-    if (print && documentReady) {
-      // Register this bridge with ViewerContext
+  const allowed = useRef(canPrint);
+  allowed.current = canPrint;
+
+  useLayoutEffect(() => {
+    if (print && documentReady && canPrint) {
       registerBridge("print", {
         state: {},
         api: {
           print: () => {
-            if (canPrint) print.print();
+            if (allowed.current) print.print();
           },
         },
       });

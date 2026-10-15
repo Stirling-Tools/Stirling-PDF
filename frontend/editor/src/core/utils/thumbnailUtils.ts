@@ -98,7 +98,7 @@ export function containsEncryptMarker(bytes: Uint8Array): boolean {
  * the head and the main one at the tail, so both windows have to be probed.
  * Heuristic: a false positive offers unlock on a file that did not need it, a
  * false negative leaves it unopenable. */
-async function looksEncryptedFromTrailer(file: File): Promise<boolean> {
+export async function looksEncryptedFromTrailer(file: File): Promise<boolean> {
   const tailStart = Math.max(0, file.size - ENCRYPT_PROBE_BYTES);
   const tail = await file.slice(tailStart).arrayBuffer();
   if (containsEncryptMarker(new Uint8Array(tail))) return true;

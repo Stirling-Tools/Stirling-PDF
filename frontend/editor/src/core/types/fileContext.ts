@@ -492,6 +492,12 @@ export interface FileContextActions {
   ) => Promise<boolean>;
   /** Creates a separate unprotected version after verifying owner access. */
   createUnprotectedCopy: (fileId: FileId) => Promise<void>;
+  /** Authenticates preview bytes without adding a library record. Abort when the preview closes. */
+  unlockPreviewPdf: (
+    file: File,
+    password: string,
+    signal: AbortSignal,
+  ) => Promise<void>;
 }
 
 // File selectors (separate from actions to avoid re-renders)

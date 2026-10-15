@@ -44,19 +44,21 @@ export function getPdfAccess(
   return blob ? accessByFile.get(blob) : undefined;
 }
 
-/** Retain access for the current session, without changing the original file. */
-export function rememberPdfAccess(file: Blob, access: PdfAccess): void {
-  accessByFile.set(file, {
+/** Retain access without changing the file; returns the identity used by preview cleanup. */
+export function rememberPdfAccess(file: Blob, access: PdfAccess): PdfAccess {
+  const storedAccess = {
     ...access,
     openingPassword: access.encrypted
       ? access.openingAuthenticated || !access.ownerAuthenticated
         ? access.password
         : (access.openingPassword ?? accessByFile.get(file)?.openingPassword)
       : undefined,
-  });
+  };
+  accessByFile.set(file, storedAccess);
   if ("fileId" in file && typeof file.fileId === "string")
     filesById.set(file.fileId, file);
   publish();
+  return storedAccess;
 }
 
 /** Bind a newly assigned FileContext identity to credentials already attached to its bytes. */
@@ -76,6 +78,17 @@ export function forgetPdfAccess(ids: readonly string[]): void {
     if (file) accessByFile.delete(file);
     filesById.delete(id);
   }
+  publish();
+}
+
+/** Drop preview-owned access unless the same bytes have since entered FileContext. */
+export function forgetPreviewPdfAccess(file: Blob, access: PdfAccess): void {
+  if (
+    accessByFile.get(file) !== access ||
+    [...filesById.values()].includes(file)
+  )
+    return;
+  accessByFile.delete(file);
   publish();
 }
 

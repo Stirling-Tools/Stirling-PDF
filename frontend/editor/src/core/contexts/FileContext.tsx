@@ -74,6 +74,7 @@ import {
   bindPdfAccess,
   clearPdfAccess,
   forgetPdfAccess,
+  forgetPreviewPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
 } from "@app/services/pdfPasswordStore";
@@ -913,6 +914,21 @@ function FileContextInner({
     [baseActions],
   );
 
+  const unlockPreviewPdf = useCallback<FileContextActions["unlockPreviewPdf"]>(
+    async (file, password, signal) => {
+      if (signal.aborted) return;
+      const access = await unlockPdfForSession(file, password);
+      if (signal.aborted) return;
+      const storedAccess = rememberPdfAccess(file, access);
+      signal.addEventListener(
+        "abort",
+        () => forgetPreviewPdfAccess(file, storedAccess),
+        { once: true },
+      );
+    },
+    [],
+  );
+
   // Complete actions object
   const actions = useMemo<FileContextActions>(
     () => ({
@@ -1018,6 +1034,7 @@ function FileContextInner({
         return promise;
       },
       createUnprotectedCopy: (fileId) => runUnprotectedCopyRef.current(fileId),
+      unlockPreviewPdf,
     }),
     [
       baseActions,
@@ -1033,6 +1050,7 @@ function FileContextInner({
       indexedDB,
       enablePersistence,
       promptEncryptedUnlock,
+      unlockPreviewPdf,
       cancelPendingAdmissions,
     ],
   );

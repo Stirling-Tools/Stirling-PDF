@@ -111,6 +111,7 @@ import {
 } from "@app/services/pdfSessionUnlock";
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { canPrintPdf } from "@app/services/pdfPermissions";
 import {
   DocumentRestoreBridge,
   type DocumentRestoreEvent,
@@ -194,6 +195,7 @@ interface LocalEmbedPDFProps {
   onDocumentReady?: (fileKey: string) => void;
   /** Includes byte-read failures, engine errors and cancelled loads. */
   onDocumentLoadFailed?: (fileKey: string, error: unknown) => void;
+  onPasswordRequired?: () => void;
   /** True while a view restore is in flight; gates the per-page layout hook. */
   restorePending?: boolean;
   restoreRequest?: DocumentRestoreRequest | null;
@@ -905,6 +907,7 @@ export function LocalEmbedPDF({
   onDocumentSwapFailed,
   onDocumentReady,
   onDocumentLoadFailed,
+  onPasswordRequired,
   restorePending = false,
   restoreRequest = null,
   onRestoreEvent,
@@ -1672,15 +1675,16 @@ export function LocalEmbedPDF({
           <PdfPasswordBridge
             fileId={file && isStirlingFile(file) ? file.fileId : undefined}
             password={pdfAccess?.password}
+            onPasswordRequired={onPasswordRequired}
           />
           <ExportAPIBridge disabled={pdfAccess?.encrypted} />
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />
           <PrintAPIBridge
-            canPrint={
-              pdfAllows(pdfAccess, PdfPermissionFlag.Print) &&
-              pdfAllows(pdfAccess, PdfPermissionFlag.PrintHighQuality)
-            }
+            file={file}
+            url={pdfUrl}
+            fileName={fileName}
+            canPrint={canPrintPdf(pdfAccess)}
           />
           <DocumentPermissionsAPIBridge
             isEncrypted={pdfAccess?.encrypted ?? true}

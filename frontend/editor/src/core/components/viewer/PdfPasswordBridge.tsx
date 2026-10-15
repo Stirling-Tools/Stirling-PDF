@@ -11,9 +11,11 @@ import type { FileId } from "@app/types/file";
 export function PdfPasswordBridge({
   fileId,
   password,
+  onPasswordRequired,
 }: {
   fileId?: string | null;
   password?: string;
+  onPasswordRequired?: () => void;
 }) {
   const { activeDocument } = useActiveDocument();
   const { provides: manager } = useDocumentManagerCapability();
@@ -37,6 +39,10 @@ export function PdfPasswordBridge({
     )
       return;
     const id = activeDocument.id;
+    const prompt = () => {
+      if (onPasswordRequired) onPasswordRequired();
+      else if (fileId) actions.openEncryptedUnlockPrompt(fileId as FileId);
+    };
     if (
       password !== undefined &&
       (attempted.current?.id !== id || attempted.current.password !== password)
@@ -48,14 +54,13 @@ export function PdfPasswordBridge({
         .toPromise()
         .then((response) => response.task.toPromise())
         .catch(() => {
-          if (attempted.current === attempt && fileId)
-            actions.openEncryptedUnlockPrompt(fileId as FileId);
+          if (attempted.current === attempt) prompt();
         });
-    } else if (fileId && prompted.current !== id) {
+    } else if ((fileId || onPasswordRequired) && prompted.current !== id) {
       prompted.current = id;
-      actions.openEncryptedUnlockPrompt(fileId as FileId);
+      prompt();
     }
-  }, [manager, activeDocument, password, fileId, actions]);
+  }, [manager, activeDocument, password, fileId, actions, onPasswordRequired]);
 
   return null;
 }

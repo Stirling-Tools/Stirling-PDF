@@ -1,54 +1,121 @@
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
 import { PrintAPIBridge } from "@app/components/viewer/PrintAPIBridge";
-import { pdfAllows } from "@app/services/pdfSessionUnlock";
-import { PdfPermissionFlag } from "@embedpdf/models";
-import type { PdfAccess } from "@app/services/pdfPasswordStore";
+import { canPrintPdf } from "@app/services/pdfPermissions";
+import { PdfPermissionFlag } from "@app/contexts/viewer/viewerBridges";
 
-const fixture = vi.hoisted(() => ({
-  print: { print: vi.fn() },
-  registerBridge: vi.fn(),
+const mock = vi.hoisted(() => ({
+  print: vi.fn(),
+  register: vi.fn(),
+  ready: true,
 }));
 vi.mock("@embedpdf/plugin-print/react", () => ({
-  usePrintCapability: () => ({ provides: fixture.print }),
+  usePrintCapability: () => ({ provides: { print: mock.print } }),
 }));
 vi.mock("@app/contexts/ViewerContext", () => ({
-  useViewer: () => ({ registerBridge: fixture.registerBridge }),
+  useViewer: () => ({ registerBridge: mock.register }),
 }));
 vi.mock("@app/components/viewer/hooks/useDocumentReady", () => ({
-  useDocumentReady: () => true,
+  useDocumentReady: () => mock.ready,
 }));
-
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  mock.ready = true;
+});
 afterEach(cleanup);
 
-it("blocks all shared print entry points until owner verification and blocks again when switching to a restricted document", () => {
-  const access: PdfAccess = {
-    password: "",
-    encrypted: true,
-    signed: false,
+it.each([
+  {
+    encrypted: false,
     ownerAuthenticated: false,
     permissions: 0,
-    canModify: false,
-    canAssemble: false,
-    pageCount: 1,
-  };
-  const canPrint = (value: PdfAccess) =>
-    pdfAllows(value, PdfPermissionFlag.Print) &&
-    pdfAllows(value, PdfPermissionFlag.PrintHighQuality);
-  const attemptPrint = () =>
-    fixture.registerBridge.mock.lastCall?.[1]?.api.print();
-  const view = render(<PrintAPIBridge canPrint={canPrint(access)} />);
-  attemptPrint();
-  expect(fixture.print.print).not.toHaveBeenCalled();
-  view.rerender(
-    <PrintAPIBridge
-      canPrint={canPrint({ ...access, ownerAuthenticated: true })}
-    />,
-  );
-  attemptPrint();
-  expect(fixture.print.print).toHaveBeenCalledOnce();
-  view.rerender(<PrintAPIBridge canPrint={canPrint(access)} />);
-  attemptPrint();
-  expect(fixture.print.print).toHaveBeenCalledOnce();
+    allowed: true,
+  },
+  {
+    encrypted: true,
+    ownerAuthenticated: false,
+    permissions: 0,
+    allowed: false,
+  },
+  {
+    encrypted: true,
+    ownerAuthenticated: false,
+    permissions: PdfPermissionFlag.CopyContents,
+    allowed: false,
+  },
+  {
+    encrypted: true,
+    ownerAuthenticated: false,
+    permissions: PdfPermissionFlag.Print,
+    allowed: false,
+  },
+  {
+    encrypted: true,
+    ownerAuthenticated: false,
+    permissions: PdfPermissionFlag.Print,
+    encryptionRevision: 2,
+    allowed: true,
+  },
+  {
+    encrypted: true,
+    ownerAuthenticated: false,
+    permissions: PdfPermissionFlag.Print | PdfPermissionFlag.PrintHighQuality,
+    allowed: true,
+  },
+  {
+    encrypted: true,
+    ownerAuthenticated: false,
+    permissions: 0,
+    honorOwnerPasswords: false,
+    allowed: true,
+  },
+  { encrypted: true, ownerAuthenticated: true, permissions: 0, allowed: true },
+])("enforces effective print permission for %j", ({ allowed, ...access }) => {
+  render(<PrintAPIBridge canPrint={canPrintPdf(access)} />);
+  const bridge = mock.register.mock.calls.find(
+    ([kind, value]) => kind === "print" && value,
+  )?.[1];
+  expect(Boolean(bridge)).toBe(allowed);
+  bridge?.api.print();
+  expect(mock.print).toHaveBeenCalledTimes(allowed ? 1 : 0);
 });
+
+it("revokes a previously registered action when the replacement denies printing", () => {
+  const view = render(<PrintAPIBridge canPrint />);
+  const previous = mock.register.mock.calls.at(-1)?.[1];
+  previous.api.print();
+  expect(mock.print).toHaveBeenCalledOnce();
+  view.rerender(<PrintAPIBridge canPrint={false} />);
+  expect(mock.register).toHaveBeenLastCalledWith("print", null);
+  previous.api.print();
+  expect(mock.print).toHaveBeenCalledOnce();
+  view.rerender(<PrintAPIBridge canPrint />);
+  mock.register.mock.calls.at(-1)?.[1].api.print();
+  expect(mock.print).toHaveBeenCalledTimes(2);
+});
+
+it("does not expose printing before the document is ready", () => {
+  mock.ready = false;
+  render(<PrintAPIBridge canPrint />);
+  expect(mock.register).not.toHaveBeenCalled();
+});
+
+it.each([false, true])(
+  "reports effective print permission consistently for owner=%s",
+  (owner) => {
+    render(
+      <DocumentPermissionsAPIBridge
+        isEncrypted
+        isOwnerUnlocked={owner}
+        permissions={0}
+      />,
+    );
+    const bridge = mock.register.mock.calls.at(-1)?.[1];
+    expect(bridge.state.canPrint).toBe(owner);
+    expect(bridge.api.getEffectivePermission(PdfPermissionFlag.Print)).toBe(
+      owner,
+    );
+    expect(bridge.api.hasPermission(PdfPermissionFlag.Print)).toBe(owner);
+  },
+);
