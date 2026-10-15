@@ -8,6 +8,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Locale;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class IssuerDiscoveryProbe {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
+    @Autowired
     public IssuerDiscoveryProbe(ObjectMapper objectMapper) {
         this(
                 HttpClient.newBuilder()
