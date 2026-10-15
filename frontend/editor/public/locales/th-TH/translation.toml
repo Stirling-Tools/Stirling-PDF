@@ -55,7 +55,9 @@ keepWorking = "ทำงานต่อ"
 loading = "กำลังโหลด..."
 loginAgreementAccept = "ยอมรับ"
 loginAgreementDecline = "ปฏิเสธ"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "ประกาศนี้จัดทำโดยผู้ดูแลระบบของคุณ ไม่ใช่ Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "ข้อตกลงการเข้าสู่ระบบ"
 logOut = "ออกจากระบบ"
 marginTooltip = "ระยะห่างระหว่างหมายเลขหน้ากับขอบกระดาษ"
@@ -299,7 +301,6 @@ title = "ผลลัพธ์หมายเลขหน้า"
 
 [addPassword]
 desc = "เข้ารหัสเอกสาร PDF ของคุณด้วยรหัสผ่าน"
-submit = "เข้ารหัส"
 tags = "เข้ารหัส,รหัสผ่าน,ล็อก,ปลอดภัย,ป้องกัน,ความปลอดภัย,encryption,ปกป้อง,ลับ,ส่วนตัว,จำกัดการเข้าถึง"
 title = "เพิ่มรหัสผ่าน"
 
@@ -311,17 +312,6 @@ label = "ความยาวกุญแจการเข้ารหัส"
 
 [addPassword.error]
 failed = "เกิดข้อผิดพลาดระหว่างการเข้ารหัส PDF"
-
-[addPassword.passwords]
-stepTitle = "รหัสผ่านและการเข้ารหัส"
-
-[addPassword.passwords.owner]
-label = "รหัสผ่านเจ้าของ"
-placeholder = "ป้อนรหัสผ่านเจ้าของ"
-
-[addPassword.passwords.user]
-label = "รหัสผ่านผู้ใช้"
-placeholder = "ป้อนรหัสผ่านผู้ใช้"
 
 [addPassword.results]
 title = "PDF ที่เข้ารหัสแล้ว"
@@ -1627,6 +1617,7 @@ title = "ต้องรีสตาร์ท"
 [admin.settings.security]
 authentication = "การยืนยันตัวตน"
 description = "กำหนดค่าการยืนยันตัวตน พฤติกรรมการเข้าสู่ระบบ และนโยบายความปลอดภัย"
+pdfPermissions = "PDF permissions"
 title = "ความปลอดภัย"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "ปิดการป้องกัน CSRF"
 [admin.settings.security.enableLogin]
 description = "บังคับให้ผู้ใช้ต้องเข้าสู่ระบบก่อนเข้าถึงแอปพลิเคชัน"
 label = "เปิดใช้งานการเข้าสู่ระบบ"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs."
+label = "Honor PDF permissions"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "การตั้งค่าขั้นสูง"
@@ -1938,9 +1933,6 @@ wrapUp = "นี่คือทัวร์ผู้ดูแลระบบ! �
 [adminUserSettings]
 admin = "ผู้ดูแลระบบ"
 title = "การควบคุมผู้ใช้"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "อาหรับ"
@@ -3173,12 +3165,14 @@ unknown = "ไม่ทราบ"
 
 [changePermissions]
 desc = "เปลี่ยนข้อจำกัดและสิทธิ์ของเอกสาร"
+loading = "Loading current permissions..."
 submit = "เปลี่ยนสิทธิ์"
 tags = "สิทธิ์,ข้อจำกัด,สิทธิ,การควบคุมการเข้าถึง,อนุญาต,ปฏิเสธ,การพิมพ์,การคัดลอก,การแก้ไข,แก้ไขสิทธิ์,การตั้งค่าความปลอดภัย,สิทธิผู้ใช้"
 title = "เปลี่ยนสิทธิ์"
 
 [changePermissions.error]
 failed = "เกิดข้อผิดพลาดระหว่างการเปลี่ยนสิทธิ์ของ PDF"
+readFailed = "Could not read this PDF's current permissions. Set the restrictions manually before applying changes."
 
 [changePermissions.permissions.preventAssembly]
 label = "ป้องกันการประกอบเอกสาร"
@@ -3219,21 +3213,16 @@ text = "เพื่อให้สิทธิ์เหล่านี้ไม
 [chat.actions]
 copy = "คัดลอกข้อความ"
 
-[chat.emptyState]
-text = "ถามคำถามเกี่ยวกับเอกสารของคุณหรือขอความช่วยเหลือเกี่ยวกับเครื่องมือ PDF"
-
-[chat.fab]
-close = "ปิดแชท"
-open = "เปิดผู้ช่วย Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "ตัวเลือกเอเจนต์ของ Stirling"
-assistant = "ผู้ช่วย AI"
 clearChat = "ล้างแชต"
 
 [chat.input]
 disclaimer = "AI อาจผิดพลาดได้ โปรดตรวจสอบผลลัพธ์ก่อนแชร์"
-placeholder = "คุณต้องการทำอะไร?"
 send = "ส่งข้อความ"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "แปลงเอกสารเหล่านี้เป็�
 convertOne = "แปลงเอกสารนี้เป็น PDF"
 heading = "เริ่มต้นใช้งาน"
 mergeMany = "ผสานเอกสาร {{count}} ฉบับให้เป็น 1"
-moreFiles = "+{{count}} เพิ่มเติม"
 openFromComputer = "เปิดจากคอมพิวเตอร์"
-removeFile = "เอา {{name}} ออก"
 splitOne = "แยกเอกสารนี้"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "ฉันไม่พบข้อมูลที่ร้องข�
 processing = "กำลังประมวลผล ({{outcome}})..."
 unsupported_capability = "ไม่รองรับความสามารถ: {{capability}}"
 usage_limit_reached = "คุณถึงขีดจำกัดการใช้งานแล้ว ตรวจสอบตัวเลือกแผนของคุณเพื่อใช้งานต่อ"
-
-[chat.toolsUsed]
-summary_one = "เรียกใช้เครื่องมือ 1 รายการ"
-summary_other = "เรียกใช้เครื่องมือ {{count}} รายการ"
-unknownTool = "เครื่องมือที่ไม่รู้จัก"
 
 [classification.families]
 correspondence = "จดหมายโต้ตอบ"
@@ -3664,6 +3646,7 @@ continue = "ดำเนินการต่อ"
 copied = "คัดลอกแล้ว!"
 copy = "คัดลอก"
 copyCode = "คัดลอกโค้ด"
+copyFailed = "Copy failed"
 dismiss = "ปิด"
 done = "เสร็จสิ้น"
 enterValue = "ป้อนค่า"
@@ -3847,6 +3830,12 @@ unavailable = "ไม่ได้ติดตั้งหรือเปิด�
 filesize = "ขนาดไฟล์"
 quality = "คุณภาพ"
 title = "วิธีการบีบอัด"
+
+[compress.noReduction]
+multiple = "Compression ran successfully, but {{count}} of {{total}} files can't be compressed any further."
+multipleAtLevel = "Compression at this level made no improvement to {{count}} of {{total}} files. Try a higher compression level."
+single = "Compression ran successfully, but this file can't be compressed any further."
+singleAtLevel = "Compression at this level made no improvement to this file. Try a higher compression level."
 
 [compress.settings]
 desiredSize = "ขนาดไฟล์ที่ต้องการ"
@@ -4364,6 +4353,10 @@ title = "อัปเดตจากดิสก์แล้ว"
 body = "\"{{name}}\" เปลี่ยนแปลงบนดิสก์ ไฟล์มีขนาดใหญ่พอที่การโหลดใหม่จะใช้เวลาสักครู่ ดังนั้นเวอร์ชันที่นี่จึงถูกปล่อยไว้ตามเดิม"
 title = "ไฟล์เปลี่ยนแปลงบนดิสก์"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "กำลังดาวน์โหลดอัปเดต..."
 installing = "กำลังติดตั้งอัปเดต..."
@@ -4491,22 +4484,80 @@ description = "เลือกเครื่องมือแก้ไขส�
 title = "เปิดเครื่องมือเพื่อเริ่มแก้ไข"
 
 [encryptedPdfUnlock]
-description = "ไฟล์ PDF นี้ถูกป้องกันด้วยรหัสผ่าน ป้อนรหัสผ่านเพื่อทำงานต่อได้"
-emptyResponse = "การลบรหัสผ่านไม่สร้างไฟล์"
+actionIgnored = "{{action}} restriction ignored"
+actionUnlocked = "{{action}} unlocked for this session"
+advanced = "Advanced"
+allowed = "Allowed"
+annotations = "Annotations"
+authoriseAction = "This PDF requires permission to use {{action}}."
+changeOwnerPassword = "Change permissions password"
+chooseOwnerPassword = "Choose a different password"
+continue = "Continue"
+copyFailed = "Unable to create the copy. Your PDF is unchanged."
+copying = "Copying content"
+editing = "Editing"
+enterPassword = "Enter password"
+ignoredByServer = "Permissions are ignored by this server's settings. The PDF's protection is unchanged."
 incorrectPassword = "รหัสผ่านไม่ถูกต้อง"
+lowQualityPrintUnsupported = "This PDF allows low-quality printing only, which this viewer does not support."
+lowResolutionOnly = "Low resolution only"
+manageProtection = "Manage protection"
 missingFile = "ไฟล์ที่เลือกไม่มีอยู่แล้ว"
+mixedProtection = "These PDFs have separate protection settings. Process them individually."
+newOwnerPassword = "New permissions password"
+notRequired = "Not required"
+openingPassword = "Password to open"
+openingPasswordRemoved = "Opening password removed. Restrictions retained."
+openingRequired = "Enter the password used to open this PDF."
+openPdf = "Open PDF"
+ownerPassword = "Permissions password"
+ownerRequired = "Enter the permissions password to continue."
+ownerTitle = "Enter permissions password"
+passwordRetained = "Kept unchanged"
+passwordsMustDiffer = "The two passwords must be different."
+permissionsUnlocked = "Permissions unlocked for this session"
+prepareFailed = "Unable to prepare this protected PDF for processing."
+printing = "Printing"
+printRestricted = "Printing is restricted. Verify permissions in Manage protection."
+protectedPdf = "Protected PDF"
+protectionRetained = "Protection retained"
+protectionSaved = "Protection saved"
+removePasswordHelp = "Open Remove Password to choose which passwords to remove."
+removeProtection = "Create an unprotected copy"
+replaceProtection = "These settings replace the PDF's current protection."
 required = "ป้อนรหัสผ่านเพื่อดำเนินการต่อ"
-skip = "ข้ามไปก่อน"
-successBody = "ลบรหัสผ่านสำเร็จ"
-successBodyWithName = "ลบรหัสผ่านจาก {{fileName}} แล้ว"
-successTitle = "ลบรหัสผ่านแล้ว"
+requiredStatus = "Required"
+requiredToApply = "Required to apply changes"
+restoreFailed = "Unable to preserve PDF protection. No unprotected result was saved."
+restrictActions = "Restrict actions"
+restricted = "Restricted"
+restrictedActions = "restricted actions"
+restrictedOperation = "This action requires the permissions password."
+retainOwnerVerification = "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it."
+saveProtection = "Save protection"
+securityChangeFailed = "Unable to change protection. Check the permissions password and the new security settings."
+sessionDetails = "Open for this session. The PDF stays protected."
+sessionDetailsLabel = "About session unlocking"
+sessionFailed = "Unable to unlock this PDF. Please try again."
+sessionSuccessBody = "Protection retained."
+sessionSuccessBodyWithName = "Protection retained for {{fileName}}."
+sessionSuccessTitle = "PDF opened"
+sessionTitle = "Open PDF"
+signedReadOnly = "This signed PDF can be viewed, but cannot be edited here."
 title = "เอารหัสผ่านออกเพื่อดำเนินการต่อ"
+toolUnavailable = "This tool doesn't support encrypted PDFs. Remove the password first."
+toolUnavailableDetails = "Why {{name}} is unavailable"
 unlock = "ปลดล็อกและดำเนินการต่อ"
 unlockAll = "ใช้กับทั้งหมด ({{count}})"
 unlockAllPartialFail = "รหัสผ่านไม่ถูกต้องสำหรับ: {{names}}"
 unlockAllSuccess_one = "ปลดล็อกไฟล์ {{count}} ไฟล์แล้ว"
 unlockAllSuccess_other = "ปลดล็อกไฟล์ {{count}} ไฟล์แล้ว"
+unlockedForSession = "Unlocked for this session using your permissions password."
 unlockPrompt = "ปลดล็อก PDF เพื่อดำเนินการต่อ"
+unprotectedCopyConsequence = "The copy will have no passwords or restrictions. The original stays protected."
+unsupportedTool = "This tool cannot yet preserve this PDF's protection."
+verifiedForSession = "Verified for this session"
+verifyPermissions = "Verify permissions for this session"
 viewerLocked = "ไฟล์ PDF นี้ถูกป้องกันด้วยรหัสผ่าน"
 viewerUnlock = "ปลดล็อก"
 
@@ -4597,22 +4648,23 @@ viewInViewer = "ดูในตัวแสดงผล"
 closeFile = "ปิดไฟล์"
 
 [fileEditor]
-addFiles = "เพิ่มไฟล์"
 closedFile = "ปิด {{name}} แล้ว"
 couldNotSave = "ไม่สามารถบันทึก {{name}} ได้"
-filesAdded_one = "เพิ่ม {{count}} ไฟล์แล้ว"
-filesAdded_other = "เพิ่ม {{count}} ไฟล์แล้ว"
 filesReordered_one = "จัดลำดับไฟล์ใหม่แล้ว"
 filesReordered_other = "จัดลำดับไฟล์ใหม่ {{count}} ไฟล์แล้ว"
 loadedFromStorage_one = "โหลด {{count}} ไฟล์จากที่เก็บข้อมูลแล้ว"
 loadedFromStorage_other = "โหลด {{count}} ไฟล์จากที่เก็บข้อมูลแล้ว"
 loadFromStorageFailed = "โหลดบางไฟล์จากที่เก็บข้อมูลไม่สำเร็จ"
 pinnedFile = "ปักหมุด {{name}} แล้ว"
-processFilesFailed = "ประมวลผลไฟล์ไม่สำเร็จ"
 savedAndClosed = "บันทึกและปิด {{name}} แล้ว"
 saveFailed = "บันทึกไม่สำเร็จ"
 unpinnedFile = "เลิกปักหมุด {{name}} แล้ว"
 unzipping = "กำลังแตกไฟล์ {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "เกิดข้อผิดพลาดในการแตกไฟล์ {{name}}"
@@ -4729,7 +4781,6 @@ dataLostBody = "เบราว์เซอร์นี้สูญเสีย�
 dataLostTitle = "ข้อมูลไฟล์ไม่พร้อมใช้งาน"
 downloadFailed = "ดาวน์โหลดล้มเหลว"
 dropHint = "เปิดไฟล์เพื่อเริ่มต้น"
-dropToAdd = "วางไฟล์เพื่อเพิ่ม"
 duplicateFailed = "ไม่สามารถทำสำเนาไฟล์ได้"
 expand = "ขยายแถบข้าง"
 googleDrive = "Google Drive"
@@ -5251,6 +5302,7 @@ rescanFields = "สแกนฟิลด์อีกครั้ง"
 rescanFormFields = "สแกนฟิลด์ฟอร์มอีกครั้ง"
 save = "บันทึก"
 saveShortcut = "Ctrl+S เพื่อบันทึก"
+saving = "Saving..."
 selectOptionPlaceholder = "— เลือก —"
 skippedEdits_one = "ไม่สามารถใช้การเปลี่ยนแปลง 1 รายการ:"
 skippedEdits_other = "ไม่สามารถใช้การเปลี่ยนแปลง {{count}} รายการ:"
@@ -5258,9 +5310,7 @@ skippedEditsTruncated = "มีอีก {{count}} รายการที่�
 unsavedChanges = "การเปลี่ยนแปลงที่ยังไม่ได้บันทึก"
 
 [formFill.create]
-commit = "เพิ่มฟิลด์ {{count}} ฟิลด์ลงใน PDF"
 empty = "ยังไม่ได้วาดฟิลด์ใด ๆ"
-failed = "เพิ่มฟิลด์ไม่สำเร็จ"
 goToField = "ไปที่ฟิลด์นี้"
 hint = "เลือกประเภทฟิลด์ แล้ววาดบนหน้า"
 placing = "วาดฟิลด์ {{type}} บนหน้า กด Esc เพื่อหยุด"
@@ -5334,7 +5384,6 @@ modify = "แก้ไข"
 commit = "บันทึกการเปลี่ยนแปลง {{count}} รายการ"
 delete = "ลบ"
 empty = "PDF นี้ยังไม่มีฟิลด์ฟอร์ม"
-failed = "บันทึกการเปลี่ยนแปลงไม่สำเร็จ"
 groupSizeHint = "ใช้ขนาดตัวเลือก"
 hint = "เลือกฟิลด์เพื่อแก้ไขคุณสมบัติ ลากบนหน้า หรือลบฟิลด์นั้น"
 restore = "คืนค่า"
@@ -5732,11 +5781,6 @@ title = "ซ้อนทับ PDF"
 desc = "รวมหน้าหลายหน้าของเอกสาร PDF เข้าด้วยกันในหน้าเดียว"
 tags = "เค้าโครง,จัดเรียง,รวม,N-up,2-up,4-up,หลายหน้าต่อหน้า,หน้าต่อแผ่น,จัดหน้า,tile,เค้าโครงตาราง,เค้าโครงหลายหน้า,รวมบนหน้า,handout"
 title = "เลย์เอาต์หลายหน้า"
-
-[home.pdfCommentAgent]
-desc = "ขอให้ AI ใส่คำอธิบายประกอบใน PDF ด้วยโน้ตแปะตามพรอมต์ของคุณ"
-tags = "AI,ตัวช่วย,ความคิดเห็น,คำอธิบายประกอบ,โน้ตแปะ,ตรวจทาน,ข้อเสนอแนะ,บันทึก"
-title = "เพิ่มความคิดเห็นด้วย AI"
 
 [home.pdfOrganiser]
 tags = "จัดระเบียบ,จัดเรียงใหม่,เรียงลำดับใหม่,จัดเรียงหน้า,เรียงลำดับ,ย้ายหน้า,ลบหน้า,ลบหน้า,การจัดการหน้า,ตัวจัดระเบียบหน้า,เรียงลำดับใหม่"
@@ -6595,63 +6639,6 @@ yourCloudAccess = "คุณจะกลายเป็นสมาชิกท�
 deselectAll = "ไม่มี"
 selectAll = "เลือกทั้งหมด"
 
-[pageEditor]
-dragPreviewAlt = "กำลังลาก"
-filePosition = "ตำแหน่ง {{position}}"
-pageLabel = "หน้า {{page}}"
-title = "ตัวแก้ไขหน้า"
-
-[pageEditor.actions]
-deletePage = "ลบหน้า"
-insertFileAfter = "แทรกไฟล์หลังจากนี้"
-moveLeft = "ย้ายไปซ้าย"
-moveRight = "ย้ายไปขวา"
-rotateLeft = "หมุนซ้าย"
-rotateRight = "หมุนขวา"
-splitAfter = "แยกหลังจากนี้"
-
-[pageEditor.commands]
-addSplitAt = "เพิ่มจุดแยกที่ตำแหน่ง {{position}}"
-addSplits_one = "เพิ่มจุดแยก {{count}} จุด"
-addSplits_other = "เพิ่มจุดแยก {{count}} จุด"
-deletePages_one = "ลบหน้า {{count}} หน้า"
-deletePages_other = "ลบหน้า {{count}} หน้า"
-insertFiles_one = "แทรกไฟล์ {{count}} ไฟล์หลังหน้า {{page}}"
-insertFiles_other = "แทรกไฟล์ {{count}} ไฟล์หลังหน้า {{page}}"
-insertPageBreaks_one = "แทรกตัวแบ่งหน้า {{count}} รายการ"
-insertPageBreaks_other = "แทรกตัวแบ่งหน้า {{count}} รายการ"
-insertPageBreaksAll = "แทรกตัวแบ่งหน้าหลังทุกหน้า"
-removeAllSplits = "ลบจุดแยกทั้งหมด"
-removeSplitAt = "ลบจุดแยกที่ตำแหน่ง {{position}}"
-removeSplits_one = "ลบจุดแยก {{count}} จุด"
-removeSplits_other = "ลบจุดแยก {{count}} จุด"
-reorderPages = "จัดลำดับหน้าใหม่"
-rotatePageLeft = "หมุนหน้าไปทางซ้าย"
-rotatePageRight = "หมุนหน้าไปทางขวา"
-rotatePagesLeft_one = "หมุนหน้า {{count}} หน้าไปทางซ้าย"
-rotatePagesLeft_other = "หมุนหน้า {{count}} หน้าไปทางซ้าย"
-rotatePagesRight_one = "หมุนหน้า {{count}} หน้าไปทางขวา"
-rotatePagesRight_other = "หมุนหน้า {{count}} หน้าไปทางขวา"
-splitAllPages = "แยกทุกหน้า"
-toggleSplits_one = "สลับตำแหน่งจุดแยก {{count}} จุด"
-toggleSplits_other = "สลับตำแหน่งจุดแยก {{count}} จุด"
-
-[pageEditor.emptyState]
-body = "เพิ่มไฟล์เพื่อเริ่มแก้ไขหน้า"
-title = "ยังไม่ได้โหลดไฟล์ PDF"
-
-[pageEditor.fileDropdown]
-addFile = "เพิ่มไฟล์"
-selectedCount = "เลือกไฟล์ {{selected}}/{{total}} แล้ว"
-untitled = "ไม่มีชื่อ"
-
-[pageEditor.toolbar]
-delete = "ลบที่เลือก"
-redo = "ทำซ้ำ"
-rotateLeft = "หมุนที่เลือกไปทางซ้าย"
-rotateRight = "หมุนที่เลือกไปทางขวา"
-undo = "เลิกทำ"
-
 [pageExtracter]
 title = "แยกหน้า"
 
@@ -6815,6 +6802,76 @@ title = "ช่วงหน้า"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → เลือกทุกหน้า"
 title = "คีย์เวิร์ดพิเศษ"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "เอกสาร"
@@ -7144,24 +7201,6 @@ totalSeats_other = "รวม ({{count}} ที่นั่ง)"
 [payment.upgradeTeam]
 title = "อัปเกรดเป็น Team"
 
-[pdfCommentAgent]
-submit = "สร้างความคิดเห็น"
-
-[pdfCommentAgent.error]
-emptyPrompt = "โปรดอธิบายว่าให้ AI แสดงความคิดเห็นเกี่ยวกับอะไร"
-failed = "สร้างความคิดเห็นไม่สำเร็จ"
-tooLong = "พรอมต์ยาวเกินไป (สูงสุด {{max}} อักขระ)"
-
-[pdfCommentAgent.prompt]
-label = "ให้ AI แสดงความคิดเห็นเกี่ยวกับอะไร?"
-placeholder = "เช่น ทำเครื่องหมายวันที่ที่คลุมเครือและแนะนำคำชี้แจง"
-
-[pdfCommentAgent.results]
-title = "PDF ที่มีความคิดเห็น"
-
-[pdfCommentAgent.settings]
-title = "คำแนะนำสำหรับความคิดเห็น"
-
 [pdfOrganiser]
 placeholder = "(เช่น 1,3,2 หรือ 4-8,2,10-12 หรือ 2n-1)"
 tags = "สองหน้า, คู่ขนาน, เรียงลำดับ, เคลื่อนย้าย"
@@ -7347,6 +7386,7 @@ nothingSelectedHint = "คลิกข้อความ รูปภาพ ห�
 ocrDocumentChanged = "เอกสารเปลี่ยนแปลงระหว่างที่ OCR กำลังทำงาน เรียกใช้ OCR อีกครั้งเพื่อรวมการเปลี่ยนแปลงล่าสุดของคุณ"
 ocrInvalidResult = "OCR ไม่ได้ส่งคืน PDF โปรดลองอีกครั้ง"
 ocrNoLanguages = "ไม่มีภาษา OCR ติดตั้งอยู่บนเซิร์ฟเวอร์"
+ocrProtected = "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing."
 ocrRunning = "กำลังรู้จำข้อความ..."
 ocrUnavailable = "OCR ไม่พร้อมใช้งานบนเซิร์ฟเวอร์นี้"
 oneImage = "รูปภาพ"
@@ -7389,13 +7429,8 @@ pageNumber = "หน้า {{page}}"
 renderFailed = "เรนเดอร์หน้าไม่สำเร็จ"
 
 [pdfTextEditor.password]
-cancel = "ยกเลิก"
 incorrect = "รหัสผ่านไม่ถูกต้อง - ลองอีกครั้ง"
 label = "รหัสผ่าน"
-open = "เปิด"
-protected = "PDF นี้มีการป้องกันด้วยรหัสผ่าน"
-protectedNamed = "\"{{fileName}}\" มีการป้องกันด้วยรหัสผ่าน"
-title = "ต้องใช้รหัสผ่าน"
 
 [pdfTextEditor.rulers]
 guide = "เส้นนำแนวที่ {{value}} {{unit}} - ลากไปยังไม้บรรทัดเพื่อลบ"
@@ -7994,6 +8029,7 @@ before = "ตั้งค่า"
 title = "ยังไม่ได้กำหนดค่าการเชื่อมต่อ Stirling"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "ไม่สามารถเปิดเบราว์เซอร์ของคุณได้ เปิดการใช้งานและการเรียกเก็บเงินบนเซิร์ฟเวอร์ที่เชื่อมต่อของคุณเพื่อเชื่อมโยงบัญชี"
 
 [portal.accountLink.panel]
@@ -8117,9 +8153,6 @@ limit = "ขีดจำกัดค่าใช้จ่ายรายเด�
 limitNoCap = "ไม่มีขีดจำกัดค่าใช้จ่าย การประมวลผลจะไม่หยุดชั่วคราว ออกใบแจ้งหนี้รายเดือน"
 
 [portal.billing.chip]
-invoices = "ใบแจ้งหนี้"
-nav = "ส่วนต่าง ๆ"
-payment = "การชำระเงิน"
 plan = "แผน"
 procurement = "การจัดซื้อ"
 usage = "การใช้งาน"
@@ -8178,9 +8211,22 @@ pdfs = "PDF ที่ประมวลผลแล้ว"
 users = "ผู้ใช้"
 
 [portal.billing.enterprise]
+active = "Agreement active through {{date}}"
 cta = "ขอใบเสนอราคาระดับองค์กร"
+included = "Included in Enterprise"
+payment_pending = "Payment pending · access through {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF over agreed volume"
+pdfsOver_other = "{{count}} PDFs over agreed volume"
+pdfsUsed_one = "{{count}} PDF processed"
+pdfsUsed_other = "{{count}} PDFs processed"
+period = "Agreement period: {{start}} – {{end}}"
 sub = "การปรับใช้แบบ air-gapped, SCIM, ถิ่นที่อยู่ของข้อมูล, SLA เวลาใช้งาน และข้อตกลงที่เหมาะสม"
 title = "กำลังใช้งาน Stirling ในสภาพแวดล้อมที่มีข้อกำกับดูแลอยู่หรือไม่"
+trial = "{{days}}-day trial · ends {{date}}"
+usersAgreed = "{{used}} / {{agreed}} agreed users"
+usersOver_one = "{{count}} user over agreed quantity"
+usersOver_other = "{{count}} users over agreed quantity"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "ไม่สามารถเริ่มชำระเงินได้"
@@ -11160,6 +11206,7 @@ tags = "Redact,ซ่อน,ปิดทับ,ดำ,marker,ซ่อนอย�
 title = "ปกปิดข้อมูล"
 
 [redact.auto]
+caseSensitiveLabel = "Case Sensitive Matching"
 colorLabel = "สีกรอบ"
 convertPDFToImageLabel = "แปลง PDF เป็น PDF-Image"
 customPaddingLabel = "ระยะขอบเพิ่มพิเศษแบบกำหนดเอง"
@@ -11194,6 +11241,10 @@ automaticDisabledTooltip = "เลือกไฟล์ในตัวจัด�
 manual = "แมนนวล"
 mode = "โหมด"
 title = "วิธีการปกปิด"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
+title = "Case Sensitive Matching"
 
 [redact.tooltip.advanced.color]
 text = "ปรับแต่งลักษณะของกรอบปกปิด มาตรฐานคือสีดำ แต่คุณสามารถเลือกสีใดก็ได้ ระยะขอบจะเพิ่มพื้นที่รอบข้อความที่พบ"
@@ -11396,7 +11447,19 @@ text = "ระบุหน้าที่ต้องการลบจาก PD
 title = "การเลือกหน้า"
 
 [removePassword]
-desc = "ลบรหัสผ่านจากการป้องกันเอกสาร PDF ของคุณ"
+appliesTo = "Set on {{count}} of {{total}} PDFs"
+batchRemoved = "Entered passwords removed where set. Blank fields kept unchanged."
+bothRemoved = "Both passwords and restrictions removed."
+checkingProtection = "Checking protection…"
+keepBlank = "Leave a field blank to keep that password."
+notSet = "Not set"
+openingOnlyRemoved = "Opening password removed."
+openWithReaderFirst = "Reopen this PDF using its opening password before removing only the permissions password."
+ownerOnlyRemoved = "Permissions password and restrictions removed."
+ownerRemoved = "Permissions password and restrictions removed. Opening password kept."
+protectionUnavailable = "Unable to check protection"
+selectiveHelp = "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions."
+selectPasswords = "Passwords to remove"
 submit = "ลบรหัสผ่าน"
 tags = "ปลอดภัย, ถอดรหัส, ความปลอดภัย, ลบรหัสผ่าน"
 title = "ลบรหัสผ่าน"
@@ -11407,13 +11470,9 @@ failed = "เกิดข้อผิดพลาดระหว่างกา�
 [removePassword.password]
 label = "รหัสผ่านปัจจุบัน"
 placeholder = "ป้อนรหัสผ่านปัจจุบัน"
-stepTitle = "ลบรหัสผ่าน"
 
 [removePassword.results]
 title = "PDF ที่ถอดรหัสแล้ว"
-
-[removePassword.tooltip]
-description = "การลบการป้องกันด้วยรหัสผ่านต้องใช้รหัสผ่านที่ใช้เข้ารหัส PDF การดำเนินการนี้จะถอดรหัสเอกสาร ทำให้เข้าถึงได้โดยไม่ต้องใช้รหัสผ่าน"
 
 [reorganizePages]
 submit = "จัดเรียงหน้าใหม่"
@@ -12054,6 +12113,7 @@ title = "พื้นที่ทำงาน"
 loginIncomplete = "เข้าสู่ระบบให้เสร็จสมบูรณ์ไม่สำเร็จ"
 noSaasServer = "ไม่ได้กำหนดค่าเซิร์ฟเวอร์ SaaS"
 noServer = "ไม่ได้กำหนดค่าเซิร์ฟเวอร์"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "เข้าสู่ระบบ SaaS ไม่สำเร็จ"
 saasLoginIncomplete = "เข้าสู่ระบบ SaaS ให้เสร็จสมบูรณ์ไม่สำเร็จ"
 selfHostedLoginFailed = "เข้าสู่ระบบ self-hosted ไม่สำเร็จ"
@@ -13905,6 +13965,11 @@ title = "ข้อความลายน้ำ"
 image = "รูปภาพ"
 text = "ข้อความ"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "ไฟล์ก่อนหน้าของคุณไม่ได้ถูกจัดเก็บไว้บนอุปกรณ์นี้อีกต่อไป"
 partial = "กู้คืนไฟล์ {{restored}} จาก {{total}} ไฟล์แล้ว ที่เหลือไม่ได้ถูกจัดเก็บไว้บนอุปกรณ์นี้อีกต่อไป"
@@ -13915,16 +13980,13 @@ annotations = "คำอธิบายประกอบ"
 applyRedactionsFirst = "ใช้การปกปิดข้อมูลก่อน"
 closeAll = "ปิดไฟล์ทั้งหมด"
 closePdf = "ปิด PDF"
-deleteSelected = "ลบหน้าที่เลือก"
 deselectAll = "ยกเลิกการเลือกทั้งหมด"
 downloadAll = "ดาวน์โหลดทั้งหมด"
 exitRedaction = "ออกจากโหมดปกปิดข้อมูล"
-exportAll = "ส่งออก PDF"
-exportSelected = "ส่งออกหน้าที่เลือก"
 formFill = "ตัวแก้ไขฟอร์ม"
 hideToolbar = "ซ่อนแถบเครื่องมือ"
 moreActions = "การดำเนินการเพิ่มเติม"
-multiTool = "เครื่องมือหลายฟังก์ชัน"
+pageEditor = "Page Editor"
 panMode = "โหมดเลื่อน"
 print = "พิมพ์ PDF"
 readAloud = "อ่านออกเสียง"
@@ -13938,7 +14000,6 @@ rulerSettings = "การตั้งค่ามาตราส่วน"
 save = "บันทึก"
 saveAll = "บันทึกทั้งหมด"
 saveAs = "บันทึกเป็น"
-saveChanges = "บันทึกการเปลี่ยนแปลง"
 search = "ค้นหาใน PDF"
 selectAll = "เลือกทั้งหมด"
 selectByNumber = "เลือกตามหมายเลขหน้า"

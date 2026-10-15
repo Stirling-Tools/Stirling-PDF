@@ -55,7 +55,9 @@ keepWorking = "Продолжить работу"
 loading = "Загрузка..."
 loginAgreementAccept = "Принять"
 loginAgreementDecline = "Отклонить"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Это уведомление предоставлено вашим администратором, а не Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Соглашение при входе"
 logOut = "Выйти"
 marginTooltip = "Расстояние между номером страницы и краем страницы."
@@ -299,7 +301,6 @@ title = "Результаты нумерации страниц"
 
 [addPassword]
 desc = "Зашифруйте ваш PDF-документ паролем."
-submit = "Зашифровать"
 tags = "шифровать,пароль,заблокировать,безопасность,защитить,защита,шифрование,обезопасить,конфиденциальный,личный,ограничить доступ"
 title = "Добавить пароль"
 
@@ -311,17 +312,6 @@ label = "Длина ключа шифрования"
 
 [addPassword.error]
 failed = "Произошла ошибка при шифровании PDF."
-
-[addPassword.passwords]
-stepTitle = "Пароли и шифрование"
-
-[addPassword.passwords.owner]
-label = "Пароль владельца"
-placeholder = "Введите пароль владельца"
-
-[addPassword.passwords.user]
-label = "Пароль пользователя"
-placeholder = "Введите пароль пользователя"
 
 [addPassword.results]
 title = "Зашифрованные PDF"
@@ -1627,6 +1617,7 @@ title = "Требуется перезапуск"
 [admin.settings.security]
 authentication = "Аутентификация"
 description = "Настройка аутентификации, поведения входа и политик безопасности."
+pdfPermissions = "PDF permissions"
 title = "Безопасность"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Отключить защиту CSRF"
 [admin.settings.security.enableLogin]
 description = "Требовать вход пользователей перед доступом к приложению"
 label = "Включить вход"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs."
+label = "Honor PDF permissions"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Расширенные настройки"
@@ -1938,9 +1933,6 @@ wrapUp = "Это был тур администратора! Вы увидели
 [adminUserSettings]
 admin = "Администратор"
 title = "Настройки управления пользователями"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Арабский"
@@ -3173,12 +3165,14 @@ unknown = "Неизвестно"
 
 [changePermissions]
 desc = "Изменяйте ограничения и разрешения документа."
+loading = "Loading current permissions..."
 submit = "Изменить разрешения"
 tags = "разрешения,ограничения,права,контроль доступа,разрешить,запретить,печать,копирование,редактирование,изменить разрешения,настройки безопасности,права пользователя"
 title = "Изменить разрешения"
 
 [changePermissions.error]
 failed = "Произошла ошибка при изменении разрешений PDF."
+readFailed = "Could not read this PDF's current permissions. Set the restrictions manually before applying changes."
 
 [changePermissions.permissions.preventAssembly]
 label = "Запретить компоновку документа"
@@ -3219,21 +3213,16 @@ text = "Чтобы сделать эти разрешения неизменяе
 [chat.actions]
 copy = "Копировать сообщение"
 
-[chat.emptyState]
-text = "Задайте вопрос о своих документах или получите помощь с PDF-инструментами."
-
-[chat.fab]
-close = "Закрыть чат"
-open = "Открыть AI-ассистента Stirling"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Параметры агента Stirling"
-assistant = "AI-ассистент"
 clearChat = "Очистить чат"
 
 [chat.input]
 disclaimer = "AI может ошибаться. Обязательно проверяйте результат перед передачей другим."
-placeholder = "Что вы хотите сделать?"
 send = "Отправить сообщение"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Преобразовать эти документы в PDF"
 convertOne = "Преобразовать этот документ в PDF"
 heading = "Начало работы"
 mergeMany = "Объединить эти {{count}} документов в 1"
-moreFiles = "+ ещё {{count}}"
 openFromComputer = "Открыть с компьютера"
-removeFile = "Удалить {{name}}"
 splitOne = "Разделить этот документ"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Не удалось найти запрашиваемую инфо�
 processing = "Обработка ({{outcome}})..."
 unsupported_capability = "Неподдерживаемая возможность: {{capability}}"
 usage_limit_reached = "Вы достигли лимита использования. Проверьте варианты плана, чтобы продолжить."
-
-[chat.toolsUsed]
-summary_one = "Запущен 1 инструмент"
-summary_other = "Запущено {{count}} инструментов"
-unknownTool = "Неизвестный инструмент"
 
 [classification.families]
 correspondence = "Корреспонденция"
@@ -3664,6 +3646,7 @@ continue = "Продолжить"
 copied = "Скопировано!"
 copy = "Копировать"
 copyCode = "Копировать код"
+copyFailed = "Copy failed"
 dismiss = "Скрыть"
 done = "Готово"
 enterValue = "Введите значение"
@@ -3847,6 +3830,12 @@ unavailable = "ImageMagick не установлен или не включён 
 filesize = "Размер файла"
 quality = "Качество"
 title = "Метод сжатия"
+
+[compress.noReduction]
+multiple = "Compression ran successfully, but {{count}} of {{total}} files can't be compressed any further."
+multipleAtLevel = "Compression at this level made no improvement to {{count}} of {{total}} files. Try a higher compression level."
+single = "Compression ran successfully, but this file can't be compressed any further."
+singleAtLevel = "Compression at this level made no improvement to this file. Try a higher compression level."
 
 [compress.settings]
 desiredSize = "Желаемый размер файла"
@@ -4364,6 +4353,10 @@ title = "Обновлено с диска"
 body = "\"{{name}}\" изменился на диске. Он достаточно большой, поэтому перезагрузка займёт время, и текущая версия здесь оставлена без изменений."
 title = "Файл изменён на диске"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Загрузка обновления..."
 installing = "Установка обновления..."
@@ -4491,22 +4484,80 @@ description = "Выберите инструмент «Редактироват�
 title = "Откройте инструмент для начала редактирования"
 
 [encryptedPdfUnlock]
-description = "Этот PDF защищён паролем. Введите пароль, чтобы продолжить работу с ним."
-emptyResponse = "Удаление пароля не дало файл."
+actionIgnored = "{{action}} restriction ignored"
+actionUnlocked = "{{action}} unlocked for this session"
+advanced = "Advanced"
+allowed = "Allowed"
+annotations = "Annotations"
+authoriseAction = "This PDF requires permission to use {{action}}."
+changeOwnerPassword = "Change permissions password"
+chooseOwnerPassword = "Choose a different password"
+continue = "Continue"
+copyFailed = "Unable to create the copy. Your PDF is unchanged."
+copying = "Copying content"
+editing = "Editing"
+enterPassword = "Enter password"
+ignoredByServer = "Permissions are ignored by this server's settings. The PDF's protection is unchanged."
 incorrectPassword = "Неверный пароль"
+lowQualityPrintUnsupported = "This PDF allows low-quality printing only, which this viewer does not support."
+lowResolutionOnly = "Low resolution only"
+manageProtection = "Manage protection"
 missingFile = "Выбранный файл больше недоступен."
+mixedProtection = "These PDFs have separate protection settings. Process them individually."
+newOwnerPassword = "New permissions password"
+notRequired = "Not required"
+openingPassword = "Password to open"
+openingPasswordRemoved = "Opening password removed. Restrictions retained."
+openingRequired = "Enter the password used to open this PDF."
+openPdf = "Open PDF"
+ownerPassword = "Permissions password"
+ownerRequired = "Enter the permissions password to continue."
+ownerTitle = "Enter permissions password"
+passwordRetained = "Kept unchanged"
+passwordsMustDiffer = "The two passwords must be different."
+permissionsUnlocked = "Permissions unlocked for this session"
+prepareFailed = "Unable to prepare this protected PDF for processing."
+printing = "Printing"
+printRestricted = "Printing is restricted. Verify permissions in Manage protection."
+protectedPdf = "Protected PDF"
+protectionRetained = "Protection retained"
+protectionSaved = "Protection saved"
+removePasswordHelp = "Open Remove Password to choose which passwords to remove."
+removeProtection = "Create an unprotected copy"
+replaceProtection = "These settings replace the PDF's current protection."
 required = "Введите пароль, чтобы продолжить."
-skip = "Пока пропустить"
-successBody = "Пароль успешно удалён."
-successBodyWithName = "Пароль удалён из {{fileName}}"
-successTitle = "Пароль удалён"
+requiredStatus = "Required"
+requiredToApply = "Required to apply changes"
+restoreFailed = "Unable to preserve PDF protection. No unprotected result was saved."
+restrictActions = "Restrict actions"
+restricted = "Restricted"
+restrictedActions = "restricted actions"
+restrictedOperation = "This action requires the permissions password."
+retainOwnerVerification = "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it."
+saveProtection = "Save protection"
+securityChangeFailed = "Unable to change protection. Check the permissions password and the new security settings."
+sessionDetails = "Open for this session. The PDF stays protected."
+sessionDetailsLabel = "About session unlocking"
+sessionFailed = "Unable to unlock this PDF. Please try again."
+sessionSuccessBody = "Protection retained."
+sessionSuccessBodyWithName = "Protection retained for {{fileName}}."
+sessionSuccessTitle = "PDF opened"
+sessionTitle = "Open PDF"
+signedReadOnly = "This signed PDF can be viewed, but cannot be edited here."
 title = "Удалите пароль, чтобы продолжить"
+toolUnavailable = "This tool doesn't support encrypted PDFs. Remove the password first."
+toolUnavailableDetails = "Why {{name}} is unavailable"
 unlock = "Разблокировать и продолжить"
 unlockAll = "Применить ко всем ({{count}})"
 unlockAllPartialFail = "Неверный пароль для: {{names}}"
 unlockAllSuccess_one = "Разблокирован {{count}} файл."
 unlockAllSuccess_other = "Разблокировано {{count}} файлов."
+unlockedForSession = "Unlocked for this session using your permissions password."
 unlockPrompt = "Разблокируйте PDF, чтобы продолжить"
+unprotectedCopyConsequence = "The copy will have no passwords or restrictions. The original stays protected."
+unsupportedTool = "This tool cannot yet preserve this PDF's protection."
+verifiedForSession = "Verified for this session"
+verifyPermissions = "Verify permissions for this session"
 viewerLocked = "Этот PDF защищен паролем"
 viewerUnlock = "Разблокировать"
 
@@ -4597,22 +4648,23 @@ viewInViewer = "Открыть в просмотрщике"
 closeFile = "Закрыть файл"
 
 [fileEditor]
-addFiles = "Добавить файлы"
 closedFile = "Закрыт {{name}}"
 couldNotSave = "Не удалось сохранить {{name}}"
-filesAdded_one = "Добавлен {{count}} файл"
-filesAdded_other = "Добавлено {{count}} файлов"
 filesReordered_one = "Порядок файлов изменен"
 filesReordered_other = "Порядок {{count}} файлов изменен"
 loadedFromStorage_one = "Загружен {{count}} файл из хранилища"
 loadedFromStorage_other = "Загружено {{count}} файлов из хранилища"
 loadFromStorageFailed = "Не удалось загрузить некоторые файлы из хранилища"
 pinnedFile = "{{name}} закреплен"
-processFilesFailed = "Не удалось обработать файлы"
 savedAndClosed = "{{name}} сохранен и закрыт"
 saveFailed = "Сохранение не удалось"
 unpinnedFile = "{{name}} откреплен"
 unzipping = "Распаковка {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Ошибка при распаковке {{name}}"
@@ -4729,7 +4781,6 @@ dataLostBody = "Этот браузер потерял содержимое эт
 dataLostTitle = "Данные файла недоступны"
 downloadFailed = "Не удалось скачать"
 dropHint = "Откройте файлы, чтобы начать"
-dropToAdd = "Перетащите файлы, чтобы добавить"
 duplicateFailed = "Не удалось создать копию файла"
 expand = "Развернуть боковую панель"
 googleDrive = "Google Drive"
@@ -5251,6 +5302,7 @@ rescanFields = "Пересканировать поля"
 rescanFormFields = "Пересканировать поля формы"
 save = "Сохранить"
 saveShortcut = "Ctrl+S для сохранения"
+saving = "Saving..."
 selectOptionPlaceholder = "— выберите —"
 skippedEdits_one = "1 изменение не удалось применить:"
 skippedEdits_other = "{{count}} изменений не удалось применить:"
@@ -5258,9 +5310,7 @@ skippedEditsTruncated = "Еще {{count}} не перечислено."
 unsavedChanges = "Несохраненные изменения"
 
 [formFill.create]
-commit = "Добавить {{count}} поле(я) в PDF"
 empty = "Поля еще не нарисованы."
-failed = "Не удалось добавить поля"
 goToField = "Перейти к этому полю"
 hint = "Выберите тип поля, затем нарисуйте его на странице."
 placing = "Нарисуйте поле {{type}} на странице. Нажмите Esc, чтобы остановить."
@@ -5334,7 +5384,6 @@ modify = "Изменить"
 commit = "Сохранить {{count}} изменение(я)"
 delete = "Удалить"
 empty = "В этом PDF пока нет полей формы."
-failed = "Не удалось сохранить изменения"
 groupSizeHint = "Использовать размер варианта"
 hint = "Выберите поле, чтобы изменить его свойства, перетащите его на странице или удалите."
 restore = "Восстановить"
@@ -5732,11 +5781,6 @@ title = "Наложение PDF"
 desc = "Объединяет несколько страниц PDF-документа в одну страницу"
 tags = "макет,расположить,объединить,N-up,2-up,4-up,несколько на странице,страниц на лист,расположить страницы,плитка,сетка,многостраничный макет,объединить на странице,раздаточный материал"
 title = "Многостраничная компоновка"
-
-[home.pdfCommentAgent]
-desc = "Попросите AI добавить в PDF комментарии-стикеры по вашему запросу"
-tags = "AI,агент,комментарий,аннотация,стикер,рецензия,обратная связь,заметки"
-title = "Добавить комментарии AI"
 
 [home.pdfOrganiser]
 tags = "организовать,переставить,изменить порядок,упорядочить страницы,сортировать,переместить страницы,удалить страницы,удалить страницы,управление страницами,организатор страниц,переупорядочить"
@@ -6595,63 +6639,6 @@ yourCloudAccess = "Вы станете участником команды и п
 deselectAll = "Ничего"
 selectAll = "Выбрать все"
 
-[pageEditor]
-dragPreviewAlt = "Перетаскивание"
-filePosition = "Позиция {{position}}"
-pageLabel = "Страница {{page}}"
-title = "Редактор страниц"
-
-[pageEditor.actions]
-deletePage = "Удалить страницу"
-insertFileAfter = "Вставить файл после"
-moveLeft = "Переместить влево"
-moveRight = "Переместить вправо"
-rotateLeft = "Повернуть влево"
-rotateRight = "Повернуть вправо"
-splitAfter = "Разделить после"
-
-[pageEditor.commands]
-addSplitAt = "Добавить разделение в позиции {{position}}"
-addSplits_one = "Добавить {{count}} разделение"
-addSplits_other = "Добавить {{count}} разделений"
-deletePages_one = "Удалить {{count}} страницу"
-deletePages_other = "Удалить {{count}} страниц"
-insertFiles_one = "Вставить {{count}} файл после страницы {{page}}"
-insertFiles_other = "Вставить {{count}} файлов после страницы {{page}}"
-insertPageBreaks_one = "Вставить {{count}} разрыв страницы"
-insertPageBreaks_other = "Вставить {{count}} разрывов страниц"
-insertPageBreaksAll = "Вставить разрывы страниц после всех страниц"
-removeAllSplits = "Удалить все разделения"
-removeSplitAt = "Удалить разделение в позиции {{position}}"
-removeSplits_one = "Удалить {{count}} разделение"
-removeSplits_other = "Удалить {{count}} разделений"
-reorderPages = "Изменить порядок страниц"
-rotatePageLeft = "Повернуть страницу влево"
-rotatePageRight = "Повернуть страницу вправо"
-rotatePagesLeft_one = "Повернуть {{count}} страницу влево"
-rotatePagesLeft_other = "Повернуть {{count}} страниц влево"
-rotatePagesRight_one = "Повернуть {{count}} страницу вправо"
-rotatePagesRight_other = "Повернуть {{count}} страниц вправо"
-splitAllPages = "Разделить все страницы"
-toggleSplits_one = "Переключить {{count}} позицию разделения"
-toggleSplits_other = "Переключить {{count}} позиций разделения"
-
-[pageEditor.emptyState]
-body = "Добавьте файлы, чтобы начать редактирование страниц"
-title = "PDF-файлы не загружены"
-
-[pageEditor.fileDropdown]
-addFile = "Добавить файл"
-selectedCount = "Выбрано файлов: {{selected}}/{{total}}"
-untitled = "Без названия"
-
-[pageEditor.toolbar]
-delete = "Удалить выбранное"
-redo = "Повторить"
-rotateLeft = "Повернуть выбранное влево"
-rotateRight = "Повернуть выбранное вправо"
-undo = "Отменить"
-
 [pageExtracter]
 title = "Извлечь страницы"
 
@@ -6815,6 +6802,76 @@ title = "Диапазоны страниц"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → выбирает все страницы"
 title = "Специальные ключевые слова"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "документы"
@@ -7144,24 +7201,6 @@ totalSeats_other = "Итого ({{count}} мест)"
 [payment.upgradeTeam]
 title = "Перейти на Team"
 
-[pdfCommentAgent]
-submit = "Сгенерировать комментарии"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Опишите, что должен прокомментировать AI"
-failed = "Не удалось сгенерировать комментарии"
-tooLong = "Запрос слишком длинный (максимум {{max}} символов)"
-
-[pdfCommentAgent.prompt]
-label = "Что должен прокомментировать AI?"
-placeholder = "например, пометьте все неоднозначные даты и предложите уточнения"
-
-[pdfCommentAgent.results]
-title = "PDF с комментариями"
-
-[pdfCommentAgent.settings]
-title = "Инструкции для комментариев"
-
 [pdfOrganiser]
 placeholder = "(например, 1,3,2 или 4-8,2,10-12 или 2n-1)"
 tags = "двусторонняя печать,четные,нечетные,сортировка,перемещение"
@@ -7347,6 +7386,7 @@ nothingSelectedHint = "Нажмите любой текст, изображен�
 ocrDocumentChanged = "Документ изменился во время выполнения OCR. Запустите OCR снова, чтобы включить последние изменения."
 ocrInvalidResult = "OCR не вернул PDF. Повторите попытку."
 ocrNoLanguages = "На сервере не установлены языки OCR."
+ocrProtected = "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing."
 ocrRunning = "Распознавание текста..."
 ocrUnavailable = "OCR недоступен на этом сервере."
 oneImage = "Изображение"
@@ -7389,13 +7429,8 @@ pageNumber = "Страница {{page}}"
 renderFailed = "Не удалось отобразить страницу"
 
 [pdfTextEditor.password]
-cancel = "Отмена"
 incorrect = "Неверный пароль — повторите попытку."
 label = "Пароль"
-open = "Открыть"
-protected = "Этот PDF защищен паролем."
-protectedNamed = "\"{{fileName}}\" защищен паролем."
-title = "Требуется пароль"
 
 [pdfTextEditor.rulers]
 guide = "Направляющая выравнивания на {{value}} {{unit}} — перетащите на линейку, чтобы удалить"
@@ -7994,6 +8029,7 @@ before = "Установите"
 title = "Подключение Stirling не настроено"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Не удалось открыть браузер. Откройте «Использование и оплата» на подключенном сервере, чтобы связать учетную запись."
 
 [portal.accountLink.panel]
@@ -8117,9 +8153,6 @@ limit = "Месячный лимит расходов {{amount}}/мес. Обр�
 limitNoCap = "Без лимита расходов. Обработка не будет приостанавливаться. Счета выставляются ежемесячно."
 
 [portal.billing.chip]
-invoices = "Счета"
-nav = "Разделы"
-payment = "Оплата"
 plan = "План"
 procurement = "Закупки"
 usage = "Использование"
@@ -8178,9 +8211,22 @@ pdfs = "Обработано PDF"
 users = "Пользователи"
 
 [portal.billing.enterprise]
+active = "Agreement active through {{date}}"
 cta = "Получить корпоративное предложение"
+included = "Included in Enterprise"
+payment_pending = "Payment pending · access through {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF over agreed volume"
+pdfsOver_other = "{{count}} PDFs over agreed volume"
+pdfsUsed_one = "{{count}} PDF processed"
+pdfsUsed_other = "{{count}} PDFs processed"
+period = "Agreement period: {{start}} – {{end}}"
 sub = "Развертывание в изолированной среде, SCIM, резидентность данных, SLA по времени доступности и соответствующее соглашение."
 title = "Запускаете Stirling в регулируемой среде?"
+trial = "{{days}}-day trial · ends {{date}}"
+usersAgreed = "{{used}} / {{agreed}} agreed users"
+usersOver_one = "{{count}} user over agreed quantity"
+usersOver_other = "{{count}} users over agreed quantity"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Не удалось начать оформление"
@@ -11160,6 +11206,7 @@ tags = "редактирование,скрыть,закрасить черны�
 title = "Редактировать"
 
 [redact.auto]
+caseSensitiveLabel = "Case Sensitive Matching"
 colorLabel = "Цвет рамки"
 convertPDFToImageLabel = "Преобразовать PDF в PDF-изображение"
 customPaddingLabel = "Пользовательский отступ"
@@ -11194,6 +11241,10 @@ automaticDisabledTooltip = "Выберите файлы в файловом ме
 manual = "Вручную"
 mode = "Режим"
 title = "Метод редактирования"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
+title = "Case Sensitive Matching"
 
 [redact.tooltip.advanced.color]
 text = "Настройте внешний вид рамок сокрытия. Чёрный — стандарт, но можно выбрать любой цвет. Отступ добавляет пространство вокруг найденного текста."
@@ -11396,7 +11447,19 @@ text = "Укажите, какие страницы удалить из PDF. М�
 title = "Выбор страниц"
 
 [removePassword]
-desc = "Удалите защиту паролем из вашего PDF-документа."
+appliesTo = "Set on {{count}} of {{total}} PDFs"
+batchRemoved = "Entered passwords removed where set. Blank fields kept unchanged."
+bothRemoved = "Both passwords and restrictions removed."
+checkingProtection = "Checking protection…"
+keepBlank = "Leave a field blank to keep that password."
+notSet = "Not set"
+openingOnlyRemoved = "Opening password removed."
+openWithReaderFirst = "Reopen this PDF using its opening password before removing only the permissions password."
+ownerOnlyRemoved = "Permissions password and restrictions removed."
+ownerRemoved = "Permissions password and restrictions removed. Opening password kept."
+protectionUnavailable = "Unable to check protection"
+selectiveHelp = "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions."
+selectPasswords = "Passwords to remove"
 submit = "Удалить пароль"
 tags = "безопасность,расшифровка,защита,удаление пароля"
 title = "Удалить пароль"
@@ -11407,13 +11470,9 @@ failed = "Произошла ошибка при удалении пароля �
 [removePassword.password]
 label = "Текущий пароль"
 placeholder = "Введите текущий пароль"
-stepTitle = "Удалить пароль"
 
 [removePassword.results]
 title = "Расшифрованные PDF"
-
-[removePassword.tooltip]
-description = "Для снятия защиты паролем требуется пароль, которым был зашифрован PDF. Это расшифрует документ, сделав его доступным без пароля."
 
 [reorganizePages]
 submit = "Изменить порядок страниц"
@@ -12054,6 +12113,7 @@ title = "Рабочее пространство"
 loginIncomplete = "Не удалось завершить вход"
 noSaasServer = "Сервер SaaS не настроен"
 noServer = "Сервер не настроен"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Сбой входа в SaaS"
 saasLoginIncomplete = "Не удалось завершить вход в SaaS"
 selfHostedLoginFailed = "Сбой входа на самостоятельно размещенный сервер"
@@ -13905,6 +13965,11 @@ title = "Текст водяного знака"
 image = "Изображение"
 text = "Текст"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Ваши предыдущие файлы больше не хранятся на этом устройстве."
 partial = "Восстановлено {{restored}} из {{total}} файлов. Остальные больше не хранятся на этом устройстве."
@@ -13915,16 +13980,13 @@ annotations = "Аннотации"
 applyRedactionsFirst = "Сначала примените скрытие данных"
 closeAll = "Закрыть все файлы"
 closePdf = "Закрыть PDF"
-deleteSelected = "Удалить выбранные страницы"
 deselectAll = "Снять выделение"
 downloadAll = "Скачать все"
 exitRedaction = "Выйти из режима скрытия данных"
-exportAll = "Экспортировать PDF"
-exportSelected = "Экспортировать выбранные страницы"
 formFill = "Редактор форм"
 hideToolbar = "Скрыть панель инструментов"
 moreActions = "Дополнительные действия"
-multiTool = "Мультиинструмент"
+pageEditor = "Page Editor"
 panMode = "Режим перемещения"
 print = "Печать PDF"
 readAloud = "Читать вслух"
@@ -13938,7 +14000,6 @@ rulerSettings = "Настройки масштаба"
 save = "Сохранить"
 saveAll = "Сохранить все"
 saveAs = "Сохранить как"
-saveChanges = "Сохранить изменения"
 search = "Поиск по PDF"
 selectAll = "Выбрать все"
 selectByNumber = "Выбрать по номерам страниц"

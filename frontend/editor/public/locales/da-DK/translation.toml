@@ -55,7 +55,9 @@ keepWorking = "Fortsæt med at arbejde"
 loading = "Laster..."
 loginAgreementAccept = "Accepter"
 loginAgreementDecline = "Afvis"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Denne meddelelse er leveret af din administrator, ikke af Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Login-aftale"
 logOut = "Log ud"
 marginTooltip = "Afstand mellem sidetallet og sidens kant."
@@ -299,7 +301,6 @@ title = "Resultater for sidetal"
 
 [addPassword]
 desc = "Kryptér dit PDF-dokument med en adgangskode."
-submit = "Kryptér"
 tags = "krypter,adgangskode,lås,sikker,beskyt,sikkerhed,kryptering,beskyttelse,fortrolig,privat,begræns adgang"
 title = "Tilføj Adgangskode"
 
@@ -311,17 +312,6 @@ label = "Længde på krypteringsnøgle"
 
 [addPassword.error]
 failed = "Der opstod en fejl under kryptering af PDF'en."
-
-[addPassword.passwords]
-stepTitle = "Adgangskoder og kryptering"
-
-[addPassword.passwords.owner]
-label = "Ejeradgangskode"
-placeholder = "Indtast ejeradgangskode"
-
-[addPassword.passwords.user]
-label = "Brugeradgangskode"
-placeholder = "Indtast brugeradgangskode"
 
 [addPassword.results]
 title = "Krypterede PDF'er"
@@ -1627,6 +1617,7 @@ title = "Genstart påkrævet"
 [admin.settings.security]
 authentication = "Godkendelse"
 description = "Konfigurer godkendelse, loginadfærd og sikkerhedspolitikker."
+pdfPermissions = "PDF permissions"
 title = "Sikkerhed"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Deaktivér CSRF-beskyttelse"
 [admin.settings.security.enableLogin]
 description = "Kræv, at brugere logger ind, før de får adgang til applikationen"
 label = "Aktivér login"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs."
+label = "Honor PDF permissions"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Avancerede indstillinger"
@@ -1938,9 +1933,6 @@ wrapUp = "Det var admin-rundvisningen! Du har set enterprise-funktionerne, der g
 [adminUserSettings]
 admin = "Administrer"
 title = "Brugerkontrolindstillinger"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Arabisk"
@@ -3173,12 +3165,14 @@ unknown = "Ukendt"
 
 [changePermissions]
 desc = "Skift dokumentbegrænsninger og tilladelser."
+loading = "Loading current permissions..."
 submit = "Ændre Tilladelser"
 tags = "tilladelser,begrænsninger,rettigheder,adgangskontrol,tillad,afvis,udskrivning,kopiering,redigering,ændr tilladelser,sikkerhedsindstillinger,brugerrettigheder"
 title = "Ændre Tilladelser"
 
 [changePermissions.error]
 failed = "Der opstod en fejl under ændring af PDF-tilladelser."
+readFailed = "Could not read this PDF's current permissions. Set the restrictions manually before applying changes."
 
 [changePermissions.permissions.preventAssembly]
 label = "Forhindre samling af dokument"
@@ -3219,21 +3213,16 @@ text = "For at gøre disse tilladelser uændrerlige skal du bruge værktøjet Ti
 [chat.actions]
 copy = "Kopiér besked"
 
-[chat.emptyState]
-text = "Stil et spørgsmål om dine dokumenter, eller få hjælp med PDF-værktøjer."
-
-[chat.fab]
-close = "Luk chat"
-open = "Åbn Stirling AI-assistent"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling-agentindstillinger"
-assistant = "AI-assistent"
 clearChat = "Ryd chat"
 
 [chat.input]
 disclaimer = "AI kan lave fejl. Sørg for at verificere outputtet, før du deler det."
-placeholder = "Hvad vil du gøre?"
 send = "Send besked"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Konvertér disse dokumenter til PDF"
 convertOne = "Konvertér dette dokument til PDF"
 heading = "Kom i gang"
 mergeMany = "Flet disse {{count}} dokumenter til 1"
-moreFiles = "+{{count}} mere"
 openFromComputer = "Åbn fra computer"
-removeFile = "Fjern {{name}}"
 splitOne = "Opdel dette dokument"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Jeg kunne ikke finde de ønskede oplysninger."
 processing = "Behandler ({{outcome}})..."
 unsupported_capability = "Ikke-understøttet funktion: {{capability}}"
 usage_limit_reached = "Du har nået din brugsgrænse. Tjek dine planmuligheder for at fortsætte."
-
-[chat.toolsUsed]
-summary_one = "Kørte 1 værktøj"
-summary_other = "Kørte {{count}} værktøjer"
-unknownTool = "Ukendt værktøj"
 
 [classification.families]
 correspondence = "Korrespondance"
@@ -3664,6 +3646,7 @@ continue = "Fortsæt"
 copied = "Kopieret!"
 copy = "Kopiér"
 copyCode = "Kopiér kode"
+copyFailed = "Copy failed"
 dismiss = "Afvis"
 done = "Færdig"
 enterValue = "Indtast værdi"
@@ -3847,6 +3830,12 @@ unavailable = "ImageMagick er ikke installeret eller aktiveret på denne server"
 filesize = "Filstørrelse"
 quality = "Kvalitet"
 title = "Komprimeringsmetode"
+
+[compress.noReduction]
+multiple = "Compression ran successfully, but {{count}} of {{total}} files can't be compressed any further."
+multipleAtLevel = "Compression at this level made no improvement to {{count}} of {{total}} files. Try a higher compression level."
+single = "Compression ran successfully, but this file can't be compressed any further."
+singleAtLevel = "Compression at this level made no improvement to this file. Try a higher compression level."
 
 [compress.settings]
 desiredSize = "Ønsket filstørrelse"
@@ -4364,6 +4353,10 @@ title = "Opdateret fra disk"
 body = "\"{{name}}\" blev ændret på disken. Den er stor nok til, at genindlæsning vil tage et stykke tid, så versionen her er ikke blevet ændret."
 title = "Fil ændret på disken"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Downloader opdatering..."
 installing = "Installerer opdatering..."
@@ -4491,22 +4484,80 @@ description = "Vælg værktøjet Rediger indholdsfortegnelse for at indlæse arb
 title = "Åbn værktøjet for at begynde at redigere"
 
 [encryptedPdfUnlock]
-description = "Denne PDF er beskyttet med adgangskode. Indtast adgangskoden, så du kan fortsætte arbejdet."
-emptyResponse = "Fjernelse af adgangskode gav ingen fil."
+actionIgnored = "{{action}} restriction ignored"
+actionUnlocked = "{{action}} unlocked for this session"
+advanced = "Advanced"
+allowed = "Allowed"
+annotations = "Annotations"
+authoriseAction = "This PDF requires permission to use {{action}}."
+changeOwnerPassword = "Change permissions password"
+chooseOwnerPassword = "Choose a different password"
+continue = "Continue"
+copyFailed = "Unable to create the copy. Your PDF is unchanged."
+copying = "Copying content"
+editing = "Editing"
+enterPassword = "Enter password"
+ignoredByServer = "Permissions are ignored by this server's settings. The PDF's protection is unchanged."
 incorrectPassword = "Forkert adgangskode"
+lowQualityPrintUnsupported = "This PDF allows low-quality printing only, which this viewer does not support."
+lowResolutionOnly = "Low resolution only"
+manageProtection = "Manage protection"
 missingFile = "Den valgte fil er ikke længere tilgængelig."
+mixedProtection = "These PDFs have separate protection settings. Process them individually."
+newOwnerPassword = "New permissions password"
+notRequired = "Not required"
+openingPassword = "Password to open"
+openingPasswordRemoved = "Opening password removed. Restrictions retained."
+openingRequired = "Enter the password used to open this PDF."
+openPdf = "Open PDF"
+ownerPassword = "Permissions password"
+ownerRequired = "Enter the permissions password to continue."
+ownerTitle = "Enter permissions password"
+passwordRetained = "Kept unchanged"
+passwordsMustDiffer = "The two passwords must be different."
+permissionsUnlocked = "Permissions unlocked for this session"
+prepareFailed = "Unable to prepare this protected PDF for processing."
+printing = "Printing"
+printRestricted = "Printing is restricted. Verify permissions in Manage protection."
+protectedPdf = "Protected PDF"
+protectionRetained = "Protection retained"
+protectionSaved = "Protection saved"
+removePasswordHelp = "Open Remove Password to choose which passwords to remove."
+removeProtection = "Create an unprotected copy"
+replaceProtection = "These settings replace the PDF's current protection."
 required = "Indtast adgangskoden for at fortsætte."
-skip = "Spring over for nu"
-successBody = "Adgangskoden blev fjernet."
-successBodyWithName = "Adgangskode fjernet fra {{fileName}}"
-successTitle = "Adgangskode fjernet"
+requiredStatus = "Required"
+requiredToApply = "Required to apply changes"
+restoreFailed = "Unable to preserve PDF protection. No unprotected result was saved."
+restrictActions = "Restrict actions"
+restricted = "Restricted"
+restrictedActions = "restricted actions"
+restrictedOperation = "This action requires the permissions password."
+retainOwnerVerification = "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it."
+saveProtection = "Save protection"
+securityChangeFailed = "Unable to change protection. Check the permissions password and the new security settings."
+sessionDetails = "Open for this session. The PDF stays protected."
+sessionDetailsLabel = "About session unlocking"
+sessionFailed = "Unable to unlock this PDF. Please try again."
+sessionSuccessBody = "Protection retained."
+sessionSuccessBodyWithName = "Protection retained for {{fileName}}."
+sessionSuccessTitle = "PDF opened"
+sessionTitle = "Open PDF"
+signedReadOnly = "This signed PDF can be viewed, but cannot be edited here."
 title = "Fjern adgangskode for at fortsætte"
+toolUnavailable = "This tool doesn't support encrypted PDFs. Remove the password first."
+toolUnavailableDetails = "Why {{name}} is unavailable"
 unlock = "Lås op og fortsæt"
 unlockAll = "Brug for alle ({{count}})"
 unlockAllPartialFail = "Forkert adgangskode for: {{names}}"
 unlockAllSuccess_one = "Låste {{count}} fil op."
 unlockAllSuccess_other = "Låste {{count}} filer op."
+unlockedForSession = "Unlocked for this session using your permissions password."
 unlockPrompt = "Lås PDF op for at fortsætte"
+unprotectedCopyConsequence = "The copy will have no passwords or restrictions. The original stays protected."
+unsupportedTool = "This tool cannot yet preserve this PDF's protection."
+verifiedForSession = "Verified for this session"
+verifyPermissions = "Verify permissions for this session"
 viewerLocked = "Denne PDF er adgangskodebeskyttet"
 viewerUnlock = "Lås op"
 
@@ -4597,22 +4648,23 @@ viewInViewer = "Vis i fremviser"
 closeFile = "Luk fil"
 
 [fileEditor]
-addFiles = "Tilføj filer"
 closedFile = "Lukkede {{name}}"
 couldNotSave = "Kunne ikke gemme {{name}}"
-filesAdded_one = "Tilføjede {{count}} fil"
-filesAdded_other = "Tilføjede {{count}} filer"
 filesReordered_one = "Fil omarrangeret"
 filesReordered_other = "{{count}} filer omarrangeret"
 loadedFromStorage_one = "Indlæste {{count}} fil fra lager"
 loadedFromStorage_other = "Indlæste {{count}} filer fra lager"
 loadFromStorageFailed = "Kunne ikke indlæse nogle filer fra lager"
 pinnedFile = "Fastgjorde {{name}}"
-processFilesFailed = "Kunne ikke behandle filer"
 savedAndClosed = "Gemte og lukkede {{name}}"
 saveFailed = "Gemning mislykkedes"
 unpinnedFile = "Frigjorde {{name}}"
 unzipping = "Udpakker {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Fejl ved udpakning af {{name}}"
@@ -4729,7 +4781,6 @@ dataLostBody = "Denne browser mistede denne fils indhold. Upload den igen for at
 dataLostTitle = "Fildata er utilgængelige"
 downloadFailed = "Download mislykkedes"
 dropHint = "Åbn filer for at komme i gang"
-dropToAdd = "Slip filer for at tilføje"
 duplicateFailed = "Kunne ikke duplikere fil"
 expand = "Udvid sidepanel"
 googleDrive = "Google Drive"
@@ -5251,6 +5302,7 @@ rescanFields = "Scan felter igen"
 rescanFormFields = "Scan formularfelter igen"
 save = "Gem"
 saveShortcut = "Ctrl+S for at gemme"
+saving = "Saving..."
 selectOptionPlaceholder = "— vælg —"
 skippedEdits_one = "1 ændring kunne ikke anvendes:"
 skippedEdits_other = "{{count}} ændringer kunne ikke anvendes:"
@@ -5258,9 +5310,7 @@ skippedEditsTruncated = "{{count}} mere ikke vist."
 unsavedChanges = "Ikke-gemte ændringer"
 
 [formFill.create]
-commit = "Tilføj {{count}} felt(er) til PDF"
 empty = "Der er endnu ikke tegnet nogen felter."
-failed = "Kunne ikke tilføje felter"
 goToField = "Gå til dette felt"
 hint = "Vælg en felttype, og tegn den derefter på siden."
 placing = "Tegn et {{type}}-felt på siden. Tryk på Esc for at stoppe."
@@ -5334,7 +5384,6 @@ modify = "Rediger"
 commit = "Gem {{count}} ændring(er)"
 delete = "Slet"
 empty = "Denne PDF har endnu ingen formularfelter."
-failed = "Kunne ikke gemme ændringer"
 groupSizeHint = "Brug Størrelse på valgmulighed"
 hint = "Vælg et felt for at redigere dets egenskaber, træk det på siden, eller slet det."
 restore = "Gendan"
@@ -5732,11 +5781,6 @@ title = "Overlejr PDF'er"
 desc = "Flet flere sider af et PDF-dokument til en enkelt side"
 tags = "layout,arranger,kombiner,N-up,2-up,4-up,flere pr. side,sider pr. ark,layout sider,flise,gitterlayout,flersidet layout,kombiner på side,handout"
 title = "Multi-Side Layout"
-
-[home.pdfCommentAgent]
-desc = "Bed AI om at annotere en PDF med klisternote-kommentarer baseret på din prompt"
-tags = "AI,agent,kommentar,annoter,klisternote,gennemgang,feedback,noter"
-title = "Tilføj AI-kommentarer"
 
 [home.pdfOrganiser]
 tags = "organiser,omarranger,omorganiser,arranger sider,sorter,flyt sider,slet sider,fjern sider,sideadministration,sideorganisator,omsekvenser"
@@ -6595,63 +6639,6 @@ yourCloudAccess = "Du bliver teammedlem og mister ejeradgang."
 deselectAll = "Ingen"
 selectAll = "Marker alle"
 
-[pageEditor]
-dragPreviewAlt = "Trækker"
-filePosition = "Position {{position}}"
-pageLabel = "Side {{page}}"
-title = "Sideeditor"
-
-[pageEditor.actions]
-deletePage = "Slet side"
-insertFileAfter = "Indsæt fil efter"
-moveLeft = "Flyt til venstre"
-moveRight = "Flyt til højre"
-rotateLeft = "Roter til venstre"
-rotateRight = "Roter til højre"
-splitAfter = "Opdel efter"
-
-[pageEditor.commands]
-addSplitAt = "Tilføj opdeling ved position {{position}}"
-addSplits_one = "Tilføj {{count}} opdeling"
-addSplits_other = "Tilføj {{count}} opdelinger"
-deletePages_one = "Slet {{count}} side"
-deletePages_other = "Slet {{count}} sider"
-insertFiles_one = "Indsæt {{count}} fil efter side {{page}}"
-insertFiles_other = "Indsæt {{count}} filer efter side {{page}}"
-insertPageBreaks_one = "Indsæt {{count}} sideskift"
-insertPageBreaks_other = "Indsæt {{count}} sideskift"
-insertPageBreaksAll = "Indsæt sideskift efter alle sider"
-removeAllSplits = "Fjern alle opdelinger"
-removeSplitAt = "Fjern opdeling ved position {{position}}"
-removeSplits_one = "Fjern {{count}} opdeling"
-removeSplits_other = "Fjern {{count}} opdelinger"
-reorderPages = "Omarranger sider"
-rotatePageLeft = "Roter side til venstre"
-rotatePageRight = "Roter side til højre"
-rotatePagesLeft_one = "Roter {{count}} side til venstre"
-rotatePagesLeft_other = "Roter {{count}} sider til venstre"
-rotatePagesRight_one = "Roter {{count}} side til højre"
-rotatePagesRight_other = "Roter {{count}} sider til højre"
-splitAllPages = "Opdel alle sider"
-toggleSplits_one = "Slå {{count}} opdelingsposition til/fra"
-toggleSplits_other = "Slå {{count}} opdelingspositioner til/fra"
-
-[pageEditor.emptyState]
-body = "Tilføj filer for at begynde at redigere sider"
-title = "Ingen PDF-filer indlæst"
-
-[pageEditor.fileDropdown]
-addFile = "Tilføj fil"
-selectedCount = "{{selected}}/{{total}} filer valgt"
-untitled = "Uden titel"
-
-[pageEditor.toolbar]
-delete = "Slet valgte"
-redo = "Gentag"
-rotateLeft = "Rotér valgte til venstre"
-rotateRight = "Rotér valgte til højre"
-undo = "Fortryd"
-
 [pageExtracter]
 title = "Udtræk Sider"
 
@@ -6815,6 +6802,76 @@ title = "Sideintervaller"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → vælger alle sider"
 title = "Særlige nøgleord"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "dokumenter"
@@ -7144,24 +7201,6 @@ totalSeats_other = "I alt ({{count}} pladser)"
 [payment.upgradeTeam]
 title = "Opgrader til Team"
 
-[pdfCommentAgent]
-submit = "Generér kommentarer"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Beskriv venligst, hvad AI'en skal kommentere på"
-failed = "Kunne ikke generere kommentarer"
-tooLong = "Prompten er for lang (maks. {{max}} tegn)"
-
-[pdfCommentAgent.prompt]
-label = "Hvad skal AI'en kommentere på?"
-placeholder = "fx Markér uklare datoer og foreslå præciseringer"
-
-[pdfCommentAgent.results]
-title = "Kommenteret PDF"
-
-[pdfCommentAgent.settings]
-title = "Kommentarinstruktioner"
-
 [pdfOrganiser]
 placeholder = "(f.eks. 1,3,2 eller 4-8,2,10-12 eller 2n-1)"
 tags = "duplex,lige,ulige,sortér,flyt"
@@ -7347,6 +7386,7 @@ nothingSelectedHint = "Klik på tekst, billede eller form på siden for at redig
 ocrDocumentChanged = "Dokumentet blev ændret, mens OCR kørte. Kør OCR igen for at inkludere dine seneste ændringer."
 ocrInvalidResult = "OCR returnerede ikke en PDF. Prøv igen."
 ocrNoLanguages = "Der er ikke installeret nogen OCR-sprog på serveren."
+ocrProtected = "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing."
 ocrRunning = "Genkender tekst..."
 ocrUnavailable = "OCR er ikke tilgængelig på denne server."
 oneImage = "Billede"
@@ -7389,13 +7429,8 @@ pageNumber = "Side {{page}}"
 renderFailed = "Kunne ikke gengive side"
 
 [pdfTextEditor.password]
-cancel = "Annuller"
 incorrect = "Forkert adgangskode - prøv igen."
 label = "Adgangskode"
-open = "Åbn"
-protected = "Denne PDF er adgangskodebeskyttet."
-protectedNamed = "\"{{fileName}}\" er adgangskodebeskyttet."
-title = "Adgangskode påkrævet"
 
 [pdfTextEditor.rulers]
 guide = "Justeringshjælpelinje ved {{value}} {{unit}} - træk den over på en lineal for at fjerne"
@@ -7994,6 +8029,7 @@ before = "Indstil"
 title = "Stirling-forbindelse ikke konfigureret"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Kunne ikke åbne din browser. Åbn Forbrug og fakturering på din forbundne server for at linke en konto."
 
 [portal.accountLink.panel]
@@ -8117,9 +8153,6 @@ limit = "Månedlig forbrugsgrænse {{amount}}/md. Behandling sættes på pause v
 limitNoCap = "Ingen forbrugsgrænse. Behandling sættes ikke på pause. Fakturaer udsendes månedligt."
 
 [portal.billing.chip]
-invoices = "Fakturaer"
-nav = "Sektioner"
-payment = "Betaling"
 plan = "Plan"
 procurement = "Indkøb"
 usage = "Forbrug"
@@ -8178,9 +8211,22 @@ pdfs = "PDFs behandlet"
 users = "Brugere"
 
 [portal.billing.enterprise]
+active = "Agreement active through {{date}}"
 cta = "Få et enterprise-tilbud"
+included = "Included in Enterprise"
+payment_pending = "Payment pending · access through {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF over agreed volume"
+pdfsOver_other = "{{count}} PDFs over agreed volume"
+pdfsUsed_one = "{{count}} PDF processed"
+pdfsUsed_other = "{{count}} PDFs processed"
+period = "Agreement period: {{start}} – {{end}}"
 sub = "Air-gapped udrulning, SCIM, data residency, uptime SLA'er og en aftale, der matcher."
 title = "Kører du Stirling i et reguleret miljø?"
+trial = "{{days}}-day trial · ends {{date}}"
+usersAgreed = "{{used}} / {{agreed}} agreed users"
+usersOver_one = "{{count}} user over agreed quantity"
+usersOver_other = "{{count}} users over agreed quantity"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Kunne ikke starte checkout"
@@ -11160,6 +11206,7 @@ tags = "Tilslør,Skjul,sortér ud,sort,markør,skjult,automatisk tilsløring,man
 title = "Tilslør"
 
 [redact.auto]
+caseSensitiveLabel = "Case Sensitive Matching"
 colorLabel = "Boksfarve"
 convertPDFToImageLabel = "Konvertér PDF til PDF-billede"
 customPaddingLabel = "Brugerdefineret ekstra afstand"
@@ -11194,6 +11241,10 @@ automaticDisabledTooltip = "Vælg filer i filhåndteringen for at maskere flere 
 manual = "Manuel"
 mode = "Tilstand"
 title = "Maskeringsmetode"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
+title = "Case Sensitive Matching"
 
 [redact.tooltip.advanced.color]
 text = "Tilpas udseendet af maskeringsbokse. Sort er standard, men du kan vælge enhver farve. Afstand tilføjer ekstra plads omkring den fundne tekst."
@@ -11396,7 +11447,19 @@ text = "Angiv hvilke sider, der skal fjernes fra din PDF. Du kan vælge enkelte 
 title = "Sidevalg"
 
 [removePassword]
-desc = "Fjern adgangskodebeskyttelse fra dit PDF-dokument."
+appliesTo = "Set on {{count}} of {{total}} PDFs"
+batchRemoved = "Entered passwords removed where set. Blank fields kept unchanged."
+bothRemoved = "Both passwords and restrictions removed."
+checkingProtection = "Checking protection…"
+keepBlank = "Leave a field blank to keep that password."
+notSet = "Not set"
+openingOnlyRemoved = "Opening password removed."
+openWithReaderFirst = "Reopen this PDF using its opening password before removing only the permissions password."
+ownerOnlyRemoved = "Permissions password and restrictions removed."
+ownerRemoved = "Permissions password and restrictions removed. Opening password kept."
+protectionUnavailable = "Unable to check protection"
+selectiveHelp = "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions."
+selectPasswords = "Passwords to remove"
 submit = "Fjern adgangskode"
 tags = "sikker,Dekryptér,sikkerhed,fjern adgangskode,slet adgangskode"
 title = "Fjern adgangskode"
@@ -11407,13 +11470,9 @@ failed = "Der opstod en fejl under fjernelse af adgangskoden fra PDF'en."
 [removePassword.password]
 label = "Nuværende Adgangskode"
 placeholder = "Indtast nuværende adgangskode"
-stepTitle = "Fjern Adgangskode"
 
 [removePassword.results]
 title = "Dekrypterede PDF'er"
-
-[removePassword.tooltip]
-description = "Fjernelse af adgangskodebeskyttelse kræver den adgangskode, der blev brugt til at kryptere PDF'en. Dette dekrypterer dokumentet, så det kan tilgås uden adgangskode."
 
 [reorganizePages]
 submit = "Omorganisér sider"
@@ -12054,6 +12113,7 @@ title = "Arbejdsområde"
 loginIncomplete = "Kunne ikke fuldføre login"
 noSaasServer = "Ingen SaaS-server konfigureret"
 noServer = "Ingen server konfigureret"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS-login mislykkedes"
 saasLoginIncomplete = "Kunne ikke fuldføre SaaS-login"
 selfHostedLoginFailed = "Selvhostet login mislykkedes"
@@ -13905,6 +13965,11 @@ title = "Vandmærketekst"
 image = "Billede"
 text = "Tekst"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Dine tidligere filer er ikke længere gemt på denne enhed."
 partial = "Gendannede {{restored}} af {{total}} filer. Resten er ikke længere gemt på denne enhed."
@@ -13915,16 +13980,13 @@ annotations = "Anmærkninger"
 applyRedactionsFirst = "Anvend maskeringer først"
 closeAll = "Luk alle filer"
 closePdf = "Luk PDF"
-deleteSelected = "Slet valgte sider"
 deselectAll = "Fravælg alle"
 downloadAll = "Download alle"
 exitRedaction = "Afslut maskeringstilstand"
-exportAll = "Eksporter PDF"
-exportSelected = "Eksporter valgte sider"
 formFill = "Formulareditor"
 hideToolbar = "Skjul værktøjslinje"
 moreActions = "Flere handlinger"
-multiTool = "Multiværktøj"
+pageEditor = "Page Editor"
 panMode = "Panoreringstilstand"
 print = "Udskriv PDF"
 readAloud = "Oplæsning"
@@ -13938,7 +14000,6 @@ rulerSettings = "Målestoksindstillinger"
 save = "Gem"
 saveAll = "Gem alle"
 saveAs = "Gem som"
-saveChanges = "Gem ændringer"
 search = "Søg i PDF"
 selectAll = "Vælg alle"
 selectByNumber = "Vælg efter sidetal"

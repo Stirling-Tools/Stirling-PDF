@@ -55,7 +55,9 @@ keepWorking = "继续编辑"
 loading = "འཇུག་བཞིན་པ..."
 loginAgreementAccept = "接受"
 loginAgreementDecline = "拒绝"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "此通知由您的管理员提供，而非 Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "登录协议"
 logOut = "退出登录"
 marginTooltip = "页码与页面边缘之间的距离。"
@@ -299,7 +301,6 @@ title = "页码结果"
 
 [addPassword]
 desc = "使用密码加密您的 PDF 文档。"
-submit = "གསང་བསྒྱུར།"
 tags = "加密,密码,锁定,安全,保护,安全性,加密,防护,机密,私密,限制访问"
 title = "གསང་ཚིག་སྣོན་པ།"
 
@@ -311,17 +312,6 @@ label = "加密密钥长度"
 
 [addPassword.error]
 failed = "加密 PDF 时发生错误。"
-
-[addPassword.passwords]
-stepTitle = "密码与加密"
-
-[addPassword.passwords.owner]
-label = "所有者密码"
-placeholder = "输入所有者密码"
-
-[addPassword.passwords.user]
-label = "用户密码"
-placeholder = "输入用户密码"
 
 [addPassword.results]
 title = "已加密的 PDF"
@@ -1627,6 +1617,7 @@ title = "需要重启"
 [admin.settings.security]
 authentication = "身份验证"
 description = "配置身份验证、登录行为和安全策略。"
+pdfPermissions = "PDF permissions"
 title = "安全"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "禁用 CSRF 保护"
 [admin.settings.security.enableLogin]
 description = "要求用户在访问应用前登录"
 label = "启用登录"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs."
+label = "Honor PDF permissions"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "高级设置"
@@ -1938,9 +1933,6 @@ wrapUp = "管理员导览到此结束！您已经了解了让 Stirling PDF 成�
 [adminUserSettings]
 admin = "དོ་དམ་པ།"
 title = "སྤྱོད་མཁན་ཚོད་འཛིན་སྒྲིག་འགོད།"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "阿拉伯语"
@@ -3173,12 +3165,14 @@ unknown = "未知"
 
 [changePermissions]
 desc = "更改文档限制和权限。"
+loading = "Loading current permissions..."
 submit = "更改权限"
 tags = "权限,限制,权利,访问控制,允许,拒绝,打印,复制,编辑,修改权限,安全设置,用户权利"
 title = "更改权限"
 
 [changePermissions.error]
 failed = "更改 PDF 权限时发生错误。"
+readFailed = "Could not read this PDF's current permissions. Set the restrictions manually before applying changes."
 
 [changePermissions.permissions.preventAssembly]
 label = "禁止组装文档"
@@ -3219,21 +3213,16 @@ text = "要使这些权限不可更改，请使用添加密码工具设置所有
 [chat.actions]
 copy = "复制消息"
 
-[chat.emptyState]
-text = "询问有关您文档的问题，或获取 PDF 工具帮助。"
-
-[chat.fab]
-close = "关闭聊天"
-open = "打开 Stirling AI 助手"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling 代理选项"
-assistant = "AI 助手"
 clearChat = "清空聊天"
 
 [chat.input]
 disclaimer = "AI 可能会出错。分享前请务必验证输出。"
-placeholder = "你想做什么？"
 send = "发送消息"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "将这些文档转换为 PDF"
 convertOne = "将此文档转换为 PDF"
 heading = "开始使用"
 mergeMany = "将这 {{count}} 个文档合并为 1 个"
-moreFiles = "+{{count}} 更多"
 openFromComputer = "从电脑打开"
-removeFile = "移除 {{name}}"
 splitOne = "拆分此文档"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "我找不到所需信息。"
 processing = "正在处理（{{outcome}}）..."
 unsupported_capability = "不支持的能力：{{capability}}"
 usage_limit_reached = "您已达到使用限制。请查看您的方案选项以继续使用。"
-
-[chat.toolsUsed]
-summary_one = "已运行 1 个工具"
-summary_other = "已运行 {{count}} 个工具"
-unknownTool = "未知工具"
 
 [classification.families]
 correspondence = "通信"
@@ -3664,6 +3646,7 @@ continue = "继续"
 copied = "已复制！"
 copy = "复制"
 copyCode = "复制代码"
+copyFailed = "Copy failed"
 dismiss = "关闭"
 done = "完成"
 enterValue = "输入值"
@@ -3847,6 +3830,12 @@ unavailable = "此服务器未安装或未启用 ImageMagick"
 filesize = "文件大小"
 quality = "质量"
 title = "压缩方式"
+
+[compress.noReduction]
+multiple = "Compression ran successfully, but {{count}} of {{total}} files can't be compressed any further."
+multipleAtLevel = "Compression at this level made no improvement to {{count}} of {{total}} files. Try a higher compression level."
+single = "Compression ran successfully, but this file can't be compressed any further."
+singleAtLevel = "Compression at this level made no improvement to this file. Try a higher compression level."
 
 [compress.settings]
 desiredSize = "期望的文件大小"
@@ -4364,6 +4353,10 @@ title = "已从磁盘更新"
 body = "\"{{name}}\" 已在磁盘上更改。它很大，重新加载需要一段时间，因此此处的版本保持不变。"
 title = "磁盘上的文件已更改"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "正在下载更新..."
 installing = "正在安装更新..."
@@ -4491,22 +4484,80 @@ description = "选择“编辑目录”工具以加载工作区。"
 title = "打开工具开始编辑"
 
 [encryptedPdfUnlock]
-description = "此 PDF 受密码保护。请输入密码以继续处理。"
-emptyResponse = "移除密码未生成文件。"
+actionIgnored = "{{action}} restriction ignored"
+actionUnlocked = "{{action}} unlocked for this session"
+advanced = "Advanced"
+allowed = "Allowed"
+annotations = "Annotations"
+authoriseAction = "This PDF requires permission to use {{action}}."
+changeOwnerPassword = "Change permissions password"
+chooseOwnerPassword = "Choose a different password"
+continue = "Continue"
+copyFailed = "Unable to create the copy. Your PDF is unchanged."
+copying = "Copying content"
+editing = "Editing"
+enterPassword = "Enter password"
+ignoredByServer = "Permissions are ignored by this server's settings. The PDF's protection is unchanged."
 incorrectPassword = "密码错误"
+lowQualityPrintUnsupported = "This PDF allows low-quality printing only, which this viewer does not support."
+lowResolutionOnly = "Low resolution only"
+manageProtection = "Manage protection"
 missingFile = "所选文件已不可用。"
+mixedProtection = "These PDFs have separate protection settings. Process them individually."
+newOwnerPassword = "New permissions password"
+notRequired = "Not required"
+openingPassword = "Password to open"
+openingPasswordRemoved = "Opening password removed. Restrictions retained."
+openingRequired = "Enter the password used to open this PDF."
+openPdf = "Open PDF"
+ownerPassword = "Permissions password"
+ownerRequired = "Enter the permissions password to continue."
+ownerTitle = "Enter permissions password"
+passwordRetained = "Kept unchanged"
+passwordsMustDiffer = "The two passwords must be different."
+permissionsUnlocked = "Permissions unlocked for this session"
+prepareFailed = "Unable to prepare this protected PDF for processing."
+printing = "Printing"
+printRestricted = "Printing is restricted. Verify permissions in Manage protection."
+protectedPdf = "Protected PDF"
+protectionRetained = "Protection retained"
+protectionSaved = "Protection saved"
+removePasswordHelp = "Open Remove Password to choose which passwords to remove."
+removeProtection = "Create an unprotected copy"
+replaceProtection = "These settings replace the PDF's current protection."
 required = "请输入密码以继续。"
-skip = "暂时跳过"
-successBody = "密码移除成功。"
-successBodyWithName = "已从 {{fileName}} 移除密码"
-successTitle = "已移除密码"
+requiredStatus = "Required"
+requiredToApply = "Required to apply changes"
+restoreFailed = "Unable to preserve PDF protection. No unprotected result was saved."
+restrictActions = "Restrict actions"
+restricted = "Restricted"
+restrictedActions = "restricted actions"
+restrictedOperation = "This action requires the permissions password."
+retainOwnerVerification = "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it."
+saveProtection = "Save protection"
+securityChangeFailed = "Unable to change protection. Check the permissions password and the new security settings."
+sessionDetails = "Open for this session. The PDF stays protected."
+sessionDetailsLabel = "About session unlocking"
+sessionFailed = "Unable to unlock this PDF. Please try again."
+sessionSuccessBody = "Protection retained."
+sessionSuccessBodyWithName = "Protection retained for {{fileName}}."
+sessionSuccessTitle = "PDF opened"
+sessionTitle = "Open PDF"
+signedReadOnly = "This signed PDF can be viewed, but cannot be edited here."
 title = "移除密码以继续"
+toolUnavailable = "This tool doesn't support encrypted PDFs. Remove the password first."
+toolUnavailableDetails = "Why {{name}} is unavailable"
 unlock = "解锁并继续"
 unlockAll = "用于全部（{{count}}）"
 unlockAllPartialFail = "密码错误：{{names}}"
 unlockAllSuccess_one = "已解锁 {{count}} 个文件。"
 unlockAllSuccess_other = "已解锁 {{count}} 个文件。"
+unlockedForSession = "Unlocked for this session using your permissions password."
 unlockPrompt = "解锁 PDF 以继续"
+unprotectedCopyConsequence = "The copy will have no passwords or restrictions. The original stays protected."
+unsupportedTool = "This tool cannot yet preserve this PDF's protection."
+verifiedForSession = "Verified for this session"
+verifyPermissions = "Verify permissions for this session"
 viewerLocked = "此 PDF 受密码保护"
 viewerUnlock = "解锁"
 
@@ -4597,22 +4648,23 @@ viewInViewer = "在查看器中查看"
 closeFile = "关闭文件"
 
 [fileEditor]
-addFiles = "添加文件"
 closedFile = "已关闭 {{name}}"
 couldNotSave = "无法保存 {{name}}"
-filesAdded_one = "已添加 {{count}} 个文件"
-filesAdded_other = "已添加 {{count}} 个文件"
 filesReordered_one = "文件已重新排序"
 filesReordered_other = "{{count}} 个文件已重新排序"
 loadedFromStorage_one = "已从存储加载 {{count}} 个文件"
 loadedFromStorage_other = "已从存储加载 {{count}} 个文件"
 loadFromStorageFailed = "从存储加载部分文件失败"
 pinnedFile = "已固定 {{name}}"
-processFilesFailed = "处理文件失败"
 savedAndClosed = "已保存并关闭 {{name}}"
 saveFailed = "保存失败"
 unpinnedFile = "已取消固定 {{name}}"
 unzipping = "正在解压 {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "解压 {{name}} 时出错"
@@ -4729,7 +4781,6 @@ dataLostBody = "此浏览器丢失了此文件的内容。请重新上传以继�
 dataLostTitle = "文件数据不可用"
 downloadFailed = "下载失败"
 dropHint = "打开文件以开始"
-dropToAdd = "拖放文件以添加"
 duplicateFailed = "无法复制文件"
 expand = "展开侧边栏"
 googleDrive = "Google Drive"
@@ -5251,6 +5302,7 @@ rescanFields = "重新扫描字段"
 rescanFormFields = "重新扫描表单字段"
 save = "保存"
 saveShortcut = "Ctrl+S 保存"
+saving = "Saving..."
 selectOptionPlaceholder = "— 选择 —"
 skippedEdits_one = "1 个更改无法应用："
 skippedEdits_other = "{{count}} 个更改无法应用："
@@ -5258,9 +5310,7 @@ skippedEditsTruncated = "还有 {{count}} 个未列出。"
 unsavedChanges = "未保存的更改"
 
 [formFill.create]
-commit = "向 PDF 添加 {{count}} 个字段"
 empty = "尚未绘制字段。"
-failed = "添加字段失败"
 goToField = "转到此字段"
 hint = "选择字段类型，然后在页面上绘制。"
 placing = "在页面上绘制一个 {{type}} 字段。按 Esc 停止。"
@@ -5334,7 +5384,6 @@ modify = "修改"
 commit = "保存 {{count}} 个更改"
 delete = "删除"
 empty = "此 PDF 尚无表单字段。"
-failed = "保存更改失败"
 groupSizeHint = "使用选项大小"
 hint = "选择字段以编辑其属性，在页面上拖动它，或删除它。"
 restore = "恢复"
@@ -5732,11 +5781,6 @@ title = "PDF སྟེང་བརྩེགས།"
 desc = "PDF ཡིག་ཆའི་ཤོག་ངོས་མང་པོ་ཤོག་ངོས་གཅིག་ཏུ་སྡེབ་སྦྱོར་བྱེད་པ།"
 tags = "布局,排列,合并,N-up,2-up,4-up,每页多个,每张纸的页数,布局页面,平铺,网格布局,多页布局,合并到页面,讲义"
 title = "ཤོག་ངོས མང་པོ སྒྲིག"
-
-[home.pdfCommentAgent]
-desc = "根据您的提示，让 AI 为 PDF 添加便签式批注"
-tags = "AI,代理,评论,注释,便签,审阅,反馈,笔记"
-title = "添加 AI 评论"
 
 [home.pdfOrganiser]
 tags = "整理,重新排列,重新排序,排列页面,排序,移动页面,删除页面,移除页面,页面管理,页面整理器,重新排序"
@@ -6595,63 +6639,6 @@ yourCloudAccess = "您将成为团队成员并失去所有者访问权限。"
 deselectAll = "无"
 selectAll = "全部勾选"
 
-[pageEditor]
-dragPreviewAlt = "正在拖动"
-filePosition = "位置 {{position}}"
-pageLabel = "第 {{page}} 页"
-title = "页面编辑器"
-
-[pageEditor.actions]
-deletePage = "删除页面"
-insertFileAfter = "在后面插入文件"
-moveLeft = "左移"
-moveRight = "右移"
-rotateLeft = "向左旋转"
-rotateRight = "向右旋转"
-splitAfter = "在后面拆分"
-
-[pageEditor.commands]
-addSplitAt = "在位置 {{position}} 添加拆分"
-addSplits_one = "添加 {{count}} 个拆分"
-addSplits_other = "添加 {{count}} 个拆分"
-deletePages_one = "删除 {{count}} 页"
-deletePages_other = "删除 {{count}} 页"
-insertFiles_one = "在第 {{page}} 页后插入 {{count}} 个文件"
-insertFiles_other = "在第 {{page}} 页后插入 {{count}} 个文件"
-insertPageBreaks_one = "插入 {{count}} 个分页符"
-insertPageBreaks_other = "插入 {{count}} 个分页符"
-insertPageBreaksAll = "在所有页面后插入分页符"
-removeAllSplits = "移除所有拆分"
-removeSplitAt = "移除位置 {{position}} 的拆分"
-removeSplits_one = "移除 {{count}} 个拆分"
-removeSplits_other = "移除 {{count}} 个拆分"
-reorderPages = "重新排序页面"
-rotatePageLeft = "向左旋转页面"
-rotatePageRight = "向右旋转页面"
-rotatePagesLeft_one = "将 {{count}} 页向左旋转"
-rotatePagesLeft_other = "将 {{count}} 页向左旋转"
-rotatePagesRight_one = "将 {{count}} 页向右旋转"
-rotatePagesRight_other = "将 {{count}} 页向右旋转"
-splitAllPages = "拆分所有页面"
-toggleSplits_one = "切换 {{count}} 个拆分位置"
-toggleSplits_other = "切换 {{count}} 个拆分位置"
-
-[pageEditor.emptyState]
-body = "添加文件以开始编辑页面"
-title = "未加载 PDF 文件"
-
-[pageEditor.fileDropdown]
-addFile = "添加文件"
-selectedCount = "已选择 {{selected}}/{{total}} 个文件"
-untitled = "无标题"
-
-[pageEditor.toolbar]
-delete = "删除所选"
-redo = "重做"
-rotateLeft = "向左旋转所选"
-rotateRight = "向右旋转所选"
-undo = "撤销"
-
 [pageExtracter]
 title = "ཤོག་ངོས་ཕྱིར་འདོན།"
 
@@ -6815,6 +6802,76 @@ title = "页面范围"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → 选择所有页面"
 title = "特殊关键字"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "文档"
@@ -7144,24 +7201,6 @@ totalSeats_other = "总计（{{count}} 个席位）"
 [payment.upgradeTeam]
 title = "升级到 Team"
 
-[pdfCommentAgent]
-submit = "生成评论"
-
-[pdfCommentAgent.error]
-emptyPrompt = "请描述您希望 AI 评论的内容"
-failed = "生成评论失败"
-tooLong = "提示过长（最多 {{max}} 个字符）"
-
-[pdfCommentAgent.prompt]
-label = "AI 应该评论什么？"
-placeholder = "例如：标记任何含糊的日期并提出澄清建议"
-
-[pdfCommentAgent.results]
-title = "已评论的 PDF"
-
-[pdfCommentAgent.settings]
-title = "评论说明"
-
 [pdfOrganiser]
 placeholder = "(དཔེར་ན། 1,3,2 ཡང་ན་ 4-8,2,10-12 ཡང་ན་ 2n-1)"
 tags = "ཤོག་ངོས་གཉིས་མ།,ཨང་གྲངས་ཟུང་ལྡན།,ཨང་གྲངས་ཡ་གྲངས།,གོ་རིམ་སྒྲིག་པ།,སྤོ་བ།"
@@ -7347,6 +7386,7 @@ nothingSelectedHint = "点击页面上的任意文本、图像或形状以在此
 ocrDocumentChanged = "OCR 运行时文档已更改。请再次运行 OCR 以包含最新更改。"
 ocrInvalidResult = "OCR 未返回 PDF。请重试。"
 ocrNoLanguages = "服务器上未安装 OCR 语言。"
+ocrProtected = "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing."
 ocrRunning = "正在识别文本..."
 ocrUnavailable = "此服务器上 OCR 不可用。"
 oneImage = "图片"
@@ -7389,13 +7429,8 @@ pageNumber = "第 {{page}} 页"
 renderFailed = "渲染页面失败"
 
 [pdfTextEditor.password]
-cancel = "取消"
 incorrect = "密码不正确 - 请重试。"
 label = "密码"
-open = "打开"
-protected = "此 PDF 受密码保护。"
-protectedNamed = "\"{{fileName}}\" 受密码保护。"
-title = "需要密码"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}} 处的对齐参考线 - 拖到标尺上可移除"
@@ -7994,6 +8029,7 @@ before = "设置"
 title = "Stirling 连接未配置"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "无法打开您的浏览器。请在已连接的服务器上打开“使用量和账单”以关联账户。"
 
 [portal.accountLink.panel]
@@ -8117,9 +8153,6 @@ limit = "月度支出限额 {{amount}}/月。达到限额时处理会暂停。"
 limitNoCap = "无支出限额。处理不会暂停。发票按月开具。"
 
 [portal.billing.chip]
-invoices = "发票"
-nav = "部分"
-payment = "付款"
 plan = "计划"
 procurement = "采购"
 usage = "使用量"
@@ -8178,9 +8211,22 @@ pdfs = "已处理的 PDF"
 users = "用户"
 
 [portal.billing.enterprise]
+active = "Agreement active through {{date}}"
 cta = "获取企业报价"
+included = "Included in Enterprise"
+payment_pending = "Payment pending · access through {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF over agreed volume"
+pdfsOver_other = "{{count}} PDFs over agreed volume"
+pdfsUsed_one = "{{count}} PDF processed"
+pdfsUsed_other = "{{count}} PDFs processed"
+period = "Agreement period: {{start}} – {{end}}"
 sub = "隔离部署、SCIM、数据驻留、正常运行时间 SLA，以及相匹配的协议。"
 title = "在受监管环境中运行 Stirling？"
+trial = "{{days}}-day trial · ends {{date}}"
+usersAgreed = "{{used}} / {{agreed}} agreed users"
+usersOver_one = "{{count}} user over agreed quantity"
+usersOver_other = "{{count}} users over agreed quantity"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "无法开始结账"
@@ -11160,6 +11206,7 @@ tags = "遮盖,隐藏,涂黑,黑色,标记,隐藏内容,自动遮盖,手动遮�
 title = "遮盖"
 
 [redact.auto]
+caseSensitiveLabel = "Case Sensitive Matching"
 colorLabel = "框颜色"
 convertPDFToImageLabel = "将 PDF 转为 PDF-Image"
 customPaddingLabel = "自定义额外内边距"
@@ -11194,6 +11241,10 @@ automaticDisabledTooltip = "在文件管理器中选择文件以一次性对多�
 manual = "手动"
 mode = "模式"
 title = "遮盖方式"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
+title = "Case Sensitive Matching"
 
 [redact.tooltip.advanced.color]
 text = "自定义遮盖框的外观。黑色为标准，但您可以选择任何颜色。内边距会在找到的文本周围增加额外空间。"
@@ -11396,7 +11447,19 @@ text = "指定要从 PDF 中删除的页面。可选择单页、范围，或使�
 title = "页面选择"
 
 [removePassword]
-desc = "从您的 PDF 文档中移除密码保护。"
+appliesTo = "Set on {{count}} of {{total}} PDFs"
+batchRemoved = "Entered passwords removed where set. Blank fields kept unchanged."
+bothRemoved = "Both passwords and restrictions removed."
+checkingProtection = "Checking protection…"
+keepBlank = "Leave a field blank to keep that password."
+notSet = "Not set"
+openingOnlyRemoved = "Opening password removed."
+openWithReaderFirst = "Reopen this PDF using its opening password before removing only the permissions password."
+ownerOnlyRemoved = "Permissions password and restrictions removed."
+ownerRemoved = "Permissions password and restrictions removed. Opening password kept."
+protectionUnavailable = "Unable to check protection"
+selectiveHelp = "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions."
+selectPasswords = "Passwords to remove"
 submit = "移除密码"
 tags = "བདེ་འཇགས།,གསང་སྡོམ་གྲོལ་བ།,ཉེན་སྲུང་།,གསང་ཚིག་མེད་པ།,གསང་ཚིག་སུབ་པ།"
 title = "གསང་ཚིག་སུབ་པ།"
@@ -11407,13 +11470,9 @@ failed = "从 PDF 移除密码时发生错误。"
 [removePassword.password]
 label = "当前密码"
 placeholder = "输入当前密码"
-stepTitle = "移除密码"
 
 [removePassword.results]
 title = "已解密的 PDF"
-
-[removePassword.tooltip]
-description = "移除密码保护需要用于加密 PDF 的密码。这将解密文档，使其在无密码情况下可访问。"
 
 [reorganizePages]
 submit = "重新整理页面"
@@ -12054,6 +12113,7 @@ title = "工作区"
 loginIncomplete = "完成登录失败"
 noSaasServer = "未配置 SaaS 服务器"
 noServer = "未配置服务器"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS 登录失败"
 saasLoginIncomplete = "完成 SaaS 登录失败"
 selfHostedLoginFailed = "自托管登录失败"
@@ -13905,6 +13965,11 @@ title = "水印文本"
 image = "图像"
 text = "文本"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "你之前的文件不再存储在此设备上。"
 partial = "已恢复 {{total}} 个文件中的 {{restored}} 个。其余文件不再存储在此设备上。"
@@ -13915,16 +13980,13 @@ annotations = "注释"
 applyRedactionsFirst = "请先应用涂黑处理"
 closeAll = "关闭所有文件"
 closePdf = "关闭 PDF"
-deleteSelected = "删除所选页面"
 deselectAll = "取消全选"
 downloadAll = "全部下载"
 exitRedaction = "退出涂黑模式"
-exportAll = "导出 PDF"
-exportSelected = "导出所选页面"
 formFill = "表单编辑器"
 hideToolbar = "隐藏工具栏"
 moreActions = "更多操作"
-multiTool = "多功能工具"
+pageEditor = "Page Editor"
 panMode = "平移模式"
 print = "打印 PDF"
 readAloud = "朗读"
@@ -13938,7 +14000,6 @@ rulerSettings = "比例设置"
 save = "保存"
 saveAll = "全部保存"
 saveAs = "另存为"
-saveChanges = "保存更改"
 search = "搜索 PDF"
 selectAll = "全选"
 selectByNumber = "按页码选择"

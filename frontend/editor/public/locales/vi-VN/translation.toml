@@ -55,7 +55,9 @@ keepWorking = "Tiếp tục làm việc"
 loading = "Đang tải..."
 loginAgreementAccept = "Chấp nhận"
 loginAgreementDecline = "Từ chối"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Thông báo này do quản trị viên của bạn cung cấp, không phải Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Thỏa thuận đăng nhập"
 logOut = "Đăng xuất"
 marginTooltip = "Khoảng cách giữa số trang và mép trang."
@@ -299,7 +301,6 @@ title = "Kết quả đánh số trang"
 
 [addPassword]
 desc = "Mã hóa tài liệu PDF của bạn bằng mật khẩu."
-submit = "Mã hóa"
 tags = "mã hóa,mật khẩu,khóa,bảo mật,bảo vệ,an ninh,mã hóa,bảo vệ,bí mật,riêng tư,hạn chế truy cập"
 title = "Thêm mật khẩu"
 
@@ -311,17 +312,6 @@ label = "Độ dài khóa mã hóa"
 
 [addPassword.error]
 failed = "Đã xảy ra lỗi khi mã hóa PDF."
-
-[addPassword.passwords]
-stepTitle = "Mật khẩu & Mã hóa"
-
-[addPassword.passwords.owner]
-label = "Mật khẩu chủ sở hữu"
-placeholder = "Nhập mật khẩu chủ sở hữu"
-
-[addPassword.passwords.user]
-label = "Mật khẩu người dùng"
-placeholder = "Nhập mật khẩu người dùng"
 
 [addPassword.results]
 title = "PDF đã mã hóa"
@@ -1627,6 +1617,7 @@ title = "Cần khởi động lại"
 [admin.settings.security]
 authentication = "Xác thực"
 description = "Cấu hình xác thực, hành vi đăng nhập và chính sách bảo mật."
+pdfPermissions = "PDF permissions"
 title = "Bảo mật"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Tắt bảo vệ CSRF"
 [admin.settings.security.enableLogin]
 description = "Yêu cầu người dùng đăng nhập trước khi truy cập ứng dụng"
 label = "Bật đăng nhập"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs."
+label = "Honor PDF permissions"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Cài đặt nâng cao"
@@ -1938,9 +1933,6 @@ wrapUp = "Đó là chuyến tham quan dành cho admin! Bạn đã xem các tính
 [adminUserSettings]
 admin = "Quản trị viên"
 title = "Cài đặt kiểm soát người dùng"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Tiếng Ả Rập"
@@ -3173,12 +3165,14 @@ unknown = "Không rõ"
 
 [changePermissions]
 desc = "Thay đổi giới hạn và quyền của tài liệu."
+loading = "Loading current permissions..."
 submit = "Thay đổi quyền"
 tags = "quyền,hạn chế,quyền truy cập,kiểm soát truy cập,cho phép,từ chối,in,sao chép,chỉnh sửa,sửa quyền,cài đặt bảo mật,quyền người dùng"
 title = "Thay đổi quyền"
 
 [changePermissions.error]
 failed = "Đã xảy ra lỗi khi thay đổi quyền PDF."
+readFailed = "Could not read this PDF's current permissions. Set the restrictions manually before applying changes."
 
 [changePermissions.permissions.preventAssembly]
 label = "Ngăn chặn lắp ráp tài liệu"
@@ -3219,21 +3213,16 @@ text = "Để các quyền này không bị thay đổi, hãy dùng công cụ T
 [chat.actions]
 copy = "Sao chép tin nhắn"
 
-[chat.emptyState]
-text = "Đặt câu hỏi về tài liệu của bạn hoặc nhận trợ giúp với công cụ PDF."
-
-[chat.fab]
-close = "Đóng chat"
-open = "Mở trợ lý Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Tùy chọn tác nhân Stirling"
-assistant = "Trợ lý AI"
 clearChat = "Xóa trò chuyện"
 
 [chat.input]
 disclaimer = "AI có thể mắc lỗi. Hãy xác minh kết quả trước khi chia sẻ."
-placeholder = "Bạn muốn làm gì?"
 send = "Gửi tin nhắn"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Chuyển các tài liệu này sang PDF"
 convertOne = "Chuyển tài liệu này sang PDF"
 heading = "Bắt đầu"
 mergeMany = "Gộp {{count}} tài liệu này thành 1"
-moreFiles = "+{{count}} nữa"
 openFromComputer = "Mở từ máy tính"
-removeFile = "Xóa {{name}}"
 splitOne = "Tách tài liệu này"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Tôi không tìm thấy thông tin yêu cầu."
 processing = "Đang xử lý ({{outcome}})..."
 unsupported_capability = "Khả năng không được hỗ trợ: {{capability}}"
 usage_limit_reached = "Bạn đã đạt giới hạn sử dụng. Kiểm tra các tùy chọn gói của bạn để tiếp tục."
-
-[chat.toolsUsed]
-summary_one = "Đã chạy 1 công cụ"
-summary_other = "Đã chạy {{count}} công cụ"
-unknownTool = "Công cụ không xác định"
 
 [classification.families]
 correspondence = "Thư từ"
@@ -3664,6 +3646,7 @@ continue = "Tiếp tục"
 copied = "Đã sao chép!"
 copy = "Sao chép"
 copyCode = "Sao chép mã"
+copyFailed = "Copy failed"
 dismiss = "Bỏ qua"
 done = "Xong"
 enterValue = "Nhập giá trị"
@@ -3847,6 +3830,12 @@ unavailable = "ImageMagick chưa được cài đặt hoặc bật trên máy ch
 filesize = "Kích thước tệp"
 quality = "Chất lượng"
 title = "Phương pháp nén"
+
+[compress.noReduction]
+multiple = "Compression ran successfully, but {{count}} of {{total}} files can't be compressed any further."
+multipleAtLevel = "Compression at this level made no improvement to {{count}} of {{total}} files. Try a higher compression level."
+single = "Compression ran successfully, but this file can't be compressed any further."
+singleAtLevel = "Compression at this level made no improvement to this file. Try a higher compression level."
 
 [compress.settings]
 desiredSize = "Kích thước tệp mong muốn"
@@ -4364,6 +4353,10 @@ title = "Đã cập nhật từ ổ đĩa"
 body = "\"{{name}}\" đã thay đổi trên ổ đĩa. Tệp đủ lớn nên việc tải lại sẽ mất một lúc, vì vậy phiên bản tại đây được giữ nguyên."
 title = "Tệp đã thay đổi trên ổ đĩa"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Đang tải bản cập nhật..."
 installing = "Đang cài đặt bản cập nhật..."
@@ -4491,22 +4484,80 @@ description = "Chọn công cụ Chỉnh sửa Mục lục để tải không gi
 title = "Mở công cụ để bắt đầu chỉnh sửa"
 
 [encryptedPdfUnlock]
-description = "PDF này được bảo vệ bằng mật khẩu. Nhập mật khẩu để tiếp tục làm việc với tệp."
-emptyResponse = "Gỡ mật khẩu không tạo ra tệp."
+actionIgnored = "{{action}} restriction ignored"
+actionUnlocked = "{{action}} unlocked for this session"
+advanced = "Advanced"
+allowed = "Allowed"
+annotations = "Annotations"
+authoriseAction = "This PDF requires permission to use {{action}}."
+changeOwnerPassword = "Change permissions password"
+chooseOwnerPassword = "Choose a different password"
+continue = "Continue"
+copyFailed = "Unable to create the copy. Your PDF is unchanged."
+copying = "Copying content"
+editing = "Editing"
+enterPassword = "Enter password"
+ignoredByServer = "Permissions are ignored by this server's settings. The PDF's protection is unchanged."
 incorrectPassword = "Mật khẩu không đúng"
+lowQualityPrintUnsupported = "This PDF allows low-quality printing only, which this viewer does not support."
+lowResolutionOnly = "Low resolution only"
+manageProtection = "Manage protection"
 missingFile = "Tệp đã chọn không còn khả dụng."
+mixedProtection = "These PDFs have separate protection settings. Process them individually."
+newOwnerPassword = "New permissions password"
+notRequired = "Not required"
+openingPassword = "Password to open"
+openingPasswordRemoved = "Opening password removed. Restrictions retained."
+openingRequired = "Enter the password used to open this PDF."
+openPdf = "Open PDF"
+ownerPassword = "Permissions password"
+ownerRequired = "Enter the permissions password to continue."
+ownerTitle = "Enter permissions password"
+passwordRetained = "Kept unchanged"
+passwordsMustDiffer = "The two passwords must be different."
+permissionsUnlocked = "Permissions unlocked for this session"
+prepareFailed = "Unable to prepare this protected PDF for processing."
+printing = "Printing"
+printRestricted = "Printing is restricted. Verify permissions in Manage protection."
+protectedPdf = "Protected PDF"
+protectionRetained = "Protection retained"
+protectionSaved = "Protection saved"
+removePasswordHelp = "Open Remove Password to choose which passwords to remove."
+removeProtection = "Create an unprotected copy"
+replaceProtection = "These settings replace the PDF's current protection."
 required = "Nhập mật khẩu để tiếp tục."
-skip = "Bỏ qua tạm thời"
-successBody = "Gỡ mật khẩu thành công."
-successBodyWithName = "Đã gỡ mật khẩu khỏi {{fileName}}"
-successTitle = "Đã gỡ mật khẩu"
+requiredStatus = "Required"
+requiredToApply = "Required to apply changes"
+restoreFailed = "Unable to preserve PDF protection. No unprotected result was saved."
+restrictActions = "Restrict actions"
+restricted = "Restricted"
+restrictedActions = "restricted actions"
+restrictedOperation = "This action requires the permissions password."
+retainOwnerVerification = "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it."
+saveProtection = "Save protection"
+securityChangeFailed = "Unable to change protection. Check the permissions password and the new security settings."
+sessionDetails = "Open for this session. The PDF stays protected."
+sessionDetailsLabel = "About session unlocking"
+sessionFailed = "Unable to unlock this PDF. Please try again."
+sessionSuccessBody = "Protection retained."
+sessionSuccessBodyWithName = "Protection retained for {{fileName}}."
+sessionSuccessTitle = "PDF opened"
+sessionTitle = "Open PDF"
+signedReadOnly = "This signed PDF can be viewed, but cannot be edited here."
 title = "Gỡ mật khẩu để tiếp tục"
+toolUnavailable = "This tool doesn't support encrypted PDFs. Remove the password first."
+toolUnavailableDetails = "Why {{name}} is unavailable"
 unlock = "Mở khóa & tiếp tục"
 unlockAll = "Dùng cho tất cả ({{count}})"
 unlockAllPartialFail = "Sai mật khẩu cho: {{names}}"
 unlockAllSuccess_one = "Đã mở khóa {{count}} tệp."
 unlockAllSuccess_other = "Đã mở khóa {{count}} tệp."
+unlockedForSession = "Unlocked for this session using your permissions password."
 unlockPrompt = "Mở khóa PDF để tiếp tục"
+unprotectedCopyConsequence = "The copy will have no passwords or restrictions. The original stays protected."
+unsupportedTool = "This tool cannot yet preserve this PDF's protection."
+verifiedForSession = "Verified for this session"
+verifyPermissions = "Verify permissions for this session"
 viewerLocked = "PDF này được bảo vệ bằng mật khẩu"
 viewerUnlock = "Mở khóa"
 
@@ -4597,22 +4648,23 @@ viewInViewer = "Xem trong trình xem"
 closeFile = "Đóng tệp"
 
 [fileEditor]
-addFiles = "Thêm tệp"
 closedFile = "Đã đóng {{name}}"
 couldNotSave = "Không thể lưu {{name}}"
-filesAdded_one = "Đã thêm {{count}} tệp"
-filesAdded_other = "Đã thêm {{count}} tệp"
 filesReordered_one = "Tệp đã được sắp xếp lại"
 filesReordered_other = "{{count}} tệp đã được sắp xếp lại"
 loadedFromStorage_one = "Đã tải {{count}} tệp từ bộ nhớ"
 loadedFromStorage_other = "Đã tải {{count}} tệp từ bộ nhớ"
 loadFromStorageFailed = "Không thể tải một số tệp từ bộ nhớ"
 pinnedFile = "Đã ghim {{name}}"
-processFilesFailed = "Không thể xử lý tệp"
 savedAndClosed = "Đã lưu và đóng {{name}}"
 saveFailed = "Lưu thất bại"
 unpinnedFile = "Đã bỏ ghim {{name}}"
 unzipping = "Đang giải nén {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Lỗi khi giải nén {{name}}"
@@ -4729,7 +4781,6 @@ dataLostBody = "Trình duyệt này đã mất nội dung của tệp này. Tả
 dataLostTitle = "Dữ liệu tệp không khả dụng"
 downloadFailed = "Tải xuống thất bại"
 dropHint = "Mở tệp để bắt đầu"
-dropToAdd = "Thả tệp để thêm"
 duplicateFailed = "Không thể nhân bản tệp"
 expand = "Mở rộng thanh bên"
 googleDrive = "Google Drive"
@@ -5251,6 +5302,7 @@ rescanFields = "Quét lại trường"
 rescanFormFields = "Quét lại trường biểu mẫu"
 save = "Lưu"
 saveShortcut = "Ctrl+S để lưu"
+saving = "Saving..."
 selectOptionPlaceholder = "— chọn —"
 skippedEdits_one = "Không thể áp dụng 1 thay đổi:"
 skippedEdits_other = "Không thể áp dụng {{count}} thay đổi:"
@@ -5258,9 +5310,7 @@ skippedEditsTruncated = "Còn {{count}} mục khác không được liệt kê."
 unsavedChanges = "Thay đổi chưa lưu"
 
 [formFill.create]
-commit = "Thêm {{count}} trường vào PDF"
 empty = "Chưa vẽ trường nào."
-failed = "Không thể thêm trường"
 goToField = "Đi tới trường này"
 hint = "Chọn loại trường, sau đó vẽ nó trên trang."
 placing = "Vẽ trường {{type}} trên trang. Nhấn Esc để dừng."
@@ -5334,7 +5384,6 @@ modify = "Sửa đổi"
 commit = "Lưu {{count}} thay đổi"
 delete = "Xóa"
 empty = "PDF này chưa có trường biểu mẫu nào."
-failed = "Không thể lưu thay đổi"
 groupSizeHint = "Sử dụng kích thước lựa chọn"
 hint = "Chọn một trường để chỉnh sửa thuộc tính, kéo nó trên trang hoặc xóa nó."
 restore = "Khôi phục"
@@ -5732,11 +5781,6 @@ title = "Chồng lớp PDF"
 desc = "Ghép nhiều trang của tài liệu PDF thành một trang duy nhất"
 tags = "bố cục,sắp xếp,kết hợp,N-up,2-up,4-up,nhiều trang mỗi trang,trang mỗi tờ,bố cục trang,lát,lưới bố cục,bố cục nhiều trang,kết hợp trên trang,tài liệu phát tay"
 title = "Bố cục nhiều trang"
-
-[home.pdfCommentAgent]
-desc = "Yêu cầu AI chú thích PDF bằng ghi chú dán dựa trên lời nhắc của bạn"
-tags = "AI,tác nhân,bình luận,chú thích,ghi chú dán,đánh giá,phản hồi,ghi chú"
-title = "Thêm bình luận bằng AI"
 
 [home.pdfOrganiser]
 tags = "sắp xếp,sắp xếp lại,đổi thứ tự,sắp xếp trang,phân loại,di chuyển trang,xóa trang,xóa bỏ trang,quản lý trang,trình sắp xếp trang,đánh lại thứ tự"
@@ -6595,63 +6639,6 @@ yourCloudAccess = "Bạn sẽ trở thành thành viên nhóm và mất quyền 
 deselectAll = "Không chọn"
 selectAll = "Chọn tất cả"
 
-[pageEditor]
-dragPreviewAlt = "Đang kéo"
-filePosition = "Vị trí {{position}}"
-pageLabel = "Trang {{page}}"
-title = "Trình chỉnh sửa trang"
-
-[pageEditor.actions]
-deletePage = "Xóa trang"
-insertFileAfter = "Chèn tệp sau"
-moveLeft = "Di chuyển sang trái"
-moveRight = "Di chuyển sang phải"
-rotateLeft = "Xoay trái"
-rotateRight = "Xoay phải"
-splitAfter = "Tách sau"
-
-[pageEditor.commands]
-addSplitAt = "Thêm điểm tách tại vị trí {{position}}"
-addSplits_one = "Thêm {{count}} điểm tách"
-addSplits_other = "Thêm {{count}} điểm tách"
-deletePages_one = "Xóa {{count}} trang"
-deletePages_other = "Xóa {{count}} trang"
-insertFiles_one = "Chèn {{count}} tệp sau trang {{page}}"
-insertFiles_other = "Chèn {{count}} tệp sau trang {{page}}"
-insertPageBreaks_one = "Chèn {{count}} ngắt trang"
-insertPageBreaks_other = "Chèn {{count}} ngắt trang"
-insertPageBreaksAll = "Chèn ngắt trang sau tất cả các trang"
-removeAllSplits = "Xóa tất cả điểm tách"
-removeSplitAt = "Xóa điểm tách tại vị trí {{position}}"
-removeSplits_one = "Xóa {{count}} điểm tách"
-removeSplits_other = "Xóa {{count}} điểm tách"
-reorderPages = "Đổi thứ tự trang"
-rotatePageLeft = "Xoay trang sang trái"
-rotatePageRight = "Xoay trang sang phải"
-rotatePagesLeft_one = "Xoay {{count}} trang sang trái"
-rotatePagesLeft_other = "Xoay {{count}} trang sang trái"
-rotatePagesRight_one = "Xoay {{count}} trang sang phải"
-rotatePagesRight_other = "Xoay {{count}} trang sang phải"
-splitAllPages = "Tách tất cả các trang"
-toggleSplits_one = "Bật/tắt {{count}} vị trí tách"
-toggleSplits_other = "Bật/tắt {{count}} vị trí tách"
-
-[pageEditor.emptyState]
-body = "Thêm tệp để bắt đầu chỉnh sửa trang"
-title = "Chưa tải tệp PDF nào"
-
-[pageEditor.fileDropdown]
-addFile = "Thêm tệp"
-selectedCount = "Đã chọn {{selected}}/{{total}} tệp"
-untitled = "Chưa có tiêu đề"
-
-[pageEditor.toolbar]
-delete = "Xóa mục đã chọn"
-redo = "Làm lại"
-rotateLeft = "Xoay trái mục đã chọn"
-rotateRight = "Xoay phải mục đã chọn"
-undo = "Hoàn tác"
-
 [pageExtracter]
 title = "Trích xuất trang"
 
@@ -6815,6 +6802,76 @@ title = "Khoảng trang"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → chọn mọi trang"
 title = "Từ khóa đặc biệt"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "tài liệu"
@@ -7144,24 +7201,6 @@ totalSeats_other = "Tổng ({{count}} chỗ)"
 [payment.upgradeTeam]
 title = "Nâng cấp lên Team"
 
-[pdfCommentAgent]
-submit = "Tạo bình luận"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Vui lòng mô tả AI nên bình luận về điều gì"
-failed = "Không tạo được bình luận"
-tooLong = "Lời nhắc quá dài (tối đa {{max}} ký tự)"
-
-[pdfCommentAgent.prompt]
-label = "AI nên bình luận về điều gì?"
-placeholder = "ví dụ: Đánh dấu mọi ngày tháng mơ hồ và đề xuất làm rõ"
-
-[pdfCommentAgent.results]
-title = "PDF đã được bình luận"
-
-[pdfCommentAgent.settings]
-title = "Hướng dẫn bình luận"
-
 [pdfOrganiser]
 placeholder = "(ví dụ: 1,3,2 hoặc 4-8,2,10-12 hoặc 2n-1)"
 tags = "duplex,chẵn,lẻ,sắp xếp,di chuyển"
@@ -7347,6 +7386,7 @@ nothingSelectedHint = "Nhấp vào bất kỳ văn bản, hình ảnh hoặc hì
 ocrDocumentChanged = "Tài liệu đã thay đổi trong khi OCR đang chạy. Chạy OCR lại để bao gồm các thay đổi mới nhất của bạn."
 ocrInvalidResult = "OCR không trả về PDF. Vui lòng thử lại."
 ocrNoLanguages = "Không có ngôn ngữ OCR nào được cài đặt trên server."
+ocrProtected = "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing."
 ocrRunning = "Đang nhận dạng văn bản..."
 ocrUnavailable = "OCR không khả dụng trên server này."
 oneImage = "Hình ảnh"
@@ -7389,13 +7429,8 @@ pageNumber = "Trang {{page}}"
 renderFailed = "Không thể kết xuất trang"
 
 [pdfTextEditor.password]
-cancel = "Hủy"
 incorrect = "Mật khẩu không đúng - hãy thử lại."
 label = "Mật khẩu"
-open = "Mở"
-protected = "PDF này được bảo vệ bằng mật khẩu."
-protectedNamed = "\"{{fileName}}\" được bảo vệ bằng mật khẩu."
-title = "Yêu cầu mật khẩu"
 
 [pdfTextEditor.rulers]
 guide = "Đường căn chỉnh tại {{value}} {{unit}} - kéo lên thước để xóa"
@@ -7994,6 +8029,7 @@ before = "Đặt"
 title = "Chưa cấu hình kết nối Stirling"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Không thể mở trình duyệt của bạn. Mở Mức sử dụng & thanh toán trên server đã kết nối của bạn để liên kết tài khoản."
 
 [portal.accountLink.panel]
@@ -8117,9 +8153,6 @@ limit = "Giới hạn chi tiêu hàng tháng {{amount}}/tháng. Xử lý tạm d
 limitNoCap = "Không có giới hạn chi tiêu. Xử lý sẽ không tạm dừng. Hóa đơn được lập hàng tháng."
 
 [portal.billing.chip]
-invoices = "Hóa đơn"
-nav = "Mục"
-payment = "Thanh toán"
 plan = "Gói"
 procurement = "Mua sắm"
 usage = "Mức sử dụng"
@@ -8178,9 +8211,22 @@ pdfs = "PDF đã xử lý"
 users = "Người dùng"
 
 [portal.billing.enterprise]
+active = "Agreement active through {{date}}"
 cta = "Nhận báo giá enterprise"
+included = "Included in Enterprise"
+payment_pending = "Payment pending · access through {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF over agreed volume"
+pdfsOver_other = "{{count}} PDFs over agreed volume"
+pdfsUsed_one = "{{count}} PDF processed"
+pdfsUsed_other = "{{count}} PDFs processed"
+period = "Agreement period: {{start}} – {{end}}"
 sub = "Triển khai air-gapped, SCIM, lưu trú dữ liệu, SLA thời gian hoạt động và thỏa thuận phù hợp."
 title = "Bạn đang chạy Stirling trong môi trường được quản lý?"
+trial = "{{days}}-day trial · ends {{date}}"
+usersAgreed = "{{used}} / {{agreed}} agreed users"
+usersOver_one = "{{count}} user over agreed quantity"
+usersOver_other = "{{count}} users over agreed quantity"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Không thể bắt đầu thanh toán"
@@ -11160,6 +11206,7 @@ tags = "Che,Ẩn,bôi đen,đen,bút đánh dấu,ẩn,tự động che,che th�
 title = "Che nội dung"
 
 [redact.auto]
+caseSensitiveLabel = "Case Sensitive Matching"
 colorLabel = "Màu hộp"
 convertPDFToImageLabel = "Chuyển PDF thành PDF-Image"
 customPaddingLabel = "Đệm bổ sung tùy chỉnh"
@@ -11194,6 +11241,10 @@ automaticDisabledTooltip = "Chọn tệp trong trình quản lý tệp để bô
 manual = "Thủ công"
 mode = "Chế độ"
 title = "Phương thức che"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
+title = "Case Sensitive Matching"
 
 [redact.tooltip.advanced.color]
 text = "Tùy chỉnh giao diện các hộp che. Màu đen là tiêu chuẩn, nhưng bạn có thể chọn màu bất kỳ. Đệm thêm khoảng trống quanh văn bản tìm thấy."
@@ -11396,7 +11447,19 @@ text = "Chỉ định các trang cần xóa khỏi PDF. Bạn có thể chọn t
 title = "Chọn trang"
 
 [removePassword]
-desc = "Xóa bảo vệ mật khẩu khỏi tài liệu PDF của bạn."
+appliesTo = "Set on {{count}} of {{total}} PDFs"
+batchRemoved = "Entered passwords removed where set. Blank fields kept unchanged."
+bothRemoved = "Both passwords and restrictions removed."
+checkingProtection = "Checking protection…"
+keepBlank = "Leave a field blank to keep that password."
+notSet = "Not set"
+openingOnlyRemoved = "Opening password removed."
+openWithReaderFirst = "Reopen this PDF using its opening password before removing only the permissions password."
+ownerOnlyRemoved = "Permissions password and restrictions removed."
+ownerRemoved = "Permissions password and restrictions removed. Opening password kept."
+protectionUnavailable = "Unable to check protection"
+selectiveHelp = "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions."
+selectPasswords = "Passwords to remove"
 submit = "Xóa mật khẩu"
 tags = "bảo mật,Giải mã,an toàn,bỏ mật khẩu,xóa mật khẩu"
 title = "Xóa mật khẩu"
@@ -11407,13 +11470,9 @@ failed = "Đã xảy ra lỗi khi gỡ mật khẩu khỏi PDF."
 [removePassword.password]
 label = "Mật khẩu hiện tại"
 placeholder = "Nhập mật khẩu hiện tại"
-stepTitle = "Xóa mật khẩu"
 
 [removePassword.results]
 title = "PDF đã giải mã"
-
-[removePassword.tooltip]
-description = "Gỡ bảo vệ bằng mật khẩu yêu cầu mật khẩu đã dùng để mã hóa PDF. Điều này sẽ giải mã tài liệu, giúp truy cập mà không cần mật khẩu."
 
 [reorganizePages]
 submit = "Sắp xếp lại trang"
@@ -12054,6 +12113,7 @@ title = "Không gian làm việc"
 loginIncomplete = "Không thể hoàn tất đăng nhập"
 noSaasServer = "Chưa cấu hình máy chủ SaaS"
 noServer = "Chưa cấu hình máy chủ"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Đăng nhập SaaS thất bại"
 saasLoginIncomplete = "Không thể hoàn tất đăng nhập SaaS"
 selfHostedLoginFailed = "Đăng nhập tự lưu trữ thất bại"
@@ -13905,6 +13965,11 @@ title = "Văn bản hình mờ"
 image = "Hình ảnh"
 text = "Văn bản"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Các tệp trước đây của bạn không còn được lưu trữ trên thiết bị này."
 partial = "Đã khôi phục {{restored}} trong tổng số {{total}} tệp. Phần còn lại không còn được lưu trữ trên thiết bị này."
@@ -13915,16 +13980,13 @@ annotations = "Chú thích"
 applyRedactionsFirst = "Áp dụng bôi đen trước"
 closeAll = "Đóng tất cả tệp"
 closePdf = "Đóng PDF"
-deleteSelected = "Xóa các trang đã chọn"
 deselectAll = "Bỏ chọn tất cả"
 downloadAll = "Tải xuống tất cả"
 exitRedaction = "Thoát chế độ bôi đen"
-exportAll = "Xuất PDF"
-exportSelected = "Xuất các trang đã chọn"
 formFill = "Trình chỉnh sửa biểu mẫu"
 hideToolbar = "Ẩn thanh công cụ"
 moreActions = "Thêm hành động"
-multiTool = "Công cụ đa năng"
+pageEditor = "Page Editor"
 panMode = "Chế độ di chuyển"
 print = "In PDF"
 readAloud = "Đọc to"
@@ -13938,7 +14000,6 @@ rulerSettings = "Cài đặt tỷ lệ"
 save = "Lưu"
 saveAll = "Lưu tất cả"
 saveAs = "Lưu dưới dạng"
-saveChanges = "Lưu thay đổi"
 search = "Tìm kiếm trong PDF"
 selectAll = "Chọn tất cả"
 selectByNumber = "Chọn theo số trang"

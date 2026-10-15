@@ -55,7 +55,9 @@ keepWorking = "Munka folytatása"
 loading = "Betöltés..."
 loginAgreementAccept = "Elfogadom"
 loginAgreementDecline = "Elutasítom"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Ezt a közleményt az Ön rendszergazdája biztosítja, nem a Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Bejelentkezési megállapodás"
 logOut = "Kijelentkezés"
 marginTooltip = "A lapszám és az oldal széle közötti távolság."
@@ -299,7 +301,6 @@ title = "Lapszámozás eredménye"
 
 [addPassword]
 desc = "PDF dokumentum titkosítása jelszóval."
-submit = "Titkosítás"
 tags = "titkosítás,jelszó,zárolás,biztonságossá tétel,védelem,biztonság,titkosítás,óvintézkedés,bizalmas,privát,hozzáférés korlátozása"
 title = "Jelszó hozzáadása"
 
@@ -311,17 +312,6 @@ label = "Titkosítási kulcs hossza"
 
 [addPassword.error]
 failed = "Hiba történt a PDF titkosítása közben."
-
-[addPassword.passwords]
-stepTitle = "Jelszavak és titkosítás"
-
-[addPassword.passwords.owner]
-label = "Tulajdonosi jelszó"
-placeholder = "Adja meg a tulajdonosi jelszót"
-
-[addPassword.passwords.user]
-label = "Felhasználói jelszó"
-placeholder = "Adja meg a felhasználói jelszót"
 
 [addPassword.results]
 title = "Titkosított PDF-ek"
@@ -1627,6 +1617,7 @@ title = "Újraindítás szükséges"
 [admin.settings.security]
 authentication = "Hitelesítés"
 description = "Hitelesítés, bejelentkezési viselkedés és biztonsági házirendek beállítása."
+pdfPermissions = "PDF permissions"
 title = "Biztonság"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "CSRF védelem letiltása"
 [admin.settings.security.enableLogin]
 description = "A felhasználók bejelentkezésének megkövetelése az alkalmazás elérése előtt"
 label = "Bejelentkezés engedélyezése"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs."
+label = "Honor PDF permissions"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Speciális beállítások"
@@ -1938,9 +1933,6 @@ wrapUp = "Ezzel véget ért az admin bemutató! Látta az enterprise funkciókat
 [adminUserSettings]
 admin = "Rendszergazda"
 title = "Felhasználókezelés"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Arab"
@@ -3173,12 +3165,14 @@ unknown = "Ismeretlen"
 
 [changePermissions]
 desc = "Dokumentumkorlátozások és jogosultságok módosítása."
+loading = "Loading current permissions..."
 submit = "Jogosultságok módosítása"
 tags = "engedélyek,korlátozások,jogok,hozzáférés-vezérlés,engedélyezés,tiltás,nyomtatás,másolás,szerkesztés,engedélyek módosítása,biztonsági beállítások,felhasználói jogok"
 title = "Jogosultságok módosítása"
 
 [changePermissions.error]
 failed = "Hiba történt a PDF jogosultságainak módosításakor."
+readFailed = "Could not read this PDF's current permissions. Set the restrictions manually before applying changes."
 
 [changePermissions.permissions.preventAssembly]
 label = "Dokumentum egyesítésének megakadályozása"
@@ -3219,21 +3213,16 @@ text = "Ezeket a jogosultságokat tegye megváltoztathatatlanná a \"Jelszó hoz
 [chat.actions]
 copy = "Üzenet másolása"
 
-[chat.emptyState]
-text = "Tegyen fel kérdést a dokumentumairól, vagy kérjen segítséget a PDF-eszközökkel kapcsolatban."
-
-[chat.fab]
-close = "Chat bezárása"
-open = "Stirling AI asszisztens megnyitása"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling ügynök beállításai"
-assistant = "AI asszisztens"
 clearChat = "Csevegés törlése"
 
 [chat.input]
 disclaimer = "Az AI hibázhat. Megosztás előtt mindenképpen ellenőrizze a kimenetet."
-placeholder = "Mit szeretne tenni?"
 send = "Üzenet küldése"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Ezeknek a dokumentumoknak az átalakítása PDF-be"
 convertOne = "E dokumentum átalakítása PDF-be"
 heading = "Kezdés"
 mergeMany = "E {{count}} dokumentum egyesítése egy dokumentummá"
-moreFiles = "+{{count}} további"
 openFromComputer = "Megnyitás a számítógépről"
-removeFile = "{{name}} eltávolítása"
 splitOne = "E dokumentum felosztása"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "A kért információ nem található."
 processing = "Feldolgozás ({{outcome}})..."
 unsupported_capability = "Nem támogatott képesség: {{capability}}"
 usage_limit_reached = "Elérte a használati korlátot. Tekintse meg csomaglehetőségeit a folytatáshoz."
-
-[chat.toolsUsed]
-summary_one = "1 eszköz futtatva"
-summary_other = "{{count}} eszköz futtatva"
-unknownTool = "Ismeretlen eszköz"
 
 [classification.families]
 correspondence = "Levelezés"
@@ -3664,6 +3646,7 @@ continue = "Folytatás"
 copied = "Másolva!"
 copy = "Másolás"
 copyCode = "Kód másolása"
+copyFailed = "Copy failed"
 dismiss = "Elvetés"
 done = "Kész"
 enterValue = "Érték megadása"
@@ -3847,6 +3830,12 @@ unavailable = "Az ImageMagick nincs telepítve vagy engedélyezve ezen a szerver
 filesize = "Fájlméret"
 quality = "Minőség"
 title = "Tömörítési mód"
+
+[compress.noReduction]
+multiple = "Compression ran successfully, but {{count}} of {{total}} files can't be compressed any further."
+multipleAtLevel = "Compression at this level made no improvement to {{count}} of {{total}} files. Try a higher compression level."
+single = "Compression ran successfully, but this file can't be compressed any further."
+singleAtLevel = "Compression at this level made no improvement to this file. Try a higher compression level."
 
 [compress.settings]
 desiredSize = "Kívánt fájlméret"
@@ -4364,6 +4353,10 @@ title = "Frissítve a lemezről"
 body = "A(z) „{{name}}” módosult a lemezen. Elég nagy ahhoz, hogy az újratöltése eltartson egy ideig, ezért az itt lévő verzió változatlan maradt."
 title = "A fájl módosult a lemezen"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Frissítés letöltése..."
 installing = "Frissítés telepítése..."
@@ -4491,22 +4484,80 @@ description = "Válassza a Tartalomjegyzék szerkesztése eszközt a munkaterül
 title = "Nyissa meg az eszközt a szerkesztéshez"
 
 [encryptedPdfUnlock]
-description = "Ez a PDF jelszóval védett. Adja meg a jelszót a munka folytatásához."
-emptyResponse = "A jelszó eltávolítása nem hozott létre fájlt."
+actionIgnored = "{{action}} restriction ignored"
+actionUnlocked = "{{action}} unlocked for this session"
+advanced = "Advanced"
+allowed = "Allowed"
+annotations = "Annotations"
+authoriseAction = "This PDF requires permission to use {{action}}."
+changeOwnerPassword = "Change permissions password"
+chooseOwnerPassword = "Choose a different password"
+continue = "Continue"
+copyFailed = "Unable to create the copy. Your PDF is unchanged."
+copying = "Copying content"
+editing = "Editing"
+enterPassword = "Enter password"
+ignoredByServer = "Permissions are ignored by this server's settings. The PDF's protection is unchanged."
 incorrectPassword = "Helytelen jelszó"
+lowQualityPrintUnsupported = "This PDF allows low-quality printing only, which this viewer does not support."
+lowResolutionOnly = "Low resolution only"
+manageProtection = "Manage protection"
 missingFile = "A kiválasztott fájl már nem érhető el."
+mixedProtection = "These PDFs have separate protection settings. Process them individually."
+newOwnerPassword = "New permissions password"
+notRequired = "Not required"
+openingPassword = "Password to open"
+openingPasswordRemoved = "Opening password removed. Restrictions retained."
+openingRequired = "Enter the password used to open this PDF."
+openPdf = "Open PDF"
+ownerPassword = "Permissions password"
+ownerRequired = "Enter the permissions password to continue."
+ownerTitle = "Enter permissions password"
+passwordRetained = "Kept unchanged"
+passwordsMustDiffer = "The two passwords must be different."
+permissionsUnlocked = "Permissions unlocked for this session"
+prepareFailed = "Unable to prepare this protected PDF for processing."
+printing = "Printing"
+printRestricted = "Printing is restricted. Verify permissions in Manage protection."
+protectedPdf = "Protected PDF"
+protectionRetained = "Protection retained"
+protectionSaved = "Protection saved"
+removePasswordHelp = "Open Remove Password to choose which passwords to remove."
+removeProtection = "Create an unprotected copy"
+replaceProtection = "These settings replace the PDF's current protection."
 required = "A folytatáshoz adja meg a jelszót."
-skip = "Kihagyás most"
-successBody = "A jelszó eltávolítása sikeres."
-successBodyWithName = "Jelszó eltávolítva: {{fileName}}"
-successTitle = "Jelszó eltávolítva"
+requiredStatus = "Required"
+requiredToApply = "Required to apply changes"
+restoreFailed = "Unable to preserve PDF protection. No unprotected result was saved."
+restrictActions = "Restrict actions"
+restricted = "Restricted"
+restrictedActions = "restricted actions"
+restrictedOperation = "This action requires the permissions password."
+retainOwnerVerification = "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it."
+saveProtection = "Save protection"
+securityChangeFailed = "Unable to change protection. Check the permissions password and the new security settings."
+sessionDetails = "Open for this session. The PDF stays protected."
+sessionDetailsLabel = "About session unlocking"
+sessionFailed = "Unable to unlock this PDF. Please try again."
+sessionSuccessBody = "Protection retained."
+sessionSuccessBodyWithName = "Protection retained for {{fileName}}."
+sessionSuccessTitle = "PDF opened"
+sessionTitle = "Open PDF"
+signedReadOnly = "This signed PDF can be viewed, but cannot be edited here."
 title = "Jelszó eltávolítása a folytatáshoz"
+toolUnavailable = "This tool doesn't support encrypted PDFs. Remove the password first."
+toolUnavailableDetails = "Why {{name}} is unavailable"
 unlock = "Feloldás és folytatás"
 unlockAll = "Alkalmazza mindegyikre ({{count}})"
 unlockAllPartialFail = "Helytelen jelszó ehhez: {{names}}"
 unlockAllSuccess_one = "{{count}} fájl feloldva."
 unlockAllSuccess_other = "{{count}} fájl feloldva."
+unlockedForSession = "Unlocked for this session using your permissions password."
 unlockPrompt = "Feloldás a folytatáshoz"
+unprotectedCopyConsequence = "The copy will have no passwords or restrictions. The original stays protected."
+unsupportedTool = "This tool cannot yet preserve this PDF's protection."
+verifiedForSession = "Verified for this session"
+verifyPermissions = "Verify permissions for this session"
 viewerLocked = "Ez a PDF jelszóval védett"
 viewerUnlock = "Feloldás"
 
@@ -4597,22 +4648,23 @@ viewInViewer = "Megtekintés a megjelenítőben"
 closeFile = "Fájl bezárása"
 
 [fileEditor]
-addFiles = "Fájlok hozzáadása"
 closedFile = "{{name}} bezárva"
 couldNotSave = "Nem sikerült menteni: {{name}}"
-filesAdded_one = "{{count}} fájl hozzáadva"
-filesAdded_other = "{{count}} fájl hozzáadva"
 filesReordered_one = "Fájl átrendezve"
 filesReordered_other = "{{count}} fájl átrendezve"
 loadedFromStorage_one = "{{count}} fájl betöltve a tárhelyről"
 loadedFromStorage_other = "{{count}} fájl betöltve a tárhelyről"
 loadFromStorageFailed = "Nem sikerült néhány fájlt betölteni a tárhelyről"
 pinnedFile = "{{name}} rögzítve"
-processFilesFailed = "Nem sikerült feldolgozni a fájlokat"
 savedAndClosed = "{{name}} mentve és bezárva"
 saveFailed = "A mentés sikertelen"
 unpinnedFile = "{{name}} rögzítése feloldva"
 unzipping = "{{name}} kicsomagolása"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Hiba {{name}} kicsomagolásakor"
@@ -4729,7 +4781,6 @@ dataLostBody = "Ez a böngésző elvesztette ennek a fájlnak a tartalmát. Töl
 dataLostTitle = "A fájladatok nem érhetők el"
 downloadFailed = "A letöltés sikertelen"
 dropHint = "A kezdéshez nyisson meg fájlokat"
-dropToAdd = "Húzza ide a fájlokat a hozzáadáshoz"
 duplicateFailed = "Nem sikerült duplikálni a fájlt"
 expand = "Oldalsáv kinyitása"
 googleDrive = "Google Drive"
@@ -5251,6 +5302,7 @@ rescanFields = "Mezők újraolvasása"
 rescanFormFields = "Űrlapmezők újraolvasása"
 save = "Mentés"
 saveShortcut = "Ctrl+S a mentéshez"
+saving = "Saving..."
 selectOptionPlaceholder = "— válasszon —"
 skippedEdits_one = "1 módosítást nem sikerült alkalmazni:"
 skippedEdits_other = "{{count}} módosítást nem sikerült alkalmazni:"
@@ -5258,9 +5310,7 @@ skippedEditsTruncated = "További {{count}} nincs felsorolva."
 unsavedChanges = "Nem mentett módosítások"
 
 [formFill.create]
-commit = "{{count}} mező hozzáadása a PDF-hez"
 empty = "Még nincs megrajzolt mező."
-failed = "Nem sikerült hozzáadni a mezőket"
 goToField = "Ugrás erre a mezőre"
 hint = "Válasszon mezőtípust, majd rajzolja meg az oldalon."
 placing = "Rajzoljon egy {{type}} mezőt az oldalon. A leállításhoz nyomja meg az Esc billentyűt."
@@ -5334,7 +5384,6 @@ modify = "Módosítás"
 commit = "{{count}} módosítás mentése"
 delete = "Törlés"
 empty = "Ebben a PDF-ben még nincsenek űrlapmezők."
-failed = "Nem sikerült menteni a módosításokat"
 groupSizeHint = "Opció méretének használata"
 hint = "Válasszon ki egy mezőt a tulajdonságainak szerkesztéséhez, húzza az oldalon, vagy törölje."
 restore = "Visszaállítás"
@@ -5732,11 +5781,6 @@ title = "PDF-ek egymásra helyezése"
 desc = "PDF dokumentum több oldalának egyesítése egyetlen oldalra"
 tags = "elrendezés,rendezés,egyesítés,N-up,2-up,4-up,több oldal laponként,oldalak laponként,oldalak elrendezése,csempézés,rácselrendezés,többoldalas elrendezés,egyesítés oldalon,kiosztmány"
 title = "Többoldalas elrendezés"
-
-[home.pdfCommentAgent]
-desc = "Kérje meg az AI-t, hogy az utasítása alapján ragadós jegyzetekkel lássa el a PDF-et"
-tags = "AI,ügynök,megjegyzés,annotálás,ragadós jegyzet,áttekintés,visszajelzés,jegyzetek"
-title = "AI-megjegyzések hozzáadása"
 
 [home.pdfOrganiser]
 tags = "rendezés,átrendezés,újrasorrendezés,oldalak rendezése,sorrendezés,oldalak mozgatása,oldalak törlése,oldalak eltávolítása,oldalkezelés,oldalrendező,újrasorrendezés"
@@ -6595,63 +6639,6 @@ yourCloudAccess = "Csapattaggá válik, és elveszíti a tulajdonosi hozzáfér�
 deselectAll = "Nincs"
 selectAll = "Összes kijelölése"
 
-[pageEditor]
-dragPreviewAlt = "Húzás"
-filePosition = "Pozíció: {{position}}"
-pageLabel = "{{page}}. oldal"
-title = "Oldalszerkesztő"
-
-[pageEditor.actions]
-deletePage = "Oldal törlése"
-insertFileAfter = "Fájl beszúrása utána"
-moveLeft = "Mozgatás balra"
-moveRight = "Mozgatás jobbra"
-rotateLeft = "Forgatás balra"
-rotateRight = "Forgatás jobbra"
-splitAfter = "Felosztás utána"
-
-[pageEditor.commands]
-addSplitAt = "Felosztás hozzáadása a(z) {{position}} pozíciónál"
-addSplits_one = "{{count}} felosztás hozzáadása"
-addSplits_other = "{{count}} felosztás hozzáadása"
-deletePages_one = "{{count}} oldal törlése"
-deletePages_other = "{{count}} oldal törlése"
-insertFiles_one = "{{count}} fájl beszúrása a(z) {{page}}. oldal után"
-insertFiles_other = "{{count}} fájl beszúrása a(z) {{page}}. oldal után"
-insertPageBreaks_one = "{{count}} oldaltörés beszúrása"
-insertPageBreaks_other = "{{count}} oldaltörés beszúrása"
-insertPageBreaksAll = "Oldaltörések beszúrása minden oldal után"
-removeAllSplits = "Összes felosztás eltávolítása"
-removeSplitAt = "Felosztás eltávolítása a(z) {{position}} pozíciónál"
-removeSplits_one = "{{count}} felosztás eltávolítása"
-removeSplits_other = "{{count}} felosztás eltávolítása"
-reorderPages = "Oldalak újrarendezése"
-rotatePageLeft = "Oldal forgatása balra"
-rotatePageRight = "Oldal forgatása jobbra"
-rotatePagesLeft_one = "{{count}} oldal forgatása balra"
-rotatePagesLeft_other = "{{count}} oldal forgatása balra"
-rotatePagesRight_one = "{{count}} oldal forgatása jobbra"
-rotatePagesRight_other = "{{count}} oldal forgatása jobbra"
-splitAllPages = "Összes oldal felosztása"
-toggleSplits_one = "{{count}} felosztási pozíció átváltása"
-toggleSplits_other = "{{count}} felosztási pozíció átváltása"
-
-[pageEditor.emptyState]
-body = "Adjon hozzá fájlokat az oldalak szerkesztésének megkezdéséhez"
-title = "Nincsenek betöltve PDF-fájlok"
-
-[pageEditor.fileDropdown]
-addFile = "Fájl hozzáadása"
-selectedCount = "{{selected}}/{{total}} fájl kiválasztva"
-untitled = "Névtelen"
-
-[pageEditor.toolbar]
-delete = "Kijelöltek törlése"
-redo = "Újra"
-rotateLeft = "Kijelöltek forgatása balra"
-rotateRight = "Kijelöltek forgatása jobbra"
-undo = "Visszavonás"
-
 [pageExtracter]
 title = "Oldalak kinyerése"
 
@@ -6815,6 +6802,76 @@ title = "Oldaltartományok"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → az összes oldal kijelölése"
 title = "Speciális kulcsszavak"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "dokumentumok"
@@ -7144,24 +7201,6 @@ totalSeats_other = "Összesen ({{count}} hely)"
 [payment.upgradeTeam]
 title = "Frissítés Team csomagra"
 
-[pdfCommentAgent]
-submit = "Megjegyzések létrehozása"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Kérjük, írja le, mire tegyen megjegyzést az AI"
-failed = "Nem sikerült megjegyzéseket létrehozni"
-tooLong = "Az utasítás túl hosszú (legfeljebb {{max}} karakter)"
-
-[pdfCommentAgent.prompt]
-label = "Mire tegyen megjegyzést az AI?"
-placeholder = "pl. Jelölje meg a kétértelmű dátumokat, és javasoljon pontosításokat"
-
-[pdfCommentAgent.results]
-title = "Megjegyzésekkel ellátott PDF"
-
-[pdfCommentAgent.settings]
-title = "Megjegyzési utasítások"
-
 [pdfOrganiser]
 placeholder = "(pl. 1,3,2 vagy 4-8,2,10-12 vagy 2n-1)"
 tags = "duplex,páros,páratlan,rendezés,mozgatás"
@@ -7347,6 +7386,7 @@ nothingSelectedHint = "Kattints bármelyik szövegre, képre vagy alakzatra az o
 ocrDocumentChanged = "A dokumentum megváltozott az OCR futása közben. Futtassa újra az OCR-t a legutóbbi módosítások belefoglalásához."
 ocrInvalidResult = "Az OCR nem adott vissza PDF-et. Próbálja újra."
 ocrNoLanguages = "Nincs OCR nyelv telepítve a szerveren."
+ocrProtected = "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing."
 ocrRunning = "Szöveg felismerése..."
 ocrUnavailable = "Az OCR nem érhető el ezen a szerveren."
 oneImage = "Kép"
@@ -7389,13 +7429,8 @@ pageNumber = "{{page}}. oldal"
 renderFailed = "Nem sikerült renderelni az oldalt"
 
 [pdfTextEditor.password]
-cancel = "Mégse"
 incorrect = "Helytelen jelszó – próbáld újra."
 label = "Jelszó"
-open = "Megnyitás"
-protected = "Ez a PDF jelszóval védett."
-protectedNamed = "„{{fileName}}” jelszóval védett."
-title = "Jelszó szükséges"
 
 [pdfTextEditor.rulers]
 guide = "Igazítási segédvonal itt: {{value}} {{unit}} – eltávolításhoz húzd egy vonalzóra"
@@ -7994,6 +8029,7 @@ before = "Állítsa be:"
 title = "A Stirling-kapcsolat nincs konfigurálva"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Nem sikerült megnyitni a böngészőt. Nyissa meg a Használat és számlázás részt a csatlakoztatott szerverén egy fiók összekapcsolásához."
 
 [portal.accountLink.panel]
@@ -8117,9 +8153,6 @@ limit = "Havi költési korlát: {{amount}}/hó. A feldolgozás a korlátnál sz
 limitNoCap = "Nincs költési korlát. A feldolgozás nem szünetel. A számlák havonta készülnek."
 
 [portal.billing.chip]
-invoices = "Számlák"
-nav = "Szakaszok"
-payment = "Fizetés"
 plan = "Csomag"
 procurement = "Beszerzés"
 usage = "Használat"
@@ -8178,9 +8211,22 @@ pdfs = "Feldolgozott PDF-ek"
 users = "Felhasználók"
 
 [portal.billing.enterprise]
+active = "Agreement active through {{date}}"
 cta = "Vállalati ajánlat kérése"
+included = "Included in Enterprise"
+payment_pending = "Payment pending · access through {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF over agreed volume"
+pdfsOver_other = "{{count}} PDFs over agreed volume"
+pdfsUsed_one = "{{count}} PDF processed"
+pdfsUsed_other = "{{count}} PDFs processed"
+period = "Agreement period: {{start}} – {{end}}"
 sub = "Elszigetelt telepítés, SCIM, adatrezidencia, rendelkezésre állási SLA-k és ehhez illő megállapodás."
 title = "Szabályozott környezetben futtatja a Stirlinget?"
+trial = "{{days}}-day trial · ends {{date}}"
+usersAgreed = "{{used}} / {{agreed}} agreed users"
+usersOver_one = "{{count}} user over agreed quantity"
+usersOver_other = "{{count}} users over agreed quantity"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Nem sikerült elindítani a fizetést"
@@ -11160,6 +11206,7 @@ tags = "Kitakarás,Elrejtés,feketítés,fekete,jelölő,rejtett,automatikus kit
 title = "Kitakarás"
 
 [redact.auto]
+caseSensitiveLabel = "Case Sensitive Matching"
 colorLabel = "Doboz színe"
 convertPDFToImageLabel = "PDF konvertálása PDF-Image formátumra"
 customPaddingLabel = "Egyéni extra margó"
@@ -11194,6 +11241,10 @@ automaticDisabledTooltip = "Válasszon fájlokat a fájlkezelőben több fájl e
 manual = "Kézi"
 mode = "Mód"
 title = "Kitakarási mód"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
+title = "Case Sensitive Matching"
 
 [redact.tooltip.advanced.color]
 text = "Testreszabhatja a kitakarási dobozok megjelenését. A fekete az alapértelmezett, de bármilyen színt választhat. A margó extra teret ad a talált szöveg köré."
@@ -11396,7 +11447,19 @@ text = "Adja meg, mely oldalakat távolítsa el a PDF-ből. Kijelölhet egyes ol
 title = "Oldalválasztás"
 
 [removePassword]
-desc = "Jelszavas védelem eltávolítása a PDF dokumentumból"
+appliesTo = "Set on {{count}} of {{total}} PDFs"
+batchRemoved = "Entered passwords removed where set. Blank fields kept unchanged."
+bothRemoved = "Both passwords and restrictions removed."
+checkingProtection = "Checking protection…"
+keepBlank = "Leave a field blank to keep that password."
+notSet = "Not set"
+openingOnlyRemoved = "Opening password removed."
+openWithReaderFirst = "Reopen this PDF using its opening password before removing only the permissions password."
+ownerOnlyRemoved = "Permissions password and restrictions removed."
+ownerRemoved = "Permissions password and restrictions removed. Opening password kept."
+protectionUnavailable = "Unable to check protection"
+selectiveHelp = "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions."
+selectPasswords = "Passwords to remove"
 submit = "Jelszó eltávolítása"
 tags = "biztonság,feloldás,védelem,jelszó törlése"
 title = "Jelszó eltávolítása"
@@ -11407,13 +11470,9 @@ failed = "Hiba történt a jelszó eltávolítása közben a PDF-ből."
 [removePassword.password]
 label = "Jelenlegi jelszó"
 placeholder = "Adja meg a jelenlegi jelszót"
-stepTitle = "Jelszó eltávolítása"
 
 [removePassword.results]
 title = "Visszafejtett PDF-ek"
-
-[removePassword.tooltip]
-description = "A jelszóvédelem eltávolításához szükség van arra a jelszóra, amellyel a PDF titkosítva lett. Ez visszafejti a dokumentumot, jelszó nélkül hozzáférhetővé téve azt."
 
 [reorganizePages]
 submit = "Oldalak átrendezése"
@@ -12054,6 +12113,7 @@ title = "Munkaterület"
 loginIncomplete = "Nem sikerült befejezni a bejelentkezést"
 noSaasServer = "Nincs konfigurálva SaaS szerver"
 noServer = "Nincs konfigurálva szerver"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS bejelentkezés sikertelen"
 saasLoginIncomplete = "Nem sikerült befejezni a SaaS bejelentkezést"
 selfHostedLoginFailed = "Saját üzemeltetésű bejelentkezés sikertelen"
@@ -13905,6 +13965,11 @@ title = "Vízjel szövege"
 image = "Kép"
 text = "Szöveg"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Az előző fájljai már nincsenek tárolva ezen az eszközön."
 partial = "{{restored}} / {{total}} fájl visszaállítva. A többi már nincs tárolva ezen az eszközön."
@@ -13915,16 +13980,13 @@ annotations = "Annotációk"
 applyRedactionsFirst = "Először alkalmazza a kitakarásokat"
 closeAll = "Összes fájl bezárása"
 closePdf = "PDF bezárása"
-deleteSelected = "Kijelölt oldalak törlése"
 deselectAll = "Összes kijelölés megszüntetése"
 downloadAll = "Összes letöltése"
 exitRedaction = "Kilépés a kitakarási módból"
-exportAll = "PDF exportálása"
-exportSelected = "Kijelölt oldalak exportálása"
 formFill = "Űrlapszerkesztő"
 hideToolbar = "Eszköztár elrejtése"
 moreActions = "További műveletek"
-multiTool = "Többfunkciós eszköz"
+pageEditor = "Page Editor"
 panMode = "Mozgatás mód"
 print = "PDF nyomtatása"
 readAloud = "Felolvasás"
@@ -13938,7 +14000,6 @@ rulerSettings = "Méretarány beállításai"
 save = "Mentés"
 saveAll = "Összes mentése"
 saveAs = "Mentés másként"
-saveChanges = "Változtatások mentése"
 search = "PDF keresése"
 selectAll = "Összes kijelölése"
 selectByNumber = "Kiválasztás oldalszámok szerint"
