@@ -281,7 +281,10 @@ for (const action of [
         exact: true,
       }),
     ).toBeVisible();
-    await page.getByRole("button", { name: "Close", exact: true }).click();
+    await page
+      .getByRole("dialog", { name: "Enter permissions password", exact: true })
+      .getByRole("button", { name: "Close", exact: true })
+      .click();
     expect(changes).toBe(0);
     await expect(
       page.getByRole("button", { name: "Print PDF", exact: true }),

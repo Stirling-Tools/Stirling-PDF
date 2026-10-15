@@ -73,7 +73,7 @@ describe("editor permissions verification", () => {
       screen.getByLabelText("Permissions password", { exact: true }),
       { target: { value: "discard-this" } },
     );
-    fireEvent.click(screen.getByRole("button", { name: "Close", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(onVerified).not.toHaveBeenCalled();
     expect(getPdfAccess(file)?.ownerAuthenticated).toBe(false);
     fireEvent.click(
@@ -94,9 +94,7 @@ describe("editor permissions verification", () => {
       screen.getByLabelText("Permissions password", { exact: true }),
       { target: { value: "reader-password" } },
     );
-    fireEvent.click(
-      screen.getByRole("button", { name: "Continue", exact: true }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(
       await screen.findByText(
         "Enter the permissions password to allow restricted actions.",
@@ -117,9 +115,7 @@ describe("editor permissions verification", () => {
       screen.getByLabelText("Permissions password", { exact: true }),
       { target: { value: "owner-password" } },
     );
-    fireEvent.click(
-      screen.getByRole("button", { name: "Continue", exact: true }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     await waitFor(() => expect(onVerified).toHaveBeenCalledWith(file));
     expect(getPdfAccess(file)).toMatchObject({
       password: "owner-password",
@@ -144,9 +140,7 @@ describe("editor permissions verification", () => {
       screen.getByLabelText("Permissions password", { exact: true }),
       { target: { value: "owner-password" } },
     );
-    fireEvent.click(
-      screen.getByRole("button", { name: "Continue", exact: true }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     cleanup();
     await act(async () =>
       complete({ data: { ...reader, ownerAuthenticated: true } }),

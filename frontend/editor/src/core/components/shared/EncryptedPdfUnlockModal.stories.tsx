@@ -34,6 +34,7 @@ function UnlockDemo(
       remainingCount={0}
       onPasswordChange={setPassword}
       onUnlock={() => {}}
+      onRemovePassword={() => {}}
       onUnlockAll={() => {}}
       onSkip={() => {}}
       {...props}

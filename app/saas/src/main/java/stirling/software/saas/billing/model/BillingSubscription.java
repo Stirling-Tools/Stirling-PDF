@@ -21,7 +21,7 @@ import lombok.Setter;
  * record a tenant's subscription state.
  */
 @Entity
-@Table(name = "billing_subscriptions")
+@Table(name = "billing_subscriptions", schema = "public")
 @NoArgsConstructor
 @Getter
 @Setter

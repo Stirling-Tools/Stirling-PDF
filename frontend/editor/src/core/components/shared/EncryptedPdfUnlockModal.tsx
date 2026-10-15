@@ -89,7 +89,7 @@ const EncryptedPdfUnlockModal = ({
         </Group>
       }
       centered
-      size="sm"
+      size={remainingCount > 0 && onUnlockAll ? 500 : "sm"}
       padding="md"
       radius="md"
       styles={{ body: { paddingTop: "var(--mantine-spacing-md)" } }}
