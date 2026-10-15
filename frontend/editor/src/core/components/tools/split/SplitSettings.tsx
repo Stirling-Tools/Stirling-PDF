@@ -5,6 +5,7 @@ import {
   Anchor,
   Text,
   Select,
+  Textarea,
 } from "@mantine/core";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
@@ -162,13 +163,29 @@ const SplitSettings = ({
     }
 
     return (
-      <TextInput
-        label={label}
-        placeholder={placeholder}
-        value={parameters.splitValue}
-        onChange={(e) => onParameterChange("splitValue", e.target.value)}
-        disabled={disabled}
-      />
+      <Stack gap="sm">
+        <TextInput
+          label={label}
+          placeholder={placeholder}
+          value={parameters.splitValue}
+          onChange={(e) => onParameterChange("splitValue", e.target.value)}
+          disabled={disabled}
+        />
+        <Textarea
+          label={t("split.outputNames.label", "Output file names (optional)")}
+          description={t(
+            "split.outputNames.description",
+            "One name per line, in order. A blank line, or a file beyond the list, keeps the default name.",
+          )}
+          placeholder={t("split.outputNames.placeholder", "e.g. Chapter 1")}
+          value={parameters.outputNames}
+          onChange={(e) => onParameterChange("outputNames", e.target.value)}
+          autosize
+          minRows={3}
+          maxRows={10}
+          disabled={disabled}
+        />
+      </Stack>
     );
   };
 

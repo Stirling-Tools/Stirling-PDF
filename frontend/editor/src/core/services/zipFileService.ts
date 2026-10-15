@@ -3,6 +3,7 @@ import type { JSZipObject } from "jszip";
 import { StirlingFileStub, createStirlingFile } from "@app/types/fileContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import { fileStorage } from "@app/services/fileStorage";
+import { splitFileName } from "@app/utils/fileUtils";
 
 // Undocumented interface in JSZip for JSZipObject._data
 interface CompressedObject {
@@ -16,6 +17,21 @@ interface CompressedObject {
 const getData = (zipEntry: JSZipObject): CompressedObject | undefined => {
   return (zipEntry as JSZipObject & { _data: CompressedObject })._data;
 };
+
+/**
+ * `name`, or `base 2.ext`, `base 3.ext`... when an earlier entry already has it. JSZip replaces
+ * an entry added under a taken name, and extracting on a case-insensitive filesystem overwrites
+ * one that differs only in case, so either way a file would be dropped silently.
+ */
+function uniqueEntryName(name: string, taken: Set<string>): string {
+  const [base, ext] = splitFileName(name);
+  let candidate = name;
+  for (let index = 2; taken.has(candidate.toLowerCase()); index++) {
+    candidate = `${base} ${index}${ext}`;
+  }
+  taken.add(candidate.toLowerCase());
+  return candidate;
+}
 
 // JSZip is ~140 KB and only needed when the user opens a zip.
 let jsZipPromise: Promise<typeof JSZipClass> | null = null;
@@ -170,10 +186,10 @@ export class ZipFileService {
       const JSZip = await loadJSZip();
       const zip = new JSZip();
 
-      // Add each file to the ZIP
+      const entryNames = new Set<string>();
       for (const file of files) {
         const content = await file.arrayBuffer();
-        zip.file(file.name, content);
+        zip.file(uniqueEntryName(file.name, entryNames), content);
       }
 
       // Generate ZIP blob

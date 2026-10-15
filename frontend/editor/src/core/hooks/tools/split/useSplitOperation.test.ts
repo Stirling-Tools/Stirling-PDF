@@ -67,6 +67,32 @@ describe("splitToApiParams", () => {
     });
   });
 
+  test("count methods send outputNames only when provided, keeping blank slots", () => {
+    expect(
+      splitToApiParams(
+        params({
+          method: SPLIT_METHODS.BY_PAGE_COUNT,
+          splitValue: "3",
+          outputNames: "FileA\nFileB\n",
+        }),
+      ),
+    ).toEqual({ splitType: 1, splitValue: "3", outputNames: "FileA\nFileB" });
+    expect(
+      splitToApiParams(
+        params({ method: SPLIT_METHODS.BY_PAGE_COUNT, outputNames: "  " }),
+      ),
+    ).toEqual({ splitType: 1, splitValue: "" });
+    expect(
+      splitToApiParams(
+        params({
+          method: SPLIT_METHODS.BY_DOC_COUNT,
+          splitValue: "3",
+          outputNames: "\n\nFileC",
+        }),
+      ),
+    ).toEqual({ splitType: 2, splitValue: "3", outputNames: "\n\nFileC" });
+  });
+
   test("byChapters converts bookmarkLevel to a number", () => {
     expect(
       splitToApiParams(
@@ -149,6 +175,11 @@ describe("split round-trip", () => {
     },
     { method: SPLIT_METHODS.BY_SIZE, splitValue: "10MB" },
     { method: SPLIT_METHODS.BY_PAGE_COUNT, splitValue: "5" },
+    {
+      method: SPLIT_METHODS.BY_PAGE_COUNT,
+      splitValue: "3",
+      outputNames: "FileA\nFileB",
+    },
     { method: SPLIT_METHODS.BY_DOC_COUNT, splitValue: "3" },
     {
       method: SPLIT_METHODS.BY_CHAPTERS,

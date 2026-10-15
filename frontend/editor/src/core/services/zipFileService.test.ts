@@ -121,3 +121,28 @@ describe("zipFileService.isZipResponse", () => {
     });
   });
 });
+
+describe("zipFileService.createZipFromFiles", () => {
+  test("keeps every file when names repeat, ignoring case", async () => {
+    const files = [
+      "Chapter 1.pdf",
+      "chapter 1.pdf",
+      "Chapter 1.pdf",
+      "notes",
+    ].map((name) => new File([name], name));
+
+    const { zipFile } = await zipFileService.createZipFromFiles(
+      files,
+      "out.zip",
+    );
+
+    const { default: JSZip } = await import("jszip");
+    const zip = await JSZip.loadAsync(await zipFile.arrayBuffer());
+    expect(Object.keys(zip.files)).toEqual([
+      "Chapter 1.pdf",
+      "chapter 1 2.pdf",
+      "Chapter 1 3.pdf",
+      "notes",
+    ]);
+  });
+});

@@ -12689,6 +12689,11 @@ title = "Choose Your Split Method"
 text = "Choose how you want to split your PDF document. Each method is optimized for different use cases and document types."
 title = "Split Method Selection"
 
+[split.outputNames]
+description = "One name per line, in order. A blank line, or a file beyond the list, keeps the default name."
+label = "Output file names (optional)"
+placeholder = "e.g. Chapter 1"
+
 [split.poster]
 rightToLeft = "Split right-to-left"
 

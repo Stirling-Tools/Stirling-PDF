@@ -24,4 +24,11 @@ public class SplitPdfBySizeOrCountRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "10MB")
     private String splitValue;
+
+    @Schema(
+            description =
+                    "Output file names, one per line, applied in order to the split documents."
+                            + " Documents beyond the list keep the default name.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    private String outputNames;
 }

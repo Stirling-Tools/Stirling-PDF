@@ -1547,6 +1547,10 @@ export interface SplitPdfBySectionsRequest {
 }
 export interface SplitPdfBySizeOrCountRequest {
   /**
+   * Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.
+   */
+  outputNames?: string;
+  /**
    * Determines the type of split: 0 for size, 1 for page count, 2 for document count
    */
   splitType?: number;
