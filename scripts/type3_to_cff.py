@@ -74,7 +74,7 @@ def load_json(path: Path) -> dict[str, object]:
     try:
         with path.open("r", encoding="utf-8") as handle:
             return json.load(handle)
-    except Exception as exc:  # pragma: no cover - fatal configuration error
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:  # pragma: no cover - fatal configuration error
         print(f"ERROR: Failed to load glyph JSON '{path}': {exc}", file=sys.stderr)
         sys.exit(2)
 
@@ -298,7 +298,7 @@ def build_ttf_glyph(glyph: GlyphSource, max_error: float) -> object | None:
 
     try:
         glyph_obj = pen.glyph()
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         return None
     return glyph_obj
 
@@ -472,7 +472,7 @@ def main() -> None:
             units_per_em=args.units_per_em,
             cu2qu_error=args.cu2qu_error,
         )
-    except Exception as exc:
+    except (OSError, ValueError, TypeError, RuntimeError) as exc:
         print(f"ERROR: Failed to generate fonts: {exc}", file=sys.stderr)
         if otf_output.exists():
             otf_output.unlink()

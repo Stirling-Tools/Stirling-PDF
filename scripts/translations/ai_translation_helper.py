@@ -11,7 +11,7 @@ import csv
 import json
 import re
 import tomllib
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,7 +28,7 @@ class AITranslationHelper:
         try:
             with open(file_path, "rb") as f:
                 return tomllib.load(f)
-        except (FileNotFoundError, Exception) as e:
+        except (OSError, tomllib.TOMLDecodeError) as e:
             print(f"Error loading {file_path}: {e}")
             return {}
 
@@ -47,7 +47,7 @@ class AITranslationHelper:
         golden_truth = self._load_translation_file(self.golden_truth_file)
         batch_data = {
             "metadata": {
-                "created_at": datetime.now().isoformat(),
+                "created_at": datetime.now(UTC).isoformat(),
                 "source_language": "en-US",
                 "target_languages": languages,
                 "max_entries_per_language": max_entries_per_language,
@@ -105,9 +105,8 @@ class AITranslationHelper:
                 key not in lang_flat
                 or lang_flat[key] == value
                 or (isinstance(lang_flat[key], str) and lang_flat[key].startswith("[UNTRANSLATED]"))
-            ):
-                if not self._is_expected_identical(key, value):
-                    untranslated[key] = value
+            ) and not self._is_expected_identical(key, value):
+                untranslated[key] = value
 
         return untranslated
 
@@ -286,7 +285,7 @@ class AITranslationHelper:
         golden_flat = self._flatten_dict(golden_truth)
 
         if output_format == "csv":
-            output_file = Path(f"translations_export_{datetime.now().strftime('%Y%m%d')}.csv")
+            output_file = Path(f"translations_export_{datetime.now(UTC).strftime('%Y%m%d')}.csv")
 
             with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
                 fieldnames = ["key", "context", "en_US"] + languages
@@ -322,7 +321,7 @@ class AITranslationHelper:
             print(f"Exported to {output_file}")
 
         elif output_format == "json":
-            output_file = Path(f"translations_export_{datetime.now().strftime('%Y%m%d')}.json")
+            output_file = Path(f"translations_export_{datetime.now(UTC).strftime('%Y%m%d')}.json")
             export_data = {"languages": languages, "translations": {}}
 
             for key, en_value in golden_flat.items():

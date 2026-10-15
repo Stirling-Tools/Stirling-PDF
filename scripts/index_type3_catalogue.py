@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 def run(cmd, cwd=None):
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=False)
     if result.returncode != 0:
         raise RuntimeError(f"Command {' '.join(cmd)} failed: {result.stderr}")
     return result.stdout
@@ -55,7 +55,7 @@ def main():
     for pdf in sorted(samples_dir.glob("*.pdf")):
         try:
             output = run(["pdffonts", str(pdf)])
-        except Exception as exc:
+        except (OSError, RuntimeError) as exc:
             print(f"Skipping {pdf.name}: {exc}")
             continue
         for font_name, encoding in parse_pdffonts(output):

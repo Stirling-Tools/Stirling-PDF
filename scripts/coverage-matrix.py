@@ -116,11 +116,7 @@ def _classify_backend(package_name: str) -> str | None:
         return "saas"
     if p.startswith("stirling.software.proprietary"):
         return "proprietary"
-    if (
-        p.startswith("stirling.software.SPDF")
-        or p.startswith("stirling.software.common")
-        or p.startswith("org.apache.pdfbox")
-    ):
+    if p.startswith(("stirling.software.SPDF", "stirling.software.common", "org.apache.pdfbox")):
         return "core"
     return None
 
