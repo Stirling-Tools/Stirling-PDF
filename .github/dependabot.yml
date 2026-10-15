@@ -26,6 +26,7 @@ updates:
       - "/docker/embedded"
       - "/docker/frontend"
       - "/docker/base"
+      - "/docker/ci"
       - "/docker/engine"
       - "/docker/unoserver"
       - "/engine"

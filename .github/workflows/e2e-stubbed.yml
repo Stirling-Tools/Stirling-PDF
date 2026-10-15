@@ -43,7 +43,12 @@ jobs:
           # exercises a seam chosen at build time, so it needs a desktop-mode
           # bundle of its own. Chromium only: it is not testing engine
           # behaviour.
-          - { browser: chromium, shard: disk-link, project: stubbed-desktop, suite: desktop }
+          - {
+              browser: chromium,
+              shard: disk-link,
+              project: stubbed-desktop,
+              suite: desktop,
+            }
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -56,6 +61,7 @@ jobs:
           fetch-depth: 0
           # Blobs load lazily; full-history fetch otherwise pulls every branch's files.
           filter: blob:none
+
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -63,7 +69,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        uses: ./.github/actions/setup-task
       # Every leg needs this, the disk-link one included: the OG prerender
       # plugin in vite.config.ts reads dist/index.html whatever --outDir the
       # desktop build was given.
