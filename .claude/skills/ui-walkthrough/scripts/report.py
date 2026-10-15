@@ -34,6 +34,16 @@ THEMES = ("light", "dark")
 FINDING_GROUPS = ("visual", "ux", "behavior", "a11y", "perf", "native")
 SEVERITIES = ("high", "med", "low")
 FINDING_KINDS = ("regression", "budget", "gap", "observation")
+# How a platform the scope leaves out is accounted for. Silence is not a status:
+# an exclusion with no recorded decision is an unreviewed exclusion.
+DECISION_STATUSES = ("required", "not-applicable", "deferred", "unknown")
+# What became of a requirement. Only `evidence` satisfies one; blocked, failed,
+# waived and not-applicable stay visible instead of quietly reducing the score.
+REQUIREMENT_STATUSES = ("evidence", "blocked", "failed", "waived", "not-applicable")
+# Why a metric has no value. "unsupported" (the collector cannot) and
+# "not-collected" (nobody recorded it) are different claims about the same gap.
+METRIC_STATES = ("measured", "unsupported", "blocked", "not-collected", "not-applicable")
+CLAIM_STATUSES = ("supported", "unsupported", "not-measured")
 # The viewer's contract: report.py fails a build that loses one of these.
 TEMPLATE_IDS = (
     "feature-title", "feature-sub", "coverage-banner", "rail", "stage-img", "missing",
@@ -167,12 +177,14 @@ def _verified_platforms(manifest: dict) -> list[str]:
 
 
 def _perf_platforms(manifest: dict) -> list[str]:
+    """Platforms with a performance interaction that measured something.
+
+    Provenance alone is not evidence: a run that recorded only unavailable
+    metrics answers nothing, so it does not count as performance coverage.
+    """
     found: set[str] = set()
-    performance = manifest.get("performance") or {}
-    for run in performance.get("interactions", []) or []:
-        if not isinstance(run, dict):
-            continue
-        if _text(run.get("platform")) and isinstance(run.get("provenance"), dict):
+    for run in _interactions(manifest):
+        if _text(run.get("platform")) and isinstance(run.get("provenance"), dict) and _has_measurement(run):
             found.add(str(run["platform"]))
     return sorted(found)
 
@@ -210,28 +222,169 @@ def _theme_gaps(manifest: dict, platforms: list[str]) -> list[str]:
     return gaps
 
 
+def _decisions(manifest: dict) -> dict[str, dict]:
+    """The recorded reason each out-of-scope platform is out of scope."""
+    coverage = manifest.get("coverage")
+    decisions = coverage.get("decisions") if isinstance(coverage, dict) else None
+    found: dict[str, dict] = {}
+    for item in decisions or []:
+        if isinstance(item, dict) and _text(item.get("platform")):
+            found.setdefault(str(item["platform"]), item)
+    return found
+
+
+def _requirements(manifest: dict) -> list[dict]:
+    coverage = manifest.get("coverage")
+    requirements = coverage.get("requirements") if isinstance(coverage, dict) else None
+    return [item for item in requirements or [] if isinstance(item, dict)]
+
+
+def _interactions(manifest: dict) -> list[dict]:
+    performance = manifest.get("performance") or {}
+    return [item for item in performance.get("interactions", []) or [] if isinstance(item, dict)]
+
+
+def _lighthouse_runs(manifest: dict) -> list[dict]:
+    lighthouse = manifest.get("lighthouse") or {}
+    return [item for item in lighthouse.get("runs", []) or [] if isinstance(item, dict)]
+
+
+def _metric_states(run: dict) -> dict[str, str]:
+    metrics = run.get("metrics")
+    states = metrics.get("states") if isinstance(metrics, dict) else None
+    if not isinstance(states, dict):
+        return {}
+    return {str(key): str(value) for key, value in states.items() if _text(key)}
+
+
+def _has_measurement(run: dict) -> bool:
+    """True when an interaction measured something, not only recorded absences.
+
+    An interaction whose every metric is unavailable answers no question, so it
+    cannot stand as the evidence a requirement or a platform needs.
+    """
+    metrics = run.get("metrics")
+    if not isinstance(metrics, dict):
+        return False
+    states = _metric_states(run)
+    for key, value in metrics.items():
+        if key in ("unavailable", "states"):
+            continue
+        if value is not None and states.get(key, "measured") == "measured":
+            return True
+    return False
+
+
+def _requirement_satisfied(requirement: dict, manifest: dict) -> bool:
+    """Only the evidence a requirement names can satisfy it.
+
+    A requirement points at the view, interaction or run that answers it, so an
+    unrelated capture, or an interaction that measured nothing, never counts.
+    """
+    if requirement.get("status") != "evidence":
+        return False
+    by = requirement.get("satisfiedBy")
+    if not isinstance(by, dict):
+        return False
+    if _text(by.get("view")):
+        wanted = str(by["view"])
+        return any(
+            isinstance(view, dict) and str(view.get("id")) == wanted
+            for view in manifest.get("views") or []
+        )
+    if _text(by.get("interaction")):
+        wanted = str(by["interaction"])
+        return any(str(run.get("id")) == wanted and _has_measurement(run) for run in _interactions(manifest))
+    if _text(by.get("run")):
+        wanted = str(by["run"])
+        return any(str(run.get("route")) == wanted for run in _lighthouse_runs(manifest))
+    return False
+
+
 def coverage_summary(manifest: dict) -> dict:
-    """Derive completion from evidence, never from self-declared lists."""
-    coverage = manifest.get("coverage") or {}
-    mode = coverage.get("mode") if isinstance(coverage, dict) else None
-    expected = [item for item in coverage.get("expected", []) if _text(item)] if isinstance(coverage, dict) else []
-    declared = [item for item in coverage.get("captured", []) if _text(item)] if isinstance(coverage, dict) else []
+    """Derive completion from evidence and recorded decisions.
+
+    `expected` is the scope the change requires and nothing else defines it.
+    Every platform that scope leaves out carries a decision saying why, so an
+    exclusion is reviewable rather than implied by silence. A platform's
+    requirements name what had to be shown there, and only the evidence a
+    requirement points at satisfies it — a platform label never does.
+    """
+    coverage = manifest.get("coverage")
+    coverage = coverage if isinstance(coverage, dict) else {}
+    mode = coverage.get("mode")
+    raw_expected = coverage.get("expected")
+    expected = [str(item) for item in raw_expected if _text(item)] if isinstance(raw_expected, list) else []
+    raw_declared = coverage.get("captured")
+    declared = [str(item) for item in raw_declared if _text(item)] if isinstance(raw_declared, list) else []
+    decisions = _decisions(manifest)
+    requirements = _requirements(manifest)
     verified = _verified_platforms(manifest)
-    gaps = [item for item in expected if item not in verified]
-    undecorated = [item for item in declared if item not in verified]
     perf = _perf_platforms(manifest)
     lighthouse = _lighthouse_platforms(manifest)
     themes = _theme_gaps(manifest, expected or verified)
+    # `expected` is the change's own scope. Platforms it leaves out are named
+    # rather than counted as gaps, and each one has to say why it is out.
+    not_in_scope = [item for item in REQUIRED_PLATFORMS if expected and item not in expected]
+    undecided = [item for item in not_in_scope if item not in decisions]
+    rows: list[dict] = []
+    for platform in sorted(set(expected) | set(verified)):
+        own = [item for item in requirements if str(item.get("platform")) == platform]
+        outcomes = [
+            {
+                "id": item.get("id"),
+                "status": item.get("status"),
+                "satisfied": _requirement_satisfied(item, manifest),
+                "reason": item.get("reason"),
+            }
+            for item in own
+        ]
+        satisfied = [item for item in outcomes if item["satisfied"]]
+        if not own:
+            state = "missing"
+        elif len(satisfied) == len(outcomes):
+            state = "captured"
+        elif satisfied:
+            state = "partial"
+        else:
+            state = str(own[0].get("status") or "missing")
+        rows.append(
+            {
+                "platform": platform,
+                "required": platform in expected,
+                "captured": platform in verified,
+                "performance": platform in perf,
+                "lighthouse": platform in lighthouse,
+                "requirements": outcomes,
+                "satisfied": len(satisfied),
+                "status": state,
+            }
+        )
+    unsatisfied = [
+        f"{row['platform']}:{item['id']}"
+        for row in rows
+        if row["required"]
+        for item in row["requirements"]
+        if not item["satisfied"]
+    ]
+    gaps = [item for item in expected if item not in verified]
+    missing_requirements = [row["platform"] for row in rows if row["required"] and not row["requirements"]]
     missing_perf = [item for item in expected if item not in perf]
     missing_lighthouse = [item for item in expected if item in WEB_PLATFORMS and item not in lighthouse]
-    # `expected` is the change's own scope: a web-only change lists the web
-    # platforms and nothing else. The platforms left out are named once in the
-    # banner rather than counted as gaps, so a report cannot quietly pretend a
-    # shell it never touched did not need checking.
-    not_in_scope = [item for item in REQUIRED_PLATFORMS if expected and item not in expected]
+    undeclared = [item for item in declared if item not in verified]
+    short = (
+        not expected
+        or gaps
+        or unsatisfied
+        or missing_requirements
+        or missing_perf
+        or missing_lighthouse
+        or themes
+        or undecided
+    )
     if mode not in ("full", "partial"):
         status = "incomplete"
-    elif not expected or gaps or missing_perf or missing_lighthouse or themes:
+    elif short:
         status = "partial" if mode == "partial" and expected else "incomplete"
     else:
         status = "complete"
@@ -239,10 +392,36 @@ def coverage_summary(manifest: dict) -> dict:
         "mode": mode,
         "expected": expected,
         "notInScope": not_in_scope,
+        "undecided": undecided,
+        "unknownDecisions": sorted(item for item in decisions if item not in REQUIRED_PLATFORMS),
+        "decisions": [
+            {
+                "platform": platform,
+                "status": decisions[platform].get("status"),
+                "reason": decisions[platform].get("reason"),
+                "basis": decisions[platform].get("basis"),
+            }
+            for platform in sorted(decisions)
+            if platform in REQUIRED_PLATFORMS
+        ],
+        "unknownExpected": sorted(item for item in expected if item not in REQUIRED_PLATFORMS),
+        "duplicateExpected": sorted({item for item in expected if expected.count(item) > 1}),
+        "platforms": rows,
+        "requirements": [
+            {
+                "platform": str(item.get("platform")),
+                "id": item.get("id"),
+                "status": item.get("status"),
+                "satisfied": _requirement_satisfied(item, manifest),
+            }
+            for item in requirements
+        ],
+        "unsatisfied": unsatisfied,
+        "missingRequirements": missing_requirements,
         "declared": declared,
         "verified": verified,
         "gaps": gaps,
-        "undeclaredProof": undecorated,
+        "undeclaredProof": undeclared,
         "performance": perf,
         "lighthouse": lighthouse,
         "themeGaps": themes,
@@ -340,8 +519,8 @@ def validate(manifest: object, *, source: str = "") -> list[Note]:
                     f"kind '{kind}' is not one of {FINDING_KINDS}; the viewer shows it verbatim",
                     where,
                 )
-            source = finding.get("source")
-            if source is not None and not _text(source):
+            finding_source = finding.get("source")
+            if finding_source is not None and not _text(finding_source):
                 note("error", "bad-finding-source", "source must be text when present", where)
 
     summary = coverage_summary(manifest)
@@ -385,6 +564,144 @@ def validate(manifest: object, *, source: str = "") -> list[Note]:
             "missing-theme-variant",
             f"no {gap.split(':')[1]} capture on {gap.split(':')[0]}; the viewer shows an explicit gap",
         )
+    for platform in summary["unknownExpected"]:
+        note(
+            "error",
+            "coverage-expected-unknown-platform",
+            f"'{platform}' is not a platform this skill can capture",
+            "coverage.expected",
+        )
+    for platform in summary["duplicateExpected"]:
+        note(
+            "error",
+            "coverage-expected-duplicate",
+            f"'{platform}' is listed more than once",
+            "coverage.expected",
+        )
+    for platform in summary["unknownDecisions"]:
+        note(
+            "error",
+            "coverage-decision-unknown-platform",
+            f"'{platform}' cannot be excluded: it is not a platform this skill captures",
+            "coverage.decisions",
+        )
+    for platform, decision in _decisions(manifest).items():
+        where = f"coverage.decisions[{platform}]"
+        status = decision.get("status")
+        if not _text(status):
+            note("error", "coverage-decision-without-status", "record a status", where)
+        elif status not in DECISION_STATUSES:
+            note(
+                "error",
+                "bad-decision-status",
+                f"status must be one of {', '.join(DECISION_STATUSES)}",
+                where,
+            )
+        elif status == "required" and platform not in summary["expected"]:
+            note(
+                "error",
+                "coverage-decision-conflict",
+                "marked required but absent from 'coverage.expected'; expected is the scope",
+                where,
+            )
+        elif status != "required" and platform in summary["expected"]:
+            note(
+                "error",
+                "coverage-decision-conflict",
+                f"'{platform}' is in 'coverage.expected', so it cannot also be '{status}'; "
+                "remove it from expected to change the scope",
+                where,
+            )
+        elif status != "required" and not _text(decision.get("reason")):
+            note(
+                "error",
+                "coverage-decision-without-reason",
+                f"say why the changed code is unreachable on {platform}",
+                where,
+            )
+        basis = decision.get("basis")
+        if basis is not None and (
+            not isinstance(basis, list) or not all(_text(item) for item in basis)
+        ):
+            note("error", "bad-decision-basis", "'basis' must be a list of references", where)
+    for platform in summary["undecided"]:
+        note(
+            "warning",
+            "coverage-decision-missing",
+            f"'{platform}' is outside the declared scope with no recorded reason; record why the "
+            "changed code cannot run there, or the exclusion is unverified",
+            "coverage.decisions",
+        )
+
+    for index, requirement in enumerate(_requirements(manifest)):
+        where = f"coverage.requirements[{index}]"
+        if not isinstance(requirement, dict):
+            note("error", "requirement-not-an-object", "requirement must be an object", where)
+            continue
+        platform = requirement.get("platform")
+        requirement_id = requirement.get("id")
+        for key, value in (("platform", platform), ("id", requirement_id)):
+            if not _text(value):
+                note("error", "requirement-missing-field", f"'{key}' is missing", where)
+        if _text(platform) and platform not in REQUIRED_PLATFORMS:
+            note(
+                "error",
+                "requirement-unknown-platform",
+                f"'{platform}' is not a platform this skill captures",
+                where,
+            )
+        status = requirement.get("status")
+        if not _text(status) or status not in REQUIREMENT_STATUSES:
+            note(
+                "error",
+                "bad-requirement-status",
+                f"status must be one of {', '.join(REQUIREMENT_STATUSES)}",
+                where,
+            )
+        elif status == "evidence":
+            if not _requirement_satisfied(requirement, manifest):
+                note(
+                    "error",
+                    "requirement-without-evidence",
+                    "status 'evidence' needs a satisfiedBy that names a captured view, a measured "
+                    "interaction or a Lighthouse run",
+                    where,
+                )
+        elif not _text(requirement.get("reason")):
+            note(
+                "error",
+                "requirement-without-reason",
+                f"'{status}' needs a reason, or it is an unexplained hole",
+                where,
+            )
+        if _text(platform) and platform not in summary["expected"]:
+            note(
+                "warning",
+                "requirement-out-of-scope",
+                f"'{platform}' is not in 'coverage.expected'; the requirement is not required",
+                where,
+            )
+    for entry in summary["unsatisfied"]:
+        platform, _, requirement_id = entry.partition(":")
+        note(
+            "error" if summary["mode"] == "full" else "warning",
+            "requirement-unsatisfied",
+            f"{platform}: '{requirement_id}' has no satisfied evidence",
+        )
+    for platform in summary["missingRequirements"]:
+        note(
+            "error" if summary["mode"] == "full" else "warning",
+            "requirement-missing",
+            f"{platform} is required but names no requirement; say what had to be shown",
+        )
+    for key in ("coverageSummary", "evaluation"):
+        if key in manifest:
+            note(
+                "warning",
+                "stale-derived-coverage",
+                f"'{key}' is derived and is removed; the build recomputes it from the manifest",
+                key,
+            )
 
     performance = manifest.get("performance") or {}
     for index, run in enumerate(performance.get("interactions", []) or []):
@@ -402,6 +719,48 @@ def validate(manifest: object, *, source: str = "") -> list[Note]:
                 "record instrumentation, build mode and fixture",
                 where,
             )
+        metrics = run.get("metrics")
+        if not isinstance(metrics, dict):
+            note(
+                "warning",
+                "perf-run-without-metrics",
+                "no metrics object: the interaction records no measurement, so it satisfies nothing",
+                where,
+            )
+        else:
+            raw_states = metrics.get("states")
+            if raw_states is not None and not isinstance(raw_states, dict):
+                note("error", "bad-metric-states", "'metrics.states' must be an object", where)
+            elif isinstance(raw_states, dict):
+                for key, state in raw_states.items():
+                    if state not in METRIC_STATES:
+                        note(
+                            "error",
+                            "bad-metric-state",
+                            f"'{key}' is '{state}'; use one of {', '.join(METRIC_STATES)}",
+                            where,
+                        )
+                    elif state == "measured" and metrics.get(key) is None:
+                        note(
+                            "error",
+                            "metric-state-without-value",
+                            f"'{key}' is 'measured' but no value was recorded for it",
+                            where,
+                        )
+                    elif state != "measured" and metrics.get(key) is not None:
+                        note(
+                            "warning",
+                            "metric-state-contradiction",
+                            f"'{key}' is '{state}' yet the metric carries a value; a recorded number is a measurement",
+                            where,
+                        )
+            if not _has_measurement(run):
+                note(
+                    "warning",
+                    "perf-run-without-measurement",
+                    "no metric is measured, so this interaction answers no question",
+                    where,
+                )
         pictures = run.get("pictures")
         if pictures is not None and not isinstance(pictures, dict):
             note("error", "perf-pictures-not-an-object", "'pictures' must be an object", where)
@@ -431,6 +790,69 @@ def validate(manifest: object, *, source: str = "") -> list[Note]:
         for key in ("preview",):
             if run.get(key) is not None and not _text(run.get(key)):
                 note("error", "lh-preview-not-text", f"'{key}' must be text", where)
+
+    claims = manifest.get("claims")
+    if claims is not None:
+        if not isinstance(claims, list):
+            note("error", "claims-not-a-list", "'claims' must be a list", "claims")
+        else:
+            for index, claim in enumerate(claims):
+                where = f"claims[{index}]"
+                if not isinstance(claim, dict):
+                    note("error", "claim-not-an-object", "claim must be an object", where)
+                    continue
+                if not _text(claim.get("claim")):
+                    note("error", "claim-without-text", "'claim' is missing", where)
+                status = claim.get("status")
+                if not _text(status) or status not in CLAIM_STATUSES:
+                    note(
+                        "error",
+                        "bad-claim-status",
+                        f"status must be one of {', '.join(CLAIM_STATUSES)}",
+                        where,
+                    )
+                evidence = claim.get("evidence")
+                if (
+                    not isinstance(evidence, list)
+                    or not evidence
+                    or not all(_text(item) for item in evidence)
+                ):
+                    note(
+                        "error",
+                        "claim-without-evidence",
+                        "name the measurements or captures that support the claim",
+                        where,
+                    )
+                if _text(status) and status != "supported":
+                    note(
+                        "warning",
+                        "claim-unproven",
+                        f"claim is '{status}': the report has to say so where the claim is made",
+                        where,
+                    )
+                if _text(status) and status != "supported" and not _text(claim.get("note")):
+                    note(
+                        "warning",
+                        "claim-without-note",
+                        "say what would have proven the claim",
+                        where,
+                    )
+
+    review = manifest.get("review")
+    if review is not None:
+        if not isinstance(review, dict):
+            note("error", "review-not-an-object", "'review' must be an object", "review")
+        elif "performed" in review and not isinstance(review["performed"], bool):
+            note("error", "bad-review-performed", "'review.performed' must be true or false", "review")
+        elif review.get("performed") is False:
+            findings = manifest.get("findings")
+            if isinstance(findings, dict) and any(findings.get(group) for group in FINDING_GROUPS):
+                note(
+                    "warning",
+                    "findings-without-review",
+                    "findings are recorded while 'review.performed' is false; say which it is",
+                    "review",
+                )
 
     def _check_data_uri(ref: object, where: str) -> None:
         if not _is_data_uri(ref):
@@ -632,8 +1054,92 @@ def prepare(manifest: dict, base: Path, *, quality: int) -> list[Note]:
                                         f"lighthouse.runs[{index}].preview",
                                         notes, quality=quality)
         run["preview"] = uri
-    manifest["coverageSummary"] = coverage_summary(manifest)
+    # Derived data is computed before it is attached, so `evaluate` validates the
+    # manifest the author wrote rather than one carrying stale derived keys.
+    evaluation = evaluate(manifest)
+    manifest["evaluation"] = evaluation
+    manifest["coverageSummary"] = evaluation["coverage"]
     return notes
+
+
+def evaluate(manifest: dict) -> dict:
+    """The single verdict every consumer reads.
+
+    Validity, evidence completeness, and what the evidence showed are separate
+    questions: a report can be valid and incomplete, or complete while carrying
+    serious findings. The CLI, the build, the banner and the chat summary all
+    quote this one result, so they cannot drift apart.
+    """
+    notes = validate(manifest)
+    summary = coverage_summary(manifest)
+    by_status: dict[str, list[str]] = {status: [] for status in REQUIREMENT_STATUSES}
+    for row in summary["requirements"]:
+        if not row["satisfied"] and row["status"] in by_status:
+            by_status[row["status"]].append(f"{row['platform']}:{row['id']}")
+    claims = [
+        {
+            "claim": _text(claim.get("claim")) or "",
+            "status": _text(claim.get("status")) or "not-measured",
+        }
+        for claim in (manifest.get("claims") or [])
+        if isinstance(claim, dict)
+    ]
+    findings = manifest.get("findings")
+    findings = findings if isinstance(findings, dict) else {}
+    counts = {severity: 0 for severity in SEVERITIES}
+    kinds: dict[str, int] = {}
+    total = 0
+    for group in FINDING_GROUPS:
+        for finding in findings.get(group) or []:
+            if not isinstance(finding, dict):
+                continue
+            total += 1
+            severity = finding.get("severity")
+            if severity in counts:
+                counts[severity] += 1
+            kind = _text(finding.get("kind")) or "untyped"
+            kinds[kind] = kinds.get(kind, 0) + 1
+    review = manifest.get("review")
+    review = review if isinstance(review, dict) else {}
+    return {
+        "artifact": {
+            "valid": not errors(notes),
+            "errors": [str(note) for note in errors(notes)],
+            "warnings": [str(note) for note in notes if note["level"] != "error"],
+        },
+        "evidence": {
+            "complete": summary["complete"],
+            "status": summary["status"],
+            "mode": summary["mode"],
+            "gaps": summary["gaps"],
+            "undecided": summary["undecided"],
+            "unsatisfied": summary["unsatisfied"],
+            "missingRequirements": summary["missingRequirements"],
+            "missingPerformance": summary["missingPerformance"],
+            "missingLighthouse": summary["missingLighthouse"],
+            "themeGaps": summary["themeGaps"],
+            "blocked": by_status["blocked"],
+            "failed": by_status["failed"],
+            "waived": by_status["waived"],
+            "notApplicable": by_status["not-applicable"],
+            "claims": claims,
+        },
+        "scope": {
+            "expected": summary["expected"],
+            "notInScope": summary["notInScope"],
+            "undecided": summary["undecided"],
+            "decisions": summary["decisions"],
+        },
+        "findings": {
+            "total": total,
+            "high": counts["high"],
+            "med": counts["med"],
+            "low": counts["low"],
+            "kinds": kinds,
+            "recorded": review.get("performed") is not False,
+        },
+        "coverage": summary,
+    }
 
 
 def inject(template: str, manifest: dict) -> str:
@@ -677,6 +1183,16 @@ def self_test(html: str, *, allow_relative: bool = False) -> list[Note]:
         if isinstance(manifest, dict) and not isinstance(manifest.get("coverageSummary"), dict):
             notes.append(Note("error", "coverage-summary-missing",
                                "the report carries no derived coverage status"))
+        if isinstance(manifest, dict):
+            evaluation = manifest.get("evaluation")
+            if not isinstance(evaluation, dict):
+                notes.append(Note("error", "evaluation-missing",
+                                   "the report carries no derived verdict"))
+            else:
+                for key in ("artifact", "evidence", "scope", "findings", "coverage"):
+                    if not isinstance(evaluation.get(key), dict):
+                        notes.append(Note("error", "evaluation-incomplete",
+                                           f"the derived verdict has no '{key}' section"))
         if isinstance(manifest, dict):
             for index, view in enumerate(manifest.get("views") or []):
                 if not isinstance(view, dict):

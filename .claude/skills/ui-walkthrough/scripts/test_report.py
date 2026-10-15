@@ -261,7 +261,50 @@ class CoverageScopeTests(unittest.TestCase):
 
     def web_only(self, mode="partial"):
         return manifest(
-            coverage={"mode": mode, "expected": ["desktop-web", "mobile-web"]},
+            coverage={
+                "mode": mode,
+                "expected": ["desktop-web", "mobile-web"],
+                "decisions": [
+                    {
+                        "platform": platform,
+                        "status": "deferred",
+                        "reason": "the shell reaches this code but has no runner here",
+                    }
+                    for platform in (
+                        "windows-tauri",
+                        "macos-tauri",
+                        "linux-tauri",
+                        "android-tauri",
+                        "ios-tauri",
+                    )
+                ],
+                "requirements": [
+                    {
+                        "platform": "desktop-web",
+                        "id": "editor-opens",
+                        "status": "evidence",
+                        "satisfiedBy": {"view": "01_desktop"},
+                    },
+                    {
+                        "platform": "desktop-web",
+                        "id": "cycle-completes",
+                        "status": "evidence",
+                        "satisfiedBy": {"interaction": "desktop-cycle"},
+                    },
+                    {
+                        "platform": "mobile-web",
+                        "id": "editor-opens",
+                        "status": "evidence",
+                        "satisfiedBy": {"view": "02_mobile"},
+                    },
+                    {
+                        "platform": "mobile-web",
+                        "id": "cycle-completes",
+                        "status": "evidence",
+                        "satisfiedBy": {"interaction": "mobile-cycle"},
+                    },
+                ],
+            },
             views=[
                 {
                     "id": "01_desktop",
@@ -286,6 +329,7 @@ class CoverageScopeTests(unittest.TestCase):
                         "platform": "desktop-web",
                         "window": "1600x900",
                         "provenance": {"build": "vite dev"},
+                        "metrics": {"jsHeapMB": 12.5, "states": {"jsHeapMB": "measured"}},
                     },
                     {
                         "id": "mobile-cycle",
@@ -293,6 +337,7 @@ class CoverageScopeTests(unittest.TestCase):
                         "platform": "mobile-web",
                         "window": "390x844",
                         "provenance": {"build": "vite dev"},
+                        "metrics": {"jsHeapMB": 12.5, "states": {"jsHeapMB": "measured"}},
                     },
                 ]
             },
@@ -471,6 +516,288 @@ class PublishTests(unittest.TestCase):
             bad.write_text("<html><body>no binding</body></html>", encoding="utf-8")
             with self.assertRaises(RuntimeError):
                 report.publish(bad, "demo", remote="origin", cwd=Path(tmp))
+
+
+SHELLS = ("windows-tauri", "macos-tauri", "linux-tauri", "android-tauri", "ios-tauri")
+
+
+def scoped(**overrides):
+    """A two-platform change whose scope, decisions, requirements and evidence hold
+    together; override one key to break exactly one rule."""
+    data = manifest(
+        coverage={
+            "mode": "partial",
+            "expected": ["desktop-web", "mobile-web"],
+            "captured": ["desktop-web", "mobile-web"],
+            "decisions": [
+                {
+                    "platform": platform,
+                    "status": "deferred",
+                    "reason": "the changed module is reachable here, but no runner is installed",
+                }
+                for platform in SHELLS
+            ],
+            "requirements": [
+                {
+                    "platform": "desktop-web",
+                    "id": "editor-opens",
+                    "status": "evidence",
+                    "satisfiedBy": {"view": "01_desktop"},
+                },
+                {
+                    "platform": "desktop-web",
+                    "id": "cycle-completes",
+                    "status": "evidence",
+                    "satisfiedBy": {"interaction": "desktop-cycle"},
+                },
+                {
+                    "platform": "mobile-web",
+                    "id": "editor-opens",
+                    "status": "evidence",
+                    "satisfiedBy": {"view": "02_mobile"},
+                },
+            ],
+        },
+        views=[
+            {
+                "id": "01_desktop",
+                "title": "Editor",
+                "platform": "desktop-web",
+                "light": "a_light.png",
+                "dark": "a_dark.png",
+            },
+            {
+                "id": "02_mobile",
+                "title": "Editor, mobile",
+                "platform": "mobile-web",
+                "light": "b_light.png",
+                "dark": "b_dark.png",
+            },
+        ],
+        performance={
+            "interactions": [
+                {
+                    "id": "desktop-cycle",
+                    "name": "text editor cycle",
+                    "platform": "desktop-web",
+                    "window": "1600x900",
+                    "provenance": {"build": "vite dev"},
+                    "metrics": {"jsHeapMB": 12.5, "states": {"jsHeapMB": "measured"}},
+                }
+            ]
+        },
+        lighthouse={
+            "runs": [
+                {
+                    "route": "/editor",
+                    "formFactor": "desktop",
+                    "mode": "vite dev",
+                    "platform": "desktop-web",
+                    "environment": {"lighthouse": "12.8.2"},
+                    "preview": "desktop-preview.jpg",
+                }
+            ]
+        },
+    )
+    data.update(overrides)
+    return data
+
+
+class CoverageDecisionTests(unittest.TestCase):
+    """Scope exclusions must be reviewable, and evidence must be earned."""
+
+    def test_a_shell_outside_the_scope_must_carry_a_reason(self):
+        coverage = dict(scoped()["coverage"])
+        coverage.pop("decisions")
+        summary = report.coverage_summary(scoped(coverage=coverage))
+        self.assertEqual(list(SHELLS), summary["undecided"])
+        self.assertIn("coverage-decision-missing", codes(report.validate(scoped(coverage=coverage))))
+        self.assertNotEqual("complete", summary["status"])
+
+    def test_a_recorded_decision_replaces_the_warning_and_keeps_the_shell_named(self):
+        summary = report.coverage_summary(scoped())
+        self.assertEqual([], summary["undecided"])
+        self.assertEqual(list(SHELLS), summary["notInScope"])
+        self.assertEqual([], summary["gaps"])
+        self.assertNotIn("coverage-decision-missing", codes(report.validate(scoped())))
+
+    def test_an_unknown_platform_cannot_be_excluded_silently(self):
+        coverage = dict(scoped()["coverage"])
+        coverage["decisions"] = coverage["decisions"] + [
+            {"platform": "solaris-web", "status": "not-applicable", "reason": "nobody runs it"}
+        ]
+        notes = codes(report.validate(scoped(coverage=coverage)))
+        self.assertIn("coverage-decision-unknown-platform", notes)
+
+    def test_expected_must_name_known_platforms_once(self):
+        coverage = {
+            "mode": "partial",
+            "expected": ["desktop-web", "desktop-web", "amiga-web"],
+            "captured": ["desktop-web"],
+        }
+        notes = codes(report.validate(scoped(coverage=coverage)))
+        self.assertIn("coverage-expected-duplicate", notes)
+        self.assertIn("coverage-expected-unknown-platform", notes)
+
+    def test_a_required_platform_cannot_be_declared_not_applicable(self):
+        coverage = dict(scoped()["coverage"])
+        coverage["decisions"] = coverage["decisions"] + [
+            {"platform": "desktop-web", "status": "not-applicable", "reason": "no runner"}
+        ]
+        notes = codes(report.validate(scoped(coverage=coverage)))
+        self.assertIn("coverage-decision-conflict", notes)
+
+    def test_a_decision_without_a_reason_is_an_error(self):
+        coverage = dict(scoped()["coverage"])
+        coverage["decisions"] = [
+            {"platform": platform, "status": "unknown"} for platform in SHELLS
+        ]
+        notes = codes(report.validate(scoped(coverage=coverage)))
+        self.assertIn("coverage-decision-without-reason", notes)
+
+    def test_a_declared_capture_without_a_usable_asset_does_not_satisfy_coverage(self):
+        view = {
+            "id": "01_desktop",
+            "title": "Editor",
+            "platform": "desktop-web",
+            "light": "",
+            "dark": "",
+        }
+        manifest_ = scoped(views=[view])
+        summary = report.coverage_summary(manifest_)
+        self.assertNotIn("desktop-web", summary["verified"])
+        self.assertIn("coverage-without-proof", codes(report.validate(manifest_)))
+
+    def test_an_unrelated_interaction_does_not_satisfy_a_requirement(self):
+        coverage = dict(scoped()["coverage"])
+        coverage["requirements"] = [
+            dict(requirement, satisfiedBy={"interaction": "some-other-cycle"})
+            if requirement["id"] == "cycle-completes"
+            else requirement
+            for requirement in coverage["requirements"]
+        ]
+        manifest_ = scoped(coverage=coverage)
+        summary = report.coverage_summary(manifest_)
+        self.assertIn("desktop-web:cycle-completes", summary["unsatisfied"])
+        self.assertIn("requirement-unsatisfied", codes(report.validate(manifest_)))
+
+    def test_a_run_with_no_measured_metric_does_not_satisfy_performance_coverage(self):
+        interaction = {
+            "id": "desktop-cycle",
+            "name": "text editor cycle",
+            "platform": "desktop-web",
+            "window": "1600x900",
+            "provenance": {"build": "vite dev"},
+            "metrics": {
+                "jsHeapMB": None,
+                "unavailable": ["process memory"],
+                "states": {"jsHeapMB": "unsupported"},
+            },
+        }
+        manifest_ = scoped(performance={"interactions": [interaction]})
+        summary = report.coverage_summary(manifest_)
+        self.assertNotIn("desktop-web", summary["performance"])
+        notes = codes(report.validate(manifest_))
+        self.assertIn("perf-run-without-measurement", notes)
+        self.assertIn("requirement-unsatisfied", notes)
+
+    def test_waived_coverage_stays_visible(self):
+        coverage = dict(scoped()["coverage"])
+        coverage["requirements"] = coverage["requirements"] + [
+            {
+                "platform": "desktop-web",
+                "id": "cancellation",
+                "status": "waived",
+                "reason": "the scenario does not exercise cancel yet",
+            }
+        ]
+        manifest_ = scoped(coverage=coverage)
+        evidence = report.evaluate(manifest_)["evidence"]
+        self.assertIn("desktop-web:cancellation", evidence["waived"])
+        self.assertIn("requirement-unsatisfied", codes(report.validate(manifest_)))
+
+    def test_a_blocked_requirement_without_a_reason_is_an_error(self):
+        coverage = dict(scoped()["coverage"])
+        coverage["requirements"] = coverage["requirements"] + [
+            {"platform": "desktop-web", "id": "print-export", "status": "blocked"}
+        ]
+        notes = codes(report.validate(scoped(coverage=coverage)))
+        self.assertIn("requirement-without-reason", notes)
+
+    def test_metric_states_must_match_the_metrics_they_describe(self):
+        interaction = dict(scoped()["performance"]["interactions"][0])
+        interaction["metrics"] = {"jsHeapMB": 1.0, "states": {"jsHeapMB": "probably"}}
+        notes = codes(report.validate(scoped(performance={"interactions": [interaction]})))
+        self.assertIn("bad-metric-state", notes)
+
+        # A 'measured' state with nothing recorded is a measurement that does
+        # not exist; a non-measured state with a real number contradicts itself.
+        interaction["metrics"] = {"jsHeapMB": 1.0, "states": {"ghost": "measured"}}
+        notes = codes(report.validate(scoped(performance={"interactions": [interaction]})))
+        self.assertIn("metric-state-without-value", notes)
+
+        interaction["metrics"] = {"jsHeapMB": 1.0, "states": {"jsHeapMB": "blocked"}}
+        notes = codes(report.validate(scoped(performance={"interactions": [interaction]})))
+        self.assertIn("metric-state-contradiction", notes)
+
+        # Naming a metric that was never recorded is the whole point of
+        # 'blocked' and 'not-collected', so it stays legal.
+        interaction["metrics"] = {"states": {"renderer.poolBytes": "blocked"}}
+        notes = codes(report.validate(scoped(performance={"interactions": [interaction]})))
+        self.assertNotIn("metric-state-without-value", notes)
+        self.assertNotIn("bad-metric-state", notes)
+
+    def test_claims_need_text_evidence_and_a_known_status(self):
+        notes = codes(
+            report.validate(
+                scoped(
+                    claims=[
+                        {"claim": "", "status": "vibes", "evidence": []},
+                        {
+                            "claim": "retained storage stops growing",
+                            "status": "not-measured",
+                            "evidence": ["metrics.jsHeapMB"],
+                        },
+                    ]
+                )
+            )
+        )
+        self.assertIn("claim-without-text", notes)
+        self.assertIn("bad-claim-status", notes)
+        self.assertIn("claim-without-evidence", notes)
+        self.assertIn("claim-unproven", notes)
+
+    def test_claims_must_be_a_list(self):
+        notes = codes(report.validate(scoped(claims={"claim": "x"})))
+        self.assertIn("claims-not-a-list", notes)
+
+    def test_stale_derived_data_is_reported(self):
+        notes = codes(report.validate(scoped(coverageSummary={}, evaluation={})))
+        self.assertIn("stale-derived-coverage", notes)
+
+    def test_a_report_without_a_review_pass_says_so(self):
+        manifest_ = scoped(review={"performed": False})
+        self.assertFalse(report.evaluate(manifest_)["findings"]["recorded"])
+
+        finding = {"title": "A thing", "severity": "low", "detail": "Seen once.", "view": "01_desktop"}
+        manifest_ = scoped(review={"performed": False}, findings={"visual": [finding]})
+        self.assertIn("findings-without-review", codes(report.validate(manifest_)))
+
+    def test_evaluate_separates_validity_from_completeness_and_findings(self):
+        verdict = report.evaluate(scoped())
+        self.assertTrue(verdict["artifact"]["valid"])
+        self.assertEqual("partial", verdict["evidence"]["status"])
+        self.assertEqual(0, verdict["findings"]["total"])
+
+        broken = scoped(views=[{"id": "", "title": "", "platform": "desktop-web"}])
+        verdict = report.evaluate(broken)
+        self.assertFalse(verdict["artifact"]["valid"])
+        self.assertIn("coverage", verdict)
+
+    def test_an_incomplete_report_is_still_publishable(self):
+        manifest_ = scoped()
+        self.assertEqual([], report.errors(report.validate(manifest_)))
+        self.assertNotEqual("complete", report.coverage_summary(manifest_)["status"])
 
 
 if __name__ == "__main__":
