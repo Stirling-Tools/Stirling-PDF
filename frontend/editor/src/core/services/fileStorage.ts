@@ -17,6 +17,7 @@ import {
   DATABASE_CONFIGS,
 } from "@app/services/indexedDBManager";
 import { alert } from "@app/components/toast";
+import { forgetLastViewedPages } from "@app/services/lastViewedPageStore";
 import i18n from "i18next";
 
 /**
@@ -1140,7 +1141,8 @@ class FileStorageService {
   }
 
   /**
-   * Delete StirlingFile - single operation, no sync issues
+   * Delete StirlingFile - single operation, no sync issues. Forgets the file's
+   * last viewed page once the delete commits.
    */
   async deleteStirlingFile(id: FileId): Promise<void> {
     const db = await this.getDatabase();
@@ -1151,13 +1153,17 @@ class FileStorageService {
       // soon as this resolves, and an aborted delete would put the row back.
       settleOnAbort(transaction, reject);
       transaction.onerror = () => reject(transaction.error);
-      transaction.oncomplete = () => resolve();
-      transaction.objectStore(this.storeName).delete(id);
+      const quickKeys = this.deleteRecords(transaction, [id]);
+      transaction.oncomplete = () => {
+        forgetLastViewedPages(quickKeys);
+        resolve();
+      };
     });
   }
 
   /**
-   * Delete multiple StirlingFiles in a single transaction
+   * Delete multiple StirlingFiles in a single transaction. Forgets their last
+   * viewed pages once the delete commits.
    */
   async deleteMultipleStirlingFiles(ids: FileId[]): Promise<void> {
     if (ids.length === 0) return;
@@ -1165,13 +1171,31 @@ class FileStorageService {
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readwrite");
-      const store = transaction.objectStore(this.storeName);
-      transaction.oncomplete = () => resolve();
+      const quickKeys = this.deleteRecords(transaction, ids);
+      transaction.oncomplete = () => {
+        forgetLastViewedPages(quickKeys);
+        resolve();
+      };
       transaction.onerror = () => reject(transaction.error);
       transaction.onabort = () =>
         reject(transaction.error ?? new Error("Transaction aborted"));
-      ids.forEach((id) => store.delete(id));
     });
+  }
+
+  /** Queues the deletes and collects each record's quickKey, filled in as the reads land. */
+  private deleteRecords(transaction: IDBTransaction, ids: FileId[]): string[] {
+    const store = transaction.objectStore(this.storeName);
+    const quickKeys: string[] = [];
+    for (const id of ids) {
+      // Requests run in order, so the read sees the record the delete removes.
+      const read = store.get(id);
+      read.onsuccess = () => {
+        const record = read.result as StoredStirlingFileRecord | undefined;
+        if (record?.quickKey) quickKeys.push(record.quickKey);
+      };
+      store.delete(id);
+    }
+    return quickKeys;
   }
 
   /**

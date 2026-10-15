@@ -1,4 +1,5 @@
 import { fileStorage } from "@app/services/fileStorage";
+import { moveLastViewedPage } from "@app/services/lastViewedPageStore";
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
 
@@ -8,7 +9,7 @@ import type { StirlingFileStub } from "@app/types/fileContext";
  * storage has no record of the file.
  */
 export async function renameStoredFile(
-  stub: Pick<StirlingFileStub, "id" | "size" | "lastModified">,
+  stub: Pick<StirlingFileStub, "id" | "name" | "size" | "lastModified">,
   name: string,
   updateStub: (id: FileId, updates: Partial<StirlingFileStub>) => void,
 ): Promise<boolean> {
@@ -19,6 +20,13 @@ export async function renameStoredFile(
     name,
     quickKey,
   });
-  if (saved) updateStub(stub.id, { name, quickKey });
-  return saved;
+  if (!saved) return false;
+  // Rebuilt from the name rather than read from the stub: a version's stub
+  // carries its parent's quickKey until it is reloaded from storage.
+  moveLastViewedPage(
+    `${stub.name}|${stub.size}|${stub.lastModified}`,
+    quickKey,
+  );
+  updateStub(stub.id, { name, quickKey });
+  return true;
 }

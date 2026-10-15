@@ -53,6 +53,7 @@ vi.mock("@embedpdf/plugin-scroll/react", () => ({
 }));
 
 const FILE_A = "report.pdf|2048|1700000000000";
+const FILE_A_RENAMED = "final report.pdf|2048|1700000000000";
 const FILE_B = "notes.pdf|512|1700000000000";
 
 function layoutReady(documentId: string, totalPages = 10, pageNumber = 1) {
@@ -155,6 +156,34 @@ describe("LastViewedPageBridge", () => {
     act(() => vi.advanceTimersByTime(500));
 
     expect(getLastViewedPage(FILE_A)).toBe(6);
+  });
+
+  it("carries the position over when the file takes a new key", () => {
+    setLastViewedPage(FILE_A, 7);
+    const view = render(
+      <LastViewedPageBridge fileKey={FILE_A} restorePending={false} />,
+    );
+    layoutReady("first");
+
+    view.rerender(
+      <LastViewedPageBridge fileKey={FILE_A_RENAMED} restorePending={false} />,
+    );
+
+    expect(getLastViewedPage(FILE_A)).toBeNull();
+    expect(getLastViewedPage(FILE_A_RENAMED)).toBe(7);
+  });
+
+  it("saves a pending page when the tab is closed", () => {
+    vi.useFakeTimers();
+    render(<LastViewedPageBridge fileKey={FILE_A} restorePending={false} />);
+    layoutReady("first");
+
+    pageChange("first", 4);
+    act(() => {
+      window.dispatchEvent(new Event("pagehide"));
+    });
+
+    expect(getLastViewedPage(FILE_A)).toBe(4);
   });
 
   it("saves a pending page when the viewer closes", () => {

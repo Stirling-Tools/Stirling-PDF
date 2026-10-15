@@ -18,6 +18,7 @@ import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import { buildQuickKeySet } from "@app/contexts/file/fileSelectors";
 import { StirlingFile } from "@app/types/fileContext";
 import { fileStorage } from "@app/services/fileStorage";
+import { moveLastViewedPage } from "@app/services/lastViewedPageStore";
 import { zipFileService } from "@app/services/zipFileService";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
 import { trackPdfUploaded } from "@app/services/analytics";
@@ -661,6 +662,20 @@ export async function consumeFiles(
       `Mismatch between output files (${outputStirlingFiles.length}) and stubs (${outputStirlingFileStubs.length})`,
     );
   }
+
+  // A new version is the same document to the reader, so it takes over the
+  // page its parent was left at. Runs before the outputs land in filesRef.
+  outputStirlingFileStubs.forEach((stub, i) => {
+    const parent = stub.parentFileId
+      ? filesRef.current.get(stub.parentFileId)
+      : undefined;
+    if (parent) {
+      moveLastViewedPage(
+        createQuickKey(parent),
+        outputStirlingFiles[i].quickKey,
+      );
+    }
+  });
 
   // Store StirlingFiles in filesRef using their existing IDs (no ID generation needed)
   for (let i = 0; i < outputStirlingFiles.length; i++) {

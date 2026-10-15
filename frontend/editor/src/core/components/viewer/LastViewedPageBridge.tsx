@@ -6,6 +6,8 @@ import {
 } from "@app/components/viewer/useActiveDocumentId";
 import {
   getLastViewedPage,
+  moveLastViewedPage,
+  resumeLastViewedPages,
   setLastViewedPage,
 } from "@app/services/lastViewedPageStore";
 
@@ -30,6 +32,18 @@ export function LastViewedPageBridge({
   const activeDocumentId = useActiveDocumentId();
   const documentReady = useDocumentReady();
   const restoreClaimedRef = useRef(false);
+  const lastFileKeyRef = useRef(fileKey);
+
+  useEffect(() => resumeLastViewedPages(), []);
+
+  // The mount follows one lineage, so a new key here is the same file renamed,
+  // versioned or reloaded from disk.
+  useEffect(() => {
+    if (!fileKey) return;
+    if (lastFileKeyRef.current)
+      moveLastViewedPage(lastFileKeyRef.current, fileKey);
+    lastFileKeyRef.current = fileKey;
+  }, [fileKey]);
 
   if (!activeDocumentId || !documentReady || !fileKey) return null;
 
@@ -94,7 +108,10 @@ function LastViewedPageBridgeInner({
       if (timer !== null) clearTimeout(timer);
       timer = setTimeout(save, SAVE_DEBOUNCE_MS);
     });
+    // Closing the tab unmounts nothing, so the cleanup below would not run.
+    window.addEventListener("pagehide", save);
     return () => {
+      window.removeEventListener("pagehide", save);
       unsubscribe();
       save();
     };

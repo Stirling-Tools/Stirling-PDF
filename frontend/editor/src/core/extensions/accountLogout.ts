@@ -1,4 +1,5 @@
 import { clearNotificationReadState } from "@app/hooks/useNotifications";
+import { suspendLastViewedPages } from "@app/services/lastViewedPageStore";
 import { suspendWorkbenchSession } from "@app/services/workbenchSession";
 
 type SignOutFn = () => Promise<void>;
@@ -30,6 +31,8 @@ export function useAccountLogout() {
       suspendWorkbenchSession();
       // Same reason: the next person's own failures must not arrive pre-read.
       clearNotificationReadState();
+      // Nor learn which documents were read here, by name.
+      suspendLastViewedPages();
       await signOut();
     } finally {
       redirectToLogin();
