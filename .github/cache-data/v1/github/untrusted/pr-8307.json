@@ -8510,67 +8510,6 @@
       "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-6b29c4f083d6eec56cbb3c76beaa436b0475950beba1095f0e599778b2db278b-v6--545220002350da3fc12d4ec1e3644158ae991109fa9aa9448-part-000000",
       "workflow_run_id": 38428223058
     },
-    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/cargo-registry/windows-x64/56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-cache-e1b7946154cca207/v6": {
-      "object": "sha256:5df9049461ee4aaed423b733bcdb082ce33325ce623d55f337dba7062d7e2d89",
-      "storage": "github-artifact",
-      "updated_at": "2026-10-13T16:26:30.352Z",
-      "source": "Stirling-Tools/Stirling-PDF",
-      "created_by": "Ludy87",
-      "size": 142364476,
-      "parts": [
-        {
-          "index": 0,
-          "object": "sha256:6e77f90e961fac58d1a7c6c8e8e3abd98642a08c1dc88ff90e665879acd51549",
-          "size": 25165824,
-          "artifact_id": 11831050412,
-          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000000",
-          "workflow_run_id": 38428223058
-        },
-        {
-          "index": 1,
-          "object": "sha256:e5d244e1b347ab6ea91e1d0efa597b2ff8e3b1f664bb8cffa123365c79dfc333",
-          "size": 25165824,
-          "artifact_id": 11830955643,
-          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000001",
-          "workflow_run_id": 38428223058
-        },
-        {
-          "index": 2,
-          "object": "sha256:38c8c04a7c92b4199bfe6a751e5377db8569fba74fbb900580696c74a8579ce6",
-          "size": 25165824,
-          "artifact_id": 11830920647,
-          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000002",
-          "workflow_run_id": 38428223058
-        },
-        {
-          "index": 3,
-          "object": "sha256:68eafbcf8a812d0bc1f3643382daa2fc5ce60a7f0d7cfeae3684dcac2ab49db5",
-          "size": 25165824,
-          "artifact_id": 11830641476,
-          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000003",
-          "workflow_run_id": 38428223058
-        },
-        {
-          "index": 4,
-          "object": "sha256:0620c3f5584e3d7d05f0e54315e767ee84835459ebfcd4be4689586bdc48a965",
-          "size": 25165824,
-          "artifact_id": 11831065391,
-          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000004",
-          "workflow_run_id": 38428223058
-        },
-        {
-          "index": 5,
-          "object": "sha256:b18d680e81fba344fb4d556153c08417bcda570ad8d4b4f3b2afb9d65b14e491",
-          "size": 16535356,
-          "artifact_id": 11830806003,
-          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000005",
-          "workflow_run_id": 38428223058
-        }
-      ],
-      "artifact_id": 11831050412,
-      "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-v6--5df9049461ee4aaed423b733bcdb082ce33325ce623d55f3-part-000000",
-      "workflow_run_id": 38428223058
-    },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/gradle-wrapper/macos-arm64/6b29c4f083d6eec56cbb3c76beaa436b0475950beba1095f0e599778b2db278b-cache-e1b7946154cca207/v6": {
       "object": "sha256:157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e8cf724d23341b0",
       "storage": "github-artifact",
@@ -11574,10 +11513,71 @@
       "artifact_id": 11952821027,
       "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-57857e607c6d01d0727275ab5e56b5065f1e6bedb1622efab722ade660d1c0eb-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000000",
       "workflow_run_id": 38690936431
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/cargo-registry/windows-x64/9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-cache-e1b7946154cca207/v6": {
+      "object": "sha256:78db9bba05b2ba8b3f4065d4c038fbb429eca80547179477cce51b589b9ec1b1",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-15T06:24:41.411Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 142321787,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:ceffaaadfde1a5da4b237f75273a129a061e4254968bb8c51a20143b2a053097",
+          "size": 25165824,
+          "artifact_id": 11952307286,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--78db9bba05b2ba8b3f4065d4c038fbb429eca80547179477-part-000000",
+          "workflow_run_id": 38690936431
+        },
+        {
+          "index": 1,
+          "object": "sha256:1619ef41a828e67a4216f1a4121e3898c168418b3de541325b7853db01915038",
+          "size": 25165824,
+          "artifact_id": 11952591859,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--78db9bba05b2ba8b3f4065d4c038fbb429eca80547179477-part-000001",
+          "workflow_run_id": 38690936431
+        },
+        {
+          "index": 2,
+          "object": "sha256:cdab592ab896552b29bd79259be16471c565f8ab5d86f9495ef08646670693c0",
+          "size": 25165824,
+          "artifact_id": 11952332232,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--78db9bba05b2ba8b3f4065d4c038fbb429eca80547179477-part-000002",
+          "workflow_run_id": 38690936431
+        },
+        {
+          "index": 3,
+          "object": "sha256:d81b42f4c935e3043126844892a77c53cb1460c5ef2caf001dbf913e1379fb5d",
+          "size": 25165824,
+          "artifact_id": 11952691831,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--78db9bba05b2ba8b3f4065d4c038fbb429eca80547179477-part-000003",
+          "workflow_run_id": 38690936431
+        },
+        {
+          "index": 4,
+          "object": "sha256:d6659aa559691710b1e0a7e0bf3c1defcfa7e0c87b59913508b4860ad02c4f28",
+          "size": 25165824,
+          "artifact_id": 11952427043,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--78db9bba05b2ba8b3f4065d4c038fbb429eca80547179477-part-000004",
+          "workflow_run_id": 38690936431
+        },
+        {
+          "index": 5,
+          "object": "sha256:0c1ee88ed33295c177fcc251ec1af54bf0820600cc38565ab59b177c394360d9",
+          "size": 16492667,
+          "artifact_id": 11952741720,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--78db9bba05b2ba8b3f4065d4c038fbb429eca80547179477-part-000005",
+          "workflow_run_id": 38690936431
+        }
+      ],
+      "artifact_id": 11952307286,
+      "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--78db9bba05b2ba8b3f4065d4c038fbb429eca80547179477-part-000000",
+      "workflow_run_id": 38690936431
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-15T05:52:55.318Z",
-    "writes": 18
+    "writes": 19
   }
 }
