@@ -65,6 +65,15 @@ class TextRedactionService {
 
     Map<Integer, List<PDFText>> findTextToRedact(
             PDDocument document, String[] listOfText, boolean useRegex, boolean wholeWordSearch) {
+        return findTextToRedact(document, listOfText, useRegex, wholeWordSearch, false);
+    }
+
+    Map<Integer, List<PDFText>> findTextToRedact(
+            PDDocument document,
+            String[] listOfText,
+            boolean useRegex,
+            boolean wholeWordSearch,
+            boolean caseSensitive) {
 
         Set<String> terms =
                 Arrays.stream(listOfText)
@@ -77,7 +86,8 @@ class TextRedactionService {
         }
 
         List<Pattern> patterns =
-                TextFinderUtils.createOptimizedSearchPatterns(terms, useRegex, wholeWordSearch);
+                TextFinderUtils.createOptimizedSearchPatterns(
+                        terms, useRegex, wholeWordSearch, caseSensitive);
 
         if (patterns.isEmpty()) {
             return new HashMap<>();

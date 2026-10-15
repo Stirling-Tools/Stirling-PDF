@@ -5251,6 +5251,7 @@ rescanFields = "Re-scan fields"
 rescanFormFields = "Re-scan form fields"
 save = "Save"
 saveShortcut = "Ctrl+S to save"
+saving = "Saving..."
 selectOptionPlaceholder = "— select —"
 skippedEdits_one = "1 change could not be applied:"
 skippedEdits_other = "{{count}} changes could not be applied:"
@@ -5258,9 +5259,7 @@ skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "Unsaved changes"
 
 [formFill.create]
-commit = "Add {{count}} field(s) to PDF"
 empty = "No fields drawn yet."
-failed = "Failed to add fields"
 goToField = "Go to this field"
 hint = "Pick a field type, then draw it on the page."
 placing = "Draw a {{type}} field on the page. Press Esc to stop."
@@ -5334,7 +5333,6 @@ modify = "Modify"
 commit = "Save {{count}} change(s)"
 delete = "Delete"
 empty = "This PDF has no form fields yet."
-failed = "Failed to save changes"
 groupSizeHint = "Use Option size"
 hint = "Select a field to edit its properties, drag it on the page, or delete it."
 restore = "Restore"
@@ -11160,6 +11158,7 @@ tags = "Redact,Hide,black out,black,marker,hidden,auto redact,manual redact"
 title = "Redact"
 
 [redact.auto]
+caseSensitiveLabel = "Case Sensitive Matching"
 colorLabel = "Box Color"
 convertPDFToImageLabel = "Convert PDF to PDF-Image"
 customPaddingLabel = "Custom Extra Padding"
@@ -11194,6 +11193,10 @@ automaticDisabledTooltip = "Select files in the file manager to redact multiple 
 manual = "Manual"
 mode = "Mode"
 title = "Redaction Method"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
+title = "Case Sensitive Matching"
 
 [redact.tooltip.advanced.color]
 text = "Customize the appearance of redaction boxes. Black is standard, but you can choose any color. Padding adds extra space around the found text."
