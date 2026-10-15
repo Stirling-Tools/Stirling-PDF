@@ -592,11 +592,12 @@ class RedactExecuteServiceMoreTest {
             factoryReturns(pdf);
 
             RedactExecuteRequest req = requestFor(pdf);
-            req.setRegexPatterns(new ArrayList<>(List.of("(")));
+            req.setRegexPatterns(new ArrayList<>(List.of("secret-term(")));
 
             assertThatThrownBy(() -> service.execute(req))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("not a valid regular expression");
+                    .hasMessageContaining("not a valid regular expression")
+                    .hasMessageNotContaining("secret-term");
         }
 
         @Test
