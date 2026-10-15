@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
@@ -91,13 +92,21 @@ public class McpSecurityConfig {
 
     @Bean
     @Order(0)
-    SecurityFilterChain mcpSecurityFilterChain(HttpSecurity http, JwtDecoder mcpJwtDecoder)
+    SecurityFilterChain mcpSecurityFilterChain(
+            HttpSecurity http, JwtDecoder mcpJwtDecoder, McpAuthenticationPolicy policy)
             throws Exception {
         ApplicationProperties.Mcp.Auth auth = applicationProperties.getMcp().getAuth();
         if (isApiKeyMode()) {
-            return apiKeyFilterChain(http);
+            return apiKeyFilterChain(http, policy);
         }
-        return oauthFilterChain(http, mcpJwtDecoder, auth);
+        return oauthFilterChain(http, mcpJwtDecoder, auth, policy);
+    }
+
+    @Bean
+    @Profile("!saas")
+    McpAuthenticationPolicy localMcpAuthenticationPolicy() {
+        return new LocalMcpAuthenticationPolicy(
+                userService, applicationProperties.getMcp().getAuth());
     }
 
     private boolean isApiKeyMode() {
@@ -108,7 +117,8 @@ public class McpSecurityConfig {
      * API-key chain: a Stirling per-user API key is validated by {@link McpApiKeyAuthFilter};
      * otherwise 401.
      */
-    private SecurityFilterChain apiKeyFilterChain(HttpSecurity http) throws Exception {
+    private SecurityFilterChain apiKeyFilterChain(HttpSecurity http, McpAuthenticationPolicy policy)
+            throws Exception {
         applyCors(http);
         http.securityMatcher(BASE_PATH, BASE_PATH + "/**")
                 // CSRF intentionally disabled: /mcp is a stateless JSON-RPC API authenticated by an
@@ -138,13 +148,17 @@ public class McpSecurityConfig {
                         AuthorizationFilter.class)
                 // Authenticate before the anonymous filter sets an anonymous token.
                 .addFilterBefore(
-                        new McpApiKeyAuthFilter(userService), AnonymousAuthenticationFilter.class);
+                        new McpApiKeyAuthFilter(userService, policy),
+                        AnonymousAuthenticationFilter.class);
         return http.build();
     }
 
     /** OAuth2 resource-server chain (JWT, RFC 8707 audience, RFC 9728 metadata). */
     private SecurityFilterChain oauthFilterChain(
-            HttpSecurity http, JwtDecoder mcpJwtDecoder, ApplicationProperties.Mcp.Auth auth)
+            HttpSecurity http,
+            JwtDecoder mcpJwtDecoder,
+            ApplicationProperties.Mcp.Auth auth,
+            McpAuthenticationPolicy policy)
             throws Exception {
         String metadataPath = "/.well-known/oauth-protected-resource";
         applyCors(http);
@@ -175,11 +189,7 @@ public class McpSecurityConfig {
                                 applicationProperties.getMcp().getMaxRequestBytes()),
                         BearerTokenAuthenticationFilter.class)
                 .addFilterAfter(
-                        new McpUserBindingFilter(
-                                userService,
-                                auth.getUsernameClaim(),
-                                auth.isRequireExistingAccount()),
-                        BearerTokenAuthenticationFilter.class)
+                        new McpUserBindingFilter(policy), BearerTokenAuthenticationFilter.class)
                 .oauth2ResourceServer(
                         oauth2 ->
                                 oauth2.authenticationEntryPoint(

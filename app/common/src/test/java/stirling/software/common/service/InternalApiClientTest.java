@@ -60,6 +60,54 @@ class InternalApiClientTest {
     }
 
     @Test
+    void bearerDispatchPreservesSessionWithoutLookingUpAnApiKey() {
+        try (var construction =
+                mockConstruction(
+                        RestTemplate.class,
+                        (rt, context) -> {
+                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
+                                    .thenAnswer(
+                                            call -> {
+                                                HttpEntity<?> entity = call.getArgument(0);
+                                                assertEquals(
+                                                        "Bearer admitted-session",
+                                                        entity.getHeaders()
+                                                                .getFirst(
+                                                                        HttpHeaders.AUTHORIZATION));
+                                                assertNull(
+                                                        entity.getHeaders().getFirst("X-API-KEY"));
+                                                return (RequestCallback) request -> {};
+                                            });
+                        })) {
+            newClient()
+                    .post(
+                            "/api/v1/misc/compress-pdf",
+                            new LinkedMultiValueMap<>(),
+                            "admitted-session");
+            verify(construction.constructed().getFirst())
+                    .execute(
+                            eq("http://localhost:8080/api/v1/misc/compress-pdf"),
+                            eq(HttpMethod.POST),
+                            any(),
+                            any());
+            verifyNoInteractions(userService);
+        }
+    }
+
+    @Test
+    void bearerDispatchCannotSendSessionToAnExternalOrUnapprovedEndpoint() {
+        for (String endpoint :
+                new String[] {
+                    "https://outside.example/upload", "/api/v1/users", "/api/v1/misc/../users"
+                }) {
+            assertThrows(
+                    SecurityException.class,
+                    () -> client.post(endpoint, new LinkedMultiValueMap<>(), "admitted-session"));
+        }
+        verifyNoInteractions(userService);
+    }
+
+    @Test
     void postTagsRequestAsAutomation() throws Exception {
         // Every InternalApiClient.post() caller is a parent automation flow dispatching a child
         // tool (pipeline executor, AI workflow, policy runner). Tagging the sub-step here means

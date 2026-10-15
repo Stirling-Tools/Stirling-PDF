@@ -12,6 +12,8 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -101,7 +103,12 @@ public class McpOperationExecutor {
 
         ResponseEntity<Resource> response;
         try {
-            response = internalApiClient.post(meta.endpointPath(), body);
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            response =
+                    authentication instanceof JwtAuthenticationToken jwt
+                            ? internalApiClient.post(
+                                    meta.endpointPath(), body, jwt.getToken().getTokenValue())
+                            : internalApiClient.post(meta.endpointPath(), body);
         } catch (InternalApiTimeoutException e) {
             return McpResponses.error(
                     mapper,
