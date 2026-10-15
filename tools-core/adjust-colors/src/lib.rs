@@ -67,14 +67,23 @@ fn to_pixels(points: f64) -> usize {
     (points * RENDER_SCALE).round().max(1.0) as usize
 }
 
-/// Adjusts packed 4-byte pixels in B, G, R, unused order, leaving the fourth
-/// byte as it was.
+/// Adjusts packed 4-byte pixels in B, G, R, unused order (PDFium's bitmaps),
+/// leaving the fourth byte as it was.
 pub fn adjust_bgrx(pixels: &mut [u8], adjustments: &Adjustments) {
+    adjust_packed(pixels, adjustments, [2, 1, 0]);
+}
+
+/// Adjusts packed 4-byte pixels in R, G, B, A order (a canvas's `ImageData`),
+/// leaving alpha as it was.
+pub fn adjust_rgba(pixels: &mut [u8], adjustments: &Adjustments) {
+    adjust_packed(pixels, adjustments, [0, 1, 2]);
+}
+
+/// `[red, green, blue]` are each channel's byte offset within a pixel.
+fn adjust_packed(pixels: &mut [u8], adjustments: &Adjustments, [red, green, blue]: [usize; 3]) {
     for pixel in pixels.chunks_exact_mut(4) {
-        let [red, green, blue] = adjust_rgb([pixel[2], pixel[1], pixel[0]], adjustments);
-        pixel[0] = blue;
-        pixel[1] = green;
-        pixel[2] = red;
+        let adjusted = adjust_rgb([pixel[red], pixel[green], pixel[blue]], adjustments);
+        [pixel[red], pixel[green], pixel[blue]] = adjusted;
     }
 }
 
@@ -229,5 +238,26 @@ mod tests {
         let mut pixels = [50, 100, 200, 7];
         adjust_bgrx(&mut pixels, &with(|a| a.red = 0.0));
         assert_eq!(pixels, [50, 100, 0, 7]);
+    }
+
+    #[test]
+    fn rgba_order_is_respected_and_alpha_kept() {
+        let mut pixels = [200, 100, 50, 7];
+        adjust_rgba(&mut pixels, &with(|a| a.red = 0.0));
+        assert_eq!(pixels, [0, 100, 50, 7]);
+    }
+
+    #[test]
+    fn both_layouts_adjust_a_pixel_identically() {
+        let punchy = with(|a| {
+            a.contrast = 160.0;
+            a.saturation = 40.0;
+            a.blue = 130.0;
+        });
+        let mut bgrx = [30, 140, 220, 255];
+        let mut rgba = [220, 140, 30, 255];
+        adjust_bgrx(&mut bgrx, &punchy);
+        adjust_rgba(&mut rgba, &punchy);
+        assert_eq!([bgrx[2], bgrx[1], bgrx[0]], [rgba[0], rgba[1], rgba[2]]);
     }
 }

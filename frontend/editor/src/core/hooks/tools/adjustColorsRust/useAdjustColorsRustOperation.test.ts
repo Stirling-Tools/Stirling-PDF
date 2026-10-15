@@ -1,6 +1,4 @@
-import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
@@ -11,13 +9,11 @@ import {
   openRawDocumentSafe,
 } from "@app/services/pdfiumService";
 import type { ColorAdjustments } from "@app/services/toolsCore";
+import {
+  stubWasmFetch,
+  toolsCoreWasmBuilt,
+} from "@app/tests/helpers/toolsCoreWasm";
 
-// Runs the real Rust wasm against the real PDFium build, so only where
-// `task tools-core:build:wasm` has produced it.
-const TOOLS_WASM = path.join(
-  import.meta.dirname,
-  "../../../../../public/wasm/stirling-tools.wasm",
-);
 const FIXTURE = path.join(
   import.meta.dirname,
   "../../../tests/test-fixtures/compare_sample_a.pdf",
@@ -96,27 +92,12 @@ function cornerPixel(m: WrappedPdfiumModule, page: number): number[] {
   }
 }
 
-describe.skipIf(!existsSync(TOOLS_WASM))("adjustColorsInBrowser", () => {
+// Runs the real Rust wasm against the real PDFium build.
+describe.skipIf(!toolsCoreWasmBuilt)("adjustColorsInBrowser", () => {
   let fixture: File;
 
   beforeAll(async () => {
-    const pdfiumWasm = await readFile(
-      createRequire(import.meta.url).resolve("@embedpdf/pdfium/pdfium.wasm"),
-    );
-    const toolsWasm = await readFile(TOOLS_WASM);
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (url: string | URL) =>
-        Promise.resolve(
-          new Response(
-            String(url).endsWith("stirling-tools.wasm")
-              ? toolsWasm
-              : pdfiumWasm,
-            { headers: { "Content-Type": "application/wasm" } },
-          ),
-        ),
-      ),
-    );
+    await stubWasmFetch();
     fixture = pdfFile(new Uint8Array(await readFile(FIXTURE)), "sample.pdf");
   });
 

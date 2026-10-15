@@ -9,6 +9,7 @@ import AdjustContrastBasicSettings from "@app/components/tools/adjustContrast/Ad
 import AdjustContrastColorSettings from "@app/components/tools/adjustContrast/AdjustContrastColorSettings";
 import AdjustContrastPreview from "@app/components/tools/adjustContrast/AdjustContrastPreview";
 import AdjustColorsRustProcessingSettings from "@app/components/tools/adjustColorsRust/AdjustColorsRustProcessingSettings";
+import { adjustPreviewWithRust } from "@app/components/tools/adjustColorsRust/adjustPreviewWithRust";
 import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
 import NavigationArrows from "@app/components/shared/filePreview/NavigationArrows";
 
@@ -21,8 +22,8 @@ enum Step {
 
 /**
  * Adjust Colors/Contrast backed by the shared Rust code, beside the TS tool for
- * comparison. The preview is the TS tool's canvas preview; only the output
- * comes from Rust, in the browser or on the server.
+ * comparison. The preview always runs the Rust wasm; the output runs it in the
+ * browser or natively on the server.
  */
 const AdjustColorsRust = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -112,6 +113,7 @@ const AdjustColorsRust = (props: BaseToolProps) => {
           <AdjustContrastPreview
             file={currentFile}
             parameters={base.params.parameters}
+            adjust={adjustPreviewWithRust}
           />
         </div>
       </NavigationArrows>

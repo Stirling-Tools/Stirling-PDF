@@ -32,6 +32,13 @@ export interface ToolsCore {
     target: number,
     adjustments: ColorAdjustments,
   ): void;
+
+  /**
+   * Adjusts packed RGBA pixels (an `ImageData`'s `data`) in place, leaving
+   * alpha as it was: the per-pixel step of {@link ToolsCore.adjustColors},
+   * for previews.
+   */
+  adjustRgba(pixels: Uint8ClampedArray, adjustments: ColorAdjustments): void;
 }
 
 interface ToolsCoreExports {
@@ -47,6 +54,18 @@ interface ToolsCoreExports {
     green: number,
     blue: number,
   ): number;
+  stirling_adjust_rgba(
+    pixels: number,
+    length: number,
+    contrast: number,
+    brightness: number,
+    saturation: number,
+    red: number,
+    green: number,
+    blue: number,
+  ): number;
+  stirling_alloc(length: number): number;
+  stirling_free(pointer: number, length: number): void;
 }
 
 let compiled: Promise<WebAssembly.Module> | null = null;
@@ -145,6 +164,27 @@ async function instantiate(
       );
       if (status !== 0) throw new Error(lastError());
     },
+
+    adjustRgba(pixels, adjustments) {
+      const pointer = tools.stirling_alloc(pixels.length);
+      try {
+        bytes(tools.memory, pointer, pixels.length).set(pixels);
+        const status = tools.stirling_adjust_rgba(
+          pointer,
+          pixels.length,
+          adjustments.contrast,
+          adjustments.brightness,
+          adjustments.saturation,
+          adjustments.red,
+          adjustments.green,
+          adjustments.blue,
+        );
+        if (status !== 0) throw new Error(lastError());
+        pixels.set(bytes(tools.memory, pointer, pixels.length));
+      } finally {
+        tools.stirling_free(pointer, pixels.length);
+      }
+    },
   };
 }
 
@@ -175,12 +215,17 @@ function pdfiumImports(
 }
 
 function toolsExports(instance: WebAssembly.Instance): ToolsCoreExports {
-  const { memory, stirling_last_error, stirling_adjust_colors } =
-    instance.exports;
+  const { memory, ...functions } = instance.exports;
+  const expected = [
+    "stirling_last_error",
+    "stirling_adjust_colors",
+    "stirling_adjust_rgba",
+    "stirling_alloc",
+    "stirling_free",
+  ];
   if (
     !(memory instanceof WebAssembly.Memory) ||
-    typeof stirling_last_error !== "function" ||
-    typeof stirling_adjust_colors !== "function"
+    expected.some((name) => typeof functions[name] !== "function")
   ) {
     throw new Error("The Rust tools wasm is missing an expected export");
   }
