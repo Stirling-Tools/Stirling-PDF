@@ -17,6 +17,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -37,6 +38,8 @@ import stirling.software.proprietary.mcp.oauth.repository.McpAuthorizationReques
 import stirling.software.proprietary.mcp.oauth.repository.McpOAuthClientRepository;
 import stirling.software.proprietary.mcp.oauth.repository.McpOAuthGrantRepository;
 import stirling.software.proprietary.mcp.oauth.repository.McpRefreshTokenRepository;
+import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.User;
 
 /**
  * Stirling's own OAuth 2.1 authorization server for /mcp: DCR, Client ID Metadata Documents, PKCE
@@ -55,6 +58,9 @@ public class McpOAuthService {
     static final int MAX_REDIRECT_URIS = 10;
     private static final int MAX_URI_LENGTH = 2048;
     private static final int MAX_NAME_LENGTH = 100;
+    private static final int MAX_STATE_LENGTH = 1024;
+    // A retried or racing refresh inside this window is refused but not treated as theft.
+    static final Duration REFRESH_REUSE_GRACE = Duration.ofSeconds(60);
     // Registered clients nobody ever connected are dropped after this.
     private static final Duration UNUSED_CLIENT_TTL = Duration.ofDays(7);
 
@@ -68,6 +74,7 @@ public class McpOAuthService {
     private final McpRefreshTokenRepository refreshTokens;
     private final McpTokenMinter tokenMinter;
     private final McpClientMetadataFetcher metadataFetcher;
+    private final ObjectProvider<UserRepository> users;
     private final Cache<String, Long> activeGrants =
             Caffeine.newBuilder()
                     .maximumSize(10_000)
@@ -81,7 +88,8 @@ public class McpOAuthService {
             McpOAuthGrantRepository grants,
             McpRefreshTokenRepository refreshTokens,
             McpTokenMinter tokenMinter,
-            McpClientMetadataFetcher metadataFetcher) {
+            McpClientMetadataFetcher metadataFetcher,
+            ObjectProvider<UserRepository> users) {
         this.applicationProperties = applicationProperties;
         this.clients = clients;
         this.authorizations = authorizations;
@@ -89,6 +97,7 @@ public class McpOAuthService {
         this.refreshTokens = refreshTokens;
         this.tokenMinter = tokenMinter;
         this.metadataFetcher = metadataFetcher;
+        this.users = users;
     }
 
     private ApplicationProperties.Mcp.Auth auth() {
@@ -130,9 +139,15 @@ public class McpOAuthService {
         return scopes;
     }
 
-    /** The tool scopes, plus offline_access whenever refresh tokens are on (consent shows it). */
+    /**
+     * The tool scopes the client asked for (both when it named none; write brings read), plus
+     * offline_access whenever refresh tokens are on, as chat apps rarely ask for it.
+     */
     String grantedScope(String requested) {
-        return refreshTokensEnabled() ? TOOL_SCOPES + " " + SCOPE_OFFLINE : TOOL_SCOPES;
+        boolean read = hasScope(requested, SCOPE_READ);
+        boolean write = hasScope(requested, SCOPE_WRITE);
+        String tools = write || !read ? TOOL_SCOPES : SCOPE_READ;
+        return refreshTokensEnabled() ? tools + " " + SCOPE_OFFLINE : tools;
     }
 
     private static boolean hasScope(String scope, String wanted) {
@@ -234,6 +249,9 @@ public class McpOAuthService {
         if (uri.getFragment() != null) {
             throw McpOAuthException.invalidRequest("redirect_uri must not contain a fragment.");
         }
+        if (uri.getRawUserInfo() != null) {
+            throw McpOAuthException.invalidRequest("redirect_uri must not contain user info.");
+        }
         String scheme = uri.getScheme().toLowerCase(Locale.ROOT);
         String host = uri.getHost();
         boolean loopback =
@@ -311,6 +329,12 @@ public class McpOAuthService {
         if (codeChallenge == null || codeChallenge.isBlank()) {
             throw McpOAuthException.invalidRequest("PKCE code_challenge is required.");
         }
+        if (codeChallenge.length() > 128) {
+            throw McpOAuthException.invalidRequest("code_challenge is too long.");
+        }
+        if (state != null && state.length() > MAX_STATE_LENGTH) {
+            throw McpOAuthException.invalidRequest("state is too long.");
+        }
         if (!"S256".equals(codeChallengeMethod)) {
             throw McpOAuthException.invalidRequest("code_challenge_method must be S256.");
         }
@@ -347,14 +371,17 @@ public class McpOAuthService {
      * port.
      */
     static boolean redirectAllowed(List<String> registered, String requested) {
-        if (requested == null || registered == null) {
+        if (requested == null || registered == null || requested.indexOf('#') >= 0) {
             return false;
         }
         if (registered.contains(requested)) {
             return true;
         }
         URI asked = parse(requested);
-        if (asked == null || !"http".equals(asked.getScheme()) || !isLoopback(asked.getHost())) {
+        if (asked == null
+                || !"http".equals(asked.getScheme())
+                || asked.getRawUserInfo() != null
+                || !isLoopback(asked.getHost())) {
             return false;
         }
         for (String candidate : registered) {
@@ -407,9 +434,29 @@ public class McpOAuthService {
                         grantKey(username, clientId),
                         k ->
                                 grants.findByUsernameAndClientId(username, clientId)
+                                        .filter(this::accountStillOwns)
                                         .map(McpOAuthGrant::getId)
                                         .orElse(-1L));
         return current > 0 && grantId.equals(current.toString());
+    }
+
+    /** The grant's account still exists, is enabled and is the same account that consented. */
+    private boolean accountStillOwns(McpOAuthGrant grant) {
+        UserRepository repository = users.getIfAvailable();
+        if (repository == null) {
+            return true;
+        }
+        Optional<User> user = repository.findByUsernameIgnoreCase(grant.getUsername());
+        return user.isPresent()
+                && user.get().isEnabled()
+                && (grant.getUserId() == null || grant.getUserId().equals(user.get().getId()));
+    }
+
+    private Long currentUserId(String username) {
+        UserRepository repository = users.getIfAvailable();
+        return repository == null
+                ? null
+                : repository.findByUsernameIgnoreCase(username).map(User::getId).orElse(null);
     }
 
     private static String grantKey(String username, String clientId) {
@@ -418,7 +465,9 @@ public class McpOAuthService {
 
     /** True when this user already granted this client, so consent can be skipped. */
     public boolean hasGrant(String username, String clientId) {
-        return grants.findByUsernameAndClientId(username, clientId).isPresent();
+        return grants.findByUsernameAndClientId(username, clientId)
+                .filter(this::accountStillOwns)
+                .isPresent();
     }
 
     /** Record the standing grant, attach a single-use code, and return the client redirect. */
@@ -428,15 +477,27 @@ public class McpOAuthService {
             throw McpOAuthException.invalidGrant("This authorization is no longer pending.");
         }
         Instant now = Instant.now();
+        Long userId = currentUserId(request.getUsername());
+        Optional<McpOAuthGrant> existing =
+                grants.findByUsernameAndClientId(request.getUsername(), request.getClientId());
+        if (existing.isPresent()
+                && existing.get().getUserId() != null
+                && !existing.get().getUserId().equals(userId)) {
+            // Left by an earlier account with this username: none of its sessions carry over.
+            refreshTokens.deleteByUsernameAndClientId(request.getUsername(), request.getClientId());
+            grants.delete(existing.get());
+            grants.flush();
+            existing = Optional.empty();
+        }
         McpOAuthGrant grant =
-                grants.findByUsernameAndClientId(request.getUsername(), request.getClientId())
-                        .orElseGet(
-                                () ->
-                                        McpOAuthGrant.builder()
-                                                .username(request.getUsername())
-                                                .clientId(request.getClientId())
-                                                .createdAt(now)
-                                                .build());
+                existing.orElseGet(
+                        () ->
+                                McpOAuthGrant.builder()
+                                        .username(request.getUsername())
+                                        .clientId(request.getClientId())
+                                        .createdAt(now)
+                                        .build());
+        grant.setUserId(userId);
         grant.setScope(request.getScope());
         grant.setLastUsedAt(now);
         grants.save(grant);
@@ -484,7 +545,8 @@ public class McpOAuthService {
     }
 
     /** Authorization-code grant with PKCE verification. */
-    @Transactional
+    // A replayed code revokes what it issued, and that revocation must commit.
+    @Transactional(noRollbackFor = McpOAuthException.class)
     public Map<String, Object> exchangeCode(
             String code, String clientId, String redirectUri, String codeVerifier) {
         McpAuthorizationRequest request =
@@ -494,6 +556,14 @@ public class McpOAuthService {
                                 () ->
                                         McpOAuthException.invalidGrant(
                                                 "Unknown authorization code."));
+        if (request.getStatus() == McpAuthorizationRequest.Status.CONSUMED) {
+            // RFC 6749 4.1.2: a code used twice may be stolen, so revoke what it issued.
+            revokeClientSessions(request.getUsername(), request.getClientId());
+            log.warn(
+                    "MCP authorization code reused for client {}; its sessions were revoked",
+                    sanitize(request.getClientId()));
+            throw McpOAuthException.invalidGrant("Authorization code has already been used.");
+        }
         if (request.getStatus() != McpAuthorizationRequest.Status.APPROVED) {
             throw McpOAuthException.invalidGrant("Authorization code has already been used.");
         }
@@ -503,7 +573,9 @@ public class McpOAuthService {
         if (clientId == null || !clientId.equals(request.getClientId())) {
             throw McpOAuthException.invalidClient("client_id does not match the code.");
         }
-        if (redirectUri == null || !redirectUri.equals(request.getRedirectUri())) {
+        // OAuth 2.1 makes redirect_uri optional here as PKCE binds the code; if sent, it must
+        // match.
+        if (redirectUri != null && !redirectUri.equals(request.getRedirectUri())) {
             throw McpOAuthException.invalidGrant("redirect_uri does not match the code.");
         }
         if (!verifyPkce(request.getCodeChallenge(), codeVerifier)) {
@@ -511,6 +583,7 @@ public class McpOAuthService {
         }
         McpOAuthGrant grant =
                 grants.findByUsernameAndClientId(request.getUsername(), clientId)
+                        .filter(this::accountStillOwns)
                         .orElseThrow(
                                 () ->
                                         McpOAuthException.invalidGrant(
@@ -551,8 +624,12 @@ public class McpOAuthService {
                         .orElseThrow(
                                 () -> McpOAuthException.invalidGrant("Unknown refresh token."));
         if (stored.getConsumedAt() != null) {
+            if (withinReuseGrace(stored.getConsumedAt())) {
+                // A client retry or a concurrent refresh, not theft: refuse, keep the new session.
+                throw McpOAuthException.invalidGrant("Refresh token has already been used.");
+            }
             // A rotated token came back: assume theft and end every session for this client.
-            revokeClientSessions(stored);
+            revokeClientSessions(stored.getUsername(), stored.getClientId());
             log.warn(
                     "MCP refresh token reused for client {}; its sessions were revoked",
                     sanitize(stored.getClientId()));
@@ -572,9 +649,17 @@ public class McpOAuthService {
             refreshTokens.delete(stored);
             throw McpOAuthException.invalidGrant("Access for this client has been revoked.");
         }
+        if (!accountStillOwns(grant.get())) {
+            Long current = currentUserId(stored.getUsername());
+            if (current == null || !current.equals(grant.get().getUserId())) {
+                // The account is gone or was re-created, so nothing of the old one survives.
+                revokeClientSessions(stored.getUsername(), stored.getClientId());
+            }
+            throw McpOAuthException.invalidGrant("The account for this access is not active.");
+        }
         Instant now = Instant.now();
         if (refreshTokens.consume(hash, now) != 1) {
-            revokeClientSessions(stored);
+            // Lost a race with a concurrent refresh of the same token, which just rotated it.
             throw McpOAuthException.invalidGrant("Refresh token has already been used.");
         }
         if (grants.touch(grant.get().getId(), now) != 1) {
@@ -588,9 +673,11 @@ public class McpOAuthService {
                 grant.get().getId());
     }
 
-    private void revokeClientSessions(McpRefreshToken token) {
-        String username = token.getUsername();
-        String clientId = token.getClientId();
+    private static boolean withinReuseGrace(Instant consumedAt) {
+        return consumedAt.isAfter(Instant.now().minus(REFRESH_REUSE_GRACE));
+    }
+
+    private void revokeClientSessions(String username, String clientId) {
         refreshTokens.deleteByUsernameAndClientId(username, clientId);
         authorizations.deleteByUsernameAndClientId(username, clientId);
         grants.deleteByUsernameAndClientId(username, clientId);

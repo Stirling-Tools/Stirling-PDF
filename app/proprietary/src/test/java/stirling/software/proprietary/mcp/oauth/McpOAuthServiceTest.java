@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
+import org.springframework.beans.factory.ObjectProvider;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.mcp.oauth.model.McpAuthorizationRequest;
@@ -37,6 +38,8 @@ import stirling.software.proprietary.mcp.oauth.repository.McpAuthorizationReques
 import stirling.software.proprietary.mcp.oauth.repository.McpOAuthClientRepository;
 import stirling.software.proprietary.mcp.oauth.repository.McpOAuthGrantRepository;
 import stirling.software.proprietary.mcp.oauth.repository.McpRefreshTokenRepository;
+import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.User;
 
 /** Security-critical behaviour of the built-in MCP authorization server. */
 class McpOAuthServiceTest {
@@ -56,6 +59,9 @@ class McpOAuthServiceTest {
     private McpRefreshTokenRepository refreshTokens;
     private McpTokenMinter tokenMinter;
     private McpClientMetadataFetcher metadataFetcher;
+    private UserRepository userRepository;
+    private ObjectProvider<UserRepository> users;
+    private User alice;
     private McpOAuthService service;
 
     @BeforeEach
@@ -70,6 +76,13 @@ class McpOAuthServiceTest {
         refreshTokens = mock(McpRefreshTokenRepository.class);
         tokenMinter = mock(McpTokenMinter.class);
         metadataFetcher = mock(McpClientMetadataFetcher.class);
+        userRepository = mock(UserRepository.class);
+        alice = new User();
+        alice.setId(7L);
+        alice.setUsername(USER);
+        alice.setEnabled(true);
+        when(userRepository.findByUsernameIgnoreCase(USER)).thenReturn(Optional.of(alice));
+        users = providerOf(userRepository);
 
         when(clients.save(any())).thenAnswer(McpOAuthServiceTest::firstArg);
         when(clients.findById(anyString())).thenReturn(Optional.empty());
@@ -104,7 +117,15 @@ class McpOAuthServiceTest {
                         grants,
                         refreshTokens,
                         tokenMinter,
-                        metadataFetcher);
+                        metadataFetcher,
+                        users);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ObjectProvider<UserRepository> providerOf(UserRepository repository) {
+        ObjectProvider<UserRepository> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(repository);
+        return provider;
     }
 
     @SuppressWarnings("unchecked")
@@ -365,7 +386,7 @@ class McpOAuthServiceTest {
                         .clientId("client-1")
                         .username(USER)
                         .expiresAt(Instant.now().plusSeconds(3600))
-                        .consumedAt(Instant.now().minusSeconds(5))
+                        .consumedAt(Instant.now().minusSeconds(600))
                         .build();
         when(refreshTokens.findById(stored.getTokenHash())).thenReturn(Optional.of(stored));
 
@@ -703,8 +724,8 @@ class McpOAuthServiceTest {
                 .thenReturn(Optional.of(McpOAuthGrant.builder().id(1L).username(USER).build()));
         when(refreshTokens.consume(eq(stored.getTokenHash()), any())).thenReturn(0);
         assertThrows(McpOAuthException.class, () -> service.refresh("raced", "client-1"));
-        verify(refreshTokens).deleteByUsernameAndClientId(USER, "client-1");
-        verify(grants).deleteByUsernameAndClientId(USER, "client-1");
+        // The winner of the race just rotated the token, so its new session must survive.
+        verify(grants, never()).deleteByUsernameAndClientId(USER, "client-1");
         verifyNoTokenMinted();
     }
 
@@ -715,7 +736,7 @@ class McpOAuthServiceTest {
                         .tokenHash(McpOAuthService.sha256Hex("replay"))
                         .clientId("client-1")
                         .username(USER)
-                        .consumedAt(Instant.now())
+                        .consumedAt(Instant.now().minusSeconds(600))
                         .expiresAt(Instant.now().plusSeconds(300))
                         .build();
         when(refreshTokens.findById(stored.getTokenHash())).thenReturn(Optional.of(stored));
@@ -740,5 +761,153 @@ class McpOAuthServiceTest {
         assertThrows(McpOAuthException.class, () -> service.refresh("revoked", "client-1"));
         verify(grants, never()).save(any());
         verifyNoTokenMinted();
+    }
+
+    private McpRefreshToken liveRefreshToken(String raw) {
+        McpRefreshToken stored =
+                McpRefreshToken.builder()
+                        .tokenHash(McpOAuthService.sha256Hex(raw))
+                        .clientId("client-1")
+                        .username(USER)
+                        .scope(service.grantedScope(null))
+                        .expiresAt(Instant.now().plusSeconds(300))
+                        .build();
+        when(refreshTokens.findById(stored.getTokenHash())).thenReturn(Optional.of(stored));
+        return stored;
+    }
+
+    private void grantOwnedBy(Long userId) {
+        when(grants.findByUsernameAndClientId(USER, "client-1"))
+                .thenReturn(
+                        Optional.of(
+                                McpOAuthGrant.builder()
+                                        .id(1L)
+                                        .username(USER)
+                                        .clientId("client-1")
+                                        .userId(userId)
+                                        .build()));
+    }
+
+    @Test
+    void aRefreshRetriedInsideTheGraceWindowIsRefusedWithoutRevokingTheSession() {
+        McpRefreshToken stored = liveRefreshToken("retried");
+        stored.setConsumedAt(Instant.now().minusSeconds(2));
+        assertThrows(McpOAuthException.class, () -> service.refresh("retried", "client-1"));
+        verify(grants, never()).deleteByUsernameAndClientId(USER, "client-1");
+        verifyNoTokenMinted();
+    }
+
+    @Test
+    void aDeletedAccountsRefreshTokenIsRefusedAndItsSessionsRemoved() {
+        liveRefreshToken("orphan");
+        grantOwnedBy(7L);
+        when(userRepository.findByUsernameIgnoreCase(USER)).thenReturn(Optional.empty());
+
+        assertThrows(McpOAuthException.class, () -> service.refresh("orphan", "client-1"));
+        verify(grants).deleteByUsernameAndClientId(USER, "client-1");
+        verifyNoTokenMinted();
+    }
+
+    @Test
+    void aRecreatedAccountWithTheSameUsernameDoesNotInheritAccess() {
+        liveRefreshToken("inherited");
+        grantOwnedBy(7L);
+        User newcomer = new User();
+        newcomer.setId(99L);
+        newcomer.setUsername(USER);
+        when(userRepository.findByUsernameIgnoreCase(USER)).thenReturn(Optional.of(newcomer));
+
+        assertThrows(McpOAuthException.class, () -> service.refresh("inherited", "client-1"));
+        verify(grants).deleteByUsernameAndClientId(USER, "client-1");
+        assertFalse(service.isGrantActive(USER, "client-1", "1"));
+        assertFalse(service.hasGrant(USER, "client-1"));
+        verifyNoTokenMinted();
+    }
+
+    @Test
+    void aDisabledAccountCannotRefreshButKeepsItsGrantForReEnabling() {
+        liveRefreshToken("disabled");
+        grantOwnedBy(7L);
+        alice.setEnabled(false);
+
+        assertThrows(McpOAuthException.class, () -> service.refresh("disabled", "client-1"));
+        verify(grants, never()).deleteByUsernameAndClientId(USER, "client-1");
+        assertFalse(service.isGrantActive(USER, "client-1", "1"));
+        verifyNoTokenMinted();
+    }
+
+    @Test
+    void approvalRecordsTheConsentingAccountId() {
+        McpAuthorizationRequest request = pending(null);
+        ArgumentCaptor<McpOAuthGrant> saved = ArgumentCaptor.forClass(McpOAuthGrant.class);
+
+        service.approve(request);
+
+        verify(grants).save(saved.capture());
+        assertEquals(7L, saved.getValue().getUserId());
+    }
+
+    @Test
+    void aReplayedCodeRevokesTheSessionsItIssued() {
+        McpAuthorizationRequest request = approvedWithVerifier();
+        request.setStatus(McpAuthorizationRequest.Status.CONSUMED);
+        when(authorizations.findByCode(request.getCode())).thenReturn(Optional.of(request));
+
+        assertThrows(
+                McpOAuthException.class,
+                () -> service.exchangeCode(request.getCode(), "client-1", REDIRECT, VERIFIER));
+        verify(grants).deleteByUsernameAndClientId(USER, "client-1");
+        verify(refreshTokens).deleteByUsernameAndClientId(USER, "client-1");
+    }
+
+    @Test
+    void codeExchangeAcceptsAnOmittedRedirectUriAsPkceBindsTheCode() {
+        McpAuthorizationRequest request = approvedWithVerifier();
+        when(authorizations.findByCode(request.getCode())).thenReturn(Optional.of(request));
+
+        Map<String, Object> token =
+                service.exchangeCode(request.getCode(), "client-1", null, VERIFIER);
+        assertEquals("signed.jwt.value", token.get("access_token"));
+    }
+
+    @Test
+    void aReadOnlyRequestIsGrantedReadOnly() {
+        assertEquals(
+                McpOAuthService.SCOPE_READ + " " + McpOAuthService.SCOPE_OFFLINE,
+                service.grantedScope("mcp.tools.read"));
+        assertTrue(service.grantedScope("mcp.tools.write").contains(McpOAuthService.SCOPE_READ));
+        assertTrue(service.grantedScope(null).contains(McpOAuthService.SCOPE_WRITE));
+    }
+
+    @Test
+    void anOversizedStateIsAnInvalidRequestNotAServerError() {
+        stubClient();
+        McpOAuthException error =
+                assertThrows(
+                        McpOAuthException.class,
+                        () ->
+                                service.createAuthorization(
+                                        "client-1",
+                                        USER,
+                                        REDIRECT,
+                                        "x".repeat(3000),
+                                        null,
+                                        null,
+                                        s256(VERIFIER),
+                                        "S256"));
+        assertEquals("invalid_request", error.getError());
+    }
+
+    @Test
+    void loopbackRedirectsWithAFragmentOrUserInfoAreNotMatched() {
+        List<String> registered = List.of("http://127.0.0.1/callback");
+        assertTrue(McpOAuthService.redirectAllowed(registered, "http://127.0.0.1:5555/callback"));
+        assertFalse(
+                McpOAuthService.redirectAllowed(registered, "http://127.0.0.1:5555/callback#x"));
+        assertFalse(
+                McpOAuthService.redirectAllowed(registered, "http://evil@127.0.0.1:5555/callback"));
+        assertThrows(
+                McpOAuthException.class,
+                () -> service.register("x", List.of("http://user@127.0.0.1:1234/cb")));
     }
 }

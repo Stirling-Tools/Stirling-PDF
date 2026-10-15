@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
@@ -37,6 +38,7 @@ import stirling.software.proprietary.mcp.oauth.repository.McpAuthorizationReques
 import stirling.software.proprietary.mcp.oauth.repository.McpOAuthClientRepository;
 import stirling.software.proprietary.mcp.oauth.repository.McpOAuthGrantRepository;
 import stirling.software.proprietary.mcp.oauth.repository.McpRefreshTokenRepository;
+import stirling.software.proprietary.security.database.repository.UserRepository;
 
 /** The OAuth entities and queries against a real (H2) schema, driven through the service. */
 @DataJpaTest
@@ -78,7 +80,14 @@ class McpOAuthDbTest {
                                 CIMD_ID, "ChatGPT", List.of(REDIRECT)));
         service =
                 new McpOAuthService(
-                        props, clients, authorizations, grants, refreshTokens, minter, fetcher);
+                        props,
+                        clients,
+                        authorizations,
+                        grants,
+                        refreshTokens,
+                        minter,
+                        fetcher,
+                        noUsers());
     }
 
     @Test
@@ -174,6 +183,11 @@ class McpOAuthDbTest {
                 service.exchangeCode(pending.getCode(), CIMD_ID, REDIRECT, VERIFIER);
         String original = tokens.get("refresh_token").toString();
         service.refresh(original, CIMD_ID);
+        // Replays inside the retry grace window are only refused, so age the rotation first.
+        var rotated = refreshTokens.findById(McpOAuthService.sha256Hex(original)).orElseThrow();
+        rotated.setConsumedAt(
+                Instant.now().minus(McpOAuthService.REFRESH_REUSE_GRACE).minusSeconds(1));
+        refreshTokens.save(rotated);
         assertThatThrownBy(() -> service.refresh(original, CIMD_ID))
                 .isInstanceOf(McpOAuthException.class);
         assertThat(grants.findByUsernameAndClientId(USER, CIMD_ID)).isEmpty();
@@ -274,4 +288,9 @@ class McpOAuthDbTest {
     @SpringBootConfiguration
     @AutoConfigurationPackage
     static class TestApp {}
+
+    @SuppressWarnings("unchecked")
+    private static ObjectProvider<UserRepository> noUsers() {
+        return mock(ObjectProvider.class);
+    }
 }

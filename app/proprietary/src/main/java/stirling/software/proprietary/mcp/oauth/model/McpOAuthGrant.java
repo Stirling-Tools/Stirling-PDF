@@ -33,6 +33,10 @@ public class McpOAuthGrant {
     @Column(name = "username", nullable = false, length = 255)
     private String username;
 
+    // The account's id at consent, so a deleted and re-created username starts with no access.
+    @Column(name = "user_id")
+    private Long userId;
+
     @Column(name = "client_id", nullable = false, length = 512)
     private String clientId;
 
