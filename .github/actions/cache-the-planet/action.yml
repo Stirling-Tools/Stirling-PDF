@@ -104,7 +104,7 @@ runs:
       env:
         CACHE_MAX_TAR_BYTES: 21474836480
         CACHE_MAX_COMPRESSED_BYTES: 4294967296
-      uses: Ludy87/cache-the-planet/multi-cache@c54a43d39db2fe8ebae0a74d1d1086c60946a9e9
+      uses: Ludy87/cache-the-planet/multi-cache@2c521c8082393bf66107757cf01f522322f1e6b5
       with:
         cleanup-path-after-save: ${{ inputs.cleanup-path-after-save }}
         version: 6
