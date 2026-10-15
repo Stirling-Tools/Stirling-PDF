@@ -2,8 +2,9 @@
  * Writes text to the clipboard and reports whether it landed.
  *
  * `navigator.clipboard` only exists in secure contexts, so self-hosted servers
- * reached over plain HTTP fall back to `execCommand("copy")`. That fallback must
- * run synchronously inside the user gesture, so this never awaits before it.
+ * reached over plain HTTP fall back to `execCommand("copy")`. That fallback only
+ * works inside the user gesture: over HTTP it runs before any await, but after a
+ * rejected async write the gesture may have expired and it can fail.
  */
 export async function copyText(text: string): Promise<boolean> {
   if (!text) return false;

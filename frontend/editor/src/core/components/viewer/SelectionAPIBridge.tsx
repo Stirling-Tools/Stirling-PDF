@@ -10,6 +10,14 @@ import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady"
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { copyText } from "@app/utils/copyText";
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    (target instanceof HTMLElement && target.isContentEditable)
+  );
+}
+
 /**
  * Connects the PDF selection plugin to the shared ViewerContext.
  */
@@ -26,6 +34,7 @@ export function SelectionAPIBridge({ canCopy = false }: { canCopy?: boolean }) {
 
   const hasSelectionRef = useRef(false);
   const selectedTextRef = useRef("");
+  const textLookupRef = useRef(0);
 
   useEffect(() => {
     if (!selection || !documentReady) return;
@@ -160,6 +169,10 @@ export function SelectionAPIBridge({ canCopy = false }: { canCopy?: boolean }) {
         api: buildApi(),
       });
 
+      // Cleared before the async lookup so a copy in the gap fails rather than
+      // writing the previous selection's text.
+      selectedTextRef.current = "";
+      const lookup = ++textLookupRef.current;
       if (hasText) {
         try {
           const result = selection.getSelectedText(
@@ -167,7 +180,8 @@ export function SelectionAPIBridge({ canCopy = false }: { canCopy?: boolean }) {
           );
           result?.wait?.(
             (texts: string[]) => {
-              selectedTextRef.current = texts.join("\n");
+              if (lookup === textLookupRef.current)
+                selectedTextRef.current = texts.join("\n");
             },
             () => {
               /* ignore errors */
@@ -176,14 +190,14 @@ export function SelectionAPIBridge({ canCopy = false }: { canCopy?: boolean }) {
         } catch {
           // Engine access failed
         }
-      } else {
-        selectedTextRef.current = "";
       }
     });
 
-    // Ctrl+C is served here rather than from keydown: writing clipboardData in
-    // the copy event works over plain HTTP, where navigator.clipboard is absent.
+    // Ctrl+C must reach this event uncancelled: writing clipboardData here
+    // works over plain HTTP, where navigator.clipboard is absent. Copies from
+    // editable fields, including copyText's fallback textarea, keep their own text.
     const handleCopy = (event: ClipboardEvent) => {
+      if (isEditableTarget(event.target)) return;
       if (!hasSelectionRef.current || !selectedTextRef.current) return;
       if (canCopy)
         event.clipboardData?.setData("text/plain", selectedTextRef.current);
