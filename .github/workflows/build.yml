@@ -150,7 +150,8 @@ jobs:
 
   check-generateOpenApiDocs:
     if: |
-      !cancelled() && needs.files-changed.outputs.openapi == 'true'
+      !cancelled() &&
+      needs.files-changed.outputs.openapi == 'true'
     needs: [files-changed, gradle-cache-prime, files-hash]
     permissions:
       contents: write
@@ -181,11 +182,17 @@ jobs:
     secrets: inherit
 
   playwright-e2e:
-    if: needs.files-changed.outputs.frontend == 'true' && false
-    needs: [files-changed]
+    if: |
+      !cancelled() && needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed, files-hash]
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/e2e-stubbed.yml
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
+      cargo-hash: ${{ needs.files-hash.outputs.cargo_files_hash }}
+      frontend-dist-hash: ${{ needs.files-hash.outputs.frontend_dist_files_hash }}
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
     secrets: inherit
 
   playwright-e2e-live:
@@ -288,7 +295,8 @@ jobs:
 
   ai-engine:
     if: |
-      !cancelled() && needs.files-changed.outputs.engine == 'true'
+      !cancelled() &&
+      needs.files-changed.outputs.engine == 'true'
     needs: [files-changed]
     permissions:
       contents: write
