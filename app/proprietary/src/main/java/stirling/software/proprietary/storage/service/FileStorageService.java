@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -117,6 +118,14 @@ public class FileStorageService {
         ensureStorageEnabled();
         return storedFileRepository.findAccessibleFiles(user).stream()
                 .filter(file -> file.getExpiresAt() == null)
+                .toList();
+    }
+
+    /** Accessible files plus temporary ones that have not expired yet (e.g. MCP results). */
+    public List<StoredFile> listLiveAccessibleFiles(User user) {
+        ensureStorageEnabled();
+        return storedFileRepository.findAccessibleFiles(user).stream()
+                .filter(file -> !isExpired(file))
                 .toList();
     }
 
@@ -694,6 +703,18 @@ public class FileStorageService {
         return fileShareRepository.save(share);
     }
 
+    /** A link only {@code recipient} (and the owner) can open, e.g. an MCP result's own link. */
+    public FileShare createShareLink(
+            User owner,
+            StoredFile file,
+            ShareAccessRole role,
+            LocalDateTime expiresAt,
+            User recipient) {
+        FileShare share = createShareLink(owner, file, role, false, expiresAt);
+        share.setSharedWithUser(recipient);
+        return fileShareRepository.save(share);
+    }
+
     /** True when share links can be created, so callers can degrade instead of failing. */
     public boolean canCreateShareLinks() {
         return applicationProperties.getStorage().isEnabled()
@@ -929,7 +950,37 @@ public class FileStorageService {
         if (principal instanceof User user) {
             return user;
         }
-        return null;
+        // Token sign-ins (Supabase on SaaS) carry a Jwt; its subject is the stable account id.
+        if (principal instanceof Jwt jwt) {
+            Optional<User> bySubject = findBySupabaseId(jwt.getSubject());
+            if (bySubject.isPresent()) {
+                return bySubject.get();
+            }
+        }
+        String name = authentication.getName();
+        if (name == null || name.isBlank() || "anonymousUser".equals(name)) {
+            return null;
+        }
+        // A name match linked to another Supabase id belongs to someone else (a reused email).
+        Optional<User> byName =
+                userRepository
+                        .findByUsernameIgnoreCase(name)
+                        .filter(u -> !(principal instanceof Jwt) || u.getSupabaseId() == null);
+        if (byName.isPresent()) {
+            return byName.get();
+        }
+        return findBySupabaseId(name).orElse(null);
+    }
+
+    private Optional<User> findBySupabaseId(String id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        try {
+            return userRepository.findBySupabaseId(UUID.fromString(id));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 
     private static final Set<String> BLOCKED_CONTENT_TYPES =

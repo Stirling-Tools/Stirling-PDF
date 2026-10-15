@@ -20,6 +20,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.mcp.McpAnalytics;
 import stirling.software.proprietary.mcp.McpServerController;
+import stirling.software.proprietary.mcp.McpWidget;
 import stirling.software.proprietary.mcp.tools.DescribeOperationTool;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -84,6 +85,7 @@ class McpScopeMetadataDisabledTest {
     @Import({
         McpSecurityConfig.class,
         McpServerController.class,
+        McpWidget.class,
         McpAnalytics.class,
         DescribeOperationTool.class
     })

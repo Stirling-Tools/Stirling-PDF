@@ -612,6 +612,10 @@ public class GlobalExceptionHandler {
                 getLocalizedMessage(
                         "error.validation.title", ErrorTitles.REQUEST_VALIDATION_FAILED_DEFAULT);
         String detail = getLocalizedMessage("error.validation.detail", "Validation failed");
+        // Clients that read only the detail (MCP, API callers) still learn which fields failed.
+        if (!errors.isEmpty()) {
+            detail = detail + ": " + String.join("; ", errors);
+        }
 
         ProblemDetail problemDetail =
                 createBaseProblemDetail(HttpStatus.BAD_REQUEST, detail, request);

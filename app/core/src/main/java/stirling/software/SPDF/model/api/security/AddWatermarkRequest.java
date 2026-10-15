@@ -12,52 +12,59 @@ import lombok.EqualsAndHashCode;
 
 import stirling.software.common.model.api.PDFFile;
 
+/** Optional fields default to what the add-watermark tool in the web UI sends. */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class AddWatermarkRequest extends PDFFile {
 
     @Schema(
-            description = "The watermark type (text or image)",
-            allowableValues = {"text", "image"},
-            requiredMode = Schema.RequiredMode.REQUIRED)
+            description =
+                    "The watermark type (text or image). When omitted, image is used if"
+                            + " watermarkImage is supplied, otherwise text.",
+            allowableValues = {"text", "image"})
     private String watermarkType;
 
-    @Schema(description = "The watermark text", defaultValue = "Stirling Software")
+    @Schema(description = "The watermark text, required when watermarkType is text")
     private String watermarkText;
 
-    @Schema(description = "The watermark image")
+    @Schema(description = "The watermark image, required when watermarkType is image")
     private MultipartFile watermarkImage;
 
     @Schema(
-            description = "The selected alphabet",
+            description = "Font script matching watermarkText; roman for Latin text",
             allowableValues = {"roman", "arabic", "japanese", "korean", "chinese", "thai"},
             defaultValue = "roman")
-    private String alphabet;
+    private String alphabet = "roman";
 
-    @Schema(description = "The font size of the watermark text", defaultValue = "30")
+    @Schema(
+            description = "Text size in points; for an image watermark, the image height",
+            defaultValue = "12")
     @DecimalMin(value = "1.0", message = "Font size must be at least 1.0")
-    private float fontSize;
+    private float fontSize = 12f;
 
     @Schema(description = "The rotation of the watermark in degrees", defaultValue = "0")
-    private float rotation;
+    private float rotation = 0f;
 
     @Schema(description = "The opacity of the watermark (0.0 - 1.0)", defaultValue = "0.5")
-    private float opacity;
+    private float opacity = 0.5f;
+
+    @Schema(
+            description = "Hex colour of the watermark text, e.g. #FF0000",
+            defaultValue = "#d3d3d3")
+    private String customColor = "#d3d3d3";
+
+    @Schema(
+            description =
+                    "Turn pages into images so the watermark is hard to remove; text"
+                            + " becomes unselectable",
+            defaultValue = "false")
+    private Boolean convertPDFToImage = false;
 
     @Schema(description = "The width spacer between watermark elements", defaultValue = "50")
     @Min(value = 0, message = "Width spacer must be non-negative")
-    private int widthSpacer;
+    private int widthSpacer = 50;
 
     @Schema(description = "The height spacer between watermark elements", defaultValue = "50")
     @Min(value = 0, message = "Height spacer must be non-negative")
-    private int heightSpacer;
-
-    @Schema(description = "The color for watermark", defaultValue = "#d3d3d3")
-    private String customColor;
-
-    @Schema(
-            description = "Convert the redacted PDF to an image",
-            defaultValue = "false",
-            requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean convertPDFToImage;
+    private int heightSpacer = 50;
 }

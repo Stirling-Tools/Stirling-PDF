@@ -17,8 +17,9 @@ public class TimestampPdfRequest extends PDFFile {
                             + " Must be one of the built-in presets (DigiCert, Sectigo, SSL.com,"
                             + " FreeTSA, MeSign) or an admin-configured URL in"
                             + " settings.yml (security.timestamp.customTsaUrls)."
-                            + " If omitted, the server default is used.",
-            defaultValue = "http://timestamp.digicert.com",
+                            + " If omitted, the server default is used"
+                            + " (security.timestamp.defaultTsaUrl, DigiCert unless changed).",
+            example = "http://timestamp.digicert.com",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String tsaUrl;
 }

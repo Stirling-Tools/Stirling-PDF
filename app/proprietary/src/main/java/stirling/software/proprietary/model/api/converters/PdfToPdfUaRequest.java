@@ -15,7 +15,7 @@ public class PdfToPdfUaRequest extends PDFFile {
             description = "PDF/UA conformance level to target",
             defaultValue = "ua1",
             allowableValues = {"ua1", "ua2"})
-    private String profile;
+    private String profile = "ua1";
 
     @Schema(
             description =
@@ -29,14 +29,14 @@ public class PdfToPdfUaRequest extends PDFFile {
                             + " document does not already declare one, unless overrideLanguage is"
                             + " set.",
             defaultValue = "en-GB")
-    private String language;
+    private String language = "en-GB";
 
     @Schema(
             description =
                     "Replace the language the document already declares. Off by default, so a"
                             + " document is never relabelled into a language it is not written in.",
             defaultValue = "false")
-    private Boolean overrideLanguage;
+    private Boolean overrideLanguage = false;
 
     @Schema(
             description =
@@ -44,7 +44,7 @@ public class PdfToPdfUaRequest extends PDFFile {
                             + " automatically",
             defaultValue = "auto",
             allowableValues = {"auto", "keep", "rebuild"})
-    private String existingTags;
+    private String existingTags = "auto";
 
     @Schema(
             description =
@@ -53,21 +53,19 @@ public class PdfToPdfUaRequest extends PDFFile {
                             + " decoration.",
             defaultValue = "require-alt",
             allowableValues = {"require-alt", "mark-decorative"})
-    private String figurePolicy;
+    private String figurePolicy = "require-alt";
 
     @Schema(
             description =
                     "Embed fonts the document references but does not carry. Required for"
                             + " conformance and needs Ghostscript.",
             defaultValue = "true")
-    private Boolean embedFonts;
+    private Boolean embedFonts = true;
 
     @Schema(
             description =
-                    "Alternative descriptions for figures, as key=text pairs separated by newlines."
-                            + " Keys come from the accessibility-report endpoint's"
-                            + " figuresNeedingDescription list, for example \"0:12=Bar chart of"
-                            + " quarterly revenue\". Descriptions are never invented, so without"
-                            + " these an illustrated document cannot claim conformance.")
+                    "Alt text for figures, one key=description per line, e.g. \"0:12=Bar"
+                            + " chart of revenue\". Keys come from accessibility-report's"
+                            + " figuresNeedingDescription.")
     private String altText;
 }

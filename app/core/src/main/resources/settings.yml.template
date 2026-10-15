@@ -291,7 +291,7 @@ storage:
     maxStorageMbTotal: -1 # Max storage across all users in MB; -1 disables total cap
     maxFileMb: -1 # Max size per stored file (including history/audit) in MB; -1 disables limit
   sharing:
-    enabled: false # set to 'true' to enable file sharing features [ALPHA]
+    enabled: true # set to 'false' to disable file sharing features
     linkEnabled: true # set to 'false' to disable share links (requires system.frontendUrl)
     emailEnabled: false # set to 'true' to allow sharing by email (requires mail.enabled)
     linkExpirationDays: 3 # Number of days before share links expire
@@ -440,6 +440,7 @@ policies:
   # Stirling's own config directory is always off-limits, and folder access is always
   # disabled in SaaS mode.
   allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
+  maxSteps: 50 # Most steps one pipeline (saved or run ad hoc) may chain; longer ones are rejected. 0 = unlimited
   scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due
   storageFolderSweepSeconds: 60 # Seconds between safety-net sweeps of server processing folders (arrivals sweep immediately)
   watchReconcileSeconds: 300 # How often (seconds) folder-watch re-syncs watches and re-runs as a safety net for missed events
@@ -454,11 +455,22 @@ mcp:
   enabled: false # Master switch. 'false' (default) means no /mcp endpoint, no metadata, no beans wired.
   scopesEnabled: true # Enforce mcp.tools.read / mcp.tools.write scopes derived from operation category
   maxRequestBytes: 10485760 # Max size (bytes) of an incoming MCP tool request payload (default 10 MB)
-  maxInlineResponseBytes: 10485760 # Max size (bytes) of an MCP tool response returned inline before it is rejected (default 10 MB)
+  maxInlineResponseBytes: 10485760 # Max size (bytes) of a result returned inline as base64 (default 10 MB)
   allowedOperations: [] # Tool allow-list (operation ids, e.g. ['compress-pdf']). Empty = all. When set, ONLY these are exposed over MCP.
   blockedOperations: [] # Tool deny-list (operation ids). Always removed from MCP even if otherwise allowed.
+  storeResults: true # Keep results as the user's hidden temporary files (needs storage.enabled and security.enableLogin; falls back to the shared temp store otherwise). 'false' = always the shared temp store
+  resultTtlMinutes: 60 # How long stored results are kept and downloadable
+  downloadLinks: private # Result download links: 'private' (user signs in to Stirling), 'public' (anyone with the link until it expires) or 'off'. Needs storage.sharing.enabled and system.frontendUrl
+  inlineResults: auto # Also return results as base64 up to maxInlineResponseBytes: 'auto' (only when results are not stored files), 'always' or 'never'. Large inline results break Claude and ChatGPT
+  syncWaitSeconds: 100 # Seconds to wait for an operation before returning a job id the client polls with stirling_job_status, so long jobs (OCR on big files) beat the chat app's tool timeout. 0 = always wait
+  rateLimitPerMinute: 60 # Tool calls each user may make per minute, shared across nodes in a cluster. 0 = unlimited
+  automationsEnabled: true # Let chat apps run several operations in one call and use the team's saved pipelines. Saving a new one still needs an admin (or team leader)
+  maxPipelineSteps: 10 # Most operations one pipeline call may chain
+  widgetEnabled: true # Serve the in-chat widget (MCP Apps: result card and file picker) to Claude and ChatGPT
+  fileUrlAllowedHosts: ['oaiusercontent.com', 'openai.com', 'chatgpt.com', 'oaisdmntpr*.blob.core.windows.net'] # Hosts chat apps may pass file download URLs from (ChatGPT attachments live on regional Azure blob hosts). HTTPS only; suffix match, * within one label, or '*' alone for any public host. Empty = disabled
+  maxFileUrlBytes: 104857600 # Max size (bytes) of a file fetched from a chat app download URL (default 100 MB)
   auth:
-    mode: oauth # 'oauth' (full OAuth2 resource server) or 'apikey' (Stirling per-user API key via X-API-KEY header; no external IdP needed - the low-friction self-host option)
+    mode: oauth # 'builtin' (Stirling's own OAuth 2.1 server: registration + PKCE + consent screen, no external IdP - works with OAuth-only clients such as ChatGPT and the claude.ai connector), 'oauth' (resource server validating an external IdP's tokens), or 'apikey' (Stirling per-user API key via X-API-KEY header; publishes no OAuth metadata, so OAuth-only clients cannot connect)
     issuerUri: "" # OAuth2 issuer URI (e.g. http://localhost:9000). Required when mode=oauth.
     jwksUri: "" # JWKS URI. Blank -> derived from issuer's /.well-known/openid-configuration.
     resourceId: "" # RFC 8707 resource identifier of THIS MCP server (e.g. http://localhost:8080/mcp).
@@ -468,7 +480,15 @@ mcp:
                           # issues aud=authenticated) list that audience here, e.g. ['authenticated'].
     usernameClaim: sub # JWT claim matched against a Stirling username (e.g. 'sub', 'email', 'preferred_username')
     requireExistingAccount: true # Reject tokens whose subject has no enabled Stirling account (recommended)
-  engineCapabilityRefreshMinutes: 5 # How often to refresh the AI capabilities manifest from the engine
+    autoProvisionUsers: false # Create a DISABLED account for an unknown IdP subject instead of returning 403, so an admin can enable it. Only used when requireExistingAccount=true. Disabled accounts count toward licence seats, so leave this off if the IdP allows self sign-up
+    builtin: # Only used when mode=builtin
+      issuer: "" # Token issuer. Blank derives it from resourceId by stripping the trailing '/mcp'
+      allowDynamicRegistration: true # RFC 7591 registration. Required by clients that cannot be pre-registered (Claude)
+      allowClientMetadataDocuments: true # Accept an https URL as client_id and fetch its Client ID Metadata Document (ChatGPT, newer Claude clients)
+      accessTokenMinutes: 60 # Access-token lifetime
+      refreshTokenDays: 30 # Refresh-token lifetime; 0 disables refresh tokens
+      authorizationCodeSeconds: 300 # Authorization-code lifetime, which also bounds the consent screen
+      registrationsPerHourPerIp: 20 # Per-IP cap on dynamic client registrations
 
 # Multi-node Stirling PDF. Two different things are called "nodes" here: cluster.node.* is THIS
 # Stirling PDF instance, cluster.valkey.* is the shared Valkey - so 'mode: cluster' is Valkey's own.

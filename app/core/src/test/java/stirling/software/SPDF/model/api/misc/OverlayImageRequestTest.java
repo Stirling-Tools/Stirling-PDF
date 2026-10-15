@@ -22,7 +22,7 @@ class OverlayImageRequestTest {
             assertThat(req.getImageFile()).isNull();
             assertThat(req.getX()).isEqualTo(0f);
             assertThat(req.getY()).isEqualTo(0f);
-            assertThat(req.getEveryPage()).isNull();
+            assertThat(req.getEveryPage()).isFalse();
         }
     }
 

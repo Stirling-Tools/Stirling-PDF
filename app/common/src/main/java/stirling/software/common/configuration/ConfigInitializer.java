@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +24,12 @@ import stirling.software.common.util.YamlHelper;
 public class ConfigInitializer {
 
     private static final int MIN_SETTINGS_FILE_LINES = 31;
+
+    // Lists whose shipped default changed; a file still holding an old default gets the new one.
+    static final Map<List<String>, List<List<String>>> SUPERSEDED_LIST_DEFAULTS =
+            Map.of(
+                    List.of("mcp", "fileUrlAllowedHosts"),
+                    List.of(List.of("oaiusercontent.com", "openai.com", "chatgpt.com")));
 
     public void ensureConfigExists() throws IOException, URISyntaxException {
         // 1) If settings file doesn't exist, create from template
@@ -82,10 +89,13 @@ public class ConfigInitializer {
             migrateProFeaturesKeyCasing(settingsFile, settingsTemplateFile);
             boolean ssoAutoLoginMigrated =
                     migrateSsoAutoLoginToSecurity(settingsFile, settingsTemplateFile);
+            boolean defaultsUpgraded =
+                    upgradeSupersededDefaults(settingsFile, settingsTemplateFile);
 
             boolean changesMade =
                     settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile)
-                            || ssoAutoLoginMigrated;
+                            || ssoAutoLoginMigrated
+                            || defaultsUpgraded;
             if (changesMade) {
                 settingsTemplateFile.save(destPath);
                 log.info("Settings file updated based on template changes.");
@@ -170,5 +180,19 @@ public class ConfigInitializer {
             }
         }
         return false;
+    }
+
+    /** Replaces untouched old list defaults with the template's; values users chose are kept. */
+    boolean upgradeSupersededDefaults(YamlHelper yaml, YamlHelper template) {
+        boolean changed = false;
+        for (Map.Entry<List<String>, List<List<String>>> e : SUPERSEDED_LIST_DEFAULTS.entrySet()) {
+            String[] path = e.getKey().toArray(String[]::new);
+            Object current = yaml.getValueByExactKeyPath(path);
+            Object fresh = template.getValueByExactKeyPath(path);
+            if (current instanceof List<?> list && fresh != null && e.getValue().contains(list)) {
+                changed |= yaml.updateValue(e.getKey(), fresh);
+            }
+        }
+        return changed;
     }
 }

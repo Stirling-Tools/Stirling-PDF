@@ -444,6 +444,7 @@ public class ConvertImgPDFController {
         try (PDDocument document = pdfDocumentFactory.load(pdfFile);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             int totalPages = document.getNumberOfPages();
+            GeneralUtils.requireValidPageSelection(String.join(",", pageOrderArr), totalPages);
             List<Integer> newPageOrder =
                     GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
 

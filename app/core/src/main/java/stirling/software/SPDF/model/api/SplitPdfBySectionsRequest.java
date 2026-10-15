@@ -15,20 +15,21 @@ import stirling.software.common.model.api.PDFFile;
 @EqualsAndHashCode(callSuper = true)
 public class SplitPdfBySectionsRequest extends PDFFile {
     @Schema(
-            description = "Pages to be split by section",
-            defaultValue = "SPLIT_ALL",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+            description =
+                    "Pages to split when splitMode is CUSTOM (required in that mode, ignored"
+                            + " otherwise). Supports ranges (e.g. '1,3,5-9'), 'all', or functions"
+                            + " like '2n+1'.",
+            example = "1,3,5-9",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String pageNumbers;
 
     @Schema(
             implementation = SplitTypes.class,
             description =
-                    "Modes for page split. Valid values are:\n"
-                            + "SPLIT_ALL_EXCEPT_FIRST_AND_LAST: Splits all except the first and the last pages.\n"
-                            + "SPLIT_ALL_EXCEPT_FIRST: Splits all except the first page.\n"
-                            + "SPLIT_ALL_EXCEPT_LAST: Splits all except the last page.\n"
-                            + "SPLIT_ALL: Splits all pages.\n"
-                            + "CUSTOM: Custom split.\n")
+                    "Which pages to split (default SPLIT_ALL). SPLIT_ALL splits every page;"
+                            + " SPLIT_ALL_EXCEPT_FIRST, SPLIT_ALL_EXCEPT_LAST and"
+                            + " SPLIT_ALL_EXCEPT_FIRST_AND_LAST keep those pages whole; CUSTOM"
+                            + " splits only pageNumbers.")
     private String splitMode;
 
     @Schema(
@@ -47,11 +48,11 @@ public class SplitPdfBySectionsRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.REQUIRED)
     @Min(value = 0, message = "Vertical divisions must be non-negative")
     @Max(value = 50, message = "Vertical divisions must not exceed 50")
-    private int verticalDivisions;
+    private int verticalDivisions = 1;
 
     @Schema(
             description = "Merge the split documents into a single PDF",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean merge;
+    private Boolean merge = false;
 }

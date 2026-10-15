@@ -36,6 +36,21 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     groupLabelKey: "settings.preferences.title",
     groupLabelFallback: "Preferences",
   },
+  {
+    key: "mcp",
+    labelKey: "config.mcp.navLabel",
+    labelFallback: "MCP Server",
+    keywords: [
+      "mcp",
+      "chatgpt",
+      "claude",
+      "connector",
+      "model context protocol",
+    ],
+    requiresLogin: true,
+    groupLabelKey: "settings.preferences.title",
+    groupLabelFallback: "Preferences",
+  },
   // --- Workspace ---
   // The shared roster needs login and admin access. Carries the words the
   // retired People and Teams sections were found by.

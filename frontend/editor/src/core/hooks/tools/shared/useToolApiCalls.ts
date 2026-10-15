@@ -5,7 +5,7 @@ import {
   processResponse,
   ResponseHandler,
 } from "@app/utils/toolResponseProcessor";
-import { isEmptyOutput } from "@app/services/errorUtils";
+import { isEmptyOutput, serverErrorReason } from "@app/services/errorUtils";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 import type { StirlingFile, FileId } from "@app/types/fileContext";
 import { isSignupRequiredError } from "@app/utils/toolErrorHandler";
@@ -53,6 +53,7 @@ export const useToolApiCalls = <TParams = void>() => {
       const failedInputs: FailedInput[] = [];
       const unprocessedSourceIds: FileId[] = [];
       const failedFiles: string[] = [];
+      let firstFailureReason: string | undefined;
       const total = validFiles.length;
 
       // Create cancel token for this operation
@@ -145,6 +146,7 @@ export const useToolApiCalls = <TParams = void>() => {
           }
           console.error("[processFiles] Failed", { name: file.name, error });
           failedFiles.push(file.name);
+          firstFailureReason ??= await serverErrorReason(error);
           failedInputs.push({ fileId: file.fileId, name: file.name, error });
           // mark errored file so UI can highlight
           try {
@@ -155,15 +157,16 @@ export const useToolApiCalls = <TParams = void>() => {
         }
       }
 
+      const reasonSuffix = firstFailureReason ? ` (${firstFailureReason})` : "";
       if (failedFiles.length > 0 && processedFiles.length === 0) {
         throw new Error(
-          `Failed to process all files: ${failedFiles.join(", ")}`,
+          `Failed to process all files: ${failedFiles.join(", ")}${reasonSuffix}`,
         );
       }
 
       if (failedFiles.length > 0) {
         onStatus(
-          `Processed ${processedFiles.length}/${total} files. Failed: ${failedFiles.join(", ")}`,
+          `Processed ${processedFiles.length}/${total} files. Failed: ${failedFiles.join(", ")}${reasonSuffix}`,
         );
       } else {
         onStatus(

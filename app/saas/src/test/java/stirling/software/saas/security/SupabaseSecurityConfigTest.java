@@ -172,6 +172,23 @@ class SupabaseSecurityConfigTest {
     }
 
     @Test
+    void validatorRejectsAppTokensOutsideMcp() {
+        Jwt base =
+                jwtForValidator(ISSUER, Instant.now().plusSeconds(600), List.of("authenticated"));
+        Jwt appToken =
+                Jwt.withTokenValue("t")
+                        .headers(h -> h.putAll(base.getHeaders()))
+                        .claims(c -> c.putAll(base.getClaims()))
+                        .claim("client_id", "claude-connector")
+                        .build();
+        OAuth2TokenValidatorResult result =
+                new SupabaseTokenValidator(ISSUER, null, SKEW).validate(appToken);
+        assertThat(result.hasErrors()).isTrue();
+        assertThat(result.getErrors())
+                .anyMatch(e -> e.getDescription().contains("only valid for MCP"));
+    }
+
+    @Test
     void validatorRejectsTokenWithWrongIssuer() {
         Jwt jwt =
                 jwtForValidator(
