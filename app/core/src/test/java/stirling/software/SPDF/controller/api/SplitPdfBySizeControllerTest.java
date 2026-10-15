@@ -176,12 +176,60 @@ class SplitPdfBySizeControllerTest {
 
         assertThat(entryNamesOf(response.getBody()))
                 .containsExactly(
-                        ".._a_b.pdf",
+                        "_a_b.pdf",
+                        "input_2.pdf",
+                        "input_3.pdf",
                         "Report.pdf",
                         "report_2.pdf",
-                        "input_6.pdf",
-                        "input_5.pdf",
-                        "input_6_2.pdf");
+                        "input_6.pdf");
+    }
+
+    @Test
+    @DisplayName("Should apply output names when splitting by document count")
+    void shouldUseOutputNamesForDocCount() throws Exception {
+        SplitPdfBySizeOrCountRequest request = pageCountRequest(6, 0, "First\nSecond");
+        request.setSplitType(2);
+        request.setSplitValue("3");
+
+        ResponseEntity<Resource> response = controller.autoSplitPdf(request);
+
+        assertThat(entryNamesOf(response.getBody()))
+                .containsExactly("First.pdf", "Second.pdf", "input_3.pdf");
+    }
+
+    @Test
+    @DisplayName("Should apply output names when splitting by size")
+    void shouldUseOutputNamesForSize() throws Exception {
+        SplitPdfBySizeOrCountRequest request = pageCountRequest(40, 0, "Part A");
+        request.setSplitType(0);
+        request.setSplitValue("1KB");
+
+        ResponseEntity<Resource> response = controller.autoSplitPdf(request);
+
+        List<String> names = entryNamesOf(response.getBody());
+        assertThat(names).hasSizeGreaterThan(1).startsWith("Part A.pdf");
+        assertThat(names.subList(1, names.size())).allMatch(name -> name.startsWith("input_"));
+    }
+
+    @Test
+    @DisplayName("Should apply output names to form PDFs, which split through PDFBox")
+    void shouldUseOutputNamesForFormPdf() throws Exception {
+        SplitPdfBySizeOrCountRequest request = new SplitPdfBySizeOrCountRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput",
+                        "input.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        createPdfWithForm(4)));
+        request.setSplitType(1);
+        request.setSplitValue("2");
+        request.setOutputNames("Form A\nForm B");
+
+        ResponseEntity<Resource> response = controller.autoSplitPdf(request);
+
+        assertThat(entryNamesOf(response.getBody())).containsExactly("Form A.pdf", "Form B.pdf");
+        assertThat(fieldNamesOf(unzip(response.getBody()).get(1)))
+                .containsExactlyInAnyOrder("text_p3", "text_p4");
     }
 
     @Test

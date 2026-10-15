@@ -175,10 +175,10 @@ const SplitSettings = ({
           label={t("split.outputNames.label", "Output file names (optional)")}
           description={t(
             "split.outputNames.description",
-            "One name per line, in order. Files beyond the list keep the default name.",
+            "One name per line, in order. A blank line, or a file beyond the list, keeps the default name.",
           )}
           placeholder={t("split.outputNames.placeholder", "e.g. Chapter 1")}
-          value={parameters.outputNames ?? ""}
+          value={parameters.outputNames}
           onChange={(e) => onParameterChange("outputNames", e.target.value)}
           autosize
           minRows={3}

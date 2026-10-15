@@ -8,7 +8,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -37,7 +36,6 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -89,7 +87,8 @@ public class SplitPdfBySizeController {
                 try (PdfDocument sourceDocument = PdfDocument.open(sourceTempFile.getPath())) {
                     List<int[]> ranges = computeRanges(request, sourceDocument);
                     List<String> entryNames =
-                            resolveEntryNames(request.getOutputNames(), filename, ranges.size());
+                            SplitOutputNames.resolve(
+                                    request.getOutputNames(), filename, ranges.size());
 
                     int fileIndex = 0;
                     for (int[] range : ranges) {
@@ -185,47 +184,6 @@ public class SplitPdfBySizeController {
         zipOut.putNextEntry(new ZipEntry(entryName));
         Files.copy(pdfPath, zipOut);
         zipOut.closeEntry();
-    }
-
-    /**
-     * Zip entry names for {@code count} documents: the user's names in order, then {@code
-     * baseFilename_N} for the rest. Unique ignoring case, so extracting on a case-insensitive
-     * filesystem cannot overwrite one document with another.
-     */
-    private static List<String> resolveEntryNames(
-            String outputNames, String baseFilename, int count) {
-        List<String> customNames = parseOutputNames(outputNames);
-        Set<String> usedNames = new HashSet<>();
-        List<String> entryNames = new ArrayList<>(count);
-        for (int i = 0; i < count; i++) {
-            String name =
-                    i < customNames.size() ? customNames.get(i) : baseFilename + "_" + (i + 1);
-            String uniqueName = name;
-            for (int suffix = 2; !usedNames.add(uniqueName.toLowerCase(Locale.ROOT)); suffix++) {
-                uniqueName = name + "_" + suffix;
-            }
-            entryNames.add(uniqueName + ".pdf");
-        }
-        return entryNames;
-    }
-
-    private static List<String> parseOutputNames(String outputNames) {
-        if (outputNames == null || outputNames.isBlank()) {
-            return List.of();
-        }
-        RegexPatternUtils patterns = RegexPatternUtils.getInstance();
-        List<String> names = new ArrayList<>();
-        for (String line : patterns.getMultiFormatNewlinePattern().split(outputNames)) {
-            String name = line.trim();
-            if (name.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
-                name = name.substring(0, name.length() - ".pdf".length()).trim();
-            }
-            name = patterns.getSafeFilenamePattern().matcher(name).replaceAll("_");
-            if (!name.isEmpty()) {
-                names.add(name);
-            }
-        }
-        return names;
     }
 
     /** Returns contiguous page-index ranges fitting within {@code maxBytes}. */

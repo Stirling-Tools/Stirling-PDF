@@ -67,7 +67,7 @@ describe("splitToApiParams", () => {
     });
   });
 
-  test("count methods send outputNames only when provided", () => {
+  test("count methods send outputNames only when provided, keeping blank slots", () => {
     expect(
       splitToApiParams(
         params({
@@ -82,6 +82,15 @@ describe("splitToApiParams", () => {
         params({ method: SPLIT_METHODS.BY_PAGE_COUNT, outputNames: "  " }),
       ),
     ).toEqual({ splitType: 1, splitValue: "" });
+    expect(
+      splitToApiParams(
+        params({
+          method: SPLIT_METHODS.BY_DOC_COUNT,
+          splitValue: "3",
+          outputNames: "\n\nFileC",
+        }),
+      ),
+    ).toEqual({ splitType: 2, splitValue: "3", outputNames: "\n\nFileC" });
   });
 
   test("byChapters converts bookmarkLevel to a number", () => {

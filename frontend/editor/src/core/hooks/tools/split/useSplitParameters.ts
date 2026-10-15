@@ -16,7 +16,7 @@ export interface SplitParameters extends BaseParameters {
   vDiv: string;
   merge: boolean;
   splitValue: string;
-  outputNames?: string;
+  outputNames: string;
   bookmarkLevel: string;
   includeMetadata: boolean;
   allowDuplicates: boolean;

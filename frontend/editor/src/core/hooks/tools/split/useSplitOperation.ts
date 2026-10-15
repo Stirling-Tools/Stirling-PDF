@@ -47,7 +47,10 @@ export const splitToApiParams = (
 ): SplitApiParams => {
   // Use BY_PAGES as default if no method is selected
   const method = parameters.method || SPLIT_METHODS.BY_PAGES;
-  const outputNames = parameters.outputNames?.trim() || undefined;
+  // Leading blank lines are kept: line N names output N, and a blank line keeps its default.
+  const outputNames = parameters.outputNames.trim()
+    ? parameters.outputNames.trimEnd()
+    : undefined;
 
   switch (method) {
     case SPLIT_METHODS.BY_PAGES:
