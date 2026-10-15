@@ -55,10 +55,11 @@ public class FlattenController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Flatten PDF form fields or full page",
+            summary = "Flatten a PDF to images, or flatten only its form fields",
             description =
-                    "Flattening just PDF form fields or converting each page to images to make text"
-                            + " unselectable.")
+                    "By default every page becomes an image, so text can no longer be"
+                            + " selected. flattenOnlyForms=true only merges form fields into the"
+                            + " page.")
     public ResponseEntity<Resource> flatten(@ModelAttribute FlattenRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
