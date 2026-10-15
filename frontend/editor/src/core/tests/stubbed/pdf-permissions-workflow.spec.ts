@@ -37,6 +37,40 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+for (const { name, route } of [
+  { name: "Remove Password", route: "/remove-password" },
+  { name: "Change Permissions", route: "/change-permissions" },
+]) {
+  test(`Manage protection opens ${name} from All Tools`, async ({ page }) => {
+    await page.goto("/compress");
+    await page.getByTestId("file-input").setInputFiles(fixture);
+    await expect(
+      page.getByRole("button", { name: "Manage protection", exact: true }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Back to all tools", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Search tools", exact: true }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Manage protection", exact: true })
+      .click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name, exact: true })
+      .click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page).toHaveURL(route);
+    await expect(page.getByTestId("tool-file-list")).toContainText(
+      "owner-only-restricted.pdf",
+    );
+    await expect(
+      page.getByRole("button", { name: "Back to all tools", exact: true }),
+    ).toBeVisible();
+  });
+}
+
 test("restricted compression prompts at execution, preserves settings on cancel, and continues after verification", async ({
   page,
 }) => {

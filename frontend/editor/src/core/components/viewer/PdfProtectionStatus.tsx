@@ -8,7 +8,7 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { useFileActions } from "@app/contexts/FileContext";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import type { StirlingFile } from "@app/types/fileContext";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
@@ -19,7 +19,7 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
   const { t } = useTranslation();
   const access = usePdfAccess(file);
   const { actions: fileActions } = useFileActions();
-  const { actions: navigation } = useNavigationActions();
+  const { handleToolSelect } = useToolWorkflowActions();
   const [opened, setOpened] = useState(false);
   const [confirmCopy, setConfirmCopy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -251,7 +251,7 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                 disabled={access.signed}
                 onClick={() => {
                   close();
-                  navigation.handleToolSelect("changePermissions");
+                  handleToolSelect("changePermissions");
                 }}
               >
                 {t("changePermissions.submit", "Change Permissions")}
@@ -261,7 +261,7 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                 disabled={access.signed}
                 onClick={() => {
                   close();
-                  navigation.handleToolSelect("removePassword");
+                  handleToolSelect("removePassword");
                 }}
               >
                 {t("removePassword.title", "Remove Password")}
