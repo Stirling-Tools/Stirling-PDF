@@ -203,9 +203,18 @@ jobs:
           restore-keys: |
             gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
 
+      - name: Checkout trusted Java action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-java-action
+          sparse-checkout: .github/actions/java
+          persist-credentials: false
+
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
-        uses: ./.github/actions/java
+        uses: ./trusted-java-action/.github/actions/java
         with:
           java-version: "25"
           architecture: "x64"
@@ -216,7 +225,7 @@ jobs:
 
       - name: Set up JDK 25
         if: matrix.platform != 'windows-11-arm'
-        uses: ./.github/actions/java
+        uses: ./trusted-java-action/.github/actions/java
         with:
           java-version: "25"
 
@@ -774,9 +783,18 @@ jobs:
           restore-keys: |
             gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
 
+      - name: Checkout trusted Java action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-java-action
+          sparse-checkout: .github/actions/java
+          persist-credentials: false
+
       - name: Set up JDK 25
         if: matrix.platform != 'windows-11-arm'
-        uses: ./.github/actions/java
+        uses: ./trusted-java-action/.github/actions/java
         with:
           java-version: "25"
 
