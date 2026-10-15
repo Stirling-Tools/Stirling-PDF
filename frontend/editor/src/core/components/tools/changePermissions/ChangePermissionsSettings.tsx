@@ -13,8 +13,6 @@ interface ChangePermissionsSettingsProps {
   isLoading?: boolean;
   /** Extraction failed for the selected PDF; manual settings remain usable. */
   hasReadError?: boolean;
-  /** Batch selection skips detection and applies these settings to every selected file. */
-  multipleFiles?: boolean;
 }
 
 const ChangePermissionsSettings = ({
@@ -23,20 +21,11 @@ const ChangePermissionsSettings = ({
   disabled = false,
   isLoading = false,
   hasReadError = false,
-  multipleFiles = false,
 }: ChangePermissionsSettingsProps) => {
   const { t } = useTranslation();
 
   return (
     <Stack gap="sm">
-      {multipleFiles && (
-        <Text size="sm">
-          {t(
-            "changePermissions.multipleFiles",
-            "Select a single PDF to automatically load its current permissions. These settings will apply to all selected PDFs.",
-          )}
-        </Text>
-      )}
       {isLoading && (
         <Text size="sm" role="status">
           {t("changePermissions.loading", "Loading current permissions…")}

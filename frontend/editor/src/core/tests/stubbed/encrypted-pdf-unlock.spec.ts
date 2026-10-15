@@ -278,6 +278,16 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       )
       .toBeGreaterThan(0);
     expect(removalRequests).toEqual([]);
+    await page
+      .locator("label")
+      .filter({ hasText: /^Active Files$/ })
+      .click();
+    const unlockedIndicator = page
+      .getByTestId("file-thumbnail")
+      .getByRole("img", { name: "PDF opened", exact: true });
+    await expect(unlockedIndicator).toBeVisible();
+    await unlockedIndicator.hover();
+    await expect(page.getByRole("tooltip")).toHaveText("Protection retained.");
   });
 
   test("incorrect password keeps the modal open with an inline error", async ({

@@ -132,7 +132,6 @@ const ChangePermissions = (props: BaseToolProps) => {
               disabled={base.endpointLoading || base.operation.isLoading}
               isLoading={permissions.isLoading}
               hasReadError={permissions.hasError}
-              multipleFiles={base.selectedFiles.length > 1}
             />
           </Stack>
         ),

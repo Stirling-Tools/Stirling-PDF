@@ -154,7 +154,6 @@ describe("Add Password permission detection", () => {
     render(<AddPassword />);
 
     expect(openRawDocument).not.toHaveBeenCalled();
-    expect(permissionSettings().multipleFiles).toBe(true);
     expect(currentFlow().executeButton?.disabled).toBe(false);
 
     act(() =>
@@ -182,7 +181,6 @@ describe("Add Password permission detection", () => {
       createStirlingFile(new File([], "second.pdf")),
     ];
     rerender(<AddPassword />);
-    expect(permissionSettings().multipleFiles).toBe(true);
     expect(currentFlow().executeButton?.disabled).toBe(false);
 
     operation.isLoading = true;

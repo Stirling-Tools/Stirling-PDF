@@ -171,12 +171,6 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                     : t("encryptedPdfUnlock.requiredStatus", "Required")}
                 </Text>
               </Group>
-              <Text size="sm" fw={500}>
-                {t(
-                  "encryptedPdfUnlock.recipientRestrictions",
-                  "Restrictions for recipients",
-                )}
-              </Text>
               {permissions.map(([label, flag]) => {
                 const allowed = (access.permissions & flag) !== 0;
                 const lowResolutionOnly =

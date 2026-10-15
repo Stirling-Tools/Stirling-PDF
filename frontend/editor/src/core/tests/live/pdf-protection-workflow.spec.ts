@@ -272,9 +272,7 @@ for (const action of [
       await page
         .getByRole("button", { name: "Manage protection", exact: true })
         .click();
-      await expect(
-        page.getByText("Restrictions for recipients", { exact: true }),
-      ).toBeVisible();
+      await expect(page.getByText("Printing", { exact: true })).toBeVisible();
       await page.getByRole("button", { name: action, exact: true }).click();
     }
     await page.getByRole("button", { name: action, exact: true }).click();

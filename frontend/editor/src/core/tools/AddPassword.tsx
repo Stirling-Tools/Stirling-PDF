@@ -149,7 +149,6 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               disabled={endpointLoading || addPasswordOperation.isLoading}
               isLoading={permissions.isLoading}
               hasReadError={permissions.hasError}
-              multipleFiles={selectedFiles.length > 1}
             />
             {hasRestrictions && (
               <PasswordInput
