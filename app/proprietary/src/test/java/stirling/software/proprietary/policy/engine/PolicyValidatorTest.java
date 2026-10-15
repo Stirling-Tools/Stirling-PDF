@@ -20,6 +20,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIOSource;
@@ -57,6 +58,7 @@ class PolicyValidatorTest {
 
     private final SourceStore sourceStore = new InProcessSourceStore();
     private final PolicyAssetStore assetStore = new InProcessPolicyAssetStore();
+    private final ApplicationProperties properties = new ApplicationProperties();
     private PolicyValidator validator;
 
     @BeforeEach
@@ -69,7 +71,8 @@ class PolicyValidatorTest {
                         List.of(stepValidator),
                         sourceStore,
                         assetStore,
-                        new ToolChainValidator(path -> java.util.Optional.empty()));
+                        new ToolChainValidator(path -> java.util.Optional.empty()),
+                        properties);
     }
 
     @ParameterizedTest
@@ -329,8 +332,144 @@ class PolicyValidatorTest {
         verify(outputSink).validate(any());
     }
 
+    @Test
+    void rejectsAStepWhoseOperationIsUnknown() {
+        when(inputSource.supports(any())).thenReturn(true);
+        PolicyValidator strict = validatorWith(KNOWS_REAL_ENDPOINTS);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> strict.validate(withSteps(ROTATE, "/api/v1/misc/no-such-tool")));
+
+        assertTrue(ex.getMessage().contains("step 2"), ex.getMessage());
+        assertTrue(ex.getMessage().contains("/api/v1/misc/no-such-tool"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsAStepWithNoOperation() {
+        when(inputSource.supports(any())).thenReturn(true);
+        PolicyValidator strict = validatorWith(KNOWS_REAL_ENDPOINTS);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> strict.validate(withSteps(ROTATE, " ")));
+
+        assertTrue(ex.getMessage().contains("step 2"), ex.getMessage());
+    }
+
+    @Test
+    void acceptsAiIntegrationDocparseAndUndeclaredSteps() {
+        // Undeclared steps only warn: they run, their output just cannot be checked.
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+        PolicyValidator strict = validatorWith(KNOWS_REAL_ENDPOINTS);
+
+        strict.validate(withSteps(CLASSIFY, ROTATE, EXTERNAL_API, COMPRESS, DOCPARSE));
+
+        verify(outputSink).validate(any());
+    }
+
+    @Test
+    void rejectsMoreStepsThanTheConfiguredCap() {
+        properties.getPolicies().setMaxSteps(3);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> validator.validate(withSteps(ROTATE, ROTATE, ROTATE, ROTATE)));
+
+        assertTrue(ex.getMessage().contains("at most 3 steps"), ex.getMessage());
+    }
+
+    @Test
+    void capsStepsAtFiftyByDefault() {
+        String[] fiftyOne = java.util.Collections.nCopies(51, ROTATE).toArray(String[]::new);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> validator.validate(withSteps(fiftyOne)));
+
+        assertTrue(ex.getMessage().contains("at most 50 steps"), ex.getMessage());
+    }
+
+    @Test
+    void acceptsExactlyTheCap() {
+        properties.getPolicies().setMaxSteps(2);
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+
+        validator.validate(withSteps(ROTATE, ROTATE));
+    }
+
+    @Test
+    void zeroLiftsTheCap() {
+        properties.getPolicies().setMaxSteps(0);
+        String[] many = java.util.Collections.nCopies(60, ROTATE).toArray(String[]::new);
+
+        validator.validateRunnableSteps(withSteps(many).steps());
+    }
+
+    @Test
+    void adHocStepsRejectAnUnknownOperation() {
+        PolicyValidator strict = validatorWith(KNOWS_REAL_ENDPOINTS);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                strict.validateRunnableSteps(
+                                        withSteps("/api/v1/misc/no-such-tool").steps()));
+
+        assertTrue(ex.getMessage().contains("step 1"), ex.getMessage());
+        assertTrue(ex.getMessage().contains("/api/v1/misc/no-such-tool"), ex.getMessage());
+    }
+
+    @Test
+    void adHocStepsRejectMoreThanTheCap() {
+        properties.getPolicies().setMaxSteps(1);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> validator.validateRunnableSteps(withSteps(ROTATE, ROTATE).steps()));
+
+        assertTrue(ex.getMessage().contains("at most 1 steps"), ex.getMessage());
+    }
+
+    @Test
+    void adHocStepsAcceptKnownOperationsAndLeaveFormatsToTheRun() {
+        PolicyValidator strict = validatorWith(KNOWS_REAL_ENDPOINTS);
+
+        strict.validateRunnableSteps(
+                withSteps(CLASSIFY, EXTERNAL_API, DOCPARSE, EXTRACT_IMAGES, ROTATE).steps());
+    }
+
     private static final String EXTRACT_IMAGES = "/api/v1/misc/extract-images";
     private static final String ROTATE = "/api/v1/general/rotate-pdf";
+    private static final String CLASSIFY = "/api/v1/ai/tools/classify-and-label";
+    private static final String EXTERNAL_API = "/api/v1/integration/external-api-call";
+    private static final String COMPRESS = "/api/v1/misc/compress-pdf";
+    private static final String DOCPARSE = "/api/v1/docparse/ingest";
+
+    // Declares only rotate and extract-images, but knows every endpoint these tests name.
+    private static final ToolIOSource KNOWS_REAL_ENDPOINTS =
+            new ToolIOSource() {
+                private final Set<String> known =
+                        Set.of(EXTRACT_IMAGES, ROTATE, CLASSIFY, EXTERNAL_API, COMPRESS, DOCPARSE);
+
+                @Override
+                public java.util.Optional<ToolIOSpec> find(String operationPath) {
+                    return IMAGE_THEN_PDF.find(operationPath);
+                }
+
+                @Override
+                public boolean isKnown(String operationPath) {
+                    return known.contains(operationPath);
+                }
+            };
 
     private static final ToolIOSource IMAGE_THEN_PDF =
             ToolIOSource.of(
@@ -356,7 +495,8 @@ class PolicyValidatorTest {
                 List.of(stepValidator),
                 sourceStore,
                 assetStore,
-                new ToolChainValidator(toolIO));
+                new ToolChainValidator(toolIO),
+                properties);
     }
 
     private Policy withSteps(String... operations) {

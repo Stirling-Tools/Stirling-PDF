@@ -21,13 +21,13 @@ class ScalePagesRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("scaleFactor zero and inherited orientation PORTRAIT")
+        @DisplayName("scaleFactor 1, page size KEEP and orientation PORTRAIT, matching the UI")
         void defaultValues() {
             ScalePagesRequest req = new ScalePagesRequest();
 
-            assertThat(req.getScaleFactor()).isEqualTo(0f);
+            assertThat(req.getScaleFactor()).isEqualTo(1f);
             assertThat(req.getOrientation()).isEqualTo("PORTRAIT");
-            assertThat(req.getPageSize()).isNull();
+            assertThat(req.getPageSize()).isEqualTo("KEEP");
         }
     }
 

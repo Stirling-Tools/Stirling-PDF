@@ -38,5 +38,5 @@ public class OverlayImageRequest extends PDFFile {
             description = "Whether to overlay the image onto every page of the PDF.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
-    private Boolean everyPage;
+    private Boolean everyPage = false;
 }

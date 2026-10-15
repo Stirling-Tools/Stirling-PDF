@@ -17,7 +17,7 @@ public class FlattenRequest extends PDFFile {
                             + " image)",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
-    private Boolean flattenOnlyForms;
+    private Boolean flattenOnlyForms = false;
 
     @Schema(
             description = "Optional DPI for page rendering when flattening the full document.",

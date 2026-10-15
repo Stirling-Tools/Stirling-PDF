@@ -28,5 +28,5 @@ public class EditTextRequest extends PDFWithPageNums {
                     "Whether matches must be whole words (boundaries determined by non-word"
                             + " characters)",
             defaultValue = "false")
-    private Boolean wholeWordSearch;
+    private Boolean wholeWordSearch = false;
 }

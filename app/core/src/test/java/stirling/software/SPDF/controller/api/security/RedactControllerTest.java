@@ -1002,15 +1002,12 @@ class RedactControllerTest {
         }
 
         @Test
-        @DisplayName("Should handle out of bounds page numbers gracefully")
-        void handleOutOfBoundsPageNumbers() throws Exception {
+        @DisplayName("Should reject page numbers past the end of the document")
+        void rejectOutOfBoundsPageNumbers() {
             ManualRedactPdfRequest request = createManualRedactPdfRequest();
             request.setPageNumbers("100-200");
 
-            ResponseEntity<Resource> response = redactController.redactPDF(request);
-
-            assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertThrows(IllegalArgumentException.class, () -> redactController.redactPDF(request));
         }
     }
 

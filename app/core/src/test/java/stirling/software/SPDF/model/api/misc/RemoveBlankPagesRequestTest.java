@@ -14,11 +14,11 @@ class RemoveBlankPagesRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("primitive fields default to zero on a fresh instance")
-        void defaultsZero() {
+        @DisplayName("fields default to the documented values on a fresh instance")
+        void defaultsMatchSchema() {
             RemoveBlankPagesRequest req = new RemoveBlankPagesRequest();
-            assertThat(req.getThreshold()).isZero();
-            assertThat(req.getWhitePercent()).isEqualTo(0f);
+            assertThat(req.getThreshold()).isEqualTo(10);
+            assertThat(req.getWhitePercent()).isEqualTo(99.9f);
         }
     }
 
