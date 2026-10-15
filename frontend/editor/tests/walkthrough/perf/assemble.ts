@@ -31,8 +31,6 @@ import {
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import { splitResourceSizes } from "./probe";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import type { BackendState } from "./backend";
-// oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import type { CollectResult, CollectOptions } from "./collect-web";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import type { CdpSnapshot, InteractionSample, PerfInteraction } from "./types";
@@ -48,8 +46,6 @@ export interface AssembleOptions {
   sampleIntervalMs: number;
   browserVersion: string;
   pictureDir: string;
-  /** Whether the route's own backend answered when the window started. */
-  backend: BackendState;
 }
 
 interface CpuProfileNode {
@@ -151,11 +147,6 @@ export async function assembleInteraction(
   const cycles = cycleRows(sample);
   const span = windowSpan(sample);
   const unavailable: string[] = [];
-  if (!assemble.backend.ok) {
-    unavailable.push(
-      `a backend behind ${assemble.backend.endpoint} (${assemble.backend.detail}; the app rendered its error state)`,
-    );
-  }
   const longTasks = longTaskStats(sample.probe.longTasks);
   const dom = domStats(sample.samples);
   const heap = heapStats(sample.samples);
@@ -190,9 +181,8 @@ export async function assembleInteraction(
   }
 
   const metrics: Record<string, unknown> = {};
-  metrics["harness.backend"] = assemble.backend.ok
-    ? `${assemble.backend.endpoint} answered`
-    : `${assemble.backend.endpoint} ${assemble.backend.detail} (the route rendered its error state)`;
+  metrics["harness.api"] =
+    "the page's API calls are answered by the repo's Playwright route stubs, which is how the app renders without a backend; nothing here measures a live backend";
   metrics["dom.baselineNodes"] = dom.baselineNodes;
   metrics["dom.peakNodes"] = dom.peakNodes;
   metrics["dom.finalNodes"] = dom.finalNodes;

@@ -20,8 +20,9 @@ npx tsx tests/walkthrough/perf/cli.ts \
 
 | File | Owns |
 |---|---|
-| `cli.ts` | Flag parsing, scenario loading, backend preflight, collector + optional Lighthouse, derived findings, fragment writing, manifest merge, `report.py validate` |
-| `backend.ts` | The preflight probe (`/api/v1/config/app-config`) and the wording of the error-state caveat |
+| `cli.ts` | Flag parsing, scenario loading, backend preflight and stub backend, collector + optional Lighthouse, derived findings, fragment writing, manifest merge, `report.py validate` |
+| `backend.ts` | The preflight probe (`/api/v1/config/app-config`), the `live`/`stubbed`/`unavailable` state, and the wording of the run limitations |
+| `stub-backend.ts` | The repo's `appApiStubs` table served over `node:http`, mirroring `mockAppApis` and its dead-proxy 500 |
 | `scenarios/editor-cycle.ts` | The built-in scenarios: `editor-settings-cycle`, `editor-picker-scroll` |
 | `scenarios/text-editor-cycle.ts` | `text-editor-raster-cycle`: load a document into the PDF text editor, zoom, scroll, leave |
 | `scenarios/index.ts` | `BUILTIN_SCENARIOS`, the list `cli.ts` resolves `--scenario` ids against |
@@ -148,7 +149,8 @@ a `confidence` that states what the measurement cannot prove:
 | `latency.durationMs` at or over 200 ms | the slowest interaction, citing web-vitals' INP boundary |
 | `metrics.unavailable` | one `gap` per unmeasured area |
 | Lighthouse category under 90 | `budget` in that category's viewer group (a11y and best-practices included) |
-| no Lighthouse run, backend down | `gap`, with the reason the audit was skipped |
+| an audit served by the repo's stubs | `observation`: the UI was scored with fixture data |
+| no Lighthouse run because nothing answered | `gap`, with the reason the audit was skipped |
 
 Nothing fires on a number that was not recorded, and a rule that cannot see its
 measurement stays silent rather than guessing. The Findings tab prints the
@@ -165,21 +167,30 @@ overhead — the `provenance.note` says so, and a dev server is not a production
 build. Compare runs within the same build mode and instrumentation, or label
 the comparison descriptive.
 
-## Auditing an error state
+## Giving the measured pages a backend
 
-Lighthouse launches its own browser (`--chrome-flags=--headless=new`), so the
-Playwright request stubs this harness installs in the capture path do not
-apply. Against a dev server whose backend is not answering, the audit loads the
-app's "backend not found" screen and scores that: the page looks enormously
-slow, and none of the numbers describe the feature.
+The app blocks its first paint on `app-config`, so a page with no API behind it
+renders an error state and every number collected from it measures that state.
+Two different consumers need an answer:
 
-`cli.ts` therefore probes `/api/v1/config/app-config` once, before it measures
-anything: the answer decides whether the numbers describe the feature or the
-error screen, it is recorded in `metrics["harness.backend"]` and as an
-`unavailable` note on the interaction, and it is evidence for the derived
-findings rather than a note someone has to remember. When the probe fails the
-Lighthouse block is skipped — `--lighthouse-force` audits anyway, and every run
-then carries the caveat in its diagnostics. Either way the skip is a `gap`
-finding, not silence. Treat a caveat as a blocker for using the scores: run the
-audit against a route that renders (a real backend, or a build that needs none)
-and re-run.
+- The interaction run installs this repo's Playwright route stubs, which is why
+  the plain `--cycles` run works without a backend at all. It records only that
+  fact (`metrics["harness.api"]`); it makes no claim about a live API.
+- Lighthouse launches its own browser (`--chrome-flags=--headless=new`), so those
+  route handlers do not exist there. `cli.ts` probes `/api/v1/config/app-config`
+  through the dev server before it measures anything: a live backend wins, and
+  with none answering it serves the repo's own stub table (`appApiStubs`, the
+  same one `mockAppApis` registers) over HTTP on the port the dev server already
+  proxies to (`BACKEND_URL`, default 8080). The audit is then a real audit of the
+  UI with fixture data, marked `stubbed` and caveated in its limitations — not an
+  audit of an error screen, and not silence.
+
+The state is `live`, `stubbed` or `unavailable`, recorded on the run and used by
+the derived findings: a stubbed audit is a low `observation`, an `unavailable`
+one is a `gap` for every run that did not happen. `--no-stub-backend` keeps the
+harness out of the dev server's proxy port entirely and `--stub-backend-port`
+moves it; the second probe goes through the dev server, so a proxy pointed
+somewhere else fails honestly instead of producing numbers from a screen nobody
+looked at. `--lighthouse-force` still audits when nothing answered, and those
+runs carry the error-state caveat in their diagnostics. Treat that caveat as a
+blocker for using the scores: fix the API route and re-run.

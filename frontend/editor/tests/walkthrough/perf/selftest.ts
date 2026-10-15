@@ -21,7 +21,7 @@ import { deflateSync } from "node:zlib";
 import { createContext, runInContext } from "node:vm";
 import { chromium } from "playwright";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import type { BackendState } from "./backend";
+import { CONFIG_PATH, stubbedState, type BackendState } from "./backend";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import {
   breakdownChart,
@@ -55,6 +55,8 @@ import {
 } from "./probe";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import { assertSerializable } from "./serialize";
+// oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
+import { matchStubPath, startStubBackend, stubFor } from "./stub-backend";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import type { CdpSnapshot, PageProbe, PerfInteraction } from "./types";
 
@@ -825,20 +827,27 @@ async function fragmentRoundTrip(): Promise<void> {
 
 /**
  * The verdicts must follow the recorded numbers, not a mood: a clean
- * measurement derives nothing, a crowded one names what it saw, and a backend
- * that did not answer is reported as a gap instead of being blamed on the app.
+ * measurement derives nothing, a crowded one names what it saw, an audit served
+ * by the repo's stubs says its data was synthetic, and a backend state that
+ * blocked the audit is reported as a gap instead of being blamed on the app.
  */
 function findings(): void {
   const healthy: BackendState = {
     ok: true,
+    source: "live",
     endpoint: "http://127.0.0.1:8080/api/v1/config/app-config",
     detail: "answered 200",
   };
   const offline: BackendState = {
     ok: false,
+    source: "unavailable",
     endpoint: "http://127.0.0.1:8080/api/v1/config/app-config",
     detail: "did not answer (fetch failed)",
   };
+  const stubbed: BackendState = stubbedState(
+    "http://127.0.0.1:8080/api/v1/config/app-config",
+    "answered by the repo's API stubs on port 8080 through http://127.0.0.1:5199",
+  );
   const interaction = (metrics: Record<string, unknown>): PerfInteraction => ({
     id: "selftest",
     name: "self-test interaction",
@@ -948,8 +957,8 @@ function findings(): void {
     backend: offline,
   });
   check(
-    "a backend that did not answer is a finding, not a footnote",
-    skipped.perf.some((finding) => finding.title.includes("error state")),
+    "an interaction that stubs its own API is not told it measured an error state",
+    !skipped.perf.some((finding) => finding.title.includes("error state")),
   );
   check(
     "the skipped audit is recorded as a gap",
@@ -957,6 +966,29 @@ function findings(): void {
       (finding) =>
         finding.kind === "gap" && finding.title.startsWith("No Lighthouse run"),
     ),
+  );
+
+  const auditedByStubs = deriveFindings({
+    interaction: interaction({}),
+    cycles: 5,
+    lighthouse: [],
+    backend: stubbed,
+  });
+  check(
+    "an audit served by the repo's stubs says so",
+    auditedByStubs.perf.some((finding) =>
+      finding.title.startsWith("The audit ran against the repo's API stubs"),
+    ),
+  );
+  check(
+    "a stubbed audit is not called an error state",
+    !auditedByStubs.perf.some((finding) =>
+      finding.title.includes("error state"),
+    ),
+  );
+  check(
+    "a stubbed audit is not a gap: the measurement exists",
+    !auditedByStubs.perf.some((finding) => finding.kind === "gap"),
   );
 
   const audit = (
@@ -1032,6 +1064,75 @@ function findings(): void {
 }
 
 /**
+ * The stub backend is what makes an audit see the feature instead of an error
+ * screen, so its routing and the server it actually starts are both checked: a
+ * matcher that answers the wrong path is worse than no stub at all.
+ */
+async function stubBackend(): Promise<void> {
+  check(
+    "an exact stub glob matches its path",
+    matchStubPath("**/api/v1/info/status", "/api/v1/info/status"),
+  );
+  check(
+    "an exact stub glob does not match a longer path",
+    !matchStubPath("**/api/v1/info/status", "/api/v1/info/status/extra"),
+  );
+  check(
+    "a trailing-wildcard glob matches the endpoint slug it names",
+    matchStubPath(
+      "**/api/v1/config/endpoint-enabled*",
+      "/api/v1/config/endpoint-enabled",
+    ),
+  );
+  check(
+    "a path-prefix glob matches everything below it",
+    matchStubPath(
+      "**/api/v1/admin/settings/section/**",
+      "/api/v1/admin/settings/section/aiEngine",
+    ),
+  );
+  const stubs = [
+    { glob: "**/api/v1/proprietary/**", body: { from: "broad" } },
+    { glob: "**/api/v1/proprietary/ui-data/login", body: { from: "narrow" } },
+  ];
+  const lastWins = stubFor("/api/v1/proprietary/ui-data/login", stubs);
+  equal(
+    "the last registered stub wins, as it does in Playwright",
+    lastWins ? (lastWins.body as { from: string }).from : null,
+    "narrow",
+  );
+
+  const server = await startStubBackend({ port: 0 });
+  try {
+    const { endpoint } = server;
+    const config = await fetch(`${endpoint}${CONFIG_PATH}`);
+    equal(
+      "the stub backend serves the app's bootstrap config",
+      config.status,
+      200,
+    );
+    const body = (await config.json()) as Record<string, unknown>;
+    check(
+      "the stub config carries the shape the app reads",
+      "enableLogin" in body,
+      JSON.stringify(Object.keys(body).slice(0, 5)),
+    );
+    equal(
+      "an unlisted API path answers the dead proxy's 500",
+      (await fetch(`${endpoint}/api/v1/nothing/here`)).status,
+      500,
+    );
+    equal(
+      "a non-API path is not answered by the stubs",
+      (await fetch(`${endpoint}/index.html`)).status,
+      404,
+    );
+  } finally {
+    await server.close();
+  }
+}
+
+/**
  * The Findings tab is the surface the verdicts have to actually reach, and a
  * template change that throws only shows up in a browser.
  */
@@ -1069,6 +1170,7 @@ async function findingsTabRenders(reportPath: string): Promise<void> {
 reductions();
 probeScript();
 findings();
+await stubBackend();
 await chartsAndRaster();
 lighthouseResolver();
 await fragmentRoundTrip();

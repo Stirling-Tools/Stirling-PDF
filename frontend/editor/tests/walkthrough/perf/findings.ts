@@ -46,6 +46,11 @@ export interface DerivedFindings {
 
 export type FindingGroup = keyof DerivedFindings;
 
+/**
+ * What the audited page's API calls were answered by. The interaction run
+ * always stubs them, so only an audit can be described here; `stubbed` means the
+ * scores came from the UI rendered with the repo's fixture data.
+ */
 export interface FindingContext {
   interaction: PerfInteraction;
   cycles: number;
@@ -95,22 +100,6 @@ function severityForScore(score: number): FindingSeverity {
   if (score < SCORE_BAD) return "high";
   if (score < SCORE_POOR) return "med";
   return "low";
-}
-
-function backendFinding(backend: BackendState): PerfFinding {
-  return {
-    severity: "med",
-    kind: "gap",
-    title: "The measurements describe the app's error state",
-    detail:
-      `${backend.endpoint} ${backend.detail} before the window started, so the ` +
-      `route rendered its error state and these numbers describe that screen.`,
-    fix: "start the backend (task backend:dev) and re-measure",
-    evidence: `${backend.endpoint} ${backend.detail}`,
-    confidence:
-      "the endpoint is probed immediately before the run; a backend that fails later is not caught",
-    source: "performance harness",
-  };
 }
 
 function heapFinding(
@@ -323,23 +312,36 @@ function lighthouseFindings(
 export function deriveFindings(context: FindingContext): DerivedFindings {
   const findings: DerivedFindings = { perf: [], a11y: [], behavior: [] };
   const interaction = context.interaction;
-  if (!context.backend.ok) {
-    findings.perf.push(backendFinding(context.backend));
-    if (context.lighthouse.length === 0) {
-      findings.perf.push({
-        severity: "low",
-        kind: "gap",
-        title: "No Lighthouse run was recorded",
-        detail:
-          `Lighthouse was skipped or unavailable: ${context.backend.endpoint} ` +
-          `${context.backend.detail}. An audit of the error state is not a measurement.`,
-        fix: "start the backend (task backend:dev) and re-run with --lighthouse",
-        evidence: `lighthouse.runs=0; ${context.backend.endpoint} ${context.backend.detail}`,
-        confidence:
-          "recorded by the harness that skipped the audit, not inferred from a failed run",
-        source: "performance harness",
-      });
-    }
+  if (context.backend.source === "stubbed") {
+    findings.perf.push({
+      severity: "low",
+      kind: "observation",
+      title: "The audit ran against the repo's API stubs, not a live backend",
+      detail:
+        `${context.backend.endpoint} ${context.backend.detail}, so the audited ` +
+        `route rendered with fixture data. The shape of the UI is what was scored; ` +
+        `a real backend's data was not.`,
+      evidence: `${context.backend.endpoint} ${context.backend.detail}`,
+      confidence:
+        "the stub backend binds the port the dev server already proxies to; a live backend takes precedence when one answers",
+      source: "Lighthouse",
+    });
+  }
+  if (!context.backend.ok && context.lighthouse.length === 0) {
+    findings.perf.push({
+      severity: "low",
+      kind: "gap",
+      title: "No Lighthouse run was recorded",
+      detail:
+        `Lighthouse was skipped: ${context.backend.endpoint} ${context.backend.detail}, ` +
+        `and the repo's stub backend could not stand in for it either. An audit of ` +
+        `the error screen would not be a measurement.`,
+      fix: "check the dev server's BACKEND_URL proxy target (or pass --stub-backend-port) and re-run with --lighthouse",
+      evidence: `lighthouse.runs=0; ${context.backend.endpoint} ${context.backend.detail}`,
+      confidence:
+        "recorded by the harness that skipped the audit, not inferred from a failed run",
+      source: "performance harness",
+    });
   }
   for (const finding of [
     heapFinding(interaction, context.cycles),

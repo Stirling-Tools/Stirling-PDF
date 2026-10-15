@@ -12,7 +12,11 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import { errorStateNote, type BackendState } from "./backend";
+import {
+  backendLimitations,
+  errorStateNote,
+  type BackendState,
+} from "./backend";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import type { FormFactor, LighthouseRun } from "./types";
 
@@ -48,15 +52,16 @@ const AUDIT_IDS = [
 ] as const;
 
 /**
- * Why an audit of an erroring page is not a measurement. The audit still runs
- * when `--lighthouse-force` asks for it: a build that does not need a backend
- * is a real case, and its scores then carry the same caveat in their diagnostics.
+ * Why an audit of an erroring page is not a measurement. Reaching this means
+ * neither a live backend nor the repo's stub backend answered the dev server.
+ * The audit still runs when `--lighthouse-force` asks for it: its scores then
+ * carry the error-state caveat in their diagnostics.
  */
 export function backendSkipReason(backend: BackendState): string {
   return (
-    `Lighthouse: skipped — ${backend.endpoint} ${backend.detail}, so an audit ` +
-    `would score the error screen instead of the feature ` +
-    `(--lighthouse-force audits it anyway)`
+    `Lighthouse: skipped — ${backend.endpoint} ${backend.detail}, and the repo's ` +
+    `API stubs could not stand in for it, so an audit would score the error ` +
+    `screen instead of the feature (--lighthouse-force audits it anyway)`
   );
 }
 
@@ -165,7 +170,6 @@ function runOne(
   binary: string,
   options: LighthouseOptions,
   formFactor: FormFactor,
-  stateNote: string | null,
 ): LighthouseRun | string {
   // Lighthouse appends its own extension when more than one output format is
   // requested, so this is a base path: the files land as <base>.report.json and
@@ -234,7 +238,13 @@ function runOne(
 
   const preview = previewFrom(report, previewPath);
   const artifacts = [jsonPath, htmlPath].filter((path) => existsSync(path));
-  // The validity caveat and the page's own console errors lead the
+  // A forced audit of an erroring page has to say so in the run's own numbers;
+  // every other backend state is already recorded in the limitations.
+  const stateNote =
+    options.backend.source === "unavailable"
+      ? errorStateNote(options.backend)
+      : null;
+  // The validity caveats and the page's own console errors lead the
   // diagnostics: a score list that starts with a metric hides both.
   const diagnosticLines = [
     ...(stateNote ? [stateNote] : []),
@@ -269,8 +279,10 @@ function runOne(
           ].includes(key),
         ),
       ),
-      limitations:
+      limitations: [
         "a Lighthouse run is a browser page-load audit: it is not a Tauri, Android or iOS test, and page-load timing does not describe responsiveness during printing, editing or export",
+        ...backendLimitations(options.backend),
+      ].join("; "),
     },
     scores,
     diagnostics: diagnosticLines,
@@ -293,13 +305,18 @@ export async function runLighthouse(
       notes: [],
     };
   }
-  const stateNote = options.backend.ok ? null : errorStateNote(options.backend);
   const runs: LighthouseRun[] = [];
   const unavailable: string[] = [];
   for (const formFactor of ["desktop", "mobile"] as FormFactor[]) {
-    const outcome = runOne(binary, options, formFactor, stateNote);
+    const outcome = runOne(binary, options, formFactor);
     if (typeof outcome === "string") unavailable.push(outcome);
     else runs.push(outcome);
   }
-  return { runs, unavailable, notes: stateNote ? [stateNote] : [] };
+  return {
+    runs,
+    unavailable,
+    notes: backendLimitations(options.backend).map(
+      (line) => `Lighthouse: ${line}`,
+    ),
+  };
 }

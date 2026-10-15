@@ -3,12 +3,14 @@
  * manifest fragment `report.py` consumes.
  *
  * This is the entry point `SKILL.md` steps 6–8 call. It never fabricates a
- * number: an area the browser cannot measure is written to `metrics.unavailable`
- * and Lighthouse is skipped with a recorded reason when no runner is installed
- * or the audited route has no backend to render against (`--lighthouse-force`
- * audits the error state anyway). Findings derived from the measurements are
- * appended to the manifest, so the report's Findings tab carries the verdicts
- * without anyone having to write them up afterwards.
+ * number: an area the browser cannot measure is written to `metrics.unavailable`.
+ * The API the measured pages need comes from a live backend when one answers and
+ * from the repo's own stubs served over HTTP otherwise, so the audit renders the
+ * feature rather than an error screen; Lighthouse is only skipped, with a
+ * recorded reason, when no runner is installed or no backend can be stood in for
+ * (`--lighthouse-force` audits the error state anyway). Findings derived from the
+ * measurements are appended to the manifest, so the report's Findings tab carries
+ * the verdicts without anyone having to write them up afterwards.
  *
  * Usage (from `frontend/`, so `playwright` and `@app/*` resolve):
  *   npx tsx editor/tests/walkthrough/perf/cli.ts \
@@ -29,7 +31,13 @@ import {
   SAMPLE_INTERVAL_MS,
 } from "./collect-web";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import { probeBackend } from "./backend";
+import { probeBackend, stubbedState, type BackendState } from "./backend";
+// oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
+import {
+  DEFAULT_STUB_PORT,
+  startStubBackend,
+  type StubBackend,
+} from "./stub-backend";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import {
   backendSkipReason,
@@ -74,6 +82,8 @@ interface Cli {
   lighthouse: boolean;
   lighthouseForce: boolean;
   lighthouseBin: string;
+  noStubBackend: boolean;
+  stubBackendPort: number;
   buildLabel: string;
   instrumentation: string;
   fixture: string;
@@ -104,6 +114,8 @@ function parseCli(): Cli {
       lighthouse: { type: "boolean", default: false },
       "lighthouse-force": { type: "boolean", default: false },
       "lighthouse-bin": { type: "string" },
+      "no-stub-backend": { type: "boolean", default: false },
+      "stub-backend-port": { type: "string" },
       "build-label": { type: "string" },
       instrumentation: { type: "string" },
       fixture: { type: "string" },
@@ -123,6 +135,17 @@ function parseCli(): Cli {
   const idleBaselineMs = Number(values["idle-baseline"] ?? 4_000);
   if (!Number.isFinite(idleBaselineMs) || idleBaselineMs < 0)
     die(`--idle-baseline must be a non-negative number of ms`);
+  const stubBackendPort = Number(
+    values["stub-backend-port"] ?? DEFAULT_STUB_PORT,
+  );
+  if (
+    !Number.isInteger(stubBackendPort) ||
+    stubBackendPort < 1 ||
+    stubBackendPort > 65_535
+  )
+    die(
+      `--stub-backend-port must be a port number, got ${String(values["stub-backend-port"])}`,
+    );
   if (values.validate && !values.manifest)
     die("--validate needs --manifest <manifest.json> to validate");
 
@@ -139,6 +162,8 @@ function parseCli(): Cli {
     lighthouse: Boolean(values.lighthouse),
     lighthouseForce: Boolean(values["lighthouse-force"]),
     lighthouseBin: String(values["lighthouse-bin"] ?? ""),
+    noStubBackend: Boolean(values["no-stub-backend"]),
+    stubBackendPort,
     buildLabel: String(values["build-label"] ?? "unspecified build"),
     instrumentation: String(
       values.instrumentation ??
@@ -219,6 +244,54 @@ function mergeIntoManifest(
   return manifest;
 }
 
+/**
+ * The state the measured pages will see. A live backend wins; with none
+ * answering, the repo's own API stubs are served on the port the dev server
+ * already proxies to, so the interaction and the audit both render the feature
+ * instead of an error. The second probe is the proof: it goes through the dev
+ * server, so a proxy pointed at another port fails honestly instead of
+ * producing numbers from a screen nobody looked at.
+ */
+async function ensureBackend(
+  cli: Cli,
+): Promise<{ backend: BackendState; stub: StubBackend | null }> {
+  const live = await probeBackend(cli.baseUrl);
+  if (live.ok || cli.noStubBackend) return { backend: live, stub: null };
+  let stub: StubBackend;
+  try {
+    stub = await startStubBackend({ port: cli.stubBackendPort });
+  } catch (error) {
+    return {
+      backend: {
+        ...live,
+        detail: `${live.detail}; the stub backend on port ${cli.stubBackendPort} could not start (${(error as Error).message})`,
+      },
+      stub: null,
+    };
+  }
+  const throughProxy = await probeBackend(cli.baseUrl);
+  if (throughProxy.ok) {
+    return {
+      backend: stubbedState(
+        throughProxy.endpoint,
+        `answered by the repo's API stubs on port ${stub.port} through ${cli.baseUrl}`,
+      ),
+      stub,
+    };
+  }
+  await stub.close();
+  return {
+    backend: {
+      ...live,
+      detail:
+        `${live.detail}; the stub backend on port ${stub.port} was not reachable ` +
+        `through ${cli.baseUrl} (the dev server proxies /api to BACKEND_URL, ` +
+        `which defaults to http://localhost:${DEFAULT_STUB_PORT})`,
+    },
+    stub: null,
+  };
+}
+
 async function main(): Promise<void> {
   const cli = parseCli();
   const scenario = await loadScenario(cli.scenario);
@@ -233,11 +306,9 @@ async function main(): Promise<void> {
   // Probed once, before anything is measured: the answer decides whether the
   // numbers describe the feature or the app's error state, and it is recorded
   // as evidence rather than remembered.
-  const backend = await probeBackend(cli.baseUrl);
+  const { backend, stub } = await ensureBackend(cli);
   process.stderr.write(
-    `[perf] backend ${backend.endpoint} ${backend.detail}${
-      backend.ok ? "" : " — the route renders its error state"
-    }\n`,
+    `[perf] backend ${backend.source}: ${backend.endpoint} ${backend.detail}\n`,
   );
 
   const collectOptions = {
@@ -269,7 +340,6 @@ async function main(): Promise<void> {
       sampleIntervalMs: SAMPLE_INTERVAL_MS,
       browserVersion: browser.version(),
       pictureDir,
-      backend,
     });
     for (const note of result.unavailable)
       process.stderr.write(`[perf] unavailable: ${note}\n`);
@@ -287,8 +357,9 @@ async function main(): Promise<void> {
       );
       process.stderr.write(`[perf] ${notes[notes.length - 1]}\n`);
     } else if (!backend.ok && !cli.lighthouseForce) {
-      // An audit of an error screen scores the error screen. The run is skipped
-      // and said so, so the gap is a recorded finding instead of a mystery.
+      // Reaching here means neither a live backend nor the stub backend answered
+      // the dev server, so an audit would score the error screen. The run is
+      // skipped and says so, so the gap is a recorded finding, not a mystery.
       notes.push(backendSkipReason(backend));
       process.stderr.write(`[perf] ${notes[notes.length - 1]}\n`);
     } else {
@@ -362,11 +433,16 @@ async function main(): Promise<void> {
     }
   }
 
+  // Closed before the summary is printed: a listening server keeps the event
+  // loop alive, so the process would hang instead of exiting.
+  if (stub) await stub.close();
+
   process.stdout.write(
     `${JSON.stringify(
       {
         scenario: scenario.id,
         platform: scenario.platform,
+        backend: `${backend.source}: ${backend.detail}`,
         window: interaction.window,
         metrics: interaction.metrics,
         pictures: Object.keys(interaction.pictures ?? {}),

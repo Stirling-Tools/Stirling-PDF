@@ -162,13 +162,27 @@ export async function fulfillUnstubbedApis(
 }
 
 /**
- * Register stub routes for the endpoints the app calls during bootstrap.
- * Call this inside `test.beforeEach` before any `page.goto(...)`.
+ * One bootstrap stub: the URL glob Playwright registers it under and the JSON
+ * body the app receives. Playwright-free on purpose — the UI walkthrough's stub
+ * backend serves this same table over HTTP, so an audit that cannot use
+ * Playwright routes (Lighthouse drives its own browser) renders the same app
+ * instead of a second, drifting copy of these responses.
  */
-export async function mockAppApis(
-  page: Page,
-  opts: MockAppApiOptions = {},
-): Promise<void> {
+export interface AppApiStub {
+  /** Playwright URL glob. The stub backend matches the same globs on a path. */
+  glob: string;
+  /** JSON body the app receives. */
+  body: unknown;
+}
+
+/**
+ * Stubs for the endpoints the app calls during bootstrap.
+ *
+ * Order matters: Playwright keeps the last handler matching a request, so a
+ * broad glob registered later wins over a narrower one registered earlier. The
+ * stub backend reproduces this by scanning the table in reverse.
+ */
+export function appApiStubs(opts: MockAppApiOptions = {}): AppApiStub[] {
   const {
     enableLogin = false,
     isAdmin = false,
@@ -185,171 +199,116 @@ export async function mockAppApis(
     backendStatus = "UP",
   } = opts;
 
-  // Backend liveness probe — determines whether the UI shows the app or an offline screen
-  await page.route("**/api/v1/info/status", (route: Route) =>
-    route.fulfill({ json: { status: backendStatus } }),
-  );
+  const endpoints = {
+    ...DEFAULT_ENDPOINTS_AVAILABILITY,
+    ...endpointsAvailability,
+  };
 
-  // App config — drives the login flow, language list, and feature flags the UI reads at startup
-  await page.route("**/api/v1/config/app-config", (route: Route) =>
-    route.fulfill({
-      json: {
-        enableLogin,
-        isAdmin,
-        enableAnalytics,
-        languages,
-        defaultLocale,
+  return [
+    // Liveness probe — decides whether the UI shows the app or an offline screen
+    { glob: "**/api/v1/info/status", body: { status: backendStatus } },
+    // App config — login flow, language list, and startup feature flags
+    {
+      glob: "**/api/v1/config/app-config",
+      body: { enableLogin, isAdmin, enableAnalytics, languages, defaultLocale },
+    },
+    {
+      glob: "**/api/v1/config/public-config",
+      body: { enableLogin, languages, defaultLocale },
+    },
+    // Current user — anonymous by default, configurable for authenticated flows
+    { glob: "**/api/v1/auth/me", body: { user } },
+    // The signed-in user's teams. Unstubbed this 401s, and the API client reads
+    // a 401 here as an expired session: refresh, fail, bounce to /login — so
+    // any page that asks (login-landing setting, account tab) logs out.
+    { glob: "**/api/v1/team/my", body: [] },
+    // Tool availability — every tool enabled unless overridden
+    { glob: "**/api/v1/config/endpoints-availability", body: endpoints },
+    { glob: "**/api/v1/config/endpoints-enabled", body: endpoints },
+    // Per-endpoint check hit by tool pages before enabling the run button
+    { glob: "**/api/v1/config/endpoint-enabled*", body: true },
+    { glob: "**/api/v1/config/group-enabled*", body: true },
+    // Login agreement / disclaimer — disabled so the blocking modal never
+    // shows; specs exercising it register a narrower route afterwards.
+    { glob: "**/api/v1/config/login-disclaimer*", body: { enabled: false } },
+    // Footer / branding — non-critical but proxied, so stub to avoid noise
+    { glob: "**/api/v1/ui-data/footer-info", body: {} },
+    // Proprietary bucket (login UI, audit, teams, …)
+    {
+      glob: "**/api/v1/proprietary/ui-data/login",
+      body: { enabled: enableLogin, loginMethod: "form" },
+    },
+    { glob: "**/api/v1/proprietary/ui-data/account", body: user },
+    // Catch-all so the Vite proxy doesn't log ECONNREFUSED for every call we
+    // haven't individually stubbed.
+    { glob: "**/api/v1/proprietary/**", body: {} },
+    // License info — stubbed so admin settings doesn't log proxy errors
+    {
+      glob: "**/api/v1/admin/license-info",
+      body: { licenseType: "FREE", valid: true, maxUsers: 5 },
+    },
+    // Settings sections touched by the settings page
+    { glob: "**/api/v1/admin/settings", body: {} },
+    { glob: "**/api/v1/admin/settings/section/**", body: {} },
+    // An empty section never gets a dirty-tracking snapshot, so anything that
+    // compares saved-vs-current reads as unchanged. Give aiEngine real values.
+    {
+      glob: "**/api/v1/admin/settings/section/aiEngine",
+      body: {
+        enabled: false,
+        url: "http://stirling-pdf-engine:5001",
+        rag: { embeddingProvider: "voyageai", embeddingModel: "voyage-3" },
       },
-    }),
-  );
+    },
+    // Folder access reads this on every visit to the System page; unstubbed it
+    // 401s in a retry loop and the refresh failures sign the session out.
+    {
+      glob: "**/api/v1/admin/settings/policies/implied-folder-roots",
+      body: { impliedRoots: [] },
+    },
+    // Same trap on the merged Legal and Advanced pages, which each pull in a
+    // card that fetches on mount.
+    {
+      glob: "**/api/v1/admin/login-agreement/**",
+      body: { content: "", enabled: false },
+    },
+    { glob: "**/api/v1/ui-data/tessdata-languages", body: { languages: [] } },
+    // Info sub-resources
+    { glob: "**/api/v1/info/wau", body: { count: 0 } },
+    // Policies (proprietary): the reconcile fires GET /api/v1/policies on app
+    // load. An empty list keeps the stubbed (backend-free) env clean — no
+    // failed request polluting the console, and the auto-run controller has
+    // nothing to dispatch.
+    { glob: "**/api/v1/policies", body: [] },
+    // The controller also reconciles server-side runs on load via
+    // GET /api/v1/policies/runs, which the glob above doesn't cover; unstubbed
+    // it hits the absent backend and the console error fails the page's
+    // no-unexpected-output guard.
+    { glob: "**/api/v1/policies/runs", body: [] },
+    { glob: "**/api/v1/processing-folders", body: [] },
+    {
+      glob: "**/api/v1/processing-folders/downloads-suggestion",
+      body: { directory: "", available: false, pdfCount: 0, limit: 0 },
+    },
+    // The bell polls this on load. The hook swallows the failure, but the
+    // browser still logs the request, which the console-hygiene guard counts.
+    { glob: "**/api/v1/notifications*", body: { notifications: [] } },
+  ];
+}
 
-  await page.route("**/api/v1/config/public-config", (route: Route) =>
-    route.fulfill({ json: { enableLogin, languages, defaultLocale } }),
-  );
-
-  // Current user — anonymous by default, configurable for authenticated flows
-  await page.route("**/api/v1/auth/me", (route: Route) =>
-    route.fulfill({ json: { user } }),
-  );
-
-  // The signed-in user's teams. Unstubbed this 401s, and the API client reads a
-  // 401 here as an expired session: refresh, fail, bounce to /login - so any
-  // page that asks (the login-landing setting, the account tab) logs out.
-  await page.route("**/api/v1/team/my", (route: Route) =>
-    route.fulfill({ json: [] }),
-  );
-
-  // Tool availability — every tool enabled unless overridden
-  await page.route("**/api/v1/config/endpoints-availability", (route: Route) =>
-    route.fulfill({
-      json: { ...DEFAULT_ENDPOINTS_AVAILABILITY, ...endpointsAvailability },
-    }),
-  );
-
-  await page.route("**/api/v1/config/endpoints-enabled", (route: Route) =>
-    route.fulfill({
-      json: { ...DEFAULT_ENDPOINTS_AVAILABILITY, ...endpointsAvailability },
-    }),
-  );
-
-  // Per-endpoint check hit by tool pages before enabling the run button
-  await page.route("**/api/v1/config/endpoint-enabled*", (route: Route) =>
-    route.fulfill({ json: true }),
-  );
-
-  await page.route("**/api/v1/config/group-enabled*", (route: Route) =>
-    route.fulfill({ json: true }),
-  );
-
-  // Login agreement / disclaimer — disabled by default so the blocking modal
-  // never shows; specs exercising it register a narrower route afterwards.
-  await page.route("**/api/v1/config/login-disclaimer*", (route: Route) =>
-    route.fulfill({ json: { enabled: false } }),
-  );
-
-  // Footer / branding — non-critical but proxied, so stub to avoid noise
-  await page.route("**/api/v1/ui-data/footer-info", (route: Route) =>
-    route.fulfill({ json: {} }),
-  );
-
-  // Proprietary bucket (login UI, audit, teams, …) — catch-all so the Vite
-  // proxy doesn't log ECONNREFUSED for every call we haven't individually
-  // stubbed. Specs can override with a narrower route registered afterwards.
-  await page.route("**/api/v1/proprietary/ui-data/login", (route: Route) =>
-    route.fulfill({
-      json: { enabled: enableLogin, loginMethod: "form" },
-    }),
-  );
-
-  await page.route("**/api/v1/proprietary/ui-data/account", (route: Route) =>
-    route.fulfill({ json: user }),
-  );
-
-  await page.route("**/api/v1/proprietary/**", (route: Route) =>
-    route.fulfill({ json: {} }),
-  );
-
-  // License info — stubbed so admin settings doesn't log proxy errors
-  await page.route("**/api/v1/admin/license-info", (route: Route) =>
-    route.fulfill({ json: { licenseType: "FREE", valid: true, maxUsers: 5 } }),
-  );
-
-  // Settings sections touched by the settings page
-  await page.route("**/api/v1/admin/settings", (route: Route) =>
-    route.fulfill({ json: {} }),
-  );
-
-  await page.route("**/api/v1/admin/settings/section/**", (route: Route) =>
-    route.fulfill({ json: {} }),
-  );
-
-  // An empty section never gets a dirty-tracking snapshot, so anything that
-  // compares saved-vs-current reads as unchanged. Give aiEngine real values.
-  await page.route(
-    "**/api/v1/admin/settings/section/aiEngine",
-    (route: Route) =>
-      route.fulfill({
-        json: {
-          enabled: false,
-          url: "http://stirling-pdf-engine:5001",
-          rag: { embeddingProvider: "voyageai", embeddingModel: "voyage-3" },
-        },
-      }),
-  );
-
-  // Folder access reads this on every visit to the System page; unstubbed it
-  // 401s in a retry loop and the refresh failures sign the session out.
-  await page.route(
-    "**/api/v1/admin/settings/policies/implied-folder-roots",
-    (route: Route) => route.fulfill({ json: { impliedRoots: [] } }),
-  );
-
-  // Same trap on the merged Legal and Advanced pages, which each pull in a
-  // card that fetches on mount.
-  await page.route("**/api/v1/admin/login-agreement/**", (route: Route) =>
-    route.fulfill({ json: { content: "", enabled: false } }),
-  );
-  await page.route("**/api/v1/ui-data/tessdata-languages", (route: Route) =>
-    route.fulfill({ json: { languages: [] } }),
-  );
-
-  // Info sub-resources
-  await page.route("**/api/v1/info/wau", (route: Route) =>
-    route.fulfill({ json: { count: 0 } }),
-  );
-
-  // Policies (proprietary): the reconcile fires GET /api/v1/policies on app
-  // load. Return an empty list so the stubbed (backend-free) env stays clean —
-  // no failed request polluting the console, and the auto-run controller has
-  // nothing to dispatch.
-  await page.route("**/api/v1/policies", (route: Route) =>
-    route.fulfill({ json: [] }),
-  );
-  // The auto-run controller also reconciles server-side runs on load via
-  // GET /api/v1/policies/runs. The glob above doesn't cover this sub-path, so
-  // stub it empty too; otherwise the request hits the absent backend and the
-  // console error fails the page's no-unexpected-output guard.
-  await page.route("**/api/v1/policies/runs", (route: Route) =>
-    route.fulfill({ json: [] }),
-  );
-
-  await page.route("**/api/v1/processing-folders", (route: Route) =>
-    route.fulfill({ json: [] }),
-  );
-
-  await page.route(
-    "**/api/v1/processing-folders/downloads-suggestion",
-    (route: Route) =>
-      route.fulfill({
-        json: { directory: "", available: false, pdfCount: 0, limit: 0 },
-      }),
-  );
-
-  // The bell polls this on load. The hook swallows the failure, but the browser still logs the
-  // request, which the console-hygiene guard counts.
-  await page.route("**/api/v1/notifications*", (route: Route) =>
-    route.fulfill({ json: { notifications: [] } }),
-  );
+/**
+ * Register stub routes for the endpoints the app calls during bootstrap.
+ * Call this inside `test.beforeEach` before any `page.goto(...)`.
+ */
+export async function mockAppApis(
+  page: Page,
+  opts: MockAppApiOptions = {},
+): Promise<void> {
+  for (const stub of appApiStubs(opts)) {
+    await page.route(stub.glob, (route: Route) =>
+      route.fulfill({ json: stub.body }),
+    );
+  }
 }
 
 /**
