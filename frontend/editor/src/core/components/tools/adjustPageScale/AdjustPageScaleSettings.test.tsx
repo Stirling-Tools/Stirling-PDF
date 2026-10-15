@@ -1,5 +1,5 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import AdjustPageScaleSettings from "@app/components/tools/adjustPageScale/AdjustPageScaleSettings";
 import {
@@ -88,5 +88,28 @@ describe("AdjustPageScaleSettings", () => {
     expect(
       screen.getByRole("radiogroup", { name: "Unit" }),
     ).toBeInTheDocument();
+  });
+
+  test("converts the width and height when the unit changes", () => {
+    render(
+      <TestWrapper>
+        <AdjustPageScaleSettings
+          parameters={{
+            ...defaultParameters,
+            pageSize: PageSize.CUSTOM,
+            customWidth: 210,
+            customHeight: 297,
+            customUnit: "mm",
+          }}
+          onParameterChange={mockOnParameterChange}
+        />
+      </TestWrapper>,
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: "in" }));
+
+    expect(mockOnParameterChange).toHaveBeenCalledWith("customWidth", 8.27);
+    expect(mockOnParameterChange).toHaveBeenCalledWith("customHeight", 11.69);
+    expect(mockOnParameterChange).toHaveBeenCalledWith("customUnit", "in");
   });
 });

@@ -48,7 +48,9 @@ public class ScalePagesController {
     private final TempFileManager tempFileManager;
 
     private static final float POINTS_PER_INCH = 72f;
-    private static final float MAX_CUSTOM_SIDE_POINTS = 200 * POINTS_PER_INCH; // Acrobat's limit
+    // ISO 32000-1 Annex C page size limits; the frontend validator mirrors them.
+    private static final float MIN_CUSTOM_SIDE_POINTS = 3f;
+    private static final float MAX_CUSTOM_SIDE_POINTS = 200 * POINTS_PER_INCH;
 
     private static PDRectangle getTargetSize(ScalePagesRequest request, PDDocument sourceDocument) {
         String targetPDRectangle = request.getPageSize();
@@ -105,9 +107,9 @@ public class ScalePagesController {
         }
         float points = value * pointsPerUnit;
         // Negated so NaN is rejected too.
-        if (!(points > 0 && points <= MAX_CUSTOM_SIDE_POINTS)) {
+        if (!(points >= MIN_CUSTOM_SIDE_POINTS && points <= MAX_CUSTOM_SIDE_POINTS)) {
             throw ExceptionUtils.createInvalidArgumentException(
-                    name, value + " (must be greater than 0 and at most 200 inches)");
+                    name, value + " (must be between 3 points and 200 inches)");
         }
         return points;
     }

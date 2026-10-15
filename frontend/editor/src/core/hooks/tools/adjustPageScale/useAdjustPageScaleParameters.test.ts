@@ -5,6 +5,7 @@ import {
   defaultParameters,
   PageSize,
   AdjustPageScaleParametersHook,
+  convertCustomSide,
 } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 
 describe("useAdjustPageScaleParameters", () => {
@@ -97,6 +98,32 @@ describe("useAdjustPageScaleParameters", () => {
       expected: false,
     },
     {
+      description: "with custom page size over 200 inches",
+      setup: (hook: AdjustPageScaleParametersHook) => {
+        hook.updateParameter("pageSize", PageSize.CUSTOM);
+        hook.updateParameter("customUnit", "in");
+        hook.updateParameter("customWidth", 200.01);
+      },
+      expected: false,
+    },
+    {
+      description: "with custom page size at 200 inches",
+      setup: (hook: AdjustPageScaleParametersHook) => {
+        hook.updateParameter("pageSize", PageSize.CUSTOM);
+        hook.updateParameter("customUnit", "mm");
+        hook.updateParameter("customWidth", 5080);
+      },
+      expected: true,
+    },
+    {
+      description: "with custom page size under 3 points",
+      setup: (hook: AdjustPageScaleParametersHook) => {
+        hook.updateParameter("pageSize", PageSize.CUSTOM);
+        hook.updateParameter("customHeight", 1);
+      },
+      expected: false,
+    },
+    {
       description: "with invalid scale factor 0",
       setup: (hook: AdjustPageScaleParametersHook) => {
         hook.updateParameter("scaleFactor", 0);
@@ -156,5 +183,26 @@ describe("useAdjustPageScaleParameters", () => {
       result.current.updateParameter("scaleFactor", 0);
     });
     expect(result.current.validateParameters()).toBe(false);
+  });
+});
+
+describe("convertCustomSide", () => {
+  test.each([
+    { value: 210, from: "mm" as const, to: "in" as const, expected: 8.27 },
+    { value: 210, from: "mm" as const, to: "cm" as const, expected: 21 },
+    { value: 8.5, from: "in" as const, to: "mm" as const, expected: 215.9 },
+  ])(
+    "converts $value $from to $expected $to",
+    ({ value, from, to, expected }) => {
+      expect(convertCustomSide(value, from, to)).toBe(expected);
+    },
+  );
+
+  test("clamps a rounded result that falls below the target unit's minimum", () => {
+    expect(convertCustomSide(1.06, "mm", "in")).toBe(0.05);
+  });
+
+  test("leaves a missing side missing", () => {
+    expect(convertCustomSide(0, "mm", "in")).toBe(0);
   });
 });

@@ -25,7 +25,7 @@ public class ScalePagesRequest extends PDFWithPageSize {
             exclusiveMinimum = true,
             description =
                     "Width of the output pages in customUnit. Required when pageSize is CUSTOM;"
-                            + " at most 200 inches.")
+                            + " between 3 points (about 1.06 mm) and 200 inches.")
     private Float customWidth;
 
     @Schema(
@@ -33,7 +33,7 @@ public class ScalePagesRequest extends PDFWithPageSize {
             exclusiveMinimum = true,
             description =
                     "Height of the output pages in customUnit. Required when pageSize is CUSTOM;"
-                            + " at most 200 inches.")
+                            + " between 3 points (about 1.06 mm) and 200 inches.")
     private Float customHeight;
 
     @Schema(

@@ -1331,7 +1331,7 @@ export interface SanitizePdfRequest {
 }
 export interface ScalePagesRequest {
   /**
-   * Height of the output pages in customUnit. Required when pageSize is CUSTOM; at most 200 inches.
+   * Height of the output pages in customUnit. Required when pageSize is CUSTOM; between 3 points (about 1.06 mm) and 200 inches.
    */
   customHeight?: number;
   /**
@@ -1339,7 +1339,7 @@ export interface ScalePagesRequest {
    */
   customUnit?: "mm" | "cm" | "in";
   /**
-   * Width of the output pages in customUnit. Required when pageSize is CUSTOM; at most 200 inches.
+   * Width of the output pages in customUnit. Required when pageSize is CUSTOM; between 3 points (about 1.06 mm) and 200 inches.
    */
   customWidth?: number;
   /**

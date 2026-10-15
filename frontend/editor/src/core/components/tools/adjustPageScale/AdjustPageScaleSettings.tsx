@@ -9,15 +9,10 @@ import {
   CustomSizeUnit,
   Orientation,
   PageSize,
+  convertCustomSide,
+  customSideLimits,
 } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
-
-// Mirrors the backend limit of 200 inches per side.
-const MAX_CUSTOM_SIDE: Record<CustomSizeUnit, number> = {
-  mm: 5080,
-  cm: 508,
-  in: 200,
-};
 
 const CUSTOM_UNIT_OPTIONS: SegmentedOption<CustomSizeUnit>[] = [
   { value: "mm", label: "mm" },
@@ -69,6 +64,21 @@ const AdjustPageScaleSettings = ({
       label: t("adjustPageScale.pageSize.custom", "Custom"),
     },
   ];
+
+  const sideLimits = customSideLimits(parameters.customUnit);
+
+  const handleCustomUnitChange = (unit: CustomSizeUnit) => {
+    const from = parameters.customUnit;
+    onParameterChange(
+      "customWidth",
+      convertCustomSide(parameters.customWidth, from, unit),
+    );
+    onParameterChange(
+      "customHeight",
+      convertCustomSide(parameters.customHeight, from, unit),
+    );
+    onParameterChange("customUnit", unit);
+  };
 
   const orientationDisabled = disabled || isKeepSelected || isCustomSelected;
   const orientationOptions: SegmentedOption<Orientation>[] = [
@@ -131,8 +141,8 @@ const AdjustPageScaleSettings = ({
                   typeof value === "number" ? value : 0,
                 )
               }
-              min={0}
-              max={MAX_CUSTOM_SIDE[parameters.customUnit]}
+              min={sideLimits.min}
+              max={sideLimits.max}
               decimalScale={2}
               disabled={disabled}
             />
@@ -145,8 +155,8 @@ const AdjustPageScaleSettings = ({
                   typeof value === "number" ? value : 0,
                 )
               }
-              min={0}
-              max={MAX_CUSTOM_SIDE[parameters.customUnit]}
+              min={sideLimits.min}
+              max={sideLimits.max}
               decimalScale={2}
               disabled={disabled}
             />
@@ -154,7 +164,7 @@ const AdjustPageScaleSettings = ({
           <SegmentedControl
             ariaLabel={t("adjustPageScale.customSize.unit", "Unit")}
             value={parameters.customUnit}
-            onChange={(value) => onParameterChange("customUnit", value)}
+            onChange={handleCustomUnitChange}
             options={CUSTOM_UNIT_OPTIONS}
             disabled={disabled}
             fullWidth

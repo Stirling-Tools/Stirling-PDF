@@ -1501,13 +1501,13 @@ class ScalePagesParams(ApiModel):
 
     custom_height: float | None = Field(
         None,
-        description="Height of the output pages in customUnit. Required when pageSize is CUSTOM; at most 200 inches.",
+        description="Height of the output pages in customUnit. Required when pageSize is CUSTOM; between 3 points (about 1.06 mm) and 200 inches.",
         gt=0.0,
     )
     custom_unit: CustomUnit = Field(CustomUnit.mm, description="Unit of customWidth and customHeight.")
     custom_width: float | None = Field(
         None,
-        description="Width of the output pages in customUnit. Required when pageSize is CUSTOM; at most 200 inches.",
+        description="Width of the output pages in customUnit. Required when pageSize is CUSTOM; between 3 points (about 1.06 mm) and 200 inches.",
         gt=0.0,
     )
     orientation: Orientation1 = Field(

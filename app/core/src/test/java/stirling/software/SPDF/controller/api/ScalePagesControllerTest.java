@@ -313,7 +313,8 @@ class ScalePagesControllerTest {
     @CsvSource({
         "in, 8.5, 11, 612, 792",
         "mm, 210, 297, 595.28, 841.89",
-        "cm, 20, 10, 566.93, 283.46"
+        "cm, 20, 10, 566.93, 283.46",
+        "mm, 5080, 1.06, 14400, 3.00"
     })
     void testScalePages_CustomSize(
             String unit, float width, float height, float expectedWidth, float expectedHeight)
@@ -332,7 +333,16 @@ class ScalePagesControllerTest {
 
     @ParameterizedTest
     @CsvSource(
-            value = {"mm, , 100", "mm, 0, 100", "mm, -5, 100", "in, 201, 10", "ft, 1, 1"},
+            value = {
+                "mm, , 100",
+                "mm, 0, 100",
+                "mm, -5, 100",
+                "mm, 1, 100",
+                "in, 201, 10",
+                "mm, NaN, 100",
+                "in, Infinity, 10",
+                "ft, 1, 1"
+            },
             nullValues = "")
     void testScalePages_CustomSizeRejectsInvalidInput(String unit, Float width, Float height)
             throws Exception {
