@@ -43,6 +43,7 @@ describe("buildRedactFormData", () => {
       wordsToRedact: ["Confidential", "Secret"],
       useRegex: true,
       wholeWordSearch: true,
+      caseSensitive: true,
       redactColor: "#FF0000",
       customPadding: 0.5,
       convertPDFToImage: false,
@@ -54,6 +55,7 @@ describe("buildRedactFormData", () => {
     expect(formData.get("listOfText")).toBe("Confidential\nSecret");
     expect(formData.get("useRegex")).toBe("true");
     expect(formData.get("wholeWordSearch")).toBe("true");
+    expect(formData.get("caseSensitive")).toBe("true");
     expect(formData.get("redactColor")).toBe("FF0000"); // Hash should be removed
     expect(formData.get("customPadding")).toBe("0.5");
     expect(formData.get("convertPDFToImage")).toBe("false");
@@ -119,6 +121,7 @@ describe("buildRedactFormData", () => {
 
     expect(formData.get("useRegex")).toBe("false");
     expect(formData.get("wholeWordSearch")).toBe("true");
+    expect(formData.get("caseSensitive")).toBe("false");
     expect(formData.get("convertPDFToImage")).toBe("false");
   });
 

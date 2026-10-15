@@ -103,7 +103,7 @@ async function typeInto(
     },
     { id: runId, text, mode },
   );
-  await page.waitForTimeout(450);
+  await expect.poll(() => page.evaluate(RUN_ID, text)).not.toBeNull();
 }
 
 async function saveAndReopen(page: import("@playwright/test").Page) {
@@ -111,7 +111,7 @@ async function saveAndReopen(page: import("@playwright/test").Page) {
   await page.getByTestId("pdf-editor-download").click();
   const confirm = page.getByTestId("pdf-editor-save-risk-confirm");
   if (await confirm.isVisible().catch(() => false)) await confirm.click();
-  const saved = "test-results/tagged-structure.pdf";
+  const saved = test.info().outputPath("tagged-structure.pdf");
   await (await downloaded).saveAs(saved);
   await page.evaluate(() => {
     const w = window as unknown as {
@@ -139,7 +139,6 @@ async function saveAndReopen(page: import("@playwright/test").Page) {
     undefined,
     { timeout: 30_000 },
   );
-  await page.waitForTimeout(1200);
 }
 
 test.describe("PDF text editor - tagged documents", () => {
@@ -155,7 +154,9 @@ test.describe("PDF text editor - tagged documents", () => {
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
-    await page.waitForTimeout(1800);
+    await expect
+      .poll(() => page.evaluate(RUN_ID, "product line"), { timeout: 30_000 })
+      .not.toBeNull();
 
     expect(await page.evaluate(AUDIT)).toEqual({
       untaggedText: 0,
@@ -173,12 +174,16 @@ test.describe("PDF text editor - tagged documents", () => {
     await typeInto(page, paragraph!, " Up 4%.", "append");
     await saveAndReopen(page);
 
-    expect(await page.evaluate(RUN_ID, "Annual summary")).not.toBeNull();
-    expect(await page.evaluate(RUN_ID, "Up 4%.")).not.toBeNull();
-    expect(await page.evaluate(AUDIT)).toEqual({
-      untaggedText: 0,
-      contentMcids: [0, 1, 2],
-      treeMcids: [0, 1, 2],
-    });
+    await expect
+      .poll(() => page.evaluate(RUN_ID, "Annual summary"))
+      .not.toBeNull();
+    await expect.poll(() => page.evaluate(RUN_ID, "Up 4%.")).not.toBeNull();
+    // The save gives each repeated sequence of an edited run its own MCID, so
+    // the count depends on how many objects the edit emitted. What must hold
+    // is that the originals survive and content and tree still agree.
+    const saved = await page.evaluate(AUDIT);
+    expect(saved.untaggedText).toBe(0);
+    expect(saved.contentMcids).toEqual(saved.treeMcids);
+    expect(saved.contentMcids).toEqual(expect.arrayContaining([0, 1, 2]));
   });
 });
