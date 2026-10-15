@@ -11750,6 +11750,7 @@ loadErrorTitle = "Couldn't load your settings"
 notNow = "Not now"
 off = "Off"
 on = "On"
+save = "Save"
 stepCount = "{{current}} of {{total}}"
 
 [serverSetup.addresses]
@@ -11785,6 +11786,12 @@ learnMore = "What we collect"
 note = "Anonymous usage data helps us improve Stirling PDF. We never collect personal information or file contents."
 subtitle = "Help make Stirling PDF better."
 title = "Analytics"
+
+[serverSetup.documents]
+label = "Document questions"
+model = "Embedding model"
+provider = "Embedding provider"
+providerHelp = "Turns document text into the search index that answers questions."
 
 [serverSetup.email]
 from = "From address"
@@ -11838,12 +11845,7 @@ subtitle = "What new visitors see first."
 title = "Language"
 
 [serverSetup.mcp]
-apiKey = "Their Stirling API key"
-authLabel = "Agents sign in with"
-issuer = "Issuer URL"
-issuerHelp = "Your identity provider's address. Agents' tokens must come from it and name this server's /mcp address."
 label = "MCP server"
-oauth = "OAuth identity provider"
 
 [serverSetup.password]
 confirm = "Confirm new password"

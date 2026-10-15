@@ -262,6 +262,11 @@
   grid-template-rows: 1fr;
 }
 
+.groupDetailsActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .groupDetailsClip {
   min-height: 0;
   overflow: hidden;

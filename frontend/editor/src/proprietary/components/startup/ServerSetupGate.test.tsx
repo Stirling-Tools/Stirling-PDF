@@ -80,8 +80,14 @@ const NEW_SERVER_SETTINGS = {
   security: { oauth2: { enabled: false } },
   mail: { enabled: false },
   storage: { enabled: true, sharing: { enabled: false } },
-  aiEngine: { enabled: false, url: "http://localhost:5001", models: {} },
-  mcp: { enabled: false },
+  aiEngine: {
+    enabled: false,
+    url: "http://localhost:5001",
+    models: {},
+    rag: { embeddingProvider: "voyageai", embeddingModel: "voyage-4" },
+    features: { documentQuestions: true },
+  },
+  mcp: { enabled: false, auth: { mode: "oauth" } },
 };
 
 function renderGate(
@@ -208,6 +214,8 @@ describe("ServerSetupGate", () => {
     expect(api.saveServerSettings).toHaveBeenCalledWith({
       "system.frontendUrl": window.location.origin,
       "system.backendUrl": window.location.origin,
+      "mcp.enabled": true,
+      "mcp.auth.mode": "apikey",
     });
     expect(api.answerAnalytics).toHaveBeenCalledWith(true);
     expect(api.requestRestart).toHaveBeenCalled();
@@ -259,42 +267,29 @@ describe("ServerSetupGate", () => {
     expect(screen.getByText("1 of 7")).toBeInTheDocument();
   });
 
-  it("asks about MCP only once AI is on", async () => {
+  it("turns MCP on with API keys, whether or not AI is on", async () => {
     renderGate();
     await openQuickStart();
-    expect(screen.queryByText("MCP server")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("radio", { name: "Your own AI" }));
-    expect(screen.getByText("MCP server")).toBeInTheDocument();
-  });
-
-  it("switches MCP off when AI is switched off", async () => {
-    vi.mocked(api.fetchServerSettings).mockResolvedValue({
-      ...NEW_SERVER_SETTINGS,
-      aiEngine: {
-        enabled: true,
-        mode: "SELF_HOSTED",
-        url: "http://engine",
-        models: {},
-      },
-      mcp: { enabled: true, auth: { mode: "apikey" } },
-    });
-    renderGate();
-    await openQuickStart();
-    fireEvent.click(within(group("AI")).getByRole("radio", { name: "Off" }));
+    expect(
+      within(group("AI")).getByRole("radio", { name: "Off" }),
+    ).toBeChecked();
+    expect(
+      within(group("MCP server")).getByRole("radio", { name: "On" }),
+    ).toBeChecked();
     click("Continue");
     click("Accept and finish");
 
     await waitFor(() => expect(api.saveServerSettings).toHaveBeenCalled());
     expect(vi.mocked(api.saveServerSettings).mock.calls[0][0]).toMatchObject({
-      "aiEngine.enabled": false,
-      "mcp.enabled": false,
+      "mcp.enabled": true,
+      "mcp.auth.mode": "apikey",
     });
   });
 
-  it("leaves MCP alone on a server that already runs without AI", async () => {
+  it("leaves MCP alone on a server that already runs it", async () => {
     vi.mocked(api.fetchServerSettings).mockResolvedValue({
       ...NEW_SERVER_SETTINGS,
-      mcp: { enabled: true, auth: { mode: "apikey" } },
+      mcp: { enabled: true, auth: { mode: "oauth" } },
     });
     renderGate();
     await openQuickStart();
@@ -302,9 +297,9 @@ describe("ServerSetupGate", () => {
     click("Accept and finish");
 
     await waitFor(() => expect(api.saveServerSettings).toHaveBeenCalled());
-    expect(
-      vi.mocked(api.saveServerSettings).mock.calls[0][0],
-    ).not.toHaveProperty("mcp.enabled");
+    const saved = vi.mocked(api.saveServerSettings).mock.calls[0][0];
+    expect(saved).not.toHaveProperty("mcp.enabled");
+    expect(saved).not.toHaveProperty("mcp.auth.mode");
   });
 
   async function reachPasswordStep() {
@@ -410,32 +405,93 @@ describe("ServerSetupGate", () => {
     expect(isShown(/^AI engine address/)).toBe(false);
   });
 
-  it("asks for an issuer when agents sign in through OAuth", async () => {
+  it("saves a section and opens the next one that is on", async () => {
     renderGate();
     await openQuickStart();
     fireEvent.click(screen.getByRole("radio", { name: "Your own AI" }));
     fireEvent.click(
-      within(group("MCP server")).getByRole("radio", { name: "On" }),
+      within(group("Send email")).getByRole("radio", { name: "On" }),
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: /^SMTP host/ }), {
+      target: { value: "smtp.example.org" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /^Port/ }), {
+      target: { value: "587" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /^From address/ }), {
+      target: { value: "pdf@example.org" },
+    });
+
+    fireEvent.click(
+      within(group("Send email")).getByRole("button", { name: "Save" }),
+    );
+    expect(isShown(/^SMTP host/)).toBe(false);
+    expect(isShown(/^AI engine address/)).toBe(true);
+
+    fireEvent.click(within(group("AI")).getByRole("button", { name: "Save" }));
+    expect(isShown(/^Embedding model/)).toBe(true);
+
+    fireEvent.click(
+      within(group("Document questions")).getByRole("button", {
+        name: "Save",
+      }),
+    );
+    expect(isShown(/^Embedding model/)).toBe(false);
+  });
+
+  it("keeps a section open until its fields are filled in", async () => {
+    renderGate();
+    await openQuickStart();
+    fireEvent.click(
+      within(group("Send email")).getByRole("radio", { name: "On" }),
+    );
+    fireEvent.click(
+      within(group("Send email")).getByRole("button", { name: "Save" }),
+    );
+
+    expect(isShown(/^SMTP host/)).toBe(true);
+    expect(screen.getByRole("textbox", { name: /^SMTP host/ })).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+  });
+
+  it("asks for an embedding setup only while document questions are on", async () => {
+    renderGate();
+    await openQuickStart();
+    expect(screen.queryByText("Document questions")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "Your own AI" }));
+    fireEvent.click(
+      within(group("Document questions")).getByRole("radio", { name: "Off" }),
+    );
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /^AI engine address/ }),
+      { target: { value: "http://engine" } },
     );
     click("Continue");
+    click("Accept and finish");
 
-    expect(isShown(/^Issuer URL/)).toBe(true);
-    expect(
-      screen.getByRole("textbox", { name: /^Issuer URL/ }),
-    ).toHaveAttribute("aria-invalid", "true");
-    expect(
-      screen.getByRole("heading", { name: "Quick start" }),
-    ).toBeInTheDocument();
+    await waitFor(() => expect(api.saveServerSettings).toHaveBeenCalled());
+    const saved = vi.mocked(api.saveServerSettings).mock.calls[0][0];
+    expect(saved).toMatchObject({
+      "aiEngine.features.documentQuestions": false,
+    });
+    expect(saved).not.toHaveProperty("aiEngine.rag.embeddingModel");
   });
 
   it("won't move on with an issuer the server can't reach", async () => {
     vi.mocked(api.checkIssuer).mockResolvedValue(false);
+    vi.mocked(api.fetchServerSettings).mockResolvedValue({
+      ...NEW_SERVER_SETTINGS,
+      security: {
+        oauth2: {
+          enabled: true,
+          client: { keycloak: { clientId: "id", clientSecret: "secret" } },
+        },
+      },
+    });
     renderGate();
     await openQuickStart();
-    fireEvent.click(screen.getByRole("radio", { name: "Your own AI" }));
-    fireEvent.click(
-      within(group("MCP server")).getByRole("radio", { name: "On" }),
-    );
     fireEvent.change(screen.getByRole("textbox", { name: /^Issuer URL/ }), {
       target: { value: "https://id.example.com" },
     });
