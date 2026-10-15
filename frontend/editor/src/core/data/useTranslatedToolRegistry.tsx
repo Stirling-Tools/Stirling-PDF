@@ -17,6 +17,7 @@ import {
   lazySettings,
 } from "@app/hooks/tools/shared/toolOperationTypes";
 import { adjustContrastOperationConfig } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
+import { adjustColorsRustOperationConfig } from "@app/hooks/tools/adjustColorsRust/useAdjustColorsRustOperation";
 import { getSynonyms } from "@app/utils/toolSynonyms";
 import { useProprietaryToolRegistry } from "@app/data/useProprietaryToolRegistry";
 import { classifyOperationConfig } from "@app/hooks/tools/classify/useClassifyOperation";
@@ -935,6 +936,22 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             import("@app/components/tools/adjustContrast/AdjustContrastSingleStepSettings"),
         ),
         synonyms: getSynonyms(t, "adjustContrast"),
+      },
+      adjustColorsRust: {
+        icon: <Icon name="palette" size="1.5rem" />,
+        name: t("home.adjustColorsRust.title", "Adjust Colors/Contrast (Rust)"),
+        component: lazy(() => import("@app/tools/AdjustColorsRust")),
+        description: t(
+          "home.adjustColorsRust.desc",
+          "Adjust colors and contrast with the shared Rust code, in your browser or on the server",
+        ),
+        categoryId: ToolCategoryId.ADVANCED_TOOLS,
+        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["adjust-colors-rust"],
+        operationConfig: asRegistryConfig(adjustColorsRustOperationConfig),
+        automationSettings: null,
+        synonyms: getSynonyms(t, "adjustColorsRust"),
       },
       repair: {
         icon: <Icon name="wrench" size="1.5rem" />,

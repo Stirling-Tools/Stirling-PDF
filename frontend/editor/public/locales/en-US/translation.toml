@@ -494,6 +494,9 @@ text = "Text"
 [adjust-contrast]
 tags = "color-correction,tune,modify,enhance"
 
+[adjustColorsRust.error]
+failed = "Failed to adjust colors/contrast"
+
 [adjustContrast]
 adjustColors = "Adjust Colors"
 basic = "Basic Adjustments"
@@ -3629,6 +3632,24 @@ library = "Adding it to your file library..."
 listing = "Listing the files in Downloads..."
 picking = "Looking for the {{count}} most recent PDFs..."
 
+[classifyRust]
+submit = "Classify"
+tags = "classify,classification,label,document type,categorise,rust,wasm,compare"
+
+[classifyRust.error]
+failed = "Failed to classify the PDF"
+
+[classifyRust.results]
+confidence = "{{confidence}} confidence"
+noLabel = "No label"
+rust = "Rust"
+title = "Classification"
+typescript = "Current heuristic"
+unavailable = "no verdict"
+
+[classifyRust.review]
+title = "Labelled PDFs"
+
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
 
@@ -5555,6 +5576,11 @@ desc = "Add custom text anywhere in your PDF"
 tags = "text,annotation,label,add text,insert text,place text,text box,add label,add caption,type on PDF,write on PDF,add words,add note,text overlay,typewriter"
 title = "Add Text"
 
+[home.adjustColorsRust]
+desc = "Adjust colors and contrast with the shared Rust code, in your browser or on the server"
+tags = "contrast,brightness,saturation,adjust colors,color correction,rust,wasm,compare"
+title = "Adjust Colors/Contrast (Rust)"
+
 [home.adjustContrast]
 desc = "Adjust Colors/Contrast, Saturation and Brightness of a PDF"
 tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
@@ -5617,6 +5643,11 @@ title = "Change Permissions"
 [home.classify]
 desc = "Identify what kind of document this is and tag it."
 title = "Classify"
+
+[home.classifyRust]
+desc = "Label what kind of document each PDF is with the rule-based Rust classifier, in your browser or on the server"
+tags = "classify,classification,label,document type,categorise,rust,wasm,compare"
+title = "Classify (Rust)"
 
 [home.compare]
 desc = "Compares and shows the differences between 2 PDF Documents"
@@ -11547,6 +11578,11 @@ mi = "Miles (mi)"
 mm = "Millimeters (mm)"
 yd = "Yards (yd)"
 
+[rustTools]
+processing = "Processing"
+processOnServer = "Process on server"
+processOnServerDesc = "Run the same Rust code natively on the server instead of in your browser"
+
 [sanitize]
 desc = "Remove potentially harmful elements from PDF files."
 sanitizationResults = "Sanitization Results"
@@ -13176,6 +13212,14 @@ notFound = "Tool not found: {{tool}}"
 [tools]
 noSearchResults = "No tools found"
 noTools = "No tools available"
+
+[toolTiming]
+firstRun = "The first run includes one-off setup, so run it again for a steady-state time."
+rustBrowser = "Rust in your browser: {{ms}} ms for {{files}} file(s)"
+rustServer = "Rust on the server: {{ms}} ms round trip for {{files}} file(s)"
+serverProcessing = "{{ms}} ms of that was processing on the server"
+title = "Timing"
+typescriptBrowser = "TypeScript in your browser: {{ms}} ms for {{files}} file(s)"
 
 [tooltip]
 close = "Close tooltip"

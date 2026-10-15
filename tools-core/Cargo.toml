@@ -1,0 +1,33 @@
+[workspace]
+resolver = "3"
+members = [
+    "pdfium",
+    "abi",
+    "adjust-colors",
+    "stirling-tools",
+    "proprietary/classify",
+    "proprietary/stirling-tools-proprietary",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+stirling-pdfium = { path = "pdfium" }
+stirling-abi = { path = "abi" }
+adjust-colors = { path = "adjust-colors" }
+classify = { path = "proprietary/classify" }
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[profile.release]
+lto = true
+codegen-units = 1
+# Hosts call in through extern "C", where unwinding is undefined; aborting also
+# keeps the wasm small.
+panic = "abort"
