@@ -27,6 +27,7 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ImageProcessingUtils;
 import stirling.software.common.util.SvgSanitizer;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -67,6 +68,9 @@ public class OverlayImageController {
             boolean isSvg = SvgOverlayUtil.isSvgImage(imageBytes);
             if (isSvg) {
                 imageBytes = svgSanitizer.sanitize(imageBytes);
+            } else {
+                // SVG is drawn as vector; a raster image can be a pixel bomb, so cap it
+                ImageProcessingUtils.assertWithinPixelLimit(imageBytes);
             }
 
             try (PDDocument document = pdfDocumentFactory.load(pdfBytes)) {
