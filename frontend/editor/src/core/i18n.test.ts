@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@app/i18n/tomlBackend", () => ({
+vi.mock("@app/i18n/localeBackend", () => ({
   default: {
     type: "backend",
     init() {},

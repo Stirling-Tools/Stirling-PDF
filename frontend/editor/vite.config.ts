@@ -238,6 +238,80 @@ function isMarkdownPackage(pkg: string): boolean {
   );
 }
 
+/**
+ * Preload for the one dictionary the app is about to fetch.
+ *
+ * en-US is only the answer when the browser asks for nothing else: the delivery
+ * files carry the source strings, so the language every visitor used to need is
+ * now just one of the languages.
+ */
+function localePreloadTag(codes: string[]): string {
+  return `<script>
+      (function () {
+        var supported = ${JSON.stringify(codes)};
+        var stored = null;
+        try {
+          stored = localStorage.getItem("i18nextLng");
+        } catch (e) {
+          /* storage blocked: the browser language below still applies */
+        }
+        var wanted = String(stored || navigator.language || "en-US").replace(
+          "_",
+          "-",
+        );
+        var match = null;
+        for (var i = 0; i < supported.length; i++) {
+          if (supported[i].toLowerCase() === wanted.toLowerCase()) {
+            match = supported[i];
+            break;
+          }
+        }
+        // No match - including a bare "en" - means en-US, the same mapping the
+        // app applies in detection.convertDetectedLanguage.
+        if (!match) match = "en-US";
+        var link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "fetch";
+        link.crossOrigin = "anonymous";
+        link.href = "locales/" + encodeURIComponent(match) + "/translation.json";
+        document.head.appendChild(link);
+      })();
+    </script>`;
+}
+
+/**
+ * Generates the locale delivery files and injects the startup preload for one
+ * of them.
+ *
+ * `public/locales/<lng>/translation.toml` stays the authored source; the app
+ * fetches the `translation.json` generated beside it, which already contains
+ * the source strings for the keys that language is missing. Logic lives in
+ * scripts/generate-locale-assets.mjs so it can be run and tested on its own.
+ */
+function localeAssetsPlugin(): PluginOption {
+  return {
+    name: "locale-assets",
+    async configResolved() {
+      const { generateLocaleAssets } =
+        // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
+        await import("./scripts/generate-locale-assets.mjs");
+      generateLocaleAssets({ log: (message: string) => console.log(message) });
+    },
+    transformIndexHtml: {
+      order: "pre",
+      async handler(html: string) {
+        const { deliveredLocaleCodes } =
+          // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
+          await import("./scripts/generate-locale-assets.mjs");
+        return html.replace(
+          "<!--LOCALE_PRELOAD-->",
+          localePreloadTag(deliveredLocaleCodes()),
+        );
+      },
+    },
+  };
+}
+
 function compressStaticCopyPlugin(): PluginOption {
   return {
     name: "compress-static-copy",
@@ -588,6 +662,7 @@ export default defineConfig(async ({ mode, command }) => {
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
+      localeAssetsPlugin(),
       // Desktop/mobile output is embedded in the Tauri binary, which brotli-
       // compresses every asset itself and never negotiates encodings, so the
       // .br/.gz siblings would only add their full size (tens of MB) to the

@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import TomlBackend from "@app/i18n/tomlBackend";
+import LocaleBackend from "@app/i18n/localeBackend";
 import {
   supportedLanguages,
   rtlLanguages,
@@ -25,11 +25,14 @@ export {
 };
 
 i18n
-  .use(TomlBackend)
+  .use(LocaleBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    fallbackLng: "en-US",
+    // No fallback language. Each delivery file already carries the source
+    // strings for the keys its language is missing, so a fallback would only
+    // download a second full dictionary to answer keys already in memory.
+    fallbackLng: false,
     supportedLngs: Object.keys(supportedLanguages),
     load: "currentOnly",
     nonExplicitSupportedLngs: false,
@@ -43,14 +46,19 @@ i18n
     },
 
     backend: {
+      // JSON rather than the authored TOML: the parse happens at build time,
+      // and `scripts/generate-locale-assets.mjs` has already merged the source
+      // strings into every file.
       loadPath: (lngs: string[], namespaces: string[]) => {
         const lng = lngs[0];
         const basePath = import.meta.env.BASE_URL || "/";
         const cleanBasePath = basePath.endsWith("/")
           ? basePath.slice(0, -1)
           : basePath;
-        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.toml`;
+        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.json`;
       },
+      // Covers a missing or corrupt file, not missing keys.
+      fallbackLocale: "en-US",
     },
 
     detection: {
@@ -160,8 +168,9 @@ export function setUserLanguage(language: string): void {
 /**
  * Updates the supported languages list dynamically based on config
  * If configLanguages is null/empty, all languages remain available
- * Otherwise, only the specified languages are enabled with the first valid
- * option (preferring en-US when present) used as the fallback language.
+ * Otherwise, only the specified languages are enabled, and the first valid
+ * option (preferring en-US when present) becomes the language used when the
+ * current one is not allowed.
  *
  * @param configLanguages - Optional array of language codes from server config (ui.languages)
  * @param defaultLocale - Optional default language for new users (system.defaultLocale)
@@ -197,7 +206,11 @@ export function updateSupportedLanguages(
     return;
   }
 
-  // Determine fallback: prefer validDefault if in the list, then en-US, then first valid language
+  // The language to move to when the current one is not allowed: prefer
+  // validDefault if in the list, then en-US, then the first valid language.
+  // Deliberately not assigned to `i18n.options.fallbackLng`: the delivery
+  // files already contain the source strings, so a fallback language would
+  // only fetch a dictionary the bundle is not missing.
   const fallback =
     validDefault && validLanguages.includes(validDefault)
       ? validDefault
@@ -206,7 +219,6 @@ export function updateSupportedLanguages(
         : validLanguages[0];
 
   i18n.options.supportedLngs = validLanguages;
-  i18n.options.fallbackLng = fallback;
 
   // If current language is not in the new supported list, switch to fallback with higher priority to override browser detection
   const currentLang = normalizeLanguageCode(i18n.language || "");
