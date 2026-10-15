@@ -231,17 +231,7 @@ for (const restriction of restrictions) {
       await page
         .getByRole("checkbox", { name: restriction.label, exact: true })
         .uncheck();
-      const savedOwner = honorOwnerPasswords
-        ? owner
-        : "matrix-replacement-owner";
-      if (!honorOwnerPasswords) {
-        await page
-          .getByRole("textbox", {
-            name: "New permissions password",
-            exact: true,
-          })
-          .fill(savedOwner);
-      }
+      const savedOwner = owner;
       const changedResponse = page.waitForResponse(
         "**/api/v1/security/change-pdf-permissions",
       );

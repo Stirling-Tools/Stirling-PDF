@@ -485,7 +485,11 @@ export interface FileContextActions {
   cleanupFile: (fileId: FileId) => void;
   openEncryptedUnlockPrompt: (fileId: FileId) => void;
   /** Resolves false on cancellation or document closure; never exposes the credential. */
-  requestPdfOwnerAccess: (fileId: FileId, action: string) => Promise<boolean>;
+  requestPdfOwnerAccess: (
+    fileId: FileId,
+    action: string,
+    preservationReason?: string,
+  ) => Promise<boolean>;
   /** Creates a separate unprotected version after verifying owner access. */
   createUnprotectedCopy: (fileId: FileId) => Promise<void>;
 }

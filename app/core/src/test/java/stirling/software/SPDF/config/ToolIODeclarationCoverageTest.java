@@ -68,6 +68,7 @@ class ToolIODeclarationCoverageTest {
                     "/api/v1/security/restore-pdf-protection",
                     "/api/v1/security/prepare-pdf-session",
                     "/api/v1/security/remove-pdf-opening-password",
+                    "/api/v1/security/remove-pdf-passwords",
                     "/api/v1/security/remove-pdf-protection",
                     "/api/v1/security/set-pdf-protection",
                     "/api/v1/security/change-pdf-permissions",

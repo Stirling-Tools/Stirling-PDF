@@ -75,7 +75,7 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
         <Group gap={6} role="status">
           <Icon name="lock" size={14} />
           <Text size="xs">
-            {access.ownerAuthenticated
+            {access.ownerAuthenticated && access.hasOwnerPassword !== false
               ? t(
                   "encryptedPdfUnlock.permissionsUnlocked",
                   "Permissions unlocked for this session",
@@ -104,7 +104,7 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
           <Text fw={500} size="sm" style={{ overflowWrap: "anywhere" }}>
             {file.name}
           </Text>
-          {access.ownerAuthenticated && (
+          {access.ownerAuthenticated && access.hasOwnerPassword !== false && (
             <Text size="sm">
               {t(
                 "encryptedPdfUnlock.verifiedPasswordInUse",
@@ -265,18 +265,13 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
               </Button>
               <Button
                 variant="secondary"
-                disabled={
-                  access.signed || access.requiresOpeningPassword === false
-                }
+                disabled={access.signed}
                 onClick={() => {
                   close();
                   navigation.handleToolSelect("removePassword");
                 }}
               >
-                {t(
-                  "encryptedPdfUnlock.removeOpening",
-                  "Remove opening password",
-                )}
+                {t("removePassword.title", "Remove Password")}
               </Button>
               <Button
                 variant="quiet"

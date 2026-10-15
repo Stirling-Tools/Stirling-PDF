@@ -124,6 +124,7 @@ export async function preflightPdfOperation(
       ),
     );
   for (const file of protectedFiles) {
+    if (endpoint === "/api/v1/security/remove-password") continue;
     const access = getPdfAccess(file)!;
     const needsOwner = endpoint?.includes("password")
       ? !hasPdfPermissionOverride(access)
@@ -230,7 +231,10 @@ export async function verifyEditedPdfProtection(
         "Unable to preserve PDF protection. No unprotected result was saved.",
       ),
     );
-  rememberPdfAccess(output, access);
+  rememberPdfAccess(output, {
+    ...access,
+    openingPassword: sourceAccess.openingPassword,
+  });
 }
 
 /** Decrypted bytes belong only to this operation. They must never enter FileContext or persistence. */
@@ -355,16 +359,36 @@ export async function changePdfSecurity(
         ),
       );
     form.set("sourcePassword", access.password);
+    if (!form.has("keyLength")) {
+      form.delete("password");
+      if (access.openingPassword !== undefined)
+        form.set("password", access.openingPassword);
+    }
   } else {
     const access = await ensurePdfAccess(file);
-    if (hasPdfPermissionOverride(access)) form.set("password", access.password);
+    if (
+      form.get("ownerPassword") &&
+      !form.get("password") &&
+      access.requiresOpeningPassword &&
+      access.openingPassword === undefined
+    ) {
+      throw new Error(
+        i18n.t(
+          "removePassword.openWithReaderFirst",
+          "Reopen this PDF using its opening password before removing only the permissions password.",
+        ),
+      );
+    }
+    form.set("sourcePassword", access.password);
+    if (access.openingPassword !== undefined)
+      form.set("retainedOpeningPassword", access.openingPassword);
   }
   return requestWorkingPdf(
     settingProtection
       ? form.has("keyLength")
         ? "/api/v1/security/set-pdf-protection"
         : "/api/v1/security/change-pdf-permissions"
-      : "/api/v1/security/remove-pdf-opening-password",
+      : "/api/v1/security/remove-pdf-passwords",
     form,
     i18n.t(
       "encryptedPdfUnlock.securityChangeFailed",

@@ -203,10 +203,13 @@ test("restricted rotation preserves the original protection without owner authen
   ).toBeVisible();
 });
 
-test("changing restrictions requires an explicit replacement instead of the old owner password", async ({
+test("changing restrictions preserves the unknown owner password unless replacement is selected", async ({
   page,
 }) => {
   await upload(page, await protect(page), "/change-permissions");
+  await page
+    .getByRole("checkbox", { name: "Change permissions password", exact: true })
+    .check();
   await page
     .getByRole("textbox", { name: "New permissions password", exact: true })
     .fill(replacement);
@@ -231,7 +234,7 @@ test("changing restrictions requires an explicit replacement instead of the old 
   });
 });
 
-test("opening passwords remain required and can be removed while retaining restrictions under a new owner", async ({
+test("removing an opening password retains the blank owner field even when enforcement is off", async ({
   page,
 }) => {
   const original = await protect(page, opening);
@@ -246,16 +249,25 @@ test("opening passwords remain required and can be removed while retaining restr
   await dialog.getByLabel("Password to open", { exact: true }).fill(opening);
   await dialog.getByRole("button", { name: "Open PDF", exact: true }).click();
   await expect(dialog).toBeHidden();
-  await page
-    .getByRole("textbox", { name: "New permissions password", exact: true })
-    .fill(replacement);
+  await page.getByLabel("Password to open", { exact: true }).fill(opening);
   const response = page.waitForResponse(
-    "**/api/v1/security/remove-pdf-opening-password",
+    "**/api/v1/security/remove-pdf-passwords",
   );
   await page
     .getByRole("button", {
-      name: /^Remove opening password(?: \(this file\))?$/,
+      name: /^Remove Password(?: \(this file\))?$/,
     })
+    .click();
+  const verification = page.getByRole("dialog", {
+    name: "Enter permissions password",
+    exact: true,
+  });
+  await expect(verification.getByText(/This will not remove it/)).toBeVisible();
+  await verification
+    .getByLabel("Permissions password", { exact: true })
+    .fill(owner);
+  await verification
+    .getByRole("button", { name: "Continue", exact: true })
     .click();
   const result = await response;
   expect(result.ok()).toBe(true);
@@ -266,7 +278,7 @@ test("opening passwords remain required and can be removed while retaining restr
     canPrint: false,
     ownerAuthenticated: false,
   });
-  expect(await inspect(page, saved, replacement)).toMatchObject({
+  expect(await inspect(page, saved, owner)).toMatchObject({
     ownerAuthenticated: true,
   });
 });

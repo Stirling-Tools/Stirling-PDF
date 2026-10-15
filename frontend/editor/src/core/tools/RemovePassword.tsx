@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useRemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
 import { useRemovePasswordOperation } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
@@ -8,10 +9,13 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { PasswordInput, Stack, Text } from "@mantine/core";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { useFileContext } from "@app/contexts/FileContext";
 
 const RemovePassword = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const removePasswordTips = useRemovePasswordTips();
+  const { actions } = useFileContext();
+  const [removalSummary, setRemovalSummary] = useState("");
 
   const base = useBaseTool(
     "removePassword",
@@ -20,23 +24,75 @@ const RemovePassword = (props: BaseToolProps) => {
     props,
   );
   usePdfAccess(base.selectedFiles[0]);
-  const needsNewOwnerPassword = base.selectedFiles.some((file) => {
-    const access = getPdfAccess(file);
-    return (
-      access?.encrypted &&
-      access.honorOwnerPasswords === false &&
-      !access.ownerAuthenticated
+  const openingSet =
+    base.hasFiles &&
+    base.selectedFiles.every(
+      (file) => getPdfAccess(file)?.requiresOpeningPassword === true,
     );
-  });
-  const nothingToRemove =
-    base.selectedFiles.length > 0 &&
+  const ownerSet =
+    base.hasFiles &&
     base.selectedFiles.every((file) => {
       const access = getPdfAccess(file);
-      return (
-        access &&
-        (!access.encrypted || access.requiresOpeningPassword === false)
-      );
+      return access?.encrypted && access.hasOwnerPassword !== false;
     });
+  const { password, ownerPassword } = base.params.parameters;
+  const updateParameter = base.params.updateParameter;
+  useEffect(() => {
+    if (base.hasResults || base.operation.isLoading) return;
+    if (!openingSet && password) updateParameter("password", "");
+    if (!ownerSet && ownerPassword) updateParameter("ownerPassword", "");
+  }, [
+    openingSet,
+    ownerSet,
+    password,
+    ownerPassword,
+    updateParameter,
+    base.hasResults,
+    base.operation.isLoading,
+  ]);
+
+  const handleExecute = async () => {
+    if (password && !ownerPassword) {
+      for (const file of base.selectedFiles) {
+        const access = getPdfAccess(file);
+        if (access?.hasOwnerPassword !== false && !access?.ownerAuthenticated) {
+          const verified = await actions.requestPdfOwnerAccess(
+            file.fileId,
+            t("removePassword.title", "Remove Password"),
+            t(
+              "encryptedPdfUnlock.retainOwnerVerification",
+              "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it.",
+            ),
+          );
+          if (!verified) return;
+        }
+      }
+    }
+    setRemovalSummary(
+      ownerPassword
+        ? password
+          ? t(
+              "removePassword.bothRemoved",
+              "Both passwords and restrictions removed.",
+            )
+          : openingSet
+            ? t(
+                "removePassword.ownerRemoved",
+                "Permissions password and restrictions removed. Opening password kept.",
+              )
+            : t(
+                "removePassword.ownerOnlyRemoved",
+                "Permissions password and restrictions removed.",
+              )
+        : ownerSet
+          ? t(
+              "encryptedPdfUnlock.openingPasswordRemoved",
+              "Opening password removed. Restrictions retained.",
+            )
+          : t("removePassword.openingOnlyRemoved", "Opening password removed."),
+    );
+    await base.handleExecute();
+  };
 
   return createToolFlow({
     files: {
@@ -45,7 +101,7 @@ const RemovePassword = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t("encryptedPdfUnlock.removeOpening", "Remove opening password"),
+        title: t("removePassword.selectPasswords", "Passwords to remove"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.hasResults
           ? base.handleSettingsReset
@@ -53,64 +109,65 @@ const RemovePassword = (props: BaseToolProps) => {
         tooltip: removePasswordTips,
         content: (
           <Stack gap="sm">
-            <Text size="sm">
-              {nothingToRemove
-                ? t(
-                    "encryptedPdfUnlock.noOpeningPassword",
-                    "This PDF already opens without a password.",
-                  )
-                : t(
-                    "encryptedPdfUnlock.removeOpeningConsequence",
-                    "Removes the opening password. Restrictions remain.",
-                  )}
+            <Text size="xs" c="dimmed">
+              {t(
+                "removePassword.keepBlank",
+                "Leave a field blank to keep that password.",
+              )}
             </Text>
-            {!nothingToRemove && needsNewOwnerPassword && (
-              <PasswordInput
-                size="xs"
-                label={t(
-                  "encryptedPdfUnlock.newOwnerPassword",
-                  "New permissions password",
-                )}
-                description={t(
-                  "encryptedPdfUnlock.replaceUnknownOwner",
-                  "Choose a new password to replace the existing permissions password.",
-                )}
-                value={base.params.parameters.newOwnerPassword ?? ""}
-                onChange={(event) =>
-                  base.params.updateParameter(
-                    "newOwnerPassword",
-                    event.currentTarget.value,
-                  )
-                }
-                disabled={base.operation.isLoading}
-                required
-              />
-            )}
+            <PasswordInput
+              size="xs"
+              label={t(
+                "encryptedPdfUnlock.openingPassword",
+                "Password to open",
+              )}
+              description={
+                base.hasFiles && !openingSet
+                  ? t("removePassword.notSet", "Not set")
+                  : undefined
+              }
+              value={openingSet ? password : ""}
+              onChange={(event) =>
+                updateParameter("password", event.currentTarget.value)
+              }
+              disabled={!openingSet || base.operation.isLoading}
+              autoComplete="off"
+            />
+            <PasswordInput
+              size="xs"
+              label={t(
+                "encryptedPdfUnlock.ownerPassword",
+                "Permissions password",
+              )}
+              description={
+                base.hasFiles && !ownerSet
+                  ? t("removePassword.notSet", "Not set")
+                  : undefined
+              }
+              value={ownerSet ? (ownerPassword ?? "") : ""}
+              onChange={(event) =>
+                updateParameter("ownerPassword", event.currentTarget.value)
+              }
+              disabled={!ownerSet || base.operation.isLoading}
+              autoComplete="off"
+            />
           </Stack>
         ),
       },
     ],
     executeButton: {
-      text: t("encryptedPdfUnlock.removeOpening", "Remove opening password"),
+      text: t("removePassword.submit", "Remove Password"),
       isVisible: !base.hasResults,
       loadingText: t("loading"),
-      onClick: base.handleExecute,
+      onClick: handleExecute,
       endpointEnabled: base.endpointEnabled,
-      paramsValid:
-        !nothingToRemove &&
-        (!needsNewOwnerPassword || !!base.params.parameters.newOwnerPassword),
+      paramsValid: (openingSet && !!password) || (ownerSet && !!ownerPassword),
     },
     review: {
-      protectionSummary: t(
-        "encryptedPdfUnlock.openingPasswordRemoved",
-        "Opening password removed. Restrictions retained.",
-      ),
+      protectionSummary: removalSummary,
       isVisible: base.hasResults,
       operation: base.operation,
-      title: t(
-        "removePassword.results.title",
-        "PDFs without an opening password",
-      ),
+      title: t("removePassword.results.title", "Updated PDFs"),
       onFileClick: base.handleThumbnailClick,
       onUndo: base.handleUndo,
     },

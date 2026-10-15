@@ -847,11 +847,11 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       removePassword: {
         icon: <Icon name="lock-open-password" size="1.5rem" />,
-        name: t("encryptedPdfUnlock.removeOpening", "Remove opening password"),
+        name: t("removePassword.title", "Remove Password"),
         component: lazy(() => import("@app/tools/RemovePassword")),
         description: t(
           "home.removePassword.desc",
-          "Removes the opening password. Restrictions remain.",
+          "Remove the opening password, permissions password, or both.",
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,

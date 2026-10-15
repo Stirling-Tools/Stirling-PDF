@@ -6,7 +6,7 @@ import {
 
 export interface RemovePasswordParameters extends BaseParameters {
   password: string;
-  newOwnerPassword?: string;
+  ownerPassword?: string;
 }
 
 export type RemovePasswordParametersHook =
@@ -21,7 +21,7 @@ export const defaultParameters: RemovePasswordParameters = {
 export function validateRemovePasswordParameters(
   params: RemovePasswordParameters,
 ): boolean {
-  return params.password !== "";
+  return params.password !== "" || !!params.ownerPassword;
 }
 
 export const useRemovePasswordParameters = (): RemovePasswordParametersHook => {

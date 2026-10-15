@@ -6,13 +6,13 @@ export const useRemovePasswordTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("encryptedPdfUnlock.removeOpening", "Remove opening password"),
+      title: t("removePassword.title", "Remove Password"),
     },
     tips: [
       {
         description: t(
-          "encryptedPdfUnlock.removeOpeningHelp",
-          "Removes only the opening password. Use Create an unprotected copy to remove passwords and restrictions.",
+          "removePassword.selectiveHelp",
+          "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions.",
         ),
       },
     ],

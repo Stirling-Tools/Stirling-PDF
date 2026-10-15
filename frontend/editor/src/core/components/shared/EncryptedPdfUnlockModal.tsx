@@ -14,6 +14,7 @@ interface EncryptedPdfUnlockModalProps {
   sessionUnlock?: boolean;
   ownerUnlock?: boolean;
   actionLabel?: string;
+  preservationReason?: string;
   testIdPrefix?: string;
   onPasswordChange: (value: string) => void;
   onUnlock: () => void;
@@ -33,6 +34,7 @@ const EncryptedPdfUnlockModal = ({
   sessionUnlock = false,
   ownerUnlock = false,
   actionLabel,
+  preservationReason,
   testIdPrefix,
   onPasswordChange,
   onUnlock,
@@ -63,13 +65,14 @@ const EncryptedPdfUnlockModal = ({
         <Text size="sm" fw={500} style={{ overflowWrap: "anywhere" }}>
           {fileName}
         </Text>
-        {actionLabel && (
+        {(preservationReason || actionLabel) && (
           <Text size="sm">
-            {t(
-              "encryptedPdfUnlock.authoriseAction",
-              "This PDF requires permission to use {{action}}.",
-              { action: actionLabel },
-            )}
+            {preservationReason ||
+              t(
+                "encryptedPdfUnlock.authoriseAction",
+                "This PDF requires permission to use {{action}}.",
+                { action: actionLabel },
+              )}
           </Text>
         )}
         <PasswordInput

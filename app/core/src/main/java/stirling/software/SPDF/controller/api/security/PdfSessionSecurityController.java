@@ -25,6 +25,8 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
+import stirling.software.SPDF.service.PdfPasswordRoles;
+import stirling.software.SPDF.service.PdfPermissionSecurityHandler;
 import stirling.software.SPDF.service.PdfSessionPermissions;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.model.ApplicationProperties;
@@ -64,14 +66,17 @@ public class PdfSessionSecurityController {
             boolean canPrintFaithful,
             String credentialFingerprint,
             boolean requiresOpeningPassword,
+            boolean openingAuthenticated,
+            boolean hasOwnerPassword,
             boolean honorOwnerPasswords) {}
 
     /** Authenticate without saving, changing metadata, or removing encryption. */
     @Operation(hidden = true)
     @PostMapping(value = "/inspect-pdf-security", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public SecurityInfo inspect(@ModelAttribute PDFPasswordRequest request) throws IOException {
+        String password = request.getPassword() == null ? "" : request.getPassword();
         try (PDDocument document =
-                pdfDocumentFactory.load(request.getFileInput(), request.getPassword(), true)) {
+                pdfDocumentFactory.load(request.getFileInput(), password, true)) {
             AccessPermission permission = document.getCurrentAccessPermission();
             return new SecurityInfo(
                     document.isEncrypted(),
@@ -90,6 +95,8 @@ public class PdfSessionSecurityController {
                     permission.canPrintFaithful(),
                     PdfSessionPermissions.credentialFingerprint(document),
                     document.isEncrypted() && requiresOpeningPassword(request.getFileInput()),
+                    PdfPasswordRoles.isOpeningPassword(document, password),
+                    PdfPasswordRoles.hasSeparateOwnerPassword(document, password),
                     applicationProperties.getSecurity().isHonorOwnerPasswords());
         }
     }
@@ -103,8 +110,7 @@ public class PdfSessionSecurityController {
     }
 
     /**
-     * Retains a verified owner credential; bypassing an unknown credential requires its
-     * replacement.
+     * Changes permissions without replacing the opening credential, including when it is unknown.
      */
     @Operation(hidden = true)
     @PostMapping(value = "/change-pdf-permissions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -117,24 +123,102 @@ public class PdfSessionSecurityController {
             PdfSessionPermissions.requireOwner(
                     source, applicationProperties.getSecurity().isHonorOwnerPasswords());
             if (source.isEncrypted()) {
-                if (requiresOpeningPassword(request.getFileInput())
-                        && (request.getPassword() == null || request.getPassword().isEmpty())) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
-                            "Choose the opening password for the updated PDF");
-                }
                 if (request.getOwnerPassword() == null || request.getOwnerPassword().isEmpty()) {
-                    if (!PdfSessionPermissions.isOwnerAuthenticated(source)) {
+                    if (!requestedPermissions(request).isOwnerPermission()
+                            && !PdfPasswordRoles.hasSeparateOwnerPassword(source, sourcePassword)) {
                         throw new ResponseStatusException(
                                 HttpStatus.BAD_REQUEST,
-                                "Choose a new permissions password to replace the unknown password");
+                                "Choose a separate permissions password to restrict actions");
                     }
-                    request.setOwnerPassword(sourcePassword);
+                    PdfPermissionSecurityHandler.changePermissions(
+                            source, sourcePassword, requestedPermissions(request));
+                    return WebResponseUtils.pdfDocToWebResponse(
+                            source, "permissions_updated.pdf", tempFileManager);
                 }
+                String reader = request.getPassword() == null ? "" : request.getPassword();
+                if (!PdfPasswordRoles.isOpeningPassword(source, reader)) {
+                    if (!PdfPasswordRoles.isOpeningPassword(source, sourcePassword)) {
+                        throw new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST,
+                                "Open the PDF with its opening password before replacing the permissions password");
+                    }
+                    reader = sourcePassword;
+                }
+                request.setPassword(reader);
                 request.setKeyLength(source.getEncryption().getLength());
             }
         }
         return setProtection(request, sourcePassword);
+    }
+
+    /** Nonempty inputs select passwords for removal; session credentials never select removal. */
+    @Operation(hidden = true)
+    @PostMapping(value = "/remove-pdf-passwords", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Resource> removePasswords(
+            @ModelAttribute PDFPasswordRequest request,
+            @RequestParam(defaultValue = "") String ownerPassword,
+            @RequestParam(defaultValue = "") String sourcePassword,
+            @RequestParam(defaultValue = "") String retainedOpeningPassword)
+            throws IOException {
+        String openingPassword = request.getPassword() == null ? "" : request.getPassword();
+        boolean removeOpening = !openingPassword.isEmpty();
+        boolean removeOwner = !ownerPassword.isEmpty();
+        if (!removeOpening && !removeOwner) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Enter a password to remove");
+        }
+        String credential = removeOwner ? ownerPassword : sourcePassword;
+        try (PDDocument document =
+                pdfDocumentFactory.load(request.getFileInput(), credential, true)) {
+            PdfSessionPermissions.requireOwner(document, false);
+            boolean openingSet =
+                    document.isEncrypted() && requiresOpeningPassword(request.getFileInput());
+            boolean ownerSet = PdfPasswordRoles.hasSeparateOwnerPassword(document, credential);
+            if (removeOpening
+                    && (!openingSet
+                            || !PdfPasswordRoles.isOpeningPassword(document, openingPassword))) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "The opening password is incorrect or is not set");
+            }
+            if (removeOwner
+                    && (!ownerSet || !PdfSessionPermissions.isOwnerAuthenticated(document))) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "The permissions password is incorrect or is not set");
+            }
+            if ((!openingSet || removeOpening) && (!ownerSet || removeOwner)) {
+                document.setAllSecurityToBeRemoved(true);
+            } else if (removeOpening) {
+                // Replacing U also changes the owner-password derivation. Verification is needed
+                // to retain that credential even when enforcement is disabled by server policy.
+                if (!PdfSessionPermissions.isOwnerAuthenticated(document)) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Verify the permissions password to retain it while removing the opening password");
+                }
+                var protection =
+                        new StandardProtectionPolicy(
+                                credential,
+                                "",
+                                new AccessPermission(document.getEncryption().getPermissions()));
+                protection.setEncryptionKeyLength(document.getEncryption().getLength());
+                protection.setPreferAES(document.getEncryption().getVersion() >= 4);
+                document.protect(protection);
+            } else {
+                if (!PdfPasswordRoles.isOpeningPassword(document, retainedOpeningPassword)) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Open the PDF with its opening password before removing only the permissions password");
+                }
+                var protection =
+                        new StandardProtectionPolicy(
+                                "", retainedOpeningPassword, new AccessPermission());
+                protection.setEncryptionKeyLength(document.getEncryption().getLength());
+                protection.setPreferAES(document.getEncryption().getVersion() >= 4);
+                document.protect(protection);
+            }
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document, "password_removed.pdf", tempFileManager);
+        }
     }
 
     /**
@@ -203,17 +287,7 @@ public class PdfSessionSecurityController {
             @ModelAttribute AddPasswordRequest request,
             @RequestParam(defaultValue = "") String sourcePassword)
             throws IOException {
-        var permissions = new AccessPermission();
-        permissions.setCanAssembleDocument(!Boolean.TRUE.equals(request.getPreventAssembly()));
-        permissions.setCanExtractContent(!Boolean.TRUE.equals(request.getPreventExtractContent()));
-        permissions.setCanExtractForAccessibility(
-                !Boolean.TRUE.equals(request.getPreventExtractForAccessibility()));
-        permissions.setCanFillInForm(!Boolean.TRUE.equals(request.getPreventFillInForm()));
-        permissions.setCanModify(!Boolean.TRUE.equals(request.getPreventModify()));
-        permissions.setCanModifyAnnotations(
-                !Boolean.TRUE.equals(request.getPreventModifyAnnotations()));
-        permissions.setCanPrint(!Boolean.TRUE.equals(request.getPreventPrinting()));
-        permissions.setCanPrintFaithful(!Boolean.TRUE.equals(request.getPreventPrintingFaithful()));
+        var permissions = requestedPermissions(request);
         String owner = request.getOwnerPassword() == null ? "" : request.getOwnerPassword();
         String reader = request.getPassword() == null ? "" : request.getPassword();
         if (!permissions.isOwnerPermission() && (owner.isEmpty() || owner.equals(reader))) {
@@ -263,6 +337,21 @@ public class PdfSessionSecurityController {
                 throw e;
             }
         }
+    }
+
+    private AccessPermission requestedPermissions(AddPasswordRequest request) {
+        var permissions = new AccessPermission();
+        permissions.setCanAssembleDocument(!Boolean.TRUE.equals(request.getPreventAssembly()));
+        permissions.setCanExtractContent(!Boolean.TRUE.equals(request.getPreventExtractContent()));
+        permissions.setCanExtractForAccessibility(
+                !Boolean.TRUE.equals(request.getPreventExtractForAccessibility()));
+        permissions.setCanFillInForm(!Boolean.TRUE.equals(request.getPreventFillInForm()));
+        permissions.setCanModify(!Boolean.TRUE.equals(request.getPreventModify()));
+        permissions.setCanModifyAnnotations(
+                !Boolean.TRUE.equals(request.getPreventModifyAnnotations()));
+        permissions.setCanPrint(!Boolean.TRUE.equals(request.getPreventPrinting()));
+        permissions.setCanPrintFaithful(!Boolean.TRUE.equals(request.getPreventPrintingFaithful()));
+        return permissions;
     }
 
     /**

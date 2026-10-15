@@ -99,16 +99,55 @@ describe("session PDF access", () => {
     },
   );
 
-  it("uses the opening credential for bypassed security changes and keeps the replacement owner explicit", async () => {
+  it("keeps removal selections separate from cached credentials in bypass mode", async () => {
     const file = new File(["encrypted"], "restricted.pdf");
     rememberPdfAccess(file, { ...access, honorOwnerPasswords: false });
     post.mockResolvedValue({ data: new Blob(["result"]) });
     const form = new FormData();
-    form.set("newOwnerPassword", "replacement");
+    form.set("password", "");
+    form.set("ownerPassword", "selected-owner");
     await changePdfSecurity(file, form, "/api/v1/security/remove-password");
-    expect(form.get("password")).toBe(access.password);
-    expect(form.get("newOwnerPassword")).toBe("replacement");
+    expect(form.get("password")).toBe("");
+    expect(form.get("sourcePassword")).toBe(access.password);
+    expect(form.get("retainedOpeningPassword")).toBe(access.password);
+    expect(form.get("ownerPassword")).toBe("selected-owner");
+    expect(post.mock.calls[0][0]).toBe("/api/v1/security/remove-pdf-passwords");
     expect(getPdfAccess(file)?.ownerAuthenticated).toBe(false);
+  });
+
+  it("retains the opening credential after separately authenticating the owner", () => {
+    const file = new File(["encrypted"], "restricted.pdf");
+    rememberPdfAccess(file, { ...access, openingAuthenticated: true });
+    expect(getPdfAccess(file)?.ownerAuthenticated).toBe(false);
+    rememberPdfAccess(file, {
+      ...access,
+      password: "owner",
+      ownerAuthenticated: true,
+      openingAuthenticated: false,
+    });
+    expect(getPdfAccess(file)?.openingPassword).toBe(access.password);
+    expect(getPdfAccess(file)?.password).toBe("owner");
+  });
+
+  it("does not infer removal from a cached owner credential or request an unrelated owner prompt", async () => {
+    const file = createStirlingFile(new File(["encrypted"], "restricted.pdf"));
+    rememberPdfAccess(file, { ...access, ownerAuthenticated: true });
+    const requestOwner = vi.fn();
+    expect(
+      await preflightPdfOperation(
+        [file],
+        "/api/v1/security/remove-password",
+        false,
+        requestOwner,
+      ),
+    ).toBe(true);
+    expect(requestOwner).not.toHaveBeenCalled();
+    post.mockResolvedValue({ data: new Blob(["result"]) });
+    const form = new FormData();
+    form.set("password", "selected-opening");
+    await changePdfSecurity(file, form, "/api/v1/security/remove-password");
+    expect(form.get("password")).toBe("selected-opening");
+    expect(form.has("ownerPassword")).toBe(false);
   });
 
   it("requests owner authority before a restricted operation and stops on cancellation", async () => {
@@ -177,10 +216,9 @@ describe("session PDF access", () => {
     post.mockResolvedValue({ data: new Blob(["result"]) });
     const form = new FormData();
     await changePdfSecurity(file, form, "/api/v1/security/remove-password");
-    expect(form.get("password")).toBe(access.password);
-    expect(post.mock.calls[0][0]).toBe(
-      "/api/v1/security/remove-pdf-opening-password",
-    );
+    expect(form.get("sourcePassword")).toBe(access.password);
+    expect(form.has("password")).toBe(false);
+    expect(post.mock.calls[0][0]).toBe("/api/v1/security/remove-pdf-passwords");
   });
   it("authenticates without rewriting bytes or retaining credentials before adoption", async () => {
     const original = createStirlingFile(new File(["encrypted"], "locked.pdf"));
@@ -251,7 +289,10 @@ describe("session PDF access", () => {
     const output = new File(["export"], "edited.pdf");
     post.mockResolvedValueOnce({ data: access });
     await verifyEditedPdfProtection(output, access);
-    expect(getPdfAccess(output)).toEqual(access);
+    expect(getPdfAccess(output)).toEqual({
+      ...access,
+      openingPassword: access.password,
+    });
     await expect(
       verifyEditedPdfProtection(output, { ...access, signed: true }),
     ).rejects.toThrow("digital signatures");
@@ -277,7 +318,10 @@ describe("session PDF access", () => {
     const first = createStirlingFile(new File(["one"], "locked.pdf"));
     const second = createStirlingFile(new File(["two"], "locked.pdf"));
     rememberPdfAccess(first, access);
-    expect(getPdfAccess(first.fileId)).toEqual(access);
+    expect(getPdfAccess(first.fileId)).toEqual({
+      ...access,
+      openingPassword: access.password,
+    });
     expect(getPdfAccess(second)).toBeUndefined();
     expect(Object.keys(first)).not.toContain("password");
     forgetPdfAccess([first.fileId]);
@@ -293,7 +337,10 @@ describe("session PDF access", () => {
     expect(working).not.toBe(original);
     expect(working.name).toBe(original.name);
     expect(getPdfAccess(working)).toBeUndefined();
-    expect(getPdfAccess(original.fileId)).toEqual(access);
+    expect(getPdfAccess(original.fileId)).toEqual({
+      ...access,
+      openingPassword: access.password,
+    });
   });
 
   it("requires a fresh unlock when different bytes replace an existing file identity", () => {

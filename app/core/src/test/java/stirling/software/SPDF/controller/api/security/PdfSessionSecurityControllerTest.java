@@ -150,15 +150,18 @@ class PdfSessionSecurityControllerTest {
     }
 
     @Test
-    void bypassCannotSilentlyReplaceUnknownOwnerWithReaderPassword() throws Exception {
+    void bypassRetainsUnknownOwnerUnlessAReplacementIsExplicit() throws Exception {
         properties.getSecurity().setHonorOwnerPasswords(false);
         var original = pdf(true, 256);
         var update = new AddPasswordRequest();
         update.setFileInput(upload(original));
         update.setPassword(USER);
         update.setPreventModify(true);
-        assertThrows(
-                ResponseStatusException.class, () -> controller.changePermissions(update, USER));
+        try (var stream = controller.changePermissions(update, USER).getBody().getInputStream()) {
+            byte[] bytes = stream.readAllBytes();
+            assertFalse(controller.inspect(request(bytes, USER)).ownerAuthenticated());
+            assertTrue(controller.inspect(request(bytes, OWNER)).ownerAuthenticated());
+        }
         update.setOwnerPassword("replacement-owner");
         try (var stream = controller.changePermissions(update, USER).getBody().getInputStream()) {
             byte[] bytes = stream.readAllBytes();
@@ -192,6 +195,7 @@ class PdfSessionSecurityControllerTest {
         try (var document = new PDDocument();
                 var output = new ByteArrayOutputStream()) {
             document.addPage(new PDPage());
+            document.getDocumentInformation().setTitle("Protected content");
             var policy = new StandardProtectionPolicy(owner, reader, permissions);
             policy.setEncryptionKeyLength(bits);
             document.protect(policy);
@@ -213,6 +217,14 @@ class PdfSessionSecurityControllerTest {
         var ownerOnly = protectedPdf("", OWNER, 256, new AccessPermission());
         assertFalse(controller.inspect(request(ownerOnly, OWNER)).requiresOpeningPassword());
         assertFalse(controller.inspect(request(pdf(false, 256), "")).requiresOpeningPassword());
+        assertFalse(controller.inspect(request(pdf(false, 256), "")).hasOwnerPassword());
+        assertTrue(controller.inspect(request(pdf(true, 256), USER)).openingAuthenticated());
+        assertFalse(controller.inspect(request(pdf(true, 256), OWNER)).openingAuthenticated());
+        assertTrue(controller.inspect(request(pdf(true, 256), USER)).hasOwnerPassword());
+        assertFalse(
+                controller
+                        .inspect(request(protectedPdf(USER, "", 256, new AccessPermission()), USER))
+                        .hasOwnerPassword());
     }
 
     @Test
@@ -231,25 +243,145 @@ class PdfSessionSecurityControllerTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"128", "256"})
+    @CsvSource({"40", "128", "256"})
     void changingPermissionsCannotSilentlyRemoveAnOpeningPassword(int bits) throws Exception {
         var update = new AddPasswordRequest();
         update.setFileInput(upload(pdf(true, bits)));
         update.setPreventModify(true);
-        assertThrows(
-                ResponseStatusException.class, () -> controller.changePermissions(update, OWNER));
-        update.setPassword(USER);
+        update.setPassword("must-not-replace-the-opening-password");
         assertThrows(
                 ResponseStatusException.class, () -> controller.changePermissions(update, USER));
         try (var stream = controller.changePermissions(update, OWNER).getBody().getInputStream()) {
             var bytes = stream.readAllBytes();
             assertThrows(InvalidPasswordException.class, () -> Loader.loadPDF(bytes));
             try (var output = Loader.loadPDF(bytes, USER)) {
-                assertTrue(output.getEncryption().getVersion() >= 4);
+                assertEquals(
+                        bits == 40 ? 1 : bits == 128 ? 4 : 5, output.getEncryption().getVersion());
                 assertEquals(bits, output.getEncryption().getLength());
             }
             assertFalse(controller.inspect(request(bytes, USER)).canModify());
             assertTrue(controller.inspect(request(bytes, OWNER)).ownerAuthenticated());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"40,true", "128,true", "256,true", "40,false", "128,false", "256,false"})
+    void blankRemovalFieldsKeepTheirPasswordsRegardlessOfCachedCredentials(int bits, boolean honor)
+            throws Exception {
+        properties.getSecurity().setHonorOwnerPasswords(honor);
+        byte[] original = pdf(true, bits);
+        assertThrows(
+                ResponseStatusException.class,
+                () -> controller.removePasswords(request(original, ""), "", OWNER, USER));
+        try (var stream =
+                controller
+                        .removePasswords(request(original, USER), "", OWNER, USER)
+                        .getBody()
+                        .getInputStream()) {
+            byte[] result = stream.readAllBytes();
+            var reader = controller.inspect(request(result, ""));
+            assertFalse(reader.requiresOpeningPassword());
+            assertTrue(reader.hasOwnerPassword());
+            assertFalse(reader.ownerAuthenticated());
+            assertFalse(reader.canPrint());
+            assertTrue(controller.inspect(request(result, OWNER)).ownerAuthenticated());
+        }
+        try (var stream =
+                controller
+                        .removePasswords(request(original, ""), OWNER, USER, USER)
+                        .getBody()
+                        .getInputStream()) {
+            byte[] result = stream.readAllBytes();
+            assertThrows(InvalidPasswordException.class, () -> Loader.loadPDF(result));
+            assertThrows(InvalidPasswordException.class, () -> Loader.loadPDF(result, OWNER));
+            var reader = controller.inspect(request(result, USER));
+            assertTrue(reader.requiresOpeningPassword());
+            assertFalse(reader.hasOwnerPassword());
+            assertTrue(reader.canPrint());
+        }
+        try (var stream =
+                        controller
+                                .removePasswords(request(original, USER), OWNER, USER, USER)
+                                .getBody()
+                                .getInputStream();
+                var result = Loader.loadPDF(stream.readAllBytes())) {
+            assertFalse(result.isEncrypted());
+        }
+        assertTrue(controller.inspect(request(original, USER)).requiresOpeningPassword());
+        assertTrue(controller.inspect(request(original, OWNER)).hasOwnerPassword());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"true", "false"})
+    void removalValidatesEachSelectedRoleAndNeverReplacesAnUnknownPassword(boolean honor)
+            throws Exception {
+        properties.getSecurity().setHonorOwnerPasswords(honor);
+        byte[] original = pdf(true, 256);
+        assertThrows(
+                ResponseStatusException.class,
+                () -> controller.removePasswords(request(original, OWNER), OWNER, USER, USER));
+        assertThrows(
+                ResponseStatusException.class,
+                () -> controller.removePasswords(request(original, USER), USER, USER, USER));
+        assertThrows(
+                ResponseStatusException.class,
+                () -> controller.removePasswords(request(original, USER), "", USER, USER));
+        assertThrows(
+                ResponseStatusException.class,
+                () -> controller.removePasswords(request(original, ""), OWNER, OWNER, ""));
+        assertThrows(
+                ResponseStatusException.class,
+                () -> controller.removePasswords(request(original, "wrong"), OWNER, USER, USER));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"40", "128", "256"})
+    void removalSupportsFilesWithOnlyOnePassword(int bits) throws Exception {
+        byte[] openingOnly = protectedPdf(USER, "", bits, new AccessPermission());
+        try (var stream =
+                        controller
+                                .removePasswords(request(openingOnly, USER), "", USER, USER)
+                                .getBody()
+                                .getInputStream();
+                var result = Loader.loadPDF(stream.readAllBytes())) {
+            assertFalse(result.isEncrypted());
+        }
+        byte[] ownerOnly = protectedPdf("", OWNER, bits, new AccessPermission());
+        try (var stream =
+                        controller
+                                .removePasswords(request(ownerOnly, ""), OWNER, "", "")
+                                .getBody()
+                                .getInputStream();
+                var result = Loader.loadPDF(stream.readAllBytes())) {
+            assertFalse(result.isEncrypted());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"40", "128", "256"})
+    void changingOnlyPermissionsRetainsUnknownPasswordsAndEncryptedContent(int bits)
+            throws Exception {
+        properties.getSecurity().setHonorOwnerPasswords(false);
+        var permissions = new AccessPermission();
+        permissions.setCanPrint(false);
+        byte[] original = protectedPdf(USER, OWNER, bits, permissions);
+        var update = new AddPasswordRequest();
+        update.setFileInput(upload(original));
+        update.setPreventModify(true);
+        for (String credential : new String[] {USER, OWNER}) {
+            try (var stream =
+                    controller.changePermissions(update, credential).getBody().getInputStream()) {
+                byte[] result = stream.readAllBytes();
+                try (var reader = Loader.loadPDF(result, USER);
+                        var owner = Loader.loadPDF(result, OWNER)) {
+                    assertEquals("Protected content", reader.getDocumentInformation().getTitle());
+                    assertEquals("Protected content", owner.getDocumentInformation().getTitle());
+                    assertFalse(reader.getCurrentAccessPermission().canModify());
+                    assertTrue(reader.getCurrentAccessPermission().canPrint());
+                }
+                assertFalse(controller.inspect(request(result, USER)).ownerAuthenticated());
+                assertTrue(controller.inspect(request(result, OWNER)).ownerAuthenticated());
+            }
         }
     }
 
@@ -262,6 +394,17 @@ class PdfSessionSecurityControllerTest {
         assertThrows(
                 ResponseStatusException.class,
                 () -> controller.removeOpeningPassword(request(original, USER), ""));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"40", "128", "256"})
+    void omittedOpeningPasswordCanInspectOwnerOnlyDocuments(int bits) throws Exception {
+        var info =
+                controller.inspect(
+                        request(protectedPdf("", OWNER, bits, new AccessPermission()), null));
+        assertFalse(info.requiresOpeningPassword());
+        assertFalse(info.ownerAuthenticated());
+        assertTrue(info.hasOwnerPassword());
     }
 
     @Test

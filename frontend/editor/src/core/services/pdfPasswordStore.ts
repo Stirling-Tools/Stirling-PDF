@@ -3,6 +3,9 @@ import type { FileId } from "@app/types/file";
 /** Session-only access to encrypted bytes. Never serialize this object or include it in tool parameters. */
 export interface PdfAccess {
   password: string;
+  openingPassword?: string;
+  openingAuthenticated?: boolean;
+  hasOwnerPassword?: boolean;
   encrypted: boolean;
   requiresOpeningPassword?: boolean;
   signed: boolean;
@@ -43,7 +46,14 @@ export function getPdfAccess(
 
 /** Retain access for the current session, without changing the original file. */
 export function rememberPdfAccess(file: Blob, access: PdfAccess): void {
-  accessByFile.set(file, access);
+  accessByFile.set(file, {
+    ...access,
+    openingPassword: access.encrypted
+      ? access.openingAuthenticated || !access.ownerAuthenticated
+        ? access.password
+        : (access.openingPassword ?? accessByFile.get(file)?.openingPassword)
+      : undefined,
+  });
   if ("fileId" in file && typeof file.fileId === "string")
     filesById.set(file.fileId, file);
   publish();

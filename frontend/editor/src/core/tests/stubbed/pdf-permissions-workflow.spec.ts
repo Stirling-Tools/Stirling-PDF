@@ -101,8 +101,8 @@ test("restricted compression prompts at execution, preserves settings on cancel,
     "Unlocked for this session using your permissions password.",
   );
   await expect(
-    page.getByRole("button", { name: "Remove opening password", exact: true }),
-  ).toBeDisabled();
+    page.getByRole("button", { name: "Remove Password", exact: true }),
+  ).toBeEnabled();
 });
 
 test("unsupported tools explain the limitation without suggesting a password will enable the tool", async ({

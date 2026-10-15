@@ -124,16 +124,17 @@ export const useToolApiCalls = <TParams = void>() => {
           ) {
             const password =
               endpoint === "/api/v1/security/remove-password"
-                ? getPdfAccess(file)?.password ||
-                  String(formData.get("password") || "")
-                : String(
-                    formData.get("ownerPassword") ||
-                      (!formData.has("keyLength") &&
-                        getPdfAccess(file)?.password) ||
-                      formData.get("password") ||
-                      getPdfAccess(file)?.password ||
-                      "",
-                  );
+                ? formData.get("password")
+                  ? ""
+                  : String(formData.get("retainedOpeningPassword") ?? "")
+                : formData.has("keyLength")
+                  ? String(formData.get("password") ?? "")
+                  : (getPdfAccess(file)?.openingPassword ??
+                    String(
+                      formData.get("ownerPassword") ||
+                        getPdfAccess(file)?.password ||
+                        "",
+                    ));
             for (const output of responseFiles)
               rememberPdfAccess(
                 output,

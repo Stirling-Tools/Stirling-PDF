@@ -168,7 +168,10 @@ describe("buildTrackFile with images and protected PDFs", () => {
       expect((form as FormData).get("sourceFile")).toBe(protectedPdf);
       expect(await readText(built!.file)).toBe("protected result");
       expect(built!.file.name).toBe(anchor === A ? "photo.pdf" : "locked.pdf");
-      expect(getPdfAccess(built!.file)).toEqual(access);
+      expect(getPdfAccess(built!.file)).toEqual({
+        ...access,
+        openingPassword: access.password,
+      });
     },
   );
 });

@@ -138,6 +138,7 @@ function FileContextInner({
       FileId,
       {
         action: string;
+        preservationReason?: string;
         promise: Promise<boolean>;
         resolve: (allowed: boolean) => void;
       }
@@ -993,9 +994,13 @@ function FileContextInner({
       scheduleCleanup: (fileId: FileId, delay?: number) =>
         lifecycleManager.scheduleCleanup(fileId, delay, stateRef),
       openEncryptedUnlockPrompt: promptEncryptedUnlock,
-      requestPdfOwnerAccess: (fileId, action) => {
+      requestPdfOwnerAccess: (fileId, action, preservationReason) => {
         if (!filesRef.current.has(fileId)) return Promise.resolve(false);
-        if (hasPdfPermissionOverride(getPdfAccess(fileId)))
+        if (
+          preservationReason
+            ? getPdfAccess(fileId)?.ownerAuthenticated
+            : hasPdfPermissionOverride(getPdfAccess(fileId))
+        )
           return Promise.resolve(true);
         const existing = ownerRequests.current.get(fileId);
         if (existing) return existing.promise;
@@ -1003,7 +1008,12 @@ function FileContextInner({
         const promise = new Promise<boolean>((settle) => {
           resolve = settle;
         });
-        ownerRequests.current.set(fileId, { action, promise, resolve });
+        ownerRequests.current.set(fileId, {
+          action,
+          preservationReason,
+          promise,
+          resolve,
+        });
         promptEncryptedUnlock(fileId);
         return promise;
       },
@@ -1107,6 +1117,12 @@ function FileContextInner({
         />
         <EncryptedPdfUnlockModal
           sessionUnlock
+          preservationReason={
+            activeEncryptedFileId
+              ? ownerRequests.current.get(activeEncryptedFileId)
+                  ?.preservationReason
+              : undefined
+          }
           ownerUnlock={
             !!activeEncryptedFileId && !!getPdfAccess(activeEncryptedFileId)
           }
