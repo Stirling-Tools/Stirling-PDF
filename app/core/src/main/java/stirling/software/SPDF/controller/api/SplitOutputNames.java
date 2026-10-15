@@ -22,7 +22,6 @@ final class SplitOutputNames {
     private static final String PDF_EXTENSION = ".pdf";
     private static final Pattern CONTROL_CHARACTERS = Pattern.compile("[\\p{Cc}\\p{Zl}\\p{Zp}]");
     private static final Pattern LEADING_DOTS_AND_SPACES = Pattern.compile("^[.\\s\\p{Z}]+");
-    private static final Pattern TRAILING_DOTS_AND_SPACES = Pattern.compile("[.\\s\\p{Z}]+$");
     private static final Pattern WINDOWS_RESERVED_STEM =
             Pattern.compile("(?i)^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?=\\.|$)");
 
@@ -81,11 +80,30 @@ final class SplitOutputNames {
     }
 
     /**
+     * Drops trailing dots and spaces with a linear scan: the equivalent {@code [.\\s\\p{Z}]+$}
+     * regex goes quadratic on long trailing runs, and this runs on the full user-supplied line
+     * before any length cap.
+     */
+    static String stripTrailingDotsAndSpaces(String name) {
+        int end = name.length();
+        while (end > 0) {
+            int codePoint = name.codePointBefore(end);
+            if (codePoint != '.'
+                    && !Character.isWhitespace(codePoint)
+                    && !Character.isSpaceChar(codePoint)) {
+                break;
+            }
+            end -= Character.charCount(codePoint);
+        }
+        return name.substring(0, end);
+    }
+
+    /**
      * Drops every trailing ".pdf" along with trailing dots and spaces: Windows strips the latter on
      * extraction, so "a." and "a" would collide there.
      */
     private static String stripTrailingExtension(String name) {
-        String stripped = TRAILING_DOTS_AND_SPACES.matcher(name).replaceAll("");
+        String stripped = stripTrailingDotsAndSpaces(name);
         while (stripped.regionMatches(
                 true,
                 stripped.length() - PDF_EXTENSION.length(),
@@ -93,11 +111,8 @@ final class SplitOutputNames {
                 0,
                 PDF_EXTENSION.length())) {
             stripped =
-                    TRAILING_DOTS_AND_SPACES
-                            .matcher(
-                                    stripped.substring(
-                                            0, stripped.length() - PDF_EXTENSION.length()))
-                            .replaceAll("");
+                    stripTrailingDotsAndSpaces(
+                            stripped.substring(0, stripped.length() - PDF_EXTENSION.length()));
         }
         return stripped;
     }
