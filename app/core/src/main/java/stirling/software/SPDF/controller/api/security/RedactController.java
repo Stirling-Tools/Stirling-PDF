@@ -182,8 +182,13 @@ public class RedactController {
                 try {
                     RegexPatternUtils.getInstance().getPattern(term);
                 } catch (PatternSyntaxException e) {
+                    // The error is logged, so it names the problem rather than the search term.
                     throw ExceptionUtils.createIllegalArgumentException(
-                            "error.redaction.no.patterns", "Invalid regex pattern: " + term);
+                            "error.redaction.no.patterns",
+                            "Invalid regex pattern: "
+                                    + e.getDescription()
+                                    + " near index "
+                                    + e.getIndex());
                 }
             }
         }

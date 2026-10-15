@@ -34,6 +34,7 @@ import stirling.software.SPDF.pdf.parser.PageImageLocator;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.ToolFailedException;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 
 @Service
@@ -187,14 +188,21 @@ class RedactExecuteService {
 
     /** A malformed pattern would otherwise match nothing and the request would "succeed". */
     private static void requireValidPatterns(List<String> patterns) {
-        for (String pattern : patterns) {
+        for (int i = 0; i < patterns.size(); i++) {
             try {
-                Pattern.compile(pattern);
+                RegexPatternUtils.getInstance().getPattern(patterns.get(i));
             } catch (PatternSyntaxException e) {
+                // Logged by the exception handler, so the pattern itself stays out.
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.invalidArgument",
                         "Invalid argument: {0}",
-                        "regexPatterns: '" + pattern + "' is not a valid regular expression");
+                        "regexPatterns["
+                                + i
+                                + "] is not a valid regular expression ("
+                                + e.getDescription()
+                                + " near index "
+                                + e.getIndex()
+                                + ")");
             }
         }
     }
