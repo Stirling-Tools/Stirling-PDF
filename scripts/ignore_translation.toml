@@ -249,6 +249,11 @@ ignore = [
     'language.direction',
 ]
 
+[gl_ES]
+ignore = [
+    'language.direction',
+]
+
 [fa_IR]
 ignore = [
     'language.direction',
