@@ -19,6 +19,8 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -231,6 +233,31 @@ class CertSignControllerTest {
                         () -> certSignController.signPDFWithCert(request, httpRequest));
 
         assertTrue(exception.getMessage().contains("PKCS12 keystore"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"PKCS12", "JKS"})
+    void wrongKeystorePasswordIsAnInputError(String certType) {
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes));
+        request.setCertType(certType);
+        if ("JKS".equals(certType)) {
+            request.setJksFile(
+                    new MockMultipartFile("jksFile", "c.jks", "application/x", jksBytes));
+        } else {
+            request.setP12File(
+                    new MockMultipartFile("p12File", "c.p12", "application/x", p12Bytes));
+        }
+        request.setPassword("not-the-password");
+
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> certSignController.signPDFWithCert(request, httpRequest));
+
+        assertTrue(exception.getMessage().contains("password is incorrect"));
     }
 
     @Test
