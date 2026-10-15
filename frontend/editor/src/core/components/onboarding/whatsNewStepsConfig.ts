@@ -1,6 +1,7 @@
 import type { StepType } from "@reactour/tour";
 import type { TFunction } from "i18next";
 import {
+  besideCentered,
   waitForElement,
   waitForHighlightable,
 } from "@app/components/onboarding/tourUtils";
@@ -53,8 +54,8 @@ export function createWhatsNewStepsConfig({
         "onboarding.whatsNew.quickAccess",
         "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours.",
       ),
-      position: "right",
-      padding: 10,
+      position: besideCentered,
+      padding: 0,
       action: () => {
         saveWorkbenchState();
         closeFilesModal();
@@ -67,7 +68,7 @@ export function createWhatsNewStepsConfig({
         "onboarding.whatsNew.leftPanel",
         "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly.",
       ),
-      position: "center",
+      position: besideCentered,
       padding: 0,
     },
     [WhatsNewTourStep.FILE_UPLOAD]: {
@@ -77,7 +78,7 @@ export function createWhatsNewStepsConfig({
         "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace.",
       ),
       position: "right",
-      padding: 10,
+      padding: 4,
       actionAfter: async () => {
         openFilesModal();
         await waitForElement('[data-tour="file-sources"]', 5000);
@@ -96,7 +97,7 @@ export function createWhatsNewStepsConfig({
         "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>.",
       ),
       position: "bottom",
-      padding: 8,
+      padding: 4,
       // Ensure the switcher has mounted before this step renders
       action: async () => {
         switchToViewer();
@@ -111,7 +112,7 @@ export function createWhatsNewStepsConfig({
         "Switch to the Page Editor to reorder, rotate, or delete pages.",
       ),
       position: "bottom",
-      padding: 8,
+      padding: 4,
       action: async () => {
         switchToPageEditor();
         await waitForElement('[data-tour="view-switcher"]', 7000);
@@ -125,7 +126,7 @@ export function createWhatsNewStepsConfig({
         "Use Active Files to see everything you have open and pick what to work on.",
       ),
       position: "bottom",
-      padding: 8,
+      padding: 4,
       action: async () => {
         switchToActiveFiles();
         await waitForElement('[data-tour="view-switcher"]', 7000);
@@ -139,7 +140,7 @@ export function createWhatsNewStepsConfig({
         "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour.",
       ),
       position: "right",
-      padding: 10,
+      padding: 4,
     },
   };
 }

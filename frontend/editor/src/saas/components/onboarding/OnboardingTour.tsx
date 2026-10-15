@@ -25,7 +25,6 @@ import { useTourOrchestration } from "@app/contexts/TourOrchestrationContext";
 import { useAdminTourOrchestration } from "@app/contexts/AdminTourOrchestrationContext";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { dispatchTourState } from "@app/constants/events";
-import { removeAllGlows } from "@app/components/onboarding/tourGlow";
 import "@core/components/onboarding/OnboardingTour.css";
 
 export default function OnboardingTour() {
@@ -55,11 +54,6 @@ export default function OnboardingTour() {
       clearTourRequest();
     }
   }, [tourRequested, requestedTourType, clearTourRequest]);
-
-  useEffect(() => {
-    if (!isOpen) removeAllGlows();
-    return () => removeAllGlows();
-  }, [isOpen]);
 
   const tourSteps = useMemo<StepType[]>(
     () =>

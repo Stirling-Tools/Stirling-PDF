@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  besideCentered,
+  insideBottom,
   revealPickerTool,
   waitForElement,
   waitForHighlightable,
@@ -88,7 +90,7 @@ describe("tourUtils", () => {
 
       expect(scrollIntoViewSpy).toHaveBeenCalledWith({
         block: "center",
-        behavior: "smooth",
+        behavior: "instant",
       });
     });
 
@@ -128,7 +130,7 @@ describe("tourUtils", () => {
       expect(mountedButton).not.toBeNull();
       expect(mountedButton?.scrollIntoView).toHaveBeenCalledWith({
         block: "center",
-        behavior: "smooth",
+        behavior: "instant",
       });
       expect(scrollCount).toBeGreaterThanOrEqual(2);
     });
@@ -137,6 +139,61 @@ describe("tourUtils", () => {
       await expect(
         revealPickerTool('[data-tour="tool-button-crop"]', 50),
       ).resolves.toBeUndefined();
+    });
+  });
+
+  // width/height are the popover's; top/left/right/bottom are the target's.
+  const placement = (target: {
+    top: number;
+    left: number;
+    right: number;
+    bottom: number;
+  }) => ({
+    ...target,
+    width: 400,
+    height: 160,
+    windowWidth: 1440,
+    windowHeight: 900,
+    x: target.left,
+    y: target.top,
+  });
+  const prevRect = { width: 400, height: 160 } as Parameters<
+    typeof besideCentered
+  >[1];
+
+  describe("besideCentered", () => {
+    it("sits left of a right-hand panel, centred on it", () => {
+      const tools = placement({ top: 0, left: 1144, right: 1440, bottom: 900 });
+      expect(besideCentered(tools, prevRect)).toEqual([728, 370]);
+    });
+
+    it("sits right of a left-hand nav row, clamped inside the window", () => {
+      const row = placement({ top: 860, left: 56, right: 319, bottom: 892 });
+      expect(besideCentered(row, prevRect)).toEqual([335, 732]);
+    });
+
+    it("falls back inside the bottom when neither side has room", () => {
+      const workbench = placement({
+        top: 0,
+        left: 308,
+        right: 1144,
+        bottom: 900,
+      });
+      expect(besideCentered(workbench, prevRect)).toEqual(
+        insideBottom(workbench, prevRect),
+      );
+    });
+  });
+
+  describe("insideBottom", () => {
+    it("centres horizontally on the target, above its visible bottom", () => {
+      const workbench = placement({
+        top: 0,
+        left: 308,
+        right: 1144,
+        bottom: 1200,
+      });
+      expect(insideBottom(workbench, prevRect)).toEqual([526, 716]);
     });
   });
 });

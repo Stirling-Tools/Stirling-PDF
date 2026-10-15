@@ -18,7 +18,6 @@ import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 import { HAS_PORTAL } from "@app/routes/hasPortal";
 import { DOCS_PATH, HAS_DOCS } from "@app/routes/docsRoute";
 import { stripBasePath } from "@app/constants/app";
-import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { canCreateProcessingFolders } from "@app/hooks/useProcessingFolderCreation";
 import { requestProcessingFolderCreation } from "@app/utils/pendingProcessingFolderCreation";
 import { requestProcessorSignup } from "@app/services/processorSignup";
@@ -283,7 +282,6 @@ export function QuickNavRailHost() {
       navigate(target, { replace: true });
       return;
     }
-    rememberSettingsOrigin();
     go(target);
   };
 

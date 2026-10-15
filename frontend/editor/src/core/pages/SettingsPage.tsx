@@ -32,7 +32,6 @@ import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { READER_PATH } from "@app/routes/readerRoute";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { stripBasePath } from "@app/constants/app";
-import { takeSettingsOrigin } from "@app/utils/settingsNavigation";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import "@app/components/shared/config/settingsSections.css";
 import "@app/pages/SettingsPage.css";
@@ -73,10 +72,10 @@ const SettingsPageInner: React.FC = () => {
   const [mobilePane, setMobilePane] = useState<"nav" | "content">(() =>
     sectionFromPath(window.location.pathname) ? "content" : "nav",
   );
-  // Leaving restores where the user came from (the editor, the processor,
-  // wherever) by replacement, or the editor for a deep link with no origin.
+  // Always the editor, not where settings was opened from: the Help tours
+  // walk the editor's own controls, which the reader and processor don't render.
   const leave = useCallback(() => {
-    navigate(takeSettingsOrigin() ?? EDITOR_BASENAME, { replace: true });
+    navigate(EDITOR_BASENAME, { replace: true });
   }, [navigate]);
 
   const { sections, overlay, aliases, pending } = useSettingsNav(leave);
@@ -202,7 +201,7 @@ const SettingsPageInner: React.FC = () => {
   const fullBleed = activeItem?.fullBleed ?? false;
 
   return (
-    <div className="settings-page" data-tour="settings-modal">
+    <div className="settings-page">
       <QuickNavHostBridge
         requestNavigation={requestNavigation}
         onGoToStartupView={goToStartupView}
@@ -336,7 +335,6 @@ const SettingsPageInner: React.FC = () => {
 
       <div
         className="settings-page__main modal-content"
-        data-tour="settings-content-area"
         style={
           isMobile && mobilePane !== "content" ? { display: "none" } : undefined
         }

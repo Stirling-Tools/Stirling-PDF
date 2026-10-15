@@ -182,9 +182,10 @@ test.describe("15.6 Tour selectors - config modal", () => {
     });
   });
 
-  test("settings-content-area is present", async ({ page }) => {
+  test("settings-tours is present on About", async ({ page }) => {
+    await page.goto("/settings/about", { waitUntil: "domcontentloaded" });
     await expect(
-      page.locator('[data-tour="settings-content-area"]').first(),
+      page.locator('[data-tour="settings-tours"]').first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 });
@@ -206,7 +207,7 @@ test.describe("15.7 Tour selectors - admin modal nav items", () => {
   const adminNavSections = [
     "users",
     "adminGeneral",
-    "adminAdvanced",
+    "adminDatabase",
     "adminSecurity",
     "adminAudit",
     "adminUsage",
