@@ -1,12 +1,14 @@
 version: '3'
 
 # tools-core/ is the Rust shared by the editor and the backend: built to wasm
-# for the editor here, and to a native library for the backend by Gradle
-# (app/core/build.gradle).
+# for the editor here, and to native libraries for the backend by Gradle
+# (gradle/tools-core-native.gradle).
 
 vars:
   WASM_TARGET: wasm32-unknown-unknown
   WASM_DIR: ../frontend/editor/public/wasm
+  # Inside the proprietary layer, so only builds that include it bundle the module.
+  PROPRIETARY_WASM_DIR: ../frontend/editor/src/proprietary/services/wasm
 
 tasks:
   build:wasm:
@@ -14,17 +16,22 @@ tasks:
     sources:
       - Cargo.toml
       - Cargo.lock
-      - '*/Cargo.toml'
-      - '*/src/**/*.rs'
+      - '**/Cargo.toml'
+      - '**/build.rs'
+      - '**/src/**/*.rs'
+      - ../frontend/editor/src/proprietary/services/heuristic/rules/**/*.json
     generates:
       - '{{.WASM_DIR}}/stirling-tools.wasm'
+      - '{{.PROPRIETARY_WASM_DIR}}/stirling-tools-proprietary.wasm'
     cmds:
-      - cargo build --release --target {{.WASM_TARGET}} -p stirling-tools
-      - mkdir -p {{.WASM_DIR}}
+      - cargo build --release --target {{.WASM_TARGET}} -p stirling-tools -p stirling-tools-proprietary
+      - mkdir -p {{.WASM_DIR}} {{.PROPRIETARY_WASM_DIR}}
       - cp target/{{.WASM_TARGET}}/release/stirling_tools.wasm {{.WASM_DIR}}/stirling-tools.wasm
+      - cp target/{{.WASM_TARGET}}/release/stirling_tools_proprietary.wasm {{.PROPRIETARY_WASM_DIR}}/stirling-tools-proprietary.wasm
 
-  # The editor's prepare step runs this so a machine without Rust still builds
-  # the editor; only the Rust tool fails, at run time, saying its wasm is missing.
+  # The editor's prepare step runs this so a machine without Rust, or whose Rust
+  # build fails, still builds the editor; only the Rust tools fail, at run time,
+  # saying their wasm is missing.
   build:wasm:if-available:
     internal: true
     vars:
@@ -36,15 +43,16 @@ tasks:
     cmds:
       - task: build:wasm
         if: '[ "{{.TOOLCHAIN}}" = "ready" ]'
+        ignore_error: true
       - cmd: >-
           echo "tools-core needs cargo and 'rustup target add {{.WASM_TARGET}}';
           skipping the wasm build"
         if: '[ "{{.TOOLCHAIN}}" != "ready" ]'
 
   build:native:
-    desc: "Build the shared Rust tools as a native library for this machine"
+    desc: "Build the shared Rust tools as native libraries for this machine"
     cmds:
-      - cargo build --release -p stirling-tools
+      - cargo build --release -p stirling-tools -p stirling-tools-proprietary
 
   test:
     desc: "Run the shared Rust tools' tests"

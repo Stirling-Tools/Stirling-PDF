@@ -84,6 +84,8 @@ public class ToolKeyRegistry {
                     "devFolderScanning",
                     "devSsoGuide",
                     "devAirgapped",
+                    // PROPRIETARY_REGULAR_TOOL_IDS
+                    "classifyRust",
                     // PROPRIETARY_SUPER_TOOL_IDS
                     "ai-workflow");
 

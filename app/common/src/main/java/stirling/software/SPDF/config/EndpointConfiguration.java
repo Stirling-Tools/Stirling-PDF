@@ -449,6 +449,7 @@ public class EndpointConfiguration {
         // Backend-only endpoints
         addEndpointToGroup("Advance", "adjust-contrast");
         addEndpointToGroup("Advance", "adjust-colors-rust");
+        addEndpointToGroup("Advance", "classify-rust");
 
         // Adding endpoints to "Automation" group
         addEndpointToGroup("Automation", "handleData");
@@ -569,6 +570,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "handleData");
         addEndpointToGroup("Java", "form-detection");
         addEndpointToGroup("Java", "adjust-colors-rust");
+        addEndpointToGroup("Java", "classify-rust");
         addEndpointToGroup("rar", "pdf-to-cbr");
 
         // Javascript

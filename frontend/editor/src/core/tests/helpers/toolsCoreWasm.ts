@@ -4,31 +4,44 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { vi } from "vitest";
 
-const TOOLS_CORE_WASM = path.join(
-  import.meta.dirname,
-  "../../../../public/wasm/stirling-tools.wasm",
-);
+const EDITOR = path.join(import.meta.dirname, "../../../..");
+// Where `task tools-core:build:wasm` writes each module.
+const MODULES: Record<string, string> = {
+  "stirling-tools.wasm": path.join(EDITOR, "public/wasm/stirling-tools.wasm"),
+  "stirling-tools-proprietary.wasm": path.join(
+    EDITOR,
+    "src/proprietary/services/wasm/stirling-tools-proprietary.wasm",
+  ),
+};
 
-/** Built by `task tools-core:build:wasm`; tests that run it skip without it. */
-export const toolsCoreWasmBuilt = existsSync(TOOLS_CORE_WASM);
+/** Tests that run a module skip without it, as on a machine without Rust. */
+export const toolsCoreWasmBuilt = existsSync(MODULES["stirling-tools.wasm"]);
+export const proprietaryToolsWasmBuilt = existsSync(
+  MODULES["stirling-tools-proprietary.wasm"],
+);
 
 /**
  * Serves the real PDFium and tools-core wasm to `fetch`, which jsdom cannot
  * load from the dev server. Undo with `vi.unstubAllGlobals()`.
  */
 export async function stubWasmFetch(): Promise<void> {
-  const pdfium = await readFile(
+  const read = async (file: string) => new Uint8Array(await readFile(file));
+  const pdfium = await read(
     createRequire(import.meta.url).resolve("@embedpdf/pdfium/pdfium.wasm"),
   );
-  const tools = await readFile(TOOLS_CORE_WASM);
+  const modules = new Map<string, Uint8Array<ArrayBuffer>>();
+  for (const [name, file] of Object.entries(MODULES)) {
+    if (existsSync(file)) modules.set(name, await read(file));
+  }
   vi.stubGlobal(
     "fetch",
-    vi.fn(
-      async (url: string | URL) =>
-        new Response(
-          String(url).endsWith("stirling-tools.wasm") ? tools : pdfium,
-          { headers: { "Content-Type": "application/wasm" } },
-        ),
-    ),
+    vi.fn(async (url: string | URL) => {
+      const name =
+        new URL(String(url), "http://localhost").pathname.split("/").pop() ??
+        "";
+      return new Response(modules.get(name) ?? pdfium, {
+        headers: { "Content-Type": "application/wasm" },
+      });
+    }),
   );
 }

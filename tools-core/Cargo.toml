@@ -1,6 +1,13 @@
 [workspace]
 resolver = "3"
-members = ["pdfium", "adjust-colors", "stirling-tools"]
+members = [
+    "pdfium",
+    "abi",
+    "adjust-colors",
+    "stirling-tools",
+    "proprietary/classify",
+    "proprietary/stirling-tools-proprietary",
+]
 
 [workspace.package]
 version = "0.1.0"
@@ -11,7 +18,9 @@ publish = false
 
 [workspace.dependencies]
 stirling-pdfium = { path = "pdfium" }
+stirling-abi = { path = "abi" }
 adjust-colors = { path = "adjust-colors" }
+classify = { path = "proprietary/classify" }
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "deny"

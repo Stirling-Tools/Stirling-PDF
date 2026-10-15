@@ -8,8 +8,10 @@ import { useAdjustColorsRustOperation } from "@app/hooks/tools/adjustColorsRust/
 import AdjustContrastBasicSettings from "@app/components/tools/adjustContrast/AdjustContrastBasicSettings";
 import AdjustContrastColorSettings from "@app/components/tools/adjustContrast/AdjustContrastColorSettings";
 import AdjustContrastPreview from "@app/components/tools/adjustContrast/AdjustContrastPreview";
-import AdjustColorsRustProcessingSettings from "@app/components/tools/adjustColorsRust/AdjustColorsRustProcessingSettings";
+import ProcessOnServerSetting from "@app/components/tools/shared/ProcessOnServerSetting";
 import { adjustPreviewWithRust } from "@app/components/tools/adjustColorsRust/adjustPreviewWithRust";
+import ToolTimingPanel from "@app/components/tools/shared/ToolTimingPanel";
+import { onTiming, type ToolTiming } from "@app/services/toolTiming";
 import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
 import NavigationArrows from "@app/components/shared/filePreview/NavigationArrows";
 
@@ -41,6 +43,12 @@ const AdjustColorsRust = (props: BaseToolProps) => {
     stateConditions: { hasFiles: base.hasFiles, hasResults: base.hasResults },
     afterResults: base.handleSettingsReset,
   });
+
+  const [timing, setTiming] = useState<ToolTiming | null>(null);
+  useEffect(() => onTiming("adjustColors", "rust", setTiming), []);
+  useEffect(() => {
+    if (!base.hasResults) setTiming(null);
+  }, [base.hasResults]);
 
   const [previewIndex, setPreviewIndex] = useState(0);
   const totalSelected = base.selectedFiles.length;
@@ -91,16 +99,24 @@ const AdjustColorsRust = (props: BaseToolProps) => {
         ),
       },
       {
-        title: t("adjustColorsRust.processing", "Processing"),
+        title: t("rustTools.processing", "Processing"),
         isCollapsed: accordion.getCollapsedState(Step.PROCESSING),
         onCollapsedClick: () => accordion.handleStepToggle(Step.PROCESSING),
         content: (
-          <AdjustColorsRustProcessingSettings
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
+          <ProcessOnServerSetting
+            processOnServer={base.params.parameters.processOnServer}
+            onChange={(value) =>
+              base.params.updateParameter("processOnServer", value)
+            }
             disabled={base.endpointLoading}
           />
         ),
+      },
+      {
+        title: t("toolTiming.title", "Timing"),
+        isVisible: base.hasResults && timing !== null,
+        isCollapsed: false,
+        content: timing ? <ToolTimingPanel timing={timing} /> : null,
       },
     ],
     preview: (

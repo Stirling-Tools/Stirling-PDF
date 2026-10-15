@@ -852,6 +852,7 @@ export interface MetadataRequest {
    */
   trapped?: "True" | "False" | "Unknown";
 }
+export type MiscClassifyRustRequest = Record<string, never>;
 export type MiscDecompressPdfRequest = Record<string, never>;
 export type MiscRepairRequest = Record<string, never>;
 export type MiscShowJavascriptRequest = Record<string, never>;
@@ -1673,6 +1674,7 @@ export type ToolEndpoint =
   | "/api/v1/misc/auto-rotate-pdf"
   | "/api/v1/misc/auto-split-pdf"
   | "/api/v1/misc/batch-process-attachments"
+  | "/api/v1/misc/classify-rust"
   | "/api/v1/misc/compress-pdf"
   | "/api/v1/misc/create-portfolio"
   | "/api/v1/misc/decompress-pdf"
@@ -1785,6 +1787,7 @@ export interface ToolApiParams {
   "/api/v1/misc/auto-rotate-pdf": AutoRotatePdfRequest;
   "/api/v1/misc/auto-split-pdf": AutoSplitPdfRequest;
   "/api/v1/misc/batch-process-attachments": BatchAttachmentRequest;
+  "/api/v1/misc/classify-rust": MiscClassifyRustRequest;
   "/api/v1/misc/compress-pdf": OptimizePdfRequest;
   "/api/v1/misc/create-portfolio": CreatePortfolioRequest;
   "/api/v1/misc/decompress-pdf": MiscDecompressPdfRequest;
@@ -1898,6 +1901,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/auto-rotate-pdf",
   "/api/v1/misc/auto-split-pdf",
   "/api/v1/misc/batch-process-attachments",
+  "/api/v1/misc/classify-rust",
   "/api/v1/misc/compress-pdf",
   "/api/v1/misc/create-portfolio",
   "/api/v1/misc/decompress-pdf",

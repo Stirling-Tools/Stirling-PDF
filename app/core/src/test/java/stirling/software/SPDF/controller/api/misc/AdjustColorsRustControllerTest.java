@@ -54,6 +54,19 @@ class AdjustColorsRustControllerTest {
     }
 
     @Test
+    void reportsProcessingTimeInServerTiming() throws IOException {
+        when(toolsCore.isAvailable()).thenReturn(true);
+        when(toolsCore.adjustColors(any(), any())).thenReturn(OUTPUT);
+
+        ResponseEntity<byte[]> response = controller.adjustColors(request());
+
+        assertThat(response.getHeaders().getFirst(AdjustColorsRustController.SERVER_TIMING_HEADER))
+                .matches("process;dur=\\d+\\.\\d");
+        assertThat(response.getHeaders().getContentDisposition().getFilename())
+                .isEqualTo("scan_adjusted.pdf");
+    }
+
+    @Test
     void answersServiceUnavailableWithoutTheLibrary() {
         when(toolsCore.isAvailable()).thenReturn(false);
 

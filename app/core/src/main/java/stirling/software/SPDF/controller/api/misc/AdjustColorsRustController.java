@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,6 +32,12 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class AdjustColorsRustController {
 
+    /**
+     * Response header carrying how long opening, adjusting and saving took, so a client can split
+     * the round trip into processing and transfer. Format per the W3C Server Timing spec.
+     */
+    static final String SERVER_TIMING_HEADER = "Server-Timing";
+
     private final ToolsCoreLibrary toolsCore;
 
     @AutoJobPostMapping(
@@ -53,9 +60,11 @@ public class AdjustColorsRustController {
                     "This server was built without the Rust tools library");
         }
         MultipartFile file = request.getFileInput();
+        byte[] input = file.getBytes();
+        long started = System.nanoTime();
         byte[] adjusted =
                 toolsCore.adjustColors(
-                        file.getBytes(),
+                        input,
                         new ColorAdjustments(
                                 request.getContrast(),
                                 request.getBrightness(),
@@ -63,8 +72,16 @@ public class AdjustColorsRustController {
                                 request.getRed(),
                                 request.getGreen(),
                                 request.getBlue()));
-        return WebResponseUtils.bytesToWebResponse(
-                adjusted,
-                GeneralUtils.generateFilename(file.getOriginalFilename(), "_adjusted.pdf"));
+        double processingMs = (System.nanoTime() - started) / 1_000_000.0;
+        ResponseEntity<byte[]> response =
+                WebResponseUtils.bytesToWebResponse(
+                        adjusted,
+                        GeneralUtils.generateFilename(file.getOriginalFilename(), "_adjusted.pdf"));
+        return ResponseEntity.status(response.getStatusCode())
+                .headers(response.getHeaders())
+                .header(
+                        SERVER_TIMING_HEADER,
+                        String.format(Locale.ROOT, "process;dur=%.1f", processingMs))
+                .body(response.getBody());
     }
 }

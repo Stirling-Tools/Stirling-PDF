@@ -21,6 +21,7 @@ const commonEndpoints = [
   "automate",
   "booklet-imposition",
   "cert-sign",
+  "classify-rust",
   "compare",
   "compress-pdf",
   "crop",

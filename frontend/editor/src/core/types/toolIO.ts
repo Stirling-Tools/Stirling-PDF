@@ -621,6 +621,11 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/misc/classify-rust": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/misc/compress-pdf": {
     accepts: ["PDF"],
     produces: "PDF",

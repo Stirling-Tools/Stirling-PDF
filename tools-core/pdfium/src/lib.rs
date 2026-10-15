@@ -12,7 +12,9 @@
 mod ffi;
 mod host;
 
-use std::ffi::{c_int, c_void};
+use host::PdfiumBuffer;
+
+use std::ffi::{c_int, c_ulong, c_ushort, c_void};
 use std::fmt;
 use std::marker::PhantomData;
 use std::mem::ManuallyDrop;
@@ -32,6 +34,9 @@ pub enum Error {
     SetBitmap,
     GenerateContent,
     PixelBufferSize,
+    LoadText(usize),
+    PdfiumMemory,
+    SetMetadata,
 }
 
 impl fmt::Display for Error {
@@ -44,6 +49,9 @@ impl fmt::Display for Error {
             Error::SetBitmap => f.write_str("could not set an image's bitmap"),
             Error::GenerateContent => f.write_str("could not write a page's content stream"),
             Error::PixelBufferSize => f.write_str("pixel buffer does not match the bitmap"),
+            Error::LoadText(index) => write!(f, "could not read the text of page {}", index + 1),
+            Error::PdfiumMemory => f.write_str("PDFium could not allocate a buffer"),
+            Error::SetMetadata => f.write_str("could not set document metadata"),
         }
     }
 }
@@ -82,6 +90,35 @@ impl Document {
         let page_index = c_int::try_from(index).map_err(|_| Error::CreatePage(index))?;
         let raw = unsafe { ffi::FPDFPage_New(self.raw, page_index, width, height) };
         Page::from_raw(raw).ok_or(Error::CreatePage(index))
+    }
+
+    /// The Info-dictionary entry `tag`, or `None` when it is absent or empty.
+    pub fn metadata(&self, tag: &str) -> Option<String> {
+        let tag = PdfiumBuffer::from_bytes(&nul_terminated(tag))?;
+        let get = |buffer: *mut c_void, len: c_ulong| unsafe {
+            ffi::FPDF_GetMetaText(self.raw, tag.as_ptr().cast(), buffer, len)
+        };
+        let len = usize::try_from(get(ptr::null_mut(), 0)).ok()?;
+        // Two bytes is the UTF-16 terminator of an empty value.
+        if len <= 2 {
+            return None;
+        }
+        let buffer = PdfiumBuffer::new(len)?;
+        get(buffer.as_ptr().cast(), c_ulong::try_from(len).ok()?);
+        let value = decode_utf16le(&buffer.read(len));
+        (!value.is_empty()).then_some(value)
+    }
+
+    /// Sets the Info-dictionary entry `tag`, adding it when absent.
+    pub fn set_metadata(&self, tag: &str, value: &str) -> Result<(), Error> {
+        let tag = PdfiumBuffer::from_bytes(&nul_terminated(tag)).ok_or(Error::PdfiumMemory)?;
+        let value = PdfiumBuffer::from_bytes(&encode_utf16le(value)).ok_or(Error::PdfiumMemory)?;
+        let ok =
+            unsafe { ffi::EPDF_SetMetaText(self.raw, tag.as_ptr().cast(), value.as_ptr().cast()) };
+        if ok == 0 {
+            return Err(Error::SetMetadata);
+        }
+        Ok(())
     }
 
     /// An image object that belongs to this document but no page yet.
@@ -152,6 +189,114 @@ impl<'doc> Page<'doc> {
         }
         Ok(())
     }
+
+    /// The page's text layer. `index` is only for the error message.
+    pub fn text(&self, index: usize) -> Result<TextPage<'_>, Error> {
+        let raw = unsafe { ffi::FPDFText_LoadPage(self.raw) };
+        if raw.is_null() {
+            return Err(Error::LoadText(index));
+        }
+        Ok(TextPage {
+            raw,
+            _page: PhantomData,
+        })
+    }
+}
+
+/// A page's characters in content order, as PDFium extracts them; closed on
+/// drop. PDFium inserts `\r\n` where it infers a line break.
+pub struct TextPage<'page> {
+    raw: ffi::FPDF_TEXTPAGE,
+    _page: PhantomData<&'page ()>,
+}
+
+impl TextPage<'_> {
+    pub fn char_count(&self) -> usize {
+        let count = unsafe { ffi::FPDFText_CountChars(self.raw) };
+        usize::try_from(count).unwrap_or(0)
+    }
+
+    /// Characters `start..start + count`, clamped to the page.
+    pub fn text(&self, start: usize, count: usize) -> Result<String, Error> {
+        let total = self.char_count();
+        let start = start.min(total);
+        let count = count.min(total - start);
+        if count == 0 {
+            return Ok(String::new());
+        }
+        let len = (count + 1) * 2;
+        let buffer = PdfiumBuffer::new(len).ok_or(Error::PdfiumMemory)?;
+        let (Ok(start), Ok(count)) = (c_int::try_from(start), c_int::try_from(count)) else {
+            return Ok(String::new());
+        };
+        let written = unsafe {
+            ffi::FPDFText_GetText(self.raw, start, count, buffer.as_ptr().cast::<c_ushort>())
+        };
+        let written = usize::try_from(written).unwrap_or(0);
+        Ok(decode_utf16le(&buffer.read(written * 2)))
+    }
+
+    /// `None` past the end, or for a code point that is not a `char`.
+    pub fn char_at(&self, index: usize) -> Option<char> {
+        let index = c_int::try_from(index).ok()?;
+        char::from_u32(unsafe { ffi::FPDFText_GetUnicode(self.raw, index) })
+    }
+
+    /// In points; 0 for a character PDFium generated (an inferred space or
+    /// line break).
+    pub fn font_size(&self, index: usize) -> f64 {
+        let Ok(index) = c_int::try_from(index) else {
+            return 0.0;
+        };
+        unsafe { ffi::FPDFText_GetFontSize(self.raw, index) }
+    }
+
+    /// The character's origin in page space: points from the bottom-left.
+    pub fn char_origin(&self, index: usize) -> Option<(f64, f64)> {
+        let index = c_int::try_from(index).ok()?;
+        let out = PdfiumBuffer::new(16)?;
+        let x = out.as_ptr();
+        let y = x.wrapping_add(8);
+        let ok = unsafe { ffi::FPDFText_GetCharOrigin(self.raw, index, x.cast(), y.cast()) };
+        if ok == 0 {
+            return None;
+        }
+        let bytes = out.read(16);
+        let x = f64::from_le_bytes(bytes[..8].try_into().ok()?);
+        let y = f64::from_le_bytes(bytes[8..].try_into().ok()?);
+        Some((x, y))
+    }
+}
+
+impl Drop for TextPage<'_> {
+    fn drop(&mut self) {
+        unsafe { ffi::FPDFText_ClosePage(self.raw) }
+    }
+}
+
+fn nul_terminated(text: &str) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(text.len() + 1);
+    bytes.extend_from_slice(text.as_bytes());
+    bytes.push(0);
+    bytes
+}
+
+fn encode_utf16le(text: &str) -> Vec<u8> {
+    text.encode_utf16()
+        .chain(std::iter::once(0))
+        .flat_map(u16::to_le_bytes)
+        .collect()
+}
+
+/// Up to the first NUL; unpaired surrogates become U+FFFD.
+fn decode_utf16le(bytes: &[u8]) -> String {
+    let units = bytes
+        .chunks_exact(2)
+        .map(|pair| u16::from_le_bytes([pair[0], pair[1]]))
+        .take_while(|&unit| unit != 0);
+    char::decode_utf16(units)
+        .map(|unit| unit.unwrap_or(char::REPLACEMENT_CHARACTER))
+        .collect()
 }
 
 impl Drop for Page<'_> {

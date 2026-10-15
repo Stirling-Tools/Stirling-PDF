@@ -2,7 +2,12 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { adjustColorsInBrowser } from "@app/hooks/tools/adjustColorsRust/useAdjustColorsRustOperation";
+import {
+  adjustColorsInBrowser,
+  adjustColorsRustOperationConfig,
+} from "@app/hooks/tools/adjustColorsRust/useAdjustColorsRustOperation";
+import { defaultParameters } from "@app/hooks/tools/adjustColorsRust/useAdjustColorsRustParameters";
+import { onTiming, type ToolTiming } from "@app/services/toolTiming";
 import {
   closeDocAndFreeBuffer,
   getPdfiumModule,
@@ -131,6 +136,30 @@ describe.skipIf(!toolsCoreWasmBuilt)("adjustColorsInBrowser", () => {
     );
 
     expect(dark.corner).toEqual([0, 0, 0]);
+  });
+
+  test("reports how long the browser run took", async () => {
+    const timings: ToolTiming[] = [];
+    const stopListening = onTiming("adjustColors", "rust", (timing) =>
+      timings.push(timing),
+    );
+    try {
+      await adjustColorsRustOperationConfig.customProcessor(defaultParameters, [
+        fixture,
+      ]);
+    } finally {
+      stopListening();
+    }
+
+    expect(timings).toEqual([
+      expect.objectContaining({
+        implementation: "rust",
+        location: "browser",
+        files: 1,
+        serverProcessingMs: null,
+      }),
+    ]);
+    expect(timings[0].totalMs).toBeGreaterThan(0);
   });
 
   test("keeps the input's file name", async () => {

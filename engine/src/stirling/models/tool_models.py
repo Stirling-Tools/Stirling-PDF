@@ -396,6 +396,12 @@ class CbzToPdfParams(ApiModel):
     optimize_for_ebook: bool = Field(False, description="Optimize the output PDF for ebook reading using Ghostscript")
 
 
+class ClassifyRustParams(ApiModel):
+    """
+    Reads the first five and last two pages, the file name and the metadata, picks up to five labels from the built-in set by rules, and stores them in the StirlingPDFClassification metadata field as the AI classify step does. Runs the same Rust code the editor runs in the browser. Input:PDF Output:PDF Type:SISO
+    """
+
+
 class LineArtEdgeLevel(IntEnum):
     """
     Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.
@@ -1893,6 +1899,7 @@ class Model(
         | AutoRotatePdfParams
         | AutoSplitPdfParams
         | BatchProcessAttachmentsParams
+        | ClassifyRustParams
         | CompressPdfParams
         | CreatePortfolioParams
         | DeleteAttachmentParams
@@ -1975,6 +1982,7 @@ class Model(
         | AutoRotatePdfParams
         | AutoSplitPdfParams
         | BatchProcessAttachmentsParams
+        | ClassifyRustParams
         | CompressPdfParams
         | CreatePortfolioParams
         | DeleteAttachmentParams
@@ -2058,6 +2066,7 @@ type ParamToolModel = (
     | AutoRotatePdfParams
     | AutoSplitPdfParams
     | BatchProcessAttachmentsParams
+    | ClassifyRustParams
     | CompressPdfParams
     | CreatePortfolioParams
     | DeleteAttachmentParams
@@ -2142,6 +2151,7 @@ class ToolEndpoint(StrEnum):
     AUTO_ROTATE_PDF = "/api/v1/misc/auto-rotate-pdf"
     AUTO_SPLIT_PDF = "/api/v1/misc/auto-split-pdf"
     BATCH_PROCESS_ATTACHMENTS = "/api/v1/misc/batch-process-attachments"
+    CLASSIFY_RUST = "/api/v1/misc/classify-rust"
     COMPRESS_PDF = "/api/v1/misc/compress-pdf"
     CREATE_PORTFOLIO = "/api/v1/misc/create-portfolio"
     DELETE_ATTACHMENT = "/api/v1/misc/delete-attachment"
@@ -2224,6 +2234,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.AUTO_ROTATE_PDF: AutoRotatePdfParams,
     ToolEndpoint.AUTO_SPLIT_PDF: AutoSplitPdfParams,
     ToolEndpoint.BATCH_PROCESS_ATTACHMENTS: BatchProcessAttachmentsParams,
+    ToolEndpoint.CLASSIFY_RUST: ClassifyRustParams,
     ToolEndpoint.COMPRESS_PDF: CompressPdfParams,
     ToolEndpoint.CREATE_PORTFOLIO: CreatePortfolioParams,
     ToolEndpoint.DELETE_ATTACHMENT: DeleteAttachmentParams,

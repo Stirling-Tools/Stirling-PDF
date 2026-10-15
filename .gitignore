@@ -194,6 +194,7 @@ proprietary/build
 stirling-pdf/build
 frontend/editor/src-tauri/provisioner/target
 frontend/editor/public/wasm/
+frontend/editor/src/proprietary/services/wasm/
 tools-core/target/
 
 # Byte-compiled / optimized / DLL files

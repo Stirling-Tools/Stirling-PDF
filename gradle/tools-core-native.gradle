@@ -1,0 +1,69 @@
+// Builds a tools-core/ Rust library natively for this machine and bundles it in the
+// project's resources, where RustToolsLibrary loads it from. A missing toolchain or a
+// failed cargo build only warns: the backend still builds, and the endpoints that need
+// the library answer 503.
+//
+// Apply this script, then call toolsCoreNative('<cargo package>').
+
+import org.apache.tools.ant.taskdefs.condition.Os
+
+ext.toolsCoreNative = { String cargoPackage ->
+    def toolsCoreDir = rootProject.file('tools-core')
+    def libraryName = System.mapLibraryName(cargoPackage.replace('-', '_'))
+    // Only a successful build lands here, so a stale library in cargo's target/ is never bundled.
+    def bundleDir = project.layout.buildDirectory.dir("tools-core-natives/${cargoPackage}")
+    // Hazard: must equal jpdfium's NativeLoader.detectPlatform() on the machine that runs the
+    // jar, which RustToolsLibrary uses to find the library.
+    def platform = {
+        def osName = System.getProperty('os.name').toLowerCase()
+        def osArch = System.getProperty('os.arch').toLowerCase()
+        def arch = (osArch.contains('aarch64') || osArch.contains('arm64')) ? 'arm64' : 'x64'
+        if (osName.contains('win')) return "windows-${arch}"
+        if (osName.contains('mac')) return "darwin-${arch}"
+        return "linux-${arch}"
+    }()
+    def cargoOnPath = System.getenv('PATH')?.split(File.pathSeparator)?.any { dir ->
+        new File(dir, Os.isFamily(Os.FAMILY_WINDOWS) ? 'cargo.exe' : 'cargo').canExecute()
+    }
+
+    def build = project.tasks.register('buildToolsCoreNative', Exec) {
+        group = 'build'
+        description = "Build the ${cargoPackage} Rust library for this machine"
+        workingDir toolsCoreDir
+        commandLine 'cargo', 'build', '--release', '-p', cargoPackage
+        inputs.files(project.fileTree(toolsCoreDir) {
+            include 'Cargo.toml', 'Cargo.lock', '**/Cargo.toml', '**/build.rs', '**/src/**/*.rs'
+            exclude 'target/**'
+        })
+        // The classifier embeds these rules at build time.
+        inputs.files(rootProject.fileTree('frontend/editor/src/proprietary/services/heuristic/rules'))
+        outputs.dir(bundleDir)
+        ignoreExitValue = true
+        onlyIf {
+            if (!cargoOnPath) {
+                logger.warn("cargo not found: the ${cargoPackage} Rust library is not bundled")
+            }
+            cargoOnPath
+        }
+        doLast {
+            def bundle = bundleDir.get().dir(platform).asFile
+            bundle.deleteDir()
+            if (executionResult.get().exitValue != 0) {
+                logger.warn("cargo build failed: the ${cargoPackage} Rust library is not bundled " +
+                        '(run `task tools-core:build:native` to see why)')
+                return
+            }
+            bundle.mkdirs()
+            java.nio.file.Files.copy(
+                    new File(toolsCoreDir, "target/release/${libraryName}").toPath(),
+                    new File(bundle, libraryName).toPath())
+        }
+    }
+
+    project.tasks.named('processResources') {
+        dependsOn build
+        from(bundleDir) {
+            into 'tools-core/natives'
+        }
+    }
+}

@@ -3,12 +3,13 @@
 
 #![allow(non_camel_case_types, non_snake_case)]
 
-use std::ffi::{c_double, c_float, c_int, c_ulong, c_void};
+use std::ffi::{c_char, c_double, c_float, c_int, c_uint, c_ulong, c_ushort, c_void};
 
 pub type FPDF_DOCUMENT = *mut c_void;
 pub type FPDF_PAGE = *mut c_void;
 pub type FPDF_BITMAP = *mut c_void;
 pub type FPDF_PAGEOBJECT = *mut c_void;
+pub type FPDF_TEXTPAGE = *mut c_void;
 pub type FPDF_BOOL = c_int;
 pub type FPDF_DWORD = c_ulong;
 
@@ -83,6 +84,17 @@ macro_rules! pdfium_functions {
 
 pdfium_functions! {
     fn FPDF_GetPageCount(document: FPDF_DOCUMENT) -> c_int;
+    fn FPDF_GetMetaText(
+        document: FPDF_DOCUMENT,
+        tag: *const c_char,
+        buffer: *mut c_void,
+        buflen: c_ulong,
+    ) -> c_ulong;
+    fn EPDF_SetMetaText(
+        document: FPDF_DOCUMENT,
+        tag: *const c_char,
+        value: *const c_ushort,
+    ) -> FPDF_BOOL;
     fn FPDF_LoadPage(document: FPDF_DOCUMENT, page_index: c_int) -> FPDF_PAGE;
     fn FPDF_ClosePage(page: FPDF_PAGE);
     fn FPDF_GetPageWidthF(page: FPDF_PAGE) -> c_float;
@@ -128,6 +140,23 @@ pdfium_functions! {
         f: c_double,
     );
     fn FPDFPageObj_Destroy(page_object: FPDF_PAGEOBJECT);
+    fn FPDFText_LoadPage(page: FPDF_PAGE) -> FPDF_TEXTPAGE;
+    fn FPDFText_ClosePage(text_page: FPDF_TEXTPAGE);
+    fn FPDFText_CountChars(text_page: FPDF_TEXTPAGE) -> c_int;
+    fn FPDFText_GetText(
+        text_page: FPDF_TEXTPAGE,
+        start_index: c_int,
+        count: c_int,
+        result: *mut c_ushort,
+    ) -> c_int;
+    fn FPDFText_GetUnicode(text_page: FPDF_TEXTPAGE, index: c_int) -> c_uint;
+    fn FPDFText_GetFontSize(text_page: FPDF_TEXTPAGE, index: c_int) -> c_double;
+    fn FPDFText_GetCharOrigin(
+        text_page: FPDF_TEXTPAGE,
+        index: c_int,
+        x: *mut c_double,
+        y: *mut c_double,
+    ) -> FPDF_BOOL;
     fn FPDFImageObj_SetBitmap(
         pages: *mut FPDF_PAGE,
         count: c_int,

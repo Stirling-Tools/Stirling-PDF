@@ -17,6 +17,11 @@ import {
   saveRawDocument,
 } from "@app/services/pdfiumService";
 import { getToolsCore, type ColorAdjustments } from "@app/services/toolsCore";
+import {
+  addServerTime,
+  emitTiming,
+  parseServerTiming,
+} from "@app/services/toolTiming";
 
 export const ADJUST_COLORS_RUST_ENDPOINT = "/api/v1/misc/adjust-colors-rust";
 
@@ -59,7 +64,7 @@ export async function adjustColorsInBrowser(
 async function adjustColorsOnServer(
   file: File,
   adjustments: ColorAdjustments,
-): Promise<File> {
+): Promise<{ file: File; processingMs: number | null }> {
   const formData = new FormData();
   formData.append("fileInput", file);
   for (const [key, value] of Object.entries(adjustments)) {
@@ -70,22 +75,41 @@ async function adjustColorsOnServer(
     formData,
     { responseType: "blob" },
   );
-  return asPdf(response.data, file);
+  return {
+    file: asPdf(response.data, file),
+    processingMs: parseServerTiming(response.headers?.["server-timing"]),
+  };
 }
 
 async function processFiles(
   params: AdjustColorsRustParameters,
   files: File[],
 ): Promise<CustomProcessorResult> {
-  const adjust = params.processOnServer
-    ? adjustColorsOnServer
-    : adjustColorsInBrowser;
   const adjustments = adjustmentsOf(params);
+  const started = performance.now();
+  let serverProcessingMs: number | null = params.processOnServer ? 0 : null;
   // One at a time: the browser path shares a single PDFium instance.
   const processed: File[] = [];
   for (const file of files) {
-    processed.push(await adjust(file, adjustments));
+    if (params.processOnServer) {
+      const result = await adjustColorsOnServer(file, adjustments);
+      processed.push(result.file);
+      serverProcessingMs = addServerTime(
+        serverProcessingMs,
+        result.processingMs,
+      );
+    } else {
+      processed.push(await adjustColorsInBrowser(file, adjustments));
+    }
   }
+  emitTiming({
+    tool: "adjustColors",
+    implementation: "rust",
+    location: params.processOnServer ? "server" : "browser",
+    files: files.length,
+    totalMs: performance.now() - started,
+    serverProcessingMs,
+  });
   return { files: processed };
 }
 

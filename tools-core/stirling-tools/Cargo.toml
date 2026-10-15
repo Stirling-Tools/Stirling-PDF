@@ -11,6 +11,7 @@ publish.workspace = true
 crate-type = ["cdylib"]
 
 [dependencies]
+stirling-abi.workspace = true
 stirling-pdfium.workspace = true
 adjust-colors.workspace = true
 
