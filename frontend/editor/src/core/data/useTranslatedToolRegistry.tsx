@@ -847,11 +847,11 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       removePassword: {
         icon: <Icon name="lock-open-password" size="1.5rem" />,
-        name: t("home.removePassword.title", "Remove Password"),
+        name: t("removePassword.title", "Remove Password"),
         component: lazy(() => import("@app/tools/RemovePassword")),
         description: t(
           "home.removePassword.desc",
-          "Remove password protection from PDF documents",
+          "Remove the opening password, permissions password, or both.",
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
@@ -884,7 +884,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Automation
 
       automate: {
-        icon: <Icon name="waypoints" size="1.5rem" />,
+        icon: <Icon name="automate" size="1.5rem" />,
         name: t("home.automate.title", "Automate"),
         component: lazy(() => import("@app/tools/Automate")),
         description: t(
@@ -1223,7 +1223,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "ocr"),
       },
       redact: {
-        icon: <Icon name="eye-off" size="1.5rem" />,
+        icon: <Icon name="redact" size="1.5rem" />,
         name: t("home.redact.title", "Redact"),
         component: lazy(() => import("@app/tools/Redact")),
         description: t(

@@ -191,35 +191,6 @@ jobs:
           # untrusted tree gets built below - never leave credentials in .git/config
           persist-credentials: false
 
-      - name: Cache Gradle
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-deploy-pr-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-
-      - name: Set up JDK 25
-        uses: ./.github/actions/java
-        with:
-          java-version: "25"
-
-      - name: Install Task
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
-      - name: Run Gradle Command
-        run: |
-          if [ "${{ needs.check-comment.outputs.disable_security }}" == "true" ]; then
-            export DISABLE_ADDITIONAL_FEATURES=true
-          else
-            export DISABLE_ADDITIONAL_FEATURES=false
-          fi
-          task backend:build
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-          STIRLING_PDF_DESKTOP_UI: false
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
@@ -240,8 +211,6 @@ jobs:
           context: .
           file: ./docker/embedded/Dockerfile
           push: true
-          cache-from: type=gha,scope=stirling-pdf-latest
-          cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:pr-${{ needs.check-comment.outputs.pr_number }}
           build-args: |
             VERSION_TAG=alpha
@@ -254,8 +223,6 @@ jobs:
           context: .
           file: ./docker/engine/Dockerfile
           push: true
-          cache-from: type=gha,scope=stirling-pdf-engine
-          cache-to: type=gha,mode=max,scope=stirling-pdf-engine
           tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
           platforms: linux/amd64
 

@@ -21,7 +21,7 @@ Stirling PDF is a powerful, open-source PDF editing platform. Run it as a person
   </a>
 </p>
 
-![Stirling PDF - Dashboard](images/home-light.png)
+![Stirling PDF - Dashboard](docs/images/home-light.png)
 
 ## Key Capabilities
 
@@ -58,11 +58,11 @@ For full installation options (including desktop and Kubernetes), see our [Docum
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! Please see [CONTRIBUTING.md](.github/CONTRIBUTING.md) for guidelines.
 
-This project uses [Task](https://taskfile.dev/) as a unified command runner for all build, dev, and test commands. Run `task dev` to get started running the editor, run `task` to see the most common commands, or see the [Developer Guide](DeveloperGuide.md) for full details.
+This project uses [Task](https://taskfile.dev/) as a unified command runner for all build, dev, and test commands. Run `task dev` to get started running the editor, run `task` to see the most common commands, or see the [Developer Guide](docs/developer/DeveloperGuide.md) for full details.
 
-For adding translations, see the [Translation Guide](devGuide/HowToAddNewLanguage.md).
+For adding translations, see the [Translation Guide](docs/developer/HowToAddNewLanguage.md).
 
 ## License
 

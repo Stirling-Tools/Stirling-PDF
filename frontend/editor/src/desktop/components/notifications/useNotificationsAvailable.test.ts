@@ -77,3 +77,6 @@ describe("desktop notification availability", () => {
     expect(result.current).toBe(false);
   });
 });
+vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+  useLocalProcessingOnly: () => false,
+}));

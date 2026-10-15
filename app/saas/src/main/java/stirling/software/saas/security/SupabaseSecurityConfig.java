@@ -33,6 +33,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -54,6 +55,7 @@ import stirling.software.proprietary.security.service.ApiKeyAuthenticationServic
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.accountlink.DeviceCredentialAuthenticationFilter;
+import stirling.software.saas.controller.OpenAiAppsChallengeController;
 import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 
@@ -112,7 +114,10 @@ public class SupabaseSecurityConfig {
                         auth ->
                                 auth.requestMatchers(HttpMethod.OPTIONS, "/**")
                                         .permitAll()
-                                        .requestMatchers("/actuator/health", "/api/v1/config/**")
+                                        .requestMatchers(
+                                                "/actuator/health",
+                                                "/api/v1/config/**",
+                                                OpenAiAppsChallengeController.PATH)
                                         .permitAll()
                                         .requestMatchers("/api/v1/company-sso/**")
                                         .permitAll()
@@ -196,7 +201,11 @@ public class SupabaseSecurityConfig {
         }
         String jwks = issuer + "/.well-known/jwks.json";
         log.info("Configuring JWT decoder with JWKS: {}", jwks);
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwks).build();
+        NimbusJwtDecoder decoder =
+                NimbusJwtDecoder.withJwkSetUri(jwks)
+                        .jwsAlgorithm(SignatureAlgorithm.RS256)
+                        .jwsAlgorithm(SignatureAlgorithm.ES256)
+                        .build();
         // Defence-in-depth: signature verification already binds the token to this Supabase
         // project's JWKS, but enforcing iss/exp/aud explicitly catches tokens that smuggle
         // through (e.g. JWKS reuse across projects, clock-skew abuse, missing aud).

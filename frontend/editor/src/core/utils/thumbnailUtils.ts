@@ -11,6 +11,7 @@ import {
 } from "@app/utils/pdfiumPageRender";
 import { jpegExifOrientation } from "@app/utils/jpegOrientation";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -97,7 +98,7 @@ export function containsEncryptMarker(bytes: Uint8Array): boolean {
  * the head and the main one at the tail, so both windows have to be probed.
  * Heuristic: a false positive offers unlock on a file that did not need it, a
  * false negative leaves it unopenable. */
-async function looksEncryptedFromTrailer(file: File): Promise<boolean> {
+export async function looksEncryptedFromTrailer(file: File): Promise<boolean> {
   const tailStart = Math.max(0, file.size - ENCRYPT_PROBE_BYTES);
   const tail = await file.slice(tailStart).arrayBuffer();
   if (containsEncryptMarker(new Uint8Array(tail))) return true;
@@ -133,11 +134,12 @@ async function renderPdfThumbnailPdfium(
   scale: number,
   applyRotation: boolean,
   collectAllPagesMetadata: boolean,
+  password?: string,
 ): Promise<PdfiumRenderResult> {
   const m = await getPdfiumModule();
   let docPtr: number;
   try {
-    docPtr = await openRawDocumentSafe(data);
+    docPtr = await openRawDocumentSafe(data, password);
   } catch (error) {
     if (error instanceof PdfiumOpenError && error.code === FPDF_ERR_PASSWORD) {
       return {
@@ -192,11 +194,12 @@ async function renderPdfThumbnailPairPdfium(
   data: ArrayBuffer,
   scale: number,
   collectAllPagesMetadata: boolean,
+  password?: string,
 ): Promise<{ unrotated: PdfiumRenderResult; rotated: PdfiumRenderResult }> {
   const m = await getPdfiumModule();
   let docPtr: number;
   try {
-    docPtr = await openRawDocumentSafe(data);
+    docPtr = await openRawDocumentSafe(data, password);
   } catch (error) {
     if (error instanceof PdfiumOpenError && error.code === FPDF_ERR_PASSWORD) {
       const encrypted: PdfiumRenderResult = {
@@ -250,12 +253,14 @@ async function renderPdfThumbnailPairPdfium(
 async function generatePDFThumbnail(
   arrayBuffer: ArrayBuffer,
   scale: number,
+  password?: string,
 ): Promise<string> {
   const result = await renderPdfThumbnailPdfium(
     arrayBuffer,
     scale,
     true,
     false,
+    password,
   );
   if (result.isEncrypted) {
     return "";
@@ -417,13 +422,16 @@ function readJpegDimensions(
   return null;
 }
 
-/** Resize a known source into a thumbnail-sized box, longest side first. */
-function thumbnailResizeOptions(source: { width: number; height: number }): {
+/** Resize a known source to fit a `maxSize` box, longest side first, never
+ *  enlarging it. */
+function thumbnailResizeOptions(
+  source: { width: number; height: number },
+  maxSize: number,
+): {
   resizeWidth: number;
   resizeHeight: number;
 } {
-  const scale =
-    IMAGE_THUMBNAIL_MAX_SIZE / Math.max(source.width, source.height);
+  const scale = Math.min(1, maxSize / Math.max(source.width, source.height));
   return {
     resizeWidth: Math.max(1, Math.round(source.width * scale)),
     resizeHeight: Math.max(1, Math.round(source.height * scale)),
@@ -477,6 +485,31 @@ async function encodeThumbnailJpeg(bitmap: ImageBitmap): Promise<string> {
 }
 
 /**
+ * A JPEG data URL of the image with its longest side at most `maxSize` pixels,
+ * decoded at that size rather than at full resolution. Throws when the header
+ * gives no dimensions or the browser cannot decode the image.
+ */
+export async function generateImageThumbnail(
+  file: File,
+  maxSize: number,
+): Promise<string> {
+  const source = await readImageDimensions(file);
+  // Without a header ratio a width-only request would let an extreme portrait
+  // ask for a maxSize x tens-of-millions bitmap.
+  if (!source) throw new Error("image dimensions unavailable");
+  const bitmap = await createImageBitmap(file, {
+    ...thumbnailResizeOptions(source, maxSize),
+    resizeQuality: "high",
+    imageOrientation: "from-image",
+  });
+  try {
+    return await encodeThumbnailJpeg(bitmap);
+  } finally {
+    bitmap.close();
+  }
+}
+
+/**
  * Generate thumbnail for any file type - always returns a thumbnail (placeholder if needed)
  */
 export async function generateThumbnailForFile(file: File): Promise<string> {
@@ -492,21 +525,7 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
   // without intrinsic size, exotic codecs) falls back to the data URL.
   if (file.type.startsWith("image/")) {
     try {
-      const source = await readImageDimensions(file);
-      // Without a header ratio a width-only request would let an extreme
-      // portrait ask for a 320 x tens-of-millions bitmap, so unknown sizes take
-      // the data URL path below instead of decoding.
-      if (!source) throw new Error("image dimensions unavailable");
-      const bitmap = await createImageBitmap(file, {
-        ...thumbnailResizeOptions(source),
-        resizeQuality: "high",
-        imageOrientation: "from-image",
-      });
-      try {
-        return await encodeThumbnailJpeg(bitmap);
-      } finally {
-        bitmap.close();
-      }
+      return await generateImageThumbnail(file, IMAGE_THUMBNAIL_MAX_SIZE);
     } catch {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -526,14 +545,22 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
     const arrayBuffer = await chunk.arrayBuffer();
 
     try {
-      return await generatePDFThumbnail(arrayBuffer, scale);
+      return await generatePDFThumbnail(
+        arrayBuffer,
+        scale,
+        getPdfAccess(file)?.password,
+      );
     } catch {
       // PDFium needs the xref table at the end of the file, so the 2MB
       // chunk can fail to open for PDFs larger than that. Retry with the
       // full buffer before falling back to an empty thumbnail.
       try {
         const fullArrayBuffer = await getDocumentBytes(file);
-        return await generatePDFThumbnail(fullArrayBuffer, scale);
+        return await generatePDFThumbnail(
+          fullArrayBuffer,
+          scale,
+          getPdfAccess(file)?.password,
+        );
       } catch (error) {
         reportThumbnailFailure(file, error);
         return "";
@@ -568,7 +595,7 @@ export async function generateThumbnailWithMetadata(
     // Probe inside the try: an unreadable file must still resolve, or the
     // caller leaves the card with no metadata and a spinner that never stops.
     try {
-      if (await looksEncryptedFromTrailer(file)) {
+      if (!getPdfAccess(file) && (await looksEncryptedFromTrailer(file))) {
         return { thumbnail: "", pageCount: 1, isEncrypted: true };
       }
       const chunk = await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer();
@@ -577,6 +604,7 @@ export async function generateThumbnailWithMetadata(
         scale,
         applyRotation,
         false,
+        getPdfAccess(file)?.password,
       );
       if (result.isEncrypted) {
         return { thumbnail: "", pageCount: 1, isEncrypted: true };
@@ -602,6 +630,7 @@ export async function generateThumbnailWithMetadata(
       scale,
       applyRotation,
       true,
+      getPdfAccess(file)?.password,
     );
 
     if (result.isEncrypted) {
@@ -638,7 +667,11 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
   try {
     // Probe inside the try: an unreadable file must still resolve, or the
     // caller leaves the card with no metadata and a spinner that never stops.
-    if (isLarge && (await looksEncryptedFromTrailer(file))) {
+    if (
+      isLarge &&
+      !getPdfAccess(file) &&
+      (await looksEncryptedFromTrailer(file))
+    ) {
       const encrypted: ThumbnailWithMetadata = {
         thumbnail: "",
         pageCount: 1,
@@ -649,7 +682,12 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
     const buffer = isLarge
       ? await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer()
       : await getDocumentBytes(file);
-    const pair = await renderPdfThumbnailPairPdfium(buffer, scale, !isLarge);
+    const pair = await renderPdfThumbnailPairPdfium(
+      buffer,
+      scale,
+      !isLarge,
+      getPdfAccess(file)?.password,
+    );
 
     const toPublic = (r: PdfiumRenderResult): ThumbnailWithMetadata =>
       r.isEncrypted
