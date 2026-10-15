@@ -51,6 +51,18 @@ Android and iOS are always listed separately — a mobile viewport is not a mobi
 
 `coverage.expected` is the list the feature requires; `coverage.captured` is what actually ran. Anything expected but not captured is a gap, and a gap makes the report **incomplete**: the viewer shows an "Incomplete report" banner and the missing categories as chips, and the chat summary names them. A missing runner is reported as missing — never replaced with a browser proxy, and never quietly dropped from the scope.
 
+### Capture Tauri desktop and mobile
+
+Run the native walkthrough adapters in addition to Playwright web captures. Desktop captures must launch the actual Tauri application; desktop-mode Vite alone does not count. Android and iOS captures must run installed applications on recorded emulators/simulators or physical devices.
+
+The harness lives in `frontend/editor/tests/walkthrough/` (adapters per runtime, one scenario per proof, `wdio.desktop.conf.ts`, `capture-manifest.ts`); mechanics and the blocked-coverage contract are in `references/tauri-capture.md`.
+
+Reuse logical scenarios and fixtures, but keep runtime-specific launch, interaction, native-dialog capture, and cleanup in adapters. Assert the intended state before screenshots. Record source/build identity, runtime, platform, theme, direction, backend/native mock status, and capture outcome.
+
+Include native handoffs, cancellation/recovery, and relevant mobile keyboard/back/background behavior. Collect bounded performance evidence with separate pictures, emphasizing main-thread responsiveness and resource recovery.
+
+Missing native infrastructure must produce blocked coverage and a partial report. Never substitute browser captures for native evidence. Automation plugins, permissions, and endpoints must be excluded from normal production builds.
+
 ## Requirement: bounded performance evidence
 
 Every full walkthrough records lightweight performance evidence for representative critical interactions on each required runtime/platform: DOM growth and recovery, scoped React commits and render cost, available memory and CPU metrics, request/IPC activity, and relevant resource lifetimes. Use bounded sampling and short recording windows; collect deep CPU/allocation/heap profiles only when warranted. Generate separate performance pictures showing the interaction timeline, measured work attribution, rendering activity and resource recovery. Preserve raw measurements, identify instrumentation overhead and unavailable metrics, and never infer a leak or hotspot solely from screenshots, counters or rerender counts.

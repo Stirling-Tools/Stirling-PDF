@@ -101,7 +101,7 @@ pub fn run() {
     std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
   }
 
-  tauri::Builder::default()
+  let builder = tauri::Builder::default()
     .plugin(
       // Dropping a file outside a dropzone makes WebKit navigate the webview to
       // that file, killing the app UI and its close handler (window becomes
@@ -115,8 +115,12 @@ pub fn run() {
           allowed
         })
         .build()
-    )
-    .plugin(
+    );
+  // Embedded WebDriver server for the ui-walkthrough desktop captures.
+  // Feature-gated: normal builds never register the automation endpoint.
+  #[cfg(feature = "ui-walkthrough")]
+  let builder = builder.plugin(tauri_plugin_wdio_webdriver::init());
+  builder.plugin(
       tauri_plugin_log::Builder::new()
         .level(log::LevelFilter::Info)
         .build()

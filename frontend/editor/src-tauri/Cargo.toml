@@ -17,6 +17,11 @@ warnings = "deny"
 name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+# Test-only WebDriver server for the ui-walkthrough desktop captures.
+# Normal builds omit it entirely; capture builds opt in explicitly.
+ui-walkthrough = ["dep:tauri-plugin-wdio-webdriver"]
+
 [build-dependencies]
 tauri-build = { version = "2.5.3", features = [] }
 
@@ -37,6 +42,7 @@ tauri-plugin-deep-link = "2.4.6"
 tauri-plugin-notification = "2.3.3"
 tauri-plugin-updater = "2"
 tauri-plugin-window-state = "2.2.1"
+tauri-plugin-wdio-webdriver = { version = "1", optional = true }
 keyring = { version = "3.6.1", features = ["apple-native", "windows-native"] }
 tokio = { version = "1.50", features = ["time", "sync"] }
 notify = "8.2"

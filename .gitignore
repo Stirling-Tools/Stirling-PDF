@@ -318,4 +318,8 @@ docs/type3/signatures/
 
 # Local screenshot artifacts from *-screenshots.spec.ts
 frontend/editor/screenshots/
+
+# Local ui-walkthrough native captures and manifests (never committed)
+frontend/editor/tests/walkthrough/captures/
+frontend/editor/tests/walkthrough/manifest.json
 frontend/editor/src-tauri/libs/.variant

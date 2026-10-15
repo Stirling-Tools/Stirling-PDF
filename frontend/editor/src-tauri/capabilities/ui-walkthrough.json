@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "ui-walkthrough",
+  "description": "Test-only automation surface for ui-walkthrough desktop captures. Permissions stay empty so normal builds never resolve automation ACLs. A capture build adds wdio-webdriver:default here (see references/tauri-capture.md) and builds with --features ui-walkthrough.",
+  "windows": ["main", "main-*"],
+  "permissions": []
+}

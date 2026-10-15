@@ -227,11 +227,19 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     }
     $("counter").textContent = (state.i + 1) + " / " + views.length;
     $("view-title").textContent = v.title || v.id;
-    $("view-meta").textContent = [v.viewport, state.theme + " mode"].filter(Boolean).join("  ·  ");
+    $("view-meta").textContent = [v.platform, v.runner, v.viewport, state.theme + " mode"].filter(Boolean).join("  ·  ");
     var notes = $("view-notes"); notes.innerHTML = "";
     var fs = findingsForView(v.id);
     (v.notes || []).forEach(function (n) {
       var li = document.createElement("li"); li.textContent = "· " + n; notes.appendChild(li);
+    });
+    (v.captures || []).forEach(function (c) {
+      var li = document.createElement("li");
+      li.textContent = "· [" + (c.runtime || "?") + " / " + (c.platform || "?") +
+        " / " + (c.theme || "?") + "] " + (c.status || "missing") +
+        (c.status === "captured" ? "" : " — " + (c.reason || "no reason recorded")) +
+        (c.image ? " (" + c.image + ")" : "");
+      notes.appendChild(li);
     });
     fs.forEach(function (f) {
       var li = document.createElement("li"); li.className = "finding";
