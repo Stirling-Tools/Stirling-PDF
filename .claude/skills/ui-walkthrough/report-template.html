@@ -218,6 +218,14 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
 
   function findingsForView(id) { return findingsByView[id] || []; }
 
+  // Platforms the change does not touch are named once rather than counted as
+  // gaps, so a change that only affects the web build is not nagged for shells
+  // it cannot run — and still says which surfaces it left unchecked.
+  function outOfScope(s) {
+    var rest = s.notInScope || [];
+    return rest.length ? " Not in scope for this change: " + rest.join(", ") + "." : "";
+  }
+
   // The completion banner is always visible, so a partial report can never
   // present itself as full coverage on initial load.
   function renderBanner() {
@@ -234,15 +242,17 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     } else if (s.complete) {
       ok = true;
       msg = "Complete report: " + s.verified.length + " platform(s) verified"
-        + (s.mode ? " (" + s.mode + " mode)" : "") + ".";
+        + (s.mode ? " (" + s.mode + " mode)" : "") + "." + outOfScope(s);
     } else {
       var parts = [];
       (s.gaps || []).forEach(function (g) { parts.push("no capture for " + g); });
       (s.missingPerformance || []).forEach(function (g) { parts.push("no performance evidence for " + g); });
       (s.missingLighthouse || []).forEach(function (g) { parts.push("no Lighthouse run for " + g); });
       (s.themeGaps || []).forEach(function (g) { parts.push("missing theme capture " + g); });
-      msg = "Incomplete report (" + text(s.status) + (s.mode ? ", " + s.mode + " mode" : "") + "): "
-        + (parts.length ? parts.join("; ") + "." : "see Findings for details.");
+      // `status` is the derived verdict; `mode` is what the author declared.
+      // Showing both reads as "partial, partial mode", so the mode wins.
+      msg = "Incomplete report (" + (s.mode ? text(s.mode) + " mode" : text(s.status)) + "): "
+        + (parts.length ? parts.join("; ") + "." : "see Findings for details.") + outOfScope(s);
     }
     el.textContent = msg;
     el.className = "banner " + (ok ? "ok" : "warn");
@@ -488,7 +498,7 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     }
     var s = D.coverageSummary || null;
     renderRollUp(pane);
-    if (s && !s.complete) {
+    if (s && (!s.complete || (s.notInScope || []).length)) {
       var note = document.createElement("div");
       note.className = "empty";
       note.textContent = $("coverage-banner").textContent;

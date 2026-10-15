@@ -256,6 +256,98 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(len(report.DATA_RE.findall(html)), 1)
 
 
+class CoverageScopeTests(unittest.TestCase):
+    """`coverage.expected` is the change's scope, not the whole platform matrix."""
+
+    def web_only(self, mode="partial"):
+        return manifest(
+            coverage={"mode": mode, "expected": ["desktop-web", "mobile-web"]},
+            views=[
+                {
+                    "id": "01_desktop",
+                    "title": "Desktop",
+                    "platform": "desktop-web",
+                    "light": "a_light.png",
+                    "dark": "a_dark.png",
+                },
+                {
+                    "id": "02_mobile",
+                    "title": "Mobile",
+                    "platform": "mobile-web",
+                    "light": "b_light.png",
+                    "dark": "b_dark.png",
+                },
+            ],
+            performance={
+                "interactions": [
+                    {
+                        "id": "desktop-cycle",
+                        "name": "Cycle",
+                        "platform": "desktop-web",
+                        "window": "1600x900",
+                        "provenance": {"build": "vite dev"},
+                    },
+                    {
+                        "id": "mobile-cycle",
+                        "name": "Cycle",
+                        "platform": "mobile-web",
+                        "window": "390x844",
+                        "provenance": {"build": "vite dev"},
+                    },
+                ]
+            },
+            lighthouse={
+                "runs": [
+                    {
+                        "route": "/editor",
+                        "formFactor": "desktop",
+                        "mode": "unspecified build",
+                        "platform": "desktop-web",
+                        "environment": {"lighthouse": "12.8.2"},
+                        "preview": "desktop-preview.jpg",
+                    },
+                    {
+                        "route": "/editor",
+                        "formFactor": "mobile",
+                        "mode": "unspecified build",
+                        "platform": "mobile-web",
+                        "environment": {"lighthouse": "12.8.2"},
+                        "preview": "mobile-preview.jpg",
+                    },
+                ]
+            },
+        )
+
+    def test_platforms_outside_the_scope_are_named_not_counted(self):
+        summary = report.coverage_summary(self.web_only())
+        self.assertEqual(summary["gaps"], [])
+        self.assertEqual(
+            summary["notInScope"],
+            ["windows-tauri", "macos-tauri", "linux-tauri", "android-tauri", "ios-tauri"],
+        )
+
+    def test_a_web_only_change_can_be_complete(self):
+        summary = report.coverage_summary(self.web_only(mode="full"))
+        self.assertEqual(summary["status"], "complete")
+        self.assertEqual(report.errors(report.validate(self.web_only(mode="full"))), [])
+
+    def test_a_report_with_nothing_in_scope_is_never_complete(self):
+        data = manifest(coverage={"mode": "full"}, views=[])
+        summary = report.coverage_summary(data)
+        self.assertEqual(summary["notInScope"], [])
+        self.assertEqual(summary["status"], "incomplete")
+        self.assertIn("coverage-expected-missing", codes(report.validate(data)))
+
+    def test_the_scope_is_baked_into_the_built_report(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            pngs(tmp)
+            out = Path(tmp) / "walkthrough.html"
+            report.build(TEMPLATE, self.web_only(), out, base=Path(tmp), quality=80)
+            html = out.read_text(encoding="utf-8")
+        self.assertIn('"notInScope":["windows-tauri","macos-tauri","linux-tauri","android-tauri","ios-tauri"]', html)
+        self.assertIn("outOfScope", html)
+
+
 class SelfTestTests(unittest.TestCase):
     def built(self, tmp):
         pngs(tmp)

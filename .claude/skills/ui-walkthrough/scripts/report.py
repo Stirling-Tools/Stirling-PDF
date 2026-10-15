@@ -224,15 +224,21 @@ def coverage_summary(manifest: dict) -> dict:
     themes = _theme_gaps(manifest, expected or verified)
     missing_perf = [item for item in expected if item not in perf]
     missing_lighthouse = [item for item in expected if item in WEB_PLATFORMS and item not in lighthouse]
+    # `expected` is the change's own scope: a web-only change lists the web
+    # platforms and nothing else. The platforms left out are named once in the
+    # banner rather than counted as gaps, so a report cannot quietly pretend a
+    # shell it never touched did not need checking.
+    not_in_scope = [item for item in REQUIRED_PLATFORMS if expected and item not in expected]
     if mode not in ("full", "partial"):
         status = "incomplete"
-    elif gaps or missing_perf or missing_lighthouse or themes:
-        status = "partial" if mode == "partial" else "incomplete"
+    elif not expected or gaps or missing_perf or missing_lighthouse or themes:
+        status = "partial" if mode == "partial" and expected else "incomplete"
     else:
         status = "complete"
     return {
         "mode": mode,
         "expected": expected,
+        "notInScope": not_in_scope,
         "declared": declared,
         "verified": verified,
         "gaps": gaps,
@@ -343,6 +349,12 @@ def validate(manifest: object, *, source: str = "") -> list[Note]:
         note("warning", "coverage-missing", "no coverage matrix; nothing can be complete")
     elif summary["mode"] not in ("full", "partial"):
         note("error", "coverage-mode-missing", "'coverage.mode' must be 'full' or 'partial'")
+    elif not summary["expected"]:
+        note(
+            "warning",
+            "coverage-expected-missing",
+            "no platform is listed in 'coverage.expected', so nothing is in scope and the report can never be complete",
+        )
     for gap in summary["gaps"]:
         note(
             "error" if summary["mode"] == "full" else "warning",
