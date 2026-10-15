@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
 import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -863,5 +864,13 @@ class AuditServiceTest {
     /** Simple controller used as join-point target. */
     public static class SampleController {
         public void sample() {}
+    }
+
+    @Test
+    void responseStatusReadsAnErrorResponseEntity() {
+        assertThat(service.responseStatus(ResponseEntity.status(401).body("no"))).isEqualTo(401);
+        assertThat(service.responseStatus(ResponseEntity.ok("yes"))).isEqualTo(200);
+        assertThat(service.responseStatus("a plain return value")).isNull();
+        assertThat(service.responseStatus(null)).isNull();
     }
 }

@@ -1,9 +1,13 @@
 package stirling.software.proprietary.service;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -54,20 +58,39 @@ public class PortalAuditReadService {
                         .getContent());
     }
 
+    /** One batch of the entire requested time window, independent of the recent-row cap. */
+    public Slice<PortalAuditEventRow> serverEventsBetween(
+            Instant since, Instant until, Pageable page) {
+        return auditRepository
+                .findInfraEventsBetween(NOISE_TYPES, since, until, page)
+                .map(PortalAuditReadService::toRow);
+    }
+
+    /** One team-scoped batch; an empty scope never falls back to a server-wide scan. */
+    public Slice<PortalAuditEventRow> scopedEventsBetween(
+            List<String> principals, Instant since, Instant until, Pageable page) {
+        if (principals.isEmpty()) {
+            return new SliceImpl<>(List.of(), page, false);
+        }
+        return auditRepository
+                .findScopedInfraEventsBetween(NOISE_TYPES, principals, since, until, page)
+                .map(PortalAuditReadService::toRow);
+    }
+
     private static PageRequest recentPage() {
         return PageRequest.of(0, SCAN_LIMIT, Sort.by(Sort.Direction.DESC, "timestamp"));
     }
 
     private static List<PortalAuditEventRow> toRows(List<PersistentAuditEvent> events) {
-        return events.stream()
-                .map(
-                        e ->
-                                new PortalAuditEventRow(
-                                        e.getId() == null ? 0L : e.getId(),
-                                        e.getPrincipal(),
-                                        e.getType(),
-                                        e.getData(),
-                                        e.getTimestamp()))
-                .toList();
+        return events.stream().map(PortalAuditReadService::toRow).toList();
+    }
+
+    private static PortalAuditEventRow toRow(PersistentAuditEvent event) {
+        return new PortalAuditEventRow(
+                event.getId() == null ? 0L : event.getId(),
+                event.getPrincipal(),
+                event.getType(),
+                event.getData(),
+                event.getTimestamp());
     }
 }
