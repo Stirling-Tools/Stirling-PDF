@@ -185,8 +185,8 @@ export default function Login() {
   const isUserPassAllowed = login.isUserPassAllowed;
   const isSsoOnlyMode = !login.isUserPassAllowed;
   // Visitors who can only sign in with a password: the admin of a fresh
-  // install (default credentials) and a local account just created or changed
-  // (messageType). Redirecting them to the IdP strands them there.
+  // install (default credentials) and a local account just created from an
+  // invite (messageType). Redirecting them to the IdP strands them there.
   const awaitsPasswordSignIn =
     isUserPassAllowed && (isFirstTimeSetup || searchParams.has("messageType"));
 

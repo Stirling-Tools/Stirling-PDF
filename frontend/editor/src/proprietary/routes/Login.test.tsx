@@ -959,6 +959,7 @@ describe("Login", () => {
       renderAt("/login?messageType=accountCreated");
 
       await waitFor(() => {
+        expect(screen.getByText(/Authentik/)).toBeInTheDocument();
         expect(
           screen.getByText(
             "Account created successfully! You can now sign in.",
