@@ -37,6 +37,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.mcp.McpAnalytics;
 import stirling.software.proprietary.mcp.McpServerController;
 import stirling.software.proprietary.mcp.McpWidget;
 import stirling.software.proprietary.mcp.oauth.McpClientMetadataFetcher;
@@ -324,6 +325,7 @@ class McpBuiltinOAuthIntegrationTest {
         McpSecurityConfig.class,
         McpServerController.class,
         McpWidget.class,
+        McpAnalytics.class,
         DescribeOperationTool.class,
         StirlingConvertTool.class,
         StirlingPagesTool.class,
