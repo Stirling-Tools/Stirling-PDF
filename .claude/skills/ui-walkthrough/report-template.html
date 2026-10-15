@@ -113,6 +113,13 @@
   .card .head { display: flex; gap: 8px; align-items: center; }
   .card a { color: var(--accent); text-decoration: none; cursor: pointer; }
   .hide { display: none !important; }
+  .banner { padding: 8px 28px; font-size: 13px; }
+  .banner.ok { background: #e6f4ea; color: #137333; }
+  .banner.warn { background: #fef7e0; color: #7a4a00; }
+  html[data-theme="dark"] .banner.ok { background: #0f2e1d; color: #7fd79a; }
+  html[data-theme="dark"] .banner.warn { background: #3a2c00; color: #f2c14e; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 12.5px; }
+  .kv dt { color: var(--muted); } .kv dd { margin: 0; overflow-wrap: anywhere; }
   kbd { font: 11px ui-monospace, monospace; background: var(--panel-2); border: 1px solid var(--border);
         border-radius: 4px; padding: 1px 5px; }
 </style>
@@ -126,6 +133,8 @@
   <div class="spacer"></div>
   <div class="tabs">
     <button class="tab active" data-tab="viewer">Walkthrough</button>
+    <button class="tab" data-tab="perf">Performance</button>
+    <button class="tab" data-tab="lighthouse">Lighthouse</button>
     <button class="tab" data-tab="summary">Findings</button>
   </div>
   <div class="counter" id="counter"></div>
@@ -135,6 +144,7 @@
     <span class="lbl" id="lbl-dark">Dark</span>
   </label>
 </header>
+<div class="banner warn" id="coverage-banner"></div>
 
 <main id="viewer-pane">
   <aside class="rail" id="rail"></aside>
@@ -153,6 +163,10 @@
   </section>
 </main>
 
+<section class="summary hide" id="perf-pane"></section>
+
+<section class="summary hide" id="lighthouse-pane"></section>
+
 <section class="summary hide" id="summary-pane"></section>
 
 <script id="data">
@@ -160,12 +174,17 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
 </script>
 <script>
 (function () {
-  var D = window.__WALKTHROUGH__ || { views: [], findings: { visual: [], ux: [] } };
+  var D = window.__WALKTHROUGH__ || { views: [], findings: {} };
   var views = D.views || [];
   var state = { i: 0, theme: localStorage.getItem("ui-wt-theme") || "light", tab: "viewer" };
 
   var $ = function (id) { return document.getElementById(id); };
+  function text(v) { return (v === null || v === undefined) ? "" : String(v); }
   function sevClass(s) { return s === "high" ? "high" : s === "med" || s === "medium" ? "med" : "low"; }
+  function imageSource(value) {
+    return (typeof value === "string" &&
+      /^data:image\/(png|jpeg|jpg|gif|webp);base64,/.test(value)) ? value : null;
+  }
 
   function applyChrome() {
     document.documentElement.setAttribute("data-theme", state.theme);
@@ -174,37 +193,114 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     $("lbl-dark").classList.toggle("on", state.theme === "dark");
   }
 
-  function srcFor(v) { return v[state.theme] || null; }
+  function srcFor(v) { return imageSource(v[state.theme]); }
+  function thumbFor(v) { return imageSource(v["thumb_" + state.theme]) || srcFor(v); }
 
   var GROUPS = [["visual", "Visual & consistency"], ["ux", "UX & ease of use"],
     ["behavior", "Behaviour"], ["a11y", "Accessibility"], ["perf", "Performance"],
     ["native", "Native / Tauri"]];
 
-  function findingsForView(id) {
-    var all = [];
-    GROUPS.forEach(function (g) { all = all.concat((D.findings && D.findings[g[0]]) || []); });
-    return all.filter(function (f) { return f.view === id; });
+  // Findings are indexed by view once; the rail and the summary share the index.
+  var findingsByView = {};
+  GROUPS.forEach(function (g) {
+    ((D.findings && D.findings[g[0]]) || []).forEach(function (f) {
+      if (f && f.view) { (findingsByView[f.view] = findingsByView[f.view] || []).push(f); }
+    });
+  });
+
+  function findingsForView(id) { return findingsByView[id] || []; }
+
+  // The completion banner is always visible, so a partial report can never
+  // present itself as full coverage on initial load.
+  function renderBanner() {
+    var el = $("coverage-banner");
+    var s = D.coverageSummary || null;
+    var msg, ok = false;
+    if (!s) {
+      var cov = D.coverage || {};
+      var gaps = (cov.expected || []).filter(function (id) {
+        return (cov.captured || []).indexOf(id) === -1;
+      });
+      msg = gaps.length ? "Incomplete report: no runner for " + gaps.join(", ") + "."
+        : "Coverage status not recorded: rebuilt reports carry coverageSummary.";
+    } else if (s.complete) {
+      ok = true;
+      msg = "Complete report: " + s.verified.length + " platform(s) verified"
+        + (s.mode ? " (" + s.mode + " mode)" : "") + ".";
+    } else {
+      var parts = [];
+      (s.gaps || []).forEach(function (g) { parts.push("no capture for " + g); });
+      (s.missingPerformance || []).forEach(function (g) { parts.push("no performance evidence for " + g); });
+      (s.missingLighthouse || []).forEach(function (g) { parts.push("no Lighthouse run for " + g); });
+      (s.themeGaps || []).forEach(function (g) { parts.push("missing theme capture " + g); });
+      msg = "Incomplete report (" + text(s.status) + (s.mode ? ", " + s.mode + " mode" : "") + "): "
+        + (parts.length ? parts.join("; ") + "." : "see Findings for details.");
+    }
+    el.textContent = msg;
+    el.className = "banner " + (ok ? "ok" : "warn");
   }
 
-  function renderRail() {
+  // The rail is built once; later renders only retarget images (on a theme
+  // change) and flip the active class. Findings per view come from the index.
+  var railItems = [];
+  function worstColor(fs) {
+    if (fs.some(function (f) { return sevClass(f.severity) === "high"; })) return "var(--hi)";
+    if (fs.some(function (f) { return sevClass(f.severity) === "med"; })) return "var(--med)";
+    return fs.length ? "var(--low)" : "transparent";
+  }
+  function buildRail() {
     var rail = $("rail");
-    rail.innerHTML = "";
-    if (!views.length) { rail.innerHTML = '<div class="group-label">No views captured</div>'; return; }
+    while (rail.firstChild) rail.removeChild(rail.firstChild);
+    railItems = [];
+    if (!views.length) {
+      var label = document.createElement("div");
+      label.className = "group-label";
+      label.textContent = "No views captured";
+      rail.appendChild(label);
+      return;
+    }
     views.forEach(function (v, idx) {
-      var fs = findingsForView(v.id);
-      var worst = fs.some(function (f){return sevClass(f.severity)==="high";}) ? "var(--hi)"
-                : fs.some(function (f){return sevClass(f.severity)==="med";}) ? "var(--med)"
-                : fs.length ? "var(--low)" : "transparent";
       var el = document.createElement("div");
-      el.className = "thumb" + (idx === state.i ? " active" : "");
-      var thumbSrc = srcFor(v);
-      el.innerHTML = (thumbSrc ? '<img src="' + thumbSrc + '" alt="" />'
-          : '<span class="badge">no ' + state.theme + '</span>') +
-        '<div><div class="t">' + (v.title || v.id) + '</div>' +
-        '<div class="badge">' + (v.viewport || "") + '</div></div>' +
-        '<span class="dot" style="background:' + worst + '"></span>';
+      el.className = "thumb";
+      var img = document.createElement("img");
+      img.alt = "";
+      var gap = document.createElement("span");
+      gap.className = "badge";
+      var wrap = document.createElement("div");
+      var t = document.createElement("div");
+      t.className = "t";
+      var badge = document.createElement("div");
+      badge.className = "badge";
+      wrap.appendChild(t); wrap.appendChild(badge);
+      var dot = document.createElement("span");
+      dot.className = "dot";
+      el.appendChild(img); el.appendChild(gap); el.appendChild(wrap); el.appendChild(dot);
       el.onclick = function () { state.i = idx; render(); };
       rail.appendChild(el);
+      railItems.push({ root: el, img: img, gap: gap, title: t, badge: badge, dot: dot });
+    });
+    refreshRail(true);
+  }
+  function refreshRail(withImages) {
+    views.forEach(function (v, idx) {
+      var r = railItems[idx];
+      if (!r) return;
+      r.root.classList.toggle("active", idx === state.i);
+      if (withImages) {
+        var src = thumbFor(v);
+        if (src) {
+          r.img.style.display = "";
+          r.img.src = src;
+          r.gap.style.display = "none";
+        } else {
+          r.img.style.display = "none";
+          r.gap.style.display = "";
+          r.gap.textContent = "no " + state.theme;
+        }
+        r.title.textContent = v.title || v.id;
+        r.badge.textContent = [v.viewport, v.platform].filter(Boolean).join("  ·  ");
+        r.dot.style.background = worstColor(findingsForView(v.id));
+      }
     });
   }
 
@@ -227,54 +323,256 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     }
     $("counter").textContent = (state.i + 1) + " / " + views.length;
     $("view-title").textContent = v.title || v.id;
-    $("view-meta").textContent = [v.viewport, state.theme + " mode"].filter(Boolean).join("  ·  ");
-    var notes = $("view-notes"); notes.innerHTML = "";
+    $("view-meta").textContent = [v.viewport, state.theme + " mode", v.platform, v.runner]
+      .filter(Boolean).join("  ·  ");
+    var notes = $("view-notes");
+    while (notes.firstChild) notes.removeChild(notes.firstChild);
     var fs = findingsForView(v.id);
     (v.notes || []).forEach(function (n) {
-      var li = document.createElement("li"); li.textContent = "· " + n; notes.appendChild(li);
+      var li = document.createElement("li"); li.textContent = "· " + text(n); notes.appendChild(li);
     });
     fs.forEach(function (f) {
       var li = document.createElement("li"); li.className = "finding";
-      li.innerHTML = '<span class="sev ' + sevClass(f.severity) + '">' + (f.severity || "note") + '</span>' +
-        '<span><b>' + (f.title || "") + '</b> — ' + (f.detail || "") +
-        (f.fix ? ' <span class="fix"><b>Fix:</b> ' + f.fix + '</span>' : '') + '</span>';
+      var sev = document.createElement("span");
+      sev.className = "sev " + sevClass(f.severity);
+      sev.textContent = f.severity || "note";
+      var body = document.createElement("span");
+      var title = document.createElement("b");
+      title.textContent = f.title || "";
+      body.appendChild(title);
+      body.appendChild(document.createTextNode(" — " + text(f.detail)));
+      if (f.fix) {
+        var fix = document.createElement("span");
+        fix.className = "fix";
+        var fixLabel = document.createElement("b");
+        fixLabel.textContent = "Fix: ";
+        fix.appendChild(fixLabel);
+        fix.appendChild(document.createTextNode(text(f.fix)));
+        body.appendChild(document.createTextNode(" "));
+        body.appendChild(fix);
+      }
+      li.appendChild(sev); li.appendChild(body);
       notes.appendChild(li);
     });
     $("prev").disabled = state.i === 0;
     $("next").disabled = state.i === views.length - 1;
-    renderRail();
+    refreshRail(false);
+  }
+
+  function jumpButton(viewId) {
+    var b = document.createElement("button");
+    b.className = "tab";
+    b.textContent = viewId;
+    b.onclick = function () {
+      var idx = views.findIndex(function (v) { return v.id === viewId; });
+      if (idx >= 0) { state.i = idx; setTab("viewer"); }
+    };
+    return b;
+  }
+
+  function findingCard(f) {
+    var card = document.createElement("div");
+    card.className = "card";
+    var head = document.createElement("div");
+    head.className = "head";
+    var sev = document.createElement("span");
+    sev.className = "sev " + sevClass(f.severity);
+    sev.textContent = f.severity || "note";
+    var title = document.createElement("b");
+    title.textContent = f.title || "";
+    head.appendChild(sev); head.appendChild(title);
+    if (f.view) { head.appendChild(document.createTextNode(" ")); head.appendChild(jumpButton(f.view)); }
+    card.appendChild(head);
+    var detail = document.createElement("div");
+    detail.style.marginTop = "6px";
+    detail.textContent = text(f.detail);
+    card.appendChild(detail);
+    if (f.fix) {
+      var fixWrap = document.createElement("div");
+      fixWrap.className = "finding";
+      fixWrap.style.marginTop = "6px";
+      var fix = document.createElement("span");
+      fix.className = "fix";
+      var fixLabel = document.createElement("b");
+      fixLabel.textContent = "Fix: ";
+      fix.appendChild(fixLabel);
+      fix.appendChild(document.createTextNode(text(f.fix)));
+      fixWrap.appendChild(fix);
+      card.appendChild(fixWrap);
+    }
+    return card;
   }
 
   function renderSummary() {
     var pane = $("summary-pane");
+    while (pane.firstChild) pane.removeChild(pane.firstChild);
     function block(title, arr) {
-      var h = '<h2>' + title + ' (' + arr.length + ')</h2>';
-      if (!arr.length) return h + '<div class="empty">None found.</div>';
-      return h + arr.map(function (f) {
-        return '<div class="card"><div class="head">' +
-          '<span class="sev ' + sevClass(f.severity) + '">' + (f.severity || "note") + '</span>' +
-          '<b>' + (f.title || "") + '</b>' +
-          (f.view ? ' <a data-jump="' + f.view + '">' + f.view + '</a>' : '') + '</div>' +
-          '<div style="margin-top:6px">' + (f.detail || "") + '</div>' +
-          (f.fix ? '<div class="finding" style="margin-top:6px"><span class="fix"><b>Fix:</b> ' + f.fix + '</span></div>' : '') +
-          '</div>';
-      }).join("");
+      var h = document.createElement("h2");
+      h.textContent = title + " (" + arr.length + ")";
+      pane.appendChild(h);
+      if (!arr.length) {
+        var empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "None found.";
+        pane.appendChild(empty);
+        return;
+      }
+      arr.forEach(function (f) { pane.appendChild(findingCard(f)); });
     }
-    var cov = D.coverage || {};
-    var gaps = (cov.expected || []).filter(function (id) {
-      return (cov.captured || []).indexOf(id) === -1;
+    var s = D.coverageSummary || null;
+    if (s && !s.complete) {
+      var note = document.createElement("div");
+      note.className = "empty";
+      note.textContent = $("coverage-banner").textContent;
+      pane.appendChild(note);
+    }
+    GROUPS.map(function (g) {
+      block(g[1], (D.findings && D.findings[g[0]]) || []);
     });
-    pane.innerHTML = (gaps.length ? '<div class="empty">Incomplete report: no runner for ' +
-        gaps.join(", ") + '.</div>' : "") +
-      GROUPS.map(function (g) {
-        return block(g[1], (D.findings && D.findings[g[0]]) || []);
-      }).join("");
-    pane.querySelectorAll("[data-jump]").forEach(function (a) {
-      a.onclick = function () {
-        var id = a.getAttribute("data-jump");
-        var idx = views.findIndex(function (v) { return v.id === id; });
-        if (idx >= 0) { state.i = idx; setTab("viewer"); }
-      };
+  }
+
+  function metricList(parent, metrics) {
+    var dl = document.createElement("dl");
+    dl.className = "kv";
+    Object.keys(metrics || {}).sort().forEach(function (k) {
+      var v = metrics[k];
+      var dt = document.createElement("dt");
+      dt.textContent = k;
+      var dd = document.createElement("dd");
+      if (v !== null && typeof v === "object") {
+        dd.textContent = JSON.stringify(v);
+      } else {
+        dd.textContent = text(v);
+      }
+      dl.appendChild(dt); dl.appendChild(dd);
+    });
+    parent.appendChild(dl);
+  }
+
+  function evidenceImage(parent, label, ref) {
+    var src = imageSource(ref);
+    if (label) {
+      var cap = document.createElement("div");
+      cap.className = "empty";
+      cap.textContent = label;
+      parent.appendChild(cap);
+    }
+    if (src) {
+      var img = document.createElement("img");
+      img.src = src;
+      img.alt = label || "evidence";
+      img.style.maxWidth = "100%";
+      parent.appendChild(img);
+    } else if (ref) {
+      var gap = document.createElement("div");
+      gap.className = "empty";
+      gap.textContent = "Picture referenced but not embedded: " + text(ref);
+      parent.appendChild(gap);
+    }
+  }
+
+  function renderPerf() {
+    var pane = $("perf-pane");
+    while (pane.firstChild) pane.removeChild(pane.firstChild);
+    var runs = ((D.performance && D.performance.interactions) || []);
+    var h = document.createElement("h2");
+    h.textContent = "Performance (" + runs.length + ")";
+    pane.appendChild(h);
+    if (!runs.length) {
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No performance interactions recorded.";
+      pane.appendChild(empty);
+      return;
+    }
+    runs.forEach(function (run) {
+      var card = document.createElement("div");
+      card.className = "card";
+      var head = document.createElement("div");
+      head.className = "head";
+      var title = document.createElement("b");
+      title.textContent = text(run.name || run.id);
+      head.appendChild(title);
+      card.appendChild(head);
+      var meta = document.createElement("div");
+      meta.className = "empty";
+      meta.textContent = [run.platform, run.window].filter(Boolean).join("  ·  ");
+      card.appendChild(meta);
+      var prov = run.provenance || {};
+      var keys = ["instrumentation", "build", "fixture", "input", "gesture", "profile"];
+      var shown = {};
+      keys.forEach(function (k) { if (prov[k] !== undefined) shown[k] = prov[k]; });
+      if (Object.keys(shown).length) metricList(card, shown);
+      var metrics = run.metrics || {};
+      var rest = {};
+      Object.keys(metrics).forEach(function (k) { if (k !== "unavailable") rest[k] = metrics[k]; });
+      if (Object.keys(rest).length) metricList(card, rest);
+      (metrics.unavailable || []).forEach(function (name) {
+        var u = document.createElement("div");
+        u.className = "empty";
+        u.textContent = "Unavailable: " + text(name);
+        card.appendChild(u);
+      });
+      var pictures = run.pictures || {};
+      ["timeline", "breakdown", "rendering", "recovery"].forEach(function (key) {
+        if (pictures[key] !== undefined) evidenceImage(card, key, pictures[key]);
+      });
+      if (run.artifacts !== undefined) {
+        var art = document.createElement("div");
+        art.className = "empty";
+        art.textContent = "Raw artifacts: " + text(
+          Array.isArray(run.artifacts) ? run.artifacts.join(", ") : run.artifacts);
+        card.appendChild(art);
+      }
+      pane.appendChild(card);
+    });
+  }
+
+  function renderLighthouse() {
+    var pane = $("lighthouse-pane");
+    while (pane.firstChild) pane.removeChild(pane.firstChild);
+    var runs = ((D.lighthouse && D.lighthouse.runs) || []);
+    var h = document.createElement("h2");
+    h.textContent = "Lighthouse (" + runs.length + ")";
+    pane.appendChild(h);
+    if (!runs.length) {
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No Lighthouse runs recorded.";
+      pane.appendChild(empty);
+      return;
+    }
+    runs.forEach(function (run) {
+      var card = document.createElement("div");
+      card.className = "card";
+      var head = document.createElement("div");
+      head.className = "head";
+      var title = document.createElement("b");
+      title.textContent = [run.route, run.formFactor, run.mode].filter(Boolean).join(" · ");
+      head.appendChild(title);
+      card.appendChild(head);
+      var env = document.createElement("div");
+      env.className = "empty";
+      var e = run.environment || {};
+      env.textContent = [run.platform, e.lighthouse, e.chrome, e.throttling, e.network]
+        .filter(Boolean).join("  ·  ");
+      card.appendChild(env);
+      if (run.scores && typeof run.scores === "object") metricList(card, run.scores);
+      (run.diagnostics || []).forEach(function (d) {
+        var line = document.createElement("div");
+        line.className = "empty";
+        line.textContent = typeof d === "object" ? JSON.stringify(d) : text(d);
+        card.appendChild(line);
+      });
+      if (run.preview !== undefined) evidenceImage(card, "preview", run.preview);
+      if (run.artifacts !== undefined) {
+        var art = document.createElement("div");
+        art.className = "empty";
+        art.textContent = "Raw artifacts: " + text(
+          Array.isArray(run.artifacts) ? run.artifacts.join(", ") : run.artifacts);
+        card.appendChild(art);
+      }
+      pane.appendChild(card);
     });
   }
 
@@ -282,17 +580,24 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     state.tab = t;
     document.querySelectorAll(".tab").forEach(function (b) { b.classList.toggle("active", b.dataset.tab === t); });
     $("viewer-pane").classList.toggle("hide", t !== "viewer");
+    $("perf-pane").classList.toggle("hide", t !== "perf");
+    $("lighthouse-pane").classList.toggle("hide", t !== "lighthouse");
     $("summary-pane").classList.toggle("hide", t !== "summary");
     if (t === "viewer") $("viewer-pane").style.display = "grid";
+    if (t === "perf") renderPerf();
+    if (t === "lighthouse") renderLighthouse();
     if (t === "summary") renderSummary();
   }
 
   // wiring
+  renderBanner();
+  buildRail();
   $("feature-title").textContent = D.feature || "UI Walkthrough";
   $("feature-sub").textContent = [D.branch, D.generated].filter(Boolean).join("  ·  ");
   $("theme-switch").onchange = function () {
     state.theme = this.checked ? "dark" : "light";
     localStorage.setItem("ui-wt-theme", state.theme);
+    refreshRail(true);
     render();
   };
   $("prev").onclick = function () { if (state.i > 0) { state.i--; render(); } };

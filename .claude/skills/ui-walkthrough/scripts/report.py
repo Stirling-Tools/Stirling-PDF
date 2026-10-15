@@ -18,16 +18,16 @@ import argparse
 import base64
 import hashlib
 import json
-import mimetypes
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
+from html.parser import HTMLParser
+from io import BytesIO
 from pathlib import Path
 
 DATA_RE = re.compile(r"/\*__DATA__\*/.*?/\*__END__\*/", re.S)
-SCRIPT_RE = re.compile(r"<script[^>]*>(.*?)</script>", re.S)
 BINDING = "window.__WALKTHROUGH__ ="
 DATA_RE_READ = re.compile(r"window\.__WALKTHROUGH__\s*=\s*(\{.*?\});?\s*</script>", re.S)
 THEMES = ("light", "dark")
@@ -35,12 +35,63 @@ FINDING_GROUPS = ("visual", "ux", "behavior", "a11y", "perf", "native")
 SEVERITIES = ("high", "med", "low")
 # The viewer's contract: report.py fails a build that loses one of these.
 TEMPLATE_IDS = (
-    "feature-title", "feature-sub", "rail", "stage-img", "missing", "counter",
-    "viewer-pane", "summary-pane", "view-title", "view-meta", "view-notes",
-    "prev", "next",
+    "feature-title", "feature-sub", "coverage-banner", "rail", "stage-img", "missing",
+    "counter", "viewer-pane", "perf-pane", "lighthouse-pane", "summary-pane",
+    "view-title", "view-meta", "view-notes", "prev", "next",
 )
 BLOCK_START = "<!-- ui-walkthrough:start -->"
 BLOCK_END = "<!-- ui-walkthrough:end -->"
+
+# Every full walkthrough accounts for these categories. Mobile web is not a
+# mobile app, and an emulator is never labeled as a device.
+REQUIRED_PLATFORMS = (
+    "desktop-web",
+    "mobile-web",
+    "windows-tauri",
+    "macos-tauri",
+    "linux-tauri",
+    "android-tauri",
+    "ios-tauri",
+)
+# Lighthouse audits only the web entry points; native shells have no page load
+# to audit, so they are excluded from the Lighthouse requirement by design.
+WEB_PLATFORMS = ("desktop-web", "mobile-web")
+IMAGE_MIMES = ("image/png", "image/jpeg", "image/gif", "image/webp")
+THUMB_SIZE = (256, 160)
+
+
+class ScriptBodies(HTMLParser):
+    """Collect script element bodies without regex tag filtering.
+
+    `<SCRIPT>`, mixed case, and end tags with whitespace (`</script >`) are
+    all valid HTML. A `<script[^>]*>(.*?)</script>` pattern drops those
+    blocks and leaves them unchecked, so the parser owns this extraction.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=False)
+        self._parts: list[str] | None = None
+        self.bodies: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "script":
+            self._parts = []
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "script" and self._parts is not None:
+            self.bodies.append("".join(self._parts))
+            self._parts = None
+
+    def handle_data(self, data: str) -> None:
+        if self._parts is not None:
+            self._parts.append(data)
+
+
+def script_bodies(html: str) -> list[str]:
+    parser = ScriptBodies()
+    parser.feed(html)
+    parser.close()
+    return parser.bodies
 
 
 class Note(dict):
@@ -65,6 +116,134 @@ def _text(value: object) -> bool:
 
 def _is_data_uri(value: object) -> bool:
     return isinstance(value, str) and value.startswith("data:")
+
+
+def _data_uri_image_info(uri: str) -> bytes | None:
+    """Decode a supported image data URI, or return a failure sentinel.
+
+    Returns the bytes on success, `None` for an unsupported MIME type, and
+    `b""` when the payload is present but does not decode to a real image.
+    """
+    match = re.match(r"data:(image/[a-z+]+);base64,(.*)$", uri, re.S)
+    if not match or match.group(1) not in IMAGE_MIMES:
+        return None
+    try:
+        raw = base64.b64decode(match.group(2), validate=True)
+    except Exception:
+        return b""
+    mime = match.group(1)
+    if mime == "image/png" and raw.startswith(b"\x89PNG\r\n\x1a\n"):
+        return raw
+    if mime == "image/jpeg" and raw.startswith(b"\xff\xd8\xff"):
+        return raw
+    if mime == "image/gif" and raw[:6] in (b"GIF87a", b"GIF89a"):
+        return raw
+    if mime == "image/webp" and raw.startswith(b"RIFF") and raw[8:12] == b"WEBP":
+        return raw
+    return b""
+
+
+def _view_image_refs(view: dict) -> dict[str, object]:
+    return {theme: view.get(theme) for theme in THEMES}
+
+
+def _verified_platforms(manifest: dict) -> list[str]:
+    """Platforms with at least one real capture, derived from evidence.
+
+    A platform counts only when a view names it and carries a light or dark
+    image reference. Self-declared `coverage.captured` entries do not count.
+    """
+    found: set[str] = set()
+    for view in manifest.get("views") or []:
+        if not isinstance(view, dict):
+            continue
+        platform = view.get("platform")
+        if not _text(platform):
+            continue
+        if any(_text(view.get(theme)) for theme in THEMES):
+            found.add(str(platform))
+    return sorted(found)
+
+
+def _perf_platforms(manifest: dict) -> list[str]:
+    found: set[str] = set()
+    performance = manifest.get("performance") or {}
+    for run in performance.get("interactions", []) or []:
+        if not isinstance(run, dict):
+            continue
+        if _text(run.get("platform")) and isinstance(run.get("provenance"), dict):
+            found.add(str(run["platform"]))
+    return sorted(found)
+
+
+def _lighthouse_platforms(manifest: dict) -> list[str]:
+    """Web platforms with a Lighthouse run.
+
+    Runs may name `platform` directly; older manifests only carry
+    `formFactor`, which maps desktop/mobile to the two web platforms.
+    """
+    found: set[str] = set()
+    lighthouse = manifest.get("lighthouse") or {}
+    for run in lighthouse.get("runs", []) or []:
+        if not isinstance(run, dict):
+            continue
+        if _text(run.get("platform")):
+            found.add(str(run["platform"]))
+        elif run.get("formFactor") == "desktop":
+            found.add("desktop-web")
+        elif run.get("formFactor") == "mobile":
+            found.add("mobile-web")
+    return sorted(found)
+
+
+def _theme_gaps(manifest: dict, platforms: list[str]) -> list[str]:
+    gaps: list[str] = []
+    by_platform: dict[str, list[dict]] = {}
+    for view in manifest.get("views") or []:
+        if isinstance(view, dict) and _text(view.get("platform")):
+            by_platform.setdefault(str(view["platform"]), []).append(view)
+    for platform in platforms:
+        for theme in THEMES:
+            if not any(_text(view.get(theme)) for view in by_platform.get(platform, [])):
+                gaps.append(f"{platform}:{theme}")
+    return gaps
+
+
+def coverage_summary(manifest: dict) -> dict:
+    """Derive completion from evidence, never from self-declared lists."""
+    coverage = manifest.get("coverage") or {}
+    mode = coverage.get("mode") if isinstance(coverage, dict) else None
+    expected = [item for item in coverage.get("expected", []) if _text(item)] if isinstance(coverage, dict) else []
+    declared = [item for item in coverage.get("captured", []) if _text(item)] if isinstance(coverage, dict) else []
+    verified = _verified_platforms(manifest)
+    gaps = [item for item in expected if item not in verified]
+    undecorated = [item for item in declared if item not in verified]
+    perf = _perf_platforms(manifest)
+    lighthouse = _lighthouse_platforms(manifest)
+    themes = _theme_gaps(manifest, expected or verified)
+    missing_perf = [item for item in expected if item not in perf]
+    missing_lighthouse = [item for item in expected if item in WEB_PLATFORMS and item not in lighthouse]
+    if mode not in ("full", "partial"):
+        status = "incomplete"
+    elif gaps or missing_perf or missing_lighthouse or themes:
+        status = "partial" if mode == "partial" else "incomplete"
+    else:
+        status = "complete"
+    return {
+        "mode": mode,
+        "expected": expected,
+        "declared": declared,
+        "verified": verified,
+        "gaps": gaps,
+        "undeclaredProof": undecorated,
+        "performance": perf,
+        "lighthouse": lighthouse,
+        "themeGaps": themes,
+        "missingPerformance": missing_perf,
+        "missingLighthouse": missing_lighthouse,
+        "complete": status == "complete",
+        "status": status,
+    }
 
 
 def validate(manifest: object, *, source: str = "") -> list[Note]:
@@ -147,15 +326,40 @@ def validate(manifest: object, *, source: str = "") -> list[Note]:
             if not _text(finding.get("confidence")):
                 note("warning", "finding-without-confidence", "state confidence and limits", where)
 
-    coverage = manifest.get("coverage") or {}
-    expected = [item for item in coverage.get("expected", []) if _text(item)]
-    captured = [item for item in coverage.get("captured", []) if _text(item)]
-    gaps = [item for item in expected if item not in captured]
-    if gaps:
+    summary = coverage_summary(manifest)
+    if not isinstance(manifest.get("coverage"), dict):
+        note("warning", "coverage-missing", "no coverage matrix; nothing can be complete")
+    elif summary["mode"] not in ("full", "partial"):
+        note("error", "coverage-mode-missing", "'coverage.mode' must be 'full' or 'partial'")
+    for gap in summary["gaps"]:
         note(
-            "warning",
+            "error" if summary["mode"] == "full" else "warning",
             "coverage-gap",
-            f"expected but not captured: {', '.join(gaps)}; the report is incomplete",
+            f"expected but not captured: {gap}; the report is incomplete",
+        )
+    for claimed in summary["undeclaredProof"]:
+        note(
+            "error",
+            "coverage-without-proof",
+            f"'{claimed}' is declared captured with no captured view behind it",
+        )
+    for gap in summary["missingPerformance"]:
+        note(
+            "error" if summary["mode"] == "full" else "warning",
+            "perf-evidence-missing",
+            f"no performance interaction recorded for {gap}",
+        )
+    for gap in summary["missingLighthouse"]:
+        note(
+            "error" if summary["mode"] == "full" else "warning",
+            "lighthouse-run-missing",
+            f"no Lighthouse run recorded for {gap}",
+        )
+    for gap in summary["themeGaps"]:
+        note(
+            "error" if summary["mode"] == "full" else "warning",
+            "missing-theme-variant",
+            f"no {gap.split(':')[1]} capture on {gap.split(':')[0]}; the viewer shows an explicit gap",
         )
 
     performance = manifest.get("performance") or {}
@@ -174,6 +378,15 @@ def validate(manifest: object, *, source: str = "") -> list[Note]:
                 "record instrumentation, build mode and fixture",
                 where,
             )
+        pictures = run.get("pictures")
+        if pictures is not None and not isinstance(pictures, dict):
+            note("error", "perf-pictures-not-an-object", "'pictures' must be an object", where)
+        elif isinstance(pictures, dict):
+            for key, ref in pictures.items():
+                if ref is not None and not _text(ref):
+                    note("error", "perf-picture-not-text",
+                         f"'pictures.{key}' must be text", where)
+
 
     lighthouse = manifest.get("lighthouse") or {}
     for index, run in enumerate(lighthouse.get("runs", []) or []):
@@ -191,53 +404,211 @@ def validate(manifest: object, *, source: str = "") -> list[Note]:
                 "record Lighthouse/Chrome versions and throttling",
                 where,
             )
+        for key in ("preview",):
+            if run.get(key) is not None and not _text(run.get(key)):
+                note("error", "lh-preview-not-text", f"'{key}' must be text", where)
+
+    def _check_data_uri(ref: object, where: str) -> None:
+        if not _is_data_uri(ref):
+            return
+        info = _data_uri_image_info(str(ref))
+        if info is None:
+            note("error", "image-unsupported", "only PNG/JPEG/GIF/WebP data URIs are supported", where)
+        elif info == b"":
+            note("error", "image-undecodable", "the embedded image does not decode", where)
+
+    for index, view in enumerate(views):
+        if not isinstance(view, dict):
+            continue
+        for theme in THEMES:
+            _check_data_uri(view.get(theme), f"views[{index}].{theme}")
+        for theme in ("thumb_light", "thumb_dark"):
+            _check_data_uri(view.get(theme), f"views[{index}].{theme}")
+    for index, run in enumerate(performance.get("interactions", []) or []):
+        if not isinstance(run, dict):
+            continue
+        pictures = run.get("pictures") or {}
+        if pictures is not None and not isinstance(pictures, dict):
+            note("error", "perf-pictures-not-an-object", "'pictures' must be an object",
+                 f"performance.interactions[{index}]")
+        for key, ref in (pictures or {}).items():
+            _check_data_uri(ref, f"performance.interactions[{index}].pictures.{key}")
+    for index, run in enumerate(lighthouse.get("runs", []) or []):
+        if isinstance(run, dict):
+            _check_data_uri(run.get("preview"), f"lighthouse.runs[{index}].preview")
     return notes
 
 
-def _encode_image(path: Path, quality: int) -> tuple[str, str]:
-    """Return (data URI, note). Prefers cwebp, then Pillow, then raw bytes."""
+def _sniff_mime(raw: bytes) -> str | None:
+    if raw.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if raw.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if raw[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    if raw.startswith(b"RIFF") and len(raw) >= 12 and raw[8:12] == b"WEBP":
+        return "image/webp"
+    return None
+
+
+def _load_image_bytes(path: Path) -> bytes | None:
+    """Read a file only when it decodes as a supported image."""
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        return None
+    try:
+        from PIL import Image  # type: ignore
+
+        try:
+            with Image.open(BytesIO(raw)) as img:
+                img.verify()
+        except Exception:
+            return None
+        return raw if _sniff_mime(raw) in IMAGE_MIMES else None
+    except ImportError:
+        return raw if _sniff_mime(raw) in IMAGE_MIMES else None
+
+
+def _encode_bytes(raw: bytes, name: str, quality: int) -> tuple[str, str]:
+    """Return (data URI, note) for already-validated image bytes."""
     with tempfile.TemporaryDirectory(prefix="ui-wt-img-") as tmp:
+        src = Path(tmp) / "src.bin"
         out = Path(tmp) / "out.webp"
+        src.write_bytes(raw)
         cwebp = shutil.which("cwebp")
         if cwebp:
-            cmd = [cwebp, "-quiet", "-q", str(quality), str(path), "-o", str(out)]
+            cmd = [cwebp, "-quiet", "-q", str(quality), str(src), "-o", str(out)]
             if subprocess.run(cmd, capture_output=True).returncode == 0 and out.exists():
                 return "data:image/webp;base64," + base64.b64encode(out.read_bytes()).decode(), ""
         try:
             from PIL import Image  # type: ignore
 
-            Image.open(path).save(out, format="WEBP", quality=quality)
+            with Image.open(BytesIO(raw)) as img:
+                img.convert("RGB").save(out, format="WEBP", quality=quality)
             return "data:image/webp;base64," + base64.b64encode(out.read_bytes()).decode(), ""
-        except Exception:  # Pillow missing, or the image is not decodable
+        except Exception:
             pass
-    mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
-    return (
-        f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode(),
-        f"inlined {path.name} uncompressed (no cwebp or Pillow)",
-    )
+    mime = _sniff_mime(raw)
+    if mime in IMAGE_MIMES:
+        return (
+            f"data:{mime};base64," + base64.b64encode(raw).decode(),
+            f"inlined {name} without recompression (no cwebp or Pillow)",
+        )
+    return "", f"{name} is not a supported image"
+
+
+def _encode_image(path: Path, quality: int) -> tuple[str, str]:
+    """Return (data URI, note); undecodable files never embed raw bytes."""
+    raw = _load_image_bytes(path)
+    if raw is None:
+        return "", f"{path.name} does not decode as a supported image"
+    return _encode_bytes(raw, path.name, quality)
+
+
+def _make_thumbnail(raw: bytes, quality: int) -> tuple[str, str]:
+    """Return (thumbnail data URI, note); the rail gets its own small asset."""
+    try:
+        from PIL import Image  # type: ignore
+
+        with Image.open(BytesIO(raw)) as img:
+            frame = img.convert("RGB")
+            frame.thumbnail(THUMB_SIZE)
+            with tempfile.TemporaryDirectory(prefix="ui-wt-thumb-") as tmp:
+                out = Path(tmp) / "thumb.webp"
+                frame.save(out, format="WEBP", quality=min(quality, 70))
+                return "data:image/webp;base64," + base64.b64encode(out.read_bytes()).decode(), ""
+    except Exception as exc:
+        return "", f"thumbnail unavailable ({exc}); the rail reuses the full image"
+
+
+def _inline_image_ref(ref: object, base: Path, where: str, notes: list[Note], *,
+                      quality: int, make_thumb: bool = False) -> tuple[str | None, str | None]:
+    """Resolve one manifest image to (full data URI, thumbnail data URI)."""
+    if not _text(ref):
+        return None, None
+    value = str(ref)  # type: ignore[arg-type]
+    if _is_data_uri(value):
+        raw = _data_uri_image_info(value)
+        if raw is None:
+            notes.append(Note("error", "image-unsupported",
+                               "only PNG/JPEG/GIF/WebP data URIs are supported", where))
+            return None, None
+        if raw == b"":
+            notes.append(Note("error", "image-undecodable",
+                               "the embedded image does not decode", where))
+            return None, None
+        thumb = None
+        if make_thumb:
+            thumb, hint = _make_thumbnail(raw, quality)
+            if hint:
+                notes.append(Note("warning", "thumbnail-unavailable", hint, where))
+            thumb = thumb or None
+        return value, thumb
+    if re.match(r"https?://", value):
+        notes.append(Note("error", "remote-manifest-asset",
+                           f"'{value}' is remote; standalone reports inline every asset", where))
+        return None, None
+    path = Path(value)
+    path = path if path.is_absolute() else base / path
+    if not path.exists():
+        notes.append(Note("error", "missing-image", f"'{value}' does not exist", where))
+        return None, None
+    raw = _load_image_bytes(path)
+    if raw is None:
+        notes.append(Note("error", "image-undecodable",
+                           f"'{value}' does not decode as a supported image", where))
+        return None, None
+    uri, hint = _encode_bytes(raw, path.name, quality)
+    if not uri:
+        notes.append(Note("error", "image-undecodable", hint, where))
+        return None, None
+    if hint:
+        notes.append(Note("info", "image-encoding", hint, where))
+    thumb = None
+    if make_thumb:
+        thumb, thumb_hint = _make_thumbnail(raw, quality)
+        if thumb_hint:
+            notes.append(Note("warning", "thumbnail-unavailable", thumb_hint, where))
+        thumb = thumb or None
+    return uri, thumb
 
 
 def prepare(manifest: dict, base: Path, *, quality: int) -> list[Note]:
-    """Inline every view's images as data URIs, so the report stands alone."""
+    """Inline every viewing asset as a data URI, so the report stands alone."""
     notes: list[Note] = []
     for index, view in enumerate(manifest.get("views") or []):
         if not isinstance(view, dict):
             continue
         for theme in THEMES:
-            ref = view.get(theme)
-            if not _text(ref) or _is_data_uri(ref):
-                continue
-            path = Path(str(ref))
-            path = path if path.is_absolute() else base / path
-            where = f"views[{index}].{theme}"
-            if not path.exists():
-                notes.append(Note("error", "missing-image", f"'{ref}' does not exist", where))
-                view[theme] = None
-                continue
-            uri, hint = _encode_image(path, quality)
-            if hint:
-                notes.append(Note("info", "image-encoding", hint, where))
+            uri, thumb = _inline_image_ref(view.get(theme), base, f"views[{index}].{theme}",
+                                           notes, quality=quality, make_thumb=True)
             view[theme] = uri
+            if thumb:
+                view[f"thumb_{theme}"] = thumb
+            else:
+                view.pop(f"thumb_{theme}", None)
+    performance = manifest.get("performance") or {}
+    for index, run in enumerate(performance.get("interactions", []) or []):
+        if not isinstance(run, dict):
+            continue
+        pictures = run.get("pictures") or {}
+        for key in ("timeline", "breakdown", "rendering", "recovery"):
+            if not isinstance(pictures, dict) or pictures.get(key) is None:
+                continue
+            uri, _thumb = _inline_image_ref(pictures.get(key), base,
+                                            f"performance.interactions[{index}].pictures.{key}",
+                                            notes, quality=quality)
+            pictures[key] = uri
+    lighthouse = manifest.get("lighthouse") or {}
+    for index, run in enumerate(lighthouse.get("runs", []) or []):
+        if not isinstance(run, dict) or run.get("preview") is None:
+            continue
+        uri, _thumb = _inline_image_ref(run.get("preview"), base,
+                                        f"lighthouse.runs[{index}].preview",
+                                        notes, quality=quality)
+        run["preview"] = uri
+    manifest["coverageSummary"] = coverage_summary(manifest)
     return notes
 
 
@@ -251,6 +622,10 @@ def inject(template: str, manifest: dict) -> str:
     if len(matches) != 1:
         raise ValueError(f"template must hold exactly one data block, found {len(matches)}")
     payload = json.dumps(manifest, separators=(",", ":"), ensure_ascii=False)
+    # The payload lives inside an executable <script> element: a literal `</`
+    # would close it, so script-sensitive characters travel escaped and are
+    # restored by JSON.parse on load.
+    payload = payload.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
     return DATA_RE.sub(lambda _match: payload, template, count=1)
 
 
@@ -264,6 +639,7 @@ def self_test(html: str, *, allow_relative: bool = False) -> list[Note]:
             Note("error", "data-binding", "expected exactly one __WALKTHROUGH__ assignment")
         )
     match = DATA_RE_READ.search(html)
+    manifest: dict | None = None
     if not match:
         notes.append(Note("error", "data-unreadable", "no embedded manifest found"))
     else:
@@ -274,9 +650,50 @@ def self_test(html: str, *, allow_relative: bool = False) -> list[Note]:
             manifest = None
         if isinstance(manifest, dict) and not manifest.get("views"):
             notes.append(Note("warning", "empty-report", "the report has no views"))
+        if isinstance(manifest, dict) and not isinstance(manifest.get("coverageSummary"), dict):
+            notes.append(Note("error", "coverage-summary-missing",
+                               "the report carries no derived coverage status"))
+        if isinstance(manifest, dict):
+            for index, view in enumerate(manifest.get("views") or []):
+                if not isinstance(view, dict):
+                    continue
+                for key in ("light", "dark", "thumb_light", "thumb_dark"):
+                    ref = view.get(key)
+                    if not _is_data_uri(ref):
+                        continue
+                    info = _data_uri_image_info(str(ref))
+                    if info is None:
+                        notes.append(Note("error", "image-unsupported",
+                                           "only PNG/JPEG/GIF/WebP data URIs are supported",
+                                           f"views[{index}].{key}"))
+                    elif info == b"":
+                        notes.append(Note("error", "image-undecodable",
+                                           "the embedded image does not decode",
+                                           f"views[{index}].{key}"))
+            performance = manifest.get("performance") or {}
+            for index, run in enumerate(performance.get("interactions", []) or []):
+                if not isinstance(run, dict):
+                    continue
+                for key, ref in ((run.get("pictures") or {}) if isinstance(run.get("pictures"), dict) else {}).items():
+                    if _text(ref) and not _is_data_uri(ref):
+                        notes.append(Note("error", "external-manifest-asset",
+                                           f"performance picture '{key}' is not inlined",
+                                           f"performance.interactions[{index}]"))
+            lighthouse = manifest.get("lighthouse") or {}
+            for index, run in enumerate(lighthouse.get("runs", []) or []):
+                if not isinstance(run, dict):
+                    continue
+                ref = run.get("preview")
+                if _text(ref) and not _is_data_uri(ref):
+                    notes.append(Note("error", "external-manifest-asset",
+                                       "lighthouse preview is not inlined",
+                                       f"lighthouse.runs[{index}]"))
     for element_id in TEMPLATE_IDS:
         if f'id="{element_id}"' not in html:
             notes.append(Note("error", "missing-element", f"viewer element '{element_id}' is gone"))
+    if ".innerHTML" in html:
+        notes.append(Note("error", "unsafe-dom-sink",
+                           "report text must travel through textContent, not innerHTML"))
     if not allow_relative:
         for bad in re.findall(r"""src=["'](?!data:|https?:)([^"']+)["']""", html):
             notes.append(
@@ -286,7 +703,7 @@ def self_test(html: str, *, allow_relative: bool = False) -> list[Note]:
         notes.append(Note("error", "external-asset", f"external asset '{bad}'"))
     node = shutil.which("node")
     if node:
-        for index, script in enumerate(SCRIPT_RE.findall(html)):
+        for index, script in enumerate(script_bodies(html)):
             if not script.strip() or BINDING in script:
                 continue
             with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as handle:
@@ -371,20 +788,54 @@ def repo_from_remote(remote: str, cwd: Path) -> str:
     return f"{match.group(1)}/{match.group(2)}"
 
 
+def _remote_branch_exists(remote: str, branch: str, cwd: Path) -> bool:
+    """True when the remote already has the branch.
+
+    A transport/auth failure raises instead of reading as "absent": only a
+    clean `ls-remote` with no matching head means the branch is missing.
+    """
+    proc = subprocess.run(["git", "ls-remote", "--heads", remote, branch],
+                          cwd=cwd, capture_output=True, text=True)
+    if proc.returncode:
+        raise RuntimeError(
+            f"git ls-remote --heads {remote} {branch} failed: "
+            f"{proc.stderr.strip() or proc.stdout.strip()}"
+        )
+    return bool(proc.stdout.strip())
+
+
+def _built_manifest(html: str) -> dict:
+    match = DATA_RE_READ.search(html)
+    if not match:
+        raise RuntimeError("the report holds no readable manifest; rebuild it")
+    manifest = json.loads(match.group(1))
+    if not isinstance(manifest, dict):
+        raise RuntimeError("the embedded manifest is not an object; rebuild it")
+    return manifest
+
+
 def publish(report: Path, feature: str, *, remote: str = "upstream",
             branch: str = "ui-walkthrough-reports", base: str = "main",
             cwd: Path | None = None, dry_run: bool = False) -> dict:
     """Commit the report to the reports branch in a throwaway worktree."""
     cwd = cwd or Path.cwd()
-    data, slug = report.read_bytes(), slugify(feature)
+    html = report.read_text(encoding="utf-8")
+    data, slug = html.encode("utf-8"), slugify(feature)
+    manifest = _built_manifest(html)
+    preflight = validate(manifest, source=str(report)) + self_test(html)
+    if errors(preflight):
+        raise RuntimeError(
+            "refusing to publish an invalid report: "
+            + "; ".join(str(note) for note in errors(preflight))
+        )
     tmp = Path(tempfile.mkdtemp(prefix="ui-wt-publish-"))
     worktree = tmp / "wt"
     try:
-        _run(["git", "fetch", remote, branch], cwd=cwd)
-        try:
-            _run(["git", "rev-parse", "--verify", f"{remote}/{branch}"], cwd=cwd)
+        if _remote_branch_exists(remote, branch, cwd):
+            _run(["git", "fetch", remote, branch], cwd=cwd)
             _run(["git", "worktree", "add", "-f", str(worktree), f"{remote}/{branch}"], cwd=cwd)
-        except RuntimeError:
+        else:
+            _run(["git", "fetch", remote, base], cwd=cwd)
             _run(["git", "worktree", "add", "-b", branch, str(worktree), f"{remote}/{base}"],
                  cwd=cwd)
         existing = {

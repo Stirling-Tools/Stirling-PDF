@@ -31,7 +31,14 @@ Walk the branch's feature the way a person would: open it, use it, break it, cha
 3. A self-contained `walkthrough.html` built from the manifest — no external assets, so it renders through htmlpreview.
 4. Optionally, with `--pr-link`: the report on the `ui-walkthrough-reports` branch plus a managed block in the PR description.
 
-The report is built and validated by `scripts/report.py`; it is published by `scripts/publish.py`. Judgment lives in this file; mechanics live in those two scripts, and both have self-tests (`scripts/tests/`).
+The report is built, validated and published by `scripts/report.py` (subcommands `validate`, `build`, `self-test`, `publish`, `link`). Judgment lives in this file; mechanics live in that script, which has self-tests in `scripts/test_report.py`. Smoke-check the documented entry points before relying on them:
+
+```bash
+python3 .claude/skills/ui-walkthrough/scripts/report.py --help
+python3 .claude/skills/ui-walkthrough/scripts/report.py publish --help
+python3 .claude/skills/ui-walkthrough/scripts/report.py link --help
+python3 .claude/skills/ui-walkthrough/scripts/test_report.py
+```
 
 ## Coverage: the runtime/platform matrix is mandatory
 
@@ -49,7 +56,7 @@ Every full walkthrough covers each required runtime/platform, and the manifest r
 
 Android and iOS are always listed separately — a mobile viewport is not a mobile app. So is an emulator: label it as an emulator, never as a device.
 
-`coverage.expected` is the list the feature requires; `coverage.captured` is what actually ran. Anything expected but not captured is a gap, and a gap makes the report **incomplete**: the viewer shows an "Incomplete report" banner and the missing categories as chips, and the chat summary names them. A missing runner is reported as missing — never replaced with a browser proxy, and never quietly dropped from the scope.
+`coverage.expected` is the list the feature requires; `coverage.mode` is `"full"` or `"partial"` and is mandatory — there is no default. Coverage is **derived from evidence**, not from self-declaration: a platform counts as captured only when a view names it in `views[].platform` and carries a real light or dark image. Listing a platform in `coverage.captured` without a captured view behind it is a validation error. Anything expected but not captured is a gap; missing performance interactions, missing Lighthouse runs (web platforms only) and missing theme variants are tracked separately. A gap makes the report **incomplete**: the viewer shows a persistent completion banner naming exactly what is missing, and the chat summary names it. A missing runner is reported as missing — never replaced with a browser proxy, and never quietly dropped from the scope. Partial reports build fine, but they can never present themselves as full coverage.
 
 ## Requirement: bounded performance evidence
 
@@ -129,7 +136,7 @@ Limitations to state plainly in the report: a Lighthouse mobile configuration is
 - **Helpers.** `frontend/editor/src/core/tests/helpers/ui-helpers.ts` exports `uploadFiles`, `openSettings`, `waitForModalOpen`, `dismissTourTooltip`; `stub-test-base` provides the `autoGoto`, `seedJwt` and `viewport` fixtures. There is no shared `settle` export — the reference spec defines its own local `settle(page)` for Mantine portals, and so should yours.
 - **Config.** `frontend/editor/playwright.config.ts` defines the `stubbed`, `stubbed-desktop`, `stubbed-firefox`, `stubbed-webkit`, `live-setup`, `live` and `enterprise` projects. There is no mobile project: mobile web is the same stubbed project with a mobile viewport and touch enabled.
 - **The report template.** `report-template.html` next to this file — self-contained, keyboard navigable, no external assets.
-- **The mechanics.** `scripts/report.py` (validate/build/self-test) and `scripts/publish.py` (publish/link), with tests in `scripts/tests/`.
+- **The mechanics.** `scripts/report.py` (validate/build/self-test/publish/link), with tests in `scripts/test_report.py`.
 - **Capture output is gitignored.** Root `.gitignore` ignores `frontend/editor/screenshots/`, so generated PNGs never reach a commit.
 
 ## Process
@@ -158,6 +165,16 @@ Create `frontend/editor/src/core/tests/stubbed/<feature>-walkthrough.spec.ts` mo
 - Shoot each view in `light` and `dark` (and RTL unless `--no-rtl`), naming files `NN_<view>_<theme>.png`.
 - Add `--project=stubbed-firefox` / `-webkit` only when cross-browser layout matters.
 - Run it: `npx playwright test --project=stubbed <feature>-walkthrough.spec.ts`.
+
+### 4b. Capture the native runtimes (Tauri desktop + Android/iOS)
+
+The web spec above covers `desktop-web` and `mobile-web` only. For the five Tauri categories, follow this procedure per platform — a browser screenshot is never a substitute:
+
+- **Desktop (windows/macos/linux-tauri).** Build or run the desktop app with the repo's Tauri workflow (`task desktop:dev` for a live shell, `task desktop:build` for the bundle). Drive the same feature flow as the web spec against the same seeded fixtures. Readiness check: the main window is titled and interactive, and the feature's first view renders — only then start capturing. Collect one PNG per view per theme with the OS screenshot path, and record `views[].platform`, `views[].runner` (e.g. `tauri-windows/x64`), viewport, and build mode.
+- **Android/iOS preflight.** `adb devices` must list the target (emulator or USB device) for `android-tauri`; `xcrun simctl list devices` must list a booted simulator, or a physical device must be paired, for `ios-tauri`. Record which one it was — emulator/simulator is labeled as such, never as a device.
+- **Android/iOS capture.** Install the Tauri mobile build on the target, launch the app, apply the same readiness check, capture each view, and pull the PNGs back to `screenshots/<area>/` with the `NN_<view>_<theme>.png` names. Seed fixtures the same way as the web spec (same JWT seed, same IndexedDB/file seed) so the captures are comparable.
+- **When a platform cannot run.** Keep it in `coverage.expected`, capture nothing for it, and set `coverage.mode` to `"partial"`. The validator derives the gap from the missing views and the viewer banners it — do not move the platform to a side note, and do not mark the report complete.
+- **Manual-evidence fallback.** If only a human-driven device pass is possible, say so in the view's provenance (`runner: "manual-android-device"` and a note naming the operator), and attach the same PNG naming. A manual pass counts as a captured view; it does not count as instrumented performance evidence.
 
 ### 5. Record provenance
 
@@ -205,16 +222,16 @@ python3 .claude/skills/ui-walkthrough/scripts/report.py build \
 python3 .claude/skills/ui-walkthrough/scripts/report.py self-test screenshots/<area>/walkthrough.html
 ```
 
-The builder inlines every image as a `data:` URI and derives rail thumbnails, so the result is one portable file. Image paths in the manifest resolve relative to the manifest itself; `cwebp` or Pillow are used when available to compress, and the builder says so when they are not. `validate` reports missing theme variants, duplicate view ids, findings pointing at views that do not exist, performance findings without evidence, coverage gaps and unprovenanced runs; `self-test` re-reads the built file the way the browser will (one data binding, every required element id, no relative or remote assets, parseable scripts).
+The builder inlines every viewing asset as a `data:` URI — view captures, per-view rail thumbnails, performance pictures and Lighthouse previews — so the result is one portable file. Image paths in the manifest resolve relative to the manifest itself; `cwebp` or Pillow are used when available to compress, and the builder says so when they are not. Raw measurement files and full Lighthouse reports stay outside the HTML and are referenced by path; the viewer shows those references as text. `validate` reports missing theme variants, duplicate view ids, findings pointing at views that do not exist, performance findings without evidence, coverage gaps, declared-but-unproven captures, and missing performance/Lighthouse evidence; `self-test` re-reads the built file the way the browser will (one data binding, a derived coverage summary, every required element id, no relative or remote assets, images that actually decode, parseable scripts, no `innerHTML` sinks).
 
-The viewer never substitutes one theme for another: if a view has no dark capture it shows an explicit "coverage gap" message, and the rail marks the view. Findings are rendered as text, so quotes and angle brackets in review prose cannot break the report.
+The viewer never substitutes one theme for another: if a view has no dark capture it shows an explicit "coverage gap" message, and the rail marks the view. A persistent banner at the top always states whether the report is complete or exactly what is missing. All report prose is rendered through `textContent`, so quotes and angle brackets in review prose — even a hostile `</script>` — stay literal text and cannot break the report or execute.
 
 ### 14. Publish and link (only with `--pr-link`)
 
 ```bash
-python3 .claude/skills/ui-walkthrough/scripts/publish.py publish \
+python3 .claude/skills/ui-walkthrough/scripts/report.py publish \
   --report screenshots/<area>/walkthrough.html --feature "<feature>"
-python3 .claude/skills/ui-walkthrough/scripts/publish.py link --pr <n> --raw-url <raw-url>
+python3 .claude/skills/ui-walkthrough/scripts/report.py link --pr <n> --raw-url <raw-url>
 ```
 
 - The report lives on the `ui-walkthrough-reports` branch, which upstream keeps on `origin` in the main checkout but on **`upstream`** in this fork layout — the script takes `--remote` (default `upstream`) and resolves the repository from that remote.
