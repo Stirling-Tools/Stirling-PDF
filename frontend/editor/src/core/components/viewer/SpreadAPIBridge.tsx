@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, type MutableRefObject } from "react";
 import { useSpread, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
@@ -11,6 +11,9 @@ import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady"
 export function SpreadAPIBridge() {
   const activeDocumentId = useActiveDocumentId();
   const documentReady = useDocumentReady();
+  // Outlives the per-document inner bridge, so turning dual-page back on
+  // restores the pairing (cover page or not) the user last chose.
+  const lastDualModeRef = useRef<SpreadMode>(SpreadMode.Odd);
 
   // Don't render the inner component until we have a valid document ID and document is ready
   if (!activeDocumentId || !documentReady) {
@@ -21,11 +24,18 @@ export function SpreadAPIBridge() {
     <SpreadAPIBridgeInner
       key={activeDocumentId}
       documentId={activeDocumentId}
+      lastDualModeRef={lastDualModeRef}
     />
   );
 }
 
-function SpreadAPIBridgeInner({ documentId }: { documentId: string }) {
+function SpreadAPIBridgeInner({
+  documentId,
+  lastDualModeRef,
+}: {
+  documentId: string;
+  lastDualModeRef: MutableRefObject<SpreadMode>;
+}) {
   const { provides: spread, spreadMode } = useSpread(documentId);
   const { registerBridge, triggerImmediateSpreadUpdate } = useViewer();
 
@@ -41,13 +51,12 @@ function SpreadAPIBridgeInner({ documentId }: { documentId: string }) {
       return;
     }
 
-    const newState = {
-      spreadMode,
-      isDualPage: spreadMode !== SpreadMode.None,
-    };
+    if (spreadMode !== SpreadMode.None) {
+      lastDualModeRef.current = spreadMode;
+    }
 
     registerBridge("spread", {
-      state: newState,
+      state: { spreadMode },
       api: {
         setSpreadMode: (mode: SpreadMode) => {
           currentSpread.setSpreadMode(mode);
@@ -56,7 +65,9 @@ function SpreadAPIBridgeInner({ documentId }: { documentId: string }) {
         toggleSpreadMode: () => {
           const current = currentSpread.getSpreadMode();
           const nextMode =
-            current === SpreadMode.None ? SpreadMode.Odd : SpreadMode.None;
+            current === SpreadMode.None
+              ? lastDualModeRef.current
+              : SpreadMode.None;
           currentSpread.setSpreadMode(nextMode);
         },
         SpreadMode,
@@ -68,7 +79,12 @@ function SpreadAPIBridgeInner({ documentId }: { documentId: string }) {
     return () => {
       registerBridge("spread", null);
     };
-  }, [spreadMode, registerBridge, triggerImmediateSpreadUpdate]);
+  }, [
+    spreadMode,
+    registerBridge,
+    triggerImmediateSpreadUpdate,
+    lastDualModeRef,
+  ]);
 
   return null;
 }
