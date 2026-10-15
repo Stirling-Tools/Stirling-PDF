@@ -235,4 +235,21 @@ describe("ZoomAPIBridge fit modes", () => {
 
     expect(typeof zoomLevel()).toBe("number");
   });
+
+  it("re-arms the auto heuristic when Automatic replaces an explicit fit", () => {
+    fixture.page.aspectRatio = 0.5;
+    render(<ZoomAPIBridge />);
+
+    act(() => contextZoomApi().requestZoom(ZoomMode.FitWidth));
+    act(() => contextZoomApi().requestZoom(ZoomMode.Automatic));
+    fixture.zoom.provides.requestZoom.mockClear();
+
+    resizeWindow(300);
+
+    // The resize hook refits width on its own; the auto heuristic adding its
+    // pass on top of that is what shows the explicit fit was cleared.
+    expect(fixture.zoom.provides.requestZoom.mock.calls.length).toBeGreaterThan(
+      1,
+    );
+  });
 });

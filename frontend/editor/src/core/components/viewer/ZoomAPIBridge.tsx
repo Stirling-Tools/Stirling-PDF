@@ -355,9 +355,9 @@ function ZoomAPIBridgeInner({
       zoomOut: () => zoomRef.current?.zoomOut(),
       toggleMarqueeZoom: () => zoomRef.current?.toggleMarqueeZoom(),
       requestZoom: (level: ZoomLevel, center?: Point) => {
-        if (isFitMode(level)) {
-          explicitFitRef.current = true;
-        }
+        // Set from the requested mode, not just the fit ones: Automatic hands
+        // the fit back to the auto heuristic, so it has to clear the flag.
+        explicitFitRef.current = isFitMode(level);
         zoomRef.current?.requestZoom(level, center);
       },
     }),
