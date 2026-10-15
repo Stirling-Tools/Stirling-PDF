@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
+import {
+  AddStampParameters,
+  isQrContentWithinLimit,
+} from "@app/components/tools/addStamp/useAddStampParameters";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
 import {
@@ -428,22 +431,23 @@ export default function StampPreview({
           </div>
         )}
 
-        {parameters.stampType === "qr" && (
-          <div
-            className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable}`}
-            style={style.item}
-            onPointerDown={(e) => handlePointerDown(e, "move")}
-            data-user-content-preview=""
-          >
-            <QRCodeSVG
-              value={parameters.stampText}
-              level="M"
-              marginSize={4}
-              className={styles.stampImage}
-            />
-            {itemHandles}
-          </div>
-        )}
+        {parameters.stampType === "qr" &&
+          isQrContentWithinLimit(parameters.stampText) && (
+            <div
+              className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable}`}
+              style={style.item}
+              onPointerDown={(e) => handlePointerDown(e, "move")}
+              data-user-content-preview=""
+            >
+              <QRCodeSVG
+                value={parameters.stampText}
+                level="M"
+                marginSize={4}
+                className={styles.stampImage}
+              />
+              {itemHandles}
+            </div>
+          )}
 
         {/* Quick position overlay grid */}
         {showQuickGrid && (

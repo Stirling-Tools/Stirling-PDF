@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumMap;
@@ -80,7 +81,9 @@ public class StampController {
     private static final Pattern CUSTOM_DATE_PATTERN = Pattern.compile("@date\\{([^}]{1,50})\\}");
     // Placeholder for escaped @ symbol (using Unicode private use area)
     private static final String ESCAPED_AT_PLACEHOLDER = "\uE000ESCAPED_AT\uE000";
-    private static final int MAX_QR_CONTENT_LENGTH = 1000;
+    // Counted in UTF-8 bytes, the unit QR byte mode is limited by. Must stay in sync with
+    // MAX_QR_CONTENT_BYTES in the frontend's useAddStampParameters.ts.
+    private static final int MAX_QR_CONTENT_BYTES = 1000;
     private static final int QR_QUIET_ZONE_MODULES = 4;
 
     /**
@@ -144,11 +147,11 @@ public class StampController {
                         "error.stamp.qr.required",
                         "Stamp text must be provided when stamp type is 'qr'");
             }
-            if (stampText.length() > MAX_QR_CONTENT_LENGTH) {
+            if (stampText.getBytes(StandardCharsets.UTF_8).length > MAX_QR_CONTENT_BYTES) {
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.stamp.qr.tooLong",
-                        "QR code content must be at most {0} characters",
-                        MAX_QR_CONTENT_LENGTH);
+                        "QR code content must be at most {0} bytes of UTF-8 text",
+                        MAX_QR_CONTENT_BYTES);
             }
         }
         String alphabet = request.getAlphabet();

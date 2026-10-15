@@ -17,7 +17,8 @@ import {
 import { Button } from "@app/ui/Button";
 import {
   AddStampParameters,
-  MAX_QR_CONTENT_LENGTH,
+  DEFAULT_QR_SIZE,
+  isQrContentWithinLimit,
 } from "@app/components/tools/addStamp/useAddStampParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
@@ -238,9 +239,12 @@ const StampSetupSettings = ({
         </Text>
         <ButtonSelector
           value={parameters.stampType}
-          onChange={(v: "text" | "image" | "qr") =>
-            onParameterChange("stampType", v)
-          }
+          onChange={(v: "text" | "image" | "qr") => {
+            onParameterChange("stampType", v);
+            if (v === "qr" && parameters.fontSize < DEFAULT_QR_SIZE) {
+              onParameterChange("fontSize", DEFAULT_QR_SIZE);
+            }
+          }}
           options={[
             { value: "text", label: t("watermark.type.1", "Text") },
             { value: "image", label: t("watermark.type.2", "Image") },
@@ -680,9 +684,16 @@ const StampSetupSettings = ({
           onChange={(e) =>
             onParameterChange("stampText", e.currentTarget.value)
           }
+          error={
+            isQrContentWithinLimit(parameters.stampText)
+              ? undefined
+              : t(
+                  "AddStampRequest.qrContentTooLong",
+                  "Too long to fit in a QR code. Shorten the content.",
+                )
+          }
           autosize
           minRows={2}
-          maxLength={MAX_QR_CONTENT_LENGTH}
           disabled={disabled}
         />
       )}

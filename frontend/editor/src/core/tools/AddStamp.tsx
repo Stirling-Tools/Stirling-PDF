@@ -109,7 +109,6 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       isVisible: hasFiles || hasResults,
       content: (
         <Stack gap="md" justify="space-between">
-          {/* Mode toggle: Quick grid vs Custom drag - not shown for text stamps */}
           {params.parameters.stampType !== "text" && (
             <ButtonSelector
               value={quickPositionModeSelected ? "quick" : "custom"}

@@ -373,6 +373,17 @@ class StampControllerMoreTest {
             assertThatThrownBy(() -> stampController.addStamp(req))
                     .isInstanceOf(IllegalArgumentException.class);
         }
+
+        @Test
+        @DisplayName("QR content is limited by UTF-8 bytes, not characters")
+        void rejectsMultiByteContentOverByteLimit() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("日".repeat(334)); // 1002 bytes in 334 characters
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("bytes");
+        }
     }
 
     @Nested
