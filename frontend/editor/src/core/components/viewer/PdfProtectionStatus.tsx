@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Group, Modal, Stack, Text, Tooltip } from "@mantine/core";
+import { Group, Modal, Stack, Text } from "@mantine/core";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import { ProtectedPdfFileCard } from "@app/components/shared/ProtectedPdfFileCard";
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { useFileActions } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
@@ -105,32 +108,7 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
         zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
       >
         <Stack gap="md">
-          <Group
-            gap="sm"
-            wrap="nowrap"
-            p="sm"
-            style={{
-              background: "var(--c-surface-raised)",
-              borderRadius: "var(--mantine-radius-md)",
-            }}
-          >
-            <Icon
-              name="lock"
-              size={20}
-              style={{ color: "var(--c-text-muted)", flexShrink: 0 }}
-            />
-            <Text size="sm" fw={500} style={{ overflowWrap: "anywhere" }}>
-              {file.name}
-            </Text>
-          </Group>
-          {access.ownerAuthenticated && access.hasOwnerPassword !== false && (
-            <Text size="sm">
-              {t(
-                "encryptedPdfUnlock.verifiedPasswordInUse",
-                "Using the permissions password verified for this session.",
-              )}
-            </Text>
-          )}
+          <ProtectedPdfFileCard fileName={file.name} />
           {confirmCopy ? (
             <>
               <Text size="sm">
@@ -185,7 +163,7 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                       {hasPdfPermissionOverride(access) &&
                         (!allowed || lowResolutionOnly) && (
                           <Tooltip
-                            label={
+                            content={
                               access.honorOwnerPasswords === false &&
                               !access.ownerAuthenticated
                                 ? t(
@@ -197,17 +175,17 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                                     "Unlocked for this session using your permissions password.",
                                   )
                             }
-                            multiline
-                            w={240}
-                            withArrow
-                            events={{ hover: true, focus: true, touch: true }}
-                            zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE + 1}
+                            position="top"
+                            maxWidth={240}
+                            arrow
+                            containerStyle={{
+                              zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE + 1,
+                            }}
                           >
-                            <Button
+                            <ActionIcon
                               size="sm"
                               variant="quiet"
                               accent="neutral"
-                              leftSection={<Icon name="lock-open" size={14} />}
                               aria-label={
                                 access.honorOwnerPasswords === false &&
                                 !access.ownerAuthenticated
@@ -222,7 +200,9 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                                       { action: label },
                                     )
                               }
-                            />
+                            >
+                              <Icon name="lock-open" size={14} />
+                            </ActionIcon>
                           </Tooltip>
                         )}
                       <Text size="sm">

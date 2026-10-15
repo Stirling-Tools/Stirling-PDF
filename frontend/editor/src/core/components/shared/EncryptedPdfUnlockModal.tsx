@@ -1,5 +1,6 @@
 import { Modal, Stack, Text, PasswordInput, Group } from "@mantine/core";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { ProtectedPdfFileCard } from "@app/components/shared/ProtectedPdfFileCard";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
@@ -63,7 +64,7 @@ const EncryptedPdfUnlockModal = ({
             <Tooltip
               content={t(
                 "encryptedPdfUnlock.sessionDetails",
-                "Unlock for this session. The PDF stays protected. Remove Password creates an unprotected copy.",
+                "Open for this session. The PDF stays protected.",
               )}
               position="top"
               maxWidth={280}
@@ -98,24 +99,7 @@ const EncryptedPdfUnlockModal = ({
       data-testid={testIdPrefix ? `${testIdPrefix}-modal` : undefined}
     >
       <Stack gap="md">
-        <Group
-          gap="sm"
-          wrap="nowrap"
-          p="sm"
-          style={{
-            background: "var(--c-surface-raised)",
-            borderRadius: "var(--mantine-radius-md)",
-          }}
-        >
-          <Icon
-            name="lock"
-            size={20}
-            style={{ color: "var(--c-text-muted)", flexShrink: 0 }}
-          />
-          <Text size="sm" fw={500} style={{ overflowWrap: "anywhere" }}>
-            {fileName}
-          </Text>
-        </Group>
+        <ProtectedPdfFileCard fileName={fileName} />
         {(preservationReason || actionLabel) && (
           <Text size="sm">
             {preservationReason ||

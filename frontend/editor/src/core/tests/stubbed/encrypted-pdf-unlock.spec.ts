@@ -121,7 +121,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     });
     await details.focus();
     await expect(page.getByRole("tooltip")).toHaveText(
-      "Unlock for this session. The PDF stays protected. Remove Password creates an unprotected copy.",
+      "Open for this session. The PDF stays protected.",
     );
     await page.getByLabel(PASSWORD_LABEL, { exact: true }).focus();
     await expect(page.getByRole("tooltip")).toBeHidden();
@@ -343,7 +343,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     });
     await removePassword.hover();
     await expect(page.getByRole("tooltip")).toHaveText(
-      "Open Remove Password to create an unprotected copy.",
+      "Open Remove Password to choose which passwords to remove.",
     );
     await removePassword.click();
     await expect(page).toHaveURL(/\/remove-password$/);

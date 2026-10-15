@@ -240,7 +240,7 @@ describe("tool file selection", () => {
       });
       act(() => removePassword.focus());
       const help = await screen.findByText(
-        "Open Remove Password to create an unprotected copy.",
+        "Open Remove Password to choose which passwords to remove.",
       );
       await waitFor(() => expect(help).toBeVisible());
       await userEvent.click(removePassword);
