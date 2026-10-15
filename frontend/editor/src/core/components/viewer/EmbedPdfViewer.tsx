@@ -1883,6 +1883,9 @@ const EmbedPdfViewerContent = ({
               restorePending={restorePending}
               restoreRequest={restoreRequest}
               onRestoreEvent={handleRestoreEvent}
+              lastViewedPageFile={
+                currentFile && isStirlingFile(currentFile) ? currentFile : null
+              }
               pdfRenderMode={pdfRenderMode}
               file={effectiveFile.file}
               url={effectiveFile.url}

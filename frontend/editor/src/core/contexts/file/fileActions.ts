@@ -18,6 +18,7 @@ import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import { buildQuickKeySet } from "@app/contexts/file/fileSelectors";
 import { StirlingFile } from "@app/types/fileContext";
 import { fileStorage } from "@app/services/fileStorage";
+import { moveLastViewedPage } from "@app/services/lastViewedPageStore";
 import { zipFileService } from "@app/services/zipFileService";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
 import { trackPdfUploaded } from "@app/services/analytics";
@@ -688,6 +689,16 @@ export async function consumeFiles(
     outputStirlingFiles,
     outputStirlingFileStubs,
   );
+
+  // A new version is the same document to the reader, so it takes over the
+  // page its parent was left at.
+  outputStirlingFileStubs.forEach((stub, i) => {
+    const parent = stub.parentFileId
+      ? filesRef.current.get(stub.parentFileId)
+      : undefined;
+    if (parent)
+      moveLastViewedPage(createQuickKey(parent), outputStirlingFiles[i]);
+  });
 
   // Dispatch the consume action with pre-created stubs (no processing needed)
   dispatch({
