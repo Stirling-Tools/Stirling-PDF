@@ -304,6 +304,7 @@ public class ConfigController {
 
             // Check if this is a new server (version was 0.0.0 before initialization)
             configData.put("isNewServer", InitialSetup.isNewServer());
+            configData.put("setupCompleted", applicationProperties.getSystem().isSetupCompleted());
 
             // Check if the current user is a first-time user
             boolean isNewUser =

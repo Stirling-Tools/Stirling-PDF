@@ -11737,6 +11737,145 @@ showTools = "View unavailable tools ▾"
 title = "Your Stirling-PDF server is unreachable"
 toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}}\" is not available on the local backend."
 
+[serverSetup]
+back = "Back"
+collapse = "Hide {{setting}} settings"
+continue = "Continue"
+expand = "Show {{setting}} settings"
+finishSetup = "Finish setup"
+loadErrorSubtitle = "Setup needs the server's current settings to start."
+loadErrorTitle = "Couldn't load your settings"
+notNow = "Not now"
+off = "Off"
+on = "On"
+stepCount = "{{current}} of {{total}}"
+
+[serverSetup.addresses]
+backendUrl = "Server address"
+backendUrlHelp = "Where sign-in providers send people back. Usually the same as the web address."
+frontendUrl = "Web address"
+frontendUrlHelp = "Where people open Stirling PDF. Used in emails, share links and QR codes."
+subtitle = "How people and sign-in providers reach this server."
+title = "Addresses"
+
+[serverSetup.ai]
+apiKey = "API key"
+apiKeyHelp = "Leave empty to use the key the AI engine already has."
+baseUrl = "Base URL"
+custom = "Your own AI"
+engineUrl = "AI engine address"
+fastModel = "Fast model"
+label = "AI"
+provider = "Model provider"
+providerCustom = "OpenAI-compatible"
+smartModel = "Full model"
+stirling = "Stirling AI"
+subtitle = "Document questions, automated edits and AI agents."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "Accept and continue"
+acceptFinish = "Accept and finish"
+decline = "Decline and continue"
+declineFinish = "Decline and finish"
+label = "Usage analytics"
+learnMore = "What we collect"
+note = "Anonymous usage data helps us improve Stirling PDF. We never collect personal information or file contents."
+subtitle = "Help make Stirling PDF better."
+title = "Analytics"
+
+[serverSetup.email]
+from = "From address"
+host = "SMTP host"
+label = "Send email"
+password = "Password"
+port = "Port"
+subtitle = "For invites, signing requests and shares."
+title = "Email"
+username = "Username"
+
+[serverSetup.error]
+email = "Enter an email address"
+issuerUnreachable = "Couldn't reach this issuer. Check the address, and that this server can reach it."
+passwordIncorrect = "Incorrect password"
+passwordLength = "Use at least 8 characters"
+passwordMismatch = "Passwords don't match"
+passwordRejected = "The server didn't accept this password. Try another."
+passwordUnchanged = "Choose a password different from the current one"
+port = "Enter a port from 1 to 65535"
+providerName = "Use letters, numbers, dashes or underscores only"
+required = "Required"
+url = "Enter a full address, starting with http:// or https://"
+
+[serverSetup.files]
+sharing = "File sharing"
+sharingOffWarning = "With sharing off, existing share links stop working."
+storage = "Store files"
+storageOffWarning = "With storage off, files people saved on the server can no longer be opened."
+subtitle = "Where files live."
+title = "Files"
+
+[serverSetup.finish]
+errorNote = "Check the server is reachable and that you're still signed in as an admin."
+errorSubtitle = "Nothing was restarted."
+errorTitle = "Couldn't save your settings"
+manualSubtitle = "This server can't restart itself. Restart its container or service to apply them."
+manualTitle = "Settings saved"
+restartFailedSubtitle = "The server didn't restart. Restart its container or service to apply them."
+restartingSubtitle = "This page reloads when it's back, usually within a minute."
+restartingTitle = "Restarting your server"
+retry = "Try again"
+saving = "Saving"
+savingSubtitle = "One moment."
+savingTitle = "Saving your settings"
+
+[serverSetup.language]
+auto = "Match each browser"
+label = "Default language"
+subtitle = "What new visitors see first."
+title = "Language"
+
+[serverSetup.mcp]
+apiKey = "Their Stirling API key"
+authLabel = "Agents sign in with"
+issuer = "Issuer URL"
+issuerHelp = "Your identity provider's address. Agents' tokens must come from it and name this server's /mcp address."
+label = "MCP server"
+oauth = "OAuth identity provider"
+
+[serverSetup.password]
+confirm = "Confirm new password"
+current = "Current password"
+new = "New password"
+saved = "Password saved"
+subtitle = "Secure your admin account."
+title = "Password"
+
+[serverSetup.signIn]
+clientId = "Client ID"
+clientSecret = "Client secret"
+issuer = "Issuer URL"
+label = "Sign in with"
+oidc = "Other OpenID Connect"
+password = "Username and password"
+providerName = "Provider name"
+providerNameHelp = "Shown on the sign-in button, for example okta or entra."
+redirectNote = "Add this redirect URI in your provider:"
+subtitle = "How your team signs in."
+title = "Sign-in"
+
+[serverSetup.start]
+custom = "Custom"
+dismissFailed = "Couldn't skip setup. Check you're still signed in as an admin."
+quick = "Quick start"
+setupLabel = "Setup"
+subtitle = "Set it up for your team in a few steps."
+title = "Your server is up"
+
+[serverSetup.summary]
+subtitle = "Check the essentials. Everything else keeps its default."
+title = "Quick start"
+
 [session]
 expired = "Your session has expired. Please refresh the page and try again."
 

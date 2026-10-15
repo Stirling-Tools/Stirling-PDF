@@ -13,6 +13,7 @@ import {
   SERVER_JAR_URL,
 } from "@app/constants/selfHosting";
 import { RunLocationStepLayout } from "@app/components/runLocation/RunLocationStepLayout";
+import cardStyles from "@app/components/shared/setupCard/SetupCard.module.css";
 import styles from "@app/components/runLocation/RunLocation.module.css";
 
 type SelfHostMethod = "docker" | "compose" | "kubernetes" | "manual";
@@ -74,11 +75,11 @@ export function SelfHostStep({ onBack }: SelfHostStepProps) {
         "Run this on your server, then open it in a browser.",
       )}
     >
-      <div className={styles.settingRow}>
-        <span className={styles.settingLabel} id="run-location-method">
+      <div className={cardStyles.settingRow}>
+        <span className={cardStyles.settingLabel} id="run-location-method">
           {t("runLocation.server.methodLabel", "Run it with")}
         </span>
-        <div className={styles.settingControl}>
+        <div className={cardStyles.settingControl}>
           <Select
             aria-labelledby="run-location-method"
             options={METHODS.map((id) => ({
@@ -117,21 +118,23 @@ export function SelfHostStep({ onBack }: SelfHostStepProps) {
             ? t("runLocation.server.copyCompose", "Copy compose file")
             : t("runLocation.server.copy", "Copy command")}
       </Button>
-      <div className={styles.note}>
-        <Icon name="info" size={16} className={styles.noteIcon} />
-        <div className={styles.noteBody}>
-          <p className={styles.noteText}>
+      <div className={cardStyles.note}>
+        <Icon name="info" size={16} className={cardStyles.noteIcon} />
+        <div className={cardStyles.noteBody}>
+          <p className={cardStyles.noteText}>
             <Trans
               t={t}
               i18nKey="runLocation.server.note"
               defaults="Then open <url/> to finish setup."
               components={{
-                url: <code className={styles.inlineCode}>{SERVER_URL}</code>,
+                url: (
+                  <code className={cardStyles.inlineCode}>{SERVER_URL}</code>
+                ),
               }}
             />
           </p>
           <a
-            className={styles.noteLink}
+            className={cardStyles.noteLink}
             href={GUIDES[method]}
             target="_blank"
             rel="noopener noreferrer"

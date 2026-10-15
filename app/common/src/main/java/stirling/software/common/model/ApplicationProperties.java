@@ -1333,6 +1333,7 @@ public class ApplicationProperties {
         private String tessdataDir;
         private boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
+        private boolean setupCompleted;
         private Boolean enablePosthog;
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide = true;

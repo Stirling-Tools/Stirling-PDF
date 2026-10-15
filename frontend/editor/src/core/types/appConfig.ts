@@ -53,6 +53,8 @@ export interface AppConfig {
   dependenciesReady?: boolean;
   error?: string;
   isNewServer?: boolean;
+  /** False until an admin finishes or skips first-run server setup. */
+  setupCompleted?: boolean;
   isNewUser?: boolean;
   defaultHideUnavailableTools?: boolean;
   defaultHideUnavailableConversions?: boolean;
