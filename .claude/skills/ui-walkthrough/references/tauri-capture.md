@@ -84,6 +84,10 @@ cd frontend/editor/src-tauri && cargo build --features ui-walkthrough
 - Resolve the executable from the real Cargo target directory
   (`target/{release,debug}/stirling-pdf[.exe]`, macOS bundle second); a
   missing binary fails the run before launch — never fall back to `vite`.
+- Reject a binary that was not built with the feature: without the embedded
+  WebDriver plugin there is nothing to drive, so the adapter fails with the
+  rebuild command instead of handing WDIO an app it cannot attach to. Point
+  `TAURI_APP_BINARY` at any capture build you made yourself.
 - Account for Windows/macOS/Linux paths in the adapter, not in the scenario.
 - Use the existing desktop frontend build hook (`vite build --mode desktop`).
 - Wait for application readiness (a titled main window), not process spawn.

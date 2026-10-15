@@ -9,7 +9,7 @@
  * be unit-checked without a browser; scenarios pass the WDIO `browser`.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import { hostPlatformId, type CaptureRecord } from "../capture-manifest";
@@ -64,9 +64,39 @@ export function candidateBinaries(srcTauri = srcTauriDir()): string[] {
 }
 
 /**
- * Explicit override, else the debug-first candidates. An override that
- * names a missing file fails the run instead of silently capturing some
- * other build than the operator selected.
+ * Marker literal `tauri-plugin-wdio-webdriver` injects into its per-platform
+ * scripts (`macos.rs`, `linux.rs`, `windows.rs`), so it is linked into any
+ * binary carrying the plugin. The `ui-walkthrough` feature is the only thing
+ * that pulls the plugin in, so its absence means the binary hosts no
+ * WebDriver server, whatever profile it was built in.
+ */
+const WEBDRIVER_MARKER = "__wd_el_";
+
+function assertCaptureBuild(binary: string): void {
+  let built: boolean;
+  try {
+    built = readFileSync(binary).includes(WEBDRIVER_MARKER);
+  } catch (error) {
+    throw new Error(
+      `Could not read ${binary} to verify it is a capture build: ${(error as Error).message}`,
+      { cause: error },
+    );
+  }
+  if (!built) {
+    throw new Error(
+      `${binary} was not built with the ui-walkthrough feature, so it hosts ` +
+        `no WebDriver server. Rebuild it ` +
+        `(cd frontend/editor/src-tauri && cargo build --features ui-walkthrough) ` +
+        `or point ${TAURI_BINARY_ENV} at a capture build.`,
+    );
+  }
+}
+
+/**
+ * Explicit override, else the debug-first candidates. The resolved file must
+ * exist and be a capture build: a missing override fails the run instead of
+ * silently capturing some other build than the operator selected, and a
+ * binary without the plugin fails here rather than inside WDIO.
  */
 export function resolveTauriBinary(srcTauri = srcTauriDir()): string {
   const override = process.env[TAURI_BINARY_ENV];
@@ -79,6 +109,7 @@ export function resolveTauriBinary(srcTauri = srcTauriDir()): string {
           `or fix the path. Searched: ${override}`,
       );
     }
+    assertCaptureBuild(override);
     return override;
   }
   const candidates = candidateBinaries(srcTauri);
@@ -90,7 +121,29 @@ export function resolveTauriBinary(srcTauri = srcTauriDir()): string {
         `or set ${TAURI_BINARY_ENV}. Searched: ${candidates.join(", ")}`,
     );
   }
+  assertCaptureBuild(hit);
   return hit;
+}
+
+/** Process names the app runs under; `pgrep -x` compares names, not command
+ * lines, so a checkout path containing "Stirling-PDF" cannot match the WDIO
+ * launcher itself. */
+const APP_PROCESS_NAMES = ["stirling-pdf", "Stirling-PDF"];
+const ALREADY_RUNNING =
+  "A Stirling-PDF instance is already running; close it before capturing.";
+
+/** `pgrep` exits 1 when nothing matched, which is the answer we want here. */
+function processRunning(name: string): boolean {
+  try {
+    const out = execFileSync("pgrep", ["-x", name], {
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    return out.trim().length > 0;
+  } catch (error) {
+    if ((error as { status?: number }).status === 1) return false;
+    throw error;
+  }
 }
 
 /**
@@ -110,20 +163,12 @@ export function ensureNoRunningInstance(): void {
         },
       );
       if (/stirling-pdf\.exe/i.test(out)) {
-        throw new Error(
-          "A Stirling-PDF instance is already running; close it before capturing.",
-        );
+        throw new Error(ALREADY_RUNNING);
       }
       return;
     }
-    const out = execFileSync("pgrep", ["-af", "stirling-pdf|Stirling-PDF"], {
-      encoding: "utf-8",
-      stdio: ["ignore", "pipe", "ignore"],
-    });
-    if (out.trim()) {
-      throw new Error(
-        "A Stirling-PDF instance is already running; close it before capturing.",
-      );
+    if (APP_PROCESS_NAMES.some(processRunning)) {
+      throw new Error(ALREADY_RUNNING);
     }
   } catch (error) {
     if (error instanceof Error && /already running/.test(error.message))
@@ -222,7 +267,10 @@ async function startLongtaskObservation(
         for (const entry of list.getEntries())
           probe.__wtLongtasks?.push(entry.duration);
       });
-      observer.observe({ type: "longtask", buffered: true });
+      // Not `buffered`: every snapshot arms a fresh array, and buffering
+      // would replay each task since page load into it, counting the same
+      // jank again in every later snapshot.
+      observer.observe({ type: "longtask" });
       probe.__wtLongtaskObserver = observer;
       return true;
     } catch {
