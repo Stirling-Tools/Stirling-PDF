@@ -316,7 +316,54 @@ class SupabaseAuthenticationFilterTest {
         verify(jwtDecoder, never()).decode(any());
     }
 
-    // -------- helpers --------
+    @Test
+    void companyCeremonyNeverProvisionsAPersonalTeam() throws Exception {
+        request.setRequestURI("/api/v1/company-sso/complete");
+        request.setMethod("POST");
+        request.addHeader("Authorization", "Bearer company-token");
+        filter.doFilter(request, response, chain);
+        verify(jwtDecoder, never()).decode(any());
+        org.mockito.Mockito.verifyNoInteractions(saasTeamService, userService);
+        assertThat(chain.getRequest()).isSameAs(request);
+    }
+
+    @Test
+    void admittedCompanyIdentityUsesTheOriginalAccountWithoutProvisioning() throws Exception {
+        var policy = org.mockito.Mockito.mock(stirling.software.saas.sso.CompanySsoPolicy.class);
+        filter.withCompanySsoPolicy(policy);
+        Jwt jwt = jwtFor(UUID.randomUUID(), "company@example.com", false, "sso:provider");
+        User original = newUser("original@example.com");
+        when(jwtDecoder.decode("token")).thenReturn(jwt);
+        when(policy.resolve(jwt)).thenReturn(Optional.of(original));
+        request.setRequestURI("/api/v1/team/my");
+        request.setMethod("GET");
+        request.addHeader("Authorization", "Bearer token");
+        filter.doFilter(request, response, chain);
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+                .isSameAs(original);
+        verify(policy).assertAccess(original, jwt);
+        org.mockito.Mockito.verifyNoInteractions(saasTeamService, userService, supabaseUserService);
+    }
+
+    @Test
+    void unadmittedCompanyIdentityIsRedirectedBeforeAnyUserCreation() throws Exception {
+        var policy = org.mockito.Mockito.mock(stirling.software.saas.sso.CompanySsoPolicy.class);
+        filter.withCompanySsoPolicy(policy);
+        Jwt jwt = jwtFor(UUID.randomUUID(), "company@example.com", false, "sso:provider");
+        when(jwtDecoder.decode("token")).thenReturn(jwt);
+        when(policy.resolve(jwt))
+                .thenThrow(
+                        new stirling.software.saas.sso.CompanySsoException(
+                                "COMPANY_SSO_REQUIRED", "Sign in"));
+        request.setRequestURI("/api/v1/team/my");
+        request.setMethod("GET");
+        request.addHeader("Authorization", "Bearer token");
+        filter.doFilter(request, response, chain);
+        assertThat(response.getStatus()).isEqualTo(403);
+        assertThat(response.getContentAsString()).contains("COMPANY_SSO_REQUIRED");
+        assertThat(chain.getRequest()).isNull();
+        org.mockito.Mockito.verifyNoInteractions(saasTeamService, userService, supabaseUserService);
+    }
 
     private User newUser(String username) {
         User u = new User();

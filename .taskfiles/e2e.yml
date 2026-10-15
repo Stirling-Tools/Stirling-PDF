@@ -1,6 +1,43 @@
 version: '3'
 
 tasks:
+  company-sso:up:
+    desc: "Start the enterprise SaaS SAML identity provider"
+    cmds:
+      - node testing/enterprise-sso/lab.mjs up
+
+  company-sso:configure:
+    desc: "Configure the enterprise SAML test connection"
+    cmds:
+      - node testing/enterprise-sso/lab.mjs configure
+
+  company-sso:doctor:
+    desc: "Check prerequisites for enterprise SAML acceptance"
+    cmds:
+      - node testing/enterprise-sso/run.mjs doctor
+
+  company-sso:test:
+    desc: "Test live enterprise SAML login and team membership"
+    cmds:
+      - node testing/enterprise-sso/run.mjs run {{.CLI_ARGS}}
+
+  company-sso:down:
+    desc: "Stop the enterprise SAML identity provider"
+    cmds:
+      - node testing/enterprise-sso/lab.mjs down
+
+  company-sso:logs:
+    desc: "Show enterprise SAML identity-provider logs"
+    cmds:
+      - node testing/enterprise-sso/lab.mjs logs
+
+  company-sso:check:
+    desc: "Check the enterprise SAML test harness"
+    cmds:
+      - node --check testing/enterprise-sso/lab.mjs
+      - node --check testing/enterprise-sso/run.mjs
+      - node --test testing/enterprise-sso/lib.test.mjs
+
   install:
     desc: "Install Playwright browsers"
     dir: frontend/editor

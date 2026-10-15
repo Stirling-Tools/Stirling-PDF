@@ -10,6 +10,7 @@ import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import McpSection from "@app/components/shared/config/configSections/McpSection";
 import HelpSection from "@app/components/shared/config/configSections/HelpSection";
 import LegalSection from "@app/components/shared/config/configSections/LegalSection";
+import CompanySsoSection from "@app/components/shared/config/configSections/CompanySsoSection";
 import {
   createCloudBillingSection,
   createCloudTeamNavItem,
@@ -19,6 +20,7 @@ type OverviewComponent = React.ComponentType<{ onLogoutClick: () => void }>;
 
 interface CreateSaasConfigNavSectionsOptions {
   isAnonymous?: boolean;
+  isTeamLeader?: boolean;
   t: TFunction<"translation", undefined>;
   /** Leaves settings; the Help tours need the page out of the way to run. */
   onRequestClose?: () => void;
@@ -185,6 +187,7 @@ export function createSaasConfigNavSections(
   onLogoutClick: () => void,
   {
     isAnonymous = false,
+    isTeamLeader = false,
     t,
     onRequestClose = () => {},
   }: CreateSaasConfigNavSectionsOptions,
@@ -211,6 +214,13 @@ export function createSaasConfigNavSections(
   if (!isAnonymous) {
     // Shared cloud team item — same management UI on saas and desktop.
     accountSection.items.push(createCloudTeamNavItem(t));
+    if (isTeamLeader)
+      accountSection.items.push({
+        key: "identity",
+        label: t("companySso.title", "Company single sign-on"),
+        icon: "lock",
+        component: <CompanySsoSection />,
+      });
   }
 
   // Login is always on and there is no local binary to update, so the setup

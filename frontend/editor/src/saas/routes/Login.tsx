@@ -388,6 +388,9 @@ export default function Login() {
       </div>
 
       {/* Email + password form — always visible (no expander toggle) */}
+      <Button variant="secondary" onClick={() => navigate("/company-sso")}>
+        {t("companySso.signIn", "Continue with company SSO")}
+      </Button>
       <div style={{ paddingBottom: "0.5rem" }}>
         <EmailPasswordForm
           email={email}

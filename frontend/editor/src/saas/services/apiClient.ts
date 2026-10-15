@@ -1,4 +1,5 @@
 import axios from "axios";
+import { reportCompanySsoRequired } from "@app/services/companySsoRequired";
 import { supabase } from "@app/auth/supabase";
 import { handleHttpError } from "@app/services/httpErrorHandler";
 import {
@@ -120,6 +121,7 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config || {};
     const status = error.response?.status;
+    reportCompanySsoRequired(status, error.response?.data);
     const isPublicEndpoint = publicEndpoints.some((endpoint) =>
       originalRequest.url?.includes(endpoint),
     );
