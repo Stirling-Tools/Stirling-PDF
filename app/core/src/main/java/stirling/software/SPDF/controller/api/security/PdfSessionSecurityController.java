@@ -18,12 +18,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
-import stirling.software.SPDF.service.PdfProtectionService;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.doc.PdfSecurity;
+import stirling.software.jpdfium.exception.JPDFiumException;
 
 /**
  * Stateless helpers for interactive unlocking. Neither endpoint retains credentials or documents.
@@ -33,7 +34,6 @@ import stirling.software.common.util.WebResponseUtils;
 public class PdfSessionSecurityController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
-    private final PdfProtectionService protectionService;
 
     /**
      * Passwords are never returned; permissions describe the authenticated access to the original
@@ -103,8 +103,12 @@ public class PdfSessionSecurityController {
                 TempFile source = new TempFile(tempFileManager, ".pdf")) {
             fileInput.transferTo(input.getFile());
             sourceFile.transferTo(source.getFile());
-            protectionService.restore(
-                    input.getPath(), source.getPath(), password, output.getPath());
+            try {
+                PdfSecurity.copyEncryption(
+                        input.getPath(), output.getPath(), source.getPath(), password);
+            } catch (JPDFiumException e) {
+                throw new IOException("Unable to restore PDF protection", e);
+            }
             try (var stream = Files.newInputStream(output.getPath());
                     PDDocument protectedDocument =
                             pdfDocumentFactory.load(stream, password, true)) {
