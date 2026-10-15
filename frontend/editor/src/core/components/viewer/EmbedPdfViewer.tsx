@@ -1739,6 +1739,7 @@ const EmbedPdfViewerContent = ({
     isScaleCalibrationActive,
     startScaleCalibration,
     cancelScaleCalibration,
+    currentFile,
   );
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.

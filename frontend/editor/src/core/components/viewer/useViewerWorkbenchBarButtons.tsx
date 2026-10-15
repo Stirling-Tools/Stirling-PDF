@@ -24,6 +24,7 @@ import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
 import { RulerScaleSettingsButton } from "@app/components/viewer/RulerScaleSettingsButton";
 import type { MeasureScale } from "@app/utils/measurementTypes";
+import type { StirlingFile } from "@app/types/fileContext";
 
 export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
@@ -33,6 +34,7 @@ export function useViewerWorkbenchBarButtons(
   isScaleCalibrationActive?: boolean,
   startScaleCalibration?: () => void,
   cancelScaleCalibration?: () => void,
+  displayedFile?: StirlingFile | File | null,
 ) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
@@ -68,7 +70,7 @@ export function useViewerWorkbenchBarButtons(
     handleReadAloud,
     handleSpeechRateChange,
     handleSpeechLanguageChange,
-  } = useViewerReadAloud(i18n.language || "en-US");
+  } = useViewerReadAloud(i18n.language || "en-US", displayedFile);
 
   useEffect(() => {
     return registerImmediatePanUpdate((newIsPanning) => {

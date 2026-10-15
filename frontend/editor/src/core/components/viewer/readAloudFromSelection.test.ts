@@ -19,6 +19,10 @@ describe("findReadAloudStartIndex", () => {
     expect(findReadAloudStartIndex(text, "The", 1)).toBe(26);
   });
 
+  it("prefers a whole word over a nearer match inside a longer word", () => {
+    expect(findReadAloudStartIndex("concatenate cat", "cat", 0)).toBe(12);
+  });
+
   it("snaps a selection starting mid-word to the word start", () => {
     expect(findReadAloudStartIndex(text, "og ran", 0)).toBe(17);
   });

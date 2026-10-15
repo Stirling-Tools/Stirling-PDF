@@ -5,7 +5,6 @@ import {
   findReadAloudStartIndex,
   type ReadAloudFromSelectionDetail,
 } from "@app/components/viewer/readAloudFromSelection";
-import { useFileSelectors } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useStopReadAloudOnNavigation } from "@app/components/viewer/useStopReadAloudOnNavigation";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
@@ -63,9 +62,26 @@ function createHighlightElement(
   return highlight;
 }
 
-export function useViewerReadAloud(defaultLanguage?: string) {
+/** -1 when `charIndex` falls on the space between two words. */
+function wordIndexAtChar(words: string[], charIndex: number): number {
+  let wordStart = 0;
+  for (let i = 0; i < words.length; i++) {
+    const wordEnd = wordStart + words[i].length;
+    if (charIndex < wordEnd) return charIndex >= wordStart ? i : -1;
+    wordStart = wordEnd + 1;
+  }
+  return -1;
+}
+
+/**
+ * `displayedFile` is the document the viewer is showing, preview included:
+ * read-aloud and the selection menu must speak the same file the user sees.
+ */
+export function useViewerReadAloud(
+  defaultLanguage?: string,
+  displayedFile?: StirlingFile | File | null,
+) {
   const viewer = useViewer();
-  const selectors = useFileSelectors();
 
   const [isReadingAloud, setIsReadingAloud] = useState(false);
   const [speechRate, setSpeechRate] = useState(1);
@@ -90,7 +106,10 @@ export function useViewerReadAloud(defaultLanguage?: string) {
   const restartingSpeechRef = useRef(false);
   const restartTimeoutRef = useRef<number | null>(null);
   const pageAdvanceTimeoutRef = useRef<number | null>(null);
-  const currentFileRef = useRef<StirlingFile | null>(null);
+  const currentFileRef = useRef<StirlingFile | File | null>(null);
+  // Bumped whenever reading starts or stops; async work started under an
+  // older value must not speak or tear down the session that replaced it.
+  const sessionRef = useRef(0);
   const totalPagesRef = useRef(0);
   const speechRateRef = useRef(1); // Keep track of current rate without recreating dependent functions
   const speechLanguageRef = useRef(defaultLanguage || "en-US");
@@ -215,16 +234,23 @@ export function useViewerReadAloud(defaultLanguage?: string) {
   }, []);
 
   const stopReadingAloud = useCallback(() => {
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
+    sessionRef.current++;
+    restartingSpeechRef.current = false;
+    if (restartTimeoutRef.current !== null) {
+      window.clearTimeout(restartTimeoutRef.current);
+      restartTimeoutRef.current = null;
     }
     if (pageAdvanceTimeoutRef.current !== null) {
       window.clearTimeout(pageAdvanceTimeoutRef.current);
       pageAdvanceTimeoutRef.current = null;
     }
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     clearHighlights();
     setIsReadingAloud(false);
     currentFileRef.current = null;
+    currentWordIndexRef.current = 0;
     utteranceRef.current = null;
     cleanupReadingSession();
   }, [clearHighlights, cleanupReadingSession]);
@@ -274,14 +300,16 @@ export function useViewerReadAloud(defaultLanguage?: string) {
     [clearHighlights],
   );
 
+  /**
+   * Parses one page's text for speaking. Null when the page has no text or
+   * when `session` was superseded mid-parse, so callers check the session
+   * before treating null as an empty page.
+   */
   const readPage = useCallback(
     async (
       currentFile: StirlingFile | File,
       pageNumber: number,
-      options?: {
-        preserveSpeechState?: boolean;
-        highlightWordIndex?: number;
-      },
+      session: number,
     ) => {
       let pdfDoc: Awaited<
         ReturnType<typeof pdfWorkerManager.createDocument>
@@ -294,14 +322,20 @@ export function useViewerReadAloud(defaultLanguage?: string) {
         if (cachedPdfDocRef.current) {
           pdfDoc = cachedPdfDocRef.current;
         } else {
-          pdfDoc = await pdfWorkerManager.createDocument(
+          const createdDoc = await pdfWorkerManager.createDocument(
             await currentFile.arrayBuffer(),
           );
+          if (session !== sessionRef.current) {
+            pdfWorkerManager.destroyDocument(createdDoc);
+            return null;
+          }
+          pdfDoc = createdDoc;
           cachedPdfDocRef.current = pdfDoc;
         }
 
         const page = await pdfDoc.getPage(pageNumber);
         const textContent = await page.getTextContent();
+        if (session !== sessionRef.current) return null;
         // The highlight is rendered inside the page element, so we keep geometry in
         // page-local coordinates and let the viewer's own rotation transform it.
         const viewportTransform = page.getViewport({ scale: zoom }).transform;
@@ -387,22 +421,6 @@ export function useViewerReadAloud(defaultLanguage?: string) {
         }
 
         const words = spokenText.split(/\s+/).filter(Boolean);
-
-        if (!options?.preserveSpeechState) {
-          speechTextRef.current = spokenText;
-          speechWordsRef.current = words;
-          speechCharIndexRef.current = 0;
-          currentWordIndexRef.current = 0;
-        }
-
-        const highlightIndex = Math.max(
-          0,
-          Math.min(
-            options?.highlightWordIndex ?? 0,
-            Math.max(words.length - 1, 0),
-          ),
-        );
-        highlightWord(highlightIndex, words, pageNumber);
         return { spokenText, words };
       } catch (error) {
         // Clear cache on error to avoid stale state
@@ -412,7 +430,7 @@ export function useViewerReadAloud(defaultLanguage?: string) {
         throw error;
       }
     },
-    [highlightWord, viewer],
+    [viewer],
   );
 
   const speakFromCharIndex = useCallback(
@@ -447,6 +465,17 @@ export function useViewerReadAloud(defaultLanguage?: string) {
         return;
       }
 
+      speechTextRef.current = spokenText;
+      speechWordsRef.current = words;
+      speechCharIndexRef.current = baseCharIndex;
+      currentPageNumberRef.current = pageNumber;
+      const startWordIndex = wordIndexAtChar(words, baseCharIndex);
+      if (startWordIndex !== -1) {
+        currentWordIndexRef.current = startWordIndex;
+        highlightWord(startWordIndex, words, pageNumber);
+      }
+
+      const session = sessionRef.current;
       const utterance = new SpeechSynthesisUtterance(remainingText);
       utterance.rate = rateOverride ?? speechRateRef.current;
       const currentLang = languageOverride ?? speechLanguageRef.current;
@@ -460,6 +489,7 @@ export function useViewerReadAloud(defaultLanguage?: string) {
 
       utterance.onstart = () => setIsReadingAloud(true);
       utterance.onend = () => {
+        if (session !== sessionRef.current) return;
         utteranceRef.current = null;
         if (restartingSpeechRef.current) {
           return;
@@ -485,7 +515,9 @@ export function useViewerReadAloud(defaultLanguage?: string) {
               const nextPageData = await readPage(
                 currentFileRef.current,
                 pageNumber + 1,
+                session,
               );
+              if (session !== sessionRef.current) return;
               if (!nextPageData) {
                 currentFileRef.current = null;
                 setIsReadingAloud(false);
@@ -501,6 +533,7 @@ export function useViewerReadAloud(defaultLanguage?: string) {
                 speechLanguageRef.current,
               );
             } catch (error) {
+              if (session !== sessionRef.current) return;
               console.error("Read aloud page advance failed", error);
               currentFileRef.current = null;
               clearHighlights();
@@ -518,6 +551,7 @@ export function useViewerReadAloud(defaultLanguage?: string) {
         cleanupReadingSession();
       };
       utterance.onerror = () => {
+        if (session !== sessionRef.current) return;
         utteranceRef.current = null;
         if (restartingSpeechRef.current) {
           return;
@@ -535,24 +569,24 @@ export function useViewerReadAloud(defaultLanguage?: string) {
         const absoluteCharIndex = baseCharIndex + event.charIndex;
         speechCharIndexRef.current = absoluteCharIndex;
 
-        let charCount = 0;
-        for (let i = 0; i < words.length; i++) {
-          const wordStart = charCount;
-          const wordEnd = charCount + words[i].length;
-          if (absoluteCharIndex >= wordStart && absoluteCharIndex < wordEnd) {
-            currentWordIndexRef.current = i;
-            currentPageNumberRef.current = pageNumber;
-            highlightWord(i, words, pageNumber);
-            break;
-          }
-          charCount = wordEnd + 1;
-        }
+        const wordIndex = wordIndexAtChar(words, absoluteCharIndex);
+        if (wordIndex === -1) return;
+        currentWordIndexRef.current = wordIndex;
+        currentPageNumberRef.current = pageNumber;
+        highlightWord(wordIndex, words, pageNumber);
       };
 
       utteranceRef.current = utterance;
       window.speechSynthesis.speak(utterance);
     },
-    [clearHighlights, cleanupReadingSession, readPage, viewer.scrollActions],
+    [
+      clearHighlights,
+      cleanupReadingSession,
+      findVoiceForLanguage,
+      highlightWord,
+      readPage,
+      viewer.scrollActions,
+    ],
   );
 
   const refreshActiveHighlight = useCallback(() => {
@@ -578,21 +612,17 @@ export function useViewerReadAloud(defaultLanguage?: string) {
       pageNumber: number,
       findStartCharIndex?: (spokenText: string) => number,
     ) => {
+      if (!displayedFile) return;
+      const session = ++sessionRef.current;
       try {
-        const selectedFiles = selectors.getSelectedFiles();
-        const currentFile =
-          selectedFiles[viewer.activeFileIndex] ?? selectedFiles[0];
-        if (!currentFile) return;
-        currentFileRef.current = currentFile;
+        currentFileRef.current = displayedFile;
         totalPagesRef.current = viewer.getScrollState().totalPages || 0;
 
         setIsReadingAloud(true);
-        currentPageNumberRef.current = pageNumber;
-        const pageData = await readPage(currentFile, pageNumber);
+        const pageData = await readPage(displayedFile, pageNumber, session);
+        if (session !== sessionRef.current) return;
         if (!pageData) {
-          currentFileRef.current = null;
-          setIsReadingAloud(false);
-          cleanupReadingSession();
+          stopReadingAloud();
           return;
         }
 
@@ -606,21 +636,12 @@ export function useViewerReadAloud(defaultLanguage?: string) {
           speechLanguageRef.current,
         );
       } catch (error) {
+        if (session !== sessionRef.current) return;
         console.error("Read aloud failed", error);
-        currentFileRef.current = null;
-        clearHighlights();
-        setIsReadingAloud(false);
-        cleanupReadingSession();
+        stopReadingAloud();
       }
     },
-    [
-      clearHighlights,
-      cleanupReadingSession,
-      readPage,
-      selectors,
-      speakFromCharIndex,
-      viewer,
-    ],
+    [displayedFile, readPage, speakFromCharIndex, stopReadingAloud, viewer],
   );
 
   const handleReadAloud = useCallback(async () => {
@@ -629,41 +650,18 @@ export function useViewerReadAloud(defaultLanguage?: string) {
     }
 
     if (isReadingAloud) {
-      restartingSpeechRef.current = false;
-      if (pageAdvanceTimeoutRef.current !== null) {
-        window.clearTimeout(pageAdvanceTimeoutRef.current);
-        pageAdvanceTimeoutRef.current = null;
-      }
-      window.speechSynthesis.cancel();
-      clearHighlights();
-      setIsReadingAloud(false);
-      currentFileRef.current = null;
-      utteranceRef.current = null;
-      cleanupReadingSession();
+      stopReadingAloud();
       return;
     }
 
     await startReading(viewer.getScrollState().currentPage || 1);
-  }, [
-    clearHighlights,
-    cleanupReadingSession,
-    isReadingAloud,
-    startReading,
-    viewer,
-  ]);
+  }, [isReadingAloud, startReading, stopReadingAloud, viewer]);
 
   useEffect(() => {
     const handleReadFromSelection = (event: Event) => {
       const { pageNumber, selectedText, approximatePosition } = (
         event as CustomEvent<ReadAloudFromSelectionDetail>
       ).detail;
-      // cancel() fires the old utterance's end or error asynchronously, which
-      // would advance the page or tear down the session started below.
-      if (utteranceRef.current) {
-        utteranceRef.current.onend = null;
-        utteranceRef.current.onerror = null;
-      }
-      restartingSpeechRef.current = false;
       stopReadingAloud();
       void startReading(pageNumber, (spokenText) =>
         findReadAloudStartIndex(spokenText, selectedText, approximatePosition),
@@ -736,25 +734,7 @@ export function useViewerReadAloud(defaultLanguage?: string) {
     });
   }, [refreshActiveHighlight, viewer]);
 
-  useEffect(() => {
-    return () => {
-      if (restartTimeoutRef.current !== null) {
-        window.clearTimeout(restartTimeoutRef.current);
-      }
-      if (pageAdvanceTimeoutRef.current !== null) {
-        window.clearTimeout(pageAdvanceTimeoutRef.current);
-      }
-      if (typeof window !== "undefined" && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-      restartingSpeechRef.current = false;
-      clearHighlights();
-      currentFileRef.current = null;
-      currentWordIndexRef.current = 0;
-      utteranceRef.current = null;
-      cleanupReadingSession();
-    };
-  }, [clearHighlights, cleanupReadingSession]);
+  useEffect(() => stopReadingAloud, [stopReadingAloud]);
 
   const handleSpeechLanguageChange = useCallback(
     (nextLanguage: string) => {
