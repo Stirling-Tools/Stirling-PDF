@@ -14,7 +14,8 @@ const SAMPLE_PDF_BYTES = fs.readFileSync(SAMPLE_PDF);
 const SMALLER_PDF_BYTES = fs.readFileSync(
   path.join(FIXTURES_DIR, "cropbox-control.pdf"),
 );
-const NO_REDUCTION_NOTICE = /can't be compressed any further/i;
+const NO_REDUCTION_NOTICE =
+  /can't be compressed any further|made no improvement/i;
 
 async function stubCompressResponse(page: Page, body: Buffer) {
   await page.route("**/api/v1/misc/compress-pdf", (route) =>
@@ -29,9 +30,16 @@ async function stubCompressResponse(page: Page, body: Buffer) {
   );
 }
 
-async function compressSample(page: Page) {
+async function compressSample(page: Page, level?: number) {
   await uploadFiles(page, SAMPLE_PDF);
   await switchToEditorIfViewerMode(page);
+  if (level !== undefined) {
+    const levelInput = page.getByRole("textbox", {
+      name: "Quality Adjustment",
+    });
+    await levelInput.fill(String(level));
+    await levelInput.blur();
+  }
   await runToolAndWaitForReview(page);
 }
 
@@ -62,13 +70,24 @@ test.describe("8. Compress Tool", () => {
   });
 
   test.describe("8.2 Compress - No size reduction", () => {
-    test("says so when the result is no smaller than the input", async ({
-      page,
-    }) => {
+    test("below the top level, suggests a higher level", async ({ page }) => {
       await stubCompressResponse(page, SAMPLE_PDF_BYTES);
       await compressSample(page);
 
-      await expect(page.getByText(NO_REDUCTION_NOTICE)).toBeVisible();
+      await expect(
+        page.getByText(/at this level made no improvement/i),
+      ).toBeVisible();
+    });
+
+    test("at the top level, says the file can't go any smaller", async ({
+      page,
+    }) => {
+      await stubCompressResponse(page, SAMPLE_PDF_BYTES);
+      await compressSample(page, 9);
+
+      await expect(
+        page.getByText(/can't be compressed any further/i),
+      ).toBeVisible();
     });
 
     test("stays quiet when the result is smaller", async ({ page }) => {
