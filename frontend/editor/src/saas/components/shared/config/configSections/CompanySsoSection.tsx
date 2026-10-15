@@ -72,15 +72,28 @@ export default function CompanySsoSection() {
           </Button>
         </Alert>
       )}
-      {settings && !settings.eligible && (
+      {settings && !settings.available && (
         <Alert>
           {t(
-            "companySso.enterpriseOnly",
-            "Company SSO is available for enterprise teams. Contact Stirling to enable it for your team.",
+            "companySso.unavailable",
+            "Company SSO setup and sign-in are temporarily unavailable. Contact Stirling support.",
           )}
         </Alert>
       )}
-      {settings?.eligible && (
+      {settings?.available && !settings.eligible && (
+        <Alert>
+          {settings.active
+            ? t(
+                "companySso.enterpriseExpired",
+                "Enterprise access has ended. Existing members can still use company SSO. New members can join after Enterprise access is renewed.",
+              )
+            : t(
+                "companySso.enterpriseOnly",
+                "Company SSO setup requires an active Enterprise plan or trial.",
+              )}
+        </Alert>
+      )}
+      {settings && (settings.eligible || settings.active) && (
         <>
           <Alert>
             {settings.active
@@ -181,7 +194,7 @@ export default function CompanySsoSection() {
                   <Text>
                     {t(
                       "companySso.enableImpact",
-                      "Members will be asked to use company SSO. Existing members must connect their account once. New users assigned to your SAML app join as Members, subject to available seats.",
+                      "Members will be asked to use company SSO. Existing members must connect their account once. New users assigned to your SAML app join as Members while Enterprise access is active.",
                     )}
                   </Text>
                   <Checkbox

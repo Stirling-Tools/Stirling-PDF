@@ -30,6 +30,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
+import stirling.software.saas.procurement.service.EnterpriseEntitlementService;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 import stirling.software.saas.service.SaasTeamExtensionService;
 
@@ -48,8 +49,10 @@ public class CompanySsoService {
     private final TeamMembershipRepository memberships;
     private final SaasTeamExtensionsRepository seats;
     private final SaasTeamExtensionService teamExtensions;
+    private final EnterpriseEntitlementService enterprise;
 
     public record Settings(
+            boolean available,
             boolean eligible,
             UUID connectionId,
             boolean active,
@@ -63,16 +66,16 @@ public class CompanySsoService {
     public record Completed(boolean active, String teamName) {}
 
     /**
-     * Reads only the current team; entitlement is assigned by the operator, never by the browser.
+     * Reads the current team's setup eligibility without hiding an enforced connection on expiry.
      */
     public Settings settings(Jwt jwt) {
         User user = originalOrAdmitted(jwt, false);
         long teamId = user.getTeam().getId();
         requireLeader(teamId, user);
-        boolean eligible =
-                properties.isEnabled() && properties.getEligibleTeamIds().contains(teamId);
-        var connection = eligible ? store.team(teamId).orElse(null) : null;
+        boolean eligible = properties.isEnabled() && enterprise.isActive(teamId);
+        var connection = store.team(teamId).orElse(null);
         return new Settings(
+                properties.isEnabled(),
                 eligible,
                 connection == null ? null : connection.id(),
                 connection != null && connection.active(),
@@ -134,6 +137,7 @@ public class CompanySsoService {
         User original = originalJwt == null ? null : originalOrAdmitted(originalJwt, true);
         if (original != null) requireMember(connection.teamId(), original);
         if (!connection.active()) {
+            requireEligible(connection.teamId());
             if (original == null)
                 throw error("CONNECTION_NOT_ACTIVE", "Your team leader is still setting up SSO.");
             requireLeader(connection.teamId(), original);
@@ -161,6 +165,7 @@ public class CompanySsoService {
         var connection = connection(attempt.connectionId());
         Team team = teams.lockById(connection.teamId()).orElseThrow();
         connection = connection(attempt.connectionId());
+        if (!connection.active()) requireEligible(team.getId());
         Instant now = Instant.now();
         if (!now.isBefore(attempt.expiresAt()) || attempt.revision() != connection.revision()) {
             throw error("ATTEMPT_EXPIRED", "Start company sign-in again.");
@@ -221,6 +226,7 @@ public class CompanySsoService {
                         "ACCOUNT_CONNECTION_REQUIRED",
                         "Sign in to your existing Stirling account to connect it to company SSO.");
             }
+            requireEnterprise(team.getId());
             user = new User();
             user.setUsername(email);
             user.setEmail(email);
@@ -241,6 +247,7 @@ public class CompanySsoService {
         if (membership == null) {
             if (!connection.active())
                 throw error("CONNECTION_NOT_ACTIVE", "Your team leader is still setting up SSO.");
+            requireEnterprise(team.getId());
             if (seats.incrementSeatsUsed(team.getId()) != 1)
                 throw error(
                         "TEAM_FULL", "Your team has no available seats. Contact your team leader.");
@@ -315,10 +322,16 @@ public class CompanySsoService {
     }
 
     private void requireEligible(long teamId) {
-        if (!properties.isEnabled() || !properties.getEligibleTeamIds().contains(teamId))
+        if (!properties.isEnabled()) throw error("SSO_UNAVAILABLE", "Company SSO is unavailable.");
+        requireEnterprise(teamId);
+    }
+
+    private void requireEnterprise(long teamId) {
+        if (!enterprise.isActive(teamId))
             throw error(
                     "ENTERPRISE_REQUIRED",
-                    "Contact Stirling to enable enterprise SSO for this team.");
+                    "An active Enterprise plan or trial is required to set up SSO or join this team."
+                            + " Existing members can still sign in with company SSO.");
     }
 
     private TeamMembership requireMember(long teamId, User user) {

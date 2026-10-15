@@ -49,6 +49,7 @@ export function exchangeCompanyCode(code: string, proof: string | null) {
 }
 
 export interface CompanySsoSettings {
+  available: boolean;
   eligible: boolean;
   connectionId: string | null;
   active: boolean;
