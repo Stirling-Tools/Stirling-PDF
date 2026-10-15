@@ -316,11 +316,12 @@ export function PdfViewerToolbar({
             size={buttonSize}
             className="pdf-viewer-toolbar-wide-only"
             onClick={handleCoverPageToggle}
+            disabled={scrollState.totalPages <= 1}
             style={{ minWidth: buttonMinWidth }}
             aria-pressed={isCoverPageActive}
             aria-label={t("viewer.coverPageView", "Show Cover Page Separately")}
           >
-            <Icon name="book-open" size={18} />
+            <Icon name="book" size={18} />
           </ActionIcon>
         </Tooltip>
       )}
@@ -477,10 +478,11 @@ export function PdfViewerToolbar({
             </Menu.Item>
             {isDualPageActive && (
               <Menu.Item
-                leftSection={<Icon name="book-open" size={18} />}
+                leftSection={<Icon name="book" size={18} />}
                 rightSection={
                   isCoverPageActive && <Icon name="check" size={16} />
                 }
+                disabled={scrollState.totalPages <= 1}
                 onClick={handleCoverPageToggle}
               >
                 {t("viewer.coverPageView", "Show Cover Page Separately")}
