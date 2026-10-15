@@ -3838,6 +3838,12 @@ filesize = "File Size"
 quality = "Quality"
 title = "Compression Method"
 
+[compress.noReduction]
+multiple = "Compression ran successfully, but {{count}} of {{total}} files can't be compressed any further."
+multipleAtLevel = "Compression at this level made no improvement to {{count}} of {{total}} files. Try a higher compression level."
+single = "Compression ran successfully, but this file can't be compressed any further."
+singleAtLevel = "Compression at this level made no improvement to this file. Try a higher compression level."
+
 [compress.settings]
 desiredSize = "Desired File Size"
 desiredSizePlaceholder = "Enter size"

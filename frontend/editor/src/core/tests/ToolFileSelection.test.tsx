@@ -13,6 +13,7 @@ import type { ToolAutomationSettingsProps } from "@app/hooks/tools/shared/toolOp
 import {
   createNewStirlingFileStub,
   createStirlingFile,
+  type FileContextState,
   type StirlingFile,
   type StirlingFileStub,
 } from "@app/types/fileContext";
@@ -85,6 +86,8 @@ vi.mock("@app/contexts/FileContext", () => ({
   }),
   useFileContext: () => ({ selectors, actions: {} }),
   useFileSelectors: () => selectors,
+  useFileSelector: <T,>(select: (state: FileContextState) => T) =>
+    select({ files: { ids: [], byId: {} } } as unknown as FileContextState),
   useFileActions: () => ({ actions: {} }),
   useFileSelection: () => ({ setSelectedFiles: vi.fn() }),
   useFileManagement: () => ({ reorderFiles: vi.fn() }),
