@@ -10,7 +10,7 @@ import {
   PdfiumModelSync,
   type ModelSyncResult,
 } from "@app/tools/pdfTextEditor/pdfium/PdfiumModelSync";
-import { resetBackendResolverCaches } from "@app/tools/pdfTextEditor/charcode/BackendResolver";
+import { resetFontHelperCaches } from "@app/tools/pdfTextEditor/charcode/FontHelpers";
 import { resetCmapCache } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
 import { resetContentStreamCache } from "@app/tools/pdfTextEditor/charcode/ContentStreamResolver";
 import {
@@ -37,7 +37,7 @@ import { resetEmbeddedFaces } from "@app/tools/pdfTextEditor/util/embeddedFace";
 
 /** Drop EVERY per-document charcode/glyph cache. */
 function resetCharcodeCaches(): void {
-  resetBackendResolverCaches();
+  resetFontHelperCaches();
   resetCmapCache();
   resetContentStreamCache();
   resetOnPageAdvCache();

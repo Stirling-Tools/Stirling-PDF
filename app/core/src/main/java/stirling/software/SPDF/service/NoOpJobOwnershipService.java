@@ -1,4 +1,4 @@
-package stirling.software.SPDF.service.pdfjson;
+package stirling.software.SPDF.service;
 
 import java.util.Optional;
 

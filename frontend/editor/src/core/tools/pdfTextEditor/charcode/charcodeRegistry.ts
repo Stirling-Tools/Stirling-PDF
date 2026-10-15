@@ -1,18 +1,11 @@
 import {
-  BackendResolver,
   findFontForChar,
   fontIsReusable,
-  prewarmBackendCacheForPage,
   styleClassFromName,
-} from "@app/tools/pdfTextEditor/charcode/BackendResolver";
+} from "@app/tools/pdfTextEditor/charcode/FontHelpers";
 
 /** Re-export so the emit path can do per-char font lookup. */
-export {
-  findFontForChar,
-  fontIsReusable,
-  prewarmBackendCacheForPage,
-  styleClassFromName,
-};
+export { findFontForChar, fontIsReusable, styleClassFromName };
 import {
   CharcodeResolver,
   CharcodeStrategy,
@@ -105,7 +98,6 @@ const resolvers: Record<CharcodeStrategy, CharcodeResolver | null> = {
   helvetica: null, // legacy: do nothing, caller falls back.
   cmap: new CmapResolver(),
   "content-stream": new ContentStreamResolver(),
-  backend: new BackendResolver(),
 };
 
 // Get the resolver for the currently active strategy. Returns null for
@@ -160,8 +152,7 @@ export function tryResolveCharcodes(
     if (result && result.coverage === [...text].length) {
       return { strategy: r.name, result };
     }
-    // Active resolver (e.g. backend with a cold cache) did not fully cover the
-    // text.
+    // Active resolver did not fully cover the text.
     if (allowContentStreamFallback && r.name !== "content-stream") {
       const cs = resolvers["content-stream"];
       const csResult = cs?.resolve(font, text, ctx);
