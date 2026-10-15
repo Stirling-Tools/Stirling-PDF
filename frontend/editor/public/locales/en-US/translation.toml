@@ -13660,8 +13660,8 @@ viewComment = "View comment"
 [viewer.comments.csv]
 author = "Author"
 comment = "Comment"
-date = "Date"
 inReplyTo = "In reply to"
+modifiedUtc = "Last modified (UTC)"
 page = "Page"
 thread = "Thread"
 

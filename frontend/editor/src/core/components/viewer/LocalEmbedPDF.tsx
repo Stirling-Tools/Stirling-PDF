@@ -765,6 +765,16 @@ function DocumentComments({
   );
 }
 
+function fileNameFromUrl(url: string): string {
+  const segment = url.split("/").pop()?.split("?")[0] ?? "";
+  try {
+    return decodeURIComponent(segment) || "document.pdf";
+  } catch {
+    // A stray "%" that is not an escape: keep the segment as written.
+    return segment || "document.pdf";
+  }
+}
+
 type EditingBridgesProps = Pick<
   LocalEmbedPDFProps,
   | "historyApiRef"
@@ -985,7 +995,7 @@ export function LocalEmbedPDF({
   const exportFileName = useMemo(() => {
     if (fileName) return fileName;
     if (file && "name" in file) return file.name;
-    if (url) return url.split("/").pop()?.split("?")[0] || "document.pdf";
+    if (url) return fileNameFromUrl(url);
     return "document.pdf";
   }, [fileStableKey, fileName, url]);
 

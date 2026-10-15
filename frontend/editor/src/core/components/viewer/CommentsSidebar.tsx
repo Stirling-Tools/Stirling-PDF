@@ -42,9 +42,9 @@ import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSide
 import {
   buildCommentsCsv,
   commentsCsvFileName,
-  type CommentCsvEntry,
-  type CommentCsvThread,
-} from "@app/components/viewer/commentsCsv";
+  getCommentDisplayContent,
+  toCommentCsvThreads,
+} from "@app/utils/commentsCsv";
 import { downloadTextAsFile } from "@app/utils/downloadUtils";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 
@@ -61,9 +61,6 @@ function isStandaloneCommentType(type: number | undefined): boolean {
 
 const ANNOTATE_PANEL_ID = "annotate" as const;
 const TEXT_COMMENT_TOOL_ID = "textComment" as const;
-
-// Without it Excel reads the CSV in the system codepage and mangles non-ASCII text.
-const EXCEL_UTF8_BOM = "\uFEFF";
 
 type StirlingAnnotationCustomData = Record<string, unknown> & {
   annotationToolId?: string;
@@ -120,18 +117,6 @@ interface CommentsSidebarProps {
   rightOffset: string;
 }
 
-function getCommentDisplayContent(entry: {
-  annotation: { object: Pick<PdfAnnotationObject, "contents"> };
-  replies: Array<{ object: Pick<PdfAnnotationObject, "contents"> }>;
-}): string {
-  const main = entry.annotation?.object?.contents;
-  if (main != null && String(main).trim()) return String(main).trim();
-  const firstReply = entry.replies?.[0]?.object?.contents;
-  if (firstReply != null && String(firstReply).trim())
-    return String(firstReply).trim();
-  return "";
-}
-
 /** Placeholder authors we never show; use current user's name from context instead. */
 const PLACEHOLDER_AUTHORS = new Set(["Guest", "Digital Signature", ""]);
 function getAuthorName(
@@ -141,17 +126,6 @@ function getAuthorName(
   const stored = (obj?.author ?? "Guest").trim() || "Guest";
   if (PLACEHOLDER_AUTHORS.has(stored)) return currentDisplayName || "Guest";
   return stored;
-}
-
-function toCommentCsvEntry(
-  obj: PdfAnnotationObject,
-  currentDisplayName: string,
-): CommentCsvEntry {
-  return {
-    author: getAuthorName(obj, currentDisplayName),
-    date: getCommentDate(obj),
-    text: (obj.contents ?? "").trim(),
-  };
 }
 
 /** Replies store an explicit author; only allow edit when it matches the current comment author name. */
@@ -1405,35 +1379,24 @@ export function CommentsSidebar({
   }, [byPage, provides, navActions]);
 
   const handleExportCsv = useCallback(() => {
-    const threads: CommentCsvThread[] = Object.keys(byPage)
-      .map(Number)
-      .sort((a, b) => a - b)
-      .flatMap((pageIndex) =>
-        byPage[pageIndex].map((entry) => ({
-          page: pageIndex + 1,
-          comment: toCommentCsvEntry(entry.annotation.object, displayName),
-          replies: (entry.replies ?? []).map((reply) =>
-            toCommentCsvEntry(reply.object, displayName),
-          ),
-        })),
-      );
+    const threads = toCommentCsvThreads(byPage, getCommentDate);
     const csv = buildCommentsCsv(
       {
         page: t("viewer.comments.csv.page", "Page"),
         thread: t("viewer.comments.csv.thread", "Thread"),
         author: t("viewer.comments.csv.author", "Author"),
-        date: t("viewer.comments.csv.date", "Date"),
+        modified: t("viewer.comments.csv.modifiedUtc", "Last modified (UTC)"),
         comment: t("viewer.comments.csv.comment", "Comment"),
         inReplyTo: t("viewer.comments.csv.inReplyTo", "In reply to"),
       },
       threads,
     );
     downloadTextAsFile(
-      EXCEL_UTF8_BOM + csv,
+      csv,
       commentsCsvFileName(fileName),
       "text/csv;charset=utf-8",
     );
-  }, [byPage, displayName, fileName, t]);
+  }, [byPage, fileName, t]);
 
   const handleSendMainComment = useCallback(
     (pageIndex: number, annotationId: string, value: string) => {
