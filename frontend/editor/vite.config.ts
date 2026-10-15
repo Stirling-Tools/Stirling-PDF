@@ -288,6 +288,72 @@ function localePreloadTag(codes: string[]): string {
  * the source strings for the keys that language is missing. Logic lives in
  * scripts/generate-locale-assets.mjs so it can be run and tested on its own.
  */
+/**
+ * Preloads the initial route's own files from the built HTML.
+ *
+ * The route is reached through a dynamic import, so its chunk is discovered only
+ * once the entry has downloaded and run: one more serial hop on exactly the
+ * chain the largest contentful paint waits for. Filenames are hashed and known
+ * only after bundling, so the links are written once the bundle exists. Only the
+ * route chunk and the CSS it needs are preloaded - the chunks it imports later
+ * belong to other routes as well, and preloading those would compete with the
+ * resources this one waits for.
+ */
+function routePreloadPlugin(routeChunk: string): PluginOption {
+  let dir: string | undefined;
+  let route: { js: string; css: string[] } | undefined;
+
+  return {
+    name: "route-preload",
+    enforce: "post",
+    writeBundle(options: Rollup.OutputOptions, bundle: Rollup.OutputBundle) {
+      dir = options.dir;
+      const chunk = Object.values(bundle).find(
+        (file): file is Rollup.OutputChunk =>
+          file.type === "chunk" &&
+          file.isDynamicEntry &&
+          file.name === routeChunk,
+      );
+      if (chunk)
+        route = {
+          js: chunk.fileName,
+          css: [...(chunk.viteMetadata?.importedCss ?? [])],
+        };
+    },
+    // After the other passes: the Open Graph prerender rewrites index.html from
+    // its own template in this hook, so an earlier write would be discarded.
+    async closeBundle() {
+      if (!dir || !route) return;
+      const indexPath = resolve(dir, "index.html");
+      let html: string;
+      try {
+        html = await fs.readFile(indexPath, "utf8");
+      } catch {
+        return;
+      }
+      if (html.includes(route.js)) return;
+
+      // Take the href prefix from a link Vite already wrote, so a subpath
+      // deployment is handled the same way its own preloads are.
+      const existing = /<link rel="modulepreload" href="([^"]+)"/.exec(html);
+      const prefix = existing
+        ? existing[1].slice(0, existing[1].lastIndexOf("/") + 1)
+        : "/";
+
+      const tags = [
+        `<link rel="modulepreload" href="${prefix}${route.js}" crossorigin>`,
+        ...route.css.map(
+          (file) => `<link rel="preload" as="style" href="${prefix}${file}">`,
+        ),
+      ];
+      await fs.writeFile(
+        indexPath,
+        html.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`),
+      );
+    },
+  };
+}
+
 function localeAssetsPlugin(): PluginOption {
   return {
     name: "locale-assets",
@@ -741,6 +807,8 @@ export default defineConfig(async ({ mode, command }) => {
         isSaas: effectiveMode === "saas",
         precompress: effectiveMode !== "desktop",
       }),
+      // Last: it edits the finished index.html.
+      routePreloadPlugin("Landing"),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.
