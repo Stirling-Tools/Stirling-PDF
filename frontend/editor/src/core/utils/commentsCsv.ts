@@ -54,7 +54,12 @@ export function getCommentDisplayContent(entry: CommentSourceEntry): string {
  * spreadsheets show the text instead of evaluating it (CSV injection).
  */
 export function toCsvCell(value: string): string {
-  const safe = FORMULA_TRIGGERS.has(value.charAt(0)) ? `'${value}` : value;
+  const stripped = value.replace(/^[ \t]+/, "");
+  const safe =
+    FORMULA_TRIGGERS.has(value.charAt(0)) ||
+    FORMULA_TRIGGERS.has(stripped.charAt(0))
+      ? `'${value}`
+      : value;
   return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 

@@ -58,6 +58,11 @@ describe("toCsvCell", () => {
     expect(toCsvCell("\r=1")).toBe('"\'\r=1"');
   });
 
+  it("neutralises a formula hidden behind leading spaces or tabs", () => {
+    expect(toCsvCell(" =1+1")).toBe("' =1+1");
+    expect(toCsvCell("\t@cmd")).toBe("'\t@cmd");
+  });
+
   it("neutralises a formula that also needs quoting", () => {
     expect(toCsvCell('=HYPERLINK("x","y")')).toBe(
       '"\'=HYPERLINK(""x"",""y"")"',
