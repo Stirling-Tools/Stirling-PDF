@@ -126,6 +126,26 @@
   .banner.warn { background: #fef7e0; color: #7a4a00; }
   html[data-theme="dark"] .banner.ok { background: #0f2e1d; color: #7fd79a; }
   html[data-theme="dark"] .banner.warn { background: #3a2c00; color: #f2c14e; }
+  .banner.bad { background: #fce8e6; color: #a50e0e; }
+  html[data-theme="dark"] .banner.bad { background: #3a1414; color: #f28b82; }
+  .banner .statusline { display: flex; gap: 8px; align-items: baseline; }
+  .banner .statusline + .statusline { margin-top: 3px; }
+  .banner .axis { flex: none; width: 72px; font-weight: 600; text-transform: uppercase;
+                  font-size: 10.5px; letter-spacing: .04em; opacity: .8; }
+  .banner .statusline.bad .detail { font-weight: 600; }
+  .chip { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; border-radius: 999px;
+          padding: 1px 7px; border: 1px solid var(--border); color: var(--muted); flex: none; }
+  .chip.ok { color: #137333; border-color: #137333; }
+  .chip.warn { color: #7a4a00; border-color: #7a4a00; }
+  .chip.bad { color: #a50e0e; border-color: #a50e0e; }
+  html[data-theme="dark"] .chip.ok { color: #7fd79a; border-color: #7fd79a; }
+  html[data-theme="dark"] .chip.warn { color: #f2c14e; border-color: #f2c14e; }
+  html[data-theme="dark"] .chip.bad { color: #f28b82; border-color: #f28b82; }
+  .matrix, .claims { display: grid; gap: 6px; }
+  .matrix .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12.5px; }
+  .matrix .row .name { font-weight: 600; min-width: 110px; }
+  .matrix .req, .claims .why { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  .claims .claim { font-size: 12.5px; }
   .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 12.5px; }
   .kv dt { color: var(--muted); } .kv dd { margin: 0; overflow-wrap: anywhere; }
   kbd { font: 11px ui-monospace, monospace; background: var(--panel-2); border: 1px solid var(--border);
@@ -226,36 +246,101 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     return rest.length ? " Not in scope for this change: " + rest.join(", ") + "." : "";
   }
 
-  // The completion banner is always visible, so a partial report can never
-  // present itself as full coverage on initial load.
+  // The completion status is always visible, so a partial report can never
+  // present itself as full coverage on initial load. Validity, evidence
+  // completeness and what the evidence showed are separate questions, so each
+  // gets its own line: one verdict would read as "the feature passed".
+  function statusLines() {
+    var e = D.evaluation || null;
+    if (!e) {
+      return [{ axis: "Status", level: "warn",
+        text: "This report carries no derived verdict; rebuild it so validity, coverage and findings are computed together." }];
+    }
+    var out = [];
+    var artifact = e.artifact || {};
+    var warnings = artifact.warnings || [];
+    out.push({
+      axis: "Artifact",
+      level: artifact.valid ? "ok" : "bad",
+      text: artifact.valid
+        ? "valid" + (warnings.length ? " (" + warnings.length + " warning(s))" : "")
+        : "invalid — " + (artifact.errors || []).length + " error(s): " + text((artifact.errors || [])[0])
+    });
+    var ev = e.evidence || {};
+    var short = [];
+    (ev.gaps || []).forEach(function (g) { short.push("no capture for " + g); });
+    (ev.missingPerformance || []).forEach(function (g) { short.push("no performance evidence for " + g); });
+    (ev.missingLighthouse || []).forEach(function (g) { short.push("no Lighthouse run for " + g); });
+    (ev.themeGaps || []).forEach(function (g) { short.push("missing theme capture " + g); });
+    (ev.unsatisfied || []).forEach(function (r) { short.push("requirement not satisfied: " + r); });
+    (ev.missingRequirements || []).forEach(function (p) { short.push("no requirement declared for " + p); });
+    (ev.undecided || []).forEach(function (p) { short.push("no reason recorded for " + p); });
+    out.push({
+      axis: "Evidence",
+      level: ev.complete ? "ok" : "warn",
+      text: ev.complete ? "complete"
+        : "incomplete — " + (short.length ? short.join("; ") : "see Findings for details")
+    });
+    var states = [];
+    if ((ev.failed || []).length) states.push("failed: " + ev.failed.join(", "));
+    if ((ev.blocked || []).length) states.push("blocked: " + ev.blocked.join(", "));
+    if ((ev.waived || []).length) states.push("waived: " + ev.waived.join(", "));
+    if ((ev.notApplicable || []).length) states.push("not applicable: " + ev.notApplicable.join(", "));
+    if (states.length) out.push({ axis: "Requirements", level: "warn", text: states.join("; ") });
+    var inters = (D.performance && D.performance.interactions) || [];
+    var runs = (D.lighthouse && D.lighthouse.runs) || [];
+    out.push({
+      axis: "Capture",
+      level: ev.complete ? "ok" : "warn",
+      text: (ev.mode ? text(ev.mode) : "unrecorded") + " mode: " + inters.length
+        + " interaction(s) and " + runs.length + " Lighthouse run(s) recorded"
+    });
+    var f = e.findings || {};
+    out.push({
+      axis: "Findings",
+      level: f.high ? "bad" : (f.med ? "warn" : "ok"),
+      text: f.total
+        ? f.total + " recorded (" + f.high + " high · " + f.med + " med · " + f.low + " low)"
+        : "No findings recorded" + (f.recorded ? "." : " — no review pass was performed, so their absence proves nothing.")
+    });
+    var scope = e.scope || {};
+    var excluded = (scope.decisions || []).map(function (d) { return d.platform + " (" + d.status + ")"; });
+    (scope.undecided || []).forEach(function (p) { excluded.push(p + " (no reason recorded)"); });
+    out.push({
+      axis: "Scope",
+      level: (scope.undecided || []).length ? "warn" : "ok",
+      text: (scope.expected || []).join(", ") + outOfScope(scope)
+        + (excluded.length ? " Excluded: " + excluded.join(", ") + "." : "")
+    });
+    return out;
+  }
+
+  // The Findings tab repeats the status in one sentence, where the banner's
+  // line-per-axis layout has no room.
+  function statusSentence() {
+    return statusLines().map(function (l) { return l.axis + ": " + l.text; }).join(" ");
+  }
+
   function renderBanner() {
     var el = $("coverage-banner");
-    var s = D.coverageSummary || null;
-    var msg, ok = false;
-    if (!s) {
-      var cov = D.coverage || {};
-      var gaps = (cov.expected || []).filter(function (id) {
-        return (cov.captured || []).indexOf(id) === -1;
-      });
-      msg = gaps.length ? "Incomplete report: no runner for " + gaps.join(", ") + "."
-        : "Coverage status not recorded: rebuilt reports carry coverageSummary.";
-    } else if (s.complete) {
-      ok = true;
-      msg = "Complete report: " + s.verified.length + " platform(s) verified"
-        + (s.mode ? " (" + s.mode + " mode)" : "") + "." + outOfScope(s);
-    } else {
-      var parts = [];
-      (s.gaps || []).forEach(function (g) { parts.push("no capture for " + g); });
-      (s.missingPerformance || []).forEach(function (g) { parts.push("no performance evidence for " + g); });
-      (s.missingLighthouse || []).forEach(function (g) { parts.push("no Lighthouse run for " + g); });
-      (s.themeGaps || []).forEach(function (g) { parts.push("missing theme capture " + g); });
-      // `status` is the derived verdict; `mode` is what the author declared.
-      // Showing both reads as "partial, partial mode", so the mode wins.
-      msg = "Incomplete report (" + (s.mode ? text(s.mode) + " mode" : text(s.status)) + "): "
-        + (parts.length ? parts.join("; ") + "." : "see Findings for details.") + outOfScope(s);
-    }
-    el.textContent = msg;
-    el.className = "banner " + (ok ? "ok" : "warn");
+    while (el.firstChild) el.removeChild(el.firstChild);
+    statusLines().forEach(function (line) {
+      var row = document.createElement("div");
+      row.className = "statusline " + line.level;
+      var axis = document.createElement("span");
+      axis.className = "axis";
+      axis.textContent = line.axis;
+      var detail = document.createElement("span");
+      detail.className = "detail";
+      detail.textContent = line.text;
+      row.appendChild(axis);
+      row.appendChild(detail);
+      el.appendChild(row);
+    });
+    var e = D.evaluation || {};
+    var valid = (e.artifact || {}).valid;
+    var complete = (e.evidence || {}).complete;
+    el.className = "banner " + (valid === false ? "bad" : (complete ? "ok" : "warn"));
   }
 
   // The rail is built once; later renders only retarget images (on a theme
@@ -480,6 +565,118 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     pane.appendChild(strip);
   }
 
+  function chip(label, level) {
+    var c = document.createElement("span");
+    c.className = "chip" + (level ? " " + level : "");
+    c.textContent = label;
+    return c;
+  }
+
+  function decisionFor(platform) {
+    var decisions = (D.coverageSummary && D.coverageSummary.decisions) || [];
+    for (var i = 0; i < decisions.length; i += 1) {
+      if (decisions[i].platform === platform) return decisions[i];
+    }
+    return null;
+  }
+
+  // Coverage is judged per named requirement rather than per platform label: a
+  // screenshot or an interaction satisfies a requirement, and a platform row
+  // that was asked to prove something it never exercised stays visible as
+  // unsatisfied instead of reading as "covered".
+  function renderCoverage(pane) {
+    var s = D.coverageSummary || null;
+    if (!s || !s.platforms || !s.platforms.length) return;
+    var h = document.createElement("h2");
+    h.textContent = "Coverage";
+    pane.appendChild(h);
+    var wrap = document.createElement("div");
+    wrap.className = "matrix";
+    s.platforms.forEach(function (row) {
+      var line = document.createElement("div");
+      line.className = "row";
+      var name = document.createElement("span");
+      name.className = "name";
+      name.textContent = row.platform;
+      line.appendChild(name);
+      line.appendChild(chip(row.required ? "required" : "excluded", row.required ? "ok" : ""));
+      if (row.required) {
+        line.appendChild(chip(row.captured ? "captured" : "no capture", row.captured ? "ok" : "warn"));
+        line.appendChild(chip(row.performance ? "performance" : "no performance evidence", row.performance ? "ok" : "warn"));
+        line.appendChild(chip(row.lighthouse ? "Lighthouse" : "no Lighthouse run", row.lighthouse ? "ok" : "warn"));
+      } else {
+        var decision = decisionFor(row.platform);
+        line.appendChild(chip(decision ? decision.status : "no reason recorded", decision ? "warn" : "bad"));
+      }
+      var detail = document.createElement("span");
+      detail.className = "req";
+      var requirements = row.requirements || [];
+      if (requirements.length) {
+        detail.textContent = requirements.map(function (r) {
+          return r.id + " · " + r.status + (r.satisfied ? "" : " (unsatisfied)");
+        }).join("; ");
+      } else if (!row.required) {
+        var recorded = decisionFor(row.platform);
+        detail.textContent = recorded ? recorded.reason : "";
+      } else {
+        detail.textContent = "no requirement declared";
+      }
+      line.appendChild(detail);
+      wrap.appendChild(line);
+    });
+    // An exclusion is only reviewable if its reason travels with the report, so
+    // a platform that was left out is listed here with the decision recorded
+    // for it instead of being visible only in the manifest.
+    var listed = s.platforms.map(function (row) { return row.platform; });
+    (s.decisions || []).forEach(function (decision) {
+      if (listed.indexOf(decision.platform) >= 0) return;
+      var line = document.createElement("div");
+      line.className = "row";
+      var name = document.createElement("span");
+      name.className = "name";
+      name.textContent = decision.platform;
+      line.appendChild(name);
+      line.appendChild(chip("excluded", ""));
+      line.appendChild(chip(text(decision.status), decision.status === "required" ? "ok" : "warn"));
+      var detail = document.createElement("span");
+      detail.className = "req";
+      var basis = decision.basis && decision.basis.length
+        ? " (" + decision.basis.map(text).join(", ") + ")" : "";
+      detail.textContent = text(decision.reason) + basis;
+      line.appendChild(detail);
+      wrap.appendChild(line);
+    });
+    pane.appendChild(wrap);
+  }
+
+  // A claim is only worth reading next to the evidence that is supposed to
+  // support it, so an unproven claim shows what it rested on.
+  function renderClaims(pane) {
+    var claims = D.claims || [];
+    if (!claims.length) return;
+    var h = document.createElement("h2");
+    h.textContent = "Claims (" + claims.length + ")";
+    pane.appendChild(h);
+    var wrap = document.createElement("div");
+    wrap.className = "claims";
+    claims.forEach(function (claim) {
+      var row = document.createElement("div");
+      row.className = "claim";
+      row.appendChild(chip(text(claim.status), claim.status === "supported" ? "ok" : "warn"));
+      var label = document.createElement("span");
+      label.textContent = " " + text(claim.claim);
+      row.appendChild(label);
+      var why = document.createElement("div");
+      why.className = "why";
+      var refs = claim.evidence;
+      why.textContent = "Evidence: " + (refs && refs.length ? refs.join(" · ") : "none recorded")
+        + (claim.note ? " — " + text(claim.note) : "");
+      row.appendChild(why);
+      wrap.appendChild(row);
+    });
+    pane.appendChild(wrap);
+  }
+
   function renderSummary() {
     var pane = $("summary-pane");
     while (pane.firstChild) pane.removeChild(pane.firstChild);
@@ -496,14 +693,18 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
       }
       arr.forEach(function (f) { pane.appendChild(findingCard(f)); });
     }
-    var s = D.coverageSummary || null;
+    var e = D.evaluation || {};
+    var ev = e.evidence || {};
+    var scope = e.scope || {};
     renderRollUp(pane);
-    if (s && (!s.complete || (s.notInScope || []).length)) {
+    if (!ev.complete || (scope.notInScope || []).length || (scope.undecided || []).length) {
       var note = document.createElement("div");
       note.className = "empty";
-      note.textContent = $("coverage-banner").textContent;
+      note.textContent = statusSentence();
       pane.appendChild(note);
     }
+    renderCoverage(pane);
+    renderClaims(pane);
     GROUPS.map(function (g) {
       block(g[1], (D.findings && D.findings[g[0]]) || []);
     });
