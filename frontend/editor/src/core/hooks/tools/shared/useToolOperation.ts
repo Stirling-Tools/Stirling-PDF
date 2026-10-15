@@ -41,7 +41,12 @@ import { refreshNotificationsNow } from "@app/hooks/useNotifications";
 import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import { zipFileService } from "@app/services/zipFileService";
-import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
+import {
+  detectFileExtension,
+  getFilenameWithoutExtension,
+  mimeTypeToExtension,
+} from "@app/utils/fileUtils";
+import { getFilenameFromHeaders } from "@app/utils/fileResponseUtils";
 import {
   createChildStub,
   generateProcessedFileMetadata,
@@ -416,9 +421,34 @@ export const useToolOperation = <TParams>(
             ) {
               processedFiles = await extractZipFiles(responseBlob);
             } else {
-              const filename = `${config.filePrefix}${filesForAPI[0]?.name || "document.pdf"}`;
+              const inputName = filesForAPI[0]?.name || "document.pdf";
+              const rawType =
+                typeof contentTypeHeader === "string" ? contentTypeHeader : "";
+              const outputType =
+                rawType.split(";")[0].trim() || "application/pdf";
+              const dispositionHeader =
+                response.headers?.["content-disposition"];
+              const disposition =
+                typeof dispositionHeader === "string" ? dispositionHeader : "";
+              // Prefer the backend-provided filename when present. Otherwise
+              // build one from the first input name, deriving the extension
+              // from the response MIME type so it always matches the actual
+              // content (#8404: merged images were named
+              // "merged_sample.jpeg" for PDF content, which broke downstream
+              // tool selection). MIME types outside the map fall back to the
+              // input extension, then "pdf".
+              const baseName =
+                getFilenameWithoutExtension(inputName, { preserveCase: true }) ||
+                "document";
+              const extension =
+                mimeTypeToExtension(outputType) ||
+                detectFileExtension(inputName) ||
+                "pdf";
+              const filename =
+                getFilenameFromHeaders(disposition) ||
+                `${config.filePrefix}${baseName}.${extension}`;
               processedFiles = [
-                new File([responseBlob], filename, { type: "application/pdf" }),
+                new File([responseBlob], filename, { type: outputType }),
               ];
             }
 

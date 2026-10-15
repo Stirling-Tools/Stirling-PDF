@@ -17,6 +17,7 @@ const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
 const MULTI_PAGE_PDF = path.join(FIXTURES_DIR, "multi-page-sample.pdf");
 const SAMPLE_PDF_BYTES = fs.readFileSync(SAMPLE_PDF);
+const SAMPLE_JPG = path.join(FIXTURES_DIR, "sample.jpg");
 
 async function mockMergeWithContentType(page: Page, contentType: string) {
   await page.route("**/api/v1/general/merge-pdfs", (route: Route) =>
@@ -68,5 +69,34 @@ test.describe("Merge multi-file response detection", () => {
     const review = page.locator('[data-testid="review-panel-container"]');
     await expect(review).toBeVisible();
     await expect(review.getByText(/result\.zip/i)).toHaveCount(0);
+  });
+});
+
+test.describe("Merge output filename (#8404)", () => {
+  test("JPEG-first merge without Content-Disposition -> .pdf filename from MIME type", async ({
+    page,
+  }) => {
+    // No Content-Disposition header: exercises the MIME-derived naming
+    // fallback. Regression test for #8404, where merged images produced
+    // "merged_sample.jpeg" for PDF content.
+    await page.route("**/api/v1/general/merge-pdfs", (route: Route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/pdf",
+        body: SAMPLE_PDF_BYTES,
+      }),
+    );
+    await page.goto("/merge");
+    await uploadFiles(page, [SAMPLE_JPG, SAMPLE_PDF]);
+    await switchToEditorIfViewerMode(page);
+    await runToolAndWaitForReview(page);
+
+    const review = page.locator('[data-testid="review-panel-container"]');
+    await expect(review).toBeVisible();
+    await expect(review.getByText(/merged_sample\.pdf/i).first()).toBeVisible();
+    await expect(
+      review.getByText("application/pdf", { exact: true }),
+    ).toBeVisible();
+    await expect(review.getByText(/merged_sample\.jpe?g/i)).toHaveCount(0);
   });
 });
