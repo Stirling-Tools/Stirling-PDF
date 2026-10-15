@@ -484,6 +484,12 @@ export interface FileContextActions {
   scheduleCleanup: (fileId: FileId, delay?: number) => void;
   cleanupFile: (fileId: FileId) => void;
   openEncryptedUnlockPrompt: (fileId: FileId) => void;
+  /** Authenticates preview bytes without adding a library record. Abort when the preview closes. */
+  unlockPreviewPdf: (
+    file: File,
+    password: string,
+    signal: AbortSignal,
+  ) => Promise<void>;
 }
 
 // File selectors (separate from actions to avoid re-renders)

@@ -62,6 +62,17 @@ export function forgetPdfAccess(ids: readonly string[]): void {
   publish();
 }
 
+/** Drop preview-owned access unless the same bytes have since entered FileContext. */
+export function forgetPreviewPdfAccess(file: Blob, access: PdfAccess): void {
+  if (
+    accessByFile.get(file) !== access ||
+    [...filesById.values()].includes(file)
+  )
+    return;
+  accessByFile.delete(file);
+  publish();
+}
+
 /** Clear all credentials on logout or FileContext teardown. */
 export function clearPdfAccess(): void {
   accessByFile = new WeakMap();
