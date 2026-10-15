@@ -8175,9 +8175,22 @@ pdfs = "PDFs processed"
 users = "Users"
 
 [portal.billing.enterprise]
+active = "Agreement active through {{date}}"
 cta = "Get an enterprise quote"
+included = "Included in Enterprise"
+payment_pending = "Payment pending · access through {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF over agreed volume"
+pdfsOver_other = "{{count}} PDFs over agreed volume"
+pdfsUsed_one = "{{count}} PDF processed"
+pdfsUsed_other = "{{count}} PDFs processed"
+period = "Agreement period: {{start}} – {{end}}"
 sub = "Air-gapped deployment, SCIM, data residency, uptime SLAs, and an agreement to match."
 title = "Running Stirling in a regulated environment?"
+trial = "{{days}}-day trial · ends {{date}}"
+usersAgreed = "{{used}} / {{agreed}} agreed users"
+usersOver_one = "{{count}} user over agreed quantity"
+usersOver_other = "{{count}} users over agreed quantity"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Couldn't start checkout"
