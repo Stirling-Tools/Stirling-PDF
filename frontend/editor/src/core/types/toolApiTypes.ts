@@ -1216,6 +1216,10 @@ export interface RedactStyle {
 }
 export interface RedactPdfRequest {
   /**
+   * Whether matching is case-sensitive, for plain text and regex alike
+   */
+  caseSensitive?: boolean;
+  /**
    * Turn pages into images so nothing under the boxes can be extracted
    */
   convertPDFToImage?: boolean;

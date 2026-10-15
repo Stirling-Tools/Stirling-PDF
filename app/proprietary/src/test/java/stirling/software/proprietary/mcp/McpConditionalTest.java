@@ -32,6 +32,11 @@ class McpConditionalTest {
     }
 
     @Test
+    void analytics_isGatedByMcpEnabled() {
+        assertGatedByEnabled(McpAnalytics.class);
+    }
+
+    @Test
     void securityConfig_isGatedByMcpEnabled() {
         assertGatedByEnabled(McpSecurityConfig.class);
     }
@@ -63,6 +68,7 @@ class McpConditionalTest {
         Class<?>[] beans = {
             McpServerController.class,
             McpSecurityConfig.class,
+            McpAnalytics.class,
             McpToolCatalog.class,
             McpOperationExecutor.class,
             DescribeOperationTool.class,

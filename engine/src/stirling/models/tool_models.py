@@ -280,6 +280,9 @@ class AutoRedactParams(ApiModel):
     Removes each match and boxes it over. If removal fails it only draws boxes; set convertPDFToImage=true to be sure nothing can be extracted. Input:PDF Output:PDF Type:SISO
     """
 
+    case_sensitive: bool = Field(
+        False, description="Whether matching is case-sensitive, for plain text and regex alike"
+    )
     convert_pdf_to_image: bool = Field(
         False, description="Turn pages into images so nothing under the boxes can be extracted"
     )

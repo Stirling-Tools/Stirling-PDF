@@ -52,6 +52,11 @@ public class DescribeOperationTool implements McpTool {
     }
 
     @Override
+    public String analyticsCategory() {
+        return "catalog";
+    }
+
+    @Override
     public String description() {
         return "Return one Stirling operation's full parameter schema, what each option means,"
                 + " and an example call. Call it when an option you need is not shown in the"

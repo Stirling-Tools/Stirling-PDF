@@ -61,6 +61,11 @@ abstract class AbstractCategoryTool implements McpTool {
     }
 
     @Override
+    public String analyticsCategory() {
+        return "operations";
+    }
+
+    @Override
     public ObjectNode inputSchema() {
         ObjectNode schema = mapper.createObjectNode();
         schema.put("type", "object");

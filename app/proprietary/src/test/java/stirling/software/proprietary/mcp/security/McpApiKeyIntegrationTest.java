@@ -19,6 +19,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.mcp.McpAnalytics;
 import stirling.software.proprietary.mcp.McpServerController;
 import stirling.software.proprietary.mcp.McpWidget;
 import stirling.software.proprietary.mcp.tools.DescribeOperationTool;
@@ -116,6 +117,7 @@ class McpApiKeyIntegrationTest {
         McpSecurityConfig.class,
         McpServerController.class,
         McpWidget.class,
+        McpAnalytics.class,
         DescribeOperationTool.class,
         StirlingConvertTool.class,
         StirlingPagesTool.class,

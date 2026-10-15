@@ -50,6 +50,11 @@ public class StirlingDownloadTool implements McpTool {
     }
 
     @Override
+    public String analyticsCategory() {
+        return "files";
+    }
+
+    @Override
     public String description() {
         return "Read a stored file's content by fileId (e.g. an operation result). Text results"
                 + " (txt, md, csv, html, xml, json) come back as text you can read and quote, such"

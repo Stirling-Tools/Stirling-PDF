@@ -70,13 +70,15 @@ public class McpServerController {
     private final Map<String, McpTool> toolsByName;
     private final McpWidget widget;
     private final McpCallObserver observer;
+    private final McpAnalytics analytics;
 
     public McpServerController(
             ObjectMapper mapper,
             ApplicationProperties applicationProperties,
             List<McpTool> tools,
-            McpWidget widget) {
-        this(mapper, applicationProperties, tools, widget, (McpCallObserver) null);
+            McpWidget widget,
+            McpAnalytics analytics) {
+        this(mapper, applicationProperties, tools, widget, (McpCallObserver) null, analytics);
     }
 
     @Autowired
@@ -85,8 +87,9 @@ public class McpServerController {
             ApplicationProperties applicationProperties,
             List<McpTool> tools,
             McpWidget widget,
-            ObjectProvider<McpCallObserver> observer) {
-        this(mapper, applicationProperties, tools, widget, observer.getIfAvailable());
+            ObjectProvider<McpCallObserver> observer,
+            McpAnalytics analytics) {
+        this(mapper, applicationProperties, tools, widget, observer.getIfAvailable(), analytics);
     }
 
     McpServerController(
@@ -94,8 +97,10 @@ public class McpServerController {
             ApplicationProperties applicationProperties,
             List<McpTool> tools,
             McpWidget widget,
-            McpCallObserver observer) {
+            McpCallObserver observer,
+            McpAnalytics analytics) {
         this.observer = observer;
+        this.analytics = analytics;
         this.mapper = mapper;
         this.applicationProperties = applicationProperties;
         this.widget = widget;
@@ -150,6 +155,7 @@ public class McpServerController {
                                         JsonRpcError.methodNotFound(request.method())));
             }
         }
+        String sessionId = "initialize".equals(request.method()) ? analytics.startSession() : null;
         JsonRpcResponse response;
         try {
             response = dispatch(request, modern);
@@ -165,7 +171,11 @@ public class McpServerController {
                             JsonRpcError.internalError(
                                     "Internal error handling " + request.method()));
         }
-        return ResponseEntity.ok(modern ? decorate(response, request.method()) : response);
+        JsonRpcResponse out = modern ? decorate(response, request.method()) : response;
+        if (sessionId != null) {
+            return ResponseEntity.ok().header(McpAnalytics.SESSION_HEADER, sessionId).body(out);
+        }
+        return ResponseEntity.ok(out);
     }
 
     /** Modern results: resultType, our identity, and cache hints on list/read results. */
@@ -252,6 +262,7 @@ public class McpServerController {
                         ? requested
                         : PREFERRED_PROTOCOL_VERSION;
         result.put("protocolVersion", negotiated);
+        analytics.initialize(params, negotiated);
         result.set("capabilities", capabilities());
         result.set("serverInfo", serverInfo());
         result.put(
@@ -422,6 +433,7 @@ public class McpServerController {
             }
             tools.add(entry);
         }
+        analytics.toolsList(List.copyOf(toolsByName.keySet()));
         return result;
     }
 
@@ -552,14 +564,20 @@ public class McpServerController {
         }
         long started = System.nanoTime();
         ObjectNode toolResult = null;
+        RuntimeException failure = null;
         try {
             toolResult = tool.call(args == null ? mapper.createObjectNode() : args, context);
             withMessage(toolResult);
             return JsonRpcResponse.success(request.id(), toolResult);
+        } catch (RuntimeException e) {
+            failure = e;
+            throw e;
         } finally {
+            long elapsed = System.nanoTime() - started;
             if (observer != null) {
-                observer.record(user, tool.name(), args, toolResult, System.nanoTime() - started);
+                observer.record(user, tool.name(), args, toolResult, elapsed);
             }
+            analytics.toolCall(tool, args, elapsed / 1_000_000, toolResult, failure);
         }
     }
 
