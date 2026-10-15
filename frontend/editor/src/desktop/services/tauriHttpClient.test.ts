@@ -6,13 +6,22 @@ import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 // "No multipart boundary parameter in Content-Type". The client must drop it so the
 // native fetch generates the boundary (axios does this for FormData).
 
-const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }));
+const { fetchMock, detachMock } = vi.hoisted(() => ({
+  fetchMock: vi.fn(),
+  detachMock: vi.fn(),
+}));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: fetchMock }));
+vi.mock("@app/utils/storedBlob", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@app/utils/storedBlob")>();
+  detachMock.mockImplementation(actual.detachedFormData);
+  return { ...actual, detachedFormData: detachMock };
+});
 vi.mock("@app/services/documentPrivacyService", () => ({
   enforceDocumentPrivacy: vi.fn().mockResolvedValue(false),
 }));
 
 import { create } from "@app/services/tauriHttpClient";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 function okJson() {
   return {
@@ -133,6 +142,51 @@ describe("tauriHttpClient — Content-Type handling", () => {
     const keys = Object.keys(lastFetchHeaders()).map((k) => k.toLowerCase());
     expect(keys).not.toContain("content-type");
     expect(fetchMock.mock.calls[0][1].body).toBeInstanceOf(FormData);
+  });
+
+  test("sends copies of the FormData's files, never the caller's own", async () => {
+    // Both transports build a Request from the body, and a Request builds a Blob
+    // over each file in it, which Chromium kills the renderer for when that file
+    // came out of IndexedDB.
+    const client = create({ baseURL: "https://api.test" });
+    const stored = new File(["%PDF-1.7"], "stored.pdf", {
+      type: "application/pdf",
+    });
+    const form = new FormData();
+    form.append("fileInput", stored);
+    form.append("pageNumbers", "1-3");
+
+    await client.post("/api/v1/general/rotate-pdf", form);
+
+    const sent = fetchMock.mock.calls[0][1].body as FormData;
+    expect(sent).toBeInstanceOf(FormData);
+    expect(sent).not.toBe(form);
+    const file = sent.get("fileInput") as File;
+    expect(file).not.toBe(stored);
+    expect(file.name).toBe("stored.pdf");
+    expect(sent.get("pageNumbers")).toBe("1-3");
+  });
+
+  test("hands a failed copy of the files to the error interceptors", async () => {
+    expectConsole.error(/\[TauriHttpClient\] Network error/);
+    expectConsole.error(/\[TauriHttpClient\] Error details/);
+    const lost = new DOMException(
+      "The object can not be found here.",
+      "NotFoundError",
+    );
+    detachMock.mockRejectedValueOnce(lost);
+    const client = create({ baseURL: "https://api.test" });
+    const onRejected = vi.fn((error: unknown) => Promise.reject(error));
+    client.interceptors.response.use((response) => response, onRejected);
+    const form = new FormData();
+    form.append("fileInput", new Blob(["x"]), "f.pdf");
+
+    await expect(
+      client.post("/api/v1/general/rotate-pdf", form),
+    ).rejects.toBeDefined();
+
+    expect(onRejected).toHaveBeenCalledTimes(1);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   test("keeps application/json for plain object bodies", async () => {

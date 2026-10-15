@@ -23,6 +23,15 @@ vi.mock("@app/services/apiClient", () => ({
   default: { post: (...args: unknown[]) => post(...args) },
 }));
 
+// The real conversion, unless a test says the stored bytes cannot be read.
+const uploadableFile = vi.hoisted(() => vi.fn());
+vi.mock("@app/utils/uploadableFile", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@app/utils/uploadableFile")>();
+  uploadableFile.mockImplementation(actual.uploadableFile);
+  return { uploadableFile: (file: File) => uploadableFile(file) };
+});
+
 const {
   KIND_ERROR_CODES,
   stashRetryPayload,
@@ -312,6 +321,20 @@ describe("hasLocalFile", () => {
 });
 
 describe("retryWithPassword", () => {
+  it("reports a stored copy that can no longer be read as gone, instead of throwing", async () => {
+    getStirlingFiles.mockResolvedValue([
+      new File(["%PDF-1.7"], "doc.pdf", { type: "application/pdf" }),
+    ]);
+    uploadableFile.mockRejectedValueOnce(
+      new DOMException("unreadable", "NotReadableError"),
+    );
+
+    const result = await retryWithPassword(payload(), "hunter2");
+
+    expect(result).toMatchObject({ ok: false, reason: "fileMissing" });
+    expect(post).not.toHaveBeenCalled();
+  });
+
   it("reports the file is gone instead of throwing, which is an expected outcome here", async () => {
     getStirlingFiles.mockResolvedValue([]);
 
@@ -588,6 +611,19 @@ describe("repairDocuments", () => {
     expect((post.mock.calls[0] as [string])[0]).toBe("/api/v1/misc/repair");
     // Paired back to the input, so each output versions the document it came from.
     expect(result.repaired?.map((doc) => doc.fileId)).toEqual(["f-1", "f-2"]);
+  });
+
+  it("ends with an outcome when a stored copy can no longer be read", async () => {
+    getStirlingFiles.mockResolvedValue([new File(["%PDF-1.7"], "doc.pdf")]);
+    uploadableFile.mockRejectedValueOnce(
+      new DOMException("unreadable", "NotReadableError"),
+    );
+
+    await expect(repairDocuments(["f-1"])).resolves.toMatchObject({
+      ok: false,
+      reason: "fileMissing",
+    });
+    expect(post).not.toHaveBeenCalled();
   });
 
   it("never sends a password, having none to send", async () => {

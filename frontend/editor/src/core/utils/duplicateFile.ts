@@ -2,6 +2,7 @@ import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { fileStorage } from "@app/services/fileStorage";
 import { splitFileName } from "@app/utils/fileUtils";
+import { detachedFile } from "@app/utils/storedBlob";
 
 /** The subset of `useFileHandler().addFiles` a duplicate needs. */
 type AddFilesFn = (
@@ -47,8 +48,9 @@ export async function duplicateStoredFile(
 
   const [copy] = await addFiles(
     [
-      new File([source], copyNameFor(stub.name, existingNames), {
-        type: source.type,
+      await detachedFile(source, {
+        name: copyNameFor(stub.name, existingNames),
+        lastModified: Date.now(),
       }),
     ],
     {

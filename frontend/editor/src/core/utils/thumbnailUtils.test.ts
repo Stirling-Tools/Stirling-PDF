@@ -293,6 +293,32 @@ describe("generateThumbnailForFile — images", () => {
     ]);
   });
 
+  it("reads a stored image's header without slicing it", async () => {
+    const { generateImageThumbnail } =
+      await import("@app/utils/thumbnailUtils");
+    const { markStoredBlob } = await import("@app/utils/storedBlob");
+    const { calls } = stubBitmapPipeline();
+    const header = pngHeader(400, 300);
+    const file = new File([header], "photo.png", { type: "image/png" });
+    const slice = vi.spyOn(file, "slice");
+    // jsdom's Blob streams nothing, so the stored bytes are served here.
+    Object.defineProperty(file, "stream", {
+      value: () =>
+        new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(header);
+            controller.close();
+          },
+        }),
+    });
+    markStoredBlob(file);
+
+    await generateImageThumbnail(file, 1024);
+
+    expect(slice).not.toHaveBeenCalled();
+    expect([calls[0].resizeWidth, calls[0].resizeHeight]).toEqual([400, 300]);
+  });
+
   it("reads JPEG dimensions from the start-of-frame marker", async () => {
     const { generateThumbnailForFile } =
       await import("@app/utils/thumbnailUtils");

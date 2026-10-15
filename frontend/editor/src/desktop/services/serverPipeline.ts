@@ -30,7 +30,9 @@ export async function submitServerPipeline(
       { type: "application/json" },
     ),
   );
-  files.forEach((file) => form.append("fileInput", uploadableFile(file)));
+  for (const file of files) {
+    form.append("fileInput", await uploadableFile(file));
+  }
   assets.forEach((asset, i) => {
     form.append(`assets[${i}].key`, asset.key);
     form.append(`assets[${i}].file`, asset.file);
