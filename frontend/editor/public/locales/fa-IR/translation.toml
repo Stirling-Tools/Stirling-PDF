@@ -55,7 +55,9 @@ keepWorking = "ادامه کار"
 loading = "در حال بارگذاری..."
 loginAgreementAccept = "پذیرفتن"
 loginAgreementDecline = "رد کردن"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "این اطلاعیه توسط مدیر سیستم شما ارائه شده است، نه Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "توافق‌نامهٔ ورود"
 logOut = "خروج از حساب"
 marginTooltip = "فاصله بین شماره صفحه و لبه صفحه."
@@ -299,7 +301,6 @@ title = "نتایج شماره‌گذاری صفحات"
 
 [addPassword]
 desc = "PDF خود را با گذرواژه رمزگذاری کنید."
-submit = "رمزنگاری"
 tags = "رمزگذاری,رمز عبور,قفل,امن,محافظت,امنیت,رمزنگاری,حفاظت,محرمانه,خصوصی,محدود کردن دسترسی"
 title = "افزودن گذرواژه"
 
@@ -311,17 +312,6 @@ label = "طول کلید رمزگذاری"
 
 [addPassword.error]
 failed = "هنگام رمزگذاری PDF خطایی رخ داد."
-
-[addPassword.passwords]
-stepTitle = "گذرواژه‌ها و رمزگذاری"
-
-[addPassword.passwords.owner]
-label = "گذرواژه مالک"
-placeholder = "گذرواژه مالک را وارد کنید"
-
-[addPassword.passwords.user]
-label = "گذرواژه کاربر"
-placeholder = "گذرواژه کاربر را وارد کنید"
 
 [addPassword.results]
 title = "PDFهای رمزنگاری‌شده"
@@ -1627,6 +1617,7 @@ title = "نیاز به راه‌اندازی مجدد"
 [admin.settings.security]
 authentication = "احراز هویت"
 description = "پیکربندی احراز هویت، رفتار ورود و سیاست‌های امنیتی."
+pdfPermissions = "PDF permissions"
 title = "امنیت"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "غیرفعال کردن محافظت CSRF"
 [admin.settings.security.enableLogin]
 description = "الزام کاربران به ورود قبل از دسترسی به برنامه"
 label = "فعال‌سازی ورود"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs."
+label = "Honor PDF permissions"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "تنظیمات پیشرفته"
@@ -1938,9 +1933,6 @@ wrapUp = "این پایان تور ادمین بود! شما قابلیت‌ها
 [adminUserSettings]
 admin = "ادمین"
 title = "تنظیمات کنترل کاربران"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "عربی"
@@ -3173,12 +3165,14 @@ unknown = "نامشخص"
 
 [changePermissions]
 desc = "محدودیت‌ها و مجوزهای سند را تغییر دهید."
+loading = "Loading current permissions..."
 submit = "تغییر مجوزها"
 tags = "مجوزها,محدودیت‌ها,حقوق,کنترل دسترسی,اجازه دادن,رد کردن,چاپ,کپی کردن,ویرایش,تغییر مجوزها,تنظیمات امنیتی,حقوق کاربر"
 title = "تغییر مجوزها"
 
 [changePermissions.error]
 failed = "هنگام تغییر مجوزهای PDF خطایی رخ داد."
+readFailed = "Could not read this PDF's current permissions. Set the restrictions manually before applying changes."
 
 [changePermissions.permissions.preventAssembly]
 label = "جلوگیری از مونتاژ سند"
@@ -3219,21 +3213,16 @@ text = "برای غیرقابل‌تغییر کردن این مجوزها، از
 [chat.actions]
 copy = "کپی پیام"
 
-[chat.emptyState]
-text = "درباره اسناد خود سؤال بپرسید یا برای ابزارهای PDF کمک بگیرید."
-
-[chat.fab]
-close = "بستن چت"
-open = "باز کردن دستیار Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "گزینه‌های عامل Stirling"
-assistant = "دستیار AI"
 clearChat = "پاک‌کردن چت"
 
 [chat.input]
 disclaimer = "AI ممکن است اشتباه کند. قبل از اشتراک‌گذاری، حتماً خروجی را بررسی کنید."
-placeholder = "می‌خواهید چه کاری انجام دهید؟"
 send = "ارسال پیام"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "تبدیل این اسناد به PDF"
 convertOne = "تبدیل این سند به PDF"
 heading = "شروع کنید"
 mergeMany = "ادغام این {{count}} سند در یک سند"
-moreFiles = "+{{count}} بیشتر"
 openFromComputer = "باز کردن از رایانه"
-removeFile = "حذف {{name}}"
 splitOne = "تقسیم این سند"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "اطلاعات درخواستی را پیدا نکردم."
 processing = "در حال پردازش ({{outcome}})..."
 unsupported_capability = "قابلیت پشتیبانی‌نشده: {{capability}}"
 usage_limit_reached = "به حد مجاز استفاده خود رسیده‌اید. برای ادامه، گزینه‌های پلن خود را بررسی کنید."
-
-[chat.toolsUsed]
-summary_one = "۱ ابزار اجرا شد"
-summary_other = "{{count}} ابزار اجرا شد"
-unknownTool = "ابزار ناشناخته"
 
 [classification.families]
 correspondence = "مکاتبات"
@@ -3664,6 +3646,7 @@ continue = "ادامه"
 copied = "کپی شد!"
 copy = "کپی"
 copyCode = "کپی کد"
+copyFailed = "Copy failed"
 dismiss = "رد کردن"
 done = "انجام شد"
 enterValue = "مقدار را وارد کنید"
@@ -3847,6 +3830,12 @@ unavailable = "ImageMagick روی این سرور نصب یا فعال نشده 
 filesize = "اندازه فایل"
 quality = "کیفیت"
 title = "روش فشرده‌سازی"
+
+[compress.noReduction]
+multiple = "Compression ran successfully, but {{count}} of {{total}} files can't be compressed any further."
+multipleAtLevel = "Compression at this level made no improvement to {{count}} of {{total}} files. Try a higher compression level."
+single = "Compression ran successfully, but this file can't be compressed any further."
+singleAtLevel = "Compression at this level made no improvement to this file. Try a higher compression level."
 
 [compress.settings]
 desiredSize = "حجم فایل موردنظر"
@@ -4364,6 +4353,10 @@ title = "از دیسک به‌روزرسانی شد"
 body = "\"{{name}}\" روی دیسک تغییر کرده است. به اندازه‌ای بزرگ است که بارگذاری دوباره آن زمان‌بر خواهد بود، بنابراین نسخه اینجا دست‌نخورده باقی مانده است."
 title = "فایل روی دیسک تغییر کرده است"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "در حال دانلود به‌روزرسانی..."
 installing = "در حال نصب به‌روزرسانی..."
@@ -4491,22 +4484,80 @@ description = "ابزار ویرایش فهرست مطالب را انتخاب �
 title = "برای شروع ویرایش، ابزار را باز کنید"
 
 [encryptedPdfUnlock]
-description = "این PDF با گذرواژه محافظت شده است. گذرواژه را وارد کنید تا بتوانید به کار ادامه دهید."
-emptyResponse = "حذف گذرواژه فایلی تولید نکرد."
+actionIgnored = "{{action}} restriction ignored"
+actionUnlocked = "{{action}} unlocked for this session"
+advanced = "Advanced"
+allowed = "Allowed"
+annotations = "Annotations"
+authoriseAction = "This PDF requires permission to use {{action}}."
+changeOwnerPassword = "Change permissions password"
+chooseOwnerPassword = "Choose a different password"
+continue = "Continue"
+copyFailed = "Unable to create the copy. Your PDF is unchanged."
+copying = "Copying content"
+editing = "Editing"
+enterPassword = "Enter password"
+ignoredByServer = "Permissions are ignored by this server's settings. The PDF's protection is unchanged."
 incorrectPassword = "گذرواژه نادرست است"
+lowQualityPrintUnsupported = "This PDF allows low-quality printing only, which this viewer does not support."
+lowResolutionOnly = "Low resolution only"
+manageProtection = "Manage protection"
 missingFile = "فایل انتخاب‌شده دیگر در دسترس نیست."
+mixedProtection = "These PDFs have separate protection settings. Process them individually."
+newOwnerPassword = "New permissions password"
+notRequired = "Not required"
+openingPassword = "Password to open"
+openingPasswordRemoved = "Opening password removed. Restrictions retained."
+openingRequired = "Enter the password used to open this PDF."
+openPdf = "Open PDF"
+ownerPassword = "Permissions password"
+ownerRequired = "Enter the permissions password to continue."
+ownerTitle = "Enter permissions password"
+passwordRetained = "Kept unchanged"
+passwordsMustDiffer = "The two passwords must be different."
+permissionsUnlocked = "Permissions unlocked for this session"
+prepareFailed = "Unable to prepare this protected PDF for processing."
+printing = "Printing"
+printRestricted = "Printing is restricted. Verify permissions in Manage protection."
+protectedPdf = "Protected PDF"
+protectionRetained = "Protection retained"
+protectionSaved = "Protection saved"
+removePasswordHelp = "Open Remove Password to choose which passwords to remove."
+removeProtection = "Create an unprotected copy"
+replaceProtection = "These settings replace the PDF's current protection."
 required = "برای ادامه گذرواژه را وارد کنید."
-skip = "فعلاً رد کن"
-successBody = "گذرواژه با موفقیت حذف شد."
-successBodyWithName = "گذرواژه از {{fileName}} حذف شد"
-successTitle = "گذرواژه حذف شد"
+requiredStatus = "Required"
+requiredToApply = "Required to apply changes"
+restoreFailed = "Unable to preserve PDF protection. No unprotected result was saved."
+restrictActions = "Restrict actions"
+restricted = "Restricted"
+restrictedActions = "restricted actions"
+restrictedOperation = "This action requires the permissions password."
+retainOwnerVerification = "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it."
+saveProtection = "Save protection"
+securityChangeFailed = "Unable to change protection. Check the permissions password and the new security settings."
+sessionDetails = "Open for this session. The PDF stays protected."
+sessionDetailsLabel = "About session unlocking"
+sessionFailed = "Unable to unlock this PDF. Please try again."
+sessionSuccessBody = "Protection retained."
+sessionSuccessBodyWithName = "Protection retained for {{fileName}}."
+sessionSuccessTitle = "PDF opened"
+sessionTitle = "Open PDF"
+signedReadOnly = "This signed PDF can be viewed, but cannot be edited here."
 title = "برای ادامه، گذرواژه را حذف کنید"
+toolUnavailable = "This tool doesn't support encrypted PDFs. Remove the password first."
+toolUnavailableDetails = "Why {{name}} is unavailable"
 unlock = "باز کردن و ادامه"
 unlockAll = "برای همه استفاده کنید ({{count}})"
 unlockAllPartialFail = "رمز عبور نادرست برای: {{names}}"
 unlockAllSuccess_one = "{{count}} فایل باز شد."
 unlockAllSuccess_other = "{{count}} فایل باز شد."
+unlockedForSession = "Unlocked for this session using your permissions password."
 unlockPrompt = "قفل PDF را باز کنید تا ادامه دهید"
+unprotectedCopyConsequence = "The copy will have no passwords or restrictions. The original stays protected."
+unsupportedTool = "This tool cannot yet preserve this PDF's protection."
+verifiedForSession = "Verified for this session"
+verifyPermissions = "Verify permissions for this session"
 viewerLocked = "این PDF با گذرواژه محافظت شده است"
 viewerUnlock = "باز کردن قفل"
 
@@ -4597,22 +4648,23 @@ viewInViewer = "مشاهده در نمایشگر"
 closeFile = "بستن فایل"
 
 [fileEditor]
-addFiles = "افزودن فایل‌ها"
 closedFile = "{{name}} بسته شد"
 couldNotSave = "ذخیره {{name}} ممکن نبود"
-filesAdded_one = "{{count}} فایل اضافه شد"
-filesAdded_other = "{{count}} فایل اضافه شد"
 filesReordered_one = "فایل دوباره مرتب شد"
 filesReordered_other = "{{count}} فایل دوباره مرتب شدند"
 loadedFromStorage_one = "{{count}} فایل از فضای ذخیره‌سازی بارگیری شد"
 loadedFromStorage_other = "{{count}} فایل از فضای ذخیره‌سازی بارگیری شدند"
 loadFromStorageFailed = "بارگیری برخی فایل‌ها از فضای ذخیره‌سازی ناموفق بود"
 pinnedFile = "{{name}} سنجاق شد"
-processFilesFailed = "پردازش فایل‌ها ناموفق بود"
 savedAndClosed = "{{name}} ذخیره و بسته شد"
 saveFailed = "ذخیره ناموفق بود"
 unpinnedFile = "{{name}} از حالت سنجاق خارج شد"
 unzipping = "در حال Unzip کردن {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "خطا در Unzip کردن {{name}}"
@@ -4729,7 +4781,6 @@ dataLostBody = "این مرورگر محتوای این فایل را از دس�
 dataLostTitle = "داده‌های فایل در دسترس نیست"
 downloadFailed = "دانلود ناموفق بود"
 dropHint = "برای شروع فایل‌ها را باز کنید"
-dropToAdd = "برای افزودن، فایل‌ها را رها کنید"
 duplicateFailed = "تکرار فایل ممکن نبود"
 expand = "گسترش نوار کناری"
 googleDrive = "Google Drive"
@@ -5251,6 +5302,7 @@ rescanFields = "اسکن دوبارهٔ فیلدها"
 rescanFormFields = "اسکن دوبارهٔ فیلدهای فرم"
 save = "ذخیره"
 saveShortcut = "Ctrl+S برای ذخیره"
+saving = "Saving..."
 selectOptionPlaceholder = "— انتخاب کنید —"
 skippedEdits_one = "۱ تغییر قابل اعمال نبود:"
 skippedEdits_other = "{{count}} تغییر قابل اعمال نبود:"
@@ -5258,9 +5310,7 @@ skippedEditsTruncated = "{{count}} مورد دیگر فهرست نشده است.
 unsavedChanges = "تغییرات ذخیره‌نشده"
 
 [formFill.create]
-commit = "افزودن {{count}} فیلد به PDF"
 empty = "هنوز هیچ فیلدی رسم نشده است."
-failed = "افزودن فیلدها ناموفق بود"
 goToField = "رفتن به این فیلد"
 hint = "نوع فیلد را انتخاب کنید، سپس آن را روی صفحه رسم کنید."
 placing = "یک فیلد {{type}} روی صفحه رسم کنید. برای توقف Esc را فشار دهید."
@@ -5334,7 +5384,6 @@ modify = "ویرایش"
 commit = "ذخیره {{count}} تغییر"
 delete = "حذف"
 empty = "این PDF هنوز هیچ فیلد فرمی ندارد."
-failed = "ذخیره تغییرات ناموفق بود"
 groupSizeHint = "استفاده از اندازه گزینه"
 hint = "فیلدی را برای ویرایش ویژگی‌هایش انتخاب کنید، آن را روی صفحه بکشید، یا حذفش کنید."
 restore = "بازیابی"
@@ -5732,11 +5781,6 @@ title = "هم‌پوشانی PDF‌ها"
 desc = "ادغام چندین صفحه یک سند PDF در یک صفحه واحد"
 tags = "چیدمان،مرتب‌سازی،ترکیب,N-up,2-up,4-up،چند صفحه در هر صفحه،صفحات در هر برگ،چیدمان صفحات،کاشی،چیدمان شبکه‌ای،چیدمان چندصفحه‌ای،ترکیب روی صفحه،جزوه آموزشی"
 title = "طرح‌بندی چند صفحه‌ای"
-
-[home.pdfCommentAgent]
-desc = "از AI بخواهید بر اساس دستور شما یک PDF را با دیدگاه‌های یادداشت‌چسبان حاشیه‌نویسی کند"
-tags = "AI,عامل,دیدگاه,حاشیه‌نویسی,یادداشت چسبان,بازبینی,بازخورد,یادداشت‌ها"
-title = "افزودن دیدگاه‌های AI"
 
 [home.pdfOrganiser]
 tags = "سازمان‌دهی،بازچینی،تغییر ترتیب،مرتب‌سازی صفحات،مرتب کردن،جابجایی صفحات،حذف صفحات،حذف صفحات،مدیریت صفحه،سازمان‌دهنده صفحه،توالی مجدد"
@@ -6595,63 +6639,6 @@ yourCloudAccess = "شما به عضو تیم تبدیل می‌شوید و دس�
 deselectAll = "هیچ‌کدام"
 selectAll = "انتخاب همه"
 
-[pageEditor]
-dragPreviewAlt = "در حال کشیدن"
-filePosition = "موقعیت {{position}}"
-pageLabel = "صفحه {{page}}"
-title = "ویرایشگر صفحه"
-
-[pageEditor.actions]
-deletePage = "حذف صفحه"
-insertFileAfter = "درج فایل بعد از این"
-moveLeft = "انتقال به چپ"
-moveRight = "انتقال به راست"
-rotateLeft = "چرخش به چپ"
-rotateRight = "چرخش به راست"
-splitAfter = "تقسیم بعد از این"
-
-[pageEditor.commands]
-addSplitAt = "افزودن تقسیم در موقعیت {{position}}"
-addSplits_one = "افزودن {{count}} تقسیم"
-addSplits_other = "افزودن {{count}} تقسیم"
-deletePages_one = "حذف {{count}} صفحه"
-deletePages_other = "حذف {{count}} صفحه"
-insertFiles_one = "درج {{count}} فایل بعد از صفحه {{page}}"
-insertFiles_other = "درج {{count}} فایل بعد از صفحه {{page}}"
-insertPageBreaks_one = "درج {{count}} شکست صفحه"
-insertPageBreaks_other = "درج {{count}} شکست صفحه"
-insertPageBreaksAll = "درج شکست صفحه بعد از همه صفحات"
-removeAllSplits = "حذف همه تقسیم‌ها"
-removeSplitAt = "حذف تقسیم در موقعیت {{position}}"
-removeSplits_one = "حذف {{count}} تقسیم"
-removeSplits_other = "حذف {{count}} تقسیم"
-reorderPages = "تغییر ترتیب صفحات"
-rotatePageLeft = "چرخاندن صفحه به چپ"
-rotatePageRight = "چرخاندن صفحه به راست"
-rotatePagesLeft_one = "چرخاندن {{count}} صفحه به چپ"
-rotatePagesLeft_other = "چرخاندن {{count}} صفحه به چپ"
-rotatePagesRight_one = "چرخاندن {{count}} صفحه به راست"
-rotatePagesRight_other = "چرخاندن {{count}} صفحه به راست"
-splitAllPages = "تقسیم همه صفحات"
-toggleSplits_one = "تغییر وضعیت {{count}} موقعیت تقسیم"
-toggleSplits_other = "تغییر وضعیت {{count}} موقعیت تقسیم"
-
-[pageEditor.emptyState]
-body = "برای ویرایش صفحات، فایل‌ها را اضافه کنید"
-title = "هیچ فایل PDF بارگذاری نشده"
-
-[pageEditor.fileDropdown]
-addFile = "افزودن فایل"
-selectedCount = "{{selected}}/{{total}} فایل انتخاب‌شده"
-untitled = "بدون عنوان"
-
-[pageEditor.toolbar]
-delete = "حذف انتخاب‌شده‌ها"
-redo = "بازانجام"
-rotateLeft = "چرخاندن موارد انتخاب‌شده به چپ"
-rotateRight = "چرخاندن موارد انتخاب‌شده به راست"
-undo = "واگرد"
-
 [pageExtracter]
 title = "استخراج صفحات"
 
@@ -6815,6 +6802,76 @@ title = "بازه صفحات"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → همه صفحات را انتخاب می‌کند"
 title = "کلیدواژه‌های ویژه"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "سندها"
@@ -7144,24 +7201,6 @@ totalSeats_other = "مجموع ({{count}} صندلی)"
 [payment.upgradeTeam]
 title = "ارتقا به Team"
 
-[pdfCommentAgent]
-submit = "تولید دیدگاه‌ها"
-
-[pdfCommentAgent.error]
-emptyPrompt = "لطفاً توضیح دهید AI دربارهٔ چه چیزی باید نظر بدهد"
-failed = "تولید دیدگاه‌ها ناموفق بود"
-tooLong = "دستور خیلی بلند است (حداکثر {{max}} نویسه)"
-
-[pdfCommentAgent.prompt]
-label = "AI باید دربارهٔ چه چیزی نظر بدهد؟"
-placeholder = "مثلاً هر تاریخ مبهمی را علامت بزن و پیشنهاد شفاف‌سازی بده"
-
-[pdfCommentAgent.results]
-title = "PDF دارای دیدگاه‌ها"
-
-[pdfCommentAgent.settings]
-title = "دستورالعمل دیدگاه‌ها"
-
 [pdfOrganiser]
 placeholder = "(مثال: ۱,۳,۲ یا ۴-۸,۲,۱۰-۱۲ یا 2n-1)"
 tags = "دوطرفه،زوج،فرد،مرتب‌سازی،جابجایی"
@@ -7347,6 +7386,7 @@ nothingSelectedHint = "روی هر متن، تصویر یا شکل در صفحه
 ocrDocumentChanged = "سند هنگام اجرای OCR تغییر کرد. برای اعمال آخرین تغییرات، OCR را دوباره اجرا کنید."
 ocrInvalidResult = "OCR یک PDF برنگرداند. لطفاً دوباره تلاش کنید."
 ocrNoLanguages = "هیچ زبان OCR روی سرور نصب نشده است."
+ocrProtected = "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing."
 ocrRunning = "در حال تشخیص متن..."
 ocrUnavailable = "OCR روی این سرور در دسترس نیست."
 oneImage = "تصویر"
@@ -7389,13 +7429,8 @@ pageNumber = "صفحه {{page}}"
 renderFailed = "رندر صفحه ناموفق بود"
 
 [pdfTextEditor.password]
-cancel = "لغو"
 incorrect = "رمز عبور نادرست است - دوباره تلاش کنید."
 label = "رمز عبور"
-open = "باز کردن"
-protected = "این PDF با رمز عبور محافظت شده است."
-protectedNamed = "\"{{fileName}}\" با رمز عبور محافظت شده است."
-title = "رمز عبور لازم است"
 
 [pdfTextEditor.rulers]
 guide = "راهنمای تراز در {{value}} {{unit}} - برای حذف، آن را روی خط‌کش بکشید"
@@ -7994,6 +8029,7 @@ before = "تنظیم کنید"
 title = "اتصال Stirling پیکربندی نشده است"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "مرورگر شما باز نشد. برای پیوند دادن یک حساب، Usage & billing را روی سرور متصل خود باز کنید."
 
 [portal.accountLink.panel]
@@ -8117,9 +8153,6 @@ limit = "محدودیت هزینه ماهانه {{amount}}/ماه. پردازش 
 limitNoCap = "بدون محدودیت هزینه. پردازش متوقف نمی‌شود. فاکتورها ماهانه صادر می‌شوند."
 
 [portal.billing.chip]
-invoices = "فاکتورها"
-nav = "بخش‌ها"
-payment = "پرداخت"
 plan = "طرح"
 procurement = "تدارکات"
 usage = "مصرف"
@@ -8178,9 +8211,22 @@ pdfs = "PDFهای پردازش‌شده"
 users = "کاربران"
 
 [portal.billing.enterprise]
+active = "Agreement active through {{date}}"
 cta = "دریافت پیشنهاد قیمت سازمانی"
+included = "Included in Enterprise"
+payment_pending = "Payment pending · access through {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF over agreed volume"
+pdfsOver_other = "{{count}} PDFs over agreed volume"
+pdfsUsed_one = "{{count}} PDF processed"
+pdfsUsed_other = "{{count}} PDFs processed"
+period = "Agreement period: {{start}} – {{end}}"
 sub = "استقرار air-gapped، SCIM، محل نگهداری داده، SLAهای زمان‌کارکرد، و توافقی متناسب."
 title = "Stirling را در محیطی تحت مقررات اجرا می‌کنید؟"
+trial = "{{days}}-day trial · ends {{date}}"
+usersAgreed = "{{used}} / {{agreed}} agreed users"
+usersOver_one = "{{count}} user over agreed quantity"
+usersOver_other = "{{count}} users over agreed quantity"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "امکان شروع پرداخت وجود نداشت"
@@ -11160,6 +11206,7 @@ tags = "پوشاندن,پنهان کردن,سیاه کردن,سیاه,ماژیک
 title = "پوشاندن"
 
 [redact.auto]
+caseSensitiveLabel = "Case Sensitive Matching"
 colorLabel = "رنگ کادر"
 convertPDFToImageLabel = "تبدیل PDF به PDF-Image"
 customPaddingLabel = "فاصله اضافی سفارشی"
@@ -11194,6 +11241,10 @@ automaticDisabledTooltip = "برای سانسور چند فایل به‌صور�
 manual = "دستی"
 mode = "حالت"
 title = "روش پنهان‌سازی"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
+title = "Case Sensitive Matching"
 
 [redact.tooltip.advanced.color]
 text = "ظاهر کادرهای پنهان‌سازی را سفارشی کنید. رنگ مشکی استاندارد است، اما می‌توانید هر رنگی را انتخاب کنید. فاصله، فضای اضافی پیرامون متن یافت‌شده اضافه می‌کند."
@@ -11396,7 +11447,19 @@ text = "مشخص کنید کدام صفحات را از PDF خود حذف کنی
 title = "انتخاب صفحه"
 
 [removePassword]
-desc = "حذف حفاظت رمز عبور از سند PDF شما."
+appliesTo = "Set on {{count}} of {{total}} PDFs"
+batchRemoved = "Entered passwords removed where set. Blank fields kept unchanged."
+bothRemoved = "Both passwords and restrictions removed."
+checkingProtection = "Checking protection…"
+keepBlank = "Leave a field blank to keep that password."
+notSet = "Not set"
+openingOnlyRemoved = "Opening password removed."
+openWithReaderFirst = "Reopen this PDF using its opening password before removing only the permissions password."
+ownerOnlyRemoved = "Permissions password and restrictions removed."
+ownerRemoved = "Permissions password and restrictions removed. Opening password kept."
+protectionUnavailable = "Unable to check protection"
+selectiveHelp = "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions."
+selectPasswords = "Passwords to remove"
 submit = "حذف رمز عبور"
 tags = "امن،رمزگشایی،امنیت،حذف رمز عبور"
 title = "حذف گذرواژه"
@@ -11407,13 +11470,9 @@ failed = "هنگام حذف رمز عبور از PDF خطایی رخ داد."
 [removePassword.password]
 label = "رمز عبور فعلی"
 placeholder = "رمز عبور فعلی را وارد کنید"
-stepTitle = "حذف رمز عبور"
 
 [removePassword.results]
 title = "PDFهای رمزگشایی‌شده"
-
-[removePassword.tooltip]
-description = "حذف حفاظت با رمز عبور نیازمند همان رمزی است که برای رمزنگاری PDF استفاده شده بود. این کار سند را رمزگشایی می‌کند و بدون رمز عبور قابل دسترسی می‌سازد."
 
 [reorganizePages]
 submit = "سازمان‌دهی مجدد صفحات"
@@ -12054,6 +12113,7 @@ title = "فضای کاری"
 loginIncomplete = "تکمیل ورود ناموفق بود"
 noSaasServer = "هیچ سرور SaaS پیکربندی نشده است"
 noServer = "هیچ سروری پیکربندی نشده است"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "ورود SaaS ناموفق بود"
 saasLoginIncomplete = "تکمیل ورود SaaS ناموفق بود"
 selfHostedLoginFailed = "ورود self-hosted ناموفق بود"
@@ -13905,6 +13965,11 @@ title = "متن واترمارک"
 image = "تصویر"
 text = "متن"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "فایل‌های قبلی شما دیگر روی این دستگاه ذخیره نشده‌اند."
 partial = "{{restored}} از {{total}} فایل بازیابی شد. بقیه دیگر روی این دستگاه ذخیره نشده‌اند."
@@ -13915,16 +13980,13 @@ annotations = "حاشیه‌نویسی‌ها"
 applyRedactionsFirst = "ابتدا پنهان‌سازی‌ها را اعمال کنید"
 closeAll = "بستن همهٔ فایل‌ها"
 closePdf = "بستن PDF"
-deleteSelected = "حذف صفحات منتخب"
 deselectAll = "لغو انتخاب همه"
 downloadAll = "دانلود همه"
 exitRedaction = "خروج از حالت پنهان‌سازی"
-exportAll = "خروجی گرفتن از PDF"
-exportSelected = "خروجی گرفتن از صفحات منتخب"
 formFill = "ویرایشگر فرم"
 hideToolbar = "پنهان کردن نوار ابزار"
 moreActions = "اقدامات بیشتر"
-multiTool = "ابزار چندگانه"
+pageEditor = "Page Editor"
 panMode = "حالت جابه‌جایی"
 print = "چاپ PDF"
 readAloud = "خواندن با صدای بلند"
@@ -13938,7 +14000,6 @@ rulerSettings = "تنظیمات مقیاس"
 save = "ذخیره"
 saveAll = "ذخیره همه"
 saveAs = "ذخیره به‌عنوان"
-saveChanges = "ذخیره تغییرات"
 search = "جستجو در PDF"
 selectAll = "انتخاب همه"
 selectByNumber = "انتخاب بر اساس شماره‌های صفحه"

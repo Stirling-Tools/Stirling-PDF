@@ -55,7 +55,9 @@ keepWorking = "Nadaljuj z delom"
 loading = "Nalaganje..."
 loginAgreementAccept = "Sprejmi"
 loginAgreementDecline = "Zavrni"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "To obvestilo je zagotovil vaš skrbnik, ne Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Sporazum ob prijavi"
 logOut = "Odjava"
 marginTooltip = "Razdalja med številko strani in robom strani."
@@ -299,7 +301,6 @@ title = "Rezultati številčenja strani"
 
 [addPassword]
 desc = "Šifrirajte svoj dokument PDF z geslom."
-submit = "Šifriraj"
 tags = "šifriraj,geslo,zakleni,varno,zaščiti,varnost,šifriranje,varovanje,zaupno,zasebno,omeji dostop"
 title = "Dodaj geslo"
 
@@ -311,17 +312,6 @@ label = "Dolžina šifrirnega ključa"
 
 [addPassword.error]
 failed = "Pri šifriranju PDF-ja je prišlo do napake."
-
-[addPassword.passwords]
-stepTitle = "Gesla in šifriranje"
-
-[addPassword.passwords.owner]
-label = "Lastniško geslo"
-placeholder = "Vnesite lastniško geslo"
-
-[addPassword.passwords.user]
-label = "Uporabniško geslo"
-placeholder = "Vnesite uporabniško geslo"
 
 [addPassword.results]
 title = "Šifrirani PDF-ji"
@@ -1627,6 +1617,7 @@ title = "Potreben je ponovni zagon"
 [admin.settings.security]
 authentication = "Preverjanje pristnosti"
 description = "Konfigurirajte preverjanje pristnosti, vedenje prijave in varnostne politike."
+pdfPermissions = "PDF permissions"
 title = "Varnost"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Onemogoči zaščito CSRF"
 [admin.settings.security.enableLogin]
 description = "Zahtevaj, da se uporabniki prijavijo pred dostopom do aplikacije"
 label = "Omogoči prijavo"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs."
+label = "Honor PDF permissions"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Napredne nastavitve"
@@ -1938,9 +1933,6 @@ wrapUp = "To je konec skrbniškega ogleda! Videli ste enterprise funkcije, zarad
 [adminUserSettings]
 admin = "Skrbnik"
 title = "Nastavitve uporabniškega nadzora"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Arabska"
@@ -3173,12 +3165,14 @@ unknown = "Neznano"
 
 [changePermissions]
 desc = "Spremenite omejitve in dovoljenja dokumenta."
+loading = "Loading current permissions..."
 submit = "Spremeni dovoljenja"
 tags = "dovoljenja,omejitve,pravice,nadzor dostopa,dovoli,zavrni,tiskanje,kopiranje,urejanje,spremeni dovoljenja,varnostne nastavitve,uporabniške pravice"
 title = "Spremeni dovoljenja"
 
 [changePermissions.error]
 failed = "Pri spreminjanju dovoljenj PDF je prišlo do napake."
+readFailed = "Could not read this PDF's current permissions. Set the restrictions manually before applying changes."
 
 [changePermissions.permissions.preventAssembly]
 label = "Prepreči sestavljanje dokumenta"
@@ -3219,21 +3213,16 @@ text = "Da bodo ta dovoljenja nespremenljiva, uporabite orodje Dodaj geslo za na
 [chat.actions]
 copy = "Kopiraj sporočilo"
 
-[chat.emptyState]
-text = "Zastavite vprašanje o svojih dokumentih ali poiščite pomoč z orodji PDF."
-
-[chat.fab]
-close = "Zapri klepet"
-open = "Odpri pomočnika Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Možnosti agenta Stirling"
-assistant = "AI pomočnik"
 clearChat = "Počisti klepet"
 
 [chat.input]
 disclaimer = "AI lahko naredi napake. Pred deljenjem preverite izhod."
-placeholder = "Kaj želite storiti?"
 send = "Pošlji sporočilo"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Pretvori te dokumente v PDF"
 convertOne = "Pretvori ta dokument v PDF"
 heading = "Začnite"
 mergeMany = "Združi teh {{count}} dokumentov v 1"
-moreFiles = "+{{count}} več"
 openFromComputer = "Odpri iz računalnika"
-removeFile = "Odstrani {{name}}"
 splitOne = "Razdeli ta dokument"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Zahtevanih informacij ni bilo mogoče najti."
 processing = "Obdelava ({{outcome}})..."
 unsupported_capability = "Nepodprta zmožnost: {{capability}}"
 usage_limit_reached = "Dosegli ste omejitev uporabe. Preverite možnosti paketa, da nadaljujete."
-
-[chat.toolsUsed]
-summary_one = "Zagnano 1 orodje"
-summary_other = "Zagnanih {{count}} orodij"
-unknownTool = "Neznano orodje"
 
 [classification.families]
 correspondence = "Korespondenca"
@@ -3664,6 +3646,7 @@ continue = "Nadaljuj"
 copied = "Kopirano!"
 copy = "Kopiraj"
 copyCode = "Kopiraj kodo"
+copyFailed = "Copy failed"
 dismiss = "Opusti"
 done = "Končano"
 enterValue = "Vnesite vrednost"
@@ -3847,6 +3830,12 @@ unavailable = "ImageMagick ni nameščen ali omogočen na tem strežniku"
 filesize = "Velikost datoteke"
 quality = "Kakovost"
 title = "Način stiskanja"
+
+[compress.noReduction]
+multiple = "Compression ran successfully, but {{count}} of {{total}} files can't be compressed any further."
+multipleAtLevel = "Compression at this level made no improvement to {{count}} of {{total}} files. Try a higher compression level."
+single = "Compression ran successfully, but this file can't be compressed any further."
+singleAtLevel = "Compression at this level made no improvement to this file. Try a higher compression level."
 
 [compress.settings]
 desiredSize = "Želena velikost datoteke"
@@ -4364,6 +4353,10 @@ title = "Posodobljeno z diska"
 body = "\"{{name}}\" je bila spremenjena na disku. Je dovolj velika, da bi ponovno nalaganje trajalo nekaj časa, zato je različica tukaj ostala nespremenjena."
 title = "Datoteka spremenjena na disku"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Prenašanje posodobitve..."
 installing = "Nameščanje posodobitve..."
@@ -4491,22 +4484,80 @@ description = "Izberite orodje Uredi kazalo za nalaganje delovnega prostora."
 title = "Odprite orodje za začetek urejanja"
 
 [encryptedPdfUnlock]
-description = "Ta PDF je zaščiten z geslom. Vnesite geslo, da lahko nadaljujete z delom."
-emptyResponse = "Odstranitev gesla ni ustvarila datoteke."
+actionIgnored = "{{action}} restriction ignored"
+actionUnlocked = "{{action}} unlocked for this session"
+advanced = "Advanced"
+allowed = "Allowed"
+annotations = "Annotations"
+authoriseAction = "This PDF requires permission to use {{action}}."
+changeOwnerPassword = "Change permissions password"
+chooseOwnerPassword = "Choose a different password"
+continue = "Continue"
+copyFailed = "Unable to create the copy. Your PDF is unchanged."
+copying = "Copying content"
+editing = "Editing"
+enterPassword = "Enter password"
+ignoredByServer = "Permissions are ignored by this server's settings. The PDF's protection is unchanged."
 incorrectPassword = "Napačno geslo"
+lowQualityPrintUnsupported = "This PDF allows low-quality printing only, which this viewer does not support."
+lowResolutionOnly = "Low resolution only"
+manageProtection = "Manage protection"
 missingFile = "Izbrana datoteka ni več na voljo."
+mixedProtection = "These PDFs have separate protection settings. Process them individually."
+newOwnerPassword = "New permissions password"
+notRequired = "Not required"
+openingPassword = "Password to open"
+openingPasswordRemoved = "Opening password removed. Restrictions retained."
+openingRequired = "Enter the password used to open this PDF."
+openPdf = "Open PDF"
+ownerPassword = "Permissions password"
+ownerRequired = "Enter the permissions password to continue."
+ownerTitle = "Enter permissions password"
+passwordRetained = "Kept unchanged"
+passwordsMustDiffer = "The two passwords must be different."
+permissionsUnlocked = "Permissions unlocked for this session"
+prepareFailed = "Unable to prepare this protected PDF for processing."
+printing = "Printing"
+printRestricted = "Printing is restricted. Verify permissions in Manage protection."
+protectedPdf = "Protected PDF"
+protectionRetained = "Protection retained"
+protectionSaved = "Protection saved"
+removePasswordHelp = "Open Remove Password to choose which passwords to remove."
+removeProtection = "Create an unprotected copy"
+replaceProtection = "These settings replace the PDF's current protection."
 required = "Vnesite geslo za nadaljevanje."
-skip = "Preskoči za zdaj"
-successBody = "Geslo uspešno odstranjeno."
-successBodyWithName = "Geslo odstranjeno iz {{fileName}}"
-successTitle = "Geslo odstranjeno"
+requiredStatus = "Required"
+requiredToApply = "Required to apply changes"
+restoreFailed = "Unable to preserve PDF protection. No unprotected result was saved."
+restrictActions = "Restrict actions"
+restricted = "Restricted"
+restrictedActions = "restricted actions"
+restrictedOperation = "This action requires the permissions password."
+retainOwnerVerification = "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it."
+saveProtection = "Save protection"
+securityChangeFailed = "Unable to change protection. Check the permissions password and the new security settings."
+sessionDetails = "Open for this session. The PDF stays protected."
+sessionDetailsLabel = "About session unlocking"
+sessionFailed = "Unable to unlock this PDF. Please try again."
+sessionSuccessBody = "Protection retained."
+sessionSuccessBodyWithName = "Protection retained for {{fileName}}."
+sessionSuccessTitle = "PDF opened"
+sessionTitle = "Open PDF"
+signedReadOnly = "This signed PDF can be viewed, but cannot be edited here."
 title = "Odstranite geslo za nadaljevanje"
+toolUnavailable = "This tool doesn't support encrypted PDFs. Remove the password first."
+toolUnavailableDetails = "Why {{name}} is unavailable"
 unlock = "Odkleni in nadaljuj"
 unlockAll = "Uporabi za vse ({{count}})"
 unlockAllPartialFail = "Napačno geslo za: {{names}}"
 unlockAllSuccess_one = "Odklenjena {{count}} datoteka."
 unlockAllSuccess_other = "Odklenjenih {{count}} datotek."
+unlockedForSession = "Unlocked for this session using your permissions password."
 unlockPrompt = "Odklenite PDF za nadaljevanje"
+unprotectedCopyConsequence = "The copy will have no passwords or restrictions. The original stays protected."
+unsupportedTool = "This tool cannot yet preserve this PDF's protection."
+verifiedForSession = "Verified for this session"
+verifyPermissions = "Verify permissions for this session"
 viewerLocked = "Ta PDF je zaščiten z geslom"
 viewerUnlock = "Odkleni"
 
@@ -4597,22 +4648,23 @@ viewInViewer = "Odpri v pregledovalniku"
 closeFile = "Zapri datoteko"
 
 [fileEditor]
-addFiles = "Dodaj datoteke"
 closedFile = "Zaprto: {{name}}"
 couldNotSave = "Ni bilo mogoče shraniti {{name}}"
-filesAdded_one = "Dodana {{count}} datoteka"
-filesAdded_other = "Dodane {{count}} datoteke"
 filesReordered_one = "Datoteka prerazporejena"
 filesReordered_other = "{{count}} datotek prerazporejenih"
 loadedFromStorage_one = "Naložena {{count}} datoteka iz shrambe"
 loadedFromStorage_other = "Naloženih {{count}} datotek iz shrambe"
 loadFromStorageFailed = "Nalaganje nekaterih datotek iz shrambe ni uspelo"
 pinnedFile = "Pripeto: {{name}}"
-processFilesFailed = "Obdelava datotek ni uspela"
 savedAndClosed = "Shranjeno in zaprto: {{name}}"
 saveFailed = "Shranjevanje ni uspelo"
 unpinnedFile = "Odpeto: {{name}}"
 unzipping = "Razširjanje {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Napaka pri razširjanju {{name}}"
@@ -4729,7 +4781,6 @@ dataLostBody = "Ta brskalnik je izgubil vsebino te datoteke. Znova jo naložite,
 dataLostTitle = "Podatki datoteke niso na voljo"
 downloadFailed = "Prenos ni uspel"
 dropHint = "Odprite datoteke, da začnete"
-dropToAdd = "Spustite datoteke za dodajanje"
 duplicateFailed = "Datoteke ni bilo mogoče podvojiti"
 expand = "Razširi stransko vrstico"
 googleDrive = "Google Drive"
@@ -5251,6 +5302,7 @@ rescanFields = "Znova preglej polja"
 rescanFormFields = "Znova preglej polja obrazca"
 save = "Shrani"
 saveShortcut = "Ctrl+S za shranjevanje"
+saving = "Saving..."
 selectOptionPlaceholder = "— izberite —"
 skippedEdits_one = "1 spremembe ni bilo mogoče uveljaviti:"
 skippedEdits_other = "{{count}} sprememb ni bilo mogoče uveljaviti:"
@@ -5258,9 +5310,7 @@ skippedEditsTruncated = "{{count}} dodatnih ni navedenih."
 unsavedChanges = "Neshranjene spremembe"
 
 [formFill.create]
-commit = "Dodaj polja ({{count}}) v PDF"
 empty = "Nobeno polje še ni narisano."
-failed = "Polj ni bilo mogoče dodati"
 goToField = "Pojdi na to polje"
 hint = "Izberite vrsto polja, nato ga narišite na strani."
 placing = "Narišite polje vrste {{type}} na strani. Pritisnite Esc za ustavitev."
@@ -5334,7 +5384,6 @@ modify = "Spremeni"
 commit = "Shrani spremembe ({{count}})"
 delete = "Izbriši"
 empty = "Ta PDF še nima polj obrazca."
-failed = "Sprememb ni bilo mogoče shraniti"
 groupSizeHint = "Uporabi velikost možnosti"
 hint = "Izberite polje, da uredite njegove lastnosti, ga povlecite po strani ali izbrišite."
 restore = "Obnovi"
@@ -5732,11 +5781,6 @@ title = "Prekrivanje PDF-jev"
 desc = "Združi več strani dokumenta PDF v eno stran"
 tags = "postavitev,razporedi,združi,N-up,2-up,4-up,več na stran,strani na list,postavi strani,ploščice,mrežna postavitev,večstranska postavitev,združi na strani,izroček"
 title = "Večstranska postavitev"
-
-[home.pdfCommentAgent]
-desc = "Prosite AI, naj PDF označi s komentarji v obliki lepljivih listkov glede na vaš poziv"
-tags = "AI,agent,komentar,anotacija,lepljivi listek,pregled,povratne informacije,zapiski"
-title = "Dodaj AI komentarje"
 
 [home.pdfOrganiser]
 tags = "organiziraj,preuredi,prevrsti,razporedi strani,razvrsti,premakni strani,izbriši strani,odstrani strani,upravljanje strani,organizator strani,ponovno zaporedje"
@@ -6595,63 +6639,6 @@ yourCloudAccess = "Postali boste član ekipe in izgubili lastniški dostop."
 deselectAll = "Nič"
 selectAll = "Označi vse"
 
-[pageEditor]
-dragPreviewAlt = "Vlečenje"
-filePosition = "Položaj {{position}}"
-pageLabel = "Stran {{page}}"
-title = "Urejevalnik strani"
-
-[pageEditor.actions]
-deletePage = "Izbriši stran"
-insertFileAfter = "Vstavi datoteko za tem"
-moveLeft = "Premakni levo"
-moveRight = "Premakni desno"
-rotateLeft = "Zasukaj levo"
-rotateRight = "Zasukaj desno"
-splitAfter = "Razdeli za tem"
-
-[pageEditor.commands]
-addSplitAt = "Dodaj razdelitev na položaju {{position}}"
-addSplits_one = "Dodaj {{count}} razdelitev"
-addSplits_other = "Dodaj {{count}} razdelitev"
-deletePages_one = "Izbriši {{count}} stran"
-deletePages_other = "Izbriši {{count}} strani"
-insertFiles_one = "Vstavi {{count}} datoteko za stranjo {{page}}"
-insertFiles_other = "Vstavi {{count}} datotek za stranjo {{page}}"
-insertPageBreaks_one = "Vstavi {{count}} prelom strani"
-insertPageBreaks_other = "Vstavi {{count}} prelomov strani"
-insertPageBreaksAll = "Vstavi prelome strani za vsemi stranmi"
-removeAllSplits = "Odstrani vse razdelitve"
-removeSplitAt = "Odstrani razdelitev na položaju {{position}}"
-removeSplits_one = "Odstrani {{count}} razdelitev"
-removeSplits_other = "Odstrani {{count}} razdelitev"
-reorderPages = "Prevrsti strani"
-rotatePageLeft = "Zavrti stran levo"
-rotatePageRight = "Zavrti stran desno"
-rotatePagesLeft_one = "Zavrti {{count}} stran levo"
-rotatePagesLeft_other = "Zavrti {{count}} strani levo"
-rotatePagesRight_one = "Zavrti {{count}} stran desno"
-rotatePagesRight_other = "Zavrti {{count}} strani desno"
-splitAllPages = "Razdeli vse strani"
-toggleSplits_one = "Preklopi {{count}} položaj razdelitve"
-toggleSplits_other = "Preklopi {{count}} položajev razdelitve"
-
-[pageEditor.emptyState]
-body = "Dodajte datoteke za začetek urejanja strani"
-title = "Ni naloženih datotek PDF"
-
-[pageEditor.fileDropdown]
-addFile = "Dodaj datoteko"
-selectedCount = "Izbranih {{selected}}/{{total}} datotek"
-untitled = "Brez naslova"
-
-[pageEditor.toolbar]
-delete = "Izbriši izbrane"
-redo = "Ponovi"
-rotateLeft = "Zavrti izbrane levo"
-rotateRight = "Zavrti izbrane desno"
-undo = "Razveljavi"
-
 [pageExtracter]
 title = "Izvleči strani"
 
@@ -6815,6 +6802,76 @@ title = "Obsegi strani"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → izbere vse strani"
 title = "Posebne ključne besede"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "dokumenti"
@@ -7144,24 +7201,6 @@ totalSeats_other = "Skupaj ({{count}} sedežev)"
 [payment.upgradeTeam]
 title = "Nadgradi na Team"
 
-[pdfCommentAgent]
-submit = "Ustvari komentarje"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Prosimo, opišite, kaj naj AI komentira"
-failed = "Generiranje komentarjev ni uspelo"
-tooLong = "Poziv je predolg (največ {{max}} znakov)"
-
-[pdfCommentAgent.prompt]
-label = "O čem naj AI komentira?"
-placeholder = "npr. Označi vse dvoumne datume in predlagaj pojasnila"
-
-[pdfCommentAgent.results]
-title = "PDF s komentarji"
-
-[pdfCommentAgent.settings]
-title = "Navodila za komentiranje"
-
 [pdfOrganiser]
 placeholder = "(npr. 1,3,2 ali 4-8,2,10-12 ali 2n-1)"
 tags = "dvostranski,sodi,lihi,razvrsti,premakni"
@@ -7347,6 +7386,7 @@ nothingSelectedHint = "Kliknite katero koli besedilo, sliko ali obliko na strani
 ocrDocumentChanged = "Dokument se je med izvajanjem OCR spremenil. Znova zaženite OCR, da vključite najnovejše spremembe."
 ocrInvalidResult = "OCR ni vrnil PDF. Poskusite znova."
 ocrNoLanguages = "Na strežniku ni nameščenih jezikov OCR."
+ocrProtected = "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing."
 ocrRunning = "Prepoznavanje besedila..."
 ocrUnavailable = "OCR na tem strežniku ni na voljo."
 oneImage = "Slika"
@@ -7389,13 +7429,8 @@ pageNumber = "Stran {{page}}"
 renderFailed = "Upodabljanje strani ni uspelo"
 
 [pdfTextEditor.password]
-cancel = "Prekliči"
 incorrect = "Napačno geslo - poskusite znova."
 label = "Geslo"
-open = "Odpri"
-protected = "Ta PDF je zaščiten z geslom."
-protectedNamed = "\"{{fileName}}\" je zaščiten z geslom."
-title = "Zahtevano je geslo"
 
 [pdfTextEditor.rulers]
 guide = "Vodilo poravnave pri {{value}} {{unit}} - povlecite ga na ravnilo za odstranitev"
@@ -7994,6 +8029,7 @@ before = "Nastavite"
 title = "Povezava Stirling ni konfigurirana"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Brskalnika ni bilo mogoče odpreti. Odprite Uporaba in obračunavanje na povezanem strežniku, da povežete račun."
 
 [portal.accountLink.panel]
@@ -8117,9 +8153,6 @@ limit = "Mesečna omejitev porabe {{amount}}/mes. Obdelava se ustavi pri omejitv
 limitNoCap = "Brez omejitve porabe. Obdelava se ne bo ustavila. Računi se izdajajo mesečno."
 
 [portal.billing.chip]
-invoices = "Računi"
-nav = "Razdelki"
-payment = "Plačilo"
 plan = "Paket"
 procurement = "Nabava"
 usage = "Uporaba"
@@ -8178,9 +8211,22 @@ pdfs = "Obdelani PDF"
 users = "Uporabniki"
 
 [portal.billing.enterprise]
+active = "Agreement active through {{date}}"
 cta = "Pridobi ponudbo za podjetja"
+included = "Included in Enterprise"
+payment_pending = "Payment pending · access through {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF over agreed volume"
+pdfsOver_other = "{{count}} PDFs over agreed volume"
+pdfsUsed_one = "{{count}} PDF processed"
+pdfsUsed_other = "{{count}} PDFs processed"
+period = "Agreement period: {{start}} – {{end}}"
 sub = "Namestitev brez povezave z zunanjim omrežjem, SCIM, lokacija podatkov, SLA za razpoložljivost in ustrezen dogovor."
 title = "Uporabljate Stirling v reguliranem okolju?"
+trial = "{{days}}-day trial · ends {{date}}"
+usersAgreed = "{{used}} / {{agreed}} agreed users"
+usersOver_one = "{{count}} user over agreed quantity"
+usersOver_other = "{{count}} users over agreed quantity"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Checkouta ni bilo mogoče začeti"
@@ -11160,6 +11206,7 @@ tags = "redigiraj,skrij,počrni,črno,marker,skrito,samodejno redigiraj,ročno r
 title = "Redigiraj"
 
 [redact.auto]
+caseSensitiveLabel = "Case Sensitive Matching"
 colorLabel = "Barva polja"
 convertPDFToImageLabel = "Pretvori PDF v PDF-Image"
 customPaddingLabel = "Dodatni odmik po meri"
@@ -11194,6 +11241,10 @@ automaticDisabledTooltip = "Izberite datoteke v upravljalniku datotek za prekriv
 manual = "Ročno"
 mode = "Način"
 title = "Način redakcije"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
+title = "Case Sensitive Matching"
 
 [redact.tooltip.advanced.color]
 text = "Prilagodite videz polj za redakcijo. Črna je standard, vendar lahko izberete katero koli barvo. Odmik doda dodatni prostor okoli najdenega besedila."
@@ -11396,7 +11447,19 @@ text = "Določite, katere strani želite odstraniti iz svojega PDF. Izberete lah
 title = "Izbira strani"
 
 [removePassword]
-desc = "Odstranite zaščito z geslom iz vašega dokumenta PDF."
+appliesTo = "Set on {{count}} of {{total}} PDFs"
+batchRemoved = "Entered passwords removed where set. Blank fields kept unchanged."
+bothRemoved = "Both passwords and restrictions removed."
+checkingProtection = "Checking protection…"
+keepBlank = "Leave a field blank to keep that password."
+notSet = "Not set"
+openingOnlyRemoved = "Opening password removed."
+openWithReaderFirst = "Reopen this PDF using its opening password before removing only the permissions password."
+ownerOnlyRemoved = "Permissions password and restrictions removed."
+ownerRemoved = "Permissions password and restrictions removed. Opening password kept."
+protectionUnavailable = "Unable to check protection"
+selectiveHelp = "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions."
+selectPasswords = "Passwords to remove"
 submit = "Odstrani geslo"
 tags = "varno,dešifriranje,varnost,odstranitev gesla,brisanje gesla"
 title = "Odstrani geslo"
@@ -11407,13 +11470,9 @@ failed = "Pri odstranjevanju gesla iz PDF-ja je prišlo do napake."
 [removePassword.password]
 label = "Trenutno geslo"
 placeholder = "Vnesite trenutno geslo"
-stepTitle = "Odstrani geslo"
 
 [removePassword.results]
 title = "Dešifrirani PDF-ji"
-
-[removePassword.tooltip]
-description = "Odstranjevanje zaščite z geslom zahteva geslo, s katerim je bil PDF šifriran. To bo dešifriralo dokument, ki bo dostopen brez gesla."
 
 [reorganizePages]
 submit = "Preuredi strani"
@@ -12054,6 +12113,7 @@ title = "Delovni prostor"
 loginIncomplete = "Dokončanje prijave ni uspelo"
 noSaasServer = "Ni konfiguriranega strežnika SaaS"
 noServer = "Ni konfiguriranega strežnika"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Prijava v SaaS ni uspela"
 saasLoginIncomplete = "Dokončanje prijave v SaaS ni uspelo"
 selfHostedLoginFailed = "Prijava v samogostovani strežnik ni uspela"
@@ -13905,6 +13965,11 @@ title = "Besedilo vodnega žiga"
 image = "Slika"
 text = "Besedilo"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Vaše prejšnje datoteke niso več shranjene na tej napravi."
 partial = "Obnovljenih {{restored}} od {{total}} datotek. Preostale niso več shranjene na tej napravi."
@@ -13915,16 +13980,13 @@ annotations = "Anotacije"
 applyRedactionsFirst = "Najprej uporabi redakcije"
 closeAll = "Zapri vse datoteke"
 closePdf = "Zapri PDF"
-deleteSelected = "Izbriši izbrane strani"
 deselectAll = "Prekliči izbor vseh"
 downloadAll = "Prenesi vse"
 exitRedaction = "Izhod iz načina redakcije"
-exportAll = "Izvozi PDF"
-exportSelected = "Izvozi izbrane strani"
 formFill = "Urejevalnik obrazcev"
 hideToolbar = "Skrij orodno vrstico"
 moreActions = "Več dejanj"
-multiTool = "Večnamensko orodje"
+pageEditor = "Page Editor"
 panMode = "Način premikanja"
 print = "Natisni PDF"
 readAloud = "Glasno branje"
@@ -13938,7 +14000,6 @@ rulerSettings = "Nastavitve merila"
 save = "Shrani"
 saveAll = "Shrani vse"
 saveAs = "Shrani kot"
-saveChanges = "Shrani spremembe"
 search = "Išči v PDF"
 selectAll = "Izberi vse"
 selectByNumber = "Izberi po številkah strani"

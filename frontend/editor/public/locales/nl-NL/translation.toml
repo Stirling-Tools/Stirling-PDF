@@ -55,7 +55,9 @@ keepWorking = "Doorgaan met werken"
 loading = "Laden..."
 loginAgreementAccept = "Accepteren"
 loginAgreementDecline = "Weigeren"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Deze melding is afkomstig van uw beheerder, niet van Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Inlogovereenkomst"
 logOut = "Uitloggen"
 marginTooltip = "Afstand tussen het paginanummer en de rand van de pagina."
@@ -299,7 +301,6 @@ title = "Resultaten paginanummering"
 
 [addPassword]
 desc = "Versleutel uw PDF-document met een wachtwoord."
-submit = "Versleutelen"
 tags = "versleutelen,wachtwoord,vergrendelen,beveiligen,beschermen,beveiliging,versleuteling,veiligstellen,vertrouwelijk,privé,toegang beperken"
 title = "Wachtwoord toevoegen"
 
@@ -311,17 +312,6 @@ label = "Sleutellengte voor versleuteling"
 
 [addPassword.error]
 failed = "Er is een fout opgetreden bij het versleutelen van de PDF."
-
-[addPassword.passwords]
-stepTitle = "Wachtwoorden & versleuteling"
-
-[addPassword.passwords.owner]
-label = "Eigenaarwachtwoord"
-placeholder = "Voer eigenaarwachtwoord in"
-
-[addPassword.passwords.user]
-label = "Gebruikerswachtwoord"
-placeholder = "Voer gebruikerswachtwoord in"
 
 [addPassword.results]
 title = "Versleutelde PDF's"
@@ -1627,6 +1617,7 @@ title = "Herstart vereist"
 [admin.settings.security]
 authentication = "Authenticatie"
 description = "Configureer authenticatie, inloggedrag en beveiligingsbeleid."
+pdfPermissions = "PDF permissions"
 title = "Beveiliging"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "CSRF-bescherming uitschakelen"
 [admin.settings.security.enableLogin]
 description = "Vereis dat gebruikers inloggen voordat ze de applicatie gebruiken"
 label = "Inloggen inschakelen"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs."
+label = "Honor PDF permissions"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Geavanceerde instellingen"
@@ -1938,9 +1933,6 @@ wrapUp = "Dat was de beheerdersrondleiding! Je hebt de enterprise-functies gezie
 [adminUserSettings]
 admin = "Beheerder"
 title = "Gebruikersbeheer"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Arabisch"
@@ -3173,12 +3165,14 @@ unknown = "Onbekend"
 
 [changePermissions]
 desc = "Documentbeperkingen en machtigingen wijzigen."
+loading = "Loading current permissions..."
 submit = "Machtigingen wijzigen"
 tags = "machtigingen,beperkingen,rechten,toegangsbeheer,toestaan,weigeren,afdrukken,kopiëren,bewerken,machtigingen wijzigen,beveiligingsinstellingen,gebruikersrechten"
 title = "Rechten wijzigen"
 
 [changePermissions.error]
 failed = "Er is een fout opgetreden bij het wijzigen van PDF-machtigingen."
+readFailed = "Could not read this PDF's current permissions. Set the restrictions manually before applying changes."
 
 [changePermissions.permissions.preventAssembly]
 label = "Voorkom samenvoegen van document"
@@ -3219,21 +3213,16 @@ text = "Om deze machtigingen niet wijzigbaar te maken, gebruik de tool Wachtwoor
 [chat.actions]
 copy = "Bericht kopiëren"
 
-[chat.emptyState]
-text = "Stel een vraag over je documenten of krijg hulp met PDF-tools."
-
-[chat.fab]
-close = "Chat sluiten"
-open = "Stirling AI-assistent openen"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling-agentopties"
-assistant = "AI-assistent"
 clearChat = "Chat wissen"
 
 [chat.input]
 disclaimer = "AI kan fouten maken. Controleer de uitvoer voordat je deze deelt."
-placeholder = "Wat wilt u doen?"
 send = "Bericht verzenden"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Deze documenten naar PDF converteren"
 convertOne = "Dit document naar PDF converteren"
 heading = "Aan de slag"
 mergeMany = "Deze {{count}} documenten samenvoegen tot 1"
-moreFiles = "+{{count}} meer"
 openFromComputer = "Openen vanaf computer"
-removeFile = "{{name}} verwijderen"
 splitOne = "Dit document splitsen"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Ik kon de gevraagde informatie niet vinden."
 processing = "Bezig met verwerken ({{outcome}})..."
 unsupported_capability = "Niet-ondersteunde mogelijkheid: {{capability}}"
 usage_limit_reached = "Je hebt je gebruikslimiet bereikt. Bekijk je planopties om door te gaan."
-
-[chat.toolsUsed]
-summary_one = "1 tool uitgevoerd"
-summary_other = "{{count}} tools uitgevoerd"
-unknownTool = "Onbekende tool"
 
 [classification.families]
 correspondence = "Correspondentie"
@@ -3664,6 +3646,7 @@ continue = "Doorgaan"
 copied = "Gekopieerd!"
 copy = "Kopiëren"
 copyCode = "Code kopiëren"
+copyFailed = "Copy failed"
 dismiss = "Sluiten"
 done = "Gereed"
 enterValue = "Voer waarde in"
@@ -3847,6 +3830,12 @@ unavailable = "ImageMagick is niet geïnstalleerd of ingeschakeld op deze server
 filesize = "Bestandsgrootte"
 quality = "Kwaliteit"
 title = "Compressiemethode"
+
+[compress.noReduction]
+multiple = "Compression ran successfully, but {{count}} of {{total}} files can't be compressed any further."
+multipleAtLevel = "Compression at this level made no improvement to {{count}} of {{total}} files. Try a higher compression level."
+single = "Compression ran successfully, but this file can't be compressed any further."
+singleAtLevel = "Compression at this level made no improvement to this file. Try a higher compression level."
 
 [compress.settings]
 desiredSize = "Gewenste bestandsgrootte"
@@ -4364,6 +4353,10 @@ title = "Bijgewerkt vanaf schijf"
 body = "\"{{name}}\" is op schijf gewijzigd. Het is groot genoeg dat opnieuw laden even duurt, dus de versie hier is met rust gelaten."
 title = "Bestand gewijzigd op schijf"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Update downloaden..."
 installing = "Update installeren..."
@@ -4491,22 +4484,80 @@ description = "Selecteer de tool Inhoudsopgave bewerken om de werkruimte te lade
 title = "Open de tool om te beginnen met bewerken"
 
 [encryptedPdfUnlock]
-description = "Deze PDF is met een wachtwoord beveiligd. Voer het wachtwoord in om verder te werken."
-emptyResponse = "Wachtwoord verwijderen leverde geen bestand op."
+actionIgnored = "{{action}} restriction ignored"
+actionUnlocked = "{{action}} unlocked for this session"
+advanced = "Advanced"
+allowed = "Allowed"
+annotations = "Annotations"
+authoriseAction = "This PDF requires permission to use {{action}}."
+changeOwnerPassword = "Change permissions password"
+chooseOwnerPassword = "Choose a different password"
+continue = "Continue"
+copyFailed = "Unable to create the copy. Your PDF is unchanged."
+copying = "Copying content"
+editing = "Editing"
+enterPassword = "Enter password"
+ignoredByServer = "Permissions are ignored by this server's settings. The PDF's protection is unchanged."
 incorrectPassword = "Onjuist wachtwoord"
+lowQualityPrintUnsupported = "This PDF allows low-quality printing only, which this viewer does not support."
+lowResolutionOnly = "Low resolution only"
+manageProtection = "Manage protection"
 missingFile = "Het geselecteerde bestand is niet meer beschikbaar."
+mixedProtection = "These PDFs have separate protection settings. Process them individually."
+newOwnerPassword = "New permissions password"
+notRequired = "Not required"
+openingPassword = "Password to open"
+openingPasswordRemoved = "Opening password removed. Restrictions retained."
+openingRequired = "Enter the password used to open this PDF."
+openPdf = "Open PDF"
+ownerPassword = "Permissions password"
+ownerRequired = "Enter the permissions password to continue."
+ownerTitle = "Enter permissions password"
+passwordRetained = "Kept unchanged"
+passwordsMustDiffer = "The two passwords must be different."
+permissionsUnlocked = "Permissions unlocked for this session"
+prepareFailed = "Unable to prepare this protected PDF for processing."
+printing = "Printing"
+printRestricted = "Printing is restricted. Verify permissions in Manage protection."
+protectedPdf = "Protected PDF"
+protectionRetained = "Protection retained"
+protectionSaved = "Protection saved"
+removePasswordHelp = "Open Remove Password to choose which passwords to remove."
+removeProtection = "Create an unprotected copy"
+replaceProtection = "These settings replace the PDF's current protection."
 required = "Voer het wachtwoord in om door te gaan."
-skip = "Voor nu overslaan"
-successBody = "Wachtwoord succesvol verwijderd."
-successBodyWithName = "Wachtwoord verwijderd uit {{fileName}}"
-successTitle = "Wachtwoord verwijderd"
+requiredStatus = "Required"
+requiredToApply = "Required to apply changes"
+restoreFailed = "Unable to preserve PDF protection. No unprotected result was saved."
+restrictActions = "Restrict actions"
+restricted = "Restricted"
+restrictedActions = "restricted actions"
+restrictedOperation = "This action requires the permissions password."
+retainOwnerVerification = "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it."
+saveProtection = "Save protection"
+securityChangeFailed = "Unable to change protection. Check the permissions password and the new security settings."
+sessionDetails = "Open for this session. The PDF stays protected."
+sessionDetailsLabel = "About session unlocking"
+sessionFailed = "Unable to unlock this PDF. Please try again."
+sessionSuccessBody = "Protection retained."
+sessionSuccessBodyWithName = "Protection retained for {{fileName}}."
+sessionSuccessTitle = "PDF opened"
+sessionTitle = "Open PDF"
+signedReadOnly = "This signed PDF can be viewed, but cannot be edited here."
 title = "Verwijder wachtwoord om door te gaan"
+toolUnavailable = "This tool doesn't support encrypted PDFs. Remove the password first."
+toolUnavailableDetails = "Why {{name}} is unavailable"
 unlock = "Ontgrendelen en doorgaan"
 unlockAll = "Voor alle ({{count}}) gebruiken"
 unlockAllPartialFail = "Onjuist wachtwoord voor: {{names}}"
 unlockAllSuccess_one = "{{count}} bestand ontgrendeld."
 unlockAllSuccess_other = "{{count}} bestanden ontgrendeld."
+unlockedForSession = "Unlocked for this session using your permissions password."
 unlockPrompt = "Ontgrendel PDF om door te gaan"
+unprotectedCopyConsequence = "The copy will have no passwords or restrictions. The original stays protected."
+unsupportedTool = "This tool cannot yet preserve this PDF's protection."
+verifiedForSession = "Verified for this session"
+verifyPermissions = "Verify permissions for this session"
 viewerLocked = "Deze PDF is met een wachtwoord beveiligd"
 viewerUnlock = "Ontgrendelen"
 
@@ -4597,22 +4648,23 @@ viewInViewer = "Bekijken in viewer"
 closeFile = "Bestand sluiten"
 
 [fileEditor]
-addFiles = "Bestanden toevoegen"
 closedFile = "{{name}} gesloten"
 couldNotSave = "Kon {{name}} niet opslaan"
-filesAdded_one = "{{count}} bestand toegevoegd"
-filesAdded_other = "{{count}} bestanden toegevoegd"
 filesReordered_one = "Bestand opnieuw geordend"
 filesReordered_other = "{{count}} bestanden opnieuw geordend"
 loadedFromStorage_one = "{{count}} bestand uit opslag geladen"
 loadedFromStorage_other = "{{count}} bestanden uit opslag geladen"
 loadFromStorageFailed = "Sommige bestanden laden uit opslag mislukt"
 pinnedFile = "{{name}} vastgezet"
-processFilesFailed = "Bestanden verwerken mislukt"
 savedAndClosed = "{{name}} opgeslagen en gesloten"
 saveFailed = "Opslaan mislukt"
 unpinnedFile = "{{name}} losgemaakt"
 unzipping = "{{name}} uitpakken"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Fout bij uitpakken van {{name}}"
@@ -4729,7 +4781,6 @@ dataLostBody = "Deze browser is de inhoud van dit bestand kwijtgeraakt. Upload h
 dataLostTitle = "Bestandsgegevens zijn niet beschikbaar"
 downloadFailed = "Downloaden mislukt"
 dropHint = "Open bestanden om te beginnen"
-dropToAdd = "Sleep bestanden hierheen om toe te voegen"
 duplicateFailed = "Kon bestand niet dupliceren"
 expand = "Zijbalk uitvouwen"
 googleDrive = "Google Drive"
@@ -5251,6 +5302,7 @@ rescanFields = "Velden opnieuw scannen"
 rescanFormFields = "Formuliervelden opnieuw scannen"
 save = "Opslaan"
 saveShortcut = "Ctrl+S om op te slaan"
+saving = "Saving..."
 selectOptionPlaceholder = "— selecteren —"
 skippedEdits_one = "1 wijziging kon niet worden toegepast:"
 skippedEdits_other = "{{count}} wijzigingen konden niet worden toegepast:"
@@ -5258,9 +5310,7 @@ skippedEditsTruncated = "{{count}} meer niet vermeld."
 unsavedChanges = "Niet-opgeslagen wijzigingen"
 
 [formFill.create]
-commit = "{{count}} veld(en) aan PDF toevoegen"
 empty = "Nog geen velden getekend."
-failed = "Velden toevoegen mislukt"
 goToField = "Ga naar dit veld"
 hint = "Kies een veldtype en teken het vervolgens op de pagina."
 placing = "Teken een {{type}}-veld op de pagina. Druk op Esc om te stoppen."
@@ -5334,7 +5384,6 @@ modify = "Wijzigen"
 commit = "{{count}} wijziging(en) opslaan"
 delete = "Verwijderen"
 empty = "Deze PDF heeft nog geen formuliervelden."
-failed = "Wijzigingen opslaan mislukt"
 groupSizeHint = "Gebruik Optiegrootte"
 hint = "Selecteer een veld om de eigenschappen te bewerken, sleep het over de pagina of verwijder het."
 restore = "Herstellen"
@@ -5732,11 +5781,6 @@ title = "PDF's overlappen"
 desc = "Voeg meerdere pagina's van een PDF-document samen op één pagina"
 tags = "lay-out,rangschikken,combineren,N-up,2-up,4-up,meerdere per pagina,pagina's per vel,pagina's lay-outen,tegelen,rasterlay-out,meerpagina-lay-out,combineren op pagina,hand-out"
 title = "Multi-pagina indeling"
-
-[home.pdfCommentAgent]
-desc = "Vraag AI om een PDF te annoteren met plaknotitie-opmerkingen op basis van je prompt"
-tags = "AI,agent,commentaar,annoteren,plaknotitie,review,feedback,notities"
-title = "AI-opmerkingen toevoegen"
 
 [home.pdfOrganiser]
 tags = "organiseren,herschikken,herordenen,pagina's rangschikken,sorteren,pagina's verplaatsen,pagina's verwijderen,pagina's weghalen,paginabeheer,pagina-organizer,opnieuw rangschikken"
@@ -6595,63 +6639,6 @@ yourCloudAccess = "Je wordt teamlid en verliest eigenaarstoegang."
 deselectAll = "Geen"
 selectAll = "Alles aanvinken"
 
-[pageEditor]
-dragPreviewAlt = "Slepen"
-filePosition = "Positie {{position}}"
-pageLabel = "Pagina {{page}}"
-title = "Pagina-editor"
-
-[pageEditor.actions]
-deletePage = "Pagina verwijderen"
-insertFileAfter = "Bestand hierna invoegen"
-moveLeft = "Naar links verplaatsen"
-moveRight = "Naar rechts verplaatsen"
-rotateLeft = "Linksom draaien"
-rotateRight = "Rechtsom draaien"
-splitAfter = "Hierna splitsen"
-
-[pageEditor.commands]
-addSplitAt = "Splitsing toevoegen op positie {{position}}"
-addSplits_one = "{{count}} splitsing toevoegen"
-addSplits_other = "{{count}} splitsingen toevoegen"
-deletePages_one = "{{count}} pagina verwijderen"
-deletePages_other = "{{count}} pagina's verwijderen"
-insertFiles_one = "{{count}} bestand invoegen na pagina {{page}}"
-insertFiles_other = "{{count}} bestanden invoegen na pagina {{page}}"
-insertPageBreaks_one = "{{count}} pagina-einde invoegen"
-insertPageBreaks_other = "{{count}} pagina-einden invoegen"
-insertPageBreaksAll = "Pagina-einden invoegen na alle pagina's"
-removeAllSplits = "Alle splitsingen verwijderen"
-removeSplitAt = "Splitsing verwijderen op positie {{position}}"
-removeSplits_one = "{{count}} splitsing verwijderen"
-removeSplits_other = "{{count}} splitsingen verwijderen"
-reorderPages = "Pagina's herordenen"
-rotatePageLeft = "Pagina naar links roteren"
-rotatePageRight = "Pagina naar rechts roteren"
-rotatePagesLeft_one = "{{count}} pagina naar links roteren"
-rotatePagesLeft_other = "{{count}} pagina's naar links roteren"
-rotatePagesRight_one = "{{count}} pagina naar rechts roteren"
-rotatePagesRight_other = "{{count}} pagina's naar rechts roteren"
-splitAllPages = "Alle pagina's splitsen"
-toggleSplits_one = "{{count}} splitspositie omschakelen"
-toggleSplits_other = "{{count}} splitsposities omschakelen"
-
-[pageEditor.emptyState]
-body = "Voeg bestanden toe om met het bewerken van pagina's te beginnen"
-title = "Geen PDF-bestanden geladen"
-
-[pageEditor.fileDropdown]
-addFile = "Bestand toevoegen"
-selectedCount = "{{selected}}/{{total}} bestanden geselecteerd"
-untitled = "Naamloos"
-
-[pageEditor.toolbar]
-delete = "Geselecteerde verwijderen"
-redo = "Opnieuw"
-rotateLeft = "Geselecteerde links roteren"
-rotateRight = "Geselecteerde rechts roteren"
-undo = "Ongedaan maken"
-
 [pageExtracter]
 title = "Pagina's extraheren"
 
@@ -6815,6 +6802,76 @@ title = "Paginareeksen"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → selecteert alle pagina's"
 title = "Speciale sleutelwoorden"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "documenten"
@@ -7144,24 +7201,6 @@ totalSeats_other = "Totaal ({{count}} licentieplekken)"
 [payment.upgradeTeam]
 title = "Upgraden naar Team"
 
-[pdfCommentAgent]
-submit = "Opmerkingen genereren"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Beschrijf waarover de AI opmerkingen moet geven"
-failed = "Opmerkingen genereren mislukt"
-tooLong = "Prompt is te lang (maximaal {{max}} tekens)"
-
-[pdfCommentAgent.prompt]
-label = "Waarover moet de AI opmerkingen geven?"
-placeholder = "bijv. Markeer onduidelijke datums en stel verduidelijkingen voor"
-
-[pdfCommentAgent.results]
-title = "PDF met opmerkingen"
-
-[pdfCommentAgent.settings]
-title = "Instructies voor opmerkingen"
-
 [pdfOrganiser]
 placeholder = "(bijv. 1,3,2 of 4-8,2,10-12 of 2n-1)"
 tags = "duplex,even oneven,sorteren,verplaatsen"
@@ -7347,6 +7386,7 @@ nothingSelectedHint = "Klik op tekst, een afbeelding of een vorm op de pagina om
 ocrDocumentChanged = "Het document is gewijzigd terwijl OCR werd uitgevoerd. Voer OCR opnieuw uit om je laatste wijzigingen mee te nemen."
 ocrInvalidResult = "OCR heeft geen PDF geretourneerd. Probeer het opnieuw."
 ocrNoLanguages = "Er zijn geen OCR-talen op de server geïnstalleerd."
+ocrProtected = "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing."
 ocrRunning = "Tekst herkennen..."
 ocrUnavailable = "OCR is niet beschikbaar op deze server."
 oneImage = "Afbeelding"
@@ -7389,13 +7429,8 @@ pageNumber = "Pagina {{page}}"
 renderFailed = "Pagina weergeven mislukt"
 
 [pdfTextEditor.password]
-cancel = "Annuleren"
 incorrect = "Onjuist wachtwoord - probeer het opnieuw."
 label = "Wachtwoord"
-open = "Openen"
-protected = "Deze PDF is beveiligd met een wachtwoord."
-protectedNamed = "\"{{fileName}}\" is beveiligd met een wachtwoord."
-title = "Wachtwoord vereist"
 
 [pdfTextEditor.rulers]
 guide = "Uitlijnhulplijn op {{value}} {{unit}} - sleep naar een liniaal om te verwijderen"
@@ -7994,6 +8029,7 @@ before = "Stel"
 title = "Stirling-verbinding niet geconfigureerd"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Kon je browser niet openen. Open Gebruik & facturering op je verbonden server om een account te koppelen."
 
 [portal.accountLink.panel]
@@ -8117,9 +8153,6 @@ limit = "Maandelijkse bestedingslimiet {{amount}}/mnd. Verwerking pauzeert bij d
 limitNoCap = "Geen bestedingslimiet. Verwerking pauzeert niet. Facturen worden maandelijks verstuurd."
 
 [portal.billing.chip]
-invoices = "Facturen"
-nav = "Secties"
-payment = "Betaling"
 plan = "Abonnement"
 procurement = "Inkoop"
 usage = "Gebruik"
@@ -8178,9 +8211,22 @@ pdfs = "PDFs verwerkt"
 users = "Gebruikers"
 
 [portal.billing.enterprise]
+active = "Agreement active through {{date}}"
 cta = "Vraag een enterprise-offerte aan"
+included = "Included in Enterprise"
+payment_pending = "Payment pending · access through {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF over agreed volume"
+pdfsOver_other = "{{count}} PDFs over agreed volume"
+pdfsUsed_one = "{{count}} PDF processed"
+pdfsUsed_other = "{{count}} PDFs processed"
+period = "Agreement period: {{start}} – {{end}}"
 sub = "Air-gapped implementatie, SCIM, dataresidentie, uptime SLAs en een passende overeenkomst."
 title = "Draai je Stirling in een gereguleerde omgeving?"
+trial = "{{days}}-day trial · ends {{date}}"
+usersAgreed = "{{used}} / {{agreed}} agreed users"
+usersOver_one = "{{count}} user over agreed quantity"
+usersOver_other = "{{count}} users over agreed quantity"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Kon checkout niet starten"
@@ -11160,6 +11206,7 @@ tags = "Redigeren, Verbergen, afdekken, zwart, markeerstift, verborgen, handmati
 title = "Handmatig redigeren"
 
 [redact.auto]
+caseSensitiveLabel = "Case Sensitive Matching"
 colorLabel = "Kleur van het vak"
 convertPDFToImageLabel = "PDF converteren naar PDF-afbeelding"
 customPaddingLabel = "Aangepaste extra marge"
@@ -11194,6 +11241,10 @@ automaticDisabledTooltip = "Selecteer bestanden in bestandsbeheer om meerdere be
 manual = "Handmatig"
 mode = "Modus"
 title = "Methode voor zwartlakken"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
+title = "Case Sensitive Matching"
 
 [redact.tooltip.advanced.color]
 text = "Pas de weergave van zwartlakvakken aan. Zwart is standaard, maar u kunt elke kleur kiezen. Marge voegt extra ruimte rond de gevonden tekst toe."
@@ -11396,7 +11447,19 @@ text = "Geef op welke pagina's u uit uw PDF wilt verwijderen. U kunt afzonderlij
 title = "Paginaselectie"
 
 [removePassword]
-desc = "Verwijder wachtwoordbeveiliging van uw PDF-document."
+appliesTo = "Set on {{count}} of {{total}} PDFs"
+batchRemoved = "Entered passwords removed where set. Blank fields kept unchanged."
+bothRemoved = "Both passwords and restrictions removed."
+checkingProtection = "Checking protection…"
+keepBlank = "Leave a field blank to keep that password."
+notSet = "Not set"
+openingOnlyRemoved = "Opening password removed."
+openWithReaderFirst = "Reopen this PDF using its opening password before removing only the permissions password."
+ownerOnlyRemoved = "Permissions password and restrictions removed."
+ownerRemoved = "Permissions password and restrictions removed. Opening password kept."
+protectionUnavailable = "Unable to check protection"
+selectiveHelp = "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions."
+selectPasswords = "Passwords to remove"
 submit = "Wachtwoord verwijderen"
 tags = "veilig,ontsleutelen,beveiliging,wachtwoord verwijderen"
 title = "Wachtwoord verwijderen"
@@ -11407,13 +11470,9 @@ failed = "Er is een fout opgetreden bij het verwijderen van het wachtwoord uit d
 [removePassword.password]
 label = "Huidige wachtwoord"
 placeholder = "Huidig wachtwoord invoeren"
-stepTitle = "Wachtwoord verwijderen"
 
 [removePassword.results]
 title = "Ontsleutelde PDF's"
-
-[removePassword.tooltip]
-description = "Voor het verwijderen van wachtwoordbeveiliging is het wachtwoord nodig dat is gebruikt om de PDF te versleutelen. Dit zal het document ontsleutelen, waardoor het toegankelijk wordt zonder wachtwoord."
 
 [reorganizePages]
 submit = "Pagina's ordenen"
@@ -12054,6 +12113,7 @@ title = "Werkruimte"
 loginIncomplete = "Aanmelding voltooien mislukt"
 noSaasServer = "Geen SaaS-server geconfigureerd"
 noServer = "Geen server geconfigureerd"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS-aanmelding mislukt"
 saasLoginIncomplete = "SaaS-aanmelding voltooien mislukt"
 selfHostedLoginFailed = "Self-hosted aanmelding mislukt"
@@ -13905,6 +13965,11 @@ title = "Watermerktekst"
 image = "Afbeelding"
 text = "Tekst"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Je vorige bestanden zijn niet meer op dit apparaat opgeslagen."
 partial = "{{restored}} van {{total}} bestanden hersteld. De rest is niet meer op dit apparaat opgeslagen."
@@ -13915,16 +13980,13 @@ annotations = "Annotaties"
 applyRedactionsFirst = "Eerst zwartlakken toepassen"
 closeAll = "Alle bestanden sluiten"
 closePdf = "PDF sluiten"
-deleteSelected = "Geselecteerde pagina's verwijderen"
 deselectAll = "Alles deselecteren"
 downloadAll = "Alles downloaden"
 exitRedaction = "Zwartlakmodus afsluiten"
-exportAll = "PDF exporteren"
-exportSelected = "Geselecteerde pagina's exporteren"
 formFill = "Formuliereditor"
 hideToolbar = "Toolbar verbergen"
 moreActions = "Meer acties"
-multiTool = "Multi-tool"
+pageEditor = "Page Editor"
 panMode = "Pan-modus"
 print = "PDF afdrukken"
 readAloud = "Voorlezen"
@@ -13938,7 +14000,6 @@ rulerSettings = "Schaalinstellingen"
 save = "Opslaan"
 saveAll = "Alles opslaan"
 saveAs = "Opslaan als"
-saveChanges = "Wijzigingen opslaan"
 search = "PDF doorzoeken"
 selectAll = "Alles selecteren"
 selectByNumber = "Selecteren op paginanummers"

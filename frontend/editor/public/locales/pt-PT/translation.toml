@@ -55,7 +55,9 @@ keepWorking = "Continuar a trabalhar"
 loading = "A carregar..."
 loginAgreementAccept = "Aceitar"
 loginAgreementDecline = "Recusar"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Este aviso é fornecido pelo seu administrador, não pela Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Acordo de início de sessão"
 logOut = "Terminar sessão"
 marginTooltip = "Distância entre o número de página e a margem da página."
@@ -299,7 +301,6 @@ title = "Resultados da numeração de páginas"
 
 [addPassword]
 desc = "Encripte o seu documento PDF com uma palavra-passe."
-submit = "Encriptar"
 tags = "encriptar,palavra-passe,bloquear,seguro,proteger,segurança,encriptação,salvaguardar,confidencial,privado,restringir acesso"
 title = "Adicionar Palavra-passe"
 
@@ -311,17 +312,6 @@ label = "Comprimento da chave de encriptação"
 
 [addPassword.error]
 failed = "Ocorreu um erro ao encriptar o PDF."
-
-[addPassword.passwords]
-stepTitle = "Palavras-passe e encriptação"
-
-[addPassword.passwords.owner]
-label = "Palavra-passe do proprietário"
-placeholder = "Introduza a palavra-passe do proprietário"
-
-[addPassword.passwords.user]
-label = "Palavra-passe do utilizador"
-placeholder = "Introduza a palavra-passe do utilizador"
 
 [addPassword.results]
 title = "PDFs encriptados"
@@ -1627,6 +1617,7 @@ title = "É necessário reiniciar"
 [admin.settings.security]
 authentication = "Autenticação"
 description = "Configurar autenticação, comportamento de início de sessão e políticas de segurança."
+pdfPermissions = "PDF permissions"
 title = "Segurança"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Desativar proteção CSRF"
 [admin.settings.security.enableLogin]
 description = "Exigir que os utilizadores iniciem sessão antes de aceder à aplicação"
 label = "Ativar início de sessão"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs."
+label = "Honor PDF permissions"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Definições avançadas"
@@ -1938,9 +1933,6 @@ wrapUp = "Esta foi a visita guiada de administrador! Viu as funcionalidades empr
 [adminUserSettings]
 admin = "Administrador"
 title = "Definições de Controlo de Utilizador"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Árabe"
@@ -3173,12 +3165,14 @@ unknown = "Desconhecido"
 
 [changePermissions]
 desc = "Alterar restrições e permissões do documento."
+loading = "Loading current permissions..."
 submit = "Alterar Permissões"
 tags = "permissões,restrições,direitos,controlo de acesso,permitir,negar,impressão,cópia,edição,modificar permissões,definições de segurança,direitos de utilizador"
 title = "Alterar Permissões"
 
 [changePermissions.error]
 failed = "Ocorreu um erro ao alterar as permissões do PDF."
+readFailed = "Could not read this PDF's current permissions. Set the restrictions manually before applying changes."
 
 [changePermissions.permissions.preventAssembly]
 label = "Impedir montagem do documento"
@@ -3219,21 +3213,16 @@ text = "Para tornar estas permissões imutáveis, use a ferramenta Adicionar pal
 [chat.actions]
 copy = "Copiar mensagem"
 
-[chat.emptyState]
-text = "Faça uma pergunta sobre os seus documentos ou obtenha ajuda com ferramentas PDF."
-
-[chat.fab]
-close = "Fechar chat"
-open = "Abrir assistente Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Opções do agente Stirling"
-assistant = "Assistente AI"
 clearChat = "Limpar chat"
 
 [chat.input]
 disclaimer = "A AI pode cometer erros. Certifique-se de verificar o resultado antes de o partilhar."
-placeholder = "O que pretende fazer?"
 send = "Enviar mensagem"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Converter estes documentos para PDF"
 convertOne = "Converter este documento para PDF"
 heading = "Começar"
 mergeMany = "Juntar estes {{count}} documentos num só"
-moreFiles = "+{{count}} mais"
 openFromComputer = "Abrir do computador"
-removeFile = "Remover {{name}}"
 splitOne = "Dividir este documento"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Não encontrei a informação solicitada."
 processing = "A processar ({{outcome}})..."
 unsupported_capability = "Funcionalidade não suportada: {{capability}}"
 usage_limit_reached = "Atingiu o seu limite de utilização. Verifique as opções do seu plano para continuar."
-
-[chat.toolsUsed]
-summary_one = "Executou 1 ferramenta"
-summary_other = "Executou {{count}} ferramentas"
-unknownTool = "Ferramenta desconhecida"
 
 [classification.families]
 correspondence = "Correspondência"
@@ -3664,6 +3646,7 @@ continue = "Continuar"
 copied = "Copiado!"
 copy = "Copiar"
 copyCode = "Copiar código"
+copyFailed = "Copy failed"
 dismiss = "Dispensar"
 done = "Concluído"
 enterValue = "Introduzir valor"
@@ -3847,6 +3830,12 @@ unavailable = "O ImageMagick não está instalado ou ativado neste servidor"
 filesize = "Tamanho do Ficheiro"
 quality = "Qualidade"
 title = "Método de compressão"
+
+[compress.noReduction]
+multiple = "Compression ran successfully, but {{count}} of {{total}} files can't be compressed any further."
+multipleAtLevel = "Compression at this level made no improvement to {{count}} of {{total}} files. Try a higher compression level."
+single = "Compression ran successfully, but this file can't be compressed any further."
+singleAtLevel = "Compression at this level made no improvement to this file. Try a higher compression level."
 
 [compress.settings]
 desiredSize = "Tamanho de ficheiro pretendido"
@@ -4364,6 +4353,10 @@ title = "Atualizado a partir do disco"
 body = "\"{{name}}\" foi alterado no disco. É suficientemente grande para que recarregá-lo demore algum tempo, por isso a versão aqui foi deixada como está."
 title = "Ficheiro alterado no disco"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "A transferir atualização..."
 installing = "A instalar atualização..."
@@ -4491,22 +4484,80 @@ description = "Selecione a ferramenta Editar índice para carregar o espaço de 
 title = "Abra a ferramenta para começar a editar"
 
 [encryptedPdfUnlock]
-description = "Este PDF está protegido por palavra-passe. Introduza a palavra-passe para continuar a trabalhar nele."
-emptyResponse = "A remoção da palavra-passe não produziu um ficheiro."
+actionIgnored = "{{action}} restriction ignored"
+actionUnlocked = "{{action}} unlocked for this session"
+advanced = "Advanced"
+allowed = "Allowed"
+annotations = "Annotations"
+authoriseAction = "This PDF requires permission to use {{action}}."
+changeOwnerPassword = "Change permissions password"
+chooseOwnerPassword = "Choose a different password"
+continue = "Continue"
+copyFailed = "Unable to create the copy. Your PDF is unchanged."
+copying = "Copying content"
+editing = "Editing"
+enterPassword = "Enter password"
+ignoredByServer = "Permissions are ignored by this server's settings. The PDF's protection is unchanged."
 incorrectPassword = "Palavra-passe incorreta"
+lowQualityPrintUnsupported = "This PDF allows low-quality printing only, which this viewer does not support."
+lowResolutionOnly = "Low resolution only"
+manageProtection = "Manage protection"
 missingFile = "O ficheiro selecionado já não está disponível."
+mixedProtection = "These PDFs have separate protection settings. Process them individually."
+newOwnerPassword = "New permissions password"
+notRequired = "Not required"
+openingPassword = "Password to open"
+openingPasswordRemoved = "Opening password removed. Restrictions retained."
+openingRequired = "Enter the password used to open this PDF."
+openPdf = "Open PDF"
+ownerPassword = "Permissions password"
+ownerRequired = "Enter the permissions password to continue."
+ownerTitle = "Enter permissions password"
+passwordRetained = "Kept unchanged"
+passwordsMustDiffer = "The two passwords must be different."
+permissionsUnlocked = "Permissions unlocked for this session"
+prepareFailed = "Unable to prepare this protected PDF for processing."
+printing = "Printing"
+printRestricted = "Printing is restricted. Verify permissions in Manage protection."
+protectedPdf = "Protected PDF"
+protectionRetained = "Protection retained"
+protectionSaved = "Protection saved"
+removePasswordHelp = "Open Remove Password to choose which passwords to remove."
+removeProtection = "Create an unprotected copy"
+replaceProtection = "These settings replace the PDF's current protection."
 required = "Introduza a palavra-passe para continuar."
-skip = "Saltar por agora"
-successBody = "Palavra-passe removida com sucesso."
-successBodyWithName = "Palavra-passe removida de {{fileName}}"
-successTitle = "Palavra-passe removida"
+requiredStatus = "Required"
+requiredToApply = "Required to apply changes"
+restoreFailed = "Unable to preserve PDF protection. No unprotected result was saved."
+restrictActions = "Restrict actions"
+restricted = "Restricted"
+restrictedActions = "restricted actions"
+restrictedOperation = "This action requires the permissions password."
+retainOwnerVerification = "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it."
+saveProtection = "Save protection"
+securityChangeFailed = "Unable to change protection. Check the permissions password and the new security settings."
+sessionDetails = "Open for this session. The PDF stays protected."
+sessionDetailsLabel = "About session unlocking"
+sessionFailed = "Unable to unlock this PDF. Please try again."
+sessionSuccessBody = "Protection retained."
+sessionSuccessBodyWithName = "Protection retained for {{fileName}}."
+sessionSuccessTitle = "PDF opened"
+sessionTitle = "Open PDF"
+signedReadOnly = "This signed PDF can be viewed, but cannot be edited here."
 title = "Remover palavra-passe para continuar"
+toolUnavailable = "This tool doesn't support encrypted PDFs. Remove the password first."
+toolUnavailableDetails = "Why {{name}} is unavailable"
 unlock = "Desbloquear e continuar"
 unlockAll = "Usar para todos ({{count}})"
 unlockAllPartialFail = "Palavra-passe incorreta para: {{names}}"
 unlockAllSuccess_one = "{{count}} ficheiro desbloqueado."
 unlockAllSuccess_other = "{{count}} ficheiros desbloqueados."
+unlockedForSession = "Unlocked for this session using your permissions password."
 unlockPrompt = "Desbloqueie o PDF para continuar"
+unprotectedCopyConsequence = "The copy will have no passwords or restrictions. The original stays protected."
+unsupportedTool = "This tool cannot yet preserve this PDF's protection."
+verifiedForSession = "Verified for this session"
+verifyPermissions = "Verify permissions for this session"
 viewerLocked = "Este PDF está protegido por palavra-passe"
 viewerUnlock = "Desbloquear"
 
@@ -4597,22 +4648,23 @@ viewInViewer = "Ver no Visualizador"
 closeFile = "Fechar ficheiro"
 
 [fileEditor]
-addFiles = "Adicionar ficheiros"
 closedFile = "{{name}} fechado"
 couldNotSave = "Não foi possível guardar {{name}}"
-filesAdded_one = "{{count}} ficheiro adicionado"
-filesAdded_other = "{{count}} ficheiros adicionados"
 filesReordered_one = "Ficheiro reordenado"
 filesReordered_other = "{{count}} ficheiros reordenados"
 loadedFromStorage_one = "{{count}} ficheiro carregado do armazenamento"
 loadedFromStorage_other = "{{count}} ficheiros carregados do armazenamento"
 loadFromStorageFailed = "Falha ao carregar alguns ficheiros do armazenamento"
 pinnedFile = "{{name}} fixado"
-processFilesFailed = "Falha ao processar ficheiros"
 savedAndClosed = "{{name}} guardado e fechado"
 saveFailed = "Falha ao guardar"
 unpinnedFile = "{{name}} desafixado"
 unzipping = "A descompactar {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Erro ao descompactar {{name}}"
@@ -4729,7 +4781,6 @@ dataLostBody = "Este browser perdeu o conteúdo deste ficheiro. Carregue-o novam
 dataLostTitle = "Dados do ficheiro indisponíveis"
 downloadFailed = "Transferência falhada"
 dropHint = "Abra ficheiros para começar"
-dropToAdd = "Largue ficheiros para adicionar"
 duplicateFailed = "Não foi possível duplicar o ficheiro"
 expand = "Expandir barra lateral"
 googleDrive = "Google Drive"
@@ -5251,6 +5302,7 @@ rescanFields = "Reanalisar campos"
 rescanFormFields = "Reanalisar campos do formulário"
 save = "Guardar"
 saveShortcut = "Ctrl+S para guardar"
+saving = "Saving..."
 selectOptionPlaceholder = "— selecionar —"
 skippedEdits_one = "Não foi possível aplicar 1 alteração:"
 skippedEdits_other = "Não foi possível aplicar {{count}} alterações:"
@@ -5258,9 +5310,7 @@ skippedEditsTruncated = "Mais {{count}} não listadas."
 unsavedChanges = "Alterações não guardadas"
 
 [formFill.create]
-commit = "Adicionar {{count}} campo(s) ao PDF"
 empty = "Ainda não foram desenhados campos."
-failed = "Falha ao adicionar campos"
 goToField = "Ir para este campo"
 hint = "Escolha um tipo de campo e depois desenhe-o na página."
 placing = "Desenhe um campo {{type}} na página. Prima Esc para parar."
@@ -5334,7 +5384,6 @@ modify = "Modificar"
 commit = "Guardar {{count}} alteração(ões)"
 delete = "Eliminar"
 empty = "Este PDF ainda não tem campos de formulário."
-failed = "Falha ao guardar alterações"
 groupSizeHint = "Usar tamanho da opção"
 hint = "Selecione um campo para editar as suas propriedades, arraste-o na página ou elimine-o."
 restore = "Restaurar"
@@ -5732,11 +5781,6 @@ title = "Sobrepor PDFs"
 desc = "Juntar múltiplas páginas de um documento PDF numa única página"
 tags = "layout,dispor,combinar,N-up,2-up,4-up,múltiplas por página,páginas por folha,dispor páginas,ladrilho,layout em grelha,layout multipágina,combinar na página,folheto"
 title = "Layout Multi-Página"
-
-[home.pdfCommentAgent]
-desc = "Peça à IA para anotar um PDF com comentários em notas adesivas com base no seu pedido"
-tags = "IA,agente,comentário,anotar,nota adesiva,revisão,feedback,notas"
-title = "Adicionar comentários de IA"
 
 [home.pdfOrganiser]
 tags = "organizar,reorganizar,reordenar,dispor páginas,ordenar,mover páginas,eliminar páginas,remover páginas,gestão de páginas,organizador de páginas,ressequenciar"
@@ -6595,63 +6639,6 @@ yourCloudAccess = "Tornar-se-á membro da equipa e perderá o acesso de propriet
 deselectAll = "Nenhum"
 selectAll = "Selecionar tudo"
 
-[pageEditor]
-dragPreviewAlt = "A arrastar"
-filePosition = "Posição {{position}}"
-pageLabel = "Página {{page}}"
-title = "Editor de páginas"
-
-[pageEditor.actions]
-deletePage = "Eliminar página"
-insertFileAfter = "Inserir ficheiro depois"
-moveLeft = "Mover para a esquerda"
-moveRight = "Mover para a direita"
-rotateLeft = "Rodar para a esquerda"
-rotateRight = "Rodar para a direita"
-splitAfter = "Dividir depois"
-
-[pageEditor.commands]
-addSplitAt = "Adicionar divisão na posição {{position}}"
-addSplits_one = "Adicionar {{count}} divisão"
-addSplits_other = "Adicionar {{count}} divisões"
-deletePages_one = "Eliminar {{count}} página"
-deletePages_other = "Eliminar {{count}} páginas"
-insertFiles_one = "Inserir {{count}} ficheiro após a página {{page}}"
-insertFiles_other = "Inserir {{count}} ficheiros após a página {{page}}"
-insertPageBreaks_one = "Inserir {{count}} quebra de página"
-insertPageBreaks_other = "Inserir {{count}} quebras de página"
-insertPageBreaksAll = "Inserir quebras de página após todas as páginas"
-removeAllSplits = "Remover todas as divisões"
-removeSplitAt = "Remover divisão na posição {{position}}"
-removeSplits_one = "Remover {{count}} divisão"
-removeSplits_other = "Remover {{count}} divisões"
-reorderPages = "Reordenar páginas"
-rotatePageLeft = "Rodar página para a esquerda"
-rotatePageRight = "Rodar página para a direita"
-rotatePagesLeft_one = "Rodar {{count}} página para a esquerda"
-rotatePagesLeft_other = "Rodar {{count}} páginas para a esquerda"
-rotatePagesRight_one = "Rodar {{count}} página para a direita"
-rotatePagesRight_other = "Rodar {{count}} páginas para a direita"
-splitAllPages = "Dividir todas as páginas"
-toggleSplits_one = "Alternar {{count}} posição de divisão"
-toggleSplits_other = "Alternar {{count}} posições de divisão"
-
-[pageEditor.emptyState]
-body = "Adicione ficheiros para começar a editar páginas"
-title = "Nenhum ficheiro PDF carregado"
-
-[pageEditor.fileDropdown]
-addFile = "Adicionar ficheiro"
-selectedCount = "{{selected}}/{{total}} ficheiros selecionados"
-untitled = "Sem título"
-
-[pageEditor.toolbar]
-delete = "Eliminar selecionados"
-redo = "Refazer"
-rotateLeft = "Rodar selecionados para a esquerda"
-rotateRight = "Rodar selecionados para a direita"
-undo = "Anular"
-
 [pageExtracter]
 title = "Extrair Páginas"
 
@@ -6815,6 +6802,76 @@ title = "Intervalos de Páginas"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → seleciona todas as páginas"
 title = "Palavras-Chave Especiais"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "documentos"
@@ -7144,24 +7201,6 @@ totalSeats_other = "Total ({{count}} lugares)"
 [payment.upgradeTeam]
 title = "Atualizar para Team"
 
-[pdfCommentAgent]
-submit = "Gerar comentários"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Indique o que a IA deve comentar"
-failed = "Não foi possível gerar comentários"
-tooLong = "O pedido é demasiado longo (máximo de {{max}} caracteres)"
-
-[pdfCommentAgent.prompt]
-label = "O que deve a IA comentar?"
-placeholder = "p.ex. Assinalar quaisquer datas ambíguas e sugerir clarificações"
-
-[pdfCommentAgent.results]
-title = "PDF comentado"
-
-[pdfCommentAgent.settings]
-title = "Instruções para comentários"
-
 [pdfOrganiser]
 placeholder = "(ex. 1,3,2 ou 4-8,2,10-12 ou 2n-1)"
 tags = "duplex,par,ímpar,ordenar,mover"
@@ -7347,6 +7386,7 @@ nothingSelectedHint = "Clique em qualquer texto, imagem ou forma na página para
 ocrDocumentChanged = "O documento foi alterado enquanto o OCR estava em execução. Execute o OCR novamente para incluir as alterações mais recentes."
 ocrInvalidResult = "O OCR não devolveu um PDF. Tente novamente."
 ocrNoLanguages = "Não há idiomas de OCR instalados no servidor."
+ocrProtected = "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing."
 ocrRunning = "A reconhecer texto..."
 ocrUnavailable = "O OCR não está disponível neste servidor."
 oneImage = "Imagem"
@@ -7389,13 +7429,8 @@ pageNumber = "Página {{page}}"
 renderFailed = "Falha ao renderizar a página"
 
 [pdfTextEditor.password]
-cancel = "Cancelar"
 incorrect = "Palavra-passe incorreta - tente novamente."
 label = "Palavra-passe"
-open = "Abrir"
-protected = "Este PDF está protegido por palavra-passe."
-protectedNamed = "\"{{fileName}}\" está protegido por palavra-passe."
-title = "Palavra-passe necessária"
 
 [pdfTextEditor.rulers]
 guide = "Guia de alinhamento em {{value}} {{unit}} - arraste para uma régua para remover"
@@ -7994,6 +8029,7 @@ before = "Defina"
 title = "Ligação Stirling não configurada"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Não foi possível abrir o seu navegador. Abra Utilização e faturação no seu servidor ligado para associar uma conta."
 
 [portal.accountLink.panel]
@@ -8117,9 +8153,6 @@ limit = "Limite mensal de gastos {{amount}}/mês. O processamento fica em pausa 
 limitNoCap = "Sem limite de gastos. O processamento não ficará em pausa. As faturas são emitidas mensalmente."
 
 [portal.billing.chip]
-invoices = "Faturas"
-nav = "Secções"
-payment = "Pagamento"
 plan = "Plano"
 procurement = "Aquisição"
 usage = "Utilização"
@@ -8178,9 +8211,22 @@ pdfs = "PDFs processados"
 users = "Utilizadores"
 
 [portal.billing.enterprise]
+active = "Agreement active through {{date}}"
 cta = "Obter uma proposta enterprise"
+included = "Included in Enterprise"
+payment_pending = "Payment pending · access through {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF over agreed volume"
+pdfsOver_other = "{{count}} PDFs over agreed volume"
+pdfsUsed_one = "{{count}} PDF processed"
+pdfsUsed_other = "{{count}} PDFs processed"
+period = "Agreement period: {{start}} – {{end}}"
 sub = "Implementação air-gapped, SCIM, residência de dados, SLAs de disponibilidade e um acordo à medida."
 title = "Está a executar o Stirling num ambiente regulado?"
+trial = "{{days}}-day trial · ends {{date}}"
+usersAgreed = "{{used}} / {{agreed}} agreed users"
+usersOver_one = "{{count}} user over agreed quantity"
+usersOver_other = "{{count}} users over agreed quantity"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Não foi possível iniciar o checkout"
@@ -11160,6 +11206,7 @@ tags = "Ocultar,Esconder,tapar a preto,preto,marcador,oculto,ocultar automaticam
 title = "Ocultar"
 
 [redact.auto]
+caseSensitiveLabel = "Case Sensitive Matching"
 colorLabel = "Cor da caixa"
 convertPDFToImageLabel = "Converter PDF para PDF-Imagem"
 customPaddingLabel = "Espaçamento extra personalizado"
@@ -11194,6 +11241,10 @@ automaticDisabledTooltip = "Selecione ficheiros no gestor de ficheiros para ocul
 manual = "Manual"
 mode = "Modo"
 title = "Método de ocultação"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
+title = "Case Sensitive Matching"
 
 [redact.tooltip.advanced.color]
 text = "Personalize a aparência das caixas de ocultação. O preto é o padrão, mas pode escolher qualquer cor. O espaçamento adiciona espaço extra à volta do texto encontrado."
@@ -11396,7 +11447,19 @@ text = "Indique quais as páginas a remover do seu PDF. Pode selecionar páginas
 title = "Seleção de Páginas"
 
 [removePassword]
-desc = "Remover proteção por palavra-passe do seu documento PDF."
+appliesTo = "Set on {{count}} of {{total}} PDFs"
+batchRemoved = "Entered passwords removed where set. Blank fields kept unchanged."
+bothRemoved = "Both passwords and restrictions removed."
+checkingProtection = "Checking protection…"
+keepBlank = "Leave a field blank to keep that password."
+notSet = "Not set"
+openingOnlyRemoved = "Opening password removed."
+openWithReaderFirst = "Reopen this PDF using its opening password before removing only the permissions password."
+ownerOnlyRemoved = "Permissions password and restrictions removed."
+ownerRemoved = "Permissions password and restrictions removed. Opening password kept."
+protectionUnavailable = "Unable to check protection"
+selectiveHelp = "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions."
+selectPasswords = "Passwords to remove"
 submit = "Remover palavra-passe"
 tags = "seguro,Desencriptar,segurança,sem palavra-passe,eliminar palavra-passe"
 title = "Remover palavra-passe"
@@ -11407,13 +11470,9 @@ failed = "Ocorreu um erro ao remover a palavra‑passe do PDF."
 [removePassword.password]
 label = "Palavra-passe Atual"
 placeholder = "Introduza a palavra‑passe atual"
-stepTitle = "Remover Palavra-passe"
 
 [removePassword.results]
 title = "PDFs desencriptados"
-
-[removePassword.tooltip]
-description = "Remover a proteção por palavra‑passe requer a palavra‑passe usada para encriptar o PDF. Isto irá desencriptar o documento, tornando-o acessível sem palavra‑passe."
 
 [reorganizePages]
 submit = "Reorganizar páginas"
@@ -12054,6 +12113,7 @@ title = "Espaço de trabalho"
 loginIncomplete = "Falha ao concluir o início de sessão"
 noSaasServer = "Nenhum servidor SaaS configurado"
 noServer = "Nenhum servidor configurado"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Falha no início de sessão SaaS"
 saasLoginIncomplete = "Falha ao concluir o início de sessão SaaS"
 selfHostedLoginFailed = "Falha no início de sessão autoalojado"
@@ -13905,6 +13965,11 @@ title = "Texto da Marca de Água"
 image = "Imagem"
 text = "Texto"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Os seus ficheiros anteriores já não estão armazenados neste dispositivo."
 partial = "Restaurados {{restored}} de {{total}} ficheiros. Os restantes já não estão armazenados neste dispositivo."
@@ -13915,16 +13980,13 @@ annotations = "Anotações"
 applyRedactionsFirst = "Aplicar expurgos primeiro"
 closeAll = "Fechar todos os ficheiros"
 closePdf = "Fechar PDF"
-deleteSelected = "Eliminar páginas selecionadas"
 deselectAll = "Desselecionar tudo"
 downloadAll = "Transferir tudo"
 exitRedaction = "Sair do modo de expurgo"
-exportAll = "Exportar PDF"
-exportSelected = "Exportar páginas selecionadas"
 formFill = "Editor de formulários"
 hideToolbar = "Ocultar barra de ferramentas"
 moreActions = "Mais ações"
-multiTool = "Multi-ferramenta"
+pageEditor = "Page Editor"
 panMode = "Modo de deslocação"
 print = "Imprimir PDF"
 readAloud = "Ler em voz alta"
@@ -13938,7 +14000,6 @@ rulerSettings = "Definições de escala"
 save = "Guardar"
 saveAll = "Guardar tudo"
 saveAs = "Guardar como"
-saveChanges = "Guardar alterações"
 search = "Pesquisar no PDF"
 selectAll = "Selecionar tudo"
 selectByNumber = "Selecionar por números de página"
