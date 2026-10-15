@@ -384,6 +384,47 @@ class StampControllerMoreTest {
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("bytes");
         }
+
+        @Test
+        @DisplayName("a non-positive QR size falls back to the default size")
+        void qrStampZeroFontSizeFallsBackToDefaultSize() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("https://stirlingpdf.com/@filename");
+            req.setFontSize(0f);
+            req.setOpacity(1f);
+
+            BufferedImage rendered;
+            try (InputStream is = stampController.addStamp(req).getBody().getInputStream();
+                    PDDocument result = Loader.loadPDF(is.readAllBytes())) {
+                rendered = new PDFRenderer(result).renderImageWithDPI(0, 144);
+            }
+            int width = rendered.getWidth();
+            int height = rendered.getHeight();
+            int[] pixels = rendered.getRGB(0, 0, width, height, null, 0, width);
+            BinaryBitmap bitmap =
+                    new BinaryBitmap(
+                            new HybridBinarizer(new RGBLuminanceSource(width, height, pixels)));
+            assertThat(new QRCodeReader().decode(bitmap).getText())
+                    .isEqualTo("https://stirlingpdf.com/input");
+        }
+
+        @Test
+        @DisplayName("QR content expanded past the byte limit by placeholders is rejected")
+        void rejectsExpandedContentOverByteLimit() throws Exception {
+            MockMultipartFile longName =
+                    new MockMultipartFile(
+                            "fileInput",
+                            "a".repeat(200) + ".pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            buildPdf(1));
+            AddStampRequest req = baseRequest(longName);
+            req.setStampType("qr");
+            req.setStampText("@filename@filename@filename@filename@filename@filename");
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("bytes");
+        }
     }
 
     @Nested

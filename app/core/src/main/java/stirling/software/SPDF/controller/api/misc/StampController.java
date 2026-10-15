@@ -232,6 +232,13 @@ public class StampController {
                                         document.getNumberOfPages(),
                                         pdfFileName,
                                         document);
+                        if (qrContent.getBytes(StandardCharsets.UTF_8).length
+                                > MAX_QR_CONTENT_BYTES) {
+                            throw ExceptionUtils.createIllegalArgumentException(
+                                    "error.stamp.qr.tooLong",
+                                    "QR code content must be at most {0} bytes of UTF-8 text",
+                                    MAX_QR_CONTENT_BYTES);
+                        }
                         addQrStamp(
                                 contentStream,
                                 encodeQrCode(qrContent),
@@ -568,17 +575,27 @@ public class StampController {
             float overrideY,
             float margin)
             throws IOException {
+        // Fall back the same way text stamps do when no usable size is given.
+        float effectiveSize = size > 0 ? size : 40f;
         enterStampBox(
-                contentStream, page, rotation, position, size, size, overrideX, overrideY, margin);
+                contentStream,
+                page,
+                rotation,
+                position,
+                effectiveSize,
+                effectiveSize,
+                overrideX,
+                overrideY,
+                margin);
         contentStream.setNonStrokingColor(Color.WHITE);
-        contentStream.addRect(0, 0, size, size);
+        contentStream.addRect(0, 0, effectiveSize, effectiveSize);
         contentStream.fill();
 
         int modules = matrix.getWidth();
-        float moduleSize = size / modules;
+        float moduleSize = effectiveSize / modules;
         contentStream.setNonStrokingColor(Color.BLACK);
         for (int row = 0; row < modules; row++) {
-            float y = size - (row + 1) * moduleSize;
+            float y = effectiveSize - (row + 1) * moduleSize;
             int col = 0;
             while (col < modules) {
                 if (!matrix.get(col, row)) {
