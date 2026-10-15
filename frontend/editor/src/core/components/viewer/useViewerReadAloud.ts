@@ -258,6 +258,19 @@ export function useViewerReadAloud(
   // Stop reading when navigating away (workbench, file, or window change)
   useStopReadAloudOnNavigation(isReadingAloud, stopReadingAloud);
 
+  // Stop reading when the displayed file itself is replaced. Navigation
+  // watches the workbench and active index, but a preview or re-upload can
+  // swap the file underneath both; without this, a pending read resolves
+  // for the old file and speaks it over the replacement.
+  const previousDisplayedFileRef = useRef(displayedFile);
+  useEffect(() => {
+    if (previousDisplayedFileRef.current === displayedFile) return;
+    previousDisplayedFileRef.current = displayedFile;
+    if (isReadingAloud) {
+      stopReadingAloud();
+    }
+  }, [displayedFile, isReadingAloud, stopReadingAloud]);
+
   const highlightWord = useCallback(
     (wordIndex: number, words: string[], pageNumber: number) => {
       clearHighlights();
