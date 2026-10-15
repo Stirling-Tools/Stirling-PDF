@@ -161,7 +161,7 @@ class AccountLinkAuthorizationTest {
                 .isInstanceOfAny(
                         AccessDeniedException.class,
                         AuthenticationCredentialsNotFoundException.class);
-        assertThatThrownBy(() -> controller.syncNow())
+        assertThatThrownBy(() -> controller.syncNow(false))
                 .isInstanceOfAny(
                         AccessDeniedException.class,
                         AuthenticationCredentialsNotFoundException.class);

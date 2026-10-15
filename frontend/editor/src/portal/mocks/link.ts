@@ -73,6 +73,7 @@ let store: LinkedInstanceRow[] = seedInstances();
 let nextId = 1004;
 let localStatus: LinkStatus = { linked: false, name: null };
 let localUsage: LocalUsage = seedLocalUsage();
+let lastSyncAt = 0;
 
 /** Resets the mock store + local link status to seed state (Storybook / tests). */
 export function resetLinkStore(): void {
@@ -80,6 +81,31 @@ export function resetLinkStore(): void {
   nextId = 1004;
   localStatus = { linked: false, name: null };
   localUsage = seedLocalUsage();
+  lastSyncAt = 0;
+}
+
+/** Mirrors the backend's default manual-sync throttle. */
+export const SYNC_THROTTLE_MS = 60_000;
+
+/**
+ * Takes the next sync, or reports the seconds left on the window — the real backend's
+ * {@code sync-now} contract, so a demo run shows the same shape rather than acknowledging
+ * every ask.
+ */
+export function claimSync(force: boolean): {
+  ran: boolean;
+  retryAfter: number;
+} {
+  const now = Date.now();
+  const elapsed = now - lastSyncAt;
+  if (!force && elapsed < SYNC_THROTTLE_MS) {
+    return {
+      ran: false,
+      retryAfter: Math.ceil((SYNC_THROTTLE_MS - elapsed) / 1000),
+    };
+  }
+  lastSyncAt = now;
+  return { ran: true, retryAfter: 0 };
 }
 
 /** Current instance-local unsynced usage (GET /api/v1/account-link/usage). */

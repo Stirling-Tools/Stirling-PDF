@@ -105,6 +105,81 @@ class UsageSyncServiceTest {
     }
 
     @Test
+    void requestSyncRunsTheFirstAsk() {
+        when(credentialStore.get()).thenReturn(Optional.empty());
+
+        UsageSyncService.SyncRequest result = service.requestSync(false);
+
+        assertThat(result.ran()).isTrue();
+        assertThat(result.retryAfterSeconds()).isZero();
+    }
+
+    @Test
+    void requestSyncDeclinesASecondAskInsideTheWindow() {
+        when(credentialStore.get()).thenReturn(Optional.empty());
+        service.requestSync(false);
+
+        UsageSyncService.SyncRequest result = service.requestSync(false);
+
+        // The reloaded page: asking is fine, reporting again is what the throttle refuses.
+        assertThat(result.ran()).isFalse();
+        assertThat(result.retryAfterSeconds()).isBetween(1L, 60L);
+        verify(credentialStore, times(1)).get();
+    }
+
+    @Test
+    void requestSyncThrottlesOnTheAttemptRatherThanTheOutcome() {
+        // An instance that cannot reach SaaS is exactly the one a reload must not retry freely.
+        when(credentialStore.get()).thenReturn(Optional.of(credential()));
+        when(counters.findPeriodsWithUnsyncedUsage()).thenReturn(List.of(period));
+        when(counters.findByPeriodStart(period)).thenReturn(List.of());
+        when(syncState.findById(any())).thenReturn(Optional.empty());
+        when(client.reportUsage(
+                        any(),
+                        any(),
+                        anyLong(),
+                        any(),
+                        anyLong(),
+                        anyLong(),
+                        anyLong(),
+                        org.mockito.ArgumentMatchers.anyInt()))
+                .thenReturn(null);
+
+        assertThat(service.requestSync(false).ran()).isTrue();
+
+        assertThat(service.requestSync(false).ran()).isFalse();
+    }
+
+    @Test
+    void forceRunsRegardlessOfTheWindow() {
+        when(credentialStore.get()).thenReturn(Optional.empty());
+        service.requestSync(false);
+
+        UsageSyncService.SyncRequest result = service.requestSync(true);
+
+        assertThat(result.ran()).isTrue();
+        verify(credentialStore, times(2)).get();
+    }
+
+    @Test
+    void aZeroWindowDisablesTheThrottle() {
+        properties.getMetering().setManualSyncThrottle(Duration.ZERO);
+        when(credentialStore.get()).thenReturn(Optional.empty());
+        service.requestSync(false);
+
+        assertThat(service.requestSync(false).ran()).isTrue();
+    }
+
+    @Test
+    void theScheduledSyncAlsoOpensTheWindow() {
+        when(credentialStore.get()).thenReturn(Optional.empty());
+        service.scheduledSync();
+
+        // Otherwise a page opened just after the daily run would report all over again.
+        assertThat(service.requestSync(false).ran()).isFalse();
+    }
+
+    @Test
     void notLinkedSkipsEntirely() {
         when(credentialStore.get()).thenReturn(Optional.empty());
 

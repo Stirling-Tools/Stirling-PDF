@@ -2,6 +2,7 @@ package stirling.software.proprietary.accountlink;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -153,11 +155,35 @@ class AccountLinkControllerTest {
     @Test
     void syncNow_triggersSyncWhenMeteringOn() {
         when(syncProvider.getIfAvailable()).thenReturn(syncService);
+        when(syncService.requestSync(false)).thenReturn(new UsageSyncService.SyncRequest(true, 0));
 
-        ResponseEntity<Void> resp = controller.syncNow();
+        ResponseEntity<Void> resp = controller.syncNow(false);
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-        verify(syncService).syncNow();
+        verify(syncService).requestSync(false);
+    }
+
+    @Test
+    void syncNow_reportsARefusedSyncAsThrottledRatherThanRun() {
+        when(syncProvider.getIfAvailable()).thenReturn(syncService);
+        when(syncService.requestSync(false))
+                .thenReturn(new UsageSyncService.SyncRequest(false, 42));
+
+        ResponseEntity<Void> resp = controller.syncNow(false);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+        assertThat(resp.getHeaders().getFirst(HttpHeaders.RETRY_AFTER)).isEqualTo("42");
+    }
+
+    @Test
+    void syncNow_passesForceThroughForAnExplicitRequest() {
+        when(syncProvider.getIfAvailable()).thenReturn(syncService);
+        when(syncService.requestSync(true)).thenReturn(new UsageSyncService.SyncRequest(true, 0));
+
+        ResponseEntity<Void> resp = controller.syncNow(true);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        verify(syncService).requestSync(true);
     }
 
     @Test
@@ -180,9 +206,9 @@ class AccountLinkControllerTest {
     void syncNow_returns409WhenSyncUnavailable() {
         when(syncProvider.getIfAvailable()).thenReturn(null);
 
-        ResponseEntity<Void> resp = controller.syncNow();
+        ResponseEntity<Void> resp = controller.syncNow(false);
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        verify(syncService, never()).syncNow();
+        verify(syncService, never()).requestSync(anyBoolean());
     }
 }

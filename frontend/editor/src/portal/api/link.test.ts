@@ -35,8 +35,10 @@ import {
   fetchLocalUsage,
   fetchStatus,
   revokeInstance,
+  triggerLocalSync,
   unlinkInstance,
 } from "@portal/api/link";
+import { http, HttpResponse } from "msw";
 
 const server = setupServer(...linkHandlers);
 
@@ -47,6 +49,36 @@ afterAll(() => {
   vi.unstubAllEnvs();
 });
 beforeEach(() => resetLinkStore());
+
+describe("api/link — sync-now is asked, not commanded", () => {
+  it("reports a sync that ran", async () => {
+    await expect(triggerLocalSync()).resolves.toBe(true);
+  });
+
+  // The billing page asks on open and a page can be reloaded. A refusal is the
+  // backend saying a recent sync already covers the caller, which is an answer.
+  it("reports a throttled sync as not-run rather than raising", async () => {
+    await triggerLocalSync();
+
+    await expect(triggerLocalSync()).resolves.toBe(false);
+  });
+
+  it("forces past the throttle when the caller asks explicitly", async () => {
+    await triggerLocalSync();
+
+    await expect(triggerLocalSync(true)).resolves.toBe(true);
+  });
+
+  it("still raises a real failure, which is not the same as a refusal", async () => {
+    server.use(
+      http.post("/api/v1/account-link/sync-now", () =>
+        HttpResponse.json({ error: "boom" }, { status: 500 }),
+      ),
+    );
+
+    await expect(triggerLocalSync()).rejects.toMatchObject({ status: 500 });
+  });
+});
 
 describe("api/link — local backend (this instance)", () => {
   it("starts not-linked", async () => {
