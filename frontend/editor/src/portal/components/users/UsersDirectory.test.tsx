@@ -374,3 +374,47 @@ it("keeps self-hosted Admin and Team Lead labels readable without editing rights
     screen.queryByRole("textbox", { name: /Role for/ }),
   ).not.toBeInTheDocument();
 });
+
+describe("UsersDirectory — plan limit", () => {
+  const disabled: Member = { ...MEMBER, status: "over_limit" };
+
+  it("labels a member the plan no longer covers and offers Make active", async () => {
+    const onMakeActive = vi.fn();
+    render(
+      <MantineProvider>
+        <UsersDirectory
+          members={[disabled]}
+          teams={TEAMS}
+          capabilities={saasCaps}
+          processorTeamIds={new Set()}
+          onChangeRole={vi.fn()}
+          onGrantProcessor={vi.fn()}
+          onRevokeProcessor={vi.fn()}
+          onGrantTeamProcessor={vi.fn()}
+          onRevokeTeamProcessor={vi.fn()}
+          onAddToTeam={vi.fn()}
+          onResetPassword={vi.fn()}
+          onMoveToTeam={vi.fn()}
+          onToggleEnabled={vi.fn()}
+          onUnlock={vi.fn()}
+          onDisableMfa={vi.fn()}
+          onRemove={vi.fn()}
+          onMakeActive={onMakeActive}
+          onRenameTeam={vi.fn()}
+          onDeleteTeam={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+    expect(screen.getByText("Over plan limit")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
+    fireEvent.click(await screen.findByText("Make active"));
+    expect(onMakeActive).toHaveBeenCalledWith(disabled);
+  });
+
+  it("offers no Make active for a member who already has a place", async () => {
+    renderDirectory(saasCaps);
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
+    await screen.findByText("Remove from team");
+    expect(screen.queryByText("Make active")).not.toBeInTheDocument();
+  });
+});

@@ -54,6 +54,7 @@ import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
+import stirling.software.saas.payg.stripe.StripeSubscriptionDao;
 import stirling.software.saas.payg.wallet.WalletPolicy;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 import stirling.software.saas.security.EnhancedJwtAuthenticationToken;
@@ -78,6 +79,7 @@ class PaygWalletControllerTest {
     @Mock private PrepaidBundleService prepaidBundleService;
     @Mock private SaasTeamExtensionsRepository teamExtensionsRepository;
     @Mock private FleetSeatService fleetSeats;
+    @Mock private StripeSubscriptionDao subscriptionDao;
 
     private PaygWalletController controller;
 
@@ -96,7 +98,8 @@ class PaygWalletControllerTest {
                         prepaidBundleService,
                         new UserTeamResolver(memberRepo),
                         teamExtensionsRepository,
-                        fleetSeats);
+                        fleetSeats,
+                        subscriptionDao);
     }
 
     /**
@@ -263,6 +266,34 @@ class PaygWalletControllerTest {
         assertThat(body.processor().active()).isTrue();
         assertThat(body.team().held()).isFalse();
         assertThat(body.team().usersInUse()).isEqualTo(8);
+    }
+
+    /** A scheduled cancel reads back as each product's end date; renewing products carry none. */
+    @Test
+    void getWallet_scheduledCancels_reportWhenEachProductEnds() {
+        User user = userWithId(63L, UUID.randomUUID());
+        Team team = teamWithId(63L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 63L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
+        when(teamExtensionsRepository.fleetUsersInUse(63L)).thenReturn(4L);
+        SaasTeamExtensions ext = new SaasTeamExtensions();
+        ext.setMaxSeats(100);
+        when(teamExtensionsRepository.findByTeamId(63L)).thenReturn(Optional.of(ext));
+        when(billingService.forTeam(63L)).thenReturn(subscribedBilling("sub_meter", 2500L, 1250L));
+        when(entitlementService.getSnapshot(63L)).thenReturn(snapshot(100L, 1250L));
+        when(subscriptionDao.findTeamScheduledEnd(63L))
+                .thenReturn(Optional.of(java.time.Instant.parse("2026-11-14T00:00:00Z")));
+        when(subscriptionDao.findScheduledEnd("sub_meter")).thenReturn(Optional.empty());
+        stubEmptyLedgerReads(63L);
+
+        WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.team().endsAt()).isEqualTo("2026-11-14T00:00:00Z");
+        assertThat(body.processor().active()).isTrue();
+        assertThat(body.processor().endsAt()).isNull();
     }
 
     @Test

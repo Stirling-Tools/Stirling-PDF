@@ -140,6 +140,30 @@
   border-top: 1px solid var(--c-border-subtle);
 }
 
+/* A real button, not a quiet link: several US states require cancelling to be prominent. */
+.billing-plan-end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.875rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--c-border-subtle);
+  font-size: 0.8125rem;
+}
+
+.billing-plan-end__dates {
+  font-weight: 600;
+  color: var(--c-warning-solid);
+}
+
+.billing-plan-end__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-left: auto;
+}
+
 .billing-meter {
   display: flex;
   align-items: center;

@@ -52,3 +52,24 @@ export function trackEditorOperation(toolId: string, fileCount: number): void {
     file_count: fileCount,
   });
 }
+
+export type CancellationEvent =
+  | "cancel_flow_opened"
+  | "cancel_reason_selected"
+  | "cancel_offer_clicked"
+  | "cancel_confirmed"
+  | "cancel_flow_abandoned"
+  | "cancel_resumed";
+
+/** Funnel for the in-app cancel flow; the reasons themselves are stored server-side. */
+export function trackCancellation(
+  event: CancellationEvent,
+  props: Record<string, string | number | boolean | null> = {},
+): void {
+  try {
+    if (!canCapture()) return;
+    posthog.capture(event, { source: "portal", ...props });
+  } catch (error) {
+    if (DEV) console.warn("[analytics] trackCancellation failed", error);
+  }
+}

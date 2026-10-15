@@ -83,6 +83,7 @@ class SaasTeamServiceTest {
     @Mock private SaasUserExtensionService saasUserExtensionService;
     @Mock private LinkedInstanceRepository linkedInstanceRepository;
     @Mock private stirling.software.proprietary.security.service.UserService userService;
+    @Mock private TeamMemberCapacityService memberCapacity;
 
     @InjectMocks private SaasTeamService service;
 
@@ -1072,6 +1073,8 @@ class SaasTeamServiceTest {
 
             verify(membershipRepository).delete(targetM);
             verify(saasTeamExtensionsRepository).decrementSeatsUsed(teamId);
+            // The freed place goes to a member the allowance had disabled.
+            verify(memberCapacity).refillAfterCommit(teamId);
             // Teams are durable now - the emptied team is not deleted.
             verify(teamRepository, never()).delete(any());
         }
@@ -1176,6 +1179,7 @@ class SaasTeamServiceTest {
 
             verify(membershipRepository).delete(memberM);
             verify(saasTeamExtensionsRepository).decrementSeatsUsed(teamId);
+            verify(memberCapacity).refillAfterCommit(teamId);
             // Teams are durable now; none is deleted on leave.
             verify(teamRepository, never()).delete(any());
         }

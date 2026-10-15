@@ -9,7 +9,8 @@ import type { Tier } from "@portal/contexts/TierContext";
  *  authorities + team leadership. Order drives the role select and grid. */
 export type RoleId = "admin" | "team_owner" | "member" | "guest";
 
-export type MemberStatus = "active" | "invited" | "suspended";
+/** `over_limit`: the team's user allowance no longer covers them, so they cannot sign in (SaaS). */
+export type MemberStatus = "active" | "invited" | "suspended" | "over_limit";
 
 /**
  * Effective portal (processor) access for a member:

@@ -157,13 +157,25 @@ public record WalletSnapshotResponse(
      *     user limit.
      * @param usersInUse counted cloud members plus deployment reports; linked teams exclude one
      *     required cloud owner.
+     * @param endsAt ISO-8601 instant the Team plan stops, once a cancel is scheduled; {@code null}
+     *     while it renews.
      */
     public record TeamHolding(
             boolean held,
             Integer licensedUsers,
             int usersInUse,
             boolean fleet,
-            stirling.software.saas.accountlink.FleetSeatService.Breakdown breakdown) {
+            stirling.software.saas.accountlink.FleetSeatService.Breakdown breakdown,
+            String endsAt) {
+        public TeamHolding(
+                boolean held,
+                Integer licensedUsers,
+                int usersInUse,
+                boolean fleet,
+                stirling.software.saas.accountlink.FleetSeatService.Breakdown breakdown) {
+            this(held, licensedUsers, usersInUse, fleet, breakdown, null);
+        }
+
         public TeamHolding(boolean held, Integer licensedUsers, int usersInUse, boolean fleet) {
             this(held, licensedUsers, usersInUse, fleet, null);
         }
@@ -179,6 +191,12 @@ public record WalletSnapshotResponse(
      * @param active the team has a live metered subscription. This is the fact the old {@code
      *     status == "subscribed"} actually carried; the rate, spend, cap and grant figures for it
      *     stay on the enclosing record.
+     * @param endsAt ISO-8601 instant the metered subscription stops, once a cancel is scheduled;
+     *     {@code null} while it renews.
      */
-    public record ProcessorHolding(boolean active) {}
+    public record ProcessorHolding(boolean active, String endsAt) {
+        public ProcessorHolding(boolean active) {
+            this(active, null);
+        }
+    }
 }
