@@ -189,8 +189,8 @@ interface LocalEmbedPDFProps {
   restorePending?: boolean;
   restoreRequest?: DocumentRestoreRequest | null;
   onRestoreEvent?: (event: DocumentRestoreEvent) => void;
-  /** FileId the last viewed page is remembered under; null remembers nothing. */
-  lastViewedPageFileId?: string | null;
+  /** quickKey the last viewed page is remembered under; null remembers nothing. */
+  lastViewedPageKey?: string | null;
 }
 
 interface ViewerPageContainerProps {
@@ -858,7 +858,7 @@ export function LocalEmbedPDF({
   restorePending = false,
   restoreRequest = null,
   onRestoreEvent,
-  lastViewedPageFileId = null,
+  lastViewedPageKey = null,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -1548,7 +1548,7 @@ export function LocalEmbedPDF({
             onEvent={onRestoreEvent}
           />
           <LastViewedPageBridge
-            fileId={lastViewedPageFileId}
+            fileKey={lastViewedPageKey}
             restorePending={restorePending}
           />
           <ZoomAPIBridge />

@@ -1,5 +1,5 @@
 /**
- * Last page viewed per file, keyed by FileId. Kept apart from the file's
+ * Last page viewed per file, keyed by quickKey. Kept apart from the file's
  * IndexedDB record because updating that record rewrites the file's bytes with
  * it, which is too costly to repeat as the reader scrolls.
  */
@@ -21,16 +21,16 @@ function readPages(): Record<string, number> {
 }
 
 /** 1-based page, or null when none past the first is remembered. */
-export function getLastViewedPage(fileId: string): number | null {
-  const page = readPages()[fileId];
+export function getLastViewedPage(fileKey: string): number | null {
+  const page = readPages()[fileKey];
   return Number.isInteger(page) && page > 1 ? page : null;
 }
 
-export function setLastViewedPage(fileId: string, page: number): void {
+export function setLastViewedPage(fileKey: string, page: number): void {
   const pages = readPages();
   // Re-inserting moves the file to the newest end of the eviction order.
-  delete pages[fileId];
-  if (page > 1) pages[fileId] = page;
+  delete pages[fileKey];
+  if (page > 1) pages[fileKey] = page;
   const ids = Object.keys(pages);
   for (const id of ids.slice(0, Math.max(0, ids.length - MAX_ENTRIES))) {
     delete pages[id];

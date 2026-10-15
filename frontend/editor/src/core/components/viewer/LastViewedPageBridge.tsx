@@ -12,8 +12,9 @@ import {
 const SAVE_DEBOUNCE_MS = 500;
 
 interface LastViewedPageBridgeProps {
-  /** Null remembers and restores nothing, e.g. for a preview file. */
-  fileId: string | null;
+  /** The file's quickKey, so reopening it from disk under a new FileId still
+   *  restores. Null remembers and restores nothing, e.g. for a preview file. */
+  fileKey: string | null;
   restorePending: boolean;
 }
 
@@ -23,20 +24,20 @@ interface LastViewedPageBridgeProps {
  * position DocumentRestoreBridge carries over.
  */
 export function LastViewedPageBridge({
-  fileId,
+  fileKey,
   restorePending,
 }: LastViewedPageBridgeProps) {
   const activeDocumentId = useActiveDocumentId();
   const documentReady = useDocumentReady();
   const restoreClaimedRef = useRef(false);
 
-  if (!activeDocumentId || !documentReady || !fileId) return null;
+  if (!activeDocumentId || !documentReady || !fileKey) return null;
 
   return (
     <LastViewedPageBridgeInner
       key={activeDocumentId}
       documentId={activeDocumentId}
-      fileId={fileId}
+      fileKey={fileKey}
       restorePending={restorePending}
       restoreClaimedRef={restoreClaimedRef}
     />
@@ -45,18 +46,18 @@ export function LastViewedPageBridge({
 
 function LastViewedPageBridgeInner({
   documentId,
-  fileId,
+  fileKey,
   restorePending,
   restoreClaimedRef,
 }: {
   documentId: string;
-  fileId: string;
+  fileKey: string;
   restorePending: boolean;
   restoreClaimedRef: RefObject<boolean>;
 }) {
   const { provides: scroll } = useScrollCapability();
-  const fileIdRef = useRef(fileId);
-  fileIdRef.current = fileId;
+  const fileKeyRef = useRef(fileKey);
+  fileKeyRef.current = fileKey;
   const restorePendingRef = useRef(restorePending);
   restorePendingRef.current = restorePending;
 
@@ -67,7 +68,7 @@ function LastViewedPageBridgeInner({
       restoreClaimedRef.current = true;
       // Something else has already positioned this document.
       if (restorePendingRef.current || event.pageNumber > 1) return;
-      const page = getLastViewedPage(fileIdRef.current);
+      const page = getLastViewedPage(fileKeyRef.current);
       if (page === null || page > event.totalPages) return;
       scroll
         .forDocument(documentId)
@@ -83,7 +84,7 @@ function LastViewedPageBridgeInner({
       if (timer !== null) clearTimeout(timer);
       timer = null;
       if (pendingPage !== null)
-        setLastViewedPage(fileIdRef.current, pendingPage);
+        setLastViewedPage(fileKeyRef.current, pendingPage);
       pendingPage = null;
     };
     const unsubscribe = scroll.onPageChange((event) => {
