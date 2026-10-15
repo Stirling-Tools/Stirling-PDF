@@ -55,6 +55,11 @@ class SimpleSchemaGeneratorTest {
                 requiredMode = io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED)
         String stampText;
 
+        @io.swagger.v3.oas.annotations.media.Schema(
+                allowableValues = {"1", "2", "3"},
+                defaultValue = "2")
+        int position;
+
         @io.swagger.v3.oas.annotations.media.Schema(hidden = true)
         String internalOnly;
     }
@@ -69,6 +74,8 @@ class SimpleSchemaGeneratorTest {
         assertEquals(1.0, props.get("opacity").get("maximum").asDouble());
         assertEquals("medium", props.get("customMargin").get("default").asText());
         assertEquals(3, props.get("customMargin").get("enum").size());
+        assertTrue(props.get("position").get("enum").get(0).isIntegralNumber(), "typed enum");
+        assertEquals(1, props.get("position").get("enum").get(0).asInt());
         assertFalse(props.has("internalOnly"), "hidden fields stay out");
 
         Set<String> required = new HashSet<>();
