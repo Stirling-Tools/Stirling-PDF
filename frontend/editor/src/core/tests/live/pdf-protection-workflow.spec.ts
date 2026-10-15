@@ -476,28 +476,32 @@ for (const tool of ["annotate", "form-fill", "redact"]) {
     await page
       .getByTestId("file-input")
       .setInputFiles(path.join(fixtures, "owner-only-restricted.pdf"));
-    if (tool === "form-fill") {
-      await expect(
-        page.getByText("This tool cannot yet preserve this PDF's protection.", {
-          exact: true,
-        }),
-      ).toBeVisible();
-    } else {
-      const notice = page.getByTestId("tool-file-list");
-      await expect(notice.getByRole("status")).toHaveCount(0);
-      await notice
-        .getByRole("button", { name: /Why .* is unavailable/ })
-        .hover();
-      await expect(page.getByRole("tooltip")).toHaveText(
-        "This tool doesn't support encrypted PDFs. Remove the password first.",
-      );
-      await expect(
-        notice.getByRole("button", { name: "Remove Password" }),
-      ).toBeVisible();
-    }
+    const notice = page.getByTestId("tool-file-list");
+    await expect(
+      notice.getByText("owner-only-restricted.pdf", { exact: true }),
+    ).toBeVisible();
+    await expect(notice.getByRole("status")).toHaveCount(0);
+    await expect(
+      page.getByText("This tool cannot yet preserve this PDF's protection.", {
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await notice.getByRole("button", { name: /Why .* is unavailable/ }).hover();
+    await expect(page.getByRole("tooltip")).toHaveText(
+      "This tool doesn't support encrypted PDFs. Remove the password first.",
+    );
+    const removePassword = notice.getByRole("button", {
+      name: "Remove Password",
+    });
+    await removePassword.hover();
+    await expect(page.getByRole("tooltip")).toHaveText(
+      "Open Remove Password to choose which passwords to remove.",
+    );
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Print PDF", exact: true }),
     ).toBeEnabled({ enabled: !honorOwnerPasswords });
+    await removePassword.click();
+    await expect(page).toHaveURL(/\/remove-password$/);
   });
 }

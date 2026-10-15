@@ -16,7 +16,9 @@ import {
   ScrollArea,
   Progress,
   Tooltip,
+  Stack,
 } from "@mantine/core";
+import { createToolSteps } from "@app/components/tools/shared/ToolStep";
 import { UnsavedChangesDialog } from "@app/components/shared/UnsavedChangesDialog";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { Button } from "@app/ui/Button";
@@ -498,16 +500,18 @@ const FormFill = (_props: BaseToolProps) => {
   }, [requiredFields, allValues]);
 
   if (!isActive) return null;
+  if (viewedFile && pdfAccess?.encrypted) {
+    return (
+      <Stack gap="sm" p="sm">
+        {createToolSteps().createFilesStep({ selectedFiles: [] })}
+      </Stack>
+    );
+  }
   if (viewedFile && !currentFile) {
     return (
       <div className={styles.root}>
         <Text size="sm" role="status">
-          {pdfAccess?.encrypted
-            ? t(
-                "encryptedPdfUnlock.unsupportedTool",
-                "This tool cannot yet preserve this PDF's protection.",
-              )
-            : t("loading", "Loading...")}
+          {t("loading", "Loading...")}
         </Text>
       </div>
     );
