@@ -293,6 +293,7 @@ function FileContextInner({
         skipAutoUnzip?: boolean;
         /** Persist to IDB without dispatching to workspace state. */
         skipWorkspaceDispatch?: boolean;
+        allowDuplicates?: boolean;
         skipUploadTracking?: boolean;
         derivedFromTool?: boolean;
         /** Folder every added file is born into (see AddFileOptions). */

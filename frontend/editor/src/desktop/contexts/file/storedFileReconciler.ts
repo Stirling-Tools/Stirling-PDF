@@ -9,6 +9,7 @@ import {
   deleteVanishedFile,
   detachedFields,
   diskBaseline,
+  hasDiskChanged,
   loadDiskVersion,
   refreshDiskBaselineAfterSave,
   notifyFileVanished,
@@ -21,8 +22,12 @@ import {
   getDiskFileState,
   type PresentDiskFileState,
 } from "@app/services/desktopFileLink";
+import { fileStorage } from "@app/services/fileStorage";
 import { sourcePathForFile } from "@app/services/fileImportPaths";
-import { isPristineLocalPassthrough } from "@app/services/pruneMissingRecentFiles";
+import {
+  hasLocalRecord,
+  isPristineLocalPassthrough,
+} from "@app/services/pruneMissingRecentFiles";
 import {
   cancelDiskConflict,
   requestDiskConflictChoice,
@@ -126,6 +131,58 @@ export async function sourceLinkForNewFile(
     localFilePath,
     ...(state.availability === "present" ? diskBaseline(state) : {}),
   };
+}
+
+/** A record holding exactly what disk holds at `path` now and nothing of its
+ *  own, so reopening it loses nothing that storing the file again would keep. */
+function isStoredCopyOf(
+  stub: StirlingFileStub,
+  path: string,
+  state: PresentDiskFileState,
+): boolean {
+  return (
+    stub.localFilePath === path &&
+    hasLocalRecord(stub) &&
+    isPristineLocalPassthrough(stub) &&
+    !stub.dataUnavailable &&
+    !stub.orphanedFilePath &&
+    !stub.diskConflictAt &&
+    stub.size === state.size &&
+    !hasDiskChanged(stub, state)
+  );
+}
+
+export async function storedCopiesForNewFiles(
+  files: File[],
+): Promise<Map<File, StirlingFileStub>> {
+  const copies = new Map<File, StirlingFileStub>();
+  await Promise.all(
+    files.map(async (file) => {
+      // A file whose lookup fails is stored again: the caller opens every file
+      // left out of the map, so one bad read must not keep the others shut.
+      try {
+        const path = await sourcePathForFile(file);
+        if (!path) return;
+        const state = await getDiskFileState(path);
+        if (state.availability !== "present" || file.size !== state.size)
+          return;
+        const [newest] = (await fileStorage.getLeafStubsNamed(file.name))
+          .filter((stub) => isStoredCopyOf(stub, path, state))
+          .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+        // Hydration drops a stub whose bytes it cannot serve, and by then the
+        // caller has let go of the disk file: only offer a copy servable now.
+        if (newest && (await fileStorage.getStirlingFile(newest.id))) {
+          copies.set(file, newest);
+        }
+      } catch (error) {
+        console.warn(
+          `[storedCopiesForNewFiles] lookup failed for ${file.name}; storing it again`,
+          error,
+        );
+      }
+    }),
+  );
+  return copies;
 }
 
 export async function reconcileBeforeOpen(
