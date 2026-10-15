@@ -75,6 +75,8 @@ export interface ReviewStepConfig<TParams = unknown> {
   title: string;
   onFileClick?: (file: File) => void;
   onUndo?: () => void;
+  /** Rendered above the results, for an outcome the files alone do not explain. */
+  notice?: React.ReactNode;
   testId?: string;
 }
 
@@ -122,6 +124,7 @@ export function createToolFlow<TParams = unknown>(
             isCollapsed: config.files.isCollapsed,
             minFiles: config.files.minFiles,
             onCollapsedClick: config.files.onCollapsedClick,
+            showUnavailableFiles: !config.review.isVisible,
           })}
 
         {/* Middle Steps */}
@@ -200,6 +203,7 @@ export function createToolFlow<TParams = unknown>(
           title: config.review.title,
           onFileClick: config.review.onFileClick,
           onUndo: config.review.onUndo,
+          notice: config.review.notice,
         })}
       </ToolStepProvider>
     </Stack>

@@ -9,6 +9,10 @@ import { isEmptyOutput } from "@app/services/errorUtils";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 import type { StirlingFile, FileId } from "@app/types/fileContext";
 import { isSignupRequiredError } from "@app/utils/toolErrorHandler";
+import {
+  prepareUnlockedFile,
+  protectUnlockedResults,
+} from "@app/services/pdfSessionUnlock";
 
 /** An input that did not survive the batch, with the error it failed on. */
 export interface FailedInput {
@@ -80,7 +84,8 @@ export const useToolApiCalls = <TParams = void>() => {
         onStatus(`Processing ${file.name} (${i + 1}/${total})`);
 
         try {
-          const formData = config.buildFormData(params, file);
+          const workingFile = await prepareUnlockedFile(file, endpoint);
+          const formData = config.buildFormData(params, workingFile);
           console.debug("[processFiles] POST", { endpoint, name: file.name });
           const response = await apiClient.post(endpoint, formData, {
             responseType: "blob",
@@ -118,7 +123,9 @@ export const useToolApiCalls = <TParams = void>() => {
             }
             continue;
           }
-          processedFiles.push(...responseFiles);
+          processedFiles.push(
+            ...(await protectUnlockedResults(responseFiles, [file], endpoint)),
+          );
           // record source id as successful
           successSourceIds.push(file.fileId);
           console.debug("[processFiles] Success", {

@@ -18,6 +18,10 @@ import type {
 import { readUtf16 } from "@app/services/pdfiumService";
 import { registerEmbeddedFace } from "@app/tools/pdfTextEditor/util/embeddedFace";
 import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import {
+  ARTIFACT_TAG,
+  readTagMarks,
+} from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 /** PDFium page-object type constants - mirrors `public/fpdf_edit.h`. */
 const FPDF_PAGEOBJ_TEXT = 1;
@@ -413,6 +417,9 @@ function walkObjects(
       if (run) {
         run.containerPtr = containerPtr;
         run.topLevelContainerPtr = topLevelContainerPtr;
+        // A form's MCIDs resolve against its own /StructParents, not the
+        // page's, so carrying them onto page-level re-emits would mis-tag.
+        if (path.length === 0) run.tagMarks = readTagMarks(m, objPtr);
         runs.push(run);
       }
     } else if (type === FPDF_PAGEOBJ_PATH) {
@@ -1054,6 +1061,8 @@ function readImage(
   if (!localBounds) return null;
   const localMatrix = readMatrix(m, objPtr);
   const ident = isIdentity(transform);
+  // A form XObject's MCIDs are not the page's, so only page-level images are tagged.
+  const tags = containerPtr === 0 ? readTagMarks(m, objPtr) : [];
   return new ImageObject({
     id: `p${page.index}-i${index}`,
     pageIndex: page.index,
@@ -1061,5 +1070,7 @@ function readImage(
     bounds: ident ? localBounds : transformRect(transform, localBounds),
     matrix: ident ? localMatrix : composeAffine(transform, localMatrix),
     containerPtr,
+    mcid: [...tags].reverse().find((t) => t.mcid !== null)?.mcid ?? undefined,
+    artifact: tags.some((t) => t.name === ARTIFACT_TAG) || undefined,
   });
 }

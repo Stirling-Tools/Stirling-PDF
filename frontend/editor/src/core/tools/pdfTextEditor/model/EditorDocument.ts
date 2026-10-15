@@ -5,6 +5,13 @@ import {
   openRawDocument,
 } from "@app/services/pdfiumService";
 import { Page } from "@app/tools/pdfTextEditor/model/Page";
+import {
+  PageStructure,
+  type StructureElement,
+} from "@app/tools/pdfTextEditor/model/PageStructure";
+import type { StructureEdit } from "@app/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
+import { readPageStructure } from "@app/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
+import { readFileStructure } from "@app/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import { FontRef } from "@app/tools/pdfTextEditor/model/FontRef";
 import { prepareForEditing } from "@app/tools/pdfTextEditor/pdfdoc/prepareForEditing";
@@ -24,6 +31,9 @@ export class EditorDocument {
   /** Empty when the file was too large to keep a second copy of. */
   readonly openedBytes: Uint8Array;
   private readonly pageCache: Map<number, Page>;
+  private readonly structureCache = new Map<number, PageStructure>();
+  /** Each page's elements from the file's own ParentTree; null when only PDFium's view is available. */
+  private readonly fileStructure: Map<number, StructureElement[]> | null;
   private readonly ownedFonts: Map<string, FontRef>;
   private _disposed: boolean;
   // Form-fill environment. Widgets with no appearance stream are drawn ONLY by
@@ -38,10 +48,12 @@ export class EditorDocument {
     module: WrappedPdfiumModule,
     docPtr: number,
     openedBytes: Uint8Array,
+    fileStructure: Map<number, StructureElement[]> | null,
   ) {
     this.module = module;
     this.docPtr = docPtr;
     this.openedBytes = openedBytes;
+    this.fileStructure = fileStructure;
     this.pageCache = new Map();
     this.ownedFonts = new Map();
     this._disposed = false;
@@ -58,7 +70,11 @@ export class EditorDocument {
     // PDFium already holds its own heap copy, so retaining these doubles the
     // footprint; past a point the gradient repair is not worth that.
     const keep = prepared.length <= MAX_RETAINED_BYTES ? prepared : EMPTY;
-    return new EditorDocument(module, docPtr, keep);
+    const fileStructure =
+      keep.length > 0 && module.FPDFCatalog_IsTagged(docPtr)
+        ? await readFileStructure(keep).catch(() => null)
+        : null;
+    return new EditorDocument(module, docPtr, keep, fileStructure);
   }
 
   /** Page indices whose content stream has been regenerated this session. */
@@ -136,6 +152,42 @@ export class EditorDocument {
     return page;
   }
 
+  /**
+   * The page's structure elements and their unsaved edits.
+   */
+  structure(pageIndex: number): PageStructure {
+    const cached = this.structureCache.get(pageIndex);
+    if (cached) return cached;
+    // PDFium's tree is the fallback, read-only: its MCIDs carry no page, so
+    // an edit made through it could land on the wrong element.
+    const structure = this.fileStructure
+      ? new PageStructure(this.fileStructure.get(pageIndex) ?? [])
+      : new PageStructure(
+          readPageStructure(this.module, this.page(pageIndex).pagePtr),
+          this.encrypted()
+            ? "the file is encrypted"
+            : "the file's tags could not be read for editing",
+        );
+    this.structureCache.set(pageIndex, structure);
+    return structure;
+  }
+
+  private encrypted(): boolean {
+    try {
+      // -1 when the file has no security handler.
+      return this.module.FPDF_GetSecurityHandlerRevision(this.docPtr) >= 0;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Every unsaved structure edit, in the form the save pass takes. */
+  structureEdits(): StructureEdit[] {
+    return [...this.structureCache].flatMap(([pageIndex, structure]) =>
+      structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
+    );
+  }
+
   registerOwnedFont(font: FontRef): void {
     this.ownedFonts.set(font.id, font);
   }
@@ -180,6 +232,7 @@ export class EditorDocument {
       }
     }
     this.pageCache.clear();
+    this.structureCache.clear();
     for (const font of this.ownedFonts.values()) {
       font.dispose();
     }
