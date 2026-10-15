@@ -46,6 +46,10 @@ export function DesktopDownloadStep({ onBack }: DesktopDownloadStepProps) {
   }));
 
   const download = () => {
+    if (target.guide) {
+      window.open(target.url, "_blank", "noopener,noreferrer");
+      return;
+    }
     startDownload(target.url);
     setDownloaded(true);
   };
@@ -89,14 +93,24 @@ export function DesktopDownloadStep({ onBack }: DesktopDownloadStepProps) {
         variant={downloaded ? "secondary" : "primary"}
         fat
         fullWidth
-        leftSection={<Icon name="download" size={18} />}
+        leftSection={
+          <Icon name={target.guide ? "external-link" : "download"} size={18} />
+        }
         onClick={download}
       >
-        {downloaded
-          ? t("runLocation.desktop.downloadAgain", "Download again")
-          : t("runLocation.desktop.download", "Download for {{platform}}", {
-              platform: platformName,
-            })}
+        {target.guide
+          ? t(
+              "runLocation.desktop.guide",
+              "Open the {{platform}} install guide",
+              {
+                platform: platformName,
+              },
+            )
+          : downloaded
+            ? t("runLocation.desktop.downloadAgain", "Download again")
+            : t("runLocation.desktop.download", "Download for {{platform}}", {
+                platform: platformName,
+              })}
       </Button>
     </RunLocationStepLayout>
   );
