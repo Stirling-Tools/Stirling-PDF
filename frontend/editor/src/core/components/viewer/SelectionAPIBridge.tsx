@@ -37,6 +37,14 @@ export function SelectionAPIBridge({ canCopy = false }: { canCopy?: boolean }) {
   const textLookupRef = useRef(0);
 
   useEffect(() => {
+    return () => {
+      hasSelectionRef.current = false;
+      selectedTextRef.current = "";
+      textLookupRef.current += 1;
+    };
+  }, [activeDocumentId]);
+
+  useEffect(() => {
     if (!selection || !documentReady) return;
 
     // begin/update/end + getOrLoadGeometry are runtime-public but typed private;
