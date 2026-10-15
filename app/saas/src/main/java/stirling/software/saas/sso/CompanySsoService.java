@@ -81,8 +81,8 @@ public class CompanySsoService {
                 connection != null && connection.active(),
                 connection != null && connection.testedBy() != null,
                 connection == null ? List.of() : store.connectedUsers(teamId),
-                supabase.getIssuer() + "/saml/metadata",
-                supabase.getIssuer() + "/saml/acs");
+                supabase.getIssuer() + "/sso/saml/metadata",
+                supabase.getIssuer() + "/sso/saml/acs");
     }
 
     /** Serialises configuration changes with activation and invalidates tests of older metadata. */

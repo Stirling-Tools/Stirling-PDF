@@ -1,0 +1,30 @@
+name: stirling-enterprise-sso-lab
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.0
+    command: [start-dev, --import-realm]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: lab-admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${LAB_ADMIN_PASSWORD:?Run the lab init command}
+      KC_HOSTNAME: http://localhost:18080
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "127.0.0.1:18080:8080"
+    volumes:
+      - ../../.test-state/enterprise-sso/realm.json:/opt/keycloak/data/import/enterprise-sso-lab-realm.json:ro
+      - keycloak-data:/opt/keycloak/data
+    healthcheck:
+      test:
+        [
+          CMD-SHELL,
+          "bash -c 'exec 3<>/dev/tcp/localhost/9000; printf \"GET /health/ready HTTP/1.0\\r\\n\\r\\n\" >&3; cat <&3 | grep -q UP'",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 30s
+
+volumes:
+  keycloak-data:

@@ -63,6 +63,8 @@ Source-level findings are observations of current code, not promises of a stable
 
 ## Deployment and review
 
+Use the [enterprise SaaS SAML lab](../../testing/enterprise-sso/README.md) for a repeatable Keycloak environment and real browser acceptance script. It checks the live Supabase metadata, original-owner conversion, activation, team admission, removal and refresh, and can also pause for an Entra test application's sign-in/MFA.
+
 MCP's separate authentication chain applies the same company SSO policy through a mandatory SaaS authentication policy. Personal API keys and ordinary-login tokens cannot access managed accounts. OAuth-mode requests must also validate against the application's Supabase decoder, then resolve the canonical account by subject and identity binding; configurable username claims and `requireExistingAccount=false` cannot bypass this. An admitted company JWT retains its scope authorities and is forwarded to allowlisted local PDF-tool endpoints instead of using a personal API key. Membership and session checks apply on each request, including after removal and rejoining. Self-hosted MCP retains its configured username mapping and API-key behavior.
 
 For SaaS MCP, configure the Supabase issuer/JWKS and accepted audience as required by the MCP deployment. A managed user's client must supply a company session admitted by the web SSO ceremony. These backend checks do not add a company sign-in flow to MCP clients; verify the intended client's ability to obtain and renew such a session in staging.

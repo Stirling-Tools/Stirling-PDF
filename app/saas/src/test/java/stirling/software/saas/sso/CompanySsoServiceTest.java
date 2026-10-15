@@ -51,10 +51,11 @@ class CompanySsoServiceTest {
     ProcurementQuoteRepository quotes = mock(ProcurementQuoteRepository.class);
     SupabaseSamlAdmin admin = mock(SupabaseSamlAdmin.class);
     CompanySsoProperties properties = new CompanySsoProperties();
+    SupabaseConfigurationProperties supabase = new SupabaseConfigurationProperties();
     CompanySsoService service =
             new CompanySsoService(
                     properties,
-                    new SupabaseConfigurationProperties(),
+                    supabase,
                     store,
                     mock(CompanySsoPolicy.class),
                     admin,
@@ -78,6 +79,7 @@ class CompanySsoServiceTest {
 
     @BeforeEach
     void setup() {
+        supabase.setIssuer("https://project.supabase.co/auth/v1");
         properties.setEnabled(true);
         team.setId(7L);
         team.setName("Company");
@@ -100,6 +102,14 @@ class CompanySsoServiceTest {
         when(memberships.findByTeamIdAndUserId(7L, 4L)).thenReturn(Optional.of(membership));
         connection(true, 1);
         attempt(null, 1, now.plusSeconds(600));
+    }
+
+    @Test
+    void settingsUseTheSupabaseSsoMetadataAndAssertionEndpoints() {
+        var settings = service.settings(original());
+        assertThat(settings.entityId())
+                .isEqualTo("https://project.supabase.co/auth/v1/sso/saml/metadata");
+        assertThat(settings.acsUrl()).isEqualTo("https://project.supabase.co/auth/v1/sso/saml/acs");
     }
 
     @Test
