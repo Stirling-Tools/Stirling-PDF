@@ -1,7 +1,9 @@
 package stirling.software.proprietary.security.service;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -20,6 +22,11 @@ import tools.jackson.databind.ObjectMapper;
  * Checks that an OpenID Connect issuer answers discovery. OAuth sign-in and MCP's OAuth mode both
  * read {@code <issuer>/.well-known/openid-configuration}; an issuer that does not answer stops
  * sign-in from being registered, so the setup wizard checks it before saving.
+ *
+ * <p>The admin chooses the host, so this is a bounded SSRF surface that only ever answers true or
+ * false. Loopback and private hosts are allowed because a self-hosted identity provider usually
+ * lives on one. Link-local addresses, which include the cloud metadata service, are refused, and
+ * redirects are not followed, so a redirect cannot move the request onto one.
  */
 @Service
 @Slf4j
@@ -36,7 +43,7 @@ public class IssuerDiscoveryProbe {
         this(
                 HttpClient.newBuilder()
                         .connectTimeout(TIMEOUT)
-                        .followRedirects(HttpClient.Redirect.NORMAL)
+                        .followRedirects(HttpClient.Redirect.NEVER)
                         .build(),
                 objectMapper);
     }
@@ -51,16 +58,22 @@ public class IssuerDiscoveryProbe {
      * throws: an unreachable, slow or malformed issuer is simply false.
      */
     public boolean answersDiscovery(String issuer) {
+        if (issuer == null) {
+            return false;
+        }
         URI discovery;
         try {
-            URI base = URI.create(issuer.trim().replaceAll("/+$", ""));
+            URI base = URI.create(withoutTrailingSlashes(issuer.trim()));
             String scheme =
                     base.getScheme() == null ? "" : base.getScheme().toLowerCase(Locale.ROOT);
             if (!scheme.equals("http") && !scheme.equals("https") || base.getHost() == null) {
                 return false;
             }
+            if (resolvesToLinkLocal(base.getHost())) {
+                return false;
+            }
             discovery = URI.create(base + DISCOVERY_PATH);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | UnknownHostException e) {
             return false;
         }
         try {
@@ -83,5 +96,25 @@ public class IssuerDiscoveryProbe {
             log.debug("Issuer discovery returned an unreadable document for {}", discovery);
             return false;
         }
+    }
+
+    // A loop rather than replaceAll("/+$"), which backtracks on long runs of slashes.
+    private static String withoutTrailingSlashes(String value) {
+        int end = value.length();
+        while (end > 0 && value.charAt(end - 1) == '/') {
+            end--;
+        }
+        return value.substring(0, end);
+    }
+
+    private static boolean resolvesToLinkLocal(String host) throws UnknownHostException {
+        for (InetAddress address : InetAddress.getAllByName(host)) {
+            if (address.isLinkLocalAddress()
+                    || address.isAnyLocalAddress()
+                    || address.isMulticastAddress()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

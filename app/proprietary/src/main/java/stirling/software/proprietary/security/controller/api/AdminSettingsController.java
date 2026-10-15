@@ -549,7 +549,7 @@ public class AdminSettingsController {
             })
     public ResponseEntity<Map<String, Object>> checkIssuer(
             @RequestBody Map<String, String> request) {
-        String issuer = request.getOrDefault("issuer", "");
+        String issuer = request.get("issuer");
         return ResponseEntity.ok(
                 Map.of("reachable", issuerDiscoveryProbe.answersDiscovery(issuer)));
     }
