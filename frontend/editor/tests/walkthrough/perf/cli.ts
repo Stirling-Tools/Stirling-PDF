@@ -47,6 +47,7 @@ import {
 } from "./collect-lighthouse";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import {
+  deriveClaims,
   deriveFindings,
   type DerivedFindings,
   type FindingGroup,
@@ -57,6 +58,7 @@ import { BUILTIN_SCENARIOS, resolveRoute } from "./scenarios";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import type {
   LighthouseRun,
+  PerfClaim,
   PerfFragment,
   PerfInteraction,
   Scenario,
@@ -233,11 +235,35 @@ function mergeFindings(
   manifest.findings = findings;
 }
 
+function mergeClaims(
+  manifest: Record<string, unknown>,
+  claims: PerfClaim[],
+): void {
+  const existing = Array.isArray(manifest.claims)
+    ? (manifest.claims as { claim?: unknown }[])
+    : [];
+  const texts = new Set(existing.map((claim) => String(claim?.claim ?? "")));
+  manifest.claims = [
+    ...existing,
+    ...claims.filter((claim) => !texts.has(claim.claim)),
+  ];
+}
+
+function mergeNotes(manifest: Record<string, unknown>, notes: string[]): void {
+  const existing = Array.isArray(manifest.notes)
+    ? (manifest.notes as unknown[]).map(String)
+    : [];
+  const seen = new Set(existing);
+  manifest.notes = [...existing, ...notes.filter((note) => !seen.has(note))];
+}
+
 function mergeIntoManifest(
   manifestPath: string,
   interaction: PerfInteraction,
   runs: LighthouseRun[],
   derived: DerivedFindings,
+  claims: PerfClaim[],
+  notes: string[],
 ): Record<string, unknown> {
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<
     string,
@@ -252,6 +278,8 @@ function mergeIntoManifest(
   manifest.performance = performance;
   if (runs.length > 0) manifest.lighthouse = lighthouse;
   mergeFindings(manifest, derived);
+  mergeClaims(manifest, claims);
+  mergeNotes(manifest, notes);
   return manifest;
 }
 
@@ -410,10 +438,22 @@ async function main(): Promise<void> {
       );
   }
 
+  // What the numbers do and do not settle. A claim whose measurement was never
+  // taken stays `not-measured` instead of reading as supported.
+  const claims = deriveClaims({
+    interaction,
+    cycles: cli.cycles,
+    lighthouse: runs,
+    backend,
+  });
+  for (const claim of claims)
+    process.stderr.write(`[perf] claim (${claim.status}): ${claim.claim}\n`);
+
   const fragment: PerfFragment & { notes: string[] } = {
     performance: { interactions: [interaction] },
     lighthouse: { runs },
     findings,
+    claims,
     notes,
   };
   const fragmentPath = join(cli.out, "perf.fragment.json");
@@ -421,7 +461,14 @@ async function main(): Promise<void> {
 
   let mergedPath: string | null = null;
   if (cli.manifest) {
-    const merged = mergeIntoManifest(cli.manifest, interaction, runs, findings);
+    const merged = mergeIntoManifest(
+      cli.manifest,
+      interaction,
+      runs,
+      findings,
+      claims,
+      notes,
+    );
     mergedPath = cli.merged ?? join(cli.out, "manifest.merged.json");
     mkdirSync(dirname(mergedPath), { recursive: true });
     writeFileSync(mergedPath, `${JSON.stringify(merged, null, 2)}\n`);
@@ -471,6 +518,7 @@ async function main(): Promise<void> {
             ),
           ]),
         ),
+        claims: claims.map((claim) => `${claim.status} ${claim.claim}`),
         fragment: fragmentPath,
         merged: mergedPath,
       },

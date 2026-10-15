@@ -21,6 +21,29 @@ export type PictureKey = (typeof PICTURE_KEYS)[number];
 
 export type FormFactor = "desktop" | "mobile";
 
+/** How one metric came to be, or failed to. Mirrors METRIC_STATES in report.py. */
+export type MetricState =
+  | "measured"
+  | "unsupported"
+  | "blocked"
+  | "not-collected"
+  | "not-applicable";
+
+/** Whether the recorded evidence settles a claim. Mirrors CLAIM_STATUSES in report.py. */
+export type ClaimStatus = "supported" | "unsupported" | "not-measured";
+
+/**
+ * A question the run was meant to answer, paired with the measurements that
+ * answer it. The report prints these beside the findings, so a claim cannot be
+ * asserted without the number that settles it.
+ */
+export interface PerfClaim {
+  claim: string;
+  status: ClaimStatus;
+  evidence: string[];
+  note: string;
+}
+
 /** One bounded, named interaction measured on one runtime/platform. */
 export interface PerfInteraction {
   id: string;
@@ -54,6 +77,8 @@ export interface PerfFragment {
   lighthouse: { runs: LighthouseRun[] };
   /** Findings derived from the measurements, appended to the manifest's own. */
   findings: DerivedFindings;
+  /** Claims derived from the measurements, appended to the manifest's own. */
+  claims: PerfClaim[];
 }
 
 /** In-page probe state installed before the app boots. */

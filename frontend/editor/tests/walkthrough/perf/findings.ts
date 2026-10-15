@@ -18,7 +18,7 @@ import type { BackendState } from "./backend";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import { round } from "./metrics";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import type { LighthouseRun, PerfInteraction } from "./types";
+import type { LighthouseRun, PerfClaim, PerfInteraction } from "./types";
 
 export type FindingSeverity = "high" | "med" | "low";
 /** How the finding got here; the report renders it as a chip. */
@@ -354,4 +354,132 @@ export function deriveFindings(context: FindingContext): DerivedFindings {
   }
   lighthouseFindings(context, findings);
   return findings;
+}
+
+/**
+ * The metric keys a claim quotes, as `key=value` entries. A key that was never
+ * recorded is written `key=absent` rather than dropped, so a claim with nothing
+ * behind it still names what was missing instead of reading as evidence-free.
+ */
+function evidenceList(
+  metrics: Record<string, unknown>,
+  keys: string[],
+): string[] {
+  return keys.map((key) =>
+    metrics[key] === undefined || metrics[key] === null
+      ? `${key}=absent`
+      : `${key}=${format(metrics[key])}`,
+  );
+}
+
+function claimOf(
+  claim: string,
+  values: (number | null)[],
+  settle: (measured: number[]) => boolean,
+  evidence: string[],
+  note: string,
+): PerfClaim {
+  const measured = values.filter((value): value is number => value !== null);
+  return {
+    claim,
+    status:
+      measured.length !== values.length
+        ? "not-measured"
+        : settle(measured)
+          ? "supported"
+          : "unsupported",
+    evidence,
+    note,
+  };
+}
+
+/**
+ * The claims these measurements do and do not settle.
+ *
+ * A claim is `supported` or `unsupported` only when the number that answers it
+ * was recorded; otherwise it is `not-measured`, because the difference between
+ * "the evidence says no" and "nothing answered this" is the whole point of the
+ * table. The last claim is deliberately unsettleable here: reuse is a property
+ * of the renderer's pool, and this harness observes the heap, not the alloy.
+ */
+export function deriveClaims(context: FindingContext): PerfClaim[] {
+  const metrics = context.interaction.metrics;
+  const runs = context.lighthouse;
+  const heapKeys = [
+    "memory.jsHeapBaselineMB",
+    "memory.jsHeapFinalMB",
+    "memory.retainedFraction",
+  ];
+  const baseline = metricNumber(metrics, "memory.jsHeapBaselineMB");
+  const final = metricNumber(metrics, "memory.jsHeapFinalMB");
+  const retained =
+    baseline === null || final === null ? null : round(final - baseline, 1);
+  const performance = runs
+    .map((run) => metricNumber(run.scores ?? {}, "performance"))
+    .filter((score): score is number => score !== null);
+
+  return [
+    claimOf(
+      "Retained JS heap returns to its baseline after the cycles",
+      [retained],
+      ([value]) => value < HEAP_RETAINED_MB,
+      evidenceList(metrics, heapKeys),
+      retained === null
+        ? "no heap counter was recorded in this window"
+        : `${retained} MB retained across ${context.cycles} cycle(s); a warm cache keeps memory by design, so this bounds the retention rather than naming its owner`,
+    ),
+    claimOf(
+      "The slowest recorded interaction stays inside the INP budget",
+      [metricNumber(metrics, "latency.durationMs")],
+      ([value]) => value <= INP_MS,
+      evidenceList(metrics, [
+        "latency.event",
+        "latency.inputDelayMs",
+        "latency.processingMs",
+        "latency.durationMs",
+      ]),
+      `the budget is ${INP_MS} ms; one interaction in one window is not a field-data percentile`,
+    ),
+    claimOf(
+      "The main thread is not blocked during the cycle",
+      [metricNumber(metrics, "rendering.blockingMs")],
+      ([value]) => value <= 0,
+      evidenceList(metrics, [
+        "rendering.longTaskCount",
+        "rendering.longestTaskMs",
+        "rendering.longTaskTotalMs",
+        "rendering.blockingMs",
+      ]),
+      "blocking is the observed long-task total for tasks over 50 ms in this window",
+    ),
+    claimOf(
+      "The audited route meets the Lighthouse performance budget",
+      runs.length === 0 ? [null] : performance,
+      (values) => values.every((value) => value >= SCORE_BUDGET),
+      runs.length === 0
+        ? ["lighthouse.runs=absent"]
+        : runs.map(
+            (run) =>
+              `lighthouse.runs[${run.route}].scores.performance=${String(
+                run.scores?.performance ?? "not scored",
+              )}`,
+          ),
+      runs.length === 0
+        ? "no audit ran, so nothing answers this"
+        : `the budget is ${SCORE_BUDGET}; a single dev-server audit bounds this build, not the deployed one`,
+    ),
+    {
+      claim: "Raster storage is reused across cycles rather than reallocated",
+      status: "not-measured",
+      evidence: evidenceList(metrics, [
+        "memory.jsHeapPeakMB",
+        "memory.jsHeapFinalMB",
+      ]),
+      note:
+        "reuse is a property of the renderer's raster pool: it needs allocation " +
+        "counters or pool instrumentation after warm-up, and this harness records " +
+        "only heap and DOM counters, so the heap figures bound the outcome without " +
+        "showing the mechanism",
+    },
+  ];
 }

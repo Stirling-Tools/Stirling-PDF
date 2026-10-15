@@ -38,7 +38,7 @@ import {
   writeSettleConfig,
 } from "./collect-lighthouse";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import { deriveFindings } from "./findings";
+import { deriveClaims, deriveFindings } from "./findings";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import {
   domStats,
@@ -65,7 +65,12 @@ import { assertSerializable } from "./serialize";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
 import { matchStubPath, startStubBackend, stubFor } from "./stub-backend";
 // oxlint-disable-next-line no-restricted-imports -- harness runs in node, outside the app aliases
-import type { CdpSnapshot, PageProbe, PerfInteraction } from "./types";
+import type {
+  CdpSnapshot,
+  LighthouseRun,
+  PageProbe,
+  PerfInteraction,
+} from "./types";
 
 const HERE = import.meta.dirname;
 const REPORT_PY = resolve(
@@ -858,6 +863,19 @@ async function fragmentRoundTrip(): Promise<void> {
     const manifest = {
       feature: "harness self-test",
       generated: "now",
+      coverage: {
+        expected: ["desktop-web"],
+        mode: "partial",
+        decisions: [
+          {
+            platform: "windows-tauri",
+            status: "deferred",
+            reason:
+              "self-test: the webview loads this code but no Tauri runner exists here",
+            basis: ["selftest.ts"],
+          },
+        ],
+      },
       views: [
         {
           id: "editor",
@@ -891,11 +909,22 @@ async function fragmentRoundTrip(): Promise<void> {
             window:
               "idle 4000 ms baseline + 5x open/use/close + 4000 ms recovery",
             provenance: { instrumentation: "selftest", build: "selftest" },
-            metrics: { "rendering.longTaskCount": 0 },
+            metrics: {
+              "rendering.longTaskCount": 0,
+              states: { "renderer.poolBytes": "blocked" },
+            },
             pictures: { timeline: "pic-timeline.png" },
           },
         ],
       },
+      claims: [
+        {
+          claim: "retained storage is bounded",
+          status: "not-measured",
+          evidence: ["metrics.rendering.longTaskCount=0"],
+          note: "written by the harness self-test",
+        },
+      ],
       lighthouse: {
         runs: [
           {
@@ -1207,6 +1236,140 @@ function findings(): void {
 }
 
 /**
+ * A claim is the other half of a verdict: a number can be quoted correctly and
+ * still not answer the question the change was asked. The self-test pins which
+ * statements the harness is allowed to make, and that an unanswered one says so
+ * instead of reading as supported.
+ */
+function claims(): void {
+  const healthy: BackendState = {
+    ok: true,
+    source: "live",
+    endpoint: "http://127.0.0.1:8080/api/v1/config/app-config",
+    detail: "answered 200",
+  };
+  const interaction = (metrics: Record<string, unknown>): PerfInteraction => ({
+    id: "selftest",
+    name: "self-test interaction",
+    platform: "desktop-web",
+    window: "self-test window",
+    provenance: { instrumentation: "selftest" },
+    metrics,
+  });
+  const audit = (performance: number): LighthouseRun => ({
+    route: "/editor",
+    formFactor: "desktop",
+    mode: "selftest",
+    platform: "desktop-web",
+    environment: { lighthouse: "selftest" },
+    scores: { performance },
+  });
+  const derived = (
+    metrics: Record<string, unknown>,
+    runs: LighthouseRun[] = [],
+  ): ReturnType<typeof deriveClaims> =>
+    deriveClaims({
+      interaction: interaction(metrics),
+      cycles: 5,
+      lighthouse: runs,
+      backend: healthy,
+    });
+
+  const quiet = derived(
+    {
+      "memory.jsHeapBaselineMB": 40,
+      "memory.jsHeapFinalMB": 41,
+      "rendering.blockingMs": 0,
+      "latency.durationMs": 20,
+    },
+    [audit(95)],
+  );
+  equal(
+    "a claim with a measurement behind it is supported",
+    quiet.filter((claim) => claim.status === "supported").length,
+    4,
+  );
+  equal(
+    "only the reuse claim is left unanswered by these numbers",
+    quiet.filter((claim) => claim.status === "not-measured").length,
+    1,
+  );
+  check(
+    "reuse is not claimed from heap counters",
+    quiet
+      .find((claim) => claim.claim.startsWith("Raster storage is reused"))
+      ?.note.includes("raster pool") === true,
+  );
+
+  const retained = derived({
+    "memory.jsHeapBaselineMB": 24.5,
+    "memory.jsHeapFinalMB": 54.2,
+  });
+  const heap = retained.find((claim) =>
+    claim.claim.startsWith("Retained JS heap"),
+  );
+  equal(
+    "retention over the budget contradicts the claim",
+    heap?.status,
+    "unsupported",
+  );
+  check(
+    "the contradicted claim quotes the numbers that contradicted it",
+    (heap?.evidence ?? []).some((entry) =>
+      entry.startsWith("memory.jsHeapFinalMB"),
+    ),
+    (heap?.evidence ?? []).join(", "),
+  );
+  check(
+    "the note says what the retention bound does not prove",
+    heap?.note.includes("bounds the retention") === true,
+    heap?.note,
+  );
+
+  const blocked = derived({ "rendering.blockingMs": 371 });
+  equal(
+    "a blocked main thread contradicts the responsiveness claim",
+    blocked.find((claim) =>
+      claim.claim.startsWith("The main thread is not blocked"),
+    )?.status,
+    "unsupported",
+  );
+
+  const unmeasured = derived({});
+  equal(
+    "a claim whose metric was never recorded is not measured",
+    unmeasured.filter((claim) => claim.status === "not-measured").length,
+    5,
+  );
+  check(
+    "an unmeasured claim says what was missing",
+    unmeasured
+      .find((claim) => claim.claim.startsWith("Retained JS heap"))
+      ?.note.includes("no heap counter") === true,
+  );
+  check(
+    "an unmeasured claim names the absent keys rather than dropping them",
+    (
+      unmeasured.find((claim) =>
+        claim.claim.startsWith("The slowest recorded interaction"),
+      )?.evidence ?? []
+    ).some((entry) => entry.endsWith("=absent")),
+  );
+  check(
+    "a claim with no audit behind it names the missing run",
+    unmeasured
+      .find((claim) => claim.claim.startsWith("The audited route"))
+      ?.evidence.includes("lighthouse.runs=absent") === true,
+  );
+  check(
+    "no audit means nothing answers the budget claim",
+    unmeasured
+      .find((claim) => claim.claim.startsWith("The audited route"))
+      ?.note.includes("no audit ran") === true,
+  );
+}
+
+/**
  * The stub backend is what makes an audit see the feature instead of an error
  * screen, so its routing and the server it actually starts are both checked: a
  * matcher that answers the wrong path is worse than no stub at all.
@@ -1305,6 +1468,13 @@ async function findingsTabRenders(reportPath: string): Promise<void> {
         "metrics.selftest=1",
       ),
     );
+    check(
+      "an excluded platform's reason reaches the report, not just the manifest",
+      (await pane.locator(".matrix").innerText()).includes(
+        "the webview loads this code but no Tauri runner exists here",
+      ),
+      await pane.locator(".matrix").innerText(),
+    );
   } finally {
     await browser.close();
   }
@@ -1313,6 +1483,7 @@ async function findingsTabRenders(reportPath: string): Promise<void> {
 reductions();
 probeScript();
 findings();
+claims();
 await stubBackend();
 await chartsAndRaster();
 lighthouseResolver();

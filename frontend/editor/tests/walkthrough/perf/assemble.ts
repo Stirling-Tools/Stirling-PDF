@@ -147,6 +147,10 @@ export async function assembleInteraction(
   const cycles = cycleRows(sample);
   const span = windowSpan(sample);
   const unavailable: string[] = [];
+  // How each metric came to be, or failed to. A key with no value at all is
+  // still a fact worth recording: `blocked` and `not-collected` say why the
+  // number is missing, which is not the same as a measured zero.
+  const states: Record<string, string> = {};
   const longTasks = longTaskStats(sample.probe.longTasks);
   const dom = domStats(sample.samples);
   const heap = heapStats(sample.samples);
@@ -219,6 +223,20 @@ export async function assembleInteraction(
     metrics["rendering.framesRendered"] = delta.frames;
   } else {
     unavailable.push("CPU/rendering counters (no CDP snapshot was captured)");
+    // The counters exist in the protocol; the run never got a snapshot to read
+    // them from, so nothing about the page blocked them.
+    for (const key of [
+      "cpu.taskDurationMs",
+      "cpu.scriptDurationMs",
+      "cpu.scriptShareOfTask",
+      "rendering.layoutCount",
+      "rendering.recalcStyleCount",
+      "rendering.layoutMs",
+      "rendering.recalcStyleMs",
+      "rendering.framesRendered",
+    ]) {
+      states[key] = "blocked";
+    }
   }
   metrics["rendering.longTaskCount"] = longTasks.count;
   metrics["rendering.longestTaskMs"] = longTasks.longestMs;
@@ -235,6 +253,16 @@ export async function assembleInteraction(
     unavailable.push(
       "interaction latency (event timing reported no interaction in this window)",
     );
+    // The scenario drove no input this window, so the browser never observed an
+    // interaction to time: not collected, not blocked.
+    for (const key of [
+      "latency.event",
+      "latency.inputDelayMs",
+      "latency.processingMs",
+      "latency.durationMs",
+    ]) {
+      states[key] = "not-collected";
+    }
   }
   metrics["network.requests"] = sample.probe.resources.length;
   metrics["network.knownBytes"] = sizes.knownBytes;
@@ -250,6 +278,16 @@ export async function assembleInteraction(
   metrics["window.totalMs"] = round(span);
   metrics["window.samples"] = sample.samples.length;
   if (hotspot) metrics["cpu.hotspots"] = hotspot;
+
+  // Everything the run recorded is `measured`; a key that is present but null
+  // says the browser could not report it. States recorded in the branches above
+  // stand, and prose keys are left out: a sentence is not a measurement.
+  for (const [key, value] of Object.entries(metrics)) {
+    if (states[key] || key.endsWith(".note") || key === "harness.api") continue;
+    states[key] =
+      value === null || value === undefined ? "unsupported" : "measured";
+  }
+  metrics["states"] = states;
 
   const pictures: Record<string, string> = {};
   const suffix = `${options.scenario.platform}-${options.scenario.id}`;
