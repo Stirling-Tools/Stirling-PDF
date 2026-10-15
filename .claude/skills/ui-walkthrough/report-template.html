@@ -1,790 +1,311 @@
 <!doctype html>
 <!--
-  Standalone ui-walkthrough report. `scripts/report.py build` swaps the data
-  placeholder below for the run's manifest, inlines the screenshots and
-  thumbnails as data URIs, and runs `self-test` over the result. Keep every
-  pane and id in sync with report.py's TEMPLATE_IDS.
+  UI Walkthrough report template (self-contained, works from file://).
+  The ui-walkthrough skill replaces the JSON in the window.__WALKTHROUGH__ data
+  block below with the captured manifest. Do not add external CDN deps - it must open offline.
+
+  Data shape:
+  {
+    "feature": "Compress PDF tool",
+    "branch": "claude/...",
+    "generated": "2026-06-21",
+    "views": [
+      { "id": "01_empty", "title": "Empty state",
+        "light": "screenshots/compress/01_empty_light.png",
+        "dark":  "screenshots/compress/01_empty_dark.png",
+        "viewport": "1600x900",
+        "notes": ["Heading is centered", "Primary CTA below the fold on mobile"] }
+    ],
+    "findings": {
+      "visual": [ { "severity":"high", "view":"01_empty", "title":"...", "detail":"...", "fix":"..." } ],
+      "ux":     [ { "severity":"med",  "view":"03_dialog", "title":"...", "detail":"...", "fix":"..." } ]
+    }
+  }
 -->
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>UI walkthrough</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>UI Walkthrough</title>
 <style>
   :root {
-    --c-bg: #f5f6f8;
-    --c-surface: #ffffff;
-    --c-border: #d7dbe0;
-    --c-text: #16181d;
-    --c-muted: #5b6472;
-    --c-accent: #3b5bdb;
-    --c-ok: #1f7a4d;
-    --c-warn: #9a5b00;
-    --c-bad: #b3261e;
-    --c-code: #eef0f4;
+    --bg: #f6f7f9; --panel: #ffffff; --panel-2: #f0f2f5; --text: #1a1b1e;
+    --muted: #6b7280; --border: #e2e5ea; --accent: #2f6fed; --accent-weak: #e8f0fe;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.06);
+    --hi: #d92d20; --med: #d98e00; --low: #2f6fed; --stage: #0b0c0e;
   }
-  [data-theme="dark"] {
-    --c-bg: #0f1115;
-    --c-surface: #171a20;
-    --c-border: #2a2f38;
-    --c-text: #e7eaef;
-    --c-muted: #9aa3b2;
-    --c-accent: #8fa6ff;
-    --c-ok: #5fcf9a;
-    --c-warn: #e0a458;
-    --c-bad: #f08a80;
-    --c-code: #1c212a;
+  html[data-theme="dark"] {
+    --bg: #0d0e10; --panel: #16181c; --panel-2: #1d2024; --text: #e6e8eb;
+    --muted: #9aa3ad; --border: #2a2e35; --accent: #5b8cff; --accent-weak: #1a2336;
+    --shadow: 0 1px 3px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4); --stage: #000;
   }
   * { box-sizing: border-box; }
-  [hidden] { display: none !important; }
-  body {
-    margin: 0;
-    background: var(--c-bg);
-    color: var(--c-text);
-    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
-  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-  header.top {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 16px 20px;
-    background: var(--c-surface);
-    border-bottom: 1px solid var(--c-border);
-    position: sticky;
-    top: 0;
-    z-index: 5;
-  }
-  h1 { font-size: 18px; margin: 0 0 4px; }
-  h2 { font-size: 16px; margin: 0 0 8px; }
-  h3 { font-size: 14px; margin: 16px 0 6px; }
-  .sub, .meta, .muted { color: var(--c-muted); font-size: 12px; }
-  .right { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
-  .chips, .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .chip {
-    border: 1px solid var(--c-border);
-    border-radius: 999px;
-    padding: 2px 9px;
-    font-size: 11px;
-    background: var(--c-bg);
-  }
-  .chip.ok { border-color: var(--c-ok); color: var(--c-ok); }
-  .chip.gap { border-color: var(--c-bad); color: var(--c-bad); }
-  .chip.warn { border-color: var(--c-warn); color: var(--c-warn); }
+  body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+         background: var(--bg); color: var(--text); }
+  header { display: flex; align-items: center; gap: 16px; padding: 12px 20px;
+           background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 15px; margin: 0; font-weight: 650; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  .spacer { flex: 1; }
+  .counter { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; }
   .tabs { display: flex; gap: 4px; }
-  .tab {
-    border: 1px solid var(--c-border);
-    background: var(--c-bg);
-    color: var(--c-text);
-    border-radius: 6px;
-    padding: 4px 10px;
-    font: inherit;
-    cursor: pointer;
-  }
-  .tab[aria-selected="true"] { border-color: var(--c-accent); color: var(--c-accent); }
-  .theme-toggle { font-size: 12px; display: flex; gap: 6px; align-items: center; }
-  main { padding: 16px 20px 40px; }
-  .pane { max-width: 1400px; }
-  #viewer-pane {
-    display: grid;
-    grid-template-columns: 132px minmax(0, 1fr) 340px;
-    gap: 16px;
-    align-items: start;
-  }
-  @media (max-width: 1100px) {
-    #viewer-pane { grid-template-columns: 100px minmax(0, 1fr); }
-    #view-meta-panel { grid-column: 1 / -1; }
-  }
-  #rail {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    max-height: 70vh;
-    overflow-y: auto;
-  }
-  .rail-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px;
-    border: 1px solid var(--c-border);
-    border-radius: 6px;
-    background: var(--c-surface);
-    cursor: pointer;
-    font: inherit;
-    text-align: left;
-  }
-  .rail-item[aria-current="true"] { border-color: var(--c-accent); }
-  .rail-item img { width: 72px; height: 45px; object-fit: cover; background: var(--c-code); border-radius: 3px; }
-  .rail-item .gapdot { width: 72px; height: 45px; border: 1px dashed var(--c-bad); border-radius: 3px; display: grid; place-items: center; color: var(--c-bad); font-size: 10px; }
-  .rail-item span { font-size: 11px; color: var(--c-muted); }
-  figure.stage { margin: 0; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 8px; padding: 10px; }
-  figure.stage img { width: 100%; border-radius: 4px; background: var(--c-code); }
-  .missing {
-    display: grid;
-    place-items: center;
-    min-height: 220px;
-    border: 1px dashed var(--c-bad);
-    border-radius: 6px;
-    color: var(--c-bad);
-    text-align: center;
-    padding: 20px;
-  }
-  aside { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 8px; padding: 12px; }
-  aside ul { margin: 6px 0; padding-left: 18px; }
-  .nav { display: flex; gap: 8px; margin-top: 12px; }
-  button { font: inherit; }
-  .btn { border: 1px solid var(--c-border); background: var(--c-bg); color: var(--c-text); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
-  table { border-collapse: collapse; width: 100%; margin: 6px 0 14px; font-size: 12px; }
-  th, td { border: 1px solid var(--c-border); padding: 4px 8px; text-align: left; vertical-align: top; }
-  th { background: var(--c-code); font-weight: 600; }
-  .card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 8px; padding: 14px; margin: 0 0 16px; }
-  .unavail { color: var(--c-warn); font-style: italic; }
-  .pill { border-radius: 999px; padding: 1px 8px; font-size: 11px; border: 1px solid currentColor; }
-  .pill.high { color: var(--c-bad); }
-  .pill.med { color: var(--c-warn); }
-  .pill.low { color: var(--c-muted); }
-  .finding { border: 1px solid var(--c-border); border-left-width: 3px; border-radius: 6px; padding: 10px; margin: 8px 0; background: var(--c-bg); }
-  .finding.high { border-left-color: var(--c-bad); }
-  .finding.med { border-left-color: var(--c-warn); }
-  .finding.low { border-left-color: var(--c-border); }
-  .provenance { margin: 6px 0 0; font-size: 12px; }
-  .provenance dt { font-weight: 600; color: var(--c-muted); float: left; clear: left; width: 150px; }
-  .provenance dd { margin: 0 0 2px 158px; }
-  .pictures { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-  .pictures figure { margin: 0; }
-  .pictures img { width: 100%; border: 1px solid var(--c-border); border-radius: 6px; background: var(--c-code); }
-  .scores { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-  .score { border: 1px solid var(--c-border); border-radius: 8px; padding: 10px; text-align: center; background: var(--c-bg); }
-  .score b { display: block; font-size: 24px; }
-  .score.good b { color: var(--c-ok); }
-  .score.avg b { color: var(--c-warn); }
-  .score.poor b { color: var(--c-bad); }
-  .banner { border: 1px solid var(--c-warn); color: var(--c-warn); background: var(--c-surface); border-radius: 8px; padding: 8px 12px; margin-bottom: 14px; }
-  pre { background: var(--c-code); padding: 8px; border-radius: 6px; overflow-x: auto; }
-  a { color: var(--c-accent); }
+  .tab { border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+         padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Light/Dark slider */
+  .theme-toggle { display: flex; align-items: center; gap: 9px; user-select: none; }
+  .theme-toggle .lbl { font-size: 12px; color: var(--muted); }
+  .theme-toggle .lbl.on { color: var(--text); font-weight: 600; }
+  .switch { position: relative; width: 52px; height: 28px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; cursor: pointer; background: var(--panel-2);
+            border: 1px solid var(--border); border-radius: 999px; transition: .2s; }
+  .slider:before { content: ""; position: absolute; height: 20px; width: 20px; left: 3px; top: 3px;
+                   background: #fbbf24; border-radius: 50%; transition: .2s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  .switch input:checked + .slider { background: var(--accent); }
+  .switch input:checked + .slider:before { transform: translateX(24px); background: #c7d2fe; }
+
+  main { display: grid; grid-template-columns: 240px 1fr; height: calc(100vh - 53px); }
+  .rail { border-right: 1px solid var(--border); overflow-y: auto; background: var(--panel); padding: 8px; }
+  .rail .group-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+                       color: var(--muted); padding: 10px 8px 4px; }
+  .thumb { display: flex; gap: 9px; align-items: center; padding: 7px; border-radius: 8px;
+           cursor: pointer; border: 1px solid transparent; }
+  .thumb:hover { background: var(--panel-2); }
+  .thumb.active { background: var(--accent-weak); border-color: var(--accent); }
+  .thumb img { width: 64px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); background: var(--stage); }
+  .thumb .t { font-size: 12.5px; line-height: 1.3; }
+  .thumb .badge { font-size: 10px; color: var(--muted); }
+  .thumb .dot { width: 7px; height: 7px; border-radius: 50%; margin-left: auto; flex: none; }
+
+  .stagewrap { display: flex; flex-direction: column; min-width: 0; }
+  .stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 22px;
+           background: var(--stage); position: relative; min-height: 0; }
+  .stage img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;
+               box-shadow: 0 4px 30px rgba(0,0,0,.4); background: #fff; }
+  html[data-theme="dark"] .stage img { background: #16181c; }
+  .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px;
+             border-radius: 50%; border: 1px solid var(--border); background: var(--panel);
+             color: var(--text); cursor: pointer; font-size: 18px; opacity: .85; }
+  .nav-btn:hover { opacity: 1; } .nav-btn.prev { left: 16px; } .nav-btn.next { right: 16px; }
+  .nav-btn:disabled { opacity: .25; cursor: default; }
+  .missing { color: var(--muted); font-size: 13px; text-align: center; }
+
+  .detail { border-top: 1px solid var(--border); background: var(--panel); padding: 14px 20px;
+            max-height: 38vh; overflow-y: auto; }
+  .detail h2 { margin: 0 0 4px; font-size: 15px; }
+  .detail .meta { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  .notes { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  .notes li { display: flex; gap: 8px; align-items: flex-start; }
+  .sev { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 999px;
+         color: #fff; flex: none; margin-top: 1px; }
+  .sev.high { background: var(--hi); } .sev.med { background: var(--med); } .sev.low { background: var(--low); }
+  .finding .fix { color: var(--muted); font-size: 12.5px; }
+  .finding .fix b { color: var(--text); font-weight: 600; }
+
+  /* Summary tab */
+  .summary { padding: 20px 28px; overflow-y: auto; }
+  .summary h2 { font-size: 16px; margin: 22px 0 8px; }
+  .summary .empty { color: var(--muted); }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+          padding: 12px 14px; margin-bottom: 8px; box-shadow: var(--shadow); }
+  .card .head { display: flex; gap: 8px; align-items: center; }
+  .card a { color: var(--accent); text-decoration: none; cursor: pointer; }
+  .hide { display: none !important; }
+  kbd { font: 11px ui-monospace, monospace; background: var(--panel-2); border: 1px solid var(--border);
+        border-radius: 4px; padding: 1px 5px; }
 </style>
 </head>
 <body>
-
-<header class="top">
+<header>
   <div>
-    <h1 id="feature-title">UI walkthrough</h1>
+    <h1 id="feature-title">UI Walkthrough</h1>
     <div class="sub" id="feature-sub"></div>
   </div>
-  <div class="right">
-    <div class="chips" id="coverage" aria-label="runtime and platform coverage"></div>
-    <div class="tabs" role="tablist" aria-label="report sections">
-      <button class="tab" type="button" role="tab" data-tab="viewer-pane" aria-selected="true">Walkthrough</button>
-      <button class="tab" type="button" role="tab" data-tab="perf-pane" aria-selected="false">Performance</button>
-      <button class="tab" type="button" role="tab" data-tab="lighthouse-pane" aria-selected="false">Lighthouse</button>
-      <button class="tab" type="button" role="tab" data-tab="summary-pane" aria-selected="false">Findings</button>
-    </div>
-    <label class="theme-toggle"><input type="checkbox" id="theme-switch"> dark theme</label>
+  <div class="spacer"></div>
+  <div class="tabs">
+    <button class="tab active" data-tab="viewer">Walkthrough</button>
+    <button class="tab" data-tab="summary">Findings</button>
   </div>
+  <div class="counter" id="counter"></div>
+  <label class="theme-toggle" title="Toggle light / dark for every screenshot">
+    <span class="lbl" id="lbl-light">Light</span>
+    <span class="switch"><input type="checkbox" id="theme-switch" /><span class="slider"></span></span>
+    <span class="lbl" id="lbl-dark">Dark</span>
+  </label>
 </header>
 
-<main>
-  <section id="viewer-pane" class="pane" role="tabpanel" aria-label="Walkthrough">
-    <div id="rail"></div>
-    <div>
-      <figure class="stage">
-        <img id="stage-img" alt="">
-        <div id="missing" class="missing" hidden></div>
-      </figure>
+<main id="viewer-pane">
+  <aside class="rail" id="rail"></aside>
+  <section class="stagewrap">
+    <div class="stage">
+      <button class="nav-btn prev" id="prev" aria-label="Previous">&#8249;</button>
+      <img id="stage-img" alt="" />
+      <div class="missing hide" id="missing"></div>
+      <button class="nav-btn next" id="next" aria-label="Next">&#8250;</button>
     </div>
-    <aside id="view-meta-panel">
-      <div class="meta" id="counter"></div>
+    <div class="detail">
       <h2 id="view-title"></h2>
       <div class="meta" id="view-meta"></div>
-      <ul id="view-notes"></ul>
-      <div class="nav">
-        <button class="btn" type="button" id="prev">&larr; previous</button>
-        <button class="btn" type="button" id="next">next &rarr;</button>
-      </div>
-      <div id="view-findings"></div>
-    </aside>
+      <ul class="notes" id="view-notes"></ul>
+    </div>
   </section>
-
-  <section id="perf-pane" class="pane" role="tabpanel" aria-label="Performance" hidden></section>
-  <section id="lighthouse-pane" class="pane" role="tabpanel" aria-label="Lighthouse" hidden></section>
-  <section id="summary-pane" class="pane" role="tabpanel" aria-label="Findings" hidden></section>
 </main>
 
-<noscript>This report needs JavaScript: it renders the manifest and the inlined screenshots.</noscript>
+<section class="summary hide" id="summary-pane"></section>
 
-<script id="data">window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated":"","build":{"mode":"unknown","instrumented":false},"coverage":{"expected":[],"captured":[]},"provenance":{"limitations":[]},"views":[],"findings":{},"performance":{"interactions":[]},"lighthouse":{"runs":[]}}/*__END__*/;</script>
-
+<script id="data">
+window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated":"","views":[],"findings":{"visual":[],"ux":[]}}/*__END__*/;
+</script>
 <script>
 (function () {
-  "use strict";
+  var D = window.__WALKTHROUGH__ || { views: [], findings: { visual: [], ux: [] } };
+  var views = D.views || [];
+  var state = { i: 0, theme: localStorage.getItem("ui-wt-theme") || "light", tab: "viewer" };
 
-  var DATA = window.__WALKTHROUGH__ || {};
-  var views = DATA.views || [];
-  var theme = "light";
-  var index = 0;
-  var shown = "viewer-pane";
+  var $ = function (id) { return document.getElementById(id); };
+  function sevClass(s) { return s === "high" ? "high" : s === "med" || s === "medium" ? "med" : "low"; }
 
-  var find = {
-    text: function (value, fallback) {
-      if (value === null || value === undefined || value === "") {
-        return fallback === undefined ? "unavailable" : fallback;
-      }
-      return String(value);
-    },
-    unit: function (value, unit) {
-      if (value === null || value === undefined || value === "") {
-        return null;
-      }
-      return String(value) + (unit ? " " + unit : "");
-    },
-    el: function (tag, attrs, children) {
-      var node = document.createElement(tag);
-      if (attrs) {
-        Object.keys(attrs).forEach(function (key) {
-          var value = attrs[key];
-          if (value === null || value === undefined || value === false) { return; }
-          if (key === "text") { node.textContent = String(value); return; }
-          if (key === "class") { node.className = String(value); return; }
-          if (key === "onClick") { node.addEventListener("click", value); return; }
-          node.setAttribute(key, String(value));
-        });
-      }
-      (children || []).forEach(function (child) {
-        if (child === null || child === undefined || child === false) { return; }
-        node.appendChild(typeof child === "string" ? document.createTextNode(child) : child);
-      });
-      return node;
-    },
-    clear: function (node) { node.textContent = ""; return node; },
-    // A metric the run did not record is "unavailable", never zero.
-    value: function (value, unit) {
-      var text = find.unit(value, unit);
-      return text === null ? find.el("span", { class: "unavail", text: "unavailable" }) : text;
-    },
-    dl: function (pairs) {
-      var list = find.el("dl", { class: "provenance" });
-      pairs.forEach(function (pair) {
-        if (pair[1] === null || pair[1] === undefined || pair[1] === "") { return; }
-        list.appendChild(find.el("dt", { text: pair[0] }));
-        list.appendChild(find.el("dd", { text: String(pair[1]) }));
-      });
-      return list;
-    },
-    link: function (href, label) {
-      if (!href) { return find.el("span", { class: "muted", text: "no artifact recorded" }); }
-      return find.el("a", { href: href, target: "_blank", rel: "noreferrer", text: label });
-    }
-  };
-
-  var GROUPS = [
-    ["visual", "Visual"],
-    ["ux", "UX"],
-    ["behavior", "Behaviour"],
-    ["a11y", "Accessibility"],
-    ["perf", "Performance"],
-    ["native", "Native"]
-  ];
-
-  var PROVENANCE = [
-    ["environment", "Environment"],
-    ["build", "Build / instrumentation"],
-    ["fixture", "Fixture"],
-    ["window", "Observation window"],
-    ["baseline", "Baseline"],
-    ["peak", "Peak"],
-    ["recovered", "Recovered"],
-    ["repeatedCycles", "Repeated cycles"],
-    ["cause", "Measured cause"],
-    ["evidence", "Raw evidence"],
-    ["picture", "Picture"],
-    ["confidence", "Confidence"],
-    ["limitations", "Limitations"],
-    ["fix", "Suggested fix"]
-  ];
-
-  // Metric groups mirror SKILL.md's performance table. A missing group is a
-  // coverage gap and reads as unavailable, not as a clean zero.
-  var METRICS = [
-    ["dom", "DOM", [["baseline", "baseline nodes"], ["peak", "peak nodes"], ["final", "final nodes"]],
-      "growth during use, and recovery after closing"],
-    ["react", "React", [["commits", "commits"], ["renderMs", "render ms"]],
-      "scoped profiler subtree; not total interaction time"],
-    ["memory", "Memory", [["jsHeapPeakMb", "JS heap peak MB"], ["retainedMb", "retained MB"], ["processPeakMb", "process peak MB"]],
-      "JS heap and native/process memory are separate numbers"],
-    ["cpu", "CPU", [["busyMs", "busy ms"], ["samples", "samples"]],
-      "when work happened, not which function caused it"],
-    ["rendering", "Rendering", [["styleRecalcMs", "style recalc ms"], ["layoutMs", "layout ms"], ["longTasks", "long tasks"], ["longestTaskMs", "longest task ms"]],
-      "tasks over 50 ms are long tasks"],
-    ["network", "Network / IPC", [["requests", "requests"], ["bytes", "bytes"], ["ipcSpans", "IPC spans"]],
-      "repeated work and native handoff overhead"],
-    ["resources", "Resources", [["activeUrls", "active URLs"], ["workers", "workers"], ["subscriptions", "subscriptions"], ["tempFiles", "temp files"]],
-      "ownership and cleanup"]
-  ];
-
-  var PICTURES = [
-    ["timeline", "Interaction timeline"],
-    ["workBreakdown", "Work breakdown"],
-    ["react", "React rendering"],
-    ["recovery", "Resource recovery"],
-    ["mainThread", "Main-thread timeline"],
-    ["hotspot", "Hotspot breakdown"],
-    ["responsiveness", "Responsiveness comparison"]
-  ];
-
-  function findingsFor(group) {
-    var all = DATA.findings || {};
-    var list = all[group];
-    return Object.prototype.toString.call(list) === "[object Array]" ? list : [];
+  function applyChrome() {
+    document.documentElement.setAttribute("data-theme", state.theme);
+    $("theme-switch").checked = state.theme === "dark";
+    $("lbl-light").classList.toggle("on", state.theme === "light");
+    $("lbl-dark").classList.toggle("on", state.theme === "dark");
   }
 
-  function allFindings() {
-    var out = [];
-    GROUPS.forEach(function (pair) {
-      findingsFor(pair[0]).forEach(function (finding) {
-        out.push({ group: pair[0], label: pair[1], data: finding });
-      });
-    });
-    return out;
-  }
+  function srcFor(v) { return v[state.theme] || null; }
 
-  function coverageGaps() {
-    var coverage = DATA.coverage || {};
-    var expected = coverage.expected || [];
-    var captured = coverage.captured || [];
-    var missing = coverage.missing;
-    if (Object.prototype.toString.call(missing) === "[object Array]") { return missing; }
-    return expected.filter(function (name) { return captured.indexOf(name) === -1; });
-  }
+  var GROUPS = [["visual", "Visual & consistency"], ["ux", "UX & ease of use"],
+    ["behavior", "Behaviour"], ["a11y", "Accessibility"], ["perf", "Performance"],
+    ["native", "Native / Tauri"]];
 
-  function currentView() { return views[index] || null; }
-
-  function imageFor(view) {
-    return view && view[theme] ? view[theme] : null;
-  }
-
-  function thumbFor(view) {
-    var thumbs = (view && view.thumbs) || {};
-    return thumbs[theme] || null;
-  }
-
-  function findingCard(entry, options) {
-    var finding = entry.data || {};
-    var severity = finding.severity || "low";
-    var card = find.el("div", { class: "finding " + severity });
-    card.appendChild(find.el("div", { class: "row" }, [
-      find.el("span", { class: "pill " + severity, text: severity }),
-      find.el("strong", { text: find.text(finding.title, "(untitled finding)") }),
-      options && options.showGroup ? find.el("span", { class: "chip", text: entry.label }) : null
-    ]));
-    if (finding.detail) { card.appendChild(find.el("p", { text: find.text(finding.detail) })); }
-    if (finding.view) {
-      var target = -1;
-      views.forEach(function (view, position) {
-        if (view && view.id === finding.view) { target = position; }
-      });
-      if (target >= 0) {
-        card.appendChild(find.el("button", {
-          class: "btn", type: "button", text: "show " + finding.view,
-          onClick: function () { showPane("viewer-pane"); go(target); }
-        }));
-      } else {
-        card.appendChild(find.el("span", { class: "chip gap", text: "view " + finding.view + " is not in this report" }));
-      }
-    }
-    card.appendChild(find.el("div", { class: "row" }, [
-      finding.evidence ? find.link(finding.evidence, "raw evidence") : null,
-      finding.picture ? find.link(finding.picture, "picture") : null
-    ]));
-    card.appendChild(find.dl(PROVENANCE.map(function (pair) { return [pair[1], finding[pair[0]]]; })));
-    return card;
-  }
-
-  function renderChrome() {
-    document.getElementById("feature-title").textContent = find.text(DATA.feature, "UI walkthrough");
-    var build = DATA.build || {};
-    var parts = [
-      DATA.branch ? "branch " + DATA.branch : null,
-      DATA.generated ? "generated " + DATA.generated : null,
-      build.mode ? "build " + build.mode : null,
-      build.instrumented === undefined ? null : "instrumented: " + (build.instrumented ? "yes" : "no"),
-      build.commit ? "commit " + build.commit : null
-    ].filter(Boolean);
-    document.getElementById("feature-sub").textContent = parts.join(" \u00b7 ");
-
-    var host = find.clear(document.getElementById("coverage"));
-    var coverage = DATA.coverage || {};
-    var expected = coverage.expected || [];
-    var captured = coverage.captured || [];
-    if (!expected.length && !captured.length) {
-      host.appendChild(find.el("span", { class: "chip gap", text: "no coverage recorded" }));
-    }
-    (expected.length ? expected : captured).forEach(function (name) {
-      var ok = captured.indexOf(name) !== -1;
-      host.appendChild(find.el("span", {
-        class: "chip " + (ok ? "ok" : "gap"),
-        title: ok ? "captured" : "expected but not captured",
-        text: name
-      }));
-    });
-    var gaps = coverageGaps();
-    if (gaps.length) {
-      host.appendChild(find.el("span", { class: "chip warn", text: "incomplete: " + gaps.length + " missing" }));
-    }
-    var count = allFindings().length;
-    var tabs = document.querySelectorAll(".tab");
-    Array.prototype.forEach.call(tabs, function (tab) {
-      if (tab.dataset.tab === "summary-pane") {
-        tab.textContent = "Findings (" + count + ")";
-      }
-    });
+  function findingsForView(id) {
+    var all = [];
+    GROUPS.forEach(function (g) { all = all.concat((D.findings && D.findings[g[0]]) || []); });
+    return all.filter(function (f) { return f.view === id; });
   }
 
   function renderRail() {
-    var rail = find.clear(document.getElementById("rail"));
+    var rail = $("rail");
+    rail.innerHTML = "";
+    if (!views.length) { rail.innerHTML = '<div class="group-label">No views captured</div>'; return; }
+    views.forEach(function (v, idx) {
+      var fs = findingsForView(v.id);
+      var worst = fs.some(function (f){return sevClass(f.severity)==="high";}) ? "var(--hi)"
+                : fs.some(function (f){return sevClass(f.severity)==="med";}) ? "var(--med)"
+                : fs.length ? "var(--low)" : "transparent";
+      var el = document.createElement("div");
+      el.className = "thumb" + (idx === state.i ? " active" : "");
+      var thumbSrc = srcFor(v);
+      el.innerHTML = (thumbSrc ? '<img src="' + thumbSrc + '" alt="" />'
+          : '<span class="badge">no ' + state.theme + '</span>') +
+        '<div><div class="t">' + (v.title || v.id) + '</div>' +
+        '<div class="badge">' + (v.viewport || "") + '</div></div>' +
+        '<span class="dot" style="background:' + worst + '"></span>';
+      el.onclick = function () { state.i = idx; render(); };
+      rail.appendChild(el);
+    });
+  }
+
+  function render() {
+    applyChrome();
     if (!views.length) {
-      rail.appendChild(find.el("div", { class: "muted", text: "no views" }));
-      return;
+      $("missing").classList.remove("hide"); $("stage-img").classList.add("hide");
+      $("missing").textContent = "No screenshots in this report yet.";
+      $("counter").textContent = ""; return;
     }
-    views.forEach(function (view, position) {
-      var thumb = thumbFor(view);
-      var item = find.el("button", {
-        class: "rail-item", type: "button",
-        "aria-current": position === index ? "true" : "false",
-        title: view.id + (thumb ? "" : " \u2014 no " + theme + " thumbnail"),
-        onClick: function () { go(position); }
-      });
-      item.appendChild(thumb
-        ? find.el("img", { src: thumb, alt: "thumbnail of " + find.text(view.title, view.id) })
-        : find.el("div", { class: "gapdot", text: "no " + theme }));
-      item.appendChild(find.el("span", { text: view.id }));
-      rail.appendChild(item);
-    });
-    var active = rail.querySelector('[aria-current="true"]');
-    if (active && active.scrollIntoView) { active.scrollIntoView({ block: "nearest" }); }
-  }
-
-  function renderStage() {
-    var view = currentView();
-    var img = document.getElementById("stage-img");
-    var missing = document.getElementById("missing");
-    var title = document.getElementById("view-title");
-    var meta = find.clear(document.getElementById("view-meta"));
-    var notes = find.clear(document.getElementById("view-notes"));
-    var counter = document.getElementById("counter");
-    var side = find.clear(document.getElementById("view-findings"));
-
-    if (!view) {
-      counter.textContent = "";
-      title.textContent = "No views captured";
-      meta.textContent = "This report carries no screenshot views; treat it as incomplete coverage.";
-      img.hidden = true;
-      img.removeAttribute("src");
-      missing.hidden = false;
-      missing.textContent = "No views captured.";
-      return;
-    }
-
-    counter.textContent = (index + 1) + " / " + views.length;
-    title.textContent = find.text(view.title, view.id);
-
-    // No silent theme fallback: a missing variant is stated, not substituted.
-    var src = imageFor(view);
+    var v = views[state.i];
+    var src = srcFor(v);
+    var img = $("stage-img");
     if (src) {
-      img.hidden = false;
-      img.src = src;
-      img.alt = find.text(view.title, view.id) + " (" + theme + ")";
-      missing.hidden = true;
-      missing.textContent = "";
+      img.classList.remove("hide"); $("missing").classList.add("hide");
+      img.src = src; img.alt = v.title || v.id;
     } else {
-      img.hidden = true;
-      img.removeAttribute("src");
-      missing.hidden = false;
-      missing.textContent = "No " + theme + " capture for this view \u2014 coverage gap, not a rendering error.";
+      img.classList.add("hide"); $("missing").classList.remove("hide");
+      $("missing").textContent = "No " + state.theme + " capture for this view — coverage gap, not a rendering error.";
     }
-
-    var themes = ["light", "dark"].map(function (name) {
-      return name + (view[name] ? "" : " (missing)");
-    }).join(", ");
-    meta.appendChild(find.el("div", {
-      text: "platform " + find.text(view.platform) + " \u00b7 viewport " + find.text(view.viewport, "unrecorded") +
-        " \u00b7 themes " + themes + " \u00b7 capture " + find.text(view.capture, "unrecorded")
-    }));
-
-    (view.notes || []).forEach(function (note) { notes.appendChild(find.el("li", { text: find.text(note) })); });
-    if (!(view.notes || []).length) { notes.appendChild(find.el("li", { class: "muted", text: "no notes recorded" })); }
-
-    allFindings().forEach(function (entry) {
-      if (entry.data && entry.data.view === view.id) { side.appendChild(findingCard(entry)); }
+    $("counter").textContent = (state.i + 1) + " / " + views.length;
+    $("view-title").textContent = v.title || v.id;
+    $("view-meta").textContent = [v.viewport, state.theme + " mode"].filter(Boolean).join("  ·  ");
+    var notes = $("view-notes"); notes.innerHTML = "";
+    var fs = findingsForView(v.id);
+    (v.notes || []).forEach(function (n) {
+      var li = document.createElement("li"); li.textContent = "· " + n; notes.appendChild(li);
     });
-  }
-
-  function renderPerformance() {
-    var pane = find.clear(document.getElementById("perf-pane"));
-    var perf = DATA.performance || {};
-    var runs = perf.interactions || [];
-    var provenance = DATA.provenance || {};
-
-    var build = DATA.build || {};
-    if (build.instrumented) {
-      pane.appendChild(find.el("div", { class: "banner", text: "Instrumented build: these numbers include profiler overhead and are not uninstrumented production performance." }));
-    }
-    pane.appendChild(find.el("h2", { text: "Performance" }));
-    pane.appendChild(find.el("p", { class: "muted", text: "Bounded sampling per required runtime/platform. Recorded separately from screenshot capture." }));
-
-    if (!runs.length) {
-      pane.appendChild(find.el("div", { class: "banner", text: "No performance recording in this report \u2014 the walkthrough is incomplete." }));
-    }
-
-    runs.forEach(function (run) {
-      var card = find.el("div", { class: "card" });
-      card.appendChild(find.el("h3", { text: find.text(run.name, run.id) }));
-      card.appendChild(find.el("div", { class: "meta", text: "platform " + find.text(run.platform) + " \u00b7 window " + find.text(run.window) }));
-      card.appendChild(find.dl(PROVENANCE.map(function (pair) {
-        return [pair[1], (run.provenance || {})[pair[0]]];
-      })));
-
-      var table = find.el("table");
-      table.appendChild(find.el("tr", {}, [
-        find.el("th", { text: "Area" }),
-        find.el("th", { text: "Recorded" }),
-        find.el("th", { text: "Interpretation" })
-      ]));
-      var metrics = run.metrics || {};
-      METRICS.forEach(function (group) {
-        var recorded = metrics[group[0]];
-        var cells = group[2].map(function (field) {
-          var value = find.value(recorded ? recorded[field[0]] : null, null);
-          return find.el("div", {}, [find.el("span", { class: "muted", text: field[1] + ": " }), value]);
-        });
-        table.appendChild(find.el("tr", {}, [
-          find.el("td", { text: group[1] }),
-          find.el("td", {}, recorded && cells.length ? cells : [find.el("span", { class: "unavail", text: "unavailable" })]),
-          find.el("td", { class: "muted", text: group[3] })
-        ]));
-      });
-      card.appendChild(table);
-
-      var pictures = run.pictures || {};
-      var names = PICTURES.map(function (pair) { return pair[0]; }).filter(function (name) {
-        return pictures[name] !== undefined && pictures[name] !== null;
-      });
-      Object.keys(pictures).forEach(function (name) {
-        if (names.indexOf(name) === -1 && pictures[name] !== undefined && pictures[name] !== null) { names.push(name); }
-      });
-      if (names.length) {
-        var grid = find.el("div", { class: "pictures" });
-        names.forEach(function (name) {
-          var picture = pictures[name];
-          var title = typeof picture === "object" && picture ? picture.title : null;
-          var src = typeof picture === "string" ? picture : (picture ? picture.src : null);
-          var caption = typeof picture === "object" && picture ? picture.caption : null;
-          var artifact = typeof picture === "object" && picture ? picture.artifact : null;
-          var label = title || (PICTURES.filter(function (pair) { return pair[0] === name; })[0] || [name, name])[1];
-          var figure = find.el("figure");
-          figure.appendChild(find.el("figcaption", { class: "meta", text: label }));
-          if (src) { figure.appendChild(find.el("img", { src: src, alt: label })); }
-          if (caption) { figure.appendChild(find.el("div", { class: "muted", text: caption })); }
-          if (artifact) { figure.appendChild(find.link(artifact, "underlying trace or measurement")); }
-          grid.appendChild(figure);
-        });
-        card.appendChild(find.el("h3", { text: "Separate performance pictures" }));
-        card.appendChild(grid);
-      } else {
-        card.appendChild(find.el("p", { class: "unavail", text: "No performance pictures recorded." }));
-      }
-      pane.appendChild(card);
+    fs.forEach(function (f) {
+      var li = document.createElement("li"); li.className = "finding";
+      li.innerHTML = '<span class="sev ' + sevClass(f.severity) + '">' + (f.severity || "note") + '</span>' +
+        '<span><b>' + (f.title || "") + '</b> — ' + (f.detail || "") +
+        (f.fix ? ' <span class="fix"><b>Fix:</b> ' + f.fix + '</span>' : '') + '</span>';
+      notes.appendChild(li);
     });
-
-    if (provenance.limitations || provenance.instrumentation || provenance.host) {
-      var card = find.el("div", { class: "card" });
-      card.appendChild(find.el("h3", { text: "Capture provenance" }));
-      card.appendChild(find.dl([
-        ["Host", provenance.host],
-        ["Instrumentation", provenance.instrumentation],
-        ["Capture", provenance.capture],
-        ["Build mode", provenance.build]
-      ]));
-      (provenance.limitations || []).forEach(function (line) {
-        card.appendChild(find.el("p", { class: "muted", text: find.text(line) }));
-      });
-      pane.appendChild(card);
-    }
-  }
-
-  function scoreCard(label, value) {
-    var band = value === null || value === undefined ? "" : (value >= 90 ? "good" : (value >= 50 ? "avg" : "poor"));
-    return find.el("div", { class: "score " + band }, [
-      find.el("b", {}, [find.value(value, null)]),
-      find.el("span", { class: "meta", text: label })
-    ]);
-  }
-
-  function renderLighthouse() {
-    var pane = find.clear(document.getElementById("lighthouse-pane"));
-    var lighthouse = DATA.lighthouse || {};
-    var runs = lighthouse.runs || [];
-    pane.appendChild(find.el("h2", { text: "Lighthouse web audit" }));
-    pane.appendChild(find.el("p", { class: "muted", text: "Separate from the Tauri runs below: a browser audit never substitutes for native desktop or mobile execution." }));
-
-    if (!runs.length) {
-      pane.appendChild(find.el("div", { class: "banner", text: "No Lighthouse audit recorded \u2014 the walkthrough is incomplete for the web entry point." }));
-    }
-
-    runs.forEach(function (run) {
-      var card = find.el("div", { class: "card" });
-      card.appendChild(find.el("h3", { text: find.text(run.formFactor) + " \u00b7 " + find.text(run.route) }));
-      card.appendChild(find.el("div", { class: "meta", text: "mode " + find.text(run.mode) }));
-      if (run.preview) { card.appendChild(find.el("img", { src: run.preview, alt: "Lighthouse summary", style: "max-width: 360px" })); }
-
-      var scores = run.scores || {};
-      card.appendChild(find.el("div", { class: "scores" }, [
-        scoreCard("Performance", scores.performance),
-        scoreCard("Accessibility", scores.accessibility),
-        scoreCard("Best practices", scores.bestPractices),
-        scoreCard("SEO", scores.seo)
-      ]));
-
-      var diagnostics = run.diagnostics || {};
-      var table = find.el("table");
-      table.appendChild(find.el("tr", {}, [find.el("th", { text: "Diagnostic" }), find.el("th", { text: "Value" })]));
-      [["lcp", "LCP"], ["cls", "CLS"], ["tbt", "Total blocking time"], ["fcp", "FCP"], ["si", "Speed index"]].forEach(function (pair) {
-        table.appendChild(find.el("tr", {}, [
-          find.el("td", { text: pair[1] }),
-          find.el("td", {}, [find.value(diagnostics[pair[0]], null)])
-        ]));
-      });
-      card.appendChild(table);
-
-      var failures = run.a11yFailures || [];
-      card.appendChild(find.el("h3", { text: "Accessibility findings" }));
-      if (!failures.length) {
-        card.appendChild(find.el("p", { class: "muted", text: "No automated accessibility failures recorded (this does not replace keyboard or screen-reader checks)." }));
-      }
-      failures.forEach(function (failure) {
-        var row = find.el("div", { class: "finding " + (failure.impact === "critical" || failure.impact === "serious" ? "high" : "med") });
-        row.appendChild(find.el("strong", { text: find.text(failure.id) }));
-        row.appendChild(find.el("p", { text: find.text(failure.description) }));
-        (failure.elements || []).forEach(function (element) {
-          row.appendChild(find.el("pre", { text: find.text(element) }));
-        });
-        card.appendChild(row);
-      });
-
-      var artifacts = run.artifacts || {};
-      card.appendChild(find.el("div", { class: "row" }, [
-        find.link(artifacts.html, "Lighthouse HTML report"),
-        find.link(artifacts.json, "Lighthouse JSON")
-      ]));
-      card.appendChild(find.dl(Object.keys(run.environment || {}).map(function (key) {
-        return [key, run.environment[key]];
-      })));
-      (run.limitations || []).forEach(function (line) {
-        card.appendChild(find.el("p", { class: "muted", text: find.text(line) }));
-      });
-      pane.appendChild(card);
-    });
+    $("prev").disabled = state.i === 0;
+    $("next").disabled = state.i === views.length - 1;
+    renderRail();
   }
 
   function renderSummary() {
-    var pane = find.clear(document.getElementById("summary-pane"));
-    pane.appendChild(find.el("h2", { text: "Findings" }));
-
-    var coverage = DATA.coverage || {};
-    var gaps = coverageGaps();
-    var coverageCard = find.el("div", { class: "card" });
-    coverageCard.appendChild(find.el("h3", { text: "Coverage" }));
-    coverageCard.appendChild(find.el("div", { class: "row" }, (coverage.expected || []).map(function (name) {
-      var ok = (coverage.captured || []).indexOf(name) !== -1;
-      return find.el("span", { class: "chip " + (ok ? "ok" : "gap"), text: name + (ok ? " \u2014 captured" : " \u2014 missing") });
-    })));
-    if (gaps.length) {
-      coverageCard.appendChild(find.el("div", { class: "banner", text: "Incomplete report: " + gaps.join(", ") + " not captured. A missing runner is reported, never silently dropped." }));
+    var pane = $("summary-pane");
+    function block(title, arr) {
+      var h = '<h2>' + title + ' (' + arr.length + ')</h2>';
+      if (!arr.length) return h + '<div class="empty">None found.</div>';
+      return h + arr.map(function (f) {
+        return '<div class="card"><div class="head">' +
+          '<span class="sev ' + sevClass(f.severity) + '">' + (f.severity || "note") + '</span>' +
+          '<b>' + (f.title || "") + '</b>' +
+          (f.view ? ' <a data-jump="' + f.view + '">' + f.view + '</a>' : '') + '</div>' +
+          '<div style="margin-top:6px">' + (f.detail || "") + '</div>' +
+          (f.fix ? '<div class="finding" style="margin-top:6px"><span class="fix"><b>Fix:</b> ' + f.fix + '</span></div>' : '') +
+          '</div>';
+      }).join("");
     }
-    var build = DATA.build || {};
-    coverageCard.appendChild(find.dl([
-      ["Build", build.mode],
-      ["Instrumented", build.instrumented === undefined ? null : (build.instrumented ? "yes" : "no")],
-      ["Commit", build.commit],
-      ["Generated", DATA.generated]
-    ]));
-    (DATA.provenance && DATA.provenance.limitations || []).forEach(function (line) {
-      coverageCard.appendChild(find.el("p", { class: "muted", text: find.text(line) }));
+    var cov = D.coverage || {};
+    var gaps = (cov.expected || []).filter(function (id) {
+      return (cov.captured || []).indexOf(id) === -1;
     });
-    pane.appendChild(coverageCard);
-
-    GROUPS.forEach(function (pair) {
-      var entries = findingsFor(pair[0]).map(function (finding) {
-        return { group: pair[0], label: pair[1], data: finding };
-      });
-      var card = find.el("div", { class: "card" });
-      card.appendChild(find.el("h3", { text: pair[1] + " (" + entries.length + ")" }));
-      if (!entries.length) {
-        card.appendChild(find.el("p", { class: "muted", text: "nothing recorded in this category" }));
-      }
-      entries.forEach(function (entry) { card.appendChild(findingCard(entry, { showGroup: false })); });
-      pane.appendChild(card);
+    pane.innerHTML = (gaps.length ? '<div class="empty">Incomplete report: no runner for ' +
+        gaps.join(", ") + '.</div>' : "") +
+      GROUPS.map(function (g) {
+        return block(g[1], (D.findings && D.findings[g[0]]) || []);
+      }).join("");
+    pane.querySelectorAll("[data-jump]").forEach(function (a) {
+      a.onclick = function () {
+        var id = a.getAttribute("data-jump");
+        var idx = views.findIndex(function (v) { return v.id === id; });
+        if (idx >= 0) { state.i = idx; setTab("viewer"); }
+      };
     });
   }
 
-  function showPane(id) {
-    shown = id;
-    ["viewer-pane", "perf-pane", "lighthouse-pane", "summary-pane"].forEach(function (pane) {
-      var node = document.getElementById(pane);
-      if (node) { node.hidden = pane !== id; }
-    });
-    Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (tab) {
-      tab.setAttribute("aria-selected", tab.dataset.tab === id ? "true" : "false");
-    });
-    if (id === "perf-pane") { renderPerformance(); }
-    if (id === "lighthouse-pane") { renderLighthouse(); }
-    if (id === "summary-pane") { renderSummary(); }
+  function setTab(t) {
+    state.tab = t;
+    document.querySelectorAll(".tab").forEach(function (b) { b.classList.toggle("active", b.dataset.tab === t); });
+    $("viewer-pane").classList.toggle("hide", t !== "viewer");
+    $("summary-pane").classList.toggle("hide", t !== "summary");
+    if (t === "viewer") $("viewer-pane").style.display = "grid";
+    if (t === "summary") renderSummary();
   }
 
-  function go(position) {
-    if (!views.length) { return; }
-    index = (position + views.length) % views.length;
-    renderStage();
-    renderRail();
-  }
-
-  function applyTheme() {
-    document.documentElement.setAttribute("data-theme", theme);
-    document.getElementById("theme-switch").checked = theme === "dark";
-    renderStage();
-    renderRail();
-  }
-
-  document.getElementById("prev").addEventListener("click", function () { go(index - 1); });
-  document.getElementById("next").addEventListener("click", function () { go(index + 1); });
-  document.getElementById("theme-switch").addEventListener("change", function (event) {
-    theme = event.target.checked ? "dark" : "light";
-    applyTheme();
+  // wiring
+  $("feature-title").textContent = D.feature || "UI Walkthrough";
+  $("feature-sub").textContent = [D.branch, D.generated].filter(Boolean).join("  ·  ");
+  $("theme-switch").onchange = function () {
+    state.theme = this.checked ? "dark" : "light";
+    localStorage.setItem("ui-wt-theme", state.theme);
+    render();
+  };
+  $("prev").onclick = function () { if (state.i > 0) { state.i--; render(); } };
+  $("next").onclick = function () { if (state.i < views.length - 1) { state.i++; render(); } };
+  document.addEventListener("keydown", function (e) {
+    if (state.tab !== "viewer") return;
+    if (e.key === "ArrowLeft") $("prev").click();
+    if (e.key === "ArrowRight") $("next").click();
+    if (e.key.toLowerCase() === "t") $("theme-switch").click();
   });
-  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (tab) {
-    tab.addEventListener("click", function () { showPane(tab.dataset.tab); });
-  });
+  document.querySelectorAll(".tab").forEach(function (b) { b.onclick = function () { setTab(b.dataset.tab); }; });
 
-  document.addEventListener("keydown", function (event) {
-    var tag = (event.target && event.target.tagName) || "";
-    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") { return; }
-    if (event.metaKey || event.ctrlKey || event.altKey) { return; }
-    if (event.key === "ArrowLeft") { go(index - 1); }
-    else if (event.key === "ArrowRight") { go(index + 1); }
-    else if (event.key === "t") { theme = theme === "dark" ? "light" : "dark"; applyTheme(); }
-    else if (event.key === "1") { showPane("viewer-pane"); }
-    else if (event.key === "2") { showPane("perf-pane"); }
-    else if (event.key === "3") { showPane("lighthouse-pane"); }
-    else if (event.key === "4") { showPane("summary-pane"); }
-    else { return; }
-    event.preventDefault();
-  });
-
-  renderChrome();
-  applyTheme();
-  showPane(shown);
+  render();
 })();
 </script>
 </body>
