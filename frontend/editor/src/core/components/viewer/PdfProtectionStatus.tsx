@@ -98,12 +98,31 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
         title={t("encryptedPdfUnlock.manageProtection", "Manage protection")}
         centered
         size="sm"
+        padding="md"
+        radius="md"
+        styles={{ body: { paddingTop: "var(--mantine-spacing-md)" } }}
+        closeButtonProps={{ "aria-label": t("close", "Close") }}
         zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
       >
         <Stack gap="md">
-          <Text fw={500} size="sm" style={{ overflowWrap: "anywhere" }}>
-            {file.name}
-          </Text>
+          <Group
+            gap="sm"
+            wrap="nowrap"
+            p="sm"
+            style={{
+              background: "var(--c-surface-raised)",
+              borderRadius: "var(--mantine-radius-md)",
+            }}
+          >
+            <Icon
+              name="lock"
+              size={20}
+              style={{ color: "var(--c-text-muted)", flexShrink: 0 }}
+            />
+            <Text size="sm" fw={500} style={{ overflowWrap: "anywhere" }}>
+              {file.name}
+            </Text>
+          </Group>
           {access.ownerAuthenticated && access.hasOwnerPassword !== false && (
             <Text size="sm">
               {t(
