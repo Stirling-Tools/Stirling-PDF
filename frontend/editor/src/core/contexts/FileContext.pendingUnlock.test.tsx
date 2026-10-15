@@ -17,9 +17,11 @@ import {
   isAwaitingUnlock,
   setPendingUnlocks,
 } from "@app/services/pendingUnlocks";
+import { holdUnlockPrompt } from "@app/services/unlockPromptHold";
 
 const observed = vi.hoisted(() => ({ heldBeforeEffects: false }));
 const id = "editor-encrypted" as FileId;
+const queuedId = "queued-encrypted" as FileId;
 
 vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => null,
@@ -51,21 +53,22 @@ vi.mock("@app/contexts/file/fileActions", async (importOriginal) => {
       async (options, _stateRef, filesRef, dispatch) => {
         const source = options.files?.[0];
         if (!source) throw new Error("No test file supplied");
-        const file = createStirlingFile(source, id);
+        const fileId = source.name === "queued.pdf" ? queuedId : id;
+        const file = createStirlingFile(source, fileId);
         const stub: StirlingFileStub = {
-          id,
+          id: fileId,
           name: file.name,
           size: file.size,
           type: file.type,
           lastModified: file.lastModified,
           isLeaf: true,
-          originalFileId: id,
+          originalFileId: fileId,
           versionNumber: 1,
           processedFile: { pages: [], isEncrypted: true },
         };
-        filesRef.current.set(id, file);
+        filesRef.current.set(fileId, file);
         dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs: [stub] } });
-        observed.heldBeforeEffects = isAwaitingUnlock(id);
+        observed.heldBeforeEffects = isAwaitingUnlock(fileId);
         return [file];
       },
     ),
@@ -135,4 +138,63 @@ describe("encrypted bytes opened by another editor", () => {
       expect(isAwaitingUnlock(id)).toBe(false);
     },
   );
+});
+
+describe("a tool that needs the original bytes", () => {
+  it("defers the unlock prompt for an upload until the tool lets go", async () => {
+    const release = holdUnlockPrompt();
+    const { result } = renderHook(() => useFileActions(), { wrapper });
+    await act(() =>
+      result.current.actions.addFiles([new File(["encrypted"], "locked.pdf")], {
+        selectFiles: false,
+      }),
+    );
+    expect(screen.queryByText("Skip unlock")).toBeNull();
+    expect(isAwaitingUnlock(id)).toBe(true);
+
+    act(() => release());
+    expect(screen.getByText("Skip unlock")).toBeVisible();
+    expect(isAwaitingUnlock(id)).toBe(true);
+  });
+
+  it("keeps a file already queued behind another prompt from opening during the hold", async () => {
+    const { result } = renderHook(() => useFileActions(), { wrapper });
+    await act(() =>
+      result.current.actions.addFiles([new File(["encrypted"], "locked.pdf")], {
+        selectFiles: false,
+      }),
+    );
+    await act(() =>
+      result.current.actions.addFiles([new File(["encrypted"], "queued.pdf")], {
+        selectFiles: false,
+      }),
+    );
+    expect(screen.getByText("Skip unlock")).toBeVisible();
+
+    let release = () => {};
+    act(() => {
+      release = holdUnlockPrompt();
+    });
+    fireEvent.click(screen.getByText("Skip unlock"));
+    expect(screen.queryByText("Skip unlock")).toBeNull();
+    expect(isAwaitingUnlock(queuedId)).toBe(true);
+
+    act(() => release());
+    expect(screen.getByText("Skip unlock")).toBeVisible();
+  });
+
+  it("leaves a file an editor already owns unprompted when it lets go", async () => {
+    const release = holdUnlockPrompt();
+    const { result } = renderHook(() => useFileActions(), { wrapper });
+    await act(() =>
+      result.current.actions.addFiles([new File(["encrypted"], "locked.pdf")], {
+        selectFiles: false,
+        skipAutomaticPasswordPrompt: true,
+      }),
+    );
+
+    act(() => release());
+    expect(screen.queryByText("Skip unlock")).toBeNull();
+    expect(isAwaitingUnlock(id)).toBe(true);
+  });
 });

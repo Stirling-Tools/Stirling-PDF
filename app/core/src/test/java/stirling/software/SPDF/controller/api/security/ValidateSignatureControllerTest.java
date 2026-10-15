@@ -2,6 +2,9 @@ package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
@@ -12,6 +15,9 @@ import java.util.List;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
+import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,6 +37,7 @@ import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
 import stirling.software.SPDF.model.api.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 
 @DisplayName("ValidateSignatureController Tests")
 @ExtendWith(MockitoExtension.class)
@@ -210,6 +217,108 @@ class ValidateSignatureControllerTest {
 
             assertNotNull(response.getBody());
             assertTrue(response.getBody().isEmpty());
+        }
+    }
+
+    @Nested
+    @DisplayName("Password Handling Tests")
+    class PasswordTests {
+
+        private byte[] encryptedPdfBytes(String password) throws IOException {
+            try (PDDocument doc = new PDDocument()) {
+                doc.addPage(new PDPage());
+                StandardProtectionPolicy policy =
+                        new StandardProtectionPolicy(password, password, new AccessPermission());
+                policy.setEncryptionKeyLength(256);
+                doc.protect(policy);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                doc.save(baos);
+                return baos.toByteArray();
+            }
+        }
+
+        private SignatureValidationRequest requestFor(byte[] pdf, String password) {
+            SignatureValidationRequest request = new SignatureValidationRequest();
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput", "locked.pdf", MediaType.APPLICATION_PDF_VALUE, pdf));
+            request.setPassword(password);
+            return request;
+        }
+
+        @Test
+        @DisplayName("Should open an encrypted PDF with the supplied password")
+        void testValidateSignature_PasswordOpensEncryptedPdf() throws Exception {
+            byte[] encrypted = encryptedPdfBytes("secret");
+            when(pdfDocumentFactory.load(any(InputStream.class), eq("secret")))
+                    .thenAnswer(inv -> Loader.loadPDF(encrypted, "secret"));
+
+            ResponseEntity<List<SignatureValidationResult>> response =
+                    validateSignatureController.validateSignature(requestFor(encrypted, "secret"));
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertTrue(response.getBody().isEmpty());
+            verify(pdfDocumentFactory).load(any(InputStream.class), eq("secret"));
+            verify(pdfDocumentFactory, never()).load(any(InputStream.class));
+        }
+
+        @Test
+        @DisplayName("Should use the password-less loader when no password is given")
+        void testValidateSignature_NoPasswordUsesPlainLoader() throws Exception {
+            when(pdfDocumentFactory.load(any(InputStream.class)))
+                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+
+            validateSignatureController.validateSignature(requestFor(simplePdfBytes, null));
+
+            verify(pdfDocumentFactory).load(any(InputStream.class));
+            verify(pdfDocumentFactory, never()).load(any(InputStream.class), any(String.class));
+        }
+
+        @Test
+        @DisplayName("Should treat an empty password as no password")
+        void testValidateSignature_EmptyPasswordUsesPlainLoader() throws Exception {
+            when(pdfDocumentFactory.load(any(InputStream.class)))
+                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+
+            validateSignatureController.validateSignature(requestFor(simplePdfBytes, ""));
+
+            verify(pdfDocumentFactory).load(any(InputStream.class));
+            verify(pdfDocumentFactory, never()).load(any(InputStream.class), any(String.class));
+        }
+
+        @Test
+        @DisplayName("Should report a wrong password as a password error, not a server error")
+        void testValidateSignature_WrongPasswordIsPasswordError() throws Exception {
+            byte[] encrypted = encryptedPdfBytes("secret");
+            InvalidPasswordException wrongPassword =
+                    assertThrows(
+                            InvalidPasswordException.class,
+                            () -> Loader.loadPDF(encrypted, "wrong"));
+            when(pdfDocumentFactory.load(any(InputStream.class), eq("wrong")))
+                    .thenThrow(wrongPassword);
+
+            assertThrows(
+                    ExceptionUtils.PdfPasswordException.class,
+                    () ->
+                            validateSignatureController.validateSignature(
+                                    requestFor(encrypted, "wrong")));
+        }
+
+        @Test
+        @DisplayName("Should leave other load failures untouched")
+        void testValidateSignature_OtherLoadFailurePropagates() throws Exception {
+            byte[] encrypted = encryptedPdfBytes("secret");
+            IOException failure = new IOException("disk full");
+            when(pdfDocumentFactory.load(any(InputStream.class), eq("secret"))).thenThrow(failure);
+
+            IOException thrown =
+                    assertThrows(
+                            IOException.class,
+                            () ->
+                                    validateSignatureController.validateSignature(
+                                            requestFor(encrypted, "secret")));
+            assertSame(failure, thrown);
         }
     }
 

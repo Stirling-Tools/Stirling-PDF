@@ -5,10 +5,12 @@ import {
 
 export interface ValidateSignatureParameters {
   certFile: File | null;
+  password: string;
 }
 
 export const defaultParameters: ValidateSignatureParameters = {
   certFile: null,
+  password: "",
 };
 
 export type ValidateSignatureParametersHook =

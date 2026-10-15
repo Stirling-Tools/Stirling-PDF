@@ -157,6 +157,35 @@ class ValidateSignatureControllerMoreTest {
     }
 
     @Nested
+    @DisplayName("Upload that is not the file that was signed")
+    class ShortenedUploadTests {
+
+        @Test
+        @DisplayName("Explains a signature that reaches past the end of the upload")
+        void reportsUploadShorterThanSignedRange() throws Exception {
+            byte[] shortened = Arrays.copyOf(signedPdfBytes, signedPdfBytes.length - 100);
+            SignatureValidationRequest request = new SignatureValidationRequest();
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput",
+                            "unlocked.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            shortened));
+
+            when(pdfDocumentFactory.load(any(InputStream.class)))
+                    .thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
+
+            SignatureValidationResult result =
+                    controller.validateSignature(request).getBody().get(0);
+
+            assertThat(result.isValid()).isFalse();
+            assertThat(result.getErrorMessage())
+                    .contains("shorter than its signature expects")
+                    .contains("supply the password");
+        }
+    }
+
+    @Nested
     @DisplayName("Signed PDF with untrusted self-signed certificate")
     class UntrustedSignerTests {
 

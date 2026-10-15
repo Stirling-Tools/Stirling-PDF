@@ -1491,6 +1491,10 @@ export interface SignPDFWithCertRequest {
 }
 export interface SignatureValidationRequest {
   certFile?: File;
+  /**
+   * (Optional) user password of an encrypted PDF. Signatures are verified against the uploaded bytes, so the file must not be unlocked beforehand.
+   */
+  password?: string;
 }
 export interface SplitPagesRequest {
   /**

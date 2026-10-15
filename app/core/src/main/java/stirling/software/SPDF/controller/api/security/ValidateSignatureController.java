@@ -62,6 +62,12 @@ public class ValidateSignatureController {
     /** PDF sub-filter identifying an RFC 3161 document timestamp (PAdES-LTV). */
     private static final String SUBFILTER_RFC3161 = "ETSI.RFC3161";
 
+    private static final String SHORTER_THAN_SIGNED_MESSAGE =
+            "The file is shorter than its signature expects, so it is not the file that was signed"
+                    + " (for example it was unlocked or re-saved after signing). Use the original"
+                    + " file; if it is password protected, supply the password instead of removing"
+                    + " it.";
+
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         binder.registerCustomEditor(
@@ -107,7 +113,7 @@ public class ValidateSignatureController {
             }
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
+        try (PDDocument document = loadDocument(file, request.getPassword())) {
             List<PDSignature> signatures = document.getSignatureDictionaries();
 
             // Detect content appended outside every signature's ByteRange (added after signing). A
@@ -118,19 +124,20 @@ public class ValidateSignatureController {
             long fileLength = file.getSize();
             long maxCovered = 0;
             for (PDSignature sig : signatures) {
-                int[] byteRange = sig.getByteRange();
-                if (byteRange != null && byteRange.length == 4) {
-                    long end = (long) byteRange[2] + byteRange[3];
-                    if (end > maxCovered) {
-                        maxCovered = end;
-                    }
-                }
+                maxCovered = Math.max(maxCovered, signedRangeEnd(sig));
             }
             boolean documentCovered = maxCovered <= 0 || maxCovered >= fileLength;
 
             for (PDSignature sig : signatures) {
                 SignatureValidationResult result = new SignatureValidationResult();
                 result.setCoversEntireDocument(documentCovered);
+
+                if (signedRangeEnd(sig) > fileLength) {
+                    result.setValid(false);
+                    result.setErrorMessage(SHORTER_THAN_SIGNED_MESSAGE);
+                    results.add(result);
+                    continue;
+                }
 
                 try {
                     byte[] signedContent = sig.getSignedContent(file.getInputStream());
@@ -350,6 +357,34 @@ public class ValidateSignatureController {
         }
 
         return ResponseEntity.ok(results);
+    }
+
+    /** Offset just past the last byte the signature covers, or 0 when it declares no ByteRange. */
+    private static long signedRangeEnd(PDSignature sig) {
+        int[] byteRange = sig.getByteRange();
+        return byteRange != null && byteRange.length == 4 ? (long) byteRange[2] + byteRange[3] : 0;
+    }
+
+    /**
+     * Opens the document for field discovery only. The password decrypts the in-memory copy; signed
+     * bytes are always read from the original upload, which stays encrypted and untouched.
+     *
+     * <p>A wrong password is rethrown as a {@code PdfPasswordException}: the password overloads of
+     * the factory do not translate PDFBox's {@code InvalidPasswordException} on every path, and
+     * untranslated it surfaces as a 500.
+     */
+    private PDDocument loadDocument(MultipartFile file, String password) throws IOException {
+        if (password == null || password.isEmpty()) {
+            return pdfDocumentFactory.load(file.getInputStream());
+        }
+        try {
+            return pdfDocumentFactory.load(file.getInputStream(), password);
+        } catch (IOException e) {
+            if (ExceptionUtils.isPasswordError(e)) {
+                throw ExceptionUtils.createPdfPasswordException(e);
+            }
+            throw e;
+        }
     }
 
     /**

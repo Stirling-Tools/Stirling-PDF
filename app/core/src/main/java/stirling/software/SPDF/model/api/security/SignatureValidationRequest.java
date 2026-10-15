@@ -17,4 +17,12 @@ public class SignatureValidationRequest extends PDFFile {
             description = "(Optional) file to compare PDF cert signatures against x.509 format",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private MultipartFile certFile;
+
+    @Schema(
+            description =
+                    "(Optional) user password of an encrypted PDF. Signatures are verified against"
+                            + " the uploaded bytes, so the file must not be unlocked beforehand.",
+            format = "password",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    private String password;
 }
