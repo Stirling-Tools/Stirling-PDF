@@ -184,6 +184,11 @@ export default function Login() {
 
   const isUserPassAllowed = login.isUserPassAllowed;
   const isSsoOnlyMode = !login.isUserPassAllowed;
+  // Visitors who can only sign in with a password: the admin of a fresh
+  // install (default credentials) and a local account just created or changed
+  // (messageType). Redirecting them to the IdP strands them there.
+  const awaitsPasswordSignIn =
+    isUserPassAllowed && (isFirstTimeSetup || searchParams.has("messageType"));
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -287,6 +292,7 @@ export default function Login() {
 
     if (
       skipSsoAutoLogin ||
+      awaitsPasswordSignIn ||
       hasSsoLoginError ||
       blockedByErrors ||
       blockedByAttempts ||
@@ -313,6 +319,7 @@ export default function Login() {
     login.signInWithProvider,
     hasSsoLoginError,
     skipSsoAutoLogin,
+    awaitsPasswordSignIn,
   ]);
 
   // Handle query params (email prefill, success messages, and session expiry)

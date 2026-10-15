@@ -874,13 +874,17 @@ describe("Login", () => {
   });
 
   describe("SSO auto-login", () => {
-    const mockLoginConfig = (loginMethod: string) =>
+    const mockLoginConfig = (
+      loginMethod: string,
+      overrides: { firstTimeSetup?: boolean } = {},
+    ) =>
       vi.mocked(apiClient.get).mockResolvedValue({
         data: {
           enableLogin: true,
           ssoAutoLogin: true,
           loginMethod,
           providerList: { "/oauth2/authorization/authentik": "Authentik" },
+          ...overrides,
         },
       });
 
@@ -927,6 +931,41 @@ describe("Login", () => {
         expect(screen.getByText(/Authentik/)).toBeInTheDocument();
       });
       expect(document.getElementById("email")).not.toBeInTheDocument();
+      expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
+    });
+
+    it("stays on the page during first-time setup when password login is allowed", async () => {
+      mockLoginConfig("all", { firstTimeSetup: true });
+      renderAt("/login");
+
+      await waitFor(() => {
+        expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+        expect(document.getElementById("password")).toBeInTheDocument();
+      });
+      expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
+    });
+
+    it("still redirects during first-time setup in SSO-only mode", async () => {
+      mockLoginConfig("oauth2", { firstTimeSetup: true });
+      renderAt("/login");
+
+      await waitFor(() => {
+        expect(springAuth.signInWithOAuth).toHaveBeenCalled();
+      });
+    });
+
+    it("stays on the page after a local account is created", async () => {
+      mockLoginConfig("all");
+      renderAt("/login?messageType=accountCreated");
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            "Account created successfully! You can now sign in.",
+          ),
+        ).toBeInTheDocument();
+        expect(document.getElementById("password")).toBeInTheDocument();
+      });
       expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
     });
   });
