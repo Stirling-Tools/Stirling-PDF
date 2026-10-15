@@ -74,6 +74,7 @@ tasks:
       - task: prepare:env
         vars: { MODE: '{{.MODE}}' }
       - prepare:og
+      - task: :tools-core:build:wasm:if-available
 
   # ============================================================
   # Development

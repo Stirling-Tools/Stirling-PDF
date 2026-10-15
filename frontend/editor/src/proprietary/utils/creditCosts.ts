@@ -46,6 +46,7 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   removeImage: CREDIT_COSTS.SMALL,
   scannerImageSplit: CREDIT_COSTS.SMALL,
   adjustContrast: CREDIT_COSTS.SMALL,
+  adjustColorsRust: CREDIT_COSTS.MEDIUM,
   multiTool: CREDIT_COSTS.SMALL,
   compare: CREDIT_COSTS.SMALL,
   addAttachments: CREDIT_COSTS.SMALL,

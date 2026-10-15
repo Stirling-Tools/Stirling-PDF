@@ -81,6 +81,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   // Image and visual tools
   "/extract-images": "extractImages",
   "/adjust-contrast": "adjustContrast",
+  "/adjust-colors-rust": "adjustColorsRust",
   "/replace-color-pdf": "replaceColor",
 
   // Metadata and info

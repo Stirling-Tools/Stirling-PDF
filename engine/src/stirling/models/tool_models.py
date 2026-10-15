@@ -262,6 +262,19 @@ class AddWatermarkParams(ApiModel):
     width_spacer: int = Field(50, description="The width spacer between watermark elements", ge=0)
 
 
+class AdjustColorsRustParams(ApiModel):
+    """
+    Renders every page at 144 DPI, adjusts its colours and replaces the page with the adjusted image. Runs the same Rust code the editor runs in the browser. Input:PDF Output:PDF Type:SISO
+    """
+
+    blue: int = Field(100, description="Blue channel gain as a percentage; 100 leaves it unchanged", ge=0, le=200)
+    brightness: int = Field(100, description="Brightness as a percentage; 100 leaves it unchanged", ge=0, le=200)
+    contrast: int = Field(100, description="Contrast as a percentage; 100 leaves it unchanged", ge=0, le=200)
+    green: int = Field(100, description="Green channel gain as a percentage; 100 leaves it unchanged", ge=0, le=200)
+    red: int = Field(100, description="Red channel gain as a percentage; 100 leaves it unchanged", ge=0, le=200)
+    saturation: int = Field(100, description="Saturation as a percentage; 100 leaves it unchanged", ge=0, le=200)
+
+
 class AutoRedactParams(ApiModel):
     """
     This endpoint automatically redacts text from a PDF file based on specified patterns. Users can provide text patterns to redact, with options for regex and whole word matching. Input:PDF Output:PDF Type:SISO
@@ -1875,6 +1888,7 @@ class Model(
         | AddCommentsParams
         | AddPageNumbersParams
         | AddStampParams
+        | AdjustColorsRustParams
         | AutoRenameParams
         | AutoRotatePdfParams
         | AutoSplitPdfParams
@@ -1956,6 +1970,7 @@ class Model(
         | AddCommentsParams
         | AddPageNumbersParams
         | AddStampParams
+        | AdjustColorsRustParams
         | AutoRenameParams
         | AutoRotatePdfParams
         | AutoSplitPdfParams
@@ -2038,6 +2053,7 @@ type ParamToolModel = (
     | AddCommentsParams
     | AddPageNumbersParams
     | AddStampParams
+    | AdjustColorsRustParams
     | AutoRenameParams
     | AutoRotatePdfParams
     | AutoSplitPdfParams
@@ -2121,6 +2137,7 @@ class ToolEndpoint(StrEnum):
     ADD_COMMENTS = "/api/v1/misc/add-comments"
     ADD_PAGE_NUMBERS = "/api/v1/misc/add-page-numbers"
     ADD_STAMP = "/api/v1/misc/add-stamp"
+    ADJUST_COLORS_RUST = "/api/v1/misc/adjust-colors-rust"
     AUTO_RENAME = "/api/v1/misc/auto-rename"
     AUTO_ROTATE_PDF = "/api/v1/misc/auto-rotate-pdf"
     AUTO_SPLIT_PDF = "/api/v1/misc/auto-split-pdf"
@@ -2202,6 +2219,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.ADD_COMMENTS: AddCommentsParams,
     ToolEndpoint.ADD_PAGE_NUMBERS: AddPageNumbersParams,
     ToolEndpoint.ADD_STAMP: AddStampParams,
+    ToolEndpoint.ADJUST_COLORS_RUST: AdjustColorsRustParams,
     ToolEndpoint.AUTO_RENAME: AutoRenameParams,
     ToolEndpoint.AUTO_ROTATE_PDF: AutoRotatePdfParams,
     ToolEndpoint.AUTO_SPLIT_PDF: AutoSplitPdfParams,

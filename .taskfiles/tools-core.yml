@@ -1,0 +1,75 @@
+version: '3'
+
+# tools-core/ is the Rust shared by the editor and the backend: built to wasm
+# for the editor here, and to a native library for the backend by Gradle
+# (app/core/build.gradle).
+
+vars:
+  WASM_TARGET: wasm32-unknown-unknown
+  WASM_DIR: ../frontend/editor/public/wasm
+
+tasks:
+  build:wasm:
+    desc: "Build the shared Rust tools for the browser"
+    sources:
+      - Cargo.toml
+      - Cargo.lock
+      - '*/Cargo.toml'
+      - '*/src/**/*.rs'
+    generates:
+      - '{{.WASM_DIR}}/stirling-tools.wasm'
+    cmds:
+      - cargo build --release --target {{.WASM_TARGET}} -p stirling-tools
+      - mkdir -p {{.WASM_DIR}}
+      - cp target/{{.WASM_TARGET}}/release/stirling_tools.wasm {{.WASM_DIR}}/stirling-tools.wasm
+
+  # The editor's prepare step runs this so a machine without Rust still builds
+  # the editor; only the Rust tool fails, at run time, saying its wasm is missing.
+  build:wasm:if-available:
+    internal: true
+    vars:
+      TOOLCHAIN:
+        sh: >-
+          command -v cargo >/dev/null 2>&1
+          && { ! command -v rustup >/dev/null 2>&1 || rustup target list --installed | grep -qx {{.WASM_TARGET}}; }
+          && echo ready || echo missing
+    cmds:
+      - task: build:wasm
+        if: '[ "{{.TOOLCHAIN}}" = "ready" ]'
+      - cmd: >-
+          echo "tools-core needs cargo and 'rustup target add {{.WASM_TARGET}}';
+          skipping the wasm build"
+        if: '[ "{{.TOOLCHAIN}}" != "ready" ]'
+
+  build:native:
+    desc: "Build the shared Rust tools as a native library for this machine"
+    cmds:
+      - cargo build --release -p stirling-tools
+
+  test:
+    desc: "Run the shared Rust tools' tests"
+    cmds:
+      - cargo test --workspace
+
+  lint:
+    desc: "Lint the shared Rust tools for native and wasm"
+    cmds:
+      - cargo clippy --workspace --all-targets -- -D warnings
+      - cargo clippy --workspace --target {{.WASM_TARGET}} -- -D warnings
+
+  format:
+    desc: "Format the shared Rust tools"
+    cmds:
+      - cargo fmt --all
+
+  format:check:
+    desc: "Check the shared Rust tools' formatting"
+    cmds:
+      - cargo fmt --all -- --check
+
+  check:
+    desc: "Quality gate for the shared Rust tools"
+    cmds:
+      - task: format:check
+      - task: lint
+      - task: test

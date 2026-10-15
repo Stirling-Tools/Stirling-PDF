@@ -494,6 +494,14 @@ text = "Text"
 [adjust-contrast]
 tags = "color-correction,tune,modify,enhance"
 
+[adjustColorsRust]
+processing = "Processing"
+processOnServer = "Process on server"
+processOnServerDesc = "Run the same Rust code natively on the server instead of in your browser"
+
+[adjustColorsRust.error]
+failed = "Failed to adjust colors/contrast"
+
 [adjustContrast]
 adjustColors = "Adjust Colors"
 basic = "Basic Adjustments"
@@ -5548,6 +5556,11 @@ title = "Add Stamp to PDF"
 desc = "Add custom text anywhere in your PDF"
 tags = "text,annotation,label,add text,insert text,place text,text box,add label,add caption,type on PDF,write on PDF,add words,add note,text overlay,typewriter"
 title = "Add Text"
+
+[home.adjustColorsRust]
+desc = "Adjust colors and contrast with the shared Rust code, in your browser or on the server"
+tags = "contrast,brightness,saturation,adjust colors,color correction,rust,wasm,compare"
+title = "Adjust Colors/Contrast (Rust)"
 
 [home.adjustContrast]
 desc = "Adjust Colors/Contrast, Saturation and Brightness of a PDF"

@@ -448,6 +448,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Advance", "overlay-pdf");
         // Backend-only endpoints
         addEndpointToGroup("Advance", "adjust-contrast");
+        addEndpointToGroup("Advance", "adjust-colors-rust");
 
         // Adding endpoints to "Automation" group
         addEndpointToGroup("Automation", "handleData");
@@ -567,6 +568,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "eml-to-pdf");
         addEndpointToGroup("Java", "handleData");
         addEndpointToGroup("Java", "form-detection");
+        addEndpointToGroup("Java", "adjust-colors-rust");
         addEndpointToGroup("rar", "pdf-to-cbr");
 
         // Javascript

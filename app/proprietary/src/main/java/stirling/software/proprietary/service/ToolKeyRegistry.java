@@ -46,6 +46,7 @@ public class ToolKeyRegistry {
                     "pageLayout",
                     "scalePages",
                     "adjustContrast",
+                    "adjustColorsRust",
                     "crop",
                     "pdfToSinglePage",
                     "repair",

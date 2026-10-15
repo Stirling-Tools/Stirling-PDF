@@ -1,0 +1,18 @@
+[package]
+name = "stirling-tools"
+description = "C ABI over the shared Stirling tools: a native library for Java, a wasm module for the browser"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+stirling-pdfium.workspace = true
+adjust-colors.workspace = true
+
+[lints]
+workspace = true

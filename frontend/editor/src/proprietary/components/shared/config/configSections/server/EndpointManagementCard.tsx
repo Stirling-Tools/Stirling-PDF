@@ -13,6 +13,7 @@ const commonEndpoints = [
   "add-password",
   "add-stamp",
   "add-watermark",
+  "adjust-colors-rust",
   "adjust-contrast",
   "auto-redact",
   "auto-rename",

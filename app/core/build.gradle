@@ -119,6 +119,65 @@ sourceSets {
 
 }
 
+// The shared Rust tools (tools-core/) as a native library for this machine, bundled
+// for ToolsCoreLibrary to load. A missing toolchain or a failed cargo build only warns:
+// the backend still builds, and the endpoints that need the library answer 503.
+def toolsCoreDir = file('../../tools-core')
+def toolsCoreLibraryName = System.mapLibraryName('stirling_tools')
+// Only a successful build lands here, so a stale library in cargo's target/ is never bundled.
+def toolsCoreBundleDir = layout.buildDirectory.dir('tools-core-natives')
+// Hazard: must equal jpdfium's NativeLoader.detectPlatform() on the machine that runs the
+// jar, which ToolsCoreLibrary uses to find the library.
+def toolsCorePlatform = {
+    def osName = System.getProperty('os.name').toLowerCase()
+    def osArch = System.getProperty('os.arch').toLowerCase()
+    def arch = (osArch.contains('aarch64') || osArch.contains('arm64')) ? 'arm64' : 'x64'
+    if (osName.contains('win')) return "windows-${arch}"
+    if (osName.contains('mac')) return "darwin-${arch}"
+    return "linux-${arch}"
+}()
+def cargoOnPath = System.getenv('PATH')?.split(File.pathSeparator)?.any { dir ->
+    new File(dir, Os.isFamily(Os.FAMILY_WINDOWS) ? 'cargo.exe' : 'cargo').canExecute()
+}
+
+tasks.register('buildToolsCoreNative', Exec) {
+    group = 'build'
+    description = 'Build the shared Rust tools as a native library for this machine'
+    workingDir toolsCoreDir
+    commandLine 'cargo', 'build', '--release', '-p', 'stirling-tools'
+    inputs.files(fileTree(toolsCoreDir) {
+        include 'Cargo.toml', 'Cargo.lock', '*/Cargo.toml', '*/src/**/*.rs'
+    })
+    outputs.dir(toolsCoreBundleDir)
+    ignoreExitValue = true
+    onlyIf {
+        if (!cargoOnPath) {
+            logger.warn('cargo not found: the Rust tools library is not bundled')
+        }
+        cargoOnPath
+    }
+    doLast {
+        def bundle = toolsCoreBundleDir.get().dir(toolsCorePlatform).asFile
+        bundle.deleteDir()
+        if (executionResult.get().exitValue != 0) {
+            logger.warn('cargo build failed: the Rust tools library is not bundled ' +
+                    '(run `task tools-core:build:native` to see why)')
+            return
+        }
+        bundle.mkdirs()
+        java.nio.file.Files.copy(
+                new File(toolsCoreDir, "target/release/${toolsCoreLibraryName}").toPath(),
+                new File(bundle, toolsCoreLibraryName).toPath())
+    }
+}
+
+tasks.named('processResources') {
+    dependsOn 'buildToolsCoreNative'
+    from(toolsCoreBundleDir) {
+        into 'tools-core/natives'
+    }
+}
+
 
 // Disable regular jar
 jar {
@@ -214,7 +273,8 @@ def generatedFrontendPaths = [
     'samples',
     'pdfium',
     'vendor',
-    'pdfjs'
+    'pdfjs',
+    'wasm'
 ]
 
 tasks.register('npmInstall', Exec) {
