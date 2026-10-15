@@ -11,12 +11,6 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.util.Calendar;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -41,10 +35,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.TimestampPdfRequest;
+import stirling.software.SPDF.pdf.signature.TsaUrlResolver;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -62,23 +56,11 @@ public class TimestampController {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    /** Built-in TSA presets with labels — single source of truth for backend + frontend. */
-    public static final List<Map<String, String>> TSA_PRESETS =
-            List.of(
-                    Map.of("label", "DigiCert", "url", "http://timestamp.digicert.com"),
-                    Map.of("label", "Sectigo", "url", "http://timestamp.sectigo.com"),
-                    Map.of("label", "SSL.com", "url", "http://ts.ssl.com"),
-                    Map.of("label", "FreeTSA", "url", "https://freetsa.org/tsr"),
-                    Map.of("label", "MeSign", "url", "http://tsa.mesign.com"));
-
-    private static final Set<String> ALLOWED_TSA_PRESET_URLS =
-            TSA_PRESETS.stream().map(p -> p.get("url")).collect(Collectors.toUnmodifiableSet());
-
     private static final int MAX_TSA_RESPONSE_SIZE = 1024 * 1024; // 1 MB
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final ApplicationProperties applicationProperties;
+    private final TsaUrlResolver tsaUrlResolver;
     private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
@@ -96,42 +78,10 @@ public class TimestampController {
     public ResponseEntity<Resource> timestampPdf(@ModelAttribute TimestampPdfRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
-        ApplicationProperties.Security.Timestamp tsConfig =
-                applicationProperties.getSecurity().getTimestamp();
 
-        // Determine effective TSA URL: use request value if provided, otherwise config default
-        String tsaUrl =
-                (request.getTsaUrl() != null && !request.getTsaUrl().isBlank())
-                        ? request.getTsaUrl()
-                        : tsConfig.getDefaultTsaUrl();
-
-        // Build allowed set: built-in presets + admin-configured custom URLs
-        // Filter null/blank entries and validate protocol (TASK-6)
-        Set<String> allowedUrls = new HashSet<>(ALLOWED_TSA_PRESET_URLS);
-        if (tsConfig.getDefaultTsaUrl() != null
-                && !tsConfig.getDefaultTsaUrl().isBlank()
-                && isValidTsaUrlProtocol(tsConfig.getDefaultTsaUrl())) {
-            allowedUrls.add(tsConfig.getDefaultTsaUrl());
-        }
-        List<String> customUrls = tsConfig.getCustomTsaUrls();
-        if (customUrls != null) {
-            customUrls.stream()
-                    .filter(u -> u != null && !u.isBlank() && isValidTsaUrlProtocol(u))
-                    .forEach(allowedUrls::add);
-        }
-
-        // Normalize for case-insensitive comparison (TASK-12)
-        Set<String> normalizedAllowed =
-                allowedUrls.stream()
-                        .map(TimestampController::normalizeTsaUrl)
-                        .collect(Collectors.toSet());
-
-        // Validate TSA URL against allowed set to prevent SSRF
-        if (!normalizedAllowed.contains(normalizeTsaUrl(tsaUrl))) {
-            throw new IllegalArgumentException(
-                    "TSA URL is not in the allowed list. Contact your administrator to add it"
-                            + " via settings.yml (security.timestamp.customTsaUrls).");
-        }
+        // Resolves to the request's URL (if provided) or the admin default, validated
+        // against the allowlist to prevent SSRF.
+        String tsaUrl = tsaUrlResolver.resolve(request.getTsaUrl());
 
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(".pdf");
         try (PDDocument document = pdfDocumentFactory.load(inputFile);
@@ -245,24 +195,6 @@ public class TimestampController {
             if (connection != null) {
                 connection.disconnect();
             }
-        }
-    }
-
-    private static boolean isValidTsaUrlProtocol(String url) {
-        String lower = url.toLowerCase(Locale.ROOT);
-        return lower.startsWith("http://") || lower.startsWith("https://");
-    }
-
-    private static String normalizeTsaUrl(String url) {
-        try {
-            URI uri = URI.create(url.trim());
-            String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
-            String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.ROOT);
-            int port = uri.getPort();
-            String path = uri.getPath() == null ? "" : uri.getPath();
-            return scheme + "://" + host + (port == -1 ? "" : ":" + port) + path;
-        } catch (Exception e) {
-            return url.toLowerCase(Locale.ROOT);
         }
     }
 

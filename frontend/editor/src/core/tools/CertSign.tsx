@@ -7,6 +7,7 @@ import CertificateFormatSettings from "@app/components/tools/certSign/Certificat
 import CertificateFilesSettings from "@app/components/tools/certSign/CertificateFilesSettings";
 import HardwareCertificateSettings from "@app/components/tools/certSign/HardwareCertificateSettings";
 import SignatureAppearanceSettings from "@app/components/tools/certSign/SignatureAppearanceSettings";
+import TimestampToggleSettings from "@app/components/tools/certSign/TimestampToggleSettings";
 import { useCertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 import { useCertSignOperation } from "@app/hooks/tools/certSign/useCertSignOperation";
 import { useCertificateTypeTips } from "@app/components/tooltips/useCertificateTypeTips";
@@ -163,6 +164,21 @@ const CertSign = (props: BaseToolProps) => {
         tooltip: appearanceTips,
         content: (
           <SignatureAppearanceSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+          />
+        ),
+      },
+      {
+        title: t("certSign.timestamp.stepTitle", "Trusted Timestamp"),
+        isCollapsed: base.settingsCollapsed || !areCertFilesConfigured(),
+        onCollapsedClick:
+          base.settingsCollapsed || !areCertFilesConfigured()
+            ? base.handleSettingsReset
+            : undefined,
+        content: (
+          <TimestampToggleSettings
             parameters={base.params.parameters}
             onParameterChange={base.params.updateParameter}
             disabled={base.endpointLoading}

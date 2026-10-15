@@ -33,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
+import stirling.software.SPDF.pdf.signature.TsaUrlResolver;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
@@ -56,6 +57,7 @@ class CertSignControllerTest {
     @Mock private TempFileManager tempFileManager;
     @Mock private HardwareKeyStoreService hardwareKeyStoreService;
     @Mock private HttpServletRequest httpRequest;
+    @Mock private TsaUrlResolver tsaUrlResolver;
 
     @InjectMocks private CertSignController certSignController;
 
@@ -173,6 +175,7 @@ class CertSignControllerTest {
         request.setName("tester");
         request.setPageNumber(1);
         request.setShowLogo(false);
+        request.setAddTimestamp(false);
 
         ResponseEntity<Resource> response =
                 certSignController.signPDFWithCert(request, httpRequest);
@@ -200,6 +203,7 @@ class CertSignControllerTest {
         request.setName("tester");
         request.setPageNumber(1);
         request.setShowLogo(false);
+        request.setAddTimestamp(false);
 
         ResponseEntity<Resource> response =
                 certSignController.signPDFWithCert(request, httpRequest);
@@ -224,6 +228,7 @@ class CertSignControllerTest {
         request.setName("tester");
         request.setPageNumber(1);
         request.setShowLogo(false);
+        request.setAddTimestamp(false);
 
         IllegalArgumentException exception =
                 assertThrows(
@@ -253,6 +258,7 @@ class CertSignControllerTest {
         request.setName("tester");
         request.setPageNumber(1);
         request.setShowLogo(false);
+        request.setAddTimestamp(false);
 
         ResponseEntity<Resource> response =
                 certSignController.signPDFWithCert(request, httpRequest);
@@ -285,6 +291,7 @@ class CertSignControllerTest {
         request.setName("tester");
         request.setPageNumber(1);
         request.setShowLogo(false);
+        request.setAddTimestamp(false);
 
         ResponseEntity<Resource> response =
                 certSignController.signPDFWithCert(request, httpRequest);
@@ -317,6 +324,7 @@ class CertSignControllerTest {
         request.setName("tester");
         request.setPageNumber(1);
         request.setShowLogo(false);
+        request.setAddTimestamp(false);
 
         ResponseEntity<Resource> response =
                 certSignController.signPDFWithCert(request, httpRequest);
@@ -349,6 +357,7 @@ class CertSignControllerTest {
         request.setName("tester");
         request.setPageNumber(1);
         request.setShowLogo(false);
+        request.setAddTimestamp(false);
 
         ResponseEntity<Resource> response =
                 certSignController.signPDFWithCert(request, httpRequest);
@@ -381,6 +390,7 @@ class CertSignControllerTest {
         request.setName("tester");
         request.setPageNumber(1);
         request.setShowLogo(false);
+        request.setAddTimestamp(false);
 
         ResponseEntity<Resource> response =
                 certSignController.signPDFWithCert(request, httpRequest);

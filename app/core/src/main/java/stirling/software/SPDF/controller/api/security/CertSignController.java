@@ -76,6 +76,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
+import stirling.software.SPDF.pdf.signature.TsaUrlResolver;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -115,16 +116,19 @@ public class CertSignController {
     private final ServerCertificateServiceInterface serverCertificateService;
     private final TempFileManager tempFileManager;
     private final HardwareKeyStoreService hardwareKeyStoreService;
+    private final TsaUrlResolver tsaUrlResolver;
 
     public CertSignController(
             CustomPDFDocumentFactory pdfDocumentFactory,
             @Autowired(required = false) ServerCertificateServiceInterface serverCertificateService,
             TempFileManager tempFileManager,
-            HardwareKeyStoreService hardwareKeyStoreService) {
+            HardwareKeyStoreService hardwareKeyStoreService,
+            TsaUrlResolver tsaUrlResolver) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.serverCertificateService = serverCertificateService;
         this.tempFileManager = tempFileManager;
         this.hardwareKeyStoreService = hardwareKeyStoreService;
+        this.tsaUrlResolver = tsaUrlResolver;
     }
 
     public static void sign(
@@ -137,7 +141,8 @@ public class CertSignController {
             String name,
             String location,
             String reason,
-            Boolean showLogo) {
+            Boolean showLogo)
+            throws IOException {
         try (PDDocument doc = pdfDocumentFactory.load(input)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -161,6 +166,7 @@ public class CertSignController {
             }
         } catch (Exception e) {
             ExceptionUtils.logException("PDF signing", e);
+            throw new IOException("PDF signing failed: " + e.getMessage(), e);
         }
     }
 
@@ -292,6 +298,9 @@ public class CertSignController {
         char[] pin = keystorePassword != null ? keystorePassword.toCharArray() : null;
         CreateSignature createSignature =
                 new CreateSignature(ks, pin, request.getAlias(), signingProvider);
+        if (Boolean.TRUE.equals(request.getAddTimestamp())) {
+            createSignature.setTsaUrl(tsaUrlResolver.resolveDefault());
+        }
         TempFile signedOut = tempFileManager.createManagedTempFile(".pdf");
         try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
             sign(
