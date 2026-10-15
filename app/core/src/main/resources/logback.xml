@@ -51,27 +51,6 @@
         </rollingPolicy>
     </appender>
 
-    <!-- Suppress PDFBox PDSimpleFont's per-charcode .notdef WARN.
-
-         Required by the v2 PDF text editor's `buildReverseUnicodeMap`
-         which DELIBERATELY iterates every charcode in 0..0xFFFF to
-         discover the encoding-to-Unicode map of an embedded subset
-         font. For any subset font ~99% of those probes hit .notdef,
-         and the default WARN level for those misses turned info.log
-         into a 1.4 GB monster overnight.
-
-         This declarative logback entry is the SOLE mechanism: it is
-         visible to ops and revertable via configuration. An earlier
-         build also mutated this logger's level from a static block in
-         PdfTextEditorCharcodeController, which silenced the same
-         warnings JVM-wide with no trace in any config file - that
-         static block has been removed in favour of this entry. -->
-    <logger name="org.apache.pdfbox.pdmodel.font.PDSimpleFont"
-            level="ERROR" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="GENERAL"/>
-    </logger>
-
     <!-- Root Logger -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>

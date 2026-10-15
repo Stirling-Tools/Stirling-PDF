@@ -39,8 +39,6 @@ export const CONVERSION_ENDPOINTS = {
   "pdf-cbr": "/api/v1/convert/pdf/cbr",
   "ebook-pdf": "/api/v1/convert/ebook/pdf",
   "pdf-epub": "/api/v1/convert/pdf/epub",
-  "pdf-text-editor": "/api/v1/convert/pdf/text-editor",
-  "text-editor-pdf": "/api/v1/convert/text-editor/pdf",
 } as const;
 
 export const ENDPOINT_NAMES = {
@@ -67,8 +65,6 @@ export const ENDPOINT_NAMES = {
   "cbr-pdf": "cbr-to-pdf",
   "pdf-cbr": "pdf-to-cbr",
   "pdf-epub": "pdf-to-epub",
-  "pdf-text-editor": "pdf-to-text-editor",
-  "text-editor-pdf": "text-editor-to-pdf",
 } as const;
 
 /** Maps conversion endpoint → [i18n key, English fallback] for display names */

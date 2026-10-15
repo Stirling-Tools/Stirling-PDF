@@ -938,23 +938,6 @@ export function TextRunOverlay({
         ) {
           caretToEnd(el, sel);
         }
-        // Backend strategy: pre-warm the per-char charcode cache for the whole
-        // page in the background.
-        void (async () => {
-          try {
-            const [
-              { getActiveCharcodeStrategy },
-              { prewarmBackendCacheForPage },
-            ] = await Promise.all([
-              import("@app/tools/pdfTextEditor/charcode/CharcodeStrategy"),
-              import("@app/tools/pdfTextEditor/charcode/charcodeRegistry"),
-            ]);
-            if (getActiveCharcodeStrategy() !== "backend") return;
-            await prewarmBackendCacheForPage(run.pageIndex);
-          } catch {
-            /* prewarm is best-effort, never block focus */
-          }
-        })();
       }}
       onBlur={(e) => {
         setTouched(false);

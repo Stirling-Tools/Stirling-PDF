@@ -78,7 +78,6 @@ public class ApplicationProperties {
 
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
-    private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
     private FormDetection formDetection = new FormDetection();
     private Docparse docparse = new Docparse();
@@ -328,46 +327,6 @@ public class ApplicationProperties {
         private boolean allowCustomApiIntegrations = true;
 
         private long webhookMaxBytes = 104857600L;
-    }
-
-    @Data
-    public static class PdfEditor {
-        private Cache cache = new Cache();
-        private FontNormalization fontNormalization = new FontNormalization();
-        private CffConverter cffConverter = new CffConverter();
-        private Type3 type3 = new Type3();
-        private String fallbackFont = "classpath:/static/fonts/NotoSans-Regular.ttf";
-
-        @Data
-        public static class Cache {
-            private long maxBytes = -1;
-            private int maxPercent = 20;
-        }
-
-        @Data
-        public static class FontNormalization {
-            private boolean enabled = false;
-        }
-
-        @Data
-        public static class CffConverter {
-            private boolean enabled = true;
-            private String method = "python";
-            private String pythonCommand = "/opt/venv/bin/python3";
-            private String pythonScript = "/scripts/convert_cff_to_ttf.py";
-            private String fontforgeCommand = "fontforge";
-        }
-
-        @Data
-        public static class Type3 {
-            private Library library = new Library();
-
-            @Data
-            public static class Library {
-                private boolean enabled = true;
-                private String index = "classpath:/type3/library/index.json";
-            }
-        }
     }
 
     @Data

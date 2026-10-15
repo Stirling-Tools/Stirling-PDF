@@ -442,7 +442,6 @@ pre-commit = [
 tools = [
     { name = "deep-translator" },
     { name = "defusedxml" },
-    { name = "fonttools" },
     { name = "fpdf2" },
     { name = "openai" },
     { name = "requests" },
@@ -501,7 +500,6 @@ pre-commit = [
 tools = [
     { name = "deep-translator", specifier = ">=1.11.4" },
     { name = "defusedxml", specifier = ">=0.7.1" },
-    { name = "fonttools", specifier = ">=4.66.0" },
     { name = "fpdf2", specifier = ">=2.8.8" },
     { name = "openai", specifier = ">=3.19.2" },
     { name = "requests", specifier = ">=2.34.2" },

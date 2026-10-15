@@ -124,14 +124,6 @@ processTestResources {
 
 tasks.register('prepareKotlinBuildScriptModel') {}
 
-tasks.register('type3SignatureTool', JavaExec) {
-    group = 'type3'
-    description = 'Dump Type3 font signatures and glyph coverage for the Type3 library'
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'stirling.software.SPDF.service.pdfjson.type3.tool.Type3SignatureTool'
-    standardInput = System.in
-}
-
 // FailureKindTest asserts the enum against two files outside this project, found by walking up to
 // the repo root: the kind-to-code fixture the frontend also reads, and the English copy every kind
 // must have a key in. Gradle cannot infer either, so without this the task is up-to-date when only

@@ -135,8 +135,7 @@ class RedactExecuteServiceMoreTest {
     }
 
     private PDFont helvetica(PDDocument doc) throws IOException {
-        try (InputStream is =
-                getClass().getResourceAsStream("/type3/library/fonts/dejavu/DejaVuSans.ttf")) {
+        try (InputStream is = getClass().getResourceAsStream("/static/fonts/DejaVuSans.ttf")) {
             if (is != null) {
                 return PDType0Font.load(doc, is);
             }

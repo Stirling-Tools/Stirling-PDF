@@ -20,10 +20,6 @@ for (const dpi of [96, 150, 600]) {
     page,
   }) => {
     test.setTimeout(150_000);
-    await page.route(
-      "**/api/v1/general/pdf-text-editor/encode-charcodes",
-      (route) => route.fulfill({ status: 503, body: "unavailable" }),
-    );
     await page.goto("/pdf-text-editor", {
       waitUntil: "domcontentloaded",
       timeout: 60_000,

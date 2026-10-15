@@ -173,12 +173,6 @@ async function undoSize(page: Page): Promise<number> {
 }
 
 test.describe("PDF text editor - combined feature set", () => {
-  // Editor edits fire encode-charcodes; with no backend an UNMOCKED call 401s
-  // and redirects to login, unmounting the editor.
-  test.beforeEach(async ({ page }) => {
-    await page.route("**/encode-charcodes", (route) => route.abort());
-  });
-
   test("image insert (real png) adds an image, then rotate-cw changes its matrix and undo reverts", async ({
     page,
   }) => {
