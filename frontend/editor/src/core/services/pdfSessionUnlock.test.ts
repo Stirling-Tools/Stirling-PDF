@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import apiClient from "@app/services/apiClient";
+import JSZip from "jszip";
+import { zipFileService } from "@app/services/zipFileService";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
 import { createStirlingFile } from "@app/types/fileContext";
 import {
@@ -233,6 +235,122 @@ describe("session PDF access", () => {
     expect(await protectUnlockedResults(outputs, [original], endpoint)).toBe(
       outputs,
     );
+    expect(post).not.toHaveBeenCalled();
+  });
+});
+
+function readBlobBytes(blob: Blob): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as ArrayBuffer);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(blob);
+  });
+}
+
+async function splitArchive(count: number): Promise<File> {
+  const zip = new JSZip();
+  for (let page = 1; page <= count; page++) {
+    zip.file(`pages/page-${page}.pdf`, `%PDF-1.7\npage ${page}`);
+  }
+  return new File(
+    [await zip.generateAsync({ type: "uint8array" })],
+    "split.zip",
+    {
+      type: "application/zip",
+    },
+  );
+}
+
+describe("protected split archives", () => {
+  beforeEach(() => {
+    vi.spyOn(Blob.prototype, "arrayBuffer").mockImplementation(function () {
+      return readBlobBytes(this);
+    });
+    vi.spyOn(File.prototype, "arrayBuffer").mockImplementation(function () {
+      return readBlobBytes(this);
+    });
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it("preserves ZIP output and protects all ten entries with the source password", async () => {
+    const source = new File(["encrypted"], "source.pdf");
+    rememberPdfAccess(source, access);
+    const archive = await splitArchive(10);
+    const outputs = await zipFileService.extractWithPreferences(archive, {
+      autoUnzip: true,
+      autoUnzipFileLimit: 4,
+    });
+    expect(outputs).toEqual([archive]);
+    post.mockImplementation(async (_url, body) => {
+      const entry = (body as FormData).get("fileInput") as File;
+      return { data: new Blob([`%PDF-1.7\nprotected ${entry.name}`]) };
+    });
+    const [protectedZip] = await protectUnlockedResults(
+      outputs,
+      [source],
+      "/api/v1/general/split-by-size-or-count",
+    );
+    expect(protectedZip.name).toBe("split.zip");
+    expect(protectedZip.type).toBe("application/zip");
+    const zip = await JSZip.loadAsync(await readBlobBytes(protectedZip));
+    const entries = Object.values(zip.files).filter((entry) => !entry.dir);
+    expect(entries).toHaveLength(10);
+    for (const entry of entries) {
+      expect(await entry.async("string")).toBe(
+        `%PDF-1.7\nprotected ${entry.name}`,
+      );
+    }
+    expect(post).toHaveBeenCalledTimes(10);
+    for (const [endpoint, body] of post.mock.calls) {
+      expect(endpoint).toBe("/api/v1/security/restore-pdf-protection");
+      expect((body as FormData).get("sourceFile")).toBe(source);
+      expect((body as FormData).get("password")).toBe(access.password);
+    }
+    expect(getPdfAccess(protectedZip)).toBeUndefined();
+  });
+
+  it("returns no ZIP if any entry fails protection", async () => {
+    const source = new File(["encrypted"], "source.pdf");
+    rememberPdfAccess(source, access);
+    post
+      .mockResolvedValueOnce({ data: new Blob(["protected"]) })
+      .mockRejectedValueOnce(new Error("protection failed"));
+    await expect(
+      protectUnlockedResults([await splitArchive(10)], [source], rotate),
+    ).rejects.toThrow("No unprotected result was saved");
+    expect(post).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects incomplete ZIP extraction instead of silently losing entries", async () => {
+    const source = new File(["encrypted"], "source.pdf");
+    rememberPdfAccess(source, access);
+    vi.spyOn(zipFileService, "extractAllFiles").mockResolvedValue({
+      success: true,
+      extractedFiles: [new File(["one"], "one.pdf")],
+      errors: ["Unreadable second entry"],
+      totalFiles: 2,
+      extractedCount: 1,
+    });
+    await expect(
+      protectUnlockedResults([await splitArchive(2)], [source], rotate),
+    ).rejects.toThrow("No unprotected result was saved");
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-PDF entries instead of returning unprotected content", async () => {
+    const source = new File(["encrypted"], "source.pdf");
+    rememberPdfAccess(source, access);
+    const zip = new JSZip();
+    zip.file("content.txt", "unprotected content");
+    const output = new File(
+      [await zip.generateAsync({ type: "uint8array" })],
+      "result.zip",
+      { type: "application/zip" },
+    );
+    await expect(
+      protectUnlockedResults([output], [source], rotate),
+    ).rejects.toThrow("No unprotected result was saved");
     expect(post).not.toHaveBeenCalled();
   });
 });
