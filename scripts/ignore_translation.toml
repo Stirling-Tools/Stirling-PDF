@@ -249,11 +249,6 @@ ignore = [
     'language.direction',
 ]
 
-[gl_ES]
-ignore = [
-    'language.direction',
-]
-
 [fa_IR]
 ignore = [
     'language.direction',
@@ -311,6 +306,11 @@ ignore = [
     'validateSignature.downloadType.csv',
     'validateSignature.downloadType.json',
     'validateSignature.downloadType.pdf',
+]
+
+[gl_ES]
+ignore = [
+    'language.direction',
 ]
 
 [hi_IN]

@@ -9921,8 +9921,8 @@ validateCompliance = "Validar o cumprimento"
 
 [portal.policies.operations]
 change = "Cambiar o que fai este paso"
-noResults = "Ningún paso coincide. Proba cun nome de produto ou con \"escanear\", \"notificar\", \"anexar\"."
-searchPlaceholder = "Buscar pasos: proba con \"escanear\", \"anexar\" ou un nome de produto"
+noResults = "Ningún paso coincide. Proba cun nome de produto ou con \"analizar\", \"publicar\", \"anexar\"."
+searchPlaceholder = "Buscar pasos: proba con \"analizar\", \"anexar\" ou un nome de produto"
 
 [portal.policies.operations.bodyMode]
 binary = "Bytes do ficheiro en bruto"
@@ -12663,7 +12663,7 @@ tooltip = "Introduce números de páxina separados por comas ou intervalos con g
 
 [split.methods.byPoster]
 name = "Anacos imprimibles"
-tooltip = "Divide as páxinas de gran tamaño en anacos máis pequenos aptos para imprimir en papel estándar (A4, Letter, etc.)"
+tooltip = "Divide as páxinas de gran tamaño en anacos máis pequenos aptos para imprimir en papel estándar (A4, Carta, etc.)"
 
 [split.methods.bySections]
 name = "Seccións"
@@ -12701,7 +12701,7 @@ a3 = "A3 (297 × 420 mm)"
 a4 = "A4 (210 × 297 mm)"
 a5 = "A5 (148 × 210 mm)"
 legal = "Legal (8.5 × 14 in)"
-letter = "Letter (8.5 × 11 in)"
+letter = "Carta (8.5 × 11 in)"
 tabloid = "Tabloide (11 × 17 in)"
 
 [split.poster.xFactor]
@@ -12757,7 +12757,7 @@ text = "Divide o teu PDF en números de páxina concretos. Usar 'n' divide despo
 title = "Dividir en números de páxina"
 
 [split.tooltip.byPoster]
-bullet1 = "Tamaño de páxina de destino: escolle o tamaño do papel resultante (A4, Letter, etc.)"
+bullet1 = "Tamaño de páxina de destino: escolle o tamaño do papel resultante (A4, Carta, etc.)"
 bullet2 = "Divisións horizontais/verticais: tamaño da grade para dividir"
 bullet3 = "De dereita a esquerda: inverte a orde das columnas para deseños RTL"
 bullet4 = "Imprime e monta as pezas para crear o teu póster"
