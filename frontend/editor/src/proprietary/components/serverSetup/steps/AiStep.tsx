@@ -12,16 +12,19 @@ import {
 } from "@app/components/serverSetup/SetupFields";
 import {
   aiProviderChange,
+  embeddingNeedsApiKey,
+  embeddingProviderChange,
   providerNeedsBaseUrl,
   type AiChoice,
   type AiProvider,
-  type McpAuthMode,
+  type EmbeddingProvider,
 } from "@app/components/serverSetup/serverSetupDraft";
 
 export function AiStep(props: SetupStepProps) {
   const { draft, initial, update, errors, mode, setOpenSection } = props;
   const { t } = useTranslation();
   const label = t("serverSetup.ai.label", "AI");
+  const documentsLabel = t("serverSetup.documents.label", "Document questions");
   const mcpLabel = t("serverSetup.mcp.label", "MCP server");
   const choices: { value: AiChoice; label: string }[] = [
     { value: "off", label: t("serverSetup.off", "Off") },
@@ -35,6 +38,15 @@ export function AiStep(props: SetupStepProps) {
       label: t("serverSetup.ai.stirling", "Stirling AI"),
     });
   }
+  const embeddingProviders: { value: EmbeddingProvider; label: string }[] = [
+    { value: "voyageai", label: "VoyageAI" },
+    { value: "openai", label: "OpenAI" },
+    { value: "ollama", label: "Ollama" },
+    {
+      value: "custom",
+      label: t("serverSetup.ai.providerCustom", "OpenAI-compatible"),
+    },
+  ];
   const providers: { value: AiProvider; label: string }[] = [
     { value: "anthropic", label: "Anthropic" },
     { value: "openai", label: "OpenAI" },
@@ -127,52 +139,71 @@ export function AiStep(props: SetupStepProps) {
           />
         )}
       </SettingRow>
-      {draft.ai !== "off" && (
+      {draft.ai === "custom" && (
         <SettingRow
-          label={mcpLabel}
-          expand={draft.mcpEnabled ? sectionToggle(props, "mcp") : undefined}
+          label={documentsLabel}
+          expand={
+            draft.documentQuestions
+              ? sectionToggle(props, "documents")
+              : undefined
+          }
           details={
             <>
               <FormField
-                label={t("serverSetup.mcp.authLabel", "Agents sign in with")}
+                label={t(
+                  "serverSetup.documents.provider",
+                  "Embedding provider",
+                )}
+                info={t(
+                  "serverSetup.documents.providerHelp",
+                  "Turns document text into the search index that answers questions.",
+                )}
+                infoBeforeLabel
+                infoZIndex={SETUP_DROPDOWN.zIndex}
               >
                 <Select
                   comboboxProps={SETUP_DROPDOWN}
-                  options={[
-                    {
-                      value: "apikey",
-                      label: t(
-                        "serverSetup.mcp.apiKey",
-                        "Their Stirling API key",
-                      ),
-                    },
-                    {
-                      value: "oauth",
-                      label: t(
-                        "serverSetup.mcp.oauth",
-                        "OAuth identity provider",
-                      ),
-                    },
-                  ]}
-                  value={draft.mcpAuthMode}
+                  options={embeddingProviders}
+                  value={draft.embeddingProvider}
                   onChange={(value) => {
-                    if (value) update({ mcpAuthMode: value as McpAuthMode });
+                    if (value)
+                      update(
+                        embeddingProviderChange(
+                          value as EmbeddingProvider,
+                          initial,
+                        ),
+                      );
                   }}
                 />
               </FormField>
-              {draft.mcpAuthMode === "oauth" && (
+              <TextField
+                required
+                label={t("serverSetup.documents.model", "Embedding model")}
+                value={draft.embeddingModel}
+                onChange={(embeddingModel) => update({ embeddingModel })}
+                error={errors.embeddingModel}
+              />
+              {providerNeedsBaseUrl(draft.embeddingProvider) && (
                 <TextField
                   required
                   type="url"
-                  label={t("serverSetup.mcp.issuer", "Issuer URL")}
+                  label={t("serverSetup.ai.baseUrl", "Base URL")}
+                  placeholder="http://ollama:11434/v1"
+                  value={draft.embeddingBaseUrl}
+                  onChange={(embeddingBaseUrl) => update({ embeddingBaseUrl })}
+                  error={errors.embeddingBaseUrl}
+                />
+              )}
+              {embeddingNeedsApiKey(draft.embeddingProvider) && (
+                <TextField
+                  type="password"
+                  label={t("serverSetup.ai.apiKey", "API key")}
                   info={t(
-                    "serverSetup.mcp.issuerHelp",
-                    "Your identity provider's address. Agents' tokens must come from it and name this server's /mcp address.",
+                    "serverSetup.ai.apiKeyHelp",
+                    "Leave empty to use the key the AI engine already has.",
                   )}
-                  placeholder="https://id.example.com"
-                  value={draft.mcpIssuerUri}
-                  onChange={(mcpIssuerUri) => update({ mcpIssuerUri })}
-                  error={errors.mcpIssuerUri}
+                  value={draft.embeddingApiKey}
+                  onChange={(embeddingApiKey) => update({ embeddingApiKey })}
                 />
               )}
             </>
@@ -180,16 +211,25 @@ export function AiStep(props: SetupStepProps) {
         >
           {() => (
             <OnOffControl
-              ariaLabel={mcpLabel}
-              value={draft.mcpEnabled}
-              onChange={(mcpEnabled) => {
-                update({ mcpEnabled });
-                if (mcpEnabled) setOpenSection("mcp");
+              ariaLabel={documentsLabel}
+              value={draft.documentQuestions}
+              onChange={(documentQuestions) => {
+                update({ documentQuestions });
+                if (documentQuestions) setOpenSection("documents");
               }}
             />
           )}
         </SettingRow>
       )}
+      <SettingRow label={mcpLabel}>
+        {() => (
+          <OnOffControl
+            ariaLabel={mcpLabel}
+            value={draft.mcpEnabled}
+            onChange={(mcpEnabled) => update({ mcpEnabled })}
+          />
+        )}
+      </SettingRow>
     </>
   );
 }

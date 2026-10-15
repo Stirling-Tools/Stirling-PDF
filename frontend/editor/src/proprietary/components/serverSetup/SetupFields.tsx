@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
 import { FormField } from "@app/ui/FormField";
 import { Icon } from "@app/ui/Icon";
 import { Input } from "@app/ui/Input";
@@ -18,29 +19,50 @@ import styles from "@app/components/shared/setupCard/SetupCard.module.css";
 export const SETUP_DROPDOWN = { zIndex: Z_INDEX_ONBOARDING_CARD + 1 };
 
 /** Settings that open more fields when switched on; one is open at a time. */
-export type ExpandableSection = "signIn" | "email" | "ai" | "mcp";
+export type ExpandableSection = "signIn" | "email" | "ai" | "documents";
 
-/**
- * The section to open when a card first shows: the first setting on it that
- * is switched on and has fields of its own.
- */
-export function initialOpenSection(
+/** Each card's expandable settings, top to bottom. */
+const SECTIONS_BY_STEP: Partial<Record<SetupStepId, ExpandableSection[]>> = {
+  summary: ["signIn", "email", "ai", "documents"],
+  signIn: ["signIn"],
+  email: ["email"],
+  ai: ["ai", "documents"],
+};
+
+/** The sections on `step` that are switched on, and so have fields to fill in. */
+function sectionsOn(
   step: SetupStepId,
   draft: ServerSetupDraft,
-): ExpandableSection | null {
-  const onByStep: Partial<Record<SetupStepId, ExpandableSection[]>> = {
-    summary: ["signIn", "email", "ai", "mcp"],
-    signIn: ["signIn"],
-    email: ["email"],
-    ai: ["ai", "mcp"],
-  };
+): ExpandableSection[] {
   const isOn: Record<ExpandableSection, boolean> = {
     signIn: draft.login !== "password",
     email: draft.emailEnabled,
     ai: draft.ai === "custom",
-    mcp: draft.ai !== "off" && draft.mcpEnabled,
+    documents: draft.ai === "custom" && draft.documentQuestions,
   };
-  return onByStep[step]?.find((section) => isOn[section]) ?? null;
+  return (SECTIONS_BY_STEP[step] ?? []).filter((section) => isOn[section]);
+}
+
+/** The section to open when a card first shows: its first one switched on. */
+export function initialOpenSection(
+  step: SetupStepId,
+  draft: ServerSetupDraft,
+): ExpandableSection | null {
+  return sectionsOn(step, draft)[0] ?? null;
+}
+
+/** The section Save moves on to: the next one switched on below `current`, if any. */
+export function nextOpenSection(
+  step: SetupStepId,
+  draft: ServerSetupDraft,
+  current: ExpandableSection,
+): ExpandableSection | null {
+  const order = SECTIONS_BY_STEP[step] ?? [];
+  return (
+    sectionsOn(step, draft).find(
+      (section) => order.indexOf(section) > order.indexOf(current),
+    ) ?? null
+  );
 }
 
 /** The section that holds a field, so an error there can open it. */
@@ -49,7 +71,7 @@ export function sectionForField(
 ): ExpandableSection | null {
   if (field.startsWith("oauth")) return "signIn";
   if (field.startsWith("smtp")) return "email";
-  if (field.startsWith("mcp")) return "mcp";
+  if (field.startsWith("embedding")) return "documents";
   if (field.startsWith("ai")) return "ai";
   return null;
 }
@@ -65,6 +87,8 @@ export interface SetupStepProps {
   usingDefaultCredentials: boolean;
   openSection: ExpandableSection | null;
   setOpenSection: (section: ExpandableSection | null) => void;
+  /** Checks `section`'s fields; when they pass, opens the next section switched on. */
+  saveSection: (section: ExpandableSection) => void;
 }
 
 /**
@@ -81,8 +105,11 @@ export function SettingRow({
 }: {
   label: string;
   children: (labelId: string) => ReactNode;
-  /** Adds a chevron that shows or hides `details`; omit while there is nothing to show. */
-  expand?: { open: boolean; onToggle: () => void };
+  /**
+   * Adds a chevron that shows or hides `details`, and a Save button under
+   * them; omit while there is nothing to show.
+   */
+  expand?: { open: boolean; onToggle: () => void; onSave: () => void };
   details?: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -126,7 +153,16 @@ export function SettingRow({
           inert={!open}
         >
           <div className={styles.groupDetailsClip}>
-            <div className={styles.groupDetailsBody}>{details}</div>
+            <div className={styles.groupDetailsBody}>
+              {details}
+              {expand && (
+                <div className={styles.groupDetailsActions}>
+                  <Button variant="secondary" size="sm" onClick={expand.onSave}>
+                    {t("serverSetup.save", "Save")}
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -145,13 +181,14 @@ export function FieldGroup({ children }: { children: ReactNode }) {
 
 /** The `expand` prop for a SettingRow whose fields live in `section`. */
 export function sectionToggle(
-  props: Pick<SetupStepProps, "openSection" | "setOpenSection">,
+  props: Pick<SetupStepProps, "openSection" | "setOpenSection" | "saveSection">,
   section: ExpandableSection,
 ) {
   const open = props.openSection === section;
   return {
     open,
     onToggle: () => props.setOpenSection(open ? null : section),
+    onSave: () => props.saveSection(section),
   };
 }
 

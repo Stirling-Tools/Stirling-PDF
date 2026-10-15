@@ -5,6 +5,8 @@
  * the server's own default (including env overrides) in place.
  */
 
+import { EMBEDDING_MODEL_SUGGESTIONS } from "@app/components/shared/config/configSections/aiEngineSettings";
+
 export type SetupMode = "quick" | "custom";
 
 export type SetupStepId =
@@ -63,23 +65,13 @@ export function issuersToCheck(
   step: SetupStepId,
   draft: ServerSetupDraft,
   initial: ServerSetupDraft,
-): ("oauthIssuer" | "mcpIssuerUri")[] {
+): "oauthIssuer"[] {
   const covers = step === "summary" ? QUICK_SUMMARY_STEPS : [step];
-  const fields: ("oauthIssuer" | "mcpIssuerUri")[] = [];
-  if (covers.includes("signIn") && loginNeedsIssuer(draft.login)) {
-    fields.push("oauthIssuer");
-  }
-  if (
-    covers.includes("ai") &&
-    draft.ai !== "off" &&
-    draft.mcpEnabled &&
-    draft.mcpAuthMode === "oauth"
-  ) {
-    fields.push("mcpIssuerUri");
-  }
-  return fields.filter(
-    (field) => trimUrl(draft[field]) !== trimUrl(initial[field]),
-  );
+  return covers.includes("signIn") &&
+    loginNeedsIssuer(draft.login) &&
+    trimUrl(draft.oauthIssuer) !== trimUrl(initial.oauthIssuer)
+    ? ["oauthIssuer"]
+    : [];
 }
 
 /**
@@ -123,6 +115,29 @@ export function aiProviderChange(
     : { aiProvider: provider, aiApiKey: "", aiBaseUrl: "" };
 }
 
+/**
+ * The same for the embedding provider. A new provider starts on its first
+ * suggested model, since the previous provider's model name means nothing to it.
+ */
+export function embeddingProviderChange(
+  provider: EmbeddingProvider,
+  initial: ServerSetupDraft,
+): Partial<ServerSetupDraft> {
+  return provider === initial.embeddingProvider
+    ? {
+        embeddingProvider: provider,
+        embeddingModel: initial.embeddingModel,
+        embeddingApiKey: initial.embeddingApiKey,
+        embeddingBaseUrl: initial.embeddingBaseUrl,
+      }
+    : {
+        embeddingProvider: provider,
+        embeddingModel: EMBEDDING_MODEL_SUGGESTIONS[provider]?.[0] ?? "",
+        embeddingApiKey: "",
+        embeddingBaseUrl: "",
+      };
+}
+
 /** Field errors across several steps, as one map (their fields never overlap). */
 export function validateSteps(
   steps: SetupStepId[],
@@ -147,7 +162,9 @@ export type AiChoice = "off" | "custom" | "stirling";
 
 export type AiProvider = "anthropic" | "openai" | "ollama" | "custom";
 
-/** How AI agents sign in to the MCP server. */
+export type EmbeddingProvider = "voyageai" | "openai" | "ollama" | "custom";
+
+/** How MCP clients sign in: OAuth needs an identity provider, so setup only turns on API keys. */
 export type McpAuthMode = "oauth" | "apikey";
 
 export interface ServerSetupDraft {
@@ -174,10 +191,13 @@ export interface ServerSetupDraft {
   aiBaseUrl: string;
   aiFastModel: string;
   aiSmartModel: string;
+  documentQuestions: boolean;
+  embeddingProvider: EmbeddingProvider;
+  embeddingModel: string;
+  embeddingApiKey: string;
+  embeddingBaseUrl: string;
   mcpEnabled: boolean;
   mcpAuthMode: McpAuthMode;
-  mcpIssuerUri: string;
-  mcpResourceId: string;
   analytics: boolean | null;
   currentPassword: string;
   newPassword: string;
@@ -212,10 +232,13 @@ export const STEP_FIELDS: Record<SetupStepId, (keyof ServerSetupDraft)[]> = {
     "aiBaseUrl",
     "aiFastModel",
     "aiSmartModel",
+    "documentQuestions",
+    "embeddingProvider",
+    "embeddingModel",
+    "embeddingApiKey",
+    "embeddingBaseUrl",
     "mcpEnabled",
     "mcpAuthMode",
-    "mcpIssuerUri",
-    "mcpResourceId",
   ],
   analytics: ["analytics"],
   password: ["currentPassword", "newPassword", "confirmPassword"],
@@ -223,8 +246,15 @@ export const STEP_FIELDS: Record<SetupStepId, (keyof ServerSetupDraft)[]> = {
 };
 
 /** Providers whose models are reached through an OpenAI-compatible base URL. */
-export function providerNeedsBaseUrl(provider: AiProvider): boolean {
+export function providerNeedsBaseUrl(
+  provider: AiProvider | EmbeddingProvider,
+): boolean {
   return provider === "ollama" || provider === "custom";
+}
+
+/** Ollama runs locally and takes no key. */
+export function embeddingNeedsApiKey(provider: EmbeddingProvider): boolean {
+  return provider !== "ollama";
 }
 
 export function loginNeedsIssuer(login: LoginMethod): boolean {
@@ -298,6 +328,13 @@ function readProvider(settings: Settings): AiProvider {
     : "anthropic";
 }
 
+function readEmbeddingProvider(settings: Settings): EmbeddingProvider {
+  const value = readString(settings, "aiEngine.rag.embeddingProvider");
+  return value === "openai" || value === "ollama" || value === "custom"
+    ? value
+    : "voyageai";
+}
+
 /** How GET /api/v1/admin/settings returns a secret. */
 const MASKED_SECRET = "********";
 
@@ -346,11 +383,17 @@ export function draftFromSettings(settings: Settings): ServerSetupDraft {
     aiBaseUrl: readString(settings, "aiEngine.models.baseUrl"),
     aiFastModel: readString(settings, "aiEngine.models.fastModel"),
     aiSmartModel: readString(settings, "aiEngine.models.smartModel"),
+    documentQuestions: readBool(
+      settings,
+      "aiEngine.features.documentQuestions",
+    ),
+    embeddingProvider: readEmbeddingProvider(settings),
+    embeddingModel: readString(settings, "aiEngine.rag.embeddingModel"),
+    embeddingApiKey: readString(settings, "aiEngine.rag.embeddingApiKey"),
+    embeddingBaseUrl: readString(settings, "aiEngine.rag.embeddingBaseUrl"),
     mcpEnabled: readBool(settings, "mcp.enabled"),
     mcpAuthMode:
       readString(settings, "mcp.auth.mode") === "apikey" ? "apikey" : "oauth",
-    mcpIssuerUri: readString(settings, "mcp.auth.issuerUri"),
-    mcpResourceId: readString(settings, "mcp.auth.resourceId"),
     analytics: typeof analytics === "boolean" ? analytics : null,
     currentPassword: "",
     newPassword: "",
@@ -423,23 +466,26 @@ function aiSettings(draft: ServerSetupDraft): Settings {
   if (providerNeedsBaseUrl(draft.aiProvider)) {
     settings["aiEngine.models.baseUrl"] = trimUrl(draft.aiBaseUrl);
   }
-  return settings;
+  return { ...settings, ...documentQuestionSettings(draft) };
 }
 
-/**
- * OAuth needs the identity provider's issuer and this server's resource id,
- * which tokens must name; the id defaults to the MCP endpoint's own URL.
- * API key mode needs neither: agents use their user's Stirling API key.
- */
-function mcpAuthSettings(draft: ServerSetupDraft): Settings {
-  if (!draft.mcpEnabled) return {};
-  if (draft.mcpAuthMode === "apikey") return { "mcp.auth.mode": "apikey" };
-  return {
-    "mcp.auth.mode": "oauth",
-    "mcp.auth.issuerUri": trimUrl(draft.mcpIssuerUri),
-    "mcp.auth.resourceId":
-      trimUrl(draft.mcpResourceId) || `${trimUrl(draft.backendUrl)}/mcp`,
+/** Document questions search an embedding index, so they need an embedding model. */
+function documentQuestionSettings(draft: ServerSetupDraft): Settings {
+  if (!draft.documentQuestions) {
+    return { "aiEngine.features.documentQuestions": false };
+  }
+  const settings: Settings = {
+    "aiEngine.features.documentQuestions": true,
+    "aiEngine.rag.embeddingProvider": draft.embeddingProvider,
+    "aiEngine.rag.embeddingModel": draft.embeddingModel.trim(),
   };
+  if (embeddingNeedsApiKey(draft.embeddingProvider)) {
+    settings["aiEngine.rag.embeddingApiKey"] = draft.embeddingApiKey.trim();
+  }
+  if (providerNeedsBaseUrl(draft.embeddingProvider)) {
+    settings["aiEngine.rag.embeddingBaseUrl"] = trimUrl(draft.embeddingBaseUrl);
+  }
+  return settings;
 }
 
 function toSettings(draft: ServerSetupDraft): Settings {
@@ -453,7 +499,7 @@ function toSettings(draft: ServerSetupDraft): Settings {
     "storage.sharing.enabled": draft.sharingEnabled,
     ...aiSettings(draft),
     "mcp.enabled": draft.mcpEnabled,
-    ...mcpAuthSettings(draft),
+    ...(draft.mcpEnabled ? { "mcp.auth.mode": draft.mcpAuthMode } : {}),
     ...(draft.analytics === null
       ? {}
       : { "system.enableAnalytics": draft.analytics }),
@@ -489,8 +535,9 @@ export function revertStep(
 
 /**
  * What Finish saves: steps outside the chosen mode go back to the server's
- * values, so Custom answers are dropped if the admin switches to Quick start,
- * and switching AI off switches MCP off, since it only lets AI agents in.
+ * values, so Custom answers are dropped if the admin switches to Quick start.
+ * MCP switched on here uses API keys, the one mode that needs no identity
+ * provider; a server that already had MCP keeps its own mode.
  */
 export function draftToSave(
   draft: ServerSetupDraft,
@@ -504,12 +551,9 @@ export function draftToSave(
     (next, step) => revertStep(next, initial, step),
     draft,
   );
-  if (saved.ai !== "off") return saved;
-  // Turning AI off turns MCP off; a server already without AI keeps its MCP.
-  return {
-    ...saved,
-    mcpEnabled: initial.ai === "off" ? initial.mcpEnabled : false,
-  };
+  return saved.mcpEnabled && !initial.mcpEnabled
+    ? { ...saved, mcpAuthMode: "apikey" }
+    : saved;
 }
 
 function isHttpUrl(value: string): boolean {
@@ -607,12 +651,11 @@ export function validateStep(
           require("aiSmartModel");
         }
       }
-      if (
-        draft.ai !== "off" &&
-        draft.mcpEnabled &&
-        draft.mcpAuthMode === "oauth"
-      ) {
-        requireUrl("mcpIssuerUri");
+      if (draft.ai === "custom" && draft.documentQuestions) {
+        require("embeddingModel");
+        if (providerNeedsBaseUrl(draft.embeddingProvider)) {
+          requireUrl("embeddingBaseUrl");
+        }
       }
       break;
     case "summary":

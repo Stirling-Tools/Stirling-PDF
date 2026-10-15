@@ -16,6 +16,7 @@ import {
   SettingRow,
   SetupNote,
   initialOpenSection,
+  nextOpenSection,
   sectionForField,
   type ExpandableSection,
   type SetupStepProps,
@@ -203,6 +204,7 @@ function ServerSetupFlow({
   const [draft, setDraft] = useState<ServerSetupDraft>(() => ({
     ...prefillAddresses(initial, pageOrigin()),
     analytics: initial.analytics ?? true,
+    mcpEnabled: true,
     currentPassword: usingDefaultCredentials ? DEFAULT_ADMIN_PASSWORD : "",
   }));
   const [mode, setMode] = useState<SetupMode>("quick");
@@ -264,6 +266,30 @@ function ServerSetupFlow({
     }
   };
 
+  /** Errors `step` has in `section`'s fields. */
+  const sectionErrors = (
+    step: SetupStepId,
+    section: ExpandableSection,
+  ): StepErrors =>
+    Object.fromEntries(
+      Object.entries(validateStep(step, draft, mode)).filter(
+        ([field]) =>
+          sectionForField(field as keyof ServerSetupDraft) === section,
+      ),
+    );
+
+  const saveSection = (section: ExpandableSection) => {
+    if (phase.kind !== "step") return;
+    const step = steps[phase.index];
+    const found = sectionErrors(step, section);
+    if (Object.keys(found).length > 0) {
+      showErrors(found);
+      return;
+    }
+    setErrors({});
+    setOpenSection(nextOpenSection(step, draft, section));
+  };
+
   const stepProps: SetupStepProps = {
     draft,
     initial,
@@ -273,6 +299,7 @@ function ServerSetupFlow({
     usingDefaultCredentials,
     openSection,
     setOpenSection,
+    saveSection,
   };
 
   /** Shows `stepErrors`, opening the section the first is in and focusing it. */

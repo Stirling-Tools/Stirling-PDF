@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   aiProviderChange,
   draftFromSettings,
+  embeddingProviderChange,
   issuersToCheck,
   loginChange,
   draftToSave,
@@ -43,8 +44,15 @@ const SETTINGS = {
       smartModel: "claude-haiku-4-5",
       apiKey: "",
     },
+    rag: {
+      embeddingProvider: "voyageai",
+      embeddingModel: "voyage-4",
+      embeddingApiKey: "********",
+      embeddingBaseUrl: "",
+    },
+    features: { documentQuestions: true },
   },
-  mcp: { enabled: false },
+  mcp: { enabled: false, auth: { mode: "oauth" } },
 };
 
 const ORIGIN = "https://pdf.example.com";
@@ -176,52 +184,84 @@ describe("draftToSave", () => {
     expect(quick.storageEnabled).toBe(true);
     expect(quick.mcpEnabled).toBe(true);
     expect(quick.emailEnabled).toBe(true);
-    expect(draftToSave(edited, initial, "custom")).toEqual(edited);
+    expect(draftToSave(edited, initial, "custom")).toEqual({
+      ...edited,
+      mcpAuthMode: "apikey",
+    });
   });
 
-  it("switches MCP off when AI is switched off", () => {
+  it("keeps MCP on when AI is switched off", () => {
     const initial = {
       ...draftFromSettings(SETTINGS),
       ai: "custom" as const,
       mcpEnabled: true,
     };
     const draft = { ...initial, ai: "off" as const };
-    expect(draftToSave(draft, initial, "custom").mcpEnabled).toBe(false);
-  });
-
-  it("leaves MCP alone where AI was already off", () => {
-    const initial = { ...draftFromSettings(SETTINGS), mcpEnabled: true };
-    expect(draftToSave(initial, initial, "custom").mcpEnabled).toBe(true);
+    expect(draftToSave(draft, initial, "custom").mcpEnabled).toBe(true);
   });
 });
 
-describe("MCP sign-in", () => {
-  const base = {
-    ...prefillAddresses(draftFromSettings(SETTINGS), ORIGIN),
-    ai: "custom" as const,
-    mcpEnabled: true,
-  };
+describe("MCP", () => {
+  const initial = draftFromSettings(SETTINGS);
 
-  it("points OAuth tokens at this server's /mcp by default", () => {
-    const delta = settingsDelta(draftFromSettings(SETTINGS), {
-      ...base,
-      mcpAuthMode: "oauth",
-      mcpIssuerUri: "https://id.example.com/",
-    });
-    expect(delta).toMatchObject({
-      "mcp.auth.mode": "oauth",
-      "mcp.auth.issuerUri": "https://id.example.com",
-      "mcp.auth.resourceId": `${ORIGIN}/mcp`,
+  it("turns on with API keys, which need no identity provider", () => {
+    const saved = draftToSave(
+      { ...initial, mcpEnabled: true },
+      initial,
+      "quick",
+    );
+    expect(settingsDelta(initial, saved)).toEqual({
+      "mcp.enabled": true,
+      "mcp.auth.mode": "apikey",
     });
   });
 
-  it("needs nothing more in API key mode", () => {
-    const delta = settingsDelta(draftFromSettings(SETTINGS), {
-      ...base,
-      mcpAuthMode: "apikey",
+  it("keeps the sign-in mode of a server that already runs it", () => {
+    const running = { ...initial, mcpEnabled: true };
+    expect(draftToSave(running, running, "custom").mcpAuthMode).toBe("oauth");
+  });
+});
+
+describe("document questions", () => {
+  const initial = prefillAddresses(draftFromSettings(SETTINGS), ORIGIN);
+  const custom = {
+    ...initial,
+    ai: "custom" as const,
+    aiFastModel: "fast",
+    aiSmartModel: "smart",
+  };
+
+  it("saves the embedding setup with AI, leaving a masked key alone", () => {
+    const delta = settingsDelta(initial, custom);
+    expect(delta).toMatchObject({
+      "aiEngine.features.documentQuestions": true,
+      "aiEngine.rag.embeddingProvider": "voyageai",
+      "aiEngine.rag.embeddingModel": "voyage-4",
     });
-    expect(delta).toMatchObject({ "mcp.auth.mode": "apikey" });
-    expect(delta).not.toHaveProperty("mcp.auth.issuerUri");
+    expect(delta).not.toHaveProperty("aiEngine.rag.embeddingApiKey");
+  });
+
+  it("needs a model, and a base URL for local providers", () => {
+    const draft = {
+      ...custom,
+      ...embeddingProviderChange("ollama", initial),
+      embeddingModel: "",
+    };
+    expect(validateStep("ai", draft, "custom")).toEqual({
+      embeddingModel: "required",
+      embeddingBaseUrl: "required",
+    });
+  });
+
+  it("starts a new provider on its own model, without the old key", () => {
+    expect(embeddingProviderChange("openai", initial)).toMatchObject({
+      embeddingModel: "text-embedding-3-small",
+      embeddingApiKey: "",
+    });
+    expect(embeddingProviderChange("voyageai", initial)).toMatchObject({
+      embeddingModel: "voyage-4",
+      embeddingApiKey: "********",
+    });
   });
 });
 
@@ -257,20 +297,13 @@ describe("switching provider", () => {
 describe("issuersToCheck", () => {
   const initial = prefillAddresses(draftFromSettings(SETTINGS), ORIGIN);
 
-  it("checks a new sign-in or MCP issuer on the steps that save it", () => {
+  it("checks a new sign-in issuer on the steps that save it", () => {
     const draft = {
       ...initial,
       login: "oidc" as const,
       oauthIssuer: "https://id.example.com",
-      ai: "custom" as const,
-      mcpEnabled: true,
-      mcpAuthMode: "oauth" as const,
-      mcpIssuerUri: "https://mcp-id.example.com",
     };
-    expect(issuersToCheck("summary", draft, initial)).toEqual([
-      "oauthIssuer",
-      "mcpIssuerUri",
-    ]);
+    expect(issuersToCheck("summary", draft, initial)).toEqual(["oauthIssuer"]);
     expect(issuersToCheck("signIn", draft, initial)).toEqual(["oauthIssuer"]);
     expect(issuersToCheck("email", draft, initial)).toEqual([]);
   });
