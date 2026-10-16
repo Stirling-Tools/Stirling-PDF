@@ -349,14 +349,28 @@ function CommentsHeaderActions({
           </ActionIcon>
         </Tooltip>
       )}
-      <MoreActionsMenu>
-        <Menu.Item
-          leftSection={<Icon name="download" size={18} />}
-          onClick={onExportCsv}
-        >
-          {t("viewer.comments.exportCsv", "Export as CSV")}
-        </Menu.Item>
-        {!readOnly && (
+      {readOnly ? (
+        // Export is the only action a view-only document permits, so it is a
+        // button rather than a one-item menu.
+        <Tooltip label={t("viewer.comments.exportCsv", "Export as CSV")}>
+          <ActionIcon
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            aria-label={t("viewer.comments.exportCsv", "Export as CSV")}
+            onClick={onExportCsv}
+          >
+            <Icon name="download" size="1.25rem" />
+          </ActionIcon>
+        </Tooltip>
+      ) : (
+        <MoreActionsMenu>
+          <Menu.Item
+            leftSection={<Icon name="download" size={18} />}
+            onClick={onExportCsv}
+          >
+            {t("viewer.comments.exportCsv", "Export as CSV")}
+          </Menu.Item>
           <Menu.Item
             leftSection={<Icon name="trash" size={18} />}
             color="red"
@@ -364,8 +378,8 @@ function CommentsHeaderActions({
           >
             {t("viewer.comments.clearAll", "Clear all comments")}
           </Menu.Item>
-        )}
-      </MoreActionsMenu>
+        </MoreActionsMenu>
+      )}
     </Group>
   );
 }
