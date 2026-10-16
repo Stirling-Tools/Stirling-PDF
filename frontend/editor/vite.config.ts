@@ -918,9 +918,12 @@ export default defineConfig(async ({ mode, command }) => {
             // enums, so they get their own chunks.
             if (pkg === "@embedpdf/engines") return "vendor-embedpdf";
             if (pkg === "@embedpdf/pdfium") return "vendor-pdfium";
+            // models is the only embedpdf package the startup path imports
+            // (PdfPermissionFlag), so grouping it with core/utils/plugins
+            // preloads the engine for one enum.
+            if (pkg === "@embedpdf/models") return "vendor-embedpdf-models";
             if (
               pkg === "@embedpdf/core" ||
-              pkg === "@embedpdf/models" ||
               pkg === "@embedpdf/utils" ||
               pkg === "@embedpdf/plugin-spread"
             ) {
@@ -934,6 +937,15 @@ export default defineConfig(async ({ mode, command }) => {
             // vendor-ui.
             if (pkg === "@mui/icons-material") return "vendor-mui-icons";
             if (pkg === "@iconify/react") return "vendor-iconify";
+            // Only lazy screens import these (DataTable, reached through the
+            // ui barrel), but the substring match on "react" below would file
+            // them with the startup modules.
+            if (
+              pkg === "@tanstack/react-table" ||
+              pkg === "@tanstack/table-core"
+            ) {
+              return "vendor-tanstack-table";
+            }
             // These packages are mutually circular: splitting them breaks
             // module init order at runtime. Only startup modules land in
             // vendor-ui; libraries only some screens use (the markdown
