@@ -222,8 +222,12 @@ export async function captureShell({ distDir, editorDir, viewport = { width: 135
     await page.waitForSelector("#root .app-frame", { timeout: 60_000 });
     await page.evaluate(() => globalThis.__shellReady(10, 500, 120_000));
 
-    const markup = await page.evaluate(() => globalThis.__shellMarkup());
-    if (!markup) throw new Error("the landing screen rendered no app frame");
+    const captured = await page.evaluate(() => globalThis.__shellMarkup());
+    if (!captured) throw new Error("the landing screen rendered no app frame");
+    // Assets imported as `new URL(..., import.meta.url)` resolve against the capture server,
+    // so its origin would be baked into every visitor's first paint. A base-relative path
+    // resolves against the document's <base> instead, which follows the deployment base.
+    const markup = captured.split(`${server.origin}/`).join("");
     const nodes = await page.evaluate(() => globalThis.__shellCount());
 
     const strings = {};
