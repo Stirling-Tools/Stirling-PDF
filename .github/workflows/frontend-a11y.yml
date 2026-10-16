@@ -19,6 +19,9 @@ on:
 permissions:
   contents: read
 
+env:
+  NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
+
 jobs:
   frontend-a11y:
     runs-on: ubuntu-latest
@@ -48,8 +51,15 @@ jobs:
           multi-cache: |
             a11y-frontend-node-modules:
               path: frontend/node_modules
+            a11y-npm-cache:
+              path: .cache/npm
           key: |
             a11y-frontend-node-modules=${{ inputs.npm-hash }}
+            a11y-npm-cache=${{ inputs.npm-hash }}
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
