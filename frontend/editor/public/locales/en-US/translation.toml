@@ -6077,6 +6077,11 @@ noneInStorage = "No files yet. Add one from this device to get started."
 readFailed = "The selected files could not be opened."
 someUnreadable = "Some files could not be opened"
 
+[mobile.scan]
+button = "Scan document"
+failed = "The document could not be scanned."
+fileName = "Scan {{date}}"
+
 [mobileScanner]
 addMore = "Add More"
 back = "Back"
