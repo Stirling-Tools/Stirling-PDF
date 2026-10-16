@@ -146,11 +146,10 @@ jobs:
     # the `project` filter so doc-only PRs skip this ~5-minute job.
     if: |
       !cancelled() &&
-      needs.files-changed.outputs.project == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
+      needs.files-changed.outputs.project == 'true'
     needs: [files-changed, gradle-cache-prime]
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/db-migration-test.yml
     secrets: inherit
 
