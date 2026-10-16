@@ -71,5 +71,10 @@ describe("LinkKeyOption", () => {
     expect(await screen.findByText(/used, revoked or expired/)).toBeVisible();
     expect(screen.getByLabelText("Link key")).toBeEnabled();
     expect(onLinked).not.toHaveBeenCalled();
+    // A fresh paste should not sit next to the last key's refusal.
+    fireEvent.change(screen.getByLabelText("Link key"), {
+      target: { value: KEY.slice(0, -1) + "C" },
+    });
+    expect(screen.queryByText(/used, revoked or expired/)).toBeNull();
   });
 });

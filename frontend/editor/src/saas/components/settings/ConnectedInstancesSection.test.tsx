@@ -172,6 +172,42 @@ describe("Connected instances", () => {
     );
   });
 
+  it("keeps waiting keys revocable when the instance list fails", async () => {
+    state.get.mockRejectedValue(new Error("Unavailable"));
+    state.getKeys.mockResolvedValue({
+      data: [
+        {
+          keyId: "k1",
+          name: "Prod",
+          createdAt: null,
+          expiresAt: "2026-10-23T12:00:00",
+        },
+      ],
+    });
+    mount();
+    expect(await screen.findByText("Prod")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Revoke key" })).toBeEnabled();
+    expect(
+      screen.getByText("Couldn’t load connected instances"),
+    ).toBeInTheDocument();
+  });
+
+  it("says when the key list fails rather than showing it empty", async () => {
+    state.get.mockResolvedValue({ data: [] });
+    state.getKeys.mockRejectedValueOnce(new Error("Unavailable"));
+    mount();
+    expect(
+      await screen.findByText("Couldn’t load link keys"),
+    ).toBeInTheDocument();
+    state.getKeys.mockResolvedValue({ data: [] });
+    fireEvent.click(screen.getAllByRole("button", { name: "Try again" })[0]);
+    await waitFor(() =>
+      expect(
+        screen.queryByText("Couldn’t load link keys"),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
   it("says when an instance was connected with a link key", async () => {
     state.get.mockResolvedValue({
       data: [{ ...instance, linkedWithKey: true }],

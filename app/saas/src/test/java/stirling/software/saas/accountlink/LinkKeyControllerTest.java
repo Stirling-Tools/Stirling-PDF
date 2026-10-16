@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +20,13 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import stirling.software.common.cluster.RateLimitStore;
+import stirling.software.common.cluster.RateLimitStore.RateLimitDecision;
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamMembership;
@@ -41,7 +45,9 @@ class LinkKeyControllerTest {
     @Mock private LinkKeyService service;
     @Mock private TeamMembershipRepository memberRepo;
     @Mock private UserRepository userRepository;
+    @Mock private RateLimitStore rateLimits;
 
+    private final MockHttpServletRequest http = new MockHttpServletRequest();
     private LinkKeyController controller;
     private Authentication auth;
 
@@ -50,7 +56,9 @@ class LinkKeyControllerTest {
         controller =
                 new LinkKeyController(
                         service,
-                        new LeaderTeamResolver(new UserTeamResolver(memberRepo), userRepository));
+                        new LeaderTeamResolver(new UserTeamResolver(memberRepo), userRepository),
+                        rateLimits);
+        http.setRemoteAddr("203.0.113.9");
         auth =
                 new AnonymousAuthenticationToken(
                         "k", "anonymousUser", List.of(new SimpleGrantedAuthority("ROLE_USER")));
@@ -135,12 +143,28 @@ class LinkKeyControllerTest {
     }
 
     @Test
+    void redeem_isLimitedPerSourceAddressBeforeTheKeyIsLookedAt() {
+        when(rateLimits.tryConsume(
+                        "account-link:redeem:203.0.113.9",
+                        LinkKeyController.REDEEMS_PER_HOUR,
+                        Duration.ofHours(1)))
+                .thenReturn(new RateLimitDecision(false, 0, 1));
+
+        ResponseEntity<?> resp =
+                controller.redeem(new LinkKeyController.RedeemRequest("stlk_k.s", null), http);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+        verifyNoInteractions(service);
+    }
+
+    @Test
     void redeem_returnsTheCredential() {
+        allowRedeem();
         when(service.redeem("stlk_k.s", "host"))
                 .thenReturn(Optional.of(new LinkKeyService.Redeemed("dev", "sec", 7L)));
 
         ResponseEntity<?> resp =
-                controller.redeem(new LinkKeyController.RedeemRequest("stlk_k.s", "host"));
+                controller.redeem(new LinkKeyController.RedeemRequest("stlk_k.s", "host"), http);
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(resp.getBody())
@@ -149,16 +173,25 @@ class LinkKeyControllerTest {
 
     @Test
     void redeem_refusalsAllLookTheSame() {
+        allowRedeem();
         when(service.redeem("stlk_k.s", null)).thenReturn(Optional.empty());
 
         ResponseEntity<?> refused =
-                controller.redeem(new LinkKeyController.RedeemRequest("stlk_k.s", null));
-        ResponseEntity<?> missing = controller.redeem(null);
+                controller.redeem(new LinkKeyController.RedeemRequest("stlk_k.s", null), http);
+        ResponseEntity<?> missing = controller.redeem(null, http);
 
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(refused.getBody()).isEqualTo(Map.of("error", "KEY_REJECTED"));
         assertThat(missing.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(missing.getBody()).isEqualTo(Map.of("error", "KEY_REJECTED"));
+    }
+
+    private void allowRedeem() {
+        when(rateLimits.tryConsume(
+                        org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyLong(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn(new RateLimitDecision(true, 19, 0));
     }
 
     /** Signs in user 42 on team 7 with the given role; close the returned mock. */

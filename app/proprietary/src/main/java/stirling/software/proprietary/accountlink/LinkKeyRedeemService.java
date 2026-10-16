@@ -22,7 +22,8 @@ import stirling.software.proprietary.service.OrgOwnerService;
  * through the browser.
  *
  * <p>The cluster lock is held across the commit, so replicas booting with the same key see the
- * winner's credential instead of spending a second redeem that SaaS will refuse.
+ * winner's credential instead of spending a second redeem that SaaS will refuse. No database
+ * transaction spans the call to SaaS.
  */
 @Slf4j
 @Service
@@ -104,41 +105,76 @@ public class LinkKeyRedeemService {
         if (lock.isEmpty()) {
             return Result.of(Outcome.BUSY);
         }
-        Result result;
         try (LockHandle held = lock.get()) {
-            result =
-                    transaction.execute(
-                            status -> {
-                                if (requireOwner) {
-                                    owners.requireCurrentOwner(authentication);
-                                }
-                                credentialStore.assertNoHandover();
-                                if (credentialStore.isLinked()) {
-                                    return Result.of(Outcome.ALREADY_LINKED);
-                                }
-                                AccountLinkClient.ConnectClaimResult claim =
-                                        client.redeemKey(parts.get().compose(), name);
-                                return switch (claim.outcome()) {
-                                    case GRANTED -> {
+            boolean linked =
+                    Boolean.TRUE.equals(
+                            transaction.execute(
+                                    status -> {
+                                        if (requireOwner) {
+                                            owners.requireCurrentOwner(authentication);
+                                        }
+                                        credentialStore.assertNoHandover();
+                                        return credentialStore.isLinked();
+                                    }));
+            if (linked) {
+                return Result.of(Outcome.ALREADY_LINKED);
+            }
+            // Outside any transaction: the call can take the whole request timeout.
+            AccountLinkClient.ConnectClaimResult claim =
+                    client.redeemKey(parts.get().compose(), name);
+            return switch (claim.outcome()) {
+                case GRANTED -> store(claim, parts.get().keyId());
+                case UNAVAILABLE -> Result.of(Outcome.UNAVAILABLE);
+                default -> Result.of(Outcome.REJECTED);
+            };
+        }
+    }
+
+    /**
+     * SaaS has spent the key by now, so a credential that cannot be kept is revoked rather than
+     * left registered to a server that will never use it.
+     */
+    private Result store(AccountLinkClient.ConnectClaimResult claim, String keyId) {
+        boolean stored;
+        try {
+            stored =
+                    Boolean.TRUE.equals(
+                            transaction.execute(
+                                    status -> {
+                                        if (credentialStore.isLinked()) {
+                                            return false;
+                                        }
                                         credentialStore.save(
                                                 claim.deviceId(),
                                                 claim.deviceSecret(),
                                                 claim.teamId(),
                                                 LinkMethod.KEY);
-                                        yield new Result(Outcome.LINKED, claim.teamId());
-                                    }
-                                    case UNAVAILABLE -> Result.of(Outcome.UNAVAILABLE);
-                                    default -> Result.of(Outcome.REJECTED);
-                                };
-                            });
+                                        return true;
+                                    }));
+        } catch (RuntimeException e) {
+            log.error(
+                    "Account-link: key {} was accepted but its credential could not be stored",
+                    keyId,
+                    e);
+            revoke(claim, keyId);
+            throw e;
         }
-        if (result.outcome() == Outcome.LINKED) {
-            entitlementCache.invalidate();
-            log.info(
-                    "Account-link: linked to team {} with key {}",
-                    result.teamId(),
-                    parts.get().keyId());
+        if (!stored) {
+            revoke(claim, keyId);
+            return Result.of(Outcome.ALREADY_LINKED);
         }
-        return result;
+        entitlementCache.invalidate();
+        log.info("Account-link: linked to team {} with key {}", claim.teamId(), keyId);
+        return new Result(Outcome.LINKED, claim.teamId());
+    }
+
+    private void revoke(AccountLinkClient.ConnectClaimResult claim, String keyId) {
+        if (!client.revokeSelf(claim.deviceId(), claim.deviceSecret())) {
+            log.warn(
+                    "Account-link: could not revoke device {} from key {}; a team leader can"
+                            + " remove it under Connected instances in Stirling Cloud",
+                    claim.deviceId(),
+                    keyId);
+        }
     }
 }

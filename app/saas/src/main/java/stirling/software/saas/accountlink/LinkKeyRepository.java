@@ -15,6 +15,13 @@ import jakarta.persistence.LockModeType;
 /** Data access for {@link LinkKey}. */
 public interface LinkKeyRepository extends JpaRepository<LinkKey, Long> {
 
+    /**
+     * A projection, not the entity, so the locked read that follows loads the row fresh rather than
+     * returning a stale instance from the persistence context.
+     */
+    @Query("SELECT k.secretHash FROM LinkKey k WHERE k.keyId = :keyId")
+    Optional<String> findSecretHashByKeyId(@Param("keyId") String keyId);
+
     /** Row-locking read used by redeem and revoke, so a key cannot be both. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT k FROM LinkKey k WHERE k.keyId = :keyId")

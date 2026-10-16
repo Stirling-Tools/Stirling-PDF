@@ -73,6 +73,33 @@ class LinkKeyRedeemServiceTest {
     }
 
     @Test
+    void aCredentialThatCannotBeStoredIsRevokedSoNoInstanceIsStranded() {
+        when(client.redeemKey(key, null))
+                .thenReturn(new ConnectClaimResult(ConnectClaimOutcome.GRANTED, "dev", "sec", 7L));
+        org.mockito.Mockito.doThrow(new IllegalStateException("database down"))
+                .when(store)
+                .save("dev", "sec", 7L, LinkMethod.KEY);
+
+        assertThatThrownBy(() -> service.redeemFromConfiguration(key, null))
+                .isInstanceOf(IllegalStateException.class);
+        verify(client).revokeSelf("dev", "sec");
+        verify(cache, never()).invalidate();
+        verify(handle).close();
+    }
+
+    @Test
+    void aLinkMadeWhileSaasAnsweredWinsAndTheNewCredentialIsRevoked() {
+        when(store.isLinked()).thenReturn(false, true);
+        when(client.redeemKey(key, null))
+                .thenReturn(new ConnectClaimResult(ConnectClaimOutcome.GRANTED, "dev", "sec", 7L));
+
+        assertThat(service.redeemFromConfiguration(key, null).outcome())
+                .isEqualTo(Outcome.ALREADY_LINKED);
+        verify(store, never()).save(any(), any(), any(), any());
+        verify(client).revokeSelf("dev", "sec");
+    }
+
+    @Test
     void theOwnerPathChecksOwnershipBeforeSpendingTheKey() {
         Authentication auth = mock(Authentication.class);
         when(owners.requireCurrentOwner(auth))

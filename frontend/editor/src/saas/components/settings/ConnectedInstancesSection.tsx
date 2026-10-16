@@ -168,6 +168,78 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
           )}
         </Banner>
       )}
+      {keys.isError && (
+        <Banner
+          tone="danger"
+          title={t(
+            "settings.connectedInstances.linkKey.loadError",
+            "Couldn’t load link keys",
+          )}
+          action={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => void keys.refetch()}
+              loading={keys.isFetching}
+            >
+              {t("settings.connectedInstances.retry", "Try again")}
+            </Button>
+          }
+        />
+      )}
+      {waitingKeys.length > 0 && (
+        <ul
+          className="account-connection__list"
+          aria-label={t(
+            "settings.connectedInstances.linkKey.waitingTitle",
+            "Keys waiting for a server",
+          )}
+        >
+          {waitingKeys.map((key) => (
+            <li key={key.keyId} className="account-connection__row">
+              <div className="account-connection__identity">
+                <div className="account-connection__name">
+                  <h3>
+                    {key.name ??
+                      t(
+                        "settings.connectedInstances.linkKey.unnamed",
+                        "Unnamed server",
+                      )}
+                  </h3>
+                </div>
+                <p>
+                  {t(
+                    "settings.connectedInstances.linkKey.waiting",
+                    "Waiting for the server to use its link key. The key expires on {{date}}.",
+                    { date: formatDay(key.expiresAt) },
+                  )}
+                </p>
+              </div>
+              <Button
+                variant="quiet"
+                accent="neutral"
+                size="sm"
+                loading={
+                  keyRevocation.isPending &&
+                  keyRevocation.variables?.keyId === key.keyId
+                }
+                disabled={keyRevocation.isPending}
+                onClick={() => keyRevocation.mutate(key)}
+              >
+                {t("settings.connectedInstances.linkKey.revoke", "Revoke key")}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {keyRevocation.isError && (
+        <Banner tone="danger">
+          {t(
+            "settings.connectedInstances.linkKey.revokeError",
+            "Couldn’t revoke the key. Try again.",
+          )}
+        </Banner>
+      )}
       {instances.isPending ? (
         <div
           role="status"
@@ -208,63 +280,9 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
         </Banner>
       ) : (
         <>
-          {waitingKeys.length > 0 && (
-            <ul
-              className="account-connection__list"
-              aria-label={t(
-                "settings.connectedInstances.linkKey.waitingTitle",
-                "Keys waiting for a server",
-              )}
-            >
-              {waitingKeys.map((key) => (
-                <li key={key.keyId} className="account-connection__row">
-                  <div className="account-connection__identity">
-                    <div className="account-connection__name">
-                      <h3>
-                        {key.name ??
-                          t(
-                            "settings.connectedInstances.linkKey.unnamed",
-                            "Unnamed server",
-                          )}
-                      </h3>
-                    </div>
-                    <p>
-                      {t(
-                        "settings.connectedInstances.linkKey.waiting",
-                        "Waiting for the server to use its link key. The key expires on {{date}}.",
-                        { date: formatDay(key.expiresAt) },
-                      )}
-                    </p>
-                  </div>
-                  <Button
-                    variant="quiet"
-                    accent="neutral"
-                    size="sm"
-                    loading={
-                      keyRevocation.isPending &&
-                      keyRevocation.variables?.keyId === key.keyId
-                    }
-                    disabled={keyRevocation.isPending}
-                    onClick={() => keyRevocation.mutate(key)}
-                  >
-                    {t(
-                      "settings.connectedInstances.linkKey.revoke",
-                      "Revoke key",
-                    )}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {keyRevocation.isError && (
-            <Banner tone="danger">
-              {t(
-                "settings.connectedInstances.linkKey.revokeError",
-                "Couldn’t revoke the key. Try again.",
-              )}
-            </Banner>
-          )}
-          {connected.length === 0 && waitingKeys.length === 0 ? (
+          {connected.length === 0 &&
+          waitingKeys.length === 0 &&
+          !keys.isPending ? (
             <EmptyState
               size="compact"
               title={t(

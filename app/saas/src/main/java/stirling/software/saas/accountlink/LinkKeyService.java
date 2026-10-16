@@ -106,15 +106,20 @@ public class LinkKeyService {
             return Optional.empty();
         }
         String keyId = parts.get().keyId();
+        // Verified before the row lock, so requests carrying a wrong secret never queue on it.
+        Optional<String> hash = repo.findSecretHashByKeyId(keyId);
+        if (hash.isEmpty()) {
+            return Optional.empty();
+        }
+        if (!secretMatches(parts.get().secret(), hash.get())) {
+            log.warn("Account-link key {}: redeem with a wrong secret", keyId);
+            return Optional.empty();
+        }
         Optional<LinkKey> found = repo.findByKeyIdForUpdate(keyId);
         if (found.isEmpty()) {
             return Optional.empty();
         }
         LinkKey key = found.get();
-        if (!secretMatches(parts.get().secret(), key.getSecretHash())) {
-            log.warn("Account-link key {}: redeem with a wrong secret", keyId);
-            return Optional.empty();
-        }
         if (!key.isUsable(LocalDateTime.now())) {
             log.info("Account-link key {}: redeem refused, key is used, revoked or expired", keyId);
             return Optional.empty();

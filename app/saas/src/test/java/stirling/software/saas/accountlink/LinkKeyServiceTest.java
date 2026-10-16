@@ -105,6 +105,17 @@ class LinkKeyServiceTest {
     }
 
     @Test
+    void redeem_checksTheSecretBeforeTakingTheRowLock() {
+        Issued issued = issue(LocalDateTime.now().plusDays(1));
+        String keyId = LinkKeyFormat.parse(issued.key).orElseThrow().keyId();
+        String other = LinkKeyFormat.generate(new java.security.SecureRandom()).secret();
+
+        service.redeem("stlk_" + keyId + "." + other, null);
+
+        verify(repo, never()).findByKeyIdForUpdate(keyId);
+    }
+
+    @Test
     void redeem_refusesTheRightIdWithTheWrongSecret() {
         Issued issued = issue(LocalDateTime.now().plusDays(1));
         String forged = LinkKeyFormat.parse(issued.key).orElseThrow().keyId();
@@ -118,8 +129,6 @@ class LinkKeyServiceTest {
     @Test
     void redeem_refusesUnknownAndMalformedKeysWithoutRegistering() {
         String unknown = LinkKeyFormat.generate(new java.security.SecureRandom()).compose();
-        when(repo.findByKeyIdForUpdate(LinkKeyFormat.parse(unknown).orElseThrow().keyId()))
-                .thenReturn(Optional.empty());
 
         assertThat(service.redeem(unknown, null)).isEmpty();
         assertThat(service.redeem("not-a-key", null)).isEmpty();
@@ -167,7 +176,13 @@ class LinkKeyServiceTest {
         row.setCreatedByUserId(42L);
         row.setName("Acme production");
         row.setExpiresAt(expiresAt);
-        when(repo.findByKeyIdForUpdate(parts.keyId())).thenReturn(Optional.of(row));
+        // Lenient: a wrong secret is refused before the locked read is ever made.
+        org.mockito.Mockito.lenient()
+                .when(repo.findSecretHashByKeyId(parts.keyId()))
+                .thenReturn(Optional.of(row.getSecretHash()));
+        org.mockito.Mockito.lenient()
+                .when(repo.findByKeyIdForUpdate(parts.keyId()))
+                .thenReturn(Optional.of(row));
         return new Issued(parts.compose(), row);
     }
 

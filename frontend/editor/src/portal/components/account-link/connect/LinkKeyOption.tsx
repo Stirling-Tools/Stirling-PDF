@@ -68,7 +68,10 @@ export function LinkKeyOption({ onLinked }: { onLinked: () => void }) {
           type="password"
           autoComplete="off"
           value={key}
-          onChange={(event) => setKey(event.target.value)}
+          onChange={(event) => {
+            setKey(event.target.value);
+            setError(null);
+          }}
           disabled={busy}
           placeholder="stlk_"
           data-autofocus
