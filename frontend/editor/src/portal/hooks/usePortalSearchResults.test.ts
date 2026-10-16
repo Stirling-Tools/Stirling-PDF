@@ -53,6 +53,10 @@ vi.mock("@app/contexts/ToolRegistryContext", () => ({
   })),
 }));
 
+vi.mock("@app/hooks/useToolManagement", () => ({
+  useToolAvailability: vi.fn(() => ({})),
+}));
+
 vi.mock("@portal/contexts/TierContext", () => ({
   useTier: vi.fn(() => ({
     tier: "pro",

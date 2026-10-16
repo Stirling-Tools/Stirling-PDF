@@ -236,6 +236,17 @@
   background: var(--c-hover);
 }
 
+/* Dimmed like an unavailable tool in the tool list; the reason line stays
+   legible because it is the point of showing the row. */
+.super-search-item--disabled {
+  cursor: default;
+}
+
+.super-search-item--disabled .super-search-item-icon,
+.super-search-item--disabled .super-search-item-title {
+  opacity: 0.25;
+}
+
 .super-search-item .mantine-Button-inner {
   width: 100%;
 }

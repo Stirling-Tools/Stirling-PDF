@@ -27,7 +27,12 @@ import { rankByFuzzy, FUZZY_MIN_SCORE } from "@app/utils/fuzzySearch";
 import { TOOL_SEARCH_FIELDS } from "@app/utils/toolSearch";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { ToolId } from "@app/types/toolId";
-import { isComingSoonTool, type ToolRegistry } from "@app/data/toolsTaxonomy";
+import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+import {
+  useToolSearchAccess,
+  type ToolSearchAccess,
+  type ToolSearchAccessResolver,
+} from "@app/hooks/useToolSearchAccess";
 import { SETTINGS_SEARCH_INDEX } from "@app/data/settingsSearchIndex";
 import { SETTINGS_SECTION_REGISTRY } from "@app/data/settingsSectionRegistry";
 import {
@@ -263,29 +268,46 @@ export function rankFileResults(
     }));
 }
 
+/**
+ * @param access how each tool may be offered (see useToolSearchAccess), so
+ *   search shows, greys or omits a tool exactly as the tool list does.
+ */
 export function rankToolResults(
   registry: Partial<ToolRegistry>,
   trimmed: string,
-  openTool: (id: ToolId) => void,
+  openTool: (id: ToolId, access: ToolSearchAccess) => void,
+  access: ToolSearchAccessResolver,
   limit = GROUP_RESULT_CEILING,
 ): SuperSearchResult[] {
   if (!trimmed) return [];
-  // Coming-soon placeholders are listed in the catalogue but can't open —
-  // selecting one would land on the "tool not found" panel.
   const entries = (
     Object.entries(registry) as [ToolId, ToolRegistry[ToolId] | undefined][]
-  ).filter(([id, tool]) => tool && !isComingSoonTool(id, tool));
+  ).flatMap(([id, tool]) => {
+    if (!tool) return [];
+    const toolAccess = access(id, tool);
+    return toolAccess.kind === "hidden"
+      ? []
+      : [[id, tool, toolAccess] as const];
+  });
   return rankByFuzzy(entries, trimmed, TOOL_SEARCH_FIELDS)
     .slice(0, limit)
-    .map(({ item: [id, tool], score }) => ({
-      key: `tool:${id}`,
-      group: "tools",
-      title: tool?.name ?? id,
-      subtitle: tool?.description,
-      icon: tool?.icon,
-      score,
-      onSelect: () => openTool(id),
-    }));
+    .map(({ item: [id, tool, toolAccess], score }) => {
+      const disabledReason =
+        toolAccess.kind === "disabled" ? toolAccess.message : undefined;
+      return {
+        key: `tool:${id}`,
+        group: "tools",
+        title: tool.name,
+        // The list's tooltip shape: the reason, then what the tool does.
+        subtitle: disabledReason
+          ? `${disabledReason} ${tool.description}`
+          : tool.description,
+        icon: tool.icon,
+        score,
+        disabledReason,
+        onSelect: () => openTool(id, toolAccess),
+      };
+    });
 }
 
 export function rankSettingsResults(
@@ -515,8 +537,10 @@ export function useSuperSearch(
     [fileActions, navActions],
   );
 
+  const toolAccess = useToolSearchAccess(toolAvailability);
   const openTool = useCallback(
-    (id: ToolId) => {
+    (id: ToolId, access: ToolSearchAccess) => {
+      if (access.kind === "disabled" || access.kind === "hidden") return;
       // Link tools have no in-editor UI — selecting one shows a "tool not
       // found" panel. Open their destination directly, matching how the
       // editor's tool lists treat them.
@@ -525,19 +549,13 @@ export function useSuperSearch(
         openExternalUrl(link);
         return;
       }
-      // Tools whose backend endpoint isn't served in this environment are
-      // flagged unavailable; handleToolSelect silently no-ops them. For a
-      // search ("take me to Repair") we still want the click to open the
-      // tool's UI, so fall back to the forced path for those. Available tools
-      // keep the normal path so the unsaved-changes guard still applies.
-      const available = toolAvailability[id]?.available !== false;
-      if (available) {
-        handleToolSelect(id);
-      } else {
+      if (access.kind === "openForced") {
         handleToolSelectForced(id);
+      } else {
+        handleToolSelect(id);
       }
     },
-    [handleToolSelect, handleToolSelectForced, toolAvailability, toolRegistry],
+    [handleToolSelect, handleToolSelectForced, toolRegistry],
   );
 
   const openSettings = useCallback(
@@ -583,7 +601,7 @@ export function useSuperSearch(
           ? rankFileResults(stubs, trimmed, openFile)
           : [],
         tools: scopeEnabled("tools")
-          ? rankToolResults(toolRegistry, trimmed, openTool)
+          ? rankToolResults(toolRegistry, trimmed, openTool, toolAccess)
           : [],
         settings: scopeEnabled("settings")
           ? rankSettingsResults(trimmed, t, gates, openSettings)
@@ -623,6 +641,7 @@ export function useSuperSearch(
     openFile,
     toolRegistry,
     openTool,
+    toolAccess,
     gates,
     openSettings,
     selectProcessorEntry,

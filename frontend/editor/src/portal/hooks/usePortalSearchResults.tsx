@@ -2,10 +2,19 @@ import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getToolUrlPath } from "@app/data/toolsTaxonomy";
+import {
+  getToolUrlPath,
+  type ToolRegistryEntry,
+} from "@app/data/toolsTaxonomy";
 import { isPortalEntityScopeAccessible } from "@app/data/processorSearchIndex";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { useToolAvailability } from "@app/hooks/useToolManagement";
+import {
+  useToolSearchAccess,
+  type ToolSearchAccess,
+} from "@app/hooks/useToolSearchAccess";
+import { preferencesService } from "@app/services/preferencesService";
 import {
   assembleSuperSearchGroups,
   rankSettingsResults,
@@ -201,8 +210,28 @@ export function usePortalSearchResults(
     ],
   );
 
+  // The editor's tool list rules, applied without the editor's providers:
+  // availability from the same endpoint query, and the user's "hide
+  // unavailable tools" choice (else the server default) from storage.
+  const toolAvailability = useToolAvailability();
+  const baseToolAccess = useToolSearchAccess(toolAvailability);
+  const hideUnavailableTools =
+    preferencesService.getStoredPreference("hideUnavailableTools") ??
+    config?.defaultHideUnavailableTools ??
+    false;
+  const toolAccess = useCallback(
+    (id: ToolId, tool: ToolRegistryEntry): ToolSearchAccess => {
+      const access = baseToolAccess(id, tool);
+      return hideUnavailableTools && access.kind === "disabled"
+        ? { kind: "hidden" }
+        : access;
+    },
+    [baseToolAccess, hideUnavailableTools],
+  );
+
   const openTool = useCallback(
-    (id: ToolId) => {
+    (id: ToolId, access: ToolSearchAccess) => {
+      if (access.kind === "disabled" || access.kind === "hidden") return;
       // Link tools have no in-editor UI — navigating to a tool URL for one
       // lands on a "tool not found" panel. Open their destination directly,
       // matching how the editor's tool lists treat them.
@@ -272,7 +301,7 @@ export function usePortalSearchResults(
     const editorGroups = assembleSuperSearchGroups(
       {
         tools: scopeEnabled("tools")
-          ? rankToolResults(allTools, trimmed, openTool)
+          ? rankToolResults(allTools, trimmed, openTool, toolAccess)
           : [],
       },
       t,
@@ -298,6 +327,7 @@ export function usePortalSearchResults(
     gates,
     openSettingsSection,
     openTool,
+    toolAccess,
     scopeEnabled,
     allTools,
     t,

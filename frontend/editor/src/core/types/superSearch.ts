@@ -22,6 +22,12 @@ export interface SuperSearchResult {
   iconName?: IconName;
   icon?: React.ReactNode;
   score: number;
+  /**
+   * Set when the destination exists but can't be used right now (e.g. a tool
+   * the server has disabled): the row is shown greyed with this reason and
+   * selecting it does nothing, matching how the destination's own list shows it.
+   */
+  disabledReason?: string;
   onSelect: () => void | Promise<void>;
 }
 

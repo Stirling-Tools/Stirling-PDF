@@ -121,12 +121,47 @@ import {
   assembleSuperSearchGroups,
   rankProcessorResults,
   rankSettingsResults,
+  rankToolResults,
 } from "@app/hooks/useSuperSearch";
+import type { ToolSearchAccess } from "@app/hooks/useToolSearchAccess";
+import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 
 const t = ((key: string, fallback?: string) =>
   fallback ?? key) as unknown as TFunction;
 
 describe("useSuperSearch helpers", () => {
+  it("omits hidden tools and marks disabled ones with their reason", () => {
+    const registry = {
+      repair: { name: "Repair", description: "Fix a broken PDF" },
+      rotate: { name: "Rotate", description: "Turn pages" },
+      automate: { name: "Automate", description: "Run a repair pipeline" },
+    } as unknown as Partial<ToolRegistry>;
+    const accessById: Record<string, ToolSearchAccess> = {
+      repair: {
+        kind: "disabled",
+        message: "Disabled by server administrator:",
+      },
+      rotate: { kind: "open" },
+      automate: { kind: "hidden" },
+    };
+    const openTool = vi.fn();
+
+    const results = rankToolResults(
+      registry,
+      "repair",
+      openTool,
+      (id) => accessById[id],
+    );
+
+    expect(results.map((result) => result.key)).toEqual(["tool:repair"]);
+    expect(results[0].disabledReason).toBe("Disabled by server administrator:");
+    expect(results[0].subtitle).toBe(
+      "Disabled by server administrator: Fix a broken PDF",
+    );
+    results[0].onSelect();
+    expect(openTool).toHaveBeenCalledWith("repair", accessById.repair);
+  });
+
   it("drops empty groups and preserves the requested group order", () => {
     const groups = assembleSuperSearchGroups(
       {

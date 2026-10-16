@@ -14,7 +14,7 @@ import {
  * outranks the same word in another tool's prose.
  */
 export const TOOL_SEARCH_FIELDS: FuzzyField<
-  [ToolId, ToolRegistryEntry | undefined]
+  readonly [ToolId, ToolRegistryEntry | undefined, ...unknown[]]
 >[] = [
   ([id]) => idToWords(id),
   ([, tool]) => tool?.name,

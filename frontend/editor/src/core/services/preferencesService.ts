@@ -64,6 +64,21 @@ class PreferencesService {
     this.serverDefaults = defaults;
   }
 
+  /** The user's own saved value, or undefined if they never set one. */
+  getStoredPreference<K extends keyof UserPreferences>(
+    key: K,
+  ): UserPreferences[K] | undefined {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        return (JSON.parse(stored) as Partial<UserPreferences>)[key];
+      }
+    } catch (error) {
+      console.error("Error reading preference:", key, error);
+    }
+    return undefined;
+  }
+
   getPreference<K extends keyof UserPreferences>(key: K): UserPreferences[K] {
     // Explicitly re-read every time in case preferences have changed in another tab etc.
     try {
