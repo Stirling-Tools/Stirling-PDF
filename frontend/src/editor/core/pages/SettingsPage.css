@@ -31,6 +31,10 @@
   flex-shrink: 0;
 }
 
+.settings-page__close {
+  margin-left: auto;
+}
+
 .settings-page__nav-title {
   font-size: 1.0625rem;
   font-weight: 700;
