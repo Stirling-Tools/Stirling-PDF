@@ -110,6 +110,14 @@
   opacity: 1;
 }
 
+/* Touch has no hover, and iOS spends the first tap on a row revealing a
+   hover-only star, so the tool only opens on the second tap. */
+@media (hover: none) {
+  .tool-button-star {
+    opacity: 1;
+  }
+}
+
 .search-input-container {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
