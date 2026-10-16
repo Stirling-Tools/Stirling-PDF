@@ -124,33 +124,4 @@ class TextRedactionServiceMoreTest {
             }
         }
     }
-
-    @Nested
-    @DisplayName("TextSegment / MatchRange data classes")
-    class DataClasses {
-
-        @Test
-        @DisplayName("TextSegment exposes its constructor values via accessors")
-        void textSegmentAccessors() {
-            PDFont font = helvetica();
-            TextRedactionService.TextSegment segment =
-                    new TextRedactionService.TextSegment(3, "Tj", "hello", 10, 15, font, 12f);
-
-            assertThat(segment.getTokenIndex()).isEqualTo(3);
-            assertThat(segment.getOperatorName()).isEqualTo("Tj");
-            assertThat(segment.getText()).isEqualTo("hello");
-            assertThat(segment.getStartPos()).isEqualTo(10);
-            assertThat(segment.getEndPos()).isEqualTo(15);
-            assertThat(segment.getFont()).isSameAs(font);
-            assertThat(segment.getFontSize()).isEqualTo(12f);
-        }
-
-        @Test
-        @DisplayName("MatchRange exposes start and end positions")
-        void matchRangeAccessors() {
-            TextRedactionService.MatchRange range = new TextRedactionService.MatchRange(4, 9);
-            assertThat(range.getStartPos()).isEqualTo(4);
-            assertThat(range.getEndPos()).isEqualTo(9);
-        }
-    }
 }

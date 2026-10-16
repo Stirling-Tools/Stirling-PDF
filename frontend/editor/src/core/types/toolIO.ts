@@ -720,11 +720,6 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
-  "/api/v1/misc/scanner-effect": {
-    accepts: ["PDF"],
-    produces: "PDF",
-    arity: "SISO",
-  },
   "/api/v1/misc/show-javascript": {
     accepts: ["PDF"],
     produces: "JAVASCRIPT",

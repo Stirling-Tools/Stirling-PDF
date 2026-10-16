@@ -1500,57 +1500,6 @@ class ScalePagesParams(ApiModel):
     )
 
 
-class Colorspace(StrEnum):
-    """
-    Colorspace for output image
-    """
-
-    grayscale = "grayscale"
-    color = "color"
-
-
-class Quality(StrEnum):
-    """
-    Scan quality preset
-    """
-
-    low = "low"
-    medium = "medium"
-    high = "high"
-
-
-class Rotation(StrEnum):
-    """
-    Rotation preset
-    """
-
-    none = "none"
-    slight = "slight"
-    moderate = "moderate"
-    severe = "severe"
-
-
-class ScannerEffectParams(ApiModel):
-    """
-    Applies various effects to simulate a scanned document, including rotation, noise, and edge softening. Input:PDF Output:PDF Type:SISO
-    """
-
-    advanced_enabled: bool | None = Field(None, description="Whether advanced settings are enabled", examples=[False])
-    blur: float | None = Field(None, description="Blur amount (0 = none, higher = more blur)", examples=[1.0])
-    border: int | None = Field(None, description="Border thickness in pixels", examples=[20])
-    brightness: float | None = Field(None, description="Brightness multiplier (1.0 = no change)", examples=[1.0])
-    colorspace: Colorspace | None = Field(None, description="Colorspace for output image", examples=["grayscale"])
-    contrast: float | None = Field(None, description="Contrast multiplier (1.0 = no change)", examples=[1.0])
-    noise: float | None = Field(None, description="Noise amount (0 = none, higher = more noise)", examples=[8.0])
-    quality: Quality = Field(..., description="Scan quality preset", examples=["high"])
-    resolution: int | None = Field(None, description="Rendering resolution in DPI", examples=[300])
-    rotate: int | None = Field(None, description="Base rotation in degrees", examples=[0])
-    rotate_variance: int | None = Field(None, description="Random rotation variance in degrees", examples=[2])
-    rotation: Rotation = Field(..., description="Rotation preset", examples=["none"])
-    rotation_value: int | None = None
-    yellowish: bool | None = Field(None, description="Simulate yellowed paper", examples=[False])
-
-
 class SplitBySizeOrCountParams(ApiModel):
     """
     split PDF into multiple paged documents based on size/count, ie if 20 pages and split into 5, it does 5 documents each 4 pages if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF Output:PDF Type:SIMO
@@ -1893,7 +1842,6 @@ class Model(
         | RenameAttachmentParams
         | RepairParams
         | ReplaceInvertPdfParams
-        | ScannerEffectParams
         | UnlockPdfFormsParams
         | UpdateMetadataParams
         | AccessibilityReportParams
@@ -1974,7 +1922,6 @@ class Model(
         | RenameAttachmentParams
         | RepairParams
         | ReplaceInvertPdfParams
-        | ScannerEffectParams
         | UnlockPdfFormsParams
         | UpdateMetadataParams
         | AccessibilityReportParams
@@ -2056,7 +2003,6 @@ type ParamToolModel = (
     | RenameAttachmentParams
     | RepairParams
     | ReplaceInvertPdfParams
-    | ScannerEffectParams
     | UnlockPdfFormsParams
     | UpdateMetadataParams
     | AccessibilityReportParams
@@ -2139,7 +2085,6 @@ class ToolEndpoint(StrEnum):
     RENAME_ATTACHMENT = "/api/v1/misc/rename-attachment"
     REPAIR = "/api/v1/misc/repair"
     REPLACE_INVERT_PDF = "/api/v1/misc/replace-invert-pdf"
-    SCANNER_EFFECT = "/api/v1/misc/scanner-effect"
     UNLOCK_PDF_FORMS = "/api/v1/misc/unlock-pdf-forms"
     UPDATE_METADATA = "/api/v1/misc/update-metadata"
     ACCESSIBILITY_REPORT = "/api/v1/security/accessibility-report"
@@ -2220,7 +2165,6 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.RENAME_ATTACHMENT: RenameAttachmentParams,
     ToolEndpoint.REPAIR: RepairParams,
     ToolEndpoint.REPLACE_INVERT_PDF: ReplaceInvertPdfParams,
-    ToolEndpoint.SCANNER_EFFECT: ScannerEffectParams,
     ToolEndpoint.UNLOCK_PDF_FORMS: UnlockPdfFormsParams,
     ToolEndpoint.UPDATE_METADATA: UpdateMetadataParams,
     ToolEndpoint.ACCESSIBILITY_REPORT: AccessibilityReportParams,

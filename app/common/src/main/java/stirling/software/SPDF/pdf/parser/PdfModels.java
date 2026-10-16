@@ -121,15 +121,6 @@ public final class PdfModels {
             List<String> warnings,
             Integer continuedFromPage) {}
 
-    // ── Page output ───────────────────────────────────────────────────────────
-
-    public record ParsedPage(
-            int pageNumber,
-            float widthPt,
-            float heightPt,
-            List<TableFragment> tables,
-            List<RawLine> layoutLines) {}
-
     // ── Parser contract ───────────────────────────────────────────────────────
 
     /**

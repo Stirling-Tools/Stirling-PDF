@@ -11693,9 +11693,6 @@ reset = "Reset to Defaults"
 unit = "Unit"
 unitInvalid = "Invalid unit: {{scaleUnit}}"
 
-[scannerEffect]
-tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-
 [scannerImageSplit]
 submit = "Extract Image Scans"
 tags = "separate,auto-detect,scans,multi-photo,organize"

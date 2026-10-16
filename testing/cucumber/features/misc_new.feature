@@ -111,27 +111,6 @@ Feature: Miscellaneous PDF Operations API Validation
         And the response file should have size greater than 0
 
 
-    @scanner-effect @positive
-    Scenario Outline: scanner-effect applies a scan simulation to a PDF
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 1 pages
-        And the request data includes
-            | parameter  | value        |
-            | colorspace | <colorspace> |
-            | quality    | <quality>    |
-        When I send the API request to the endpoint "/api/v1/misc/scanner-effect"
-        Then the response content type should be "application/pdf"
-        And the response status code should be 200
-        And the response file should have size greater than 0
-        And the response PDF should contain 1 pages
-
-        Examples:
-            | colorspace | quality |
-            | grayscale  | low     |
-            | grayscale  | medium  |
-            | grayscale  | high    |
-
-
     @replace-invert-pdf @positive
     Scenario: replace-invert-pdf returns a valid PDF
         Given I generate a PDF file as "fileInput"

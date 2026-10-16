@@ -1353,61 +1353,6 @@ export interface ScalePagesRequest {
    */
   scaleFactor?: number;
 }
-export interface ScannerEffectRequest {
-  /**
-   * Whether advanced settings are enabled
-   */
-  advancedEnabled?: boolean;
-  /**
-   * Blur amount (0 = none, higher = more blur)
-   */
-  blur?: number;
-  /**
-   * Border thickness in pixels
-   */
-  border?: number;
-  /**
-   * Brightness multiplier (1.0 = no change)
-   */
-  brightness?: number;
-  /**
-   * Colorspace for output image
-   */
-  colorspace?: "grayscale" | "color";
-  /**
-   * Contrast multiplier (1.0 = no change)
-   */
-  contrast?: number;
-  /**
-   * Noise amount (0 = none, higher = more noise)
-   */
-  noise?: number;
-  /**
-   * Scan quality preset
-   */
-  quality: "low" | "medium" | "high";
-  /**
-   * Rendering resolution in DPI
-   */
-  resolution?: number;
-  /**
-   * Base rotation in degrees
-   */
-  rotate?: number;
-  /**
-   * Random rotation variance in degrees
-   */
-  rotateVariance?: number;
-  /**
-   * Rotation preset
-   */
-  rotation: "none" | "slight" | "moderate" | "severe";
-  rotationValue?: number;
-  /**
-   * Simulate yellowed paper
-   */
-  yellowish?: boolean;
-}
 export interface SecurityCertSignSessionsRequest {
   request?: WorkflowCreationRequest;
 }
@@ -1662,7 +1607,6 @@ export type ToolEndpoint =
   | "/api/v1/misc/rename-attachment"
   | "/api/v1/misc/repair"
   | "/api/v1/misc/replace-invert-pdf"
-  | "/api/v1/misc/scanner-effect"
   | "/api/v1/misc/show-javascript"
   | "/api/v1/misc/unlock-pdf-forms"
   | "/api/v1/misc/update-metadata"
@@ -1773,7 +1717,6 @@ export interface ToolApiParams {
   "/api/v1/misc/rename-attachment": RenameAttachmentRequest;
   "/api/v1/misc/repair": MiscRepairRequest;
   "/api/v1/misc/replace-invert-pdf": ReplaceAndInvertColorRequest;
-  "/api/v1/misc/scanner-effect": ScannerEffectRequest;
   "/api/v1/misc/show-javascript": MiscShowJavascriptRequest;
   "/api/v1/misc/unlock-pdf-forms": MiscUnlockPdfFormsRequest;
   "/api/v1/misc/update-metadata": MetadataRequest;
@@ -1885,7 +1828,6 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/rename-attachment",
   "/api/v1/misc/repair",
   "/api/v1/misc/replace-invert-pdf",
-  "/api/v1/misc/scanner-effect",
   "/api/v1/misc/show-javascript",
   "/api/v1/misc/unlock-pdf-forms",
   "/api/v1/misc/update-metadata",
