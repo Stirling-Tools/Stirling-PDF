@@ -23,11 +23,13 @@ on:
 permissions:
   contents: read
 
+env:
+  TASK_TEMP_DIR: ${{ github.workspace }}/.cache/task/task-state
+  NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
+
 jobs:
   playwright-e2e:
     name: playwright-e2e (${{ matrix.browser }} ${{ matrix.shard }})
-    env:
-      NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -86,7 +88,13 @@ jobs:
               path: frontend/node_modules
             npm-cache:
               path: .cache/npm
+            task-cache:
+              path: .cache/setup-uv-cache
+            task-state-cache:
+              path: .cache/task/task-state
           key: |
+            task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
+            task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             npm-cache=${{ inputs.npm-hash }}
             frontend-dist=${{ inputs.frontend-dist-hash }}
             frontend-node-modules=${{ inputs.npm-hash }}

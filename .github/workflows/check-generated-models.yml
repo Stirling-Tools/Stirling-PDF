@@ -21,8 +21,7 @@ permissions:
   contents: read
 
 env:
-  CACHE_MAX_TAR_BYTES: 21474836480
-  CACHE_MAX_COMPRESSED_BYTES: 4294967296
+  TASK_TEMP_DIR: ${{ github.workspace }}/.cache/task/task-state
   JAVA_VERSION: 25
   GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
   GRADLE_FILES_TO_HASH: |
@@ -122,7 +121,13 @@ jobs:
               path: .cache/uv-python-dir
             tool-models-setup-uv-cache:
               path: .cache/setup-uv-cache
+            task-cache:
+              path: .cache/setup-uv-cache
+            task-state-cache:
+              path: .cache/task/task-state
           key: |
+            task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
+            task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             tool-models-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             tool-models-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}

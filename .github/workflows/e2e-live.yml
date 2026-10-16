@@ -28,6 +28,7 @@ permissions:
 
 env:
   GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
+  TASK_TEMP_DIR: ${{ github.workspace }}/.cache/task/task-state
 
 jobs:
   playwright-e2e-live:
@@ -89,7 +90,13 @@ jobs:
               path: .cache/setup-uv-cache
             e2e-live-uv-python-dir:
               path: .cache/uv-python-dir
+            task-cache:
+              path: .cache/setup-uv-cache
+            task-state-cache:
+              path: .cache/task/task-state
           key: |
+            task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
+            task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             gradle-caches=${{ inputs.gradle-hash }}
             gradle-wrapper=${{ inputs.gradle-hash }}
             cargo-registry=${{ inputs.cargo-hash }}

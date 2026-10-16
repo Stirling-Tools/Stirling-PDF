@@ -18,6 +18,7 @@ permissions:
 
 env:
   GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
+  TASK_TEMP_DIR: ${{ github.workspace }}/.cache/task/task-state
 
 jobs:
   check-licence:
@@ -57,7 +58,13 @@ jobs:
               path: .cache/gradle-java-${{ inputs.java-version }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
+            task-cache:
+              path: .cache/setup-uv-cache
+            task-state-cache:
+              path: .cache/task/task-state
           key: |
+            task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
+            task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             gradle-caches=${{ inputs.gradle-hash }}
             gradle-wrapper=${{ inputs.gradle-hash }}
 

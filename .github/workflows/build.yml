@@ -105,6 +105,11 @@ jobs:
             ${{ hashFiles(
               'frontend/package-lock.json'
             ) }}
+          TASK_HASH_FILES: >-
+            ${{ hashFiles(
+              '.taskfiles/**',
+              'Taskfile.yml'
+            ) }}
         shell: bash
         run: |
           echo "gradle_files_hash=$GRADLE_HASH_FILES" >> "$GITHUB_OUTPUT"

@@ -31,6 +31,7 @@ permissions:
 
 env:
   GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
+  TASK_TEMP_DIR: ${{ github.workspace }}/.cache/task/task-state
 
 jobs:
   build:
@@ -83,6 +84,10 @@ jobs:
               path: .cache/setup-uv-cache
             backend-build-uv-python-dir:
               path: .cache/uv-python-dir
+            task-cache:
+              path: .cache/setup-uv-cache
+            task-state-cache:
+              path: .cache/task/task-state
           CACHE
               echo 'EOF'
               echo 'cache_key<<EOF'
@@ -90,6 +95,8 @@ jobs:
               echo 'gradle-wrapper=${{ inputs.gradle-hash }}'
               echo 'backend-build-setup-uv-cache=${{ inputs.uv-hash }}'
               echo 'backend-build-uv-python-dir=${{ inputs.uv-hash }}'
+              echo 'task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}'
+              echo 'task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}'
               echo 'EOF'
             } >> "$GITHUB_OUTPUT"
           else
@@ -100,11 +107,17 @@ jobs:
               path: .cache/gradle-java-${{ inputs.java-version }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
+            task-cache:
+              path: .cache/setup-uv-cache
+            task-state-cache:
+              path: .cache/task/task-state
           CACHE
               echo 'EOF'
               echo 'cache_key<<EOF'
               echo 'gradle-caches=${{ inputs.gradle-hash }}'
               echo 'gradle-wrapper=${{ inputs.gradle-hash }}'
+              echo 'task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}'
+              echo 'task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}'
               echo 'EOF'
             } >> "$GITHUB_OUTPUT"
           fi
