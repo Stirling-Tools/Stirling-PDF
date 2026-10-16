@@ -202,9 +202,10 @@ function startupModules(meta: ManualChunkMeta): Set<string> {
  * and `Combobox` arrive through Mantine's own `Select`/`Flex` internals.
  * `useCombobox` went with them: it resolves into the same `Combobox` family, so
  * leaving it listed kept the very chunk that closed the cycle.
- * `NumberInput` never qualified — `UpdateSeatsModal` renders one from the entry
- * chunk — and `SegmentedControl` is out because its wrapper's chunk is fetched
- * immediately after first paint, so it would drag its family with it.
+ * `NumberInput` qualified once `UpdateSeatsModal`, its only startup-reachable
+ * consumer, moved behind a lazy import; `SegmentedControl` is out because its
+ * wrapper's chunk is fetched immediately after first paint, so it would drag
+ * its family with it.
  */
 const MANTINE_TOOL_ONLY_COMPONENTS = [
   "Autocomplete",
@@ -224,6 +225,8 @@ const MANTINE_TOOL_ONLY_COMPONENTS = [
   "LoadingOverlay",
   "MultiSelect",
   "Notification",
+  "NumberFormatter",
+  "NumberInput",
   "Pagination",
   "SimpleGrid",
   "Skeleton",
@@ -1175,6 +1178,11 @@ export default defineConfig(async ({ mode, command }) => {
             // `mantineToolOnlyImports`.
             const toolOnly = mantineToolOnlyChunk(id);
             if (toolOnly) return toolOnly;
+            // react-number-format is imported by NumberInput and NumberFormatter
+            // and nothing else, so it travels with the NumberInput family rather
+            // than with the preloaded chunk.
+            if (pkg === "react-number-format")
+              return "vendor-mantine-NumberInput";
             // These packages are mutually circular: splitting them breaks
             // module init order at runtime. Only startup modules land in
             // vendor-ui; libraries only some screens use (the markdown

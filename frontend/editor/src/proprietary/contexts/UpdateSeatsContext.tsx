@@ -4,12 +4,20 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  Suspense,
+  lazy,
   ReactNode,
 } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import licenseService from "@app/services/licenseService";
-import UpdateSeatsModal from "@app/components/shared/UpdateSeatsModal";
+// The seat dialog is the only startup-reachable consumer of Mantine's
+// NumberInput, which carries react-number-format. Loading it here keeps that
+// family out of the preloaded chunk the landing fetches for a dialog only the
+// seat flow opens.
+const UpdateSeatsModal = lazy(
+  () => import("@app/components/shared/UpdateSeatsModal"),
+);
 import { userManagementService } from "@app/services/userManagementService";
 import { alert } from "@app/components/toast";
 import { useOptionalLicense } from "@app/contexts/LicenseContext";
@@ -43,6 +51,8 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({
   // Use optional hook - won't throw during setup wizard when license provider isn't needed
   const license = useOptionalLicense();
   const [isOpen, setIsOpen] = useState(false);
+  // The dialog's chunk downloads on mount, so it waits for the first open.
+  const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSeats, setCurrentSeats] = useState<number>(1);
   const [minimumSeats, setMinimumSeats] = useState<number>(1);
@@ -165,6 +175,7 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({
         setCurrentSeats(currentLicenseSeats);
         setMinimumSeats(calculatedMinSeats);
         setCurrentOptions(options);
+        setMounted(true);
         setIsOpen(true);
       } catch (err) {
         const errorMessage =
@@ -243,15 +254,23 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({
       }}
     >
       {children}
-      <UpdateSeatsModal
-        opened={isOpen}
-        onClose={closeUpdateSeats}
-        currentSeats={currentSeats}
-        minimumSeats={minimumSeats}
-        _onSuccess={handleSuccess}
-        onError={handleError}
-        onUpdateSeats={handleUpdateSeats}
-      />
+      {/* Rendering the lazy dialog unconditionally would start its chunk
+          download on the provider's first render, which is the whole startup
+          cost this avoids; it mounts on the first open and stays mounted so a
+          reopen does not refetch. */}
+      {mounted && (
+        <Suspense fallback={null}>
+          <UpdateSeatsModal
+            opened={isOpen}
+            onClose={closeUpdateSeats}
+            currentSeats={currentSeats}
+            minimumSeats={minimumSeats}
+            _onSuccess={handleSuccess}
+            onError={handleError}
+            onUpdateSeats={handleUpdateSeats}
+          />
+        </Suspense>
+      )}
     </UpdateSeatsContext.Provider>
   );
 };
