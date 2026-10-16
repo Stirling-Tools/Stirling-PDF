@@ -9360,35 +9360,6 @@
       "artifact_name": "cache-untrusted-pr-8307-tauri-target-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--014c292c3c23cbdabd3788c66d0e07eba4ed164886451cfb59-part-000000",
       "workflow_run_id": 38862442229
     },
-    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/frontend-dist/windows-x64/6151e233d05287633e15a034fa67ccda6c37c4847228958286471a020972ca80-cache-e1b7946154cca207/v6": {
-      "object": "sha256:0087d3f81d5db6a649c9678f5c633bae18ca6c4a6053657465da49d860d07b92",
-      "storage": "github-artifact",
-      "updated_at": "2026-10-15T06:29:09.385Z",
-      "source": "Stirling-Tools/Stirling-PDF",
-      "created_by": "Ludy87",
-      "size": 29691879,
-      "parts": [
-        {
-          "index": 0,
-          "object": "sha256:1635bd17b566ca513ae766b14962cfb58bd7425a0e2d9cd234466aececf31473",
-          "size": 25165824,
-          "artifact_id": 11953200311,
-          "artifact_name": "cache-untrusted-pr-8307-frontend-dist-windows-x64-6151e233d05287633e15a034fa67ccda6c37c4847228958286471a020972ca80-v6--0087d3f81d5db6a649c9678f5c633bae18ca6c4a605365746-part-000000",
-          "workflow_run_id": 38690936431
-        },
-        {
-          "index": 1,
-          "object": "sha256:f4f12407f645090fa9d0190d1c9638646e1e7e9c899d6b9c0cf8d9fa3f81a519",
-          "size": 4526055,
-          "artifact_id": 11953280280,
-          "artifact_name": "cache-untrusted-pr-8307-frontend-dist-windows-x64-6151e233d05287633e15a034fa67ccda6c37c4847228958286471a020972ca80-v6--0087d3f81d5db6a649c9678f5c633bae18ca6c4a605365746-part-000001",
-          "workflow_run_id": 38690936431
-        }
-      ],
-      "artifact_id": 11953200311,
-      "artifact_name": "cache-untrusted-pr-8307-frontend-dist-windows-x64-6151e233d05287633e15a034fa67ccda6c37c4847228958286471a020972ca80-v6--0087d3f81d5db6a649c9678f5c633bae18ca6c4a605365746-part-000000",
-      "workflow_run_id": 38690936431
-    },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/frontend-dist/macos-arm64/6151e233d05287633e15a034fa67ccda6c37c4847228958286471a020972ca80-cache-e1b7946154cca207/v6": {
       "object": "sha256:0087d3f81d5db6a649c9678f5c633bae18ca6c4a6053657465da49d860d07b92",
       "storage": "github-artifact",
@@ -10820,10 +10791,39 @@
       "artifact_id": 12032287042,
       "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-52ab514eac0ac24a1f85b83afb52c5c05e0c906c571b91d70d4d86cbbb87efd9-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000000",
       "workflow_run_id": 38867002074
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/frontend-dist/windows-x64/96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-cache-e1b7946154cca207/v6": {
+      "object": "sha256:8daa8567e598b46a41048ed8e2d95110b3e29ece1dabd5ceb547b66707ae0c2a",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-16T07:39:51.763Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 29709824,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:a522f7644b127f3621fd436bcd18ff4f93c255815c575e833d2dc411413c84d3",
+          "size": 25165824,
+          "artifact_id": 12031424576,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-dist-windows-x64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1dabd5ceb-part-000000",
+          "workflow_run_id": 38867002074
+        },
+        {
+          "index": 1,
+          "object": "sha256:6d4338e9c025f1afd1b999125327b23a2f82604cfa17c10fa9fa6a5373dcd977",
+          "size": 4544000,
+          "artifact_id": 12031599064,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-dist-windows-x64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1dabd5ceb-part-000001",
+          "workflow_run_id": 38867002074
+        }
+      ],
+      "artifact_id": 12031424576,
+      "artifact_name": "cache-untrusted-pr-8307-frontend-dist-windows-x64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1dabd5ceb-part-000000",
+      "workflow_run_id": 38867002074
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-16T07:29:42.255Z",
-    "writes": 7
+    "writes": 8
   }
 }
