@@ -10937,30 +10937,30 @@
       "artifact_name": "cache-untrusted-pr-8307-task-state-cache-windows-x64-f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-v6--26c650c6efe9d93392e8585d76ff966bb5b65d275982f8-part-000000",
       "workflow_run_id": 38877262750
     },
-    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/task-state-cache/linux-x64/f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf/v6": {
-      "object": "sha256:c5bfdabc1a159abe0dca60eba9b43dcb07882926682fd5bed6568b4208089654",
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/task-state-cache/linux-x64/f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-cache-e1b7946154cca207/v6": {
+      "object": "sha256:26c650c6efe9d93392e8585d76ff966bb5b65d275982f882ce88da9e5ca83839",
       "storage": "github-artifact",
-      "updated_at": "2026-10-16T09:11:46.175Z",
+      "updated_at": "2026-10-16T09:14:00.023Z",
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
-      "size": 269,
+      "size": 306,
       "parts": [
         {
           "index": 0,
-          "object": "sha256:c5bfdabc1a159abe0dca60eba9b43dcb07882926682fd5bed6568b4208089654",
-          "size": 269,
-          "artifact_id": 12036895838,
-          "artifact_name": "cache-untrusted-pr-8307-task-state-cache-linux-x64-f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-v6--c5bfdabc1a159abe0dca60eba9b43dcb07882926682fd5be-part-000000",
+          "object": "sha256:26c650c6efe9d93392e8585d76ff966bb5b65d275982f882ce88da9e5ca83839",
+          "size": 306,
+          "artifact_id": 12036243657,
+          "artifact_name": "cache-untrusted-pr-8307-task-state-cache-linux-x64-f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-v6--26c650c6efe9d93392e8585d76ff966bb5b65d275982f882-part-000000",
           "workflow_run_id": 38877262750
         }
       ],
-      "artifact_id": 12036895838,
-      "artifact_name": "cache-untrusted-pr-8307-task-state-cache-linux-x64-f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-v6--c5bfdabc1a159abe0dca60eba9b43dcb07882926682fd5be-part-000000",
+      "artifact_id": 12036243657,
+      "artifact_name": "cache-untrusted-pr-8307-task-state-cache-linux-x64-f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-v6--26c650c6efe9d93392e8585d76ff966bb5b65d275982f882-part-000000",
       "workflow_run_id": 38877262750
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-16T08:32:08.199Z",
-    "writes": 21
+    "writes": 22
   }
 }
