@@ -9,12 +9,6 @@ import {
   RemoveAnnotationsParameters,
   defaultParameters,
 } from "@app/hooks/tools/removeAnnotations/useRemoveAnnotationsParameters";
-import {
-  getPdfiumModule,
-  openRawDocumentSafe,
-  closeDocAndFreeBuffer,
-  saveRawDocument,
-} from "@app/services/pdfiumService";
 
 // Client-side PDF processing using PDFium WASM
 const removeAnnotationsProcessor = async (
@@ -25,6 +19,14 @@ const removeAnnotationsProcessor = async (
 
   for (const file of files) {
     try {
+      // The engine is a document-side chunk: importing it at the point of use
+      // keeps it off the startup path.
+      const {
+        getPdfiumModule,
+        openRawDocumentSafe,
+        closeDocAndFreeBuffer,
+        saveRawDocument,
+      } = await import("@app/services/pdfiumService");
       const m = await getPdfiumModule();
       const fileArrayBuffer = await file.arrayBuffer();
       const docPtr = await openRawDocumentSafe(fileArrayBuffer);

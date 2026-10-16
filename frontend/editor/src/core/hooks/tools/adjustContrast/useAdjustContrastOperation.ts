@@ -11,7 +11,6 @@ import {
 import { applyAdjustmentsToCanvas } from "@app/components/tools/adjustContrast/utils";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { createFileFromApiResponse } from "@app/utils/fileResponseUtils";
-import { getPdfiumModule, saveRawDocument } from "@app/services/pdfiumService";
 import { copyRgbaToBgraHeap } from "@app/utils/pdfiumBitmapUtils";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
@@ -36,6 +35,11 @@ async function buildAdjustedPdfForFile(
   file: File,
   params: AdjustContrastParameters,
 ): Promise<File> {
+  // The engine is a document-side chunk: importing it at the point of use
+  // keeps it off the startup path.
+  const { getPdfiumModule, saveRawDocument } = await import(
+    "@app/services/pdfiumService"
+  );
   const m = await getPdfiumModule();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {});

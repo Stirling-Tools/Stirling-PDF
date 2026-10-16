@@ -1,11 +1,4 @@
 import {
-  openRawDocumentSafe,
-  closeRawDocument,
-  getPdfiumModule,
-  PdfiumOpenError,
-  FPDF_ERR_PASSWORD,
-} from "@app/services/pdfiumService";
-import {
   renderPdfiumPageDataUrl,
   readPdfiumPageMetadata,
 } from "@app/utils/pdfiumPageRender";
@@ -136,6 +129,15 @@ async function renderPdfThumbnailPdfium(
   collectAllPagesMetadata: boolean,
   password?: string,
 ): Promise<PdfiumRenderResult> {
+  // The engine is a document-side chunk: importing it at the point of use
+  // keeps it off the startup path.
+  const {
+    getPdfiumModule,
+    openRawDocumentSafe,
+    closeRawDocument,
+    PdfiumOpenError,
+    FPDF_ERR_PASSWORD,
+  } = await import("@app/services/pdfiumService");
   const m = await getPdfiumModule();
   let docPtr: number;
   try {
@@ -196,6 +198,13 @@ async function renderPdfThumbnailPairPdfium(
   collectAllPagesMetadata: boolean,
   password?: string,
 ): Promise<{ unrotated: PdfiumRenderResult; rotated: PdfiumRenderResult }> {
+  const {
+    getPdfiumModule,
+    openRawDocumentSafe,
+    closeRawDocument,
+    PdfiumOpenError,
+    FPDF_ERR_PASSWORD,
+  } = await import("@app/services/pdfiumService");
   const m = await getPdfiumModule();
   let docPtr: number;
   try {

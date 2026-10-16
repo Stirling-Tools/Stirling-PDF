@@ -1,4 +1,3 @@
-import { getPdfiumModule, saveRawDocument } from "@app/services/pdfiumService";
 import { copyRgbaToBgraHeap } from "@app/utils/pdfiumBitmapUtils";
 
 export interface ImageToPdfOptions {
@@ -25,6 +24,12 @@ export async function convertImageToPdf(
     pageFormat = "A4",
     stretchToFit = false,
   } = options;
+
+  // The engine is a document-side chunk: importing it at the point of use
+  // keeps it off the startup path.
+  const { getPdfiumModule, saveRawDocument } = await import(
+    "@app/services/pdfiumService"
+  );
 
   try {
     const m = await getPdfiumModule();
