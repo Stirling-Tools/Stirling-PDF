@@ -16,9 +16,6 @@ on:
       uv-hash:
         required: true
         type: string
-      cargo-hash:
-        required: true
-        type: string
       frontend-dist-hash:
         required: true
         type: string
@@ -41,7 +38,6 @@ jobs:
       UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
       UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
       NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
-      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
     permissions:
       contents: write
     steps:
@@ -68,12 +64,6 @@ jobs:
         with:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           multi-cache: |
-            cargo-registry:
-              path: .cache/cargo/registry
-            cargo-git:
-              path: .cache/cargo/git
-            cargo-bin:
-              path: .cache/cargo/bin
             frontend-dist:
               path: frontend/editor/dist
             frontend-node-modules:
@@ -84,33 +74,22 @@ jobs:
               path: .cache/gradle-java-${{ inputs.java-version }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
-            tauri-target:
-              path: frontend/editor/src-tauri/target
             e2e-live-setup-uv-cache:
               path: .cache/setup-uv-cache
             e2e-live-uv-python-dir:
               path: .cache/uv-python-dir
-            task-cache:
-              path: .cache/task/task
             task-state-cache:
               path: .cache/task/task-state
           key: |
-            task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             gradle-caches=${{ inputs.gradle-hash }}
             gradle-wrapper=${{ inputs.gradle-hash }}
-            cargo-registry=${{ inputs.cargo-hash }}
-            cargo-git=${{ inputs.cargo-hash }}
-            cargo-bin=${{ inputs.cargo-hash }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ inputs.frontend-dist-hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tauri-target=${{ inputs.frontend-dist-hash }}
             e2e-live-setup-uv-cache=${{ inputs.uv-hash }}
             e2e-live-uv-python-dir=${{ inputs.uv-hash }}
           token: ${{ github.token }}
-          exclude: |
-            frontend/editor/src-tauri/target/debug/**
 
       - name: Set up JDK ${{ inputs.java-version }}
         uses: ./trusted-java-action/.github/actions/java

@@ -21,9 +21,6 @@ on:
       npm-hash:
         required: true
         type: string
-      cargo-hash:
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -31,9 +28,6 @@ permissions:
 env:
   UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
   UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
-  NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
-  CARGO_HOME: ${{ github.workspace }}/.cache/cargo
-  TASK_TEMP_DIR: ${{ github.workspace }}/.cache/task/task-state
 
 jobs:
   frontend-a11y:
@@ -62,42 +56,19 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            cargo-registry:
-              path: .cache/cargo/registry
-            cargo-git:
-              path: .cache/cargo/git
-            cargo-bin:
-              path: .cache/cargo/bin
             frontend-dist:
               path: frontend/editor/dist
             frontend-node-modules:
               path: frontend/node_modules
-            npm-cache:
-              path: .cache/npm
-            tauri-target:
-              path: frontend/editor/src-tauri/target
             frontend-setup-uv-cache:
               path: .cache/setup-uv-cache
             frontend-uv-python-dir:
               path: .cache/uv-python-dir
-            task-cache:
-              path: .cache/task/task
-            task-state-cache:
-              path: .cache/task/task-state
           key: |
-            task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
-            task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
-            cargo-registry=${{ inputs.cargo-hash }}
-            cargo-git=${{ inputs.cargo-hash }}
-            cargo-bin=${{ inputs.cargo-hash }}
-            npm-cache=${{ inputs.npm-hash }}
             frontend-dist=${{ inputs.frontend-dist-hash }}
             frontend-node-modules=${{ inputs.npm-hash }}
-            tauri-target=${{ inputs.frontend-dist-hash }}
             frontend-setup-uv-cache=${{ inputs.uv-hash }}
             frontend-uv-python-dir=${{ inputs.uv-hash }}
-          exclude: |
-            frontend/editor/src-tauri/target/debug/**
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0

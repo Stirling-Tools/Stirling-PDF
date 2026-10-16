@@ -242,12 +242,9 @@ jobs:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
             tauri-target:
               path: frontend/editor/src-tauri/target
-            task-cache:
-              path: .cache/task/task
             task-state-cache:
               path: .cache/task/task-state
           key: |
-            task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
@@ -858,12 +855,9 @@ jobs:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
             tauri-target:
               path: frontend/editor/src-tauri/target
-            task-cache:
-              path: .cache/task/task
             task-state-cache:
               path: .cache/task/task-state
           key: |
-            task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}

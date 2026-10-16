@@ -148,12 +148,6 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            cargo-registry:
-              path: .cache/cargo/registry
-            cargo-git:
-              path: .cache/cargo/git
-            cargo-bin:
-              path: .cache/cargo/bin
             frontend-dist:
               path: frontend/editor/dist
             frontend-node-modules:
@@ -164,32 +158,15 @@ jobs:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-            tauri-target:
-              path: frontend/editor/src-tauri/target
-            enterprise-setup-uv-cache:
-              path: .cache/setup-uv-cache
-            enterprise-uv-python-dir:
-              path: .cache/uv-python-dir
-            task-cache:
-              path: .cache/task/task
             task-state-cache:
               path: .cache/task/task-state
           key: |
-            task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tauri-target=${{ hashFiles('frontend/package-lock.json') }}
-            enterprise-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
-            enterprise-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
-          exclude: |
-            frontend/editor/src-tauri/target/debug/**
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: ./trusted-java-action/.github/actions/java

@@ -21,7 +21,6 @@ permissions:
   contents: read
 
 env:
-  TASK_TEMP_DIR: ${{ github.workspace }}/.cache/task/task-state
   JAVA_VERSION: 25
   GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
   GRADLE_FILES_TO_HASH: |
@@ -32,8 +31,6 @@ env:
     build.gradle
     app/**/build.gradle
     gradle/**/*.gradle
-  FRONTEND_DIST_FILES_TO_HASH: |
-    frontend/editor/src/**
   UV_FILES_TO_HASH: |
     engine/.python-version
     engine/pyproject.toml
@@ -49,7 +46,6 @@ jobs:
     outputs:
       gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
       uv_files_hash: ${{ steps.hash.outputs.uv_files_hash}}
-      frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -66,12 +62,10 @@ jobs:
         env:
           GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
           UV_HASH: ${{ hashFiles(env.UV_FILES_TO_HASH) }}
-          FRONTEND_DIST_HASH: ${{ hashFiles(env.FRONTEND_DIST_FILES_TO_HASH) }}
         shell: bash
         run: |
           echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
           echo "uv_files_hash=$UV_HASH" >> "$GITHUB_OUTPUT"
-          echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"
   generated-models:
     runs-on: ubuntu-latest
     needs: hash_pr
@@ -107,8 +101,6 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            frontend-dist:
-              path: frontend/editor/dist
             frontend-node-modules:
               path: frontend/node_modules
             npm-cache:
@@ -121,17 +113,10 @@ jobs:
               path: .cache/uv-python-dir
             tool-models-setup-uv-cache:
               path: .cache/setup-uv-cache
-            task-cache:
-              path: .cache/task/task
-            task-state-cache:
-              path: .cache/task/task-state
           key: |
-            task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
-            task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             tool-models-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             tool-models-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
-            frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
             tool-models-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
             tool-models-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}

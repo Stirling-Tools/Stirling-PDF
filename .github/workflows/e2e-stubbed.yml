@@ -93,12 +93,9 @@ jobs:
               path: frontend/node_modules
             npm-cache:
               path: .cache/npm
-            task-cache:
-              path: .cache/task/task
             task-state-cache:
               path: .cache/task/task-state
           key: |
-            task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             npm-cache=${{ inputs.npm-hash }}
             frontend-dist=${{ inputs.frontend-dist-hash }}

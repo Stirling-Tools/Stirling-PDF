@@ -49,12 +49,9 @@ jobs:
               path: .cache/uv-python-dir
             npm-cache:
               path: .cache/npm
-            task-cache:
-              path: .cache/task/task
             task-state-cache:
               path: .cache/task/task-state
           key: |
-            task-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             pre-commit-setup-uv-cache=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
             pre-commit-uv-python-dir=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
