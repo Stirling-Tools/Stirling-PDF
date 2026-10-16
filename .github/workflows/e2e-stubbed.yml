@@ -87,19 +87,19 @@ jobs:
         with:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           multi-cache: |
-            frontend-dist:
+            e2e-frontend-dist:
               path: frontend/editor/dist
-            frontend-node-modules:
+            e2e-frontend-node-modules:
               path: frontend/node_modules
-            npm-cache:
+            e2e-npm-cache:
               path: .cache/npm
             task-state-cache:
               path: .cache/task/task-state
           key: |
             task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
-            npm-cache=${{ inputs.npm-hash }}
-            frontend-dist=${{ inputs.frontend-dist-hash }}
-            frontend-node-modules=${{ inputs.npm-hash }}
+            e2e-npm-cache=${{ inputs.npm-hash }}
+            e2e-frontend-dist=${{ inputs.frontend-dist-hash }}
+            e2e-frontend-node-modules=${{ inputs.npm-hash }}
           token: ${{ github.token }}
           exclude: |
             frontend/editor/src-tauri/target/debug/**
