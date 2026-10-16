@@ -74,12 +74,12 @@ function definesKey(dictionary, path) {
   return !isPlainObject(current);
 }
 
-function readStartupKeys(source) {
-  const keys = JSON.parse(readFileSync(STARTUP_KEYS, "utf8"));
+function readStartupKeys(source, path = STARTUP_KEYS) {
+  const keys = JSON.parse(readFileSync(path, "utf8"));
   const unknown = keys.filter((key) => !definesKey(source, key));
   if (unknown.length > 0) {
     throw new Error(
-      `${STARTUP_KEYS} lists keys ${SOURCE_LOCALE}/${AUTHORED} does not define: ` +
+      `${path} lists keys ${SOURCE_LOCALE}/${AUTHORED} does not define: ` +
         `${unknown.join(", ")}. Re-record them with tests/walkthrough/perf/probe-keys.mjs.`,
     );
   }
@@ -115,11 +115,11 @@ function pickStartupKeys(dictionary, keys) {
   return subset;
 }
 
-const localeCodes = () =>
-  readdirSync(LOCALES_DIR, { withFileTypes: true })
+const localeCodes = (dir = LOCALES_DIR) =>
+  readdirSync(dir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
-    .filter((code) => exists(join(LOCALES_DIR, code, AUTHORED)))
+    .filter((code) => exists(join(dir, code, AUTHORED)))
     .sort();
 
 const exists = (path) => {
@@ -137,26 +137,42 @@ const kib = (bytes) => `${(bytes / 1024).toFixed(1)} KiB`;
 /**
  * Generates every delivery file. Returns what was written so a caller can log
  * a summary; skips locales whose files are already newer than the authored
- * file, the startup key list and this script unless `force` is set.
+ * file, the source locale, the startup key list and this script unless `force`
+ * is set.
+ *
+ * `localesDir` and `startupKeysPath` are for tests, which run against a fixture
+ * tree instead of the checked-in locales.
  */
-export function generateLocaleAssets({ force = false, log = () => {} } = {}) {
+export function generateLocaleAssets({
+  force = false,
+  log = () => {},
+  localesDir = LOCALES_DIR,
+  startupKeysPath = STARTUP_KEYS,
+} = {}) {
   const scriptMtime = mtimeOf(join(HERE, "generate-locale-assets.mjs"));
-  const sourcePath = join(LOCALES_DIR, SOURCE_LOCALE, AUTHORED);
+  const sourcePath = join(localesDir, SOURCE_LOCALE, AUTHORED);
   const source = parse(readFileSync(sourcePath, "utf8"));
   const sourceJson = JSON.stringify(source);
-  const keys = readStartupKeys(source);
-  const keysMtime = mtimeOf(STARTUP_KEYS);
+  const keys = readStartupKeys(source, startupKeysPath);
+  const keysMtime = mtimeOf(startupKeysPath);
   const sourceStartupJson = JSON.stringify(pickStartupKeys(source, keys));
 
   const written = [];
   let skipped = 0;
   const fallbackBytes = Buffer.byteLength(sourceJson);
 
-  for (const code of localeCodes()) {
-    const authoredPath = join(LOCALES_DIR, code, AUTHORED);
-    const deliveredPath = join(LOCALES_DIR, code, DELIVERED);
-    const startupPath = join(LOCALES_DIR, code, STARTUP);
-    const newestInput = Math.max(mtimeOf(authoredPath), keysMtime, scriptMtime);
+  for (const code of localeCodes(localesDir)) {
+    const authoredPath = join(localesDir, code, AUTHORED);
+    const deliveredPath = join(localesDir, code, DELIVERED);
+    const startupPath = join(localesDir, code, STARTUP);
+    // The source locale is merged into every delivery, so a change there makes
+    // this language's files stale even though its own file did not move.
+    const newestInput = Math.max(
+      mtimeOf(authoredPath),
+      mtimeOf(sourcePath),
+      keysMtime,
+      scriptMtime,
+    );
     if (
       !force &&
       exists(deliveredPath) &&
