@@ -169,7 +169,7 @@ jobs:
     if: needs.files-changed.outputs.frontend == 'true' && false
     needs: [files-changed, files-hash]
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     uses: ./.github/workflows/frontend-validation.yml
     secrets: inherit
