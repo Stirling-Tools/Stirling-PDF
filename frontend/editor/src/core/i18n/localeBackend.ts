@@ -14,10 +14,9 @@ export function localeFileUrl(language: string, file: string): string {
 }
 
 /**
- * Languages whose complete dictionary is already in memory. The backend serves
- * the complete file to every namespace load after the first, and `i18n.ts`
- * merges it for the language loaded at init; tracking it here keeps the two
- * from fetching the same 500 KB twice.
+ * Languages whose complete dictionary is already installed. A language switch
+ * serves the complete file and `i18n.ts` merges it for the language loaded at
+ * init; tracking it here keeps the two from fetching the same file twice.
  */
 const completeDictionaries = new Set<string>();
 
@@ -29,6 +28,43 @@ export function isDictionaryComplete(language: string): boolean {
 /** Records that `language` has the complete dictionary, not just the subset. */
 export function markDictionaryComplete(language: string): void {
   completeDictionaries.add(language);
+}
+
+/**
+ * In-flight complete-dictionary loads, one per language.
+ *
+ * Two callers can want the same file: the intent prefetch and a route that
+ * renders keys outside the startup subset, or a language switch and either of
+ * those. Sharing the request keeps it to one fetch, one parse and one
+ * resource-bundle merge instead of one per caller.
+ */
+const pendingDictionaries = new Map<string, Promise<void>>();
+
+/** The in-flight complete-dictionary load for `language`, if one is running. */
+export function pendingDictionaryLoad(
+  language: string,
+): Promise<void> | undefined {
+  return pendingDictionaries.get(language);
+}
+
+/**
+ * Runs `load` as the single in-flight complete-dictionary load for `language`.
+ *
+ * The entry is dropped once the load settles, on failure as well as success, so
+ * an interrupted request stays retryable. Only the loader itself marks the
+ * language complete, and only after its strings are installed.
+ */
+export function startDictionaryLoad(
+  language: string,
+  load: () => Promise<void>,
+): Promise<void> {
+  const pending = pendingDictionaries.get(language);
+  if (pending) return pending;
+  const request = load().finally(() => {
+    pendingDictionaries.delete(language);
+  });
+  pendingDictionaries.set(language, request);
+  return request;
 }
 
 export interface LocaleBackendOptions {
@@ -73,9 +109,11 @@ async function loadJson(url: string): Promise<ResourceKey> {
  * the authoring format; `scripts/generate-locale-assets.mjs` derives these from
  * it at build time.
  *
- * This backend deliberately serves the startup subset, not the complete
- * dictionary: the complete file is `i18n.ts`'s explicit second fetch, off the
- * first-paint path.
+ * At init this backend serves the startup subset, not the complete dictionary:
+ * the complete file is `i18n.ts`'s explicit second fetch, off the first-paint
+ * path. A language switch is the exception - i18next awaits it before it
+ * reports the change, so it gets the complete file rather than a screen of the
+ * subset's gaps.
  */
 export default class LocaleBackend implements BackendModule<LocaleBackendOptions> {
   static type = "backend" as const;
@@ -103,20 +141,58 @@ export default class LocaleBackend implements BackendModule<LocaleBackendOptions
         ? urlFor(loadPath, fallback, namespace)
         : null;
 
-    void loadJson(url)
-      .catch((error: unknown) => {
+    const readOne = () =>
+      loadJson(url).catch((error: unknown) => {
         if (!fallbackUrl) throw error;
         return loadJson(fallbackUrl);
-      })
-      .then((resource) => {
-        callback(null, resource);
-      })
-      .catch((error: unknown) => {
-        callback(
-          error instanceof Error ? error : new Error(String(error)),
-          null,
-        );
       });
+
+    if (url !== localeFileUrl(language, FULL_FILE)) {
+      void readOne()
+        .then((resource) => {
+          callback(null, resource);
+        })
+        .catch((error: unknown) => {
+          callback(
+            error instanceof Error ? error : new Error(String(error)),
+            null,
+          );
+        });
+      return;
+    }
+
+    // A language switch asks for the complete dictionary, which `i18n.ts` may
+    // already have in memory or in flight (an intent prefetch, a route that
+    // needs it). An empty bundle leaves the installed one untouched, and
+    // awaiting the in-flight request keeps the switch on one fetch rather than
+    // starting a second.
+    const pending = pendingDictionaryLoad(language);
+    if (pending || isDictionaryComplete(language)) {
+      void (pending ?? Promise.resolve())
+        .then(() => {
+          callback(null, {});
+        })
+        .catch((error: unknown) => {
+          callback(
+            error instanceof Error ? error : new Error(String(error)),
+            null,
+          );
+        });
+      return;
+    }
+
+    void startDictionaryLoad(language, async () => {
+      const resource = await readOne();
+      callback(null, resource);
+      // i18next installs the bundle as the callback returns, so this is the
+      // first point at which the strings are on their way in.
+      markDictionaryComplete(language);
+    }).catch((error: unknown) => {
+      callback(
+        error instanceof Error ? error : new Error(String(error)),
+        null,
+      );
+    });
   }
 
   private options?: LocaleBackendOptions;

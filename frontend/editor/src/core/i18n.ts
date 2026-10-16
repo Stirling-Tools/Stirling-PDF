@@ -7,6 +7,8 @@ import LocaleBackend, {
   localeFileUrl,
   markDictionaryComplete,
   isDictionaryComplete,
+  pendingDictionaryLoad,
+  startDictionaryLoad,
 } from "@app/i18n/localeBackend";
 import {
   supportedLanguages,
@@ -63,7 +65,6 @@ i18n
         // reports the change, so it gets the complete file - a screen switched
         // into another language must not render the subset's gaps.
         if (i18n.isInitialized) {
-          markDictionaryComplete(language);
           return localeFileUrl(language, FULL_FILE);
         }
         return localeFileUrl(language, STARTUP_FILE);
@@ -110,43 +111,35 @@ export const i18nReady: Promise<void> = i18n.isInitialized
     });
 
 /**
- * Merges the complete dictionary in behind the startup subset.
+ * Loads the complete dictionary for a route that renders keys outside the
+ * startup subset, and reports failure to its caller.
  *
  * The subset covers the keys the first screen resolves; tool pages, dialogs and
  * the file list need the rest of the ~9 900 keys, which is ~120 KiB brotli that
  * no first paint can use. The merge only fills keys the subset does not already
  * define, so it cannot blank text that is on screen.
  *
- * Settles on failure too: without the file the subset stays in place, which is
- * a thinner screen rather than a broken one.
+ * A load already running for the language is joined rather than repeated, and a
+ * failed one rejects instead of reporting readiness: a route that renders the
+ * subset's gaps is a broken screen, not a thin one, so the error boundary above
+ * it owns the retry.
  */
 export async function loadFullDictionary(
   language: string = i18n.language,
 ): Promise<void> {
   if (!language || isDictionaryComplete(language)) return;
-  const url = localeFileUrl(language, FULL_FILE);
-  // A request that never lands stays quiet: the subset still covers every
-  // screen the user reaches first, and an environment with no delivery server
-  // (unit tests, a worker) is not a production fault. A broken response is
-  // worth reporting, because it means a file the build should have written is
-  // missing or corrupt.
-  let response: Response;
-  try {
-    response = await fetch(url);
-  } catch {
-    return;
-  }
-  if (!response.ok) {
-    console.warn(`[i18n] ${url}: ${response.status}`);
-    return;
-  }
-  try {
+  const pending = pendingDictionaryLoad(language);
+  if (pending) return pending;
+  await startDictionaryLoad(language, async () => {
+    const url = localeFileUrl(language, FULL_FILE);
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to load translation file: ${url} (${response.status})`);
+    }
     const dictionary = (await response.json()) as ResourceKey;
     i18n.addResourceBundle(language, "translation", dictionary, true, false);
     markDictionaryComplete(language);
-  } catch (error) {
-    console.warn(`[i18n] ${url} is not readable JSON`, error);
-  }
+  });
 }
 
 /**
@@ -158,6 +151,11 @@ export async function loadFullDictionary(
  * app. A timer would charge every visitor for it whether or not they ever
  * leave the landing screen.
  *
+ * Failure stays quiet here: the subset still covers the screen the user is on,
+ * and an environment with no delivery server (unit tests, a worker) is not a
+ * production fault. A response that arrives broken is worth reporting, because
+ * it means a file the build should have written is missing or corrupt.
+ *
  * Idempotent, and deliberately installed by the entry rather than by this
  * module: the listeners belong to the browser entry point, and a test that
  * dispatches a pointer event should not start a fetch.
@@ -166,13 +164,27 @@ export function installFullDictionaryOnIntent(): void {
   const load = () => {
     document.removeEventListener("pointerdown", load, { capture: true });
     document.removeEventListener("keydown", load, { capture: true });
-    void loadFullDictionary();
+    void prefetchFullDictionary();
   };
   document.addEventListener("pointerdown", load, {
     capture: true,
     passive: true,
   });
   document.addEventListener("keydown", load, { capture: true, passive: true });
+}
+
+/** `loadFullDictionary` with its failure reduced to a warning. */
+async function prefetchFullDictionary(
+  language: string = i18n.language,
+): Promise<void> {
+  try {
+    await loadFullDictionary(language);
+  } catch (error) {
+    // A rejected fetch means no delivery server answered at all; anything else
+    // is a file the build should have written, which is worth naming.
+    if (error instanceof TypeError) return;
+    console.warn(`[i18n] ${String(error)}`);
+  }
 }
 
 // Set document direction based on language
