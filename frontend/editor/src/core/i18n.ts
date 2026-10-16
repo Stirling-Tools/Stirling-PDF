@@ -1,7 +1,13 @@
-import i18n from "i18next";
+import i18n, { type ResourceKey } from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import LocaleBackend from "@app/i18n/localeBackend";
+import LocaleBackend, {
+  FULL_FILE,
+  STARTUP_FILE,
+  localeFileUrl,
+  markDictionaryComplete,
+  isDictionaryComplete,
+} from "@app/i18n/localeBackend";
 import {
   supportedLanguages,
   rtlLanguages,
@@ -49,13 +55,18 @@ i18n
       // JSON rather than the authored TOML: the parse happens at build time,
       // and `scripts/generate-locale-assets.mjs` has already merged the source
       // strings into every file.
-      loadPath: (lngs: string[], namespaces: string[]) => {
-        const lng = lngs[0];
-        const basePath = import.meta.env.BASE_URL || "/";
-        const cleanBasePath = basePath.endsWith("/")
-          ? basePath.slice(0, -1)
-          : basePath;
-        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.json`;
+      loadPath: (lngs: string[]) => {
+        const language = lngs[0];
+        // The language loaded at init needs only the startup subset: the keys
+        // the first screen resolves, ~7 KiB brotli rather than ~127 KiB. Every
+        // later load is a language switch, which i18next awaits before it
+        // reports the change, so it gets the complete file - a screen switched
+        // into another language must not render the subset's gaps.
+        if (i18n.isInitialized) {
+          markDictionaryComplete(language);
+          return localeFileUrl(language, FULL_FILE);
+        }
+        return localeFileUrl(language, STARTUP_FILE);
       },
       // Covers a missing or corrupt file, not missing keys.
       fallbackLocale: "en-US",
@@ -97,6 +108,72 @@ export const i18nReady: Promise<void> = i18n.isInitialized
         resolve();
       });
     });
+
+/**
+ * Merges the complete dictionary in behind the startup subset.
+ *
+ * The subset covers the keys the first screen resolves; tool pages, dialogs and
+ * the file list need the rest of the ~9 900 keys, which is ~120 KiB brotli that
+ * no first paint can use. The merge only fills keys the subset does not already
+ * define, so it cannot blank text that is on screen.
+ *
+ * Settles on failure too: without the file the subset stays in place, which is
+ * a thinner screen rather than a broken one.
+ */
+export async function loadFullDictionary(
+  language: string = i18n.language,
+): Promise<void> {
+  if (!language || isDictionaryComplete(language)) return;
+  const url = localeFileUrl(language, FULL_FILE);
+  // A request that never lands stays quiet: the subset still covers every
+  // screen the user reaches first, and an environment with no delivery server
+  // (unit tests, a worker) is not a production fault. A broken response is
+  // worth reporting, because it means a file the build should have written is
+  // missing or corrupt.
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch {
+    return;
+  }
+  if (!response.ok) {
+    console.warn(`[i18n] ${url}: ${response.status}`);
+    return;
+  }
+  try {
+    const dictionary = (await response.json()) as ResourceKey;
+    i18n.addResourceBundle(language, "translation", dictionary, true, false);
+    markDictionaryComplete(language);
+  } catch (error) {
+    console.warn(`[i18n] ${url} is not readable JSON`, error);
+  }
+}
+
+/**
+ * Fetches the complete dictionary on the user's first interaction.
+ *
+ * Nothing the landing screen renders comes from outside the subset, and every
+ * other screen loads the complete file before it renders, so the only visitor
+ * who pays for the remaining ~120 KiB brotli is one who is about to use the
+ * app. A timer would charge every visitor for it whether or not they ever
+ * leave the landing screen.
+ *
+ * Idempotent, and deliberately installed by the entry rather than by this
+ * module: the listeners belong to the browser entry point, and a test that
+ * dispatches a pointer event should not start a fetch.
+ */
+export function installFullDictionaryOnIntent(): void {
+  const load = () => {
+    document.removeEventListener("pointerdown", load, { capture: true });
+    document.removeEventListener("keydown", load, { capture: true });
+    void loadFullDictionary();
+  };
+  document.addEventListener("pointerdown", load, {
+    capture: true,
+    passive: true,
+  });
+  document.addEventListener("keydown", load, { capture: true, passive: true });
+}
 
 // Set document direction based on language
 i18n.on("languageChanged", (lng) => {

@@ -273,7 +273,8 @@ function localePreloadTag(codes: string[]): string {
         link.rel = "preload";
         link.as = "fetch";
         link.crossOrigin = "anonymous";
-        link.href = "locales/" + encodeURIComponent(match) + "/translation.json";
+        link.href =
+          "locales/" + encodeURIComponent(match) + "/startup.json";
         document.head.appendChild(link);
       })();
     </script>`;
@@ -283,9 +284,9 @@ function localePreloadTag(codes: string[]): string {
  * Generates the locale delivery files and injects the startup preload for one
  * of them.
  *
- * `public/locales/<lng>/translation.toml` stays the authored source; the app
- * fetches the `translation.json` generated beside it, which already contains
- * the source strings for the keys that language is missing. Logic lives in
+ * `public/locales/<lng>/translation.toml` stays the authored source; the build
+ * writes both the complete `translation.json` beside it and the `startup.json`
+ * subset that the first screen actually fetches. Logic lives in
  * scripts/generate-locale-assets.mjs so it can be run and tested on its own.
  */
 /**

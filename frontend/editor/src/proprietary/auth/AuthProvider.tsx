@@ -3,13 +3,14 @@
  * (cloud) backend by `mode` and feeds the single shared AuthContext, so
  * consumers read `useAuth()` identically either way.
  */
-import { lazy, Suspense, type ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { translatedLazy } from "@app/i18n/translatedLazy";
 import { SpringAuthProvider } from "@app/auth/spring/UseSession";
 import { type AuthMode, type AuthTranslate } from "@app/auth/types";
 
 // Lazy so Spring-mode hosts (e.g. the portal) don't bundle @supabase/supabase-js
 // they never use; only loaded when mode="supabase".
-const SupabaseAuthProvider = lazy(() =>
+const SupabaseAuthProvider = translatedLazy(() =>
   import("@app/auth/supabase/UseSession").then((m) => ({
     default: m.SupabaseAuthProvider,
   })),

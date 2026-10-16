@@ -15,7 +15,7 @@ import ReactDOM from "react-dom/client";
 import { ColorSchemeScript } from "@mantine/core";
 import { BrowserRouter } from "react-router-dom";
 import App from "@app/App";
-import { i18nReady } from "@app/i18n"; // Initialize i18next and expose its readiness
+import { i18nReady, installFullDictionaryOnIntent } from "@app/i18n"; // Initialize i18next and expose its readiness
 import { BASE_PATH } from "@app/constants/app";
 import { applyDevWorktreeLabel } from "@app/utils/applyDevWorktreeLabel";
 
@@ -32,6 +32,7 @@ const root = ReactDOM.createRoot(container); // Finds the root DOM element
 // render that suspends on the locale file is held behind React's ~300 ms retry
 // throttle, which is slower than waiting for the translations outright.
 void i18nReady.then(() => {
+  installFullDictionaryOnIntent();
   root.render(
     <React.StrictMode>
       <ColorSchemeScript />

@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, Suspense, lazy } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { translatedLazy } from "@app/i18n/translatedLazy";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { Box, Loader, Center, Stack, Text } from "@mantine/core";
@@ -30,13 +31,17 @@ import { NotificationBell } from "@app/components/notifications/NotificationBell
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageTracks are only needed once a file
 // is open. Lazy-loading keeps all of that out of the initial bundle.
-const SigningWorkspace = lazy(
+const SigningWorkspace = translatedLazy(
   () => import("@app/components/shared/signing/SigningWorkspace"),
 );
-const FileEditor = lazy(() => import("@app/components/fileEditor/FileEditor"));
-const PageTracks = lazy(() => import("@app/components/pageTracks/PageTracks"));
-const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
-const FileManagerView = lazy(
+const FileEditor = translatedLazy(
+  () => import("@app/components/fileEditor/FileEditor"),
+);
+const PageTracks = translatedLazy(
+  () => import("@app/components/pageTracks/PageTracks"),
+);
+const Viewer = translatedLazy(() => import("@app/components/viewer/Viewer"));
+const FileManagerView = translatedLazy(
   () => import("@app/components/filesPage/FileManagerView"),
 );
 

@@ -1,9 +1,38 @@
 import type { BackendModule, ReadCallback, ResourceKey } from "i18next";
 
+/** The subset the first screen resolves; i18next loads this one at init. */
+export const STARTUP_FILE = "startup.json";
+
+/** The complete dictionary, merged in after the first paint by `i18n.ts`. */
+export const FULL_FILE = "translation.json";
+
+const BASE_PATH = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+
+/** Delivery file URL for one language, honouring a subpath deployment. */
+export function localeFileUrl(language: string, file: string): string {
+  return `${BASE_PATH}/locales/${language}/${file}`;
+}
+
+/**
+ * Languages whose complete dictionary is already in memory. The backend serves
+ * the complete file to every namespace load after the first, and `i18n.ts`
+ * merges it for the language loaded at init; tracking it here keeps the two
+ * from fetching the same 500 KB twice.
+ */
+const completeDictionaries = new Set<string>();
+
+/** True when `loadFullDictionary` has nothing left to fetch for `language`. */
+export function isDictionaryComplete(language: string): boolean {
+  return completeDictionaries.has(language);
+}
+
+/** Records that `language` has the complete dictionary, not just the subset. */
+export function markDictionaryComplete(language: string): void {
+  completeDictionaries.add(language);
+}
+
 export interface LocaleBackendOptions {
-  loadPath:
-    | string
-    | ((languages: string[], namespaces: string[]) => string);
+  loadPath: string | ((languages: string[], namespaces: string[]) => string);
   /**
    * Retried once when the requested language's file cannot be read, so a
    * language with a missing or corrupt delivery file falls back to the source
@@ -21,21 +50,21 @@ function urlFor(
 ): string | null {
   if (typeof loadPath === "function") return loadPath([language], [namespace]);
   if (!loadPath) return null;
-  return loadPath
-    .replace("{{lng}}", language)
-    .replace("{{ns}}", namespace);
+  return loadPath.replace("{{lng}}", language).replace("{{ns}}", namespace);
 }
 
 async function loadJson(url: string): Promise<ResourceKey> {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to load translation file: ${url} (${response.status})`);
+    throw new Error(
+      `Failed to load translation file: ${url} (${response.status})`,
+    );
   }
   return JSON.parse(await response.text()) as ResourceKey;
 }
 
 /**
- * Loads the generated `translation.json` delivery files.
+ * Loads the generated `startup.json` delivery files.
  *
  * They are JSON rather than the authored TOML for two reasons: the browser does
  * not have to parse 500 KB of TOML on the startup path, and each file already
@@ -43,6 +72,10 @@ async function loadJson(url: string): Promise<ResourceKey> {
  * i18next never needs to fetch a second dictionary. `translation.toml` stays
  * the authoring format; `scripts/generate-locale-assets.mjs` derives these from
  * it at build time.
+ *
+ * This backend deliberately serves the startup subset, not the complete
+ * dictionary: the complete file is `i18n.ts`'s explicit second fetch, off the
+ * first-paint path.
  */
 export default class LocaleBackend implements BackendModule<LocaleBackendOptions> {
   static type = "backend" as const;
