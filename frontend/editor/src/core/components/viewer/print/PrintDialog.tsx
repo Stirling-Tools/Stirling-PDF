@@ -5,6 +5,7 @@ import {
   useMemo,
   useState,
   type CSSProperties,
+  type KeyboardEvent,
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -38,6 +39,7 @@ import {
   POSTER_PAGE_SIZES,
   PRINT_PRESETS,
   bookletPass,
+  bookletSideIndex,
   bookletSides,
   defaultPrintSettings,
   pagesPerSheet,
@@ -181,7 +183,7 @@ function OptionsToggle({
 
 /** The settings a collapsed panel is hiding, so a clean form still shows its state. */
 const optionSummary = (...facts: (string | null)[]) =>
-  facts.filter((fact) => fact !== null).join(" · ");
+  facts.filter((fact) => fact !== null).join(", ");
 
 /** A cell's share of its sheet, which is how both figures place themselves. */
 const share = (value: number, total: number) => `${(value / total) * 100}%`;
@@ -874,7 +876,9 @@ export function PrintDialog({
   // The figure shows one output side or one document page, and the reader can
   // step through them: a job whose last side is half full is worth checking, and
   // every page of a booklet is otherwise hidden behind the selection.
-  const perSheet = pagesPerSheet(layout);
+  // A cleared grid field reads as zero, which would divide the side count into
+  // Infinity and put it in the pager; the settings are refused anyway.
+  const perSheet = Math.max(1, pagesPerSheet(layout));
   const sides = Math.max(1, Math.ceil(pageCount / perSheet));
   const bookletSheet = useMemo(
     () => bookletSides(pageCount, settings.booklet.spineLocation),
@@ -898,10 +902,13 @@ export function PrintDialog({
         )
       : settings.preset === "standard"
         ? Math.max(1, selected.indexOf(currentPage) + 1)
-        : Math.min(
-            steps,
-            Math.max(1, 2 * Math.ceil(Math.max(currentPage, 1) / 2) - 1),
-          );
+        : settings.preset === "booklet"
+          ? bookletSideIndex(
+              pageCount,
+              settings.booklet.spineLocation,
+              Math.max(currentPage, 1),
+            )
+          : 1;
   const [step, setStep] = useState(0);
   const shownStep = step === 0 ? autoStep : Math.min(step, steps);
 
@@ -1236,6 +1243,28 @@ export function PrintDialog({
     selected.length < pageCount;
   const clipped = rangeIsClipped(settings.pageRange, pageCount);
 
+  // The strip's buttons are the only focusable parts of it, so arrow presses
+  // arrive here from either one.
+  const stepPager = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+      return;
+    }
+
+    const next = shownStep + (event.key === "ArrowLeft" ? -1 : 1);
+    if (next < 1 || next > steps) {
+      return;
+    }
+
+    event.preventDefault();
+    setStep(next);
+  };
+
+  const resetSettings = () => {
+    setSettings(defaultPrintSettings());
+    setPageScope("all");
+    setStep(0);
+  };
+
   // The figure column renders twice: once in the dialog and, larger, in the
   // overlay the Enlarge action opens. The overlay's title names the figure it
   // holds, so only the dialog copy heads it, and only the dialog copy offers
@@ -1256,7 +1285,12 @@ export function PrintDialog({
         inDialog,
       )}
       {pager ? (
-        <Group gap={0} justify="center" className="print-preview__pager">
+        <Group
+          gap={0}
+          justify="center"
+          className="print-preview__pager"
+          onKeyDown={stepPager}
+        >
           <Button
             variant="quiet"
             size="sm"
@@ -1266,7 +1300,7 @@ export function PrintDialog({
           >
             <Icon name="chevron-left" />
           </Button>
-          <Text c="dimmed" className="print-preview__pager-label">
+          <Text c="dimmed" className="print-preview__pager-label" role="status">
             {t(pager.label, pager.values)}
           </Text>
           <Button
@@ -1288,7 +1322,7 @@ export function PrintDialog({
         </Text>
       ) : null}
       {showsSelection || summary ? (
-        <div className="print-preview__output">
+        <div className="print-preview__output" role="status">
           {showsSelection ? (
             <Text size="xs" c="dimmed" className="print-preview__summary">
               {clipped
@@ -1345,28 +1379,31 @@ export function PrintDialog({
     </>
   );
 
+  // The enlarged preview is a modal of its own: while it is open Escape belongs
+  // to it, so this dialog must not read the same key as its own close.
   return (
     <Modal
       open={open}
       onClose={onClose}
+      disableEscapeClose={enlarged}
       title={t("viewer.print.title")}
       width={settings.preset === "standard" ? "md" : "lg"}
       ariaLabel={t("viewer.print.title")}
       footer={
         <Group
-          justify={isPhone ? "flex-end" : "space-between"}
+          justify={permissionProblem && !isPhone ? "space-between" : "flex-end"}
           gap="sm"
           wrap="wrap"
         >
           {
-            // The handoff is why the dialog is not the printer's own, so it is
-            // said on every viewport rather than only where it fits beside the
-            // buttons. A document that forbids printing has no handoff to
-            // describe, so its reason takes the line instead.
+            // The button names the next step, so only a refused document has
+            // something to read here.
           }
-          <Text size="xs" c="dimmed" className="print-handoff">
-            {permissionProblem ?? t("viewer.print.handoff")}
-          </Text>
+          {permissionProblem ? (
+            <Text size="xs" c="dimmed" className="print-handoff">
+              {permissionProblem}
+            </Text>
+          ) : null}
           <Group gap="sm">
             <Button variant="tertiary" onClick={onClose}>
               {t("common.cancel")}
@@ -1399,7 +1436,7 @@ export function PrintDialog({
                 <span className="print-document__name">{fileName}</span>
               ) : null}
               {fileName && pageCount > 0 ? (
-                <span className="print-document__meta"> · </span>
+                <span className="print-document__meta">, </span>
               ) : null}
               {pageCount > 0 ? (
                 <span className="print-document__meta">
@@ -1451,12 +1488,22 @@ export function PrintDialog({
 
         <div className="print-body__controls">
           <Stack gap="md">
-            <Text className="print-column__title">
-              {t("viewer.print.settingsLabel")}
-            </Text>
+            <Group justify="space-between" align="center">
+              <Text className="print-column__title">
+                {t("viewer.print.settingsLabel")}
+              </Text>
+              <Button
+                variant="quiet"
+                size="sm"
+                onClick={resetSettings}
+                disabled={busy}
+              >
+                {t("viewer.print.reset")}
+              </Button>
+            </Group>
             {scopeNote && pageCount > 0 ? (
               <Text size="xs" c="dimmed">
-                {t(scopeNote, { count: pageCount })}
+                {t(scopeNote)}
               </Text>
             ) : null}
             {fields()}

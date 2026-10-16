@@ -25,7 +25,14 @@ export function PrintAPIBridge({
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const isMac = (await getDesktopOs()) === DesktopOs.Mac;
+      let isMac = false;
+      try {
+        isMac = (await getDesktopOs()) === DesktopOs.Mac;
+      } catch {
+        // getDesktopOs caches its promise, so one rejection would otherwise
+        // leave printing unavailable for the rest of the session. The in-app
+        // print path still works.
+      }
       if (!cancelled) {
         setSystemPrintDialog(isMac);
       }

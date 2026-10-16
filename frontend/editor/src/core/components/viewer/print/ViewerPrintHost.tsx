@@ -83,6 +83,9 @@ export function ViewerPrintHost({
     () => () => {
       jobRef.current?.controller.abort();
       jobRef.current = null;
+      // The abort makes that handle stale, so its own finally will not clear the
+      // busy state the dropped job set.
+      setBusy(false);
     },
     [fileName],
   );

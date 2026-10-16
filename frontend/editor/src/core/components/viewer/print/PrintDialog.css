@@ -282,6 +282,9 @@
    box, so a landscape or square page is divided where its tiles really fall. */
 .print-tiles {
   position: relative;
+  /* The cut lines, kept out of the accent: they are a guide, not a border the
+     printed page will carry. */
+  --print-cut: color-mix(in srgb, var(--c-text-subtle) 45%, transparent);
 }
 
 /* The sheet the tiles are computed on, so a figure awaiting its page still shows
@@ -290,7 +293,7 @@
 .print-tiles__paper {
   display: block;
   width: 100%;
-  aspect-ratio: 1 / 1.41;
+  aspect-ratio: 210 / 297;
 }
 
 .print-tiles__page {
@@ -306,13 +309,16 @@
   display: grid;
   grid-template-columns: repeat(var(--print-tiles-columns), 1fr);
   grid-template-rows: repeat(var(--print-tiles-rows), 1fr);
+  /* The grid closes the outer trim and each tile closes its own right and
+     bottom edge, so a cut shared by two tiles is drawn once rather than twice. */
+  border-top: 1px dashed var(--print-cut);
+  border-left: 1px dashed var(--print-cut);
 }
 
-/* A nonprinting guide: dashed and neutral rather than in the accent, so it is
-   never read as a border the printed page will carry. */
 .print-tiles__tile {
   position: relative;
-  border: 1px dashed color-mix(in srgb, var(--c-text-subtle) 45%, transparent);
+  border-right: 1px dashed var(--print-cut);
+  border-bottom: 1px dashed var(--print-cut);
 }
 
 /* The badge follows its tile, which is a tenth of a sheet across at 10 x 10. */
@@ -340,6 +346,14 @@
   background: var(--c-surface);
   border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-pill);
+}
+
+/* One control seen from each end: the disabled arrow keeps the bare glyph the
+   enabled one draws instead of the grey chip every disabled button gets, so the
+   pair cannot read as two different designs. */
+.print-preview__pager .sui-btn.mantine-Button-root:disabled,
+.print-preview__pager .sui-btn.mantine-Button-root[data-disabled] {
+  background: transparent !important;
 }
 
 .print-preview__pager-label {
@@ -418,6 +432,12 @@
   .print-handoff {
     flex: 1 1 100%;
     text-align: right;
+  }
+
+  /* The stage is nearly the whole width here, so the page takes it: the size the
+     desktop column is drawn for leaves the preview too small to read. */
+  .print-body {
+    --print-figure-w: 15rem;
   }
 }
 

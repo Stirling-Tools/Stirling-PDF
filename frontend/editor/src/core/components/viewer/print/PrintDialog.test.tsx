@@ -45,10 +45,11 @@ const renderDialog = (props: {
   onPrint?: (settings: PrintSettings) => void;
 }) => {
   const onPrint = props.onPrint ?? vi.fn();
+  const onClose = vi.fn();
   const dialog = (open: boolean) => (
     <PrintDialog
       open={open}
-      onClose={vi.fn()}
+      onClose={onClose}
       onPrint={onPrint}
       fileName={props.fileName}
       systemPrintDialog={props.systemPrintDialog}
@@ -71,7 +72,7 @@ const renderDialog = (props: {
   const result = render(tree(props.open ?? true));
   // The viewer keeps the dialog mounted between opens, so a test can too.
   const setOpen = (open: boolean) => result.rerender(tree(open));
-  return { onPrint, setOpen, ...result };
+  return { onPrint, onClose, setOpen, ...result };
 };
 
 const confirm = () =>
@@ -247,6 +248,48 @@ describe("PrintDialog", () => {
     expect(line?.textContent).toContain("viewer.print.pageCount");
   });
 
+  it("steps the page from the strip with the arrow keys", () => {
+    renderDialog({ pageCount: 5 });
+
+    fireEvent.change(rangeField(), { target: { value: "1-3" } });
+
+    const next = screen.getByLabelText("viewer.print.nextPage");
+
+    expect(next).toBeDisabled();
+
+    fireEvent.keyDown(next, { key: "ArrowLeft" });
+
+    expect(next).not.toBeDisabled();
+
+    fireEvent.keyDown(next, { key: "ArrowRight" });
+
+    expect(next).toBeDisabled();
+  });
+
+  it("returns every setting to its default", () => {
+    const { onPrint } = renderDialog({ pageCount: 12 });
+
+    fireEvent.change(rangeField(), { target: { value: "2-4" } });
+    fireEvent.click(screen.getByText("viewer.print.presetBooklet"));
+    fireEvent.click(screen.getByText("viewer.print.reset"));
+    fireEvent.click(confirm());
+
+    expect(onPrint).toHaveBeenCalledWith(defaultPrintSettings());
+  });
+
+  it("announces the job summary and the output position", () => {
+    renderDialog({ pageCount: 12 });
+
+    fireEvent.click(screen.getByText("viewer.print.presetBooklet"));
+
+    const summary = document.querySelector(".print-preview__output");
+    const position = document.querySelector(".print-preview__pager-label");
+
+    expect(summary?.getAttribute("role")).toBe("status");
+    expect(summary?.textContent?.length).toBeGreaterThan(0);
+    expect(position?.getAttribute("role")).toBe("status");
+  });
+
   it("keeps both settings when a booklet output mode changes them", () => {
     const { onPrint } = renderDialog({ pageCount: 12 });
 
@@ -338,6 +381,18 @@ describe("PrintDialog", () => {
     fireEvent.click(screen.getByLabelText("viewer.print.nextSide"));
 
     expect(badges(document.body)).toEqual(["4", "9"]);
+  });
+
+  it("closes only the enlarged preview when Escape is pressed in it", () => {
+    const { onClose } = renderDialog({ pageCount: 12 });
+
+    fireEvent.click(screen.getByLabelText("viewer.print.enlargePreview"));
+    expect(document.querySelector(".print-preview--enlarged")).toBeTruthy();
+
+    fireEvent.keyDown(document.body, { key: "Escape" });
+
+    expect(document.querySelector(".print-preview--enlarged")).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("enlarges the preview without offering to enlarge itself", () => {

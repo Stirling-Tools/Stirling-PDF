@@ -261,6 +261,18 @@ export function bookletSides(
   return sides;
 }
 
+/** 1-based side of the imposition that holds a page, or 1 when it holds none. */
+export function bookletSideIndex(
+  pageCount: number,
+  spineLocation: BookletImpositionParameters["spineLocation"],
+  page: number,
+): number {
+  const index = bookletSides(pageCount, spineLocation).findIndex(
+    (side) => side[0] === page || side[1] === page,
+  );
+  return index < 0 ? 1 : index + 1;
+}
+
 /**
  * What the job will produce, so a layout that rearranges the document says what
  * it makes before it runs. Pages are the document's and output sides are the

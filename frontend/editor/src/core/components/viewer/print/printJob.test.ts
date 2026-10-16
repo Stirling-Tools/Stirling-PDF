@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  bookletSideIndex,
   bookletSides,
   buildPrintJob,
   canPrint,
@@ -41,6 +42,20 @@ const serverJob = (job: ReturnType<typeof buildPrintJob>) => {
   }
   return job;
 };
+
+describe("bookletSideIndex", () => {
+  it("finds the side of the imposition that holds a page", () => {
+    expect(bookletSideIndex(12, "LEFT", 1)).toBe(1);
+    expect(bookletSideIndex(12, "LEFT", 2)).toBe(2);
+    expect(bookletSideIndex(12, "LEFT", 3)).toBe(3);
+    expect(bookletSideIndex(12, "LEFT", 8)).toBe(5);
+    expect(bookletSideIndex(12, "LEFT", 12)).toBe(1);
+  });
+
+  it("falls back to the first side for a page the imposition does not place", () => {
+    expect(bookletSideIndex(0, "LEFT", 4)).toBe(1);
+  });
+});
 
 describe("buildPrintJob", () => {
   it("hands the standard layout to the viewer with the page range", () => {
