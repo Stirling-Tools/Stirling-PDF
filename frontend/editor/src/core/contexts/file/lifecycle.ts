@@ -4,6 +4,7 @@
 
 import { FileId } from "@app/types/file";
 import { releaseDocumentBytes } from "@app/services/documentBytesCache";
+import { forgetCachedPageImages } from "@app/services/pageImageCache";
 import { wasmCompilationStarted } from "@app/services/wasmPrecompiler";
 import {
   forgetPdfAccess,
@@ -196,6 +197,10 @@ export class FileLifecycleManager {
     // and cannot be reused once it leaves the workbench.
     releaseSharedDocument();
     if (file) releaseDocumentBytes(file);
+
+    // Page images are keyed by page id, so the cache has to be told which file
+    // they came from; nothing else drops them when the file goes.
+    forgetCachedPageImages(fileId);
 
     // Clean up blob URLs from file record if we have access to state
     if (stateRef) {

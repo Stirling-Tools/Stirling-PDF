@@ -103,6 +103,7 @@ async function processRequestQueue() {
               thumbnailGenerationService.addThumbnailToCache(
                 request.pageId,
                 result.thumbnail,
+                fileId,
               );
               request.resolve(result.thumbnail);
             } else {
@@ -159,8 +160,8 @@ export function useThumbnailGeneration() {
   );
 
   const addThumbnailToCache = useCallback(
-    (pageId: string, thumbnail: string) => {
-      thumbnailGenerationService.addThumbnailToCache(pageId, thumbnail);
+    (pageId: string, thumbnail: string, fileId?: FileId) => {
+      thumbnailGenerationService.addThumbnailToCache(pageId, thumbnail, fileId);
     },
     [],
   );

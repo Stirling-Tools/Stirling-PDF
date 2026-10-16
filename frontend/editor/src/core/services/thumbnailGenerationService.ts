@@ -9,6 +9,7 @@ import {
   closeRawDocument,
 } from "@app/services/pdfiumService";
 import { renderPdfiumPageDataUrl } from "@app/utils/pdfiumPageRender";
+import { registerPageImageCache } from "@app/services/pageImageCache";
 
 export interface ThumbnailResult {
   pageNumber: number;
@@ -28,6 +29,7 @@ interface CachedThumbnail {
   thumbnail: string;
   lastUsed: number;
   sizeBytes: number;
+  fileId?: FileId;
 }
 
 interface CachedPDFDocument {
@@ -43,6 +45,10 @@ export class ThumbnailGenerationService {
     CachedThumbnail
   >();
   private maxCacheSizeBytes = 1024 * 1024 * 1024; // 1GB cache limit
+  // A byte cap alone never bites on its own: one page image is ~100 KB, so 1 GB
+  // holds thousands of pages. Without an entry cap a long session keeps every
+  // page it has ever shown.
+  private maxCacheEntries = 512;
   private currentCacheSize = 0;
 
   // PDF document cache to reuse PDF instances and avoid creating multiple workers
@@ -242,13 +248,14 @@ export class ThumbnailGenerationService {
     return null;
   }
 
-  addThumbnailToCache(pageId: string, thumbnail: string): void {
+  addThumbnailToCache(pageId: string, thumbnail: string, fileId?: FileId): void {
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
 
     // Enforce cache size limits
     while (
-      this.currentCacheSize + sizeBytes > this.maxCacheSizeBytes &&
-      this.thumbnailCache.size > 0
+      this.thumbnailCache.size >= this.maxCacheEntries ||
+      (this.currentCacheSize + sizeBytes > this.maxCacheSizeBytes &&
+        this.thumbnailCache.size > 0)
     ) {
       this.evictLeastRecentlyUsed();
     }
@@ -257,9 +264,27 @@ export class ThumbnailGenerationService {
       thumbnail,
       lastUsed: Date.now(),
       sizeBytes,
+      ...(fileId ? { fileId } : {}),
     });
 
     this.currentCacheSize += sizeBytes;
+  }
+
+  /**
+   * Drop every cached page image that came from one file. Page ids are chosen
+   * by the caller, so the cache cannot find a file's entries by key: it has to
+   * remember which file each image belongs to, or a deleted document keeps its
+   * base64 page images for the rest of the session.
+   */
+  evictThumbnailsForFile(fileId: FileId): number {
+    let dropped = 0;
+    for (const [key, entry] of this.thumbnailCache) {
+      if (entry.fileId !== fileId) continue;
+      this.thumbnailCache.delete(key);
+      this.currentCacheSize -= entry.sizeBytes;
+      dropped++;
+    }
+    return dropped;
   }
 
   private evictLeastRecentlyUsed(): void {
@@ -332,3 +357,9 @@ export class ThumbnailGenerationService {
 
 // Global singleton instance
 export const thumbnailGenerationService = new ThumbnailGenerationService();
+
+// Only the app's own cache takes the seam: a test instance must not take over
+// pruning for the singleton the running app uses.
+registerPageImageCache((fileId) =>
+  thumbnailGenerationService.evictThumbnailsForFile(fileId),
+);
