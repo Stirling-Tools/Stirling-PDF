@@ -3,20 +3,13 @@ import {
   HORIZONTAL_PADDING_RATIO,
   VERTICAL_PADDING_RATIO,
 } from "@app/constants/signConstants";
+import { loadImage } from "@app/utils/canvasImage";
 
 export interface SignaturePreview {
   dataUrl: string;
   width: number;
   height: number;
 }
-
-const loadImage = (src: string): Promise<HTMLImageElement> =>
-  new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
 
 export const buildSignaturePreview = async (
   config: SignParameters | null,

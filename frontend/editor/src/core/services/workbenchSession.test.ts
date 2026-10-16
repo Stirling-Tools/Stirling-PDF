@@ -103,12 +103,13 @@ describe("record hygiene", () => {
   it("drops the previous record when a write fails, rather than leaving it stale", () => {
     writeWorkbenchSession({ fileIds: ["old"], selectedFileIds: [] });
     const setItem = vi
-      .spyOn(Storage.prototype, "setItem")
+      .spyOn(Object.getPrototypeOf(sessionStorage), "setItem")
       .mockImplementation(() => {
         throw new Error("QuotaExceededError");
       });
 
     writeWorkbenchSession({ fileIds: ["new"], selectedFileIds: [] });
+    expect(setItem).toHaveBeenCalledOnce();
     setItem.mockRestore();
 
     // Better to restore nothing than to restore a workbench the user has moved on from.

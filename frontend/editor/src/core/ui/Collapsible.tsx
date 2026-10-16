@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Icon } from "@app/ui/Icon";
 import "@app/ui/Collapsible.css";
 
 export interface CollapsibleProps {
@@ -33,21 +34,12 @@ export function Collapsible({
         onClick={onToggle}
         aria-expanded={open}
       >
-        <svg
-          className="sui-collapsible__chevron"
-          data-open={open}
-          viewBox="0 0 24 24"
-          width={16}
-          height={16}
-          fill="none"
-          stroke="currentColor"
+        <Icon
+          name="chevron-down"
+          size={16}
           strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+          className="sui-collapsible__chevron"
+        />
         {header}
       </button>
       <div className="sui-collapsible__body" data-open={open}>

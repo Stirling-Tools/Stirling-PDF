@@ -26,6 +26,7 @@ export default function WorkbenchBarDesktopActions({
   downloadIconName,
   saveAsIconName,
   onPrint,
+  printDisabledReason,
   onExport,
   onClose,
   enforcingProgress,
@@ -33,7 +34,7 @@ export default function WorkbenchBarDesktopActions({
   const { t } = useTranslation();
   const exportDisabled = actionsDisabled || policyEnforcing;
   const closeLabel =
-    currentView === "fileEditor"
+    currentView === "fileEditor" || currentView === "pageEditor"
       ? t("workbenchBar.closeAll", "Close All")
       : t("workbenchBar.closePdf", "Close PDF");
 
@@ -54,12 +55,14 @@ export default function WorkbenchBarDesktopActions({
             hover={false}
             className="workbench-bar-action-icon"
             onClick={onPrint}
-            disabled={exportDisabled}
+            disabled={exportDisabled || !onPrint}
             aria-label={t("workbenchBar.print", "Print PDF")}
           >
             <Icon name="printer" size={"1rem"} />
           </ActionIcon>,
-          tooltipFor(t("workbenchBar.print", "Print PDF")),
+          tooltipFor(
+            printDisabledReason ?? t("workbenchBar.print", "Print PDF"),
+          ),
         )}
 
       {/* Saving, and closing what was saved: only where a document is open. */}

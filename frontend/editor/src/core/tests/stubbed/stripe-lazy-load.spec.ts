@@ -41,7 +41,7 @@ test.describe("Stripe SDK lazy loading", () => {
     await page
       .waitForLoadState("networkidle", { timeout: 15_000 })
       .catch(() => {
-        // Posthog / iconify keep some connections warm — fall back to a
+        // Posthog keeps some connections warm — fall back to a
         // brief settle window if networkidle never resolves.
       });
     await page.waitForTimeout(2_000);

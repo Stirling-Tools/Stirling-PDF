@@ -7,18 +7,7 @@ import { Button } from "@app/ui/Button";
 const Plus = () => <Icon name="plus" size="1em" />;
 const Arrow = () => <Icon name="arrow-right" size="1em" />;
 const Trash = () => <Icon name="trash" size="1em" />;
-const Sparkle = () => (
-  <svg
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    aria-hidden
-  >
-    <path d="M12 2l1.9 5.1L19 9l-5.1 1.9L12 16l-1.9-5.1L5 9l5.1-1.9L12 2z" />
-    <path d="M19 14l.9 2.4L22 17l-2.1.8L19 20l-.9-2.2L16 17l2.1-.6L19 14z" />
-  </svg>
-);
+const Sparkle = () => <Icon name="sparkles" size="1em" />;
 
 const meta: Meta<typeof Button> = {
   title: "Primitives/Button",

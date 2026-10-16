@@ -31,6 +31,17 @@ async function makeStore(): Promise<EditorStore> {
 }
 
 describe("EditorStore dirty tracking", () => {
+  it.each(["clearDocument", "dispose"] as const)(
+    "invalidates pending loads on %s",
+    async (method) => {
+      const store = await makeStore();
+      const token = store.beginLoad();
+      expect(store.isCurrentLoad(token)).toBe(true);
+      store[method]();
+      expect(store.isCurrentLoad(token)).toBe(false);
+      store.dispose();
+    },
+  );
   beforeEach(() => {
     vi.useFakeTimers();
   });

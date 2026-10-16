@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -743,6 +744,34 @@ class SaasTeamServiceTest {
         }
 
         @Test
+        @DisplayName("successor joining another team keeps a solo transferred team's ownership")
+        void successorKeepsTransferredTeamAfterFounderRemoved() {
+            User bob = user(5L, "bob@example.com", "bob");
+            Team transferred = team(300L, "Transferred organisation");
+            Team next = team(100L, "Next organisation");
+            TeamMembership ownership = membership(transferred, bob, TeamRole.LEADER);
+            TeamInvitation invite =
+                    pendingInvitation(next, user(1L, "a@x.com", "alice"), "bob@example.com");
+            when(userRepository.findById(5L)).thenReturn(Optional.of(bob));
+            when(invitationRepository.findByInvitationToken("tok-123"))
+                    .thenReturn(Optional.of(invite));
+            when(saasTeamExtensionService.hasAvailableSeats(next)).thenReturn(true);
+            when(saasUserExtensionService.getHomeTeamId(bob)).thenReturn(200L);
+            when(membershipRepository.findByUserId(5L)).thenReturn(List.of(ownership));
+            when(membershipRepository.countByTeamIdAndRole(300L, TeamRole.LEADER)).thenReturn(1L);
+            when(saasTeamExtensionsRepository.incrementSeatsUsed(100L)).thenReturn(1);
+
+            service.acceptInvitation("tok-123", bob);
+
+            verify(membershipRepository, never()).delete(ownership);
+            verify(saasTeamExtensionsRepository, never()).decrementSeatsUsed(300L);
+            verify(teamRepository, never()).delete(any());
+            verify(userRepository).updateUserTeamId(5L, 100L);
+            assertThat(ownership.getRole()).isEqualTo(TeamRole.LEADER);
+            assertThat(invite.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);
+        }
+
+        @Test
         @DisplayName("parks the home team (keeps it) and joins the new team, incrementing seats")
         void success_parksHomeTeamAndJoins() {
             User u = user(5L, "b@x.com", "bob");
@@ -835,7 +864,6 @@ class SaasTeamServiceTest {
             when(saasTeamExtensionService.hasAvailableSeats(newTeam)).thenReturn(true);
             when(membershipRepository.findByUserId(5L)).thenReturn(List.of(sharedMembership));
             // Shared team: sole leader, but >1 member - leaving would orphan the other member.
-            when(membershipRepository.countByTeamId(300L)).thenReturn(2L);
             when(membershipRepository.countByTeamIdAndRole(300L, TeamRole.LEADER)).thenReturn(1L);
             when(saasTeamExtensionsRepository.incrementSeatsUsed(100L)).thenReturn(1);
 
@@ -1046,6 +1074,33 @@ class SaasTeamServiceTest {
             verify(saasTeamExtensionsRepository).decrementSeatsUsed(teamId);
             // Teams are durable now - the emptied team is not deleted.
             verify(teamRepository, never()).delete(any());
+        }
+
+        @Test
+        void removingFormerFounderCreatesFreshHomeWithoutRestoringMembership() {
+            User bob = user(1L, "bob@example.com", "bob");
+            User alice = user(2L, "alice@example.com", "alice");
+            Team transferred = team(teamId, "Transferred team");
+            TeamMembership bobOwner = membership(transferred, bob, TeamRole.LEADER);
+            TeamMembership aliceMember = membership(transferred, alice, TeamRole.MEMBER);
+            when(membershipRepository.findByTeamIdAndUserId(teamId, 1L))
+                    .thenReturn(Optional.of(bobOwner));
+            when(membershipRepository.findByTeamIdAndRole(teamId, TeamRole.LEADER))
+                    .thenReturn(List.of(bobOwner));
+            when(membershipRepository.findByTeamIdAndUserId(teamId, 2L))
+                    .thenReturn(Optional.of(aliceMember))
+                    .thenReturn(Optional.empty());
+            when(saasUserExtensionService.getHomeTeamId(alice)).thenReturn(teamId);
+            stubCreatePersonalTeam(alice, 500L);
+
+            service.removeTeamMember(teamId, 2L, bob);
+
+            verify(membershipRepository).delete(aliceMember);
+            verify(saasUserExtensionService).setHomeTeamId(alice, 500L);
+            verify(membershipRepository, never())
+                    .save(argThat(m -> m.getTeam().getId().equals(teamId)));
+            assertThat(alice.getTeam().getId()).isEqualTo(500L);
+            assertThat(bobOwner.getRole()).isEqualTo(TeamRole.LEADER);
         }
 
         @Test
@@ -1460,8 +1515,8 @@ class SaasTeamServiceTest {
 
             service.acceptInvitation(TOKEN, joiner);
 
-            // Guard let the move through: the old membership was left and the user re-pointed.
-            verify(membershipRepository).delete(oldMembership);
+            // Joining changes the active team while retaining ownership of the previous team.
+            verify(membershipRepository, never()).delete(oldMembership);
             verify(userRepository).updateUserTeamId(USER_ID, NEW_TEAM_ID);
             verify(invitationRepository).save(invitation);
             assertThat(invitation.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);

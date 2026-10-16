@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Box, Group, Menu, Modal, Stack, Text } from "@mantine/core";
+import { Group, Menu, Modal, Text } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Tooltip } from "@app/ui/Tooltip";
+import { StatusBadge } from "@app/ui/StatusBadge";
+import "@app/components/shared/signing/signingDetail.css";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import {
@@ -20,11 +23,13 @@ interface SignControlsPanelProps {
   placementMode: boolean;
   onPlacementModeChange: (active: boolean) => void;
   onSignatureSelected: (config: SignParameters) => void;
-  onComplete: () => void;
-  canComplete: boolean;
   signatureConfig: SignParameters | null;
   hasSelectedAnnotation?: boolean;
   onDeleteSelected?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
 }
 
 // wetSignature creation type ↔ stored/placement signature type.
@@ -34,16 +39,18 @@ const STORED_TYPE: Record<SignatureType, SavedSignature["type"]> = {
   type: "text",
 };
 
-/** Vertical sidebar signing controls: pick/create a signature, toggle place/move, delete, and complete & sign (placement happens on the main Viewer). */
+/** Places optional visible marks in the shared viewer; certificate submission belongs to the request panel. */
 export default function SignControlsPanel({
   placementMode,
   onPlacementModeChange,
   onSignatureSelected,
-  onComplete,
-  canComplete,
   signatureConfig,
   hasSelectedAnnotation = false,
   onDeleteSelected,
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo,
 }: SignControlsPanelProps) {
   const { t } = useTranslation();
   const {
@@ -71,21 +78,9 @@ export default function SignControlsPanel({
     (sig: SavedSignature) => {
       if (sig.type === "text") {
         return (
-          <Box
-            style={{
-              width: 72,
-              height: 28,
-              backgroundColor: "#ffffff",
-              borderRadius: 8,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "0 8px",
-              overflow: "hidden",
-            }}
-          >
+          <span className="signing-controls__preview">
             <Text
-              size="sm"
+              size="lg"
               style={{
                 fontFamily: sig.fontFamily,
                 color: sig.textColor,
@@ -97,38 +92,20 @@ export default function SignControlsPanel({
             >
               {sig.signerName}
             </Text>
-          </Box>
+          </span>
         );
       }
 
       return (
-        <Box
-          style={{
-            width: 72,
-            height: 28,
-            backgroundColor: "#ffffff",
-            borderRadius: 8,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "2px 6px",
-          }}
-        >
-          <Box
-            component="img"
+        <span className="signing-controls__preview">
+          <img
             src={sig.dataUrl}
             alt={
               sig.label ||
               t("certSign.collab.signRequest.saved.defaultLabel", "Signature")
             }
-            style={{
-              maxWidth: "100%",
-              maxHeight: "100%",
-              objectFit: "contain",
-              display: "block",
-            }}
           />
-        </Box>
+        </span>
       );
     },
     [t],
@@ -271,7 +248,6 @@ export default function SignControlsPanel({
     textColor,
   ]);
 
-  // Keyboard: Esc pauses placement, Backspace deletes the selected placement.
   useEffect(() => {
     if (!signatureConfig || createOpen) return;
 
@@ -282,7 +258,18 @@ export default function SignControlsPanel({
         target?.tagName === "TEXTAREA" ||
         target?.tagName === "CANVAS" ||
         (target as { isContentEditable?: boolean })?.isContentEditable;
-      if (isTypingTarget) return;
+      if (isTypingTarget || target?.closest('[role="dialog"]')) return;
+
+      if ((event.ctrlKey || event.metaKey) && !event.altKey) {
+        const key = event.key.toLowerCase();
+        if (key === "z" || key === "y") {
+          event.preventDefault();
+          event.stopPropagation();
+          if (key === "y" || event.shiftKey) onRedo?.();
+          else onUndo?.();
+          return;
+        }
+      }
 
       if (event.key === "Escape") {
         onPlacementModeChange(false);
@@ -294,16 +281,23 @@ export default function SignControlsPanel({
       }
     };
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onPlacementModeChange, onDeleteSelected, signatureConfig, createOpen]);
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [
+    onPlacementModeChange,
+    onDeleteSelected,
+    onUndo,
+    onRedo,
+    signatureConfig,
+    createOpen,
+  ]);
 
   if (!signatureConfig) return null;
 
   const previewNode =
     signatureConfig.signatureType === "text" ? (
       <Text
-        size="sm"
+        size="lg"
         style={{
           fontFamily: signatureConfig.fontFamily ?? "Helvetica",
           color: signatureConfig.textColor ?? "#000000",
@@ -323,12 +317,6 @@ export default function SignControlsPanel({
           "certSign.collab.signRequest.preview.imageAlt",
           "Selected signature",
         )}
-        style={{
-          maxHeight: 32,
-          maxWidth: "100%",
-          objectFit: "contain",
-          display: "block",
-        }}
       />
     ) : (
       // Sits on the white signature sheet in both schemes, so it takes a fixed
@@ -342,147 +330,193 @@ export default function SignControlsPanel({
     );
 
   return (
-    <Stack gap="sm">
-      <Text size="sm" fw={700}>
-        {t("certSign.collab.signRequest.signingTitle", "Signing")}
-      </Text>
-
-      {/* Current signature + change menu */}
-      <Menu withinPortal position="bottom" shadow="md" width="target">
-        <Menu.Target>
-          <Button
-            variant="secondary"
-            fullWidth
-            justify="between"
-            rightSection={<Icon name="chevron-down" size={"1.1rem"} />}
-            aria-label={t(
-              "certSign.collab.signRequest.changeSignature",
-              "Change signature",
+    <section className="signing-detail__section">
+      <div className="signing-detail__heading">
+        <h3>{t("signingDetail.visibleSignature", "Visible signature")}</h3>
+        <Group gap={4}>
+          <StatusBadge tone="neutral" showDot={false} size="sm">
+            {t("signingDetail.optional", "Optional")}
+          </StatusBadge>
+          <Tooltip
+            content={t(
+              "signMenu.optionalMarks",
+              "Visible marks are optional. Complete & Sign also works with a certificate alone.",
             )}
           >
-            <Box
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                minWidth: 0,
-                backgroundColor: "#ffffff",
-                borderRadius: 8,
-                padding: "2px 8px",
-                minHeight: 28,
-              }}
+            <ActionIcon
+              variant="tertiary"
+              size="sm"
+              aria-label={t(
+                "signingDetail.visibleSignatureHelp",
+                "About visible signatures",
+              )}
             >
-              {previewNode}
-            </Box>
-          </Button>
-        </Menu.Target>
-        <Menu.Dropdown>
-          {sortedSavedSignatures.length ? (
-            sortedSavedSignatures.map((sig) => (
-              <Menu.Item key={sig.id} onClick={() => applySavedSignature(sig)}>
-                <Group gap="sm" wrap="nowrap" justify="space-between">
-                  {renderSavedSignaturePreview(sig)}
-                  <ActionIcon
-                    as="div"
-                    size="sm"
-                    accent="danger"
-                    variant="tertiary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeSignature(sig.id);
-                    }}
-                    aria-label={t(
-                      "certSign.collab.signRequest.saved.delete",
-                      "Delete signature",
-                    )}
-                  >
-                    <Icon name="x" size={"0.9rem"} />
-                  </ActionIcon>
-                </Group>
+              <Icon name="info" size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      </div>
+      {!sortedSavedSignatures.length && !signatureConfig.signatureData ? (
+        <Button
+          variant="secondary"
+          className="signing-controls__picker"
+          leftSection={<Icon name="pen-tool" size={20} />}
+          onClick={openCreateModal}
+          fullWidth
+        >
+          {t("certSign.collab.signRequest.preview.create", "Add signature")}
+        </Button>
+      ) : (
+        <Menu withinPortal position="bottom" shadow="md" width="target">
+          <Menu.Target>
+            <Button
+              variant="secondary"
+              className="signing-controls__picker"
+              fullWidth
+              justify="between"
+              rightSection={<Icon name="chevron-down" size={"1.1rem"} />}
+              aria-label={t(
+                "certSign.collab.signRequest.changeSignature",
+                "Change signature",
+              )}
+            >
+              <span className="signing-controls__preview">{previewNode}</span>
+            </Button>
+          </Menu.Target>
+          <Menu.Dropdown>
+            {sortedSavedSignatures.length ? (
+              sortedSavedSignatures.map((sig) => (
+                <Menu.Item
+                  key={sig.id}
+                  onClick={() => applySavedSignature(sig)}
+                >
+                  <Group gap="sm" wrap="nowrap" justify="space-between">
+                    {renderSavedSignaturePreview(sig)}
+                    <ActionIcon
+                      as="div"
+                      size="sm"
+                      accent="danger"
+                      variant="tertiary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeSignature(sig.id);
+                      }}
+                      aria-label={t(
+                        "certSign.collab.signRequest.saved.delete",
+                        "Delete signature",
+                      )}
+                    >
+                      <Icon name="x" size={"0.9rem"} />
+                    </ActionIcon>
+                  </Group>
+                </Menu.Item>
+              ))
+            ) : (
+              <Menu.Item disabled>
+                {t(
+                  "certSign.collab.signRequest.saved.none",
+                  "No saved signatures",
+                )}
               </Menu.Item>
-            ))
-          ) : (
-            <Menu.Item disabled>
+            )}
+            <Menu.Divider />
+            <Menu.Item
+              leftSection={<Icon name="plus" size={"1rem"} />}
+              onClick={openCreateModal}
+              disabled={isAtCapacity}
+            >
               {t(
-                "certSign.collab.signRequest.saved.none",
-                "No saved signatures",
+                "certSign.collab.signRequest.createNewSignature",
+                "Create New Signature",
               )}
             </Menu.Item>
-          )}
-          <Menu.Divider />
-          <Menu.Item
-            leftSection={<Icon name="plus" size={"1rem"} />}
-            onClick={openCreateModal}
-            disabled={isAtCapacity}
-          >
-            {t(
-              "certSign.collab.signRequest.createNewSignature",
-              "Create New Signature",
+          </Menu.Dropdown>
+        </Menu>
+      )}
+      {signatureConfig.signatureData && (
+        <>
+          <Group gap="xs" grow>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!canUndo}
+              onClick={onUndo}
+              leftSection={<Icon name="undo-2" size={16} />}
+            >
+              {t("pageEditor.toolbar.undo", "Undo")}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!canRedo}
+              onClick={onRedo}
+              leftSection={<Icon name="redo-2" size={16} />}
+            >
+              {t("pageEditor.toolbar.redo", "Redo")}
+            </Button>
+          </Group>
+          <SegmentedControl
+            fullWidth
+            value={placementMode ? "place" : "move"}
+            onChange={(value) => onPlacementModeChange(value === "place")}
+            options={[
+              {
+                value: "place",
+                label: (
+                  <Group gap={6} wrap="nowrap" justify="center">
+                    <Icon name="pen-tool" size={"1.1rem"} />
+                    <span>
+                      {t("certSign.collab.signRequest.mode.place", "Place")}
+                    </span>
+                  </Group>
+                ),
+              },
+              {
+                value: "move",
+                label: (
+                  <Group gap={6} wrap="nowrap" justify="center">
+                    <Icon name="move" size={"1.1rem"} />
+                    <span>
+                      {t("certSign.collab.signRequest.mode.move", "Move")}
+                    </span>
+                  </Group>
+                ),
+              },
+            ]}
+            size="sm"
+            ariaLabel={t(
+              "certSign.collab.signRequest.mode.title",
+              "Sign or move mode",
             )}
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
-
-      {/* Place vs. move */}
-      <SegmentedControl
-        fullWidth
-        value={placementMode ? "place" : "move"}
-        onChange={(value) => onPlacementModeChange(value === "place")}
-        options={[
-          {
-            value: "place",
-            label: (
-              <Group gap={6} wrap="nowrap" justify="center">
-                <Icon name="pen-tool" size={"1.1rem"} />
-                <span>
-                  {t("certSign.collab.signRequest.mode.place", "Place")}
-                </span>
-              </Group>
-            ),
-          },
-          {
-            value: "move",
-            label: (
-              <Group gap={6} wrap="nowrap" justify="center">
-                <Icon name="move" size={"1.1rem"} />
-                <span>
-                  {t("certSign.collab.signRequest.mode.move", "Move")}
-                </span>
-              </Group>
-            ),
-          },
-        ]}
-        size="xs"
-        ariaLabel={t(
-          "certSign.collab.signRequest.mode.title",
-          "Sign or move mode",
-        )}
-      />
-
-      <Button
-        variant="tertiary"
-        accent="danger"
-        leftSection={<Icon name="trash" size={"1.1rem"} />}
-        onClick={onDeleteSelected}
-        disabled={!hasSelectedAnnotation}
-        fullWidth
-      >
-        {t(
-          "certSign.collab.signRequest.deleteSelected",
-          "Delete selected signature",
-        )}
-      </Button>
-
-      <Button
-        leftSection={<Icon name="check" size={"1.1rem"} />}
-        onClick={onComplete}
-        disabled={!canComplete}
-        fullWidth
-      >
-        {t("certSign.collab.signRequest.completeAndSign", "Complete & Sign")}
-      </Button>
-
-      {/* Create signature — reuses the shared wet-signature creation flow */}
+          />
+          {hasSelectedAnnotation && (
+            <Button
+              variant="tertiary"
+              accent="danger"
+              leftSection={<Icon name="trash" size={"1.1rem"} />}
+              onClick={onDeleteSelected}
+              disabled={!hasSelectedAnnotation}
+              fullWidth
+            >
+              {t(
+                "certSign.collab.signRequest.deleteSelected",
+                "Delete selected signature",
+              )}
+            </Button>
+          )}
+          <p className="signing-detail__hint">
+            {placementMode
+              ? t(
+                  "signingDetail.placeHint",
+                  "Click on the document to place your signature.",
+                )
+              : t(
+                  "signingDetail.moveHint",
+                  "Select a signature on the document to move, resize or remove it.",
+                )}
+          </p>
+        </>
+      )}
       <Modal
         opened={createOpen}
         onClose={() => setCreateOpen(false)}
@@ -513,6 +547,6 @@ export default function SignControlsPanel({
           )}
         />
       </Modal>
-    </Stack>
+    </section>
   );
 }

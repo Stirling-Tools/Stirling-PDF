@@ -192,7 +192,6 @@ body {
   font-size: 16px;
   font-weight: 500;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
 }
 
 /* Page 2: What is Stirling PDF */

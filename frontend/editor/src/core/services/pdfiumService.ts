@@ -12,17 +12,14 @@
  * `getSignatures`, `saveAsCopy`, …) wrap the `PdfEngine` interface so callers
  * never have to deal with raw pointers or Tasks.
  */
-import {
-  init,
-  type WrappedPdfiumModule,
-  type PdfiumModule,
-} from "@embedpdf/pdfium";
+import type { WrappedPdfiumModule, PdfiumModule } from "@embedpdf/pdfium";
 import {
   pdfiumWasmModulePromise,
   startEagerWasmCompilation,
   pdfiumWasmUrl,
 } from "@app/services/wasmPrecompiler";
 import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
+import i18n from "i18next";
 import type { FormField, WidgetCoordinates } from "@app/tools/formFill/types";
 
 export interface ExtendedPdfiumRuntime {
@@ -89,7 +86,13 @@ async function initPdfiumModule(): Promise<WrappedPdfiumModule> {
   startEagerWasmCompilation();
 
   const overrides: PdfiumModuleOverrides = { locateFile: () => wasmUrl() };
-  const precompiled = await pdfiumWasmModulePromise;
+  // The glue is imported here, not at the top: this service is reached from
+  // app-root contexts, and a static import would put the whole embedpdf chunk on
+  // the initial load. It downloads alongside the WASM rather than after it.
+  const [precompiled, { init }] = await Promise.all([
+    pdfiumWasmModulePromise,
+    import("@embedpdf/pdfium"),
+  ]);
 
   let reportFailure: (error: unknown) => void = () => {};
   const instantiateFailed = new Promise<never>((_, reject) => {
@@ -312,19 +315,41 @@ function copyToWasmHeap(
 function pdfiumOpenErrorMessage(err: number): string {
   switch (err) {
     case 1:
-      return "Could not open the PDF (unknown error).";
+      return i18n.t(
+        "error.pdfOpen.unknown",
+        "Could not open the PDF (unknown error).",
+      );
     case 2:
-      return "This file is not a valid PDF or is corrupted.";
+      return i18n.t(
+        "error.pdfOpen.invalid",
+        "This file is not a valid PDF or is corrupted.",
+      );
     case 3:
-      return "The PDF file is corrupted and could not be read.";
+      return i18n.t(
+        "error.pdfOpen.corrupted",
+        "The PDF file is corrupted and could not be read.",
+      );
     case 4:
-      return "This PDF is password-protected.";
+      return i18n.t(
+        "error.pdfOpen.passwordProtected",
+        "This PDF is password-protected.",
+      );
     case 5:
-      return "This PDF uses an unsupported security scheme.";
+      return i18n.t(
+        "error.pdfOpen.unsupportedSecurity",
+        "This PDF uses an unsupported security scheme.",
+      );
     case 6:
-      return "A page in this PDF could not be loaded.";
+      return i18n.t(
+        "error.pdfOpen.pageLoadFailed",
+        "A page in this PDF could not be loaded.",
+      );
     default:
-      return `Could not open the PDF (error ${err}).`;
+      return i18n.t(
+        "error.pdfOpen.code",
+        "Could not open the PDF (error {{code}}).",
+        { code: err },
+      );
   }
 }
 

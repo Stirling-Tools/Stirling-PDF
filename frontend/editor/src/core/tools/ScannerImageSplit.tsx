@@ -25,7 +25,7 @@ const ScannerImageSplit = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: "Settings",
+        title: t("scannerImageSplit.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed
           ? base.handleSettingsReset

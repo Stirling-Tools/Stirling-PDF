@@ -1,10 +1,12 @@
 import React from "react";
 import { Box, Center, Loader, Stack, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { getFileTypeIcon } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { detectFileExtension } from "@app/utils/fileUtils";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
 
 export interface DocumentThumbnailProps {
   file: File | StirlingFileStub | null;
@@ -31,6 +33,14 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
   onClick,
   children,
 }) => {
+  const { t } = useTranslation();
+  const access = usePdfAccess(file instanceof Blob ? file : file?.id);
+  const locked =
+    !access &&
+    (isEncrypted ||
+      Boolean(
+        file && "processedFile" in file && file.processedFile?.isEncrypted,
+      ));
   if (!file) return null;
 
   const containerStyle: React.CSSProperties = {
@@ -45,13 +55,15 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
     ...style,
   };
 
-  if (thumbnail && !isEncrypted) {
+  if (thumbnail && !locked) {
     return (
       <Box style={containerStyle} onClick={onClick}>
         <PrivateContent>
           <img
             src={thumbnail}
-            alt={`Preview of ${file.name}`}
+            alt={t("filePreview.previewOf", "Preview of {{name}}", {
+              name: file.name,
+            })}
             className={imgClassName}
             style={
               imgClassName
@@ -75,7 +87,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
     );
   }
 
-  if (isEncrypted) {
+  if (locked) {
     return (
       <Box style={containerStyle} onClick={onClick}>
         <div
@@ -108,7 +120,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
               borderRadius: "6px",
             }}
           >
-            Locked
+            {t("filePreview.locked", "Locked")}
           </span>
         </div>
         {children}
@@ -127,7 +139,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
         >
           <Loader size="sm" />
           <Text size="xs" c="dimmed">
-            Loading thumbnail...
+            {t("filePreview.loadingThumbnail", "Loading thumbnail...")}
           </Text>
         </Stack>
         {children}

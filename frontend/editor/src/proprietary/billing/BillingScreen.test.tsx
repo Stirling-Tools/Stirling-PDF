@@ -325,8 +325,8 @@ it("retains Plan and Usage while data is unavailable without inventing figures o
       licenseSection={<span>Local license</span>}
     />,
   );
-  expect(screen.getByRole("button", { name: "Plan" })).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Usage" })).toBeInTheDocument();
+  expect(document.getElementById("ub-plan")).not.toBeNull();
+  expect(document.getElementById("ub-usage")).not.toBeNull();
   expect(
     screen.getByText("Renew access to read billing data."),
   ).toBeInTheDocument();

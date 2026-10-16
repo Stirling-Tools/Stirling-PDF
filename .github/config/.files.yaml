@@ -70,7 +70,6 @@ project: &project
   - gradle.properties
   - gradlew
   - gradlew.bat
-  - launch4jConfig.xml
   - settings.gradle
   - frontend/**
   - docker/**

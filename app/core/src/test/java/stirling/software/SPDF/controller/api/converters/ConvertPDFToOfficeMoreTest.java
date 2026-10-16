@@ -38,6 +38,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
+import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -60,12 +61,15 @@ class ConvertPDFToOfficeMoreTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Mock private OfficeConversionService officeConversionService;
     @Mock private RuntimePathConfig runtimePathConfig;
 
     @InjectMocks private ConvertPDFToOffice controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        // These cover the legacy converters; Stirling Office Convert has its own tests.
+        lenient().when(officeConversionService.legacy(null)).thenReturn(true);
         // Real temp files backing TempFileManager so the file-backed response can be read back.
         lenient()
                 .when(tempFileManager.createManagedTempFile(any()))
@@ -165,7 +169,8 @@ class ConvertPDFToOfficeMoreTest {
             try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
                 stubLibreOfficeWritesOutput(mockedFactory, "pptx");
 
-                ResponseEntity<Resource> response = controller.processPdfToPresentation(request);
+                ResponseEntity<Resource> response =
+                        controller.processPdfToPresentation(request, null);
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 assertTrue(readResource(response.getBody()).length > 0);
@@ -179,7 +184,7 @@ class ConvertPDFToOfficeMoreTest {
             request.setFileInput(nonPdfFile());
             request.setOutputFormat("pptx");
 
-            ResponseEntity<Resource> response = controller.processPdfToPresentation(request);
+            ResponseEntity<Resource> response = controller.processPdfToPresentation(request, null);
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         }
@@ -202,7 +207,9 @@ class ConvertPDFToOfficeMoreTest {
                                                 ProcessExecutor.Processes.LIBRE_OFFICE))
                         .thenReturn(executor);
 
-                assertThrows(IOException.class, () -> controller.processPdfToPresentation(request));
+                assertThrows(
+                        IOException.class,
+                        () -> controller.processPdfToPresentation(request, null));
             }
         }
     }
@@ -221,7 +228,7 @@ class ConvertPDFToOfficeMoreTest {
             try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
                 stubLibreOfficeWritesOutput(mockedFactory, "docx");
 
-                ResponseEntity<Resource> response = controller.processPdfToWord(request);
+                ResponseEntity<Resource> response = controller.processPdfToWord(request, null);
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 assertTrue(readResource(response.getBody()).length > 0);
@@ -235,7 +242,7 @@ class ConvertPDFToOfficeMoreTest {
             request.setFileInput(pdfFile());
             request.setOutputFormat("bogus");
 
-            ResponseEntity<Resource> response = controller.processPdfToWord(request);
+            ResponseEntity<Resource> response = controller.processPdfToWord(request, null);
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         }
@@ -256,7 +263,7 @@ class ConvertPDFToOfficeMoreTest {
             realDoc.addPage(new PDPage());
             when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response = controller.processPdfToRTForTXT(request);
+            ResponseEntity<Resource> response = controller.processPdfToRTForTXT(request, null);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertEquals(MediaType.TEXT_PLAIN, response.getHeaders().getContentType());
@@ -272,7 +279,7 @@ class ConvertPDFToOfficeMoreTest {
             try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
                 stubLibreOfficeWritesOutput(mockedFactory, "rtf");
 
-                ResponseEntity<Resource> response = controller.processPdfToRTForTXT(request);
+                ResponseEntity<Resource> response = controller.processPdfToRTForTXT(request, null);
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 assertTrue(readResource(response.getBody()).length > 0);
@@ -290,7 +297,9 @@ class ConvertPDFToOfficeMoreTest {
                     .thenThrow(new IOException("cannot parse pdf"));
 
             IOException thrown =
-                    assertThrows(IOException.class, () -> controller.processPdfToRTForTXT(request));
+                    assertThrows(
+                            IOException.class,
+                            () -> controller.processPdfToRTForTXT(request, null));
             assertEquals("cannot parse pdf", thrown.getMessage());
         }
     }

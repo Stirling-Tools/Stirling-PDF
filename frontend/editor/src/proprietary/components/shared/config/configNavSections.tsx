@@ -3,11 +3,10 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import {
   useConfigNavSections as useCoreConfigNavSections,
+  extendPreferences,
   ConfigNavSection,
 } from "@core/components/shared/config/configNavSections";
-import AdminPlanSection from "@app/components/shared/config/configSections/AdminPlanSection";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
 
 // Lazy, and rendered inside one Suspense below: these five pages are the bulk of
 // the settings tree, and pulling them all eagerly starved the i18n fetch on a
@@ -69,23 +68,14 @@ export const useConfigNavSections = (
     showSettingsWhenNoLogin,
   );
   const about = coreSections.filter((s) => s.id === "about");
-  const sections = coreSections.filter((s) => s.id !== "about");
+  // Core owns the page; the flavor supplies what core has no concept of.
+  const sections = extendPreferences(
+    coreSections.filter((s) => s.id !== "about"),
+    loginEnabled ? { accountSlot: <AccountCards /> } : {},
+  );
 
   const preferences = sections.find((s) => s.id === "preferences");
   if (preferences) {
-    // Core owns the page; the flavor supplies what core has no concept of.
-    preferences.items = preferences.items.map((item) =>
-      item.key === "general"
-        ? {
-            ...item,
-            component: (
-              <PreferencesSection
-                accountSlot={loginEnabled ? <AccountCards /> : undefined}
-              />
-            ),
-          }
-        : item,
-    );
     // Keys belong to you, not to the server, so they sit with your own
     // settings rather than alone under a heading of their own.
     if (loginEnabled) {
@@ -112,26 +102,6 @@ export const useConfigNavSections = (
     disabled: requiresLogin,
     disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
   };
-
-  if (showAdmin) {
-    sections.push({
-      id: "workspace",
-      title: t("settings.workspace.title", "Workspace"),
-      items: [
-        {
-          key: "adminPlan",
-          label: t("settings.licensingAnalytics.plan", "Plan"),
-          description: t(
-            "settings.licensingAnalytics.planDescription",
-            "Your licence, seats and what the current plan unlocks.",
-          ),
-          icon: "star",
-          component: <AdminPlanSection />,
-          ...gated,
-        },
-      ],
-    });
-  }
 
   if (showAdmin) {
     sections.push(

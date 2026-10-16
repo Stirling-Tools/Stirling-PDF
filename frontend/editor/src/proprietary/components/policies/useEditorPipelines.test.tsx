@@ -13,6 +13,10 @@ vi.mock("@app/services/policyStorage", () => ({
   loadPolicies: () => cache.value,
   onPoliciesChange: () => () => {},
 }));
+const i18nMock = vi.hoisted(() => ({
+  t: (_key: string, fallback: string) => fallback,
+}));
+vi.mock("react-i18next", () => ({ useTranslation: () => i18nMock }));
 vi.mock("@app/services/policyCatalog", () => ({
   loadPolicyCatalog: () => ({
     categories: [

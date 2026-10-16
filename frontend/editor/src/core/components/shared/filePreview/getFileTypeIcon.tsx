@@ -89,7 +89,8 @@ export function getFileTypeIcon(
   return (
     <FileDocIcon
       variant={getFileDocVariant(ext, mime)}
-      style={{ width: size, height: "auto" }}
+      // `size` is the page's width, and the page spans 16 of the frame's 24 units.
+      size={typeof size === "number" ? size * 1.5 : `calc(${size} * 1.5)`}
     />
   );
 }

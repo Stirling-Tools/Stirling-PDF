@@ -59,7 +59,9 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
       setTimeout(() => setSuccess(false), 5000);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to clear audit data",
+        err instanceof Error
+          ? err.message
+          : t("audit.clearData.failed", "Failed to clear audit data"),
       );
     } finally {
       setClearing(false);
@@ -74,7 +76,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
           icon={<Icon name="circle-check" size="1.2rem" />}
           title={t("audit.clearData.success", "Success")}
           onClose={() => setSuccess(false)}
-          closeButtonLabel="Close alert"
+          closeButtonLabel={t("audit.clearData.closeAlert", "Close alert")}
           withCloseButton
         >
           {t(

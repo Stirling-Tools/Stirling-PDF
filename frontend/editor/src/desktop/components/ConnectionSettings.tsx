@@ -62,8 +62,7 @@ export const ConnectionSettings: React.FC = () => {
         );
         await authService.logout();
       }
-      // Always switch to local after logout so the app remains usable
-      await connectionModeService.switchToLocal();
+      if (!config?.require_sign_in) await connectionModeService.switchToLocal();
 
       // Reload config
       const newConfig = await connectionModeService.getCurrentConfig();

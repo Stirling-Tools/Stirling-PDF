@@ -2,6 +2,11 @@ import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { collectMemberPtrs } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import {
+  scanDrawnSize,
+  setScanOverride,
+  type ScanOverride,
+} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
 
 /** Scale a text run so its effective on-page size matches `nextSize`. */
 export class SetFontSizeCommand implements Command {
@@ -10,6 +15,9 @@ export class SetFontSizeCommand implements Command {
   private readonly runId: string;
   private readonly nextSize: number;
   private prevSize: number | null;
+  /** Set when the run was scanned text, resized by redrawing it. */
+  private scanPrev: ScanOverride | null = null;
+  private scanTarget: number | null = null;
 
   constructor(opts: { pageIndex: number; runId: string; nextSize: number }) {
     this.pageIndex = opts.pageIndex;
@@ -21,7 +29,23 @@ export class SetFontSizeCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
-    if (!run || !run.pdfiumObjPtr) return;
+    if (!run) return;
+    // Scaled from the size actually drawn: before the first edit the run may
+    // still report OCR's guess, which is far off. Fixed once, so redo matches.
+    const drawn = scanDrawnSize(doc, page, run);
+    if (drawn !== null)
+      this.scanTarget ??=
+        (drawn * this.nextSize) / Math.max(0.01, run.fontSize);
+    const target = this.scanTarget;
+    const scanPrev =
+      target === null
+        ? null
+        : setScanOverride(doc, page, run, (o) => ({ ...o, fontSize: target }));
+    if (scanPrev) {
+      this.scanPrev = scanPrev;
+      return;
+    }
+    if (!run.pdfiumObjPtr) return;
     if (this.prevSize === null) {
       this.prevSize = run.fontSize;
     }
@@ -50,6 +74,14 @@ export class SetFontSizeCommand implements Command {
   }
 
   revert(doc: EditorDocument): void {
+    if (this.scanPrev) {
+      const page = doc.page(this.pageIndex);
+      const run = page.findRun(this.runId);
+      const prev = this.scanPrev;
+      if (run) setScanOverride(doc, page, run, () => prev);
+      this.scanPrev = null;
+      return;
+    }
     if (this.prevSize === null) return;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);

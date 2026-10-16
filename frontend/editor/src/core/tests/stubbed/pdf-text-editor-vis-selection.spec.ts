@@ -401,7 +401,7 @@ test.describe("PDF text editor - selection affordances, visually", () => {
     await page.keyboard.up("Control");
   });
 
-  // Breaks if collectRunsInRect works in the wrong coordinate space (page vs
+  // Breaks if collectIdsInRect works in the wrong coordinate space (page vs
   // client), or intersects against the wrong box: runs whose glyphs are
   // nowhere near the drag would come back selected.
   test("the marquee selects exactly the runs whose glyph ink it encloses", async ({

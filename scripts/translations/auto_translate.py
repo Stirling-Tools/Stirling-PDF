@@ -47,9 +47,21 @@ def load_translation_file(file_path):
         return tomllib.load(f)
 
 
-def extract_untranslated(language_code, batch_size=500, include_existing=False):
+def load_ignored_keys(language_code):
+    """Keys listed in scripts/ignore_translation.toml as intentionally identical to English."""
+    ignore_file = Path("scripts/ignore_translation.toml")
+    if not ignore_file.exists():
+        return set()
+    with open(ignore_file, "rb") as f:
+        data = tomllib.load(f)
+    return set(data.get(language_code.replace("-", "_"), {}).get("ignore", []))
+
+
+def extract_untranslated(language_code, batch_size=500, include_existing=False, forced_keys=None, only_forced=False):
     """Extract untranslated entries and split into batches."""
     mode = "all untranslated (including existing)" if include_existing else "new (missing)"
+    if forced_keys is not None:
+        mode = "listed" if only_forced else f"{mode} and listed"
     print(f"\n🔍 Extracting {mode} entries for {language_code}...")
 
     # Load files
@@ -86,12 +98,18 @@ def extract_untranslated(language_code, batch_size=500, include_existing=False):
 
     # Find untranslated
     untranslated = {}
+    forced = set(forced_keys or [])
+    ignored = load_ignored_keys(language_code)
     for key, value in golden_flat.items():
-        if include_existing:
+        if key in forced:
+            untranslated[key] = value
+        elif only_forced:
+            continue
+        elif include_existing:
             # Include missing keys, keys with English values, and [UNTRANSLATED] keys
             if (
                 key not in lang_flat
-                or lang_flat.get(key) == value
+                or (lang_flat.get(key) == value and key not in ignored)
                 or (isinstance(lang_flat.get(key), str) and lang_flat.get(key).startswith("[UNTRANSLATED]"))
             ):
                 untranslated[key] = value
@@ -112,7 +130,7 @@ def extract_untranslated(language_code, batch_size=500, include_existing=False):
     num_batches = (total + batch_size - 1) // batch_size
 
     batch_files = []
-    lang_code_safe = language_code.replace("-", "_")
+    lang_code_safe = batch_prefix(language_code, forced_keys is not None)
 
     for i in range(num_batches):
         start = i * batch_size
@@ -127,6 +145,12 @@ def extract_untranslated(language_code, batch_size=500, include_existing=False):
         print(f"  Created {filename} with {len(batch)} entries")
 
     return batch_files
+
+
+def batch_prefix(language_code, keyed=False):
+    """Keyed runs get their own temp files so resume never mixes them with missing-key batches."""
+    prefix = language_code.replace("-", "_")
+    return f"{prefix}_keyed" if keyed else prefix
 
 
 def translate_batches(batch_files, language_code, api_key, timeout=600, model="gpt-5.5", parallel=1):
@@ -193,7 +217,7 @@ def translate_batches(batch_files, language_code, api_key, timeout=600, model="g
     return translated_files
 
 
-def merge_translations(translated_files, language_code):
+def merge_translations(translated_files, language_code, keyed=False):
     """Merge all translated batch files."""
     if not translated_files:
         return None
@@ -209,8 +233,7 @@ def merge_translations(translated_files, language_code):
         with open(filename, encoding="utf-8") as f:
             merged.update(json.load(f))
 
-    lang_code_safe = language_code.replace("-", "_")
-    merged_file = f"{lang_code_safe}_merged.json"
+    merged_file = f"{batch_prefix(language_code, keyed)}_merged.json"
 
     with open(merged_file, "w", encoding="utf-8") as f:
         json.dump(merged, f, ensure_ascii=False, separators=(",", ":"))
@@ -247,11 +270,11 @@ def beautify_translations(language_code):
     return True
 
 
-def cleanup_temp_files(language_code):
+def cleanup_temp_files(language_code, keyed=False):
     """Remove temporary batch files."""
     print("\n🧹 Cleaning up temporary files...")
 
-    lang_code_safe = language_code.replace("-", "_")
+    lang_code_safe = batch_prefix(language_code, keyed)
     patterns = [f"{lang_code_safe}_batch_*.json", f"{lang_code_safe}_merged.json"]
 
     import glob
@@ -313,6 +336,15 @@ Examples:
         help="Also retranslate existing keys that match English (default: only translate missing keys)",
     )
     parser.add_argument(
+        "--keys-file",
+        help="JSON list of keys to retranslate even if already translated (e.g. from stale_translations.py)",
+    )
+    parser.add_argument(
+        "--only-keys",
+        action="store_true",
+        help="Translate only the keys in --keys-file, not missing keys",
+    )
+    parser.add_argument(
         "--parallel",
         type=int,
         default=1,
@@ -325,6 +357,14 @@ Examples:
     )
 
     args = parser.parse_args()
+
+    if args.only_keys and not args.keys_file:
+        parser.error("--only-keys requires --keys-file")
+    forced_keys = None
+    if args.keys_file:
+        with open(args.keys_file, encoding="utf-8") as f:
+            forced_keys = json.load(f)
+    keyed = forced_keys is not None
 
     # Verify API key
     api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
@@ -343,7 +383,9 @@ Examples:
 
     try:
         # Step 1: Extract and split
-        batch_files = extract_untranslated(args.language, args.batch_size, args.include_existing)
+        batch_files = extract_untranslated(
+            args.language, args.batch_size, args.include_existing, forced_keys, args.only_keys
+        )
         if batch_files is None:
             sys.exit(1)
 
@@ -359,7 +401,7 @@ Examples:
             sys.exit(1)
 
         # Step 3: Merge translations
-        merged_file = merge_translations(translated_files, args.language)
+        merged_file = merge_translations(translated_files, args.language, keyed)
         if merged_file is None:
             sys.exit(1)
 
@@ -373,7 +415,7 @@ Examples:
 
         # Step 6: Cleanup
         if not args.no_cleanup:
-            cleanup_temp_files(args.language)
+            cleanup_temp_files(args.language, keyed)
 
         # Step 7: Verify
         if not args.skip_verification:

@@ -100,16 +100,23 @@ class AttachmentServiceTest {
     }
 
     @Test
-    void addAttachmentToPDF_AttachmentInputStreamThrowsIOException() throws IOException {
+    void addAttachmentToPDF_AttachmentInputStreamThrowsIOException() {
         try (var document = new PDDocument()) {
             var attachments = List.of(mock(MultipartFile.class));
             var ioException = new IOException("Failed to read attachment stream");
             when(attachments.get(0).getOriginalFilename()).thenReturn("test.txt");
             when(attachments.get(0).getInputStream()).thenThrow(ioException);
             when(attachments.get(0).getSize()).thenReturn(10L);
-            PDDocument result = attachmentService.addAttachment(document, attachments);
-            assertNotNull(result);
-            assertNotNull(result.getDocumentCatalog().getNames());
+            // An unreadable staged file fails the batch: a partial save must
+            // never be returned as the operation result.
+            assertEquals(
+                    "Failed to read attachment stream",
+                    assertThrows(
+                                    IOException.class,
+                                    () -> attachmentService.addAttachment(document, attachments))
+                            .getMessage());
+        } catch (IOException e) {
+            fail("Test fixture should not throw", e);
         }
     }
 
@@ -293,6 +300,171 @@ class AttachmentServiceTest {
             assertThrows(
                     IllegalArgumentException.class,
                     () -> attachmentService.renameAttachment(document, "notexist.txt", "new.txt"));
+        }
+    }
+
+    @Test
+    void renameAttachment_MatchesCaseInsensitively() throws IOException {
+        try (var document = new PDDocument()) {
+            var file =
+                    new MockMultipartFile(
+                            "file",
+                            "Report.PDF",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            "data".getBytes());
+            attachmentService.addAttachment(document, List.of(file));
+            PDDocument result =
+                    attachmentService.renameAttachment(document, "report.pdf", "renamed.txt");
+            assertNotNull(result);
+            List<AttachmentInfo> attachments = attachmentService.listAttachments(result);
+            assertEquals(1, attachments.size());
+            assertEquals("renamed.txt", attachments.get(0).getFilename());
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_ReturnsMatchingBytes() throws IOException {
+        try (var document = new PDDocument()) {
+            var file =
+                    new MockMultipartFile(
+                            "file", "notes.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
+            attachmentService.addAttachment(document, List.of(file));
+            Optional<byte[]> extracted =
+                    attachmentService.extractSingleAttachment(document, "notes.txt");
+            assertTrue(extracted.isPresent());
+            assertEquals("hello", new String(extracted.get()));
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_PrefersExactMatchOverSimplifiedFallback() throws IOException {
+        try (var document = new PDDocument()) {
+            attachmentService.addAttachment(
+                    document,
+                    List.of(
+                            new MockMultipartFile(
+                                    "file",
+                                    "dir/report.pdf",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "dir".getBytes()),
+                            new MockMultipartFile(
+                                    "file",
+                                    "report.pdf",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "exact".getBytes())));
+            Optional<byte[]> extracted =
+                    attachmentService.extractSingleAttachment(document, "report.pdf");
+            assertTrue(extracted.isPresent());
+            assertEquals("exact", new String(extracted.get()));
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_PrefersCaseSensitiveMatch() throws IOException {
+        try (var document = new PDDocument()) {
+            attachmentService.addAttachment(
+                    document,
+                    List.of(
+                            new MockMultipartFile(
+                                    "file",
+                                    "REPORT.PDF",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "upper".getBytes()),
+                            new MockMultipartFile(
+                                    "file",
+                                    "Report.pdf",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "mixed".getBytes())));
+            Optional<byte[]> extracted =
+                    attachmentService.extractSingleAttachment(document, "Report.pdf");
+            assertTrue(extracted.isPresent());
+            assertEquals("mixed", new String(extracted.get()));
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_EmptyWhenCaseInsensitiveMatchIsAmbiguous() throws IOException {
+        try (var document = new PDDocument()) {
+            attachmentService.addAttachment(
+                    document,
+                    List.of(
+                            new MockMultipartFile(
+                                    "file",
+                                    "Report.pdf",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "mixed".getBytes()),
+                            new MockMultipartFile(
+                                    "file",
+                                    "REPORT.PDF",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "upper".getBytes())));
+            assertTrue(attachmentService.extractSingleAttachment(document, "report.pdf").isEmpty());
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_DoesNotMatchSpaceAgainstPlus() throws IOException {
+        try (var document = new PDDocument()) {
+            attachmentService.addAttachment(
+                    document,
+                    List.of(
+                            new MockMultipartFile(
+                                    "file",
+                                    "a+b.txt",
+                                    MediaType.TEXT_PLAIN_VALUE,
+                                    "plus".getBytes())));
+            assertTrue(attachmentService.extractSingleAttachment(document, "a b.txt").isEmpty());
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_MatchesPercentEncodedPlus() throws IOException {
+        try (var document = new PDDocument()) {
+            attachmentService.addAttachment(
+                    document,
+                    List.of(
+                            new MockMultipartFile(
+                                    "file",
+                                    "a+b.txt",
+                                    MediaType.TEXT_PLAIN_VALUE,
+                                    "plus".getBytes())));
+            Optional<byte[]> extracted =
+                    attachmentService.extractSingleAttachment(document, "a%2Bb.txt");
+            assertTrue(extracted.isPresent());
+            assertEquals("plus", new String(extracted.get()));
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_EmptyWhenFallbackMatchIsAmbiguous() throws IOException {
+        try (var document = new PDDocument()) {
+            attachmentService.addAttachment(
+                    document,
+                    List.of(
+                            new MockMultipartFile(
+                                    "file",
+                                    "a/report.pdf",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "a".getBytes()),
+                            new MockMultipartFile(
+                                    "file",
+                                    "b/report.pdf",
+                                    MediaType.APPLICATION_PDF_VALUE,
+                                    "b".getBytes())));
+            assertTrue(attachmentService.extractSingleAttachment(document, "report.pdf").isEmpty());
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_EmptyWhenNameNotFound() throws IOException {
+        try (var document = new PDDocument()) {
+            var file =
+                    new MockMultipartFile(
+                            "file", "notes.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
+            attachmentService.addAttachment(document, List.of(file));
+            Optional<byte[]> extracted =
+                    attachmentService.extractSingleAttachment(document, "missing.txt");
+            assertTrue(extracted.isEmpty());
         }
     }
 

@@ -164,6 +164,15 @@ test("a rotated document saves annotations without reopening", async ({
   await expect
     .poll(() => page.locator("[data-page-index]").count(), { timeout: 15_000 })
     .toBe(pageCount);
+
+  // Nothing was reopened, so no restore may hold the zoom readout.
+  const zoomBefore = await page.getByText(/%$/).first().textContent();
+  await page.getByRole("button", { name: "Zoom In" }).first().click();
+  await expect
+    .poll(async () => page.getByText(/%$/).first().textContent(), {
+      timeout: 5_000,
+    })
+    .not.toBe(zoomBefore);
 });
 
 test("rotated and landscape pages reload a tool output in place", async ({
@@ -486,7 +495,8 @@ test("a form apply keeps a fit-page zoom", async ({ page }) => {
     .first();
   await expect(field).toBeVisible({ timeout: 20_000 });
   await field.fill("updated value");
-  await page.keyboard.press("Tab");
+  // Tab can start an asynchronous scroll to the next field in WebKit.
+  await field.blur();
 
   // Filling can scroll the field into view, so the baseline is read once the
   // edit is done, right before the apply.

@@ -8,6 +8,7 @@
 import apiClient from "@app/services/apiClient";
 import { fileStorage } from "@app/services/fileStorage";
 import { alert } from "@app/components/toast";
+import i18n from "i18next";
 import { StirlingFileStub, StirlingFile } from "@app/types/fileContext";
 import { FileId } from "@app/types/fileContext";
 import { FolderId, parseFolderId } from "@app/types/folder";
@@ -280,9 +281,18 @@ export async function reconcileServerFiles(
       alertType: "warning",
       title:
         status === 401
-          ? "Sign-in required to load cloud files"
-          : "Could not reach the cloud library",
-      body: "Showing only files cached in this browser. Refresh to retry once the connection is back.",
+          ? i18n.t(
+              "fileSync.pullFailed.signInTitle",
+              "Sign-in required to load cloud files",
+            )
+          : i18n.t(
+              "fileSync.pullFailed.unreachableTitle",
+              "Could not reach the cloud library",
+            ),
+      body: i18n.t(
+        "fileSync.pullFailed.body",
+        "Showing only files cached in this browser. Refresh to retry once the connection is back.",
+      ),
       expandable: false,
       durationMs: 5000,
     });
@@ -513,13 +523,36 @@ export async function materializeServerStubs(
     // Single summarized toast - far less noisy than per-stub alerts but
     // still surfaces what would otherwise be a silent drop from the grid.
     const first = failed[0];
-    const bodyText =
-      failed.length === 1
-        ? `Couldn't open "${first.name}"${first.status ? ` (HTTP ${first.status})` : ""}.`
-        : `Couldn't open ${failed.length} files including "${first.name}".`;
+    let bodyText: string;
+    if (failed.length > 1) {
+      bodyText = i18n.t(
+        "fileSync.openFailed.multiple",
+        `Couldn't open {{count}} files including "{{name}}".`,
+        {
+          count: failed.length,
+          name: first.name,
+          defaultValue_one: `Couldn't open {{count}} file including "{{name}}".`,
+        },
+      );
+    } else if (first.status) {
+      bodyText = i18n.t(
+        "fileSync.openFailed.singleWithStatus",
+        `Couldn't open "{{name}}" (HTTP {{status}}).`,
+        { name: first.name, status: first.status },
+      );
+    } else {
+      bodyText = i18n.t(
+        "fileSync.openFailed.single",
+        `Couldn't open "{{name}}".`,
+        { name: first.name },
+      );
+    }
     alert({
       alertType: "warning",
-      title: "Some files couldn't be opened",
+      title: i18n.t(
+        "fileSync.openFailed.title",
+        "Some files couldn't be opened",
+      ),
       body: bodyText,
       expandable: false,
       durationMs: 5000,

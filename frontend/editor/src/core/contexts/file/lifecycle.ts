@@ -6,10 +6,16 @@ import { FileId } from "@app/types/file";
 import { releaseSharedDocumentWhenIdle } from "@app/services/pdfiumService";
 import { releaseDocumentBytes } from "@app/services/documentBytesCache";
 import {
+  forgetPdfAccess,
+  getPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfPasswordStore";
+import {
   FileContextAction,
   FileContextState,
   StirlingFileStub,
   ProcessedFilePage,
+  createStirlingFile,
 } from "@app/types/fileContext";
 import {
   forgetFile,
@@ -71,6 +77,7 @@ export class FileLifecycleManager {
    * Clean up all files and resources
    */
   cleanupAllFiles = (): void => {
+    forgetPdfAccess([...this.filesRef.current.keys()]);
     // Revoke all blob URLs
     this.blobUrls.forEach((url) => {
       try {
@@ -157,6 +164,7 @@ export class FileLifecycleManager {
     fileId: FileId,
     stateRef?: React.RefObject<FileContextState>,
   ): void => {
+    forgetPdfAccess([fileId]);
     const file = this.filesRef.current.get(fileId);
     this.filesRef.current.delete(fileId);
 
@@ -215,6 +223,20 @@ export class FileLifecycleManager {
       if (DEBUG)
         console.warn(`🗂️ Attempted to update removed file (state): ${fileId}`);
       return;
+    }
+
+    // Tools name their output after the held File, not the stub, so a rename
+    // must replace it or the next tool run brings the old name back.
+    const held = this.filesRef.current.get(fileId);
+    if (held && updates.name !== undefined && updates.name !== held.name) {
+      const access = getPdfAccess(held);
+      const renamed = new File([held], updates.name, {
+        type: held.type,
+        lastModified: held.lastModified,
+      });
+      const renamedFile = createStirlingFile(renamed, fileId);
+      this.filesRef.current.set(fileId, renamedFile);
+      if (access) rememberPdfAccess(renamedFile, access);
     }
 
     this.dispatch({

@@ -94,6 +94,37 @@ export function ProcessorPlanRow({
 }) {
   const { t } = useTranslation();
   const name = t("portal.billing.processor.rowName", "Processor");
+  if (wallet?.enterprise) {
+    const { annualVolume, pdfsUsed, periodStart, periodEnd } =
+      wallet.enterprise;
+    const over =
+      annualVolume != null ? Math.max(0, pdfsUsed - annualVolume) : 0;
+    return (
+      <MeterRow
+        name={name}
+        mid={
+          over > 0
+            ? t("portal.billing.enterprise.pdfsOver", { count: over })
+            : t("portal.billing.enterprise.included")
+        }
+        fact={
+          annualVolume != null && annualVolume > 0
+            ? t("portal.billing.enterprise.pdfsAgreed", {
+                used: pdfsUsed.toLocaleString(),
+                agreed: annualVolume.toLocaleString(),
+              })
+            : t("portal.billing.enterprise.pdfsUsed", { count: pdfsUsed })
+        }
+        midTitle={t("portal.billing.enterprise.period", {
+          start: formatPeriodDate(periodStart, { year: true }),
+          end: formatPeriodDate(periodEnd, { year: true }),
+        })}
+        tone={over > 0 ? "warn" : "paid"}
+        showTrack={annualVolume != null && annualVolume > 0}
+        pct={annualVolume ? (pdfsUsed / annualVolume) * 100 : 0}
+      />
+    );
+  }
   if (included)
     return (
       <MeterRow

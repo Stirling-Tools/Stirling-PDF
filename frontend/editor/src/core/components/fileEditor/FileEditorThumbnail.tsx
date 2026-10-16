@@ -34,11 +34,14 @@ import HoverActionMenu, {
 } from "@app/components/shared/HoverActionMenu";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { CloseFilesConfirmModal } from "@app/components/shared/CloseFilesConfirmModal";
 import UploadToServerModal from "@app/components/shared/UploadToServerModal";
 import ShareFileModal from "@app/components/shared/ShareFileModal";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { Tooltip as StirlingTooltip } from "@app/components/shared/Tooltip";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import { truncateCenter } from "@app/utils/textUtils";
@@ -74,6 +77,7 @@ const FileEditorThumbnail = ({
   policies = [],
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
+  const pdfAccess = usePdfAccess(file.id);
   const eligibleFileIds = useToolEligibleFileIds();
   const isToolSkipped =
     eligibleFileIds !== null && !eligibleFileIds.has(file.id);
@@ -239,12 +243,12 @@ const FileEditorThumbnail = ({
     onCloseFile(file.id);
     alert({
       alertType: "neutral",
-      title: `Closed ${file.name}`,
+      title: t("fileEditor.closedFile", "Closed {{name}}", { name: file.name }),
       expandable: false,
       durationMs: 3500,
     });
     setShowCloseModal(false);
-  }, [file.id, file.name, onCloseFile]);
+  }, [file.id, file.name, onCloseFile, t]);
 
   const handleSaveAndClose = useCallback(async () => {
     const fileToSave = selectors.getFile(file.id);
@@ -269,8 +273,10 @@ const FileEditorThumbnail = ({
         console.error(`Failed to save ${file.name}:`, error);
         alert({
           alertType: "error",
-          title: "Save failed",
-          body: `Could not save ${file.name}`,
+          title: t("fileEditor.saveFailed", "Save failed"),
+          body: t("fileEditor.couldNotSave", "Could not save {{name}}", {
+            name: file.name,
+          }),
           expandable: true,
         });
         setShowCloseModal(false);
@@ -280,7 +286,9 @@ const FileEditorThumbnail = ({
     onCloseFile(file.id);
     alert({
       alertType: "success",
-      title: `Saved and closed ${file.name}`,
+      title: t("fileEditor.savedAndClosed", "Saved and closed {{name}}", {
+        name: file.name,
+      }),
       expandable: false,
       durationMs: 3500,
     });
@@ -292,6 +300,7 @@ const FileEditorThumbnail = ({
     onCloseFile,
     selectors,
     fileActions,
+    t,
   ]);
 
   const [showVersionHistory, setShowVersionHistory] = useState(false);
@@ -351,7 +360,9 @@ const FileEditorThumbnail = ({
               unpinFile(actualFile);
               alert({
                 alertType: "neutral",
-                title: `Unpinned ${file.name}`,
+                title: t("fileEditor.unpinnedFile", "Unpinned {{name}}", {
+                  name: file.name,
+                }),
                 expandable: false,
                 durationMs: 3000,
               });
@@ -359,7 +370,9 @@ const FileEditorThumbnail = ({
               pinFile(actualFile);
               alert({
                 alertType: "success",
-                title: `Pinned ${file.name}`,
+                title: t("fileEditor.pinnedFile", "Pinned {{name}}", {
+                  name: file.name,
+                }),
                 expandable: false,
                 durationMs: 3000,
               });
@@ -424,7 +437,9 @@ const FileEditorThumbnail = ({
             onUnzipFile(file.id);
             alert({
               alertType: "success",
-              title: `Unzipping ${file.name}`,
+              title: t("fileEditor.unzipping", "Unzipping {{name}}", {
+                name: file.name,
+              }),
               expandable: false,
               durationMs: 2500,
             });
@@ -669,63 +684,57 @@ const FileEditorThumbnail = ({
           <span className={styles.fileNameText}>
             <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
           </span>
+          {pdfAccess?.encrypted && (
+            <StirlingTooltip
+              content={t(
+                "encryptedPdfUnlock.sessionSuccessBody",
+                "Unlocked for this session. Password protection is retained.",
+              )}
+              position="top"
+              maxWidth={230}
+              arrow
+            >
+              <span
+                className={styles.unlockedIndicator}
+                role="img"
+                aria-label={t(
+                  "encryptedPdfUnlock.sessionSuccessTitle",
+                  "PDF unlocked",
+                )}
+                tabIndex={0}
+                data-no-select
+              >
+                <Icon name="lock-open" size={14} />
+              </span>
+            </StirlingTooltip>
+          )}
           <PolicyBadges policies={policies} className={styles.fileNameBadges} />
         </p>
         <p className={styles.fileMeta}>{metaLine}</p>
       </div>
 
-      {/* Close Confirmation Modal */}
-      <Modal
+      <CloseFilesConfirmModal
         opened={showCloseModal}
-        onClose={handleCancelClose}
-        title={t("confirmClose", "Confirm Close")}
-        centered
-        size="auto"
-      >
-        <Stack gap="md">
-          {file.isDirty && file.localFilePath ? (
-            <>
-              <Text size="md">
-                {t("confirmCloseUnsaved", "This file has unsaved changes.")}
-              </Text>
-              <Text size="sm" c="dimmed" fw={500}>
-                <PrivateContent>{file.name}</PrivateContent>
-              </Text>
-              <Group justify="flex-end" gap="sm">
-                <Button variant="secondary" onClick={handleCancelClose}>
-                  {t("confirmCloseCancel", "Cancel")}
-                </Button>
-                <Button accent="danger" onClick={handleConfirmClose}>
-                  {t("confirmCloseDiscard", "Discard changes and close")}
-                </Button>
-                <Button onClick={handleSaveAndClose}>
-                  {t("confirmCloseSave", "Save and close")}
-                </Button>
-              </Group>
-            </>
-          ) : (
-            <>
-              <Text size="md">
-                {t(
-                  "confirmCloseMessage",
-                  "Are you sure you want to close this file?",
-                )}
-              </Text>
-              <Text size="sm" c="dimmed" fw={500}>
-                <PrivateContent>{file.name}</PrivateContent>
-              </Text>
-              <Group justify="flex-end" gap="sm">
-                <Button variant="secondary" onClick={handleCancelClose}>
-                  {t("confirmCloseCancel", "Cancel")}
-                </Button>
-                <Button accent="danger" onClick={handleConfirmClose}>
-                  {t("confirmCloseConfirm", "Close File")}
-                </Button>
-              </Group>
-            </>
-          )}
-        </Stack>
-      </Modal>
+        message={
+          file.isDirty && file.localFilePath
+            ? t("confirmCloseUnsaved", "This file has unsaved changes.")
+            : t(
+                "confirmCloseMessage",
+                "Are you sure you want to close this file?",
+              )
+        }
+        files={[{ id: file.id, name: file.name }]}
+        closeLabel={
+          file.isDirty && file.localFilePath
+            ? t("confirmCloseDiscard", "Discard changes and close")
+            : t("confirmCloseConfirm", "Close File")
+        }
+        onClose={handleConfirmClose}
+        onCancel={handleCancelClose}
+        onSave={
+          file.isDirty && file.localFilePath ? handleSaveAndClose : undefined
+        }
+      />
 
       {/* Shared edit notice modal */}
       <Modal

@@ -252,6 +252,9 @@ public class ConfigController {
                     applicationProperties.getSecurity().isEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
             configData.put(
+                    "honorOwnerPasswords",
+                    applicationProperties.getSecurity().isHonorOwnerPasswords());
+            configData.put(
                     "showSettingsWhenNoLogin",
                     applicationProperties.getSystem().isShowSettingsWhenNoLogin());
 
@@ -322,6 +325,9 @@ public class ConfigController {
             configData.put(
                     "enableAlphaFunctionality",
                     applicationProperties.getSystem().isEnableAlphaFunctionality());
+            configData.put(
+                    "stirlingOfficeConversion",
+                    applicationProperties.getSystem().isStirlingOfficeConversion());
             boolean shouldShowUpdate =
                     applicationProperties.getSystem().isShowUpdate()
                             && (showAdmin == null || showAdmin.getShowUpdateOnlyAdmins());

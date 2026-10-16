@@ -64,6 +64,29 @@ Lucide icon geometry used in this project. Two places rely on this notice:
                      (from lucide "chart-line" with its axis dropped and the
                      zigzag scaled about its centre to fill the box)
 
+     qr-code.svg     the three finder  rect 7x7 at 3,3 rx 1
+                     squares           rect 7x7 at 14,3 rx 1
+                                       rect 7x7 at 3,14 rx 1
+                     (from lucide "layout-grid"; the finder centres and the
+                     data modules are ours)
+
+     replace-text.svg
+                     the speech bubble M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0
+                                       -1.414.586l-2.202 2.202A.71.71 0 0 1
+                                       2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1
+                                       2 2z
+                     (from lucide "message-square", the bubble the other
+                     comment tools use; the swap arrows are ours)
+
+     automate.svg    the step box      rect 8x8 at 3,3 rx 2
+                     the elbow         M7 11v4a2 2 0 0 0 2 2h5
+                     the play button   lucide "play" scaled to half size:
+                                       M14 13.5a1 1 0 0 1 1.504-.864l5.999
+                                       3.499a1 1 0 0 1 .001 1.729l-6 3.5A1 1 0
+                                       0 1 14 20.5z
+                     (box and elbow from lucide "workflow", the Pipelines icon,
+                     with the elbow run on to meet the play button)
+
 None of the source icons appears in the Feather-derived list below, so only the
 ISC terms apply to them. Keep this file for as long as any of those svgs, or the
 icons.ts maps, remains. task frontend:lint:icons fails if it goes missing.

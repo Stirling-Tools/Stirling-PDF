@@ -56,6 +56,7 @@ import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.security.util.RedirectBaseUrl;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 import tools.jackson.core.JacksonException;
@@ -121,19 +122,14 @@ public class ProprietaryUIDataController {
     }
 
     /**
-     * Get the backend base URL for SAML/OAuth redirects. Uses system.backendUrl from config if set,
-     * otherwise defaults to http://localhost:8080
+     * Base URL for the SAML login link: security.saml2.redirectBaseUrl, then system.backendUrl,
+     * then http://localhost:8080 for development.
      */
     private String getBackendBaseUrl() {
-        String backendUrl = applicationProperties.getSystem().getBackendUrl();
-
-        // If backendUrl is configured, use it
-        if (backendUrl != null && !backendUrl.trim().isEmpty()) {
-            return backendUrl.trim();
-        }
-
-        // For development, default to localhost:8080 (backend port)
-        return "http://localhost:8080";
+        return RedirectBaseUrl.overrideOr(
+                        applicationProperties.getSecurity().getSaml2().getRedirectBaseUrl(),
+                        applicationProperties.getSystem().getBackendUrl())
+                .orElse("http://localhost:8080");
     }
 
     @GetMapping("/audit-dashboard")
@@ -422,7 +418,8 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/account")
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize(
+            "!@principalPolicy.isInternalApiUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @Operation(summary = "Get account page data")
     public ResponseEntity<AccountData> getAccountData(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -620,6 +617,8 @@ public class ProprietaryUIDataController {
         summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));
         summary.setUsername(user.getUsername());
         summary.setEmail(user.getEmail());
+        summary.setSupabaseId(
+                user.getSupabaseId() == null ? null : user.getSupabaseId().toString());
         summary.setRoleName(user.getRoleName());
         summary.setRolesAsString(user.getRolesAsString());
         summary.setEnabled(user.isEnabled());

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import type { MeasureScale, PagePoint } from "@app/utils/measurementTypes";
 import {
-  UNIT_OPTIONS,
+  getUnitOptions,
   formatPaperDistance,
   validateRealDistance,
   calculateCalibratedScale,
@@ -157,7 +157,7 @@ export function ScaleCalibrationDialog({
           />
           <Select
             label={t("scaleSettings.unit", "Unit")}
-            data={UNIT_OPTIONS}
+            data={getUnitOptions(t)}
             value={unit}
             onChange={handleUnitChange}
             searchable
