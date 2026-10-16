@@ -355,6 +355,67 @@ function routePreloadPlugin(routeChunk: string): PluginOption {
   };
 }
 
+/**
+ * Puts the landing screen's first paint into index.html, so the largest paint
+ * does not wait for the Landing chunk to parse and run. The capture drives a
+ * real browser against the finished dist and the app's own API stubs, so it can
+ * fail (browser download missing, stubs drifted) on a machine that still has a
+ * working build: warn and leave the page alone rather than fail the build.
+ */
+function prerenderShellPlugin(options: { precompress: boolean }): PluginOption {
+  let distDir: string | undefined;
+  let editorDir: string | undefined;
+
+  return {
+    name: "prerender-shell",
+    apply: "build" as const,
+    enforce: "post" as const,
+    configResolved(config) {
+      // `outDir` is whatever the config said (the CLI's root is relative here),
+      // and the capture needs the source tree for its stub helper either way.
+      distDir = resolve(config.root, config.build.outDir);
+      editorDir = config.root;
+    },
+    // Last in a chain of closeBundle passes that each rewrite index.html, so it
+    // re-reads the file the Open Graph prerender left rather than a copy.
+    async closeBundle() {
+      if (!distDir || !editorDir) return;
+      const outDir = distDir;
+      const sourceDir = editorDir;
+      try {
+        const { prerenderShell } =
+          // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+          await import("./scripts/prerender-shell.mjs");
+        const result = await prerenderShell({
+          distDir: outDir,
+          editorDir: sourceDir,
+        });
+        console.log(
+          `[prerender-shell] ${result.languages} languages, ${result.nodes} text nodes, ${(
+            result.bytes / 1024
+          ).toFixed(1)} KiB` +
+            (result.dropped.length
+              ? `; no shell for ${result.dropped.join(", ")}`
+              : ""),
+        );
+      } catch (error) {
+        console.warn(`[prerender-shell] skipped: ${String(error)}`);
+        return;
+      }
+
+      if (!options.precompress) return;
+      // The write above invalidates the siblings the prerender wrote for the
+      // shell it replaced.
+      await Promise.all(
+        ["index.html.br", "index.html.gz"].map((name) =>
+          fs.rm(resolve(outDir, name), { force: true }),
+        ),
+      );
+      await compressFiles([resolve(outDir, "index.html")], outDir);
+    },
+  };
+}
+
 function localeAssetsPlugin(): PluginOption {
   return {
     name: "locale-assets",
@@ -810,6 +871,7 @@ export default defineConfig(async ({ mode, command }) => {
       }),
       // Last: it edits the finished index.html.
       routePreloadPlugin("Landing"),
+      prerenderShellPlugin({ precompress: effectiveMode !== "desktop" }),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.
