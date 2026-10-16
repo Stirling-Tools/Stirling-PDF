@@ -166,7 +166,7 @@ jobs:
     secrets: inherit
 
   frontend-validation:
-    if: needs.files-changed.outputs.frontend == 'true' && false
+    if: needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed, files-hash]
     permissions:
       contents: write
