@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Icon } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import "@app/components/shared/config/SettingsCard.css";
@@ -15,6 +15,12 @@ export interface SettingsCardProps {
   defaultCollapsed?: boolean;
   /** Hold off mounting children until first opened, for expensive content. */
   lazy?: boolean;
+  /**
+   * Opens the card each time this changes to a new defined value — e.g. the
+   * router's location key while a link targets the card, so following the
+   * link again reopens a card the user had folded.
+   */
+  openRequest?: string;
   children: ReactNode;
 }
 
@@ -32,10 +38,17 @@ export function SettingsCard({
   badge,
   defaultCollapsed = false,
   lazy = false,
+  openRequest,
   children,
 }: SettingsCardProps) {
   const [open, setOpen] = useState(!defaultCollapsed);
   const [everOpened, setEverOpened] = useState(!defaultCollapsed);
+
+  useEffect(() => {
+    if (openRequest === undefined) return;
+    setOpen(true);
+    setEverOpened(true);
+  }, [openRequest]);
 
   return (
     <section className="settings-card" data-open={open || undefined}>

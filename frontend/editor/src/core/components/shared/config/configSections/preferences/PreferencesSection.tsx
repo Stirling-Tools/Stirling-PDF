@@ -60,7 +60,8 @@ export default function PreferencesSection({
   const { config } = useAppConfig();
   // From the router, not window: a deep link followed while this page is
   // already showing must open the card too, not only a fresh mount.
-  const startHotkeysOpen = focusIsHotkeys(useLocation().hash);
+  const location = useLocation();
+  const startHotkeysOpen = focusIsHotkeys(location.hash);
 
   // Same condition the standalone section used: a version to report, or the
   // desktop updater. Not mounting the card is what skips the update check.
@@ -109,8 +110,6 @@ export default function PreferencesSection({
         )}
 
         <SettingsCard
-          // Remounts open when a link starts targeting the shortcuts.
-          key={startHotkeysOpen ? "hotkeys-focused" : "hotkeys"}
           id="hotkeys"
           title={t("settings.hotkeys.title", "Keyboard Shortcuts")}
           description={t(
@@ -119,6 +118,7 @@ export default function PreferencesSection({
           )}
           // A row per registered tool, so it stays shut and unmounted until asked for.
           defaultCollapsed={!startHotkeysOpen}
+          openRequest={startHotkeysOpen ? location.key : undefined}
           lazy
         >
           <HotkeysCard />

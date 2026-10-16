@@ -9,7 +9,7 @@ import {
   type SuperSearchResult,
 } from "@app/types/superSearch";
 import { rankByFuzzy } from "@app/utils/fuzzySearch";
-import { SETTINGS_SECTION_REGISTRY } from "@app/data/settingsSectionRegistry";
+import { isPortalEntityScopeShipped } from "@app/data/portalEntityScopes";
 import {
   assemblePolicies,
   fetchPoliciesList,
@@ -67,33 +67,13 @@ export const ENTITY_GROUP_LIMIT = 24;
 /** How long a fetched entity scope stays fresh before a search refetches it. */
 export const ENTITY_REFRESH_MS = 30_000;
 
-const PORTAL_VIEW_BY_SCOPE_ID = Object.fromEntries(
-  PORTAL_ENTITY_SCOPE_DEFS.map((def) => [def.id, def.viewId]),
-) as Record<PortalEntityScopeId, string>;
-
 const VISIBLE_PORTAL_VIEW_IDS = new Set(
   PROCESSOR_SEARCH_INDEX.map((entry) => entry.id),
 );
 
-const SETTINGS_KEY_BY_SCOPE_ID = Object.fromEntries(
-  PORTAL_ENTITY_SCOPE_DEFS.map((def) => [def.id, def.settingsKey]),
-) as Record<PortalEntityScopeId, string | undefined>;
-
-const SETTINGS_SECTION_KEYS = new Set<string>(
-  SETTINGS_SECTION_REGISTRY.map((section) => section.key),
-);
-
-/**
- * Whether this build ships somewhere an entity scope's results open: the
- * portal view it targets, or — for entities that now live in settings
- * (users) — that settings section. Per-session visibility is the host's to
- * add (see isPortalEntityScopeOffered).
- */
+/** Whether this build ships somewhere an entity scope's results open. */
 export function isVisiblePortalScope(scopeId: PortalEntityScopeId): boolean {
-  const settingsKey = SETTINGS_KEY_BY_SCOPE_ID[scopeId];
-  return settingsKey !== undefined
-    ? SETTINGS_SECTION_KEYS.has(settingsKey)
-    : VISIBLE_PORTAL_VIEW_IDS.has(PORTAL_VIEW_BY_SCOPE_ID[scopeId]);
+  return isPortalEntityScopeShipped(scopeId);
 }
 
 /** Whether this build ships the in-app developer docs (so they're searchable). */

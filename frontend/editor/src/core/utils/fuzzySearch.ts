@@ -138,14 +138,19 @@ function isWordStart(target: string, index: number): boolean {
 }
 
 /**
+ * @param queryTokens the query's content words (contentTokens), and
+ * @param targetTokens the target's words (tokenize) — passed in so a ranker
+ *   scoring many fields per keystroke derives each only once.
  * @param anywhere also accept the whole query mid-word, for identifier-like
- *   fields (file names, emails) that are searched by fragment
- *   ("2024" in "Invoice2024Final.pdf"). Prose fields leave it off so "word"
- *   doesn't match "password".
+ *   fields (file names, emails) searched by fragment ("2024" in
+ *   "Invoice2024Final.pdf"). Prose fields leave it off, so a fragment there
+ *   must start a word, cover most of one, or end one (see tokenTier).
  */
 function scoreNormalized(
   query: string,
+  queryTokens: string[],
   target: string,
+  targetTokens: string[],
   anywhere = false,
 ): number {
   if (!query || !target) return 0;
@@ -169,9 +174,8 @@ function scoreNormalized(
   }
 
   // Word-by-word: every content word must find a match somewhere in the field.
-  const targetTokens = tokenize(target);
   const tiers: number[] = [];
-  for (const token of contentTokens(query)) {
+  for (const token of queryTokens) {
     const tier = bestTokenTier(token, targetTokens);
     if (tier === 0) return 0;
     tiers.push(tier);
@@ -181,7 +185,9 @@ function scoreNormalized(
 
 /** Match score 0..100 of a query against one field (higher is better). */
 export function scoreMatch(queryRaw: string, targetRaw: string): number {
-  return scoreNormalized(normalizeText(queryRaw), normalizeText(targetRaw));
+  const query = normalizeText(queryRaw);
+  const target = normalizeText(targetRaw);
+  return scoreNormalized(query, contentTokens(query), target, tokenize(target));
 }
 
 /** Lowest score any fuzzy match can pass with (see minScoreForQuery). Rankers
@@ -258,14 +264,20 @@ export function rankByFuzzy<T>(
       for (const phrase of phrases) {
         if (!phrase) continue;
         const normalized = normalizeText(phrase);
+        const tokens = tokenize(normalized);
         const s =
-          scoreNormalized(normalizedQuery, normalized, anywhere) * weight;
+          scoreNormalized(
+            normalizedQuery,
+            queryTokens,
+            normalized,
+            tokens,
+            anywhere,
+          ) * weight;
         if (s > best) {
           best = s;
           matchedText = phrase;
         }
         if (queryTokens.length > 1) {
-          const tokens = tokenize(normalized);
           queryTokens.forEach((token, i) => {
             const tier = bestTokenTier(token, tokens) * weight;
             if (tier > crossTiers[i]) crossTiers[i] = tier;

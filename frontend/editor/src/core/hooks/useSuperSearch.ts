@@ -49,6 +49,7 @@ import {
   type ProcessorSearchEntry,
 } from "@app/data/processorSearchIndex";
 import { useProcessorEntityGroups } from "@app/data/processorEntitySearch";
+import { isPortalEntityScopeShipped } from "@app/data/portalEntityScopes";
 import {
   PORTAL_ENTITY_SCOPE_DEFS,
   PORTAL_DOCS_SCOPE_ID,
@@ -123,6 +124,7 @@ export function useSuperSearchGates(): SuperSearchGates | null {
             // owner-only sections), hence the `in` check.
             isOrgOwner:
               (authState.isAdmin ?? false) &&
+              !authState.loading &&
               !!authState.user &&
               "orgOwner" in authState.user &&
               authState.user.orgOwner === true,
@@ -131,6 +133,7 @@ export function useSuperSearchGates(): SuperSearchGates | null {
     [
       authState.isAdmin,
       authState.isAnonymous,
+      authState.loading,
       authState.user,
       portalAccessible,
       accountCardShown,
@@ -378,16 +381,17 @@ export function isPortalEntityScopeOffered(
 ): boolean {
   const def = PORTAL_ENTITY_SCOPE_DEFS.find((d) => d.id === scopeId);
   if (!def) return true;
-  const hosted =
-    def.settingsKey !== undefined
-      ? SETTINGS_SECTION_REGISTRY.some(
-          (s) =>
-            s.key === def.settingsKey && isSettingsSectionVisible(s, gates),
-        )
-      : PROCESSOR_SEARCH_INDEX.some((entry) => entry.id === def.viewId);
-  return (
-    hosted && isPortalEntityScopeAccessible(def.id, gates?.isAdmin ?? false)
-  );
+  if (!isPortalEntityScopeShipped(def.id)) return false;
+  // A settings-hosted lane also needs its section visible to this session.
+  if (
+    def.settingsKey !== undefined &&
+    !SETTINGS_SECTION_REGISTRY.some(
+      (s) => s.key === def.settingsKey && isSettingsSectionVisible(s, gates),
+    )
+  ) {
+    return false;
+  }
+  return isPortalEntityScopeAccessible(def.id, gates?.isAdmin ?? false);
 }
 
 export function rankSettingsResults(

@@ -10,7 +10,8 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { useToolAvailability } from "@app/hooks/useToolManagement";
 import { useAccountCardShown } from "@app/hooks/useAccountCardShown";
-import { useAuth } from "@app/auth";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
 import {
   useToolSearchAccess,
   type ToolSearchAccess,
@@ -75,18 +76,11 @@ function externalEditorHref(path: string): string {
   return EDITOR_URL.replace(/\/$/, "") + path;
 }
 
-/**
- * The portal bar's filter chips — every lane the editor offers except Files
- * (files only open in the editor) and Pages (the sidebar covers navigation).
- * Ordered to match the dropdown's section priority. Lanes whose data source
- * refuses this session (the users roster for non-admins on self-hosted) get
- * no chip — an offered lane must be able to return results.
- */
 /** The portal session's visibility gates, shared by its chips and results. */
 function usePortalSearchGates(): SuperSearchGates | null {
   const { config } = useAppConfig();
   const accountCardShown = useAccountCardShown();
-  const { user } = useAuth();
+  const isOrgOwner = useAccountLinkOwner();
   return useMemo<SuperSearchGates | null>(
     () =>
       config
@@ -97,13 +91,20 @@ function usePortalSearchGates(): SuperSearchGates | null {
             portalAccessible: true,
             showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
             accountCardShown,
-            isOrgOwner: (config.isAdmin ?? false) && user?.orgOwner === true,
+            isOrgOwner,
           }
         : null,
-    [config, accountCardShown, user],
+    [config, accountCardShown, isOrgOwner],
   );
 }
 
+/**
+ * The portal bar's filter chips — every lane the editor offers except Files
+ * (files only open in the editor) and Pages (the sidebar covers navigation).
+ * Ordered to match the dropdown's section priority. Lanes whose data source
+ * refuses this session (the users roster for non-admins on self-hosted) get
+ * no chip — an offered lane must be able to return results.
+ */
 export function usePortalSearchScopes(): SuperSearchScope[] {
   const { t } = useTranslation();
   const gates = usePortalSearchGates();
@@ -162,7 +163,8 @@ export function usePortalSearchResults(
 
   const trimmed = query.trim();
   const gates = usePortalSearchGates();
-  const aiEngineEnabled = config ? Boolean(config.aiEngineEnabled) : undefined;
+  const aiEngine = useAiEngineEnabled();
+  const aiEngineEnabled = aiEngine.loading ? undefined : aiEngine.enabled;
   const { scopeEnabled } = useSearchScopeFilter(options);
   // The chip filter plus the lane's own availability, so an unoffered lane
   // is neither fetched nor shown.
@@ -244,18 +246,25 @@ export function usePortalSearchResults(
   // unavailable tools" choice (else the server default) from storage.
   const toolAvailability = useToolAvailability();
   const baseToolAccess = useToolSearchAccess(toolAvailability);
-  const hideUnavailableTools =
-    preferencesService.getStoredPreference("hideUnavailableTools") ??
-    config?.defaultHideUnavailableTools ??
-    false;
+  const hideUnavailableTools = useMemo(
+    () =>
+      preferencesService.getStoredPreference("hideUnavailableTools") ??
+      config?.defaultHideUnavailableTools ??
+      false,
+    [config?.defaultHideUnavailableTools],
+  );
   const toolAccess = useCallback(
     (id: ToolId, tool: ToolRegistryEntry): ToolSearchAccess => {
       const access = baseToolAccess(id, tool);
-      return hideUnavailableTools && access.kind === "disabled"
+      // The preference drops what the server can't run, as the editor's
+      // registry does; premium-locked tools stay, greyed.
+      return hideUnavailableTools &&
+        access.kind === "disabled" &&
+        toolAvailability[id]?.available === false
         ? { kind: "hidden" }
         : access;
     },
-    [baseToolAccess, hideUnavailableTools],
+    [baseToolAccess, hideUnavailableTools, toolAvailability],
   );
 
   const openTool = useCallback(
