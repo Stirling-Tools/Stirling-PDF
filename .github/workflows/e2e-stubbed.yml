@@ -99,12 +99,6 @@ jobs:
             e2e-subbed-frontend-dist=${{ inputs.frontend-dist-hash }}
           token: ${{ github.token }}
 
-      - name: Download frontend dependencies
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: e2e-frontend-node-modules
-          path: frontend/node_modules
-
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
 
