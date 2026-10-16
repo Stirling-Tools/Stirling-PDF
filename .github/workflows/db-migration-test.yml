@@ -29,7 +29,6 @@ jobs:
     uses: ./.github/workflows/_runner-pick.yml
 
   hash_pr:
-    needs: pick
     name: Hash files
     runs-on: ubuntu-latest
     timeout-minutes: 5
