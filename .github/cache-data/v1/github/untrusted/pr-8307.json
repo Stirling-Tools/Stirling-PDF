@@ -11425,10 +11425,31 @@
       "artifact_id": 12038204593,
       "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000000",
       "workflow_run_id": 38883434118
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/pre-commit-task-state-cache/linux-x64/f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf/v6": {
+      "object": "sha256:8d725c056feb5679e2cbe407799d5141207b584493d0217a05796655c55657b7",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-16T09:55:34.113Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 276,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:8d725c056feb5679e2cbe407799d5141207b584493d0217a05796655c55657b7",
+          "size": 276,
+          "artifact_id": 12038314407,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-task-state-cache-linux-x64-f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-v6--8d725c056feb5679e2cbe407799d5141207b5-part-000000",
+          "workflow_run_id": 38883434118
+        }
+      ],
+      "artifact_id": 12038314407,
+      "artifact_name": "cache-untrusted-pr-8307-pre-commit-task-state-cache-linux-x64-f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-v6--8d725c056feb5679e2cbe407799d5141207b5-part-000000",
+      "workflow_run_id": 38883434118
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-16T09:32:33.411Z",
-    "writes": 21
+    "writes": 22
   }
 }
