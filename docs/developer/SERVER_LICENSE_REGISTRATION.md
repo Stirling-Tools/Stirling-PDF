@@ -117,6 +117,15 @@ on this Windows host: four `LibreOfficeSandboxPolicyTest` cases, one
 `FolderIdentitiesTest` fail in unchanged code. These need a passing supported
 CI environment before release; the joint staging runs remain unperformed.
 
+Preview checkpoint, 16 October 2026: 24 additional checks passed against a running
+SaaS Java application and the PR's real Supabase branch, with a loopback Keygen
+simulator and synthetic license proofs. These exercised the full security filters,
+100-to-200 reporting, signed files, concurrent retries, stale reports, revocation,
+process restart, rate limiting, public API denial and response/log redaction.
+Synthetic registration rows were removed afterwards. Live Keygen verification and
+the complete self-hosted reporter process remain release gates; the simulator does
+not establish either.
+
 Run the backend quality gate in the `saas` flavor with security enabled. For a
 focused Java run, pass a filter to each test task:
 
