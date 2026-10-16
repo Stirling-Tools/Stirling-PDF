@@ -12,14 +12,23 @@ import type { LinkedInstanceRow } from "@app/types/linkedInstance";
 
 const state = vi.hoisted(() => ({
   get: vi.fn(),
+  getKeys: vi.fn(),
   post: vi.fn(),
   patch: vi.fn(),
   owner: true,
   loading: false,
 }));
 
+// Key reads are routed apart so the instance-list tests can keep stubbing `get` wholesale.
 vi.mock("@app/services/apiClient", () => ({
-  default: { get: state.get, post: state.post, patch: state.patch },
+  default: {
+    get: (url: string, options: unknown) =>
+      url === "/api/v1/account-link/keys"
+        ? state.getKeys(url, options)
+        : state.get(url, options),
+    post: state.post,
+    patch: state.patch,
+  },
 }));
 vi.mock("@app/auth/UseSession", () => ({
   useAuth: () => ({ user: { id: "owner-1" } }),
@@ -71,6 +80,7 @@ function mount() {
 describe("Connected instances", () => {
   beforeEach(() => {
     state.get.mockReset().mockResolvedValue({ data: [instance] });
+    state.getKeys.mockReset().mockResolvedValue({ data: [] });
     state.post.mockReset().mockResolvedValue({});
     state.patch.mockReset().mockResolvedValue({});
     state.owner = true;
@@ -99,6 +109,76 @@ describe("Connected instances", () => {
     state.loading = true;
     mount();
     expect(state.get).not.toHaveBeenCalled();
+    expect(state.getKeys).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("button", { name: "Add a server with a key" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("creates a link key and shows it once", async () => {
+    state.post.mockImplementation((url: string) =>
+      Promise.resolve(
+        url === "/api/v1/account-link/keys"
+          ? {
+              data: {
+                keyId: "k1",
+                key: "stlk_k1.secret",
+                name: "Prod",
+                expiresAt: "2026-10-23T12:00:00",
+              },
+            }
+          : {},
+      ),
+    );
+    mount();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Add a server with a key" }),
+    );
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByRole("textbox"), {
+      target: { value: " Prod " },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Create key" }));
+    expect(await screen.findByText("stlk_k1.secret")).toBeInTheDocument();
+    expect(state.post).toHaveBeenCalledWith(
+      "/api/v1/account-link/keys",
+      { name: "Prod" },
+      { suppressErrorToast: true },
+    );
+    // The new key appears in the waiting list without a reload.
+    await waitFor(() => expect(state.getKeys).toHaveBeenCalledTimes(2));
+  });
+
+  it("lists keys waiting for a server and revokes one", async () => {
+    state.getKeys.mockResolvedValue({
+      data: [
+        {
+          keyId: "k1",
+          name: "Prod",
+          createdAt: "2026-10-16T12:00:00",
+          expiresAt: "2026-10-23T12:00:00",
+        },
+      ],
+    });
+    mount();
+    expect(await screen.findByText("Prod")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Revoke key" }));
+    await waitFor(() =>
+      expect(state.post).toHaveBeenCalledWith(
+        "/api/v1/account-link/keys/k1/revoke",
+        undefined,
+        { suppressErrorToast: true },
+      ),
+    );
+  });
+
+  it("says when an instance was connected with a link key", async () => {
+    state.get.mockResolvedValue({
+      data: [{ ...instance, linkedWithKey: true }],
+    });
+    mount();
+    expect(await screen.findByText("Connected with")).toBeInTheDocument();
+    expect(screen.getByText("Link key")).toBeInTheDocument();
   });
 
   it("requires confirmation, permits cancellation, and hides removed connections", async () => {

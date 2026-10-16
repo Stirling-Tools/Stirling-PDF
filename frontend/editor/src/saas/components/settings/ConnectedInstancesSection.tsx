@@ -7,13 +7,31 @@ import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import apiClient from "@app/services/apiClient";
 import type { LinkedInstanceRow } from "@app/types/linkedInstance";
 import { Banner, Button, EmptyState, Input, Modal, Skeleton } from "@app/ui";
+import { Icon } from "@app/ui/Icon";
 import { ConnectedInstanceRow } from "@app/components/settings/ConnectedInstanceRow";
 import { AccountConnectionLayout } from "@app/components/settings/AccountConnectionLayout";
+import {
+  CreateLinkKeyModal,
+  LINK_KEYS_PATH,
+} from "@app/components/settings/CreateLinkKeyModal";
 
 const BASE = "/api/v1/account-link/instances";
 
+interface LinkKeyRow {
+  keyId: string;
+  name: string | null;
+  createdAt: string | null;
+  expiresAt: string;
+}
+
+const linkKeysQueryKey = (userId: string, teamId: number) => [
+  "link-keys",
+  userId,
+  teamId,
+];
+
 function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const queryKey = ["connected-instances", userId, teamId];
   const [selected, setSelected] = useState<LinkedInstanceRow | null>(null);
@@ -31,6 +49,34 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
       return response.data;
     },
     retry: false,
+  });
+  const keysQueryKey = linkKeysQueryKey(userId, teamId);
+  const keys = useQuery({
+    queryKey: keysQueryKey,
+    queryFn: async ({ signal }) => {
+      const response = await apiClient.get<LinkKeyRow[]>(LINK_KEYS_PATH, {
+        signal,
+        suppressErrorToast: true,
+      });
+      return response.data;
+    },
+    retry: false,
+  });
+  const keyRevocation = useMutation({
+    mutationFn: async (key: LinkKeyRow) => {
+      await apiClient.post(
+        `${LINK_KEYS_PATH}/${encodeURIComponent(key.keyId)}/revoke`,
+        undefined,
+        { suppressErrorToast: true },
+      );
+    },
+    onSuccess: async (_, key) => {
+      await queryClient.cancelQueries({ queryKey: keysQueryKey });
+      queryClient.setQueryData<LinkKeyRow[]>(keysQueryKey, (rows) =>
+        rows?.filter((row) => row.keyId !== key.keyId),
+      );
+      void queryClient.invalidateQueries({ queryKey: keysQueryKey });
+    },
   });
   const removal = useMutation({
     mutationFn: async (instance: LinkedInstanceRow) => {
@@ -84,6 +130,15 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
 
   const connected =
     instances.data?.filter((instance) => !instance.revoked) ?? [];
+  const waitingKeys = keys.data ?? [];
+  const formatDay = (value: string) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? value
+      : new Intl.DateTimeFormat(i18n.language, { dateStyle: "medium" }).format(
+          date,
+        );
+  };
   const forbidden =
     isAxiosError(instances.error) && instances.error.response?.status === 403;
   const removalForbidden =
@@ -153,7 +208,63 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
         </Banner>
       ) : (
         <>
-          {connected.length === 0 ? (
+          {waitingKeys.length > 0 && (
+            <ul
+              className="account-connection__list"
+              aria-label={t(
+                "settings.connectedInstances.linkKey.waitingTitle",
+                "Keys waiting for a server",
+              )}
+            >
+              {waitingKeys.map((key) => (
+                <li key={key.keyId} className="account-connection__row">
+                  <div className="account-connection__identity">
+                    <div className="account-connection__name">
+                      <h3>
+                        {key.name ??
+                          t(
+                            "settings.connectedInstances.linkKey.unnamed",
+                            "Unnamed server",
+                          )}
+                      </h3>
+                    </div>
+                    <p>
+                      {t(
+                        "settings.connectedInstances.linkKey.waiting",
+                        "Waiting for the server to use its link key. The key expires on {{date}}.",
+                        { date: formatDay(key.expiresAt) },
+                      )}
+                    </p>
+                  </div>
+                  <Button
+                    variant="quiet"
+                    accent="neutral"
+                    size="sm"
+                    loading={
+                      keyRevocation.isPending &&
+                      keyRevocation.variables?.keyId === key.keyId
+                    }
+                    disabled={keyRevocation.isPending}
+                    onClick={() => keyRevocation.mutate(key)}
+                  >
+                    {t(
+                      "settings.connectedInstances.linkKey.revoke",
+                      "Revoke key",
+                    )}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {keyRevocation.isError && (
+            <Banner tone="danger">
+              {t(
+                "settings.connectedInstances.linkKey.revokeError",
+                "Couldn’t revoke the key. Try again.",
+              )}
+            </Banner>
+          )}
+          {connected.length === 0 && waitingKeys.length === 0 ? (
             <EmptyState
               size="compact"
               title={t(
@@ -162,10 +273,10 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
               )}
               description={t(
                 "settings.connectedInstances.connectHelp",
-                "To connect a server, open Settings → Account connection on your self-hosted instance and follow the connection steps.",
+                "Connect a server from Settings → Account connection on the server, or add one with a link key.",
               )}
             />
-          ) : (
+          ) : connected.length === 0 ? null : (
             <ul className="account-connection__list">
               {connected.map((instance) => (
                 <ConnectedInstanceRow
@@ -318,6 +429,9 @@ export default function ConnectedInstancesSection() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { currentTeam, isTeamLeader, loading } = useSaaSTeam();
+  const queryClient = useQueryClient();
+  const [creatingKey, setCreatingKey] = useState(false);
+  const canManage = !loading && Boolean(user && isTeamLeader && currentTeam);
 
   return (
     <AccountConnectionLayout
@@ -326,6 +440,19 @@ export default function ConnectedInstancesSection() {
         "settings.connectedInstances.subtitle",
         "Manage the self-hosted servers connected to your team.",
       )}
+      actions={
+        canManage && (
+          <Button
+            leftSection={<Icon name="key" />}
+            onClick={() => setCreatingKey(true)}
+          >
+            {t(
+              "settings.connectedInstances.linkKey.add",
+              "Add a server with a key",
+            )}
+          </Button>
+        )
+      }
     >
       {loading ? (
         <Skeleton height="8rem" />
@@ -364,6 +491,15 @@ export default function ConnectedInstancesSection() {
               teamId={currentTeam.teamId}
             />
           </section>
+          <CreateLinkKeyModal
+            open={creatingKey}
+            onClose={() => setCreatingKey(false)}
+            onCreated={() =>
+              void queryClient.invalidateQueries({
+                queryKey: linkKeysQueryKey(user.id, currentTeam.teamId),
+              })
+            }
+          />
         </>
       )}
     </AccountConnectionLayout>

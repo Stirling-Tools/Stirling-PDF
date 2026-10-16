@@ -11,6 +11,7 @@ import { useAccountLinkContext } from "@app/portal/contexts/AccountLinkContext";
 import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
 import { HttpError } from "@app/portal/api/http";
 import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
+import { cloudUrl } from "@app/portal/components/account-link/cloudLinks";
 import {
   fetchInstances,
   revokeInstance as apiRevokeInstance,
@@ -32,14 +33,16 @@ function OwnerAccountLinkPanel() {
   const link = useAccountLinkContext();
 
   const linked = link.status?.linked ?? false;
+  // The team's instance list is a cloud read, and a key-linked server holds no cloud session.
+  const listsInstances = linked && link.status?.linkMethod !== "KEY";
   const [reloadKey, setReloadKey] = useState(0);
   // Only fetch the team-wide instance list when THIS instance is linked. When
   // unlinked, the portal has no team to display — the admin's SaaS session may
   // still be valid in the browser, but the local instance isn't part of a team
   // (so showing the team's other instances would be confusing).
   const instancesState = useAsync<LinkedInstanceRow[]>(
-    () => (linked ? fetchInstances() : Promise.resolve([])),
-    [reloadKey, linked, sessionRevision],
+    () => (listsInstances ? fetchInstances() : Promise.resolve([])),
+    [reloadKey, listsInstances, sessionRevision],
   );
 
   const [revokingId, setRevokingId] = useState<number | null>(null);
@@ -51,13 +54,7 @@ function OwnerAccountLinkPanel() {
   const otherInstances = (instancesState.data ?? []).filter(
     (instance) => !deviceId || instance.deviceId !== deviceId,
   );
-  const cloudBaseUrl = import.meta.env.VITE_SAAS_FRONTEND_URL?.replace(
-    /\/+$/,
-    "",
-  );
-  const cloudSettingsUrl = cloudBaseUrl
-    ? `${cloudBaseUrl}/settings/account-link`
-    : null;
+  const cloudSettingsUrl = cloudUrl("/settings/account-link");
 
   const revoke = useCallback(async (instance: LinkedInstanceRow) => {
     setRevokingId(instance.instanceId);
@@ -101,7 +98,7 @@ function OwnerAccountLinkPanel() {
       <AccountConnectionNotice />
       <LinkAccountCard link={link} instanceName={currentInstance?.name} />
 
-      {linked && (
+      {listsInstances && (
         <section className="account-connection__body">
           <div className="portal-link__section-head">
             <h2 className="portal-link__section-title">

@@ -6,12 +6,14 @@ import LicenseKeySection from "@app/components/shared/config/configSections/plan
 import { KvRow } from "@app/billing/KvRow";
 import { Banner, Button, Spinner } from "@app/ui";
 import { Modal } from "@app/ui/Modal";
+import { useAccountLinkOptional } from "@app/portal/contexts/AccountLinkContext";
 
 /** The caller must restrict this server-local license surface to administrators. */
 export function ServerLicenseSection({ onSaved }: { onSaved: () => void }) {
   const { t } = useTranslation();
   const { licenseInfo, loading, error, refetchLicense } = useLicense();
   const { error: configError, refetch: refetchConfig } = useAppConfig();
+  const accountLink = useAccountLinkOptional();
   const [dialog, setDialog] = useState<"view" | "update" | null>(null);
   const storedKey = licenseInfo?.licenseKey?.trim();
   const licenseKey =
@@ -118,6 +120,11 @@ export function ServerLicenseSection({ onSaved }: { onSaved: () => void }) {
             }
             onSaved={() => {
               setDialog(null);
+              onSaved();
+            }}
+            onLinked={() => {
+              setDialog(null);
+              void accountLink?.refresh();
               onSaved();
             }}
           />

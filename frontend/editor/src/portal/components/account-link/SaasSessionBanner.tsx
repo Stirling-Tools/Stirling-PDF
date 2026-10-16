@@ -4,6 +4,7 @@ import { Banner, Button } from "@app/ui";
 import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
 import { useLink } from "@app/portal/contexts/LinkContext";
 import { useUI } from "@app/portal/contexts/UIContext";
+import { useKeyLinked } from "@app/portal/hooks/useKeyLinked";
 
 /** Recovery for attended calls, including checkout and settings, without changing instance status. */
 export function SaasSessionBanner() {
@@ -12,7 +13,10 @@ export function SaasSessionBanner() {
   const { required } = usePortalSaasSession();
   const { isLinked } = useLink();
   const { openLinkModal, linkModalOpen } = useUI();
-  if (!required || !isLinked || !isOwner || linkModalOpen) return null;
+  // A key-linked server manages billing on stirling.com, so there is no session here to renew.
+  const keyLinked = useKeyLinked();
+  if (!required || !isLinked || !isOwner || linkModalOpen || keyLinked)
+    return null;
   return (
     <Banner
       tone="neutral"

@@ -4,6 +4,17 @@
    cards. FlowModal stacks and spaces the body, so these blocks own only their
    own internals. */
 
+.portal-connect__key {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.portal-connect__key-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .portal-connect__lede {
   margin: 0;
   font-size: 0.875rem;

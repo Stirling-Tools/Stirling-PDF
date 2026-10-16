@@ -12,6 +12,8 @@ import "@app/components/account-link/connect.css";
 interface Props {
   /** Closes the dialog first, so a next step does not land behind the overlay. */
   onNavigate: () => void;
+  /** False after linking with a key: there is no cloud session to read the wallet with. */
+  withWallet?: boolean;
 }
 
 /** Below this the meter grows an upgrade row; above it the meter is information, not a prompt. */
@@ -34,13 +36,14 @@ function Chevron() {
  * goes to Usage rather than starting checkout, which already lives there with its quotes and
  * resumable bundle.
  */
-export function ConnectDoneSlide({ onNavigate }: Props) {
+export function ConnectDoneSlide({ onNavigate, withWallet = true }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const email = useLinkedAccountEmail();
   const [wallet, setWallet] = useState<Wallet | null>(null);
 
   useEffect(() => {
+    if (!withWallet) return;
     let cancelled = false;
     void fetchWallet()
       .then((w) => {
@@ -53,7 +56,7 @@ export function ConnectDoneSlide({ onNavigate }: Props) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [withWallet]);
 
   const go = (path: string) => {
     onNavigate();

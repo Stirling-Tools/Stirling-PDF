@@ -14,6 +14,25 @@ export interface LinkStatus {
   /** Matches the cloud instance row; older status responses may omit it. */
   deviceId?: string | null;
   name?: string | null;
+  /** KEY: linked with a key from Stirling Cloud, so no one here holds a cloud sign-in. */
+  linkMethod?: "BROWSER" | "KEY" | null;
+}
+
+/** What Stirling Cloud last told this server about its plan (GET /api/v1/account-link/plan). */
+export interface CloudPlan {
+  /** False until the server has heard from Stirling Cloud at least once. */
+  known: boolean;
+  subscribed: boolean;
+  freeRemainingUnits: number;
+  prepaidRemainingUnits: number;
+  periodSpendUnits: number;
+  /** Null when there is no spend limit. */
+  periodCapUnits: number | null;
+  state: "OK" | "OVER_LIMIT" | "REVOKED" | "UNKNOWN" | null;
+  periodStart: string | null;
+  periodEnd: string | null;
+  licensedUsers: number | null;
+  unsyncedUnits: number;
 }
 
 /** Locally-accrued usage not yet reported to SaaS (GET /api/v1/account-link/usage). */
@@ -64,6 +83,11 @@ export async function fetchLocalUsage(): Promise<LocalUsage> {
  */
 export async function fetchFreeTier(): Promise<FreeTierBalance> {
   return apiClient.local.json<FreeTierBalance>(`${BASE}/free-tier`);
+}
+
+/** Read from the server's own cache; a key-linked server has no cloud session to ask with. */
+export async function fetchCloudPlan(): Promise<CloudPlan> {
+  return apiClient.local.json<CloudPlan>(`${BASE}/plan`);
 }
 
 /** Drop this instance's link. */

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 import { ExhaustedAccountLinkModal } from "@app/components/account-link/ExhaustedAccountLinkModal";
@@ -9,6 +9,8 @@ import { FlowModal } from "@app/portal/components/shared/FlowModal";
 import { StepModalHeader } from "@app/portal/components/shared/StepModalHeader";
 import { ConnectAskStep } from "@app/portal/components/account-link/connect/ConnectAskStep";
 import { ConnectHandoffGhost } from "@app/portal/components/account-link/connect/ConnectHandoffGhost";
+import { ConnectDoneSlide } from "@app/portal/components/account-link/connect/ConnectDoneSlide";
+import { useAccountLinkOptional } from "@app/portal/contexts/AccountLinkContext";
 import {
   ConnectCallbackView,
   isRetryableOutcome,
@@ -93,10 +95,20 @@ export function LinkAccountModal({
     (outcome?.state === "linked" && !outcome.sessionRestored);
   const exhausted = mode === "exhausted";
   const handoff = useConnectHandoff(reauth);
+  const accountLink = useAccountLinkOptional();
+  // A key links in one request, with no hand-off and no cloud session to restore.
+  const [keyLinked, setKeyLinked] = useState(false);
+  const onKeyLinked = isOwner
+    ? () => {
+        setKeyLinked(true);
+        void accountLink?.refresh();
+      }
+    : undefined;
 
   // Busy outranks a stale outcome, or a retry sits on the old result until the browser leaves.
   let step: StepId = "ask";
-  if (handoff.busy) step = "handoff";
+  if (keyLinked) step = "outcome";
+  else if (handoff.busy) step = "handoff";
   else if (outcome && !handoff.error) step = "outcome";
 
   const title = stepTitle();
@@ -137,6 +149,7 @@ export function LinkAccountModal({
           exhausted
           error={handoff.error}
           summary={summary}
+          onKeyLinked={onKeyLinked}
         />
       </ExhaustedAccountLinkModal>
     );
@@ -178,7 +191,7 @@ export function LinkAccountModal({
     if (step === "handoff") {
       return t("portal.accountLink.connect.handoff.title", "Connecting");
     }
-    if (outcome?.state === "linked") {
+    if (keyLinked || outcome?.state === "linked") {
       return t("portal.accountLink.connect.done.title", "Connected");
     }
     return t("portal.accountLink.connect.done.pendingTitle", "Almost there");
@@ -192,11 +205,14 @@ export function LinkAccountModal({
             reauth={reauth}
             exhausted={exhausted}
             error={handoff.error}
+            onKeyLinked={onKeyLinked}
           />
         );
       case "handoff":
         return <ConnectHandoffGhost />;
       case "outcome":
+        if (keyLinked)
+          return <ConnectDoneSlide onNavigate={onClose} withWallet={false} />;
         return outcome ? (
           <ConnectCallbackView
             mode={reauth ? "reauth" : "link"}
@@ -255,7 +271,7 @@ export function LinkAccountModal({
     }
 
     // A retry over a call that has not answered is how you get two handshakes.
-    if (outcome?.state === "working") {
+    if (!keyLinked && outcome?.state === "working") {
       return (
         <>
           <span />
@@ -265,7 +281,7 @@ export function LinkAccountModal({
     }
 
     // Still open: re-claim rather than spend the approval a leader gave by hand.
-    if (outcome?.reclaim) {
+    if (!keyLinked && outcome?.reclaim) {
       return (
         <>
           {closeButton()}
@@ -274,7 +290,7 @@ export function LinkAccountModal({
       );
     }
 
-    if (outcome?.state === "linked" && !outcome.sessionRestored) {
+    if (!keyLinked && outcome?.state === "linked" && !outcome.sessionRestored) {
       return (
         <>
           {closeButton()}
@@ -283,7 +299,7 @@ export function LinkAccountModal({
       );
     }
 
-    if (outcome && isRetryableOutcome(outcome.state)) {
+    if (!keyLinked && outcome && isRetryableOutcome(outcome.state)) {
       return (
         <>
           {closeButton()}

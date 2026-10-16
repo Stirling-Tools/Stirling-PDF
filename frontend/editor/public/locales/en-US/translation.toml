@@ -1582,6 +1582,21 @@ title = "⚠️ Warning: Existing License Detected"
 info = "If you have a license key or certificate file from a direct purchase, you can enter it here to activate premium or enterprise features."
 toggle = "Got a license key or certificate file?"
 
+[admin.settings.premium.linkKey]
+connect = "Connect"
+connected = "This server is now connected to Stirling Cloud."
+recognised = "This is a Stirling Cloud link key. Connecting links this server to the team that created it."
+
+[admin.settings.premium.linkKey.error]
+alreadyLinked = "This server is already connected. Disconnect it first to use a different account."
+format = "That isn’t a complete link key. Copy it again from Stirling Cloud."
+inProgress = "This server is already being connected. Try again in a moment."
+notAvailable = "Connecting to Stirling Cloud is turned off on this server."
+notOwner = "Only the organization owner can connect this server."
+rejected = "Stirling Cloud didn’t accept this key. It may have been used, revoked or expired. Ask for a new one."
+unknown = "Couldn’t connect this server. Try again."
+unreachable = "Couldn’t reach Stirling Cloud. Check the server’s internet access and try again."
+
 [admin.settings.premium.movedFeatures]
 auditLogging = "<0>Audit Logging</0> (ENTERPRISE) - Security"
 customMetadata = "<0>Custom Metadata</0> (PRO) - General"
@@ -7908,6 +7923,7 @@ disconnectBody = "This server will stop using your team’s processing allowance
 disconnectTitle = "Disconnect this instance?"
 eyebrow = "This instance"
 linkButton = "Connect your Stirling account"
+linkedWithKey = "Connected with a link key. Billing is managed on stirling.com."
 loading = "Checking account connection"
 notLinked = "Not connected"
 signedInAs = "Signed in to Stirling Cloud as"
@@ -7982,6 +7998,12 @@ title = "Connected"
 opening = "Opening Stirling sign-in..."
 reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
 title = "Connecting"
+
+[portal.accountLink.connect.key]
+label = "Link key"
+notAKey = "Link keys start with stlk_. A license key goes under Usage & Billing instead."
+submit = "Connect with key"
+toggle = "Have a link key from Stirling Cloud?"
 
 [portal.accountLink.connectionNotice]
 expiredBody = "This server has not reached Stirling Cloud within its offline allowance. Cloud-backed Team features and Processor work are paused. Existing data and installed licence rights are preserved. Access returns automatically after a successful connection confirms your plan."
@@ -8158,6 +8180,25 @@ limitNoCap = "No spend limit. Processing won't pause. Invoices post monthly."
 plan = "Plan"
 procurement = "Procurement"
 usage = "Usage"
+
+[portal.billing.cloudManaged]
+credits = "{{amount}} credits"
+freeLeft = "Free credits left"
+limit = "Spend limit"
+limitBody = "Metered processing is paused until your Stirling Cloud team raises the limit on stirling.com."
+limitTitle = "Spend limit reached"
+loadError = "Couldn’t load this server’s plan"
+manage = "Manage billing on stirling.com"
+noLimit = "No limit"
+noticeBody = "This server was connected with a link key. Your Stirling Cloud team changes the plan, payment details and spend limit on stirling.com."
+noticeTitle = "Billing is managed in Stirling Cloud"
+periodEnds = "Period ends"
+prepaidLeft = "Prepaid credits left"
+subtitle = "Your plan and usage. Billing is managed in Stirling Cloud."
+unsynced = "{{amount}} not yet synced"
+used = "Credits used this period"
+users = "Team plan users"
+waiting = "Plan details appear once this server has checked in with Stirling Cloud."
 
 [portal.billing.compare]
 current = "Current"
@@ -11796,7 +11837,8 @@ confirmBody = "This revokes the instance’s access to your team in Stirling Clo
 confirmTitle = "Remove {{name}}?"
 connectedAt = "Connected: {{date}}"
 connectedDate = "Connected"
-connectHelp = "To connect a server, open Settings → Account connection on your self-hosted instance and follow the connection steps."
+connectedWith = "Connected with"
+connectHelp = "Connect a server from Settings → Account connection on the server, or add one with a link key."
 copied = "ID copied"
 copyError = "Couldn’t copy the ID. Select it to copy manually."
 copyId = "Copy ID"
@@ -11824,6 +11866,23 @@ teamNote = "These instances share your team’s processing allowance."
 title = "Connected instances"
 unknown = "Not available"
 yourTeam = "Your team"
+
+[settings.connectedInstances.linkKey]
+add = "Add a server with a key"
+caption = "Link key"
+create = "Create key"
+createdTitle = "Link key created"
+createError = "Couldn’t create the key. Try again."
+done = "Done"
+instructions = "On the server, open Usage & Billing and add it as the license key, or set it as STIRLING_BILLING_ACCOUNT_LINK_KEY."
+name = "Server name (optional)"
+once = "Copy it now. It is shown only once, works once, and expires on {{date}}."
+revoke = "Revoke key"
+revokeError = "Couldn’t revoke the key. Try again."
+title = "Add a server with a key"
+unnamed = "Unnamed server"
+waiting = "Waiting for the server to use its link key. The key expires on {{date}}."
+waitingTitle = "Keys waiting for a server"
 
 [settings.connection]
 description = "Work locally on this machine or connect the app to a Stirling server."
