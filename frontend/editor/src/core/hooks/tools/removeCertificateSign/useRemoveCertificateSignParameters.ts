@@ -5,11 +5,11 @@ import {
 } from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface RemoveCertificateSignParameters extends BaseParameters {
-  // Extends BaseParameters - ready for future parameter additions if needed
+  removeVisibleSignature: boolean;
 }
 
 export const defaultParameters: RemoveCertificateSignParameters = {
-  // No parameters needed
+  removeVisibleSignature: false,
 };
 
 export type RemoveCertificateSignParametersHook =

@@ -1,9 +1,12 @@
 package stirling.software.SPDF.controller.api.security;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
@@ -18,10 +21,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.model.api.security.RemoveCertSignRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
-import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -46,8 +49,8 @@ public class RemoveCertSignController {
             summary = "Remove digital signature from PDF",
             description =
                     "This endpoint accepts a PDF file and returns the PDF file without the digital"
-                            + " signature.")
-    public ResponseEntity<Resource> removeCertSignPDF(@ModelAttribute PDFFile request)
+                            + " signature, optionally removing its visible appearance as well.")
+    public ResponseEntity<Resource> removeCertSignPDF(@ModelAttribute RemoveCertSignRequest request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();
 
@@ -60,11 +63,18 @@ public class RemoveCertSignController {
             // Get the AcroForm
             PDAcroForm acroForm = catalog.getAcroForm();
             if (acroForm != null) {
-                // Remove signature fields safely
-                List<PDField> fieldsToRemove =
-                        acroForm.getFields().stream()
-                                .filter(PDSignatureField.class::isInstance)
-                                .toList();
+                List<PDField> fieldsToRemove = new ArrayList<>();
+                for (PDField field : acroForm.getFieldTree()) {
+                    if (field instanceof PDSignatureField) {
+                        fieldsToRemove.add(field);
+                        if (request.isRemoveVisibleSignature()) {
+                            // Flattening removes the widgets without painting a missing appearance.
+                            for (PDAnnotationWidget widget : field.getWidgets()) {
+                                widget.getCOSObject().removeItem(COSName.AP);
+                            }
+                        }
+                    }
+                }
 
                 if (!fieldsToRemove.isEmpty()) {
                     acroForm.flatten(fieldsToRemove, false);
