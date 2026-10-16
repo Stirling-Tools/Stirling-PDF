@@ -43,9 +43,10 @@ public class AccountLinkService {
             String deviceId,
             Long teamId,
             String linkedAt,
-            EntitlementCache.ConnectionStatus connection) {
+            EntitlementCache.ConnectionStatus connection,
+            LinkMethod linkMethod) {
         public LinkStatus(boolean linked, String deviceId, Long teamId, String linkedAt) {
-            this(linked, deviceId, teamId, linkedAt, null);
+            this(linked, deviceId, teamId, linkedAt, null, null);
         }
     }
 
@@ -96,7 +97,8 @@ public class AccountLinkService {
                                         c.getDeviceId(),
                                         c.getTeamId(),
                                         c.getLinkedAt() != null ? c.getLinkedAt().toString() : null,
-                                        entitlementCache.connectionStatus()))
+                                        entitlementCache.connectionStatus(),
+                                        c.getLinkMethod()))
                 .orElseGet(() -> new LinkStatus(false, null, null, null));
     }
 }
