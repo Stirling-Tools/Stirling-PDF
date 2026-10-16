@@ -1,8 +1,8 @@
 import type { TFunction } from "i18next";
 import type { ToolId } from "@app/types/toolId";
+import type { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
   CONVERSION_MATRIX,
-  EXTENSION_TO_ENDPOINT,
   FROM_FORMAT_OPTIONS,
   TO_FORMAT_OPTIONS,
 } from "@app/constants/convertConstants";
@@ -150,10 +150,9 @@ export function getToolSubtool(
   return SUBTOOL_BY_KEY.get(`${toolId}:${slug}`);
 }
 
-/** The backend endpoint a conversion subtool runs on, if it maps to one. */
-export function getConversionEndpoint(
-  from: string,
-  to: string,
-): string | undefined {
-  return EXTENSION_TO_ENDPOINT[from]?.[to];
+/** A Convert subtool's settings, typed for the Convert tool. */
+export function getConvertPreset(
+  slug: string,
+): Partial<ConvertParameters> | undefined {
+  return getToolSubtool("convert", slug)?.params;
 }

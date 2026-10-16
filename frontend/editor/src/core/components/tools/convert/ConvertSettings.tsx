@@ -3,17 +3,13 @@ import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 import {
   isImageFormat,
   isWebFormat,
   getAvailableToExtensions as defaultGetAvailableToExtensions,
   usesOfficeEngine,
 } from "@app/utils/convertUtils";
-import { getConversionEndpoints } from "@app/data/toolsTaxonomy";
-import { usePreferences } from "@app/contexts/PreferencesContext";
-import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { useConversionAvailability } from "@app/hooks/tools/convert/useConversionAvailability";
 import GroupedFormatDropdown from "@app/components/tools/convert/GroupedFormatDropdown";
 import ConvertToImageSettings from "@app/components/tools/convert/ConvertToImageSettings";
 import ConvertFromImageSettings from "@app/components/tools/convert/ConvertFromImageSettings";
@@ -33,7 +29,6 @@ import ConvertOfficeEngineSettings from "@app/components/tools/convert/ConvertOf
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
-  EXTENSION_TO_ENDPOINT,
   COLOR_TYPES,
   OUTPUT_OPTIONS,
   FIT_OPTIONS,
@@ -69,40 +64,11 @@ const ConvertSettings = ({
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
-  const { preferences } = usePreferences();
-  const localProcessingOnly = useLocalProcessingOnly();
-  const hideUnavailableConversions =
-    localProcessingOnly || preferences.hideUnavailableConversions;
-
-  const allEndpoints = useMemo(() => {
-    const endpoints = getConversionEndpoints(EXTENSION_TO_ENDPOINT);
-    return endpoints;
-  }, []);
-
-  const { endpointStatus } = useMultipleEndpointsEnabled(allEndpoints);
-
-  // Get comprehensive conversion status (availability + cloud routing)
-  const conversionStatus = useConversionCloudStatus();
-
-  const isConversionAvailable = (fromExt: string, toExt: string): boolean => {
-    const conversionKey = `${fromExt}-${toExt}`;
-
-    // In desktop SaaS mode, check combined availability (local OR SaaS)
-    if (conversionStatus.availability[conversionKey] !== undefined) {
-      return conversionStatus.availability[conversionKey];
-    }
-
-    // Fallback to local-only check (web mode or desktop non-SaaS mode)
-    const endpointKey = EXTENSION_TO_ENDPOINT[fromExt]?.[toExt];
-    if (!endpointKey) return false;
-
-    const isAvailable = endpointStatus[endpointKey] === true;
-    return isAvailable;
-  };
-
-  const doesConversionUseCloud = (fromExt: string, toExt: string): boolean => {
-    return conversionStatus.cloudStatus[`${fromExt}-${toExt}`] || false;
-  };
+  const {
+    isConversionAvailable,
+    doesConversionUseCloud,
+    hideUnavailableConversions,
+  } = useConversionAvailability();
 
   // Enhanced FROM options with endpoint availability
   const enhancedFromOptions = useMemo(() => {
@@ -145,9 +111,9 @@ const ConvertSettings = ({
     return filteredOptions;
   }, [
     parameters.fromExtension,
-    endpointStatus,
+    isConversionAvailable,
+    doesConversionUseCloud,
     hideUnavailableConversions,
-    conversionStatus,
   ]);
 
   // Enhanced TO options with endpoint availability and cloud status
@@ -179,9 +145,9 @@ const ConvertSettings = ({
     return enhanced;
   }, [
     parameters.fromExtension,
-    endpointStatus,
+    isConversionAvailable,
+    doesConversionUseCloud,
     hideUnavailableConversions,
-    conversionStatus,
   ]);
 
   const resetParametersToDefaults = () => {

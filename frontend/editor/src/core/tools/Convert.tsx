@@ -12,6 +12,8 @@ import ConvertSettings from "@app/components/tools/convert/ConvertSettings";
 
 import { useConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import { useConvertOperation } from "@app/hooks/tools/convert/useConvertOperation";
+import { useToolPresetRequest } from "@app/services/toolPresetRequests";
+import { getConvertPreset } from "@app/data/toolSubtools";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -103,6 +105,21 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     convertParams.parameters.fromExtension,
     convertParams.parameters.toExtension,
   ]);
+
+  // A subtool ("Convert PDF to PNG") sets the formats and options as the
+  // pickers would, then narrows the selection as choosing a source format
+  // does; detection on the narrowed selection keeps the chosen target.
+  useToolPresetRequest("convert", (slug) => {
+    const preset = getConvertPreset(slug);
+    if (!preset?.fromExtension) return;
+    convertParams.setParameters((prev) => ({
+      ...prev,
+      ...preset,
+      isSmartDetection: false,
+      smartDetectionType: "none",
+    }));
+    handleSourceFormatSelected(preset.fromExtension);
+  });
 
   const handleConvert = async () => {
     try {
