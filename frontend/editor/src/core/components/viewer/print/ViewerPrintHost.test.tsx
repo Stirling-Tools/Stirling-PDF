@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   post: vi.fn(),
   viewerPrint: vi.fn(),
   printPdfBlob: vi.fn(),
+  activeFileId: "doc-a" as string | null,
+  printDialogProps: [] as Array<{ documentId?: string | null }>,
 }));
 
 vi.mock("@app/services/printService", () => ({
@@ -32,8 +34,27 @@ vi.mock("@app/contexts/ViewerContext", () => ({
   useViewer: () => ({
     registerBridge: mocks.registerBridge,
     exportActions: { saveAsCopy: mocks.saveAsCopy },
+    activeFileId: mocks.activeFileId,
   }),
 }));
+
+// Records the props the host hands the dialog while still rendering the real
+// one, so the prop assertions do not replace the behaviour the rest exercises.
+vi.mock("@app/components/viewer/print/PrintDialog", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@app/components/viewer/print/PrintDialog")
+    >();
+
+  function RecordingPrintDialog(
+    props: Parameters<typeof actual.PrintDialog>[0],
+  ) {
+    mocks.printDialogProps.push(props);
+    return actual.PrintDialog(props);
+  }
+
+  return { ...actual, PrintDialog: RecordingPrintDialog };
+});
 
 vi.mock("@embedpdf/plugin-print/react", () => ({
   usePrintCapability: () => ({ provides: { print: mocks.viewerPrint } }),
@@ -66,20 +87,23 @@ const choosePreset = (preset: string) => {
   fireEvent.click(screen.getByText(preset));
 };
 
-const renderHost = (systemPrintDialog = false) => {
-  render(
-    <MantineProvider env="test">
-      <ViewerPrintHost
-        fileName="report.pdf"
-        systemPrintDialog={systemPrintDialog}
-      />
-    </MantineProvider>,
-  );
-};
+const hostTree = (systemPrintDialog = false) => (
+  <MantineProvider env="test">
+    <ViewerPrintHost
+      fileName="report.pdf"
+      systemPrintDialog={systemPrintDialog}
+    />
+  </MantineProvider>
+);
+
+const renderHost = (systemPrintDialog = false) =>
+  render(hostTree(systemPrintDialog));
 
 describe("ViewerPrintHost", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.activeFileId = "doc-a";
+    mocks.printDialogProps.length = 0;
     mocks.printPdfBlob.mockResolvedValue(undefined);
     mocks.saveAsCopy.mockResolvedValue(pdf());
     mocks.post.mockResolvedValue({ data: pdf() });
@@ -226,5 +250,121 @@ describe("ViewerPrintHost", () => {
 
     await waitFor(() => expect(mocks.printPdfBlob).toHaveBeenCalledTimes(1));
     expect(mocks.post).toHaveBeenCalledTimes(2);
+  });
+
+  it("cancels an in-flight job when another document opens under the same name", async () => {
+    let settle = (_value: unknown) => {};
+    mocks.post.mockReturnValue(
+      new Promise((resolve) => {
+        settle = resolve;
+      }),
+    );
+    const view = renderHost();
+    openDialog();
+    choosePreset("viewer.print.presetPoster");
+    fireEvent.click(
+      screen.getByRole("button", { name: "viewer.print.confirm" }),
+    );
+    await waitFor(() => expect(mocks.post).toHaveBeenCalledTimes(1));
+    const request = (mocks.post.mock.calls[0] as unknown[])[2] as {
+      signal: AbortSignal;
+    };
+    expect(request.signal.aborted).toBe(false);
+
+    // The next document arrives under the same fileName, so the name cannot
+    // tell the two apart; only the document's identity can.
+    mocks.activeFileId = "doc-b";
+    view.rerender(hostTree());
+
+    expect(request.signal.aborted).toBe(true);
+
+    await act(async () => {
+      settle({ data: pdf() });
+    });
+    expect(mocks.printPdfBlob).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "viewer.print.confirm" }),
+    ).toBeTruthy();
+  });
+
+  it("hands printPdfBlob the job's own signal and aborts it with the document", async () => {
+    mocks.printPdfBlob.mockReturnValue(new Promise(() => {}));
+    const view = renderHost(true);
+    openDialog();
+    fireEvent.click(
+      screen.getByRole("button", { name: "viewer.print.confirm" }),
+    );
+    await waitFor(() => expect(mocks.printPdfBlob).toHaveBeenCalledTimes(1));
+
+    const signal = (
+      mocks.printPdfBlob.mock.calls[0] as unknown[]
+    )[2] as AbortSignal;
+    expect(signal).toBeInstanceOf(AbortSignal);
+    expect(signal.aborted).toBe(false);
+
+    mocks.activeFileId = "doc-b";
+    view.rerender(hostTree(true));
+
+    expect(signal.aborted).toBe(true);
+  });
+
+  it("ignores a completion from the document that was open before", async () => {
+    let settleA = (_value: unknown) => {};
+    let settleB = (_value: unknown) => {};
+    mocks.post
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          settleA = resolve;
+        }),
+      )
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          settleB = resolve;
+        }),
+      );
+
+    const view = renderHost();
+    openDialog();
+    choosePreset("viewer.print.presetPoster");
+    fireEvent.click(
+      screen.getByRole("button", { name: "viewer.print.confirm" }),
+    );
+    await waitFor(() => expect(mocks.post).toHaveBeenCalledTimes(1));
+
+    mocks.activeFileId = "doc-b";
+    view.rerender(hostTree());
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "viewer.print.confirm" }),
+    );
+    await waitFor(() => expect(mocks.post).toHaveBeenCalledTimes(2));
+    expect(
+      screen.getByRole("button", { name: "viewer.print.preparing" }),
+    ).toBeTruthy();
+
+    // A's late bytes must neither print nor clear the busy state B set.
+    await act(async () => {
+      settleA({ data: pdf() });
+    });
+    expect(mocks.printPdfBlob).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "viewer.print.preparing" }),
+    ).toBeTruthy();
+
+    await act(async () => {
+      settleB({ data: pdf() });
+    });
+    await waitFor(() => expect(mocks.printPdfBlob).toHaveBeenCalledTimes(1));
+  });
+
+  it("tells the dialog which document the page selection belongs to", () => {
+    const view = renderHost();
+
+    expect(mocks.printDialogProps.at(-1)?.documentId).toBe("doc-a");
+
+    mocks.activeFileId = "doc-b";
+    view.rerender(hostTree());
+
+    expect(mocks.printDialogProps.at(-1)?.documentId).toBe("doc-b");
   });
 });

@@ -750,6 +750,11 @@ interface PrintDialogProps {
    * action must not start a job.
    */
   canPrint?: boolean;
+  /**
+   * Which document the page selection belongs to. Another document starts from
+   * a clean selection rather than inheriting a subset of the previous one.
+   */
+  documentId?: string | null;
 }
 
 export function PrintDialog({
@@ -761,6 +766,7 @@ export function PrintDialog({
   fileName = null,
   systemPrintDialog = false,
   canPrint = true,
+  documentId = null,
 }: PrintDialogProps) {
   const { t } = useTranslation();
   const isPhone = useIsPhone();
@@ -796,9 +802,12 @@ export function PrintDialog({
   }, [pageScope, currentPage]);
 
   // A blank custom field cannot mean every page any more, so it is refused like
-  // any other range the reader has not finished writing.
+  // any other range the reader has not finished writing. Only the plain preset
+  // reads that field, so another preset must not inherit the refusal.
   const problem: PrintProblem | null =
-    pageScope === "custom" && settings.pageRange.trim() === ""
+    settings.preset === "standard" &&
+    pageScope === "custom" &&
+    settings.pageRange.trim() === ""
       ? "invalidPageRange"
       : printProblem(settings, pageCount);
   const scopeNote = scopeNoteKey(settings);
@@ -920,6 +929,18 @@ export function PrintDialog({
       setEnlarged(false);
     }
   }, [open]);
+
+  // A page range and a stepped side belong to the document they were chosen on:
+  // a range that happens to stay valid in another document would silently print
+  // a subset of it. The layout choices stay, since they describe the reader's
+  // intent rather than the document.
+  useEffect(() => {
+    setPageScope("all");
+    setStep(0);
+    setSettings((current) =>
+      current.pageRange === "" ? current : { ...current, pageRange: "" },
+    );
+  }, [documentId]);
   const previewPage =
     selected.length > 0 ? selected[shownStep - 1] : currentPage;
   const bookletSide: BookletSide | undefined =
@@ -952,7 +973,7 @@ export function PrintDialog({
             : [previewPage];
   const { pageImage, pageState, retry } = usePrintPreviewImages(
     open ? previewPages : NO_PREVIEW_PAGES,
-    open,
+    pageCount,
   );
   // An uncountable or unprintable job has no result to state, and a count from
   // settings that do not validate would contradict the error beside the fields.

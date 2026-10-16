@@ -66,17 +66,20 @@ export function usePrintPagePosition(active = true): {
  * draws its placeholder instead. Every blob URL created here is released when
  * the document changes or the dialog unmounts. A page that failed is named as
  * such rather than left looking like blank paper, and `retry` asks again.
+ *
+ * The page count comes from the caller, which already subscribes to the
+ * viewer's scroll position: a second subscription there re-renders the dialog
+ * twice for every page the reader turns.
  */
 export function usePrintPreviewImages(
   pages: number[],
-  active = true,
+  pageCount: number,
 ): {
   pageImage: (page: number) => string | null;
   pageState: (page: number) => PreviewPageState;
   retry: () => void;
 } {
   const viewer = useContext(ViewerContext);
-  const { pageCount } = usePrintPagePosition(active);
   const [images, setImages] = useState<Record<number, string>>({});
   const [failed, setFailed] = useState<number[]>([]);
   const [attempt, setAttempt] = useState(0);

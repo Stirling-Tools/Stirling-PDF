@@ -39,6 +39,7 @@ const renderDialog = (props: {
   pageCount?: number;
   open?: boolean;
   canPrint?: boolean;
+  documentId?: string | null;
   thumbnailAPI?: {
     renderThumb: (index: number, scale: number) => unknown;
   } | null;
@@ -46,7 +47,7 @@ const renderDialog = (props: {
 }) => {
   const onPrint = props.onPrint ?? vi.fn();
   const onClose = vi.fn();
-  const dialog = (open: boolean) => (
+  const dialog = (open: boolean, documentId = props.documentId) => (
     <PrintDialog
       open={open}
       onClose={onClose}
@@ -54,17 +55,18 @@ const renderDialog = (props: {
       fileName={props.fileName}
       systemPrintDialog={props.systemPrintDialog}
       canPrint={props.canPrint}
+      documentId={documentId}
     />
   );
-  const tree = (open: boolean) => (
+  const tree = (open: boolean, documentId = props.documentId) => (
     <MantineProvider env="test">
       {props.pageCount === undefined ? (
-        dialog(open)
+        dialog(open, documentId)
       ) : (
         <ViewerContext.Provider
           value={viewerAt(props.pageCount, props.thumbnailAPI ?? null)}
         >
-          {dialog(open)}
+          {dialog(open, documentId)}
         </ViewerContext.Provider>
       )}
     </MantineProvider>
@@ -72,7 +74,9 @@ const renderDialog = (props: {
   const result = render(tree(props.open ?? true));
   // The viewer keeps the dialog mounted between opens, so a test can too.
   const setOpen = (open: boolean) => result.rerender(tree(open));
-  return { onPrint, onClose, setOpen, ...result };
+  const setDocumentId = (documentId: string | null) =>
+    result.rerender(tree(props.open ?? true, documentId));
+  return { onPrint, onClose, setOpen, setDocumentId, ...result };
 };
 
 const confirm = () =>
@@ -393,6 +397,12 @@ describe("PrintDialog", () => {
 
     expect(document.querySelector(".print-preview--enlarged")).toBeNull();
     expect(onClose).not.toHaveBeenCalled();
+
+    // With the overlay gone the dialog is the topmost surface, so the next
+    // Escape closes it once rather than both at the same time.
+    fireEvent.keyDown(document.body, { key: "Escape" });
+
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("enlarges the preview without offering to enlarge itself", () => {
@@ -447,6 +457,124 @@ describe("PrintDialog", () => {
     fireEvent.click(screen.getByLabelText("viewer.print.nextSide"));
 
     expect(badges(document.body)).toEqual(["5", "6", "7", "8"]);
+  });
+
+  it("resets the page selection for a new document and keeps the layout", () => {
+    const { onPrint, setDocumentId } = renderDialog({
+      pageCount: 12,
+      documentId: "doc-1",
+    });
+
+    fireEvent.change(rangeField(), { target: { value: "2-4" } });
+
+    fireEvent.click(screen.getByText("viewer.print.presetPagesPerSheet"));
+    fireEvent.click(
+      screen.getByRole("textbox", { name: "pageLayout.orientation.label" }),
+    );
+    fireEvent.click(
+      screen.getByRole("option", { name: "pageLayout.orientation.landscape" }),
+    );
+
+    fireEvent.click(screen.getByText("viewer.print.presetPoster"));
+    fireEvent.click(
+      screen.getByRole("textbox", { name: "viewer.print.posterPageSize" }),
+    );
+    fireEvent.click(screen.getByRole("option", { name: "A3" }));
+
+    fireEvent.click(screen.getByText("viewer.print.presetBooklet"));
+    fireEvent.click(screen.getByText("viewer.print.bindingRight"));
+
+    setDocumentId("doc-2");
+
+    // The layout choices describe the reader's intent, so they survive.
+    fireEvent.click(confirm());
+    expect(onPrint).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        preset: "booklet",
+        layout: expect.objectContaining({ orientation: "LANDSCAPE" }),
+        poster: expect.objectContaining({ pageSize: "A3" }),
+        booklet: expect.objectContaining({ spineLocation: "RIGHT" }),
+      }),
+    );
+
+    // The selection belonged to the previous document, so it is gone: the
+    // custom scope is no longer chosen and the range it held is empty.
+    fireEvent.click(screen.getByText("viewer.print.presetStandard"));
+    expect(
+      screen.queryByPlaceholderText("viewer.print.pageRangePlaceholder"),
+    ).toBeNull();
+
+    fireEvent.click(confirm());
+    expect(onPrint).toHaveBeenLastCalledWith(
+      expect.objectContaining({ preset: "standard", pageRange: "" }),
+    );
+  });
+
+  it("keeps a typed range when the same document re-renders", () => {
+    const { setDocumentId } = renderDialog({
+      pageCount: 12,
+      documentId: "doc-1",
+    });
+
+    fireEvent.change(rangeField(), { target: { value: "2-4" } });
+
+    setDocumentId("doc-1");
+
+    expect(
+      (
+        screen.getByPlaceholderText(
+          "viewer.print.pageRangePlaceholder",
+        ) as HTMLInputElement
+      ).value,
+    ).toBe("2-4");
+  });
+
+  it("does not refuse another preset for the plain preset's blank range", () => {
+    renderDialog({ pageCount: 12 });
+
+    fireEvent.change(rangeField(), { target: { value: "" } });
+    expect(screen.getByText("viewer.print.invalidPageRange")).toBeTruthy();
+    expect(confirm()).toBeDisabled();
+
+    fireEvent.click(screen.getByText("viewer.print.presetBooklet"));
+    expect(screen.queryByText("viewer.print.invalidPageRange")).toBeNull();
+    expect(confirm()).toBeEnabled();
+
+    fireEvent.click(screen.getByText("viewer.print.presetPoster"));
+    expect(screen.queryByText("viewer.print.invalidPageRange")).toBeNull();
+    expect(confirm()).toBeEnabled();
+
+    fireEvent.click(screen.getByText("viewer.print.presetPagesPerSheet"));
+    expect(screen.queryByText("viewer.print.invalidPageRange")).toBeNull();
+    expect(confirm()).toBeEnabled();
+  });
+
+  it("refuses a cleared page grid without inventing a count", () => {
+    renderDialog({ pageCount: 12 });
+
+    fireEvent.click(screen.getByText("viewer.print.presetPagesPerSheet"));
+    fireEvent.click(
+      screen.getByRole("textbox", { name: "viewer.print.pagesPerSheetLabel" }),
+    );
+    fireEvent.click(
+      screen.getByRole("option", { name: "viewer.print.customGrid" }),
+    );
+
+    fireEvent.change(screen.getByLabelText("pageLayout.rows"), {
+      target: { value: "" },
+    });
+    expect(confirm()).toBeDisabled();
+    expect(screen.getByText("viewer.print.invalidLayout")).toBeTruthy();
+    expect(document.body.textContent ?? "").not.toMatch(/Infinity|NaN/);
+
+    fireEvent.change(screen.getByLabelText("pageLayout.rows"), {
+      target: { value: "2" },
+    });
+    fireEvent.change(screen.getByLabelText("pageLayout.cols"), {
+      target: { value: "" },
+    });
+    expect(confirm()).toBeDisabled();
+    expect(document.body.textContent ?? "").not.toMatch(/Infinity|NaN/);
   });
 });
 

@@ -50,7 +50,7 @@ export function ViewerPrintHost({
 }: ViewerPrintHostProps) {
   const { t } = useTranslation();
   const { provides: print } = usePrintCapability();
-  const { registerBridge, exportActions } = useViewer();
+  const { registerBridge, exportActions, activeFileId } = useViewer();
   const documentReady = useDocumentReady();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -78,7 +78,9 @@ export function ViewerPrintHost({
   }, [documentReady, registerBridge, canPrint]);
 
   // A document swap or an unmount makes any in-flight job stale: the bytes it
-  // is about to hand to the printer belong to a document no longer open.
+  // is about to hand to the printer belong to a document no longer open. The
+  // active document's identity is what separates them, since two documents can
+  // arrive under the same name.
   useEffect(
     () => () => {
       jobRef.current?.controller.abort();
@@ -87,7 +89,7 @@ export function ViewerPrintHost({
       // busy state the dropped job set.
       setBusy(false);
     },
-    [fileName],
+    [activeFileId],
   );
 
   const handleClose = useCallback(() => {
@@ -141,7 +143,11 @@ export function ViewerPrintHost({
         const source = new File([buffer], name, { type: "application/pdf" });
 
         if (job.kind === "viewer") {
-          await printPdfBlob(source, printFileName(name));
+          await printPdfBlob(
+            source,
+            printFileName(name),
+            handle.controller.signal,
+          );
         } else {
           const formData = objectToFormData(job.request, { fileInput: source });
           const response = await apiClient.post<Blob>(job.endpoint, formData, {
@@ -154,7 +160,11 @@ export function ViewerPrintHost({
           if (response.data.size === 0) {
             throw new Error(t("viewer.print.emptyOutput"));
           }
-          await printPdfBlob(response.data, printFileName(name, job.suffix));
+          await printPdfBlob(
+            response.data,
+            printFileName(name, job.suffix),
+            handle.controller.signal,
+          );
         }
 
         if (!ownsJob()) {
@@ -187,6 +197,7 @@ export function ViewerPrintHost({
       busy={busy}
       error={error}
       fileName={fileName ?? null}
+      documentId={activeFileId}
       systemPrintDialog={systemPrintDialog}
       canPrint={canPrint}
     />
