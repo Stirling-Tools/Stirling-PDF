@@ -12583,10 +12583,39 @@
       "artifact_id": 12039098649,
       "artifact_name": "cache-untrusted-pr-8307-valid-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--7e6715c7c332d06c02ec056464d08e8aa9bc4a0d749f07ed8-part-000000",
       "workflow_run_id": 38883434118
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-frontend-dist/windows-x64/96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-cache-e1b7946154cca207/v6": {
+      "object": "sha256:8daa8567e598b46a41048ed8e2d95110b3e29ece1dabd5ceb547b66707ae0c2a",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-16T10:11:18.803Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 29709824,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:a522f7644b127f3621fd436bcd18ff4f93c255815c575e833d2dc411413c84d3",
+          "size": 25165824,
+          "artifact_id": 12039672207,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-windows-x64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1da-part-000000",
+          "workflow_run_id": 38883434118
+        },
+        {
+          "index": 1,
+          "object": "sha256:6d4338e9c025f1afd1b999125327b23a2f82604cfa17c10fa9fa6a5373dcd977",
+          "size": 4544000,
+          "artifact_id": 12039617333,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-windows-x64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1da-part-000001",
+          "workflow_run_id": 38883434118
+        }
+      ],
+      "artifact_id": 12039672207,
+      "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-windows-x64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1da-part-000000",
+      "workflow_run_id": 38883434118
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-16T09:32:33.411Z",
-    "writes": 36
+    "writes": 37
   }
 }
