@@ -167,12 +167,17 @@ jobs:
 
   frontend-validation:
     if: needs.files-changed.outputs.frontend == 'true' && false
-    needs: [files-changed]
+    needs: [files-changed, files-hash]
     permissions:
       contents: read
       pull-requests: write
     uses: ./.github/workflows/frontend-validation.yml
     secrets: inherit
+    with:
+      frontend-dist-hash: ${{ needs.files-hash.outputs.frontend_dist_files_hash }}
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
+      cargo-hash: ${{ needs.files-hash.outputs.cargo_files_hash }}
+      npm-hash: ${{ needs.files-hash.outputs.npm_files_hash }}
 
   # Required (in all-checks-passed). Scans the stories a branch touches in both
   # light and dark; an axe violation in either theme blocks the merge. The
@@ -227,11 +232,6 @@ jobs:
     secrets: inherit
     with:
       use_shared_cache: true
-      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
-      frontend-dist-hash: ${{ needs.files-hash.outputs.frontend_dist_files_hash }}
-      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
-      cargo-hash: ${{ needs.files-hash.outputs.cargo_files_hash }}
-      npm-hash: ${{ needs.files-hash.outputs.npm_files_hash }}
 
   check-licence:
     if: |

@@ -1,38 +1,95 @@
 name: Frontend lint, type-check, and build
 
 # Reusable workflow called from build.yml when frontend / testing sources
-# change. Runs `task frontend:check:all` and uploads the 
+# change. Runs `task frontend:check:all` and uploads the
 # coverage + dist artifacts for downstream jobs.
 on:
   workflow_call:
+    inputs:
+      frontend-dist-hash:
+        required: true
+        type: string
+      uv-hash:
+        required: true
+        type: string
+      npm-hash:
+        required: true
+        type: string
+      cargo-hash:
+        required: true
+        type: string
 
 permissions:
   contents: read
   pull-requests: write
 
+env:
+  UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
+  UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
+  NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
+  CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+
 jobs:
   frontend-validation:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
+
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+
+      - name: Restore cache artifact
+        id: cache
+        uses: ./.github/actions/cache-the-planet
         with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
+          multi-cache: |
+            cargo-registry:
+              path: .cache/cargo/registry
+            cargo-git:
+              path: .cache/cargo/git
+            cargo-bin:
+              path: .cache/cargo/bin
+            frontend-dist:
+              path: frontend/editor/dist
+            frontend-node-modules:
+              path: frontend/node_modules
+            npm-cache:
+              path: .cache/npm
+            tauri-target:
+              path: frontend/editor/src-tauri/target
+            frontend-setup-uv-cache:
+              path: .cache/setup-uv-cache
+            frontend-uv-python-dir:
+              path: .cache/uv-python-dir
+          key: |
+            cargo-registry=${{ inputs.cargo-hash }}
+            cargo-git=${{ inputs.cargo-hash }}
+            cargo-bin=${{ inputs.cargo-hash }}
+            npm-cache=${{ inputs.npm-hash }}
+            frontend-dist=${{ inputs.frontend-dist-hash }}
+            frontend-node-modules=${{ inputs.npm-hash }}
+            tauri-target=${{ inputs.frontend-dist-hash }}
+            frontend-setup-uv-cache=${{ inputs.uv-hash }}
+            frontend-uv-python-dir=${{ inputs.uv-hash }}
+          exclude: |
+            frontend/editor/src-tauri/target/debug/**
+
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+
       - name: Quality-check frontend
         id: frontend-check
         run: task frontend:check:all
         continue-on-error: true
+
       - name: Comment on frontend check failure
         # Only post a comment on PRs. github-script's PR helpers need an
         # issue/PR number, which doesn't exist on merge_group runs.
@@ -71,6 +128,7 @@ jobs:
                 body,
               });
             }
+
       - name: Fail if frontend check failed
         if: steps.frontend-check.outcome == 'failure'
         run: |
@@ -86,6 +144,7 @@ jobs:
           echo "to see what still needs fixing manually."
           echo "============================================"
           exit 1
+
       - name: Remove frontend check comment on success
         if: steps.frontend-check.outcome == 'success' && github.event_name == 'pull_request'
         continue-on-error: true
@@ -106,14 +165,17 @@ jobs:
                 comment_id: existing.id,
               });
             }
+
       - name: Install uv
         if: always()
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          enable-cache: true
+          enable-cache: false
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
+          cache-local-path: .cache/setup-uv-cache
+
       - name: Vitest coverage step summary
         if: always()
         run: |
@@ -121,6 +183,7 @@ jobs:
             --title "Frontend Vitest coverage" \
             --vitest frontend/editor/coverage/coverage-summary.json \
             --github-step-summary
+
       - name: Upload vitest coverage report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -129,6 +192,7 @@ jobs:
           path: frontend/editor/coverage/
           retention-days: 7
           if-no-files-found: warn
+
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

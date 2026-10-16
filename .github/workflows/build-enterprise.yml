@@ -20,25 +20,6 @@ on:
         required: false
         type: boolean
         default: false
-      gradle-hash:
-        required: true
-        type: string
-      java-version:
-        required: false
-        default: '25'
-        type: string
-      uv-hash:
-        required: true
-        type: string
-      cargo-hash:
-        required: true
-        type: string
-      frontend-dist-hash:
-        required: true
-        type: string
-      npm-hash:
-        required: true
-        type: string
   push:
     branches: ["main"]
   schedule:
@@ -57,21 +38,81 @@ permissions:
   contents: read
 
 env:
-  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
+  JAVA_VERSION: 25
   UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
   UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
   NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
   CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
+  GRADLE_FILES_TO_HASH: |
+    gradle/wrapper/gradle-wrapper.properties
+    gradle/libs.versions.toml
+    buildSrc/**
+    settings.gradle
+    build.gradle
+    app/**/build.gradle
+    gradle/**/*.gradle
+  CARGO_FILES_TO_HASH: |
+    frontend/editor/src-tauri/**
+    frontend/editor/src-tauri/Cargo.toml
+    frontend/editor/src-tauri/Cargo.lock
+  FRONTEND_DIST_FILES_TO_HASH: |
+    frontend/editor/src/**
+  UV_FILES_TO_HASH: |
+    engine/.python-version
+    engine/pyproject.toml
+    engine/uv.lock
 
 jobs:
   pick:
     uses: ./.github/workflows/_runner-pick.yml
 
+  hash_pr:
+    name: Hash files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      java_version: ${{ steps.hash.outputs.java_version }}
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
+      cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash}}
+      frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
+      frontend_tauri_files_hash: ${{ steps.hash.outputs.frontend_tauri_files_hash }}
+      uv_files_hash: ${{ steps.hash.outputs.uv_files_hash }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Hash Gradle and Cargo files
+        id: hash
+        env:
+          GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+          CARGO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+          FRONTEND_DIST_HASH: ${{ hashFiles(env.FRONTEND_DIST_FILES_TO_HASH) }}
+          FRONTEND_TAURI_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+          UV_HASH: ${{ hashFiles(env.UV_FILES_TO_HASH) }}
+        shell: bash
+        run: |
+          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
+          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
+          echo "cargo_files_hash=$CARGO_HASH" >> "$GITHUB_OUTPUT"
+          echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"
+          echo "frontend_tauri_files_hash=$FRONTEND_TAURI_HASH" >> "$GITHUB_OUTPUT"
+          echo "uv_files_hash=$UV_HASH" >> "$GITHUB_OUTPUT"
+
   playwright-e2e-enterprise:
     environment:
       name: ci-unsigned
       deployment: false
-    needs: pick
+    needs: [pick, hash_pr]
     # Skip on fork PRs / untrusted authors: they have no PREMIUM_KEY_ENTERPRISE,
     # so the suite can't boot premium and would fail. See the header comment.
     # GitHub reports the skipped reusable workflow as success.
@@ -119,9 +160,9 @@ jobs:
             npm-cache:
               path: .cache/npm
             gradle-caches:
-              path: .cache/gradle-java-${{ inputs.java-version }}/caches
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
-              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
             tauri-target:
               path: frontend/editor/src-tauri/target
             enterprise-setup-uv-cache:
@@ -129,22 +170,24 @@ jobs:
             enterprise-uv-python-dir:
               path: .cache/uv-python-dir
           key: |
-            gradle-caches=${{ inputs.gradle-hash }}
-            gradle-wrapper=${{ inputs.gradle-hash }}
-            cargo-registry=${{ inputs.cargo-hash }}
-            cargo-git=${{ inputs.cargo-hash }}
-            cargo-bin=${{ inputs.cargo-hash }}
-            npm-cache=${{ inputs.npm-hash }}
-            frontend-dist=${{ inputs.frontend-dist-hash }}
-            frontend-node-modules=${{ inputs.npm-hash }}
-            tauri-target=${{ inputs.frontend-dist-hash }}
-            enterprise-setup-uv-cache=${{ inputs.uv-hash }}
-            enterprise-uv-python-dir=${{ inputs.uv-hash }}
+            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
+            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            tauri-target=${{ hashFiles('frontend/package-lock.json') }}
+            enterprise-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
+            enterprise-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
+          exclude: |
+            frontend/editor/src-tauri/target/debug/**
 
-      - name: Set up JDK ${{ inputs.java-version }}
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: ./trusted-java-action/.github/actions/java
         with:
-          java-version: ${{ inputs.java-version }}
+          java-version: ${{ env.JAVA_VERSION }}
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
@@ -405,7 +448,7 @@ jobs:
     environment:
       name: ci-unsigned
       deployment: false
-    needs: [pick, playwright-e2e-enterprise]
+    needs: [pick, playwright-e2e-enterprise, hash_pr]
     # Nightly cron + manual dispatch only (heavy build), fork-gated for the licence secret.
     if: >-
       always() && needs.pick.outputs.is_fork != 'true'
@@ -455,9 +498,9 @@ jobs:
             npm-cache:
               path: .cache/npm
             gradle-caches:
-              path: .cache/gradle-java-${{ inputs.java-version }}/caches
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
-              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
             tauri-target:
               path: frontend/editor/src-tauri/target
             enterprise-setup-uv-cache:
@@ -465,17 +508,17 @@ jobs:
             enterprise-uv-python-dir:
               path: .cache/uv-python-dir
           key: |
-            gradle-caches=${{ inputs.gradle-hash }}
-            gradle-wrapper=${{ inputs.gradle-hash }}
-            cargo-registry=${{ inputs.cargo-hash }}
-            cargo-git=${{ inputs.cargo-hash }}
-            cargo-bin=${{ inputs.cargo-hash }}
-            npm-cache=${{ inputs.npm-hash }}
-            frontend-dist=${{ inputs.frontend-dist-hash }}
-            frontend-node-modules=${{ inputs.npm-hash }}
-            tauri-target=${{ inputs.frontend-dist-hash }}
-            enterprise-setup-uv-cache=${{ inputs.uv-hash }}
-            enterprise-uv-python-dir=${{ inputs.uv-hash }}
+            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            frontend-dist=${{ hashFiles('frontend/package-lock.json') }}
+            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            tauri-target=${{ hashFiles('frontend/package-lock.json') }}
+            enterprise-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
+            enterprise-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
