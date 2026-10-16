@@ -232,8 +232,6 @@ jobs:
               path: .cache/cargo/registry
             tauri-frontend-dist:
               path: frontend/editor/dist
-            tauri-frontend-node-modules:
-              path: frontend/node_modules
             tauri-npm-cache:
               path: .cache/npm
             tauri-gradle-caches:
@@ -251,7 +249,6 @@ jobs:
             tauri-cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
             tauri-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             tauri-frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
-            tauri-frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
             tauri-build-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           exclude: |
             frontend/editor/src-tauri/target/debug/**
@@ -845,8 +842,6 @@ jobs:
           multi-cache: |
             test-cargo-registry:
               path: .cache/cargo/registry
-            test-frontend-node-modules:
-              path: frontend/node_modules
             test-npm-cache:
               path: .cache/npm
             test-gradle-caches:
@@ -863,7 +858,6 @@ jobs:
             test-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             test-cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
             test-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
-            test-frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
             test-tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           exclude: |
             frontend/editor/src-tauri/target/debug/**

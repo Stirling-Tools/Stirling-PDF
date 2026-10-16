@@ -66,8 +66,6 @@ jobs:
           multi-cache: |
             e2e-frontend-dist:
               path: frontend/editor/dist
-            e2e-frontend-node-modules:
-              path: frontend/node_modules
             e2e-npm-cache:
               path: .cache/npm
             e2e-gradle-caches:
@@ -86,7 +84,6 @@ jobs:
             e2e-gradle-wrapper=${{ inputs.gradle-hash }}
             e2e-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             e2e-frontend-dist=${{ inputs.frontend-dist-hash }}
-            e2e-frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
             e2e-live-setup-uv-cache=${{ inputs.uv-hash }}
             e2e-live-uv-python-dir=${{ inputs.uv-hash }}
           token: ${{ github.token }}

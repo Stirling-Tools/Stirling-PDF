@@ -59,8 +59,6 @@ jobs:
               path: .cache/cargo/bin
             valid-frontend-dist:
               path: frontend/editor/dist
-            valid-frontend-node-modules:
-              path: frontend/node_modules
             valid-npm-cache:
               path: .cache/npm
             valid-tauri-target:
@@ -75,7 +73,6 @@ jobs:
             valid-cargo-bin=${{ inputs.cargo-hash }}
             valid-npm-cache=${{ inputs.npm-hash }}
             valid-frontend-dist=${{ inputs.frontend-dist-hash }}
-            valid-frontend-node-modules=${{ inputs.npm-hash }}
             valid-tauri-target=${{ inputs.frontend-dist-hash }}
             valid-frontend-setup-uv-cache=${{ inputs.uv-hash }}
             valid-frontend-uv-python-dir=${{ inputs.uv-hash }}

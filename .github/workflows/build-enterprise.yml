@@ -150,8 +150,6 @@ jobs:
           multi-cache: |
             enterprise-frontend-dist:
               path: frontend/editor/dist
-            enterprise-frontend-node-modules:
-              path: frontend/node_modules
             enterprise-npm-cache:
               path: .cache/npm
             enterprise-gradle-caches:
@@ -166,7 +164,6 @@ jobs:
             enterprise-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             enterprise-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             enterprise-frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
-            enterprise-frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: ./trusted-java-action/.github/actions/java
@@ -477,8 +474,6 @@ jobs:
               path: .cache/cargo/bin
             enterprise-frontend-dist:
               path: frontend/editor/dist
-            enterprise-frontend-node-modules:
-              path: frontend/node_modules
             enterprise-npm-cache:
               path: .cache/npm
             enterprise-gradle-caches:
@@ -499,7 +494,6 @@ jobs:
             enterprise-cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
             enterprise-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             enterprise-frontend-dist=${{ hashFiles('frontend/package-lock.json') }}
-            enterprise-frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
             enterprise-tauri-target=${{ hashFiles('frontend/package-lock.json') }}
             enterprise-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
             enterprise-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}

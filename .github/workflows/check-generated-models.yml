@@ -101,8 +101,6 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            models-frontend-node-modules:
-              path: frontend/node_modules
             models-npm-cache:
               path: .cache/npm
             models-gradle-caches:
@@ -117,7 +115,6 @@ jobs:
             models-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             models-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             models-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
-            models-frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
             models-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
             models-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
 
