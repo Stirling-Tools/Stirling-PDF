@@ -23,6 +23,7 @@ import {
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { CloudBadge } from "@app/components/shared/CloudBadge";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
+import { toolEndpointPath } from "@app/constants/toolEndpoints";
 
 interface ToolButtonProps {
   id: ToolId;
@@ -77,9 +78,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   const fav = isFavorite(id);
 
   // Check if this tool will route to SaaS backend (desktop only)
-  const rawEndpoint = tool.operationConfig?.endpoint;
-  const endpointString =
-    typeof rawEndpoint === "string" ? rawEndpoint : undefined;
+  const endpointString = toolEndpointPath(tool.endpoints?.[0]);
   const usesCloud = useWillUseCloud(endpointString);
 
   const handleClick = (id: ToolId) => {

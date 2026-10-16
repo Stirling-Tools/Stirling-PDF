@@ -4,12 +4,12 @@ import {
   useToolOperation,
 } from "@app/hooks/tools/shared/useToolOperation";
 import { executeAutomationSequence } from "@app/utils/automationExecutor";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { useOperationConfigCatalog } from "@app/data/toolOperationConfigs";
 import type { AutomateParameters } from "@app/types/automation";
 
 /** Server execution includes metering; a second browser meter would charge the same run twice. */
 export function useAutomateOperation() {
-  const { allTools } = useToolRegistry();
+  const { allTools } = useOperationConfigCatalog();
   const customProcessor = useCallback(
     async (params: AutomateParameters, files: File[]) => {
       if (!params.automationConfig)

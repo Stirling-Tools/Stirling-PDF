@@ -10,6 +10,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
+import { withOperationConfigs } from "@app/data/toolOperationConfigs";
 import { getExecutableTools } from "@app/hooks/tools/shared/toolAutomation";
 import { isToolEndpoint } from "@app/hooks/tools/shared/toolApiMapping";
 import { TOOL_IO } from "@app/types/toolIO";
@@ -34,8 +35,9 @@ describe("classify as a pipeline task", () => {
 
   test("the builder offers it as a step", () => {
     const { result } = renderHook(() => useTranslatedToolCatalog());
+    const regularTools = withOperationConfigs(result.current.regularTools);
 
-    const executable = getExecutableTools(result.current.regularTools);
+    const executable = getExecutableTools(regularTools);
     const classify = executable.find((tool) => tool.toolId === "classify");
 
     expect(classify).toBeDefined();
@@ -66,8 +68,9 @@ describe("classify as a pipeline task", () => {
 
   test("it does not re-classify by default", () => {
     const { result } = renderHook(() => useTranslatedToolCatalog());
+    const regularTools = withOperationConfigs(result.current.regularTools);
 
-    const config = result.current.regularTools.classify?.operationConfig;
+    const config = regularTools.classify?.operationConfig;
 
     // The step is idempotent unless asked otherwise: a second run on a classified document
     // would be a second engine call, and a second charge, for the same answer.
