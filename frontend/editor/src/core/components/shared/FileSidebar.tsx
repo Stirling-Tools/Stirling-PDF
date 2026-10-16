@@ -1,4 +1,6 @@
 import React, {
+  Suspense,
+  lazy,
   useState,
   useCallback,
   useMemo,
@@ -65,9 +67,6 @@ import { useBulkAddProgress } from "@app/services/bulkAddProgress";
 import { useIsScrolled } from "@app/hooks/useIsScrolled";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { useCoalescedCallback } from "@app/hooks/useCoalescedCallback";
-import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
-import { useFilesPage } from "@app/contexts/FilesPageContext";
-import type { FolderId, FolderRecord } from "@app/types/folder";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 import { useWorkbenchFileDrop } from "@app/components/layout/useWorkbenchFileDrop";
 import "@app/components/shared/FileSidebar.css";
@@ -78,6 +77,14 @@ const SIDEBAR_WIDTH = "var(--sidebar-w)";
 // Stable empty props for rows without policies, so the memoized
 // FileItem isn't re-rendered by a fresh `?? []` identity on every list render.
 const NO_POLICIES: never[] = [];
+
+/**
+ * Mounts the folder tree, which only the Files workbench shows. Loading it here
+ * and not with the sidebar keeps the files-page machinery off the startup path.
+ */
+const FileSidebarFolderTree = lazy(
+  () => import("@app/components/shared/FileSidebarFolderTree"),
+);
 
 /** Show pre-dispatch progress only for large drops; small imports finish before it paints. */
 const BULK_ADD_INDICATOR_MIN = 8;
@@ -128,30 +135,6 @@ function BulkAddProgressRow() {
           }}
         />
       </div>
-    </div>
-  );
-}
-
-/** Isolates library-state subscriptions from the sidebar used by every workspace. */
-function FolderTreeSection() {
-  const filesPage = useFilesPage();
-  return (
-    <div className="file-sidebar-folders-section sidebar-content-fade">
-      <FolderTreeSidebar
-        fileCounts={filesPage.fileCountsByFolder}
-        onRequestNewFolder={filesPage.openNewFolderDialog}
-        onRenameFolder={(folder: FolderRecord) =>
-          filesPage.openRenameFolderDialog(folder)
-        }
-        onDeleteFolder={filesPage.promptDeleteFolder}
-        onMoveFilesIntoFolder={async (
-          targetId: FolderId | null,
-          fileIds: FileId[],
-        ) => {
-          if (fileIds.length === 0) return;
-          await filesPage.moveFilesTo(fileIds, targetId);
-        }}
-      />
     </div>
   );
 }
@@ -1168,7 +1151,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           <NavSurface className="file-sidebar-files-box">
             <div className="file-sidebar-scroll">
               {currentWorkbench === "myFiles" ? (
-                <FolderTreeSection />
+                <Suspense fallback={null}>
+                  <FileSidebarFolderTree />
+                </Suspense>
               ) : (
                 <FileLibrarySection
                   loaded={stubsLoaded}
