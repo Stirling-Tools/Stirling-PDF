@@ -8,8 +8,8 @@ function normalizeText(text: string): string {
       .normalize("NFD")
       .replace(/\p{Diacritic}+/gu, "")
       // Punctuation reads as a space, so "pdf/a", "pdf-a" and "pdf a" agree.
-    // Combining marks stay: in scripts like Devanagari and Thai they are part
-    // of the word, and dropping them would split it.
+      // Combining marks stay: in scripts like Devanagari and Thai they are part
+      // of the word, and dropping them would split it.
       .replace(/[^\p{L}\p{M}\p{N}]+/gu, " ")
       .trim()
   );
@@ -132,6 +132,12 @@ function bestTokenTier(queryToken: string, targetTokens: string[]): number {
  */
 function contentTokens(query: string): string[] {
   return tokenize(query).filter((token) => !STOPWORDS.has(token));
+}
+
+/** True when every word of the query is filler ("pdf", "pdf to", "pdf/a"). */
+export function isFillerOnlyQuery(query: string): boolean {
+  const normalized = normalizeText(query);
+  return normalized.length > 0 && contentTokens(normalized).length === 0;
 }
 
 /** Score for a query whose every content word matched, from the mean tier. */

@@ -24,11 +24,17 @@ import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { detectFileExtension } from "@app/utils/fileUtils";
 import { openExternalUrl } from "@app/utils/safeNavigation";
-import { rankByFuzzy, FUZZY_MIN_SCORE } from "@app/utils/fuzzySearch";
+import {
+  rankByFuzzy,
+  FUZZY_MIN_SCORE,
+  isFillerOnlyQuery,
+} from "@app/utils/fuzzySearch";
 import { TOOL_SEARCH_FIELDS } from "@app/utils/toolSearch";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { ToolId } from "@app/types/toolId";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+import type { ToolRegistry, ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+import { TOOL_SUBTOOLS, type ToolSubtool } from "@app/data/toolSubtools";
+import { useConversionAvailability } from "@app/hooks/tools/convert/useConversionAvailability";
 import {
   useToolSearchAccess,
   type ToolSearchAccess,
@@ -339,6 +345,89 @@ export function rankToolResults(
     });
 }
 
+/** Most subtools shown per tool, so one tool's many presets can't crowd the group. */
+const SUBTOOLS_PER_TOOL = 3;
+
+/**
+ * Subtools ("Convert PDF to PNG") for the query. One is offered only when it
+ * answers the query better than its tool does, so "convert" lists Convert
+ * alone while "png", "pdf to word" or "pdf/a-2b" reach the specific preset.
+ * A subtool inherits its tool's access (hidden or disabled with it), then
+ * its own: `subtoolAccess` says whether that preset itself can run.
+ */
+export function rankSubtoolResults(
+  subtools: readonly ToolSubtool[],
+  registry: Partial<ToolRegistry>,
+  trimmed: string,
+  t: TFunction,
+  openTool: (id: ToolId, access: ToolSearchAccess, preset?: string) => void,
+  access: ToolSearchAccessResolver,
+  subtoolAccess: (subtool: ToolSubtool) => ToolSearchAccess,
+): SuperSearchResult[] {
+  if (!trimmed) return [];
+  const parentScores = new Map<ToolId, number>();
+  const parentScore = (id: ToolId, tool: ToolRegistryEntry) => {
+    let score = parentScores.get(id);
+    if (score === undefined) {
+      score =
+        rankByFuzzy([[id, tool] as const], trimmed, TOOL_SEARCH_FIELDS)[0]
+          ?.score ?? 0;
+      parentScores.set(id, score);
+    }
+    return score;
+  };
+
+  const candidates = subtools.flatMap((subtool) => {
+    const tool = registry[subtool.toolId];
+    if (!tool) return [];
+    const toolAccess = access(subtool.toolId, tool);
+    if (toolAccess.kind === "hidden") return [];
+    const ownAccess = subtoolAccess(subtool);
+    if (ownAccess.kind === "hidden") return [];
+    const combined =
+      toolAccess.kind === "disabled"
+        ? toolAccess
+        : ownAccess.kind === "disabled"
+          ? ownAccess
+          : toolAccess;
+    return [{ subtool, tool, title: subtool.title(t), access: combined }];
+  });
+
+  // A query of filler alone ("pdf") names no preset; only an exact term
+  // ("pdf/a") does, or every PDF conversion would match.
+  const minScore = isFillerOnlyQuery(trimmed) ? 100 : undefined;
+  const shownPerTool = new Map<ToolId, number>();
+  return rankByFuzzy(
+    candidates,
+    trimmed,
+    [(c) => c.title, (c) => c.subtool.terms],
+    minScore,
+  ).flatMap(({ item, score }) => {
+    const { subtool, tool, title, access: subtoolResultAccess } = item;
+    if (score <= parentScore(subtool.toolId, tool)) return [];
+    const shown = shownPerTool.get(subtool.toolId) ?? 0;
+    if (shown >= SUBTOOLS_PER_TOOL) return [];
+    shownPerTool.set(subtool.toolId, shown + 1);
+    const disabledReason =
+      subtoolResultAccess.kind === "disabled"
+        ? subtoolResultAccess.message
+        : undefined;
+    return [
+      {
+        key: `tool:${subtool.toolId}:${subtool.slug}`,
+        group: "tools",
+        title,
+        subtitle: disabledReason,
+        icon: tool.icon,
+        score,
+        disabledReason,
+        onSelect: () =>
+          openTool(subtool.toolId, subtoolResultAccess, subtool.slug),
+      },
+    ];
+  });
+}
+
 /** Whether the settings nav shows this section to the current session. */
 export function isSettingsSectionVisible(
   s: SettingsSectionEntry,
@@ -612,8 +701,32 @@ export function useSuperSearch(
   );
 
   const toolAccess = useToolSearchAccess(toolAvailability);
+  const conversions = useConversionAvailability();
+  // Conversion subtools follow Convert's own pickers: left out when those
+  // hide unavailable conversions, greyed when they grey them.
+  const subtoolAccess = useCallback(
+    (subtool: ToolSubtool): ToolSearchAccess => {
+      const { conversion } = subtool;
+      if (
+        !conversion ||
+        conversions.isConversionAvailable(conversion.from, conversion.to)
+      ) {
+        return { kind: "open" };
+      }
+      return conversions.hideUnavailableConversions
+        ? { kind: "hidden" }
+        : {
+            kind: "disabled",
+            message: t(
+              "superSearch.conversionUnavailable",
+              "Not available on this server",
+            ),
+          };
+    },
+    [conversions, t],
+  );
   const openTool = useCallback(
-    (id: ToolId, access: ToolSearchAccess) => {
+    (id: ToolId, access: ToolSearchAccess, preset?: string) => {
       if (access.kind === "disabled" || access.kind === "hidden") return;
       // Link tools have no in-editor UI — selecting one shows a "tool not
       // found" panel. Open their destination directly, matching how the
@@ -623,10 +736,11 @@ export function useSuperSearch(
         openExternalUrl(link);
         return;
       }
+      const options = preset ? { preset } : undefined;
       if (access.kind === "openForced") {
-        handleToolSelectForced(id);
+        handleToolSelectForced(id, options);
       } else {
-        handleToolSelect(id);
+        handleToolSelect(id, options);
       }
     },
     [handleToolSelect, handleToolSelectForced, toolRegistry],
@@ -687,7 +801,20 @@ export function useSuperSearch(
             )
           : [],
         tools: scopeEnabled("tools")
-          ? rankToolResults(toolRegistry, trimmed, openTool, toolAccess)
+          ? [
+              ...rankToolResults(toolRegistry, trimmed, openTool, toolAccess),
+              ...rankSubtoolResults(
+                TOOL_SUBTOOLS,
+                toolRegistry,
+                trimmed,
+                t,
+                openTool,
+                toolAccess,
+                subtoolAccess,
+              ),
+            ]
+              .sort((a, b) => b.score - a.score)
+              .slice(0, GROUP_RESULT_CEILING)
           : [],
         settings: scopeEnabled("settings")
           ? rankSettingsResults(trimmed, t, gates, openSettings)
@@ -728,6 +855,7 @@ export function useSuperSearch(
     toolRegistry,
     openTool,
     toolAccess,
+    subtoolAccess,
     gates,
     openSettings,
     selectProcessorEntry,

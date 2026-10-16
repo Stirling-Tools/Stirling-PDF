@@ -28,6 +28,10 @@ import {
   isBaseWorkbench,
 } from "@app/types/workbench";
 import { useNavigationUrlSync } from "@app/hooks/useUrlSync";
+import {
+  clearToolPresetRequest,
+  requestToolPreset,
+} from "@app/services/toolPresetRequests";
 import { stripBasePath } from "@app/constants/app";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
@@ -90,11 +94,11 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   resetTool: (toolId: string) => void;
 
   // Workflow Actions (compound actions)
-  handleToolSelect: (toolId: ToolId) => void;
+  handleToolSelect: (toolId: ToolId, options?: ToolSelectOptions) => void;
   /** Like handleToolSelect but bypasses the availability guard — use when you want to
    *  navigate to a tool's UI even if it's marked unavailable (e.g. to show a disabled
    *  execute button with a sign-in prompt rather than blocking navigation entirely). */
-  handleToolSelectForced: (toolId: ToolId) => void;
+  handleToolSelectForced: (toolId: ToolId, options?: ToolSelectOptions) => void;
   handleBackToTools: () => void;
   handleReaderToggle: () => void;
 
@@ -140,12 +144,18 @@ if (!existingContext) {
  *  - `useToolWorkflowActions()` — referentially-stable callbacks.
  *  - `useToolWorkflowData()` — tool registry, availability, favorites.
  */
+/** Extra intent carried with a tool selection. */
+export interface ToolSelectOptions {
+  /** Subtool preset slug to apply once the tool opens (see toolSubtools). */
+  preset?: string;
+}
+
 export interface ToolWorkflowActionsValue {
   selectTool: (toolId: ToolId | null) => void;
   clearToolSelection: () => void;
   toggleFavorite: (toolId: ToolId) => void;
-  handleToolSelect: (toolId: ToolId) => void;
-  handleToolSelectForced: (toolId: ToolId) => void;
+  handleToolSelect: (toolId: ToolId, options?: ToolSelectOptions) => void;
+  handleToolSelectForced: (toolId: ToolId, options?: ToolSelectOptions) => void;
   handleBackToTools: () => void;
   handleReaderToggle: () => void;
   setLeftPanelView: (view: "toolPicker" | "toolContent") => void;
@@ -451,7 +461,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback(
-    (toolId: ToolId) => {
+    (toolId: ToolId, options?: ToolSelectOptions) => {
       const availabilityInfo = toolAvailability[toolId];
       const isExplicitlyDisabled = availabilityInfo
         ? availabilityInfo.available === false
@@ -468,7 +478,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
         navigationState.selectedTool &&
         navigationState.selectedTool !== toolId
       ) {
-        actions.requestNavigation(() => handleToolSelectRef.current(toolId));
+        actions.requestNavigation(() =>
+          handleToolSelectRef.current(toolId, options),
+        );
         return;
       }
 
@@ -476,7 +488,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       const importPreview = previewImportRef.current;
       if (importPreview) {
         previewImportRef.current = null;
-        void importPreview().then(() => handleToolSelect(toolId));
+        void importPreview().then(() => handleToolSelect(toolId, options));
         return;
       }
 
@@ -511,6 +523,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
       // Set the selected tool and determine the appropriate workbench
       const validToolId = isValidToolId(toolId) ? toolId : null;
+      // Recorded only once the switch really happens, so a guard the user
+      // cancels drops the preset along with the switch.
+      if (validToolId && options?.preset) {
+        requestToolPreset(validToolId, options.preset);
+      }
       actions.setSelectedTool(validToolId);
 
       // Switch workbench only when required: leaving a custom view, or the tool declares one.
@@ -540,8 +557,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   );
 
   const handleToolSelectForced = useCallback(
-    (toolId: ToolId) => {
+    (toolId: ToolId, options?: ToolSelectOptions) => {
       const validToolId = isValidToolId(toolId) ? toolId : null;
+      if (validToolId && options?.preset) {
+        requestToolPreset(validToolId, options.preset);
+      }
       actions.setSelectedTool(validToolId);
       const tool = getSelectedTool(toolId);
       const wasInCustomWorkbench = !isBaseWorkbench(navigationState.workbench);
@@ -602,16 +622,24 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const handleToolSelectRef = useRef(handleToolSelect);
   handleToolSelectRef.current = handleToolSelect;
   const stableHandleToolSelect = useCallback(
-    (id: ToolId) => handleToolSelectRef.current(id),
+    (id: ToolId, options?: ToolSelectOptions) =>
+      handleToolSelectRef.current(id, options),
     [],
   );
 
   const handleToolSelectForcedRef = useRef(handleToolSelectForced);
   handleToolSelectForcedRef.current = handleToolSelectForced;
   const stableHandleToolSelectForced = useCallback(
-    (id: ToolId) => handleToolSelectForcedRef.current(id),
+    (id: ToolId, options?: ToolSelectOptions) =>
+      handleToolSelectForcedRef.current(id, options),
     [],
   );
+
+  // A preset waiting for a tool the user has since left would otherwise apply
+  // the next time they open that tool by hand.
+  useEffect(() => {
+    clearToolPresetRequest(navigationState.selectedTool);
+  }, [navigationState.selectedTool]);
 
   const handleBackToToolsRef = useRef(handleBackToTools);
   handleBackToToolsRef.current = handleBackToTools;

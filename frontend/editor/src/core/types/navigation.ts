@@ -15,4 +15,6 @@ export interface NavigationState {
 export interface ToolRoute {
   workbench: WorkbenchType;
   toolId: ToolId | null;
+  /** Subtool preset the address asks the tool to open with (see toolSubtools). */
+  preset?: string;
 }

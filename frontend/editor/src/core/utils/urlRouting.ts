@@ -10,7 +10,8 @@ import {
   getToolWorkbench,
   getToolUrlPath,
 } from "@app/data/toolsTaxonomy";
-import { URL_TO_TOOL_MAP } from "@app/utils/urlMapping";
+import { URL_TO_TOOL_MAP, URL_TO_PRESET_MAP } from "@app/utils/urlMapping";
+import { getToolSubtool } from "@app/data/toolSubtools";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 /**
@@ -26,6 +27,22 @@ export interface RouteLocation {
 }
 
 export function parseToolRoute(
+  registry: ToolRegistry,
+  location: RouteLocation,
+): ToolRoute {
+  const route = parseToolOnlyRoute(registry, location);
+  if (!route.toolId) return route;
+  // `?preset=` wins over a preset the alias path implies; a slug the tool
+  // doesn't have is ignored rather than carried.
+  const preset =
+    new URLSearchParams(location.search).get("preset") ??
+    URL_TO_PRESET_MAP[location.pathname];
+  return preset && getToolSubtool(route.toolId, preset)
+    ? { ...route, preset }
+    : route;
+}
+
+function parseToolOnlyRoute(
   registry: ToolRegistry,
   location: RouteLocation,
 ): ToolRoute {
@@ -77,8 +94,10 @@ export function parseToolRoute(
  */
 function routeTarget(path: string, from: RouteLocation): string | null {
   const searchParams = new URLSearchParams(from.search);
-  // The path names the tool, so the query form of it never survives a move.
+  // The path names the tool, so the query form of it never survives a move;
+  // a preset is applied once on arrival and must not ride onto the next tool.
   searchParams.delete("tool");
+  searchParams.delete("preset");
   const queryString = searchParams.toString();
   const search = queryString ? `?${queryString}` : "";
 
@@ -97,6 +116,11 @@ export function toolRoute(
     return null;
   }
   return routeTarget(getToolUrlPath(toolId), from);
+}
+
+/** The same address without its `?preset=`, or null when it has none. */
+export function presetFreeRoute(from: RouteLocation): string | null {
+  return routeTarget(from.pathname, from);
 }
 
 /** Where the address should move to with no tool open ("/" is the role router). */
