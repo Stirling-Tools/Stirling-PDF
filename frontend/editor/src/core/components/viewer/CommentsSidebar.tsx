@@ -317,6 +317,7 @@ function MoreActionsMenu({ children }: { children: ReactNode }) {
 
 interface CommentsHeaderActionsProps {
   readerMode: boolean;
+  readOnly: boolean;
   onAdd: () => void;
   onExportCsv: () => void;
   onClearAll: () => void;
@@ -324,6 +325,7 @@ interface CommentsHeaderActionsProps {
 
 function CommentsHeaderActions({
   readerMode,
+  readOnly,
   onAdd,
   onExportCsv,
   onClearAll,
@@ -354,13 +356,15 @@ function CommentsHeaderActions({
         >
           {t("viewer.comments.exportCsv", "Export as CSV")}
         </Menu.Item>
-        <Menu.Item
-          leftSection={<Icon name="trash" size={18} />}
-          color="red"
-          onClick={onClearAll}
-        >
-          {t("viewer.comments.clearAll", "Clear all comments")}
-        </Menu.Item>
+        {!readOnly && (
+          <Menu.Item
+            leftSection={<Icon name="trash" size={18} />}
+            color="red"
+            onClick={onClearAll}
+          >
+            {t("viewer.comments.clearAll", "Clear all comments")}
+          </Menu.Item>
+        )}
       </MoreActionsMenu>
     </Group>
   );
@@ -1546,9 +1550,10 @@ export function CommentsSidebar({
         onClose={toggleCommentsSidebar}
         closeLabel={t("viewer.comments.closeSidebar", "Close comments sidebar")}
         headerActions={
-          totalCount > 0 && !readOnly ? (
+          totalCount > 0 ? (
             <CommentsHeaderActions
               readerMode={readerMode || readOnly}
+              readOnly={readOnly}
               onAdd={handleAddComment}
               onExportCsv={handleExportCsv}
               onClearAll={() => setClearAllModalOpen(true)}
