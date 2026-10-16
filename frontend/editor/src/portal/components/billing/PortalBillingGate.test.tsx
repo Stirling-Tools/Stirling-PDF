@@ -93,9 +93,11 @@ vi.mock("@app/portal/hooks/useKeyLinked", () => ({
   useKeyLinked: () => keyLinked.is,
 }));
 vi.mock("@app/portal/components/billing/CloudManagedPlanView", () => ({
-  CloudManagedPlanView: ({ licenseSection }: { licenseSection?: ReactNode }) => (
-    <div data-testid="cloud-managed">{licenseSection}</div>
-  ),
+  CloudManagedPlanView: ({
+    licenseSection,
+  }: {
+    licenseSection?: ReactNode;
+  }) => <div data-testid="cloud-managed">{licenseSection}</div>,
 }));
 vi.mock("@app/portal/components/billing/FreeTierPlanView", () => ({
   FreeTierPlanView: ({ licenseSection }: { licenseSection?: ReactNode }) => (

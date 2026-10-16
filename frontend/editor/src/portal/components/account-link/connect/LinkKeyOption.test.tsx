@@ -11,7 +11,8 @@ vi.mock("@app/services/linkKey", async (original) => ({
 import { LinkKeyOption } from "@app/portal/components/account-link/connect/LinkKeyOption";
 import { LinkKeyError } from "@app/services/linkKey";
 
-const KEY = "stlk_AAAAAAAAAAAAAAAAAAAAAA.BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB";
+const KEY =
+  "stlk_AAAAAAAAAAAAAAAAAAAAAA.BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB";
 
 function mount(onLinked = vi.fn()) {
   render(
@@ -24,7 +25,9 @@ function mount(onLinked = vi.fn()) {
 
 function open() {
   fireEvent.click(
-    screen.getByRole("button", { name: "Have a link key from Stirling Cloud?" }),
+    screen.getByRole("button", {
+      name: "Have a link key from Stirling Cloud?",
+    }),
   );
   return screen.getByLabelText("Link key");
 }
@@ -52,7 +55,9 @@ describe("LinkKeyOption", () => {
     fireEvent.change(open(), {
       target: { value: "00000000-0000-0000-0000-000000000000" },
     });
-    expect(screen.getByText(/A license key goes under Usage & Billing/)).toBeVisible();
+    expect(
+      screen.getByText(/A license key goes under Usage & Billing/),
+    ).toBeVisible();
     expect(
       screen.getByRole("button", { name: "Connect with key" }),
     ).toBeDisabled();

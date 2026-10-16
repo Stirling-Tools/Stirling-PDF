@@ -42,6 +42,7 @@ public final class SaasSchemaOwnership {
     public static final Set<String> MIGRATION_OWNED =
             Set.of(
                     "account_link_connect_request",
+                    "account_link_key",
                     "ai_create_sessions",
                     "audit_events",
                     "authorities",
