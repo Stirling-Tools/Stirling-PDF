@@ -43,7 +43,7 @@ ext {
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.5.0"
     batikVersion = "1.19"
-    jpdfiumVersion = "1.1.5"
+    jpdfiumVersion = "1.1.6"
     tesseractJavacppVersion = "5.5.3-1.5.14"
     leptonicaJavacppVersion = "1.87.0-1.5.14"
     javacppVersion = "1.5.14"

@@ -1,3 +1,6 @@
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { pdfAllows } from "@app/services/pdfSessionUnlock";
+import { PdfPermissionFlag } from "@embedpdf/models";
 import React, {
   useCallback,
   useEffect,
@@ -234,7 +237,9 @@ export default function WorkbenchBar({
         const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
         if (!buffer) return;
         const fileToExport =
-          selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
+          activeFiles.find(
+            (file) => isStirlingFile(file) && file.fileId === activeFileId,
+          ) ?? activeFiles[0];
         if (!fileToExport) return;
         const stub = isStirlingFile(fileToExport)
           ? selectors.getStirlingFileStub(fileToExport.fileId)
@@ -326,6 +331,7 @@ export default function WorkbenchBar({
       currentView,
       selectedFiles,
       activeFiles,
+      activeFileId,
       viewerContext,
       viewFileActions,
       selectors,
@@ -333,6 +339,22 @@ export default function WorkbenchBar({
     ],
   );
 
+  const printAccess = usePdfAccess(activeFileId);
+  const canPrint =
+    pdfAllows(printAccess, PdfPermissionFlag.Print) &&
+    pdfAllows(printAccess, PdfPermissionFlag.PrintHighQuality);
+  const printDisabledReason =
+    printAccess?.encrypted && !canPrint
+      ? pdfAllows(printAccess, PdfPermissionFlag.Print)
+        ? t(
+            "encryptedPdfUnlock.lowQualityPrintUnsupported",
+            "This PDF allows low-quality printing only, which this viewer does not support.",
+          )
+        : t(
+            "encryptedPdfUnlock.printRestricted",
+            "Printing is restricted. Verify permissions in Manage protection.",
+          )
+      : undefined;
   const handlePrint = useCallback(() => {
     viewerContext?.printActions?.print?.();
   }, [viewerContext]);
@@ -397,7 +419,8 @@ export default function WorkbenchBar({
     downloadLabel: downloadTooltip,
     downloadIconName: icons.download,
     saveAsIconName: icons.saveAs,
-    onPrint: handlePrint,
+    onPrint: canPrint ? handlePrint : undefined,
+    printDisabledReason,
     onExport: handleExportAll,
     onClose: handleClose,
   };
