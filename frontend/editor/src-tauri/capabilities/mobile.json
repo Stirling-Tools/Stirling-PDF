@@ -104,6 +104,7 @@
     "dialog:allow-message",
     "dialog:allow-open",
     "dialog:allow-save",
+    "document-scanner:default",
     "opener:default",
     "shell:allow-open",
     "notification:allow-notify",

@@ -138,6 +138,9 @@ pub fn run() {
     .plugin(tauri_plugin_notification::init())
     .manage(AppConnectionState::default());
 
+  #[cfg(mobile)]
+  let builder = builder.plugin(tauri_plugin_document_scanner::init());
+
   // Desktop-only plugins: in-app updates (mobile uses the app stores), window
   // geometry persistence and single-instance / "open with" forwarding.
   #[cfg(desktop)]

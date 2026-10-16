@@ -9,6 +9,7 @@ import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { CreateProcessingFolderButton } from "@app/components/policies/CreateProcessingFolderButton";
+import { LandingExtraActions } from "@app/components/shared/LandingExtraActions";
 import { folderKind } from "@app/types/folder";
 
 type LandingActionsProps = {
@@ -56,6 +57,8 @@ export function LandingActions({
         </Button>
 
         <CreateProcessingFolderButton />
+
+        <LandingExtraActions />
 
         {config?.enableMobileScanner && !isMobile && (
           <Tooltip label={terminology.mobileUpload} position="bottom">
