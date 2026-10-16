@@ -121,15 +121,15 @@ jobs:
               path: frontend/node_modules
             npm-cache:
               path: .cache/npm
-            gradle-caches:
+            tool-models-gradle-caches:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
-            gradle-wrapper:
+            tool-models-gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
             tauri-target:
               path: frontend/editor/src-tauri/target
           key: |
-            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            tool-models-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            tool-models-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
