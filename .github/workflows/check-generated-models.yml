@@ -71,7 +71,7 @@ jobs:
         shell: bash
         run: |
           echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
-          echo "uv_files_hash=$UB_HASH" >> "$GITHUB_OUTPUT"
+          echo "uv_files_hash=$UV_HASH" >> "$GITHUB_OUTPUT"
           echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"
   generated-models:
     runs-on: ubuntu-latest
