@@ -291,12 +291,15 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     let log_dir = app_data_dir.join("logs");
     let work_dir = app_data_dir.clone();
     let legacy_work_dir = app_data_dir.join("workspace");
+    // OCR languages live in a writable folder so they can be added after install.
+    let tessdata_dir = app_data_dir.join("tessdata");
 
     // Create all necessary directories
     std::fs::create_dir_all(&app_data_dir).ok();
     std::fs::create_dir_all(&log_dir).ok();
     std::fs::create_dir_all(&work_dir).ok();
     std::fs::create_dir_all(&config_dir).ok();
+    std::fs::create_dir_all(&tessdata_dir).ok();
 
     // Migrate legacy workspace content into the app data root before launch.
     if legacy_work_dir.exists() {
@@ -315,6 +318,7 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     add_log(format!("📁 Log directory: {}", log_dir.display()));
     add_log(format!("📁 Working directory: {}", work_dir.display()));
     add_log(format!("📁 Config directory: {}", config_dir.display()));
+    add_log(format!("📁 OCR language directory: {}", tessdata_dir.display()));
 
     // Define all Java options with Tauri-specific paths
     let log_path_option = format!("-Dlogging.file.path={}", log_dir.display());
@@ -401,6 +405,7 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         .env("STIRLING_PDF_CONFIG_DIR", config_dir.to_str().unwrap())
         .env("STIRLING_PDF_LOG_DIR", log_dir.to_str().unwrap())
         .env("STIRLING_PDF_WORK_DIR", work_dir.to_str().unwrap())
+        .env("TESSDATA_PREFIX", tessdata_dir.to_str().unwrap())
         .env("STIRLING_PDF_SHUTDOWN_FILE", shutdown_file.to_str().unwrap());
 
     add_log("⚙️ Starting backend with bundled JRE...".to_string());

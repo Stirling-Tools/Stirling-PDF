@@ -42,6 +42,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
+import stirling.software.SPDF.service.ocr.NativeTesseractService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -65,6 +66,7 @@ class OCRControllerMoreTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private EndpointConfiguration endpointConfiguration;
     @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock private NativeTesseractService nativeTesseract;
 
     private TempFileManager tempFileManager;
     private ApplicationProperties applicationProperties;
@@ -94,7 +96,8 @@ class OCRControllerMoreTest {
                         pdfDocumentFactory,
                         tempFileManager,
                         endpointConfiguration,
-                        runtimePathConfig);
+                        runtimePathConfig,
+                        nativeTesseract);
     }
 
     /** Build a tiny single-page in-memory PDF as a MockMultipartFile. */
