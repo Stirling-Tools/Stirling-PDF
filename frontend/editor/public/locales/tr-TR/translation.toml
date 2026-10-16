@@ -169,7 +169,7 @@ signedInAs = "Olarak oturum açıldı: {{email}}"
 tags = "sayfalandır,etiket,düzenle,dizin"
 
 [addAttachments]
-tags = "göm,ekle,dahil et,ekler,dosya ekle,dosyaları göm,dosyaları dahil et,dosya ekle,dosya eki,ilişkili dosyalar,tamamlayıcı dosyalar"
+tags = "göm,ekle,dahil et,ekler,dosya ekle,dosya göm,dosya dahil et,dosya iliştir,ilişkili dosyalar,tamamlayıcı dosyalar"
 
 [addAttachments.error]
 failed = "PDF'ye ekler eklenirken bir hata oluştu."
@@ -204,7 +204,7 @@ colorPickerTitle = "Choose stroke colour"
 failed = "Resim PDF'e eklenirken bir hata oluştu."
 
 [addImage.image]
-hint = "PNG, JPEG, GIF, BMP, TIFF ve SVG dosyalarını destekler. SVG dosyaları gömme için PNG'ye dönüştürülür."
+hint = "PNG, JPEG, GIF, BMP, TIFF ve SVG dosyalarını destekler. SVG dosyaları, gömme işlemi için PNG'ye dönüştürülür."
 label = "Resim dosyası"
 name = "Resim"
 placeholder = "Bir resim yükleyin"
@@ -226,7 +226,7 @@ resume = "Yerleştirmeyi sürdür"
 title = "Resim Ekleme Sonuçları"
 
 [addImage.saved]
-defaultCanvasLabel = "Çizim imzası"
+defaultCanvasLabel = "Çizilmiş imza"
 defaultImageLabel = "Yüklenen resim"
 defaultLabel = "Resim"
 defaultTextLabel = "Yazılmış imza"
@@ -238,13 +238,13 @@ limitTitle = "Sınıra ulaşıldı"
 next = "Sonraki"
 personalHeading = "Kişisel İmzalar"
 prev = "Önceki"
-savePersonal = "Kişisel Kaydet"
-saveShared = "Paylaşılan Kaydet"
+savePersonal = "Kişisel Olarak Kaydet"
+saveShared = "Paylaşılan Olarak Kaydet"
 sharedHeading = "Paylaşılan İmzalar"
 
 [addImage.saved.type]
 canvas = "Çizim"
-image = "Yükle"
+image = "Yükleme"
 text = "Metin"
 
 [addImage.step]
@@ -264,8 +264,8 @@ placeholder = "Metin girin"
 
 [addImage.type]
 canvas = "Tuval"
-image = "Görüntü"
-saved = "Kaydedilmiş"
+image = "Görsel"
+saved = "Kaydedilen"
 text = "Metin"
 
 [addPageNumbers]
@@ -280,10 +280,10 @@ positionAndPages = "Konum ve Sayfalar"
 preview = "Konum Seçimi"
 previewDisclaimer = "Önizleme yaklaşıktır. Nihai çıktı PDF yazı tipi metrikleri nedeniyle değişebilir."
 submit = "Sayfa Numaraları Ekle"
-tags = "numara,sayfalama,say,sayfa numaraları ekle,sayfa numaralandırma,sayfa numaraları,altbilgi,üstbilgi,sayfaları numaralandır,sıralı,sayfalama aracı"
+tags = "numara,sayfalama,say,sayfa numarası ekle,sayfa numaralandırma,sayfa numaraları,alt bilgi,üst bilgi,sayfaları numaralandır,sıralı,sayfalama aracı"
 title = "Sayfa Numaraları Ekle"
 zeroPad = "Sıfırla Doldurma Genişliği (Bates Damgalama)"
-zeroPadTooltip = "Sayfa numaralarını bu genişliğe kadar sıfırla doldurun (Bates Damgası) (örn. 3 ⇒ 001). Devre dışı bırakmak için 0 ayarlayın."
+zeroPadTooltip = "Sayfa numaralarını bu genişliğe kadar başına sıfır ekleyerek doldurun (ör. 3 ⇒ 001). Devre dışı bırakmak için 0 olarak ayarlayın."
 
 [addPageNumbers.error]
 failed = "Sayfa numarası ekleme işlemi başarısız oldu"
@@ -300,7 +300,7 @@ title = "Sayfa Numarası Sonuçları"
 [addPassword]
 desc = "PDF belgenizi bir parola ile şifreleyin."
 submit = "Şifrele"
-tags = "şifrele,parola,kilitle,güvenli,koru,güvenlik,şifreleme,güvence,gizli,özel,erişimi kısıtla"
+tags = "şifrele,parola,kilitle,güvenli,koru,güvenlik,şifreleme,koruma,gizli,özel,erişimi kısıtla"
 title = "Parola Ekle"
 
 [addPassword.encryption.keyLength]
@@ -370,7 +370,7 @@ fontSize = "Yazı Tipi/Görüntü Boyutu"
 imageSize = "Görüntü Boyutu"
 margin = "Kenar Boşluğu"
 metadataDesc = "PDF belge özelliklerinden"
-metadataVars = "Belge Metadata"
+metadataVars = "Belge Meta Verileri"
 multiLine = "çok satırlı"
 noStampSelected = "Damga seçilmedi. 1. Adıma dönün."
 opacity = "Opaklık"
@@ -386,17 +386,17 @@ selectedImageAlt = "Seçilen damga görseli"
 selectTemplate = "Bir şablon seçin..."
 stampSetup = "Damga Ayarları"
 stampText = "Damga Metni"
-stampTextDescription = "Aşağıdaki dinamik değişkenleri kullanın. Gerçek @ için @@ kullanın. Yeni satırlar için \\n kullanın."
+stampTextDescription = "Aşağıdaki dinamik değişkenleri kullanın. Değişmez @ karakteri için @@, yeni satırlar için \\n kullanın."
 stampType = "Damga Türü"
 submit = "Damga Ekle"
 tags = "Damga, Görüntü ekle, Görüntüyü ortala, Filigran, PDF, Göm, Özelleştir"
 timeDesc = "Geçerli saat"
 title = "Damga PDF"
 totalPagesDesc = "Toplam sayfa sayısı"
-useTemplate = "Şablonu Kullan"
+useTemplate = "Şablon Kullan"
 uuidDesc = "Kısa benzersiz tanımlayıcı (8 karakter)"
-variablesHelp = "Damga metninize eklemek için herhangi bir değişkene tıklayın. Gerçek @ için @@ kullanın."
-yearMonthDayDesc = "Ayrı tarih parçaları"
+variablesHelp = "Damga metninize eklemek için herhangi bir değişkene tıklayın. Değişmez @ karakteri için @@ kullanın."
+yearMonthDayDesc = "Ayrı tarih bölümleri"
 
 [AddStampRequest.error]
 failed = "PDF'ye damga eklenirken bir hata oluştu."
@@ -406,15 +406,15 @@ title = "Damga Sonuçları"
 
 [AddStampRequest.template]
 custom = "Özel"
-dateHeader = "Tarih Üstbilgisi"
-doc-info = "Belge Bilgisi"
+dateHeader = "Tarih Üst Bilgisi"
+doc-info = "Belge Bilgileri"
 draft = "Taslak Filigranı"
 draftWatermark = "Taslak Filigranı"
-european-date = "Avrupa Tarihi (DD/MM/YYYY)"
+european-date = "Avrupa Tarihi (GG/AA/YYYY)"
 europeanDate = "Avrupa Tarihi"
-legal-footer = "Yasal Altbilgi"
+legal-footer = "Yasal Alt Bilgi"
 page-numbers = "Sayfa Numaraları"
-pageNumberFooter = "Sayfa Numarası Altbilgisi"
+pageNumberFooter = "Sayfa Numarası Alt Bilgisi"
 timestamp = "Zaman Damgası"
 
 [addText]
@@ -446,7 +446,7 @@ resume = "Yerleştirmeye devam et"
 title = "Metin Ekleme Sonuçları"
 
 [addText.saved]
-defaultCanvasLabel = "Çizim imzası"
+defaultCanvasLabel = "Çizilmiş imza"
 defaultImageLabel = "Yüklenmiş imza"
 defaultLabel = "İmza"
 defaultTextLabel = "Yazılmış imza"
@@ -458,13 +458,13 @@ limitTitle = "Sınıra ulaşıldı"
 next = "Sonraki"
 personalHeading = "Kişisel İmzalar"
 prev = "Önceki"
-savePersonal = "Kişisel Kaydet"
-saveShared = "Paylaşılan Kaydet"
+savePersonal = "Kişisel Olarak Kaydet"
+saveShared = "Paylaşılan Olarak Kaydet"
 sharedHeading = "Paylaşılan İmzalar"
 
 [addText.saved.type]
 canvas = "Çizim"
-image = "Yükle"
+image = "Yükleme"
 text = "Metin"
 
 [addText.step]
@@ -485,8 +485,8 @@ placeholder = "Ekleyeceğiniz metni girin"
 
 [addText.type]
 canvas = "Tuval"
-image = "Görüntü"
-saved = "Kaydedilmiş"
+image = "Görsel"
+saved = "Kaydedilen"
 text = "Metin"
 
 [adjust-contrast]
@@ -503,7 +503,7 @@ green = "Yeşil"
 noPreview = "Önizlemek için bir PDF seçin"
 red = "Kırmızı"
 saturation = "Doygunluk:"
-tags = "kontrast,parlaklık,doygunluk,renkleri ayarla,renk düzeltme,iyileştir,açıklaştır,koyulaştır,kaliteyi artır,renk dengesi,ton,canlılık"
+tags = "kontrast,parlaklık,doygunluk,renkleri ayarla,renk düzeltme,iyileştir,aydınlat,koyulaştır,kaliteyi artır,renk dengesi,renk tonu,canlılık"
 title = "Renkleri/Kontrastı Ayarla"
 
 [adjustContrast.error]
@@ -528,8 +528,8 @@ portrait = "Dikey"
 [adjustPageScale.pageSize]
 keep = "Orijinal Boyutu Koru"
 label = "Hedef Sayfa Boyutu"
-legal = "Legal"
-letter = "Letter"
+legal = "Legal kâğıt"
+letter = "Letter kâğıt"
 
 [adjustPageScale.scaleFactor]
 label = "Ölçek Faktörü"
@@ -746,7 +746,7 @@ title = "Belgeler ve RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "Engine'in kendi ortam kimlik bilgisini kullanmak için boş bırakın. Kendi barındırılan tek engine dağıtımları için geçerlidir."
-generic = "Embedding API anahtarı"
+generic = "Gömme API anahtarı"
 openai = "OpenAI API anahtarı"
 setPlaceholder = "Kaydedildi - geçerli key'i korumak için boş bırakın"
 voyageai = "VoyageAI API anahtarı"
@@ -757,7 +757,7 @@ label = "Embedding temel URL'si"
 
 [admin.settings.ai.documents.embeddingModel]
 description = "Embedding model adı. Serbest metin; öneriler yalnızca ipucudur."
-label = "Embedding modeli"
+label = "Gömme modeli"
 
 [admin.settings.ai.documents.embeddingProvider]
 description = "Belge metnini vektör embedding'lere dönüştürmek için kullanılan sağlayıcı."
@@ -776,13 +776,13 @@ reindexNote = "Embedding modelini değiştirdiyseniz, aramanın yeni modeli kull
 
 [admin.settings.ai.documents.topK]
 description = "Arama başına getirilen en alakalı parça sayısı."
-label = "Top K"
+label = "İlk K"
 
 [admin.settings.ai.general]
 connection = "Bağlantı"
 description = "AI'ın nerede çalışacağını seçin. Buradaki değişiklikler yeniden başlatmada uygulanır."
 restartNote = "URL veya herhangi bir zaman aşımı değişikliği, yeniden başlatmadan sonra etkili olur."
-title = "AI Motoru"
+title = "Yapay Zekâ Motoru"
 
 [admin.settings.ai.general.capabilities]
 description = "Tek tek AI özelliklerini açın veya kapatın. Devre dışı bırakılan özellikler uygulamada gizlenir."
@@ -1018,7 +1018,7 @@ mobileScannerStretchToFit = "Sığdırmak için esnet"
 mobileScannerStretchToFitDesc = "Görselleri tüm sayfayı dolduracak şekilde esnetir. Devre dışıysa görseller, en-boy oranı korunarak ortalanır."
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Koru (Orijinal Boyutlar)"
-pageFormatLetter = "Letter (8.5×11in)"
+pageFormatLetter = "Letter (8,5×11 inç)"
 title = "Bağlantılar"
 unlinkedServices = "Bağlı Olmayan Hizmetler"
 
@@ -1040,7 +1040,7 @@ mobileScannerStretchToFitDesc = "Görselleri tüm sayfayı dolduracak şekilde e
 note = "Not: Ön Uç URL'sinin yapılandırılması gerekir. "
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Koru (Orijinal Boyutlar)"
-pageFormatLetter = "Letter (8.5×11in)"
+pageFormatLetter = "Letter (8,5×11 inç)"
 
 [admin.settings.connections.oauth2]
 label = "OAuth2"
@@ -1324,15 +1324,15 @@ description = "İşlenen PDF’lerin çıktısının alındığı dizin (varsay�
 label = "Tamamlanan Klasörler Dizini"
 
 [admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Pipeline kaynakları için temel dizin (varsayılan için boş bırakın: /pipeline)"
-label = "Pipeline Dizini"
+description = "İşlem hattı kaynaklarının temel dizini (varsayılan /pipeline için boş bırakın)"
+label = "İşlem Hattı Dizini"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 description = "Ardışık düzenin gelen PDF’leri izlediği dizin (varsayılan için boş bırakın: /pipeline/watchedFolders)"
 label = "İzlenen Klasörler Dizini"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Pipeline'ın gelen PDF'ler için izlediği dizinler (satır başına bir tane veya virgülle ayrılmış; varsayılan için boş bırakın: /pipeline/watchedFolders)"
+description = "İşlem hattının gelen PDF'leri izlediği dizinler (satır veya virgülle ayrılmış; varsayılan /pipeline/watchedFolders için boş bırakın)"
 label = "İzlenen Klasör Dizinleri"
 
 [admin.settings.general.defaultLocale]
@@ -1478,70 +1478,70 @@ description = "SMTP kimlik doğrulama kullanıcı adı"
 label = "SMTP Kullanıcı Adı"
 
 [admin.settings.mcp]
-apikeyNote = "İstemciler X-API-KEY header'ında (veya Authorization: Bearer <key>) bir Stirling API key gönderir. Anahtar, sahibi olan Stirling kullanıcısıyla eşleşir; yalnızca sağlanmış hesaplar erişebilir ve işlemler o kullanıcı olarak denetlenir. Anahtarları Hesap > API Keys altında yönetin."
-description = "Stirling'in PDF araçlarını ve AI aracılarını OAuth korumalı bir endpoint üzerinden MCP istemcilerine sunun."
-title = "MCP Server"
+apikeyNote = "İstemciler, X-API-KEY üst bilgisinde (veya Authorization: Bearer <key> biçiminde) bir Stirling API anahtarı gönderir. Anahtar, sahibi olan Stirling kullanıcısıyla eşleştirilir; yalnızca tanımlanmış hesaplar erişebilir ve işlemler o kullanıcı adına denetlenir. Anahtarları Hesap > API Anahtarları bölümünden yönetin."
+description = "Stirling'in PDF araçlarını ve yapay zekâ ajanlarını OAuth korumalı bir uç nokta üzerinden MCP istemcilerine sunun."
+title = "MCP Sunucusu"
 
 [admin.settings.mcp.acceptedAudiences]
-description = "Resource ID dışında kabul edilen ek token audience değerleri (virgül veya boşlukla ayrılmış). Katı RFC 8707 için boş bırakın. Kaynak audience oluşturamayan IdP'ler için gereklidir; örn. Supabase'in OAuth sunucusu her zaman aud=authenticated verir."
-label = "Ek kabul edilen audience'lar (isteğe bağlı)"
+description = "Kaynak Kimliğine ek olarak kabul edilen belirteç hedef kitle değerleri (virgül veya boşlukla ayrılmış). Katı RFC 8707 uyumluluğu için boş bırakın. Kaynak hedef kitlesi oluşturamayan kimlik sağlayıcıları için gereklidir; örneğin Supabase OAuth sunucusu her zaman aud=authenticated üretir."
+label = "Kabul edilen ek hedef kitleler (isteğe bağlı)"
 
 [admin.settings.mcp.allowedOps]
-description = "Ayarlanırsa YALNIZCA bu operation id'leri sunulur (allow-list; virgül veya boşlukla ayrılmış). Aşağıda engellenenler hariç tüm etkin araçları sunmak için boş bırakın."
+description = "Ayarlanırsa YALNIZCA bu işlem kimlikleri sunulur (virgül veya boşlukla ayrılmış izin listesi). Aşağıda engellenenler dışında tüm etkin araçları sunmak için boş bırakın."
 label = "İzin verilen araçlar"
 
 [admin.settings.mcp.blockedOps]
-description = "MCP'den gizlenecek operation id'leri (virgül veya boşlukla ayrılmış), örn. add-password remove-password. Tüm etkin araçları sunmak için boş bırakın."
+description = "MCP'den gizlenecek işlem kimlikleri (virgül veya boşlukla ayrılmış), ör. add-password remove-password. Tüm etkin araçları sunmak için boş bırakın."
 label = "Engellenen araçlar"
 
 [admin.settings.mcp.enabled]
-description = "Kapalıyken (varsayılan), /mcp endpoint'i, metadata veya MCP bean'leri yüklenmez."
-label = "MCP Server'ı Etkinleştir"
+description = "Kapalıyken (varsayılan), /mcp uç noktası, meta veriler veya MCP bileşenleri yüklenmez."
+label = "MCP Sunucusunu Etkinleştir"
 
 [admin.settings.mcp.guide]
-step1 = "Yukarıya OAuth issuer + resource ID'nizi girin, Kaydedin ve yeniden başlatın."
-step1ApiKey = "Hesap > API Keys altında bir API key oluşturun (her kullanıcı kendi anahtarını kullanır)."
-step2 = "MCP istemcinize şunu ekleyin:"
-step2b = "server şurayı işaret edecek:"
-step3 = "İstemci OAuth'u otomatik olarak şuradan keşfeder:"
+step1 = "Yukarıya OAuth sağlayıcınızı ve kaynak kimliğini girin, kaydedin ve yeniden başlatın."
+step1ApiKey = "Hesap > API Anahtarları bölümünde bir API anahtarı oluşturun (her kullanıcı kendi anahtarını kullanır)."
+step2 = "MCP istemcinize şuraya işaret eden bir"
+step2b = "sunucu ekleyin:"
+step3 = "İstemci OAuth'u şuradan otomatik olarak keşfeder:"
 step3ApiKey = "Anahtarı bir"
-step3ApiKeyb = "header içinde gönderin (veya Authorization: Bearer <key>). OAuth veya metadata keşfi kullanılmaz."
-step4 = "Oturum açmayı onaylayın; istemci bir token ile yeniden dener. Araçlar gruplu görünür: convert, pages, misc, security, ai."
-step4ApiKey = "Araçlar gruplu görünür: convert, pages, misc, security, ai - ve her çağrı anahtar sahibinin adına denetlenir."
-tip = "İpucu: resource ID'yi IdP'nizde izin verilen audience olarak kaydedin. MCP Inspector ve Claude Desktop ile test edildi."
-tipApiKey = "İpucu: API-key modu harici IdP gerektirmez; self-host için en basitidir. Anahtar, sahibi olan Stirling kullanıcısıyla eşleşir."
+step3ApiKeyb = "üst bilgisinde gönderin (veya Authorization: Bearer <key>). OAuth veya meta veri keşfi kullanılmaz."
+step4 = "Oturum açmayı onaylayın; istemci bir belirteçle yeniden dener. Araçlar şu gruplarda görünür: dönüştürme, sayfalar, çeşitli, güvenlik, yapay zekâ."
+step4ApiKey = "Araçlar dönüştürme, sayfalar, çeşitli, güvenlik ve yapay zekâ gruplarında görünür; her çağrı anahtarın sahibi adına denetlenir."
+tip = "İpucu: Kaynak kimliğini, kimlik sağlayıcınızda izin verilen hedef kitle olarak kaydedin. MCP Inspector ve Claude Desktop ile test edilmiştir."
+tipApiKey = "İpucu: API anahtarı modu harici bir kimlik sağlayıcı gerektirmez ve kendi sunucunuzda barındırma için en basit seçenektir. Anahtar, sahibi olan Stirling kullanıcısıyla eşleştirilir."
 title = "Bir MCP istemcisi bağlayın"
 
 [admin.settings.mcp.issuerUri]
-description = "OAuth2 authorization server'ınız (/.well-known/openid-configuration yayınlamalıdır). Etkinleştirildiğinde zorunludur."
-label = "OAuth Veren URL"
+description = "OAuth2 yetkilendirme sunucunuz (/.well-known/openid-configuration yayımlamalıdır). Etkinleştirildiğinde gereklidir."
+label = "OAuth Sağlayıcı URL'si"
 
 [admin.settings.mcp.jwksUri]
-description = "Issuer'dan keşfetmek için boş bırakın. Yalnızca IdP'niz anahtarları standart olmayan bir URL'de sunuyorsa ayarlayın."
-label = "JWKS URL (isteğe bağlı)"
-placeholder = "Issuer'dan otomatik keşfedildi"
+description = "Sağlayıcıdan keşfedilmesi için boş bırakın. Yalnızca kimlik sağlayıcınız anahtarları standart olmayan bir URL'de sunuyorsa ayarlayın."
+label = "JWKS URL'si (isteğe bağlı)"
+placeholder = "Sağlayıcıdan otomatik keşfedilir"
 
 [admin.settings.mcp.mode]
-apikey = "API key (Stirling kullanıcı başına key)"
-description = "OAuth harici bir IdP gerektirir. API key, kullanıcı başına bir Stirling API key (X-API-KEY) kullanır; self-host için en basitidir."
+apikey = "API anahtarı (Stirling kullanıcı başına anahtar)"
+description = "OAuth harici bir kimlik sağlayıcı gerektirir. API anahtarı, kullanıcı başına bir Stirling API anahtarı (X-API-KEY) kullanır ve kendi sunucunuzda barındırma için en basit seçenektir."
 label = "Kimlik doğrulama modu"
-oauth = "OAuth 2.1 (harici IdP)"
+oauth = "OAuth 2.1 (harici kimlik sağlayıcı)"
 
 [admin.settings.mcp.requireAccount]
-description = "Yalnızca subject'i sağlanmış, etkin bir Stirling kullanıcısıyla eşleşen token'lara izin verin."
+description = "Yalnızca konusu tanımlanmış ve etkin bir Stirling kullanıcısıyla eşleşen belirteçlere izin verin."
 label = "Mevcut bir Stirling hesabı gerektir"
 
 [admin.settings.mcp.resourceId]
-description = "Bu sunucunun herkese açık /mcp URL'si. Token'lar bunu audience'larında listelemelidir (RFC 8707), aksi halde reddedilir."
-label = "Kaynak ID"
+description = "Bu sunucunun herkese açık /mcp URL'si. Belirteçler bunu hedef kitlelerinde (RFC 8707) listelemelidir; aksi takdirde reddedilir."
+label = "Kaynak Kimliği"
 
 [admin.settings.mcp.scopes]
-description = "Okuma işlemleri için mcp.tools.read, yazma/AI işlemleri için mcp.tools.write gerektir."
-label = "OAuth scope'larını zorunlu kıl"
+description = "Okuma işlemleri için mcp.tools.read, yazma/yapay zekâ işlemleri için mcp.tools.write kapsamını zorunlu tutun."
+label = "OAuth kapsamlarını zorunlu tut"
 
 [admin.settings.mcp.usernameClaim]
-description = "Bir Stirling kullanıcı adıyla eşleştirilen JWT claim'i (örn. sub, email, preferred_username)."
-label = "Kullanıcı adı claim'i"
+description = "Bir Stirling kullanıcı adıyla eşleştirilen JWT talebi (ör. sub, email, preferred_username)."
+label = "Kullanıcı adı talebi"
 
 [admin.settings.plan.noData]
 message = "Bu sunucu lisans hizmetine ulaşamadı. Yeniden deneyin veya lisans anahtarını kontrol edin."
@@ -1788,10 +1788,10 @@ title = "SSO/SAML ayarlarını mı arıyorsunuz?"
 
 [admin.settings.security.xFrameOptions]
 deny = "Reddet (Tüm çerçevelemeyi engeller)"
-description = "Uygulamanın iframe'lere gömülüp gömülemeyeceğini kontrol eder"
-disabled = "Devre dışı (X-Frame-Options header yok)"
+description = "Uygulamanın iframe'lere gömülüp gömülemeyeceğini denetler"
+disabled = "Devre dışı (X-Frame-Options üst bilgisi yok)"
 label = "X-Frame-Options"
-sameorigin = "Aynı Kaynak (Aynı domainden çerçevelemeye izin ver)"
+sameorigin = "Aynı Kaynak (Aynı etki alanından çerçevelemeye izin verir)"
 
 [admin.settings.storage]
 description = "Sunucu depolama ve paylaşım seçeneklerini kontrol edin."
@@ -1841,7 +1841,7 @@ placeholder = "Kullanıcı kimliği ekleyin ve enter'a basın"
 
 [admin.settings.telegram.botToken]
 description = "Telegram botunuz için BotFather tarafından sağlanan API token'ı."
-label = "Bot Token"
+label = "Bot Belirteci"
 
 [admin.settings.telegram.botUsername]
 description = "Telegram botunuzun herkese açık kullanıcı adı."
@@ -1957,7 +1957,7 @@ paragraph2 = "Stirling PDF’in büyümesine destek olmak ve kullanıcılarımı
 title = "Stirling PDF'yi daha iyi hale getirmeye yardımcı olmak ister misiniz?"
 
 [annotate]
-tags = "açıklama ekle,vurgula,çiz,işaretle,yorum,notlar,inceleme,redline,geri bildirim,işaretleme araçları,yapışkan notlar,şekiller,oklar,metin kutusu,serbest çizim"
+tags = "açıklama ekle,vurgula,çiz,işaretle,yorum,notlar,incele,düzeltme,geri bildirim,işaretleme araçları,yapışkan notlar,şekiller,oklar,metin kutusu,serbest çizim"
 
 [annotation]
 alignCenter = "Ortaya hizala"
@@ -2305,7 +2305,7 @@ importPartialSuccess_other = "{{count}} eşlenmemiş işlemle içe aktarıldı: 
 importSuccess = "İçe aktarılan otomasyon: {{name}}"
 invalidStep = "Geçersiz adım"
 reviewTitle = "Otomasyon Sonuçları"
-tags = "workflow,sıra,otomasyon,otomatikleştir,batch,batch işleme,pipeline,zincir,çok adımlı,yinelenen,zamanlanmış,otomatik,çoklu işlem,toplu işlemler"
+tags = "iş akışı,sıra,otomasyon,otomatikleştir,toplu işlem,toplu işleme,işlem hattı,zincir,çok adımlı,yinelenen,zamanlanmış,otomatik,birden çok işle,toplu operasyonlar"
 title = "Otomatikleştir"
 
 [automate.config]
@@ -2355,8 +2355,8 @@ label = "{{title}} için menüyü aç"
 [automate.importModal]
 cancel = "İptal"
 confirm = "İçe aktar"
-detectedAutomation = "Automate JSON"
-detectedFolderScan = "Klasör Tarama JSON"
+detectedAutomation = "Otomasyon JSON'u"
+detectedFolderScan = "Klasör Tarama JSON'u"
 dropHint = "JSON'u buraya bırakın ya da bir dosya seçmek için tıklayın"
 dropSubhint = "Automate ve Folder Scanning yapılandırmaları kabul edilir"
 dropzoneAriaLabel = "Bir otomasyon JSON dosyasını buraya bırakın"
@@ -2408,11 +2408,11 @@ secureWorkflowDesc = "JavaScript ve gömülü dosyalar gibi potansiyel olarak k�
 
 [autoRename]
 description = "Bu araç, PDF dosyalarını içeriklerine göre otomatik olarak yeniden adlandırır. Metinden en uygun başlığı bulmak için belgeyi analiz eder."
-tags = "otomatik algıla,başlığa dayalı,düzenle,yeniden etiketle,otomatik yeniden adlandır,akıllı yeniden adlandır,içeriğe göre yeniden adlandır,dosya adı,dosya adlandırma,başlığı algıla"
+tags = "otomatik algıla,üst bilgiye göre,düzenle,yeniden etiketle,otomatik yeniden adlandır,akıllı yeniden adlandır,içeriğe göre yeniden adlandır,dosya adı,dosya adlandırma,başlığı algıla"
 
 [autoRotate]
 submit = "Otomatik Döndür"
-tags = "otomatik döndür,yönlendirmeyi düzelt,baş aşağı,yan dönmüş,düzelt,yönlendir,yönlendirmeyi algıla,döndürmeyi düzelt,otomatik yönlendir,taranmış,OSD"
+tags = "otomatik döndür,yönü düzelt,baş aşağı,yana dönük,düzelt,yönlendir,yönü algıla,döndürmeyi düzelt,otomatik yönlendir,taranmış,OSD"
 
 [autoRotate.confidenceThreshold]
 title = "Güven eşiği"
@@ -2914,8 +2914,8 @@ certInvalidFallback = "Geçersiz sertifika"
 certNetworkError = "Sertifika doğrulanamadı"
 certValidating = "Sertifika doğrulanıyor..."
 certValidUntil = "Sertifika {{date}} tarihine kadar geçerli"
-description_one = "{{count}} görünür işaret hazır. İmzalamayı tamamlamak için bir sertifika seçin."
-description_other = "{{count}} görünür işaret hazır. İmzalamayı tamamlamak için bir sertifika seçin."
+description_one = "{{count}} imza yerleştirdiniz. İmzalamayı tamamlamak için sertifikanızı seçin."
+description_other = "{{count}} imza yerleştirdiniz. İmzalamayı tamamlamak için sertifikanızı seçin."
 description_zero = "Sertifikanız belgeyi görünür işaretler olmadan imzalayacak."
 details = "İmzalama ayrıntıları (isteğe bağlı)"
 format = "Sertifika formatı"
@@ -2986,7 +2986,7 @@ stepTitle = "Bu cihaz"
 failed = "İmzalar işlenirken bir hata oluştu."
 
 [certSign.format]
-pkcs11 = "USB Token"
+pkcs11 = "USB Belirteci"
 windowsStore = "Windows sertifika deposu"
 
 [certSign.hardware]
@@ -3066,7 +3066,7 @@ title = "Giriş Bilgilerini Değiştir"
 [changeMetadata]
 filenamePrefix = "meta_veri"
 submit = "Değiştir"
-tags = "düzenle,değiştir,güncelle,metadata,özellikler,belge özellikleri,yazar,başlık,konu,anahtar kelimeler,oluşturucu,üretici,bilgi,belge bilgisi,dosya özellikleri"
+tags = "düzenle,değiştir,güncelle,meta veri,özellikler,belge özellikleri,yazar,başlık,konu,anahtar kelimeler,oluşturan,üretici,bilgi,belge bilgileri,dosya özellikleri"
 
 [changeMetadata.advanced]
 title = "Gelişmiş Seçenekler"
@@ -3174,7 +3174,7 @@ unknown = "Bilinmiyor"
 [changePermissions]
 desc = "Belge kısıtlamalarını ve izinlerini değiştirin."
 submit = "İzinleri Değiştir"
-tags = "izinler,kısıtlamalar,haklar,erişim kontrolü,izin ver,reddet,yazdırma,kopyalama,düzenleme,izinleri değiştir,güvenlik ayarları,kullanıcı hakları"
+tags = "izinler,kısıtlamalar,haklar,erişim denetimi,izin ver,reddet,yazdırma,kopyalama,düzenleme,izinleri değiştir,güvenlik ayarları,kullanıcı hakları"
 title = "İzinleri Değiştir"
 
 [changePermissions.error]
@@ -3224,15 +3224,14 @@ text = "Belgeleriniz hakkında bir soru sorun veya PDF araçlarıyla ilgili yard
 
 [chat.fab]
 close = "Sohbeti kapat"
-open = "Stirling AI asistanını aç"
+open = "Stirling yapay zekâ asistanını aç"
 
 [chat.header]
 agentMenu = "Stirling ajan seçenekleri"
-assistant = "AI Asistanı"
 clearChat = "Sohbeti temizle"
 
 [chat.input]
-disclaimer = "AI hata yapabilir. Paylaşmadan önce çıktıyı doğruladığınızdan emin olun."
+disclaimer = "Yapay zekâ hata yapabilir. Paylaşmadan önce çıktıyı doğruladığınızdan emin olun."
 placeholder = "Ne yapmak istiyorsunuz?"
 send = "Mesaj gönder"
 
@@ -3247,7 +3246,7 @@ extracting_content = "Belgelerinizden içerik çıkarılıyor..."
 processing = "Çıkarılan içerik işleniyor..."
 ranForMinutes_one = "1 dakika çalıştı"
 ranForMinutes_other = "{{count}} dakika çalıştı"
-ranForMinutesSeconds = "{{minutes}} dk, {{seconds}} sn çalıştı"
+ranForMinutesSeconds = "{{minutes}} dk {{seconds}} sn çalıştı"
 ranForSeconds_one = "1 saniye çalıştı"
 ranForSeconds_other = "{{count}} saniye çalıştı"
 thinking = "Düşünüyor..."
@@ -3277,7 +3276,7 @@ need_clarification = "Lütfen isteğinizi netleştirir misiniz?"
 not_found = "İstenen bilgiyi bulamadım."
 processing = "İşleniyor ({{outcome}})..."
 unsupported_capability = "Desteklenmeyen özellik: {{capability}}"
-usage_limit_reached = "Kullanım sınırınıza ulaştınız. Devam etmek için plan seçeneklerinizi kontrol edin."
+usage_limit_reached = "Kullanım sınırınıza ulaştınız. Devam etmek için plan seçeneklerinizi inceleyin."
 
 [chat.toolsUsed]
 summary_one = "1 araç çalıştırıldı"
@@ -3298,7 +3297,7 @@ operations = "Operasyonlar"
 projects = "Projeler"
 property = "Mülk"
 reports = "Raporlar"
-sales = "Pazarlama"
+sales = "Satış"
 travel = "Seyahat"
 
 [classification.labels]
@@ -3355,7 +3354,7 @@ cover-letter = "Ön yazı"
 credit-note = "Alacak dekontu"
 customs-declaration = "Gümrük beyannamesi"
 customs-form = "Gümrük formu"
-cv = "CV"
+cv = "Öz geçmiş"
 datasheet = "Veri sayfası"
 debit-note = "Borç dekontu"
 deed = "Tapu senedi"
