@@ -162,7 +162,7 @@ export default defineConfig({
           // all-tool-pages-load.spec.ts). Locally, keep `vite` dev for HMR.
           command: process.env.CI
             ? `npx vite preview --port ${DEV_PORT} --strictPort`
-            : `npx vite --port ${DEV_PORT} --strictPort`,
+            : `npx vite --mode proprietary --port ${DEV_PORT} --strictPort`,
           url:
             process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${DEV_PORT}`,
           reuseExistingServer: !process.env.CI,

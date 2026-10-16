@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Icon } from "@app/ui/Icon";
 import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
 import { Button as DSButton } from "@app/ui/Button";
 import { GENERIC_PROVIDER_ICON } from "@app/auth/ui/oauthIcons";
@@ -210,19 +211,11 @@ export default function OAuthButtons({
             </span>
             {useNewStyle && isSingleProvider && (
               <span className="oauth-button-right" aria-hidden="true">
-                <svg
+                <Icon
+                  name="arrow-right"
+                  strokeWidth={2}
                   className="oauth-arrow-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <path
-                    d="M5 12h12m0 0-5-5m5 5-5 5"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                />
               </span>
             )}
           </DSButton>

@@ -47,6 +47,24 @@ export interface PaygSignupRequiredDetail {
   category: string | null;
 }
 
+/** Decodes JSON entitlement errors from file downloads before the session-refresh interceptor. */
+export async function normalizePaygError(error: unknown): Promise<void> {
+  if (!error || typeof error !== "object") return;
+  const response = (error as { response?: { status?: number; data?: unknown } })
+    .response;
+  if (!response || (response.status !== 401 && response.status !== 402)) return;
+  const data = response.data;
+  try {
+    if (data instanceof Blob && data.size <= 65_536) {
+      response.data = JSON.parse(await data.text());
+    } else if (typeof data === "string" && data.length <= 65_536) {
+      response.data = JSON.parse(data);
+    }
+  } catch {
+    // Non-JSON failures still belong to the normal HTTP error handler.
+  }
+}
+
 /**
  * Inspect an axios-style error and decide whether it's one of the known
  * PAYG sentinels. Returns the kind, or {@code null} if it isn't.
@@ -138,7 +156,9 @@ export function handlePaygError(kind: PaygErrorKind, error: unknown): void {
     try {
       window.dispatchEvent(
         new CustomEvent<PaygSignupRequiredDetail>("payg:signupRequired", {
-          detail: { category },
+          detail: {
+            category,
+          },
         }),
       );
     } catch {

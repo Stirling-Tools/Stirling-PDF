@@ -1,4 +1,6 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ConnectionConfig } from "@app/services/connectionModeService";
 
@@ -26,6 +28,16 @@ vi.mock("@app/services/connectionModeService", () => ({
 }));
 
 import { useWallet } from "@app/hooks/useWallet";
+import { createAppQueryClient } from "@app/query/queryClient";
+
+/** The hook reads through the shared cache, so it needs the app's own client. */
+function wrapper({ children }: { children: ReactNode }) {
+  return (
+    <QueryClientProvider client={createAppQueryClient()}>
+      {children}
+    </QueryClientProvider>
+  );
+}
 
 describe("desktop wallet connection mode", () => {
   beforeEach(() => {
@@ -34,13 +46,17 @@ describe("desktop wallet connection mode", () => {
     mocks.get.mockReset();
   });
 
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => {
+    // Unmount before real timers, or a live poll fires outside act.
+    cleanup();
+    vi.useRealTimers();
+  });
 
   it.each([null, "local", "selfhosted"] as const)(
     "does not fetch or poll with mode %s",
     async (mode) => {
       mocks.mode = mode;
-      const { result } = renderHook(() => useWallet());
+      const { result } = renderHook(() => useWallet(), { wrapper });
 
       await act(async () => {
         vi.advanceTimersByTime(60_000);
@@ -62,7 +78,7 @@ describe("desktop wallet connection mode", () => {
         resolveWallet = resolve;
       }),
     );
-    const { result } = renderHook(() => useWallet());
+    const { result } = renderHook(() => useWallet(), { wrapper });
     await waitFor(() => expect(mocks.get).toHaveBeenCalledTimes(1));
 
     await act(async () => {

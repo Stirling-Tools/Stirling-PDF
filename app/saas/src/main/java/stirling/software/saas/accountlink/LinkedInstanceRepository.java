@@ -50,4 +50,19 @@ public interface LinkedInstanceRepository extends JpaRepository<LinkedInstance, 
             "UPDATE LinkedInstance li SET li.lastSeenAt = :now "
                     + "WHERE li.instanceId = :instanceId AND li.revokedAt IS NULL")
     int touchLastSeen(@Param("instanceId") Long instanceId, @Param("now") LocalDateTime now);
+
+    @Modifying
+    @Query(
+            "UPDATE LinkedInstance i SET i.seatCount = :seats, i.seatsReportedAt = :now "
+                    + "WHERE i.instanceId = :instanceId AND i.teamId = :teamId AND i.revokedAt IS NULL")
+    int reportSeats(
+            @Param("teamId") Long teamId,
+            @Param("instanceId") Long instanceId,
+            @Param("seats") int seats,
+            @Param("now") java.time.OffsetDateTime now);
+
+    @Query(
+            "SELECT COALESCE(SUM(i.seatCount), 0) FROM LinkedInstance i "
+                    + "WHERE i.teamId = :teamId AND i.instanceId <> :instanceId AND i.revokedAt IS NULL")
+    long otherDeploymentSeats(@Param("teamId") Long teamId, @Param("instanceId") Long instanceId);
 }

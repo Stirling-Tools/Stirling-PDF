@@ -23,12 +23,16 @@ public class ClusterLicenseGate {
     @Qualifier("runningProOrHigher")
     private Boolean runningProOrHigher;
 
+    @Autowired
+    private stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker
+            licenseChecker;
+
     @PostConstruct
     void verifyLicense() {
         if (runningProOrHigher == null) {
             return; // saas flavor - licensed via Stripe elsewhere
         }
-        if (!runningProOrHigher) {
+        if (!runningProOrHigher && !licenseChecker.isTeamOfflineExpired()) {
             throw new IllegalStateException(
                     "Cluster mode (cluster.enabled=true) requires a SERVER or"
                             + " ENTERPRISE license. Configure stirling.premium.key with a valid"

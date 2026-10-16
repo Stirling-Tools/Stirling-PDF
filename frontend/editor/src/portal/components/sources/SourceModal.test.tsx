@@ -51,15 +51,17 @@ vi.mock("@portal/api/integrations", () => ({
 function renderModal(sourceId: string | null = null) {
   const onClose = vi.fn();
   const onSaved = vi.fn();
+  const onCreated = vi.fn();
   render(
     <SourceModal
       open
       sourceId={sourceId}
       onClose={onClose}
       onSaved={onSaved}
+      onCreated={onCreated}
     />,
   );
-  return { onClose, onSaved };
+  return { onClose, onSaved, onCreated };
 }
 
 describe("SourceModal", () => {
@@ -78,7 +80,7 @@ describe("SourceModal", () => {
   });
 
   it("creates a folder source through the staged flow and closes", async () => {
-    const { onClose, onSaved } = renderModal();
+    const { onClose, onSaved, onCreated } = renderModal();
 
     // Stage 1: pick the folder connector, then fill name + directory.
     fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
@@ -104,6 +106,7 @@ describe("SourceModal", () => {
     );
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(onClose).toHaveBeenCalled();
+    expect(onCreated).toHaveBeenCalledWith({ id: "src-1" });
   });
 
   it("offers a Folder Access settings link when the folder is outside allowed roots", async () => {

@@ -11,10 +11,13 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import stirling.software.proprietary.automation.AutomationRunSource;
 import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -62,15 +65,16 @@ class SaasAutomationRunBillerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
-    @Test
-    void chargesComputedUnitsAsWebAutomation() {
+    @ParameterizedTest
+    @EnumSource(AutomationRunSource.class)
+    void chargesComputedUnitsAsWebAutomation(AutomationRunSource source) {
         User user = userWithTeam(3L, 7L);
         authenticateAs(mock(Authentication.class), user);
         PricingPolicy policy = policy();
         when(pricingPolicyService.getEffectivePolicy(7L)).thenReturn(policy);
 
         // 25 pages -> ceil(25/10)=3 page units; 5000 bytes -> 1 byte unit; max = 3.
-        biller.recordAutomationRun(List.of(new FileSize(25, 5000L)));
+        biller.recordAutomationRun(List.of(new FileSize(25, 5000L)), source);
 
         ArgumentCaptor<ChargeContext> ctx = ArgumentCaptor.forClass(ChargeContext.class);
         verify(jobChargeService).chargeStandalone(ctx.capture(), eq(3));
@@ -88,7 +92,7 @@ class SaasAutomationRunBillerTest {
         PricingPolicy policy = policy();
         when(pricingPolicyService.getEffectivePolicy(7L)).thenReturn(policy);
 
-        biller.recordAutomationRun(List.of(new FileSize(1, 10L)));
+        biller.recordAutomationRun(List.of(new FileSize(1, 10L)), AutomationRunSource.PROCESSOR);
 
         ArgumentCaptor<ChargeContext> ctx = ArgumentCaptor.forClass(ChargeContext.class);
         verify(jobChargeService).chargeStandalone(ctx.capture(), eq(1));
@@ -101,7 +105,7 @@ class SaasAutomationRunBillerTest {
         when(user.getTeam()).thenReturn(null);
         authenticateAs(mock(Authentication.class), user);
 
-        biller.recordAutomationRun(List.of(new FileSize(1, 10L)));
+        biller.recordAutomationRun(List.of(new FileSize(1, 10L)), AutomationRunSource.PROCESSOR);
 
         verify(jobChargeService, never())
                 .chargeStandalone(
@@ -110,7 +114,7 @@ class SaasAutomationRunBillerTest {
 
     @Test
     void noChargeForEmptyInputs() {
-        biller.recordAutomationRun(List.of());
+        biller.recordAutomationRun(List.of(), AutomationRunSource.PROCESSOR);
 
         verify(jobChargeService, never())
                 .chargeStandalone(

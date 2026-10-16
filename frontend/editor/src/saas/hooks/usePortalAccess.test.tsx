@@ -6,10 +6,12 @@ import {
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { qk } from "@app/query/keys";
 
 const get = vi.fn();
 let currentUserId: string | null = null;
 let authLoading = false;
+let isAnonymous = false;
 
 vi.mock("@app/services/apiClient", () => ({
   default: {
@@ -21,6 +23,7 @@ vi.mock("@app/auth/UseSession", () => ({
   useAuth: () => ({
     user: currentUserId ? { id: currentUserId } : null,
     loading: authLoading,
+    isAnonymous,
   }),
 }));
 
@@ -51,6 +54,7 @@ describe("usePortalAccess", () => {
     get.mockReset();
     currentUserId = null;
     authLoading = false;
+    isAnonymous = false;
     client = new QueryClient({
       defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
     });
@@ -63,6 +67,22 @@ describe("usePortalAccess", () => {
     const { result } = renderHook(() => usePortalAccess());
 
     await waitFor(() => expect(result.current).toBe(true));
+  });
+
+  it("skips the access request for guests even with cached access, then queries after signup", async () => {
+    currentUserId = "guest-1";
+    isAnonymous = true;
+    client.setQueryData(qk.portalAccess(currentUserId), true);
+    get.mockResolvedValue(meReturning(true));
+
+    const { result, rerender } = renderHook(() => usePortalAccessState());
+    expect(result.current).toEqual({ granted: false, settled: true });
+    expect(get).not.toHaveBeenCalled();
+
+    isAnonymous = false;
+    rerender();
+    await waitFor(() => expect(result.current.granted).toBe(true));
+    expect(get).toHaveBeenCalledOnce();
   });
 
   it("does not report a settled denial while the incoming session is loading", async () => {

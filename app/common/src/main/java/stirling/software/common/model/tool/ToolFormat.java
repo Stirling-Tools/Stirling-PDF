@@ -33,7 +33,7 @@ public enum ToolFormat {
     CSV("csv"),
     HTML("html", "htm", "xhtml"),
     XML("xml", "xsd", "xsl"),
-    JSON("json"),
+    JSON("json", "jsonl"),
     TEXT("txt", "text", "md", "markdown"),
     MARKDOWN("md", "markdown"),
     JAVASCRIPT("js", "jsx"),

@@ -2,21 +2,11 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import CloseIcon from "@mui/icons-material/Close";
-import CompressIcon from "@mui/icons-material/Compress";
-import ContentCutIcon from "@mui/icons-material/ContentCut";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFileOutlined";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import LayersIcon from "@mui/icons-material/Layers";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
+import { Icon } from "@app/ui/Icon";
+import { useAllFiles } from "@app/contexts/FileContext";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { detectFileExtension, isPdfFile } from "@app/utils/fileUtils";
 import type { StirlingFileStub } from "@app/types/fileContext";
-
-const MAX_FILE_PILLS = 3;
 
 interface QuickAction {
   key: string;
@@ -44,12 +34,10 @@ function QuickActionCard({ action }: { action: QuickAction }) {
         </Box>
       }
       rightSection={
-        <KeyboardArrowDownIcon
-          sx={{
-            fontSize: 18,
-            transform: "rotate(-90deg)",
-            color: "var(--c-text-subtle)",
-          }}
+        <Icon
+          name="chevron-down"
+          size={18}
+          style={{ transform: "rotate(-90deg)", color: "var(--c-text-subtle)" }}
         />
       }
     >
@@ -64,58 +52,6 @@ function QuickActionCard({ action }: { action: QuickAction }) {
         )}
       </Box>
     </Button>
-  );
-}
-
-function WorkbenchFilePills({
-  stubs,
-  onOpenFilesModal,
-  onRemove,
-  moreLabel,
-  removeLabel,
-}: {
-  stubs: StirlingFileStub[];
-  onOpenFilesModal: () => void;
-  onRemove: (id: StirlingFileStub["id"]) => void;
-  moreLabel: (count: number) => string;
-  removeLabel: (name: string) => string;
-}) {
-  const visible = stubs.slice(0, MAX_FILE_PILLS);
-  const overflow = Math.max(0, stubs.length - visible.length);
-  return (
-    <div className="chat-file-pills">
-      {visible.map((stub) => (
-        <span key={stub.id} className="chat-file-pill">
-          <InsertDriveFileIcon
-            className="chat-file-pill__icon"
-            sx={{ fontSize: 14 }}
-          />
-          <span className="chat-file-pill__label" title={stub.name}>
-            {stub.name}
-          </span>
-          <ActionIcon
-            type="button"
-            variant="tertiary"
-            className="chat-file-pill__remove"
-            onClick={() => onRemove(stub.id)}
-            aria-label={removeLabel(stub.name)}
-          >
-            <CloseIcon sx={{ fontSize: 12 }} />
-          </ActionIcon>
-        </span>
-      ))}
-      {overflow > 0 && (
-        <Button
-          type="button"
-          variant="tertiary"
-          hover={false}
-          className="chat-file-pill chat-file-pill--more"
-          onClick={onOpenFilesModal}
-        >
-          {moreLabel(overflow)}
-        </Button>
-      )}
-    </div>
   );
 }
 
@@ -167,7 +103,6 @@ export interface ChatQuickActionsProps {
 export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
   const { t } = useTranslation();
   const { fileStubs } = useAllFiles();
-  const { actions: fileActions } = useFileActions();
   const { openFilesModal } = useFilesModalContext();
 
   const summary = useMemo(() => summariseWorkbench(fileStubs), [fileStubs]);
@@ -179,7 +114,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
       return [
         {
           key: "open-from-computer",
-          icon: <UploadFileIcon sx={{ fontSize: 18 }} />,
+          icon: <Icon name="file-up" size={18} />,
           title: t("chat.quickActions.openFromComputer", "Open from computer"),
           subtitle: t("chat.quickActions.browseYourFiles", "Browse your files"),
           onClick: () => openFilesModal(),
@@ -197,7 +132,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
         return [
           {
             key: "convert",
-            icon: <PictureAsPdfIcon sx={{ fontSize: 18 }} />,
+            icon: <Icon name="file-pdf" size={18} />,
             title: text,
             onClick: send(text),
           },
@@ -211,7 +146,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
         const text = t("chat.quickActions.splitOne", "Split this document");
         result.push({
           key: "split",
-          icon: <ContentCutIcon sx={{ fontSize: 18 }} />,
+          icon: <Icon name="scissors" size={18} />,
           title: text,
           onClick: send(text),
         });
@@ -222,7 +157,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
       );
       result.push({
         key: "compress",
-        icon: <CompressIcon sx={{ fontSize: 18 }} />,
+        icon: <Icon name="shrink" size={18} />,
         title: compressText,
         onClick: send(compressText),
       });
@@ -238,7 +173,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
       );
       result.push({
         key: "convert",
-        icon: <PictureAsPdfIcon sx={{ fontSize: 18 }} />,
+        icon: <Icon name="file-pdf" size={18} />,
         title: text,
         onClick: send(text),
       });
@@ -253,13 +188,13 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
     );
     result.push({
       key: "merge",
-      icon: <LayersIcon sx={{ fontSize: 18 }} />,
+      icon: <Icon name="layers" size={18} />,
       title: mergeText,
       onClick: send(mergeText),
     });
     result.push({
       key: "compress",
-      icon: <CompressIcon sx={{ fontSize: 18 }} />,
+      icon: <Icon name="shrink" size={18} />,
       title: compressText,
       onClick: send(compressText),
     });
@@ -268,25 +203,6 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
 
   return (
     <div className="chat-panel__quick-actions">
-      {summary.fileCount > 0 && (
-        <WorkbenchFilePills
-          stubs={fileStubs}
-          onOpenFilesModal={() => openFilesModal()}
-          onRemove={(id) => fileActions.removeFiles([id])}
-          moreLabel={(count) =>
-            t("chat.quickActions.moreFiles", {
-              count,
-              defaultValue: "+{{count}} more",
-            })
-          }
-          removeLabel={(name) =>
-            t("chat.quickActions.removeFile", {
-              name,
-              defaultValue: "Remove {{name}}",
-            })
-          }
-        />
-      )}
       <Text className="chat-panel__quick-actions-label">{heading}</Text>
       <Stack gap="xs">
         {actions.map((action) => (

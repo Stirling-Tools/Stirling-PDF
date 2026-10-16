@@ -1,13 +1,13 @@
 import { useSaasAppConfig } from "@app/hooks/useSaasAppConfig";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
+import { useSaaSMode } from "@app/hooks/useSaaSMode";
 
-/**
- * Desktop: the AI engine runs on the SaaS backend, so its enabled flag must come
- * from the SaaS app-config (not the local bundled backend, which never has the
- * engine). useSaasAppConfig() returns null outside SaaS mode, so AI is implicitly
- * hidden in local/self-hosted — and the cloud retains the on/off switch (flip
- * aiEngineEnabled server-side and the desktop FAB disappears on next load, no
- * release required).
- */
+/** AI availability comes from the connected server's configuration. */
 export function useAiEngineEnabled(): boolean {
-  return Boolean(useSaasAppConfig()?.aiEngineEnabled);
+  const cloudConfig = useSaasAppConfig();
+  const { config } = useAppConfig();
+  const saas = useSaaSMode();
+  const enabled = usePoliciesEnabled();
+  return enabled && Boolean((saas ? cloudConfig : config)?.aiEngineEnabled);
 }

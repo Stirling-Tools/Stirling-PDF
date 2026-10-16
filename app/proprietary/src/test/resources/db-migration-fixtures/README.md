@@ -48,6 +48,64 @@ compatible with an existing user database. Common causes:
 * Changing a column type in an incompatible way.
 * Dropping or renaming a foreign-key target.
 
+## PostgreSQL upgrade coverage
+
+The same CI workflow also runs `scripts/db-migration/run-postgres-migration-test.py`
+against PostgreSQL 16. For each version named by the H2 fixtures from v2.5.0
+onwards, it boots the historical release on a disposable PostgreSQL database,
+then dumps and restores that database before starting the current JAR.
+
+The historical app creates the same core data as the H2 fixtures, then the test
+uses its authenticated APIs (including CSRF handling) to populate:
+
+* Two custom teams: Migration Finance and Migration Operations.
+* Three regular users across those teams, including one disabled account.
+* Nine user settings, including Unicode text.
+* Real audit events from creating teams/users, updating settings, and login activity.
+
+Seeding fails if any API call fails, any expected record is missing, or async
+audit writes do not persist events for the admin and every fixture user.
+Each fixture contains five users and four teams in total, including defaults.
+
+After upgrading, the test checks that enabled users can log in and the disabled
+user cannot. It compares user IDs, usernames, authentication types, enabled
+states, team memberships, password hashes/API keys, roles, teams, and settings.
+Every captured historical audit event must retain its ID, principal, type,
+timestamp, and JSON payload; additional events from the new app are allowed.
+
+Stirling-PDF v2.0.0 PostgreSQL coverage is deferred because its legacy large-object storage
+requires a separate migration fix. The PostgreSQL test rejects versions before
+v2.5.0; the existing H2 test still includes its v2.0.0 fixture.
+
+Generated values can differ between H2 and PostgreSQL; each PostgreSQL upgrade
+must preserve its own values. User timestamps and license entitlements are
+excluded because startup may change them. File storage, workflows, invites,
+and HTTP sessions are not seeded by this test.
+
+Historical releases require a license for custom databases and an Enterprise
+license to populate audit history.
+CI uses `PREMIUM_KEY_ENTERPRISE` from the `ci-unsigned` environment. Missing or
+invalid licenses fail the test, including any fallback to H2. Fork PRs run H2
+only and report the missing PostgreSQL coverage in the job summary.
+
+To run locally, install Docker, Python 3.10+, and Java 25; set `PREMIUM_KEY` to a
+valid test license or an absolute `file:` license reference; then run:
+
+```bash
+python scripts/db-migration/run-postgres-migration-test.py \
+  --jar /absolute/path/to/current-stirling-pdf.jar \
+  --work-dir /absolute/path/to/new-migration-results
+```
+
+Use a fresh work directory per run. `--versions v2.5.0` narrows the releases;
+`--release-jar-dir /path/to/jars` reuses files named `stirling-pdf-v2.5.0.jar`.
+`--postgres-image postgres:16` and `--startup-timeout 300` can be overridden.
+
+Only containers created by the script are used and removed. SQL dumps and logs
+remain in the work directory; CI uploads only app/PostgreSQL logs on failure.
+This tests application schema upgrades on PostgreSQL 16, not PostgreSQL server
+major-version upgrades or every possible data/schema change.
+
 ## Regenerating fixtures
 
 There's no automated regenerator script - fixtures are rare to refresh and the

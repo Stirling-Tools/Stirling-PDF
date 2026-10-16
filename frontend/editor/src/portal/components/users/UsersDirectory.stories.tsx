@@ -28,7 +28,7 @@ const FULL_CAPS: UsersCapabilities = {
   listingRequiresAdmin: true,
 };
 
-/** SaaS team-leader: invite / rename / remove-member only, no org group. */
+/** SaaS team-leader: invite / rename / remove-member only. */
 const SAAS_CAPS: UsersCapabilities = {
   orgGroup: false,
   transferOwnership: false,
@@ -205,7 +205,7 @@ const STATE_MEMBERS: Member[] = [
   },
 ];
 
-/** A big team (>8) to exercise the "Show all" / "Show less" expander. */
+/** A team big enough that its tab carries a double-digit count. */
 const BIG_MEMBERS: Member[] = [
   {
     id: "b0",
@@ -272,10 +272,8 @@ type Story = StoryObj<typeof UsersDirectory>;
 /** Organization owner plus two teams, each with a leader. */
 export const Default: Story = {};
 
-/**
- * SaaS build (team-leader scope): no Organization group, no role select, no
- * password/suspend actions - just invite / rename / remove-from-team.
- */
+/** SaaS build (team-leader scope): no role select, no password/suspend actions -
+ *  just invite / rename / remove-from-team. */
 export const SaasTeamLeader: Story = {
   args: {
     members: MEMBERS.filter((m) => m.role !== "admin"),
@@ -308,7 +306,7 @@ export const SingleTeam: Story = {
   },
 };
 
-/** Guests group + "Guest" role option (parked in the live app; behind showGuests). */
+/** The "Guest" role option (parked in the live app; behind showGuests). */
 export const WithGuests: Story = {
   args: { members: [...MEMBERS, GUEST], showGuests: true },
 };
@@ -321,7 +319,7 @@ export const MemberStates: Story = {
   },
 };
 
-/** A team past the collapse limit surfaces the "Show all" expander. */
+/** A single large team: one tab, one long flat list. */
 export const LargeTeam: Story = {
   args: {
     members: BIG_MEMBERS,

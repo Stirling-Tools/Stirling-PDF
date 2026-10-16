@@ -1,0 +1,458 @@
+{
+  "version": 2,
+  "language": "ar",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "فاتورة", "weight": 24, "where": "title" },
+        { "text": "ضريبة القيمة المضافة", "weight": 8 }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [{ "text": "إيصال", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "credit-note",
+      "phrases": [{ "text": "إشعار دائن", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "إيصال", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bank-statement",
+      "phrases": [{ "text": "كشف حساب", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "payslip",
+      "phrases": [{ "text": "بيان راتب", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "expense-report",
+      "phrases": [{ "text": "مصروف", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "بيان مالي", "weight": 20, "where": "title" },
+        { "text": "ميزانية عمومية", "weight": 12 }
+      ]
+    },
+    {
+      "id": "tax-return",
+      "phrases": [{ "text": "إقرار ضريبي", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "tax-form",
+      "phrases": [{ "text": "إقرار ضريبي", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [{ "text": "عقد عمل", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "nda",
+      "phrases": [
+        { "text": "اتفاقية عدم إفصاح", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "privacy-policy",
+      "phrases": [
+        { "text": "سياسة الخصوصية", "weight": 24, "where": "title" },
+        { "text": "النظام الأوروبي العام لحماية البيانات", "weight": 10 }
+      ]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "وصية", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "mortgage-document",
+      "phrases": [{ "text": "رهن عقاري", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "insurance-policy",
+      "phrases": [{ "text": "بوليصة التأمين", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "resume",
+      "phrases": [{ "text": "سيرة ذاتية", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [{ "text": "خطاب تقديم", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "reference-letter",
+      "phrases": [{ "text": "خطاب توصية", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "job-description",
+      "phrases": [{ "text": "وصف وظيفي", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "certificate",
+      "phrases": [
+        { "text": "شهادة أكاديمية", "weight": 16, "where": "title" },
+        { "text": "دبلوم", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "thesis",
+      "phrases": [{ "text": "أطروحة", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "research-paper",
+      "phrases": [{ "text": "نشر أكاديمي", "weight": 10 }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "براءة اختراع", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "وصفة طبية", "weight": 20, "where": "title" },
+        { "text": "صيدلة", "weight": 10 }
+      ]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [{ "text": "سجل طبي", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "تلقيح طبي", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [{ "text": "استبانة", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "user-guide",
+      "phrases": [{ "text": "دليل المستخدم", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        { "text": "صحيفة بيانات سلامة المادة", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [{ "text": "رسم صناعي", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bill-of-materials",
+      "phrases": [{ "text": "مكونات المادة", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "press-release",
+      "phrases": [{ "text": "بيان صحفي", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "newsletter",
+      "phrases": [{ "text": "نشرة إعلامية", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "كتيب", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [{ "text": "خطة عمل", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "ورقة بيضاء", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-minutes",
+      "phrases": [{ "text": "محضر اجتماع", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "invitation",
+      "phrases": [{ "text": "دعوة زفاف", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "ticket",
+      "phrases": [{ "text": "تذكرة", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "waybill",
+      "phrases": [
+        { "text": "قائمة الشحن البري", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "تأشيرة", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [{ "text": "عداد كهرباء", "weight": 12 }]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "قائمة طعام", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [{ "text": "وصفة", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "عرض تقديمي", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "تقرير", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "رسالة مكتوبة", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "form",
+      "phrases": [{ "text": "استمارة", "weight": 10, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "تصريح", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "تدقيق", "weight": 12 }]
+    },
+    {
+      "id": "risk-assessment",
+      "phrases": [{ "text": "تقييم المخاطر", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "incident-report",
+      "phrases": [{ "text": "تقرير الحادث", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "inspection-report",
+      "phrases": [{ "text": "معاينة", "weight": 10 }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "عقار", "weight": 8 }]
+    },
+    {
+      "id": "grant-agreement",
+      "phrases": [{ "text": "منحة مالية", "weight": 12 }]
+    },
+    {
+      "id": "tender-document",
+      "phrases": [{ "text": "طلب العروض", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "subscription-confirmation",
+      "phrases": [{ "text": "نموذج عمل بالاشتراك", "weight": 10 }]
+    },
+    {
+      "id": "donation-receipt",
+      "phrases": [{ "text": "تبرع", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "بريد إلكتروني", "weight": 8 }]
+    },
+    {
+      "id": "book-ebook",
+      "phrases": [{ "text": "جدول المحتويات", "weight": 6 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "مجلة", "weight": 10 }]
+    },
+    {
+      "id": "course-syllabus",
+      "phrases": [{ "text": "خطة دراسية", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "lesson-plan",
+      "phrases": [{ "text": "خطة الدرس", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "employee-handbook",
+      "phrases": [{ "text": "كتيب الموظفين", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "performance-review",
+      "phrases": [{ "text": "تقييم أداء", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "تعبئة", "weight": 8 }]
+    },
+    {
+      "id": "statement-of-work",
+      "phrases": [{ "text": "بيان العمل", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "service-agreement",
+      "phrases": [
+        { "text": "اتفاق مستوى الخدمة", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "purchase-agreement",
+      "phrases": [{ "text": "عقد بيع", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "settlement-agreement",
+      "phrases": [{ "text": "تسوية", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "legal-opinion",
+      "phrases": [{ "text": "استشارة قانونية", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "subpoena",
+      "phrases": [{ "text": "أمر بالاستدعاء", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "consent-form",
+      "phrases": [{ "text": "موافقة مستنيرة", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "lab-report",
+      "phrases": [{ "text": "علم المختبرات السريرية", "weight": 12 }]
+    },
+    {
+      "id": "referral-letter",
+      "phrases": [{ "text": "إحالة", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "تأمين", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "quality-report",
+      "phrases": [{ "text": "ضبط الجودة", "weight": 10 }]
+    },
+    {
+      "id": "test-report",
+      "phrases": [{ "text": "معايرة", "weight": 12 }]
+    },
+    {
+      "id": "safety-procedure",
+      "phrases": [{ "text": "السلامة والصحة المهنية", "weight": 10 }]
+    },
+    {
+      "id": "technical-specification",
+      "phrases": [{ "text": "مواصفة", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "api-documentation",
+      "phrases": [{ "text": "واجهة برمجة التطبيقات", "weight": 8 }]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [
+        {
+          "text": "اتفاقية ترخيص المستخدم النهائي",
+          "weight": 20,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "proposal",
+      "phrases": [
+        { "text": "نموذج طلب تقديم عرض", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "ميزانية", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "order-confirmation",
+      "phrases": [{ "text": "أمر البيع", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "remittance-advice",
+      "phrases": [
+        { "text": "إخطار تحويل الأموال", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "statement-of-account",
+      "phrases": [{ "text": "كشف حساب", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "application-form",
+      "phrases": [{ "text": "طلب التوظيف", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "registration-form",
+      "phrases": [{ "text": "جامعة نيوزيلندا", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "gift-certificate",
+      "phrases": [{ "text": "بطاقة هدية", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "organization-chart",
+      "phrases": [
+        { "text": "مخطط هيكل تنظيمي", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "case-study",
+      "phrases": [{ "text": "دراسة حالة", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "مجلس إدارة", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "استثمار", "weight": 8 }]
+    },
+    {
+      "id": "letter-of-intent",
+      "phrases": [{ "text": "خطاب نوايا", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "analytics-report",
+      "phrases": [{ "text": "تحليل الويب", "weight": 10 }]
+    },
+    {
+      "id": "appraisal-report",
+      "phrases": [{ "text": "تثمين عقاري", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "benefits-summary",
+      "phrases": [{ "text": "استحقاقات الموظفين", "weight": 14 }]
+    },
+    {
+      "id": "hoa-document",
+      "phrases": [
+        { "text": "جمعية مالكي المنازل", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "grade-report",
+      "phrases": [
+        { "text": "النتيجة المدرسية", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "واجب منزلي", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "toc": [{ "pattern": "جدول\\ المحتويات" }],
+    "references": [{ "pattern": "فهرسة\\ الكتب" }],
+    "signature": [{ "pattern": "توقيع" }]
+  }
+}

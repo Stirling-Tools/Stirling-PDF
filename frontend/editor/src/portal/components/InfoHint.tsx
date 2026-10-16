@@ -1,5 +1,5 @@
 import { ActionIcon, Tooltip, type TooltipPlacement } from "@app/ui";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import "@portal/components/InfoHint.css";
 
 export interface InfoHintProps {
@@ -22,7 +22,7 @@ export function InfoHint({ content, label, placement = "top" }: InfoHintProps) {
   return (
     <Tooltip content={content} placement={placement} className="portal-hint">
       <ActionIcon variant="quiet" size="sm" aria-label={label}>
-        <LocalIcon icon="info-rounded" width="0.9rem" />
+        <Icon name="info" size="0.9rem" />
       </ActionIcon>
     </Tooltip>
   );

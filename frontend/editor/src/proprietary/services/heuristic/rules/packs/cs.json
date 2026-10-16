@@ -1,0 +1,388 @@
+{
+  "version": 2,
+  "language": "cs",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "faktura", "weight": 24, "where": "title" },
+        { "text": "daň z přidané hodnoty", "weight": 8 }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [{ "text": "kvitance", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "credit-note",
+      "phrases": [{ "text": "dobropis", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "purchase-order",
+      "phrases": [{ "text": "objednávka", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "kvitance", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "expense-report",
+      "phrases": [
+        { "text": "finanční náklady", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "účetní závěrka", "weight": 20, "where": "title" },
+        { "text": "rozvaha", "weight": 12 }
+      ]
+    },
+    {
+      "id": "tax-return",
+      "phrases": [{ "text": "daňové přiznání", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "tax-form",
+      "phrases": [{ "text": "daňové přiznání", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "smlouva", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [
+        { "text": "pracovní smlouva", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "lease-agreement",
+      "phrases": [{ "text": "nájem", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "affidavit",
+      "phrases": [
+        { "text": "čestné prohlášení", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "závěť", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "deed",
+      "phrases": [{ "text": "listina", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "mortgage-document",
+      "phrases": [{ "text": "hypoteční úvěr", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "resume",
+      "phrases": [
+        { "text": "curriculum vitæ", "weight": 24, "where": "title" },
+        { "text": "curriculum vitae", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [{ "text": "motivační dopis", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "job-description",
+      "phrases": [
+        { "text": "popis pracovního místa", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "certificate",
+      "phrases": [
+        { "text": "vysokoškolský diplom", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "transcript",
+      "phrases": [
+        { "text": "vysokoškolský index", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "thesis",
+      "phrases": [
+        {
+          "text": "vysokoškolská kvalifikační práce",
+          "weight": 20,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "patent", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "lékařský předpis", "weight": 20, "where": "title" },
+        { "text": "farmacie", "weight": 10 }
+      ]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [{ "text": "diagnóza", "weight": 10 }]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "očkování", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [{ "text": "dotazník", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "user-guide",
+      "phrases": [
+        { "text": "uživatelská příručka", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        { "text": "bezpečnostní list", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [
+        { "text": "technické kreslení", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "bill-of-materials",
+      "phrases": [{ "text": "kusovník", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "press-release",
+      "phrases": [{ "text": "tisková zpráva", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "newsletter",
+      "phrases": [{ "text": "newsletter", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "brožura", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [
+        { "text": "podnikatelský záměr", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "bílá kniha", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-minutes",
+      "phrases": [{ "text": "protokol", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-agenda",
+      "phrases": [{ "text": "agenda", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "memorandum", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "invitation",
+      "phrases": [
+        { "text": "svatební oznámení", "weight": 14, "where": "title" }
+      ]
+    },
+    {
+      "id": "ticket",
+      "phrases": [{ "text": "vstupenka", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "vízum", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [{ "text": "elektroměr", "weight": 12 }]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "jídelní lístek", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [
+        { "text": "kuchařský recept", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "prezentace", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "zpráva", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "dopis", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "form",
+      "phrases": [{ "text": "formulář", "weight": 10, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "licence", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "legal-notice",
+      "phrases": [
+        { "text": "předžalobní výzva", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "audit", "weight": 12 }]
+    },
+    {
+      "id": "inspection-report",
+      "phrases": [{ "text": "inspekce", "weight": 10 }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "nemovitá věc", "weight": 8 }]
+    },
+    {
+      "id": "grant-agreement",
+      "phrases": [{ "text": "grant", "weight": 12 }]
+    },
+    {
+      "id": "tender-document",
+      "phrases": [{ "text": "výběrové řízení", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "e-mail", "weight": 8 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "časopis", "weight": 10 }]
+    },
+    {
+      "id": "course-syllabus",
+      "phrases": [{ "text": "sylabus", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "získávání a výběr zaměstnanců", "weight": 8 }]
+    },
+    {
+      "id": "purchase-agreement",
+      "phrases": [{ "text": "kupní smlouva", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "settlement-agreement",
+      "phrases": [{ "text": "smír", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "consent-form",
+      "phrases": [
+        { "text": "informovaný souhlas", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "discharge-summary",
+      "phrases": [{ "text": "hospitalizace", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "pojištění", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "regulatory-filing",
+      "phrases": [{ "text": "korporátní compliance", "weight": 10 }]
+    },
+    {
+      "id": "quality-report",
+      "phrases": [{ "text": "nástroje pro řízení kvality", "weight": 10 }]
+    },
+    {
+      "id": "test-report",
+      "phrases": [{ "text": "kalibrace", "weight": 12 }]
+    },
+    {
+      "id": "datasheet",
+      "phrases": [{ "text": "katalogový list", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "technical-specification",
+      "phrases": [{ "text": "specifikace", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [
+        { "text": "end user license agreement", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "rozpočet", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "gift-certificate",
+      "phrases": [{ "text": "dárková karta", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "return-authorization",
+      "phrases": [{ "text": "vrácení zboží", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "organization-chart",
+      "phrases": [{ "text": "organigram", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "case-study",
+      "phrases": [
+        { "text": "případová studie", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "představenstvo", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "investice", "weight": 8 }]
+    },
+    {
+      "id": "analytics-report",
+      "phrases": [{ "text": "webová analytika", "weight": 10 }]
+    },
+    {
+      "id": "benefits-summary",
+      "phrases": [{ "text": "zaměstnanecké výhody", "weight": 14 }]
+    },
+    {
+      "id": "grade-report",
+      "phrases": [{ "text": "vysvědčení", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "domácí úkol", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "references": [{ "pattern": "bibliografie" }],
+    "signature": [{ "pattern": "podpis" }]
+  }
+}

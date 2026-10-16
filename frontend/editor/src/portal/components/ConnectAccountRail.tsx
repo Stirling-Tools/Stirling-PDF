@@ -1,55 +1,63 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@app/auth";
 import { Button } from "@app/ui";
-import { useConnectGate } from "@portal/hooks/useConnectGate";
+import { formatPeriodDate } from "@app/billing";
+import { useAccountLinkBlock } from "@app/services/accountLinkBlock";
+import { useFreeTierBalance } from "@portal/hooks/useFreeTierBalance";
+import { useLinkOptional } from "@portal/contexts/LinkContext";
+import { useUI } from "@portal/contexts/UIContext";
 import "@portal/components/ConnectAccountRail.css";
 
-const DISMISSED_KEY = "portal::connect-rail-dismissed";
-
-function readDismissed(): boolean {
-  try {
-    return sessionStorage.getItem(DISMISSED_KEY) === "true";
-  } catch {
-    return false;
-  }
-}
-
-/** Session-scoped dismissal, so the ask comes back until it is answered rather than for good. */
+/** The exhausted allowance stays actionable across Processor routes, even after the dialog closes. */
 export function ConnectAccountRail() {
   const { t } = useTranslation();
-  const { gated, loading, connect } = useConnectGate();
-  const [dismissed, setDismissed] = useState(readDismissed);
-
-  if (loading || !gated || dismissed) return null;
-
-  const dismiss = () => {
-    try {
-      sessionStorage.setItem(DISMISSED_KEY, "true");
-    } catch {
-      // Storage refusing is no reason to leave the rail stuck on screen.
-    }
-    setDismissed(true);
-  };
+  const { isAdmin } = useAuth();
+  const link = useLinkOptional();
+  const { openLinkModal } = useUI();
+  const { exhausted } = useAccountLinkBlock();
+  const { data: balance } = useFreeTierBalance();
+  if (!link || link.isLinked || (!exhausted && balance?.remainingUnits !== 0))
+    return null;
+  const resets = balance ? formatPeriodDate(balance.periodEnd) : null;
 
   return (
-    <section className="portal-connect-rail">
+    <section className="portal-connect-rail" role="status">
       <div className="portal-connect-rail__text">
         <b className="portal-connect-rail__title">
-          {t("portal.accountLink.rail.title", "Connect your Stirling account")}
+          {t(
+            "portal.accountLink.rail.exhaustedTitle",
+            "This server’s free credits are used up",
+          )}
         </b>
         <span className="portal-connect-rail__sub">
-          {t(
-            "portal.accountLink.rail.sub",
-            "Adds monthly credits and room for more users. Everything on this server already works without one.",
+          {isAdmin
+            ? t(
+                "portal.accountLink.rail.exhaustedSub",
+                "Link for monthly credits, shared billing and the option to grow with a Team plan.",
+              )
+            : t(
+                "portal.accountLink.rail.adminSub",
+                "Ask your server administrator to link a Stirling account for more credits. Manual PDF tools are still available.",
+              )}
+          {resets && (
+            <>
+              {" "}
+              {t("portal.usage.freeTier.resets", "Resets {{date}}", {
+                date: resets,
+              })}
+              .
+            </>
           )}
         </span>
       </div>
       <div className="portal-connect-rail__actions">
-        <Button variant="quiet" accent="neutral" onClick={dismiss}>
-          {t("portal.accountLink.rail.later", "Not now")}
-        </Button>
-        <Button variant="primary" onClick={connect}>
-          {t("portal.accountLink.rail.cta", "Connect")}
+        <Button variant="primary" onClick={() => openLinkModal("exhausted")}>
+          {isAdmin
+            ? t(
+                "portal.accountLink.rail.exhaustedCta",
+                "Link account for more credits",
+              )
+            : t("portal.accountLink.rail.adminCta", "How to get more credits")}
         </Button>
       </div>
     </section>

@@ -2,6 +2,7 @@ import { Suspense, lazy, type ComponentType } from "react";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { useEnterpriseEnabled } from "@portal/hooks/useEnterpriseEnabled";
 import { PortalSettingsSectionHost } from "@portal/components/settings/PortalSettingsSectionHost";
+import { PortalRosterHost } from "@portal/components/settings/PortalRosterHost";
 import { accountLinkSettings } from "@portal/components/settings/accountLinkSettings";
 
 const Users = lazy(async () => {
@@ -40,6 +41,19 @@ const Billing = lazy(async () => {
   return { default: m.BillingSettingsSection };
 });
 
+/** The roster host loads cloud sign-in only when a handover requests it. */
+function rosterHosted(View: ComponentType) {
+  return function HostedRosterSection() {
+    return (
+      <PortalRosterHost>
+        <Suspense fallback={<LoadingFallback />}>
+          <View />
+        </Suspense>
+      </PortalRosterHost>
+    );
+  };
+}
+
 /** `padded`: for views that were tab panels and left the page gutter to their host. */
 function hosted(View: ComponentType, { padded = false } = {}) {
   return function HostedPortalSection() {
@@ -59,18 +73,9 @@ function hosted(View: ComponentType, { padded = false } = {}) {
   };
 }
 
-/**
- * The processor's server administration as settings sections: the org roster,
- * API keys, audit, encryption at rest, and the account's billing. They
- * configure the whole deployment rather than a step in a document pipeline, so
- * they belong on the settings page and the processor keeps only its workflow.
- *
- * Each is a portal-authored view wrapped in {@link PortalSettingsSectionHost}
- * for the contexts it expects. The nav entries that mount these (labels, keys,
- * aliases) live in the proprietary layer, so a build without the processor
- * never pulls this module - and with it the portal chunk - into its graph.
- */
-export const PortalUsersSection = hosted(Users);
+/** The processor's server administration as settings sections, each a portal view
+ *  in its host. All but the roster are gated on the build shipping the processor. */
+export const PortalUsersSection = rosterHosted(Users);
 export const PortalApiKeysSection = hosted(ApiKeys, { padded: true });
 export const PortalAuditSection = hosted(Audit, { padded: true });
 export const PortalEncryptionSection = hosted(Encryption, { padded: true });

@@ -11,5 +11,6 @@ public enum IntegrationType {
     /** Microsoft Purview Information Protection: sensitivity-label taxonomy via Graph. */
     PURVIEW,
     /** ConsignO Cloud (Notarius) e-signature and notarization. */
-    CONSIGNO
+    CONSIGNO,
+    VECTOR_DB
 }

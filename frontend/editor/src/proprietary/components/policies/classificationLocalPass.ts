@@ -111,7 +111,7 @@ async function classifyStub(
   recordRunStart({
     runId,
     policyKey: CLASSIFICATION_POLICY_KEY,
-    fileId: fileId as string,
+    fileId: fileId,
     fileName,
     fileSize,
     target: "local",
@@ -126,14 +126,13 @@ async function classifyStub(
     const result = await classifyFileHeuristically(file, { explain: debug });
     const { labels } = result;
     const ms = Math.round(performance.now() - startedAt);
-    const verdict =
-      labels.length > 0
-        ? labels.join(", ")
-        : result.isEnglish
-          ? "no label"
-          : "no label (not English)";
+    const scoredAgainst =
+      result.packs.length > 0
+        ? result.packs.join("+")
+        : `core only, ${result.language ?? "language unknown"}`;
+    const verdict = labels.length > 0 ? labels.join(", ") : "no label";
     console.debug(
-      `[Classify] ${fileName} -> ${verdict} (${result.confidence}, score ${result.score}, ${ms}ms)` +
+      `[Classify] ${fileName} -> ${verdict} (${result.confidence}, score ${result.score}, ${scoredAgainst}, ${ms}ms)` +
         (alreadyMetered ? " [heal: not re-metered]" : ""),
     );
     if (debug && result.explain) logExplanation(fileName, result);
@@ -154,7 +153,7 @@ async function classifyStub(
     updateRun(runId, {
       status: "COMPLETED",
       imported: true,
-      outputFileIds: [fileId as string],
+      outputFileIds: [fileId],
     });
     return { labels, confidence: result.confidence, meter };
   } catch (err) {
@@ -177,7 +176,7 @@ function logExplanation(
   const ex = result.explain;
   if (!ex) return;
   console.groupCollapsed(
-    `[Classify] ${fileName} scoring (english=${ex.isEnglish}, lowText=${ex.lowText})`,
+    `[Classify] ${fileName} scoring (language=${ex.language ?? "?"}${ex.assumed ? " assumed" : ""}, script=${ex.script ?? "?"}, packs=[${ex.packs.join(", ")}], lowText=${ex.lowText})`,
   );
   if (ex.candidates.length === 0) {
     console.log("no label scored above zero");

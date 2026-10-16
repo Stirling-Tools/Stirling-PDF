@@ -37,6 +37,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
+import stirling.software.saas.accountlink.FleetSeatService;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.ActivityRow;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.CategoryBreakdown;
@@ -55,6 +56,7 @@ import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 import stirling.software.saas.payg.wallet.WalletPolicy;
+import stirling.software.saas.procurement.service.EnterpriseEntitlementService;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
@@ -114,6 +116,8 @@ public class PaygWalletController {
     private final PrepaidBundleService prepaidBundleService;
     private final UserTeamResolver userTeamResolver;
     private final SaasTeamExtensionsRepository teamExtensionsRepository;
+    private final FleetSeatService fleetSeats;
+    private final EnterpriseEntitlementService enterprise;
 
     public PaygWalletController(
             EntitlementService entitlementService,
@@ -126,7 +130,11 @@ public class PaygWalletController {
             UserRepository userRepository,
             PrepaidBundleService prepaidBundleService,
             UserTeamResolver userTeamResolver,
-            SaasTeamExtensionsRepository teamExtensionsRepository) {
+            SaasTeamExtensionsRepository teamExtensionsRepository,
+            FleetSeatService fleetSeats,
+            EnterpriseEntitlementService enterprise) {
+        this.fleetSeats = fleetSeats;
+        this.enterprise = Objects.requireNonNull(enterprise);
         this.entitlementService = Objects.requireNonNull(entitlementService, "entitlementService");
         this.billingService = Objects.requireNonNull(billingService, "billingService");
         this.memberRepo = Objects.requireNonNull(memberRepo, "memberRepo");
@@ -155,12 +163,17 @@ public class PaygWalletController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
+        if (AuthenticationUtils.isAnonymous(auth)
+                || "ANONYMOUS".equalsIgnoreCase(user.getAuthenticationType())) {
+            return ResponseEntity.ok(emptySnapshot(0));
+        }
+
         Optional<Long> resolvedTeam = userTeamResolver.teamId(user);
         if (resolvedTeam.isEmpty()) {
             // Authenticated user without a team — shouldn't happen post-migration, but we don't
             // want to 500. Return a free-tier-shaped empty snapshot so the FE renders the gated UI
             // rather than blowing up on a null body.
-            return ResponseEntity.ok(emptySnapshot());
+            return ResponseEntity.ok(emptySnapshot(FREE_TIER_LIMIT_UNITS_FALLBACK));
         }
         Long teamId = resolvedTeam.get();
         boolean isLeader = userTeamResolver.isLeader(user);
@@ -174,7 +187,7 @@ public class PaygWalletController {
         String status = billing.subscribed() ? STATUS_SUBSCRIBED : STATUS_FREE;
         WalletSnapshotResponse.ProcessorHolding processor =
                 new WalletSnapshotResponse.ProcessorHolding(billing.subscribed());
-        WalletSnapshotResponse.TeamHolding team = teamHolding(teamId);
+        WalletSnapshotResponse.TeamHolding team = teamHolding(teamId, isLeader);
 
         boolean noCap = billing.subscribed() && billing.capMoneyMinor() == null;
         Integer capMajor =
@@ -252,22 +265,56 @@ public class PaygWalletController {
                         prepaidTotal,
                         prepaidExpiresAt,
                         billingMode,
-                        bundleRatePerCreditMinor);
+                        bundleRatePerCreditMinor,
+                        billing.includedPeriodStart() == null
+                                ? null
+                                : billing.includedPeriodStart().toLocalDate().toString(),
+                        billing.includedPeriodEnd() == null
+                                ? null
+                                : billing.includedPeriodEnd().toLocalDate().toString(),
+                        enterpriseHolding(teamId));
         return ResponseEntity.ok(body);
+    }
+
+    private WalletSnapshotResponse.EnterpriseHolding enterpriseHolding(Long teamId) {
+        return enterprise
+                .findActive(teamId)
+                .map(
+                        ent -> {
+                            long used =
+                                    ledgerRepo.sumEnterprisePdfs(
+                                            teamId, ent.periodStart(), ent.periodEnd());
+                            return new WalletSnapshotResponse.EnterpriseHolding(
+                                    ent.status(),
+                                    ent.periodStart().toString() + "Z",
+                                    ent.periodEnd().toString() + "Z",
+                                    ent.accessUntil().toString() + "Z",
+                                    ent.agreedSeats(),
+                                    ent.annualVolume(),
+                                    used);
+                        })
+                .orElse(null);
     }
 
     /**
      * The team's user-capacity holding. The cap is written from the Team subscription, so a team
      * holds Team exactly when {@link SaasTeamExtensions#licensedUsers()} states one.
      */
-    private WalletSnapshotResponse.TeamHolding teamHolding(Long teamId) {
-        int usersInUse = Math.toIntExact(memberRepo.countByTeamId(teamId));
+    private WalletSnapshotResponse.TeamHolding teamHolding(Long teamId, boolean isLeader) {
+        Long fleetUsers = teamExtensionsRepository.fleetUsersInUse(teamId);
+        int usersInUse =
+                Math.toIntExact(fleetUsers == null ? memberRepo.countByTeamId(teamId) : fleetUsers);
         Integer licensed =
                 teamExtensionsRepository
                         .findByTeamId(teamId)
                         .map(SaasTeamExtensions::licensedUsers)
                         .orElse(null);
-        return new WalletSnapshotResponse.TeamHolding(licensed != null, licensed, usersInUse);
+        return new WalletSnapshotResponse.TeamHolding(
+                licensed != null,
+                licensed,
+                usersInUse,
+                fleetUsers != null,
+                isLeader ? fleetSeats.breakdown(teamId) : null);
     }
 
     /** Per-category size-scaled units + input-file counts for the same window. */
@@ -497,7 +544,7 @@ public class PaygWalletController {
         return (int) v;
     }
 
-    private WalletSnapshotResponse emptySnapshot() {
+    private WalletSnapshotResponse emptySnapshot(int allowance) {
         LocalDateTime[] window = currentMonthWindow();
         return new WalletSnapshotResponse(
                 null, // teamId — unknown when the caller has no team membership
@@ -508,9 +555,9 @@ public class PaygWalletController {
                 ISO_DATE.format(window[0].toLocalDate()),
                 ISO_DATE.format(window[1].toLocalDate()),
                 0,
-                FREE_TIER_LIMIT_UNITS_FALLBACK,
-                FREE_TIER_LIMIT_UNITS_FALLBACK,
-                FREE_TIER_LIMIT_UNITS_FALLBACK,
+                allowance,
+                allowance,
+                allowance,
                 UserLicenseSettingsService.DEFAULT_USER_LIMIT,
                 null,
                 null,
@@ -530,6 +577,9 @@ public class PaygWalletController {
                 0L,
                 null,
                 BILLING_MODE_PAYG,
+                null,
+                null,
+                null,
                 null);
     }
 }

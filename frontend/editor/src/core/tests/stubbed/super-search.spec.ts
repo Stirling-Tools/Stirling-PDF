@@ -201,7 +201,9 @@ test.describe("Super search — user without Processor access", () => {
     const input = await openSearch(page);
 
     // Chip row: the editor lanes only. No Processor lanes of any kind.
-    await expect(page.getByRole("button", { name: "Tools" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Tools", exact: true }),
+    ).toBeVisible();
     for (const lane of [
       "Pages",
       "Users",

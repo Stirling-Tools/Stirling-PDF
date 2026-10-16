@@ -36,6 +36,11 @@ vi.mock("@app/services/notificationPolicyRetry", () => ({
 }));
 
 const reportNotificationResolved = vi.fn();
+const reportKnownFailure = vi.fn();
+vi.mock("@app/services/failureReporting", () => ({
+  reportKnownFailure: (...args: unknown[]) => reportKnownFailure(...args),
+}));
+
 vi.mock("@app/services/notifications", async () => ({
   ...(await vi.importActual<typeof import("@app/services/notifications")>(
     "@app/services/notifications",
@@ -192,6 +197,7 @@ beforeEach(() => {
   });
   // Placeable by default: the browser still holds the policy the failure names.
   canPlacePolicy.mockReset().mockReturnValue(true);
+  reportKnownFailure.mockReset().mockResolvedValue(undefined);
   window.sessionStorage.clear();
   window.history.pushState({}, "", "/");
 });
@@ -224,6 +230,46 @@ describe("REPAIR", () => {
     });
     expect(repairDocuments).not.toHaveBeenCalled();
     expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
+  });
+
+  it("replaces the row when the repair tools refuse the document", async () => {
+    // The row offered a fix that has now been refused, so leaving it as damaged would keep
+    // offering it. The new code names a kind with no Repair, and the old row is closed behind it.
+    repairDocuments.mockResolvedValue({
+      ok: false,
+      reason: "serverMessage",
+      message: "This document is damaged in a way the repair tools cannot fix.",
+      errorCode: "E076",
+    });
+
+    const outcome = await registry().REPAIR?.run(
+      context({ kindId: "INPUT_CORRUPTED" }),
+    );
+
+    expect(outcome).toEqual({
+      ok: false,
+      message: "This document is damaged in a way the repair tools cannot fix.",
+    });
+    expect(reportKnownFailure).toHaveBeenCalledWith(
+      expect.objectContaining({ errorCode: "E076", fileIds: ["f-1"] }),
+    );
+    expect(reportNotificationResolved).toHaveBeenCalledWith("failure:evt-1");
+  });
+
+  it("leaves the row alone when the refusal is what its kind already says", async () => {
+    // A code the row's own kind claims tells the reader nothing new, so swapping the row would
+    // close and reopen it for no change.
+    repairDocuments.mockResolvedValue({
+      ok: false,
+      reason: "serverMessage",
+      message: "still damaged",
+      errorCode: "E001",
+    });
+
+    await registry().REPAIR?.run(context({ kindId: "INPUT_CORRUPTED" }));
+
+    expect(reportKnownFailure).not.toHaveBeenCalled();
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
   });
 
   it("re-runs the stashed operation over the repaired bytes, not the original", async () => {

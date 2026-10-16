@@ -1,8 +1,8 @@
+import type { IconName } from "@app/ui/Icon";
+
 /**
  * Types for automation functionality
  */
-
-import { type ComponentType } from "react";
 
 export interface AutomationOperation {
   operation: string;
@@ -67,5 +67,5 @@ export interface SuggestedAutomation {
   operations: AutomationOperation[];
   createdAt: string;
   updatedAt: string;
-  icon: ComponentType;
+  icon: IconName;
 }

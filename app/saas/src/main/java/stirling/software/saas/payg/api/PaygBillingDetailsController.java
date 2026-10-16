@@ -1,5 +1,6 @@
 package stirling.software.saas.payg.api;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,8 +31,8 @@ import stirling.software.saas.util.AuthenticationUtils;
  * The team is resolved from the authenticated principal, never from the request, as {@link
  * PaygPaymentMethodController} and {@link PaygInvoicesController} also do.
  *
- * <p>Read-only by design; Stripe's hosted portal is the one writer. Next-invoice timing is not
- * served here either, since the wallet already carries the period end.
+ * <p>Read-only by design; Stripe's hosted portal is the one writer. Each subscription's renewal
+ * date is independent of the wallet's usage and free-grant window.
  *
  * <p>No team, no {@code stripe_customer_id}, or a customer absent from the mirror all degrade to
  * {@code 200 present=false}, so the section loses rows rather than failing the page.
@@ -44,9 +45,13 @@ import stirling.software.saas.util.AuthenticationUtils;
 public class PaygBillingDetailsController {
 
     /** {@code present=false} carries no detail fields; either field may be null when present. */
-    public record BillingDetailsResponse(boolean present, String companyName, String invoiceEmail) {
+    public record BillingDetailsResponse(
+            boolean present,
+            String companyName,
+            String invoiceEmail,
+            List<StripeCustomerDetailsDao.UpcomingInvoice> upcomingInvoices) {
         static BillingDetailsResponse absent() {
-            return new BillingDetailsResponse(false, null, null);
+            return new BillingDetailsResponse(false, null, null, List.of());
         }
     }
 
@@ -93,7 +98,11 @@ public class PaygBillingDetailsController {
                         .map(
                                 d ->
                                         new BillingDetailsResponse(
-                                                true, d.companyName(), d.invoiceEmail()))
+                                                true,
+                                                d.companyName(),
+                                                d.invoiceEmail(),
+                                                customerDetailsDao.findUpcomingInvoices(
+                                                        ext.get().getStripeCustomerId())))
                         .orElseGet(BillingDetailsResponse::absent));
     }
 }

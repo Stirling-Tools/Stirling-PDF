@@ -1,4 +1,3 @@
-import { Group } from "@mantine/core";
 import { createPortal } from "react-dom";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
@@ -7,11 +6,15 @@ import {
   PdfAnnotationSubtype,
   type PdfAnnotationObject,
 } from "@embedpdf/models";
-import type { AnnotationObject } from "@app/components/viewer/viewerTypes";
+import type {
+  AnnotationMenuAnchor,
+  AnnotationObject,
+} from "@app/components/viewer/viewerTypes";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useAnnotationMenuHandlers } from "@app/components/viewer/useAnnotationMenuHandlers";
 import { AnnotationTypeButtons } from "@app/components/viewer/AnnotationTypeButtons";
+import "@app/components/viewer/TextSelectionMenu.css";
 
 /**
  * Props interface matching EmbedPDF's annotation selection menu pattern
@@ -29,6 +32,8 @@ export interface AnnotationSelectionMenuProps {
     ref?: (node: HTMLDivElement | null) => void;
     style?: React.CSSProperties;
   };
+  /** Reports where the menu sits so a delete can leave an undo affordance there. */
+  onAnchor?: (anchor: AnnotationMenuAnchor | null) => void;
 }
 
 export function AnnotationSelectionMenu(props: AnnotationSelectionMenuProps) {
@@ -44,6 +49,7 @@ function AnnotationSelectionMenuInner({
   context,
   selected,
   menuWrapperProps,
+  onAnchor,
 }: AnnotationSelectionMenuProps & { documentId: string }) {
   const annotation = context?.annotation;
   const pageIndex = context?.pageIndex;
@@ -125,7 +131,12 @@ function AnnotationSelectionMenuInner({
     if (!selected) return;
     const handlePointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement;
-      if (target.closest("[data-annotation-selection-menu]")) return;
+      if (
+        target.closest(
+          "[data-annotation-selection-menu],[data-text-selection-menu],[data-redaction-selection-menu]",
+        )
+      )
+        return;
       if (target.closest("[data-no-interaction]")) return;
       if (target.closest(".mantine-Popover-dropdown")) return;
       provides?.deselectAnnotation?.();
@@ -143,10 +154,27 @@ function AnnotationSelectionMenuInner({
     [menuWrapperProps],
   );
 
+  // The anchor follows the wrapper so a delete from any path can keep an undo
+  // menu where the annotation was.
+  const updateAnchor = useCallback(
+    (position: { top: number; left: number }) => {
+      const id = (annotation?.object as AnnotationObject | undefined)?.id;
+      if (!onAnchor || !id || pageIndex === undefined) return;
+      onAnchor({
+        annotationId: id,
+        pageIndex,
+        top: position.top,
+        left: position.left,
+      });
+    },
+    [annotation, onAnchor, pageIndex],
+  );
+
   // Track menu position via MutationObserver (handles drag repositioning)
   useEffect(() => {
     if (!selected || !annotation || !wrapperRef.current) {
       setMenuPosition(null);
+      onAnchor?.(null);
       return;
     }
 
@@ -157,10 +185,12 @@ function AnnotationSelectionMenuInner({
         return;
       }
       const rect = wrapper.getBoundingClientRect();
-      setMenuPosition({
+      const position = {
         top: rect.bottom + 8,
         left: rect.left + rect.width / 2,
-      });
+      };
+      setMenuPosition(position);
+      updateAnchor(position);
     };
 
     updatePosition();
@@ -178,13 +208,14 @@ function AnnotationSelectionMenuInner({
       window.removeEventListener("scroll", updatePosition, true);
       window.removeEventListener("resize", updatePosition);
     };
-  }, [selected]);
+  }, [selected, updateAnchor]);
 
   if (!selected || !annotation) return null;
 
   const menuContent = menuPosition ? (
     <div
       data-annotation-selection-menu
+      className="embedpdf-floating-menu"
       style={{
         position: "fixed",
         top: `${menuPosition.top}px`,
@@ -192,26 +223,17 @@ function AnnotationSelectionMenuInner({
         transform: "translateX(-50%)",
         pointerEvents: "auto",
         zIndex: 10000,
-        backgroundColor: "var(--mantine-color-body)",
-        borderRadius: 8,
-        padding: "8px 12px",
-        boxShadow: "0 2px 12px rgba(0, 0, 0, 0.25)",
-        border: "1px solid var(--mantine-color-default-border)",
-        fontSize: "14px",
-        minWidth: `${handlers.menuWidth}px`,
-        transition: "min-width 0.2s ease",
+        width: "max-content",
       }}
     >
-      <Group gap="sm" wrap="nowrap" justify="center">
-        <AnnotationTypeButtons
-          {...handlers}
-          isInSidebar={isInSidebar}
-          annotation={annotation}
-          documentId={documentId}
-          pageIndex={pageIndex}
-          annotationId={handlers.annotationId}
-        />
-      </Group>
+      <AnnotationTypeButtons
+        {...handlers}
+        isInSidebar={isInSidebar}
+        annotation={annotation}
+        documentId={documentId}
+        pageIndex={pageIndex}
+        annotationId={handlers.annotationId}
+      />
     </div>
   ) : null;
 

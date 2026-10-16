@@ -1,20 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
-const PROMPT_DISMISSED_KEY = "stirlingpdf_default_app_prompt_dismissed";
-
-type PromptDismissedListener = () => void;
-const promptDismissedListeners = new Set<PromptDismissedListener>();
-
-function notifyPromptDismissedListeners(): void {
-  for (const listener of promptDismissedListeners) {
-    listener();
-  }
-}
-
-/**
- * Service for managing default PDF handler settings
- * Note: Uses localStorage for machine-specific preferences (not synced to server)
- */
+/** Service for managing default PDF handler settings */
 export const defaultAppService = {
   /**
    * Check if Stirling PDF is the default PDF handler
@@ -43,53 +29,5 @@ export const defaultAppService = {
       console.error("[DefaultApp] Failed to set default handler:", error);
       return "error";
     }
-  },
-
-  /**
-   * Check if user has dismissed the default app prompt (machine-specific)
-   */
-  hasUserDismissedPrompt(): boolean {
-    try {
-      const dismissed = localStorage.getItem(PROMPT_DISMISSED_KEY);
-      return dismissed === "true";
-    } catch {
-      return false;
-    }
-  },
-
-  /**
-   * Mark that user has dismissed the default app prompt (machine-specific)
-   */
-  setPromptDismissed(dismissed: boolean): void {
-    try {
-      localStorage.setItem(PROMPT_DISMISSED_KEY, dismissed ? "true" : "false");
-      notifyPromptDismissedListeners();
-    } catch (error) {
-      console.error("[DefaultApp] Failed to save prompt preference:", error);
-    }
-  },
-
-  /**
-   * Subscribe to prompt-dismissed preference changes (same-session sync).
-   * Returns an unsubscribe function.
-   */
-  subscribePromptDismissed(listener: PromptDismissedListener): () => void {
-    promptDismissedListeners.add(listener);
-    return () => {
-      promptDismissedListeners.delete(listener);
-    };
-  },
-
-  /**
-   * Check if we should show the default app prompt
-   * Returns true if: user hasn't dismissed it AND app is not default handler
-   */
-  async shouldShowPrompt(): Promise<boolean> {
-    if (this.hasUserDismissedPrompt()) {
-      return false;
-    }
-
-    const isDefault = await this.isDefaultPdfHandler();
-    return !isDefault;
   },
 };

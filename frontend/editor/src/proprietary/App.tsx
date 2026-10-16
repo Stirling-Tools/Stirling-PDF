@@ -5,18 +5,19 @@ import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
-import Landing from "@app/routes/Landing";
-import Login from "@app/routes/Login";
-import AuthCallback from "@app/routes/AuthCallback";
-import InviteAccept from "@app/routes/InviteAccept";
-import ShareLinkPage from "@app/routes/ShareLinkPage";
-import ParticipantView from "@app/components/workflow/ParticipantView";
-import Onboarding from "@app/components/onboarding/Onboarding";
-import WatchedFoldersRegistration from "@app/components/watchedFolders/WatchedFoldersRegistration";
+
+const Landing = lazy(() => import("@app/routes/Landing"));
+const Login = lazy(() => import("@app/routes/Login"));
+const AuthCallback = lazy(() => import("@app/routes/AuthCallback"));
+const InviteAccept = lazy(() => import("@app/routes/InviteAccept"));
+const ShareLinkPage = lazy(() => import("@app/routes/ShareLinkPage"));
+const ParticipantView = lazy(
+  () => import("@app/components/workflow/ParticipantView"),
+);
+const Onboarding = lazy(() => import("@app/components/onboarding/Onboarding"));
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
-import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import { AppFrame } from "@app/components/layout/AppFrame";
 import { NoAppChrome } from "@app/components/layout/NoAppChrome";
@@ -46,6 +47,39 @@ function ParticipantViewPage() {
   const { token } = useParams<{ token: string }>();
   if (!token) return null;
   return <ParticipantView token={token} />;
+}
+
+function MainRoutes() {
+  return (
+    <Routes>
+      {/* Not the app: no rail over any of these, ever. */}
+      <Route element={<NoAppChrome />}>
+        <Route path="/login" element={<Login />} />
+        {/* Self-hosted has no signup: old links land on login. */}
+        <Route path="/signup" element={<Navigate to="/login" replace />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/invite/:token" element={<InviteAccept />} />
+        <Route path="/share/:token" element={<ShareLinkPage />} />
+      </Route>
+      {/* The editor and its tool routes - Landing handles auth logic */}
+      <Route path="/*" element={<Landing />} />
+    </Routes>
+  );
+}
+
+// All other routes need AppProviders for backend integration. RootGate routes
+// "/" by role before any of it mounts.
+function MainApp() {
+  return (
+    <RootGate>
+      <AppProviders>
+        <AppLayout>
+          <MainRoutes />
+          <Onboarding />
+        </AppLayout>
+      </AppProviders>
+    </RootGate>
+  );
 }
 
 export default function App() {
@@ -86,47 +120,7 @@ export default function App() {
         <Route element={<AppFrame />}>
           {/* The portal: its own shell, before the catch-all. An empty stub in core. */}
           {getAdminRouteExtensions()}
-
-          {/* All other routes need AppProviders for backend integration. RootGate
-              routes "/" by role before any of it mounts. */}
-          <Route
-            path="*"
-            element={
-              <RootGate>
-                <AppProviders>
-                  <AppLayout>
-                    <Routes>
-                      {/* Not the app: no rail over any of these, ever. */}
-                      <Route element={<NoAppChrome />}>
-                        <Route path="/login" element={<Login />} />
-                        {/* Self-hosted has no signup: old links land on login. */}
-                        <Route
-                          path="/signup"
-                          element={<Navigate to="/login" replace />}
-                        />
-                        <Route
-                          path="/auth/callback"
-                          element={<AuthCallback />}
-                        />
-                        <Route
-                          path="/invite/:token"
-                          element={<InviteAccept />}
-                        />
-                        <Route
-                          path="/share/:token"
-                          element={<ShareLinkPage />}
-                        />
-                      </Route>
-                      {/* The editor and its tool routes - Landing handles auth logic */}
-                      <Route path="/*" element={<Landing />} />
-                    </Routes>
-                    <Onboarding />
-                    {WATCHED_FOLDERS_ENABLED && <WatchedFoldersRegistration />}
-                  </AppLayout>
-                </AppProviders>
-              </RootGate>
-            }
-          />
+          <Route path="*" element={<MainApp />} />
         </Route>
       </Routes>
     </Suspense>

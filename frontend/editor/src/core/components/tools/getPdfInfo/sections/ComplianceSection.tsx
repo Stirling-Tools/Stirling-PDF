@@ -16,6 +16,7 @@ import type {
   PdfComplianceSummary,
 } from "@app/types/getPdfInfo";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 interface ComplianceSectionProps {
   anchorId: string;
@@ -119,6 +120,7 @@ const parseStandardDisplayName = (
 };
 
 const buildComplianceResults = (
+  t: TFunction,
   complianceSummary?: PdfComplianceSummary[] | null,
   legacyCompliance?: PdfCompliance | null,
 ): ComplianceCheckResult[] => {
@@ -161,8 +163,14 @@ const buildComplianceResults = (
       category: "SEC",
       isCompliant: isSecCompliant,
       summary: isSecCompliant
-        ? "Document meets SEC EDGAR filing requirements"
-        : "Document does not meet SEC EDGAR filing requirements",
+        ? t(
+            "getPdfInfo.compliance.secCompliant",
+            "Document meets SEC EDGAR filing requirements",
+          )
+        : t(
+            "getPdfInfo.compliance.secNotCompliant",
+            "Document does not meet SEC EDGAR filing requirements",
+          ),
       standardId: "sec-edgar",
       sortOrder: 600,
     });
@@ -277,8 +285,8 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({
   const { t } = useTranslation();
 
   const complianceResults = useMemo(
-    () => buildComplianceResults(complianceSummary, legacyCompliance),
-    [complianceSummary, legacyCompliance],
+    () => buildComplianceResults(t, complianceSummary, legacyCompliance),
+    [t, complianceSummary, legacyCompliance],
   );
 
   const conformanceLevel = useMemo(

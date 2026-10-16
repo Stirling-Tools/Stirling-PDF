@@ -3,7 +3,7 @@ import { Paper, Group, Text, Popover, List, ScrollArea } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
 import {
@@ -217,10 +217,9 @@ export function SelfHostedOfflineBanner() {
           wrap="nowrap"
           style={{ minWidth: 0, flex: 1 }}
         >
-          <LocalIcon
-            icon="warning-rounded"
-            width="1rem"
-            height="1rem"
+          <Icon
+            name="triangle-alert"
+            size="1rem"
             style={{ color: BANNER_ICON, flexShrink: 0 }}
           />
           <Text
@@ -293,7 +292,7 @@ export function SelfHostedOfflineBanner() {
           aria-label={t("close", "Close")}
           style={{ color: BANNER_TEXT }}
         >
-          <LocalIcon icon="close-rounded" width="0.8rem" height="0.8rem" />
+          <Icon name="x" size="0.8rem" />
         </ActionIcon>
       </Group>
     </Paper>

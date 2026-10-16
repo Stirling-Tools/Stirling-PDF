@@ -10,9 +10,13 @@
  * download. Each policy selects files using its first step's accepted inputs.
  */
 
+import { dispatchPolicyFile } from "@app/services/policyDispatch";
 import { loadPolicies } from "@app/services/policyStorage";
+import { reportFreeTierExhausted } from "@app/services/accountLinkBlock";
+import { policyCreditContext } from "@app/services/policyCreditContext";
 import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
+import { editorTriggerOf } from "@app/policies/runOn";
 import { policyAcceptsFile } from "@app/services/policyInput";
 import { splitFileName } from "@app/utils/fileUtils";
 import {
@@ -26,6 +30,7 @@ import type { PolicyState } from "@app/types/policies";
 import {
   recordRunStart,
   isDispatched,
+  markDispatched,
 } from "@app/components/policies/policyRunStore";
 import {
   runQueued,
@@ -47,6 +52,7 @@ interface ExportPolicy extends Pick<PolicyState, "firstOperation"> {
   backendId: string;
   label: string;
   outputMode: "new_file" | "new_version";
+  externalOutput?: boolean;
   required: boolean;
   /** The policy's accent as a CSS colour, for the toast glow. */
   accent: string;
@@ -57,6 +63,7 @@ interface PolicyRunResult {
   runId: string;
   target: PolicyExecutionTarget;
   outputs: { fileId: string; fileName: string }[];
+  externalOutput?: boolean;
 }
 
 /** Configured, active policies set to enforce on export (read from the cache). */
@@ -66,27 +73,31 @@ function activeExportPolicies(): ExportPolicy[] {
   );
   return (
     Object.entries(loadPolicies())
-      .filter(
-        ([, s]) =>
-          s.configured &&
-          s.enabled &&
-          s.backendId &&
-          s.runsOnEditor &&
-          s.runOn === "export",
-      )
+      .filter(([, s]) => editorTriggerOf(s) === "export")
       // Same team-wide run order the upload path uses: enforcement is not commutative (a watermark
       // then a flatten is not a flatten then a watermark), so both paths must agree on the sequence.
       .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
-      .map(([id, s]) => ({
-        policyKey: id,
-        backendId: s.backendId as string,
-        firstOperation: s.firstOperation,
-        // A builder pipeline has no built-in category, so it labels by its own name.
-        label: labels.get(id) ?? s.name ?? "Policy",
-        outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
-        required: s.required === true,
-        accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
-      }))
+      .map(([id, s]) => {
+        const required = s.required === true;
+        return {
+          policyKey: id,
+          backendId: s.backendId as string,
+          externalOutput: s.externalOutput,
+          firstOperation: s.firstOperation,
+          // A builder pipeline has no built-in category, so it labels by its own name.
+          label:
+            labels.get(id) ??
+            s.name ??
+            i18n.t(
+              required
+                ? "portal.pipelines.type.policy"
+                : "portal.pipelines.type.pipeline",
+            ),
+          outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
+          required,
+          accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
+        };
+      })
   );
 }
 
@@ -97,7 +108,12 @@ async function runToCompletion(
   file: File,
 ): Promise<PolicyRunResult> {
   const target = resolvePolicyRunTarget();
-  const runId = await runStoredPolicy(backendId, [file]);
+  const runId = await runStoredPolicy(
+    backendId,
+    [file],
+    undefined,
+    "background",
+  );
   for (let i = 0; i < MAX_POLLS; i++) {
     await delay(POLL_MS);
     let view;
@@ -107,6 +123,14 @@ async function runToCompletion(
       continue; // transient — keep polling within the cap.
     }
     if (view.status === "COMPLETED") {
+      if (view.externalOutput)
+        return {
+          file,
+          runId,
+          target,
+          outputs: view.outputs ?? [],
+          externalOutput: true,
+        };
       const out = view.outputs?.[0];
       if (!out) throw new Error("policy produced no output");
       const blob = await downloadPolicyOutput(out.fileId, target);
@@ -117,6 +141,9 @@ async function runToCompletion(
       return { file: enforced, runId, target, outputs: view.outputs ?? [] };
     }
     if (view.status === "FAILED" || view.status === "CANCELLED") {
+      if (view.errorCode === "FREE_TIER_EXHAUSTED") {
+        reportFreeTierExhausted(policyCreditContext(backendId));
+      }
       throw new Error(view.error || `policy run ${view.status.toLowerCase()}`);
     }
     if (view.status === "WAITING_FOR_INPUT") {
@@ -156,7 +183,25 @@ export async function enforceExportPolicies(
   trigger: EnforcementTrigger = "export",
 ): Promise<File[]> {
   assertFilesNotBlocked(fileIds);
-  const active = activeExportPolicies();
+  const policies = activeExportPolicies();
+  const active = policies.filter((policy) => !policy.externalOutput);
+  const external = policies.filter((policy) => policy.externalOutput);
+  for (const [i, file] of files.entries()) {
+    const fileId = fileIds?.[i];
+    for (const policy of external) {
+      if (!policyAcceptsFile(policy, file)) continue;
+      if (fileId && isDispatched(policy.policyKey, fileId)) continue;
+      if (fileId) markDispatched(policy.policyKey, fileId);
+      void dispatchPolicyFile(
+        policy.policyKey,
+        policy.backendId,
+        file,
+        fileId,
+        false,
+        true,
+      );
+    }
+  }
   if (!active.length || files.length === 0) return files;
 
   // Policies that haven't already enforced this exact file version. Enforcing
@@ -258,6 +303,7 @@ export async function enforceExportPolicies(
             target: versionRun.target,
             status: "COMPLETED",
             outputs: versionRun.outputs,
+            externalOutput: versionRun.externalOutput,
             error: null,
             startedAt: Date.now(),
           });

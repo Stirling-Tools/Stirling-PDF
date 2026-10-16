@@ -1,16 +1,17 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
 import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
-import { WindowTitleBar } from "@app/components/WindowTitleBar";
 import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
 import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
+import { LocalProcessingFolders } from "@app/components/LocalProcessingFolders";
 import { DiskConflictHost } from "@app/components/shared/DiskConflictHost";
 import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
 import { DesktopSaasOnboardingBootstrap } from "@app/components/DesktopSaasOnboardingBootstrap";
 import { ClassificationBackgroundRunner } from "@app/components/onboarding/classificationDemo/ClassificationBackgroundRunner";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
 import { SignInModal } from "@app/components/SignInModal";
+import { DesktopAccessGate } from "@app/components/DesktopAccessGate";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 import { ToolActionsContext } from "@app/contexts/ToolActionsContext";
 import { useFirstLaunchCheck } from "@app/hooks/useFirstLaunchCheck";
@@ -19,6 +20,7 @@ import { DESKTOP_DEFAULT_APP_CONFIG } from "@app/config/defaultAppConfig";
 import {
   connectionModeService,
   JWT_EXPIRED_PROMPTED_KEY,
+  type ConnectionConfig,
 } from "@app/services/connectionModeService";
 import { STIRLING_SAAS_URL } from "@app/constants/connection";
 import { tauriBackendService } from "@app/services/tauriBackendService";
@@ -30,6 +32,7 @@ import { isTauri } from "@tauri-apps/api/core";
 import { SaaSTeamProvider } from "@app/contexts/SaaSTeamContext";
 import UpdateModal from "@core/components/shared/UpdateModal";
 import { useDesktopUpdatePopup } from "@app/hooks/useDesktopUpdatePopup";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 
 // Common tool endpoints to preload for faster first-use
 const COMMON_TOOL_ENDPOINTS = [
@@ -52,6 +55,7 @@ const COMMON_TOOL_ENDPOINTS = [
  * - Shows setup wizard on first launch
  */
 export function AppProviders({ children }: { children: ReactNode }) {
+  const localOnly = useLocalProcessingOnly();
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
   const updatePopup = useDesktopUpdatePopup();
   const [connectionMode, setConnectionMode] = useState<
@@ -65,6 +69,17 @@ export function AppProviders({ children }: { children: ReactNode }) {
   // tree to remount without a full page reload (avoids Windows WebView2 freeze on window.location.reload()).
   const [appKey, setAppKey] = useState(0);
   const hasLoadedInitialMode = useRef(false);
+  // The mode the current appKey reflects. A same-mode notify (e.g. "continue without
+  // signing in" re-selecting local while already local) must not remount the provider
+  // tree - that resets DesktopOnboardingModal mid-flow and re-shows the welcome slide.
+  const lastAppliedMode = useRef<"saas" | "selfhosted" | "local" | null>(null);
+
+  const initializeConnectionMode = useCallback((config: ConnectionConfig) => {
+    if (hasLoadedInitialMode.current) return;
+    setConnectionMode(config.mode);
+    lastAppliedMode.current = config.mode;
+    hasLoadedInitialMode.current = true;
+  }, []);
 
   // Files dropped outside a dropzone must never navigate the webview to the
   // file (Linux WebKit renders the PDF fullscreen and orphans the app UI).
@@ -82,10 +97,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   // Load connection mode on mount and subscribe to future changes
   useEffect(() => {
-    void connectionModeService.getCurrentMode().then((mode) => {
-      setConnectionMode(mode);
-      hasLoadedInitialMode.current = true;
-    });
+    void connectionModeService
+      .getCurrentConfig()
+      .then(initializeConnectionMode)
+      .catch(() => setAuthChecked(true));
 
     const unsub = connectionModeService.subscribeToModeChanges((config) => {
       setConnectionMode(config.mode);
@@ -96,12 +111,21 @@ export function AppProviders({ children }: { children: ReactNode }) {
       // SaaS providers and remounting mid-wizard resets authChecked, navigating away.
       // Switching FROM selfhosted TO saas DOES trigger a remount (mode !== 'selfhosted')
       // which is intentional — the SaaS provider tree needs fresh state after login.
-      if (hasLoadedInitialMode.current && config.mode !== "selfhosted") {
+      // Only on a real transition: a same-mode notify has nothing to reset, and
+      // remounting would tear down an in-flight modal (e.g. onboarding sign-in).
+      const modeChanged = lastAppliedMode.current !== config.mode;
+      lastAppliedMode.current = config.mode;
+      if (
+        hasLoadedInitialMode.current &&
+        modeChanged &&
+        config.mode !== "selfhosted"
+      ) {
         setAppKey((k) => k + 1);
       }
+      hasLoadedInitialMode.current = true;
     });
     return unsub;
-  }, []);
+  }, [initializeConnectionMode]);
 
   useEffect(() => {
     // Wait until connection mode is loaded before checking auth
@@ -132,7 +156,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
               const cfg = await connectionModeService
                 .getCurrentConfig()
                 .catch(() => null);
-              if (!cfg?.lock_connection_mode) {
+              if (cfg && !cfg.lock_connection_mode && !cfg.require_sign_in) {
                 // JWT expired — fall back to local so local tools still work.
                 await connectionModeService
                   .switchToLocal()
@@ -154,7 +178,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
             const cfg = await connectionModeService
               .getCurrentConfig()
               .catch(() => null);
-            if (!cfg?.lock_connection_mode) {
+            if (cfg && !cfg.lock_connection_mode && !cfg.require_sign_in) {
               await connectionModeService.switchToLocal().catch(console.error);
               setConnectionMode("local");
               if (!localStorage.getItem(JWT_EXPIRED_PROMPTED_KEY)) {
@@ -172,12 +196,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
       connectionModeService
         .getCurrentConfig()
         .then(async (cfg) => {
-          if (cfg.lock_connection_mode && cfg.server_config?.url) {
-            // Locked provisioned deployment — do NOT switch to local (would clear server_config
-            // from the store). Show onboarding normally; the sign-in slide handles locked auth.
-            // Still start the local backend so local tools work while the user signs in.
+          if (
+            cfg.require_sign_in ||
+            (cfg.lock_connection_mode && cfg.server_config?.url)
+          ) {
+            // Preserve the managed connection; DesktopAccessGate controls access to local tools.
             await tauriBackendService.startBackend().catch(console.error);
-            setConnectionMode("selfhosted");
+            setConnectionMode(cfg.mode);
           } else {
             // Normal first launch — auto-enter local mode.
             // The onboarding carousel + sign-in slide will be shown inside the main app.
@@ -216,7 +241,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const shouldMonitorBackend =
     setupComplete &&
     !isFirstLaunch &&
-    (connectionMode === "saas" || connectionMode === "local");
+    (connectionMode === "saas" || connectionMode === "local" || localOnly);
   useBackendInitializer(shouldMonitorBackend);
 
   // Preload endpoint availability for the local bundled backend.
@@ -331,8 +356,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
       >
         {/* Also here: the auth check below switches mode pre-authChecked. */}
         <DesktopQueryCacheReset />
-        <WindowTitleBar />
-        <div style={{ minHeight: "100vh" }} />
+        {/* The title-bar strip (window controls) comes from AppFrame, which wraps
+            this loading branch too; here we just fill the space below it. */}
+        <div style={{ height: "100%" }} />
         {updatePopupModal}
       </ProprietaryAppProviders>
     );
@@ -358,29 +384,31 @@ export function AppProviders({ children }: { children: ReactNode }) {
         }}
       >
         <DesktopQueryCacheReset />
-        <WindowTitleBar />
-        <SaaSTeamProvider key={appKey}>
-          <DesktopConfigSync />
-          <DesktopBannerInitializer />
-          <SaveShortcutListener />
-          <DiskConflictHost />
-          {children}
-          {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
-          <DesktopOnboardingModal />
-          {/* SaaS product onboarding (cloud flow, minus the desktop-download slide),
+        <DesktopAccessGate onConfigLoaded={initializeConnectionMode}>
+          <SaaSTeamProvider key={appKey}>
+            <DesktopConfigSync />
+            <DesktopBannerInitializer />
+            <SaveShortcutListener />
+            <LocalProcessingFolders />
+            <DiskConflictHost />
+            {children}
+            {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
+            <DesktopOnboardingModal />
+            {/* SaaS product onboarding (cloud flow, minus the desktop-download slide),
               shown once after a SaaS sign-in. Mirrors saas's OnboardingBootstrap. */}
-          <DesktopSaasOnboardingBootstrap connectionMode={connectionMode} />
-          <ClassificationBackgroundRunner />
-          {/* Always-mounted host for the PAYG usage-limit modals (free-limit /
+            <DesktopSaasOnboardingBootstrap connectionMode={connectionMode} />
+            <ClassificationBackgroundRunner />
+            {/* Always-mounted host for the PAYG usage-limit modals (free-limit /
               spend-cap). Resolves to the cloud implementation via @app; listens
               for both the imperative open events (direct-call 402s) and the
               usageLimitBridge event (server-side policy/AI run 402s). */}
-          <UsageLimitModalHost />
-          {/* Global sign-in modal, opened via stirling:open-sign-in event */}
-          <SignInModal />
-          {/* Desktop auto-update popup */}
-          {updatePopupModal}
-        </SaaSTeamProvider>
+            <UsageLimitModalHost />
+            {/* Global sign-in modal, opened via stirling:open-sign-in event */}
+            <SignInModal />
+            {/* Desktop auto-update popup */}
+            {updatePopupModal}
+          </SaaSTeamProvider>
+        </DesktopAccessGate>
       </ToolActionsContext.Provider>
     </ProprietaryAppProviders>
   );

@@ -1,7 +1,6 @@
-import { estimatedBillWithPending } from "@app/billing/pendingUsage";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { KvRow, formatMinor, formatPeriodDate } from "@app/billing";
+import { KvRow, formatPeriodDate } from "@app/billing";
 import {
   fetchBillingDetails,
   fetchPaymentMethod,
@@ -18,11 +17,10 @@ import {
  */
 export function PaymentSection({
   wallet,
-  pendingUnits = 0,
   onManage,
   managing = false,
 }: {
-  /** Supplies the next-invoice date and estimate. */
+  /** Identifies the account and refreshes details after subscription changes. */
   wallet: Wallet;
   pendingUnits?: number;
   /** Opens the Stripe customer portal, which is where all of these are edited. */
@@ -30,7 +28,6 @@ export function PaymentSection({
   managing?: boolean;
 }) {
   const { t } = useTranslation();
-  const estimatedMinor = estimatedBillWithPending(wallet, pendingUnits);
   const [pm, setPm] = useState<PaymentMethod | null>(null);
   const [details, setDetails] = useState<BillingDetails | null>(null);
 
@@ -54,7 +51,7 @@ export function PaymentSection({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [wallet]);
 
   const card =
     pm?.present && pm.brand && pm.last4
@@ -89,31 +86,24 @@ export function PaymentSection({
         value={card}
         door={update}
       />
-      <KvRow
-        label={t("portal.billing.payment.nextInvoice", "Next invoice")}
-        note={
-          wallet.processor.active
-            ? t(
-                "portal.billing.payment.nextInvoiceNote",
-                "from this cycle's pace",
-              )
-            : undefined
-        }
-        value={
-          estimatedMinor != null
-            ? t(
-                "portal.billing.payment.nextInvoiceValue",
-                "{{date}} · {{amount}}",
-                {
-                  date: formatPeriodDate(wallet.billingPeriodEnd, {
-                    year: true,
-                  }),
-                  amount: formatMinor(estimatedMinor, wallet.currency),
-                },
-              )
-            : formatPeriodDate(wallet.billingPeriodEnd, { year: true })
-        }
-      />
+      {details?.upcomingInvoices?.length ? (
+        details.upcomingInvoices.map((invoice) => (
+          <KvRow
+            key={invoice.subscriptionId}
+            label={t("portal.billing.payment.nextInvoice", "Next invoice")}
+            note={invoice.description ?? undefined}
+            value={formatPeriodDate(invoice.date, { year: true })}
+          />
+        ))
+      ) : (
+        <KvRow
+          label={t("portal.billing.payment.nextInvoice", "Next invoice")}
+          value={t(
+            "portal.billing.payment.dateUnavailable",
+            "Billing date not available yet",
+          )}
+        />
+      )}
       {details?.companyName && (
         <KvRow
           label={t("portal.billing.payment.billedTo", "Billed to")}

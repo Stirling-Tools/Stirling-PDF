@@ -37,15 +37,8 @@ export async function fetchPoliciesByCategory(): Promise<
   return byCategory;
 }
 
-/**
- * Project a decoded backend policy onto the frontend per-category state. The
- * locally-cached `folderId` (the editable-automation link, which the backend
- * doesn't track) is preserved by the caller via `localFolderId`.
- */
-export function decodedToState(
-  decoded: DecodedPolicy,
-  localFolderId: string | undefined,
-): PolicyState {
+/** Project backend policy settings onto the editor's cached enforcement state. */
+export function decodedToState(decoded: DecodedPolicy): PolicyState {
   return {
     configured: true,
     enabled: decoded.enabled,
@@ -53,6 +46,7 @@ export function decodedToState(
     owner: decoded.owner,
     sources: decoded.sources,
     runsOnEditor: decoded.runsOnEditor,
+    externalOutput: decoded.externalOutput,
     required: decoded.required,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
@@ -61,7 +55,6 @@ export function decodedToState(
     outputName: decoded.folder.outputName,
     outputNamePosition: decoded.folder.outputNamePosition,
     runOn: decoded.folder.runOn,
-    folderId: localFolderId,
     backendId: decoded.id,
     firstOperation: decoded.firstOperation,
     // Server-side run-order position (team-wide); drives the settings reorder list.

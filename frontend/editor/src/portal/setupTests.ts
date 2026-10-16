@@ -1,8 +1,17 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
+import i18n from "i18next";
 
 // The shims `src/index.tsx` installs - see core/setupTests.ts.
 import "@app/utils/engineShims";
+
+// Modules outside React call i18n.t directly; no resources means the English defaults render.
+void i18n.init({
+  lng: "en-US",
+  resources: {},
+  initAsync: false,
+  interpolation: { escapeValue: false },
+});
 
 // Mirrors the editor's setup: jsdom lacks a handful of browser APIs that shared
 // components (Mantine FocusTrap, responsive helpers) touch on render.
@@ -35,7 +44,7 @@ class LocalStorageMock implements Storage {
   }
 }
 
-Object.defineProperty(window, "localStorage", {
+Object.defineProperty(globalThis, "localStorage", {
   value: new LocalStorageMock(),
   writable: true,
 });
@@ -52,7 +61,7 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
-Object.defineProperty(window, "matchMedia", {
+Object.defineProperty(globalThis, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
     matches: false,

@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
@@ -72,7 +73,8 @@ class UserControllerMoreTest {
                         teamMembershipService,
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.service.OrgOwnerService.class),
-                        loginLandingService);
+                        loginLandingService,
+                        new MockEnvironment());
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -258,7 +260,7 @@ class UserControllerMoreTest {
             Team defaultTeam = new Team();
             defaultTeam.setId(1L);
             defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-            when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+            when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                     .thenReturn(Optional.of(defaultTeam));
 
             mockMvc.perform(
@@ -465,7 +467,7 @@ class UserControllerMoreTest {
             Team defaultTeam = new Team();
             defaultTeam.setId(1L);
             defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-            when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+            when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                     .thenReturn(Optional.of(defaultTeam));
 
             mockMvc.perform(

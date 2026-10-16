@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.pdf.MarkdownBlock;
+import stirling.software.common.pdf.MarkdownBlocks;
 import stirling.software.common.pdf.PdfMarkdownExtractor;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfPage;
@@ -29,15 +31,17 @@ import stirling.software.jpdfium.text.TextLine;
 public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
 
     @Override
-    public String convert(PdfDocument doc) throws IOException {
-        List<String> rendered = new ArrayList<>();
-        for (Object e : buildElements(doc)) {
-            rendered.add(e instanceof TableBlock tb ? tb.render() : (String) e);
+    public List<MarkdownBlock> extractBlocks(PdfDocument doc) throws IOException {
+        List<Element> elements = buildElements(doc);
+        List<MarkdownBlock> blocks = new ArrayList<>(elements.size());
+        for (Element e : elements) {
+            String md = e.value() instanceof TableBlock tb ? tb.render() : (String) e.value();
+            blocks.add(new MarkdownBlock(md, e.pageStart(), e.pageEnd()));
         }
-        return MarkdownText.normaliseHeadingLevels(String.join("\n\n", rendered));
+        return MarkdownBlocks.withHeadingPaths(MarkdownBlocks.normaliseHeadingLevels(blocks));
     }
 
-    private List<Object> buildElements(PdfDocument doc) throws IOException {
+    private List<Element> buildElements(PdfDocument doc) throws IOException {
         List<PageText> allPageText = PdfTextExtractor.extractAll(doc);
         float medianSize = HeadingDetector.medianFontSize(allPageText);
         float medianHeight = HeadingDetector.medianLineHeight(allPageText);
@@ -46,7 +50,7 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
         int pageCount = doc.pageCount();
         // Tables stay structured until after the page loop so one split across a page break can
         // be stitched back together before rendering.
-        List<Object> output = new ArrayList<>();
+        List<Element> output = new ArrayList<>();
         // Header of a table that ended the previous page, for spotting a continuation; null if
         // none.
         String prevPageTrailingTableHeader = null;
@@ -54,12 +58,12 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
         for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
             PageLines page = pageLines(doc, allPageText, pageIndex);
             if (page.lines().isEmpty()) {
-                PageImages.emit(doc, pageIndex, output);
+                PageImages.emit(doc, pageIndex, pageIndex + 1, output);
                 prevPageTrailingTableHeader = null;
                 continue;
             }
 
-            List<Object> pageItems =
+            List<Element> pageItems =
                     buildPageItems(
                             doc,
                             page,
@@ -107,7 +111,7 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
      * One page's elements: paragraph strings interleaved with {@link TableBlock}s in reading order.
      * {@code continuationHeader} is the previous page's trailing table header, or null.
      */
-    private List<Object> buildPageItems(
+    private List<Element> buildPageItems(
             PdfDocument doc,
             PageLines page,
             int pageIndex,
@@ -191,7 +195,7 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
             }
         }
 
-        List<Object> pageItems = new ArrayList<>();
+        List<Element> pageItems = new ArrayList<>();
         List<List<Line>> segments = segmentsAround(lines, blocks, tableLines);
         if (twoColumn) {
             // A full-width table interrupts both columns, so splitting at its own vertical band
@@ -205,10 +209,12 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
                     List<String> paras = new ArrayList<>();
                     ParagraphAssembler.assembleParagraphs(
                             col, medianSize, medianHeight, bodyFont, paras, tableRowTexts);
-                    pageItems.addAll(paras);
+                    for (String p : paras) {
+                        pageItems.add(new Element(p, pageIndex + 1, pageIndex + 1));
+                    }
                 }
                 if (s < blocks.size()) {
-                    pageItems.add(blocks.get(s));
+                    pageItems.add(new Element(blocks.get(s), pageIndex + 1, pageIndex + 1));
                 }
             }
         } else {
@@ -218,14 +224,16 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
                 List<String> paras = new ArrayList<>();
                 ParagraphAssembler.assembleParagraphs(
                         segments.get(s), medianSize, medianHeight, bodyFont, paras, tableRowTexts);
-                pageItems.addAll(paras);
+                for (String p : paras) {
+                    pageItems.add(new Element(p, pageIndex + 1, pageIndex + 1));
+                }
                 if (s < blocks.size()) {
-                    pageItems.add(blocks.get(s));
+                    pageItems.add(new Element(blocks.get(s), pageIndex + 1, pageIndex + 1));
                 }
             }
         }
 
-        PageImages.emit(doc, pageIndex, pageItems);
+        PageImages.emit(doc, pageIndex, pageIndex + 1, pageItems);
         return pageItems;
     }
 

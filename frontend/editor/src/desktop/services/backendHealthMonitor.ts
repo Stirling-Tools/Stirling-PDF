@@ -91,8 +91,8 @@ class BackendHealthMonitor {
       console.error("[BackendHealthMonitor] Health check failed:", error);
       this.updateState({
         status: "unhealthy",
-        message: "Backend is unavailable",
-        error: "Backend offline",
+        message: i18n.t("backendHealth.unavailable", "Backend is unavailable"),
+        error: i18n.t("backendHealth.offline", "Backend Offline"),
       });
       return false;
     }

@@ -1,6 +1,7 @@
 package stirling.software.common.pdf;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
@@ -11,7 +12,7 @@ import stirling.software.jpdfium.PdfDocument;
 public class BasicPdfMarkdownExtractor implements PdfMarkdownExtractor {
 
     @Override
-    public String convert(PdfDocument doc) throws IOException {
-        return new PdfMarkdownConverter().convert(doc);
+    public List<MarkdownBlock> extractBlocks(PdfDocument doc) throws IOException {
+        return new PdfMarkdownConverter().extractBlocks(doc);
     }
 }

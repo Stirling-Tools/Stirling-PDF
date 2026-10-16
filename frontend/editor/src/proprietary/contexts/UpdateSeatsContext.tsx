@@ -266,4 +266,9 @@ export const useUpdateSeats = (): UpdateSeatsContextValue => {
   return context;
 };
 
+/** The seat flow where it may legitimately be absent, such as the portal embedded
+ *  in settings. Undefined means "no seat flow here": callers render no control. */
+export const useOptionalUpdateSeats = (): UpdateSeatsContextValue | undefined =>
+  useContext(UpdateSeatsContext);
+
 export default UpdateSeatsContext;

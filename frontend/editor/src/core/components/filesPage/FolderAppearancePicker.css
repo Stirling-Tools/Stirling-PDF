@@ -1,0 +1,98 @@
+.folder-appearance {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.folder-appearance[data-disabled] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.folder-appearance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.folder-appearance-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--c-text-subtle);
+}
+
+.folder-appearance-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+}
+
+/* The hit area is the button; the dot is only what it looks like. Keeps a
+   small swatch comfortably tappable without drawing a 2rem blob. */
+.folder-appearance-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.folder-appearance-swatch:hover .folder-appearance-dot {
+  transform: scale(1.12);
+}
+
+.folder-appearance-dot {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  transition: transform 0.12s ease;
+}
+
+/* Ring sits outside the dot, with a gap in the surface colour between, so the
+   selection reads without thickening the swatch itself. */
+.folder-appearance-swatch[aria-pressed="true"] .folder-appearance-dot {
+  box-shadow:
+    0 0 0 2px var(--c-surface),
+    0 0 0 4px var(--c-text);
+}
+
+.folder-appearance-icons {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.25rem;
+}
+
+.folder-appearance-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--c-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.folder-appearance-icon:hover {
+  background: var(--c-hover);
+}
+
+.folder-appearance-icon[aria-pressed="true"] {
+  background: var(--c-hover);
+  border-color: var(--c-primary);
+}

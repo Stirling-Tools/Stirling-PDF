@@ -3,6 +3,7 @@ package stirling.software.proprietary.failure;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -11,6 +12,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +25,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
  * Tests for {@link FileRunEventService}: team scoping, the declaration guard, transition legality,
@@ -36,6 +41,7 @@ class FileRunEventServiceTest {
 
     @Mock private PolicyManagementAuthority authority;
     @Mock private UserServiceInterface userService;
+    @Mock private PolicyStore policyStore;
 
     private FileRunEventStore store;
     private FileRunEventService service;
@@ -48,10 +54,15 @@ class FileRunEventServiceTest {
         store = new FileRunEventStore(new InMemoryFileRunEventRepository());
         FailureActionRegistry registry =
                 new FailureActionRegistry(
-                        List.of(new AcknowledgeAction(store), new DismissAction(store)));
+                        List.of(
+                                new AcknowledgeAction(store),
+                                new DismissAction(store),
+                                new NoopFolderAction(FailureActionId.OPEN_IN_TOOL)));
         registry.verifyEveryDeclaredActionHasAHandler();
 
-        service = new FileRunEventService(store, registry, authority, userService, props);
+        service =
+                new FileRunEventService(
+                        store, registry, authority, userService, props, policyStore);
 
         lenient().when(authority.currentUserTeamId()).thenReturn(TEAM);
         lenient().when(userService.getCurrentUsername()).thenReturn(ACTOR);
@@ -65,6 +76,34 @@ class FileRunEventServiceTest {
     }
 
     /** As {@link #given} but naming who the incident belongs to, which decides its ownership. */
+    /**
+     * A row from a smart folder the given person owns, which is where a server fix is reachable.
+     */
+    private FileRunEvent givenInAFolderOwnedBy(String owner) {
+        when(policyStore.get(anyString()))
+                .thenReturn(
+                        Optional.of(
+                                new Policy(
+                                                "policy-1",
+                                                "Payroll",
+                                                owner,
+                                                true,
+                                                List.of(),
+                                                List.of(),
+                                                OutputSpec.inline())
+                                        .withSurface(Policy.SURFACE_PROCESSING_FOLDER)));
+        return store.record(
+                RecordFailure.forRun(
+                        FailureKind.UNKNOWN,
+                        TEAM,
+                        owner,
+                        "policy-1",
+                        "run-1",
+                        "src-downloads",
+                        "/folder/march.pdf",
+                        "boom"));
+    }
+
     private FileRunEvent givenHitBy(String actor, FailureKind kind, Long teamId, String fileId) {
         return store.record(
                 new RecordFailure(
@@ -367,7 +406,7 @@ class FileRunEventServiceTest {
             for (FailureKind kind : FailureKind.values()) {
                 FileRunEvent event = given(kind, TEAM, "f-" + kind.getId());
                 for (FailureActionId action : kind.getActions()) {
-                    if (action.runsOnServer()) {
+                    if (action.executionFor(false) == FailureActionId.Execution.SERVER) {
                         continue;
                     }
                     assertThatThrownBy(() -> service.dispatch(event.id(), action.name(), Map.of()))
@@ -400,7 +439,8 @@ class FileRunEventServiceTest {
                             new FailureActionRegistry(List.of(new AcknowledgeAction(store))),
                             authority,
                             userService,
-                            props);
+                            props,
+                            policyStore);
 
             assertThatThrownBy(() -> missingHandler.dispatch(event.id(), "DISMISS", Map.of()))
                     .isInstanceOf(FailureActionException.class)
@@ -420,6 +460,52 @@ class FileRunEventServiceTest {
                     .isInstanceOf(FailureActionException.class)
                     .extracting(e -> ((FailureActionException) e).getReason())
                     .isEqualTo(FailureActionException.Reason.ALREADY_CLOSED);
+        }
+    }
+
+    @Nested
+    @DisplayName("an owner's fix is refused to whoever merely reviews it")
+    class DispatchAudience {
+
+        @Test
+        void aReviewerCannotRunAnOwnersFixOnTheirColleaguesDocument() {
+            // The whole point of the check: a leader reads the team's rows, so without it the only
+            // thing between them and a colleague's document is the handler's own guard.
+            FileRunEvent theirs = givenInAFolderOwnedBy("colleague@example.com");
+
+            assertThatThrownBy(() -> service.dispatch(theirs.id(), "OPEN_IN_TOOL", Map.of()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.ACTION_NOT_THEIRS);
+        }
+
+        @Test
+        void refusedBeforeTheHandlerIsAskedToDoAnything() {
+            // The registry's stand-in throws if reached, so this asserts the refusal is the
+            // service's rather than something the handler happened to catch.
+            FileRunEvent theirs = givenInAFolderOwnedBy("colleague@example.com");
+
+            assertThatThrownBy(() -> service.dispatch(theirs.id(), "OPEN_IN_TOOL", Map.of()))
+                    .isNotInstanceOf(UnsupportedOperationException.class);
+        }
+
+        @Test
+        void theOwnerOfTheFolderStillRunsIt() {
+            FileRunEvent mine = givenInAFolderOwnedBy(ACTOR);
+
+            // Reaches the registry's stand-in, which is as far as this test can follow it.
+            assertThatThrownBy(() -> service.dispatch(mine.id(), "OPEN_IN_TOOL", Map.of()))
+                    .isInstanceOf(UnsupportedOperationException.class);
+        }
+
+        @Test
+        void aReviewerCanStillDismissAColleaguesRow() {
+            // Dispositions are for anyone who sees the row; only an owner's fix is narrowed.
+            FileRunEvent theirs =
+                    givenHitBy("colleague@example.com", FailureKind.UNKNOWN, TEAM, "f1");
+
+            assertThat(service.dispatch(theirs.id(), "DISMISS", Map.of()).status())
+                    .isEqualTo(FileRunEventStatus.DISMISSED);
         }
     }
 
@@ -571,6 +657,32 @@ class FileRunEventServiceTest {
         }
 
         @Test
+        void aRowAboutTheSourceItselfKeepsItsOwnerActionUsableThoughItNamesNoDocument() {
+            // The folder is the subject, and the one thing offered its owner opens the processor,
+            // which needs no document. Greying it out would answer a question nobody asked.
+            FileRunEvent folder =
+                    store.record(
+                            RecordFailure.forRun(
+                                    FailureKind.SOURCE_UNREADABLE,
+                                    TEAM,
+                                    ACTOR,
+                                    "policy-1",
+                                    "run-1",
+                                    "src-downloads",
+                                    null,
+                                    "Permission denied"));
+
+            assertThat(service.availableActions(folder))
+                    .filteredOn(action -> action.id() == FailureActionId.VIEW_IN_PROCESSOR)
+                    .singleElement()
+                    .satisfies(
+                            action -> {
+                                assertThat(action.enabled()).isTrue();
+                                assertThat(action.disabledReasonKey()).isNull();
+                            });
+        }
+
+        @Test
         void aRowThatNamesADocumentKeepsItsOwnerActionsUsable() {
             FileRunEvent withDocument =
                     givenHitBy(ACTOR, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
@@ -602,7 +714,8 @@ class FileRunEventServiceTest {
                             new FailureActionRegistry(List.of(new DismissAction(store))),
                             authority,
                             userService,
-                            props);
+                            props,
+                            policyStore);
             FileRunEvent event = givenHitBy(null, FailureKind.INPUT_PASSWORD_PROTECTED, null, "f1");
 
             assertThat(unsecured.availableActions(event))
@@ -759,7 +872,8 @@ class FileRunEventServiceTest {
                     new FailureActionRegistry(
                             List.of(new AcknowledgeAction(store), new DismissAction(store)));
             FileRunEventService unsecured =
-                    new FileRunEventService(store, registry, authority, userService, props);
+                    new FileRunEventService(
+                            store, registry, authority, userService, props, policyStore);
 
             given(FailureKind.UNKNOWN, null, "unteamed");
             given(FailureKind.UNKNOWN, TEAM, "teamed");
@@ -801,13 +915,17 @@ class FileRunEventServiceTest {
         void acceptsACompleteSetOfHandlers() {
             FailureActionRegistry complete =
                     new FailureActionRegistry(
-                            List.of(new AcknowledgeAction(store), new DismissAction(store)));
+                            List.of(
+                                    new AcknowledgeAction(store),
+                                    new DismissAction(store),
+                                    new NoopFolderAction(FailureActionId.OPEN_IN_TOOL)));
 
             complete.verifyEveryDeclaredActionHasAHandler();
 
             for (FailureActionId id : FailureActionId.values()) {
-                // Only server actions need a handler, which is why the boot check ignores the rest.
-                assertThat(complete.find(id).isPresent()).isEqualTo(id.runsOnServer());
+                // Only what the server can run needs a handler, which is why the boot check
+                // ignores the rest.
+                assertThat(complete.find(id).isPresent()).isEqualTo(id.canRunOnServer());
             }
         }
 
@@ -816,7 +934,10 @@ class FileRunEventServiceTest {
             // Otherwise every client action would need an empty handler beside it.
             FailureActionRegistry serverOnly =
                     new FailureActionRegistry(
-                            List.of(new AcknowledgeAction(store), new DismissAction(store)));
+                            List.of(
+                                    new AcknowledgeAction(store),
+                                    new DismissAction(store),
+                                    new NoopFolderAction(FailureActionId.OPEN_IN_TOOL)));
 
             assertThatCode(serverOnly::verifyEveryDeclaredActionHasAHandler)
                     .doesNotThrowAnyException();

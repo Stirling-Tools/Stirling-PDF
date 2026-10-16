@@ -2,6 +2,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { useAuth } from "@app/auth/UseSession";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import {
   QuickNavHostProvider,
@@ -10,12 +11,13 @@ import {
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import { fetchSigningSessions, type SigningSessions } from "@app/api/signing";
 import { alert } from "@app/components/toast";
+import { markSigningItemSeen } from "@app/services/signingSeenStore";
 import { expectConsole } from "@app/tests/failOnConsole";
 
-const { auth, access } = vi.hoisted(() => ({
-  auth: { user: { id: "ada" } as { id: string } | null, loading: false },
-  access: { granted: true, settled: true },
-}));
+const auth = vi.hoisted<Pick<ReturnType<typeof useAuth>, "user" | "loading">>(
+  () => ({ user: { id: "ada" }, loading: false }),
+);
+const access = vi.hoisted(() => ({ granted: true, settled: true }));
 
 vi.mock("@app/auth/UseSession", () => ({
   useAuth: () => ({
@@ -58,6 +60,7 @@ function RailState() {
     <>
       <output data-testid="access">{String(host?.portalAccess)}</output>
       <output data-testid="badge">{host?.signingBadge}</output>
+      <output data-testid="items">{JSON.stringify(host?.signingItems)}</output>
     </>
   );
 }
@@ -120,6 +123,49 @@ describe("quick-nav account data during view switches", () => {
     mockFetch.mockResolvedValue(UNREAD);
   });
 
+  it("keeps the unread count in sync as owners view updates and ready sessions", async () => {
+    const partial = UNREAD.mySessions[0];
+    mockFetch.mockResolvedValue({
+      signRequests: [
+        {
+          sessionId: "request",
+          documentName: "Request.pdf",
+          ownerUsername: "Owner",
+          createdAt: "2026-09-24",
+          dueDate: "",
+          myStatus: "PENDING",
+        },
+      ],
+      mySessions: [
+        partial,
+        { ...partial, sessionId: "ready", signedCount: 2 },
+        { ...partial, sessionId: "closed", finalized: true },
+      ],
+    });
+    setup();
+    await waitFor(() => expectRail(true, 3));
+    const unreadCount = () =>
+      JSON.parse(screen.getByTestId("items").textContent ?? "[]").filter(
+        (item: { unread: boolean }) => item.unread,
+      ).length;
+    expect(unreadCount()).toBe(3);
+    act(() => markSigningItemSeen("ada", { ...partial, kind: "session" }));
+    await waitFor(() => expectRail(true, 2));
+    expect(unreadCount()).toBe(2);
+    act(() =>
+      markSigningItemSeen("ada", {
+        ...partial,
+        kind: "session",
+        sessionId: "ready",
+        signedCount: 2,
+      }),
+    );
+    await waitFor(() => expectRail(true, 1));
+    expect(unreadCount()).toBe(1);
+    expect(
+      JSON.parse(screen.getByTestId("items").textContent ?? "[]"),
+    ).toHaveLength(4);
+  });
   it("retains access and the count until each incoming lookup settles", async () => {
     const switchView = setup();
     await waitFor(() => expectRail(true, 1));

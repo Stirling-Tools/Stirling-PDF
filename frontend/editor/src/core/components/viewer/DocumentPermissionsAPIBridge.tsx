@@ -11,7 +11,7 @@ function hasPermissionFlag(
   permissions: number,
   flag: PdfPermissionFlag,
 ): boolean {
-  if (permissions === 0 || permissions === PdfPermissionFlag.AllowAll) {
+  if (permissions === PdfPermissionFlag.AllowAll) {
     return true;
   }
   return (permissions & flag) !== 0;
@@ -20,64 +20,77 @@ function hasPermissionFlag(
 interface DocumentPermissionsAPIBridgeProps {
   isEncrypted?: boolean;
   isOwnerUnlocked?: boolean;
+  honorOwnerPasswords?: boolean;
   permissions?: number;
 }
 
 export function DocumentPermissionsAPIBridge({
   isEncrypted = false,
   isOwnerUnlocked = false,
+  honorOwnerPasswords = true,
   permissions = PdfPermissionFlag.AllowAll,
 }: DocumentPermissionsAPIBridgeProps) {
   const { registerBridge } = useViewer();
   const documentReady = useDocumentReady();
+
+  const effectivePermissions =
+    !isEncrypted || isOwnerUnlocked || !honorOwnerPasswords
+      ? PdfPermissionFlag.AllowAll
+      : permissions;
 
   const state = useMemo<DocumentPermissionsState>(
     () => ({
       isEncrypted,
       isOwnerUnlocked,
       permissions,
-      canPrint: hasPermissionFlag(permissions, PdfPermissionFlag.Print),
+      canPrint: hasPermissionFlag(
+        effectivePermissions,
+        PdfPermissionFlag.Print,
+      ),
       canModifyContents: hasPermissionFlag(
-        permissions,
+        effectivePermissions,
         PdfPermissionFlag.ModifyContents,
       ),
       canCopyContents: hasPermissionFlag(
-        permissions,
+        effectivePermissions,
         PdfPermissionFlag.CopyContents,
       ),
       canModifyAnnotations: hasPermissionFlag(
-        permissions,
+        effectivePermissions,
         PdfPermissionFlag.ModifyAnnotations,
       ),
-      canFillForms: hasPermissionFlag(permissions, PdfPermissionFlag.FillForms),
+      canFillForms: hasPermissionFlag(
+        effectivePermissions,
+        PdfPermissionFlag.FillForms,
+      ),
       canExtractForAccessibility: hasPermissionFlag(
-        permissions,
+        effectivePermissions,
         PdfPermissionFlag.ExtractForAccessibility,
       ),
       canAssembleDocument: hasPermissionFlag(
-        permissions,
+        effectivePermissions,
         PdfPermissionFlag.AssembleDocument,
       ),
       canPrintHighQuality: hasPermissionFlag(
-        permissions,
+        effectivePermissions,
         PdfPermissionFlag.PrintHighQuality,
       ),
     }),
-    [isEncrypted, isOwnerUnlocked, permissions],
+    [isEncrypted, isOwnerUnlocked, permissions, effectivePermissions],
   );
 
   const api = useMemo<DocumentPermissionsAPIWrapper>(
     () => ({
       hasPermission: (flag: PdfPermissionFlag) =>
-        hasPermissionFlag(permissions, flag),
+        hasPermissionFlag(effectivePermissions, flag),
       hasAllPermissions: (flags: PdfPermissionFlag[]) =>
-        flags.every((flag) => hasPermissionFlag(permissions, flag)),
+        flags.every((flag) => hasPermissionFlag(effectivePermissions, flag)),
       getEffectivePermission: (flag: PdfPermissionFlag) => {
         if (isOwnerUnlocked) return true;
-        return hasPermissionFlag(permissions, flag);
+        return hasPermissionFlag(effectivePermissions, flag);
       },
     }),
-    [permissions, isOwnerUnlocked],
+    [effectivePermissions, isOwnerUnlocked],
   );
 
   useEffect(() => {

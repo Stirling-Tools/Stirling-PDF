@@ -47,7 +47,9 @@ public class AccountLinkController {
             String name,
             String createdAt,
             String lastSeenAt,
-            boolean revoked) {}
+            boolean revoked,
+            Integer seatCount,
+            String seatsReportedAt) {}
 
     @GetMapping("/instances")
     @PreAuthorize("isAuthenticated()")
@@ -70,7 +72,11 @@ public class AccountLinkController {
                                                 i.getLastSeenAt() != null
                                                         ? i.getLastSeenAt().toString()
                                                         : null,
-                                                i.getRevokedAt() != null))
+                                                i.getRevokedAt() != null,
+                                                i.getSeatCount(),
+                                                i.getSeatsReportedAt() == null
+                                                        ? null
+                                                        : i.getSeatsReportedAt().toString()))
                         .toList();
         return ResponseEntity.ok(rows);
     }

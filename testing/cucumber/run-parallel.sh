@@ -94,7 +94,9 @@ start_shard() {
     PIDS+=($!)
 }
 
-declare -a BEHAVE_EXTRA=("$@")
+# Global-state assertions cannot be isolated from other shards; the regular Docker suite still
+# exercises them serially.
+declare -a BEHAVE_EXTRA=(--tags="~@serial" "$@")
 
 for ((shard = 0; shard < SHARDS; shard++)); do
     assigned=()

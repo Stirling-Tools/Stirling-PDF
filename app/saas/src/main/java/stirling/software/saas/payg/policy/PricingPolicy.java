@@ -82,6 +82,10 @@ public class PricingPolicy implements Serializable {
     @Column(name = "free_tier_units", nullable = false)
     private Long freeTierUnits = 0L;
 
+    /** Null inherits the default policy's Team allowance. */
+    @Column(name = "team_included_units")
+    private Long teamIncludedUnits;
+
     /**
      * Max tool steps allowed in one process before it splits, keyed by the caller's {@link
      * JobSource}. Self-hosted teams typically get a higher limit via a per-team policy override.

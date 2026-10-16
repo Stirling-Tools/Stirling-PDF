@@ -9,7 +9,7 @@ import {
   recordAgreementSignature,
   type QuoteResult,
 } from "@portal/api/procurement";
-import { DownloadIcon } from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 import { useAsync } from "@portal/hooks/useAsync";
 import "@portal/theme/surface.css";
@@ -127,7 +127,7 @@ export function ProcurementAgreement({
             <Button
               variant="tertiary"
               size="sm"
-              leftSection={<DownloadIcon size={14} />}
+              leftSection={<Icon name="download" size={14} />}
               loading={downloadingMsa}
               onClick={downloadMsa}
             >

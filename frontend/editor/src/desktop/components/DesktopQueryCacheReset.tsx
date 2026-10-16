@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
+import { clearPolicies } from "@app/services/policyStorage";
+import { resetPolicyRuns } from "@app/components/policies/policyRunStore";
 
 /**
  * Drops cached responses when the backend behind them changes. operationRouter
@@ -15,7 +17,11 @@ export function DesktopQueryCacheReset() {
     // resetQueries, not clear(): clear() evicts without notifying mounted
     // observers, so a panel keeps rendering the old backend's answer.
     const reset = () => void queryClient.resetQueries();
-    const unsubscribeMode = connectionModeService.subscribeToModeChanges(reset);
+    const unsubscribeMode = connectionModeService.subscribeToModeChanges(() => {
+      clearPolicies();
+      resetPolicyRuns();
+      reset();
+    });
 
     // idle/checking say nothing about reachability — treating them as "not
     // offline" would reset on offline→checking and then skip the real recovery.

@@ -1,5 +1,6 @@
 // PDF point to real-world unit conversions
 
+import type { TFunction } from "i18next";
 import type {
   Measurement,
   MeasureScale,
@@ -109,15 +110,25 @@ export function parsePresetRatio(preset: string): number | null {
 
 // UI dropdown options - shared across components
 export const UNIT_OPTIONS = [
-  { value: "m", label: "Meters (m)" },
-  { value: "cm", label: "Centimeters (cm)" },
-  { value: "mm", label: "Millimeters (mm)" },
-  { value: "km", label: "Kilometers (km)" },
-  { value: "ft", label: "Feet (ft)" },
-  { value: "in", label: "Inches (in)" },
-  { value: "yd", label: "Yards (yd)" },
-  { value: "mi", label: "Miles (mi)" },
+  { value: "m", labelKey: "ruler.units.m", label: "Meters (m)" },
+  { value: "cm", labelKey: "ruler.units.cm", label: "Centimeters (cm)" },
+  { value: "mm", labelKey: "ruler.units.mm", label: "Millimeters (mm)" },
+  { value: "km", labelKey: "ruler.units.km", label: "Kilometers (km)" },
+  { value: "ft", labelKey: "ruler.units.ft", label: "Feet (ft)" },
+  { value: "in", labelKey: "ruler.units.in", label: "Inches (in)" },
+  { value: "yd", labelKey: "ruler.units.yd", label: "Yards (yd)" },
+  { value: "mi", labelKey: "ruler.units.mi", label: "Miles (mi)" },
 ] as const;
+
+/** UNIT_OPTIONS with labels translated; call at render time. */
+export function getUnitOptions(
+  t: TFunction,
+): { value: (typeof UNIT_OPTIONS)[number]["value"]; label: string }[] {
+  return UNIT_OPTIONS.map(({ value, labelKey, label }) => ({
+    value,
+    label: t(labelKey, label),
+  }));
+}
 
 const MAX_SESSION_ENTRIES = 50;
 const TRIMMED_SESSION_ENTRIES = 40;
@@ -296,8 +307,8 @@ export function validateMeasurement(obj: unknown): obj is Measurement {
   }
 
   // Reject cross-page measurements
-  const start = m.start as PagePoint;
-  const end = m.end as PagePoint;
+  const start = m.start;
+  const end = m.end;
   if (start.pageIndex !== end.pageIndex) {
     return false;
   }

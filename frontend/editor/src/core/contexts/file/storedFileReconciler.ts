@@ -52,11 +52,10 @@ export function inheritedSourceLink(
   return {};
 }
 
-/** Fields recording the source a newly added file was read from, keyed by the
- *  quickKey the open dialog registered it under. Empty where files have no
- *  source outside the app. */
+/** Fields recording the source a newly added file was read from.
+ * Empty where files have no source outside the app. */
 export async function sourceLinkForNewFile(
-  _quickKey: string,
+  _file: File,
 ): Promise<Partial<StirlingFileStub>> {
   return {};
 }

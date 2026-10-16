@@ -1,5 +1,7 @@
 import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { ensurePdfAccess } from "@app/services/pdfSessionUnlock";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
@@ -7,8 +9,6 @@ import type { PDFDocumentProxy } from "pdfjs-dist";
 // trailer sits at the tail; linearized files also keep a first-page trailer at
 // the head. Sliced, so a multi-GB file is never read into memory.
 const ENCRYPT_PROBE_BYTES = 64 * 1024;
-
-/** A pdf.js worker that dies mid-parse never settles its promise. */
 const PROBE_TIMEOUT = "pdf-probe-timeout";
 const PROBE_TIMEOUT_MS = 30_000;
 
@@ -90,22 +90,23 @@ export class FileAnalyzer {
     return analysis;
   }
 
-  /**
-   * Quick PDF analysis without full processing
+  /** Detect encryption and admit empty-password documents without prompting.
+   * The marker is an upload optimisation, not authorisation; operations inspect original bytes.
    */
-  /**
-   * Cheap encryption-only probe for the upload-time detection path.
-   *
-   * Looks for a /Encrypt entry in a bounded window at either end of the file
-   * (where PDF trailers live). If absent, the file is definitely not encrypted
-   * and we can skip a full pdf.js parse. If present, falls back to pdf.js so we
-   * can distinguish user-password (blocks open) from owner-password-only (opens
-   * fine); only the former should prompt.
-   *
-   * Runs inside the addFiles mutex, so it must always settle: an unbounded
-   * parse here stalls every later upload as well as this one.
-   */
-  static async isPDFUserPasswordProtected(file: File): Promise<boolean> {
+  static async isPDFEncrypted(file: File): Promise<boolean> {
+    const access = getPdfAccess(file);
+    if (access) return access.encrypted;
+    if (!(await hasEncryptMarker(file))) return false;
+    if (file.size >= LARGE_PDF_PARSE_LIMIT) return true;
+    if (await this.requiresOpeningPassword(file)) return true;
+    try {
+      return (await ensurePdfAccess(file)).encrypted;
+    } catch {
+      return true;
+    }
+  }
+
+  private static async requiresOpeningPassword(file: File): Promise<boolean> {
     if (!(await hasEncryptMarker(file))) return false;
 
     // Too big to hand pdf.js: that full-buffer parse is the renderer OOM the
@@ -168,12 +169,11 @@ export class FileAnalyzer {
 
       const pageCount = pdf.numPages;
 
-      // If pdf.js opened the document successfully, the user can view it — even if
-      // the PDF carries encryption dictionaries (owner-password-only case).  We only
-      // flag isEncrypted when pdf.js *fails* to open the file (caught below).
       return {
         pageCount,
-        isEncrypted: false,
+        isEncrypted:
+          getPdfAccess(file)?.encrypted ??
+          (await pdf.getPermissions()) !== null,
         isCorrupted: false,
       };
     } catch (error) {

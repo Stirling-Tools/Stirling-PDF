@@ -35,6 +35,7 @@ interface FontFamilySelectProps {
   onChange: (family: string) => void;
   mixed?: boolean;
   disabled?: boolean;
+  touch?: boolean;
 }
 
 /** Font picker. Device fonts are additive: no prompt until the user asks. */
@@ -43,6 +44,7 @@ export function FontFamilySelect({
   onChange,
   mixed = false,
   disabled = false,
+  touch = false,
 }: FontFamilySelectProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -131,11 +133,16 @@ export function FontFamilySelect({
   }, [mixed, value, isKnown, documentFamily]);
 
   return (
-    <Group gap="xs" align="center" wrap="nowrap">
+    <Group
+      gap="xs"
+      align="center"
+      wrap="nowrap"
+      style={touch ? { flex: "1 1 100%" } : undefined}
+    >
       <Select
-        size="xs"
-        w={138}
-        style={{ flexShrink: 0 }}
+        size={touch ? "lg" : "xs"}
+        w={touch ? undefined : 138}
+        style={touch ? { flex: 1, minWidth: 0 } : { flexShrink: 0 }}
         searchable
         data={data}
         value={selected}
@@ -165,7 +172,7 @@ export function FontFamilySelect({
           <Button
             variant="tertiary"
             accent="neutral"
-            size="sm"
+            size={touch ? "xl" : "sm"}
             style={{ flexShrink: 0 }}
             loading={loading}
             disabled={disabled || loading}

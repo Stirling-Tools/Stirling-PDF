@@ -420,6 +420,31 @@ describe("unlockLocalDocument", () => {
     expect(post).not.toHaveBeenCalled();
   });
 
+  it("reads the reason out of a blob body, rather than showing the transport's words", async () => {
+    // An error body arrives as a blob here too. Left unread, a document nothing can repair
+    // reported only "Request failed with status code 500".
+    getStirlingFiles.mockResolvedValue([new File(["%PDF-1.7"], "broken.pdf")]);
+    post.mockRejectedValue({
+      response: {
+        data: new Blob([
+          JSON.stringify({
+            detail:
+              "This document is damaged in a way the repair tools cannot fix.",
+            errorCode: "E076",
+          }),
+        ]),
+      },
+      message: "Request failed with status code 500",
+    });
+
+    const result = await repairDocuments(["f-1"]);
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toBe(
+      "This document is damaged in a way the repair tools cannot fix.",
+    );
+  });
+
   it("returns the server's own message when the password is wrong", async () => {
     getStirlingFiles.mockResolvedValue([new File(["%PDF-1.7"], "locked.pdf")]);
     post.mockRejectedValue({
@@ -493,13 +518,25 @@ describe("stashMatchesKind", () => {
   });
 
   it("gives an unclaimed code to UNKNOWN, and a claimed one never", async () => {
-    expect(stashMatchesKind("UNKNOWN", payload({ errorCode: "E005" }))).toBe(
+    // E031 is the step's catch-all, left unclaimed because nothing more specific is known.
+    expect(stashMatchesKind("UNKNOWN", payload({ errorCode: "E031" }))).toBe(
       true,
     );
     expect(stashMatchesKind("UNKNOWN", payload({ errorCode: null }))).toBe(
       true,
     );
     expect(stashMatchesKind("UNKNOWN", payload({ errorCode: "E001" }))).toBe(
+      false,
+    );
+  });
+
+  it("matches a kind with no resolution, so its stash is not offered to UNKNOWN", async () => {
+    // These kinds run nothing, but the stash still decides which row a file's failure belongs
+    // to, so a wrong-type failure must not read as the unrecognised one.
+    expect(
+      stashMatchesKind("INPUT_WRONG_TYPE", payload({ errorCode: "E061" })),
+    ).toBe(true);
+    expect(stashMatchesKind("UNKNOWN", payload({ errorCode: "E061" }))).toBe(
       false,
     );
   });

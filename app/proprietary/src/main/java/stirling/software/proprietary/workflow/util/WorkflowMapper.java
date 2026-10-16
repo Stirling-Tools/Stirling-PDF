@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.Map;
 
 import stirling.software.proprietary.workflow.dto.ParticipantResponse;
+import stirling.software.proprietary.workflow.dto.SigningParticipantPreview;
 import stirling.software.proprietary.workflow.dto.WetSignatureMetadata;
 import stirling.software.proprietary.workflow.dto.WorkflowSessionResponse;
+import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 
@@ -17,6 +19,29 @@ import tools.jackson.databind.ObjectMapper;
  * API responses.
  */
 public class WorkflowMapper {
+
+    /**
+     * Returns progress without bearer tokens; finalized PDFs already contain the submitted marks.
+     */
+    public static List<SigningParticipantPreview> toSigningParticipantPreviews(
+            WorkflowSession session, ObjectMapper objectMapper) {
+        return session.getParticipants().stream()
+                .map(
+                        p ->
+                                new SigningParticipantPreview(
+                                        p.getId(),
+                                        p.getName() != null
+                                                ? p.getName()
+                                                : p.getUser() != null
+                                                        ? p.getUser().getUsername()
+                                                        : "",
+                                        p.getStatus(),
+                                        !session.isFinalized()
+                                                        && p.getStatus() == ParticipantStatus.SIGNED
+                                                ? extractWetSignatures(p, objectMapper)
+                                                : List.of()))
+                .toList();
+    }
 
     /** Converts a WorkflowSession entity to a response DTO. */
     public static WorkflowSessionResponse toResponse(WorkflowSession session) {

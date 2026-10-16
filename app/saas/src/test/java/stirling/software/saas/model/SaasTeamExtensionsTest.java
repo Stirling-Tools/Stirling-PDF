@@ -89,11 +89,13 @@ class SaasTeamExtensionsTest {
     class HasAvailableSeats {
 
         @Test
-        @DisplayName("standard teams are always unlimited")
-        void standardUnlimited() {
+        @DisplayName("standard teams enforce purchased capacity")
+        void standardCapacity() {
             SaasTeamExtensions ext = new SaasTeamExtensions();
             ext.setSeatsUsed(100);
             ext.setMaxSeats(1);
+            assertThat(ext.hasAvailableSeats()).isFalse();
+            ext.setMaxSeats(101);
             assertThat(ext.hasAvailableSeats()).isTrue();
         }
 

@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BellIcon, Button } from "@app/ui";
+import { Button } from "@app/ui";
+import { Icon } from "@app/ui/Icon";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useNotificationActions } from "@app/components/notifications/notificationActions";
 import { NotificationPanel } from "@app/components/notifications/NotificationPanel";
@@ -61,7 +62,7 @@ function MountedNotificationBell() {
         aria-expanded={open}
         onClick={() => setOpen((wasOpen) => !wasOpen)}
       >
-        <BellIcon />
+        <Icon name="bell" size={18} />
         {unreadCount > 0 && (
           <span className="notification-bell__badge" aria-hidden>
             {unreadCount > 9 ? "9+" : unreadCount}

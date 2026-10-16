@@ -110,14 +110,14 @@ class AdminSettingsControllerTest {
         @Test
         @DisplayName("merges pending changes when includePending is true")
         void mergesPendingChanges() {
-            putPending("ui.logoStyle", "modern");
+            putPending("ui.appNameNavbar", "Custom Name");
 
             ResponseEntity<?> response = controller.getSettings(true);
 
             assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
             Map<?, ?> body = (Map<?, ?>) response.getBody();
             Map<?, ?> ui = (Map<?, ?>) body.get("ui");
-            assertThat(ui.get("logoStyle")).isEqualTo("modern");
+            assertThat(ui.get("appNameNavbar")).isEqualTo("Custom Name");
         }
 
         @Test
@@ -367,6 +367,23 @@ class AdminSettingsControllerTest {
     class GetSettingsSection {
 
         @Test
+        void ownerPasswordPolicyRemainsBooleanIncludingPendingFalse() {
+            putPending("security.honorOwnerPasswords", false);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body =
+                    (Map<String, Object>) controller.getSettingsSection("security", true).getBody();
+            assertThat(body.get("honorOwnerPasswords")).isEqualTo(true);
+            assertThat(((Map<?, ?>) body.get("_pending")).get("honorOwnerPasswords"))
+                    .isEqualTo(false);
+            applicationProperties.getSecurity().setHonorOwnerPasswords(false);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> active =
+                    (Map<String, Object>)
+                            controller.getSettingsSection("security", false).getBody();
+            assertThat(active.get("honorOwnerPasswords")).isEqualTo(false);
+        }
+
+        @Test
         @DisplayName("returns 400 for invalid section name")
         void invalidSection() {
             ResponseEntity<?> response = controller.getSettingsSection("nonsense", true);
@@ -572,14 +589,14 @@ class AdminSettingsControllerTest {
         @Test
         @DisplayName("returns value for an existing key")
         void existingKey() {
-            applicationProperties.getUi().setLogoStyle("modern");
+            applicationProperties.getUi().setAppNameNavbar("Custom Name");
 
-            ResponseEntity<?> response = controller.getSettingValue("ui.logoStyle");
+            ResponseEntity<?> response = controller.getSettingValue("ui.appNameNavbar");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             SettingValueResponse body = (SettingValueResponse) response.getBody();
-            assertThat(body.getKey()).isEqualTo("ui.logoStyle");
-            assertThat(body.getValue()).isEqualTo("modern");
+            assertThat(body.getKey()).isEqualTo("ui.appNameNavbar");
+            assertThat(body.getValue()).isEqualTo("Custom Name");
         }
 
         @Test

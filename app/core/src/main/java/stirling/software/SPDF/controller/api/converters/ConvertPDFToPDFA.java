@@ -659,9 +659,7 @@ public class ConvertPDFToPDFA {
         try {
             // PDF/X conversion uses Ghostscript (no fallback currently)
             if (!isGhostscriptAvailable()) {
-                log.error("Ghostscript is required for PDF/X conversion");
-                throw new IOException(
-                        "Ghostscript is required for PDF/X conversion but is not available on the system");
+                throw ExceptionUtils.createGhostscriptRequiredException("PDF/X conversion");
             }
 
             log.info("Using Ghostscript for PDF/X conversion to {}", profile.getDisplayName());
@@ -679,9 +677,15 @@ public class ConvertPDFToPDFA {
             }
             return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
 
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw ExceptionUtils.createProcessingInterruptedException("PDF/X conversion", e);
+        } catch (ExceptionUtils.BaseAppException e) {
+            // Already says what went wrong, such as the missing binary above.
+            throw e;
+        } catch (IOException e) {
             log.error("PDF/X conversion failed", e);
-            throw ExceptionUtils.createPdfaConversionFailedException();
+            throw ExceptionUtils.createPdfaConversionFailedException(e);
         } finally {
             deleteQuietly(workingDir);
         }

@@ -28,7 +28,7 @@ export function getStartupNavigationAction(
 
   // The user is browsing their file library - don't auto-switch them out of
   // the file manager just because a new upload landed.
-  if (currentWorkbench === "myFiles") {
+  if (currentWorkbench === "myFiles" || currentWorkbench === "signing") {
     return null;
   }
 

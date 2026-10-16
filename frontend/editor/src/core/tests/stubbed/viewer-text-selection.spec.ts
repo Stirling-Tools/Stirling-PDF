@@ -120,7 +120,8 @@ test("Ctrl+C copies selected text to the clipboard", async ({
   await dragSelectAcrossPage(page, firstPage);
   await page.waitForTimeout(500);
 
-  await page.keyboard.press("Control+C");
+  const isMac = process.platform === "darwin";
+  await page.keyboard.press(isMac ? "Meta+c" : "Control+c");
   await page.waitForTimeout(500);
 
   // If keyboard event didn't trigger clipboard write due to container focus, trigger via copy menu

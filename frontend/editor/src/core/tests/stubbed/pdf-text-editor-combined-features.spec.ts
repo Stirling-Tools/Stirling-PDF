@@ -86,7 +86,7 @@ async function runText(
       const r = (window as unknown as EditorTestWindow).__editor_store.doc
         .page(pageIdx)
         .runs.find((x) => x.id === id);
-      return r ? (r.text as string) : "(gone)";
+      return r ? r.text : "(gone)";
     },
     { pageIdx, id },
   );

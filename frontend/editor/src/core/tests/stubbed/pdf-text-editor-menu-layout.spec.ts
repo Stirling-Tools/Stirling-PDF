@@ -2,6 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import { waitForEditorReady } from "@app/tests/stubbed/editorReady";
 
 /**
  * Layout coverage for the properties-inspector panel.
@@ -26,7 +27,7 @@ async function open(page: Page, firstPage = 0): Promise<void> {
   await expect(page.getByTestId(`pdf-editor-page-${firstPage}`)).toBeVisible({
     timeout: 30_000,
   });
-  await page.waitForTimeout(900);
+  await waitForEditorReady(page);
 }
 
 async function runId(
@@ -55,7 +56,6 @@ async function selectOne(page: Page, id: string): Promise<void> {
       ).__editor_store.selection.selectOne(rid),
     id,
   );
-  await page.waitForTimeout(150);
 }
 
 /** Switch to the Document tab, which owns the document-level preferences. */

@@ -39,7 +39,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.CustomAuthenticationFailureHandler;
@@ -80,7 +79,6 @@ public class SecurityConfiguration {
 
     private final ApplicationProperties applicationProperties;
     private final ApplicationProperties.Security securityProperties;
-    private final AppConfig appConfig;
     private final UserAuthenticationFilter userAuthenticationFilter;
     private final JwtServiceInterface jwtService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -102,7 +100,6 @@ public class SecurityConfiguration {
             @Lazy UserService userService,
             @Qualifier("loginEnabled") boolean loginEnabledValue,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
-            AppConfig appConfig,
             ApplicationProperties applicationProperties,
             ApplicationProperties.Security securityProperties,
             UserAuthenticationFilter userAuthenticationFilter,
@@ -123,7 +120,6 @@ public class SecurityConfiguration {
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
         this.runningProOrHigher = runningProOrHigher;
-        this.appConfig = appConfig;
         this.applicationProperties = applicationProperties;
         this.securityProperties = securityProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
@@ -236,7 +232,7 @@ public class SecurityConfiguration {
         http.securityMatcher("/saml2/**", "/login/saml2/**");
 
         SessionCreationPolicy sessionPolicy =
-                (securityProperties.isSaml2Active() && runningProOrHigher)
+                securityProperties.isSaml2Active()
                         ? SessionCreationPolicy.IF_REQUIRED
                         : SessionCreationPolicy.STATELESS;
 
@@ -331,9 +327,9 @@ public class SecurityConfiguration {
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(
                                                     securityProperties,
-                                                    appConfig,
                                                     jwtService,
-                                                    aiUserDataService))
+                                                    aiUserDataService,
+                                                    applicationProperties))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
                                     .deleteCookies("JSESSIONID", "remember-me", "stirling_jwt"));
@@ -429,7 +425,7 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle SAML
-            if (securityProperties.isSaml2Active() && runningProOrHigher) {
+            if (securityProperties.isSaml2Active()) {
                 OpenSaml5AuthenticationProvider authenticationProvider =
                         new OpenSaml5AuthenticationProvider();
                 authenticationProvider.setResponseAuthenticationConverter(

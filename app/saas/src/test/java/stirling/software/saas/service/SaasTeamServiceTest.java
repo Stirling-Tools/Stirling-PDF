@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -323,10 +324,7 @@ class SaasTeamServiceTest {
             service.inviteUserToTeam(teamId, "b@x.com", inviter);
 
             verify(saasTeamExtensionService).setPersonal(t, false);
-            // Still the sentinel. A standard team has no user limit until it buys one, and nothing
-            // enforces capacity for one, so stating the free allowance here would announce a
-            // ceiling nothing honours.
-            verify(saasTeamExtensionService).setSeats(t, Integer.MAX_VALUE, Integer.MAX_VALUE);
+            verify(saasTeamExtensionService).setSeats(t, 5, 5);
         }
 
         @Test
@@ -746,6 +744,34 @@ class SaasTeamServiceTest {
         }
 
         @Test
+        @DisplayName("successor joining another team keeps a solo transferred team's ownership")
+        void successorKeepsTransferredTeamAfterFounderRemoved() {
+            User bob = user(5L, "bob@example.com", "bob");
+            Team transferred = team(300L, "Transferred organisation");
+            Team next = team(100L, "Next organisation");
+            TeamMembership ownership = membership(transferred, bob, TeamRole.LEADER);
+            TeamInvitation invite =
+                    pendingInvitation(next, user(1L, "a@x.com", "alice"), "bob@example.com");
+            when(userRepository.findById(5L)).thenReturn(Optional.of(bob));
+            when(invitationRepository.findByInvitationToken("tok-123"))
+                    .thenReturn(Optional.of(invite));
+            when(saasTeamExtensionService.hasAvailableSeats(next)).thenReturn(true);
+            when(saasUserExtensionService.getHomeTeamId(bob)).thenReturn(200L);
+            when(membershipRepository.findByUserId(5L)).thenReturn(List.of(ownership));
+            when(membershipRepository.countByTeamIdAndRole(300L, TeamRole.LEADER)).thenReturn(1L);
+            when(saasTeamExtensionsRepository.incrementSeatsUsed(100L)).thenReturn(1);
+
+            service.acceptInvitation("tok-123", bob);
+
+            verify(membershipRepository, never()).delete(ownership);
+            verify(saasTeamExtensionsRepository, never()).decrementSeatsUsed(300L);
+            verify(teamRepository, never()).delete(any());
+            verify(userRepository).updateUserTeamId(5L, 100L);
+            assertThat(ownership.getRole()).isEqualTo(TeamRole.LEADER);
+            assertThat(invite.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);
+        }
+
+        @Test
         @DisplayName("parks the home team (keeps it) and joins the new team, incrementing seats")
         void success_parksHomeTeamAndJoins() {
             User u = user(5L, "b@x.com", "bob");
@@ -838,7 +864,6 @@ class SaasTeamServiceTest {
             when(saasTeamExtensionService.hasAvailableSeats(newTeam)).thenReturn(true);
             when(membershipRepository.findByUserId(5L)).thenReturn(List.of(sharedMembership));
             // Shared team: sole leader, but >1 member - leaving would orphan the other member.
-            when(membershipRepository.countByTeamId(300L)).thenReturn(2L);
             when(membershipRepository.countByTeamIdAndRole(300L, TeamRole.LEADER)).thenReturn(1L);
             when(saasTeamExtensionsRepository.incrementSeatsUsed(100L)).thenReturn(1);
 
@@ -1049,6 +1074,33 @@ class SaasTeamServiceTest {
             verify(saasTeamExtensionsRepository).decrementSeatsUsed(teamId);
             // Teams are durable now - the emptied team is not deleted.
             verify(teamRepository, never()).delete(any());
+        }
+
+        @Test
+        void removingFormerFounderCreatesFreshHomeWithoutRestoringMembership() {
+            User bob = user(1L, "bob@example.com", "bob");
+            User alice = user(2L, "alice@example.com", "alice");
+            Team transferred = team(teamId, "Transferred team");
+            TeamMembership bobOwner = membership(transferred, bob, TeamRole.LEADER);
+            TeamMembership aliceMember = membership(transferred, alice, TeamRole.MEMBER);
+            when(membershipRepository.findByTeamIdAndUserId(teamId, 1L))
+                    .thenReturn(Optional.of(bobOwner));
+            when(membershipRepository.findByTeamIdAndRole(teamId, TeamRole.LEADER))
+                    .thenReturn(List.of(bobOwner));
+            when(membershipRepository.findByTeamIdAndUserId(teamId, 2L))
+                    .thenReturn(Optional.of(aliceMember))
+                    .thenReturn(Optional.empty());
+            when(saasUserExtensionService.getHomeTeamId(alice)).thenReturn(teamId);
+            stubCreatePersonalTeam(alice, 500L);
+
+            service.removeTeamMember(teamId, 2L, bob);
+
+            verify(membershipRepository).delete(aliceMember);
+            verify(saasUserExtensionService).setHomeTeamId(alice, 500L);
+            verify(membershipRepository, never())
+                    .save(argThat(m -> m.getTeam().getId().equals(teamId)));
+            assertThat(alice.getTeam().getId()).isEqualTo(500L);
+            assertThat(bobOwner.getRole()).isEqualTo(TeamRole.LEADER);
         }
 
         @Test
@@ -1316,7 +1368,6 @@ class SaasTeamServiceTest {
             Team t = team(teamId, "My Team");
             when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             when(saasTeamExtensionService.getSeatsUsed(t)).thenReturn(1);
-            when(saasTeamExtensionService.getMaxSeats(t)).thenReturn(1);
             // First isPersonal call (after setSeats) returns true -> convert to standard.
             when(saasTeamExtensionService.isPersonal(t)).thenReturn(true, false);
 
@@ -1333,7 +1384,6 @@ class SaasTeamServiceTest {
             Team t = team(teamId, "Acme");
             when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             when(saasTeamExtensionService.getSeatsUsed(t)).thenReturn(1);
-            when(saasTeamExtensionService.getMaxSeats(t)).thenReturn(5);
             // Was standard (false) so reducing to 1 flips back to personal.
             when(saasTeamExtensionService.isPersonal(t)).thenReturn(false);
 
@@ -1343,39 +1393,19 @@ class SaasTeamServiceTest {
         }
 
         @Test
-        @DisplayName("removes excess members (members before leaders) when reducing below usage")
-        void reduceBelowUsage_removesExcessMembers() {
+        @DisplayName("reductions retain existing members and the standard team")
+        void reduceBelowUsage_retainsMembers() {
             Team t = team(teamId, "Acme");
-            User leader = user(1L, "a@x.com", "alice");
-            User member = user(2L, "b@x.com", "bob");
-            // Distinct membership ids so delete() verification can tell the two rows apart
-            // (TeamMembership equals is by membershipId).
-            TeamMembership leaderM = membership(t, leader, TeamRole.LEADER);
-            leaderM.setMembershipId(1L);
-            TeamMembership memberM = membership(t, member, TeamRole.MEMBER);
-            memberM.setMembershipId(2L);
-            memberM.setAcceptedAt(LocalDateTime.now());
-            leaderM.setAcceptedAt(LocalDateTime.now().minusDays(10));
-
             when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             when(saasTeamExtensionService.getSeatsUsed(t)).thenReturn(2);
-            when(saasTeamExtensionService.getMaxSeats(t)).thenReturn(2);
-            when(membershipRepository.findByTeamId(teamId)).thenReturn(List.of(leaderM, memberM));
-            // Reduce to 1: must remove 1 excess; the MEMBER goes first.
-            stubCreatePersonalTeam(member, 500L);
             when(saasTeamExtensionService.isPersonal(t)).thenReturn(false);
 
             service.updateTeamSeats(teamId, 1);
 
-            // The MEMBER is removed, the LEADER kept (removal prioritises non-leaders).
-            verify(membershipRepository).delete(memberM);
-            verify(membershipRepository, never()).delete(leaderM);
-            // One decrement for the removed member, then a second seat update is applied via
-            // setSeats(t, 1, 1). Reducing to 1 seat also flips a standard team back to personal:
-            // setPersonal(true) is invoked for both the removed member's new personal team and t.
-            verify(saasTeamExtensionsRepository).decrementSeatsUsed(teamId);
-            verify(saasTeamExtensionService, org.mockito.Mockito.times(2))
-                    .setPersonal(any(), eq(true));
+            verify(saasTeamExtensionService).setSeats(t, 1, 1);
+            verify(membershipRepository, never()).delete(any(TeamMembership.class));
+            verify(saasTeamExtensionService, never()).decrementSeatsUsed(any());
+            verify(saasTeamExtensionService, never()).setPersonal(t, true);
         }
 
         @Test
@@ -1384,7 +1414,6 @@ class SaasTeamServiceTest {
             Team t = team(teamId, "Acme");
             when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             when(saasTeamExtensionService.getSeatsUsed(t)).thenReturn(2);
-            when(saasTeamExtensionService.getMaxSeats(t)).thenReturn(5);
             // Already standard, raising to 10: neither conversion branch fires.
             when(saasTeamExtensionService.isPersonal(t)).thenReturn(false);
 
@@ -1486,8 +1515,8 @@ class SaasTeamServiceTest {
 
             service.acceptInvitation(TOKEN, joiner);
 
-            // Guard let the move through: the old membership was left and the user re-pointed.
-            verify(membershipRepository).delete(oldMembership);
+            // Joining changes the active team while retaining ownership of the previous team.
+            verify(membershipRepository, never()).delete(oldMembership);
             verify(userRepository).updateUserTeamId(USER_ID, NEW_TEAM_ID);
             verify(invitationRepository).save(invitation);
             assertThat(invitation.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);

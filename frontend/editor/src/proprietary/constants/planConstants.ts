@@ -70,7 +70,7 @@ export const usePlanFeatures = (): PlanFeaturesMap => {
       "plan.features.usersLimitedToSeats",
       "Users limited to seats",
     );
-    const sso = t("plan.features.sso", "SSO");
+    const sso = t("plan.features.sso", "SSO (OAuth2/OIDC)");
     const saml = t("plan.features.saml", "SAML");
     const auditing = t("plan.features.auditing", "Auditing");
     const usageTracking = t("plan.features.usageTracking", "Usage tracking");
@@ -96,7 +96,7 @@ export const usePlanFeatures = (): PlanFeaturesMap => {
         { name: externalDatabase, included: false },
         { name: editingTextInPdfs, included: false },
         { name: usersLimitedToSeats, included: false },
-        { name: sso, included: false },
+        { name: sso, included: true },
         { name: saml, included: false },
         { name: auditing, included: false },
         { name: usageTracking, included: false },
@@ -188,6 +188,7 @@ export const usePlanHighlights = (): PlanHighlightsMap => {
         t("plan.highlights.upToFiveUsers", "Up to 5 users"),
         t("plan.highlights.selfHosted", "Self-hosted"),
         t("plan.highlights.allBasicFeatures", "All basic features"),
+        ssoOAuth,
       ],
       SERVER_MONTHLY: [
         selfHostedOnInfrastructure,

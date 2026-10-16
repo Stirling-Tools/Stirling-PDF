@@ -1,10 +1,3 @@
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Connect rail — the ambient prompt above Home's deployment card          */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-/* Flat and quiet: it sits above the hero every visit until the account is
-   connected, so it has to be legible without competing with the card below it. */
-
 .portal-connect-rail {
   display: flex;
   align-items: center;
@@ -39,6 +32,8 @@
   gap: 0.5rem;
   margin-left: auto;
   flex: none;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 
 @media (max-width: 40rem) {

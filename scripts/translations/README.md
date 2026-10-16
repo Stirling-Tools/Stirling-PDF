@@ -304,6 +304,28 @@ python3 scripts/translations/auto_translate.py es-ES --skip-verification
 **Supported Languages:**
 All language codes from `frontend/editor/public/locales/` (e.g., es-ES, de-DE, fr-FR, zh-CN, ar-AR, etc.)
 
+#### Retranslating changed English text
+
+`auto_translate.py` only picks up keys that are missing. When an existing en-US string is reworded, other languages keep the old translation. `bulk_auto_translate.py --mode changed` finds those keys from git history and retranslates them:
+
+```bash
+# See how many changed keys each language has (no API calls)
+python3 scripts/translations/bulk_auto_translate.py --mode changed --dry-run
+
+# Retranslate changed keys only, or missing + changed together
+python3 scripts/translations/bulk_auto_translate.py --mode changed --parallel 5
+python3 scripts/translations/bulk_auto_translate.py --mode all --parallel 5
+
+# Inspect old vs new English per key without translating
+python3 scripts/translations/stale_translations.py --languages de-DE --verbose
+```
+
+For each key, `stale_translations.py` finds the commit where the translation last changed and compares the English text at that commit with today's en-US. It follows the old file locations (`frontend/public/locales`, `translation.json`).
+
+en-GB was the source language until en-US was re-added in June 2026. Translations written before that are compared against en-GB, then mapped to the en-US text of the same string, so US/GB spelling differences alone never count as a change. Case-only English edits are skipped too.
+
+Uncommitted edits to a language file count as up to date. `auto_translate.py --keys-file keys.json [--only-keys]` retranslates a specific list of keys.
+
 ### 6. `batch_translator.py` - GPT-5.6 Translation Engine
 
 Low-level translation script used by `auto_translate.py`. Can be used standalone for manual batch translation.

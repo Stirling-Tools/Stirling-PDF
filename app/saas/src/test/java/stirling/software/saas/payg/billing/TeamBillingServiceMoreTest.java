@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
@@ -69,7 +71,7 @@ class TeamBillingServiceMoreTest {
     }
 
     private void stubGrant(long grant) {
-        PricingPolicy policy = org.mockito.Mockito.mock(PricingPolicy.class);
+        PricingPolicy policy = Mockito.mock(PricingPolicy.class);
         lenient().when(policy.getFreeTierUnits()).thenReturn(grant);
         lenient().when(pricingPolicyService.getEffectivePolicy(TEAM_ID)).thenReturn(policy);
     }
@@ -190,8 +192,8 @@ class TeamBillingServiceMoreTest {
             // Window is the calendar month.
             LocalDateTime[] expected =
                     new LocalDateTime[] {
-                        YearMonth.now().atDay(1).atStartOfDay(),
-                        YearMonth.now().plusMonths(1).atDay(1).atStartOfDay()
+                        YearMonth.now(ZoneOffset.UTC).atDay(1).atStartOfDay(),
+                        YearMonth.now(ZoneOffset.UTC).plusMonths(1).atDay(1).atStartOfDay()
                     };
             assertThat(ctx.periodStart()).isEqualTo(expected[0]);
             assertThat(ctx.periodEnd()).isEqualTo(expected[1]);
@@ -229,7 +231,7 @@ class TeamBillingServiceMoreTest {
         }
 
         @Test
-        @DisplayName("missing extension row yields zero free remaining")
+        @DisplayName("missing extension row has no included pool")
         void noExtensionRow_zeroFreeRemaining() {
             stubGrant(500L);
             when(extensionsRepository.findById(TEAM_ID)).thenReturn(Optional.empty());
@@ -238,7 +240,7 @@ class TeamBillingServiceMoreTest {
 
             TeamBillingContext ctx = service.forTeam(TEAM_ID);
 
-            assertThat(ctx.freeGrantUnits()).isEqualTo(500L);
+            assertThat(ctx.freeGrantUnits()).isZero();
             assertThat(ctx.freeRemainingUnits()).isZero();
             assertThat(ctx.subscriptionId()).isNull();
         }
@@ -299,7 +301,9 @@ class TeamBillingServiceMoreTest {
                     rate,
                     "usd",
                     null,
-                    null);
+                    null,
+                    LocalDateTime.now(),
+                    LocalDateTime.now());
         }
 
         @Test
@@ -357,8 +361,9 @@ class TeamBillingServiceMoreTest {
         @DisplayName("no-arg overload anchors on the current month")
         void noArgOverload() {
             LocalDateTime[] window = TeamBillingService.calendarMonthWindow();
-            assertThat(window[0]).isEqualTo(YearMonth.now().atDay(1).atStartOfDay());
-            assertThat(window[1]).isEqualTo(YearMonth.now().plusMonths(1).atDay(1).atStartOfDay());
+            assertThat(window[0]).isEqualTo(YearMonth.now(ZoneOffset.UTC).atDay(1).atStartOfDay());
+            assertThat(window[1])
+                    .isEqualTo(YearMonth.now(ZoneOffset.UTC).plusMonths(1).atDay(1).atStartOfDay());
         }
     }
 
@@ -417,14 +422,13 @@ class TeamBillingServiceMoreTest {
         }
 
         @Test
-        @DisplayName("the grant resets on the Stripe window, not the calendar month")
-        void subscribedGrantFollowsTheStripeWindow() {
+        @DisplayName("advancing the Stripe window does not replenish included credits")
+        void subscribedGrantIsIndependentOfStripeWindow() {
             stubGrant(GRANT);
-            // Stamped for the calendar month, but this team's period is Stripe-anchored and starts
-            // mid-month, so the stamp belongs to the previous period and the grant resets.
-            LocalDateTime stripeStart = LocalDateTime.of(2026, 6, 10, 0, 0);
+            LocalDateTime includedStart = TeamBillingService.calendarMonthWindow()[0];
+            LocalDateTime stripeStart = includedStart.plusDays(9);
             when(extensionsRepository.findById(TEAM_ID))
-                    .thenReturn(Optional.of(subscribedRow(LocalDateTime.of(2026, 6, 1, 0, 0))));
+                    .thenReturn(Optional.of(subscribedRow(includedStart)));
             when(subscriptionDao.findBilling("sub_1"))
                     .thenReturn(
                             Optional.of(
@@ -439,54 +443,14 @@ class TeamBillingServiceMoreTest {
             TeamBillingContext ctx = service.forTeam(TEAM_ID);
 
             assertThat(ctx.periodStart()).isEqualTo(stripeStart);
-            assertThat(ctx.freeRemainingUnits()).isEqualTo(GRANT);
+            assertThat(ctx.includedPeriodStart()).isEqualTo(includedStart);
+            assertThat(ctx.freeRemainingUnits()).isZero();
         }
 
         private PaygTeamExtensions subscribedRow(LocalDateTime stamp) {
             PaygTeamExtensions e = stamped(stamp, 0L);
             e.setPaygSubscriptionId("sub_1");
             return e;
-        }
-    }
-
-    @Nested
-    @DisplayName("remainingForPeriod")
-    class RemainingForPeriodRule {
-
-        private final LocalDateTime period = LocalDateTime.of(2026, 8, 1, 0, 0);
-
-        @Test
-        @DisplayName("stale stamp yields the full grant; current stamp yields the stored balance")
-        void staleVersusCurrent() {
-            assertThat(
-                            TeamBillingService.remainingForPeriod(
-                                    period.minusMonths(1), 0L, 500L, period))
-                    .isEqualTo(500L);
-            assertThat(TeamBillingService.remainingForPeriod(period, 0L, 500L, period)).isZero();
-            assertThat(TeamBillingService.remainingForPeriod(period, 42L, 500L, period))
-                    .isEqualTo(42L);
-        }
-
-        @Test
-        @DisplayName("a stamp in the future is never read as another grant")
-        void futureStampKeepsTheStoredBalance() {
-            assertThat(TeamBillingService.remainingForPeriod(period.plusDays(1), 7L, 500L, period))
-                    .isEqualTo(7L);
-        }
-
-        @Test
-        @DisplayName("null stored balance and negative values floor at zero")
-        void nullAndNegativeBalances() {
-            assertThat(TeamBillingService.remainingForPeriod(period, null, 500L, period)).isZero();
-            assertThat(TeamBillingService.remainingForPeriod(period, -5L, 500L, period)).isZero();
-            assertThat(TeamBillingService.remainingForPeriod(null, 0L, -1L, period)).isZero();
-        }
-
-        @Test
-        @DisplayName("an unknown current period leaves the counter alone")
-        void nullCurrentPeriod() {
-            assertThat(TeamBillingService.isStale(null, null)).isFalse();
-            assertThat(TeamBillingService.remainingForPeriod(null, 3L, 500L, null)).isEqualTo(3L);
         }
     }
 }

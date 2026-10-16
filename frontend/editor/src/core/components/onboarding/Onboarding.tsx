@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback, useState } from "react";
+import { useEffect, useMemo, useCallback, useState, useRef } from "react";
 import { type StepType } from "@reactour/tour";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -11,7 +11,6 @@ import OnboardingTour, {
   type CloseArgs,
 } from "@app/components/onboarding/OnboardingTour";
 import OnboardingModalSlide from "@app/components/onboarding/OnboardingModalSlide";
-import StaticOnboardingSlide from "@app/components/onboarding/StaticOnboardingSlide";
 import {
   useServerLicenseRequest,
   useTourRequest,
@@ -42,11 +41,7 @@ export default function Onboarding() {
 
   const { osInfo, osOptions, setSelectedDownloadUrl, handleDownloadSelected } =
     useOnboardingDownload();
-  const {
-    showLicenseSlide,
-    licenseNotice: externalLicenseNotice,
-    closeLicenseSlide,
-  } = useServerLicenseRequest();
+  const { showLicenseSlide, closeLicenseSlide } = useServerLicenseRequest();
   const {
     tourRequested: externalTourRequested,
     requestedTourType,
@@ -115,7 +110,7 @@ export default function Onboarding() {
           break;
         case "see-plans":
           actions.complete();
-          navigate("/settings/adminPlan");
+          navigate("/settings/billing");
           break;
       }
     },
@@ -258,6 +253,40 @@ export default function Onboarding() {
     return modalSlides.findIndex((step) => step.id === currentStep.id);
   }, [activeFlow, currentStep]);
 
+  const onboardingLicenseRequested =
+    isActive && currentStep?.id === "server-license";
+  const handledLicenseRequest = useRef(false);
+  useEffect(() => {
+    const requested = showLicenseSlide || onboardingLicenseRequested;
+    if (!requested) {
+      handledLicenseRequest.current = false;
+      return;
+    }
+    if (bypassOnboarding || onAuthRoute || handledLicenseRequest.current)
+      return;
+    handledLicenseRequest.current = true;
+    if (showLicenseSlide) closeLicenseSlide();
+    else actions.complete();
+    if (
+      serverExperience.effectiveIsAdmin &&
+      !serverExperience.hasPaidLicense &&
+      serverExperience.overFreeTierLimit === true
+    ) {
+      navigate("/settings/billing?upgrade=team");
+    }
+  }, [
+    showLicenseSlide,
+    onboardingLicenseRequested,
+    bypassOnboarding,
+    onAuthRoute,
+    closeLicenseSlide,
+    actions,
+    navigate,
+    serverExperience.effectiveIsAdmin,
+    serverExperience.hasPaidLicense,
+    serverExperience.overFreeTierLimit,
+  ]);
+
   if (bypassOnboarding) {
     return null;
   }
@@ -266,39 +295,7 @@ export default function Onboarding() {
     return null;
   }
 
-  if (showLicenseSlide) {
-    const effectiveLicenseNotice =
-      externalLicenseNotice || runtimeState.licenseNotice;
-    return (
-      <StaticOnboardingSlide
-        key="server-license"
-        slideId="server-license"
-        // Remove back button for the external license notice.
-        transformButtons={(buttons) =>
-          buttons.filter((btn) => btn.key !== "license-back")
-        }
-        runtimeState={{
-          ...runtimeState,
-          licenseNotice: effectiveLicenseNotice,
-        }}
-        params={{
-          osOptions: [],
-          onDownloadUrlChange: () => {},
-          licenseNotice: effectiveLicenseNotice,
-          loginEnabled: serverExperience.loginEnabled,
-        }}
-        onSkip={closeLicenseSlide}
-        onAction={(action) => {
-          if (action === "see-plans") {
-            closeLicenseSlide();
-            navigate("/settings/adminPlan");
-          } else {
-            closeLicenseSlide();
-          }
-        }}
-      />
-    );
-  }
+  if (showLicenseSlide || onboardingLicenseRequested) return null;
 
   // Always render the tour component (it controls its own visibility with isOpen)
   const tourComponent = (

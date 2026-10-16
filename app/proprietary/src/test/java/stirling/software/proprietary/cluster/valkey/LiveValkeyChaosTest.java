@@ -20,13 +20,8 @@ import org.testcontainers.utility.DockerImageName;
 import stirling.software.common.model.ApplicationProperties;
 
 /**
- * Live failure-injection: a frozen (network-black-holed) Valkey must NOT stall hot-path commands
- * for Lettuce's 60s default. {@link ValkeyConnectionConfiguration} pins a 2s command timeout, so a
- * paused server must surface an error in seconds, and the connection must recover when it returns.
- *
- * <p>Uses {@code docker pause}/{@code unpause} (TCP stays ESTABLISHED but the server never replies)
- * to reproduce a partition rather than {@code stop} (which would fail fast with
- * connection-refused).
+ * Uses {@code docker pause}, not {@code stop}: TCP stays ESTABLISHED and the server never replies,
+ * which is a partition. {@code stop} would fail fast with connection-refused instead.
  */
 @Testcontainers
 @EnabledIf("isDockerAvailable")

@@ -19,13 +19,14 @@ import {
   rememberPendingDestination,
   takePendingDestination,
 } from "@app/services/pendingDestination";
-import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
+import { Icon } from "@app/ui/Icon";
 
 // Import login components
 import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
+import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
@@ -94,6 +95,11 @@ export default function Login() {
     ogImage: `${baseUrl}/og_images/saas/app.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
+
+  // The form is only for visitors known to be signed out; splash until then.
+  if (loading) {
+    return <LoadingFallback />;
+  }
 
   // Show logged in state if authenticated (unless bouncing back to `next`)
   if (session && !loading) {
@@ -317,7 +323,8 @@ export default function Login() {
             className={`oauth-button-fullwidth auth-expandable-trigger ${showMagicLinkForm ? "auth-expandable-trigger--active" : ""}`}
           >
             <span className="oauth-btn-group">
-              <LinkRoundedIcon
+              <Icon
+                name="link"
                 style={{
                   width: "1.75rem",
                   height: "1.75rem",

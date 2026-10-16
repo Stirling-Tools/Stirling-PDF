@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   validateToolChain,
+  chainOutputFormat,
   toolAcceptsFile,
   type ToolChainStep,
   type ToolDiagnostic,
@@ -137,4 +138,35 @@ describe("tool file inputs", () => {
       expect(toolAcceptsFile(endpoint, file)).toBe(true);
     },
   );
+});
+
+describe("RAG pipeline contract", () => {
+  it("recognises OCR followed by a chunks-only RAG export", () => {
+    const steps = [
+      { operation: "/api/v1/misc/ocr-pdf", parameters: { sidecar: false } },
+      {
+        operation: "/api/v1/docparse/ingest",
+        parameters: {
+          includeOriginal: false,
+          exportChunksJsonl: true,
+          exportMarkdown: false,
+        },
+      },
+    ];
+    expect(validateToolChain(steps)).toEqual([]);
+    expect(chainOutputFormat(steps)).toBe("JSON");
+  });
+
+  it("rejects a PDF operation after a chunks-only export", () => {
+    const diagnostics = validateToolChain([
+      {
+        operation: "/api/v1/docparse/ingest",
+        parameters: { includeOriginal: false, exportChunksJsonl: true },
+      },
+      { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+    ]);
+    expect(diagnostics).toEqual([
+      expect.objectContaining({ stepIndex: 1, severity: "ERROR" }),
+    ]);
+  });
 });

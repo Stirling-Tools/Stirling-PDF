@@ -47,7 +47,10 @@ class WalletSnapshotResponseTest {
                 /* prepaidUnitsTotal= */ 120_000L,
                 /* prepaidExpiresAt= */ "2027-06-01",
                 /* billingMode= */ "prepaid",
-                /* bundleRatePerCreditMinor= */ new BigDecimal("1"));
+                /* bundleRatePerCreditMinor= */ new BigDecimal("1"),
+                null,
+                null,
+                null);
     }
 
     @Test
@@ -132,6 +135,9 @@ class WalletSnapshotResponseTest {
                         0L,
                         null,
                         "payg",
+                        null,
+                        null,
+                        null,
                         null);
 
         assertThat(free.billableLimit()).isNull();

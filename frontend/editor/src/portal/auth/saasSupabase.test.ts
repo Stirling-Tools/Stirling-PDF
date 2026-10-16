@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Mock only the low-level client factory — NOT ensureSaasSupabase itself — so this
@@ -23,12 +24,13 @@ describe("ensureSaasSupabase — configures the shared client from VITE_SUPABASE
     vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY", "anon-key");
     // Dynamic import so the module reads the stubbed env at load.
     const { ensureSaasSupabase, isSaasSupabaseConfigured } =
-      await import("@portal/auth/saasSupabase");
+      await import("@app/portal/auth/saasSupabase");
     expect(isSaasSupabaseConfigured).toBe(true);
     const client = ensureSaasSupabase();
     expect(configureSupabase).toHaveBeenCalledWith({
       url: "https://proj.supabase.co",
       key: "anon-key",
+      authOptions: { detectSessionInUrl: false },
     });
     expect(client).not.toBeNull();
   });
@@ -37,7 +39,7 @@ describe("ensureSaasSupabase — configures the shared client from VITE_SUPABASE
     vi.stubEnv("VITE_SUPABASE_URL", "");
     vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY", "");
     const { ensureSaasSupabase, isSaasSupabaseConfigured } =
-      await import("@portal/auth/saasSupabase");
+      await import("@app/portal/auth/saasSupabase");
     expect(isSaasSupabaseConfigured).toBe(false);
     expect(ensureSaasSupabase()).toBeNull();
     expect(configureSupabase).not.toHaveBeenCalled();

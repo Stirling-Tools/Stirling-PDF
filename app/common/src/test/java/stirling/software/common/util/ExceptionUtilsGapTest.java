@@ -236,7 +236,7 @@ class ExceptionUtilsGapTest {
         @Test
         @DisplayName("ocr invalid render type uses default message")
         void ocrInvalidRenderType() {
-            IOException ex = ExceptionUtils.createOcrInvalidRenderTypeException();
+            IllegalArgumentException ex = ExceptionUtils.createOcrInvalidRenderTypeException();
             assertTrue(ex.getMessage().contains("hocr"));
         }
 

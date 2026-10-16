@@ -4,11 +4,13 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
+import { EditorPipelinesPanel } from "@app/components/policies/EditorPipelinesPanel";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
 import { ToolPanelHeader } from "@app/components/shared/ToolPanelHeader";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { withViewTransition } from "@app/utils/viewTransition";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import { ToolId } from "@app/types/toolId";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import {
@@ -28,6 +30,7 @@ export default function RightSidebar() {
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef, quickAccessRef } = sidebarRefs;
   const isMobile = useIsMobile();
+  const policiesEnabled = usePoliciesEnabled();
 
   const {
     leftPanelView,
@@ -110,6 +113,7 @@ export default function RightSidebar() {
           }}
         >
           <>
+            {policiesEnabled && <EditorPipelinesPanel />}
             {activeTool ? (
               <ToolPanelHeader
                 icon={
@@ -147,7 +151,7 @@ export default function RightSidebar() {
                     }
                     className="tool-panel__expand-btn"
                   >
-                    <CloseIcon sx={{ fontSize: "1.1rem" }} />
+                    <Icon name="x" size={"1.1rem"} />
                   </ActionIcon>
                 </div>
               </div>

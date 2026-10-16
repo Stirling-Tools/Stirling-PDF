@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useAuth } from "@app/auth/UseSession";
@@ -88,12 +87,14 @@ export function GuestUserBanner({ className = "" }: GuestUserBannerProps) {
             onClick={handleDismiss}
             aria-label={t("guestBanner.dismiss", "Dismiss banner")}
           >
-            <CloseIcon className="guest-banner-icon" />
+            <Icon name="x" className="guest-banner-icon" />
           </ActionIcon>
           <Button
             size="sm"
             onClick={handleSignUp}
-            leftSection={<PersonAddIcon className="guest-banner-signup-icon" />}
+            leftSection={
+              <Icon name="user-plus" className="guest-banner-signup-icon" />
+            }
           >
             {t("guestBanner.signUp", "Sign Up Free")}
           </Button>

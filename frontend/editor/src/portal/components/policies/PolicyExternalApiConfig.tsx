@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import { Icon } from "@app/ui/Icon";
 import { Banner, Button, FormField, Input, Select } from "@app/ui";
 import { fetchIntegrationCapabilities } from "@portal/api/integrations";
 import { ConnectionPicker } from "@portal/components/sources/ConnectionPicker";
@@ -125,7 +124,11 @@ export function PolicyExternalApiConfig({
     return (
       <div className="portal-policies__capability-config">
         <div className="portal-conn-picker__search">
-          <SearchRoundedIcon className="portal-conn-picker__search-icon" />
+          <Icon
+            name="search"
+            size={18}
+            className="portal-conn-picker__search-icon"
+          />
           <input
             type="search"
             value={query}
@@ -165,7 +168,7 @@ export function PolicyExternalApiConfig({
         variant="quiet"
         size="sm"
         className="portal-sources__connection-back"
-        leftSection={<ArrowBackRoundedIcon fontSize="inherit" />}
+        leftSection={<Icon name="arrow-left" size="1em" />}
         onClick={() =>
           onChange({
             ...parameters,

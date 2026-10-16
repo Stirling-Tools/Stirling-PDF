@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "@app/auth/UseSession";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -23,7 +23,6 @@ import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { detectFileExtension } from "@app/utils/fileUtils";
 import { openExternalUrl } from "@app/utils/safeNavigation";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import {
   rankByFuzzy,
   idToWords,
@@ -254,15 +253,13 @@ export function rankFileResults(
       group: "files",
       title: item.name,
       // The file-type doc icon (PDF/image/doc/…) the sidebar and grid use,
-      // rather than a flat generic file glyph. Sized by height so the portrait
-      // doc shape sits level with the square tool/settings icons instead of
-      // overflowing the row.
+      // rather than a flat generic file glyph.
       icon: createElement(FileDocIcon, {
         variant: getFileDocVariant(
           detectFileExtension(item.name.toLowerCase()),
           (item.type ?? "").toLowerCase(),
         ),
-        style: { height: "1.15rem", width: "auto" },
+        size: "1.15rem",
       }),
       score,
       onSelect: () => openFile(item),
@@ -350,12 +347,12 @@ export function rankSettingsResults(
       (e) => e.keywords?.join(" ") ?? "",
     ],
   );
-  const rows = rowMatches.map(({ item, score }) => ({
+  const rows: SuperSearchResult[] = rowMatches.map(({ item, score }) => ({
     key: `setting:${item.section}:${item.anchor}`,
     group: "settings",
     title: t(item.labelKey, item.labelFallback),
     subtitle: sectionLabelFor.get(item.section),
-    iconName: "settings-rounded",
+    iconName: "settings",
     score: score + 1, // nudge rows above bare section matches
     onSelect: () => openSettings(item.section, item.anchor),
   }));
@@ -371,15 +368,17 @@ export function rankSettingsResults(
     (s) => s.labelFallback,
     (s) => s.keywords?.join(" ") ?? "",
   ]);
-  const sections = sectionMatches.map(({ item, score }) => ({
-    key: `setting-section:${item.key}`,
-    group: "settings",
-    title: t(item.labelKey, item.labelFallback),
-    subtitle: groupTitle(item),
-    iconName: "settings-rounded",
-    score,
-    onSelect: () => openSettings(item.key),
-  }));
+  const sections: SuperSearchResult[] = sectionMatches.map(
+    ({ item, score }) => ({
+      key: `setting-section:${item.key}`,
+      group: "settings",
+      title: t(item.labelKey, item.labelFallback),
+      subtitle: groupTitle(item),
+      iconName: "settings",
+      score,
+      onSelect: () => openSettings(item.key),
+    }),
+  );
 
   // Content matches: sections whose rendered copy contains the query, so terms
   // with no curated keyword ("SMTP", a field label) still find their section.
@@ -390,7 +389,7 @@ export function rankSettingsResults(
     ...sectionMatches.map(({ item }) => item.key),
     ...rowMatches.map(({ item }) => item.section),
   ]);
-  const contentMatches =
+  const contentMatches: SuperSearchResult[] =
     trimmed.length < 3
       ? []
       : visibleSections
@@ -406,7 +405,7 @@ export function rankSettingsResults(
                 group: "settings",
                 title: t(s.labelKey, s.labelFallback),
                 subtitle: group ? `${group} · ${snippet}` : snippet,
-                iconName: "settings-rounded",
+                iconName: "settings",
                 // Always below the weakest possible label/keyword match.
                 score: FUZZY_MIN_SCORE - 10,
                 onSelect: () => openSettings(s.key),
@@ -439,9 +438,7 @@ export function rankProcessorResults(
       key: `processor:${item.id}`,
       group: "processor",
       title: t(item.labelKey, item.labelFallback),
-      // Must exist in the bundled Material Symbols set (LocalIcon falls back
-      // to a network fetch for unknown names — blank when self-hosted offline).
-      iconName: "grid-view",
+      iconName: "layout-grid",
       score,
       onSelect: () => selectEntry(item),
     }));
@@ -475,7 +472,7 @@ export function assembleSuperSearchGroups(
 /**
  * The editor's results provider: the shared sources wired to in-app select
  * actions (open file → viewer, select tool in the workbench, deep-link into
- * the settings modal, route into the Processor).
+ * the settings page, route into the Processor).
  *
  * @param query   current search text
  * @param active  whether the search surface is open; gates the My Files load
@@ -508,19 +505,6 @@ export function useSuperSearch(
   const trimmed = query.trim();
   const { stubs, loadingFiles } = useMyFilesStubs(active);
   const { scopeEnabled } = useSearchScopeFilter(options);
-  const { pathname } = useLocation();
-
-  // Workbench-bound selections must leave the file manager through the router.
-  // Tool/file selection pins its URL via raw history.pushState, which the
-  // router never observes — so on /files the route keeps re-asserting the
-  // "myFiles" workbench and the selection appears to do nothing. Exit to the
-  // editor's home path: on processor-shipping builds "/" is a role router,
-  // not the editor.
-  const leaveFileManager = useCallback(() => {
-    if (pathname.startsWith("/files")) {
-      navigate(EDITOR_BASENAME);
-    }
-  }, [pathname, navigate]);
 
   // --- Actions -----------------------------------------------------------
   const openFile = useCallback(
@@ -529,14 +513,14 @@ export function useSuperSearch(
         // The file already lives in storage — load it as a stub so its id and
         // metadata are preserved (addFiles would persist a duplicate record).
         await fileActions.addStirlingFileStubs([stub], { selectFiles: true });
+        // Leaving the library is the view changing; HomePage takes the path with it.
         navActions.setWorkbench("viewer");
         viewerRef.current?.setActiveFileId?.(stub.id);
-        leaveFileManager();
       } catch (err) {
         console.error("[SuperSearch] Failed to open file:", stub.name, err);
       }
     },
-    [fileActions, navActions, leaveFileManager],
+    [fileActions, navActions],
   );
 
   const openTool = useCallback(
@@ -560,15 +544,8 @@ export function useSuperSearch(
       } else {
         handleToolSelectForced(id);
       }
-      leaveFileManager();
     },
-    [
-      handleToolSelect,
-      handleToolSelectForced,
-      toolAvailability,
-      toolRegistry,
-      leaveFileManager,
-    ],
+    [handleToolSelect, handleToolSelectForced, toolAvailability, toolRegistry],
   );
 
   const openSettings = useCallback(

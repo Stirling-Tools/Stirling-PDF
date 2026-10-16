@@ -74,11 +74,19 @@ const NO_DOCUMENT: NotificationDocumentState = {
 };
 
 /**
- * Whether this browser could resolve the document a row names. Two id spaces share `fileId`: an
- * attended run reports the id its editor minted, a source-fed one a hash that was never on a device.
+ * Whether this browser holds the document a row names, and so could run a fix over it. The server
+ * says: a client inferring it from `sourceId` cannot see a smart folder's rows at all.
  */
 export function isResolvableHere(notification: AppNotification): boolean {
-  return (notification.sourceId ?? null) === null;
+  return notification.documentLocation === "BROWSER";
+}
+
+/**
+ * Rows the server keeps on the reader's behalf. The server says which, so a smart-folder policy
+ * run from the editor, whose document is this browser's, is not mistaken for one.
+ */
+function isHeldByServer(notification: AppNotification): boolean {
+  return notification.heldByServer;
 }
 
 interface NotificationsSnapshot {
@@ -155,15 +163,16 @@ async function read(forCycle: number): Promise<void> {
   if (forCycle !== cycle) return;
 
   const documents = Object.fromEntries(resolved);
-  // Presentation, not access: the server has already scoped these rows to the reader. Hidden
-  // because every offer a member gets needs the document, so the row would only say so.
+  // Presentation, not access: the server has already scoped these rows to the reader. A member is
+  // shown what they can act on, plus what the server holds for them and nobody else.
   const visible = viewerReviewsTeam
     ? listed
     : listed.filter(
         // Asked, not left to the lookup missing: a hit on another id space would be a collision.
         (n) =>
-          isResolvableHere(n) &&
-          Boolean(n.fileId && documents[n.fileId]?.hasLocalFile),
+          isHeldByServer(n) ||
+          (isResolvableHere(n) &&
+            Boolean(n.fileId && documents[n.fileId]?.hasLocalFile)),
       );
 
   // Per read, since signing in or out changes whose marker applies without remounting the bell.
@@ -211,12 +220,28 @@ function loadFresh(): void {
   });
 }
 
+/**
+ * The bell sits in the quick-nav rail, which renders above AppProviders and so
+ * above the query client - hence this store rather than a query. The one thing
+ * the client would give for free has to be spelled out: a backgrounded tab
+ * otherwise reads every 30s for the whole session, on every page.
+ */
+function pollIfWatching(): void {
+  if (document.visibilityState === "visible") void load();
+}
+
 function startPolling(): void {
   cycle += 1;
   // Nothing counts as read until a read names the viewer, which errs towards showing failures.
   snapshot = NOTHING_LOADED;
-  pollTimer = window.setInterval(() => void load(), POLL_INTERVAL_MS);
+  pollTimer = window.setInterval(pollIfWatching, POLL_INTERVAL_MS);
+  document.addEventListener("visibilitychange", onVisibilityChange);
   void load();
+}
+
+/** Coming back to a stale bell is the case people notice, so catch up on return. */
+function onVisibilityChange(): void {
+  if (document.visibilityState === "visible") void load();
 }
 
 function stopPolling(): void {
@@ -224,6 +249,7 @@ function stopPolling(): void {
     window.clearInterval(pollTimer);
     pollTimer = null;
   }
+  document.removeEventListener("visibilitychange", onVisibilityChange);
   // Drop anything in flight: its cycle has nobody watching it.
   cycle += 1;
   inFlight = null;

@@ -58,7 +58,7 @@ export interface PanAPIWrapper {
 }
 
 export interface SelectionAPIWrapper {
-  copyToClipboard: () => void;
+  copyToClipboard: () => Promise<boolean>;
   getFormattedSelection: () => FormattedSelection[];
   selectAll: (totalPages: number) => Promise<boolean>;
   selectWordAt: (pageIndex: number, x: number, y: number) => boolean;
@@ -130,6 +130,8 @@ export interface ScrollState {
 export interface ZoomState {
   currentZoom: number;
   zoomPercent: number;
+  /** Active zoom as the plugin reports it: a mode or a numeric user level. */
+  level?: ZoomLevel;
 }
 
 export interface PanState {

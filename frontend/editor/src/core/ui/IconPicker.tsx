@@ -27,8 +27,8 @@ export interface IconPickerProps {
 
 /**
  * Pick an icon from a caller-supplied set. The chosen glyph is the trigger; the menu is a grid. The
- * icon set is injected (via {@link options}) rather than baked in, so any surface - a pipeline, a
- * watched folder, an automation - passes its own vocabulary and shares the one control.
+ * icon set is injected (via {@link options}) rather than baked in, so any surface - a pipeline, an
+ * automation - passes its own vocabulary and shares the one control.
  */
 export function IconPicker({
   value,

@@ -396,6 +396,7 @@ function RulerBand({
         overflow: "hidden",
       }}
     >
+      {/* icon-lint-allow: runtime-generated-svg -- ruler ticks are computed from the page */}
       <svg
         width={bandWidth}
         height={bandHeight}

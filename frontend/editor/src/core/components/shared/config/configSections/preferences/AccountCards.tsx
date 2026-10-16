@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import {
   Alert,
@@ -13,7 +14,6 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert as showToast } from "@app/components/toast";
 import { useAuth } from "@app/auth/UseSession";
 import { accountService } from "@app/services/accountService";
@@ -376,7 +376,7 @@ export function AccountCards() {
             <Stack gap="xs">
               {isSsoUser && (
                 <Alert
-                  icon={<LocalIcon icon="info" width="1rem" height="1rem" />}
+                  icon={<Icon name="info" size="1rem" />}
                   color="blue"
                   variant="light"
                 >
@@ -390,7 +390,7 @@ export function AccountCards() {
               <Group gap="sm" wrap="wrap">
                 {!isSsoUser && (
                   <Button
-                    leftSection={<LocalIcon icon="key-rounded" />}
+                    leftSection={<Icon name="key" />}
                     onClick={() => setPasswordModalOpen(true)}
                   >
                     {t("settings.security.password.update", "Update password")}
@@ -400,7 +400,7 @@ export function AccountCards() {
                 {!isSsoUser && (
                   <Button
                     variant="secondary"
-                    leftSection={<LocalIcon icon="edit-rounded" />}
+                    leftSection={<Icon name="pencil" />}
                     onClick={() => setUsernameModalOpen(true)}
                   >
                     {t("account.changeUsername", "Change username")}
@@ -410,7 +410,7 @@ export function AccountCards() {
                 <Button
                   variant="secondary"
                   accent="danger"
-                  leftSection={<LocalIcon icon="logout-rounded" />}
+                  leftSection={<Icon name="log-out" />}
                   onClick={handleLogout}
                 >
                   {t("settings.general.logout", "Log out")}
@@ -433,7 +433,7 @@ export function AccountCards() {
           <Stack gap="sm">
             {isSsoUser ? (
               <Alert
-                icon={<LocalIcon icon="info" width="1rem" height="1rem" />}
+                icon={<Icon name="info" size="1rem" />}
                 color="blue"
                 variant="light"
               >
@@ -446,9 +446,7 @@ export function AccountCards() {
               <Group gap="sm" wrap="wrap">
                 {!mfaEnabled ? (
                   <Button
-                    leftSection={
-                      <LocalIcon icon="check-circle-outline-rounded" />
-                    }
+                    leftSection={<Icon name="circle-check" />}
                     onClick={handleStartMfaSetup}
                     loading={mfaLoading}
                     disabled={changeButtonDisabled}
@@ -462,7 +460,7 @@ export function AccountCards() {
                   <Button
                     variant="secondary"
                     accent="danger"
-                    leftSection={<LocalIcon icon="close-rounded" />}
+                    leftSection={<Icon name="x" />}
                     onClick={() => {
                       setMfaError("");
                       setMfaDisableCode("");
@@ -500,9 +498,7 @@ export function AccountCards() {
 
             {passwordError && (
               <Alert
-                icon={
-                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
-                }
+                icon={<Icon name="circle-alert" size="1rem" />}
                 color="red"
                 variant="light"
               >
@@ -563,7 +559,7 @@ export function AccountCards() {
               <Button
                 type="submit"
                 loading={passwordSubmitting}
-                leftSection={<LocalIcon icon="save-rounded" />}
+                leftSection={<Icon name="save" />}
               >
                 {t("settings.security.password.update", "Update password")}
               </Button>
@@ -623,9 +619,7 @@ export function AccountCards() {
             )}
             {mfaError && (
               <Alert
-                icon={
-                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
-                }
+                icon={<Icon name="circle-alert" size="1rem" />}
                 color="red"
                 variant="light"
               >
@@ -681,9 +675,7 @@ export function AccountCards() {
             </Text>
             {mfaError && (
               <Alert
-                icon={
-                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
-                }
+                icon={<Icon name="circle-alert" size="1rem" />}
                 color="red"
                 variant="light"
               >
@@ -737,9 +729,7 @@ export function AccountCards() {
 
             {usernameError && (
               <Alert
-                icon={
-                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
-                }
+                icon={<Icon name="circle-alert" size="1rem" />}
                 color="red"
                 variant="light"
               >
@@ -777,7 +767,7 @@ export function AccountCards() {
               <Button
                 type="submit"
                 loading={usernameSubmitting}
-                leftSection={<LocalIcon icon="save-rounded" />}
+                leftSection={<Icon name="save" />}
               >
                 {t("common.save", "Save")}
               </Button>

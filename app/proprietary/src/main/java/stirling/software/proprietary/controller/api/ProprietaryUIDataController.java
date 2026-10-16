@@ -56,6 +56,7 @@ import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.security.util.RedirectBaseUrl;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 import tools.jackson.core.JacksonException;
@@ -121,19 +122,14 @@ public class ProprietaryUIDataController {
     }
 
     /**
-     * Get the backend base URL for SAML/OAuth redirects. Uses system.backendUrl from config if set,
-     * otherwise defaults to http://localhost:8080
+     * Base URL for the SAML login link: security.saml2.redirectBaseUrl, then system.backendUrl,
+     * then http://localhost:8080 for development.
      */
     private String getBackendBaseUrl() {
-        String backendUrl = applicationProperties.getSystem().getBackendUrl();
-
-        // If backendUrl is configured, use it
-        if (backendUrl != null && !backendUrl.trim().isEmpty()) {
-            return backendUrl.trim();
-        }
-
-        // For development, default to localhost:8080 (backend port)
-        return "http://localhost:8080";
+        return RedirectBaseUrl.overrideOr(
+                        applicationProperties.getSecurity().getSaml2().getRedirectBaseUrl(),
+                        applicationProperties.getSystem().getBackendUrl())
+                .orElse("http://localhost:8080");
     }
 
     @GetMapping("/audit-dashboard")
@@ -168,7 +164,7 @@ public class ProprietaryUIDataController {
 
         // Add enableLogin flag so frontend doesn't need to call /app-config
         data.setEnableLogin(securityProps.isEnableLogin());
-        data.setSsoAutoLogin(applicationProperties.getPremium().getProFeatures().isSsoAutoLogin());
+        data.setSsoAutoLogin(applicationProperties.getSecurity().isSsoAutoLogin());
 
         // Check if this is first-time setup with default credentials
         // The isFirstLogin flag captures: default username/password usage and unchanged state
@@ -231,7 +227,7 @@ public class ProprietaryUIDataController {
 
         SAML2 saml2 = securityProps.getSaml2();
         // Only add SAML2 providers if loginMethod allows it
-        if (securityProps.isSaml2Active() && applicationProperties.getPremium().isEnabled()) {
+        if (securityProps.isSaml2Active() && licenseSettingsService.hasPaidLicense()) {
             String samlIdp = saml2.getProvider();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
@@ -351,7 +347,7 @@ public class ProprietaryUIDataController {
         long availableSlots = licenseSettingsService.getAvailableUserSlots();
         int grandfatheredCount = licenseSettingsService.getDisplayGrandfatheredCount();
         int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
-        boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
+        boolean premiumEnabled = licenseSettingsService.hasPaidLicense();
         long pendingInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
 
         // Resolve portal access for the whole roster. The teamLead display flag counts a
@@ -422,7 +418,8 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/account")
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize(
+            "!@principalPolicy.isInternalApiUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @Operation(summary = "Get account page data")
     public ResponseEntity<AccountData> getAccountData(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -619,7 +616,9 @@ public class ProprietaryUIDataController {
         // Portal access (same policy /me uses).
         summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));
         summary.setUsername(user.getUsername());
-        summary.setEmail(user.getUsername()); // Use username as email for consistency
+        summary.setEmail(user.getEmail());
+        summary.setSupabaseId(
+                user.getSupabaseId() == null ? null : user.getSupabaseId().toString());
         summary.setRoleName(user.getRoleName());
         summary.setRolesAsString(user.getRolesAsString());
         summary.setEnabled(user.isEnabled());

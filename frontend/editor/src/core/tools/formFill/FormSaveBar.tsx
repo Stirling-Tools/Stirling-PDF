@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
+import { getFormFillFileId } from "@app/types/fileContext";
 
 interface FormSaveBarProps {
   /** The current file being viewed */
@@ -42,10 +43,13 @@ export function FormSaveBar({
   const [applying, setApplying] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  // Reset dismissed state when file changes
-  const [prevFile, setPrevFile] = useState<File | Blob | null>(null);
-  if (file !== prevFile) {
-    setPrevFile(file);
+  // Reset the dismissed state only when genuinely different bytes open: the
+  // key folds the content identity (quickKey) in, so a disk reload under an
+  // unchanged record id still brings the bar back.
+  const fileRootKey = getFormFillFileId(file);
+  const [prevFileRootKey, setPrevFileRootKey] = useState<unknown>(fileRootKey);
+  if (fileRootKey !== prevFileRootKey) {
+    setPrevFileRootKey(fileRootKey);
     setDismissed(false);
   }
 

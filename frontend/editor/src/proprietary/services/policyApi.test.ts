@@ -64,4 +64,17 @@ describe("runStoredPolicy", () => {
     expect(sent.name).toBe(source.name);
     expect(await textOf(sent)).toBe(await textOf(source));
   });
+
+  it("includes the pipeline and distinguishes automatic dispatches from manual retries", async () => {
+    await runStoredPolicy("policy-1", [document()], "file-1", "background");
+    expect(post.mock.calls.at(-1)?.[2]).toMatchObject({
+      suppressErrorToast: true,
+      accountLinkBlockContext: { pipelineId: "policy-1", trigger: "automatic" },
+    });
+    await runStoredPolicy("policy-1", [document()], "file-1");
+    expect(post.mock.calls.at(-1)?.[2]).toMatchObject({
+      suppressErrorToast: true,
+      accountLinkBlockContext: { pipelineId: "policy-1", trigger: "manual" },
+    });
+  });
 });

@@ -1,6 +1,11 @@
 import type { Stripe } from "@stripe/stripe-js";
-import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
+import {
+  getPortalSessionClient,
+  ensurePortalSessionClient,
+} from "@app/portal/auth/sessionClient";
+import { invokeSaasFunction } from "@app/portal/auth/saasFunctions";
+import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
+import { getPreferredCurrency } from "@app/utils/currencyDetection";
 
 /**
  * Stripe checkout + portal sessions, minted via the SaaS Supabase edge
@@ -20,8 +25,47 @@ export class StripeFunctionError extends Error {
   }
 }
 
-/** Currencies the SaaS PAYG offering supports. Default for new checkouts is "usd". */
-export type SaasCurrency = "usd" | "eur" | "gbp";
+/** Lower-case ISO currency; Stripe determines availability for the customer and price. */
+export type SaasCurrency = string;
+
+export interface CheckoutPricing {
+  currency: string;
+  currencyLocked: boolean;
+  unitAmountMinor?: number;
+}
+
+/** Resolves customer currency before preferences; Processor rates come from its pricing policy. */
+export async function fetchCheckoutPricing(
+  teamId: number,
+  preview: "currency" | "processor",
+  currency = getPreferredCurrency(),
+): Promise<CheckoutPricing> {
+  const result = await invoke<{
+    success: boolean;
+    currency: string;
+    currency_locked: boolean;
+    unit_amount_minor?: number;
+    error?: string;
+  }>("create-checkout-session", { team_id: teamId, preview, currency }, true);
+  if (
+    !result.success ||
+    !/^[a-z]{3}$/.test(result.currency) ||
+    typeof result.currency_locked !== "boolean" ||
+    (preview === "processor" &&
+      (typeof result.unit_amount_minor !== "number" ||
+        !Number.isFinite(result.unit_amount_minor) ||
+        result.unit_amount_minor < 0))
+  ) {
+    throw new StripeFunctionError(
+      result.error ?? "Couldn't load checkout pricing.",
+    );
+  }
+  return {
+    currency: result.currency,
+    currencyLocked: result.currency_locked,
+    unitAmountMinor: result.unit_amount_minor,
+  };
+}
 
 interface CheckoutSessionRequest {
   teamId: number;
@@ -66,20 +110,41 @@ interface PortalResponse {
 async function invoke<T>(
   name: string,
   body: Record<string, unknown>,
+  readOnly = false,
 ): Promise<T> {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
+  ensurePortalSessionClient();
+  const supabase = getPortalSessionClient();
   if (!supabase) {
     throw new StripeFunctionError(
       "SaaS Supabase not configured — set VITE_SUPABASE_URL.",
       "unconfigured",
     );
   }
-  const { data, error } = await supabase.functions.invoke<T>(name, { body });
+  const { data, error } = await invokeSaasFunction<T>(name, { body }, readOnly);
   if (error) {
-    throw new StripeFunctionError(
-      error.message ?? `Edge function ${name} failed`,
-    );
+    let message = error.message ?? `Edge function ${name} failed`;
+    let code: string | undefined;
+    if (error.context instanceof Response) {
+      try {
+        const details: unknown = await error.context.clone().json();
+        if (details && typeof details === "object") {
+          if ("error" in details && typeof details.error === "string") {
+            code = details.error;
+            message = details.error;
+          }
+          if ("message" in details && typeof details.message === "string")
+            message = details.message;
+          if (
+            "stripe_error" in details &&
+            typeof details.stripe_error === "string"
+          )
+            message = details.stripe_error;
+        }
+      } catch {
+        // Gateway failures may not return JSON.
+      }
+    }
+    throw new StripeFunctionError(message, code);
   }
   if (data == null) {
     throw new StripeFunctionError(`Edge function ${name} returned no data`);
@@ -88,16 +153,24 @@ async function invoke<T>(
 }
 
 /** Call a SECURITY DEFINER public.* RPC with the admin's JWT (same client as {@link invoke}). */
-async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
+async function rpc<T>(
+  fn: string,
+  args: Record<string, unknown>,
+  readOnly = false,
+): Promise<T> {
+  ensurePortalSessionClient();
+  const supabase = getPortalSessionClient();
   if (!supabase) {
     throw new StripeFunctionError(
       "SaaS Supabase not configured — set VITE_SUPABASE_URL.",
       "unconfigured",
     );
   }
-  const { data, error } = await supabase.rpc(fn, args);
+  const { data, error } = await withPortalSaasSession(
+    () => Promise.resolve(supabase.rpc(fn, args)),
+    (response) => response.status === 401,
+    readOnly,
+  );
   if (error) {
     throw new StripeFunctionError(
       error.message ?? `RPC ${fn} failed`,
@@ -110,7 +183,7 @@ async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
 /** Inputs to {@link upsertBundleQuote} — the sized config + computed figures. */
 export interface BundleQuoteInput {
   teamId: number;
-  users: number;
+  users: number | null;
   posturePolicies: number;
   sizeMult: number;
   pipelineMult: number;
@@ -224,6 +297,7 @@ export async function getLatestBundleQuote(
   const rows = await rpc<LatestBundleQuoteRow[]>(
     "payg_get_latest_bundle_quote",
     { p_team_id: teamId },
+    true,
   );
   const row = rows?.[0];
   if (!row) return null;
@@ -303,10 +377,62 @@ export async function createCheckoutSession(
   };
 }
 
+export interface BundlePricing {
+  currency: string;
+  unitAmountMinor: number;
+  availableCurrencies: string[];
+  currencyLocked: boolean;
+}
+
+/** Reads the customer's billing currency and configured rate without creating a quote. */
+export async function fetchBundlePricing(
+  teamId: number,
+  currency?: string,
+): Promise<BundlePricing> {
+  const res = await invoke<{
+    success?: boolean;
+    currency?: string;
+    unit_amount_minor?: number;
+    available_currencies?: string[];
+    currency_locked?: boolean;
+    error?: string;
+  }>("create-payg-bundle-quote", {
+    team_id: teamId,
+    preview: true,
+    ...(currency ? { currency } : {}),
+  });
+  if (
+    !res.success ||
+    typeof res.currency !== "string" ||
+    !/^[a-z]{3}$/.test(res.currency) ||
+    (res.available_currencies != null &&
+      (!Array.isArray(res.available_currencies) ||
+        !res.available_currencies.every(
+          (value) => typeof value === "string" && /^[a-z]{3}$/.test(value),
+        ))) ||
+    res.unit_amount_minor == null ||
+    !Number.isFinite(res.unit_amount_minor) ||
+    res.unit_amount_minor <= 0
+  ) {
+    throw new StripeFunctionError(
+      res.error ?? "Bundle pricing is unavailable.",
+    );
+  }
+  return {
+    currency: res.currency,
+    unitAmountMinor: res.unit_amount_minor,
+    availableCurrencies: res.available_currencies ?? [res.currency],
+    currencyLocked: res.currency_locked ?? true,
+  };
+}
+
 /** Result of {@link createBundleStripeQuote} — the Stripe-issued quote handles. */
 export interface BundleStripeQuote {
   stripeQuoteId: string;
   stripeQuoteNumber: string | null;
+  currency?: string;
+  amountSubtotal?: number;
+  amountTotal?: number;
 }
 
 interface BundleStripeQuoteRequest {
@@ -320,6 +446,9 @@ interface BundleStripeQuoteRequest {
 }
 
 interface BundleStripeQuoteResponse {
+  currency?: string;
+  amount_subtotal?: number;
+  amount_total?: number;
   success?: boolean;
   stripe_quote_id?: string;
   stripe_quote_number?: string | null;
@@ -351,6 +480,13 @@ export async function createBundleStripeQuote(
   return {
     stripeQuoteId: res.stripe_quote_id,
     stripeQuoteNumber: res.stripe_quote_number ?? null,
+    ...(res.currency
+      ? {
+          currency: res.currency,
+          amountSubtotal: res.amount_subtotal,
+          amountTotal: res.amount_total,
+        }
+      : {}),
   };
 }
 
@@ -462,17 +598,18 @@ export async function cancelBundleQuote(req: {
  * GET route (streams application/pdf). Returns a Blob the caller can object-URL for download.
  */
 export async function fetchBundleQuotePdf(quoteId: number): Promise<Blob> {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
+  ensurePortalSessionClient();
+  const supabase = getPortalSessionClient();
   if (!supabase) {
     throw new StripeFunctionError(
       "SaaS Supabase not configured — set VITE_SUPABASE_URL.",
       "unconfigured",
     );
   }
-  const { data, error } = await supabase.functions.invoke<Blob>(
+  const { data, error } = await invokeSaasFunction<Blob>(
     `create-payg-bundle-quote?quote_id=${quoteId}`,
     { method: "GET" },
+    true,
   );
   if (error) {
     throw new StripeFunctionError(error.message ?? "quote PDF fetch failed");

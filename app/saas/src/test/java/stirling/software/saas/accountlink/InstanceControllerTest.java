@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,7 @@ import stirling.software.saas.accountlink.InstanceController.EntitlementResponse
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.instance.InstanceUsageIngestService;
@@ -59,6 +61,7 @@ class InstanceControllerTest {
     @Mock private InstanceUsageIngestService usageIngestService;
     @Mock private LinkedInstanceRepository linkedInstanceRepository;
     @Mock private SaasTeamExtensionsRepository teamExtensionsRepository;
+    @Mock private FleetSeatService fleetSeats;
 
     private InstanceController controller() {
         return new InstanceController(
@@ -68,7 +71,9 @@ class InstanceControllerTest {
                 pricingPolicyService,
                 usageIngestService,
                 linkedInstanceRepository,
-                teamExtensionsRepository);
+                teamExtensionsRepository,
+                Mockito.mock(PrepaidBundleService.class),
+                fleetSeats);
     }
 
     private static PricingPolicy policy() {
@@ -291,7 +296,9 @@ class InstanceControllerTest {
                 null,
                 null,
                 null,
-                null);
+                null,
+                start,
+                start.plusMonths(1));
     }
 
     private static TeamBillingContext subscribedBilling(String subId, long freeRemaining) {
@@ -306,7 +313,9 @@ class InstanceControllerTest {
                 BigDecimal.valueOf(2),
                 "usd",
                 2500L,
-                1250L);
+                1250L,
+                start,
+                start.plusMonths(1));
     }
 
     private static EntitlementSnapshot snapshot(EntitlementState state, long spend, Long cap) {
@@ -333,5 +342,44 @@ class InstanceControllerTest {
                 start,
                 start.plusMonths(1),
                 false);
+    }
+
+    @Test
+    void seatOnlySyncUsesAuthenticatedDeploymentWithoutBillingUsage() {
+        when(billingService.forTeam(42L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(42L))
+                .thenReturn(snapshot(EntitlementState.FULL, 0L, null));
+        when(pricingPolicyService.getEffectivePolicy(42L)).thenReturn(policy());
+        when(fleetSeats.allowance(42L, 1L)).thenReturn(17);
+        var response =
+                controller()
+                        .sync(
+                                new LinkedInstanceAuthenticationToken(1L, 42L),
+                                new InstanceController.UsageSyncRequest(0, null, null, 7));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().fleetUserLimit()).isEqualTo(17);
+        verify(fleetSeats).report(42L, 1L, 7);
+        verifyNoInteractions(usageIngestService);
+    }
+
+    @Test
+    void negativeSeatsAndPartialUsageAreRejected() {
+        var token = new LinkedInstanceAuthenticationToken(1L, 42L);
+        assertThat(
+                        controller()
+                                .sync(
+                                        token,
+                                        new InstanceController.UsageSyncRequest(0, null, null, -1))
+                                .getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(
+                        controller()
+                                .sync(
+                                        token,
+                                        new InstanceController.UsageSyncRequest(
+                                                0, LocalDateTime.now(), null, 7))
+                                .getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        verifyNoInteractions(fleetSeats, usageIngestService);
     }
 }

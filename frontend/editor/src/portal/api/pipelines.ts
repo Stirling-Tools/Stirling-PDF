@@ -50,7 +50,7 @@ export interface OutputSpec {
 }
 
 /** Source types that can be written to (used as a pipeline's output destination). */
-export type PipelineOutputMode = "folder" | "s3";
+export type PipelineOutputMode = "folder" | "s3" | "vectordb";
 
 /**
  * The stored policy record: the create/update body (`id` blank on create) and what
@@ -220,7 +220,10 @@ export interface TriggerOutcome {
 export async function triggerPipeline(id: string): Promise<TriggerOutcome> {
   return apiClient.local.json<TriggerOutcome>(
     `/api/v1/policies/${encodeURIComponent(id)}/trigger`,
-    { method: "POST" },
+    {
+      method: "POST",
+      accountLinkBlockContext: { pipelineId: id, trigger: "manual" },
+    },
   );
 }
 
@@ -270,6 +273,11 @@ export async function runPipelineTest(
   const res = await apiClient.local.multipart<{ jobId: string }>(
     "/api/v1/policies/run",
     form,
+    {
+      pipelineId: policyId,
+      pipelineName: definition.name,
+      trigger: "manual",
+    },
   );
   return { runId: res.jobId };
 }

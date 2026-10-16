@@ -12,17 +12,29 @@ import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProces
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 const capability = vi.hoisted(() => ({ available: true }));
+const connected = vi.hoisted(() => ({ value: true }));
+const privacy = vi.hoisted(() => ({ localOnly: false }));
+vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+  useLocalProcessingOnly: () => privacy.localOnly,
+}));
 vi.mock("@app/hooks/useProcessingFolderCreation", () => ({
   get canCreateProcessingFolders() {
     return capability.available;
   },
+}));
+vi.mock("@app/hooks/useConnectedServer", () => ({
+  useConnectedServer: () => connected.value,
 }));
 vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
 vi.mock("@app/components/shared/quickNav/QuickNavRailContainer", () => ({
   QuickNavRailContainer: ({ groups }: { groups: QuickNavEntry[][] }) => (
     <>
       {groups.flat().map((entry) => (
-        <button key={entry.id} onClick={entry.onClick}>
+        <button
+          key={entry.id}
+          disabled={entry.disabled}
+          onClick={entry.disabled ? undefined : entry.onClick}
+        >
           {entry.label}
         </button>
       ))}
@@ -48,8 +60,24 @@ function setup(path: string, actions: QuickNavHostActions = {}) {
 }
 
 beforeEach(() => {
+  privacy.localOnly = false;
   capability.available = true;
+  connected.value = true;
   consumeProcessingFolderCreationRequest();
+});
+
+it("hides off-device processing shortcuts under managed privacy", () => {
+  privacy.localOnly = true;
+  setup("/files");
+  expect(
+    screen.queryByRole("button", { name: "processingFolders.setup.title" }),
+  ).toBeNull();
+  expect(
+    screen.queryByRole("button", { name: "quickAccess.automate" }),
+  ).toBeNull();
+  expect(
+    screen.getByRole("button", { name: "fileSidebar.myFiles" }),
+  ).toBeInTheDocument();
 });
 
 it.each(["/settings/general", "/docs", "/processor"])(
@@ -99,4 +127,23 @@ it("omits folder processing in builds without the feature", () => {
   expect(
     screen.queryByRole("button", { name: "processingFolders.setup.title" }),
   ).toBeNull();
+});
+
+it("disables folder processing but keeps automate with no connected server", () => {
+  connected.value = false;
+  const createProcessingFolder = vi.fn();
+  setup("/compress-pdf", { createProcessingFolder });
+
+  const processing = screen.getByRole("button", {
+    name: "processingFolders.setup.title",
+  });
+  const automate = screen.getByRole("button", {
+    name: "quickAccess.automate",
+  });
+  expect(processing).toBeDisabled();
+  expect(automate).toBeEnabled();
+
+  fireEvent.click(processing);
+  expect(createProcessingFolder).not.toHaveBeenCalled();
+  expect(consumeProcessingFolderCreationRequest()).toBe(false);
 });

@@ -31,6 +31,8 @@ export interface TranslationProject {
   srcRoot: string;
   /** Absolute path to the en-US source locale. */
   localeFile: string;
+  /** Other English locales that can receive new source strings. */
+  additionalLocaleFiles?: string[];
   /** Static keys flagged as missing that are genuinely fine (false positives). */
   ignoredKeys?: Set<string>;
   /** Locale keys assembled at runtime; exempt from the unused check. */
@@ -75,6 +77,9 @@ export const I18N_PROJECTS: TranslationProject[] = [
     // like any other key.
     srcRoot: front("editor/src"),
     localeFile: front("editor/public/locales/en-US/translation.toml"),
+    additionalLocaleFiles: [
+      front("editor/public/locales/en-GB/translation.toml"),
+    ],
     ignoredKeyPatterns: [
       // SignSettings / SavedSignaturesSection resolve every key as
       // t(`${scope}.${key}`); scope and leaf only ever exist as separate literals.
@@ -394,6 +399,9 @@ export function findMissingKeys(project: TranslationProject): {
   usedCount: number;
 } {
   const localeKeys = collectLocaleKeys(project.localeFile);
+  for (const localeFile of project.additionalLocaleFiles ?? []) {
+    for (const key of collectLocaleKeys(localeFile)) localeKeys.add(key);
+  }
   const ignored = project.ignoredKeys ?? new Set<string>();
 
   // A used key resolves if the locale has it exactly, a plural variant covers

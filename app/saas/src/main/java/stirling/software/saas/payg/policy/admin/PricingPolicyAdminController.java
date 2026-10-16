@@ -161,6 +161,10 @@ public class PricingPolicyAdminController {
         p.setIsDefault(false);
         p.setNotes(req.notes());
         p.setCreatedBy(req.createdBy());
+        if (req.teamIncludedUnits() != null && req.teamIncludedUnits() < 0) {
+            throw new IllegalArgumentException("teamIncludedUnits must not be negative.");
+        }
+        p.setTeamIncludedUnits(req.teamIncludedUnits());
         return p;
     }
 

@@ -353,11 +353,11 @@ public class TaskManager {
      */
     public record CleanupSummary(int jobsRemoved, int filesDeleted, int jobsRetained) {}
 
-    /** Clean up old completed job results. No-op in cluster mode; the backplane TTL owns expiry. */
+    /**
+     * Clean up old completed job results. Always runs locally: the backplane TTL expires the shared
+     * job row, but only this sweep frees this node's {@code jobResults} heap and result files.
+     */
     public CleanupSummary cleanupOldJobs() {
-        if (clusterBackplane != null && !clusterBackplane.shouldRunLocalCleanup()) {
-            return new CleanupSummary(0, 0, jobResults.size());
-        }
         return cleanupJobs(false, jobId -> true);
     }
 
@@ -418,7 +418,12 @@ public class TaskManager {
 
                     // Remove the job result
                     jobResults.remove(entry.getKey());
-                    if (jobStore != null) {
+                    // A distributed backplane TTLs the shared row on the same expiry. A forced
+                    // sweep drops files early, so there the row must go with them.
+                    if (jobStore != null
+                            && (force
+                                    || clusterBackplane == null
+                                    || clusterBackplane.shouldRunLocalCleanup())) {
                         jobStore.delete(entry.getKey());
                     }
                     removedCount++;

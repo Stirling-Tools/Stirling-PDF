@@ -107,6 +107,7 @@ describe("an upload waiting on its unlock prompt", () => {
       "backend-sec",
       expect.anything(),
       "file-locked",
+      "background",
     );
   });
 

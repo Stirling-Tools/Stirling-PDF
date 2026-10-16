@@ -9,10 +9,7 @@ import {
   pendingIdFrom,
   pendingSelectionName,
 } from "@app/tools/formFill/pendingSelection";
-import type {
-  CreatableFieldType,
-  NewFieldDefinition,
-} from "@app/tools/formFill/types";
+import type { NewFieldDefinition } from "@app/tools/formFill/types";
 
 /** Enough offset that the copy is visibly its own field rather than hiding the original. */
 const PASTE_OFFSET_PT = 12;
@@ -22,6 +19,7 @@ type Copied = Omit<NewFieldDefinition, "name"> & { name?: string };
 export function useFieldShortcuts() {
   const {
     mode,
+    saving,
     state,
     selectedFieldName,
     setSelectedField,
@@ -37,6 +35,7 @@ export function useFieldShortcuts() {
   // Refs, so the listener is installed once instead of on every selection change.
   const latest = useRef({
     mode,
+    saving,
     state,
     selectedFieldName,
     setSelectedField,
@@ -48,6 +47,7 @@ export function useFieldShortcuts() {
   });
   latest.current = {
     mode,
+    saving,
     state,
     selectedFieldName,
     setSelectedField,
@@ -61,7 +61,7 @@ export function useFieldShortcuts() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const ctx = latest.current;
-      if (ctx.mode === "fill") return;
+      if (ctx.mode === "fill" || ctx.saving) return;
       // Never steal a shortcut from a field the user is typing in.
       if (isTextEntryTarget(event.target)) return;
 
@@ -91,7 +91,7 @@ export function useFieldShortcuts() {
         if (!field || !widget) return;
         clipboardRef.current = {
           name: field.name,
-          type: field.type as CreatableFieldType,
+          type: field.type,
           pageIndex: widget.pageIndex,
           x: widget.x,
           y: widget.y,

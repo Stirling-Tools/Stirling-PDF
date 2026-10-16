@@ -13,7 +13,7 @@ const mockFiles: StirlingFileStub[] = [
     size: 2_400_000,
     lastModified: Date.now(),
     isLeaf: true,
-    originalFileId: "file-1" as FileId,
+    originalFileId: "file-1",
     versionNumber: 1,
   },
   {
@@ -23,7 +23,7 @@ const mockFiles: StirlingFileStub[] = [
     size: 512_000,
     lastModified: Date.now(),
     isLeaf: true,
-    originalFileId: "file-2" as FileId,
+    originalFileId: "file-2",
     versionNumber: 1,
   },
 ];

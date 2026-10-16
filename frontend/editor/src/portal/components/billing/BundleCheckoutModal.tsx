@@ -8,6 +8,7 @@ import {
   Input,
   Modal,
   NumberInput,
+  Select,
   Skeleton,
 } from "@app/ui";
 import {
@@ -16,14 +17,25 @@ import {
   BUNDLE_SIZE_TIERS,
   type BundleQuoteBreakdown,
   computeBundleQuote,
+  bundleListMinor,
+  bundlePriceMinor,
   formatMinor,
+  formatMoneyMajor,
+  currencySymbol,
 } from "@app/billing";
-import type { Wallet } from "@portal/api/billing";
+import type { Wallet } from "@app/portal/api/billing";
+import { stripeMinorUnitScale } from "@app/utils/stripeCurrency";
+import {
+  getPreferredCurrency,
+  setCachedCurrency,
+} from "@app/utils/currencyDetection";
 import {
   acceptBundleStripeQuote,
   cancelBundleQuote,
   createBundleStripeQuote,
   fetchBundleQuotePdf,
+  fetchBundlePricing,
+  type BundlePricing,
   finalizeBundleInvoice,
   getLatestBundleQuote,
   StripeFunctionError,
@@ -31,34 +43,10 @@ import {
   type BundleInvoice,
   type BundleQuote,
   type BundleStripeQuote,
-  type LatestBundleQuote,
-} from "@portal/billing/stripe";
-import { PrepayModalHeader } from "@portal/components/billing/PrepayModalHeader";
-import "@portal/theme/surface.css";
+} from "@app/portal/billing/stripe";
+import "@app/portal/theme/surface.css";
 
-/**
- * Prepaid-bundle purchase modal for the Processor billing page — "12 months for
- * the price of 10". Three steps inside the shared portal {@link Modal}:
- *
- *   1. Size your year — buyers size the purchase in PEOPLE. Team size drives an
- *      estimated volume (≈80 PDFs/user/mo), provisioned ~3× above expected; the
- *      finer settings (governance posture, file size, pipelines) scale it up. All
- *      local, via the shared {@code computeBundleQuote} brain.
- *      The calculator is the quote page: it also carries a "Download quote (PDF)"
- *      link, which (like Accept) mints the Stripe QUOTE lazily via
- *      create-payg-bundle-quote — nothing is minted just by sizing.
- *   2. Review + pay — the same quote receipt card (with "Download quote (PDF)") plus recipient details
- *      + consent. "Finalise" accepts the quote and generates the net-terms invoice, then the step flips
- *      to the finalized state (Download invoice / Pay online). Paying opens Stripe's hosted invoice;
- *      capacity lands via the webhook on invoice.paid, never here. No separate confirmation screen.
- *
- * The pool is denominated in size-folded RUNS — the same currency the meter charges
- * on consumption — so a flat per-run rate reproduces the marketing calculator's
- * total. The run-based brain (policy-count posture, pipelines, 1¢/run, 10/12) lives
- * in {@code @app/billing}, shared with the backend.
- */
-
-/** Default team size the calculator opens on. */
+const DEFAULT_POOL_CREDITS = 1_200_000;
 const DEFAULT_USERS = 25;
 
 /**
@@ -124,7 +112,8 @@ function buildStripeQuoteSig(
  * only the "still sizing, nothing minted yet" fallback.
  */
 interface CalcSettings {
-  users: number;
+  poolCredits: number;
+  users: number | null;
   postureId: string;
   sizeId: string;
   pipelineId: string;
@@ -145,8 +134,31 @@ function readCalcSettings(teamId: number): CalcSettings | null {
     // laundered by the ...IdFor() lookups downstream, but we default them here too).
     const p = JSON.parse(raw) as Partial<Record<keyof CalcSettings, unknown>>;
     const users = Number(p.users);
-    return {
+    const legacy = computeBundleQuote({
       users: Number.isFinite(users) && users > 0 ? users : DEFAULT_USERS,
+      posturePolicies: policiesFor(
+        typeof p.postureId === "string" ? p.postureId : "governed",
+      ),
+      sizeMult: sizeMultFor(
+        typeof p.sizeId === "string" ? p.sizeId : "standard",
+      ),
+      pipelineMult: pipelineMultFor(
+        typeof p.pipelineId === "string" ? p.pipelineId : "none",
+      ),
+      ratePerRunMinor: null,
+    });
+    const poolCredits = Number(p.poolCredits);
+    return {
+      poolCredits:
+        Number.isSafeInteger(poolCredits) && poolCredits > 0
+          ? poolCredits
+          : legacy.poolCredits,
+      users:
+        p.users == null
+          ? null
+          : Number.isFinite(users) && users > 0
+            ? users
+            : DEFAULT_USERS,
       postureId: typeof p.postureId === "string" ? p.postureId : "governed",
       sizeId: typeof p.sizeId === "string" ? p.sizeId : "standard",
       pipelineId: typeof p.pipelineId === "string" ? p.pipelineId : "none",
@@ -192,7 +204,7 @@ interface Props {
   onClose: () => void;
   /** Return to payment choices without cancelling the saved quote; omitted for top-ups. */
   onBack?: () => void;
-  /** Drives teamId, per-run rate, currency, and top-up vs first-buy copy. */
+  /** Identifies the team and whether this is a top-up. Stripe supplies pricing. */
   wallet: Wallet;
   /** Fired after a completed purchase so the parent can refetch the wallet. */
   onComplete?: () => void;
@@ -209,13 +221,18 @@ export function BundleCheckoutModal({
 }: Props) {
   const { t } = useTranslation();
   const teamId = wallet.teamId;
-  const currency = wallet.currency ?? "usd";
+  const [pricing, setPricing] = useState<BundlePricing | null>(null);
+  const pricingRequest = useRef(0);
+  const [persistedSubtotal, setPersistedSubtotal] = useState<number | null>(
+    null,
+  );
   // The pool is priced per size-scaled RUN at the prepaid-bundle rate (bundle:processor), NOT the
   // metered per-document rate — so the estimate matches the amount the checkout edge fn charges.
-  const ratePerRunMinor = wallet.bundleRatePerCreditMinor;
+  const ratePerRunMinor = pricing?.unitAmountMinor ?? null;
 
   const [phase, setPhase] = useState<Phase>("calc");
-  const [users, setUsers] = useState(DEFAULT_USERS);
+  const [poolCredits, setPoolCredits] = useState(DEFAULT_POOL_CREDITS);
+  const [users, setUsers] = useState<number | null>(null);
   const [postureId, setPostureId] = useState<string>("governed");
   const [sizeId, setSizeId] = useState<string>("standard");
   const [pipelineId, setPipelineId] = useState<string>("none");
@@ -250,6 +267,9 @@ export function BundleCheckoutModal({
   const [persistedPriceMinor, setPersistedPriceMinor] = useState<number | null>(
     null,
   );
+  const [persistedCurrency, setPersistedCurrency] = useState<string | null>(
+    null,
+  );
   const [persistedPoolCredits, setPersistedPoolCredits] = useState<
     number | null
   >(null);
@@ -273,7 +293,8 @@ export function BundleCheckoutModal({
     if (!open) {
       hydratedRef.current = false;
       setPhase("calc");
-      setUsers(DEFAULT_USERS);
+      setPoolCredits(DEFAULT_POOL_CREDITS);
+      setUsers(null);
       setPostureId("governed");
       setSizeId("standard");
       setPipelineId("none");
@@ -286,6 +307,9 @@ export function BundleCheckoutModal({
       setStripeQuoteSig(null);
       setInvoice(null);
       setPersistedPriceMinor(null);
+      setPersistedCurrency(null);
+      setPersistedSubtotal(null);
+      setPricing(null);
       setPersistedPoolCredits(null);
       setBusy(false);
       setPdfBusy(false);
@@ -298,29 +322,66 @@ export function BundleCheckoutModal({
     }
     let cancelled = false;
     (async () => {
-      let latest: LatestBundleQuote | null;
-      try {
-        latest = await getLatestBundleQuote(teamId);
-      } catch {
-        latest = null; // no backend / not a leader — fall through to local progress
-      }
+      const [pricingResult, quoteResult] = await Promise.allSettled([
+        fetchBundlePricing(teamId),
+        getLatestBundleQuote(teamId),
+      ]);
       if (cancelled) return;
+      if (quoteResult.status === "rejected") {
+        const error = quoteResult.reason;
+        setActionError(error instanceof Error ? error.message : String(error));
+        setPricing(null);
+        setResolving(false);
+        return;
+      }
+      const latest = quoteResult.value;
+      let resolvedPricing =
+        pricingResult.status === "fulfilled" ? pricingResult.value : null;
+      const preferredCurrency = latest?.currency ?? getPreferredCurrency();
+      if (
+        resolvedPricing?.currencyLocked === false &&
+        preferredCurrency !== resolvedPricing.currency &&
+        resolvedPricing.availableCurrencies.includes(preferredCurrency)
+      ) {
+        try {
+          resolvedPricing = await fetchBundlePricing(teamId, preferredCurrency);
+        } catch (error) {
+          resolvedPricing = null;
+          if (!cancelled)
+            setActionError(
+              error instanceof Error ? error.message : String(error),
+            );
+        }
+        if (cancelled) return;
+      }
+      setPricing(resolvedPricing);
+      if (pricingResult.status === "rejected" && !latest?.stripeRef) {
+        const error = pricingResult.reason;
+        setActionError(error instanceof Error ? error.message : String(error));
+      }
       const saved = readCalcSettings(teamId);
       if (latest) {
         // Resume the existing quote: restore its sizing + consent + id (landing on the calculator), and
         // relink any already-minted Stripe quote so Download/Accept reuse it rather than minting anew.
-        setUsers(latest.users ?? DEFAULT_USERS);
+        setPoolCredits(latest.poolCredits);
+        setUsers(latest.users);
         setPostureId(postureIdFor(latest.posturePolicies));
         setSizeId(sizeIdFor(latest.sizeMult));
         setPipelineId(pipelineIdFor(latest.pipelineMult));
         setConsented(latest.consentedAt != null);
         setQuoteId(latest.quoteId);
-        setPersistedPriceMinor(latest.priceMinor);
+        const sameCurrency = latest.currency === resolvedPricing?.currency;
+        setPersistedPriceMinor(
+          (sameCurrency && latest.stripeQuoteId) || latest.stripeRef
+            ? latest.priceMinor
+            : null,
+        );
+        setPersistedCurrency(latest.currency);
         setPersistedPoolCredits(latest.poolCredits);
         if (saved?.poNumber) setPoNumber(saved.poNumber);
         if (saved?.companyName) setCompanyName(saved.companyName);
         if (saved?.accountName) setAccountName(saved.accountName);
-        if (latest.stripeQuoteId) {
+        if (latest.stripeQuoteId && (sameCurrency || latest.stripeRef)) {
           setStripeQuote({
             stripeQuoteId: latest.stripeQuoteId,
             stripeQuoteNumber: latest.stripeQuoteNumber,
@@ -354,6 +415,7 @@ export function BundleCheckoutModal({
           }
         }
       } else if (saved) {
+        setPoolCredits(saved.poolCredits);
         setUsers(saved.users);
         setPostureId(saved.postureId);
         setSizeId(saved.sizeId);
@@ -368,14 +430,47 @@ export function BundleCheckoutModal({
     })();
     return () => {
       cancelled = true;
+      pricingRequest.current += 1;
     };
   }, [open, teamId]);
+
+  async function changeCurrency(selected: string) {
+    if (
+      teamId == null ||
+      pricing?.currencyLocked !== false ||
+      busy ||
+      pdfBusy ||
+      invoice
+    )
+      return;
+    const request = ++pricingRequest.current;
+    setBusy(true);
+    setActionError(null);
+    try {
+      const next = await fetchBundlePricing(teamId, selected);
+      if (request !== pricingRequest.current) return;
+      setPricing(next);
+      setCachedCurrency(next.currency);
+      setPersistedPriceMinor(null);
+      setPersistedCurrency(null);
+      setPersistedSubtotal(null);
+      setStripeQuote(null);
+      setStripeQuoteSig(null);
+    } catch (error) {
+      if (request === pricingRequest.current) {
+        setActionError(error instanceof Error ? error.message : String(error));
+      }
+    } finally {
+      if (request === pricingRequest.current) setBusy(false);
+    }
+  }
 
   // Persist pre-quote calculator progress so close/reload keeps the buyer's place. Held until hydration
   // completes so it can't clobber restored values.
   useEffect(() => {
     if (!open || teamId == null || !hydratedRef.current) return;
     writeCalcSettings(teamId, {
+      poolCredits,
       users,
       postureId,
       sizeId,
@@ -388,6 +483,7 @@ export function BundleCheckoutModal({
   }, [
     open,
     teamId,
+    poolCredits,
     users,
     postureId,
     sizeId,
@@ -398,22 +494,42 @@ export function BundleCheckoutModal({
     consented,
   ]);
 
-  const quote = useMemo(
-    () =>
-      computeBundleQuote({
-        users,
-        posturePolicies: policiesFor(postureId),
-        sizeMult: sizeMultFor(sizeId),
-        pipelineMult: pipelineMultFor(pipelineId),
-        ratePerRunMinor,
-      }),
-    [users, postureId, sizeId, pipelineId, ratePerRunMinor],
-  );
+  const quote = useMemo<BundleQuoteBreakdown>(() => {
+    const listMinor = bundleListMinor(poolCredits, ratePerRunMinor);
+    const priceMinor = bundlePriceMinor(poolCredits, ratePerRunMinor);
+    return {
+      expectedMonthlyVolume: Math.round(poolCredits / 12),
+      provisionedMonthlyVolume: Math.round(poolCredits / 12),
+      poolCredits,
+      listMinor,
+      priceMinor,
+      savingsMinor:
+        listMinor != null && priceMinor != null ? listMinor - priceMinor : null,
+      overEnterprise: false,
+    };
+  }, [poolCredits, ratePerRunMinor]);
 
-  // The receipt shows the persisted (server) total on resume so it matches the quote the buyer
-  // created, not a figure recomputed from a since-changed rate — but only while the sizing is
-  // unchanged (same pool). Editing the calculator changes the pool and reverts to the live estimate.
-  // savings tracks whichever total is shown so the receipt stays internally consistent.
+  const currency =
+    persistedPriceMinor != null && persistedPoolCredits === quote.poolCredits
+      ? (persistedCurrency ?? pricing?.currency ?? "usd")
+      : (pricing?.currency ?? "usd");
+
+  function changePool(credits: number) {
+    const next = Number.isSafeInteger(credits) && credits > 0 ? credits : 0;
+    if (next === poolCredits) return;
+    setStripeQuoteSig(null);
+    setPersistedPriceMinor(null);
+    setPersistedPoolCredits(null);
+    setPersistedCurrency(null);
+    setPersistedSubtotal(null);
+    setPoolCredits(next);
+    setUsers(null);
+    setPostureId("essentials");
+    setSizeId("compact");
+    setPipelineId("none");
+  }
+
+  // A resumed quote keeps its agreed total; its original undiscounted rate is not persisted.
   const receiptQuote = useMemo(() => {
     if (
       persistedPriceMinor == null ||
@@ -424,12 +540,13 @@ export function BundleCheckoutModal({
     return {
       ...quote,
       priceMinor: persistedPriceMinor,
+      listMinor: persistedSubtotal,
       savingsMinor:
-        quote.listMinor != null
-          ? quote.listMinor - persistedPriceMinor
-          : quote.savingsMinor,
+        persistedSubtotal != null
+          ? persistedSubtotal - persistedPriceMinor
+          : null,
     };
-  }, [quote, persistedPriceMinor, persistedPoolCredits]);
+  }, [quote, persistedPriceMinor, persistedPoolCredits, persistedSubtotal]);
 
   // Flip the loader on synchronously the moment the modal opens (React's "adjust state during render"),
   // so the resume runs behind a loader from the very first frame — the calculator never shows en route to
@@ -443,7 +560,10 @@ export function BundleCheckoutModal({
 
   // calc → pay only needs a valid pool; consent + the account-holder name are captured on the payment
   // step, so they gate the commit (accept + finalize).
-  const canContinue = quote.poolCredits > 0 && !quote.overEnterprise;
+  const canContinue =
+    (pricing != null || invoice != null) &&
+    quote.poolCredits > 0 &&
+    !quote.overEnterprise;
   const nameProvided = accountName.trim().length > 0;
   // Once the invoice is issued, the recipient details + consent are already captured on it and the fields
   // are locked, so on resume Pay/Download just re-open the existing invoice — don't re-gate on the (now
@@ -460,12 +580,12 @@ export function BundleCheckoutModal({
       const q = await upsertBundleQuote({
         teamId,
         users,
-        posturePolicies: policiesFor(postureId),
-        sizeMult: sizeMultFor(sizeId),
-        pipelineMult: pipelineMultFor(pipelineId),
+        posturePolicies: users == null ? 1 : policiesFor(postureId),
+        sizeMult: users == null ? 1 : sizeMultFor(sizeId),
+        pipelineMult: users == null ? 1 : pipelineMultFor(pipelineId),
         provisionedMonthlyVolume: quote.provisionedMonthlyVolume,
         poolCredits: quote.poolCredits,
-        priceMinor: quote.priceMinor,
+        priceMinor: receiptQuote.priceMinor,
         currency,
         consented,
         eulaVersion: CONSENT_EULA_VERSION,
@@ -508,6 +628,12 @@ export function BundleCheckoutModal({
       poNumber: poNumber.trim() || undefined,
     });
     setStripeQuote(sq);
+    if (sq.currency && sq.amountTotal != null) {
+      setPersistedCurrency(sq.currency);
+      setPersistedSubtotal(sq.amountSubtotal ?? null);
+      setPersistedPriceMinor(sq.amountTotal);
+      setPersistedPoolCredits(quote.poolCredits);
+    }
     setStripeQuoteSig(sig);
     return { quoteId: q.quoteId, stripeQuote: sq };
   }
@@ -540,9 +666,12 @@ export function BundleCheckoutModal({
   // returns the existing invoice, an already-finalized invoice comes back as-is. Returns the current
   // (simulated) invoice when there's no SaaS backend.
   async function acceptAndFinalize(): Promise<BundleInvoice | null> {
+    if (invoiceIssued) return invoice;
     if (teamId == null || quoteId == null) return invoice;
-    await ensureQuote(); // persists consented=true (pay-step state) so accept can verify it
-    await acceptBundleStripeQuote({ teamId, quoteId });
+    if (!invoice) {
+      await ensureQuote();
+      await acceptBundleStripeQuote({ teamId, quoteId });
+    }
     const inv = await finalizeBundleInvoice({
       teamId,
       quoteId,
@@ -612,7 +741,7 @@ export function BundleCheckoutModal({
   // Download the Stripe-rendered quote PDF. Mints the quote (if not already) — that's what makes the
   // PDF exist — then streams it. No SaaS backend → nothing to download.
   async function downloadPdf() {
-    if (busy || pdfBusy || quote.poolCredits <= 0) return;
+    if (busy || pdfBusy || !canContinue) return;
     setPdfBusy(true);
     setActionError(null);
     try {
@@ -723,27 +852,28 @@ export function BundleCheckoutModal({
       open={open}
       onClose={onClose}
       width="md"
-      className="portal-billing__bundle-modal portal-billing__checkout-modal--framed"
+      className="portal-billing__bundle-modal portal-billing__checkout-modal--framed processor-prepay"
       ariaLabel={t(
         "portal.billing.prepaid.offer.title",
         "Get 12 months for the price of 10",
       )}
+      title={
+        resolving
+          ? t("portal.billing.prepaid.buy.loadingTitle", "Loading your quote")
+          : phase === "pay"
+            ? t("portal.billing.prepaid.buy.payTitle", "Pay for your year")
+            : t("portal.billing.prepaid.buy.creditTitle", "Prepay the year")
+      }
+      subtitle={
+        !resolving && phase === "calc"
+          ? t(
+              "portal.billing.simple.prepayIntro",
+              "A year of processing at a discount.",
+            )
+          : undefined
+      }
       footer={resolving ? undefined : footer}
     >
-      <PrepayModalHeader
-        step={resolving ? undefined : phase === "pay" ? 3 : 2}
-        title={
-          resolving
-            ? t("portal.billing.prepaid.buy.loadingTitle", "Loading your quote")
-            : phase === "pay"
-              ? t("portal.billing.prepaid.buy.payTitle", "Pay for your year")
-              : t(
-                  "portal.billing.prepaid.buy.calcTitle",
-                  "Calculate your annual payment",
-                )
-        }
-        onClose={onClose}
-      />
       <div className="portal-billing__checkout-scroll">
         {resolving && (
           <div className="portal-billing__bundle-pay" aria-busy="true">
@@ -754,16 +884,16 @@ export function BundleCheckoutModal({
         )}
         {!resolving && phase === "calc" && (
           <CalculatorStep
-            users={users}
-            setUsers={setUsers}
-            postureId={postureId}
-            setPostureId={setPostureId}
-            sizeId={sizeId}
-            setSizeId={setSizeId}
-            pipelineId={pipelineId}
-            setPipelineId={setPipelineId}
+            key={(pricing?.currency ?? currency) + ":" + ratePerRunMinor}
+            credits={poolCredits}
+            rate={ratePerRunMinor}
+            selectionCurrency={pricing?.currency ?? currency}
+            onCreditsChange={changePool}
             quote={receiptQuote}
             currency={currency}
+            pricing={pricing}
+            onCurrencyChange={(selected) => void changeCurrency(selected)}
+            currencyBusy={busy || pdfBusy || !!invoice}
             onDownload={downloadPdf}
             downloading={pdfBusy}
             actionError={actionError}
@@ -793,11 +923,6 @@ export function BundleCheckoutModal({
   );
 }
 
-// ─── Shared: the quote receipt card ──────────────────────────────────────────
-// The sized plan, its price + savings, the credit pool, and a shareable proforma download. Shown on both
-// the calculator step and the payment step (so the buyer can review + download the quote before/after
-// finalizing it).
-
 function QuoteReceipt({
   quote,
   currency,
@@ -812,339 +937,133 @@ function QuoteReceipt({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="portal-billing__bundle-receipt">
-      <div className="portal-billing__bundle-receipt-row portal-billing__bundle-receipt-row--head">
-        <span>
-          {t("portal.billing.prepaid.calc.handlesLabel", "Your Processor")}
-        </span>
-        <strong>
-          {t(
-            "portal.billing.prepaid.calc.handlesValue",
-            "handles {{volume}} credits / mo",
-            { volume: quote.provisionedMonthlyVolume.toLocaleString() },
-          )}
-        </strong>
-      </div>
-      {quote.priceMinor != null ? (
-        <>
+    <>
+      <div className="portal-billing__bundle-receipt processor-prepay__receipt">
+        {quote.listMinor != null && (
+          <div className="portal-billing__bundle-receipt-row">
+            <span>
+              {t("portal.billing.simple.yearValue", "A year of processing")}
+            </span>
+            <strong>{formatMinor(quote.listMinor, currency)}</strong>
+          </div>
+        )}
+        {quote.savingsMinor != null && quote.savingsMinor > 0 && (
           <div className="portal-billing__bundle-receipt-row">
             <span>
               {t(
-                "portal.billing.prepaid.calc.priceLabel",
-                "Your year · 12 months for the price of 10",
+                "portal.billing.simple.prepayDiscount",
+                "Prepay discount · 12 for 10",
               )}
             </span>
-            <strong className="portal-billing__bundle-receipt-price">
-              {formatMinor(quote.priceMinor, currency)}
+            <strong className="processor-prepay__saving">
+              −{formatMinor(quote.savingsMinor, currency)}
             </strong>
           </div>
-          {quote.savingsMinor != null && quote.savingsMinor > 0 && (
-            <p className="portal-billing__bundle-savings">
-              {t(
-                "portal.billing.prepaid.calc.savings",
-                "You save {{amount}} · 2 months free.",
-                { amount: formatMinor(quote.savingsMinor, currency) },
-              )}
-            </p>
-          )}
-        </>
-      ) : (
-        <p className="portal-billing__bundle-savings">
-          {t(
-            "portal.billing.prepaid.calc.rateUnknown",
-            "We'll show the exact price at checkout.",
-          )}
-        </p>
-      )}
-      {quote.poolCredits > 0 && (
-        <p className="portal-billing__bundle-pool">
-          {t(
-            "portal.billing.prepaid.calc.poolCaption",
-            "One pool of {{credits}} credits for the year. Heavy months borrow from light ones.",
-            { credits: quote.poolCredits.toLocaleString() },
-          )}
-        </p>
-      )}
-      {quote.poolCredits > 0 && (
-        <div
-          role="button"
-          tabIndex={0}
-          aria-disabled={downloading}
-          className="portal-billing__bundle-download"
-          onClick={onDownload}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onDownload();
-            }
-          }}
-        >
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" />
-          </svg>
-          {downloading
-            ? t("portal.billing.prepaid.review.downloading", "Preparing…")
-            : t(
-                "portal.billing.prepaid.review.download",
-                "Download quote (PDF)",
-              )}
-          {!downloading && (
-            <span className="portal-billing__bundle-download-share">
-              · {t("portal.billing.prepaid.review.share", "share for approval")}
-            </span>
-          )}
+        )}
+        <div className="portal-billing__bundle-receipt-row">
+          <strong>{t("payment.capacityStage.dueToday", "Due today")}</strong>
+          <strong>
+            {quote.priceMinor == null
+              ? t(
+                  "portal.billing.prepaid.calc.rateUnknown",
+                  "We'll show the exact price at checkout.",
+                )
+              : formatMinor(quote.priceMinor, currency)}
+          </strong>
         </div>
-      )}
-    </div>
+      </div>
+      <Button
+        variant="quiet"
+        size="sm"
+        disabled={
+          downloading || quote.poolCredits <= 0 || quote.priceMinor == null
+        }
+        onClick={onDownload}
+      >
+        {downloading
+          ? t("portal.billing.prepaid.review.downloading", "Preparing…")
+          : t("portal.billing.prepaid.review.download", "Download quote (PDF)")}
+      </Button>
+    </>
   );
-}
-
-// ─── Step 1: users-first calculator ──────────────────────────────────────────
-
-interface CalcProps {
-  users: number;
-  setUsers: (v: number) => void;
-  postureId: string;
-  setPostureId: (v: string) => void;
-  sizeId: string;
-  setSizeId: (v: string) => void;
-  pipelineId: string;
-  setPipelineId: (v: string) => void;
-  quote: BundleQuoteBreakdown;
-  currency: string;
-  /** Mint-if-needed + stream the Stripe quote PDF. */
-  onDownload: () => void;
-  /** PDF download in flight. */
-  downloading: boolean;
-  /** Last Download error, surfaced inline. */
-  actionError: string | null;
-}
-
-interface PickerCard {
-  id: string;
-  title: string;
-  meta?: string;
-  desc: string;
 }
 
 function CalculatorStep({
-  users,
-  setUsers,
-  postureId,
-  setPostureId,
-  sizeId,
-  setSizeId,
-  pipelineId,
-  setPipelineId,
+  credits,
+  rate,
+  selectionCurrency,
+  onCreditsChange,
   quote,
   currency,
+  pricing,
+  onCurrencyChange,
+  currencyBusy,
   onDownload,
   downloading,
   actionError,
-}: CalcProps) {
+}: {
+  credits: number;
+  rate: number | null;
+  selectionCurrency: string;
+  pricing: BundlePricing | null;
+  onCurrencyChange: (currency: string) => void;
+  currencyBusy: boolean;
+  onCreditsChange: (credits: number) => void;
+  quote: BundleQuoteBreakdown;
+  currency: string;
+  onDownload: () => void;
+  downloading: boolean;
+  actionError: string | null;
+}) {
   const { t } = useTranslation();
-  // Deployment is a display-only finer setting (same rate self-serve); expanded
-  // tracks which row's card picker is bloomed (demo: one open at a time).
-  const [deployId, setDeployId] = useState<string>("cloud");
-  const [expanded, setExpanded] = useState<string | null>(null);
-
-  const deployCards: PickerCard[] = [
-    {
-      id: "cloud",
-      title: t("portal.billing.prepaid.deploy.cloud", "Stirling Cloud"),
-      desc: t(
-        "portal.billing.prepaid.deploy.cloudDesc",
-        "Managed by Stirling. Live in minutes.",
-      ),
-    },
-    {
-      id: "selfhost",
-      title: t("portal.billing.prepaid.deploy.selfhost", "Self-hosted"),
-      desc: t(
-        "portal.billing.prepaid.deploy.selfhostDesc",
-        "Runs on private infrastructure. Same rate.",
-      ),
-    },
-  ];
-  const sizeCards: PickerCard[] = [
-    {
-      id: "compact",
-      title: t("portal.billing.prepaid.size.compact", "Compact"),
-      meta: "×1",
-      desc: t(
-        "portal.billing.prepaid.size.compactDesc",
-        "Files under 25 MB, no data charges",
-      ),
-    },
-    {
-      id: "standard",
-      title: t("portal.billing.prepaid.size.standard", "Standard"),
-      meta: "×1.2",
-      desc: t(
-        "portal.billing.prepaid.size.standardDesc",
-        "Mostly small, some scans past 25 MB",
-      ),
-    },
-    {
-      id: "heavy",
-      title: t("portal.billing.prepaid.size.heavy", "Heavy"),
-      meta: "×2",
-      desc: t(
-        "portal.billing.prepaid.size.heavyDesc",
-        "Scanned or image-heavy, routinely 50 MB+",
-      ),
-    },
-  ];
-  const postureCards: PickerCard[] = [
-    {
-      id: "essentials",
-      title: t("portal.billing.prepaid.posture.essentials", "Essentials"),
-      meta: t(
-        "portal.billing.prepaid.calc.policiesMeta",
-        "{{count}} policies",
-        {
-          count: 2,
-        },
-      ),
-      desc: t(
-        "portal.billing.prepaid.posture.essentialsDesc",
-        "Classification, the default, plus Sharing",
-      ),
-    },
-    {
-      id: "governed",
-      title: t("portal.billing.prepaid.posture.governed", "Governed"),
-      meta: t(
-        "portal.billing.prepaid.calc.policiesMeta",
-        "{{count}} policies",
-        {
-          count: 4,
-        },
-      ),
-      desc: t(
-        "portal.billing.prepaid.posture.governedDesc",
-        "Adds Security and Routing",
-      ),
-    },
-    {
-      id: "regulated",
-      title: t("portal.billing.prepaid.posture.regulated", "Regulated"),
-      meta: t(
-        "portal.billing.prepaid.calc.policiesMeta",
-        "{{count}} policies",
-        {
-          count: 7,
-        },
-      ),
-      desc: t(
-        "portal.billing.prepaid.posture.regulatedDesc",
-        "Every category, incl. Compliance, Retention, Ingestion",
-      ),
-    },
-  ];
-  const pipelineCards: PickerCard[] = [
-    {
-      id: "none",
-      title: t("portal.billing.prepaid.pipelines.none", "None"),
-      desc: t(
-        "portal.billing.prepaid.pipelines.noneDesc",
-        "Not running pipelines yet. Turn them on any time.",
-      ),
-    },
-    {
-      id: "standard",
-      title: t("portal.billing.prepaid.pipelines.standard", "Standard"),
-      desc: t(
-        "portal.billing.prepaid.pipelines.standardDesc",
-        "A few pipelines re-process arriving PDFs.",
-      ),
-    },
-    {
-      id: "advanced",
-      title: t("portal.billing.prepaid.pipelines.advanced", "Advanced"),
-      desc: t(
-        "portal.billing.prepaid.pipelines.advancedDesc",
-        "Pipelines drive most of your processing.",
-      ),
-    },
-  ];
-
-  const find = (cards: PickerCard[], id: string) =>
-    cards.find((c) => c.id === id) ?? cards[0];
-  const size = find(sizeCards, sizeId);
-  const posture = find(postureCards, postureId);
-  const pipeline = find(pipelineCards, pipelineId);
-  const policies =
-    BUNDLE_POLICY_POSTURES.find((p) => p.id === postureId)?.policies ?? 0;
-
-  const deployValue =
-    deployId === "cloud"
-      ? t(
-          "portal.billing.prepaid.deploy.cloudValue",
-          "Stirling Cloud · Managed",
-        )
-      : t(
-          "portal.billing.prepaid.deploy.selfhostValue",
-          "Self-hosted · Private infrastructure",
-        );
-  const sizeValue = t(
-    "portal.billing.prepaid.calc.sizingValue",
-    "{{label}} · {{desc}}",
-    { label: size.title, desc: size.desc },
+  const presets = [12_000, 24_000, 48_000];
+  const minorUnitScale = stripeMinorUnitScale(selectionCurrency);
+  const yearValue =
+    rate && rate > 0 ? Math.round(credits * rate) / minorUnitScale : null;
+  const [custom, setCustom] = useState(
+    yearValue == null || !presets.includes(yearValue),
   );
-  const postureValue = t(
-    "portal.billing.prepaid.calc.governanceValue",
-    "{{label}} · {{count}} policies",
-    { label: posture.title, count: policies },
-  );
-
-  const rows = [
-    {
-      id: "deploy",
-      label: t("portal.billing.prepaid.calc.deployRow", "Deployment"),
-      value: deployValue,
-      cards: deployCards,
-      activeId: deployId,
-      onPick: setDeployId,
-    },
-    {
-      id: "size",
-      label: t("portal.billing.prepaid.calc.sizingRow", "Sizing"),
-      value: sizeValue,
-      cards: sizeCards,
-      activeId: sizeId,
-      onPick: setSizeId,
-    },
-    {
-      id: "posture",
-      label: t("portal.billing.prepaid.calc.governanceRow", "Governance"),
-      value: postureValue,
-      cards: postureCards,
-      activeId: postureId,
-      onPick: setPostureId,
-    },
-    {
-      id: "pipes",
-      label: t("portal.billing.prepaid.calc.pipelinesLabel", "Pipelines"),
-      value: pipeline.title,
-      cards: pipelineCards,
-      activeId: pipelineId,
-      onPick: setPipelineId,
-    },
-  ];
-
+  const [draft, setDraft] = useState<number | string>(yearValue ?? "");
+  const changeAmount = (value: number | string) => {
+    setDraft(value);
+    const amount = Number(value);
+    onCreditsChange(
+      rate && rate > 0 && Number.isFinite(amount) && amount > 0
+        ? Math.round((amount * minorUnitScale) / rate)
+        : 0,
+    );
+  };
   return (
     <div className="portal-billing__bundle-calc">
+      {pricing && (
+        <FormField
+          label={t("portal.billing.prepaid.calc.currency", "Quote currency")}
+          helperText={
+            pricing.currencyLocked !== false
+              ? t(
+                  "portal.billing.prepaid.calc.currencyLocked",
+                  "Uses your existing Stripe billing currency.",
+                )
+              : undefined
+          }
+        >
+          <Select
+            aria-label={t(
+              "portal.billing.prepaid.calc.currency",
+              "Quote currency",
+            )}
+            value={currency}
+            comboboxProps={{ withinPortal: false }}
+            options={(pricing.availableCurrencies ?? [currency]).map(
+              (code) => ({ value: code, label: code.toUpperCase() }),
+            )}
+            disabled={currencyBusy || pricing.currencyLocked !== false}
+            onChange={(selected) => {
+              if (selected) onCurrencyChange(selected);
+            }}
+          />
+        </FormField>
+      )}
       {actionError && (
         <Banner
           tone="danger"
@@ -1156,130 +1075,79 @@ function CalculatorStep({
           {actionError}
         </Banner>
       )}
-      <div className="portal-billing__bundle-field">
-        <div className="portal-billing__bundle-field-label">
-          {t("portal.billing.prepaid.calc.usersLabel", "Total users")}
+      <div className="processor-prepay__picker">
+        <div
+          className="processor-prepay__choices"
+          role="group"
+          aria-label={t("portal.billing.simple.yearSize", "Year size")}
+        >
+          <span>{t("portal.billing.simple.yearSize", "Year size")}</span>
+          {presets.map((value) => (
+            <Button
+              key={value}
+              variant="secondary"
+              disabled={!rate || rate <= 0}
+              aria-pressed={!custom && yearValue === value}
+              onClick={() => {
+                setCustom(false);
+                changeAmount(value);
+              }}
+            >
+              {formatMoneyMajor(value, selectionCurrency)}
+            </Button>
+          ))}
+          <Button
+            variant="secondary"
+            aria-pressed={custom}
+            disabled={!rate || rate <= 0}
+            onClick={() => {
+              setDraft(yearValue ?? "");
+              setCustom(true);
+            }}
+          >
+            {t("payment.capacityStage.other", "Other")}
+          </Button>
         </div>
-        <div className="portal-billing__bundle-users">
-          <NumberInput
-            value={users}
-            onChange={(v) => setUsers(typeof v === "number" ? v : 0)}
-            min={0}
-            step={1}
-            allowNegative={false}
-            aria-label={t(
-              "portal.billing.prepaid.calc.usersLabel",
-              "Total users",
-            )}
-          />
-        </div>
+        {custom && rate != null && rate > 0 && (
+          <div className="processor-prepay__custom">
+            <NumberInput
+              value={draft}
+              onChange={changeAmount}
+              hideControls
+              clampBehavior="none"
+              prefix={currencySymbol(selectionCurrency)}
+              decimalScale={Math.log10(minorUnitScale)}
+              allowNegative={false}
+              aria-label={t("portal.billing.simple.yearSize", "Year size")}
+            />
+          </div>
+        )}
       </div>
-
-      {/* Finer settings as progressive-disclosure rows — a "Change" blooms the card picker. */}
-      <div className="portal-surface portal-billing__bundle-rows">
-        {rows.map((row) => {
-          const open = expanded === row.id;
-          return (
-            <div key={row.id} className="portal-billing__bundle-row">
-              <div
-                role="button"
-                tabIndex={0}
-                className="portal-billing__bundle-row-head"
-                aria-expanded={open}
-                onClick={() => setExpanded(open ? null : row.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setExpanded(open ? null : row.id);
-                  }
-                }}
-              >
-                <span className="portal-billing__bundle-row-label">
-                  {row.label}
-                </span>
-                <span className="portal-billing__bundle-row-value">
-                  {row.value}
-                  <span className="portal-billing__bundle-row-change">
-                    {open
-                      ? t("portal.billing.prepaid.calc.done", "Done")
-                      : t("portal.billing.prepaid.calc.change", "Change")}
-                  </span>
-                </span>
-              </div>
-              {open && (
-                <div className="portal-billing__bundle-row-body">
-                  <div className="portal-billing__bundle-cards">
-                    {row.cards.map((card) => {
-                      const active = card.id === row.activeId;
-                      const pick = () => {
-                        row.onPick(card.id);
-                        setExpanded(null);
-                      };
-                      return (
-                        <div
-                          key={card.id}
-                          role="button"
-                          tabIndex={0}
-                          aria-pressed={active}
-                          className={
-                            "portal-billing__bundle-card" +
-                            (active
-                              ? " portal-billing__bundle-card--active"
-                              : "")
-                          }
-                          onClick={pick}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              pick();
-                            }
-                          }}
-                        >
-                          <span className="portal-billing__bundle-card-head">
-                            <span className="portal-billing__bundle-card-title">
-                              {card.title}
-                            </span>
-                            {card.meta && (
-                              <span className="portal-billing__bundle-card-meta">
-                                {card.meta}
-                              </span>
-                            )}
-                          </span>
-                          <span className="portal-billing__bundle-card-desc">
-                            {card.desc}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
+      <p className="processor-prepay__credits">
+        {t("portal.billing.simple.creditEstimate", "≈ {{credits}} credits", {
+          credits: quote.poolCredits.toLocaleString(),
         })}
-      </div>
-
-      {/* Receipt — the sized plan, its price, the credit pool, and a shareable proforma. */}
+      </p>
       <QuoteReceipt
         quote={quote}
         currency={currency}
         onDownload={onDownload}
         downloading={downloading}
       />
-
-      {quote.overEnterprise && (
-        <p className="portal-billing__bundle-savings">
+      <div className="processor-prepay__after">
+        <strong>
+          {t("portal.billing.simple.afterYear", "After the year")}
+        </strong>
+        <p>
           {t(
-            "portal.billing.prepaid.calc.enterpriseHint",
-            "This is enterprise scale. At this volume, enterprise rates beat any self-serve discount. Rate lock, terms, and a quote in minutes.",
+            "portal.billing.simple.afterYearNote",
+            "No automatic renewal. Further processing needs an active metered plan and stays within its spend limit.",
           )}
         </p>
-      )}
+      </div>
     </div>
   );
 }
-
-// ─── Step 2: pay for your year (quote already accepted → PO · download · pay) ──
 
 function PaymentStep({
   quote,

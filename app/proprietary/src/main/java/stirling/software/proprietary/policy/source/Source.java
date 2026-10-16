@@ -12,11 +12,10 @@ import stirling.software.proprietary.policy.model.OutputSpec;
  * run's files are delivered to it), which is how a folder or bucket can be both the output of one
  * pipeline and the input of the next.
  *
- * <p>{@code type} keys an {@link stirling.software.proprietary.policy.input.InputSource} bean (and,
- * for writable types, a {@link stirling.software.proprietary.policy.output.PolicyOutputSink}),
- * matching {@link InputSpec#type()}; {@code options} is that location's config. {@code owner} and
- * {@code teamId} scope the source to a team, mirroring {@link
- * stirling.software.proprietary.policy.model.Policy}.
+ * <p>{@code type} keys an {@link stirling.software.proprietary.policy.input.InputSource} bean, a
+ * {@link stirling.software.proprietary.policy.output.PolicyOutputSink}, or both, matching {@link
+ * InputSpec#type()}; {@code options} is that location's config. {@code owner} and {@code teamId}
+ * scope the source to a team, mirroring {@link stirling.software.proprietary.policy.model.Policy}.
  */
 public record Source(
         String id,

@@ -65,6 +65,12 @@
    so height = icon/label only and rows sit tight against each other. */
 .tool-button {
   font-size: 0.875rem;
+  /* Shared by the row's icon and label; dark mode matches the viewer bar icons. */
+  --tool-button-fg: var(--c-text-muted);
+}
+
+[data-mantine-color-scheme="dark"] .tool-button {
+  --tool-button-fg: color-mix(in srgb, var(--c-text) 80%, var(--c-surface));
 }
 
 .tool-button.sui-btn.mantine-Button-root {
@@ -74,6 +80,7 @@
 .tool-button .mantine-Button-label {
   font-size: 0.84rem;
   font-weight: 500;
+  color: var(--tool-button-fg);
   /* ≥1.4 so the overflow:hidden label box contains glyph descenders (g/y/p);
      row height is icon-bound (~24px) so this doesn't change row size. */
   line-height: 1.4;
@@ -134,4 +141,20 @@
 
 .tool-picker__view-all {
   margin-top: 0.75rem;
+}
+
+/* The rule only appears once rows scroll beneath the header, so a list at
+   rest has no line separating nothing. Stacked over the scroller, whose
+   negative top margin would otherwise paint rows over the rule. */
+.tool-picker__header {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  background: var(--c-surface);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.12s ease;
+}
+
+.tool-picker__header[data-scrolled] {
+  border-bottom-color: var(--c-border-subtle);
 }

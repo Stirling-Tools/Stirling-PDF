@@ -4,6 +4,16 @@
 
 import axios from "axios";
 import { normalizeAxiosErrorData } from "@app/services/errorUtils";
+import i18n from "i18next";
+
+/** Signup gates are handled by the account modal and must not be reported as damaged files. */
+export function isSignupRequiredError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const response = (
+    error as { response?: { status?: number; data?: { error?: string } } }
+  ).response;
+  return response?.status === 401 && response.data?.error === "SIGNUP_REQUIRED";
+}
 
 /**
  * Default error extractor that follows the standard pattern.
@@ -22,7 +32,10 @@ export const extractErrorMessage = (error: unknown): string => {
   if (error instanceof Error && error.message) {
     return error.message;
   }
-  return "There was an error processing your request.";
+  return i18n.t(
+    "error.requestFallback",
+    "There was an error processing your request.",
+  );
 };
 
 /**

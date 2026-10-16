@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { isAxiosError } from "axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import apiClient from "@app/services/apiClient";
 import { useAuth } from "@app/auth/UseSession";
@@ -38,12 +39,23 @@ export default function ConnectApprove() {
   const requestId = params.get("request");
 
   const [phase, setPhase] = useState<ApprovePhase>("loading");
-  const [pending, setPending] = useState<PendingConnect | null>(null);
+  const [lookup, setLookup] = useState<
+    (PendingConnect & { accountId: string }) | null
+  >(null);
+  const accountId = session?.user.id;
+  const pending =
+    lookup?.accountId === accountId && lookup?.requestId === requestId
+      ? lookup
+      : null;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const lookedUpRef = useRef(false);
 
-  useDocumentMeta({ title: t("connect.meta.title", "Connect a server") });
+  useDocumentMeta({
+    title:
+      pending?.mode === "REAUTH"
+        ? t("connect.renewal.title", "Renew your server sign-in")
+        : t("connect.meta.title", "Connect a server"),
+  });
 
   // On arrival, not only when signed out: an approver who is already signed in can
   // still be sent away to re-authenticate, and needs the same way back.
@@ -60,8 +72,11 @@ export default function ConnectApprove() {
   }, [loading, session, requestId, navigate]);
 
   useEffect(() => {
-    if (loading || !session || lookedUpRef.current) return;
-    lookedUpRef.current = true;
+    if (loading || !accountId) return;
+    let active = true;
+    setLookup(null);
+    setError(null);
+    setPhase("loading");
     if (!requestId) {
       setPhase("notFound");
       return;
@@ -71,6 +86,7 @@ export default function ConnectApprove() {
         const res = await apiClient.get<ConnectLookup>(
           `/api/v1/account-link/connect/${encodeURIComponent(requestId)}`,
         );
+        if (!active) return;
         // Approving a settled request fails server-side, so offering the form again
         // would only produce a dead end.
         if (res.data.status !== "PENDING") {
@@ -78,18 +94,29 @@ export default function ConnectApprove() {
           setPhase(res.data.status === "DENIED" ? "declined" : "notFound");
           return;
         }
-        setPending(res.data);
+        setLookup({ ...res.data, accountId });
         setPhase("confirm");
       } catch {
+        if (!active) return;
         clearPendingConnect();
         setPhase("notFound");
       }
     })();
-  }, [loading, session, requestId]);
+    return () => {
+      active = false;
+    };
+  }, [loading, accountId, requestId]);
 
   const onDecide = useCallback(
     async (approve: boolean) => {
-      if (!requestId || !(approve ? pending?.canApprove : pending?.canDeny))
+      if (
+        busy ||
+        !requestId ||
+        !pending ||
+        !(approve
+          ? pending.canApprove
+          : pending.canDeny && pending.mode !== "REAUTH")
+      )
         return;
       setBusy(true);
       setError(null);
@@ -105,7 +132,23 @@ export default function ConnectApprove() {
         clearPendingConnect();
         setPhase("redirecting");
         window.location.replace(returnUrl(res.data, session));
-      } catch {
+      } catch (cause) {
+        if (pending.mode === "REAUTH") {
+          const status = isAxiosError(cause)
+            ? cause.response?.status
+            : undefined;
+          if (status === 403 || status === 409) {
+            setLookup({ ...pending, canApprove: false, canDeny: false });
+          } else {
+            setError(
+              t(
+                "connect.renewal.failed",
+                "Your sign-in could not be renewed. Try again, or dismiss this page and start again from your server.",
+              ),
+            );
+          }
+          return;
+        }
         setError(
           t(
             "connect.error.failed",
@@ -116,7 +159,7 @@ export default function ConnectApprove() {
         setBusy(false);
       }
     },
-    [requestId, pending, session, t],
+    [busy, requestId, pending, session, t],
   );
 
   /**
@@ -127,7 +170,7 @@ export default function ConnectApprove() {
   }, [signOut]);
 
   const onDismiss = useCallback(() => {
-    if (!pending || pending.canDeny) return;
+    if (!pending || (pending.canDeny && pending.mode !== "REAUTH")) return;
     clearPendingConnect();
     navigate("/", { replace: true });
   }, [pending, navigate]);
@@ -153,7 +196,8 @@ export default function ConnectApprove() {
       </div>
 
       <ConnectApproveView
-        phase={phase}
+        key={`${requestId}:${accountId}`}
+        phase={phase === "confirm" && !pending ? "loading" : phase}
         pending={pending}
         signedInEmail={user?.email ?? null}
         busy={busy}

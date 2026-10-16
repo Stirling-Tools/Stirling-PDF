@@ -9,8 +9,9 @@ import { PortalProviders } from "@portal/PortalProviders";
 const h = vi.hoisted(() => ({
   get: vi.fn(),
   auth: {
-    user: { id: "admin" },
+    user: { id: "admin", orgOwner: true },
     loading: false,
+    isAdmin: true,
     isAnonymous: false,
     signOut: vi.fn(),
   },
@@ -21,6 +22,7 @@ vi.mock("react-i18next", () => ({
     i18n: { language: "en-US" },
   }),
 }));
+vi.mock("@app/auth", () => ({ useAuth: () => h.auth }));
 vi.mock("@app/auth/UseSession", () => ({ useAuth: () => h.auth }));
 vi.mock("@app/services/apiClient", () => ({ default: { get: h.get } }));
 vi.mock("@app/extensions/accountLogout", () => ({
@@ -47,7 +49,7 @@ vi.mock("@portal/contexts/UIContext", () => ({
   useUI: () => ({ linkModalOpen: false }),
 }));
 vi.mock("@portal/components/account-link/LinkAccountModal", () => ({
-  LinkAccountModal: () => null,
+  LinkAccountModalHost: () => null,
 }));
 vi.mock("@portal/components/account-link/ConnectCallbackHost", () => ({
   ConnectCallbackHost: () => null,

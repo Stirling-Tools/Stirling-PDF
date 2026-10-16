@@ -22,7 +22,7 @@ export async function processResponse(
 ): Promise<File[]> {
   if (responseHandler) {
     const out = await responseHandler(blob, originalFiles);
-    return Array.isArray(out) ? out : [out as unknown as File];
+    return Array.isArray(out) ? out : [out];
   }
 
   // Check if we should use the backend-provided filename from headers

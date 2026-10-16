@@ -7,8 +7,7 @@
  */
 
 import { useTranslation } from "react-i18next";
-import DiamondOutlinedIcon from "@mui/icons-material/DiamondOutlined";
-
+import { Icon, type IconName } from "@app/ui/Icon";
 import type {
   SlideDefinition,
   ButtonAction,
@@ -20,8 +19,6 @@ import OnboardingSlideShell, {
   ShellHero,
   type ShellButton,
 } from "@app/components/onboarding/OnboardingSlideShell";
-import LocalIcon from "@app/components/shared/LocalIcon";
-
 interface OnboardingModalSlideProps {
   slideDefinition: SlideDefinition;
   slideContent: SlideConfig;
@@ -33,11 +30,11 @@ interface OnboardingModalSlideProps {
   allowDismiss?: boolean;
 }
 
-const HERO_ICON: Record<string, string> = {
-  rocket: "rocket-launch",
-  shield: "verified-user-outline",
-  lock: "lock-outline",
-  analytics: "analytics",
+const HERO_ICON: Record<string, IconName> = {
+  rocket: "rocket",
+  shield: "shield-check",
+  lock: "lock",
+  analytics: "chart-column",
 };
 
 export default function OnboardingModalSlide({
@@ -61,9 +58,9 @@ export default function OnboardingModalSlide({
     ) : (
       <ShellHero>
         {heroType === "diamond" ? (
-          <DiamondOutlinedIcon sx={{ fontSize: 30 }} />
+          <Icon name="gem" size={30} />
         ) : HERO_ICON[heroType] ? (
-          <LocalIcon icon={HERO_ICON[heroType]} width={30} height={30} />
+          <Icon name={HERO_ICON[heroType]} size={30} />
         ) : null}
       </ShellHero>
     );

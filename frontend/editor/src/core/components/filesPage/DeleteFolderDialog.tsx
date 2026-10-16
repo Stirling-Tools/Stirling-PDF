@@ -85,7 +85,7 @@ export function DeleteFolderDialog({
                 )
               : t(
                   "filesPage.deleteFolderKeepHint",
-                  "Files inside will be moved to All files.",
+                  "Files inside will be moved to Stirling library.",
                 )}
           </Text>
         )}

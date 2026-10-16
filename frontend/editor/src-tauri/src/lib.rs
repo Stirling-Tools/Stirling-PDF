@@ -1,4 +1,6 @@
 use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+use tauri_plugin_window_state::StateFlags;
 
 mod utils;
 pub mod commands;
@@ -49,6 +51,7 @@ use commands::{
     get_app_version,
     restart_app,
     target_window_label,
+    build_main_window,
     MAIN_WINDOW_LABEL,
 };
 use commands::connection::apply_provisioning_if_present;
@@ -128,7 +131,11 @@ pub fn run() {
     .plugin(tauri_plugin_deep_link::init())
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_updater::Builder::new().build())
-    .plugin(tauri_plugin_window_state::Builder::default().build())
+    .plugin(
+      tauri_plugin_window_state::Builder::default()
+        .with_state_flags(StateFlags::all() & !StateFlags::DECORATIONS)
+        .build()
+    )
     .manage(AppConnectionState::default())
     .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
       // Runs in the existing instance when a second launch is attempted
@@ -152,15 +159,29 @@ pub fn run() {
     .setup(|app| {
       add_log("🚀 Tauri app setup started".to_string());
 
-      // Windows: drop the native title bar so the in-app custom title bar
-      // (window controls + drag region) takes over. Runtime toggle because the
-      // main window is defined in tauri.conf.json; spawned windows set it at
-      // build time in window.rs. macOS/Linux keep their native decorations.
-      #[cfg(target_os = "windows")]
-      {
-        if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-          let _ = window.set_decorations(false);
-        }
+      if let Err(err) = apply_provisioning_if_present(app.handle()) {
+        add_log(format!("⚠️ Failed to apply provisioning file: {}", err));
+        let handle = app.handle().clone();
+        app.dialog()
+          .message(format!(
+            "Stirling PDF could not apply your managed settings and cannot start.\n\n{err}\n\nContact your administrator to correct the provisioning file or restore access to the settings store, then restart Stirling PDF."
+          ))
+          .title("Stirling PDF — managed settings error")
+          .kind(MessageDialogKind::Error)
+          .show(move |_| handle.exit(1));
+        // Keep the event loop alive for the dialog, without opening the workspace or backend.
+        return Ok(());
+      }
+
+      // The main window is built here, not in tauri.conf.json, so its chrome
+      // (decorations, macOS overlay title bar, traffic-light inset) lives with
+      // the spawned-window chrome in window.rs. Created first so the deep-link
+      // and file-open handling below can target it.
+      if let Err(err) = build_main_window(app.handle()) {
+        add_log(format!("❌ Failed to build main window: {}", err));
+        // No fallback window exists, so abort startup rather than run headless
+        // (on frameless Windows a windowless app has no way to be closed).
+        return Err(err.into());
       }
 
       // Files passed on the command line at first launch load into the main
@@ -194,10 +215,6 @@ pub fn run() {
         });
       }
 
-      if let Err(err) = apply_provisioning_if_present(&app.handle()) {
-        add_log(format!("⚠️ Failed to apply provisioning file: {}", err));
-      }
-
       // Start backend immediately, non-blocking
       let app_handle = app.handle().clone();
 
@@ -216,9 +233,12 @@ pub fn run() {
       start_backend,
       get_backend_port,
       get_opened_files,
+      commands::file_drop::resolve_dropped_file_paths,
+      commands::file_drop::install_drag_capture,
       pop_opened_files,
       clear_opened_files,
       file_disk_state,
+      commands::files::publish_processing_file,
       watch_disk_paths,
       unwatch_disk_paths,
       open_in_new_window,

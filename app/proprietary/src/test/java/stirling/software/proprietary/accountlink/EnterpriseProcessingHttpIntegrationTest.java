@@ -1,13 +1,10 @@
 package stirling.software.proprietary.accountlink;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -65,6 +62,7 @@ import stirling.software.proprietary.controller.api.converters.ConvertPdfToPdfUa
 import stirling.software.proprietary.security.configuration.ee.DynamicLicenseService;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
+import stirling.software.proprietary.service.AiEngineRouter;
 import stirling.software.proprietary.service.ua.FontEmbeddingService;
 import stirling.software.proprietary.service.ua.PdfUaConversionService;
 import stirling.software.proprietary.service.ua.PdfUaValidationService;
@@ -118,7 +116,7 @@ class EnterpriseProcessingHttpIntegrationTest {
         signatures.deleteAll();
         cloudCounters.deleteAll();
         syncState.deleteAll();
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         localUsage.accrue(BillingCategory.AUTOMATION, SPENT_GRANT, null);
         assertThat(localUsage.balance().remainingUnits()).isZero();
     }
@@ -163,15 +161,7 @@ class EnterpriseProcessingHttpIntegrationTest {
         assertThat(cloudCounters.count()).isZero();
         verifyNoInteractions(cloud);
         sync.syncNow();
-        verify(cloud, never())
-                .reportUsage(
-                        anyString(),
-                        anyString(),
-                        anyLong(),
-                        any(),
-                        anyLong(),
-                        anyLong(),
-                        anyLong());
+        verify(cloud).reportUsage("test-device", "test-secret", 0L, null, 0L, 0L, 0L, 0);
 
         cloudCounters.saveAndFlush(new UsageCounter(period, "API", 7, period));
         when(cloud.reportUsage(
@@ -181,11 +171,12 @@ class EnterpriseProcessingHttpIntegrationTest {
                         eq(period),
                         eq(7L),
                         eq(0L),
-                        eq(0L)))
+                        eq(0L),
+                        eq(0)))
                 .thenReturn(blocked);
         sync.syncNow();
 
-        verify(cloud).reportUsage("test-device", "test-secret", 1L, period, 7L, 0L, 0L);
+        verify(cloud).reportUsage("test-device", "test-secret", 1L, period, 7L, 0L, 0L, 0);
         assertThat(cloudCounters.findByPeriodStart(period).getFirst().getLastSyncedUnits())
                 .isEqualTo(7);
         assertLocalUsage(SPENT_GRANT + PDF_UNITS);
@@ -201,7 +192,7 @@ class EnterpriseProcessingHttpIntegrationTest {
         assertConvertedPdf(convert(input));
         assertLocalUsage(SPENT_GRANT + PDF_UNITS);
 
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(nextLicense);
+        when(licenseChecker.premiumTier()).thenReturn(nextLicense);
         HttpResponse<byte[]> response = convert(input);
 
         assertThat(response.statusCode()).isEqualTo(402);
@@ -316,9 +307,22 @@ class EnterpriseProcessingHttpIntegrationTest {
         UsageMeterService.class, UsageSyncService.class, DeviceCredentialStore.class,
         EntitlementCache.class, DynamicLicenseService.class, TempFileManager.class,
         TempFileRegistry.class, ConvertPdfToPdfUa.class, PdfUaConversionService.class,
-        PdfUaValidationService.class, FontEmbeddingService.class
+        PdfUaValidationService.class, FontEmbeddingService.class, AiEngineRouter.class
     })
     static class TestApp {
+        @Bean
+        stirling.software.proprietary.security.service.UserService userService() {
+            return mock(stirling.software.proprietary.security.service.UserService.class);
+        }
+
+        @Bean
+        stirling.software.proprietary.service.UserLicenseSettingsService licenseSettingsService() {
+            var service =
+                    mock(stirling.software.proprietary.service.UserLicenseSettingsService.class);
+            when(service.hasLicenseKeyPaidTier()).thenReturn(true);
+            return service;
+        }
+
         @Bean
         LicenseKeyChecker licenseKeyChecker() {
             return mock(LicenseKeyChecker.class);

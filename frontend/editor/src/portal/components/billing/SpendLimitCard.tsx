@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button, Card } from "@app/ui";
 import {
   currencySymbol,
-  docCapForMoney,
   formatMinor,
   formatMoneyMajor,
   MeterBar,
@@ -136,7 +135,7 @@ export function SpendLimitCard({
         <SharedSpendCapControl
           capUsd={draftCap}
           onChange={setDraftCap}
-          pricePerDocMinor={wallet.pricePerDocMinor}
+          disabled={saving}
           currency={wallet.currency}
           note={t(
             "portal.billing.spendLimit.capControlNote",
@@ -161,15 +160,12 @@ export function SpendLimitCard({
           </Button>
         )}
 
-        <div className="portal-billing__guardrail">
-          <strong>
-            {t("portal.billing.spendLimit.guardrailLabel", "Your guardrail:")}
-          </strong>{" "}
+        <p className="portal-billing__section-sub">
           {t(
-            "portal.billing.spendLimit.guardrailBody",
-            "a hard ceiling — you're never billed past it. At the cap, metered processing pauses (unlimited PDF editing keeps working) until you raise it or the cycle resets. Nothing is lost.",
+            "portal.billing.spendLimit.pauseNote",
+            "Metered processing pauses at your limit. PDF editing remains available.",
           )}
-        </div>
+        </p>
 
         {error && (
           <Banner
@@ -187,6 +183,7 @@ export function SpendLimitCard({
           <Button
             variant="secondary"
             size="sm"
+            disabled={saving}
             onClick={() => onAdjustingChange(false)}
           >
             {t("portal.billing.spendLimit.cancel", "Cancel")}
@@ -205,7 +202,6 @@ export function SpendLimitCard({
   const capActive = !wallet.noCap && wallet.capUsd != null;
   const { state, pct } = meterState(spentMinor / 100, cap);
   const remainingMinor = Math.max(0, Math.round(cap * 100) - spentMinor);
-  const docEstimate = docCapForMoney(wallet.capUsd, wallet.pricePerDocMinor);
   const spentLabel = formatMinor(spentMinor, wallet.currency);
 
   return (
@@ -243,15 +239,7 @@ export function SpendLimitCard({
           }
           capSuffix={
             capActive
-              ? docEstimate != null
-                ? t(
-                    "portal.billing.spendLimit.capSuffixWithDocs",
-                    "/ month · ≈ {{documents}} documents",
-                    {
-                      documents: docEstimate.toLocaleString(),
-                    },
-                  )
-                : t("portal.billing.spendLimit.capSuffix", "/ month")
+              ? t("portal.billing.spendLimit.capSuffix", "/ month")
               : t("portal.billing.spendLimit.noCap", "no cap")
           }
           statusLabel={

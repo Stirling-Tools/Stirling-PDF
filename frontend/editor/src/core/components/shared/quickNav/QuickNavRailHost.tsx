@@ -1,4 +1,8 @@
 import { useTranslation } from "react-i18next";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { useState } from "react";
+import { SignMenu } from "@app/components/shared/signing/SignMenu";
+import { requestSigningIntent } from "@app/utils/pendingSigningIntent";
 import { useLocation, useNavigate } from "react-router-dom";
 import { QuickNavRailContainer } from "@app/components/shared/quickNav/QuickNavRailContainer";
 import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
@@ -17,6 +21,8 @@ import { stripBasePath } from "@app/constants/app";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { canCreateProcessingFolders } from "@app/hooks/useProcessingFolderCreation";
 import { requestProcessingFolderCreation } from "@app/utils/pendingProcessingFolderCreation";
+import { requestProcessorSignup } from "@app/services/processorSignup";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
 
 import { Icon } from "@app/ui/Icon";
 const SIZE = "1.125rem";
@@ -27,9 +33,15 @@ const ACCOUNT_ANCHOR = "account";
 
 export function QuickNavRailHost() {
   const { t } = useTranslation();
+  const localOnly = useLocalProcessingOnly();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const host = useQuickNavHost();
+  const [signMenuOpen, setSignMenuOpen] = useState(false);
+  // Processing folders run on the non-core API server. True on web (served by that backend);
+  // on desktop it tracks the signed-in connection, so the entry falls inert until the user
+  // signs in to Stirling Cloud or a self-hosted server.
+  const connectedServer = useConnectedServer();
 
   const appMounted = Boolean(host?.appMounted);
 
@@ -46,6 +58,13 @@ export function QuickNavRailHost() {
     const reset = host?.actions.current?.goToDefaultState;
     if (reset) reset();
     else navigate(inPortal ? PORTAL_BASENAME : EDITOR_BASENAME);
+  };
+
+  // The brand goes where the app launches; the Editor entry stays in the editor.
+  const goToStartupView = () => {
+    const start = host?.actions.current?.goToStartupView;
+    if (start) start();
+    else returnHome();
   };
 
   // Guarded where the app supplies a guard, so leaving mid-edit still prompts.
@@ -95,10 +114,14 @@ export function QuickNavRailHost() {
   const editor: QuickNavEntry = {
     id: "editor",
     label: t("quickNav.editor", "Editor"),
-    icon: <Icon name="pencil" size={SIZE} filled={inEditor} />,
+    icon: <Icon name="pencil" size={SIZE} />,
     // The library and reading are places of their own, not the editor with a
     // different centre.
-    current: inEditor && !host?.fileLibrary && !host?.readerMode,
+    current:
+      inEditor &&
+      !host?.fileLibrary &&
+      !host?.readerMode &&
+      path !== "/shared-sign",
     onClick: () => {
       if (inEditor) {
         returnHome();
@@ -112,14 +135,19 @@ export function QuickNavRailHost() {
   const processor: QuickNavEntry = {
     id: "processor",
     label: t("quickNav.processor", "Processor"),
-    icon: <Icon name="cpu" size={SIZE} filled={inPortal} />,
+    icon: <Icon name="cpu" size={SIZE} />,
     current: inPortal,
-    disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
+    disabled:
+      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous,
     reason:
-      HAS_PORTAL && !inPortal && !host?.portalAccess
+      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous
         ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
         : undefined,
     onClick: () => {
+      if (host?.isAnonymous) {
+        requestProcessorSignup();
+        return;
+      }
       if (inPortal) {
         returnHome();
         return;
@@ -134,7 +162,7 @@ export function QuickNavRailHost() {
   const surfaces: QuickNavEntry[] = [
     reader,
     editor,
-    ...(HAS_PORTAL ? [processor] : []),
+    ...(HAS_PORTAL && !localOnly ? [processor] : []),
   ];
 
   const within: QuickNavEntry[] = [
@@ -169,13 +197,21 @@ export function QuickNavRailHost() {
         else go("/files");
       },
     },
-    ...(canCreateProcessingFolders
+    ...(canCreateProcessingFolders && !localOnly
       ? [
           {
             id: "createProcessingFolder",
             label: t("processingFolders.setup.title"),
             icon: <Icon name="folder-plus" size={SIZE} />,
+            disabled: !connectedServer,
+            reason: connectedServer
+              ? undefined
+              : t("quickNav.signInToUse", "Sign in to use this"),
             onClick: () => {
+              if (host?.isAnonymous) {
+                requestProcessorSignup();
+                return;
+              }
               const open = host?.actions.current?.createProcessingFolder;
               if (open) open();
               else
@@ -196,14 +232,41 @@ export function QuickNavRailHost() {
       onClick: () => openTool("automate", "/automate"),
     },
     {
-      id: "sharedSign",
-      label: t("home.sharedSign.title", "Shared Signing"),
+      id: "sign",
+      label: host?.signingBadge
+        ? t("signMenu.triggerUnreadCount", "Sign · {{count}} unread sessions", {
+            count: host.signingBadge,
+          })
+        : t("signMenu.title", "Sign"),
       icon: <Icon name="pen-tool" size={SIZE} />,
       badge: host?.signingBadge,
+      badgeMax: null,
       badgeTone: "warning",
-      ...openingTool("sharedSign"),
-      ...unusable("sharedSign"),
-      onClick: () => openTool("sharedSign", "/shared-sign"),
+      current:
+        host?.activeTool === "sign" ||
+        host?.activeTool === "certSign" ||
+        path === "/shared-sign",
+      expanded: signMenuOpen,
+      onClick: () => setSignMenuOpen((open) => !open),
+      wrap: (button) => (
+        <SignMenu
+          opened={signMenuOpen}
+          onClose={() => setSignMenuOpen(false)}
+          reasons={host?.toolReasons ?? {}}
+          items={host?.signingItems ?? []}
+          onOpenSigning={(intent) =>
+            guarded(() => {
+              requestSigningIntent(intent);
+              navigate("/shared-sign");
+            })
+          }
+          onSelect={(tool) =>
+            openTool(tool, tool === "certSign" ? "/cert-sign" : "/sign")
+          }
+        >
+          {button}
+        </SignMenu>
+      ),
     },
   ];
 
@@ -229,8 +292,11 @@ export function QuickNavRailHost() {
 
   return (
     <QuickNavRailContainer
-      groups={[surfaces, within]}
-      onReturnHome={returnHome}
+      groups={[
+        surfaces,
+        localOnly ? within.filter((entry) => entry.id !== "automate") : within,
+      ]}
+      onReturnHome={() => guarded(goToStartupView)}
       identity={host?.identity ?? null}
       onOpenAccount={openAccount}
       // The avatar stands for the whole page, not just its own section.

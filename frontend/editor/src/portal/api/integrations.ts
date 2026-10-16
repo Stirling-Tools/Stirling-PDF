@@ -12,7 +12,8 @@ export type IntegrationType =
   | "MCP"
   | "API"
   | "PURVIEW"
-  | "CONSIGNO";
+  | "CONSIGNO"
+  | "VECTOR_DB";
 export type OwnerScope = "USER" | "TEAM" | "SERVER";
 
 /** Mirrors the backend IntegrationConfigResponse; `config` values are masked. */

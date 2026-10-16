@@ -73,7 +73,9 @@ public class AutomationMeterController {
         AutomationRunBiller runBiller = biller.getIfAvailable();
         if (runBiller != null) {
             try {
-                runBiller.recordAutomationRun(inputs);
+                runBiller.recordAutomationRun(
+                        inputs,
+                        body.source() == null ? AutomationRunSource.PROCESSOR : body.source());
             } catch (RuntimeException e) {
                 log.warn(
                         "[automate meter] billing failed; the run already completed unbilled: {}",
@@ -119,9 +121,12 @@ public class AutomationMeterController {
         return out;
     }
 
-    /** Frontend payload: the run's name, its operation ids, and per-input page/byte facts. */
+    /** Frontend run report. An absent source retains Processor billing. */
     public record AutomationMeterRequest(
-            String automationName, List<String> operations, List<InputDoc> inputs) {}
+            String automationName,
+            List<String> operations,
+            List<InputDoc> inputs,
+            AutomationRunSource source) {}
 
     /** One input document's page count (0 for non-PDF / unknown) and byte size. */
     public record InputDoc(Integer pages, Long bytes) {}

@@ -40,6 +40,7 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(
 
       const handleAnnotationEvent = (event: AnnotationEvent) => {
         if (event.type === "loaded") return;
+
         const annotation: SignatureAnnotation = event.annotation;
 
         // Store image data for all STAMP annotations immediately when created or modified
@@ -174,14 +175,14 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(
       };
 
       // Add the event listener
-      annotationApi.onAnnotationEvent(handleAnnotationEvent);
+      const unsubscribe = annotationApi.onAnnotationEvent(
+        handleAnnotationEvent,
+      );
 
-      // Cleanup function
       return () => {
-        // Note: EmbedPDF doesn't provide a way to remove event listeners
-        // This is a limitation of the current API
+        unsubscribe();
       };
-    }, [annotationApi, getImageData, storeImageData]);
+    }, [annotationApi, documentReady, getImageData, storeImageData]);
 
     useImperativeHandle(
       ref,

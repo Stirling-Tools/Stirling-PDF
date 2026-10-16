@@ -8,6 +8,9 @@ import { getDocumentFileDialogFilter } from "@app/utils/fileDialogUtils";
 
 export type { FileWithPath, FileDialogOptions };
 
+/** Whether cancelling the picker should finish instead of opening a browser fallback. */
+export const hasNativeFileDialog = true;
+
 /**
  * Open native file dialog and read selected files (Desktop/Tauri only)
  */

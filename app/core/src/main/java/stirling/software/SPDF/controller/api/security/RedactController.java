@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
@@ -42,7 +41,9 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -148,7 +149,8 @@ public class RedactController {
                     "This endpoint automatically redacts text from a PDF file based on specified"
                             + " patterns. Users can provide text patterns to redact, with options for regex"
                             + " and whole word matching.")
-    public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request) {
+    public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request)
+            throws ToolFailedException {
         if (request.getFileInput() == null || request.getFileInput().isEmpty()) {
             log.error("File input is null or empty");
             throw ExceptionUtils.createFileNullOrEmptyException();
@@ -173,11 +175,12 @@ public class RedactController {
 
         boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
         boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
+        boolean caseSensitive = Boolean.TRUE.equals(request.getCaseSensitive());
 
         if (useRegex) {
             for (String term : terms) {
                 try {
-                    Pattern.compile(term);
+                    RegexPatternUtils.getInstance().getPattern(term);
                 } catch (PatternSyntaxException e) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.redaction.no.patterns", "Invalid regex pattern: " + term);
@@ -214,6 +217,7 @@ public class RedactController {
                                 .addWords(terms)
                                 .useRegex(useRegex)
                                 .wholeWord(wholeWordSearchBool)
+                                .caseSensitive(caseSensitive)
                                 .boxColor(boxColorInt)
                                 .padding(request.getCustomPadding())
                                 .removeContent(true)
@@ -247,6 +251,7 @@ public class RedactController {
                         throw new IOException("JPDFium auto-redact returned null result");
                     }
                     try {
+                        TextRedactionService.requireVerified(result.pageResults());
                         result.save(tempOutput.getFile().toPath());
                         log.info(
                                 "JPDFium auto-redact: {} matches processed into {}",
@@ -258,8 +263,12 @@ public class RedactController {
                             result.document().close();
                         }
                     }
+                } catch (ToolFailedException e) {
+                    tempOutput.close();
+                    throw e;
                 } catch (Exception e) {
                     tempOutput.close();
+                    TextRedactionService.rejectUnverifiable(e);
                     log.warn(
                             "JPDFium native redaction fell back to manual redaction service: {}",
                             e.getMessage());
@@ -268,7 +277,8 @@ public class RedactController {
                                     document,
                                     terms.toArray(new String[0]),
                                     useRegex,
-                                    wholeWordSearchBool);
+                                    wholeWordSearchBool,
+                                    caseSensitive);
                     TempFile finalized =
                             manualRedactionService.finalizeRedaction(
                                     document,
@@ -280,7 +290,7 @@ public class RedactController {
                     return WebResponseUtils.pdfFileToWebResponse(finalized, filename);
                 }
             }
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | ToolFailedException e) {
             throw e;
         } catch (Exception e) {
             log.error("Redaction operation failed: {}", e.getMessage(), e);

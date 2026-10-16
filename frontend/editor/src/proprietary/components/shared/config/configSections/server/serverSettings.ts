@@ -11,7 +11,6 @@ export interface GeneralSettingsData {
   ui: {
     appNameNavbar?: string;
     languages?: string[];
-    logoStyle?: "modern" | "classic";
     hideDisabledTools?: {
       googleDrive?: boolean;
       mobileQRScanner?: boolean;

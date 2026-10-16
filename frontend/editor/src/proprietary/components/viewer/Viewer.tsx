@@ -14,6 +14,7 @@ import { PolicyEnforcementOverlay } from "@app/components/viewer/PolicyEnforceme
 type SignatureOverlayPassThrough = Pick<
   EmbedPdfViewerProps,
   | "signaturePreviews"
+  | "readOnlySignaturePreviews"
   | "signaturePreviewsReadOnly"
   | "signaturePlacementMode"
   | "signaturePlacementData"
@@ -32,6 +33,7 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
           r.fileId === activeFileId &&
           // Classification runs async and must never block the viewer.
           !isClassificationPolicy(r.policyKey) &&
+          !r.externalOutput &&
           (POLICY_IN_FLIGHT_STATUSES.includes(r.status) || r.retrying === true),
       )
     : [];

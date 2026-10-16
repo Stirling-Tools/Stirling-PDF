@@ -8,22 +8,22 @@ const PLAN_GROUP: PlanTierGroup = {
   monthly: {
     id: "server-monthly",
     name: "Server Monthly",
-    price: 29,
-    currency: "usd",
+    price: 99,
+    currency: "$",
     period: "monthly",
     features: [],
     highlights: ["Unlimited documents", "Priority support"],
-    lookupKey: "selfhosted:server:monthly",
+    lookupKey: "selfhosted:team:monthly",
   },
   yearly: {
     id: "server-yearly",
     name: "Server Yearly",
-    price: 290,
-    currency: "usd",
+    price: 990,
+    currency: "$",
     period: "yearly",
     features: [],
     highlights: ["Unlimited documents", "Priority support", "2 months free"],
-    lookupKey: "selfhosted:server:yearly",
+    lookupKey: "selfhosted:team:yearly",
   },
   features: [],
   highlights: ["Unlimited documents", "Priority support"],
@@ -55,4 +55,12 @@ export const HostedCheckoutSuccess: Story = {
       licenseKey: "STIRLING-XXXX-XXXX-XXXX",
     },
   },
+};
+
+export const TeamPurchase: Story = {
+  args: { combinedChoose: true },
+};
+
+export const TeamAdjustment: Story = {
+  args: { combinedChoose: true, currentLimit: 300, minimumSeats: 40 },
 };

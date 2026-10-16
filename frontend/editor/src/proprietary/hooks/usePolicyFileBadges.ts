@@ -102,9 +102,10 @@ export function buildPolicyBadgeMap(
     if (settled && !run.retrying) continue;
     const name = labelById.get(run.policyKey);
     if (!name) continue;
-    const inFlightFlag = isClassificationPolicy(run.policyKey)
-      ? ("background" as const)
-      : ("enforcing" as const);
+    const inFlightFlag =
+      run.externalOutput || isClassificationPolicy(run.policyKey)
+        ? ("background" as const)
+        : ("enforcing" as const);
     const list = result.get(run.fileId) ?? [];
     const existing = list.find((p) => p.id === run.policyKey);
     if (existing) {

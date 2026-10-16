@@ -31,6 +31,7 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.util.SecretMasker;
@@ -66,6 +67,7 @@ public class SourceController {
     private final PolicyTriggerManager policyTriggerManager;
     private final ApplicationProperties applicationProperties;
     private final List<InputSource> inputSources;
+    private final List<PolicyOutputSink> outputSinks;
 
     @GetMapping
     @Operation(
@@ -253,10 +255,17 @@ public class SourceController {
     /** Validate the config against the bean that handles the source's type, as the engine will. */
     private void validateConfig(Source source) {
         InputSpec spec = source.toInputSpec();
-        inputSourceFor(spec)
+        Optional<InputSource> input = inputSourceFor(spec);
+        if (input.isPresent()) {
+            input.get().validate(spec);
+            return;
+        }
+        outputSinks.stream()
+                .filter(sink -> sink.supports(source.toOutputSpec()))
+                .findFirst()
                 .orElseThrow(
                         () -> new IllegalArgumentException("unknown source type: " + source.type()))
-                .validate(spec);
+                .validate(source.toOutputSpec());
     }
 
     private Source withPreparedOptions(Source source, boolean isCreate) {

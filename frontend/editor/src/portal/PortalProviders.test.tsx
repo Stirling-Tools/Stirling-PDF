@@ -4,14 +4,17 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import type { ReactNode } from "react";
-import { PortalProviders } from "@portal/PortalProviders";
-import { ServerLicenseSection } from "@portal/components/billing/ServerLicenseSection";
+import { PortalProviders } from "@app/portal/PortalProviders";
+import { ServerLicenseSection } from "@app/portal/components/billing/ServerLicenseSection";
 
 const { fetchAppConfig, getLicenseInfo } = vi.hoisted(() => ({
   fetchAppConfig: vi.fn(),
   getLicenseInfo: vi.fn(),
 }));
 
+vi.mock("@app/auth", () => ({
+  useAuth: () => ({ user: { id: "owner" }, isAdmin: true, loading: false }),
+}));
 vi.mock("@app/api/config", () => ({
   DEFAULT_APP_CONFIG: { enableLogin: true },
   fetchAppConfig,
@@ -22,32 +25,32 @@ vi.mock("@app/services/licenseService", () => ({
 vi.mock("@app/testing/serverExperienceSimulations", () => ({
   getSimulatedLicenseInfo: () => null,
 }));
-vi.mock("@portal/contexts/TierContext", () => ({
+vi.mock("@app/portal/contexts/TierContext", () => ({
   TierProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@portal/contexts/LinkContext", () => ({
+vi.mock("@app/portal/contexts/LinkContext", () => ({
   LinkProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@app/portal/contexts/UIContext", () => ({
   UIProvider: ({ children }: { children: ReactNode }) => children,
   useUI: () => ({ linkModalOpen: false }),
 }));
-vi.mock("@portal/contexts/AccountLinkContext", () => ({
+vi.mock("@app/portal/contexts/AccountLinkContext", () => ({
   AccountLinkProvider: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock("@app/contexts/CheckoutContext", () => ({
   CheckoutProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@portal/components/account-link/LinkAccountModal", () => ({
-  LinkAccountModal: () => null,
+vi.mock("@app/portal/components/account-link/LinkAccountModal", () => ({
+  LinkAccountModalHost: () => null,
 }));
-vi.mock("@portal/components/account-link/ConnectCallbackHost", () => ({
+vi.mock("@app/portal/components/account-link/ConnectCallbackHost", () => ({
   ConnectCallbackHost: () => null,
 }));
-vi.mock("@portal/hooks/useFreeTierExhaustedPrompt", () => ({
+vi.mock("@app/portal/hooks/useFreeTierExhaustedPrompt", () => ({
   useFreeTierExhaustedPrompt: () => {},
 }));
-vi.mock("@portal/components/PortalChrome", () => ({
+vi.mock("@app/portal/components/PortalChrome", () => ({
   PortalChrome: () => <ServerLicenseSection onSaved={() => {}} />,
 }));
 

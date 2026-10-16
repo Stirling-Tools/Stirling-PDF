@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   decodedToState,
@@ -37,7 +38,7 @@ async function stateOf(wire: ReturnType<typeof policy>, key: string) {
   listPolicies.mockResolvedValue([wire]);
   const decoded = (await fetchPoliciesByCategory()).get(key);
   if (!decoded) throw new Error(`no decoded policy for ${key}`);
-  return decodedToState(decoded, undefined);
+  return decodedToState(decoded);
 }
 
 describe("fetchPoliciesByCategory", () => {

@@ -25,10 +25,7 @@
 import React, { useState } from "react";
 import { Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import BoltIcon from "@mui/icons-material/BoltRounded";
-import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
-import CheckIcon from "@mui/icons-material/CheckRounded";
-import LockIcon from "@mui/icons-material/LockOutlined";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 import { useWallet } from "@app/hooks/useWallet";
@@ -64,10 +61,7 @@ function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
     <div className="payg-planhead paygf-editorcard">
       <div className="payg-planhead__top">
         <span className="payg-planhead__lbl payg-planhead__lbl--free paygf-editorcard__eyebrow">
-          <AllInclusiveIcon
-            className="payg-planhead__lbl-icon"
-            fontSize="small"
-          />
+          <Icon name="infinity" size={16} className="payg-planhead__lbl-icon" />
           {t("payg.free.editor.eyebrow", "Editor plan · Always free")}
         </span>
         <span
@@ -103,7 +97,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
   return (
     <div className="paygf-cta paygf-proc">
       <span className="paygf-proc__eyebrow">
-        <BoltIcon className="payg-planhead__lbl-icon" fontSize="small" />
+        <Icon name="zap" size={16} className="payg-planhead__lbl-icon" />
         {t("payg.free.proc.eyebrow", "Processor plan · metered")}
       </span>
 
@@ -122,7 +116,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
 
           <ul className="paygf-cta__benefits paygf-proc__benefits">
             <li>
-              <CheckIcon className="paygf-cta__check" fontSize="small" />
+              <Icon name="check" size={20} className="paygf-cta__check" />
               <span>
                 <strong>
                   {t("payg.free.cta.benefit1Title", "Automation pipelines")}
@@ -135,7 +129,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
               </span>
             </li>
             <li>
-              <CheckIcon className="paygf-cta__check" fontSize="small" />
+              <Icon name="check" size={20} className="paygf-cta__check" />
               <span>
                 <strong>{t("payg.free.cta.benefit2Title", "AI tools")}</strong>
                 {": "}
@@ -146,7 +140,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
               </span>
             </li>
             <li>
-              <CheckIcon className="paygf-cta__check" fontSize="small" />
+              <Icon name="check" size={20} className="paygf-cta__check" />
               <span>
                 <strong>
                   {t("payg.free.cta.benefit3Title", "API access")}
@@ -184,9 +178,10 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
             </>
           ) : (
             <div className="paygf-proc__membernote">
-              <LockIcon
+              <Icon
+                name="lock"
+                size={18}
                 className="paygf-proc__membernote-icon"
-                fontSize="small"
               />
               <span>
                 {t(

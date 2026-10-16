@@ -13,7 +13,7 @@ export function Home() {
 
   return (
     <div className="portal-home">
-      {/* Paid tiers open with a greeting; free opens straight with the banner. */}
+      {/* Paid tiers open with a greeting; free opens with local deployment status. */}
       {tier !== "free" && <HomeGreeting />}
 
       {/* Per-tier hero. Its footer is the deal-status hero while a procurement

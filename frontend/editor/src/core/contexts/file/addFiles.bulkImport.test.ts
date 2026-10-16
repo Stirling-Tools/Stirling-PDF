@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { FileContextState } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
@@ -16,7 +17,7 @@ vi.mock("@app/utils/thumbnailUtils", () => ({
   generateThumbnailForFile: vi.fn(),
 }));
 vi.mock("@app/services/fileAnalyzer", () => ({
-  FileAnalyzer: { isPDFUserPasswordProtected: async () => false },
+  FileAnalyzer: { isPDFEncrypted: async () => false },
 }));
 
 import { addFiles } from "@app/contexts/file/fileActions";

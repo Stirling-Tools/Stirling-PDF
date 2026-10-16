@@ -49,19 +49,6 @@ import {
 } from "@app/types/fileContext";
 import { MantineProvider } from "@mantine/core";
 
-// Mock axios (for static methods like CancelToken, isCancel)
-vi.mock("axios", () => ({
-  default: {
-    CancelToken: {
-      source: vi.fn(() => ({
-        token: "mock-cancel-token",
-        cancel: vi.fn(),
-      })),
-    },
-    isCancel: vi.fn(() => false),
-  },
-}));
-
 // Mock our apiClient service
 vi.mock("../../services/apiClient", () => ({
   default: {
@@ -79,7 +66,13 @@ vi.mock("../../services/apiClient", () => ({
 
 // Import the mocked apiClient
 import apiClient from "@app/services/apiClient";
+import { notifyToolCompleted } from "@app/services/toolUsageTracker";
 const mockedApiClient = vi.mocked(apiClient, { deep: true });
+
+// Usage-recommendation tracking would add its own posts to the apiClient spy.
+vi.mock("../../services/toolUsageTracker", () => ({
+  notifyToolCompleted: vi.fn(),
+}));
 
 // Mock only essential services that are actually called by the tests
 vi.mock("../../services/fileStorage", () => ({
@@ -158,6 +151,16 @@ describe("Convert Tool Integration Tests", () => {
       "encrypted",
       "application/pdf",
     );
+    rememberPdfAccess(locked, {
+      password: "test",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: true,
+      permissions: -4,
+      canModify: true,
+      canAssemble: true,
+      pageCount: 1,
+    });
     const files = [locked, pdf];
     const customProcessor = vi.fn().mockResolvedValue({ files: [pdf] });
     const { result } = renderHook(
@@ -216,6 +219,17 @@ describe("Convert Tool Integration Tests", () => {
   });
 
   test("filters mixed inputs using current params and protection without consuming skipped files", async () => {
+    const thumbnail = {
+      thumbnail: "data:image/png;base64,fake-thumbnail",
+      pageCount: 1,
+    };
+    vi.spyOn(
+      thumbnailUtils,
+      "generateThumbnailPairWithMetadata",
+    ).mockResolvedValue({ unrotated: thumbnail, rotated: thumbnail });
+    vi.spyOn(thumbnailUtils, "generateThumbnailForFile").mockResolvedValue(
+      thumbnail.thumbnail,
+    );
     mockedApiClient.post.mockResolvedValue({
       data: new Blob(["output"]),
       headers: {},
@@ -241,6 +255,16 @@ describe("Convert Tool Integration Tests", () => {
       "encrypted",
       "application/pdf",
     );
+    rememberPdfAccess(locked, {
+      password: "test",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: true,
+      permissions: -4,
+      canModify: true,
+      canAssemble: true,
+      pageCount: 1,
+    });
     const files = [image, locked, pdf, svg];
     await act(async () => {
       result.current.context.dispatch({
@@ -308,19 +332,35 @@ describe("Convert Tool Integration Tests", () => {
     expect(fileStorage.persistVersionedOutputs).toHaveBeenCalledTimes(2);
     expect(result.current.convert.errorMessage).toBe("noValidFiles");
 
+    mockedApiClient.post.mockResolvedValueOnce({
+      data: new Blob(["protected output"], { type: "application/pdf" }),
+    });
+    mockedApiClient.post.mockResolvedValueOnce({
+      data: {
+        encrypted: true,
+        ownerAuthenticated: false,
+        permissions: -4,
+        requiresOpeningPassword: false,
+        signed: false,
+        keyLength: 256,
+      },
+    });
     await act(async () => {
       await result.current.unlock.executeOperation({ password: "secret" }, [
         image,
         locked,
       ]);
     });
-    expect(mockedApiClient.post).toHaveBeenCalledTimes(3);
+    expect(mockedApiClient.post).toHaveBeenCalledTimes(4);
     expect(mockedApiClient.post.mock.calls[2][0]).toBe(
-      "/api/v1/security/remove-password",
+      "/api/v1/security/remove-pdf-passwords",
     );
     expect(
       (mockedApiClient.post.mock.calls[2][1] as FormData).get("password"),
     ).toBe("secret");
+    expect(
+      (mockedApiClient.post.mock.calls[2][1] as FormData).get("sourcePassword"),
+    ).toBe("test");
     expect(
       (mockedApiClient.post.mock.calls[2][1] as FormData).getAll("fileInput"),
     ).toEqual([locked]);
@@ -437,6 +477,16 @@ describe("Convert Tool Integration Tests", () => {
       // The output file must be persisted via fileStorage.persistVersionedOutputs
       // so downstream tools see it in the registry.
       expect(fileStorage.persistVersionedOutputs).toHaveBeenCalled();
+
+      // The tracker must see the real input document and the output that
+      // replaced it, so the recorded chain follows the file. Convert is exactly
+      // the case that breaks the version chain, so the handover has to be here.
+      const completion = vi.mocked(notifyToolCompleted).mock.calls[0][0];
+      expect(completion.toolId).toBe("convert");
+      expect(completion.inputs.map((input) => input.id)).toEqual([
+        testFile.fileId,
+      ]);
+      expect(completion.outputFileIds).not.toHaveLength(0);
     });
 
     test("should handle API error responses correctly", async () => {
@@ -1336,3 +1386,4 @@ describe("Convert Tool Integration Tests", () => {
  *    - Test graceful degradation when endpoints are disabled
  *    - Test dynamic endpoint configuration updates
  */
+import { rememberPdfAccess } from "@app/services/pdfPasswordStore";

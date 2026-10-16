@@ -18,6 +18,7 @@ function CreateSessionFlowDemo({
 
   return (
     <CreateSessionFlow
+      documentPicker={<div>{initialFiles[0]?.name ?? "Choose a PDF"}</div>}
       selectedFiles={initialFiles}
       selectedUserIds={selectedUserIds}
       onSelectedUserIdsChange={setSelectedUserIds}
@@ -34,6 +35,7 @@ const meta = {
   component: CreateSessionFlow,
   parameters: { layout: "padded" },
   args: {
+    documentPicker: <div>contract.pdf</div>,
     selectedFiles: [mockFile],
     selectedUserIds: [],
     onSelectedUserIdsChange: () => {},

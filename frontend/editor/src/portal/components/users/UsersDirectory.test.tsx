@@ -36,12 +36,21 @@ const MEMBER: Member = {
 };
 const TEAMS: Team[] = [{ id: 1, name: "Acme", userCount: 1, owners: [] }];
 
+// Label and count are separate spans, so the accessible name may or may not
+// carry a space between them depending on the accname implementation.
+function teamTab(label: string, count: number) {
+  return screen.getByRole("button", {
+    name: new RegExp(`^${label}\\s*${count}$`),
+  });
+}
+
 function renderDirectory(
   caps: typeof saasCaps,
   teams: Team[] = TEAMS,
   members: Member[] = [MEMBER],
   onTransferOwnership = vi.fn(),
   onChangeRole = vi.fn(),
+  seatsFull = false,
 ) {
   const onRemove = vi.fn();
   render(
@@ -50,6 +59,7 @@ function renderDirectory(
         members={members}
         teams={teams}
         capabilities={caps}
+        seatsFull={seatsFull}
         processorTeamIds={new Set()}
         onChangeRole={onChangeRole}
         onGrantProcessor={vi.fn()}
@@ -94,21 +104,123 @@ describe("UsersDirectory — remove action gating", () => {
       { id: 1, name: "My Team", userCount: 1, owners: [], isPersonal: true },
     ];
     renderDirectory(saasCaps, personalTeam);
-    // No team-header kebab at all (rename is the only would-be item on SaaS).
+    fireEvent.click(teamTab("My Team", 1));
+    // No team kebab at all (rename is the only would-be item on SaaS).
     expect(
       screen.queryByRole("button", { name: "Team actions" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Rename team")).not.toBeInTheDocument();
   });
 
-  it("lists a team with no members yet, so its first member can be added", () => {
+  it("offers to create a team from the self-hosted Default team", async () => {
+    renderDirectory(selfHostedCaps, [
+      { id: 1, name: "Default", userCount: 1, owners: [] },
+    ]);
+    fireEvent.click(teamTab("Default", 1));
+    fireEvent.click(screen.getByRole("button", { name: "Team actions" }));
+
+    expect(
+      await screen.findByText("Create team from Default"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Delete team")).not.toBeInTheDocument();
+  });
+
+  it("offers a team with no members yet, so its first member can be added", () => {
     renderDirectory(selfHostedCaps, [
       ...TEAMS,
       { id: 2, name: "Brand new", userCount: 0, owners: [] },
     ]);
 
-    expect(screen.getByText("Brand new team")).toBeInTheDocument();
-    expect(screen.getAllByText("Add to team")).toHaveLength(2);
+    const tab = teamTab("Brand new", 0);
+    expect(screen.queryByText("Add to team")).not.toBeInTheDocument();
+    fireEvent.click(tab);
+    expect(screen.getByText("Add to team")).toBeInTheDocument();
+  });
+
+  it("blocks 'Add to team' once every licensed seat is taken", () => {
+    renderDirectory(selfHostedCaps, TEAMS, [MEMBER], vi.fn(), vi.fn(), true);
+    fireEvent.click(teamTab("Acme", 1));
+    expect(screen.getByText("Add to team").closest("button")).toBeDisabled();
+  });
+});
+
+describe("UsersDirectory — team strip", () => {
+  it("hides identity and status columns that contain no distinct values", () => {
+    const emailOnlyMember = {
+      ...MEMBER,
+      name: MEMBER.email,
+    };
+    renderDirectory(selfHostedCaps, TEAMS, [emailOnlyMember]);
+
+    expect(
+      screen.queryByRole("columnheader", { name: "Email" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("columnheader", { name: "Status" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("columnheader", { name: "Last active" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^All/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows identity and status columns when they carry information", () => {
+    renderDirectory(selfHostedCaps, TEAMS, [
+      { ...MEMBER, status: "suspended", lastActive: "2 hours ago" },
+    ]);
+    expect(screen.getByRole("columnheader", { name: "Email" })).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: "Status" })).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "Last active" }),
+    ).toBeVisible();
+  });
+
+  it("narrows the flat roster to the selected team", () => {
+    const other: Member = {
+      ...MEMBER,
+      id: "3",
+      name: "Tom",
+      email: "tom@acme.com",
+      teamId: 2,
+      teamName: "Brand new",
+    };
+    render(
+      <MantineProvider>
+        <UsersDirectory
+          members={[MEMBER, other]}
+          teams={[
+            ...TEAMS,
+            { id: 2, name: "Brand new", userCount: 1, owners: [] },
+          ]}
+          capabilities={selfHostedCaps}
+          processorTeamIds={new Set()}
+          onChangeRole={vi.fn()}
+          onGrantProcessor={vi.fn()}
+          onRevokeProcessor={vi.fn()}
+          onGrantTeamProcessor={vi.fn()}
+          onRevokeTeamProcessor={vi.fn()}
+          onAddToTeam={vi.fn()}
+          onResetPassword={vi.fn()}
+          onMoveToTeam={vi.fn()}
+          onToggleEnabled={vi.fn()}
+          onUnlock={vi.fn()}
+          onDisableMfa={vi.fn()}
+          onRemove={vi.fn()}
+          onRenameTeam={vi.fn()}
+          onDeleteTeam={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    expect(teamTab("All", 2)).toBeInTheDocument();
+    expect(screen.getByText("Priya")).toBeInTheDocument();
+    expect(screen.getByText("Tom")).toBeInTheDocument();
+
+    fireEvent.click(teamTab("Acme", 1));
+    expect(screen.getByText("Priya")).toBeInTheDocument();
+    expect(screen.queryByText("Tom")).not.toBeInTheDocument();
   });
 });
 
@@ -167,6 +279,8 @@ it("protects the owner when viewed by a second admin", () => {
   expect(
     screen.getByRole("menuitem", { name: "Reset password" }),
   ).toBeDisabled();
+  expect(screen.getByRole("menuitem", { name: "Move to team" })).toBeDisabled();
+  expect(screen.getByRole("menuitem", { name: "Suspend" })).toBeDisabled();
   expect(
     screen.getByRole("menuitem", { name: "Remove from org" }),
   ).toBeDisabled();
@@ -235,22 +349,18 @@ describe("read-only role visibility", () => {
       [owner, viewer],
       transfer,
     );
-    expect(screen.getByRole("textbox", { name: "Role for Alex" })).toHaveValue(
-      "Org Owner",
-    );
+    expect(screen.getByRole("cell", { name: "Org Owner" })).toBeVisible();
+    expect(screen.getByRole("cell", { name: "Member" })).toBeVisible();
     expect(
-      screen.getByRole("textbox", { name: "Role for Alex" }),
-    ).toHaveAttribute("readonly");
-    expect(screen.getByRole("textbox", { name: "Role for Priya" })).toHaveValue(
-      "Member",
-    );
+      screen.queryByRole("textbox", { name: /Role for/ }),
+    ).not.toBeInTheDocument();
     expect(transfer).not.toHaveBeenCalled();
   });
 });
 
 it("keeps self-hosted Admin and Team Lead labels readable without editing rights", () => {
   const members = [
-    { ...MEMBER, id: "1", name: "Admin", role: "admin" as const },
+    { ...MEMBER, id: "1", name: "Administrator", role: "admin" as const },
     { ...MEMBER, name: "Lead", role: "team_owner" as const, teamLead: true },
   ];
   renderDirectory(
@@ -258,10 +368,9 @@ it("keeps self-hosted Admin and Team Lead labels readable without editing rights
     TEAMS,
     members,
   );
-  expect(screen.getByRole("textbox", { name: "Role for Admin" })).toHaveValue(
-    "Admin",
-  );
-  expect(screen.getByRole("textbox", { name: "Role for Lead" })).toHaveValue(
-    "Team Lead",
-  );
+  expect(screen.getByRole("cell", { name: "Admin" })).toBeVisible();
+  expect(screen.getByRole("cell", { name: "Team Lead" })).toBeVisible();
+  expect(
+    screen.queryByRole("textbox", { name: /Role for/ }),
+  ).not.toBeInTheDocument();
 });

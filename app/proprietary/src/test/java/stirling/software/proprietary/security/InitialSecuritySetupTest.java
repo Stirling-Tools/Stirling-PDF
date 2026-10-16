@@ -2,7 +2,9 @@ package stirling.software.proprietary.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,6 +19,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -105,6 +108,27 @@ class InitialSecuritySetupTest {
         SaveUserRequest saved = captor.getValue();
         assertThat(saved.getUsername()).isEqualTo("admin");
         assertThat(saved.getPassword()).isEqualTo("password");
+    }
+
+    @Test
+    void initRetriesUntilPeerRacesStopColliding() {
+        // Cluster cold boot: peers collide on a different row each pass, so one retry is not
+        // enough. Two collisions then success proves the loop converges instead of exiting.
+        when(userService.hasUsers()).thenReturn(true);
+        when(userService.getUsersWithoutTeam()).thenReturn(Collections.emptyList());
+        when(userService.usernameExistsIgnoreCase(any())).thenReturn(true);
+        doThrow(new DataIntegrityViolationException("duplicate key: users_username_key"))
+                .doThrow(
+                        new DataIntegrityViolationException("duplicate key: license_settings_pkey"))
+                .doNothing()
+                .when(licenseSettingsService)
+                .initializeGrandfatheredCount();
+
+        initialSecuritySetup.init();
+
+        verify(licenseSettingsService, times(3)).initializeGrandfatheredCount();
+        // Only the pass that got through may complete the remaining steps.
+        verify(licenseSettingsService, times(1)).updateLicenseMaxUsers();
     }
 
     @Test

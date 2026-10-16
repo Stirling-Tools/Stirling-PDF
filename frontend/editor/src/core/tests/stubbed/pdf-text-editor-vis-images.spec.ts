@@ -67,7 +67,7 @@ async function inkStats(
         `[data-testid="pdf-editor-page-${idx}"]`,
       );
       if (!pageEl) return { error: `no page ${idx}` } as const;
-      const canvas = pageEl.querySelector("canvas") as HTMLCanvasElement | null;
+      const canvas = pageEl.querySelector("canvas");
       if (!canvas || !canvas.width || !canvas.height)
         return { error: "page canvas has no bitmap" } as const;
       const cb = canvas.getBoundingClientRect();

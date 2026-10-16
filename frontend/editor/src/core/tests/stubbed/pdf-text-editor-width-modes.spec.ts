@@ -1,6 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
+import { selectWrapWidthMode } from "@app/tests/stubbed/widthModeHelpers";
 
 // The sidebar promises two distinct behaviours:
 //
@@ -67,13 +68,7 @@ async function open(page: Page, mode: "grow" | "wrap"): Promise<void> {
   });
   await page.waitForTimeout(1500);
   if (mode === "wrap") {
-    await page.getByTestId("pdf-editor-tab-document").click();
-    await page.getByTestId("pdf-editor-advanced-toggle").click();
-    await page
-      .getByTestId("pdf-editor-width-mode-control")
-      .getByText("Wrap", { exact: true })
-      .click();
-    await page.getByTestId("pdf-editor-tab-selected").click();
+    await selectWrapWidthMode(page);
     await page.waitForTimeout(500);
   }
 }
@@ -280,14 +275,21 @@ for (const which of ["single", "paragraph"] as const) {
       expect(before).not.toBeNull();
 
       await caretToEndAndType(page, testId, textFor(which));
+
+      // The overflow goes onto new lines AS THE USER TYPES (no blur), but WebKit
+      // can apply the reflow a few frames after the keystrokes land, so poll the
+      // box until it has settled back to its locked width rather than reading it
+      // one-shot mid-reflow.
+      await expect
+        .poll(
+          async () =>
+            (await shapeOf(page, testId, runId))?.boxW ??
+            Number.POSITIVE_INFINITY,
+          { timeout: 15_000 },
+        )
+        .toBeLessThan(before!.boxW + 12);
       const typed = await shapeOf(page, testId, runId);
       expect(typed).not.toBeNull();
-
-      expect(
-        typed!.boxW,
-        `Wrap widened the box ${before!.boxW} -> ${typed!.boxW}; the hint says boxes keep their width`,
-      ).toBeLessThan(before!.boxW + 12);
-      // The headline fix: the overflow goes onto new lines AS THE USER TYPES.
       // It used to wait for blur, so the text sat invisible past the box edge
       // and the caret only dropped onto the new line once they clicked away.
       expect(

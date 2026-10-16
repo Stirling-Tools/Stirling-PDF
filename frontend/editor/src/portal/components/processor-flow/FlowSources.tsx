@@ -1,7 +1,7 @@
 import { type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import type {
   FlowComingSoonSource,
   FlowSource,
@@ -79,7 +79,7 @@ export function FlowSources({
           onClick={onOpen}
           leftSection={
             <span className="portal-pf__node-icon" aria-hidden>
-              <LocalIcon icon="add" width={ICON_SIZE} />
+              <Icon name="plus" size={ICON_SIZE} />
             </span>
           }
         >

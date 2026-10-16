@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@app/services/apiClient";
 import { qk } from "@app/query/keys";
 
@@ -38,43 +38,37 @@ const INSTALL_URL = "/api/v1/form/form-detection-model/install";
 const CONFIG_URL = "/api/v1/form/form-detection-model/config";
 const MODEL_URL = "/api/v1/form/form-detection-model";
 
+/** How often to re-read progress while a model is downloading or verifying. */
+const POLL_MS = 1500;
+
 /**
  * Polls model status while an install is in flight and exposes the admin actions. Readiness flips
  * invalidate the endpoint-availability cache so the tool tile enables/disables.
+ *
+ * The poll pauses while the tab is hidden - a download nobody is watching stops being
+ * narrated, and the next tick on return carries the invalidation the tile needs.
  */
 export function useFormDetectionModelStatus() {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<FormDetectionModelStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryKey = qk.formDetectionModelStatus();
 
-  const fetchStatus = useCallback(async () => {
-    try {
-      const res = await apiClient.get<FormDetectionModelStatus>(STATUS_URL);
-      setStatus(res.data);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load model status");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchStatus();
-  }, [fetchStatus]);
+  const {
+    data: status = null,
+    isPending,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey,
+    queryFn: async () =>
+      (await apiClient.get<FormDetectionModelStatus>(STATUS_URL)).data,
+    refetchInterval: ({ state }) =>
+      state.data?.status === "downloading" || state.data?.status === "verifying"
+        ? POLL_MS
+        : false,
+  });
 
   const active = status?.status;
   const featureEnabled = status?.enabled;
-
-  // Poll only while an install is in flight.
-  useEffect(() => {
-    if (active === "downloading" || active === "verifying") {
-      const id = setInterval(fetchStatus, 1500);
-      return () => clearInterval(id);
-    }
-    return undefined;
-  }, [active, fetchStatus]);
 
   // Readiness and the master switch both gate the endpoint, so either flipping must refresh
   // the tool availability cache.
@@ -89,40 +83,43 @@ export function useFormDetectionModelStatus() {
     }
   }, [active, featureEnabled, queryClient]);
 
-  const install = useCallback(
-    async (modelId: string) => {
-      await apiClient.post(INSTALL_URL, { modelId });
-      await fetchStatus();
-    },
-    [fetchStatus],
-  );
+  /** Each write re-reads status, so the caller's await settles on the new state. */
+  const afterWrite = () => queryClient.invalidateQueries({ queryKey });
 
-  const uninstall = useCallback(
-    async (modelId?: string) => {
-      const url = modelId
-        ? `${MODEL_URL}?modelId=${encodeURIComponent(modelId)}`
-        : MODEL_URL;
-      await apiClient.delete(url);
-      await fetchStatus();
-    },
-    [fetchStatus],
-  );
+  const install = useMutation({
+    mutationFn: (modelId: string) => apiClient.post(INSTALL_URL, { modelId }),
+    onSuccess: afterWrite,
+  });
 
-  const setConfig = useCallback(
-    async (config: { enabled?: boolean }) => {
-      await apiClient.post(CONFIG_URL, config);
-      await fetchStatus();
-    },
-    [fetchStatus],
-  );
+  const uninstall = useMutation({
+    mutationFn: (modelId?: string) =>
+      apiClient.delete(
+        modelId
+          ? `${MODEL_URL}?modelId=${encodeURIComponent(modelId)}`
+          : MODEL_URL,
+      ),
+    onSuccess: afterWrite,
+  });
+
+  const setConfig = useMutation({
+    mutationFn: (config: { enabled?: boolean }) =>
+      apiClient.post(CONFIG_URL, config),
+    onSuccess: afterWrite,
+  });
 
   return {
     status,
-    loading,
-    error,
-    refetch: fetchStatus,
-    install,
-    uninstall,
-    setConfig,
+    loading: isPending,
+    error: queryError
+      ? queryError instanceof Error
+        ? queryError.message
+        : "Failed to load model status"
+      : null,
+    refetch: async () => {
+      await refetch();
+    },
+    install: install.mutateAsync,
+    uninstall: uninstall.mutateAsync,
+    setConfig: setConfig.mutateAsync,
   };
 }

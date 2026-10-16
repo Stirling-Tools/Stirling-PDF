@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { fileOpenService } from "@app/services/fileOpenService";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import {
+  beginLoadingLaunchFiles,
+  endLoadingLaunchFiles,
+  trackLaunchFilePop,
+} from "@app/services/launchFiles";
 
 export function useOpenedFile() {
   const [openedFilePaths, setOpenedFilePaths] = useState<string[]>([]);
@@ -8,6 +13,7 @@ export function useOpenedFile() {
   const openedFilePathsRef = useRef<string[]>([]);
 
   const clearOpenedFilePaths = useCallback(() => {
+    if (openedFilePathsRef.current.length > 0) endLoadingLaunchFiles();
     openedFilePathsRef.current = [];
     setOpenedFilePaths([]);
   }, []);
@@ -20,11 +26,17 @@ export function useOpenedFile() {
   }, []);
 
   useEffect(() => {
-    // Function to read and process files from storage
+    let disposed = false;
     const readFilesFromStorage = async () => {
+      // StrictMode replays setup before this resumes; a discarded setup must not drain the queue.
+      await Promise.resolve();
+      if (disposed) return;
       console.log("🔍 Reading files from storage...");
       try {
-        const filePaths = await fileOpenService.getOpenedFiles();
+        const filePaths = await trackLaunchFilePop(
+          fileOpenService.getOpenedFiles(),
+        );
+        if (disposed) return;
         console.log("🔍 fileOpenService.getOpenedFiles() returned:", filePaths);
 
         if (filePaths.length > 0) {
@@ -32,13 +44,16 @@ export function useOpenedFile() {
             `✅ Found ${filePaths.length} file(s) in storage:`,
             filePaths,
           );
+          // A batch replaced before it was consumed is never loaded.
+          if (openedFilePathsRef.current.length > 0) endLoadingLaunchFiles();
+          beginLoadingLaunchFiles();
           openedFilePathsRef.current = filePaths;
           setOpenedFilePaths(filePaths);
         }
       } catch (error) {
         console.error("❌ Failed to read files from storage:", error);
       } finally {
-        setLoading(false);
+        if (!disposed) setLoading(false);
       }
     };
 
@@ -58,10 +73,16 @@ export function useOpenedFile() {
         await readFilesFromStorage();
       })
       .then((unlistenFn) => {
-        unlisten = unlistenFn;
+        if (disposed) unlistenFn();
+        else unlisten = unlistenFn;
       });
 
     return () => {
+      disposed = true;
+      if (openedFilePathsRef.current.length > 0) {
+        endLoadingLaunchFiles();
+        openedFilePathsRef.current = [];
+      }
       if (unlisten) unlisten();
     };
   }, []);

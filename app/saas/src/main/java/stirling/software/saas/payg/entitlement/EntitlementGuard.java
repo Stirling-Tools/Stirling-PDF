@@ -20,28 +20,32 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import tools.jackson.databind.ObjectMapper;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.proprietary.controller.api.PortalApiKeysController;
 import stirling.software.proprietary.policy.controller.PolicyRunRoutes;
+import stirling.software.proprietary.security.controller.api.UserController;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.saas.accountlink.LinkedInstanceAuthenticationToken;
 import stirling.software.saas.payg.cap.AiToolRoutes;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.util.AuthenticationUtils;
 
+import tools.jackson.databind.ObjectMapper;
+
 /**
- * Hot-path entitlement check. Runs after {@code PaygChargeInterceptor} in the MVC chain and short-
+ * Hot-path entitlement check. Runs before {@code PaygChargeInterceptor} in the MVC chain and short-
  * circuits the request before any handler work happens when the team's snapshot is missing one of
  * the gates the route declared via {@link RequiresFeature}.
  *
@@ -58,13 +62,13 @@ import stirling.software.saas.util.AuthenticationUtils;
  * <table>
  *   <tr><th>auth</th><th>required gates</th><th>snapshot enabled?</th><th>outcome</th></tr>
  *   <tr><td>anonymous</td><td>AUTOMATION or AI_SUPPORT</td><td>n/a</td><td>401 SIGNUP_REQUIRED</td></tr>
- *   <tr><td>anonymous</td><td>OFFSITE_PROCESSING / CLIENT_SIDE</td><td>n/a</td><td>200 (pass through)</td></tr>
+ *   <tr><td>guest</td><td>OFFSITE_PROCESSING / CLIENT_SIDE</td><td>n/a</td><td>200</td></tr>
  *   <tr><td>authenticated</td><td>required ⊆ enabled</td><td>yes</td><td>200</td></tr>
  *   <tr><td>authenticated</td><td>required ⊄ enabled</td><td>no</td><td>402 FEATURE_DEGRADED</td></tr>
  * </table>
  *
- * <p>Fail-open: any unexpected exception is logged at WARN and the request passes through. The cap
- * pipeline must never block a customer because the guard tripped on a transient DB error.
+ * <p>Account billing lookups fail open on transient errors. Guests may use manual tools without
+ * billing or usage tracking; billable Processor features require an account.
  */
 @Slf4j
 @Component
@@ -124,6 +128,20 @@ public class EntitlementGuard implements HandlerInterceptor {
         if (!(handler instanceof HandlerMethod hm)) {
             return true;
         }
+        // The REQUEST dispatch already decided. Security filters skip ASYNC dispatches, so the
+        // empty context here would 401 a streamed response that has already started.
+        if (request.getDispatcherType() == DispatcherType.ASYNC) {
+            return true;
+        }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean keyManagement =
+                PortalApiKeysController.class.isAssignableFrom(hm.getBeanType())
+                        || (UserController.class.isAssignableFrom(hm.getBeanType())
+                                && (hm.getMethod().getName().equals("getApiKey")
+                                        || hm.getMethod().getName().equals("updateApiKey")));
+        if (keyManagement && AuthenticationUtils.isAnonymous(auth)) {
+            return write401SignupRequired(response, "API");
+        }
         // Scope: AutoJobPostMapping routes (multipart tool POSTs) OR routes that explicitly
         // declare @RequiresFeature (e.g. AI controllers — JSON-bodied, no AutoJobPostMapping).
         // Admin / info / config endpoints carry neither annotation and never trip the guard.
@@ -143,7 +161,14 @@ public class EntitlementGuard implements HandlerInterceptor {
         // Policy execute routes (/api/v1/policies/**/run etc.) are proprietary and can't carry
         // @RequiresFeature; recognise them by path and gate on AUTOMATION (mirrors aiToolRoute).
         boolean policyRunRoute = PolicyRunRoutes.matches(request);
-        if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute && !policyRunRoute) {
+        String automationHeader = request.getHeader("X-Stirling-Automation");
+        boolean automationStep =
+                automationHeader != null && "true".equalsIgnoreCase(automationHeader.trim());
+        if (!hasAutoJobPostMapping
+                && !hasRequiresFeature
+                && !aiToolRoute
+                && !policyRunRoute
+                && !automationStep) {
             skippedNoAnnotationCounter.increment();
             return true;
         }
@@ -151,20 +176,16 @@ public class EntitlementGuard implements HandlerInterceptor {
         FeatureGate[] required =
                 aiToolRoute
                         ? new FeatureGate[] {FeatureGate.AI_SUPPORT}
-                        : policyRunRoute
+                        : policyRunRoute || automationStep
                                 ? new FeatureGate[] {FeatureGate.AUTOMATION}
                                 : resolveRequiredGates(hm);
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        boolean anonymous = isAnonymous(auth);
-        boolean billable = isBillable(required);
+        boolean anonymous = AuthenticationUtils.isAnonymous(auth);
+        boolean billable = isBillable(required) || auth instanceof ApiKeyAuthenticationToken;
 
         if (anonymous) {
             if (billable) {
                 return write401SignupRequired(response, required);
             }
-            // Anonymous user calling a manual / OFFSITE-only tool — let it through; PAYG only
-            // charges authenticated requests.
             passCounter.increment();
             return true;
         }
@@ -226,14 +247,6 @@ public class EntitlementGuard implements HandlerInterceptor {
         return DEFAULT_REQUIRED_GATES;
     }
 
-    private static boolean isAnonymous(Authentication auth) {
-        if (auth == null || !auth.isAuthenticated()) {
-            return true;
-        }
-        // Spring's anonymous filter installs a token whose name is "anonymousUser".
-        return "anonymousUser".equals(auth.getName());
-    }
-
     private static boolean isBillable(FeatureGate[] required) {
         for (FeatureGate g : required) {
             if (g == FeatureGate.AUTOMATION || g == FeatureGate.AI_SUPPORT) {
@@ -244,6 +257,10 @@ public class EntitlementGuard implements HandlerInterceptor {
     }
 
     private Long resolveTeamId(Authentication auth) {
+        // A linked instance has no Supabase id, so the user lookup below would fail open.
+        if (auth instanceof LinkedInstanceAuthenticationToken instance) {
+            return instance.getTeamId();
+        }
         if (auth instanceof ApiKeyAuthenticationToken
                 && auth.getPrincipal() instanceof User apiUser) {
             return apiUser.getTeam() == null ? null : apiUser.getTeam().getId();
@@ -266,10 +283,14 @@ public class EntitlementGuard implements HandlerInterceptor {
     }
 
     private boolean write401SignupRequired(HttpServletResponse response, FeatureGate[] required) {
+        return write401SignupRequired(response, inferCategory(required));
+    }
+
+    private boolean write401SignupRequired(HttpServletResponse response, String category) {
         deniedSignupRequiredCounter.increment();
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("error", "SIGNUP_REQUIRED");
-        body.put("category", inferCategory(required));
+        body.put("category", category);
         writeJson(response, HttpStatus.UNAUTHORIZED, body);
         return false;
     }

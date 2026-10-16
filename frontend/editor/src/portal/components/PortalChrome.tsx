@@ -1,9 +1,10 @@
+import { AccountConnectionRefresh } from "@app/portal/components/account-link/AccountConnectionNotice";
 import { useLocation } from "react-router-dom";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { ErrorBoundary } from "@portal/components/ErrorBoundary";
-import { AppShell } from "@portal/components/AppShell";
-import { ViewRouter } from "@portal/ViewRouter";
+import { ErrorBoundary } from "@app/portal/components/ErrorBoundary";
+import { AppShell } from "@app/portal/components/AppShell";
+import { ViewRouter } from "@app/portal/ViewRouter";
 
 /**
  * The routed view, wrapped in an error boundary so a single view crashing can't
@@ -33,6 +34,7 @@ export function PortalChrome() {
     <AppConfigProvider bootstrapMode="non-blocking">
       {/* The pipeline builder reads the tool registry to list and configure operations. */}
       <ToolRegistryProvider>
+        <AccountConnectionRefresh />
         <AppShell>
           <RoutedContent />
         </AppShell>

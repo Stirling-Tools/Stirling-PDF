@@ -3,6 +3,7 @@
 
 export interface SecuritySettingsData {
   enableLogin?: boolean;
+  honorOwnerPasswords?: boolean;
   loginMethod?: string;
   loginAttemptCount?: number;
   loginResetTimeMinutes?: number;

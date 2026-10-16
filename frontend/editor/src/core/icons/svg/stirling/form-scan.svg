@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+  <!-- The four corner brackets are Lucide geometry (ISC). Full notice and the exact paths:
+       src/core/icons/LICENSE-lucide.txt, which must stay with this file. -->
+  <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+  <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+  <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+  <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+  <path d="M13.5 5H7.5A1.5 1.5 0 0 0 6 6.5v11A1.5 1.5 0 0 0 7.5 19h9a1.5 1.5 0 0 0 1.5-1.5V9.5Z" />
+  <path d="M13.5 5v3A1.5 1.5 0 0 0 15 9.5h3" />
+  <!-- Lighter than the frame, and on the group: <Icon> passes strokeWidth as a prop, so a root
+       stroke-width is overwritten and the field rules would render at the page's weight. -->
+  <g stroke-width="1.25">
+    <path d="M8.4 12.6h7.8" />
+    <path d="M8.4 16h4.6" />
+  </g>
+</svg>

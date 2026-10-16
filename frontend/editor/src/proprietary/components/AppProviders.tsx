@@ -9,6 +9,7 @@ import { UpgradeBannerInitializer } from "@app/components/shared/UpgradeBannerIn
 import { ServerExperienceProvider } from "@app/contexts/ServerExperienceContext";
 import { UpdateSeatsProvider } from "@app/contexts/UpdateSeatsContext";
 import { ChatProvider } from "@app/components/chat/ChatContext";
+import { AccountLinkNotice } from "@app/components/AccountLinkNotice";
 
 export function AppProviders({
   children,
@@ -26,6 +27,7 @@ export function AppProviders({
             <ServerExperienceProvider>
               <CheckoutProvider>
                 <UpgradeBannerInitializer />
+                <AccountLinkNotice />
                 <ChatProvider>{children}</ChatProvider>
               </CheckoutProvider>
             </ServerExperienceProvider>

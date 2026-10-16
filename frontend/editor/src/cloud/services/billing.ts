@@ -21,7 +21,7 @@
 export interface CheckoutParams {
   /** The caller's team id. Required — scopes the PAYG subscription. */
   teamId: number;
-  /** Lower-case 3-letter ISO currency (e.g. {@code "gbp"}). Selects the Stripe Price. */
+  /** Billing display currency; Stripe selects the checkout payment currency. */
   currency?: string;
   /** Billing email for the Checkout Session; maps to Stripe {@code customer_email} when the team has no customer yet. */
   billingOwnerEmail?: string | null;

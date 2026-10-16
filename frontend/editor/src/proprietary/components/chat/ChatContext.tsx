@@ -14,7 +14,14 @@ import apiClient from "@app/services/apiClient";
 import { getAiBaseUrl } from "@app/services/aiBaseUrl";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
-import { createChildStub } from "@app/contexts/file/fileActions";
+import {
+  reportAccountLinkBlock,
+  reportFreeTierExhausted,
+} from "@app/services/accountLinkBlock";
+import {
+  createChildStub,
+  generateProcessedFileMetadata,
+} from "@app/contexts/file/fileActions";
 import {
   createNewStirlingFileStub,
   createStirlingFile,
@@ -422,10 +429,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Download a File from the Stirling files endpoint.
   const downloadFile = useCallback(
     async (descriptor: AiWorkflowResultFile): Promise<File> => {
-      // AI result files live on the backend that ran the workflow (the SaaS
-      // engine on desktop), so fetch from the AI base, not the local backend.
+      // AI result files live on the backend that ran the workflow (the connected
+      // server on desktop), so fetch from the AI base, not the local backend.
       const response = await apiClient.get<Blob>(
-        `${getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
+        `${await getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
         { responseType: "blob" },
       );
       return new File([response.data], descriptor.fileName, {
@@ -486,14 +493,31 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             );
           }
         }
+        // consumeFiles takes the stubs as final and never hydrates them, so
+        // without page metadata here the page editor waits on it forever.
+        const metadata = await Promise.all(
+          files.map((file) => generateProcessedFileMetadata(file)),
+        );
         const consumedIds: StirlingFileStub["id"][] = [];
         const stubs = files.map((file, i) => {
           const source = sourceForOutput[i];
+          const thumbnail = metadata[i]?.thumbnailUrl;
           if (source && outputsPerSource.get(source.id) === 1) {
             consumedIds.push(source.id);
-            return createChildStub(source, operation, file);
+            return createChildStub(
+              source,
+              operation,
+              file,
+              thumbnail,
+              metadata[i],
+            );
           }
-          return createNewStirlingFileStub(file);
+          return createNewStirlingFileStub(
+            file,
+            undefined,
+            thumbnail,
+            metadata[i],
+          );
         });
         const stirlingFiles = files.map((file, i) =>
           createStirlingFile(file, stubs[i].id),
@@ -562,7 +586,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
         const response = await fetch(
-          `${getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
+          `${await getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
           {
             method: "POST",
             body: formData,
@@ -581,7 +605,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             // A 402 carrying a usage-limit sentinel means the agent call itself was gated.
             // Fire the usage-limit modal (free → subscribe, subscribed → raise cap) and show a
             // brief line below — not a generic "engine failed" error.
-            if (response.status === 402 && isPaygLimitCode(code)) {
+            if (reportAccountLinkBlock({ status: response.status, body })) {
+              limitHandled = true;
+            } else if (response.status === 402 && isPaygLimitCode(code)) {
               dispatchPaygLimitReached(
                 typeof body?.subscribed === "boolean" ? body.subscribed : null,
               );
@@ -647,8 +673,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             // result (not via the apiClient interceptor that pops the modal for direct calls).
             // Fire the matching modal and replace the raw "tool failed: 402…" reason with a
             // brief, non-alarming line.
-            const isLimit = isPaygLimitCode(data.errorCode);
-            if (isLimit) {
+            const localLimit = data.errorCode === "FREE_TIER_EXHAUSTED";
+            const isLimit = localLimit || isPaygLimitCode(data.errorCode);
+            if (localLimit) {
+              reportFreeTierExhausted();
+            } else if (isLimit) {
               dispatchPaygLimitReached(data.errorSubscribed ?? null);
             }
             const replyContent = isLimit

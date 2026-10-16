@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
@@ -9,20 +10,6 @@ import {
 } from "@portal/api/documents";
 import { ReviewQueue } from "@portal/components/documents/ReviewQueue";
 import "@portal/views/Documents.css";
-
-function DownloadIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 function csvCell(value: string): string {
   return `"${value.replace(/"/g, '""')}"`;
@@ -95,7 +82,7 @@ export function Documents() {
         <Button
           variant="secondary"
           fat
-          leftSection={<DownloadIcon />}
+          leftSection={<Icon name="download" size={15} />}
           onClick={exportCsv}
           disabled={documents.length === 0}
         >

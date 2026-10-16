@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.proprietary.accountlink.EntitlementRefreshedEvent;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
@@ -31,10 +32,11 @@ public class LicenseKeyChecker {
 
     private final UserLicenseSettingsService licenseSettingsService;
 
-    // volatile: written by evaluateLicense() on the @Scheduled refresh thread, read by request
-    // threads via getPremiumLicenseEnabledResult() / requireProOrEnterprise(). Ensures readers see
-    // the latest tier rather than a stale cached value.
+    // Licence refreshes and request threads share these snapshots.
     private volatile License premiumEnabledResult = License.NORMAL;
+
+    /** The licence key's own tier, before any Team-plan promotion. Same volatile contract. */
+    private volatile License licenseKeyResult = License.NORMAL;
 
     public LicenseKeyChecker(
             KeygenLicenseVerifier licenseService,
@@ -50,9 +52,21 @@ public class LicenseKeyChecker {
         evaluateLicense();
     }
 
+    /** Refreshes persisted entitlement without repeating Keygen verification. */
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
+        applyTeamPlanPromotion();
         synchronizeLicenseSettings();
+    }
+
+    /** Applies a newly synced Team entitlement. */
+    @EventListener(EntitlementRefreshedEvent.class)
+    public void onEntitlementRefreshed() {
+        try {
+            applyTeamPlanPromotion();
+        } catch (RuntimeException e) {
+            log.debug("Team plan check failed; keeping the current tier: {}", e.getMessage());
+        }
     }
 
     @Scheduled(initialDelay = 604800000, fixedRate = 604800000) // 7 days in milliseconds
@@ -69,24 +83,54 @@ public class LicenseKeyChecker {
     }
 
     private void evaluateLicense() {
+        licenseKeyResult = verifyLicenseKey();
+        applyTeamPlanPromotion();
+    }
+
+    private License verifyLicenseKey() {
         if (!applicationProperties.getPremium().isEnabled()) {
-            premiumEnabledResult = License.NORMAL;
-        } else {
-            String licenseKey = getLicenseKeyContent(applicationProperties.getPremium().getKey());
-            if (licenseKey != null) {
-                premiumEnabledResult = licenseService.verifyLicense(licenseKey);
-                if (License.ENTERPRISE == premiumEnabledResult) {
-                    log.info("License key is Enterprise.");
-                } else if (License.SERVER == premiumEnabledResult) {
-                    log.info("License key is Server.");
-                } else {
-                    log.info("License key is invalid, defaulting to non pro license.");
-                }
-            } else {
-                log.error("Failed to obtain license key content.");
-                premiumEnabledResult = License.NORMAL;
-            }
+            return License.NORMAL;
         }
+        String licenseKey = getLicenseKeyContent(applicationProperties.getPremium().getKey());
+        if (licenseKey == null) {
+            log.error("Failed to obtain license key content.");
+            return License.NORMAL;
+        }
+        License verified = licenseService.verifyLicense(licenseKey);
+        if (License.ENTERPRISE == verified) {
+            log.info("License key is Enterprise.");
+        } else if (License.SERVER == verified) {
+            log.info("License key is Server.");
+        } else {
+            log.info("License key is invalid, defaulting to non pro license.");
+        }
+        return verified;
+    }
+
+    /** Team grants Server features independently of the installed-key settings. */
+    private void applyTeamPlanPromotion() {
+        if (licenseKeyResult != License.NORMAL) {
+            premiumEnabledResult = licenseKeyResult;
+            return;
+        }
+        Integer users;
+        try {
+            users = purchasedTeamUsers();
+        } catch (RuntimeException e) {
+            // A failed read must not revoke a known entitlement.
+            log.debug("Linked team allowance unreadable; keeping the current tier", e);
+            return;
+        }
+        boolean entitled = users != null && users > 0;
+        if (entitled) {
+            log.info("Linked cloud team holds a Team plan for {} users; running as Server.", users);
+        }
+        premiumEnabledResult = entitled ? License.SERVER : License.NORMAL;
+    }
+
+    /** Throws when entitlement cannot be read; null means no purchased Team capacity. */
+    private Integer purchasedTeamUsers() {
+        return licenseSettingsService.refreshLinkedTeamUsers();
     }
 
     private void synchronizeLicenseSettings() {
@@ -127,23 +171,50 @@ public class LicenseKeyChecker {
         synchronizeLicenseSettings();
     }
 
+    /** Refreshes the linked entitlement and installed licence after a purchase. */
     public void resyncLicense() {
+        licenseSettingsService.forgetEntitlement();
         evaluateLicense();
         synchronizeLicenseSettings();
+    }
+
+    /** Resolves the effective tier after the datasource is available. */
+    public License premiumTier() {
+        applyTeamPlanPromotion();
+        return premiumEnabledResult;
     }
 
     public License getPremiumLicenseEnabledResult() {
         return premiumEnabledResult;
     }
 
+    /** Purchased Team capacity, excluding grandfathered and installed-key allowances. */
+    public Integer linkedTeamUsers() {
+        return licenseSettingsService.refreshLinkedTeamUsers();
+    }
+
+    /** Effective admission limit enforced on this instance. */
+    public int maxAllowedUsers() {
+        return licenseSettingsService.calculateMaxAllowedUsers();
+    }
+
+    /** Installed-key tier only; use it for seat arithmetic, not feature gates. */
+    public License getLicenseKeyResult() {
+        return licenseKeyResult;
+    }
+
+    /** Keeps configured infrastructure available for recovery after an offline Team expiry. */
+    public boolean isTeamOfflineExpired() {
+        return licenseKeyResult == License.NORMAL && licenseSettingsService.isTeamOfflineExpired();
+    }
+
     /**
-     * Throws {@link IllegalStateException} if the current license is not Pro or Enterprise. Used by
-     * boot-time gates to fail fast when an operator enables a premium-only setting without a valid
-     * license. {@code configuredAs} is the human-readable property path (e.g. {@code
-     * "storage.provider=s3"}) and appears in the exception message.
+     * Validates paid startup configuration, allowing expired Team infrastructure to boot for
+     * recovery.
      */
     public void requireProOrEnterprise(String configuredAs) {
-        if (premiumEnabledResult != License.SERVER && premiumEnabledResult != License.ENTERPRISE) {
+        License tier = premiumTier();
+        if (tier != License.SERVER && tier != License.ENTERPRISE && !isTeamOfflineExpired()) {
             throw new IllegalStateException(configuredAs + " requires a Pro or Enterprise license");
         }
     }

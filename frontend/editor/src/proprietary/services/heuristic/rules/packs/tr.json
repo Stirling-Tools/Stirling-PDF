@@ -1,0 +1,322 @@
+{
+  "version": 2,
+  "language": "tr",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "fatura", "weight": 24, "where": "title" },
+        { "text": "katma değer vergisi", "weight": 8 }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [{ "text": "makbuz", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "makbuz", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "expense-report",
+      "phrases": [{ "text": "gider", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "mali bilanço", "weight": 20, "where": "title" },
+        { "text": "bilanço", "weight": 12 }
+      ]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "sözleşme", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [{ "text": "i̇ş sözleşmesi", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "nda",
+      "phrases": [
+        { "text": "gizlilik sözleşmesi", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "privacy-policy",
+      "phrases": [{ "text": "genel veri koruma tüzüğü", "weight": 10 }]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "vasiyet", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "deed",
+      "phrases": [{ "text": "senet", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "mortgage-document",
+      "phrases": [{ "text": "mortgage", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "insurance-policy",
+      "phrases": [{ "text": "poliçe", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "resume",
+      "phrases": [{ "text": "öz geçmiş", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "reference-letter",
+      "phrases": [{ "text": "ön mektup", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "certificate",
+      "phrases": [
+        { "text": "akademik sertifika", "weight": 16, "where": "title" },
+        { "text": "diploma", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "transcript",
+      "phrases": [{ "text": "transkript", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "patent", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "reçete", "weight": 20, "where": "title" },
+        { "text": "eczacılık", "weight": 10 }
+      ]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "aşılama", "weight": 12 }]
+    },
+    {
+      "id": "warranty-document",
+      "phrases": [{ "text": "garanti belgesi", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "user-guide",
+      "phrases": [
+        { "text": "kullanıcı kılavuzu", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        { "text": "güvenlik bilgi formu", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [{ "text": "teknik resim", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bill-of-materials",
+      "phrases": [{ "text": "ürün ağacı", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "press-release",
+      "phrases": [
+        { "text": "basın açıklaması", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "broşür", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [{ "text": "i̇ş planı", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "beyaz kitap", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "muhtıra", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "ticket",
+      "phrases": [{ "text": "bilet", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "waybill",
+      "phrases": [{ "text": "taşıma makbuzu", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "vize", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [{ "text": "elektrik sayacı", "weight": 12 }]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "menü", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "sunum", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "rapor", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "mektup", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "form",
+      "phrases": [{ "text": "form", "weight": 10, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "yetki belgesi", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "denetim", "weight": 12 }]
+    },
+    {
+      "id": "risk-assessment",
+      "phrases": [
+        { "text": "risk kıymetlendirme", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "emlak", "weight": 8 }]
+    },
+    {
+      "id": "grant-agreement",
+      "phrases": [{ "text": "hibe", "weight": 12 }]
+    },
+    {
+      "id": "tender-document",
+      "phrases": [{ "text": "i̇hale", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "booking-confirmation",
+      "phrases": [{ "text": "rezervasyon", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "subscription-confirmation",
+      "phrases": [{ "text": "abonelik iş modeli", "weight": 10 }]
+    },
+    {
+      "id": "donation-receipt",
+      "phrases": [{ "text": "bağış", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "e-posta", "weight": 8 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "dergi", "weight": 10 }]
+    },
+    {
+      "id": "performance-review",
+      "phrases": [
+        { "text": "performans değerlendirme", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "i̇şe alım", "weight": 8 }]
+    },
+    {
+      "id": "settlement-agreement",
+      "phrases": [{ "text": "sulh", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "consent-form",
+      "phrases": [
+        { "text": "aydınlatılmış rıza", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "lab-report",
+      "phrases": [{ "text": "tıbbi laboratuvar", "weight": 12 }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "sigorta", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "quality-report",
+      "phrases": [{ "text": "kalite kontrolü", "weight": 10 }]
+    },
+    {
+      "id": "test-report",
+      "phrases": [{ "text": "kalibrasyon", "weight": 12 }]
+    },
+    {
+      "id": "safety-procedure",
+      "phrases": [{ "text": "i̇ş sağlığı ve güvenliği", "weight": 10 }]
+    },
+    {
+      "id": "technical-specification",
+      "phrases": [{ "text": "şartname", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "api-documentation",
+      "phrases": [{ "text": "uygulama programlama arayüzü", "weight": 8 }]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [
+        {
+          "text": "son kullanıcı lisans anlaşması",
+          "weight": 20,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "proposal",
+      "phrases": [{ "text": "teklif talebi", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "bütçe", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "return-authorization",
+      "phrases": [{ "text": "ürün iadesi", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "yönetim kurulu", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "yatırım", "weight": 8 }]
+    },
+    {
+      "id": "letter-of-intent",
+      "phrases": [{ "text": "niyet mektubu", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "grade-report",
+      "phrases": [{ "text": "karne", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "ödev", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "references": [{ "pattern": "bibliyografya" }],
+    "signature": [{ "pattern": "i̇mza" }]
+  }
+}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
 import { refreshNotificationsNow } from "@app/hooks/useNotifications";
+import { closesPanelFor } from "@app/components/notifications/notificationActions";
 import type { PasswordPrompt } from "@app/components/notifications/NotificationItem";
 
 /**
@@ -42,7 +43,7 @@ export function useNotificationPasswordPrompt(closePanel: () => void) {
     close();
     // The incident was resolved server-side, so the list is re-read rather than patched here.
     refreshNotificationsNow();
-    if (prompt.spec.closesPanel) closePanel();
+    if (closesPanelFor(prompt.spec, prompt.context)) closePanel();
   };
 
   return {

@@ -2,6 +2,10 @@ import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { collectMemberPtrs } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import {
+  setScanOverride,
+  type ScanOverride,
+} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
 
 /** Translate a text run by (dx, dy) in PDF page-space points. */
 export class MoveTextRunCommand implements Command {
@@ -11,6 +15,8 @@ export class MoveTextRunCommand implements Command {
   private readonly dx: number;
   private readonly dy: number;
   private appliedPtrs: number[];
+  /** Set when the run was scanned text, moved by redrawing it. */
+  private scanPrev: ScanOverride | null = null;
 
   constructor(opts: {
     pageIndex: number;
@@ -29,6 +35,17 @@ export class MoveTextRunCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    // Scanned words are pixels: cover them where they were, draw them anew.
+    const scanPrev = setScanOverride(doc, page, run, (o) => ({
+      ...o,
+      dx: o.dx + this.dx,
+      dy: o.dy + this.dy,
+    }));
+    if (scanPrev) {
+      this.scanPrev = scanPrev;
+      this.shiftModel(run, this.dx, this.dy);
+      return;
+    }
     const m = doc.module;
     const seen = new Set<number>();
     for (const ptr of collectMemberPtrs(run)) {
@@ -48,6 +65,16 @@ export class MoveTextRunCommand implements Command {
   }
 
   revert(doc: EditorDocument): void {
+    if (this.scanPrev) {
+      const page = doc.page(this.pageIndex);
+      const run = page.findRun(this.runId);
+      if (!run) return;
+      const prev = this.scanPrev;
+      setScanOverride(doc, page, run, () => prev);
+      this.shiftModel(run, -this.dx, -this.dy);
+      this.scanPrev = null;
+      return;
+    }
     if (this.appliedPtrs.length === 0) return;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);

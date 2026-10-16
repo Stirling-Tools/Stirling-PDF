@@ -188,9 +188,7 @@ export function useOnboardingOrchestrator(
         isOverLimit: serverExperience.overFreeTierLimit ?? false,
         requiresLicense:
           !serverExperience.hasPaidLicense &&
-          (serverExperience.overFreeTierLimit === true ||
-            (serverExperience.effectiveIsAdmin &&
-              serverExperience.userCountResolved)),
+          serverExperience.overFreeTierLimit === true,
       },
     }));
   }, [

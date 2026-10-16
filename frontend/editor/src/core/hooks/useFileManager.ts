@@ -6,6 +6,7 @@ import { StirlingFileStub, StirlingFile } from "@app/types/fileContext";
 import { FileId } from "@app/types/fileContext";
 import apiClient from "@app/services/apiClient";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAuth } from "@app/auth/UseSession";
 import { useDiskLinkReconcile } from "@app/hooks/useDiskLinkReconcile";
 
 interface StoredFileResponse {
@@ -37,6 +38,7 @@ export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
   const indexedDB = useIndexedDB();
   const { config } = useAppConfig();
+  const { isAnonymous } = useAuth();
 
   // Refs inside, so loadRecentFiles isn't recreated on every workbench change -
   // its consumers re-run it on identity change, which would loop.
@@ -125,7 +127,9 @@ export const useFileManager = () => {
       );
       let combinedStubs = stirlingFileStubs;
 
-      const shouldFetchServerFiles = config?.storageEnabled === true;
+      // Guests have no server storage; the request would only 401.
+      const shouldFetchServerFiles =
+        config?.storageEnabled === true && !isAnonymous;
 
       if (shouldFetchServerFiles) {
         try {
@@ -380,6 +384,7 @@ export const useFileManager = () => {
     config?.enableLogin,
     config?.storageEnabled,
     config?.storageShareLinksEnabled,
+    isAnonymous,
     normalizeServerFileName,
     openFileIdsRef,
     onOpenFilesDetached,

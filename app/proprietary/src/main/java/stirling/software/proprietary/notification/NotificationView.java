@@ -10,8 +10,8 @@ import stirling.software.proprietary.failure.FileRunEventView;
 import stirling.software.proprietary.failure.Ownership;
 
 /**
- * A source's row flattened to what a bell renders. {@code fileId} is an opaque reference, never a
- * name, and two id spaces share it: {@code sourceId} tells them apart.
+ * A source's row flattened to what a bell renders. {@code fileId} is present only when {@code
+ * documentLocation} is {@code BROWSER}; a document the server holds is named only for its owner.
  */
 public record NotificationView(
         String id,
@@ -25,6 +25,17 @@ public record NotificationView(
         String defaultTitle,
         String detail,
         String fileId,
+        /**
+         * What to call a document the reader cannot hold, for the person the row belongs to and
+         * nobody else. Null unless a storage-backed folder can answer; never a path.
+         */
+        String documentName,
+        FileRunEventView.DocumentLocation documentLocation,
+        /**
+         * Whether the server keeps this row on the reader's behalf: a smart folder's document, or
+         * the folder itself when it could not be read. The one rule a member's bell filters on.
+         */
+        boolean heldByServer,
         String sourceId,
         String policyId,
         int occurrences,

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import stirling.software.common.pdf.MarkdownBlocks;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfPage;
 import stirling.software.jpdfium.doc.ExtractedImage;
@@ -19,12 +20,13 @@ final class PageImages {
 
     private PageImages() {}
 
-    static void emit(PdfDocument doc, int pageIndex, List<Object> pageItems) throws IOException {
+    static void emit(PdfDocument doc, int pageIndex, int pageNumber, List<Element> sink)
+            throws IOException {
         try (PdfPage page = doc.page(pageIndex)) {
             List<ExtractedImage> images =
                     PdfImageExtractor.extract(page.rawDocHandle(), page.rawHandle(), pageIndex);
             for (ExtractedImage img : images) {
-                pageItems.add(describe(img));
+                sink.add(new Element(describe(img), pageNumber, pageNumber));
             }
         }
     }
@@ -60,7 +62,7 @@ final class PageImages {
             parts.add(img.bitsPerPixel() + "bpp");
         }
 
-        StringBuilder sb = new StringBuilder("<image redacted");
+        StringBuilder sb = new StringBuilder(MarkdownBlocks.IMAGE_PLACEHOLDER);
         if (!parts.isEmpty()) {
             sb.append(": ").append(String.join(", ", parts));
         }

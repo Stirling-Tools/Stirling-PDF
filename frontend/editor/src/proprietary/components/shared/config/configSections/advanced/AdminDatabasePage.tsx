@@ -127,7 +127,7 @@ export default function AdminDatabasePage() {
             "admin.settings.database.connectionDescription",
             "Point Stirling at an external database instead of the embedded one.",
           )}
-          badge={<TierBadge tier="ENTERPRISE" />}
+          badge={<TierBadge tier="PRO" />}
         >
           <DatabaseConfigCard
             settings={settings}

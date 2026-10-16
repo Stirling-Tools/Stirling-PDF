@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { NavSurface } from "@app/ui/NavSurface";
 import {
   QuickNavRailBase,
@@ -52,43 +52,19 @@ function Rail({ children }: { children: ReactNode }) {
         <QuickNavRailBase
           groups={[
             [
-              entry(
-                "reader",
-                "Reader",
-                <LocalIcon
-                  icon="menu-book-outline-rounded"
-                  width={SIZE}
-                  height={SIZE}
-                />,
-              ),
-              entry(
-                "editor",
-                "Editor",
-                <LocalIcon
-                  icon="edit-outline-rounded"
-                  width={SIZE}
-                  height={SIZE}
-                />,
-              ),
+              entry("reader", "Reader", <Icon name="book-open" size={SIZE} />),
+              entry("editor", "Editor", <Icon name="pencil" size={SIZE} />),
             ],
             [
               entry(
                 "files",
                 "File library",
-                <LocalIcon
-                  icon="folder-outline-rounded"
-                  width={SIZE}
-                  height={SIZE}
-                />,
+                <Icon name="folder" size={SIZE} />,
               ),
               entry(
                 "automate",
                 "Automate",
-                <LocalIcon
-                  icon="rebase-outline-rounded"
-                  width={SIZE}
-                  height={SIZE}
-                />,
+                <Icon name="git-branch" size={SIZE} />,
               ),
             ],
           ]}

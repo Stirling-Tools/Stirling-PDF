@@ -27,7 +27,8 @@ public record PolicyRunView(
          * live runs needs something to call them before any output exists. Null for uploads and
          * cross-node views, whose identity is not name-shaped.
          */
-        String fileName) {
+        String fileName,
+        boolean externalOutput) {
 
     public static PolicyRunView of(PolicyRun run) {
         return new PolicyRunView(
@@ -41,7 +42,8 @@ public record PolicyRunView(
                 run.getErrorSubscribed(),
                 run.getOutputs(),
                 run.getCreatedAt().toEpochMilli(),
-                fileNameOf(run.getFileIdentity()));
+                fileNameOf(run.getFileIdentity()),
+                run.externalOutput());
     }
 
     /**
@@ -84,6 +86,7 @@ public record PolicyRunView(
                 null,
                 outputs,
                 createdAt,
-                null);
+                null,
+                Boolean.parseBoolean(meta.get("externalOutput")));
     }
 }
