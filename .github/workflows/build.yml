@@ -189,10 +189,10 @@ jobs:
   # whole-suite sweep (nightly.yml) still covers stories a change affects without
   # touching them directly.
   frontend-a11y:
-    if: needs.files-changed.outputs.frontend == 'true' && false
+    if: needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed, files-hash]
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/frontend-a11y.yml
     secrets: inherit
     with:
