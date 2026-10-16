@@ -31,6 +31,7 @@
     "src/cloud/**/*.test.ts*",
     "src/cloud/**/*.spec.ts*",
     "src/desktop",
-    "src/tauri"
+    "src/tauri",
+    "src/mobile"
   ]
 }

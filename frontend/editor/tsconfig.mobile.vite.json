@@ -1,0 +1,41 @@
+{
+  "extends": "./tsconfig.proprietary.vite.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": [
+        "./src/mobile/*",
+        "./src/tauri/*",
+        "./src/cloud/*",
+        "./src/proprietary/*",
+        "./src/core/*"
+      ],
+      "@app/portal/*": [
+        "./src/mobile/portal/*",
+        "./src/tauri/portal/*",
+        "./src/cloud/portal/*",
+        "./src/proprietary/portal/*",
+        "./src/core/portal/*",
+        "./src/portal/*"
+      ],
+      "@portal/*": ["./src/portal/*"],
+      "@tauri/*": ["./src/tauri/*"],
+      "@cloud/*": ["./src/cloud/*"],
+      "@proprietary/*": ["./src/proprietary/*"],
+      "@core/*": ["./src/core/*"]
+    }
+  },
+  "exclude": [
+    "src/core/**/*.test.ts*",
+    "src/core/**/*.spec.ts*",
+    "src/proprietary/**/*.test.ts*",
+    "src/proprietary/**/*.spec.ts*",
+    "src/cloud/**/*.test.ts*",
+    "src/cloud/**/*.spec.ts*",
+    "src/saas",
+    "src/prototypes",
+    "src/portal-saas",
+    "src/portal/**/*.test.ts*",
+    "src/portal/**/*.spec.ts*",
+    "src/desktop"
+  ]
+}

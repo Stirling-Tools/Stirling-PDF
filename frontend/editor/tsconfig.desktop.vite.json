@@ -35,6 +35,7 @@
     "src/prototypes",
     "src/portal-saas",
     "src/portal/**/*.test.ts*",
-    "src/portal/**/*.spec.ts*"
+    "src/portal/**/*.spec.ts*",
+    "src/mobile"
   ]
 }
