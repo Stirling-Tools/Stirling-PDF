@@ -20,13 +20,74 @@ on:
 permissions:
   contents: read
 
+env:
+  CACHE_MAX_TAR_BYTES: 21474836480
+  CACHE_MAX_COMPRESSED_BYTES: 4294967296
+  JAVA_VERSION: 25
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
+  GRADLE_FILES_TO_HASH: |
+    gradle/wrapper/gradle-wrapper.properties
+    gradle/libs.versions.toml
+    buildSrc/**
+    settings.gradle
+    build.gradle
+    app/**/build.gradle
+    gradle/**/*.gradle
+  CARGO_FILES_TO_HASH: |
+    frontend/editor/src-tauri/**
+    frontend/editor/src-tauri/Cargo.toml
+    frontend/editor/src-tauri/Cargo.lock
+  FRONTEND_DIST_FILES_TO_HASH: |
+    frontend/editor/src/**
+
 jobs:
-  generated-models:
+  hash_pr:
+    name: Hash files
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     permissions:
       contents: read
+    outputs:
+      java_version: ${{ steps.hash.outputs.java_version }}
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
+      cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash}}
+      frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
+      frontend_tauri_files_hash: ${{ steps.hash.outputs.frontend_tauri_files_hash }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Hash Gradle and Cargo files
+        id: hash
+        env:
+          GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+          CARGO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+          FRONTEND_DIST_HASH: ${{ hashFiles(env.FRONTEND_DIST_FILES_TO_HASH) }}
+          FRONTEND_TAURI_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+        shell: bash
+        run: |
+          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
+          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
+          echo "cargo_files_hash=$CARGO_HASH" >> "$GITHUB_OUTPUT"
+          echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"
+          echo "frontend_tauri_files_hash=$FRONTEND_TAURI_HASH" >> "$GITHUB_OUTPUT"
+  generated-models:
+    runs-on: ubuntu-latest
+    needs: hash_pr
+    timeout-minutes: 20
+    permissions:
+      contents: write
       pull-requests: write
+    env:
+      UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
+      UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -45,31 +106,46 @@ jobs:
           sparse-checkout: .github/actions/java
           persist-credentials: false
 
+      - name: Restore Gradle cache github-artifact
+        id: cache
+        uses: ./.github/actions/cache-the-planet
+        with:
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
+          multi-cache: |
+            cargo-registry:
+              path: .cache/cargo/registry
+            frontend-dist:
+              path: frontend/editor/dist
+            frontend-node-modules:
+              path: frontend/node_modules
+            npm-cache:
+              path: .cache/npm
+            gradle-caches:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+            tauri-target:
+              path: frontend/editor/src-tauri/target
+          key: |
+            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
+            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
+          exclude: |
+            frontend/editor/src-tauri/target/debug/**
+
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          enable-cache: true
+          enable-cache: false
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
-
-      - name: Restore cache Gradle User Home
-        if: inputs.use_shared_cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-
-      - name: Restore cache Gradle
-        if: inputs.use_shared_cache == false
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-generated-models-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          cache-local-path: .cache/setup-uv-cache
 
       - name: Set up JDK 25
         uses: ./trusted-java-action/.github/actions/java

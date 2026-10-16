@@ -843,12 +843,6 @@ jobs:
           multi-cache: |
             cargo-registry:
               path: .cache/cargo/registry
-            cargo-git:
-              path: .cache/cargo/git
-            cargo-bin:
-              path: .cache/cargo/bin
-            frontend-dist:
-              path: frontend/editor/dist
             frontend-node-modules:
               path: frontend/node_modules
             npm-cache:
@@ -863,10 +857,7 @@ jobs:
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
-            frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
             tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           exclude: |

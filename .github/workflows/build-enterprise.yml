@@ -36,6 +36,9 @@ on:
       frontend-dist-hash:
         required: true
         type: string
+      npm-hash:
+        required: true
+        type: string
   push:
     branches: ["main"]
   schedule:
@@ -131,9 +134,9 @@ jobs:
             cargo-registry=${{ inputs.cargo-hash }}
             cargo-git=${{ inputs.cargo-hash }}
             cargo-bin=${{ inputs.cargo-hash }}
-            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            npm-cache=${{ inputs.npm-hash }}
             frontend-dist=${{ inputs.frontend-dist-hash }}
-            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            frontend-node-modules=${{ inputs.npm-hash }}
             tauri-target=${{ inputs.frontend-dist-hash }}
             enterprise-setup-uv-cache=${{ inputs.uv-hash }}
             enterprise-uv-python-dir=${{ inputs.uv-hash }}
@@ -467,9 +470,9 @@ jobs:
             cargo-registry=${{ inputs.cargo-hash }}
             cargo-git=${{ inputs.cargo-hash }}
             cargo-bin=${{ inputs.cargo-hash }}
-            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            npm-cache=${{ inputs.npm-hash }}
             frontend-dist=${{ inputs.frontend-dist-hash }}
-            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            frontend-node-modules=${{ inputs.npm-hash }}
             tauri-target=${{ inputs.frontend-dist-hash }}
             enterprise-setup-uv-cache=${{ inputs.uv-hash }}
             enterprise-uv-python-dir=${{ inputs.uv-hash }}
@@ -522,7 +525,7 @@ jobs:
         if: failure()
         working-directory: testing/compose
         run: docker compose $MN_FILES logs --tail=400 stirling-1 stirling-2
-        
+
       - name: Tear down
         if: always()
         working-directory: testing/compose

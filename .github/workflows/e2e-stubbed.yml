@@ -13,37 +13,21 @@ name: Playwright E2E (stubbed)
 on:
   workflow_call:
     inputs:
-      gradle-hash:
-        required: true
-        type: string
-      java-version:
-        required: false
-        default: '25'
-        type: string
-      uv-hash:
-        required: true
-        type: string
-      cargo-hash:
-        required: true
-        type: string
       frontend-dist-hash:
+        required: true
+        type: string
+      npm-hash:
         required: true
         type: string
 
 permissions:
   contents: read
 
-env:
-  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
-
 jobs:
   playwright-e2e:
     name: playwright-e2e (${{ matrix.browser }} ${{ matrix.shard }})
     env:
-      UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
-      UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
       NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
-      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -96,40 +80,16 @@ jobs:
         with:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           multi-cache: |
-            cargo-registry:
-              path: .cache/cargo/registry
-            cargo-git:
-              path: .cache/cargo/git
-            cargo-bin:
-              path: .cache/cargo/bin
             frontend-dist:
               path: frontend/editor/dist
             frontend-node-modules:
               path: frontend/node_modules
             npm-cache:
               path: .cache/npm
-            gradle-caches:
-              path: .cache/gradle-java-${{ inputs.java-version }}/caches
-            gradle-wrapper:
-              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
-            tauri-target:
-              path: frontend/editor/src-tauri/target
-            e2e-stubbed-setup-uv-cache:
-              path: .cache/setup-uv-cache
-            e2e-stubbed-uv-python-dir:
-              path: .cache/uv-python-dir
           key: |
-            gradle-caches=${{ inputs.gradle-hash }}
-            gradle-wrapper=${{ inputs.gradle-hash }}
-            cargo-registry=${{ inputs.cargo-hash }}
-            cargo-git=${{ inputs.cargo-hash }}
-            cargo-bin=${{ inputs.cargo-hash }}
-            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            npm-cache=${{ inputs.npm-hash }}
             frontend-dist=${{ inputs.frontend-dist-hash }}
-            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tauri-target=${{ inputs.frontend-dist-hash }}
-            e2e-stubbed-setup-uv-cache=${{ inputs.uv-hash }}
-            e2e-stubbed-uv-python-dir=${{ inputs.uv-hash }}
+            frontend-node-modules=${{ inputs.npm-hash }}
           token: ${{ github.token }}
           exclude: |
             frontend/editor/src-tauri/target/debug/**

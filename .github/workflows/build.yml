@@ -69,6 +69,7 @@ jobs:
       cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash }}
       frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
       uv_files_hash: ${{ steps.hash.outputs.uv_files_hash }}
+      npm_files_hash: ${{ steps.hash.outputs.npm_files_hash }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -100,12 +101,17 @@ jobs:
               'engine/pyproject.toml',
               'engine/uv.lock'
             ) }}
+          NPM_HASH_FILES: >-
+            ${{ hashFiles(
+              'frontend/package-lock.json'
+            ) }}
         shell: bash
         run: |
           echo "gradle_files_hash=$GRADLE_HASH_FILES" >> "$GITHUB_OUTPUT"
           echo "cargo_files_hash=$CARGO_HASH_FILES" >> "$GITHUB_OUTPUT"
           echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH_FILES" >> "$GITHUB_OUTPUT"
           echo "uv_files_hash=$UV_HASH_FILES" >> "$GITHUB_OUTPUT"
+          echo "npm_files_hash=$NPM_HASH_FILES" >> "$GITHUB_OUTPUT"
 
   gradle-cache-prime:
     if: needs.files-changed.outputs.backend == 'true'
@@ -183,16 +189,15 @@ jobs:
 
   playwright-e2e:
     if: |
-      !cancelled() && needs.files-changed.outputs.frontend == 'true'
+      !cancelled() &&
+      needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed, files-hash]
     permissions:
       contents: write
     uses: ./.github/workflows/e2e-stubbed.yml
     with:
-      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
-      cargo-hash: ${{ needs.files-hash.outputs.cargo_files_hash }}
       frontend-dist-hash: ${{ needs.files-hash.outputs.frontend_dist_files_hash }}
-      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
+      npm-hash: ${{ needs.files-hash.outputs.npm_files_hash }}
     secrets: inherit
 
   playwright-e2e-live:
@@ -227,6 +232,7 @@ jobs:
       frontend-dist-hash: ${{ needs.files-hash.outputs.frontend_dist_files_hash }}
       uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
       cargo-hash: ${{ needs.files-hash.outputs.cargo_files_hash }}
+      npm-hash: ${{ needs.files-hash.outputs.npm_files_hash }}
 
   check-licence:
     if: |
@@ -313,10 +319,10 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.generated-models == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
     needs: [files-changed, gradle-cache-prime]
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     uses: ./.github/workflows/check-generated-models.yml
     secrets: inherit
