@@ -1,5 +1,4 @@
 import React, {
-  Suspense,
   useState,
   useCallback,
   useMemo,
@@ -51,7 +50,7 @@ import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
-import { translatedLazy } from "@app/i18n/translatedLazy";
+import { SidebarChat } from "@app/components/chat/SidebarChat";
 import {
   deleteServerFile,
   type DeleteScope,
@@ -72,13 +71,6 @@ import type { FolderId, FolderRecord } from "@app/types/folder";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 import { useWorkbenchFileDrop } from "@app/components/layout/useWorkbenchFileDrop";
 import "@app/components/shared/FileSidebar.css";
-
-/** The agent dock belongs to a workbench, so it loads when one is on screen. */
-const SidebarChat = translatedLazy(() =>
-  import("@app/components/chat/SidebarChat").then((module) => ({
-    default: module.SidebarChat,
-  })),
-);
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
 const SIDEBAR_WIDTH = "var(--sidebar-w)";
@@ -1236,11 +1228,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onOpenPlan={openPlan ?? undefined}
         />
 
-        {currentWorkbench !== "myFiles" && (
-          <Suspense fallback={null}>
-            <SidebarChat />
-          </Suspense>
-        )}
+        {currentWorkbench !== "myFiles" && <SidebarChat />}
       </div>
     );
   },
