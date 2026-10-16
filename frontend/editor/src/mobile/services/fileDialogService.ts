@@ -27,17 +27,24 @@ const MAGIC_NUMBERS: Array<{ bytes: number[]; type: string; ext: string }> = [
   { bytes: [0x50, 0x4b, 0x03, 0x04], type: "application/zip", ext: "zip" },
 ];
 
-/** HTML has no fixed signature, so it is recognised from its leading markup. */
+/**
+ * HTML has no fixed signature, so it is recognised from markup near the start.
+ * A leading comment or `<meta>` is common, so the structural tags are looked
+ * for anywhere in the head of a document that opens with a tag.
+ */
 const HTML_FORMAT = { type: "text/html", ext: "html" };
-const HTML_PREFIX = /^(?:\uFEFF)?\s*(?:<!doctype html|<html[\s>])/i;
+const STARTS_WITH_TAG = /^(?:\uFEFF)?\s*</;
+const HTML_STRUCTURE = /<(?:!doctype html|html|head|body)[\s>]/i;
 
 function sniffFormat(data: Uint8Array) {
   const binary = MAGIC_NUMBERS.find((candidate) =>
     candidate.bytes.every((byte, index) => data[index] === byte),
   );
   if (binary) return binary;
-  const head = new TextDecoder().decode(data.subarray(0, 512));
-  return HTML_PREFIX.test(head) ? HTML_FORMAT : undefined;
+  const head = new TextDecoder().decode(data.subarray(0, 1024));
+  return STARTS_WITH_TAG.test(head) && HTML_STRUCTURE.test(head)
+    ? HTML_FORMAT
+    : undefined;
 }
 
 /**

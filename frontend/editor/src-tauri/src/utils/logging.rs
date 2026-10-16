@@ -16,11 +16,16 @@ pub fn set_log_directory(dir: PathBuf) {
     let _ = APP_LOG_DIR.set(dir);
 }
 
-// Get platform-specific log directory
-fn get_log_directory() -> PathBuf {
+// None until `set_log_directory` runs on mobile: the desktop fallbacks below
+// resolve outside the app sandbox there, where writes fail.
+fn get_log_directory() -> Option<PathBuf> {
     if let Some(dir) = APP_LOG_DIR.get() {
-        dir.clone()
-    } else if cfg!(target_os = "macos") {
+        return Some(dir.clone());
+    }
+    if cfg!(mobile) {
+        return None;
+    }
+    Some(if cfg!(target_os = "macos") {
         // macOS: ~/Library/Logs/Stirling-PDF
         let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
         PathBuf::from(home).join("Library").join("Logs").join("Stirling-PDF")
@@ -32,7 +37,7 @@ fn get_log_directory() -> PathBuf {
         // Linux: ~/.config/Stirling-PDF/logs
         let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
         PathBuf::from(home).join(".config").join("Stirling-PDF").join("logs")
-    }
+    })
 }
 
 // Helper function to add log entry
@@ -64,7 +69,9 @@ pub fn add_log(message: String) {
 
 // Write log entry to file
 fn write_to_log_file(log_entry: &str) {
-    let log_dir = get_log_directory();
+    let Some(log_dir) = get_log_directory() else {
+        return;
+    };
     if let Err(e) = std::fs::create_dir_all(&log_dir) {
         eprintln!("Failed to create log directory: {}", e);
         return;
