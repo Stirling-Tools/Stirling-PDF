@@ -3,11 +3,9 @@ import { useTranslation } from "react-i18next";
 /**
  * File action wording for the phone.
  *
- * Inherited from the desktop layer this said "Drop files here or click the
- * open button" and "Open from computer". There is no drag and drop on touch
- * and there is no computer, so both instructions were wrong wherever they
- * appeared. Saving keeps the desktop wording, because a phone save really is
- * a save to the device rather than a browser download.
+ * Files are opened and saved through the native pickers, not uploaded to and
+ * downloaded from a browser, and there is no drag and drop on touch or
+ * computer to upload from, so neither the web nor the desktop wording fits.
  */
 export function useFileActionTerminology() {
   const { t } = useTranslation();

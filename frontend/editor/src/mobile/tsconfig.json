@@ -4,24 +4,24 @@
     "paths": {
       "@app/*": [
         "../../src/mobile/*",
-        "../../src/desktop/*",
+        "../../src/tauri/*",
         "../../src/cloud/*",
         "../../src/proprietary/*",
         "../../src/core/*"
       ],
       "@app/portal/*": [
         "../../src/mobile/portal/*",
-        "../../src/desktop/portal/*",
+        "../../src/tauri/portal/*",
         "../../src/cloud/portal/*",
         "../../src/proprietary/portal/*",
         "../../src/core/portal/*",
         "../../src/portal/*"
       ],
       "@portal/*": ["../../src/portal/*"],
+      "@tauri/*": ["../../src/tauri/*"],
       "@cloud/*": ["../../src/cloud/*"],
       "@proprietary/*": ["../../src/proprietary/*"],
-      "@core/*": ["../../src/core/*"],
-      "@desktop/*": ["../../src/desktop/*"]
+      "@core/*": ["../../src/core/*"]
     }
   },
   "include": [
@@ -30,6 +30,7 @@
     "../*.ts",
     "../*.tsx",
     "../core/setupTests.ts",
-    "."
+    ".",
+    "../tauri"
   ]
 }

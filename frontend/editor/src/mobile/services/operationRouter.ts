@@ -1,24 +1,12 @@
 import { connectionModeService } from "@app/services/connectionModeService";
 import { STIRLING_SAAS_BACKEND_API_URL } from "@app/constants/connection";
 import i18n from "@app/i18n";
-import { type ExecutionTarget } from "@desktop/services/operationRouter";
-
-export { type ExecutionTarget };
 
 /**
  * Where an operation runs, on a phone.
  *
- * The desktop router exists to choose between a bundled local backend and a
- * remote server, and it defaults to local for both `saas` and `local` modes.
- * There is no bundled backend on iOS or Android, so every one of those local
- * branches would resolve to a URL that does not exist and throw "Backend URL
- * not available". This router therefore has one rule: always the connected
- * server, never local.
- *
- * That also means no local-capability probing. The desktop version asks the
- * local backend which endpoints it supports before deciding; here the answer
- * is always "none", so the question is skipped and the request goes straight
- * to whichever server the user is connected to.
+ * There is no bundled backend on iOS or Android, so the rule is always the
+ * connected server, never local, and there is no local-capability probing.
  */
 export class OperationRouter {
   private static instance: OperationRouter;
@@ -28,11 +16,6 @@ export class OperationRouter {
       OperationRouter.instance = new OperationRouter();
     }
     return OperationRouter.instance;
-  }
-
-  /** Always remote: there is nothing to execute against on the device. */
-  async getExecutionTarget(_operation?: string): Promise<ExecutionTarget> {
-    return "remote";
   }
 
   /** Automation must reach the connected server, which is the only target a phone has. */
@@ -70,7 +53,7 @@ export class OperationRouter {
       return serverConfig.url.replace(/\/$/, "");
     }
 
-    // `local` is the desktop's offline mode. On a phone it means "no server
+    // `local` is the bundled-backend mode. On a phone it means "no server
     // chosen yet", so point the user at the place that fixes it rather than
     // failing with a backend error they cannot act on.
     window.dispatchEvent(

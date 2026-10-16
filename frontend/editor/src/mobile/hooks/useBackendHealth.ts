@@ -54,8 +54,8 @@ function resolveHealth(
   }
 
   if (mode === "selfhosted") {
-    // Matches the desktop rule: only a confirmed offline server blocks the run,
-    // so the button is not dead while the first check is still in flight.
+    // Only a confirmed offline server blocks the run, so the button is not
+    // dead while the first check is still in flight.
     if (selfHostedStatus === "offline") {
       return {
         status: "unhealthy",

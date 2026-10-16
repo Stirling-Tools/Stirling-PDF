@@ -211,7 +211,7 @@ import { useFileContext } from "@proprietary/contexts/FileContext";
 - Building layer-specific override that wraps a lower layer's component
 - Example: `import { AppProviders as CoreAppProviders } from "@core/components/AppProviders"` when creating proprietary/AppProviders.tsx that extends the core version
 
-The `@app/*` alias automatically resolves to the correct layer based on build target (core/proprietary/saas/desktop/cloud/tauri) and handles the fallback cascade — see "Frontend `cloud/` Layer" below for the full per-flavor order.
+The `@app/*` alias automatically resolves to the correct layer based on build target (core/proprietary/saas/desktop/mobile/cloud/tauri) and handles the fallback cascade — see "Frontend `cloud/` Layer" below for the full per-flavor order.
 
 #### Frontend `cloud/` Layer
 
@@ -221,6 +221,7 @@ The `@app/*` alias automatically resolves to the correct layer based on build ta
 - **proprietary** → proprietary → core
 - **saas** → saas → cloud → proprietary → core
 - **desktop** → desktop → tauri → cloud → proprietary → core
+- **mobile** → mobile → tauri → cloud → proprietary → core
 - **cloud** → cloud → proprietary → core
 
 What goes where:
@@ -231,12 +232,13 @@ What goes where:
 - **saas** — web-only: Supabase web auth, AuthCallback, avatar canvas, `window.location`.
 - **tauri** — the SHARED native-app experience for every platform built on the Tauri shell: tauriHttpClient, keyring authService, connection modes and the server-selection SetupWizard, OAuth through the system browser, native-app onboarding.
 - **desktop** — desktop-only, on top of `tauri/`: the bundled backend, windows, auto-updater, default-PDF-app registration, disk sync, local processing folders.
+- **mobile** — iOS/Android-only, on top of `tauri/`: native file pickers and saving, server health for a phone that has no bundled backend.
 
 `cloud/` MUST NOT import `@supabase/*`, `@tauri-apps/*`, raw `fetch`, `window.location`, `localStorage`, `sessionStorage`, or `import.meta.env.VITE_*` (all enforced by the linter). It reaches platform-specific things only via `@app/*` seams: `services/apiClient`, `auth/session.getAccessToken`, `auth/supabase`, `platform/openExternal`, `services/billing`, `hooks/useSaaSMode` — each provided per-platform in `saas/` and `tauri/`.
 
 Rule of thumb — **move, don't copy**: share via `cloud/`, override by shadowing the same `@app/*` path in a leaf (`saas/` or `desktop/`).
 
-A platform never builds on another platform: `desktop/` sits on `tauri/`, and a future Tauri platform does the same as a sibling of `desktop/`. `tauri/` must not depend on `desktop/`; where it needs the bundled backend it imports a seam the platform provides (`services/tauriBackendService`, `services/operationRouter`, `hooks/useBackendInitializer`).
+A platform never builds on another platform: `desktop/` and `mobile/` are siblings, each on `tauri/`, and neither is in the other's build. `tauri/` must not depend on either; where it needs the bundled backend it imports a seam the platform provides (`services/tauriBackendService`, `services/operationRouter`, `hooks/useBackendInitializer`).
 
 **Cloud feature flags on desktop.** The local `AppConfigContext` reads `/api/v1/config/app-config` from the LOCAL bundled backend, so cloud-only flags (`aiEngineEnabled`, `premiumEnabled`, …) are never seen on desktop. To read the cloud's view, use `useSaasAppConfig()` (`tauri/hooks/useSaasAppConfig.ts`, backed by the general `saasAppConfigService` — SaaS-mode-only, public endpoint, native HTTP, 5-min cache). It returns `null` outside SaaS mode, so cloud features stay off in local mode and the server keeps the on/off switch (no desktop release needed to flip a flag). In self-hosted mode the connected server's own `AppConfigContext` is the authority instead. Gate a feature behind a per-platform seam - e.g. `useAiEngineEnabled()` (core reads `useAppConfig()`, desktop reads `useAppConfig()` when signed in to a self-hosted server and `useSaasAppConfig()` otherwise) - rather than hardcoding the flag on.
 
@@ -445,6 +447,7 @@ The frontend is organized with a clear separation of concerns:
 
 - **`frontend/editor/src/tauri/`**: Code shared by every Tauri-shell platform
 - **`frontend/editor/src/desktop/`**: Desktop-only Tauri code, layered on `tauri/`
+- **`frontend/editor/src/mobile/`**: iOS/Android-only Tauri code, layered on `tauri/`
 - **`frontend/editor/src/proprietary/`**: Proprietary/licensed features
 - **`frontend/editor/src-tauri/`**: Tauri (Rust) native desktop application code
 - **`frontend/editor/public/`**: Static assets served directly

@@ -18,6 +18,7 @@
     "src/core/**/*.spec.ts*",
     "src/desktop",
     "src/tauri",
+    "src/mobile",
     "src/cloud"
   ]
 }

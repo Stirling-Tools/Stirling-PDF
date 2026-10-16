@@ -1,14 +1,11 @@
 export type BackendStatus = "stopped" | "starting" | "healthy" | "unhealthy";
 
 /**
- * Inert replacement for the desktop bundled-backend service.
+ * The bundled-backend seam `tauri/` reads, for a platform that has none.
  *
- * Mobile never has a local Stirling backend: there is no JVM on iOS/Android and
- * every operation goes to the connected server. The desktop service would
- * otherwise treat the stubbed `start_backend` rejection as a crash and run its
- * restart/alert loop ("Backend stopped unexpectedly"). This keeps the same
- * public surface so shared desktop code keeps working, but reports the backend
- * as permanently stopped and never alerts.
+ * There is no JVM on iOS or Android, so every operation goes to the connected
+ * server. This keeps the seam's public surface but reports the backend as
+ * permanently stopped and never alerts.
  */
 export class TauriBackendService {
   private static instance: TauriBackendService;

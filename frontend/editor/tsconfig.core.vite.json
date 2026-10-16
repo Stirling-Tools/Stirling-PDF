@@ -5,5 +5,5 @@
       "@app/*": ["./src/core/*"]
     }
   },
-  "exclude": ["src/proprietary", "src/desktop", "src/tauri"]
+  "exclude": ["src/proprietary", "src/desktop", "src/tauri", "src/mobile"]
 }

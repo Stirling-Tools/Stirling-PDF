@@ -21,6 +21,7 @@
     "src/proprietary/**/*.spec.ts*",
     "src/desktop",
     "src/tauri",
+    "src/mobile",
     "src/saas"
   ]
 }

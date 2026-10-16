@@ -1,6 +1,6 @@
 /**
  * Mobile has no bundled backend to start or monitor: every operation goes to
- * the connected server. The desktop hook would otherwise keep retrying the
- * stubbed `start_backend` command in a tight loop.
+ * the connected server, and `start_backend` is stubbed in
+ * `src-tauri/src/commands/mobile_stubs.rs`.
  */
 export function useBackendInitializer(_enabled = true): void {}

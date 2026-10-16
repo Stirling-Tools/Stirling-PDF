@@ -17,10 +17,9 @@ function warnOnce(title: string, body: string): void {
 /**
  * Checks the CONNECTED server is reachable before a tool calls it.
  *
- * The desktop guard waits on the bundled local backend, which does not exist
- * here: its SaaS branch polls a stub that always reports offline, so every
- * operation was blocked with a "Backend Offline" toast. This version asks the
- * monitor that matches the current connection mode instead.
+ * Every operation goes to a remote server, so the guard asks the monitor that
+ * matches the current connection mode rather than reporting ready as the web
+ * build does.
  *
  * A `checking` status is allowed through rather than blocked. The first poll
  * can still be in flight moments after launch, and letting the request proceed

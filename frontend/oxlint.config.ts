@@ -31,7 +31,7 @@ const noTauriOutsideTauriLayers = {
 const cloudNoTauri = {
   regex: "^@tauri-apps/",
   message:
-    "cloud/ must stay platform-portable. Tauri APIs belong to tauri/ and desktop/ — reach native features via an @app/* seam (e.g. @app/platform/openExternal).",
+    "cloud/ must stay platform-portable. Tauri APIs belong to tauri/, desktop/ and mobile/ — reach native features via an @app/* seam (e.g. @app/platform/openExternal).",
 };
 const cloudNoSupabase = {
   regex: "^@supabase/",
