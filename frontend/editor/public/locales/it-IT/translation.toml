@@ -3228,7 +3228,7 @@ open = "Apri Stirling assistente IA"
 
 [chat.header]
 agentMenu = "Opzioni agente Stirling"
-assistant = "Assistente AI"
+assistant = "Assistente IA"
 clearChat = "Cancella chat"
 
 [chat.input]
@@ -3463,7 +3463,7 @@ payslip = "Busta paga"
 performance-review = "Valutazione delle prestazioni"
 permit = "Permesso"
 petition = "Petizione"
-pitch-deck = "Pitch deck"
+pitch-deck = "PResentazione aziendale"
 power-of-attorney = "Procura"
 prescription = "Prescrizione"
 presentation = "Presentazione"
@@ -3474,7 +3474,7 @@ privacy-policy = "Informativa sulla privacy"
 product-sheet = "Scheda prodotto"
 proforma-invoice = "Fattura proforma"
 progress-report = "Report di avanzamento"
-project-charter = "Project charter"
+project-charter = "Documento di progetto"
 project-plan = "Piano di progetto"
 promotional-material = "Materiale promozionale"
 property-listing = "Annuncio immobiliare"
@@ -3962,13 +3962,13 @@ schemaLink = "Riferimento schema API"
 usage = "Includi questa chiave nell'intestazione X-API-KEY in tutte le richieste API."
 
 [config.apiKeys.alert]
-apiKeyErrorTitle = "Errore API Key"
-apiKeyRefreshed = "API Key aggiornata"
-apiKeyRefreshedBody = "La tua API key è stata aggiornata correttamente."
-failedToCreateApiKey = "Creazione della API key non riuscita."
-failedToFetchApiKey = "Impossibile recuperare la API key."
-failedToRefreshApiKey = "Aggiornamento della API key non riuscito."
-failedToRetrieveApiKey = "Impossibile recuperare la API key dalla risposta."
+apiKeyErrorTitle = "Errore chiave API"
+apiKeyRefreshed = "Chiave API aggiornata"
+apiKeyRefreshedBody = "La tua chiave API è stata aggiornata correttamente."
+failedToCreateApiKey = "Creazione della chiave API non riuscita."
+failedToFetchApiKey = "Impossibile recuperare la chiave API."
+failedToRefreshApiKey = "Aggiornamento della chiave API non riuscito."
+failedToRetrieveApiKey = "Impossibile recuperare la chiave API dalla risposta."
 
 [config.apiKeys.refreshModal]
 confirmCta = "Aggiorna chiavi"
@@ -3982,7 +3982,7 @@ description = "Il Model Context Protocol (MCP) consente agli assistenti IA come 
 guestInfo = "Gli utenti ospite non possono connettere client MCP. Crea un account per utilizzare il server MCP e consentire al tuo assistente IA di eseguire gli strumenti Stirling PDF per tuo conto."
 navLabel = "Server MCP"
 tip = "Ogni azione eseguita dal tuo assistente viene effettuata con il tuo account e viene conteggiata nel tuo consumo, esattamente come quando usi Stirling PDF direttamente."
-viewApiKeys = "Visualizza API key"
+viewApiKeys = "Visualizza chiave API"
 
 [config.mcp.copy]
 configLabel = "Configurazione"
@@ -8573,7 +8573,7 @@ label = "Cloudmersive"
 
 [portal.connections.types.cloudmersiveadvanced]
 description = "Blocca documenti contenenti macro, eseguibili, script o oggetti incorporati - non solo malware noto."
-label = "Cloudmersive Advanced Scan"
+label = "Scansione avanzata Cloudmersive"
 
 [portal.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
@@ -9805,7 +9805,7 @@ defaultName = "Pipeline {{category}}"
 
 [portal.policies.card]
 comingSoon = "Passa a Enterprise"
-requiresAiEngine = "Richiede motore AI"
+requiresAiEngine = "Richiede motore IA"
 
 [portal.policies.categories.classification]
 desc = "Identifica il tipo di ogni documento al caricamento e tagga i suoi metadati per archiviazione e ricerca."
@@ -10025,7 +10025,7 @@ placeholder = "/v1/scan"
 [portal.policies.operations.fields.remotePath]
 helperText = "Dove scriverlo nel drive. {{document.filename}} viene compilato per documento."
 label = "Percorso di destinazione"
-placeholder = "Processed/{{document.filename}}"
+placeholder = "Elaborato/{{document.filename}}"
 
 [portal.policies.operations.fields.responseMode]
 helperText = "Report lascia il documento invariato. Replace lo sostituisce con ciò che viene restituito."
@@ -10182,7 +10182,7 @@ noTools = "Abilita almeno un'azione."
 saveFailed = "Impossibile salvare la pipeline. Riprova."
 
 [portal.policies.wizard.locations]
-aiSettings = "Apri impostazioni AI"
+aiSettings = "Apri impostazioni IA"
 builtin = "Knowledge base Stirling"
 builtinHelp = "Indicizza blocchi ricercabili in Stirling e restituisce il PDF elaborato alla destinazione sotto. Un provider di embedding deve essere configurato nelle impostazioni AI."
 checking = "Verifica disponibilità acquisizione..."
@@ -10817,7 +10817,7 @@ summary = "Governance completa su workspace, impostazioni e membri."
 0 = "Gestire utenti, team e ruoli"
 1 = "Gestire tutte le integrazioni, incl. connessioni S3"
 2 = "Concedere o revocare l'accesso al portale"
-3 = "Tutto ciò che può fare Team Owner"
+3 = "Tutto ciò che può fare il proprietario del Team"
 
 [portal.users.roles.guest]
 label = "Ospite"
@@ -11698,7 +11698,7 @@ title = "Informazioni"
 
 [settings.ai]
 documents = "Documenti e RAG"
-general = "Motore AI"
+general = "Motore IA"
 limits = "Limiti e prestazioni"
 models = "Modelli e provider"
 title = "IA"
@@ -11932,7 +11932,7 @@ auditDescription = "Chi ha fatto cosa su questo server e per quanto tempo viene 
 plan = "Piano"
 planDescription = "La tua licenza, i posti e cosa sblocca il piano attuale."
 usage = "Analisi utilizzo"
-usageAnalytics = "Analytics d'uso"
+usageAnalytics = "Uso degli Analytics"
 usageDescription = "Come viene utilizzato il server: operazioni, volume e tendenze nel tempo."
 
 [settings.monitoring]
@@ -11995,7 +11995,7 @@ title = "Aggiorna il tuo piano"
 [settings.policiesPrivacy]
 legal = "Documenti legali"
 privacy = "Privacy"
-title = "Legale e privacy"
+title = "Informazioni legali e privacy"
 
 [settings.preferences]
 appearance = "Aspetto"
