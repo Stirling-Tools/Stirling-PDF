@@ -843,28 +843,28 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            cargo-registry:
+            test-cargo-registry:
               path: .cache/cargo/registry
-            frontend-node-modules:
+            test-frontend-node-modules:
               path: frontend/node_modules
-            npm-cache:
+            test-npm-cache:
               path: .cache/npm
-            gradle-caches:
+            test-gradle-caches:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
-            gradle-wrapper:
+            test-gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-            tauri-target:
+            test-tauri-target:
               path: frontend/editor/src-tauri/target
-            task-state-cache:
+            test-task-state-cache:
               path: .cache/task/task-state
           key: |
-            task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
-            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
-            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
+            test-task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
+            test-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            test-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            test-cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            test-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            test-frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            test-tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           exclude: |
             frontend/editor/src-tauri/target/debug/**
 
