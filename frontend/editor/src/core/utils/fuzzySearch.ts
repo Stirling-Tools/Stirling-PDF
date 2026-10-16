@@ -97,8 +97,15 @@ function tokenTier(queryToken: string, targetToken: string): number {
   // The tail of a compound word ("data" in "metadata", "light" in
   // "highlight") is often a word in its own right; rank it low but keep it.
   if (queryToken.length >= 4 && targetToken.endsWith(queryToken)) return 0.55;
-  // A near-miss of filler ("pdfa" vs "pdf") says nothing about the item.
-  if (queryToken.length < 3 || STOPWORDS.has(targetToken)) return 0;
+  // A near-miss of filler ("pdfa" vs "pdf") or of a tiny word ("ocr" vs
+  // "or") says nothing about the item.
+  if (
+    queryToken.length < 3 ||
+    targetToken.length < 3 ||
+    STOPWORDS.has(targetToken)
+  ) {
+    return 0;
+  }
   const maxEdits = queryToken.length <= 4 ? 1 : 2;
   if (Math.abs(queryToken.length - targetToken.length) > maxEdits) return 0;
   const distance = levenshtein(queryToken, targetToken);

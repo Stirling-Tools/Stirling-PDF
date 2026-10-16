@@ -22,6 +22,11 @@ describe("scoreMatch", () => {
     expect(isFuzzyMatch("watermrk", "Add Watermark")).toBe(true);
   });
 
+  it("doesn't treat a short word as a typo of the query", () => {
+    expect(isFuzzyMatch("ocr", "Add text or add image stamps")).toBe(false);
+    expect(isFuzzyMatch("ocr", "OCR / Cleanup scans")).toBe(true);
+  });
+
   it("rejects unrelated words that share half their letters", () => {
     // Unrelated words can share many letters (rotate vs update is edit
     // distance 3 of 6) but must not be treated as a fuzzy match.
