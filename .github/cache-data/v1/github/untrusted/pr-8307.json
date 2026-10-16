@@ -10910,10 +10910,31 @@
       "artifact_id": 12034174999,
       "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-52ab514eac0ac24a1f85b83afb52c5c05e0c906c571b91d70d4d86cbbb87efd9-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000000",
       "workflow_run_id": 38873424482
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/task-state-cache/linux-x64/f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf/v6": {
+      "object": "sha256:c5bfdabc1a159abe0dca60eba9b43dcb07882926682fd5bed6568b4208089654",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-16T08:55:50.514Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 269,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:c5bfdabc1a159abe0dca60eba9b43dcb07882926682fd5bed6568b4208089654",
+          "size": 269,
+          "artifact_id": 12035443491,
+          "artifact_name": "cache-untrusted-pr-8307-task-state-cache-linux-x64-f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-v6--c5bfdabc1a159abe0dca60eba9b43dcb07882926682fd5be-part-000000",
+          "workflow_run_id": 38876665993
+        }
+      ],
+      "artifact_id": 12035443491,
+      "artifact_name": "cache-untrusted-pr-8307-task-state-cache-linux-x64-f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-v6--c5bfdabc1a159abe0dca60eba9b43dcb07882926682fd5be-part-000000",
+      "workflow_run_id": 38876665993
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-16T08:32:08.199Z",
-    "writes": 6
+    "writes": 7
   }
 }
