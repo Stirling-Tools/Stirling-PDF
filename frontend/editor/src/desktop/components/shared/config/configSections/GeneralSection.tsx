@@ -100,11 +100,7 @@ const GeneralSection: React.FC<PreferencesSectionProps> = ({
           </>
         }
         // Mounting the card starts its summary request, so policy must be known first.
-        hideUpdateSection={
-          hideUpdateSection ||
-          !updateModeInfo ||
-          (updateModeInfo.mode === "disabled" && updateModeInfo.locked)
-        }
+        hideUpdateSection={hideUpdateSection || !updateModeInfo}
         desktopInstall={{
           state: install.state,
           progress: install.progress,
