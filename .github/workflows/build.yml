@@ -185,11 +185,16 @@ jobs:
   # touching them directly.
   frontend-a11y:
     if: needs.files-changed.outputs.frontend == 'true' && false
-    needs: [files-changed]
+    needs: [files-changed, files-hash]
     permissions:
       contents: read
     uses: ./.github/workflows/frontend-a11y.yml
     secrets: inherit
+    with:
+      frontend-dist-hash: ${{ needs.files-hash.outputs.frontend_dist_files_hash }}
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
+      cargo-hash: ${{ needs.files-hash.outputs.cargo_files_hash }}
+      npm-hash: ${{ needs.files-hash.outputs.npm_files_hash }}
 
   playwright-e2e:
     if: |
