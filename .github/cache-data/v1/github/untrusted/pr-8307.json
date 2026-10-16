@@ -12612,10 +12612,39 @@
       "artifact_id": 12039672207,
       "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-windows-x64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1da-part-000000",
       "workflow_run_id": 38883434118
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/valid-frontend-setup-uv-cache/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-cache-e1b7946154cca207/v6": {
+      "object": "sha256:58843fd067a646c0d7086c2ef86ca5d56a690255995a9617ce88a74df0d5fe74",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-16T10:11:21.620Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 44052703,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:98c8617ad8bb2eaa5608321dcc85b4b21fedfdd25a9af0157f183415cd791707",
+          "size": 25165824,
+          "artifact_id": 12039701883,
+          "artifact_name": "cache-untrusted-pr-8307-valid-frontend-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--58843fd067a646c0d7086c2ef86ca5d56a6-part-000000",
+          "workflow_run_id": 38883434118
+        },
+        {
+          "index": 1,
+          "object": "sha256:ab74f587a0a33b4d15fb88efcd487333a87450a259c15d974b19a390fb92ee5f",
+          "size": 18886879,
+          "artifact_id": 12039048680,
+          "artifact_name": "cache-untrusted-pr-8307-valid-frontend-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--58843fd067a646c0d7086c2ef86ca5d56a6-part-000001",
+          "workflow_run_id": 38883434118
+        }
+      ],
+      "artifact_id": 12039701883,
+      "artifact_name": "cache-untrusted-pr-8307-valid-frontend-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--58843fd067a646c0d7086c2ef86ca5d56a6-part-000000",
+      "workflow_run_id": 38883434118
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-16T09:32:33.411Z",
-    "writes": 37
+    "writes": 38
   }
 }
