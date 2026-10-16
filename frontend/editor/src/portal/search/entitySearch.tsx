@@ -237,7 +237,7 @@ export function rankPortalPipelineResults(
   return rankByFuzzy(
     entries.filter((entry) => !excludedIds.has(entry.id)),
     trimmed,
-    [(entry) => entry.name, (entry) => entry.trigger],
+    [{ get: (entry) => entry.name, anywhere: true }, (entry) => entry.trigger],
   )
     .slice(0, limit)
     .map(({ item, score }) => ({
@@ -277,8 +277,8 @@ export function buildProcessorEntityGroups(
 
   const users = includeScope("portal-users")
     ? rankByFuzzy(entities.users, trimmed, [
-        (member) => member.name,
-        (member) => member.email,
+        { get: (member) => member.name, anywhere: true },
+        { get: (member) => member.email, anywhere: true },
       ])
         .slice(0, ENTITY_GROUP_LIMIT)
         .map(({ item, score }) => ({
@@ -347,7 +347,7 @@ export function buildProcessorEntityGroups(
 
   const sources = includeScope("portal-sources")
     ? rankByFuzzy(entities.sources, trimmed, [
-        (source) => source.name,
+        { get: (source) => source.name, anywhere: true },
         (source) => source.type,
       ])
         .slice(0, ENTITY_GROUP_LIMIT)

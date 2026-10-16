@@ -23,11 +23,8 @@ import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { detectFileExtension } from "@app/utils/fileUtils";
 import { openExternalUrl } from "@app/utils/safeNavigation";
-import {
-  rankByFuzzy,
-  idToWords,
-  FUZZY_MIN_SCORE,
-} from "@app/utils/fuzzySearch";
+import { rankByFuzzy, FUZZY_MIN_SCORE } from "@app/utils/fuzzySearch";
+import { TOOL_SEARCH_FIELDS } from "@app/utils/toolSearch";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { ToolId } from "@app/types/toolId";
 import { isComingSoonTool, type ToolRegistry } from "@app/data/toolsTaxonomy";
@@ -246,7 +243,7 @@ export function rankFileResults(
   limit = GROUP_RESULT_CEILING,
 ): SuperSearchResult[] {
   if (!trimmed) return [];
-  return rankByFuzzy(stubs, trimmed, [(s) => s.name])
+  return rankByFuzzy(stubs, trimmed, [{ get: (s) => s.name, anywhere: true }])
     .slice(0, limit)
     .map(({ item, score }) => ({
       key: `file:${item.id}`,
@@ -278,12 +275,7 @@ export function rankToolResults(
   const entries = (
     Object.entries(registry) as [ToolId, ToolRegistry[ToolId] | undefined][]
   ).filter(([id, tool]) => tool && !isComingSoonTool(id, tool));
-  return rankByFuzzy(entries, trimmed, [
-    ([id]) => idToWords(id),
-    ([, v]) => v?.name ?? "",
-    ([, v]) => v?.description ?? "",
-    ([, v]) => v?.synonyms?.join(" ") ?? "",
-  ])
+  return rankByFuzzy(entries, trimmed, TOOL_SEARCH_FIELDS)
     .slice(0, limit)
     .map(({ item: [id, tool], score }) => ({
       key: `tool:${id}`,
@@ -344,7 +336,7 @@ export function rankSettingsResults(
     [
       (e) => t(e.labelKey, e.labelFallback),
       (e) => e.labelFallback,
-      (e) => e.keywords?.join(" ") ?? "",
+      (e) => e.keywords,
     ],
   );
   const rows: SuperSearchResult[] = rowMatches.map(({ item, score }) => ({
@@ -366,7 +358,7 @@ export function rankSettingsResults(
   const sectionMatches = rankByFuzzy(visibleSections, trimmed, [
     (s) => t(s.labelKey, s.labelFallback),
     (s) => s.labelFallback,
-    (s) => s.keywords?.join(" ") ?? "",
+    (s) => s.keywords,
   ]);
   const sections: SuperSearchResult[] = sectionMatches.map(
     ({ item, score }) => ({
@@ -431,7 +423,7 @@ export function rankProcessorResults(
   return rankByFuzzy(PROCESSOR_SEARCH_INDEX, trimmed, [
     (e) => t(e.labelKey, e.labelFallback),
     (e) => e.labelFallback,
-    (e) => e.keywords?.join(" ") ?? "",
+    (e) => e.keywords,
   ])
     .slice(0, limit)
     .map(({ item, score }) => ({

@@ -4,7 +4,23 @@ import {
   scoreMatch,
   minScoreForQuery,
   normalizeForSearch,
+  idToWords,
+  type FuzzyField,
 } from "@app/utils/fuzzySearch";
+
+/**
+ * The fields a tool is found by, for rankByFuzzy. Synonyms are matched tag by
+ * tag; the description is weighted down so a hit in a tool's name or tags
+ * outranks the same word in another tool's prose.
+ */
+export const TOOL_SEARCH_FIELDS: FuzzyField<
+  [ToolId, ToolRegistryEntry | undefined]
+>[] = [
+  ([id]) => idToWords(id),
+  ([, tool]) => tool?.name,
+  { get: ([, tool]) => tool?.synonyms, weight: 0.9 },
+  { get: ([, tool]) => tool?.description, weight: 0.7 },
+];
 
 export interface RankedToolItem {
   item: [ToolId, ToolRegistryEntry];
