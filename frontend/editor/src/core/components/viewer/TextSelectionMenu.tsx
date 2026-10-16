@@ -276,8 +276,14 @@ function TextSelectionMenuInner({
   const handleReadAloudFromHere = useCallback(() => {
     const state = selection?.getState(documentId);
     if (!selection || !state?.selection) return;
-    const { page, index } = state.selection.start;
+    const originalSelection = state.selection;
+    const { page, index } = originalSelection.start;
+    // The text task resolves asynchronously; a selection made in the meantime
+    // must not be the one read aloud and cleared.
+    const stillSelected = () =>
+      selection.getState(documentId).selection === originalSelection;
     const dispatch = (selectedText: string) => {
+      if (!stillSelected()) return;
       window.dispatchEvent(
         new CustomEvent<ReadAloudFromSelectionDetail>(
           READ_ALOUD_FROM_SELECTION_EVENT,
