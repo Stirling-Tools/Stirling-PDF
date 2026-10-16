@@ -7,6 +7,7 @@ import type {
   PortalEntityScopeId,
 } from "@portal/search/entitySearch";
 import { HAS_PORTAL } from "@app/routes/hasPortal";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 type EntitySearchModule = typeof import("@portal/search/entitySearch");
 
@@ -38,6 +39,8 @@ export function useProcessorEntityGroups(
   const modRef = useRef<EntitySearchModule | null>(null);
   // Without the portal these entities have nowhere to open, so don't fetch them.
   const active = enabled && HAS_PORTAL;
+  const { config } = useAppConfig();
+  const aiEngineEnabled = config ? Boolean(config.aiEngineEnabled) : undefined;
   const hasQuery = trimmed.length > 0;
 
   useEffect(() => {
@@ -88,6 +91,17 @@ export function useProcessorEntityGroups(
     if (!mod || !entities || !active || !hasQuery) return NO_GROUPS;
     return mod.buildProcessorEntityGroups(entities, trimmed, t, navigate, {
       scopeEnabled,
+      aiEngineEnabled,
     });
-  }, [mod, entities, active, hasQuery, trimmed, t, navigate, scopeEnabled]);
+  }, [
+    mod,
+    entities,
+    active,
+    hasQuery,
+    trimmed,
+    t,
+    navigate,
+    scopeEnabled,
+    aiEngineEnabled,
+  ]);
 }

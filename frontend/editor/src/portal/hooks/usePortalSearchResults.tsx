@@ -6,10 +6,11 @@ import {
   getToolUrlPath,
   type ToolRegistryEntry,
 } from "@app/data/toolsTaxonomy";
-import { isPortalEntityScopeAccessible } from "@app/data/processorSearchIndex";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { useToolAvailability } from "@app/hooks/useToolManagement";
+import { useAccountCardShown } from "@app/hooks/useAccountCardShown";
+import { useAuth } from "@app/auth";
 import {
   useToolSearchAccess,
   type ToolSearchAccess,
@@ -17,6 +18,7 @@ import {
 import { preferencesService } from "@app/services/preferencesService";
 import {
   assembleSuperSearchGroups,
+  isPortalEntityScopeOffered,
   rankSettingsResults,
   rankToolResults,
   useSearchScopeFilter,
@@ -49,7 +51,6 @@ import {
   buildProcessorEntityGroups,
   defaultPortalEntityScopes,
   isDocsSearchable,
-  isVisiblePortalScope,
   withPortalEntityDependencies,
   type ProcessorEntities,
 } from "@portal/search/entitySearch";
@@ -81,17 +82,36 @@ function externalEditorHref(path: string): string {
  * refuses this session (the users roster for non-admins on self-hosted) get
  * no chip — an offered lane must be able to return results.
  */
+/** The portal session's visibility gates, shared by its chips and results. */
+function usePortalSearchGates(): SuperSearchGates | null {
+  const { config } = useAppConfig();
+  const accountCardShown = useAccountCardShown();
+  const { user } = useAuth();
+  return useMemo<SuperSearchGates | null>(
+    () =>
+      config
+        ? {
+            isAdmin: config.isAdmin ?? false,
+            loginEnabled: config.enableLogin ?? false,
+            // Being in the processor is proof of access to it.
+            portalAccessible: true,
+            showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
+            accountCardShown,
+            isOrgOwner: (config.isAdmin ?? false) && user?.orgOwner === true,
+          }
+        : null,
+    [config, accountCardShown, user],
+  );
+}
+
 export function usePortalSearchScopes(): SuperSearchScope[] {
   const { t } = useTranslation();
-  const { config } = useAppConfig();
-  const isAdmin = config?.isAdmin ?? false;
+  const gates = usePortalSearchGates();
 
   return useMemo(
     () => [
-      ...PORTAL_ENTITY_SCOPE_DEFS.filter(
-        (def) =>
-          isVisiblePortalScope(def.id) &&
-          isPortalEntityScopeAccessible(def.id, isAdmin),
+      ...PORTAL_ENTITY_SCOPE_DEFS.filter((def) =>
+        isPortalEntityScopeOffered(def.id, gates),
       ).map((def) => ({
         id: def.id,
         label: t(def.labelKey, def.labelFallback),
@@ -117,7 +137,7 @@ export function usePortalSearchScopes(): SuperSearchScope[] {
         aliases: ["tool", "tools"],
       },
     ],
-    [t, isAdmin],
+    [t, gates],
   );
 }
 
@@ -141,14 +161,23 @@ export function usePortalSearchResults(
   const { tier } = useTier();
 
   const trimmed = query.trim();
+  const gates = usePortalSearchGates();
+  const aiEngineEnabled = config ? Boolean(config.aiEngineEnabled) : undefined;
   const { scopeEnabled } = useSearchScopeFilter(options);
+  // The chip filter plus the lane's own availability, so an unoffered lane
+  // is neither fetched nor shown.
+  const entityScopeEnabled = useCallback(
+    (scopeId: string) =>
+      scopeEnabled(scopeId) && isPortalEntityScopeOffered(scopeId, gates),
+    [scopeEnabled, gates],
+  );
   const requestedEntityScopes = useMemo(() => {
     if (!active || trimmed.length === 0) return new Set<string>();
     const enabled = defaultPortalEntityScopes(config?.isAdmin ?? false).filter(
-      (scopeId) => scopeEnabled(scopeId),
+      (scopeId) => entityScopeEnabled(scopeId),
     );
     return new Set<string>(withPortalEntityDependencies(enabled));
-  }, [active, scopeEnabled, trimmed, config?.isAdmin]);
+  }, [active, entityScopeEnabled, trimmed, config?.isAdmin]);
 
   // Entity data rides the portal's shared query layer — the same keys the
   // views use, so searching warms the view (and vice versa) and the client's
@@ -258,26 +287,13 @@ export function usePortalSearchResults(
     [openSettings],
   );
 
-  const gates = useMemo<SuperSearchGates | null>(
-    () =>
-      config
-        ? {
-            isAdmin: config.isAdmin ?? false,
-            loginEnabled: config.enableLogin ?? false,
-            // Being in the processor is proof of access to it.
-            portalAccessible: true,
-            showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
-          }
-        : null,
-    [config],
-  );
-
   const entityGroups = useMemo<SuperSearchGroup[]>(
     () =>
       buildProcessorEntityGroups(entities, trimmed, t, navigate, {
-        scopeEnabled,
+        scopeEnabled: entityScopeEnabled,
+        aiEngineEnabled,
       }),
-    [entities, trimmed, t, navigate, scopeEnabled],
+    [entities, trimmed, t, navigate, entityScopeEnabled, aiEngineEnabled],
   );
 
   const groups = useMemo(() => {

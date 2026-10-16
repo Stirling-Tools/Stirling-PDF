@@ -41,7 +41,8 @@ vi.mock("react-router-dom", () => ({
 vi.mock("@app/contexts/AppConfigContext", () => ({
   useAppConfig: vi.fn(() => ({
     config: {
-      isAdmin: false,
+      // The users lane opens the admin-only Users settings section.
+      isAdmin: true,
       enableLogin: true,
     },
   })),
@@ -95,6 +96,13 @@ vi.mock("@app/data/settingsSectionRegistry", () => ({
       labelFallback: "Email",
       keywords: ["smtp", "email"],
       requiresLogin: true,
+    },
+    {
+      key: "users",
+      labelKey: "portal.nav.users",
+      labelFallback: "Users",
+      requiresLogin: true,
+      adminArea: true,
     },
   ],
 }));
@@ -178,6 +186,7 @@ import { fetchPipelines } from "@portal/api/pipelines";
 import { fetchSources } from "@portal/api/sources";
 import type { Member, UsersResponse } from "@portal/api/users";
 import { usersBackend } from "@app/portal/usersBackend";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import {
   rankDocsResults,
   rankPortalPipelineResults,
@@ -321,6 +330,37 @@ describe("usePortalSearchResults helpers", () => {
     vi.mocked(fetchSources).mockResolvedValue({ kpis: [], sources: [] });
   });
 
+  it("shows AI templates locked while the AI engine is off", () => {
+    const openPolicy = vi.fn();
+    const entry = makePolicyEntry();
+    entry.category.requiresAiEngine = true;
+    const tKey = (key: string) => key;
+
+    const [locked] = rankPortalPolicyResults(
+      [entry],
+      "security",
+      tKey,
+      openPolicy,
+      undefined,
+      false,
+    );
+    expect(locked.disabledReason).toBe("portal.policies.card.requiresAiEngine");
+    locked.onSelect();
+    expect(openPolicy).not.toHaveBeenCalled();
+
+    const [open] = rankPortalPolicyResults(
+      [entry],
+      "security",
+      tKey,
+      openPolicy,
+      undefined,
+      true,
+    );
+    expect(open.disabledReason).toBeUndefined();
+    open.onSelect();
+    expect(openPolicy).toHaveBeenCalledWith("security");
+  });
+
   it("ranks configured policies under the policies group", () => {
     const openPolicy = vi.fn();
     const results = rankPortalPolicyResults(
@@ -409,6 +449,31 @@ describe("usePortalSearchResults helpers", () => {
     expect(result.current.groups.map((group) => group.id)).toEqual([
       "portal-users",
     ]);
+  });
+
+  it("offers no users lane to a session that can't open the Users settings", async () => {
+    const adminConfig = vi.mocked(useAppConfig).getMockImplementation();
+    vi.mocked(useAppConfig).mockImplementation(
+      () =>
+        ({
+          config: { isAdmin: false, enableLogin: true },
+        }) as ReturnType<typeof useAppConfig>,
+    );
+    try {
+      const { result } = renderHook(
+        () =>
+          usePortalSearchResults("alice", true, {
+            scopeIds: ["portal-users"],
+          }),
+        { wrapper: queryWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.loadingFiles).toBe(false));
+      expect(usersBackend.fetchUsers).not.toHaveBeenCalled();
+      expect(result.current.groups).toEqual([]);
+    } finally {
+      vi.mocked(useAppConfig).mockImplementation(adminConfig!);
+    }
   });
 
   it("reuses the in-flight query after close/reopen instead of sticking in loading", async () => {

@@ -193,6 +193,7 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
           ],
           adminArea: true,
           requiresPortalAccess: true,
+          requiresOrgOwner: true,
           groupLabelKey: "settings.workspace.title",
           groupLabelFallback: "Workspace",
         },

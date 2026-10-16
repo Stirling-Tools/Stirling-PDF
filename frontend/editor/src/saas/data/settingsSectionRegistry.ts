@@ -1,4 +1,5 @@
 import { type SettingsSectionEntry } from "@core/data/settingsSectionRegistry";
+import { HAS_PORTAL } from "@app/routes/hasPortal";
 
 export type { SettingsSectionEntry };
 
@@ -66,15 +67,20 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     groupLabelKey: "settings.developer.title",
     groupLabelFallback: "Developer",
   },
-  {
-    key: "audit",
-    labelKey: "settings.licensingAnalytics.audit",
-    labelFallback: "Audit log",
-    keywords: ["audit", "logs", "events", "history"],
-    requiresPortalAccess: true,
-    groupLabelKey: "settings.securityAuth.title",
-    groupLabelFallback: "Security & sign-in",
-  },
+  // The audit page comes with the processor; a build without it has none.
+  ...(HAS_PORTAL
+    ? ([
+        {
+          key: "audit",
+          labelKey: "settings.licensingAnalytics.audit",
+          labelFallback: "Audit log",
+          keywords: ["audit", "logs", "events", "history"],
+          requiresPortalAccess: true,
+          groupLabelKey: "settings.securityAuth.title",
+          groupLabelFallback: "Security & sign-in",
+        },
+      ] satisfies SettingsSectionEntry[])
+    : []),
   {
     key: "mcp",
     labelKey: "config.mcp.navLabel",

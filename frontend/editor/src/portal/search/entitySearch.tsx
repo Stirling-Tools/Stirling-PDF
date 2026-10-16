@@ -9,6 +9,7 @@ import {
   type SuperSearchResult,
 } from "@app/types/superSearch";
 import { rankByFuzzy } from "@app/utils/fuzzySearch";
+import { SETTINGS_SECTION_REGISTRY } from "@app/data/settingsSectionRegistry";
 import {
   assemblePolicies,
   fetchPoliciesList,
@@ -74,9 +75,25 @@ const VISIBLE_PORTAL_VIEW_IDS = new Set(
   PROCESSOR_SEARCH_INDEX.map((entry) => entry.id),
 );
 
-/** Whether the flavor's portal nav ships the view an entity scope targets. */
+const SETTINGS_KEY_BY_SCOPE_ID = Object.fromEntries(
+  PORTAL_ENTITY_SCOPE_DEFS.map((def) => [def.id, def.settingsKey]),
+) as Record<PortalEntityScopeId, string | undefined>;
+
+const SETTINGS_SECTION_KEYS = new Set<string>(
+  SETTINGS_SECTION_REGISTRY.map((section) => section.key),
+);
+
+/**
+ * Whether this build ships somewhere an entity scope's results open: the
+ * portal view it targets, or — for entities that now live in settings
+ * (users) — that settings section. Per-session visibility is the host's to
+ * add (see isPortalEntityScopeOffered).
+ */
 export function isVisiblePortalScope(scopeId: PortalEntityScopeId): boolean {
-  return VISIBLE_PORTAL_VIEW_IDS.has(PORTAL_VIEW_BY_SCOPE_ID[scopeId]);
+  const settingsKey = SETTINGS_KEY_BY_SCOPE_ID[scopeId];
+  return settingsKey !== undefined
+    ? SETTINGS_SECTION_KEYS.has(settingsKey)
+    : VISIBLE_PORTAL_VIEW_IDS.has(PORTAL_VIEW_BY_SCOPE_ID[scopeId]);
 }
 
 /** Whether this build ships the in-app developer docs (so they're searchable). */
@@ -199,12 +216,18 @@ function policyResultTitle(entry: CatalogueEntry, t: Translate) {
     : category;
 }
 
+/**
+ * @param aiEngineEnabled false once config says the AI engine is off: AI
+ *   templates then show locked, as on the Pipelines page, rather than opening
+ *   a setup the page refuses.
+ */
 export function rankPortalPolicyResults(
   entries: CatalogueEntry[],
   trimmed: string,
   t: Translate,
   openPolicy: (policyKey: string) => void,
   limit = ENTITY_GROUP_LIMIT,
+  aiEngineEnabled?: boolean,
 ): SuperSearchResult[] {
   return rankByFuzzy(
     entries.filter((entry) => !entry.category.comingSoon),
@@ -216,15 +239,23 @@ export function rankPortalPolicyResults(
     ],
   )
     .slice(0, limit)
-    .map(({ item, score }) => ({
-      key: `portal-policy:${item.category.id}`,
-      group: "portal-policies",
-      title: policyResultTitle(item, t),
-      subtitle: t(item.category.desc),
-      icon: <Icon name="shield-check" size={18} />,
-      score,
-      onSelect: () => openPolicy(item.category.id),
-    }));
+    .map(({ item, score }) => {
+      const locked =
+        item.category.requiresAiEngine === true && aiEngineEnabled === false;
+      const lockedLabel = locked
+        ? t("portal.policies.card.requiresAiEngine")
+        : undefined;
+      return {
+        key: `portal-policy:${item.category.id}`,
+        group: "portal-policies",
+        title: policyResultTitle(item, t),
+        subtitle: lockedLabel ?? t(item.category.desc),
+        icon: <Icon name="shield-check" size={18} />,
+        score,
+        disabledReason: lockedLabel,
+        onSelect: () => (locked ? undefined : openPolicy(item.category.id)),
+      };
+    });
 }
 
 export function rankPortalPipelineResults(
@@ -254,6 +285,8 @@ export function rankPortalPipelineResults(
 export interface BuildEntityGroupsOptions {
   /** Host scope filter; defaults to every scope enabled. */
   scopeEnabled?: (scopeId: string) => boolean;
+  /** From app config; undefined while it loads (see rankPortalPolicyResults). */
+  aiEngineEnabled?: boolean;
 }
 
 /**
@@ -310,6 +343,7 @@ export function buildProcessorEntityGroups(
             `${toPortalPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(policyKey)}`,
           ),
         ENTITY_GROUP_LIMIT,
+        options.aiEngineEnabled,
       )
     : [];
   if (policies.length > 0) {

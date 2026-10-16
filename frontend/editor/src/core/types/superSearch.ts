@@ -80,6 +80,10 @@ export interface SuperSearchGates {
    * (SaaS). Hosts whose users are always signed in may omit it.
    */
   isAnonymous?: boolean;
+  /** Whether General renders the account card (see useAccountCardShown). */
+  accountCardShown?: boolean;
+  /** An admin who owns the organization — the only one who sees billing. */
+  isOrgOwner?: boolean;
 }
 
 /**

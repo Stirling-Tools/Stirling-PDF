@@ -16,6 +16,7 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { usePortalAccess } from "@app/hooks/usePortalAccess";
+import { useAccountCardShown } from "@app/hooks/useAccountCardShown";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { fileStorage } from "@app/services/fileStorage";
@@ -34,7 +35,10 @@ import {
   type ToolSearchAccessResolver,
 } from "@app/hooks/useToolSearchAccess";
 import { SETTINGS_SEARCH_INDEX } from "@app/data/settingsSearchIndex";
-import { SETTINGS_SECTION_REGISTRY } from "@app/data/settingsSectionRegistry";
+import {
+  SETTINGS_SECTION_REGISTRY,
+  type SettingsSectionEntry,
+} from "@app/data/settingsSectionRegistry";
 import {
   buildMatchSnippet,
   findSettingsContentMatch,
@@ -75,6 +79,8 @@ export type {
  * slice per group and expands to the rest on demand.
  */
 export const GROUP_RESULT_CEILING = 24;
+/** Translation subtrees General only renders inside the account card. */
+const ACCOUNT_CARD_PREFIXES = ["account"];
 /** Group display order in the dropdown. */
 const GROUP_ORDER: SuperSearchGroupId[] = [
   "files",
@@ -102,6 +108,7 @@ export function useSuperSearchGates(): SuperSearchGates | null {
   // Through the seam, not authState: on SaaS the editor's Supabase session
   // carries no permission flags, so reading it here hid every processor lane.
   const portalAccessible = usePortalAccess();
+  const accountCardShown = useAccountCardShown();
   return useMemo(
     () =>
       config
@@ -111,9 +118,24 @@ export function useSuperSearchGates(): SuperSearchGates | null {
             portalAccessible,
             isAnonymous: authState.isAnonymous,
             showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
+            accountCardShown,
+            // Not every build's user type carries orgOwner (SaaS has no
+            // owner-only sections), hence the `in` check.
+            isOrgOwner:
+              (authState.isAdmin ?? false) &&
+              !!authState.user &&
+              "orgOwner" in authState.user &&
+              authState.user.orgOwner === true,
           }
         : null,
-    [authState.isAdmin, authState.isAnonymous, portalAccessible, config],
+    [
+      authState.isAdmin,
+      authState.isAnonymous,
+      authState.user,
+      portalAccessible,
+      accountCardShown,
+      config,
+    ],
   );
 }
 
@@ -155,12 +177,8 @@ export function useEditorSearchScopes(): SuperSearchScope[] {
               label: t("superSearch.group.pages", "Pages"),
               aliases: ["page", "pages", "processor", "portal"],
             },
-            ...PORTAL_ENTITY_SCOPE_DEFS.filter(
-              (def) =>
-                // A settings-hosted entity is reachable wherever the processor is.
-                (def.settingsKey !== undefined ||
-                  visibleViewIds.has(def.viewId)) &&
-                isPortalEntityScopeAccessible(def.id, gates?.isAdmin ?? false),
+            ...PORTAL_ENTITY_SCOPE_DEFS.filter((def) =>
+              isPortalEntityScopeOffered(def.id, gates),
             ).map((def) => ({
               id: def.id,
               label: t(def.labelKey, def.labelFallback),
@@ -178,7 +196,7 @@ export function useEditorSearchScopes(): SuperSearchScope[] {
           ]
         : []),
     ];
-  }, [t, processorAvailable, gates?.isAdmin]);
+  }, [t, processorAvailable, gates]);
 }
 
 /**
@@ -241,10 +259,15 @@ export function useMyFilesStubs(active: boolean): {
   return { stubs, loadingFiles };
 }
 
+/**
+ * @param dataLostLabel reason shown on a file whose stored bytes are gone —
+ *   still listed, as the sidebar lists it, but it can't be opened.
+ */
 export function rankFileResults(
   stubs: StirlingFileStub[],
   trimmed: string,
   openFile: (stub: StirlingFileStub) => void | Promise<void>,
+  dataLostLabel: string,
   limit = GROUP_RESULT_CEILING,
 ): SuperSearchResult[] {
   if (!trimmed) return [];
@@ -264,7 +287,10 @@ export function rankFileResults(
         size: "1.15rem",
       }),
       score,
-      onSelect: () => openFile(item),
+      ...(item.dataUnavailable
+        ? { subtitle: dataLostLabel, disabledReason: dataLostLabel }
+        : {}),
+      onSelect: () => (item.dataUnavailable ? undefined : openFile(item)),
     }));
 }
 
@@ -310,6 +336,60 @@ export function rankToolResults(
     });
 }
 
+/** Whether the settings nav shows this section to the current session. */
+export function isSettingsSectionVisible(
+  s: SettingsSectionEntry,
+  gates: SuperSearchGates | null,
+): boolean {
+  // Null gates (config still loading): hide every gated section.
+  // requiresLogin keys off the deployment's login *mode*, mirroring the nav
+  // builder: with login on the editor is login-walled (an unauthenticated
+  // visitor never reaches this code), and with login off those sections
+  // (account, API keys) have no meaning. Actual per-session auth state only
+  // matters on SaaS, where requiresAccount/isAnonymous carries it.
+  if (s.requiresLogin && !(gates?.loginEnabled ?? false)) return false;
+  // Admin-area sections mirror the builder's gate: admins always; no-login
+  // mode only while system.showSettingsWhenNoLogin keeps the admin preview.
+  const adminGateOpen =
+    !!gates &&
+    (gates.isAdmin ||
+      (!gates.loginEnabled && (gates.showSettingsWhenNoLogin ?? true)));
+  if (s.adminArea && !adminGateOpen) return false;
+  // Account-bound sections mirror the SaaS builder's `!isAnonymous` gate.
+  if (s.requiresAccount && (gates ? (gates.isAnonymous ?? false) : true))
+    return false;
+  // The processor's own sections mirror its nav builder's portalAccess gate.
+  if (s.requiresPortalAccess && gates?.portalAccessible !== true) return false;
+  // Billing is the owner's alone, mirroring the settings nav.
+  if (s.requiresOrgOwner && gates?.isOrgOwner !== true) return false;
+  return true;
+}
+
+/**
+ * Whether a Processor entity lane can be offered and return results here: its
+ * page ships in this build, or — for entities that now live in settings
+ * (users) — that settings section is visible to this session; and the session
+ * may list them. Both a lane's chip and its fetch go through this, so an
+ * offered chip always has something behind it.
+ */
+export function isPortalEntityScopeOffered(
+  scopeId: string,
+  gates: SuperSearchGates | null,
+): boolean {
+  const def = PORTAL_ENTITY_SCOPE_DEFS.find((d) => d.id === scopeId);
+  if (!def) return true;
+  const hosted =
+    def.settingsKey !== undefined
+      ? SETTINGS_SECTION_REGISTRY.some(
+          (s) =>
+            s.key === def.settingsKey && isSettingsSectionVisible(s, gates),
+        )
+      : PROCESSOR_SEARCH_INDEX.some((entry) => entry.id === def.viewId);
+  return (
+    hosted && isPortalEntityScopeAccessible(def.id, gates?.isAdmin ?? false)
+  );
+}
+
 export function rankSettingsResults(
   trimmed: string,
   t: TFunction,
@@ -322,29 +402,9 @@ export function rankSettingsResults(
   // Sections gated like the settings nav. The registry resolves per build
   // (core / proprietary / saas / desktop), so this only ever sees sections
   // the current build's settings page can actually show.
-  const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) => {
-    // Null gates (config still loading): hide every gated section.
-    // requiresLogin keys off the deployment's login *mode*, mirroring the nav
-    // builder: with login on the editor is login-walled (an unauthenticated
-    // visitor never reaches this code), and with login off those sections
-    // (account, API keys) have no meaning. Actual per-session auth state only
-    // matters on SaaS, where requiresAccount/isAnonymous carries it.
-    if (s.requiresLogin && !(gates?.loginEnabled ?? false)) return false;
-    // Admin-area sections mirror the builder's gate: admins always; no-login
-    // mode only while system.showSettingsWhenNoLogin keeps the admin preview.
-    const adminGateOpen =
-      !!gates &&
-      (gates.isAdmin ||
-        (!gates.loginEnabled && (gates.showSettingsWhenNoLogin ?? true)));
-    if (s.adminArea && !adminGateOpen) return false;
-    // Account-bound sections mirror the SaaS builder's `!isAnonymous` gate.
-    if (s.requiresAccount && (gates ? (gates.isAnonymous ?? false) : true))
-      return false;
-    // The processor's own sections mirror its nav builder's portalAccess gate.
-    if (s.requiresPortalAccess && gates?.portalAccessible !== true)
-      return false;
-    return true;
-  });
+  const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) =>
+    isSettingsSectionVisible(s, gates),
+  );
   // Row context: the display label of the section the row lives in.
   const sectionLabelFor = new Map(
     visibleSections.map((s) => [s.key, t(s.labelKey, s.labelFallback)]),
@@ -352,8 +412,13 @@ export function rankSettingsResults(
 
   // Row-level entries (deep-link by slug) take priority. Rows for
   // sections this build/user can't open are dropped with them.
+  const accountCardShown = gates?.accountCardShown ?? false;
   const rowMatches = rankByFuzzy(
-    SETTINGS_SEARCH_INDEX.filter((e) => sectionLabelFor.has(e.section)),
+    SETTINGS_SEARCH_INDEX.filter(
+      (e) =>
+        sectionLabelFor.has(e.section) &&
+        (!e.requiresAccountCard || accountCardShown),
+    ),
     trimmed,
     [
       (e) => t(e.labelKey, e.labelFallback),
@@ -409,7 +474,12 @@ export function rankSettingsResults(
       : visibleSections
           .filter((s) => !labelMatchedKeys.has(s.key))
           .flatMap((s) => {
-            const match = findSettingsContentMatch(s.key, trimmed, t);
+            const match = findSettingsContentMatch(
+              s.key,
+              trimmed,
+              t,
+              accountCardShown ? undefined : ACCOUNT_CARD_PREFIXES,
+            );
             if (!match) return [];
             const snippet = buildMatchSnippet(match, trimmed);
             const group = groupTitle(s);
@@ -585,12 +655,19 @@ export function useSuperSearch(
   // Processor entities (users, policies, pipelines, sources) join the pages
   // under the Processor section — same access gate as the pages group, each
   // entity type filterable by its own scope.
+  // The chip filter plus the lane's own availability, so an unoffered lane
+  // is neither fetched nor shown.
+  const entityScopeEnabled = useCallback(
+    (scopeId: string) =>
+      scopeEnabled(scopeId) && isPortalEntityScopeOffered(scopeId, gates),
+    [scopeEnabled, gates],
+  );
   const entityGroups = useProcessorEntityGroups(
     trimmed,
     active && trimmed.length > 0 && isProcessorGateOpen(gates),
     t,
     navigate,
-    scopeEnabled,
+    entityScopeEnabled,
     gates?.isAdmin ?? false,
   );
 
@@ -598,7 +675,12 @@ export function useSuperSearch(
     const assembledGroups = assembleSuperSearchGroups(
       {
         files: scopeEnabled("files")
-          ? rankFileResults(stubs, trimmed, openFile)
+          ? rankFileResults(
+              stubs,
+              trimmed,
+              openFile,
+              t("fileSidebar.dataLostTitle", "File data is unavailable"),
+            )
           : [],
         tools: scopeEnabled("tools")
           ? rankToolResults(toolRegistry, trimmed, openTool, toolAccess)

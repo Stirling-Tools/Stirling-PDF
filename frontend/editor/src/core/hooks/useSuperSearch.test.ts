@@ -49,6 +49,14 @@ vi.mock("@app/data/settingsSearchIndex", () => ({
       labelFallback: "SMTP host",
       keywords: ["smtp"],
     },
+    {
+      section: "general",
+      anchor: "account",
+      labelKey: "account.accountSettings",
+      labelFallback: "Account",
+      keywords: ["password"],
+      requiresAccountCard: true,
+    },
   ],
 }));
 
@@ -80,6 +88,14 @@ vi.mock("@app/data/settingsSectionRegistry", () => ({
       labelFallback: "Team",
       keywords: ["team"],
       requiresAccount: true,
+    },
+    {
+      key: "billing",
+      labelKey: "portal.nav.usage",
+      labelFallback: "Usage & Billing",
+      keywords: ["wallet"],
+      adminArea: true,
+      requiresOrgOwner: true,
     },
   ],
 }));
@@ -120,9 +136,11 @@ import type { TFunction } from "i18next";
 import {
   assembleSuperSearchGroups,
   rankProcessorResults,
+  rankFileResults,
   rankSettingsResults,
   rankToolResults,
 } from "@app/hooks/useSuperSearch";
+import type { StirlingFileStub } from "@app/types/fileContext";
 import type { ToolSearchAccess } from "@app/hooks/useToolSearchAccess";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 
@@ -249,6 +267,54 @@ describe("useSuperSearch helpers", () => {
     expect(admin.map((result) => result.key)).toEqual([
       "setting-section:admin",
     ]);
+  });
+
+  it("links the account row only where the account card renders", () => {
+    const gates = { isAdmin: false, loginEnabled: true };
+    expect(
+      rankSettingsResults("password", t, gates, vi.fn()).map((r) => r.key),
+    ).not.toContain("setting:general:account");
+    expect(
+      rankSettingsResults(
+        "password",
+        t,
+        { ...gates, accountCardShown: true },
+        vi.fn(),
+      ).map((r) => r.key),
+    ).toContain("setting:general:account");
+  });
+
+  it("offers billing to the organization owner, not every admin", () => {
+    const admin = { isAdmin: true, loginEnabled: true };
+    expect(rankSettingsResults("wallet", t, admin, vi.fn())).toEqual([]);
+    expect(
+      rankSettingsResults(
+        "wallet",
+        t,
+        { ...admin, isOrgOwner: true },
+        vi.fn(),
+      ).map((r) => r.key),
+    ).toEqual(["setting-section:billing"]);
+  });
+
+  it("lists a file whose data is lost but won't open it", () => {
+    const openFile = vi.fn();
+    const [lost] = rankFileResults(
+      [
+        {
+          id: "f1",
+          name: "Invoice2024.pdf",
+          type: "application/pdf",
+          dataUnavailable: true,
+        } as unknown as StirlingFileStub,
+      ],
+      "2024",
+      openFile,
+      "File data is unavailable",
+    );
+    expect(lost.disabledReason).toBe("File data is unavailable");
+    lost.onSelect();
+    expect(openFile).not.toHaveBeenCalled();
   });
 
   it("hides account-bound settings from anonymous sessions", () => {

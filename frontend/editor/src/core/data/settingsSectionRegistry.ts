@@ -51,6 +51,8 @@ export interface SettingsSectionEntry {
   requiresAccount?: boolean;
   /** Section is the processor's; only a session that can enter it sees it. */
   requiresPortalAccess?: boolean;
+  /** Only the organization owner sees it (billing), not every admin. */
+  requiresOrgOwner?: boolean;
 }
 
 /** Core (OSS) sections — always present in every build. */
