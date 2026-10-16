@@ -36,6 +36,17 @@
   }
 }
 
+/* Phone dialogs fill the screen with their primary action in the same corner,
+   and the overlay stacks above the default modal layer. Covers both modal
+   systems: an open Mantine modal sets data-scroll-locked on the body, and the
+   shared ui/Modal portals a .sui-modal__backdrop. */
+@media (max-width: 768px) {
+  body[data-scroll-locked] .chat-fab-trigger,
+  body:has(.sui-modal__backdrop) .chat-fab-trigger {
+    display: none;
+  }
+}
+
 .chat-fab-trigger--hidden {
   opacity: 0;
   transform: scale(0.78);
