@@ -5546,30 +5546,6 @@ count_other = "{{count}} participants selected"
 label = "Select participants"
 placeholder = "Choose participants to sign..."
 
-[groupSigning.tooltip]
-header = "About Group Signing"
-
-[groupSigning.tooltip.finalization]
-bullet1 = "The final PDF includes all accepted signatures"
-bullet2 = "Review outstanding participants before finalizing with partial signatures"
-bullet3 = "Finalization closes the request; outstanding participants can no longer sign"
-description = "After at least one participant has signed, the owner can finalize the request and generate the signed PDF."
-title = "Finalization Process"
-
-[groupSigning.tooltip.roles]
-bullet1 = "Owner (you): Creates session, configures signature defaults, finalizes document"
-bullet2 = "Participants: Choose a certificate and optionally place a visible signature on the PDF"
-bullet3 = "Participants can adjust their signature reason and location before submitting"
-description = "The owner sets request defaults; each participant chooses their certificate and optional visible mark."
-title = "Participant Roles"
-
-[groupSigning.tooltip.sequential]
-bullet1 = "Participants do not need to wait for another signer"
-bullet2 = "Track each participant's progress in Signing Sessions"
-bullet3 = "A due date is a reminder; it does not expire access"
-description = "Assigned participants can review and sign independently, in any order."
-title = "Signing in Any Order"
-
 [guestBanner]
 dismiss = "Dismiss banner"
 message = "Create a free account to save your work, access more features, and support the project."
@@ -7141,8 +7117,6 @@ upgradeSuccess = "Payment successful! Your subscription has been upgraded. The l
 upgradeTitle = "Upgrade to {{planName}}"
 yearly = "Yearly"
 
-[payment.addCapacity]
-
 [payment.adjustTeam]
 title = "Adjust Team plan"
 
@@ -7571,21 +7545,6 @@ undoTooltip = "Undo ({{shortcut}})"
 unlock = "Unlock selection"
 unlockTooltip = "Unlock selection - makes it editable again"
 
-[pdfTextEditor.tooltip.alpha]
-text = "This alpha viewer is still evolving-certain fonts, colors, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
-title = "Alpha Viewer"
-
-[pdfTextEditor.tooltip.header]
-title = "Preview Limitations"
-
-[pdfTextEditor.tooltip.previewVariance]
-text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
-title = "Preview Variance"
-
-[pdfTextEditor.tooltip.textFocus]
-text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
-title = "Text and Image Focus"
-
 [pdfTextEditor.zoom]
 fit = "Fit"
 fitToWidth = "Fit to width"
@@ -7674,7 +7633,6 @@ tags = "automate,sequence,scripted,batch-process"
 title = "Pipeline"
 
 [plan]
-contact = "Contact Us"
 current = "Current Plan"
 featureComparison = "Feature Comparison"
 fetchError = "Failed to fetch pricing data"
@@ -7709,7 +7667,6 @@ highlight2 = "Dedicated support"
 highlight3 = "Latest features"
 name = "Enterprise"
 requiresServer = "Requires Team plan"
-requiresServerMessage = "Please upgrade to the Team plan first before upgrading to Enterprise."
 
 [plan.feature]
 api = "API Access"
@@ -7788,17 +7745,11 @@ title = "You're on a Roll!"
 
 [plan.static]
 activateLicense = "Activate Your License"
-contactToUpgrade = "Contact us to upgrade or customize your plan"
 getLicense = "Get the Team plan"
 monthlyBilling = "Monthly Billing"
 selectPeriod = "Select Billing Period"
 upgradeToEnterprise = "Upgrade to Enterprise"
-upTo = "Up to"
 yearlyBilling = "Yearly Billing"
-
-[plan.static.billingPortal]
-message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
-title = "Email Verification Required"
 
 [plan.static.licenseActivation]
 activate = "Activate License"
@@ -7809,10 +7760,6 @@ instructions = "Complete your purchase in the Stripe tab. Once your payment is c
 keyDescription = "Paste the license key from your email"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
-
-[plan.team]
-maxUsers = "100 users"
-name = "Team"
 
 [policies.activity]
 outputsUnavailable = "Policy outputs are no longer available to download."
@@ -8327,8 +8274,6 @@ rateUnknown = "We'll show the exact price at checkout."
 [portal.billing.prepaid.consent]
 label = "I understand that when my prepaid capacity is used up or expires after 12 months, processing automatically continues at the standard metered pay-as-you-go rate (up to my spend limit) unless I cancel, and that I can cancel anytime from the billing portal."
 
-[portal.billing.prepaid.deploy]
-
 [portal.billing.prepaid.offer]
 title = "Get 12 months for the price of 10"
 
@@ -8342,15 +8287,9 @@ payOnline = "Pay online"
 poNumber = "PO number (optional)"
 poNumberPlaceholder = "e.g. PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
-
-[portal.billing.prepaid.posture]
-
 [portal.billing.prepaid.review]
 download = "Download quote (PDF)"
 downloading = "Preparing…"
-
-[portal.billing.prepaid.size]
 
 [portal.billing.processor]
 activate = "Switch on the Processor"
@@ -8446,8 +8385,6 @@ useSuggested = "Use suggested · {{amount}} / month"
 body_one = "At {{rate}}/day you reach the cap in ~{{count}} day (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
 body_other = "At {{rate}}/day you reach the cap in ~{{count}} days (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
 label = "Projected to exceed."
-
-[portal.billing.spendLimitModal]
 
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "Raise it now so automated processing never pauses."
@@ -12520,37 +12457,6 @@ rotateRight = "Rotate right"
 trim = "Trim to signature"
 trimHint = "Crops the empty space around it"
 
-[signatureSettings.tooltip]
-header = "Signature Appearance Settings"
-
-[signatureSettings.tooltip.location]
-bullet1 = "Examples: \"New York, USA\", \"London Office\", \"Remote\""
-bullet2 = "Not the same as page position"
-bullet3 = "May be required for certain legal jurisdictions"
-description = "Optional geographic location where the signature was applied. Stored in certificate metadata."
-title = "Signature Location"
-
-[signatureSettings.tooltip.logo]
-bullet1 = "Displayed alongside signature and text"
-bullet2 = "Supports PNG, JPG formats"
-bullet3 = "Enhances professional appearance"
-description = "Add a company logo to visible signatures for branding and authenticity."
-title = "Company Logo"
-
-[signatureSettings.tooltip.reason]
-bullet1 = "Examples: \"Approval\", \"Contract Agreement\", \"Review Complete\""
-bullet2 = "Visible in PDF signature properties"
-bullet3 = "Useful for audit trails and compliance"
-description = "Optional text explaining why the document is being signed. Stored in certificate metadata."
-title = "Signature Reason"
-
-[signatureSettings.tooltip.visibility]
-bullet1 = "<b>Visible</b>: Signature appears on PDF with custom appearance"
-bullet2 = "<b>Invisible</b>: Certificate embedded without visual mark"
-bullet3 = "Invisible signatures still provide cryptographic validation"
-description = "Controls whether the signature is visible on the document or embedded invisibly."
-title = "Signature Visibility"
-
 [signingDetail]
 allSigned = "Everyone has signed. Review the document, then finalize."
 awaitingOwner = "The owner will finalize the document once they are ready."
@@ -12961,7 +12867,6 @@ ownerLabel = "Owner"
 ownerUnknown = "Unknown"
 removeLink = "Remove link"
 removeUser = "Remove"
-requiresLogin = "This shared file requires login."
 revoked = "Share link removed"
 revokeFailed = "Unable to remove the share link."
 roleCommenter = "Commenter"
@@ -13031,9 +12936,6 @@ tools = "Tools"
 title = "Stirling-PDF Survey"
 
 [swagger]
-clickHere = "click here"
-fallback = "If it didn't open automatically,"
-opening = "Opening Swagger UI in a new tab..."
 tags = "api,documentation,swagger,endpoints,development"
 title = "API Documentation"
 
@@ -14068,10 +13970,6 @@ title = "Workspace"
 
 [workspace.people]
 description = "Manage workspace members and their permissions"
-
-[workspace.people.license]
-users_one = "user"
-users_other = "users"
 
 [workspace.teams]
 description = "Manage teams and organize workspace members"
