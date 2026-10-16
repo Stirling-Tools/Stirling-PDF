@@ -12,12 +12,51 @@ on:
 permissions:
   contents: read
 
+env:
+  JAVA_VERSION: 25
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
+  GRADLE_FILES_TO_HASH: |
+    gradle/wrapper/gradle-wrapper.properties
+    gradle/libs.versions.toml
+    buildSrc/**
+    settings.gradle
+    build.gradle
+    app/**/build.gradle
+    gradle/**/*.gradle
+
 jobs:
   pick:
     uses: ./.github/workflows/_runner-pick.yml
 
+  hash_pr:
+    name: Hash files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Hash Gradle and Cargo files
+        id: hash
+        env:
+          GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+        shell: bash
+        run: |
+          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
+
   migration-test:
-    needs: pick
+    needs: [pick, hash_pr]
     name: DB upgrade (${{ matrix.database }})
     strategy:
       fail-fast: false
@@ -28,6 +67,8 @@ jobs:
       name: ci-unsigned
       deployment: false
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     timeout-minutes: 45
     steps:
       - name: Harden Runner
@@ -37,6 +78,15 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Checkout trusted Java action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-java-action
+          sparse-checkout: .github/actions/java
+          persist-credentials: false
 
       - name: Report PostgreSQL coverage unavailable for forks
         if: needs.pick.outputs.is_fork == 'true'
@@ -52,16 +102,23 @@ jobs:
             exit 1
           fi
 
-      - name: Restore cache Gradle User Home
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore cache artifact
+        id: cache
+        uses: ./.github/actions/cache-the-planet
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
+          multi-cache: |
+            db-gradle-caches:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+            db-gradle-wrapper:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+          key: |
+            db-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            db-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
 
       - name: Set up JDK 25
-        uses: ./.github/actions/java
+        uses: ./trusted-java-action/.github/actions/java
         with:
           java-version: 25
 

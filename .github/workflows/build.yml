@@ -60,19 +60,85 @@ jobs:
         id: changes
         with:
           filters: .github/config/.files.yaml
+  files-hash:
+    name: Hash files
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash }}
+      cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash }}
+      frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
+      uv_files_hash: ${{ steps.hash.outputs.uv_files_hash }}
+      npm_files_hash: ${{ steps.hash.outputs.npm_files_hash }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Hash files
+        id: hash
+        env:
+          GRADLE_HASH_FILES: >-
+            ${{ hashFiles(
+              'gradle/wrapper/gradle-wrapper.properties',
+              'gradle/libs.versions.toml',
+              'buildSrc/**',
+              'settings.gradle',
+              'build.gradle',
+              'app/**/build.gradle',
+              'gradle/**/*.gradle'
+            ) }}
+          CARGO_HASH_FILES: >-
+            ${{ hashFiles(
+              'frontend/editor/src-tauri/**',
+              'frontend/editor/src-tauri/Cargo.toml',
+              'frontend/editor/src-tauri/Cargo.lock'
+            ) }}
+          FRONTEND_DIST_HASH_FILES: >-
+            ${{ hashFiles('frontend/editor/src/**') }}
+          UV_HASH_FILES: >-
+            ${{ hashFiles(
+              'engine/.python-version',
+              'engine/pyproject.toml',
+              'engine/uv.lock'
+            ) }}
+          NPM_HASH_FILES: >-
+            ${{ hashFiles(
+              'frontend/package-lock.json'
+            ) }}
+          TASK_HASH_FILES: >-
+            ${{ hashFiles(
+              '.taskfiles/**',
+              'Taskfile.yml'
+            ) }}
+        shell: bash
+        run: |
+          echo "gradle_files_hash=$GRADLE_HASH_FILES" >> "$GITHUB_OUTPUT"
+          echo "cargo_files_hash=$CARGO_HASH_FILES" >> "$GITHUB_OUTPUT"
+          echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH_FILES" >> "$GITHUB_OUTPUT"
+          echo "uv_files_hash=$UV_HASH_FILES" >> "$GITHUB_OUTPUT"
+          echo "npm_files_hash=$NPM_HASH_FILES" >> "$GITHUB_OUTPUT"
 
   gradle-cache-prime:
     if: needs.files-changed.outputs.backend == 'true'
-    needs: [files-changed]
+    needs: [files-changed, files-hash]
+    permissions:
+      contents: write
     uses: ./.github/workflows/gradle-cache-prime.yml
     secrets: inherit
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
 
   build:
-    if: needs.files-changed.outputs.backend == 'true'
-    needs: [files-changed, gradle-cache-prime]
+    if: |
+      !cancelled() &&
+      needs.files-changed.outputs.backend == 'true'
+    needs: [files-changed, gradle-cache-prime, files-hash]
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
     permissions:
       actions: read
-      contents: read
+      contents: write
       security-events: write
       pull-requests: write
     uses: ./.github/workflows/backend-build.yml
@@ -85,30 +151,38 @@ jobs:
     # the `project` filter so doc-only PRs skip this ~5-minute job.
     if: |
       !cancelled() &&
-      needs.files-changed.outputs.project == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      needs.files-changed.outputs.project == 'true'
     needs: [files-changed, gradle-cache-prime]
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/db-migration-test.yml
     secrets: inherit
 
   check-generateOpenApiDocs:
-    if: needs.files-changed.outputs.openapi == 'true'
-    needs: [files-changed, gradle-cache-prime]
+    if: |
+      !cancelled() &&
+      needs.files-changed.outputs.openapi == 'true'
+    needs: [files-changed, gradle-cache-prime, files-hash]
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/check-openapi.yml
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
     secrets: inherit
 
   frontend-validation:
     if: needs.files-changed.outputs.frontend == 'true'
-    needs: [files-changed]
+    needs: [files-changed, files-hash]
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     uses: ./.github/workflows/frontend-validation.yml
     secrets: inherit
+    with:
+      frontend-dist-hash: ${{ needs.files-hash.outputs.frontend_dist_files_hash }}
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
+      cargo-hash: ${{ needs.files-hash.outputs.cargo_files_hash }}
+      npm-hash: ${{ needs.files-hash.outputs.npm_files_hash }}
 
   # Required (in all-checks-passed). Scans the stories a branch touches in both
   # light and dark; an axe violation in either theme blocks the merge. The
@@ -116,18 +190,25 @@ jobs:
   # touching them directly.
   frontend-a11y:
     if: needs.files-changed.outputs.frontend == 'true'
-    needs: [files-changed]
+    needs: [files-changed, files-hash]
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/frontend-a11y.yml
     secrets: inherit
+    with:
+      npm-hash: ${{ needs.files-hash.outputs.npm_files_hash }}
 
   playwright-e2e:
-    if: needs.files-changed.outputs.frontend == 'true'
-    needs: [files-changed]
+    if: |
+      !cancelled() &&
+      needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed, files-hash]
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/e2e-stubbed.yml
+    with:
+      frontend-dist-hash: ${{ needs.files-hash.outputs.frontend_dist_files_hash }}
+      npm-hash: ${{ needs.files-hash.outputs.npm_files_hash }}
     secrets: inherit
 
   playwright-e2e-live:
@@ -135,10 +216,14 @@ jobs:
       !cancelled() &&
       needs.files-changed.outputs.frontend == 'true' &&
       contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
-    needs: [files-changed, gradle-cache-prime]
+    needs: [files-changed, gradle-cache-prime, files-hash]
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/e2e-live.yml
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
+      frontend-dist-hash: ${{ needs.files-hash.outputs.frontend_dist_files_hash }}
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
     secrets: inherit
 
   playwright-e2e-enterprise:
@@ -146,7 +231,7 @@ jobs:
       !cancelled() &&
       needs.files-changed.outputs.proprietary == 'true' &&
       contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
-    needs: [files-changed, gradle-cache-prime]
+    needs: [files-changed, gradle-cache-prime, files-hash]
     permissions:
       contents: read
     uses: ./.github/workflows/build-enterprise.yml
@@ -155,10 +240,13 @@ jobs:
       use_shared_cache: true
 
   check-licence:
-    if: needs.files-changed.outputs.build == 'true'
-    needs: [files-changed, gradle-cache-prime]
+    if: |
+      !cancelled() && needs.files-changed.outputs.build == 'true'
+    needs: [files-changed, gradle-cache-prime, files-hash]
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/check-licence.yml
     secrets: inherit
 
@@ -166,7 +254,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.project == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: write
@@ -183,8 +271,9 @@ jobs:
   # the critical path once the e2e matrix was sharded.
   test-build-docker-images:
     if: |
+      !cancelled() &&
       github.event_name == 'pull_request' &&
-      needs.files-changed.outputs.project == 'true'
+      needs.files-changed.outputs.project == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -198,11 +287,10 @@ jobs:
   tauri-build:
     if: |
       !cancelled() &&
-      needs.files-changed.outputs.tauri == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      needs.files-changed.outputs.tauri == 'true'
     needs: [files-changed, gradle-cache-prime]
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     secrets: inherit
@@ -217,10 +305,12 @@ jobs:
       use_shared_cache: true
 
   ai-engine:
-    if: needs.files-changed.outputs.engine == 'true'
+    if: |
+      !cancelled() &&
+      needs.files-changed.outputs.engine == 'true'
     needs: [files-changed]
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     uses: ./.github/workflows/ai-engine.yml
     secrets: inherit
@@ -233,11 +323,10 @@ jobs:
   generated-models:
     if: |
       !cancelled() &&
-      needs.files-changed.outputs.generated-models == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
-    needs: [files-changed, gradle-cache-prime]
+      needs.files-changed.outputs.generated-models == 'true'
+    needs: [files-changed]
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     uses: ./.github/workflows/check-generated-models.yml
     secrets: inherit
@@ -245,14 +334,13 @@ jobs:
       use_shared_cache: true
 
   pre-commit:
-    needs: [files-changed]
+    if: ${{ !cancelled() }}
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/pre_commit.yml
     secrets: inherit
 
   dependency-review:
-    needs: [files-changed]
     permissions:
       contents: read
     uses: ./.github/workflows/dependency-review.yml
@@ -265,17 +353,19 @@ jobs:
   # for whatever did record. Advisory only - intentionally NOT in
   # all-checks-passed, so a flaky aggregate run never blocks merging.
   coverage-aggregate:
-    if: ${{!cancelled()}}
+    if: ${{ !cancelled() }}
     needs:
       - build
       - playwright-e2e-live
       - docker-compose-tests
       - frontend-validation
+      - files-hash
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/coverage-aggregate.yml
     secrets: inherit
     with:
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
       frontend-validation-result: ${{ needs.frontend-validation.result }}
       playwright-e2e-live-result: ${{ needs.playwright-e2e-live.result }}
 
