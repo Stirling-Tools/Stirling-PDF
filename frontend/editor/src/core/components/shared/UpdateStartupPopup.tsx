@@ -1,10 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { updateService, type UpdateSummary } from "@app/services/updateService";
 import { isUpdatePopupAllowed } from "@app/components/shared/updatePopupGate";
-import UpdateModal from "@app/components/shared/UpdateModal";
+
+/**
+ * The modal can only ever render after the 15s startup check plus a version
+ * comparison finds a newer release, so its code belongs in the request that
+ * actually shows it rather than in everything every visitor downloads.
+ */
+const UpdateModal = lazy(() => import("@app/components/shared/UpdateModal"));
 
 /**
  * How long to wait after mount before checking for an update. Matches the
@@ -101,20 +107,22 @@ export function UpdateStartupPopup() {
   };
 
   return (
-    <UpdateModal
-      opened={showModal}
-      onClose={() => setShowModal(false)}
-      onRemindLater={() => {
-        localStorage.setItem(
-          SNOOZE_KEY,
-          String(Date.now() + SNOOZE_DURATION_MS),
-        );
-        setShowModal(false);
-      }}
-      currentVersion={currentVersion}
-      updateSummary={updateSummary}
-      machineInfo={machineInfo}
-    />
+    <Suspense fallback={null}>
+      <UpdateModal
+        opened={showModal}
+        onClose={() => setShowModal(false)}
+        onRemindLater={() => {
+          localStorage.setItem(
+            SNOOZE_KEY,
+            String(Date.now() + SNOOZE_DURATION_MS),
+          );
+          setShowModal(false);
+        }}
+        currentVersion={currentVersion}
+        updateSummary={updateSummary}
+        machineInfo={machineInfo}
+      />
+    </Suspense>
   );
 }
 
