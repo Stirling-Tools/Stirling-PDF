@@ -16611,10 +16611,31 @@
       "artifact_id": 12057101206,
       "artifact_name": "cache-untrusted-pr-8307-test-gradle-wrapper-macos-arm64-52ab514eac0ac24a1f85b83afb52c5c05e0c906c571b91d70d4d86cbbb87efd9-v6--157332f83a08dfcc06670080f92431c8687babbe1a1-part-000000",
       "workflow_run_id": 38924744022
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/test-tauri-target/macos-arm64/9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-cache-e1b7946154cca207/v6": {
+      "object": "sha256:b1db115c59869563bf6d4349f78cd5b4fdb1d0887092825d91b0732eb561764e",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-16T15:43:57.768Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 999,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:b1db115c59869563bf6d4349f78cd5b4fdb1d0887092825d91b0732eb561764e",
+          "size": 999,
+          "artifact_id": 12055844847,
+          "artifact_name": "cache-untrusted-pr-8307-test-tauri-target-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--b1db115c59869563bf6d4349f78cd5b4fdb1d08870928-part-000000",
+          "workflow_run_id": 38924744022
+        }
+      ],
+      "artifact_id": 12055844847,
+      "artifact_name": "cache-untrusted-pr-8307-test-tauri-target-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--b1db115c59869563bf6d4349f78cd5b4fdb1d08870928-part-000000",
+      "workflow_run_id": 38924744022
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-16T15:30:12.478Z",
-    "writes": 16
+    "writes": 17
   }
 }
