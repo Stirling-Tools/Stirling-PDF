@@ -110,8 +110,12 @@
   flex: 0 0 280px;
 }
 @media (max-width: 640px) {
+  /* The full-screen modal pads itself by the safe-area insets, so the picker
+     fills what is left or its footer actions fall below the screen. */
   .library-file-picker {
-    height: 100dvh;
+    height: calc(
+      100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+    );
   }
   .library-picker-header,
   .library-picker-footer,
