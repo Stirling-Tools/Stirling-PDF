@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { Suspense, lazy, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -10,9 +10,15 @@ import { accountService, type AccountData } from "@app/services/accountService";
 import apiClient from "@app/services/apiClient";
 import { withBasePath } from "@app/constants/app";
 import { DEFAULT_RUNTIME_STATE } from "@app/components/onboarding/orchestrator/onboardingConfig";
-import StaticOnboardingSlide from "@app/components/onboarding/StaticOnboardingSlide";
 import { Button } from "@app/ui/Button";
 import { Z_INDEX_ONBOARDING_CARD } from "@app/styles/zIndex";
+
+// The interrupt slides are the only startup-reachable consumers of the slide
+// definitions, and a returning install shows none of them, so the definitions
+// and their shell stay out of the boot chunks.
+const StaticOnboardingSlide = lazy(
+  () => import("@app/components/onboarding/StaticOnboardingSlide"),
+);
 
 function requiresMfaSetup(account: AccountData): boolean {
   if (account.mfaEnabled) return false;
@@ -127,52 +133,61 @@ export function StartupSetup({
     config?.enableAnalytics == null
   ) {
     return (
-      <StaticOnboardingSlide
-        key="analytics-choice"
-        slideId="analytics-choice"
-        runtimeState={runtimeState}
-        params={{ analyticsError, analyticsLoading }}
-        onSkip={() => {}}
-        allowDismiss={false}
-        onAction={(action) => {
-          if (action === "enable-analytics" || action === "disable-analytics") {
-            void handleAnalyticsChoice(action === "enable-analytics");
-          }
-        }}
-      />
+      <Suspense fallback={null}>
+        <StaticOnboardingSlide
+          key="analytics-choice"
+          slideId="analytics-choice"
+          runtimeState={runtimeState}
+          params={{ analyticsError, analyticsLoading }}
+          onSkip={() => {}}
+          allowDismiss={false}
+          onAction={(action) => {
+            if (
+              action === "enable-analytics" ||
+              action === "disable-analytics"
+            ) {
+              void handleAnalyticsChoice(action === "enable-analytics");
+            }
+          }}
+        />
+      </Suspense>
     );
   }
 
   const { account, login } = requirements.data ?? {};
   if (account?.changeCredsFlag) {
     return (
-      <StaticOnboardingSlide
-        key="first-login"
-        slideId="first-login"
-        runtimeState={runtimeState}
-        params={{
-          firstLoginUsername: account.username,
-          onPasswordChanged: handlePasswordChanged,
-          usingDefaultCredentials: login?.showDefaultCredentials,
-        }}
-        onSkip={() => {}}
-        allowDismiss={false}
-        onAction={() => {}}
-      />
+      <Suspense fallback={null}>
+        <StaticOnboardingSlide
+          key="first-login"
+          slideId="first-login"
+          runtimeState={runtimeState}
+          params={{
+            firstLoginUsername: account.username,
+            onPasswordChanged: handlePasswordChanged,
+            usingDefaultCredentials: login?.showDefaultCredentials,
+          }}
+          onSkip={() => {}}
+          allowDismiss={false}
+          onAction={() => {}}
+        />
+      </Suspense>
     );
   }
 
   if (account && requiresMfaSetup(account) && !mfaCompleted) {
     return (
-      <StaticOnboardingSlide
-        key="mfa-setup"
-        slideId="mfa-setup"
-        runtimeState={runtimeState}
-        params={{ onMfaSetupComplete: () => setMfaCompleted(true) }}
-        onSkip={() => {}}
-        allowDismiss={false}
-        onAction={() => {}}
-      />
+      <Suspense fallback={null}>
+        <StaticOnboardingSlide
+          key="mfa-setup"
+          slideId="mfa-setup"
+          runtimeState={runtimeState}
+          params={{ onMfaSetupComplete: () => setMfaCompleted(true) }}
+          onSkip={() => {}}
+          allowDismiss={false}
+          onAction={() => {}}
+        />
+      </Suspense>
     );
   }
 
