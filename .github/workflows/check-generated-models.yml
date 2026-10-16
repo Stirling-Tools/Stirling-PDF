@@ -33,12 +33,12 @@ env:
     build.gradle
     app/**/build.gradle
     gradle/**/*.gradle
-  CARGO_FILES_TO_HASH: |
-    frontend/editor/src-tauri/**
-    frontend/editor/src-tauri/Cargo.toml
-    frontend/editor/src-tauri/Cargo.lock
   FRONTEND_DIST_FILES_TO_HASH: |
     frontend/editor/src/**
+  UV_FILES_TO_HASH: |
+    engine/.python-version
+    engine/pyproject.toml
+    engine/uv.lock
 
 jobs:
   hash_pr:
@@ -48,11 +48,9 @@ jobs:
     permissions:
       contents: read
     outputs:
-      java_version: ${{ steps.hash.outputs.java_version }}
       gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
-      cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash}}
+      uv_files_hash: ${{ steps.hash.outputs.uv_files_hash}}
       frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
-      frontend_tauri_files_hash: ${{ steps.hash.outputs.frontend_tauri_files_hash }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -68,16 +66,13 @@ jobs:
         id: hash
         env:
           GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
-          CARGO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+          UV_HASH: ${{ hashFiles(env.UV_FILES_TO_HASH) }}
           FRONTEND_DIST_HASH: ${{ hashFiles(env.FRONTEND_DIST_FILES_TO_HASH) }}
-          FRONTEND_TAURI_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
         shell: bash
         run: |
-          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
           echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
-          echo "cargo_files_hash=$CARGO_HASH" >> "$GITHUB_OUTPUT"
+          echo "uv_files_hash=$UB_HASH" >> "$GITHUB_OUTPUT"
           echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"
-          echo "frontend_tauri_files_hash=$FRONTEND_TAURI_HASH" >> "$GITHUB_OUTPUT"
   generated-models:
     runs-on: ubuntu-latest
     needs: hash_pr
@@ -88,7 +83,6 @@ jobs:
     env:
       UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
       UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
-      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -115,12 +109,6 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            cargo-registry:
-              path: .cache/cargo/registry
-            cargo-git:
-              path: .cache/cargo/git
-            cargo-bin:
-              path: .cache/cargo/bin
             frontend-dist:
               path: frontend/editor/dist
             frontend-node-modules:
@@ -131,20 +119,18 @@ jobs:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             tool-models-gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-            tauri-target:
-              path: frontend/editor/src-tauri/target
+            tool-models-uv-python-dir:
+              path: .cache/uv-python-dir
+            tool-models-setup-uv-cache:
+              path: .cache/setup-uv-cache
           key: |
             tool-models-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             tool-models-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
-          exclude: |
-            frontend/editor/src-tauri/target/debug/**
+            tool-models-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
+            tool-models-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
@@ -159,13 +145,6 @@ jobs:
         uses: ./trusted-java-action/.github/actions/java
         with:
           java-version: "25"
-
-      - name: Set up Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
