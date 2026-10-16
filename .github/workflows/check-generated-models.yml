@@ -88,6 +88,8 @@ jobs:
     env:
       UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
       UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
+      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+      NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -115,6 +117,10 @@ jobs:
           multi-cache: |
             cargo-registry:
               path: .cache/cargo/registry
+            cargo-git:
+              path: .cache/cargo/git
+            cargo-bin:
+              path: .cache/cargo/bin
             frontend-dist:
               path: frontend/editor/dist
             frontend-node-modules:
@@ -131,6 +137,8 @@ jobs:
             tool-models-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             tool-models-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
