@@ -201,7 +201,7 @@
   },
   "/remove-password": {
     "title": "Remove PDF Password",
-    "description": "Remove password protection from PDF documents"
+    "description": "Remove the opening password, permissions password, or both."
   },
   "/change-permissions": {
     "title": "Change PDF Permissions",

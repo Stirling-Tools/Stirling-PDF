@@ -205,6 +205,19 @@ export function appApiStubs(opts: MockAppApiOptions = {}): AppApiStub[] {
   };
 
   return [
+    // Protection probe — the viewer reads it before showing a protected file
+    {
+      glob: "**/api/v1/security/inspect-pdf-security",
+      body: {
+        encrypted: false,
+        signed: false,
+        ownerAuthenticated: false,
+        permissions: -4,
+        canModify: true,
+        canAssemble: true,
+        pageCount: 1,
+      },
+    },
     // Liveness probe — decides whether the UI shows the app or an offline screen
     { glob: "**/api/v1/info/status", body: { status: backendStatus } },
     // App config — login flow, language list, and startup feature flags
