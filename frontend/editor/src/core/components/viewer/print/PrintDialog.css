@@ -1,0 +1,435 @@
+/* The print dialog reads as a workspace rather than a form: what is being
+   printed, the layout chosen, then the decisions beside the figure they produce.
+   Every length comes from the shared scale so the dialog keeps the app's rhythm. */
+
+/* Every figure draws at one width, so changing preset does not resize the panel. */
+.print-body {
+  --print-figure-w: 11rem;
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  /* The settings come before the figure, so the control someone opened the
+     dialog for is not behind a document thumbnail on a narrow screen. */
+  grid-template-areas:
+    "document"
+    "picker"
+    "controls"
+    "figure";
+}
+
+/* What is being printed, named above the layout it will be printed in. */
+.print-body__document {
+  grid-area: document;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.print-document__name {
+  font-weight: var(--font-weight-medium);
+  color: var(--c-text);
+}
+
+.print-document__meta {
+  color: var(--c-text-subtle);
+}
+
+/* The layout choice sits above both columns, ruled off from the decisions it
+   leads to rather than floating between them. */
+.print-body__picker {
+  grid-area: picker;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+.print-body__figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  grid-area: figure;
+}
+
+.print-body__controls {
+  display: grid;
+  grid-area: controls;
+}
+
+@media (min-width: 48.01em) {
+  .print-body {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+    column-gap: var(--space-6);
+    row-gap: var(--space-3);
+    grid-template-areas:
+      "document document"
+      "picker picker"
+      "controls figure";
+    /* The figure spans the last row and is taller than the controls, so the extra
+       height has to land in the grown row below the controls rather than
+       opening a gap between the picker and the panel. */
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  /* A hairline divides the decisions from their result, so the two columns read
+     as one panel instead of two stacks beside each other. */
+  .print-body__figure {
+    position: sticky;
+    top: 0;
+    padding-left: var(--space-6);
+    border-left: 1px solid var(--c-border-subtle);
+  }
+
+  /* The plain preset asks two short questions and shows one page, so stacking
+     them keeps the dialog from opening a column of empty space beside the
+     controls. The narrower column is centred under the picker. */
+  .print-body--plain {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "document"
+      "picker"
+      "controls"
+      "figure";
+  }
+
+  .print-body--plain .print-body__controls,
+  .print-body--plain .print-body__figure {
+    width: 100%;
+    max-width: 26rem;
+    margin-inline: auto;
+  }
+
+  .print-body--plain .print-body__figure {
+    position: static;
+    padding: var(--space-5) 0 0;
+    border-top: 1px solid var(--c-border-subtle);
+    border-left: 0;
+  }
+
+  /* The stage holds the page it is given rather than stretching past it. */
+  .print-body--plain .print-preview__stage {
+    max-width: 22rem;
+    margin-inline: auto;
+  }
+}
+
+/* Both column headings carry one label treatment, so the dialog reads as a
+   single panel rather than two kinds of surface. */
+/* The label row: a preview may offer one action, so it sits opposite the label. */
+.print-preview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.print-column__title,
+.print-preview__label {
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  color: var(--c-text-subtle);
+  text-transform: uppercase;
+}
+
+.print-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* The stage sizes the sheet; the sheet's aspect ratio gives it its height. */
+.print-preview__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 14rem;
+  padding: var(--space-5) var(--space-4);
+  /* A wash rather than a slab: the paper's own edge and lift set the figure
+     apart, so the frame does not compete with a small drawing. */
+  background: color-mix(in srgb, var(--c-surface-sunken) 55%, var(--c-surface));
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+}
+
+/* Every figure draws at one width, so changing preset does not resize the panel.
+   Landscape paper is wider than it is tall, so the imposed sheet is the one that
+   takes the extra room the rotation needs. */
+.print-preview__sheet,
+.print-page,
+.print-tiles {
+  width: var(--print-figure-w);
+  max-width: 100%;
+}
+
+.print-preview__sheet--landscape {
+  width: calc(var(--print-figure-w) * 1.414);
+}
+
+/* Paper reads as paper in both themes, whatever draws it: the imposed sheet, a
+   page bitmap, or the poster's stand-in. Constant so the bitmaps on it read the
+   same way in either. */
+.print-sheet,
+.print-page__image,
+.print-tiles__paper {
+  background: var(--c-document-bg);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.print-sheet {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 210 / 297;
+}
+
+.print-sheet--landscape {
+  aspect-ratio: 297 / 210;
+}
+
+/* Paper lifts off the stage it is drawn on, in either theme: in dark the rim is
+   the lift, which a shadow would not show against the dialog. */
+.print-sheet,
+.print-page__image,
+.print-tiles__paper,
+.print-tiles__page {
+  box-shadow:
+    0 1px 1px color-mix(in srgb, var(--c-text) 6%, transparent),
+    0 10px 24px -16px color-mix(in srgb, var(--c-text) 40%, transparent);
+}
+
+/* A cell shows the page that lands in it and nothing else: the sheet's own white
+   is what is left when the cell holds no page. */
+.print-sheet__cell {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-xs);
+}
+
+/* The layout's border setting, which the printed page will carry. */
+.print-sheet__cell--bordered {
+  border: 1px solid
+    color-mix(in srgb, var(--c-text-subtle) 70%, var(--c-document-bg));
+}
+
+/* A cell whose page is still rendering: not paper white, so a cell that has not
+   been drawn cannot be read as a page that is genuinely blank. */
+.print-sheet__cell--pending {
+  background: color-mix(
+    in srgb,
+    var(--c-surface-sunken) 75%,
+    var(--c-document-bg)
+  );
+}
+
+.print-sheet__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--c-document-bg);
+  object-fit: contain;
+}
+
+/* The page number a cell holds, over the page it holds. */
+.print-badge {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.95rem;
+  height: 0.95rem;
+  padding: 0 0.15rem;
+  font-size: 0.5625rem;
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--c-accent-on-light);
+  background: color-mix(
+    in srgb,
+    var(--c-accent-on-light) 14%,
+    var(--c-document-bg)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--c-accent-on-light) 35%, var(--c-document-bg));
+  border-radius: var(--radius-xs);
+}
+
+/* One page on its own, for the presets that impose nothing. The bitmap is the
+   document's own page, so its proportions give the figure its shape rather than
+   the sheet the imposed layouts are computed on. */
+.print-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.print-page__image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  /* A page taller than the stage keeps its proportions and stops growing, rather
+     than setting the stage's height from the document's longest page. */
+  max-height: 15rem;
+}
+
+/* The poster's page over the tiles it will be cut into: the page is drawn whole
+   with the grid and its numbering over it, so the figure names the order and the
+   boundaries without drawing cut marks the generated tiles do not carry.
+   The page's own bitmap defines the box and the grid is laid over exactly that
+   box, so a landscape or square page is divided where its tiles really fall. */
+.print-tiles {
+  position: relative;
+}
+
+/* The sheet the tiles are computed on, so a figure awaiting its page still shows
+   the paper the grid divides. Drawn only while the page itself is missing: two
+   boxes in the same place could disagree about the figure's height. */
+.print-tiles__paper {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1.41;
+}
+
+.print-tiles__page {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+.print-tiles__grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--print-tiles-columns), 1fr);
+  grid-template-rows: repeat(var(--print-tiles-rows), 1fr);
+}
+
+/* A nonprinting guide: dashed and neutral rather than in the accent, so it is
+   never read as a border the printed page will carry. */
+.print-tiles__tile {
+  position: relative;
+  border: 1px dashed color-mix(in srgb, var(--c-text-subtle) 45%, transparent);
+}
+
+/* The badge follows its tile, which is a tenth of a sheet across at 10 x 10. */
+.print-tiles .print-badge {
+  min-width: 1.2em;
+  height: 1.2em;
+  font-size: clamp(
+    0.5rem,
+    calc(
+      min(
+          var(--print-figure-w) / var(--print-tiles-columns),
+          var(--print-figure-w) / var(--print-tiles-rows)
+        ) *
+        0.18
+    ),
+    0.8125rem
+  );
+}
+
+/* Stepping between sides or pages: one control rather than two buttons floating
+   beside a number, with the count in a fixed track so it does not shift. */
+.print-preview__pager {
+  align-self: center;
+  padding: 0 var(--space-0_5);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-pill);
+}
+
+.print-preview__pager-label {
+  min-width: 7rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* Where the reader is, in the figures that stand for a page of the document. */
+.print-preview__caption {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* What the job produces, ruled off from the figure it describes. */
+.print-preview__output {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.print-preview__summary {
+  text-align: center;
+}
+
+/* The result the reader came for, above the quieter per-side detail and the
+   limits stated under them. */
+.print-preview__summary--primary {
+  font-weight: var(--font-weight-medium);
+  color: var(--c-text);
+}
+
+/* A limitation worth reading twice, left aligned because it wraps. */
+.print-preview__note {
+  text-align: left;
+  line-height: 1.5;
+}
+
+/* A figure that is still rendering, said under it rather than left to look like
+   blank paper. The area collapses when it has nothing to say, so it costs no
+   space when the figure is drawn. */
+.print-preview__status {
+  text-align: center;
+}
+
+.print-preview__status:empty {
+  display: none;
+}
+
+/* The reason the settings cannot print, under the control that causes it. */
+.print-problem:not(:empty) {
+  margin-top: var(--space-2);
+}
+
+/* The facts a collapsed panel is hiding, so a form that looks empty still states
+   what it will do. Set on the label's baseline rather than beside it. */
+.print-options-toggle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.print-options-toggle__summary {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--c-text-subtle);
+}
+
+/* Where the horizontal room runs out the handoff takes its own line rather than
+   being dropped: it is why the printer's own page settings are not here. */
+@media (max-width: 48em) {
+  .print-handoff {
+    flex: 1 1 100%;
+    text-align: right;
+  }
+}
+
+/* The enlarged preview: the same figure at the width a detail check needs. */
+.print-preview--enlarged {
+  --print-figure-w: 24rem;
+}
+
+.print-preview--enlarged .print-preview__stage {
+  min-height: 60vh;
+}
+
+.print-preview--enlarged .print-page__image {
+  max-height: 70vh;
+}
