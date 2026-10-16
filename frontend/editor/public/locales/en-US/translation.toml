@@ -13015,6 +13015,7 @@ uploadButton = "Upload to Server"
 [superSearch]
 all = "All"
 ariaLabel = "Super search"
+conversionUnavailable = "Not available on this server"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
@@ -13029,6 +13030,9 @@ pages = "Pages"
 processor = "Processor"
 settings = "Settings"
 tools = "Tools"
+
+[superSearch.subtool]
+convert = "Convert {{from}} to {{to}}"
 
 [survey]
 title = "Stirling-PDF Survey"

@@ -138,14 +138,93 @@ import {
   rankProcessorResults,
   rankFileResults,
   rankSettingsResults,
+  rankSubtoolResults,
   rankToolResults,
 } from "@app/hooks/useSuperSearch";
+import { TOOL_SUBTOOLS } from "@app/data/toolSubtools";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { ToolSearchAccess } from "@app/hooks/useToolSearchAccess";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 
 const t = ((key: string, fallback?: string) =>
   fallback ?? key) as unknown as TFunction;
+
+describe("subtool search", () => {
+  const convert = {
+    name: "Convert",
+    description: "Convert files between different formats",
+    synonyms: [
+      "transform",
+      "convert",
+      "PDF to Word",
+      "PDF to image",
+      "PDF to PDF/A",
+      "PDF/A",
+    ],
+  };
+  const registry = { convert } as unknown as Partial<ToolRegistry>;
+  const open = (): ToolSearchAccess => ({ kind: "open" });
+  const rank = (
+    query: string,
+    subtoolAccess: Parameters<typeof rankSubtoolResults>[6] = open,
+    openTool = vi.fn(),
+  ) =>
+    rankSubtoolResults(
+      TOOL_SUBTOOLS,
+      registry,
+      query,
+      t,
+      openTool,
+      open,
+      subtoolAccess,
+    );
+  const slugs = (query: string) =>
+    rank(query).map((result) => result.key.replace("tool:convert:", ""));
+
+  it("offers no subtools for the tool's own name, or filler alone", () => {
+    expect(slugs("convert")).toEqual([]);
+    expect(slugs("pdf")).toEqual([]);
+    expect(slugs("pdf to")).toEqual([]);
+  });
+
+  it.each([
+    ["png", "pdf-to-png"],
+    ["pdf to word", "pdf-to-docx"],
+    ["word to pdf", "docx-to-pdf"],
+    ["convert pdf to png", "pdf-to-png"],
+    ["pdf/a-2b", "pdf-to-pdfa-2b"],
+    ["pdfa 1b", "pdf-to-pdfa-1b"],
+    ["excel", "pdf-to-xlsx"],
+  ])("%j leads with %s", (query, slug) => {
+    expect(slugs(query)).toContain(slug);
+    expect(slugs(query).length).toBeLessThanOrEqual(3);
+  });
+
+  it("puts the asked-for pair first", () => {
+    expect(slugs("pdf to word")[0]).toBe("pdf-to-docx");
+    expect(slugs("pdf/a-2b")[0]).toBe("pdf-to-pdfa-2b");
+  });
+
+  it("opens the tool with the subtool's preset", () => {
+    const openTool = vi.fn();
+    const [first] = rank("pdf/a-2b", open, openTool);
+    first.onSelect();
+    expect(openTool).toHaveBeenCalledWith(
+      "convert",
+      { kind: "open" },
+      "pdf-to-pdfa-2b",
+    );
+  });
+
+  it("greys or drops a conversion the server can't run", () => {
+    const disabled = rank("pdf to word", () => ({
+      kind: "disabled",
+      message: "Not available on this server",
+    }));
+    expect(disabled[0].disabledReason).toBe("Not available on this server");
+    expect(rank("pdf to word", () => ({ kind: "hidden" }))).toEqual([]);
+  });
+});
 
 describe("useSuperSearch helpers", () => {
   it("omits hidden tools and marks disabled ones with their reason", () => {
