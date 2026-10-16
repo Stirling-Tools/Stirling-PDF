@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Group, Loader, Modal, Progress, Stack, Text } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
-import ShareManagementModal from "@app/components/shared/ShareManagementModal";
+import { translatedLazy } from "@app/i18n/translatedLazy";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import { uploadHistoryChain } from "@app/services/serverStorageUpload";
@@ -19,6 +19,12 @@ import {
   POLICY_IN_FLIGHT_STATUSES,
   usePolicyRuns,
 } from "@app/components/policies/policyRunStore";
+
+// The share dialog and its server-storage machinery only load when the button
+// is used; the button itself sits in the workbench bar from first paint.
+const ShareManagementModal = translatedLazy(
+  () => import("@app/components/shared/ShareManagementModal"),
+);
 
 interface ViewerShareButtonProps {
   disabled?: boolean;
@@ -245,11 +251,13 @@ export default function ViewerShareButton({
       </Modal>
 
       {shareStub && (
-        <ShareManagementModal
-          opened={shareOpen}
-          onClose={() => setShareOpen(false)}
-          file={shareStub}
-        />
+        <Suspense fallback={null}>
+          <ShareManagementModal
+            opened={shareOpen}
+            onClose={() => setShareOpen(false)}
+            file={shareStub}
+          />
+        </Suspense>
       )}
     </>
   );
