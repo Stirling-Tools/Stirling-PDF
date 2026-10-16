@@ -1,4 +1,6 @@
 import {
+  Suspense,
+  lazy,
   forwardRef,
   startTransition,
   useCallback,
@@ -45,7 +47,6 @@ import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { READER_PATH } from "@app/routes/readerRoute";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
-import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
@@ -82,6 +83,16 @@ import "@app/components/layout/WorkspaceFrame.css";
 import "@app/pages/HomePage.css";
 
 const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
+
+/**
+ * Policies and their recovery run once per editor, and the pass pulls the policy
+ * chain with it, so the controller loads with the pass rather than with the page.
+ */
+const PolicyAutoRunController = lazy(() =>
+  import("@app/components/policies/PolicyAutoRunController").then((m) => ({
+    default: m.PolicyAutoRunController,
+  })),
+);
 
 /**
  * The wings' slide is `--wings-ms` (dimensions.css). Read from the document so one
@@ -700,7 +711,11 @@ export default function HomePage() {
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
       {processingFolderCreation.dialog}
-      {policiesEnabled && <PolicyAutoRunController />}
+      {policiesEnabled && (
+        <Suspense fallback={null}>
+          <PolicyAutoRunController />
+        </Suspense>
+      )}
       <QuickNavHostBridge
         requestNavigation={requestNavigation}
         readerMode={readerMode}
