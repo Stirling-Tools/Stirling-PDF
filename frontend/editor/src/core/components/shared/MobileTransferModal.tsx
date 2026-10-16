@@ -1,9 +1,12 @@
-import { ReactNode } from "react";
+import { lazy, Suspense, ReactNode } from "react";
 import { Modal, Stack, Text, Box, Alert } from "@mantine/core";
-import { QRCodeSVG } from "qrcode.react";
 import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 import { useMobileTransferSession } from "@app/hooks/useMobileTransferSession";
+
+const QRCodeSVG = lazy(() =>
+  import("qrcode.react").then((module) => ({ default: module.QRCodeSVG })),
+);
 
 /**
  * The QR modal shell every phone-to-desktop transfer feature shares: session
@@ -121,13 +124,15 @@ export default function MobileTransferModal({
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             }}
           >
-            <QRCodeSVG
-              value={mobileUrl}
-              size={qrSize}
-              level="H"
-              includeMargin
-              title={qrTitle}
-            />
+            <Suspense fallback={null}>
+              <QRCodeSVG
+                value={mobileUrl}
+                size={qrSize}
+                level="H"
+                includeMargin
+                title={qrTitle}
+              />
+            </Suspense>
           </Box>
 
           {filesReceived > 0 && renderReceived?.(filesReceived)}

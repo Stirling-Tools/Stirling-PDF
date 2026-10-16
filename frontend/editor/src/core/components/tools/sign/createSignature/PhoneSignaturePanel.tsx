@@ -1,6 +1,5 @@
-import { useCallback, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { QRCodeSVG } from "qrcode.react";
 import { useMobileTransferSession } from "@app/hooks/useMobileTransferSession";
 import { Banner } from "@app/ui/Banner";
 import { Icon } from "@app/ui/Icon";
@@ -8,6 +7,10 @@ import type { MobileSignaturePayload } from "@app/components/tools/sign/MobileSi
 import { parseMobileSignatureFile } from "@app/components/tools/sign/parseMobileSignatureFile";
 import { TransparentPreview } from "@app/components/tools/sign/createSignature/TransparentPreview";
 import styles from "@app/components/tools/sign/createSignature/PhoneSignaturePanel.module.css";
+
+const QRCodeSVG = lazy(() =>
+  import("qrcode.react").then((module) => ({ default: module.QRCodeSVG })),
+);
 
 interface PhoneSignaturePanelProps {
   active: boolean;
@@ -119,12 +122,14 @@ export function PhoneSignaturePanel({
     <div className={styles.layout}>
       <div className={styles.qrCard}>
         {active && (
-          <QRCodeSVG
-            value={mobileUrl}
-            size={176}
-            level="H"
-            title={t("sign.wallet.phone.qr", "QR code to sign on your phone")}
-          />
+          <Suspense fallback={null}>
+            <QRCodeSVG
+              value={mobileUrl}
+              size={176}
+              level="H"
+              title={t("sign.wallet.phone.qr", "QR code to sign on your phone")}
+            />
+          </Suspense>
         )}
         {timeRemaining !== null && (
           <span className={styles.expiry}>
