@@ -101,25 +101,25 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            frontend-node-modules:
+            models-frontend-node-modules:
               path: frontend/node_modules
-            npm-cache:
+            models-npm-cache:
               path: .cache/npm
-            tool-models-gradle-caches:
+            models-gradle-caches:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
-            tool-models-gradle-wrapper:
+            models-gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-            tool-models-uv-python-dir:
+            models-uv-python-dir:
               path: .cache/uv-python-dir
-            tool-models-setup-uv-cache:
+            models-setup-uv-cache:
               path: .cache/setup-uv-cache
           key: |
-            tool-models-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            tool-models-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
-            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tool-models-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
-            tool-models-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
+            models-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            models-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            models-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            models-frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            models-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
+            models-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0

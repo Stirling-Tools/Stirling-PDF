@@ -54,13 +54,13 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            gradle-caches:
+            openapi-gradle-caches:
               path: .cache/gradle-java-${{ inputs.java-version }}/caches
-            gradle-wrapper:
+            openapi-gradle-wrapper:
               path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
           key: |
-            gradle-caches=${{ inputs.gradle-hash }}
-            gradle-wrapper=${{ inputs.gradle-hash }}
+            openapi-gradle-caches=${{ inputs.gradle-hash }}
+            openapi-gradle-wrapper=${{ inputs.gradle-hash }}
 
       - name: Set up JDK ${{ inputs.java-version }}
         uses: ./trusted-java-action/.github/actions/java

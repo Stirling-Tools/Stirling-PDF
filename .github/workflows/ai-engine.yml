@@ -40,10 +40,10 @@ jobs:
           multi-cache: |
             ai-engine-setup-uv-cache:
               path: .cache/setup-uv-cache
-            task-state-cache:
+            ai-engine-task-state-cache:
               path: .cache/task/task-state
           key: |
-            task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
+            ai-engine-task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             ai-engine-setup-uv-cache=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
 
       - name: Install uv

@@ -148,25 +148,25 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            frontend-dist:
+            enterprise-frontend-dist:
               path: frontend/editor/dist
-            frontend-node-modules:
+            enterprise-frontend-node-modules:
               path: frontend/node_modules
-            npm-cache:
+            enterprise-npm-cache:
               path: .cache/npm
-            gradle-caches:
+            enterprise-gradle-caches:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
-            gradle-wrapper:
+            enterprise-gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-            task-state-cache:
+            enterprise-task-state-cache:
               path: .cache/task/task-state
           key: |
-            task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
-            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
-            frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
-            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            enterprise-task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
+            enterprise-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            enterprise-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            enterprise-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            enterprise-frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
+            enterprise-frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: ./trusted-java-action/.github/actions/java
@@ -469,38 +469,38 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            cargo-registry:
+            enterprise-cargo-registry:
               path: .cache/cargo/registry
-            cargo-git:
+            enterprise-cargo-git:
               path: .cache/cargo/git
-            cargo-bin:
+            enterprise-cargo-bin:
               path: .cache/cargo/bin
-            frontend-dist:
+            enterprise-frontend-dist:
               path: frontend/editor/dist
-            frontend-node-modules:
+            enterprise-frontend-node-modules:
               path: frontend/node_modules
-            npm-cache:
+            enterprise-npm-cache:
               path: .cache/npm
-            gradle-caches:
+            enterprise-gradle-caches:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
-            gradle-wrapper:
+            enterprise-gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-            tauri-target:
+            enterprise-tauri-target:
               path: frontend/editor/src-tauri/target
             enterprise-setup-uv-cache:
               path: .cache/setup-uv-cache
             enterprise-uv-python-dir:
               path: .cache/uv-python-dir
           key: |
-            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
-            frontend-dist=${{ hashFiles('frontend/package-lock.json') }}
-            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tauri-target=${{ hashFiles('frontend/package-lock.json') }}
+            enterprise-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            enterprise-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            enterprise-cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            enterprise-cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            enterprise-cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            enterprise-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            enterprise-frontend-dist=${{ hashFiles('frontend/package-lock.json') }}
+            enterprise-frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            enterprise-tauri-target=${{ hashFiles('frontend/package-lock.json') }}
             enterprise-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
             enterprise-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
 

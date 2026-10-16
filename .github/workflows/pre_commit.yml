@@ -47,15 +47,15 @@ jobs:
               path: .cache/setup-uv-cache
             pre-commit-uv-python-dir:
               path: .cache/uv-python-dir
-            npm-cache:
+            pre-commit-npm-cache:
               path: .cache/npm
-            task-state-cache:
+            pre-commit-task-state-cache:
               path: .cache/task/task-state
           key: |
-            task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
+            pre-commit-task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             pre-commit-setup-uv-cache=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
             pre-commit-uv-python-dir=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
-            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            pre-commit-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0

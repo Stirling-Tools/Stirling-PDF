@@ -228,31 +228,31 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            cargo-registry:
+            tauri-cargo-registry:
               path: .cache/cargo/registry
-            frontend-dist:
+            tauri-frontend-dist:
               path: frontend/editor/dist
-            frontend-node-modules:
+            tauri-frontend-node-modules:
               path: frontend/node_modules
-            npm-cache:
+            tauri-npm-cache:
               path: .cache/npm
-            gradle-caches:
+            tauri-gradle-caches:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
-            gradle-wrapper:
+            tauri-gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-            tauri-target:
+            tauri-build-target:
               path: frontend/editor/src-tauri/target
-            task-state-cache:
+            tauri-task-state-cache:
               path: .cache/task/task-state
           key: |
-            task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
-            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
-            frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
-            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
+            tauri-task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
+            tauri-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            tauri-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            tauri-cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            tauri-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            tauri-frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
+            tauri-frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            tauri-build-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           exclude: |
             frontend/editor/src-tauri/target/debug/**
 

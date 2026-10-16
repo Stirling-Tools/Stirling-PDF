@@ -64,29 +64,29 @@ jobs:
         with:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           multi-cache: |
-            frontend-dist:
+            e2e-frontend-dist:
               path: frontend/editor/dist
-            frontend-node-modules:
+            e2e-frontend-node-modules:
               path: frontend/node_modules
-            npm-cache:
+            e2e-npm-cache:
               path: .cache/npm
-            gradle-caches:
+            e2e-gradle-caches:
               path: .cache/gradle-java-${{ inputs.java-version }}/caches
-            gradle-wrapper:
+            e2e-gradle-wrapper:
               path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
             e2e-live-setup-uv-cache:
               path: .cache/setup-uv-cache
             e2e-live-uv-python-dir:
               path: .cache/uv-python-dir
-            task-state-cache:
+            e2e-task-state-cache:
               path: .cache/task/task-state
           key: |
-            task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
-            gradle-caches=${{ inputs.gradle-hash }}
-            gradle-wrapper=${{ inputs.gradle-hash }}
-            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
-            frontend-dist=${{ inputs.frontend-dist-hash }}
-            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            e2e-task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
+            e2e-gradle-caches=${{ inputs.gradle-hash }}
+            e2e-gradle-wrapper=${{ inputs.gradle-hash }}
+            e2e-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            e2e-frontend-dist=${{ inputs.frontend-dist-hash }}
+            e2e-frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
             e2e-live-setup-uv-cache=${{ inputs.uv-hash }}
             e2e-live-uv-python-dir=${{ inputs.uv-hash }}
           token: ${{ github.token }}

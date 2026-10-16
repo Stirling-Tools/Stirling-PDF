@@ -12,22 +12,12 @@ name: Frontend a11y regression gate
 on:
   workflow_call:
     inputs:
-      frontend-dist-hash:
-        required: true
-        type: string
-      uv-hash:
-        required: true
-        type: string
       npm-hash:
         required: true
         type: string
 
 permissions:
   contents: read
-
-env:
-  UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
-  UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
 
 jobs:
   frontend-a11y:
@@ -56,19 +46,10 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            frontend-dist:
-              path: frontend/editor/dist
-            frontend-node-modules:
+            a11y-frontend-node-modules:
               path: frontend/node_modules
-            frontend-setup-uv-cache:
-              path: .cache/setup-uv-cache
-            frontend-uv-python-dir:
-              path: .cache/uv-python-dir
           key: |
-            frontend-dist=${{ inputs.frontend-dist-hash }}
-            frontend-node-modules=${{ inputs.npm-hash }}
-            frontend-setup-uv-cache=${{ inputs.uv-hash }}
-            frontend-uv-python-dir=${{ inputs.uv-hash }}
+            a11y-frontend-node-modules=${{ inputs.npm-hash }}
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0

@@ -53,13 +53,13 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            gradle-caches:
+            licence-gradle-caches:
               path: .cache/gradle-java-${{ inputs.java-version }}/caches
-            gradle-wrapper:
+            licence-gradle-wrapper:
               path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
           key: |
-            gradle-caches=${{ inputs.gradle-hash }}
-            gradle-wrapper=${{ inputs.gradle-hash }}
+            licence-gradle-caches=${{ inputs.gradle-hash }}
+            licence-gradle-wrapper=${{ inputs.gradle-hash }}
 
       - name: Set up JDK 25
         uses: ./trusted-java-action/.github/actions/java
@@ -72,7 +72,6 @@ jobs:
       - name: Check licenses for compatibility
         run: task backend:licenses:check
         env:
-          STIRLING_FLAVOR: saas
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}

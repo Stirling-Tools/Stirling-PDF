@@ -51,34 +51,34 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            cargo-registry:
+            valid-cargo-registry:
               path: .cache/cargo/registry
-            cargo-git:
+            valid-cargo-git:
               path: .cache/cargo/git
-            cargo-bin:
+            valid-cargo-bin:
               path: .cache/cargo/bin
-            frontend-dist:
+            valid-frontend-dist:
               path: frontend/editor/dist
-            frontend-node-modules:
+            valid-frontend-node-modules:
               path: frontend/node_modules
-            npm-cache:
+            valid-npm-cache:
               path: .cache/npm
-            tauri-target:
+            valid-tauri-target:
               path: frontend/editor/src-tauri/target
-            frontend-setup-uv-cache:
+            valid-frontend-setup-uv-cache:
               path: .cache/setup-uv-cache
-            frontend-uv-python-dir:
+            valid-frontend-uv-python-dir:
               path: .cache/uv-python-dir
           key: |
-            cargo-registry=${{ inputs.cargo-hash }}
-            cargo-git=${{ inputs.cargo-hash }}
-            cargo-bin=${{ inputs.cargo-hash }}
-            npm-cache=${{ inputs.npm-hash }}
-            frontend-dist=${{ inputs.frontend-dist-hash }}
-            frontend-node-modules=${{ inputs.npm-hash }}
-            tauri-target=${{ inputs.frontend-dist-hash }}
-            frontend-setup-uv-cache=${{ inputs.uv-hash }}
-            frontend-uv-python-dir=${{ inputs.uv-hash }}
+            valid-cargo-registry=${{ inputs.cargo-hash }}
+            valid-cargo-git=${{ inputs.cargo-hash }}
+            valid-cargo-bin=${{ inputs.cargo-hash }}
+            valid-npm-cache=${{ inputs.npm-hash }}
+            valid-frontend-dist=${{ inputs.frontend-dist-hash }}
+            valid-frontend-node-modules=${{ inputs.npm-hash }}
+            valid-tauri-target=${{ inputs.frontend-dist-hash }}
+            valid-frontend-setup-uv-cache=${{ inputs.uv-hash }}
+            valid-frontend-uv-python-dir=${{ inputs.uv-hash }}
           exclude: |
             frontend/editor/src-tauri/target/debug/**
 
