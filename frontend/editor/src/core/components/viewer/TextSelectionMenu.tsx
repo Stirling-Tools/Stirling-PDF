@@ -26,6 +26,11 @@ import {
 import { MARKUP_ANNOTATION_COLORS } from "@app/components/viewer/annotationDefaults";
 import { alert } from "@app/components/toast";
 import { getExternalHref } from "@app/utils/externalUrl";
+import {
+  READ_ALOUD_FROM_SELECTION_EVENT,
+  glyphPositionRatio,
+  type ReadAloudFromSelectionDetail,
+} from "@app/components/viewer/readAloudFromSelection";
 import "@app/components/viewer/TextSelectionMenu.css";
 
 export type TextSelectionMenuProps = SelectionSelectionMenuProps & {
@@ -265,6 +270,43 @@ function TextSelectionMenuInner({
     ],
   );
 
+  const canReadAloud =
+    typeof window !== "undefined" && "speechSynthesis" in window;
+
+  const handleReadAloudFromHere = useCallback(() => {
+    const state = selection?.getState(documentId);
+    if (!selection || !state?.selection) return;
+    const originalSelection = state.selection;
+    const { page, index } = originalSelection.start;
+    // The text task resolves asynchronously; a selection made in the meantime
+    // must not be the one read aloud and cleared.
+    const stillSelected = () =>
+      selection.getState(documentId).selection === originalSelection;
+    const dispatch = (selectedText: string) => {
+      if (!stillSelected()) return;
+      window.dispatchEvent(
+        new CustomEvent<ReadAloudFromSelectionDetail>(
+          READ_ALOUD_FROM_SELECTION_EVENT,
+          {
+            detail: {
+              pageNumber: page + 1,
+              selectedText,
+              approximatePosition: glyphPositionRatio(
+                state.geometry[page],
+                index,
+              ),
+            },
+          },
+        ),
+      );
+      selection.clear(documentId);
+    };
+    selection.getSelectedText(documentId).wait(
+      (texts) => dispatch(texts[0] ?? ""),
+      () => dispatch(""),
+    );
+  }, [selection, documentId]);
+
   const handleRedact = useCallback(() => {
     if (!documentId || readOnly) return;
     const selections = selection?.getFormattedSelection(documentId) ?? [];
@@ -452,6 +494,25 @@ function TextSelectionMenuInner({
                 </button>
               </Tooltip>
             </>
+          )}
+
+          {canReadAloud && (
+            <Tooltip
+              label={t("viewer.readAloudFromHere", "Read aloud from here")}
+              withArrow
+            >
+              <button
+                type="button"
+                className="embedpdf-text-selection-btn"
+                onClick={handleReadAloudFromHere}
+                aria-label={t(
+                  "viewer.readAloudFromHere",
+                  "Read aloud from here",
+                )}
+              >
+                <Icon name="volume-2" size={20} />
+              </button>
+            </Tooltip>
           )}
         </div>
       </div>,
