@@ -71,7 +71,7 @@ jobs:
             frontend-uv-python-dir:
               path: .cache/uv-python-dir
             task-cache:
-              path: .cache/setup-uv-cache
+              path: .cache/task/task
             task-state-cache:
               path: .cache/task/task-state
           key: |

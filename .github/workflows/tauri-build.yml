@@ -243,7 +243,7 @@ jobs:
             tauri-target:
               path: frontend/editor/src-tauri/target
             task-cache:
-              path: .cache/setup-uv-cache
+              path: .cache/task/task
             task-state-cache:
               path: .cache/task/task-state
           key: |
@@ -859,7 +859,7 @@ jobs:
             tauri-target:
               path: frontend/editor/src-tauri/target
             task-cache:
-              path: .cache/setup-uv-cache
+              path: .cache/task/task
             task-state-cache:
               path: .cache/task/task-state
           key: |

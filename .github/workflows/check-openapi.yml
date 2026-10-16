@@ -11,7 +11,7 @@ on:
         type: string
       java-version:
         required: false
-        default: '25'
+        default: "25"
         type: string
 
 permissions:
@@ -60,7 +60,7 @@ jobs:
             gradle-wrapper:
               path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
             task-cache:
-              path: .cache/setup-uv-cache
+              path: .cache/task/task
             task-state-cache:
               path: .cache/task/task-state
           key: |

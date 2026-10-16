@@ -56,7 +56,12 @@ jobs:
           # exercises a seam chosen at build time, so it needs a desktop-mode
           # bundle of its own. Chromium only: it is not testing engine
           # behaviour.
-          - { browser: chromium, shard: disk-link, project: stubbed-desktop, suite: desktop }
+          - {
+              browser: chromium,
+              shard: disk-link,
+              project: stubbed-desktop,
+              suite: desktop,
+            }
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -89,7 +94,7 @@ jobs:
             npm-cache:
               path: .cache/npm
             task-cache:
-              path: .cache/setup-uv-cache
+              path: .cache/task/task
             task-state-cache:
               path: .cache/task/task-state
           key: |
