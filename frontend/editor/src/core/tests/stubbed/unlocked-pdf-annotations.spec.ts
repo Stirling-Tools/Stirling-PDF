@@ -103,7 +103,7 @@ test("unlocked annotations render before opening comments and remain read-only",
   ).toBeVisible();
 });
 
-test("unlocked links remain navigable and text selection only offers copying", async ({
+test("unlocked links remain navigable and text selection offers reading actions only", async ({
   page,
 }) => {
   await unlockFixture(page, "encrypted-links.pdf", 2);
@@ -130,5 +130,8 @@ test("unlocked links remain navigable and text selection only offers copying", a
   await expect(
     selectionMenu.getByRole("button", { name: "Copy", exact: true }),
   ).toBeVisible();
-  await expect(selectionMenu.getByRole("button")).toHaveCount(1);
+  // A password-opened document is view-only, so the menu offers reading actions
+  // only: copy, plus read aloud when the browser can speak.
+  const canSpeak = await page.evaluate(() => "speechSynthesis" in window);
+  await expect(selectionMenu.getByRole("button")).toHaveCount(canSpeak ? 2 : 1);
 });
