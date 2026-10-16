@@ -300,59 +300,36 @@ function localePreloadTag(codes: string[]): string {
  * belong to other routes as well, and preloading those would compete with the
  * resources this one waits for.
  */
-function routePreloadPlugin(routeChunk: string): PluginOption {
-  let dir: string | undefined;
-  let route: { js: string; css: string[] } | undefined;
+async function writeRouteHints(
+  distDir: string,
+  route: { js: string; css: string[] },
+): Promise<void> {
+  const indexPath = resolve(distDir, "index.html");
+  let html: string;
+  try {
+    html = await fs.readFile(indexPath, "utf8");
+  } catch {
+    return;
+  }
+  if (html.includes(route.js)) return;
 
-  return {
-    name: "route-preload",
-    enforce: "post",
-    writeBundle(options: Rollup.OutputOptions, bundle: Rollup.OutputBundle) {
-      dir = options.dir;
-      const chunk = Object.values(bundle).find(
-        (file): file is Rollup.OutputChunk =>
-          file.type === "chunk" &&
-          file.isDynamicEntry &&
-          file.name === routeChunk,
-      );
-      if (chunk)
-        route = {
-          js: chunk.fileName,
-          css: [...(chunk.viteMetadata?.importedCss ?? [])],
-        };
-    },
-    // After the other passes: the Open Graph prerender rewrites index.html from
-    // its own template in this hook, so an earlier write would be discarded.
-    async closeBundle() {
-      if (!dir || !route) return;
-      const indexPath = resolve(dir, "index.html");
-      let html: string;
-      try {
-        html = await fs.readFile(indexPath, "utf8");
-      } catch {
-        return;
-      }
-      if (html.includes(route.js)) return;
+  // Take the href prefix from a link Vite already wrote, so a subpath
+  // deployment is handled the same way its own preloads are.
+  const existing = /<link rel="modulepreload" href="([^"]+)"/.exec(html);
+  const prefix = existing
+    ? existing[1].slice(0, existing[1].lastIndexOf("/") + 1)
+    : "/";
 
-      // Take the href prefix from a link Vite already wrote, so a subpath
-      // deployment is handled the same way its own preloads are.
-      const existing = /<link rel="modulepreload" href="([^"]+)"/.exec(html);
-      const prefix = existing
-        ? existing[1].slice(0, existing[1].lastIndexOf("/") + 1)
-        : "/";
-
-      const tags = [
-        `<link rel="modulepreload" href="${prefix}${route.js}" crossorigin>`,
-        ...route.css.map(
-          (file) => `<link rel="preload" as="style" href="${prefix}${file}">`,
-        ),
-      ];
-      await fs.writeFile(
-        indexPath,
-        html.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`),
-      );
-    },
-  };
+  const tags = [
+    `<link rel="modulepreload" href="${prefix}${route.js}" crossorigin>`,
+    ...route.css.map(
+      (file) => `<link rel="preload" as="style" href="${prefix}${file}">`,
+    ),
+  ];
+  await fs.writeFile(
+    indexPath,
+    html.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`),
+  );
 }
 
 /**
@@ -362,58 +339,26 @@ function routePreloadPlugin(routeChunk: string): PluginOption {
  * fail (browser download missing, stubs drifted) on a machine that still has a
  * working build: warn and leave the page alone rather than fail the build.
  */
-function prerenderShellPlugin(options: { precompress: boolean }): PluginOption {
-  let distDir: string | undefined;
-  let editorDir: string | undefined;
-
-  return {
-    name: "prerender-shell",
-    apply: "build" as const,
-    enforce: "post" as const,
-    configResolved(config) {
-      // `outDir` is whatever the config said (the CLI's root is relative here),
-      // and the capture needs the source tree for its stub helper either way.
-      distDir = resolve(config.root, config.build.outDir);
-      editorDir = config.root;
-    },
-    // Last in a chain of closeBundle passes that each rewrite index.html, so it
-    // re-reads the file the Open Graph prerender left rather than a copy.
-    async closeBundle() {
-      if (!distDir || !editorDir) return;
-      const outDir = distDir;
-      const sourceDir = editorDir;
-      try {
-        const { prerenderShell } =
-          // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
-          await import("./scripts/prerender-shell.mjs");
-        const result = await prerenderShell({
-          distDir: outDir,
-          editorDir: sourceDir,
-        });
-        console.log(
-          `[prerender-shell] ${result.languages} languages, ${result.nodes} text nodes, ${(
-            result.bytes / 1024
-          ).toFixed(1)} KiB` +
-            (result.dropped.length
-              ? `; no shell for ${result.dropped.join(", ")}`
-              : ""),
-        );
-      } catch (error) {
-        console.warn(`[prerender-shell] skipped: ${String(error)}`);
-        return;
-      }
-
-      if (!options.precompress) return;
-      // The write above invalidates the siblings the prerender wrote for the
-      // shell it replaced.
-      await Promise.all(
-        ["index.html.br", "index.html.gz"].map((name) =>
-          fs.rm(resolve(outDir, name), { force: true }),
-        ),
-      );
-      await compressFiles([resolve(outDir, "index.html")], outDir);
-    },
-  };
+async function writeLandingShell(
+  distDir: string,
+  editorDir: string,
+): Promise<void> {
+  try {
+    const { prerenderShell } =
+      // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+      await import("./scripts/prerender-shell.mjs");
+    const result = await prerenderShell({ distDir, editorDir });
+    console.log(
+      `[prerender-shell] ${result.languages} languages, ${result.nodes} text nodes, ${(
+        result.bytes / 1024
+      ).toFixed(1)} KiB` +
+        (result.dropped.length
+          ? `; no shell for ${result.dropped.join(", ")}`
+          : ""),
+    );
+  } catch (error) {
+    console.warn(`[prerender-shell] skipped: ${String(error)}`);
+  }
 }
 
 function localeAssetsPlugin(): PluginOption {
@@ -449,8 +394,8 @@ function compressStaticCopyPlugin(): PluginOption {
 
       // The plugin's include list skips .wasm and viteStaticCopy output never
       // reaches it, so the walk has to cover the rest of dist. HTML, sitemap.xml
-      // and robots.txt stay with the prerender hook, which rewrites them in a
-      // concurrent closeBundle.
+      // and robots.txt are left to the html-output pass, which owns every one of
+      // those writes and compresses them once it has made them.
       const files: string[] = [];
       const walk = async (dir: string) => {
         let entries;
@@ -508,138 +453,170 @@ function compressStaticCopyPlugin(): PluginOption {
 // origin serves the page (correct for self-hosted Docker). Indexing signals
 // (canonical, JSON-LD, sitemap) need VITE_OG_BASE_URL specifically - see below.
 // Logic lives in scripts/og-prerender.mjs so it can be unit-tested without a full build.
-function prerenderOgPlugin(options: {
-  isSaas: boolean;
-  precompress: boolean;
-}): PluginOption {
-  const { isSaas, precompress } = options;
-  // SaaS (stirling.com) prerenders the marketing cards from a dedicated
-  // manifest; every other flavour uses the tool-registry manifest.
+async function writeOpenGraphPages(
+  distDir: string,
+  isSaas: boolean,
+): Promise<void> {
+  const { prerenderOg, buildSitemap, resolveDeployBases } =
+    // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
+    await import("./scripts/og-prerender.mjs");
+  const canonicalOrigin = process.env.VITE_OG_BASE_URL || "";
+  const deployOrigin = process.env.CF_PAGES_URL || "";
+  // Absolute deploy base for nested routes' <base href> (matches vite `base`).
+  const subpath = (process.env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
+  const baseHref = subpath ? `/${subpath}/` : "/";
+  const { ogBase, canonicalBase } = resolveDeployBases({
+    canonicalOrigin,
+    deployOrigin,
+    baseHref,
+  });
+  if (!canonicalBase && ogBase) {
+    console.warn(
+      "[prerender-og] VITE_OG_BASE_URL is unset: falling back to CF_PAGES_URL " +
+        `(${ogBase}) for social-card URLs only. No canonical links, JSON-LD ` +
+        "or sitemap will be emitted - set VITE_OG_BASE_URL to the public " +
+        "origin to enable them.",
+    );
+  }
   const manifestFile = isSaas
     ? "public/og-metadata.saas.json"
     : "public/og-metadata.json";
+  let manifest;
+  try {
+    manifest = JSON.parse(
+      await fs.readFile(path.resolve(__dirname, manifestFile), "utf8"),
+    );
+  } catch {
+    console.warn(
+      `[prerender-og] ${manifestFile} missing; skipping OG prerender. ` +
+        "Run `node scripts/generate-og-metadata.mjs`.",
+    );
+    return;
+  }
+  // The crawlable landing body only pays for itself where a crawler can reach
+  // the page; self-hosted and desktop builds just get the flash.
+  const injectLanding = Boolean(ogBase);
+  const count = await prerenderOg({
+    distDir,
+    manifest,
+    ogBase,
+    canonicalBase,
+    baseHref,
+    injectLanding,
+  });
+  console.log(
+    `[prerender-og] wrote ${count} prerendered route pages` +
+      (ogBase
+        ? ` (absolute URLs, base=${ogBase}, crawlable landing body)`
+        : " (root-relative URLs, no landing body)"),
+  );
+
+  // Sitemaps are an indexing instruction, so they need the canonical origin,
+  // not just any absolute one. Self-hosted and preview builds skip it.
+  const sitemap = buildSitemap(manifest, { canonicalBase });
+  if (!sitemap) return;
+  await fs.writeFile(path.join(distDir, "sitemap.xml"), sitemap);
+  // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
+  // Static hosts only: packaged builds exclude dist/robots.txt and serve it
+  // from RobotsController, gated on system.googlevisibility.
+  const robotsPath = path.join(distDir, "robots.txt");
+  try {
+    let robots = await fs.readFile(robotsPath, "utf8");
+    if (!/^\s*Sitemap:/im.test(robots)) {
+      robots =
+        robots.replace(/\s*$/, "\n") + `Sitemap: ${canonicalBase}/sitemap.xml\n`;
+      await fs.writeFile(robotsPath, robots);
+    }
+  } catch {
+    // no robots.txt in dist - nothing to link
+  }
+  console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
+}
+
+/**
+ * Precompresses the HTML the passes above produced, after the last of them has
+ * run: the bundler wrote siblings for the pre-prerender `index.html`, which
+ * describes a document that no longer exists.
+ */
+async function compressHtmlOutput(distDir: string): Promise<void> {
+  const files: string[] = [];
+  const walk = async (dir: string) => {
+    let entries;
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const p = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(p);
+      else if (
+        entry.name.endsWith(".html") ||
+        entry.name === "sitemap.xml" ||
+        entry.name === "robots.txt"
+      )
+        files.push(p);
+    }
+  };
+  await walk(distDir);
+  await Promise.all(
+    files
+      .filter((file) => file.endsWith(".html"))
+      .flatMap((file) => [`${file}.br`, `${file}.gz`])
+      .map((file) => fs.rm(file, { force: true })),
+  );
+  await compressFiles(files, distDir);
+}
+
+/**
+ * The only writer of the built HTML.
+ *
+ * The Open Graph pages, the route hints, the landing shell and the precompressed
+ * siblings all rewrite or derive from the same documents. As separate plugins
+ * their `closeBundle` hooks ran in parallel, so a hint could be overwritten by a
+ * later template and a `.br` sibling could describe an older copy than the HTML
+ * beside it; `enforce: "post"` orders plugins in the array, not their async
+ * hooks. One hook running the passes in order is the ordering that was wanted.
+ */
+function htmlOutputPlugin(options: {
+  routeChunk: string;
+  isSaas: boolean;
+  precompress: boolean;
+}): PluginOption {
+  const { routeChunk, isSaas, precompress } = options;
+  let distDir: string | undefined;
+  let editorDir: string | undefined;
+  let route: { js: string; css: string[] } | undefined;
+
   return {
-    name: "prerender-og",
+    name: "html-output",
     apply: "build" as const,
+    enforce: "post" as const,
+    configResolved(config) {
+      // `outDir` is whatever the config said (the CLI's root is relative here),
+      // and the capture needs the source tree for its stub helper either way.
+      distDir = resolve(config.root, config.build.outDir);
+      editorDir = config.root;
+    },
+    writeBundle(_output: Rollup.OutputOptions, bundle: Rollup.OutputBundle) {
+      const chunk = Object.values(bundle).find(
+        (file): file is Rollup.OutputChunk =>
+          file.type === "chunk" &&
+          file.isDynamicEntry &&
+          file.name === routeChunk,
+      );
+      if (chunk)
+        route = {
+          js: chunk.fileName,
+          css: [...(chunk.viteMetadata?.importedCss ?? [])],
+        };
+    },
     async closeBundle() {
-      const { prerenderOg, buildSitemap, resolveDeployBases } =
-        // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
-        await import("./scripts/og-prerender.mjs");
-      const canonicalOrigin = process.env.VITE_OG_BASE_URL || "";
-      const deployOrigin = process.env.CF_PAGES_URL || "";
-      // Absolute deploy base for nested routes' <base href> (matches vite `base`).
-      const subpath = (process.env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
-      const baseHref = subpath ? `/${subpath}/` : "/";
-      const { ogBase, canonicalBase } = resolveDeployBases({
-        canonicalOrigin,
-        deployOrigin,
-        baseHref,
-      });
-      if (!canonicalBase && ogBase) {
-        console.warn(
-          "[prerender-og] VITE_OG_BASE_URL is unset: falling back to CF_PAGES_URL " +
-            `(${ogBase}) for social-card URLs only. No canonical links, JSON-LD ` +
-            "or sitemap will be emitted - set VITE_OG_BASE_URL to the public " +
-            "origin to enable them.",
-        );
-      }
-      let manifest;
-      try {
-        manifest = JSON.parse(
-          await fs.readFile(path.resolve(__dirname, manifestFile), "utf8"),
-        );
-      } catch {
-        console.warn(
-          `[prerender-og] ${manifestFile} missing; skipping OG prerender. ` +
-            "Run `node scripts/generate-og-metadata.mjs`.",
-        );
-        return;
-      }
-      const distDir = path.resolve(__dirname, "dist");
-      // The crawlable landing body only pays for itself where a crawler can
-      // reach the page; self-hosted and desktop builds just get the flash.
-      const injectLanding = Boolean(ogBase);
-      const count = await prerenderOg({
-        distDir,
-        manifest,
-        ogBase,
-        canonicalBase,
-        baseHref,
-        injectLanding,
-      });
-      console.log(
-        `[prerender-og] wrote ${count} prerendered route pages` +
-          (ogBase
-            ? ` (absolute URLs, base=${ogBase}, crawlable landing body)`
-            : " (root-relative URLs, no landing body)"),
-      );
-
-      // prerenderOg rewrote index.html, so the bundler's siblings for the
-      // original shell are stale.
-      await Promise.all(
-        ["index.html.br", "index.html.gz"].map((name) =>
-          fs.rm(path.join(distDir, name), { force: true }),
-        ),
-      );
-
-      const lateFiles: string[] = [path.join(distDir, "index.html")];
-
-      // Sitemaps are an indexing instruction, so they need the canonical origin,
-      // not just any absolute one. Self-hosted and preview builds skip it.
-      const sitemap = buildSitemap(manifest, { canonicalBase });
-      if (sitemap) {
-        const sitemapPath = path.join(distDir, "sitemap.xml");
-        await fs.writeFile(sitemapPath, sitemap);
-        lateFiles.push(sitemapPath);
-        // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
-        // Static hosts only: packaged builds exclude dist/robots.txt and serve it
-        // from RobotsController, gated on system.googlevisibility.
-        const robotsPath = path.join(distDir, "robots.txt");
-        try {
-          let robots = await fs.readFile(robotsPath, "utf8");
-          if (!/^\s*Sitemap:/im.test(robots)) {
-            robots =
-              robots.replace(/\s*$/, "\n") +
-              `Sitemap: ${canonicalBase}/sitemap.xml\n`;
-            await fs.writeFile(robotsPath, robots);
-          }
-        } catch {
-          // no robots.txt in dist - nothing to link
-        }
-        console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
-      }
-      // Rewritten above when the sitemap points at it.
-      const robotsPath = path.join(distDir, "robots.txt");
-      try {
-        await fs.access(robotsPath);
-        lateFiles.push(robotsPath);
-      } catch {
-        // absent
-      }
-      // These are written here, and closeBundle hooks run concurrently, so the
-      // walk in the other plugin cannot compress them reliably.
-      const walkHtml = async (dir: string) => {
-        let entries;
-        try {
-          entries = await fs.readdir(dir, { withFileTypes: true });
-        } catch {
-          return;
-        }
-        for (const entry of entries) {
-          const p = path.join(dir, entry.name);
-          if (entry.isDirectory()) await walkHtml(p);
-          else if (entry.name.endsWith(".html") && entry.name !== "index.html")
-            lateFiles.push(p);
-        }
-      };
-      await walkHtml(distDir);
-      // The HTML, sitemap and robots.txt written above skip the other plugin's
-      // walk, so they are compressed here (desktop is embedded and compressed by
-      // Tauri). The siblings only serve static hosts: Jetty gzips the Spring
-      // responses in memory, so it never reads them.
-      if (precompress) {
-        await compressFiles(lateFiles, distDir);
-      }
+      if (!distDir) return;
+      await writeOpenGraphPages(distDir, isSaas);
+      if (route) await writeRouteHints(distDir, route);
+      if (editorDir) await writeLandingShell(distDir, editorDir);
+      if (precompress) await compressHtmlOutput(distDir);
     },
   };
 }
@@ -865,13 +842,11 @@ export default defineConfig(async ({ mode, command }) => {
         ],
       }),
       ...(effectiveMode === "desktop" ? [] : [compressStaticCopyPlugin()]),
-      prerenderOgPlugin({
+      htmlOutputPlugin({
+        routeChunk: "Landing",
         isSaas: effectiveMode === "saas",
         precompress: effectiveMode !== "desktop",
       }),
-      // Last: it edits the finished index.html.
-      routePreloadPlugin("Landing"),
-      prerenderShellPlugin({ precompress: effectiveMode !== "desktop" }),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.
