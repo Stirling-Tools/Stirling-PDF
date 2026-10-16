@@ -92,7 +92,7 @@ public class Type3FontLibrary {
                     }
                 }
             }
-            log.info(
+            log.debug(
                     "[TYPE3] Loaded {} Type3 library entries (signatures={}, aliases={}) from {}",
                     entries.size(),
                     signatureIndex.size(),

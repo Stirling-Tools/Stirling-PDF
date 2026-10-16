@@ -132,7 +132,7 @@ public class DatabaseService implements DatabaseServiceInterface {
                 Path.of(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
 
         if (!Files.exists(sourceDir)) {
-            log.info("Source directory does not exist: {}", sourceDir);
+            log.debug("Source directory does not exist: {}", sourceDir);
             return;
         }
 
@@ -322,17 +322,19 @@ public class DatabaseService implements DatabaseServiceInterface {
                                 + e.getMessage());
             }
 
-            log.info("Database export completed: {}", insertOutputFilePath);
+            log.debug("Database export completed: {}", insertOutputFilePath);
             verifyBackup(insertOutputFilePath);
         }
     }
 
     private boolean verifyBackup(Path backupPath) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] content = Files.readAllBytes(backupPath);
-            String checksum = bytesToHex(digest.digest(content));
-            log.info("Checksum for {}: {}", backupPath.getFileName(), checksum);
+            if (log.isDebugEnabled()) {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] content = Files.readAllBytes(backupPath);
+                String checksum = bytesToHex(digest.digest(content));
+                log.debug("Checksum for {}: {}", backupPath.getFileName(), checksum);
+            }
 
             String verifyDbUrl = "jdbc:h2:mem:backupVerify_" + UUID.randomUUID();
             // Use a fresh in-memory database per verification to avoid leftover objects between

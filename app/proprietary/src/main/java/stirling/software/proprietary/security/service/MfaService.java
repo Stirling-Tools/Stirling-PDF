@@ -194,7 +194,7 @@ public class MfaService {
         if (value == null) {
             value = "false";
         }
-        log.info("MFA required for user {}: {}", user.getUsername(), value);
+        log.debug("MFA required for user {}: {}", user.getUsername(), value);
         return Boolean.parseBoolean(value);
     }
 

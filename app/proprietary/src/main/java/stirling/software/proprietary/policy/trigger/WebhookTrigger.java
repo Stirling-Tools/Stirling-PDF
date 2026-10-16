@@ -73,7 +73,7 @@ public class WebhookTrigger implements PolicyTrigger {
                 Executors.newSingleThreadScheduledExecutor(
                         Thread.ofVirtual().name("policy-webhook-reconcile-", 0).factory());
         reconciler.scheduleAtFixedRate(this::safeReconcile, 0, reconcileSeconds, TimeUnit.SECONDS);
-        log.info("Webhook trigger started (reconcile every {}s)", reconcileSeconds);
+        log.debug("Webhook trigger started (reconcile every {}s)", reconcileSeconds);
     }
 
     @Override

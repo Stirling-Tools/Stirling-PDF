@@ -636,7 +636,7 @@ public class FormDetectionModelManager {
             } catch (IOException e) {
                 log.warn("Could not persist seeded activeModelId: {}", e.getMessage());
             }
-            log.info("Activated pre-installed Auto Form Detection model '{}'", id);
+            log.debug("Activated pre-installed Auto Form Detection model '{}'", id);
         }
     }
 

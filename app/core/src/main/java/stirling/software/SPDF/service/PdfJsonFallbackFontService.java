@@ -338,7 +338,7 @@ public class PdfJsonFallbackFontService {
         } else {
             fallbackFontLocation = legacyFallbackFontLocation;
         }
-        log.info("Using fallback font location: {}", fallbackFontLocation);
+        log.debug("Using fallback font location: {}", fallbackFontLocation);
     }
 
     public PdfJsonFont buildFallbackFontModel() throws IOException {

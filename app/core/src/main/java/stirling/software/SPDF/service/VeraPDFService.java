@@ -183,7 +183,7 @@ public class VeraPDFService {
     public void initialize() {
         try {
             VeraGreenfieldFoundryProvider.initialise();
-            log.info("VeraPDF Greenfield initialized successfully");
+            log.debug("VeraPDF Greenfield initialized successfully");
         } catch (Exception e) {
             log.error("Failed to initialize VeraPDF", e);
         }
