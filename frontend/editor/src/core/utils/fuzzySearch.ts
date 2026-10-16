@@ -8,7 +8,9 @@ function normalizeText(text: string): string {
       .normalize("NFD")
       .replace(/\p{Diacritic}+/gu, "")
       // Punctuation reads as a space, so "pdf/a", "pdf-a" and "pdf a" agree.
-      .replace(/[^\p{L}\p{N}]+/gu, " ")
+    // Combining marks stay: in scripts like Devanagari and Thai they are part
+    // of the word, and dropping them would split it.
+      .replace(/[^\p{L}\p{M}\p{N}]+/gu, " ")
       .trim()
   );
 }
@@ -23,7 +25,7 @@ const UNSPACED_RUN = new RegExp(`[${UNSPACED_SCRIPT_CHARS}]+`, "gu");
 function tokenize(normalized: string): string[] {
   return normalized
     .replace(UNSPACED_RUN, " $& ")
-    .split(/[^\p{L}\p{N}]+/u)
+    .split(/[^\p{L}\p{M}\p{N}]+/u)
     .filter(Boolean);
 }
 
@@ -134,7 +136,7 @@ function tokenCoverageScore(tiers: number[]): number {
 function isWordStart(target: string, index: number): boolean {
   if (index === 0) return true;
   const prev = target[index - 1];
-  return /[^\p{L}\p{N}]/u.test(prev) || UNSPACED_SCRIPT.test(prev);
+  return /[^\p{L}\p{M}\p{N}]/u.test(prev) || UNSPACED_SCRIPT.test(prev);
 }
 
 /**

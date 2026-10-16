@@ -5546,7 +5546,7 @@ title = "Compress"
 
 [home.convert]
 desc = "Convert files between different formats"
-tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,PDF to PDF/A,PDF/A,PDFA,PDF/A-1b,PDF/A-2b,PDF/A-3b,PDF/X,archive,archival,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
+tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 title = "Convert"
 
 [home.createPortfolio]

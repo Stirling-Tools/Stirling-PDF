@@ -79,6 +79,13 @@ describe("scoreMatch on multi-word queries", () => {
     // A Latin word next to CJK text is still a word.
     expect(isFuzzyMatch("word", "PDF转Word")).toBe(true);
   });
+
+  it("keeps combining vowel signs inside the word", () => {
+    // किताब: the vowel sign after क must not split the word, or a lone
+    // consonant ("त") would match as the start of a fragment.
+    expect(isFuzzyMatch("त", "किताब")).toBe(false);
+    expect(isFuzzyMatch("खोलें किताब", "किताब खोलें")).toBe(true);
+  });
 });
 
 describe("rankByFuzzy fields", () => {
