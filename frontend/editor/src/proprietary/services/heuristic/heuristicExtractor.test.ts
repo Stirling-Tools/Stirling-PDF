@@ -164,7 +164,8 @@ describe("extractHeuristicDoc with a budget", () => {
     createDocument.mockResolvedValue(doc([endless]));
     const extracted = await extractHeuristicDoc(pdf(), "a.pdf");
     expect(extracted.firstZone.length).toBeLessThanOrEqual(8000);
-    expect(endless.cancel).toHaveBeenCalled();
+    // pdf.js drops a cancel without an Error reason, and the worker keeps pushing.
+    expect(endless.cancel).toHaveBeenCalledWith(expect.any(Error));
   });
 
   test("no budget means no deadline, opening included", async () => {
