@@ -31,7 +31,8 @@ async function renderPdfPageToCanvas(
   return canvas;
 }
 
-// Render, adjust, and assemble all pages of a single PDF into a new PDF using PDFium
+// Render, adjust, and assemble all pages of a single PDF into a new PDF using PDFium.
+// The render scale and page geometry must match the backend's AdjustContrastController.
 async function buildAdjustedPdfForFile(
   file: File,
   params: AdjustContrastParameters,
