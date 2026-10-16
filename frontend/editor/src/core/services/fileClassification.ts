@@ -7,7 +7,6 @@
  */
 
 import { fileStorage } from "@app/services/fileStorage";
-import { extractPDFMetadata } from "@app/services/pdfMetadataService";
 import type { StirlingFileStub } from "@app/types/fileContext";
 
 export const CLASSIFICATION_METADATA_KEY = "StirlingPDFClassification";
@@ -40,6 +39,11 @@ export async function readClassificationLabelsFromFile(
   file: File,
 ): Promise<string[] | null> {
   try {
+    // Metadata extraction drags the PDF worker in, which the first screen must
+    // not wait for, so the service arrives with the work.
+    const { extractPDFMetadata } = await import(
+      "@app/services/pdfMetadataService"
+    );
     const result = await extractPDFMetadata(file);
     if (!result.success) return null;
     const entry = result.metadata.customMetadata.find(

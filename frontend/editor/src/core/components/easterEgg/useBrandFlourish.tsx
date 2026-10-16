@@ -9,7 +9,6 @@ import {
 } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { FileStoreContext } from "@app/contexts/file/contexts";
-import { thumbnailGenerationService } from "@app/services/thumbnailGenerationService";
 import {
   type ThumbnailRequest,
   planThumbnails,
@@ -83,6 +82,11 @@ async function renderPlan(
     if (!file) continue;
     try {
       const buffer = await file.arrayBuffer();
+      // Thumbnails pull the PDFium engine in, which the first screen must not
+      // wait for, so the service arrives with the work.
+      const { thumbnailGenerationService } = await import(
+        "@app/services/thumbnailGenerationService"
+      );
       const results = await thumbnailGenerationService.generateThumbnails(
         file.fileId,
         buffer,
