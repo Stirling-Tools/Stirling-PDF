@@ -133,3 +133,24 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   "/split-pdf-by-sections": "split",
   "/split-pdf-by-chapters": "split",
 };
+
+/**
+ * Aliases that name one conversion, opening the tool with that subtool's
+ * preset (see toolSubtools). Ones naming a family (`/pdf-to-img`,
+ * `/file-to-pdf`) open the tool as it is.
+ */
+export const URL_TO_PRESET_MAP: Record<string, string> = {
+  "/eml-to-pdf": "eml-to-pdf",
+  "/html-to-pdf": "html-to-pdf",
+  "/markdown-to-pdf": "md-to-pdf",
+  "/pdf-to-csv": "pdf-to-csv",
+  "/pdf-to-xlsx": "pdf-to-xlsx",
+  "/pdf-to-markdown": "pdf-to-md",
+  "/pdf-to-pdfa": "pdf-to-pdfa-2b",
+  "/pdf-to-word": "pdf-to-docx",
+  "/pdf-to-xml": "pdf-to-xml",
+  "/cbr-to-pdf": "cbr-to-pdf",
+  "/pdf-to-cbr": "pdf-to-cbr",
+  "/cbz-to-pdf": "cbz-to-pdf",
+  "/pdf-to-cbz": "pdf-to-cbz",
+};

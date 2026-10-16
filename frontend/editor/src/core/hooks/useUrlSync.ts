@@ -9,7 +9,9 @@ import {
   parseToolRoute,
   toolRoute,
   editorHomeRoute,
+  presetFreeRoute,
 } from "@app/utils/urlRouting";
+import type { ToolSelectOptions } from "@app/contexts/ToolWorkflowContext";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { firePixel } from "@app/utils/scarfTracking";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -23,7 +25,7 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
  */
 export function useNavigationUrlSync(
   selectedTool: ToolId | null,
-  handleToolSelect: (toolId: ToolId) => void,
+  handleToolSelect: (toolId: ToolId, options?: ToolSelectOptions) => void,
   clearToolSelection: () => void,
   registry: ToolRegistry,
   enableSync: boolean = true,
@@ -43,6 +45,10 @@ export function useNavigationUrlSync(
   const lastReadLocation = useRef<typeof location | null>(null);
   // A pixel is a move, not a render.
   const countedPath = useRef<string | null>(null);
+  // Set while the address carries a `?preset=` the selection is about to
+  // consume: the write that follows replaces that entry rather than pushing,
+  // so Back can't land on it and apply the preset again.
+  const replaceNextWrite = useRef(false);
 
   // Held in a ref so neither pass below depends on it: a write that re-ran on
   // every address change would answer a Back by returning to the tool it left.
@@ -53,7 +59,7 @@ export function useNavigationUrlSync(
 
   // Check if tool requires premium and redirect if needed
   const checkPremiumAndSelect = useCallback(
-    (toolId: ToolId) => {
+    (toolId: ToolId, preset?: string) => {
       const tool = registry[toolId];
       if (tool?.requiresPremium === true && premiumEnabled !== true) {
         // Replaced, not pushed: Back would land on an address that bounces again.
@@ -61,9 +67,27 @@ export function useNavigationUrlSync(
         if (target) navigate(target, { replace: true });
         return;
       }
-      handleToolSelect(toolId);
+      handleToolSelect(toolId, preset ? { preset } : undefined);
     },
     [registry, premiumEnabled, handleToolSelect, navigate],
+  );
+
+  /**
+   * Hands an address's preset to its tool and drops it from the address. When
+   * the selection is about to change, its own write does that (as a replace,
+   * see replaceNextWrite); otherwise nothing else will, so it happens here.
+   */
+  const applyAddressPreset = useCallback(
+    (toolId: ToolId, preset: string) => {
+      const writePending = prevSelectedTool.current !== toolId;
+      if (writePending) replaceNextWrite.current = true;
+      checkPremiumAndSelect(toolId, preset);
+      if (!writePending) {
+        const target = presetFreeRoute(here.current);
+        if (target) navigate(target, { replace: true });
+      }
+    },
+    [checkPremiumAndSelect, navigate],
   );
 
   // Initialize workbench and tool from URL on mount
@@ -81,7 +105,9 @@ export function useNavigationUrlSync(
     const route = parseToolRoute(registry, here.current);
     if (route.toolId) {
       // URL specifies a tool — navigate to it (URL takes precedence over startup view preference)
-      if (route.toolId !== selectedTool) {
+      if (route.preset) {
+        applyAddressPreset(route.toolId, route.preset);
+      } else if (route.toolId !== selectedTool) {
         checkPremiumAndSelect(route.toolId);
       }
     }
@@ -91,6 +117,7 @@ export function useNavigationUrlSync(
     hasInitialized.current = true;
     countedPath.current = pathname;
   }, [
+    applyAddressPreset,
     checkPremiumAndSelect,
     config,
     enableSync,
@@ -119,6 +146,11 @@ export function useNavigationUrlSync(
     }
 
     const route = parseToolRoute(registry, here.current);
+    // A preset is news even for the open tool ("?preset=" typed on /convert).
+    if (route.toolId && route.preset) {
+      applyAddressPreset(route.toolId, route.preset);
+      return;
+    }
     if (route.toolId === selectedTool) return;
     if (route.toolId) {
       checkPremiumAndSelect(route.toolId);
@@ -132,6 +164,7 @@ export function useNavigationUrlSync(
     registry,
     enableSync,
     checkPremiumAndSelect,
+    applyAddressPreset,
   ]);
 
   // Selection -> address. The pass above owns what an address change means.
@@ -148,13 +181,18 @@ export function useNavigationUrlSync(
     // and re-asserting the tool's address on every run would undo a Back the
     // moment it landed.
     if (selectedTool !== previous) {
+      const replace = replaceNextWrite.current;
+      replaceNextWrite.current = false;
       if (selectedTool) {
         // A startup-view selection is a view preference, not a navigation, or
         // every visit to /editor becomes /read. The marker survives until the
         // selection moves off it (cleared below).
         if (startupTool !== selectedTool) {
           const target = toolRoute(selectedTool, registry, here.current);
-          if (target) navigate(target);
+          if (target) {
+            if (replace) navigate(target, { replace: true });
+            else navigate(target);
+          }
         }
       } else if (previous !== null) {
         // Only a tool's own address is this hook's to clear: the library and the
