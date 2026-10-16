@@ -12381,10 +12381,71 @@
       "artifact_id": 12039108537,
       "artifact_name": "cache-untrusted-pr-8307-valid-frontend-node-modules-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--96bb30e9edf3c9fb1fd11c733c395403825f3-part-000000",
       "workflow_run_id": 38883434118
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-cargo-registry/windows-x64/9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-cache-e1b7946154cca207/v6": {
+      "object": "sha256:7af8340aa12388d4a597b6112336a498827b5bb24a5ff4037ba50a4c4e8f0a96",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-16T10:11:09.750Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 142334636,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:156b65bb24df73a911bf01b1e8760734dd05bb83c26c63accb01142fa9604a1b",
+          "size": 25165824,
+          "artifact_id": 12039602019,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--7af8340aa12388d4a597b6112336a498827b5bb24a-part-000000",
+          "workflow_run_id": 38883434118
+        },
+        {
+          "index": 1,
+          "object": "sha256:407701546be2217487fd3e0bca482ba9909ce2934f53ab3c5a9049a13cfa22b1",
+          "size": 25165824,
+          "artifact_id": 12039292725,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--7af8340aa12388d4a597b6112336a498827b5bb24a-part-000001",
+          "workflow_run_id": 38883434118
+        },
+        {
+          "index": 2,
+          "object": "sha256:5fe52d74f2f32e771b552956caa2cdc1f8d6de68593fc2a63947aca46eec0d40",
+          "size": 25165824,
+          "artifact_id": 12039182959,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--7af8340aa12388d4a597b6112336a498827b5bb24a-part-000002",
+          "workflow_run_id": 38883434118
+        },
+        {
+          "index": 3,
+          "object": "sha256:aec1881c8c4cf3bb733dbaa1c43da06dabf12ee28c492b86d5c6535ff3810bb8",
+          "size": 25165824,
+          "artifact_id": 12039427334,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--7af8340aa12388d4a597b6112336a498827b5bb24a-part-000003",
+          "workflow_run_id": 38883434118
+        },
+        {
+          "index": 4,
+          "object": "sha256:21122454de30d41bc0600f4b4322fec35e1952c8d5aa7cb5ea2233158805962d",
+          "size": 25165824,
+          "artifact_id": 12039522497,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--7af8340aa12388d4a597b6112336a498827b5bb24a-part-000004",
+          "workflow_run_id": 38883434118
+        },
+        {
+          "index": 5,
+          "object": "sha256:01c8e2a9ce741fd122882172e6d6432f32eb3f235334550d4f7335cbff0cd528",
+          "size": 16505516,
+          "artifact_id": 12038514652,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--7af8340aa12388d4a597b6112336a498827b5bb24a-part-000005",
+          "workflow_run_id": 38883434118
+        }
+      ],
+      "artifact_id": 12039602019,
+      "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-windows-x64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--7af8340aa12388d4a597b6112336a498827b5bb24a-part-000000",
+      "workflow_run_id": 38883434118
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-16T09:32:33.411Z",
-    "writes": 34
+    "writes": 35
   }
 }
