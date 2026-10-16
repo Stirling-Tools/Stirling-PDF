@@ -1,7 +1,9 @@
 import react from "@vitejs/plugin-react-swc";
 import { compression, defineAlgorithm } from "vite-plugin-compression2";
 import { randomUUID } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
 import fs from "node:fs/promises";
+import { createRequire } from "node:module";
 import path, { resolve } from "node:path";
 import { constants, brotliCompress, gzip } from "node:zlib";
 import { fileURLToPath } from "node:url";
@@ -172,6 +174,85 @@ function startupModules(meta: ManualChunkMeta): Set<string> {
   }
   startupModulesByOutput.set(meta, modules);
   return modules;
+}
+
+/**
+ * Mantine components only lazy screens use. The barrel re-exports all of them,
+ * so the startup walk above counts those re-export edges as reachability and
+ * `manualChunks` files every implementation with vendor-ui, which the editor
+ * preloads. `mantineToolOnlyImports` rewrites the app's imports to the
+ * implementations, and `manualChunks` gives each component family its own
+ * chunk, so a screen that opens one fetches only that family.
+ *
+ * Inclusion is measured twice. First, every application module that imports one
+ * of these has to land in a lazy chunk, or a startup screen would fetch it.
+ * Second, after the build, no preloaded chunk may statically import the family's
+ * chunk: Mantine's own preloaded modules reach into each other (`Menu` renders a
+ * `Popover`, `Modal` a `FocusTrap`), and a family a preloaded chunk imports both
+ * re-enters the preload set and can close an initialisation cycle that breaks
+ * the app. A `generateBundle` check in the plugin fails the build on that cycle
+ * rather than shipping a page that cannot render.
+ *
+ * `Accordion`, `Checkbox`, `Combobox`, `Flex`, `FocusTrap`, `Overlay`, `Pill`,
+ * `Popover`, `Select`, `Transition` and `VisuallyHidden` were removed for the
+ * second reason. Some came back as modulepreload links and stopped the app from
+ * rendering; the rest are reached by the first screen: `Landing`, the route the
+ * build preloads, statically imports `Flex`'s family (`Footer`), `Pill`'s
+ * (`Chip`) and `Select`'s (the onboarding `SecurityCheckSlide`), and `Checkbox`
+ * and `Combobox` arrive through Mantine's own `Select`/`Flex` internals.
+ * `useCombobox` went with them: it resolves into the same `Combobox` family, so
+ * leaving it listed kept the very chunk that closed the cycle.
+ * `NumberInput` never qualified — `UpdateSeatsModal` renders one from the entry
+ * chunk — and `SegmentedControl` is out because its wrapper's chunk is fetched
+ * immediately after first paint, so it would drag its family with it.
+ */
+const MANTINE_TOOL_ONLY_COMPONENTS = [
+  "Autocomplete",
+  "Avatar",
+  "Card",
+  "Code",
+  "ColorInput",
+  "ColorPicker",
+  "ColorSwatch",
+  "CopyButton",
+  "Drawer",
+  "FileButton",
+  "FileInput",
+  "Grid",
+  "Image",
+  "List",
+  "LoadingOverlay",
+  "MultiSelect",
+  "Notification",
+  "Pagination",
+  "SimpleGrid",
+  "Skeleton",
+  "Slider",
+  "Table",
+  "TableTbody",
+  "TableTd",
+  "TableTh",
+  "TableThead",
+  "TableTr",
+  "Tabs",
+  "TagsInput",
+  "ThemeIcon",
+  "Title",
+];
+
+/**
+ * Filled by `mantineToolOnlyImports` while the config is built, then read by
+ * `manualChunks` during the build. An empty implementations map leaves every
+ * app import alone and every implementation in vendor-ui.
+ */
+const mantineToolOnlyImplementations = new Map<string, string>();
+const mantineToolOnlyFamilies = new Map<string, string>();
+
+function mantineToolOnlyChunk(id: string): string | undefined {
+  for (const [dir, family] of mantineToolOnlyFamilies) {
+    if (id.startsWith(dir)) return `vendor-mantine-${family}`;
+  }
+  return undefined;
 }
 
 /**
@@ -569,7 +650,149 @@ async function compressHtmlOutput(distDir: string): Promise<void> {
 }
 
 /**
- * The only writer of the built HTML.
+ * Rewrites the app's `@mantine/core` imports of `MANTINE_TOOL_ONLY_COMPONENTS`
+ * to the implementation files the barrel re-exports them from. That removes the
+ * barrel edge which otherwise tells `manualChunks` the component is reachable
+ * from the entry. Central here so no application file names an internal Mantine
+ * path. Reads the installed barrel to find those files, and fails the build when
+ * a name stops resolving to a component directory.
+ *
+ * Build-only: dev resolves `@mantine/core` through the dependency optimizer, so
+ * a raw `.mjs` import beside it would load a second copy of Mantine's context
+ * modules and the components would lose the provider theme. The type checker
+ * never sees this rewrite, so types keep resolving through the package.
+ */
+function mantineToolOnlyImports(): PluginOption {
+  const packageDir = path.dirname(
+    createRequire(import.meta.url).resolve("@mantine/core/styles.css"),
+  );
+  const esmDir = path.join(packageDir, "esm");
+  const componentRoot = `${path.join(esmDir, "components")}/`;
+  const barrel = readFileSync(path.join(esmDir, "index.mjs"), "utf8");
+
+  // The barrel is the only place that maps an exported name to its file, and the
+  // naming is not uniform (`Slider` lives in `Slider/Slider/Slider.mjs`,
+  // `TableTr` in `Table/Table.components.mjs`), so read it rather than template
+  // a path. A name it no longer exports fails loudly below.
+  const exportedAt = new Map<string, string>();
+  for (const statement of barrel.matchAll(
+    /export\s*\{([^}]*)\}\s*from\s*["']([^"']+)["']/g,
+  )) {
+    if (!statement[2].startsWith(".")) continue;
+    const file = path.resolve(esmDir, statement[2]);
+    for (const raw of statement[1].split(",")) {
+      const entry = raw.trim().replace(/^type\s+/, "");
+      if (!entry) continue;
+      const exported = entry.split(/\s+as\s+/).pop()?.trim() ?? entry;
+      exportedAt.set(exported, file);
+    }
+  }
+
+  for (const name of MANTINE_TOOL_ONLY_COMPONENTS) {
+    const file = exportedAt.get(name);
+    if (!file || !file.startsWith(componentRoot) || !existsSync(file)) {
+      throw new Error(
+        `mantine-tool-only-imports: @mantine/core no longer exports ${name} from a component ` +
+          `directory (resolved ${file ?? "nothing"}); check the package layout and update ` +
+          "MANTINE_TOOL_ONLY_COMPONENTS",
+      );
+    }
+    mantineToolOnlyImplementations.set(name, file);
+    const family = file.slice(componentRoot.length).split("/")[0];
+    mantineToolOnlyFamilies.set(`${componentRoot}${family}/`, family);
+  }
+
+  let appDir: string | undefined;
+
+  return {
+    name: "mantine-tool-only-imports",
+    apply: "build" as const,
+    configResolved(config) {
+      appDir = `${resolve(config.root, "src")}/`;
+    },
+    generateBundle(_options, bundle) {
+      // A moved family that a startup chunk still imports lands back in the
+      // preload set, and the two chunks importing each other let the browser
+      // execute a module before its dependency: the app dies with
+      // "Cannot access 'x' before initialization". Fail the build instead.
+      const names = new Set(
+        Object.values(bundle)
+          .filter((file) => file.type === "chunk")
+          .map((file) => file.fileName),
+      );
+      const imports = new Map<string, string[]>();
+      for (const file of Object.values(bundle)) {
+        if (file.type === "chunk")
+          imports.set(
+            file.fileName,
+            file.imports.filter((target) => names.has(target)),
+          );
+      }
+      const visiting = new Set<string>();
+      const done = new Set<string>();
+      const trail: string[] = [];
+      const visit = (name: string): void => {
+        if (done.has(name)) return;
+        if (visiting.has(name)) {
+          throw new Error(
+            `mantine-tool-only-imports: chunks import each other in a cycle ` +
+              `(${[...trail.slice(trail.indexOf(name)), name].join(" -> ")}); ` +
+              "a component family a startup chunk reaches has to stay in vendor-ui",
+          );
+        }
+        visiting.add(name);
+        trail.push(name);
+        for (const target of imports.get(name) ?? []) visit(target);
+        trail.pop();
+        visiting.delete(name);
+        done.add(name);
+      };
+      for (const name of imports.keys()) visit(name);
+    },
+    transform(code, id) {
+      if (!appDir || !id.startsWith(appDir) || !code.includes("@mantine/core"))
+        return null;
+      let cursor = 0;
+      let rewritten = "";
+      for (const node of this.parse(code).body) {
+        if (
+          node.type !== "ImportDeclaration" ||
+          node.source.value !== "@mantine/core"
+        )
+          continue;
+        const moved: Array<{
+          specifier: (typeof node.specifiers)[number];
+          file: string;
+        }> = [];
+        const staying: Array<(typeof node.specifiers)[number]> = [];
+        for (const specifier of node.specifiers) {
+          const file =
+            specifier.type === "ImportSpecifier" &&
+            specifier.imported.type === "Identifier"
+              ? mantineToolOnlyImplementations.get(specifier.imported.name)
+              : undefined;
+          if (file) moved.push({ specifier, file });
+          else staying.push(specifier);
+        }
+        if (moved.length === 0) continue;
+        rewritten += code.slice(cursor, node.start);
+        cursor = node.end;
+        if (staying.length > 0) {
+          rewritten += `import { ${staying
+            .map((specifier) => code.slice(specifier.start, specifier.end))
+            .join(", ")} } from "@mantine/core";\n`;
+        }
+        for (const { specifier, file } of moved) {
+          rewritten += `import { ${code.slice(specifier.start, specifier.end)} } from "${file}";\n`;
+        }
+      }
+      if (cursor === 0) return null;
+      return { code: rewritten + code.slice(cursor), map: null };
+    },
+  };
+}
+
+/**
  *
  * The Open Graph pages, the route hints, the landing shell and the precompressed
  * siblings all rewrite or derive from the same documents. As separate plugins
@@ -763,6 +986,7 @@ export default defineConfig(async ({ mode, command }) => {
     plugins: [
       iconSvgr(),
       react(),
+      mantineToolOnlyImports(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
       tsconfigPaths({
         projects: [tsconfigProject],
@@ -946,6 +1170,11 @@ export default defineConfig(async ({ mode, command }) => {
             ) {
               return "vendor-tanstack-table";
             }
+            // A component family only lazy screens open, in its own chunk, so
+            // the preloaded chunk stops carrying it; see
+            // `mantineToolOnlyImports`.
+            const toolOnly = mantineToolOnlyChunk(id);
+            if (toolOnly) return toolOnly;
             // These packages are mutually circular: splitting them breaks
             // module init order at runtime. Only startup modules land in
             // vendor-ui; libraries only some screens use (the markdown
