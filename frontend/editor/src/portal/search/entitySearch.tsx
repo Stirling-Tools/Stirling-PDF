@@ -9,6 +9,7 @@ import {
   type SuperSearchResult,
 } from "@app/types/superSearch";
 import { rankByFuzzy } from "@app/utils/fuzzySearch";
+import { isPortalEntityScopeShipped } from "@app/data/portalEntityScopes";
 import {
   assemblePolicies,
   fetchPoliciesList,
@@ -66,17 +67,13 @@ export const ENTITY_GROUP_LIMIT = 24;
 /** How long a fetched entity scope stays fresh before a search refetches it. */
 export const ENTITY_REFRESH_MS = 30_000;
 
-const PORTAL_VIEW_BY_SCOPE_ID = Object.fromEntries(
-  PORTAL_ENTITY_SCOPE_DEFS.map((def) => [def.id, def.viewId]),
-) as Record<PortalEntityScopeId, string>;
-
 const VISIBLE_PORTAL_VIEW_IDS = new Set(
   PROCESSOR_SEARCH_INDEX.map((entry) => entry.id),
 );
 
-/** Whether the flavor's portal nav ships the view an entity scope targets. */
+/** Whether this build ships somewhere an entity scope's results open. */
 export function isVisiblePortalScope(scopeId: PortalEntityScopeId): boolean {
-  return VISIBLE_PORTAL_VIEW_IDS.has(PORTAL_VIEW_BY_SCOPE_ID[scopeId]);
+  return isPortalEntityScopeShipped(scopeId);
 }
 
 /** Whether this build ships the in-app developer docs (so they're searchable). */
@@ -199,12 +196,18 @@ function policyResultTitle(entry: CatalogueEntry, t: Translate) {
     : category;
 }
 
+/**
+ * @param aiEngineEnabled false once config says the AI engine is off: AI
+ *   templates then show locked, as on the Pipelines page, rather than opening
+ *   a setup the page refuses.
+ */
 export function rankPortalPolicyResults(
   entries: CatalogueEntry[],
   trimmed: string,
   t: Translate,
   openPolicy: (policyKey: string) => void,
   limit = ENTITY_GROUP_LIMIT,
+  aiEngineEnabled?: boolean,
 ): SuperSearchResult[] {
   return rankByFuzzy(
     entries.filter((entry) => !entry.category.comingSoon),
@@ -216,15 +219,23 @@ export function rankPortalPolicyResults(
     ],
   )
     .slice(0, limit)
-    .map(({ item, score }) => ({
-      key: `portal-policy:${item.category.id}`,
-      group: "portal-policies",
-      title: policyResultTitle(item, t),
-      subtitle: t(item.category.desc),
-      icon: <Icon name="shield-check" size={18} />,
-      score,
-      onSelect: () => openPolicy(item.category.id),
-    }));
+    .map(({ item, score }) => {
+      const locked =
+        item.category.requiresAiEngine === true && aiEngineEnabled === false;
+      const lockedLabel = locked
+        ? t("portal.policies.card.requiresAiEngine")
+        : undefined;
+      return {
+        key: `portal-policy:${item.category.id}`,
+        group: "portal-policies",
+        title: policyResultTitle(item, t),
+        subtitle: lockedLabel ?? t(item.category.desc),
+        icon: <Icon name="shield-check" size={18} />,
+        score,
+        disabledReason: lockedLabel,
+        onSelect: () => (locked ? undefined : openPolicy(item.category.id)),
+      };
+    });
 }
 
 export function rankPortalPipelineResults(
@@ -237,7 +248,7 @@ export function rankPortalPipelineResults(
   return rankByFuzzy(
     entries.filter((entry) => !excludedIds.has(entry.id)),
     trimmed,
-    [(entry) => entry.name, (entry) => entry.trigger],
+    [{ get: (entry) => entry.name, anywhere: true }, (entry) => entry.trigger],
   )
     .slice(0, limit)
     .map(({ item, score }) => ({
@@ -254,6 +265,8 @@ export function rankPortalPipelineResults(
 export interface BuildEntityGroupsOptions {
   /** Host scope filter; defaults to every scope enabled. */
   scopeEnabled?: (scopeId: string) => boolean;
+  /** From app config; undefined while it loads (see rankPortalPolicyResults). */
+  aiEngineEnabled?: boolean;
 }
 
 /**
@@ -277,8 +290,8 @@ export function buildProcessorEntityGroups(
 
   const users = includeScope("portal-users")
     ? rankByFuzzy(entities.users, trimmed, [
-        (member) => member.name,
-        (member) => member.email,
+        { get: (member) => member.name, anywhere: true },
+        { get: (member) => member.email, anywhere: true },
       ])
         .slice(0, ENTITY_GROUP_LIMIT)
         .map(({ item, score }) => ({
@@ -310,6 +323,7 @@ export function buildProcessorEntityGroups(
             `${toPortalPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(policyKey)}`,
           ),
         ENTITY_GROUP_LIMIT,
+        options.aiEngineEnabled,
       )
     : [];
   if (policies.length > 0) {
@@ -347,7 +361,7 @@ export function buildProcessorEntityGroups(
 
   const sources = includeScope("portal-sources")
     ? rankByFuzzy(entities.sources, trimmed, [
-        (source) => source.name,
+        { get: (source) => source.name, anywhere: true },
         (source) => source.type,
       ])
         .slice(0, ENTITY_GROUP_LIMIT)

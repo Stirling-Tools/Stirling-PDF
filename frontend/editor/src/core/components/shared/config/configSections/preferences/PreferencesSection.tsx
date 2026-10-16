@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { AdminSetupBanner } from "@app/components/shared/config/configSections/preferences/AdminSetupBanner";
@@ -32,8 +33,8 @@ export interface PreferencesSectionProps {
 }
 
 /** True when the URL deep-links at the shortcuts card, which starts collapsed. */
-function focusIsHotkeys(): boolean {
-  const anchor = window.location.hash.replace(/^#/, "");
+function focusIsHotkeys(hash: string): boolean {
+  const anchor = hash.replace(/^#/, "");
   return anchor === "hotkeys" || anchor.startsWith("setting-hotkeys");
 }
 
@@ -57,7 +58,10 @@ export default function PreferencesSection({
 }: PreferencesSectionProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
-  const startHotkeysOpen = focusIsHotkeys();
+  // From the router, not window: a deep link followed while this page is
+  // already showing must open the card too, not only a fresh mount.
+  const location = useLocation();
+  const startHotkeysOpen = focusIsHotkeys(location.hash);
 
   // Same condition the standalone section used: a version to report, or the
   // desktop updater. Not mounting the card is what skips the update check.
@@ -114,6 +118,7 @@ export default function PreferencesSection({
           )}
           // A row per registered tool, so it stays shut and unmounted until asked for.
           defaultCollapsed={!startHotkeysOpen}
+          openRequest={startHotkeysOpen ? location.key : undefined}
           lazy
         >
           <HotkeysCard />

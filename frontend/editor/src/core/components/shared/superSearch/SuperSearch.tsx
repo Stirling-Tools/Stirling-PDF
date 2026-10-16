@@ -264,7 +264,8 @@ export default function SuperSearch({
 
   const selectResult = useCallback(
     (result: SuperSearchResult | undefined) => {
-      if (!result) return;
+      // A disabled row explains itself in place; leave the search open.
+      if (!result || result.disabledReason) return;
       void result.onSelect();
       setQuery("");
       close();
@@ -584,7 +585,14 @@ export default function SuperSearch({
                                 fullWidth
                                 role="option"
                                 aria-selected={active}
-                                className={`super-search-item${active ? " active" : ""}`}
+                                aria-disabled={
+                                  result.disabledReason ? true : undefined
+                                }
+                                className={`super-search-item${active ? " active" : ""}${
+                                  result.disabledReason
+                                    ? " super-search-item--disabled"
+                                    : ""
+                                }`}
                                 onMouseEnter={() => moveHighlight(index)}
                                 onClick={() => selectResult(result)}
                               >

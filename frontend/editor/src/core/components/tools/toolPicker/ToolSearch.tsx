@@ -6,7 +6,8 @@ import { Icon } from "@app/ui/Icon";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { TextInput } from "@app/components/shared/TextInput";
 import "@app/components/tools/toolPicker/ToolPicker.css";
-import { rankByFuzzy, idToWords } from "@app/utils/fuzzySearch";
+import { rankByFuzzy } from "@app/utils/fuzzySearch";
+import { TOOL_SEARCH_FIELDS } from "@app/utils/toolSearch";
 import { ToolId } from "@app/types/toolId";
 
 interface ToolSearchProps {
@@ -43,15 +44,17 @@ const ToolSearch = ({
 
   const filteredTools = useMemo(() => {
     if (!value.trim()) return [];
-    const entries = Object.entries(toolRegistry).filter(
-      ([id]) => !(mode === "dropdown" && id === selectedToolKey),
+    const entries = (
+      Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry | undefined][]
+    ).filter(
+      (entry): entry is [ToolId, ToolRegistryEntry] =>
+        !!entry[1] && !(mode === "dropdown" && entry[0] === selectedToolKey),
     );
-    const ranked = rankByFuzzy(entries, value, [
-      ([key]) => idToWords(key),
-      ([, v]) => v.name,
-      ([, v]) => v.description,
-      ([, v]) => v.synonyms?.join(" ") || "",
-    ]).slice(0, 6);
+    const ranked = rankByFuzzy<[ToolId, ToolRegistryEntry]>(
+      entries,
+      value,
+      TOOL_SEARCH_FIELDS,
+    ).slice(0, 6);
     return ranked.map(({ item: [id, tool] }) => ({ id, tool }));
   }, [value, toolRegistry, mode, selectedToolKey]);
 
@@ -142,7 +145,7 @@ const ToolSearch = ({
                 key={id}
                 variant="tertiary"
                 onClick={() => {
-                  onToolSelect?.(id as ToolId);
+                  onToolSelect?.(id);
                   setDropdownOpen(false);
                 }}
                 leftSection={

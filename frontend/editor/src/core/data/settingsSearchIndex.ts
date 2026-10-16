@@ -21,6 +21,8 @@ export interface SettingsSearchEntry {
   labelFallback: string;
   /** Extra English terms to match against (synonyms, related words). */
   keywords?: string[];
+  /** Lives in the account card, which only some builds render. */
+  requiresAccountCard?: boolean;
 }
 
 /**
@@ -193,6 +195,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
     anchor: "account",
     labelKey: "account.accountSettings",
     labelFallback: "Account",
+    requiresAccountCard: true,
     keywords: [
       "account",
       "password",

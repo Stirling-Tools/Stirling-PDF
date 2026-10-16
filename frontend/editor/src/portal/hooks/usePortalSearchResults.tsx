@@ -2,12 +2,24 @@ import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getToolUrlPath } from "@app/data/toolsTaxonomy";
-import { isPortalEntityScopeAccessible } from "@app/data/processorSearchIndex";
+import {
+  getToolUrlPath,
+  type ToolRegistryEntry,
+} from "@app/data/toolsTaxonomy";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { useToolAvailability } from "@app/hooks/useToolManagement";
+import { useAccountCardShown } from "@app/hooks/useAccountCardShown";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
+import {
+  useToolSearchAccess,
+  type ToolSearchAccess,
+} from "@app/hooks/useToolSearchAccess";
+import { preferencesService } from "@app/services/preferencesService";
 import {
   assembleSuperSearchGroups,
+  isPortalEntityScopeOffered,
   rankSettingsResults,
   rankToolResults,
   useSearchScopeFilter,
@@ -40,7 +52,6 @@ import {
   buildProcessorEntityGroups,
   defaultPortalEntityScopes,
   isDocsSearchable,
-  isVisiblePortalScope,
   withPortalEntityDependencies,
   type ProcessorEntities,
 } from "@portal/search/entitySearch";
@@ -65,6 +76,28 @@ function externalEditorHref(path: string): string {
   return EDITOR_URL.replace(/\/$/, "") + path;
 }
 
+/** The portal session's visibility gates, shared by its chips and results. */
+function usePortalSearchGates(): SuperSearchGates | null {
+  const { config } = useAppConfig();
+  const accountCardShown = useAccountCardShown();
+  const isOrgOwner = useAccountLinkOwner();
+  return useMemo<SuperSearchGates | null>(
+    () =>
+      config
+        ? {
+            isAdmin: config.isAdmin ?? false,
+            loginEnabled: config.enableLogin ?? false,
+            // Being in the processor is proof of access to it.
+            portalAccessible: true,
+            showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
+            accountCardShown,
+            isOrgOwner,
+          }
+        : null,
+    [config, accountCardShown, isOrgOwner],
+  );
+}
+
 /**
  * The portal bar's filter chips — every lane the editor offers except Files
  * (files only open in the editor) and Pages (the sidebar covers navigation).
@@ -74,15 +107,12 @@ function externalEditorHref(path: string): string {
  */
 export function usePortalSearchScopes(): SuperSearchScope[] {
   const { t } = useTranslation();
-  const { config } = useAppConfig();
-  const isAdmin = config?.isAdmin ?? false;
+  const gates = usePortalSearchGates();
 
   return useMemo(
     () => [
-      ...PORTAL_ENTITY_SCOPE_DEFS.filter(
-        (def) =>
-          isVisiblePortalScope(def.id) &&
-          isPortalEntityScopeAccessible(def.id, isAdmin),
+      ...PORTAL_ENTITY_SCOPE_DEFS.filter((def) =>
+        isPortalEntityScopeOffered(def.id, gates),
       ).map((def) => ({
         id: def.id,
         label: t(def.labelKey, def.labelFallback),
@@ -108,7 +138,7 @@ export function usePortalSearchScopes(): SuperSearchScope[] {
         aliases: ["tool", "tools"],
       },
     ],
-    [t, isAdmin],
+    [t, gates],
   );
 }
 
@@ -132,14 +162,24 @@ export function usePortalSearchResults(
   const { tier } = useTier();
 
   const trimmed = query.trim();
+  const gates = usePortalSearchGates();
+  const aiEngine = useAiEngineEnabled();
+  const aiEngineEnabled = aiEngine.loading ? undefined : aiEngine.enabled;
   const { scopeEnabled } = useSearchScopeFilter(options);
+  // The chip filter plus the lane's own availability, so an unoffered lane
+  // is neither fetched nor shown.
+  const entityScopeEnabled = useCallback(
+    (scopeId: string) =>
+      scopeEnabled(scopeId) && isPortalEntityScopeOffered(scopeId, gates),
+    [scopeEnabled, gates],
+  );
   const requestedEntityScopes = useMemo(() => {
     if (!active || trimmed.length === 0) return new Set<string>();
     const enabled = defaultPortalEntityScopes(config?.isAdmin ?? false).filter(
-      (scopeId) => scopeEnabled(scopeId),
+      (scopeId) => entityScopeEnabled(scopeId),
     );
     return new Set<string>(withPortalEntityDependencies(enabled));
-  }, [active, scopeEnabled, trimmed, config?.isAdmin]);
+  }, [active, entityScopeEnabled, trimmed, config?.isAdmin]);
 
   // Entity data rides the portal's shared query layer — the same keys the
   // views use, so searching warms the view (and vice versa) and the client's
@@ -201,8 +241,35 @@ export function usePortalSearchResults(
     ],
   );
 
+  // The editor's tool list rules, applied without the editor's providers:
+  // availability from the same endpoint query, and the user's "hide
+  // unavailable tools" choice (else the server default) from storage.
+  const toolAvailability = useToolAvailability();
+  const baseToolAccess = useToolSearchAccess(toolAvailability);
+  const hideUnavailableTools = useMemo(
+    () =>
+      preferencesService.getStoredPreference("hideUnavailableTools") ??
+      config?.defaultHideUnavailableTools ??
+      false,
+    [config?.defaultHideUnavailableTools],
+  );
+  const toolAccess = useCallback(
+    (id: ToolId, tool: ToolRegistryEntry): ToolSearchAccess => {
+      const access = baseToolAccess(id, tool);
+      // The preference drops what the server can't run, as the editor's
+      // registry does; premium-locked tools stay, greyed.
+      return hideUnavailableTools &&
+        access.kind === "disabled" &&
+        toolAvailability[id]?.available === false
+        ? { kind: "hidden" }
+        : access;
+    },
+    [baseToolAccess, hideUnavailableTools, toolAvailability],
+  );
+
   const openTool = useCallback(
-    (id: ToolId) => {
+    (id: ToolId, access: ToolSearchAccess) => {
+      if (access.kind === "disabled" || access.kind === "hidden") return;
       // Link tools have no in-editor UI — navigating to a tool URL for one
       // lands on a "tool not found" panel. Open their destination directly,
       // matching how the editor's tool lists treat them.
@@ -229,26 +296,13 @@ export function usePortalSearchResults(
     [openSettings],
   );
 
-  const gates = useMemo<SuperSearchGates | null>(
-    () =>
-      config
-        ? {
-            isAdmin: config.isAdmin ?? false,
-            loginEnabled: config.enableLogin ?? false,
-            // Being in the processor is proof of access to it.
-            portalAccessible: true,
-            showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
-          }
-        : null,
-    [config],
-  );
-
   const entityGroups = useMemo<SuperSearchGroup[]>(
     () =>
       buildProcessorEntityGroups(entities, trimmed, t, navigate, {
-        scopeEnabled,
+        scopeEnabled: entityScopeEnabled,
+        aiEngineEnabled,
       }),
-    [entities, trimmed, t, navigate, scopeEnabled],
+    [entities, trimmed, t, navigate, entityScopeEnabled, aiEngineEnabled],
   );
 
   const groups = useMemo(() => {
@@ -272,7 +326,7 @@ export function usePortalSearchResults(
     const editorGroups = assembleSuperSearchGroups(
       {
         tools: scopeEnabled("tools")
-          ? rankToolResults(allTools, trimmed, openTool)
+          ? rankToolResults(allTools, trimmed, openTool, toolAccess)
           : [],
       },
       t,
@@ -298,6 +352,7 @@ export function usePortalSearchResults(
     gates,
     openSettingsSection,
     openTool,
+    toolAccess,
     scopeEnabled,
     allTools,
     t,
