@@ -37,6 +37,7 @@ async function resolveSelectionToCsv(
 export const extractPagesOperationConfig = defineCustomTool({
   validateParams: validateExtractPagesParameters,
   operationType: "extractPages",
+  endpoint: "/api/v1/general/rearrange-pages",
   customProcessor: async (
     parameters: ExtractPagesParameters,
     files: File[],
