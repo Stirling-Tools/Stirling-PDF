@@ -15,6 +15,9 @@ const mocks = vi.hoisted(() => ({
   refetch: vi.fn(),
 }));
 vi.mock("react-i18next", () => ({
+  // The checkout screen is a lazily-loaded route, so rendering it initialises
+  // the i18n runtime, which registers this plugin.
+  initReactI18next: { type: "3rdParty", init: vi.fn() },
   useTranslation: () => ({
     t: (key: string) => key,
     i18n: { language: "en-US" },
