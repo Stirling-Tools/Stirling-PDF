@@ -33,12 +33,21 @@ export const defaultParameters: AddPasswordParameters = {
 
 /**
  * Whether these parameters are complete enough to run.
- * Add Password requires nothing of its own, so delegate to Change Permissions.
+ * Restrictions require separate credentials so opening the document does not grant owner access.
  */
 export function validateAddPasswordParameters(
   params: AddPasswordFullParameters,
 ): boolean {
-  return validateChangePermissionsParameters(params.permissions);
+  const restricted = Object.entries(params.permissions).some(
+    ([key, value]) => key.startsWith("prevent") && value === true,
+  );
+  return (
+    validateChangePermissionsParameters(params.permissions) &&
+    (params.password.length > 0 || params.ownerPassword.length > 0) &&
+    (!restricted ||
+      (params.ownerPassword.length > 0 &&
+        params.ownerPassword !== params.password))
+  );
 }
 
 export const useAddPasswordParameters = (): AddPasswordParametersHook => {
@@ -66,6 +75,7 @@ export const useAddPasswordParameters = (): AddPasswordParametersHook => {
   return {
     ...baseHook,
     fullParameters,
+    validateParameters: () => validateAddPasswordParameters(fullParameters),
     permissions,
     resetParameters,
   };

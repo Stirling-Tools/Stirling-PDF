@@ -75,6 +75,7 @@ function isInternalLink(annotationLink: PdfLinkAnnoObject): boolean {
 // ---------------------------------------------------------------------------
 
 interface LinkToolbarProps {
+  readOnly: boolean;
   annotationLink: PdfLinkAnnoObject;
   toolbarRef: React.Ref<HTMLDivElement>;
   left: number;
@@ -121,6 +122,7 @@ function isRectOutsideViewport(rect: DOMRect): boolean {
 
 const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
   ({
+    readOnly,
     annotationLink,
     toolbarRef,
     left,
@@ -149,20 +151,23 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        {/* Delete */}
-        <ActionIcon
-          variant="tertiary"
-          className="pdf-link-toolbar-btn pdf-link-toolbar-btn--delete"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(annotationLink);
-          }}
-          aria-label={t("viewer.link.delete", "Delete link")}
-          title={t("viewer.link.delete", "Delete link")}
-        >
-          <Icon name="trash" size={13} strokeWidth={1.5} />
-        </ActionIcon>
-        <span className="pdf-link-toolbar-sep" />
+        {!readOnly && (
+          <>
+            <ActionIcon
+              variant="tertiary"
+              className="pdf-link-toolbar-btn pdf-link-toolbar-btn--delete"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(annotationLink);
+              }}
+              aria-label={t("viewer.link.delete", "Delete link")}
+              title={t("viewer.link.delete", "Delete link")}
+            >
+              <Icon name="trash" size={13} strokeWidth={1.5} />
+            </ActionIcon>
+            <span className="pdf-link-toolbar-sep" />
+          </>
+        )}
 
         {/* Navigate / Open */}
         <Button
@@ -198,6 +203,7 @@ LinkToolbar.displayName = "LinkToolbar";
 // ---------------------------------------------------------------------------
 
 interface LinkLayerProps {
+  readOnly?: boolean;
   documentId: string;
   pageIndex: number;
   /** While annotation editing is active, a click selects the link's
@@ -209,6 +215,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   documentId,
   pageIndex,
   selectionActive = false,
+  readOnly = false,
 }) => {
   const { t } = useTranslation();
   const { provides: scroll } = useScroll(documentId);
@@ -376,10 +383,10 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     (annotationLink: PdfLinkAnnoObject) => {
       setHoveredLinkId(null);
       setToolbarPlacement(null);
-      if (!scope) return;
+      if (!scope || readOnly) return;
       scope.deleteAnnotation(pageIndex, annotationLink.id);
     },
-    [scope, pageIndex],
+    [scope, pageIndex, readOnly],
   );
 
   useEffect(() => () => clearLeaveTimer(), [clearLeaveTimer]);
@@ -435,6 +442,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     typeof document !== "undefined"
       ? createPortal(
           <LinkToolbar
+            readOnly={readOnly}
             annotationLink={hoveredAnnotationLink}
             toolbarRef={toolbarElementRef}
             left={toolbarPlacement.left}
