@@ -9319,25 +9319,25 @@
       "workflow_run_id": 38862442229
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-target/macos-arm64/9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-cache-e1b7946154cca207/v6": {
-      "object": "sha256:d8cd3c5187621ac13ae373000c7bd5c94fc1153b34622c449fdb63a2d4c86122",
+      "object": "sha256:2c7f72424d6f16294e370ab9a34dd29c7671c909e6f0afad6d18eac93b98358d",
       "storage": "github-artifact",
-      "updated_at": "2026-10-15T06:25:25.825Z",
+      "updated_at": "2026-10-16T07:18:08.871Z",
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
-      "size": 996,
+      "size": 997,
       "parts": [
         {
           "index": 0,
-          "object": "sha256:d8cd3c5187621ac13ae373000c7bd5c94fc1153b34622c449fdb63a2d4c86122",
-          "size": 996,
-          "artifact_id": 11952267531,
-          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--d8cd3c5187621ac13ae373000c7bd5c94fc1153b34622c449f-part-000000",
-          "workflow_run_id": 38690936431
+          "object": "sha256:2c7f72424d6f16294e370ab9a34dd29c7671c909e6f0afad6d18eac93b98358d",
+          "size": 997,
+          "artifact_id": 12031686055,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--2c7f72424d6f16294e370ab9a34dd29c7671c909e6f0afad6d-part-000000",
+          "workflow_run_id": 38865152968
         }
       ],
-      "artifact_id": 11952267531,
-      "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--d8cd3c5187621ac13ae373000c7bd5c94fc1153b34622c449f-part-000000",
-      "workflow_run_id": 38690936431
+      "artifact_id": 12031686055,
+      "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--2c7f72424d6f16294e370ab9a34dd29c7671c909e6f0afad6d-part-000000",
+      "workflow_run_id": 38865152968
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-target/windows-x64/9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-cache-e1b7946154cca207/v6": {
       "object": "sha256:014c292c3c23cbdabd3788c66d0e07eba4ed164886451cfb59e58e8b517e5f69",
@@ -10614,6 +10614,6 @@
   },
   "monitoring": {
     "window_started_at": "2026-10-16T06:22:25.762Z",
-    "writes": 36
+    "writes": 37
   }
 }
