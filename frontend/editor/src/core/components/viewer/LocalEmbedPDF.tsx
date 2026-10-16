@@ -1686,8 +1686,6 @@ export function LocalEmbedPDF({
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />
           <PrintAPIBridge
-            file={file}
-            url={pdfUrl}
             fileName={fileName}
             canPrint={canPrintPdf(pdfAccess)}
           />

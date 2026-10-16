@@ -1,42 +1,17 @@
-import { useLayoutEffect, useRef } from "react";
-import { usePrintCapability } from "@embedpdf/plugin-print/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
-
-export interface PrintAPIBridgeProps {
-  file?: File | Blob;
-  url?: string | null;
-  fileName?: string;
-  canPrint?: boolean;
-}
+import { ViewerPrintHost } from "@app/components/viewer/print/ViewerPrintHost";
+import type { ViewerPrintHostProps } from "@app/components/viewer/print/ViewerPrintHost";
 
 /**
- * Connects the PDF print plugin to the shared ViewerContext.
+ * Connects the viewer's print action to the shared print dialog.
+ *
+ * A document that forbids printing renders nothing, so the viewer's print
+ * action is left unregistered and does nothing. The flag defaults to forbidden
+ * because printing is only offered once a caller establishes that the
+ * document's permissions allow it.
  */
-export function PrintAPIBridge({ canPrint = false }: PrintAPIBridgeProps) {
-  const { provides: print } = usePrintCapability();
-  const { registerBridge } = useViewer();
-  const documentReady = useDocumentReady();
-
-  const allowed = useRef(canPrint);
-  allowed.current = canPrint;
-
-  useLayoutEffect(() => {
-    if (print && documentReady && canPrint) {
-      registerBridge("print", {
-        state: {},
-        api: {
-          print: () => {
-            if (allowed.current) print.print();
-          },
-        },
-      });
-    }
-
-    return () => {
-      registerBridge("print", null);
-    };
-  }, [print, documentReady, registerBridge, canPrint]);
-
-  return null;
+export function PrintAPIBridge({
+  fileName,
+  canPrint = false,
+}: ViewerPrintHostProps) {
+  return canPrint ? <ViewerPrintHost fileName={fileName} /> : null;
 }

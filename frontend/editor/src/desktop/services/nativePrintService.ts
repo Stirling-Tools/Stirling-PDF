@@ -9,33 +9,11 @@ function sanitizeFileName(fileName: string) {
   return cleaned || "document.pdf";
 }
 
-async function resolvePdfSource(file?: File | Blob, url?: string | null) {
-  if (file) {
-    return file;
-  }
-
-  if (!url) {
-    return null;
-  }
-
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to load PDF for native print (${response.status})`);
-  }
-
-  return response.blob();
-}
-
+/** The array buffer that produced the temporary file is not kept. */
 export async function printPdfNatively(
-  file?: File | Blob,
-  url?: string | null,
+  source: Blob,
   fileName = "document.pdf",
 ) {
-  const source = await resolvePdfSource(file, url);
-  if (!source) {
-    throw new Error("No PDF source available for native print");
-  }
-
   const { tempDir, join } = await import("@tauri-apps/api/path");
   const { remove, writeFile } = await import("@tauri-apps/plugin-fs");
 
@@ -44,9 +22,9 @@ export async function printPdfNatively(
     `stirling-print-${generateId()}-${sanitizeFileName(fileName)}`,
   );
 
-  await writeFile(tempPath, new Uint8Array(await source.arrayBuffer()));
-
   try {
+    await writeFile(tempPath, new Uint8Array(await source.arrayBuffer()));
+
     await invoke("print_pdf_file_native", {
       filePath: tempPath,
       title: fileName,

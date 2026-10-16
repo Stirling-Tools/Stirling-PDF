@@ -19,11 +19,22 @@ vi.mock("@app/contexts/ViewerContext", () => ({
 vi.mock("@app/components/viewer/hooks/useDocumentReady", () => ({
   useDocumentReady: () => mock.ready,
 }));
+// The dialog is not what this file is about, and rendering it here would need
+// the provider the print host's own tests already supply.
+vi.mock("@app/components/viewer/print/PrintDialog", () => ({
+  PrintDialog: () => null,
+}));
 beforeEach(() => {
   vi.clearAllMocks();
   mock.ready = true;
 });
 afterEach(cleanup);
+
+/** The print action the host publishes, or undefined when printing is denied. */
+const printBridge = () => {
+  const call = mock.register.mock.calls.at(-1);
+  return call && call[0] === "print" && call[1] ? call[1] : undefined;
+};
 
 it.each([
   {
@@ -73,26 +84,17 @@ it.each([
   { encrypted: true, ownerAuthenticated: true, permissions: 0, allowed: true },
 ])("enforces effective print permission for %j", ({ allowed, ...access }) => {
   render(<PrintAPIBridge canPrint={canPrintPdf(access)} />);
-  const bridge = mock.register.mock.calls.find(
-    ([kind, value]) => kind === "print" && value,
-  )?.[1];
-  expect(Boolean(bridge)).toBe(allowed);
-  bridge?.api.print();
-  expect(mock.print).toHaveBeenCalledTimes(allowed ? 1 : 0);
+  expect(Boolean(printBridge())).toBe(allowed);
 });
 
 it("revokes a previously registered action when the replacement denies printing", () => {
   const view = render(<PrintAPIBridge canPrint />);
-  const previous = mock.register.mock.calls.at(-1)?.[1];
-  previous.api.print();
-  expect(mock.print).toHaveBeenCalledOnce();
+  expect(printBridge()).toBeTruthy();
   view.rerender(<PrintAPIBridge canPrint={false} />);
   expect(mock.register).toHaveBeenLastCalledWith("print", null);
-  previous.api.print();
-  expect(mock.print).toHaveBeenCalledOnce();
+  expect(printBridge()).toBeUndefined();
   view.rerender(<PrintAPIBridge canPrint />);
-  mock.register.mock.calls.at(-1)?.[1].api.print();
-  expect(mock.print).toHaveBeenCalledTimes(2);
+  expect(printBridge()).toBeTruthy();
 });
 
 it("does not expose printing before the document is ready", () => {

@@ -1,44 +1,55 @@
-import { useEffect } from "react";
-import { usePrintCapability } from "@embedpdf/plugin-print/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
-import { printPdfNatively } from "@app/services/nativePrintService";
+import { useEffect, useState } from "react";
+import { ViewerPrintHost } from "@core/components/viewer/print/ViewerPrintHost";
+import type { ViewerPrintHostProps } from "@core/components/viewer/print/ViewerPrintHost";
 import { DesktopOs, getDesktopOs } from "@app/services/platformService";
-import { PrintAPIBridgeProps } from "@core/components/viewer/PrintAPIBridge";
 
-export function PrintAPIBridge({ file, url, fileName }: PrintAPIBridgeProps) {
-  const { provides: print } = usePrintCapability();
-  const { registerBridge } = useViewer();
-  const documentReady = useDocumentReady();
+/**
+ * Connects the viewer's print action to the shared print dialog, and tells it
+ * when the platform owns the print dialog itself.
+ *
+ * macOS prints through the OS dialog because Tauri/WKWebView cannot print an
+ * embedded frame reliably:
+ * https://github.com/tauri-apps/tauri/issues/13451#issuecomment-4045138142
+ *
+ * A document that forbids printing renders nothing, so the viewer's print
+ * action is left unregistered and does nothing.
+ */
+export function PrintAPIBridge({
+  fileName,
+  canPrint = false,
+}: ViewerPrintHostProps) {
+  const [systemPrintDialog, setSystemPrintDialog] = useState<boolean | null>(
+    null,
+  );
 
   useEffect(() => {
-    if (documentReady) {
-      registerBridge("print", {
-        state: {},
-        api: {
-          print: () => {
-            void (async () => {
-              // macOS desktop uses a native print path because Tauri/WKWebView does not
-              // reliably support iframe-based PDF printing yet:
-              // https://github.com/tauri-apps/tauri/issues/13451#issuecomment-4045138142
-              if ((await getDesktopOs()) === DesktopOs.Mac) {
-                await printPdfNatively(file, url, fileName);
-                return;
-              }
-
-              print?.print?.();
-            })().catch((error) => {
-              console.error("[Desktop Print] Print failed", error);
-            });
-          },
-        },
-      });
-    }
-
+    let cancelled = false;
+    void (async () => {
+      const isMac = (await getDesktopOs()) === DesktopOs.Mac;
+      if (!cancelled) {
+        setSystemPrintDialog(isMac);
+      }
+    })();
     return () => {
-      registerBridge("print", null);
+      cancelled = true;
     };
-  }, [documentReady, file, fileName, print, registerBridge, url]);
+  }, []);
 
-  return null;
+  if (!canPrint) {
+    return null;
+  }
+
+  // Printing is withheld until the platform is known: offering the dialog with
+  // the wrong handoff and correcting it a moment later would show controls this
+  // platform ignores, or hand the job to the wrong print path.
+  if (systemPrintDialog === null) {
+    return null;
+  }
+
+  return (
+    <ViewerPrintHost
+      fileName={fileName}
+      systemPrintDialog={systemPrintDialog}
+    />
+  );
 }
