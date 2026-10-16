@@ -15668,10 +15668,47 @@
       "artifact_id": 12057300162,
       "artifact_name": "cache-untrusted-pr-8307-e2e-subbed-task-state-cache-linux-x64-f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-v6--26c650c6efe9d93392e8585d76ff966bb5b65-part-000000",
       "workflow_run_id": 38924744022
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/test-cargo-registry/macos-arm64/9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-cache-e1b7946154cca207/v6": {
+      "object": "sha256:d5bbc4f3fe12668ce1ac20326862299e06d53ef99f2eb873b508b3fa23329569",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-16T15:41:26.898Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 59134420,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:63a37216e27d105e867f7c1a1d0b396908bd6fc073499a562a3f3739126f3d17",
+          "size": 25165824,
+          "artifact_id": 12056722097,
+          "artifact_name": "cache-untrusted-pr-8307-test-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--d5bbc4f3fe12668ce1ac20326862299e06d53ef99f2-part-000000",
+          "workflow_run_id": 38924744022
+        },
+        {
+          "index": 1,
+          "object": "sha256:20a3172406d823999fe42067feed6db61f236ecc524e9f46f0bc0e83747372c4",
+          "size": 25165824,
+          "artifact_id": 12056457973,
+          "artifact_name": "cache-untrusted-pr-8307-test-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--d5bbc4f3fe12668ce1ac20326862299e06d53ef99f2-part-000001",
+          "workflow_run_id": 38924744022
+        },
+        {
+          "index": 2,
+          "object": "sha256:c0af8bf6f7e5902c6c02c3247d90f84a802de076989b89e2baca75cea8dc4ba1",
+          "size": 8802772,
+          "artifact_id": 12056741905,
+          "artifact_name": "cache-untrusted-pr-8307-test-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--d5bbc4f3fe12668ce1ac20326862299e06d53ef99f2-part-000002",
+          "workflow_run_id": 38924744022
+        }
+      ],
+      "artifact_id": 12056722097,
+      "artifact_name": "cache-untrusted-pr-8307-test-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--d5bbc4f3fe12668ce1ac20326862299e06d53ef99f2-part-000000",
+      "workflow_run_id": 38924744022
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-16T15:30:12.478Z",
-    "writes": 5
+    "writes": 6
   }
 }
