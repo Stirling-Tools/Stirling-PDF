@@ -233,6 +233,59 @@ class AccountLinkClientTest {
                 claimOutcome(200, "{\"status\":\"confirmed\",\"teamId\":7}"));
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    void redeemKeySendsOnlyTheKeyAndNameAndGrantsTheCredential() throws Exception {
+        var requests = ArgumentCaptor.forClass(HttpRequest.class);
+        HttpResponse<String> resp =
+                response(200, "{\"deviceId\":\"dev-1\",\"deviceSecret\":\"sec-1\",\"teamId\":7}");
+        when(httpClient.send(requests.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(resp);
+
+        AccountLinkClient.ConnectClaimResult result = client.redeemKey("stlk_k.s", "pdf.acme");
+
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.GRANTED, result.outcome());
+        assertEquals("dev-1", result.deviceId());
+        assertEquals("sec-1", result.deviceSecret());
+        assertEquals(7L, result.teamId());
+        HttpRequest request = requests.getValue();
+        assertEquals("/api/v1/account-link/keys/redeem", request.uri().getPath());
+        assertEquals(java.util.Optional.empty(), request.headers().firstValue("X-Device-Secret"));
+        assertEquals(java.util.Optional.empty(), request.headers().firstValue("Authorization"));
+    }
+
+    @Test
+    void redeemKeyTreatsOnlyA400AsAVerdictOnTheKey() throws Exception {
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.REJECTED, redeemOutcome(400, "{}"));
+        // An older SaaS without the endpoint, an auth proxy or an outage leaves the key unspent.
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE, redeemOutcome(404, ""));
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE, redeemOutcome(401, ""));
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE, redeemOutcome(503, ""));
+        assertEquals(
+                AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE,
+                redeemOutcome(200, "<html>not json</html>"));
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE, redeemOutcome(200, "{}"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void redeemKeyIsUnavailableWhenSaasCannotBeReached() throws Exception {
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))
+                .thenThrow(new ConnectException("refused"));
+
+        assertEquals(
+                AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE,
+                client.redeemKey("stlk_k.s", null).outcome());
+    }
+
+    @SuppressWarnings("unchecked")
+    private AccountLinkClient.ConnectClaimOutcome redeemOutcome(int status, String body)
+            throws Exception {
+        HttpResponse<String> resp = response(status, body);
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+        return client.redeemKey("stlk_k.s", null).outcome();
+    }
+
     @SuppressWarnings("unchecked")
     private AccountLinkClient.ConnectClaimOutcome claimOutcome(int status, String body)
             throws Exception {

@@ -13,6 +13,8 @@ import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { AccountConnectionNotice } from "@app/portal/components/account-link/AccountConnectionNotice";
 import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
 import { FreeTierPlanView } from "@app/portal/components/billing/FreeTierPlanView";
+import { CloudManagedPlanView } from "@app/portal/components/billing/CloudManagedPlanView";
+import { useKeyLinked } from "@app/portal/hooks/useKeyLinked";
 import { Usage } from "@app/portal/views/Usage";
 import type { Wallet } from "@app/portal/api/billing";
 
@@ -36,6 +38,7 @@ export function PortalBillingGate() {
   } = useServerPlan(isOwner);
   const serverPlanAction = serverPlan ? <ManageBillingButton /> : undefined;
   const link = useLinkOptional();
+  const keyLinked = useKeyLinked();
   const [searchParams] = useSearchParams();
   const prompted = useRef(false);
   const accountLinkRequested =
@@ -69,6 +72,13 @@ export function PortalBillingGate() {
       <FreeTierPlanView
         serverPlan={serverPlan}
         serverPlanAction={serverPlanAction}
+        licenseSection={<ServerLicenseSection onSaved={() => {}} />}
+      />
+    );
+  // Linked with a key: nobody here holds a cloud session, so billing is shown, not managed.
+  if (keyLinked)
+    return (
+      <CloudManagedPlanView
         licenseSection={<ServerLicenseSection onSaved={() => {}} />}
       />
     );

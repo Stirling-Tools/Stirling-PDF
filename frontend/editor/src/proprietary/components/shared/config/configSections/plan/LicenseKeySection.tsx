@@ -20,6 +20,11 @@ import { LicenseInfo } from "@app/services/licenseService";
 import licenseService from "@app/services/licenseService";
 import { useLicense } from "@app/contexts/LicenseContext";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import {
+  isLinkKey,
+  linkKeyErrorMessage,
+  redeemLinkKey,
+} from "@app/services/linkKey";
 
 interface LicenseKeySectionProps {
   currentLicenseInfo?: LicenseInfo;
@@ -27,12 +32,15 @@ interface LicenseKeySectionProps {
   presentation?: "disclosure" | "form";
   /** Refresh any host-owned entitlement views after the license context has updated. */
   onSaved?: () => void;
+  /** A Stirling Cloud link key was redeemed instead of a license being saved. */
+  onLinked?: () => void;
 }
 
 const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
   currentLicenseInfo,
   presentation = "disclosure",
   onSaved,
+  onLinked,
 }) => {
   const { t } = useTranslation();
   const { refetchLicense } = useLicense();
@@ -42,10 +50,40 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
   const [savingLicense, setSavingLicense] = useState(false);
   const [inputMethod, setInputMethod] = useState<"text" | "file">("text");
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
+  const linkKeyEntered = inputMethod === "text" && isLinkKey(licenseKeyInput);
+
+  const handleConnect = async () => {
+    try {
+      setSavingLicense(true);
+      await redeemLinkKey(licenseKeyInput);
+      setLicenseKeyInput("");
+      alert({
+        alertType: "success",
+        title: t("success", "Success"),
+        body: t(
+          "admin.settings.premium.linkKey.connected",
+          "This server is now connected to Stirling Cloud.",
+        ),
+      });
+      onLinked?.();
+    } catch (error) {
+      alert({
+        alertType: "error",
+        title: t("admin.error", "Error"),
+        body: linkKeyErrorMessage(error, t),
+      });
+    } finally {
+      setSavingLicense(false);
+    }
+  };
 
   const handleSaveLicense = async () => {
     // Block save if login is disabled
     if (!validateLoginEnabled()) {
+      return;
+    }
+    if (linkKeyEntered) {
+      await handleConnect();
       return;
     }
 
@@ -251,6 +289,14 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                   {t("admin.settings.premium.key.label", "License Key")}
                 </SettingsFieldLabel>
               }
+              description={
+                linkKeyEntered
+                  ? t(
+                      "admin.settings.premium.linkKey.recognised",
+                      "This is a Stirling Cloud link key. Connecting links this server to the team that created it.",
+                    )
+                  : undefined
+              }
               value={licenseKeyInput}
               onChange={(e) => setLicenseKeyInput(e.target.value)}
               placeholder={
@@ -316,7 +362,9 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                 (inputMethod === "file" && !licenseFile)
               }
             >
-              {t("admin.settings.save", "Save Changes")}
+              {linkKeyEntered
+                ? t("admin.settings.premium.linkKey.connect", "Connect")
+                : t("admin.settings.save", "Save Changes")}
             </Button>
           </Group>
         </Stack>

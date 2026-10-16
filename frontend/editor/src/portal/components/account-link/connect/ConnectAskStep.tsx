@@ -5,6 +5,7 @@ import { isSaasSupabaseConfigured } from "@app/portal/auth/saasSupabase";
 import { ConnectBenefitsSlide } from "@app/portal/components/account-link/connect/ConnectBenefitsSlide";
 import { FreeTierExhaustedSummary } from "@app/portal/components/account-link/connect/FreeTierExhaustedSummary";
 import { ExhaustedAccountLinkContent } from "@app/components/account-link/ExhaustedAccountLinkModal";
+import { LinkKeyOption } from "@app/portal/components/account-link/connect/LinkKeyOption";
 import "@app/components/account-link/connect.css";
 
 interface Props {
@@ -19,6 +20,8 @@ interface Props {
   error?: string | null;
   /** Undefined uses the Processor ledger; null deliberately omits unavailable figures. */
   summary?: ReactNode;
+  /** Offers connecting with a link key instead of signing in; omitted when renewing sign-in. */
+  onKeyLinked?: () => void;
 }
 
 export function ConnectAskStep({
@@ -26,6 +29,7 @@ export function ConnectAskStep({
   exhausted = false,
   error,
   summary,
+  onKeyLinked,
 }: Props) {
   const { t } = useTranslation();
 
@@ -68,6 +72,8 @@ export function ConnectAskStep({
       )}
 
       {error && <Banner tone="danger">{error}</Banner>}
+
+      {!reauth && onKeyLinked && <LinkKeyOption onLinked={onKeyLinked} />}
     </>
   );
 }

@@ -97,6 +97,14 @@ export function LinkAccountCard({ link, instanceName }: Props) {
 
       {(email || linked) && (
         <div className="portal-link__account-row">
+          {linked && link.status?.linkMethod === "KEY" && !email && (
+            <p className="portal-link__account">
+              {t(
+                "portal.accountLink.card.linkedWithKey",
+                "Connected with a link key. Billing is managed on stirling.com.",
+              )}
+            </p>
+          )}
           {email && (
             <p className="portal-link__account">
               {t(
