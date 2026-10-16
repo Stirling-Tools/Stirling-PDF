@@ -28,7 +28,50 @@ env:
   NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
 
 jobs:
+  install-frontend-dependencies:
+    name: install-frontend-dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble@sha256:6446946a1d9fd62d9ae501312a2d76a43ee688542b21622056a372959b65d63d
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Install zstd
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends zstd
+
+      - name: Restore cache artifact
+        id: cache
+        uses: ./.github/actions/cache-the-planet
+        with:
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          multi-cache: |
+            e2e-subbed-frontend-node-modules:
+              path: frontend/node_modules
+          key: |
+            e2e-subbed-frontend-node-modules=${{ inputs.npm-hash }}
+          token: ${{ github.token }}
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Upload frontend dependencies
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-frontend-node-modules
+          path: frontend/node_modules
+          include-hidden-files: true
+          retention-days: 1
+
   playwright-e2e:
+    needs: install-frontend-dependencies
     name: playwright-e2e (${{ matrix.browser }} ${{ matrix.shard }})
     permissions:
       contents: write
@@ -89,8 +132,6 @@ jobs:
           multi-cache: |
             e2e-subbed-frontend-dist:
               path: frontend/editor/dist
-            e2e-subbed-frontend-node-modules:
-              path: frontend/node_modules
             e2e-subbed-npm-cache:
               path: .cache/npm
             e2e-subbed-task-state-cache:
@@ -99,14 +140,15 @@ jobs:
             e2e-subbed-task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             e2e-subbed-npm-cache=${{ inputs.npm-hash }}
             e2e-subbed-frontend-dist=${{ inputs.frontend-dist-hash }}
-            e2e-subbed-frontend-node-modules=${{ inputs.npm-hash }}
           token: ${{ github.token }}
           exclude: |
             frontend/editor/src-tauri/target/debug/**
 
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
+      - name: Download frontend dependencies
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: e2e-frontend-node-modules
+          path: frontend/node_modules
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
