@@ -13185,12 +13185,15 @@ named = "Loading {{toolName}}..."
 [toolPanel]
 alpha = "Alpha"
 backToAllTools = "Back to all tools"
+beta = "Beta"
 goBack = "Go back"
+new = "New"
 pdfTools = "PDF Tools"
 placeholder = "Choose a tool to get started"
 premiumFeature = "Premium feature:"
 searchTools = "Search tools"
 toolsHeader = "PDF Tools"
+updated = "Updated"
 viewAllTools = "View all tools"
 
 [toolPanel.fullscreen]
