@@ -318,9 +318,8 @@ jobs:
   generated-models:
     if: |
       !cancelled() &&
-      needs.files-changed.outputs.generated-models == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
-    needs: [files-changed, gradle-cache-prime]
+      needs.files-changed.outputs.generated-models == 'true'
+    needs: [files-changed]
     permissions:
       contents: write
       pull-requests: write
