@@ -10833,10 +10833,71 @@
       "artifact_id": 12034608647,
       "artifact_name": "cache-untrusted-pr-8307-frontend-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--1a717a61f6db9a6b62a9f39214286e8b3433ecf6a-part-000000",
       "workflow_run_id": 38873424482
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/frontend-uv-python-dir/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-cache-e1b7946154cca207/v6": {
+      "object": "sha256:638f15783e12652c4a69c1277cdcd7ce5824201675c05d7cb673e11ec19c4f6a",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-16T08:41:07.069Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 139193541,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:435a924a6f24e833812e3699fd4c79f1c9d96aa6c850d9d29de43cfee9153742",
+          "size": 25165824,
+          "artifact_id": 12035111343,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--638f15783e12652c4a69c1277cdcd7ce5824201675-part-000000",
+          "workflow_run_id": 38873424482
+        },
+        {
+          "index": 1,
+          "object": "sha256:21139278f1f89aef9f11535d31b004f3abef0b1286746f9da32922ce5ce25cba",
+          "size": 25165824,
+          "artifact_id": 12035280890,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--638f15783e12652c4a69c1277cdcd7ce5824201675-part-000001",
+          "workflow_run_id": 38873424482
+        },
+        {
+          "index": 2,
+          "object": "sha256:2526402bfcaedf636daa80ae9a64b65ad2b77500fe9ce71a716df31d82c81bcc",
+          "size": 25165824,
+          "artifact_id": 12035116223,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--638f15783e12652c4a69c1277cdcd7ce5824201675-part-000002",
+          "workflow_run_id": 38873424482
+        },
+        {
+          "index": 3,
+          "object": "sha256:db29c47f0cc7f3e872c76a6e6a4a769266f51154c8fafa839981a97e5ad3f7db",
+          "size": 25165824,
+          "artifact_id": 12034859165,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--638f15783e12652c4a69c1277cdcd7ce5824201675-part-000003",
+          "workflow_run_id": 38873424482
+        },
+        {
+          "index": 4,
+          "object": "sha256:528e0c1afcf47a68ffacd731b9a28f5f2c478471bbec3dbf9c3a808045018bff",
+          "size": 25165824,
+          "artifact_id": 12034923946,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--638f15783e12652c4a69c1277cdcd7ce5824201675-part-000004",
+          "workflow_run_id": 38873424482
+        },
+        {
+          "index": 5,
+          "object": "sha256:808bc98aef0a557c2463f4f3c8c712f92a7074a729c84dbe18b8e4cbec30161e",
+          "size": 13364421,
+          "artifact_id": 12034659664,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--638f15783e12652c4a69c1277cdcd7ce5824201675-part-000005",
+          "workflow_run_id": 38873424482
+        }
+      ],
+      "artifact_id": 12035111343,
+      "artifact_name": "cache-untrusted-pr-8307-frontend-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--638f15783e12652c4a69c1277cdcd7ce5824201675-part-000000",
+      "workflow_run_id": 38873424482
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-16T08:32:08.199Z",
-    "writes": 3
+    "writes": 4
   }
 }
