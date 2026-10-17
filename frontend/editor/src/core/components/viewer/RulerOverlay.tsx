@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import React, {
   useCallback,
   useEffect,
@@ -19,6 +20,8 @@ import type {
   PageMeasureScales,
   PagePoint,
 } from "@app/utils/measurementTypes";
+import { polygonArea, polygonPerimeter, rectanglePoints } from "@app/utils/measurementArea";
+import { convertLength, formatMeasurement, type LengthUnit } from "@app/utils/measurementUnits";
 import { validateMeasurement } from "@app/utils/measurementUtils";
 import type { ScaleCalibrationMeasurement } from "@app/components/viewer/ScaleCalibrationDialog";
 import {
@@ -43,6 +46,12 @@ function createRulerMeasurementId(): string {
 
 export interface RulerOverlayHandle {
   clearAll: (silent?: boolean) => void;
+  deleteById: (id: string) => void;
+  selectById: (id: string) => void;
+  hasSelection: () => boolean;
+  clearSelection: () => void;
+  moveById: (id: string) => void;
+  cancelMove: () => void;
   getMeasurements: () => Measurement[];
   setMeasurements: (measurements: Measurement[]) => void;
   /** Restore measurements without triggering notification */
@@ -58,6 +67,10 @@ interface RulerOverlayProps {
   isActive: boolean;
   pageMeasureScales?: PageMeasureScales | null;
   customScale?: MeasureScale | null;
+  displayUnit?: string;
+  tool?: "length" | "rectangle" | "polygon";
+  groups?: {id: string; name: string; color: string; lineWidth?: number}[];
+  activeGroup?: string;
   isCalibrationActive?: boolean;
   onCalibrationMeasure?: (measurement: ScaleCalibrationMeasurement) => void;
 }
@@ -309,6 +322,10 @@ export const RulerOverlay = React.forwardRef<
     isActive,
     pageMeasureScales,
     customScale,
+    displayUnit,
+    tool = "length",
+    groups = [],
+    activeGroup = "default",
     isCalibrationActive = false,
     onCalibrationMeasure,
   }: RulerOverlayProps,
@@ -322,6 +339,10 @@ export const RulerOverlay = React.forwardRef<
   const [cursorDoc, setCursorDoc] = useState<PagePoint | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [menu, setMenu] = useState<{id:string;x:number;y:number}|null>(null);
+  const [moveId, setMoveId] = useState<string | null>(null);
+  const moveIdRef = useRef<string | null>(null);
+  const [snapPoint, setSnapPoint] = useState<PagePoint | null>(null);
   const [labelVisibilityMode, setLabelVisibilityMode] =
     useState<RulerLabelVisibilityMode>("hideSmall");
   const [isDrawThroughActive, setIsDrawThroughActive] = useState(false);
@@ -349,10 +370,31 @@ export const RulerOverlay = React.forwardRef<
     isActiveRef.current = isActive;
   }, [isActive]);
 
+  const [areaPoints, setAreaPoints] = useState<PagePoint[]>([]);
+  const areaPointsRef = useRef<PagePoint[]>([]);
+  const rectStartRef = useRef<PagePoint | null>(null);
+  const [rectStart, setRectStart] = useState<PagePoint | null>(null);
+  const [pendingEnd, setPendingEnd] = useState<PagePoint | null>(null);
+  const pendingEndRef = useRef<PagePoint | null>(null);
   const firstPtRef = useRef<PagePoint | null>(null);
   useEffect(() => {
     firstPtRef.current = firstPt;
   }, [firstPt]);
+
+  // Nullstill påbegynt måling ved bytte av verktøy.
+  useEffect(() => {
+    firstPtRef.current = null;
+    pendingEndRef.current = null;
+    areaPointsRef.current = [];
+    setAreaPoints([]);
+    rectStartRef.current = null;
+    setRectStart(null);
+    setFirstPt(null);
+    setPendingEnd(null);
+    setCursorS(null);
+    setCursorDoc(null);
+    setSnapPoint(null);
+  }, [tool]);
 
   const cursorDocRef = useRef<PagePoint | null>(null);
   const wasCalibrationActiveRef = useRef(isCalibrationActive);
@@ -570,6 +612,15 @@ export const RulerOverlay = React.forwardRef<
 
   // ── Imperative handle ──────────────────────────────────────────────────────
   React.useImperativeHandle(ref, () => ({
+    deleteById: (id) => {
+      updateMeasurements(ms => ms.filter(m => m.id !== id), true);
+      setSelectedId(null); setMenu(null);
+    },
+    selectById: (id) => { setSelectedId(id); setMenu(null); },
+    hasSelection: () => selectedId !== null,
+    clearSelection: () => { setSelectedId(null); setHoveredId(null); setMenu(null); },
+    moveById: (id) => { moveIdRef.current = id; setMoveId(id); setMenu(null); },
+    cancelMove: () => { moveIdRef.current = null; setMoveId(null); },
     clearAll: (silent = false) => {
       firstPtRef.current = null;
       cursorDocRef.current = null;
@@ -695,11 +746,21 @@ export const RulerOverlay = React.forwardRef<
         z,
         effectiveRotation,
       );
-      return {
-        pageIndex,
-        x: docPoint.x,
-        y: docPoint.y,
-      };
+      const point = {pageIndex, x:docPoint.x, y:docPoint.y};
+      if (moveIdRef.current) return point;
+      let best: PagePoint | null = null;
+      let bestDistance = 12;
+      for (const m of measurementsRef.current) {
+        const vertices = m.points?.length ? m.points : [m.start,m.end];
+        for (const v of vertices) {
+          if (v.pageIndex !== pageIndex) continue;
+          const display = pagePointToDisplayPoint(pageEl, pageEl.getBoundingClientRect(), v, z, effectiveRotation);
+          const r = pageEl.getBoundingClientRect();
+          const distance = Math.hypot(e.clientX-r.left-display.x,e.clientY-r.top-display.y);
+          if (distance < bestDistance) { bestDistance=distance; best=v; }
+        }
+      }
+      return best ?? point;
     };
 
     const clearCursor = () => {
@@ -717,6 +778,8 @@ export const RulerOverlay = React.forwardRef<
         setCursorS(screenPt);
         setCursorDoc(docPt);
         cursorDocRef.current = docPt;
+        const nearest = measurementsRef.current.some(m => (m.points?.length ? m.points : [m.start,m.end]).some(p => p.pageIndex === docPt.pageIndex && Math.hypot(p.x-docPt.x,p.y-docPt.y)<0.001));
+        setSnapPoint(nearest ? docPt : null);
       } else if (firstPtRef.current !== null) {
         // First point placed, cursor wandered off page — clamp to nearest edge
         el.style.cursor = "crosshair";
@@ -738,29 +801,121 @@ export const RulerOverlay = React.forwardRef<
       }
     };
 
+    const saveArea = (kind: "rectangle" | "area", points: PagePoint[]) => {
+      if (points.length < 3 || polygonArea(points) <= 0) return;
+      updateMeasurements(m => [...m, {
+        id: createRulerMeasurementId(), kind, points,
+        start: points[0], end: points[points.length - 1], groupId: activeGroup,
+      }], true);
+    };
     const onClick = (e: MouseEvent) => {
       if (e.button !== 0) return;
       const target = e.target as Element;
       if (target.closest?.("[data-ruler-control]")) return;
+      if (target.closest?.("button, select, input, textarea")) return;
+      const snapped = toDocPagePt(e);
+      const nearExisting = snapped && measurementsRef.current.find(m =>
+        (m.points?.length ? m.points : [m.start,m.end]).some(p => p.pageIndex === snapped.pageIndex && Math.hypot(p.x-snapped.x,p.y-snapped.y)<0.001));
+      if (moveIdRef.current) {
+        const targetPoint = toDocPagePt(e);
+        const id = moveIdRef.current;
+        const current = measurementsRef.current.find(m => m.id === id);
+        if (targetPoint && current && current.start.pageIndex === targetPoint.pageIndex) {
+          const dx = targetPoint.x-current.start.x;
+          const dy = targetPoint.y-current.start.y;
+          const shift = (p: PagePoint): PagePoint => ({...p,x:p.x+dx,y:p.y+dy});
+          updateMeasurements(ms => ms.map(m => m.id === id ? {...m,start:shift(m.start),end:shift(m.end),points:m.points?.map(shift)} : m),true);
+        }
+        moveIdRef.current=null; setMoveId(null); e.preventDefault(); return;
+      }
+      if (!isCalibrationActive && tool === "rectangle") {
+        const pt = toDocPagePt(e);
+        if (!pt) return;
+        const start = rectStartRef.current;
+        if (!start) { rectStartRef.current=pt; setRectStart(pt); }
+        else if (start.pageIndex === pt.pageIndex) {
+          saveArea("rectangle",rectanglePoints(start,pt));
+          rectStartRef.current=null; setRectStart(null);
+        }
+        e.preventDefault(); return;
+      }
+      if (!isCalibrationActive && tool === "polygon") {
+        const pt = toDocPagePt(e);
+        if (!pt) return;
+        const prev = areaPointsRef.current;
+        if (prev.length && pt.pageIndex !== prev[0].pageIndex) return;
+        const first = prev[0];
+        // Close by clicking within 12 screen pixels of first vertex.
+        if (first && prev.length >= 3) {
+          const pageEl = el.querySelector(`[data-page-index="${first.pageIndex}"]`) as HTMLElement | null;
+          if (pageEl) {
+            const rect = pageEl.getBoundingClientRect();
+            const rot = getEffectivePageRotation(pageEl, rotationRef.current);
+            const a = pagePointToDisplayPoint(pageEl, rect, first, zoomRef.current, rot);
+            const b = pagePointToDisplayPoint(pageEl, rect, pt, zoomRef.current, rot);
+            if (Math.hypot(a.x-b.x, a.y-b.y) <= 12) {
+              saveArea("area", prev);
+              areaPointsRef.current = []; setAreaPoints([]);
+              e.preventDefault(); return;
+            }
+          }
+        }
+        areaPointsRef.current = [...prev, pt];
+        setAreaPoints(areaPointsRef.current);
+        e.preventDefault(); return;
+      }
 
       const hasMeasurementInProgress =
-        firstPtRef.current !== null || drawThroughActiveRef.current || e.altKey;
+        firstPtRef.current !== null ||
+        pendingEndRef.current !== null ||
+        drawThroughActiveRef.current || e.altKey;
       if (
         !hasMeasurementInProgress &&
-        target.closest?.("[data-ruler-interactive]")
+        target.closest?.("[data-ruler-interactive]") && !nearExisting
       ) {
         return;
       }
 
       const dp = toDocPagePt(e);
       const overPage = dp !== null;
-      if (!overPage && firstPtRef.current === null) return;
+      if (!overPage && firstPtRef.current === null &&
+          pendingEndRef.current === null) return;
       e.preventDefault();
 
       const nextPoint = dp ?? cursorDocRef.current;
       if (!nextPoint) return;
 
       const prev = firstPtRef.current;
+      const lockedEnd = pendingEndRef.current;
+
+      if (prev && lockedEnd && !isCalibrationActive) {
+        const dx = lockedEnd.x - prev.x;
+        const dy = lockedEnd.y - prev.y;
+        const length = Math.hypot(dx, dy);
+        if (length > 0) {
+          const offset = (
+            -(nextPoint.x - prev.x) * dy +
+            (nextPoint.y - prev.y) * dx
+          ) / length;
+
+          updateMeasurements(
+            (m) => [...m, {
+              id: createRulerMeasurementId(),
+              start: prev,
+              end: lockedEnd,
+              offset,
+              groupId: activeGroup,
+            }],
+            true,
+          );
+        }
+        pendingEndRef.current = null;
+        setPendingEnd(null);
+        firstPtRef.current = null;
+        setFirstPt(null);
+        return;
+      }
+
       if (!prev) {
         firstPtRef.current = nextPoint;
         setFirstPt(nextPoint);
@@ -781,6 +936,14 @@ export const RulerOverlay = React.forwardRef<
         return;
       }
 
+      if (!isCalibrationActive) {
+        if (dist(prev, nextPoint) > 0) {
+          pendingEndRef.current = nextPoint;
+          setPendingEnd(nextPoint);
+        }
+        return;
+      }
+
       firstPtRef.current = null;
       setFirstPt(null);
 
@@ -798,7 +961,7 @@ export const RulerOverlay = React.forwardRef<
 
       const id = createRulerMeasurementId();
       updateMeasurements(
-        (m) => [...m, { id, start: prev, end: nextPoint }],
+        (m) => [...m, { id, start: prev, end: nextPoint, groupId: activeGroup }],
         true,
       );
     };
@@ -808,7 +971,37 @@ export const RulerOverlay = React.forwardRef<
       if (firstPtRef.current === null) clearCursor();
     };
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Enter" &&
+          firstPtRef.current && pendingEndRef.current &&
+          !isCalibrationActive) {
+        updateMeasurements(
+          (m) => [...m, {
+            id: createRulerMeasurementId(),
+            start: firstPtRef.current!,
+            end: pendingEndRef.current!,
+            offset: 0,
+            groupId: activeGroup,
+          }],
+          true,
+        );
+        pendingEndRef.current = null;
+        setPendingEnd(null);
+        firstPtRef.current = null;
+        setFirstPt(null);
+        e.preventDefault();
+        return;
+      }
+      if (tool === "polygon" && !isCalibrationActive && e.key === "Backspace" && areaPointsRef.current.length) {
+        areaPointsRef.current = areaPointsRef.current.slice(0, -1);
+        setAreaPoints(areaPointsRef.current);
+        e.preventDefault(); return;
+      }
       if (e.key === "Escape") {
+        moveIdRef.current=null; setMoveId(null); setMenu(null);
+        areaPointsRef.current = []; setAreaPoints([]);
+        rectStartRef.current = null; setRectStart(null);
+        pendingEndRef.current = null;
+        setPendingEnd(null);
         firstPtRef.current = null;
         cursorDocRef.current = null;
         setFirstPt(null);
@@ -818,12 +1011,12 @@ export const RulerOverlay = React.forwardRef<
     };
 
     el.addEventListener("mousemove", onMove);
-    el.addEventListener("click", onClick);
+    el.addEventListener("click", onClick, true);
     el.addEventListener("mouseleave", onLeave);
     document.addEventListener("keydown", onKey);
     return () => {
       el.removeEventListener("mousemove", onMove);
-      el.removeEventListener("click", onClick);
+      el.removeEventListener("click", onClick, true);
       el.removeEventListener("mouseleave", onLeave);
       document.removeEventListener("keydown", onKey);
       el.style.cursor = "";
@@ -831,10 +1024,30 @@ export const RulerOverlay = React.forwardRef<
   }, [
     containerRef,
     isActive,
+    tool,
+    activeGroup,
     isCalibrationActive,
     onCalibrationMeasure,
     updateMeasurements,
   ]);
+
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectedId) {
+        setSelectedId(null);
+        setHoveredId(null);
+        setMenu(null);
+        return;
+      }
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedId && !isEditableKeyboardTarget(e.target)) {
+        e.preventDefault();
+        updateMeasurements(ms => ms.filter(m => m.id !== selectedId),true);
+        setSelectedId(null); setMenu(null);
+      }
+    };
+    document.addEventListener("keydown",key);
+    return () => document.removeEventListener("keydown",key);
+  },[selectedId,updateMeasurements]);
 
   const deleteMeasurement = useCallback(
     (id: string) => {
@@ -889,6 +1102,7 @@ export const RulerOverlay = React.forwardRef<
   const firstPtS = firstPt ? pagePointToScreen(firstPt) : null;
   const renderedMeasurements = measurements.reduce<RulerRenderedMeasurement[]>(
     (items, measurement) => {
+      if (measurement.kind === "area" || measurement.kind === "rectangle") return items;
       const startS = pagePointToScreen(measurement.start);
       const endS = pagePointToScreen(measurement.end);
       if (!startS || !endS) {
@@ -902,21 +1116,103 @@ export const RulerOverlay = React.forwardRef<
         customScale,
       );
 
+      const offsetEndS =
+        measurement.offset && measurement.offset !== 0
+          ? pagePointToScreen({
+              ...measurement.start,
+              x: measurement.start.x -
+                (measurement.end.y - measurement.start.y) *
+                measurement.offset /
+                (dist(measurement.start, measurement.end) || 1),
+              y: measurement.start.y +
+                (measurement.end.x - measurement.start.x) *
+                measurement.offset /
+                (dist(measurement.start, measurement.end) || 1),
+            })
+          : null;
+
+      const screenDx = endS.x - startS.x;
+      const screenDy = endS.y - startS.y;
+      const screenLength = Math.hypot(screenDx, screenDy);
+      const screenOffset = offsetEndS && screenLength > 0
+        ? (
+            -(offsetEndS.x - startS.x) * screenDy +
+            (offsetEndS.y - startS.y) * screenDx
+          ) / screenLength
+        : 0;
+
       items.push({
         measurement,
         startS,
         endS,
         distPts: dist(measurement.start, measurement.end),
         measureScale,
+        offset: screenOffset,
       });
       return items;
     },
     [],
   );
+  const pendingPreview =
+    isActive && !isCalibrationActive &&
+    firstPt && pendingEnd && cursorDoc
+      ? (() => {
+          const dx = pendingEnd.x - firstPt.x;
+          const dy = pendingEnd.y - firstPt.y;
+          const length = Math.hypot(dx, dy);
+          if (length === 0 || cursorDoc.pageIndex !== firstPt.pageIndex) {
+            return null;
+          }
+
+          const offset = (
+            -(cursorDoc.x - firstPt.x) * dy +
+            (cursorDoc.y - firstPt.y) * dx
+          ) / length;
+
+          const startS = pagePointToScreen(firstPt);
+          const endS = pagePointToScreen(pendingEnd);
+          if (!startS || !endS) return null;
+
+          return {
+            measurement: {
+              id: "__offset_preview__",
+              start: firstPt,
+              end: pendingEnd,
+              offset,
+            },
+            startS,
+            endS,
+            distPts: length,
+            offset: (() => {
+              const shiftedS = pagePointToScreen({
+                ...firstPt,
+                x: firstPt.x - dy * offset / length,
+                y: firstPt.y + dx * offset / length,
+              });
+              if (!shiftedS) return 0;
+              const sx = endS.x - startS.x;
+              const sy = endS.y - startS.y;
+              const sl = Math.hypot(sx, sy);
+              return sl > 0
+                ? (-(shiftedS.x - startS.x) * sy +
+                    (shiftedS.y - startS.y) * sx) / sl
+                : 0;
+            })(),
+            measureScale: pickScale(
+              firstPt,
+              pendingEnd,
+              pageMeasureScales,
+              customScale,
+            ),
+          };
+        })()
+      : null;
+
   const isMeasurementInteractionPassthroughActive =
     firstPt !== null || isDrawThroughActive;
+  const pendingEndS = pendingEnd ? pagePointToScreen(pendingEnd) : null;
   const liveLine =
-    isActive && firstPtS && cursorS
+    isActive && (tool === "length" || isCalibrationActive) && firstPtS && cursorS && !pendingEnd
       ? {
           startS: firstPtS,
           endS: cursorS,
@@ -927,8 +1223,38 @@ export const RulerOverlay = React.forwardRef<
         }
       : null;
 
+  const areaRender = measurements.filter(m => (m.kind === "area" || m.kind === "rectangle") && m.points?.length).map(m => ({m, points: m.points!.map(pagePointToScreen)})).filter(v => v.points.every(Boolean));
+  const previewPoints = tool === "rectangle" && rectStart && cursorDoc && rectStart.pageIndex === cursorDoc.pageIndex
+    ? rectanglePoints(rectStart, cursorDoc)
+    : tool === "polygon" && areaPoints.length
+      ? [...areaPoints, ...(cursorDoc && cursorDoc.pageIndex === areaPoints[0].pageIndex ? [cursorDoc] : [])]
+      : [];
+  const previewScreen = previewPoints.map(pagePointToScreen).filter((p): p is Point => !!p);
+  const areaShapes = [...areaRender.map(v => ({points: v.points as Point[], m: v.m, preview: false})), ...(previewScreen.length > 1 ? [{points: previewScreen, m: null, preview: true}] : [])];
+  const textZoom = Math.max(0.25, zoom);
+  const areaColor = (m: Measurement | null) => groups.find(g => g.id === (m?.groupId ?? activeGroup))?.color ?? "#299bff";
+  const areaLineWidth = (m: Measurement | null) => m?.lineWidth ?? groups.find(g => g.id === (m?.groupId ?? activeGroup))?.lineWidth ?? 2;
+  const areaScale = (m: Measurement | null) => {
+    const pt = m?.start ?? previewPoints[0];
+    return pt ? pickScale(pt, pt, pageMeasureScales, customScale) : null;
+  };
+  const toDisplay = (pdfLength: number, scale: MeasureScale | null, area = false) => {
+    // Never present PDF paper dimensions as real-world quantities.
+    if (!scale || !Number.isFinite(scale.factor) || scale.factor <= 0) return "Kalibrer";
+    const source = (scale?.unit ?? "m") as LengthUnit;
+    const target = (displayUnit ?? "m") as LengthUnit;
+    const units = ["mm","cm","m","km","in","ft","yd","mi"];
+    const from = units.includes(source) ? source : "m";
+    const to = units.includes(target) ? target : "m";
+    const value = pdfLength * (scale?.factor ?? 0.0254 / 72);
+    const converted = convertLength(value, from, to);
+    // Areas are already in squared PDF points; square the unit conversion factor, not the area.
+    const convertedArea = pdfLength * Math.pow(convertLength(scale?.factor ?? 0.0254 / 72, from, to), 2);
+    return formatMeasurement(area ? convertedArea : converted, to, area ? "area" : "length", 2);
+  };
   return (
-    // icon-lint-allow: runtime-generated-svg -- ruler geometry is computed from the page
+    <>
+    {/* icon-lint-allow: runtime-generated-svg */} -- ruler geometry is computed from the page
     <svg
       style={{
         position: "absolute",
@@ -939,6 +1265,11 @@ export const RulerOverlay = React.forwardRef<
         pointerEvents: "none",
         overflow: "visible",
         zIndex: 100,
+      }}
+      onContextMenu={(e) => {
+        const target = (e.target as Element).closest("[data-measurement-id]");
+        const id = target?.getAttribute("data-measurement-id");
+        if (id) { e.preventDefault(); setSelectedId(id); setMenu({id,x:e.clientX,y:e.clientY}); }
       }}
       onClick={(e) => {
         // Close expanded label if clicking on empty SVG area
@@ -958,8 +1289,42 @@ export const RulerOverlay = React.forwardRef<
         </filter>
       </defs>
 
+      <g style={{pointerEvents:"none"}}>
+        {areaShapes.map((shape, i) => {
+          const pts = shape.points;
+          const color = areaColor(shape.m);
+          const scale = areaScale(shape.m);
+          const raw = shape.m?.points ?? previewPoints;
+          const cx = pts.reduce((sum,p) => sum+p.x,0)/pts.length;
+          const cy = pts.reduce((sum,p) => sum+p.y,0)/pts.length;
+          return <g key={shape.m?.id ?? "area-preview"} data-ruler-interactive={shape.m ? "true" : undefined}
+            style={{pointerEvents:shape.m ? "visiblePainted" : "none",cursor:shape.m ? "pointer":"crosshair"}}
+            onClick={e => {if (!shape.m) return; e.stopPropagation(); setSelectedId(shape.m.id);}}
+            onContextMenu={e => {if (!shape.m) return; e.preventDefault(); e.stopPropagation(); setSelectedId(shape.m.id); setMenu({id:shape.m.id,x:e.clientX,y:e.clientY});}}>
+
+            <polygon points={pts.map(p=>`${p.x},${p.y}`).join(" ")} fill={color} fillOpacity={0.12} stroke={color} strokeWidth={areaLineWidth(shape.m)+(shape.m?.id===selectedId?1.5:0)} strokeDasharray={shape.preview ? "6 4" : undefined}/>
+            {raw.length >= 3 && <text x={cx} y={cy} fill={color} fontSize={14 * textZoom} fontWeight={700} textAnchor="middle" stroke="#151515" strokeWidth={3 * textZoom} paintOrder="stroke">{toDisplay(polygonArea(raw), scale, true)}</text>}
+            {pts.map((p,j) => {
+              if (shape.preview && j === pts.length-1) return null;
+              const q = pts[(j+1)%pts.length];
+              const a = raw[j], b = raw[(j+1)%raw.length];
+              if (!a || !b) return null;
+              const len = Math.hypot(a.x-b.x,a.y-b.y);
+              return <text key={j} x={(p.x+q.x)/2} y={(p.y+q.y)/2-5 * textZoom} fill={color} fontSize={11 * textZoom} textAnchor="middle" stroke="#151515" strokeWidth={3 * textZoom} paintOrder="stroke">{toDisplay(len,scale)}</text>;
+            })}
+            {!shape.preview && raw.length>=3 && <text x={cx} y={cy+18 * textZoom} fill={color} fontSize={11 * textZoom} textAnchor="middle" stroke="#151515" strokeWidth={3 * textZoom} paintOrder="stroke">Omkrets {toDisplay(polygonPerimeter(raw),scale)}</text>}
+          </g>;
+        })}
+      </g>
+      {snapPoint && isActive && (()=>{const p=pagePointToScreen(snapPoint);return p ? <circle cx={p.x} cy={p.y} r={6} fill="none" stroke="#ffcc00" strokeWidth={2} pointerEvents="none"/> : null;})()}
       <RulerMeasurementLayer
-        measurements={renderedMeasurements}
+        groupColors={Object.fromEntries(groups.map(g => [g.id, g.color]))}
+        displayUnit={displayUnit}
+        measurements={
+          pendingPreview
+            ? [...renderedMeasurements, pendingPreview]
+            : renderedMeasurements
+        }
         zoom={zoom}
         selectedId={selectedId}
         hoveredId={hoveredId}
@@ -982,6 +1347,13 @@ export const RulerOverlay = React.forwardRef<
         onCycleLabelVisibilityMode={cycleLabelVisibilityMode}
       />
     </svg>
+    {menu && createPortal(<div style={{position:"fixed",left:Math.min(menu.x,window.innerWidth-200),top:Math.min(menu.y,window.innerHeight-150),zIndex:100000,background:"#242832",color:"white",border:"1px solid #666",borderRadius:8,padding:5,boxShadow:"0 5px 20px #0008"}}>
+      {[["Flytt",()=>{moveIdRef.current=menu.id;setMoveId(menu.id);setMenu(null);}],
+        ["Endre gruppe",()=>{const chosen=window.prompt("Gruppe: "+groups.map(g=>g.name+" ("+g.id+")").join(", "),activeGroup);if(chosen && groups.some(g=>g.id===chosen)){updateMeasurements(ms=>ms.map(m=>m.id===menu.id?{...m,groupId:chosen}:m),true);}setMenu(null);}],
+        ["Slett",()=>{updateMeasurements(ms=>ms.filter(m=>m.id!==menu.id),true);setSelectedId(null);setMenu(null);}]] .map(([label,fn])=><button key={label as string} type="button" onClick={fn as ()=>void} style={{display:"block",width:"100%",textAlign:"left",padding:"9px 18px",background:"transparent",color:"white",border:0,cursor:"pointer"}}>{label as string}</button>)}
+      <button type="button" onClick={()=>setMenu(null)} style={{padding:6,background:"transparent",color:"#aaa",border:0}}>Lukk</button>
+    </div>,document.body)}
+    </>
   );
 });
 
