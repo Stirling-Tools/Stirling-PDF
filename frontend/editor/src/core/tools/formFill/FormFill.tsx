@@ -16,7 +16,9 @@ import {
   ScrollArea,
   Progress,
   Tooltip,
+  Stack,
 } from "@mantine/core";
+import { createToolSteps } from "@app/components/tools/shared/ToolStep";
 import { UnsavedChangesDialog } from "@app/components/shared/UnsavedChangesDialog";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { Button } from "@app/ui/Button";
@@ -31,6 +33,7 @@ import { useNavigation } from "@app/contexts/NavigationContext";
 import { useFieldShortcuts } from "@app/tools/formFill/useFieldShortcuts";
 import { serverMessage } from "@app/tools/formFill/useFormCommit";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import { useAllFiles, useFileState } from "@app/contexts/FileContext";
 import { Skeleton } from "@mantine/core";
 import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
@@ -136,7 +139,7 @@ const FormFill = (_props: BaseToolProps) => {
   const allValues = useAllFormValues();
   const { validationErrors } = formState;
 
-  const { scrollActions } = useViewer();
+  const { scrollActions, activeFileId } = useViewer();
 
   const [flatten, setFlatten] = useState(false);
   const [extracting, setExtracting] = useState(false);
@@ -197,8 +200,12 @@ const FormFill = (_props: BaseToolProps) => {
   // changes, so the panel kept showing the pre-hydration (or pre-version) file.
   const { files: activeFiles } = useAllFiles();
   const selectedFileIds = fileState.ui.selectedFileIds;
-  const currentFile = useMemo(() => {
+  const viewedFile = useMemo(() => {
     if (activeFiles.length === 0) return null;
+    const viewed = activeFiles.find(
+      (file) => isStirlingFile(file) && file.fileId === activeFileId,
+    );
+    if (viewed) return viewed;
     if (selectedFileIds.length > 0) {
       const sel = activeFiles.find(
         (f) => isStirlingFile(f) && selectedFileIds.includes(f.fileId),
@@ -206,7 +213,9 @@ const FormFill = (_props: BaseToolProps) => {
       if (sel) return sel;
     }
     return activeFiles[0];
-  }, [activeFiles, selectedFileIds]);
+  }, [activeFiles, selectedFileIds, activeFileId]);
+  const pdfAccess = usePdfAccess(viewedFile);
+  const currentFile = pdfAccess?.encrypted === false ? viewedFile : null;
 
   const handleExtractCsv = useCallback(async () => {
     if (!currentFile) return;
@@ -491,6 +500,22 @@ const FormFill = (_props: BaseToolProps) => {
   }, [requiredFields, allValues]);
 
   if (!isActive) return null;
+  if (viewedFile && pdfAccess?.encrypted) {
+    return (
+      <Stack gap="sm" p="sm">
+        {createToolSteps().createFilesStep({ selectedFiles: [] })}
+      </Stack>
+    );
+  }
+  if (viewedFile && !currentFile) {
+    return (
+      <div className={styles.root}>
+        <Text size="sm" role="status">
+          {t("loading", "Loading...")}
+        </Text>
+      </div>
+    );
+  }
 
   const changeCount =
     pendingFields.length +

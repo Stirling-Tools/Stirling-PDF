@@ -3,6 +3,7 @@ import { TierBadge } from "@app/components/shared/config/TierBadge";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { SettingsCard } from "@app/components/shared/config/SettingsCard";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { Stack, Loader } from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
@@ -165,6 +166,30 @@ export default function AdminSecurityPage() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
+        <SettingsCard
+          id="pdfPermissions"
+          title={t("admin.settings.security.pdfPermissions", "PDF permissions")}
+        >
+          <SettingsToggleRow
+            label={t(
+              "admin.settings.security.honorOwnerPasswords.label",
+              "Honor PDF permissions",
+            )}
+            info={t(
+              "admin.settings.security.honorOwnerPasswords.description",
+              "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs.",
+            )}
+            pending={security.isFieldPending("honorOwnerPasswords")}
+            checked={security.settings?.honorOwnerPasswords ?? true}
+            disabled={!loginEnabled}
+            onChange={(checked) =>
+              security.setSettings({
+                ...security.settings,
+                honorOwnerPasswords: checked,
+              })
+            }
+          />
+        </SettingsCard>
         <SettingsCard
           id="securityAuthentication"
           title={t("admin.settings.security.authentication", "Authentication")}
