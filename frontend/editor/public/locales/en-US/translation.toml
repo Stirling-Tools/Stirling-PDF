@@ -6082,6 +6082,10 @@ button = "Scan document"
 failed = "The document could not be scanned."
 fileName = "Scan {{date}}"
 
+[mobile.tools]
+close = "Close tools"
+sheet = "Tools"
+
 [mobileScanner]
 addMore = "Add More"
 back = "Back"
