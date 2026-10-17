@@ -19,20 +19,18 @@ interface UseWheelZoomOptions {
   enabled?: boolean;
   /**
    * How much delta needs to accumulate before a zoom action is triggered.
-   * Defaults to 10 which matches the previous implementations.
+   * Defaults to 10.
    */
   threshold?: number;
   /**
-   * Whether a Ctrl/Cmd modifier is required for zooming. Defaults to true so
-   * we only react to pinch gestures and intentional ctrl+wheel zooming.
+   * Whether a Ctrl/Cmd modifier is required for zooming. Defaults to true.
    */
   requireModifierKey?: boolean;
 }
 
 /**
- * Shared hook for handling wheel-based zoom across components.
- * It normalises accumulated delta behaviour, prevents default scrolling when
- * zoom is triggered, and keeps the handler detached when disabled.
+ * Lightweight hook for handling wheel and trackpad pinch zoom on non-EmbedPDF
+ * components (such as the Page Editor thumbnail view).
  */
 export function useWheelZoom({
   ref,
@@ -43,23 +41,17 @@ export function useWheelZoom({
   requireModifierKey = true,
 }: UseWheelZoomOptions) {
   useEffect(() => {
-    if (!enabled) {
-      return;
-    }
+    if (!enabled) return;
 
     const element = ref.current;
-    if (!element) {
-      return;
-    }
+    if (!element) return;
 
     let accumulator = 0;
 
     const handleWheel = (event: Event) => {
       const wheelEvent = event as WheelEvent;
       const hasModifier = wheelEvent.ctrlKey || wheelEvent.metaKey;
-      if (requireModifierKey && !hasModifier) {
-        return;
-      }
+      if (requireModifierKey && !hasModifier) return;
 
       wheelEvent.preventDefault();
       wheelEvent.stopPropagation();
