@@ -14,6 +14,10 @@
  */
 import type { WrappedPdfiumModule, PdfiumModule } from "@embedpdf/pdfium";
 
+/**
+ * Exported so a caller holding an engine handle from this service can type it
+ * without importing `@embedpdf/pdfium` directly.
+ */
 export type { WrappedPdfiumModule };
 import {
   pdfiumWasmModulePromise,
