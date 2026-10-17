@@ -24,10 +24,34 @@ export interface CalibrationMetadata {
 }
 
 // Single measurement between two page points on same page
+export type MeasurementKind =
+  | "length"
+  | "rectangle"
+  | "area"
+  | "perimeter"
+  | "count";
+
+export interface MeasurementGroup {
+  id: string;
+  name: string;
+  color: string;
+  lineWidth: number;
+  lineStyle: "solid" | "dashed" | "dotted";
+  parentId?: string | null;
+}
+
 export interface Measurement {
   id: string;
   start: PagePoint;
   end: PagePoint;
+  /** Parallel displacement of the dimension line, in PDF points. */
+  offset?: number;
+  kind?: MeasurementKind;
+  points?: PagePoint[];
+  groupId?: string | null;
+  color?: string;
+  lineWidth?: number;
+  lineStyle?: "solid" | "dashed" | "dotted";
 }
 
 // Viewport area with its own scale (for multi-region PDFs)

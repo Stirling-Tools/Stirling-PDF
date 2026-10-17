@@ -1,3 +1,7 @@
+import { createPortal } from "react-dom";
+import type { Measurement } from "@app/utils/measurementTypes";
+import { MeasurementPanel } from "@app/components/viewer/MeasurementPanel";
+import type { LengthUnit } from "@app/utils/measurementUnits";
 import React, {
   useCallback,
   useEffect,
@@ -1767,10 +1771,139 @@ const EmbedPdfViewerContent = ({
     rulerOverlayRef,
   });
 
+  const [measurementPanelVisible, setMeasurementPanelVisible] = useState(false);
+  const toggleMeasurementPanel = useCallback(() => {
+    setMeasurementPanelVisible(v => !v);
+  }, []);
+  const [panelMeasurements, setPanelMeasurements] = useState<Measurement[]>([]);
+  const [measurementUnit, setMeasurementUnit] = useState<LengthUnit>("m");
+  const [measurementGroups, setMeasurementGroups] = useState<{id: string; name: string; color: string; lineWidth?: number}[]>([{id:"default",name:"Generelt",color:"#299bff",lineWidth:2}]);
+  const [activeMeasurementGroup, setActiveMeasurementGroup] = useState("default");
+  const [measurementTool, setMeasurementTool] =
+    useState<"length" | "rectangle" | "polygon">("length");
+
+  // Persist group definitions and measurement membership per PDF. The PDF
+  // measurement manager restores geometry independently, so membership must
+  // be reapplied after that restoration rather than relying on mount order.
+  const measurementGroupStorageKey = `stirling-measurement-groups-v3:${currentFile?.name ?? currentFileStableId ?? "unknown"}`;
+  const [savedGroupMembership, setSavedGroupMembership] = useState<Record<string, string>>({});
+  const measurementBackupKey = `stirling-measurement-backup-v1:${currentFile?.name ?? currentFileStableId ?? "unknown"}`;
+  const backupKeyRef = useRef(measurementBackupKey);
+  useEffect(() => { backupKeyRef.current = measurementBackupKey; }, [measurementBackupKey]);
+  const saveMeasurementBackup = useCallback((next: Measurement[]) => {
+    try {
+      // Never overwrite a non-empty backup with an accidental empty restoration.
+      if (next.length) localStorage.setItem(backupKeyRef.current, JSON.stringify(next));
+    } catch (error) { console.warn("Kunne ikke sikkerhetslagre målinger", error); }
+  }, []);
+
+  const [restoredGroupKey, setRestoredGroupKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    setRestoredGroupKey(null);
+    let saved: { groups?: typeof measurementGroups; activeGroup?: string; membership?: Record<string, string> } = {};
+    try {
+      const raw = localStorage.getItem(measurementGroupStorageKey) ?? localStorage.getItem(`stirling-measurement-groups-v2:${currentFileId ?? "unknown"}`);
+      if (raw) saved = JSON.parse(raw);
+    } catch { /* Ignore corrupt or blocked local storage. */ }
+    const validGroups = Array.isArray(saved.groups)
+      ? saved.groups.filter(g => g && typeof g.id === "string" && typeof g.name === "string" && /^#[0-9a-fA-F]{6}$/.test(g.color))
+      : [];
+    setMeasurementGroups(validGroups.length ? validGroups : [{id:"default",name:"Generelt",color:"#299bff",lineWidth:2}]);
+    setActiveMeasurementGroup(saved.activeGroup && validGroups.some(g => g.id === saved.activeGroup) ? saved.activeGroup : "default");
+    setSavedGroupMembership(saved.membership && typeof saved.membership === "object" ? saved.membership : {});
+    setRestoredGroupKey(measurementGroupStorageKey);
+  }, [measurementGroupStorageKey]);
+
+  useEffect(() => {
+    if (restoredGroupKey !== measurementGroupStorageKey) return;
+    try {
+      localStorage.setItem(measurementGroupStorageKey, JSON.stringify({
+        groups: measurementGroups,
+        activeGroup: activeMeasurementGroup,
+        membership: savedGroupMembership,
+      }));
+    } catch { /* Storage may be unavailable. */ }
+  }, [measurementGroupStorageKey, restoredGroupKey, measurementGroups, activeMeasurementGroup, savedGroupMembership]);
+
+  const changeMeasurementGroup = (id: string, groupId: string) => {
+    if (!measurementGroups.some(g => g.id === groupId)) return;
+    setSavedGroupMembership(previous => ({...previous, [id]: groupId}));
+    const updated = rulerOverlayRef.current?.getMeasurements().map(m => m.id === id ? {...m, groupId} : m);
+    if (updated) rulerOverlayRef.current?.setMeasurements(updated);
+  };
+
+  useEffect(() => {
+    if (restoredGroupKey !== measurementGroupStorageKey || !panelMeasurements.length) return;
+    const restored = panelMeasurements.map(m => {
+      const groupId = savedGroupMembership[m.id];
+      return groupId && measurementGroups.some(g => g.id === groupId) && m.groupId !== groupId
+        ? {...m, groupId} : m;
+    });
+    if (restored.some((m, i) => m !== panelMeasurements[i])) {
+      rulerOverlayRef.current?.setMeasurements(restored);
+    }
+  }, [panelMeasurements, savedGroupMembership, measurementGroups, restoredGroupKey, measurementGroupStorageKey]);
+
+
+  useEffect(() => {
+    const overlay = rulerOverlayRef.current;
+    if (!overlay) return;
+
+    const existing = overlay.getMeasurements();
+    if (!existing.length) {
+      try {
+        const raw = localStorage.getItem(measurementBackupKey);
+        if (raw) {
+          const recovered = JSON.parse(raw) as Measurement[];
+          if (Array.isArray(recovered) && recovered.length) overlay.restoreMeasurements(recovered);
+        }
+      } catch (error) { console.warn("Kunne ikke hente målesikkerhetskopi", error); }
+    }
+    setPanelMeasurements(overlay.getMeasurements());
+    return overlay.onMeasurementsChange((next) => {
+      saveMeasurementBackup(next);
+      setPanelMeasurements(next);
+      setSavedGroupMembership(previous => {
+        let changed = false;
+        const merged = {...previous};
+        next.forEach(m => {
+          if (m.groupId && merged[m.id] !== m.groupId) { merged[m.id] = m.groupId; changed = true; }
+        });
+        return changed ? merged : previous;
+      });
+    });
+  }, [measurementBackupKey, saveMeasurementBackup]);
+
+  useEffect(() => {
+    if (isRulerActive) setMeasurementPanelVisible(true);
+  }, [isRulerActive]);
+
+  useEffect(() => {
+    const escapeToNavigation = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || !isRulerActive) return;
+
+      const overlay = rulerOverlayRef.current;
+      if (overlay?.hasSelection()) {
+        event.preventDefault();
+        event.stopPropagation();
+        overlay.clearSelection();
+        return;
+      }
+
+      event.preventDefault();
+      overlay?.cancelMove();
+      setIsRulerActive(false);
+    };
+    document.addEventListener("keydown", escapeToNavigation);
+    return () => document.removeEventListener("keydown", escapeToNavigation);
+  }, [isRulerActive, setIsRulerActive]);
+
   // Register workbench bar buttons for the viewer
   useViewerWorkbenchBarButtons(
     isRulerActive,
     setIsRulerActive,
+    toggleMeasurementPanel,
     customScale,
     handleSetCustomScale,
     isScaleCalibrationActive,
@@ -1984,12 +2117,39 @@ const EmbedPdfViewerContent = ({
               signatureConfig={signatureConfig}
               signatureLineZoom={signatureLineZoom}
             />
+            {measurementPanelVisible && createPortal(
+              <MeasurementPanel
+                onClose={() => setMeasurementPanelVisible(false)}
+                measurements={panelMeasurements}
+                tool={measurementTool}
+                onToolChange={(next) => { setMeasurementTool(next); setIsRulerActive(true); }}
+                groups={measurementGroups}
+                onGroupsChange={setMeasurementGroups}
+                activeGroup={activeMeasurementGroup}
+                onActiveGroupChange={setActiveMeasurementGroup}
+                onDeleteMeasurement={(id) => rulerOverlayRef.current?.deleteById(id)}
+                onMoveMeasurement={(id) => rulerOverlayRef.current?.moveById(id)}
+                onSelectMeasurement={(id) => rulerOverlayRef.current?.selectById(id)}
+                onChangeMeasurementGroup={changeMeasurementGroup}
+                unit={measurementUnit}
+                onUnitChange={setMeasurementUnit}
+                scale={customScale}
+                onSetScale={handleSetCustomScale}
+                onCalibrate={startScaleCalibration}
+                isCalibrating={isScaleCalibrationActive}
+              />,
+              document.body
+            )}
             <RulerOverlay
               ref={rulerOverlayRef}
               containerRef={pdfContainerRef}
               isActive={isRulerActive}
               pageMeasureScales={pageMeasureScales}
               customScale={customScale}
+              displayUnit={measurementUnit}
+              tool={measurementTool}
+              groups={measurementGroups}
+              activeGroup={activeMeasurementGroup}
               isCalibrationActive={isScaleCalibrationActive}
               onCalibrationMeasure={handleScaleCalibrationMeasurement}
             />

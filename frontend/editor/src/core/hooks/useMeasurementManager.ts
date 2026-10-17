@@ -126,6 +126,19 @@ export function useMeasurementManager({
 
   function persistScale(fileKey: string, scale: MeasureScale | null) {
     persistSessionValue("stirling_scales", fileKey, scale, "scale");
+    try {
+      const name = currentFile?.name;
+      if (name) {
+        const key = `stirling-measurement-scale-v1:${name}`;
+        if (scale) {
+          localStorage.setItem(key, JSON.stringify(scale));
+        } else {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch (error) {
+      console.warn("[Measurement] Could not persist scale backup", error);
+    }
   }
 
   function persistMeasurements(fileKey: string, value: Measurement[]) {
@@ -209,10 +222,23 @@ export function useMeasurementManager({
     setIsScaleCalibrationActive(false);
 
     const storedScale = readStoredScale(currentFileKey);
+    let backedUpScale: MeasureScale | null = null;
+    try {
+      const name = currentFile?.name;
+      const raw = name
+        ? localStorage.getItem(`stirling-measurement-scale-v1:${name}`)
+        : null;
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw);
+        if (validateMeasureScale(parsed)) backedUpScale = parsed;
+      }
+    } catch (error) {
+      console.warn("[Measurement] Could not restore scale backup", error);
+    }
     const savedScale =
       storedScale === undefined
-        ? (scalesByFileId.get(currentFileKey) ?? null)
-        : storedScale;
+        ? (scalesByFileId.get(currentFileKey) ?? backedUpScale)
+        : (storedScale ?? backedUpScale);
 
     setCustomScale(savedScale);
 

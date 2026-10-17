@@ -20,12 +20,15 @@ export interface RulerRenderedMeasurement {
   endS: RulerPoint;
   distPts: number;
   measureScale: MeasureScale | null;
+  offset?: number;
 }
 
 export type RulerLabelVisibilityMode = "hideSmall" | "showAll" | "hideAll";
 
 interface RulerMeasurementLayerProps {
   measurements: RulerRenderedMeasurement[];
+  groupColors?: Record<string, string>;
+  displayUnit?: string;
   zoom: number;
   selectedId: string | null;
   hoveredId: string | null;
@@ -92,6 +95,25 @@ function perpUnit(a: RulerPoint, b: RulerPoint): { nx: number; ny: number } {
   return { nx: -dy / len, ny: dx / len };
 }
 
+function offsetDimensionPoints(
+  start: RulerPoint,
+  end: RulerPoint,
+  offset: number,
+): { start: RulerPoint; end: RulerPoint } {
+  const { nx, ny } = perpUnit(start, end);
+
+  return {
+    start: {
+      x: start.x + nx * offset,
+      y: start.y + ny * offset,
+    },
+    end: {
+      x: end.x + nx * offset,
+      y: end.y + ny * offset,
+    },
+  };
+}
+
 function angleDeg(a: RulerPoint, b: RulerPoint): number {
   return Math.atan2(Math.abs(b.y - a.y), Math.abs(b.x - a.x)) * (180 / Math.PI);
 }
@@ -154,7 +176,7 @@ function scaledCross(pts: number, scale: MeasureScale): string | null {
 }
 
 function getZoomScale(zoom: number): number {
-  return Math.max(0.6, Math.min(1.0, zoom / 1.5));
+  return Math.max(0.25, zoom);
 }
 
 function getMeasurementLabel(
@@ -196,7 +218,7 @@ function getLabelCenter(
 
 function getIdleLabelDimensions(label: string, zoom: number) {
   return {
-    width: Math.max(label.length * 7 + IDLE_LP * 2, IDLE_LABEL_MIN_WIDTH),
+    width: Math.max(label.length * 7 + IDLE_LP * 2, IDLE_LABEL_MIN_WIDTH) * getZoomScale(zoom),
     height: Math.max(18, Math.round(IDLE_LH * getZoomScale(zoom))),
   };
 }
@@ -323,6 +345,7 @@ function getVisibleIdleLabelIds(
 
 interface MeasurementLineProps {
   id: string;
+  lineColor?: string;
   startS: RulerPoint;
   endS: RulerPoint;
   distPts: number;
@@ -337,10 +360,13 @@ interface MeasurementLineProps {
   expandLabelOnHover: boolean;
   isInteractionPassthroughActive: boolean;
   labels: MeasurementLineLabels;
+  displayUnit?: string;
+  offset?: number;
 }
 
 function MeasurementLine({
   id,
+  lineColor = "#1e88e5",
   startS,
   endS,
   distPts,
@@ -355,17 +381,37 @@ function MeasurementLine({
   expandLabelOnHover,
   isInteractionPassthroughActive,
   labels,
+  displayUnit,
+  offset = 0,
 }: MeasurementLineProps) {
+  const originalStart = startS;
+  const originalEnd = endS;
+  const shifted = offsetDimensionPoints(startS, endS, offset);
+  startS = shifted.start;
+  endS = shifted.end;
+
   const { nx, ny } = preferredPerpUnit(startS, endS);
   const ang = angleDeg(startS, endS);
   const angLabel = `∠ ${ang.toFixed(1)}°`;
 
   const imperialFirst = !!measureScale && isImperialUnit(measureScale.unit);
-  const distLabel = getMeasurementLabel(distPts, measureScale);
+  const displayScale = measureScale && displayUnit
+    ? (() => {
+        const converted = convertUnit(
+          measureScale.factor,
+          measureScale.unit,
+          displayUnit,
+        );
+        return converted === null
+          ? measureScale
+          : { ...measureScale, factor: converted, unit: displayUnit };
+      })()
+    : measureScale;
+  const distLabel = getMeasurementLabel(distPts, displayScale);
 
   const hoverLine1 = measureScale
     ? (() => {
-        const primary = formatScaled(distPts, measureScale);
+        const primary = formatScaled(distPts, displayScale ?? measureScale);
         const cross = scaledCross(distPts, measureScale);
         return cross
           ? `${labels.scaled}: ${primary} / ${cross}`
@@ -394,7 +440,7 @@ function MeasurementLine({
   const isHoveredLabelExpanded = isHovered && expandLabelOnHover;
   const isInspecting = isSelected || isHoveredLabelExpanded;
   const isCompactIdle = !isInspecting;
-  const showLabel = isSelected || isHovered || showIdleLabel;
+  const showLabel = true; // Always show the measurement value
   const showDelete = isSelected || isHovered;
   const lh = isSelected
     ? maxHoverLh
@@ -414,15 +460,19 @@ function MeasurementLine({
     : isHoveredLabelExpanded
       ? lwNormal
       : idleDimensions.width;
-  const sw = isSelected ? 3 : 2;
+  const sw = isSelected ? 6 : 2;
 
   const labelCenter = getLabelCenter(startS, endS, lw, lh);
   const deleteCenter = getDeleteCenter(startS, endS, labelCenter, lw, lh);
   const mono = "'Roboto Mono','Consolas',monospace";
+  // Align the value with the measured segment and keep it readable.
+  const rawAngle = Math.atan2(endS.y - startS.y, endS.x - startS.x) * 180 / Math.PI;
+  const labelAngle = rawAngle > 90 ? rawAngle - 180 : rawAngle < -90 ? rawAngle + 180 : rawAngle;
 
   return (
     <g
       data-ruler-interactive="true"
+      data-measurement-id={id}
       onPointerEnter={() => {
         if (!isInteractionPassthroughActive) {
           onHoverChange(id);
@@ -442,6 +492,28 @@ function MeasurementLine({
         cursor: isInteractionPassthroughActive ? "crosshair" : "pointer",
       }}
     >
+      {offset !== 0 && (
+        <>
+          <line
+            x1={originalStart.x}
+            y1={originalStart.y}
+            x2={startS.x}
+            y2={startS.y}
+            stroke={lineColor}
+            strokeWidth={1}
+            opacity={0.7}
+          />
+          <line
+            x1={originalEnd.x}
+            y1={originalEnd.y}
+            x2={endS.x}
+            y2={endS.y}
+            stroke={lineColor}
+            strokeWidth={1}
+            opacity={0.7}
+          />
+        </>
+      )}
       <line
         x1={startS.x}
         y1={startS.y}
@@ -453,12 +525,25 @@ function MeasurementLine({
         pointerEvents="stroke"
       />
 
+      {isSelected && (
+        <line
+          x1={startS.x}
+          y1={startS.y}
+          x2={endS.x}
+          y2={endS.y}
+          stroke="#ffeb3b"
+          strokeWidth={12}
+          strokeLinecap="round"
+          opacity={0.9}
+          pointerEvents="none"
+        />
+      )}
       <line
         x1={startS.x}
         y1={startS.y}
         x2={endS.x}
         y2={endS.y}
-        stroke="#1e88e5"
+        stroke={lineColor}
         strokeWidth={sw}
         strokeLinecap="round"
       />
@@ -467,7 +552,7 @@ function MeasurementLine({
         y1={startS.y + (ny * TICK) / 2}
         x2={startS.x - (nx * TICK) / 2}
         y2={startS.y - (ny * TICK) / 2}
-        stroke="#1e88e5"
+        stroke={lineColor}
         strokeWidth={sw}
         strokeLinecap="round"
       />
@@ -476,7 +561,7 @@ function MeasurementLine({
         y1={endS.y + (ny * TICK) / 2}
         x2={endS.x - (nx * TICK) / 2}
         y2={endS.y - (ny * TICK) / 2}
-        stroke="#1e88e5"
+        stroke={lineColor}
         strokeWidth={sw}
         strokeLinecap="round"
       />
@@ -484,7 +569,7 @@ function MeasurementLine({
         cx={startS.x}
         cy={startS.y}
         r={RULER_DOT_RADIUS}
-        fill="#1e88e5"
+        fill={lineColor}
         stroke="white"
         strokeWidth={2}
       />
@@ -492,13 +577,13 @@ function MeasurementLine({
         cx={endS.x}
         cy={endS.y}
         r={RULER_DOT_RADIUS}
-        fill="#1e88e5"
+        fill={lineColor}
         stroke="white"
         strokeWidth={2}
       />
 
       {showLabel && (
-        <g style={{ pointerEvents: "all", cursor: "pointer" }}>
+        <g transform={`rotate(${labelAngle} ${labelCenter.x} ${labelCenter.y})`} style={{ pointerEvents: "none" }}>
           <rect
             x={labelCenter.x - lw / 2 - 4}
             y={labelCenter.y - lh / 2 - 4}
@@ -514,21 +599,21 @@ function MeasurementLine({
             width={lw}
             height={lh}
             rx={isCompactIdle ? 4 : 5}
-            fill={isCompactIdle ? "rgba(255,255,255,0.94)" : "white"}
-            stroke="#1e88e5"
+            fill="transparent"
+            stroke="none"
             strokeWidth={isCompactIdle ? 1 : 1.5}
-            filter="url(#ruler-shadow)"
+            filter="none"
           />
 
-          {isSelected && measureScale ? (
+          {false && isSelected && measureScale ? (
             <>
               <text
                 x={labelCenter.x}
                 y={labelCenter.y - Math.round(17 * zoomScale)}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fill="#1e88e5"
-                fontSize={12}
+                fill={lineColor}
+                fontSize={12 * zoomScale}
                 fontFamily={mono}
                 fontWeight={600}
                 style={{ userSelect: "none" }}
@@ -541,7 +626,7 @@ function MeasurementLine({
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="#546e7a"
-                fontSize={11}
+                fontSize={11 * zoomScale}
                 fontFamily={mono}
                 fontWeight={500}
                 style={{ userSelect: "none" }}
@@ -554,7 +639,7 @@ function MeasurementLine({
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="#5c6bc0"
-                fontSize={10}
+                fontSize={10 * zoomScale}
                 fontFamily={mono}
                 fontWeight={500}
                 style={{ userSelect: "none" }}
@@ -562,15 +647,15 @@ function MeasurementLine({
                 {contextLabel}
               </text>
             </>
-          ) : isSelected ? (
+          ) : false && isSelected ? (
             <>
               <text
                 x={labelCenter.x}
                 y={labelCenter.y - Math.round(6 * zoomScale)}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fill="#1e88e5"
-                fontSize={12}
+                fill={lineColor}
+                fontSize={12 * zoomScale}
                 fontFamily={mono}
                 fontWeight={600}
                 style={{ userSelect: "none" }}
@@ -583,7 +668,7 @@ function MeasurementLine({
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="#5c6bc0"
-                fontSize={11}
+                fontSize={11 * zoomScale}
                 fontFamily={mono}
                 fontWeight={500}
                 style={{ userSelect: "none" }}
@@ -597,8 +682,8 @@ function MeasurementLine({
               y={labelCenter.y + 1}
               textAnchor="middle"
               dominantBaseline="middle"
-              fill="#1e88e5"
-              fontSize={isCompactIdle ? 10 : 12}
+              fill={lineColor}
+              fontSize={(isCompactIdle ? 10 : 12) * zoomScale}
               fontFamily={mono}
               fontWeight={600}
               style={{ userSelect: "none" }}
@@ -642,7 +727,7 @@ function MeasurementLine({
               textAnchor="middle"
               dominantBaseline="middle"
               fill="white"
-              fontSize={12}
+              fontSize={12 * zoomScale}
               fontWeight={700}
               style={{ userSelect: "none" }}
             >
@@ -680,7 +765,7 @@ function LiveLine({ startS, endS, zoom, measureScale }: LiveLineProps) {
         y1={startS.y}
         x2={endS.x}
         y2={endS.y}
-        stroke="#1e88e5"
+        stroke={"#1e88e5"}
         strokeWidth={2}
         strokeDasharray="7 4"
         strokeLinecap="round"
@@ -691,7 +776,7 @@ function LiveLine({ startS, endS, zoom, measureScale }: LiveLineProps) {
         y1={startS.y + (ny * TICK) / 2}
         x2={startS.x - (nx * TICK) / 2}
         y2={startS.y - (ny * TICK) / 2}
-        stroke="#1e88e5"
+        stroke={"#1e88e5"}
         strokeWidth={2}
         strokeLinecap="round"
       />
@@ -703,7 +788,7 @@ function LiveLine({ startS, endS, zoom, measureScale }: LiveLineProps) {
             width={lw}
             height={lh}
             rx={5}
-            fill="#1e88e5"
+            fill={"#1e88e5"}
             stroke="white"
             strokeWidth={1}
           />
@@ -740,7 +825,9 @@ function LiveLine({ startS, endS, zoom, measureScale }: LiveLineProps) {
 }
 
 export function RulerMeasurementLayer({
+  groupColors = {},
   measurements,
+  displayUnit,
   zoom,
   selectedId,
   hoveredId,
@@ -812,11 +899,14 @@ export function RulerMeasurementLayer({
             <MeasurementLine
               key={measurement.id}
               id={measurement.id}
+              lineColor={groupColors[measurement.groupId ?? "default"] ?? groupColors.default ?? "#1e88e5"}
               startS={startS}
               endS={endS}
               distPts={distPts}
+              offset={item.offset}
+              displayUnit={displayUnit}
               isSelected={
-                !isInteractionPassthroughActive && selectedId === measurement.id
+                selectedId === measurement.id
               }
               isHovered={
                 !isInteractionPassthroughActive && hoveredId === measurement.id
