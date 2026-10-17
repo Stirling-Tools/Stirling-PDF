@@ -751,6 +751,31 @@ function mantineToolOnlyImports(): PluginOption {
         done.add(name);
       };
       for (const name of imports.keys()) visit(name);
+
+      // The engine is a megabyte the browser downloads before the app runs if
+      // anything a startup chunk statically imports pulls it in: every static
+      // import of an entry becomes a modulepreload. Only the opened viewer
+      // needs it; pdfium's url glue and the shared enums stay in their own
+      // chunks and are small enough to keep.
+      const eager = new Set<string>();
+      const reach = (name: string): void => {
+        if (eager.has(name)) return;
+        eager.add(name);
+        for (const target of imports.get(name) ?? []) reach(target);
+      };
+      for (const file of Object.values(bundle)) {
+        if (file.type === "chunk" && file.isEntry) reach(file.fileName);
+      }
+      const eagerEngine = [...eager].filter((name) =>
+        /^vendor-embedpdf(-core)?-/.test(name),
+      );
+      if (eagerEngine.length) {
+        throw new Error(
+          `startup chunks statically reach the pdf engine (${eagerEngine.join(", ")}); ` +
+            "the browser would preload it before the app runs, so keep the engine " +
+            "behind a dynamic import",
+        );
+      }
     },
     transform(code, id) {
       if (!appDir || !id.startsWith(appDir) || !code.includes("@mantine/core"))
