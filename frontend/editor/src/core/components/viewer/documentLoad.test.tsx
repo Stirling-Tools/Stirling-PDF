@@ -46,34 +46,58 @@ describe("form save document completion", () => {
     mocks.active = { status: "loading", error: null };
   });
 
-  it("waits for the saved document's loaded task and ignores unrelated document events", async () => {
-    const load = deferred<void>();
-    mocks.open.mockReturnValue({
-      toPromise: async () => ({
-        documentId: "saved",
-        task: { toPromise: () => load.promise },
-      }),
-    });
-    const { result } = renderHook(useDocumentLoadWaiter);
-    const saved = result.current.waitForDocument("B-saved");
-    const completed = vi.fn();
-    void saved.then(completed);
-    result.current.documentReady("A");
-    result.current.documentFailed("A", new Error("unrelated"));
-    render(
-      <DocumentSwapBridge
-        pending={pending("B-saved")}
-        onSwapped={(_, key) => result.current.documentReady(key)}
-        onFailed={result.current.documentFailed}
-      />,
-    );
-    await act(async () => {});
-    expect(completed).not.toHaveBeenCalled();
-    await act(async () => load.resolve());
-    await saved;
-    expect(mocks.activate).toHaveBeenCalledWith("saved");
-    expect(completed).toHaveBeenCalledOnce();
-  });
+  it.each(
+    [undefined, "session-password"].flatMap((password) =>
+      [undefined, true, false].map((honorOwnerPasswords) => ({
+        password,
+        honorOwnerPasswords,
+      })),
+    ),
+  )(
+    "waits for the saved document's loaded task and ignores unrelated document events (password: $password, honorOwnerPasswords: $honorOwnerPasswords)",
+    async ({ password, honorOwnerPasswords }) => {
+      const load = deferred<void>();
+      mocks.open.mockReturnValue({
+        toPromise: async () => ({
+          documentId: "saved",
+          task: { toPromise: () => load.promise },
+        }),
+      });
+      const { result } = renderHook(useDocumentLoadWaiter);
+      const saved = result.current.waitForDocument("B-saved");
+      const completed = vi.fn();
+      void saved.then(completed);
+      result.current.documentReady("A");
+      result.current.documentFailed("A", new Error("unrelated"));
+      const replacement = {
+        ...pending("B-saved"),
+        password,
+        honorOwnerPasswords,
+      };
+      render(
+        <DocumentSwapBridge
+          pending={replacement}
+          onSwapped={(_, key) => result.current.documentReady(key)}
+          onFailed={result.current.documentFailed}
+        />,
+      );
+      await act(async () => {});
+      expect(mocks.open).toHaveBeenCalledExactlyOnceWith({
+        buffer: replacement.buffer,
+        name: replacement.name,
+        password,
+        permissions: {
+          enforceDocumentPermissions: honorOwnerPasswords !== false,
+        },
+        autoActivate: false,
+      });
+      expect(completed).not.toHaveBeenCalled();
+      await act(async () => load.resolve());
+      await saved;
+      expect(mocks.activate).toHaveBeenCalledWith("saved");
+      expect(completed).toHaveBeenCalledOnce();
+    },
+  );
 
   it.each(["unmount", "clear"])(
     "rejects a save when its swap is cancelled by %s",
