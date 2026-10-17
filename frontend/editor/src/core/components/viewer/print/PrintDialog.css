@@ -303,13 +303,23 @@
   border-radius: var(--radius-sm);
 }
 
+/* The rim a tile keeps past a cut line, centred on the line two neighbours
+   share: coverage implied, never a printed border. */
+.print-tiles__rim {
+  position: absolute;
+  background: color-mix(in srgb, var(--c-accent-on-light) 16%, transparent);
+  pointer-events: none;
+}
+
 .print-tiles__grid {
   position: absolute;
   inset: 0;
   display: grid;
   grid-template-columns: repeat(var(--print-tiles-columns), 1fr);
-  grid-template-rows: repeat(var(--print-tiles-rows), 1fr);
-  /* The grid closes the outer trim and each tile closes its own right and
+  grid-template-rows: repeat(
+    var(--print-tiles-rows),
+    1fr
+  ); /* The grid closes the outer trim and each tile closes its own right and
      bottom edge, so a cut shared by two tiles is drawn once rather than twice. */
   border-top: 1px dashed var(--print-cut);
   border-left: 1px dashed var(--print-cut);

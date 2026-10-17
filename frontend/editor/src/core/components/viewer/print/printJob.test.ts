@@ -33,10 +33,12 @@ const customLayout = (rows: number, cols: number): PrintSettings["layout"] => ({
 const posterSettings = (
   xFactor: number,
   yFactor: number,
+  overlap = 0,
 ): PrintSettings["poster"] => ({
   ...defaultPrintSettings().poster,
   xFactor,
   yFactor,
+  overlap,
 });
 
 const serverJob = (job: ReturnType<typeof buildPrintJob>) => {
@@ -126,7 +128,13 @@ describe("buildPrintJob", () => {
       buildPrintJob(
         settings({
           preset: "poster",
-          poster: { pageSize: "A3", xFactor: 3, yFactor: 4, rightToLeft: true },
+          poster: {
+            pageSize: "A3",
+            xFactor: 3,
+            yFactor: 4,
+            rightToLeft: true,
+            overlap: 0,
+          },
         }),
       ),
     );
@@ -138,6 +146,7 @@ describe("buildPrintJob", () => {
       xFactor: 3,
       yFactor: 4,
       rightToLeft: true,
+      overlap: 0,
     });
   });
 
@@ -248,6 +257,21 @@ describe("printProblem", () => {
     expect(printProblem(poster(2, 11))).toBe("invalidTiles");
     expect(printProblem(poster(1.5, 2))).toBe("invalidTiles");
     expect(printProblem(poster(2, Number.NaN))).toBe("invalidTiles");
+  });
+
+  it("keeps the poster's overhang a rim from zero to fifty points", () => {
+    const poster = (overlap: number) =>
+      settings({
+        preset: "poster",
+        poster: posterSettings(2, 2, overlap),
+      });
+
+    expect(printProblem(poster(0))).toBeNull();
+    expect(printProblem(poster(12))).toBeNull();
+    expect(printProblem(poster(50))).toBeNull();
+    expect(printProblem(poster(-1))).toBe("invalidOverhang");
+    expect(printProblem(poster(51))).toBe("invalidOverhang");
+    expect(printProblem(poster(Number.NaN))).toBe("invalidOverhang");
   });
 
   it("names a layout that cannot be applied", () => {
@@ -517,6 +541,44 @@ describe("printSummary", () => {
         values: { columns: 2, rows: 2, paper: "A4" },
       },
     ]);
+  });
+
+  it("names the overhang the tiles keep past the grid", () => {
+    expect(
+      printSummary(
+        settings({ preset: "poster", poster: posterSettings(2, 3, 8) }),
+        12,
+      ),
+    ).toContainEqual({
+      key: "viewer.print.summaryPosterOverhang",
+      values: { count: 8 },
+    });
+  });
+
+  it("says nothing about an overhang that reaches nowhere", () => {
+    expect(
+      printSummary(
+        settings({ preset: "poster", poster: posterSettings(2, 2, 0) }),
+        12,
+      ).map((line) => line.key),
+    ).not.toContain("viewer.print.summaryPosterOverhang");
+  });
+
+  it("sends the overhang to the poster endpoint with the tiles", () => {
+    expect(
+      serverJob(
+        buildPrintJob(
+          settings({ preset: "poster", poster: posterSettings(2, 2, 7) }),
+          3,
+        ),
+      ).request,
+    ).toEqual({
+      pageSize: "A4",
+      xFactor: 2,
+      yFactor: 2,
+      rightToLeft: false,
+      overlap: 7,
+    });
   });
 
   it("says nothing for settings it cannot count", () => {

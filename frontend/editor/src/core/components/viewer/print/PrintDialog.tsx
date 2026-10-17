@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
   type KeyboardEvent,
@@ -34,6 +35,7 @@ import { Modal } from "@app/ui/Modal";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { ToggleSwitch } from "@app/ui/ToggleSwitch";
 import {
+  POSTER_MAX_OVERHANG,
   POSTER_MAX_TILES,
   POSTER_MIN_TILES,
   POSTER_PAGE_SIZES,
@@ -50,6 +52,7 @@ import {
 } from "@app/components/viewer/print/printJob";
 import {
   NO_PREVIEW_PAGES,
+  PREVIEW_SCALE,
   type PreviewPageState,
   usePrintPagePosition,
   usePrintPreviewImages,
@@ -77,6 +80,7 @@ const PRESET_LABELS: Record<PrintPreset, string> = {
 const PROBLEM_KEYS: Record<PrintProblem, string> = {
   emptyPageRange: "viewer.print.emptyPageRange",
   invalidLayout: "viewer.print.invalidLayout",
+  invalidOverhang: "viewer.print.invalidOverhang",
   invalidPageRange: "viewer.print.invalidPageRange",
   invalidTiles: "viewer.print.invalidTiles",
 };
@@ -272,13 +276,21 @@ export const PosterTilePreview = memo(function PosterTilePreview({
   rows,
   rightToLeft,
   pageImage,
+  overhang,
 }: {
   columns: number;
   rows: number;
   rightToLeft: boolean;
   pageImage: PageImage;
+  /** The rim each tile keeps past the grid, in pt; zero draws no rim. */
+  overhang: number;
 }) {
   const image = pageImage(1);
+  // A bitmap rendered at half scale, so two of its px are a source pt.
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  const [ptWidth, setPtWidth] = useState(0);
+  const readPtWidth = () =>
+    setPtWidth((imageRef.current?.naturalWidth ?? 0) / PREVIEW_SCALE);
   const tiles = Array.from({ length: rows * columns }, (_, index) => {
     const row = Math.floor(index / columns);
     const column = index % columns;
@@ -290,14 +302,54 @@ export const PosterTilePreview = memo(function PosterTilePreview({
     "--print-tiles-columns": columns,
     "--print-tiles-rows": rows,
   };
+  // Every tile keeps its rim past each edge, so two neighbours' rims coincide
+  // on a shared line; one band centred on it shows what both print there.
+  const rimShare =
+    overhang > 0 && ptWidth > 0 ? ((2 * overhang) / ptWidth) * 100 : 0;
 
   return (
     <div className="print-tiles" style={style}>
       {image ? (
-        <img className="print-tiles__page" src={image} alt="" />
+        <img
+          className="print-tiles__page"
+          src={image}
+          alt=""
+          ref={imageRef}
+          onLoad={readPtWidth}
+        />
       ) : (
         <div className="print-tiles__paper" />
       )}
+      {rimShare > 0 ? (
+        <>
+          {Array.from({ length: columns - 1 }, (_, seam) => (
+            <div
+              key={`v${seam}`}
+              aria-hidden="true"
+              className="print-tiles__rim"
+              style={{
+                left: `calc(${((seam + 1) / columns) * 100}% - ${rimShare / 2}%)`,
+                height: "100%",
+                width: `${rimShare}%`,
+              }}
+            />
+          ))}
+          {Array.from({ length: rows - 1 }, (_, seam) => (
+            <div
+              key={`h${seam}`}
+              aria-hidden="true"
+              className="print-tiles__rim"
+              style={{
+                top: `calc(${((seam + 1) / rows) * 100}% - ${rimShare / 2}%)`,
+                left: 0,
+                right: 0,
+                width: "100%",
+                height: `${rimShare}%`,
+              }}
+            />
+          ))}
+        </>
+      ) : null}
       <div className="print-tiles__grid">
         {tiles.map((label) => (
           <div key={label} className="print-tiles__tile">
@@ -1047,6 +1099,7 @@ export function PrintDialog({
               rows={tileCount(settings.poster.yFactor)}
               rightToLeft={settings.poster.rightToLeft}
               pageImage={pageImage}
+              overhang={settings.poster.overlap}
             />
           );
         case "standard":
@@ -1133,9 +1186,22 @@ export function PrintDialog({
                   allowDecimal={false}
                   disabled={busy}
                 />
+                <NumberInput
+                  label={t("viewer.print.posterOverhang")}
+                  value={settings.poster.overlap}
+                  onChange={(value) => updatePoster({ overlap: Number(value) })}
+                  min={0}
+                  max={POSTER_MAX_OVERHANG}
+                  allowDecimal={false}
+                  disabled={busy}
+                />
               </Group>
               <ProblemNote
-                text={problem === "invalidTiles" ? problemText(problem) : null}
+                text={
+                  problem === "invalidTiles" || problem === "invalidOverhang"
+                    ? problemText(problem)
+                    : null
+                }
               />
             </div>
             <Collapsible

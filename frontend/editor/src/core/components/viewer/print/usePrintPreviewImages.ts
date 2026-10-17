@@ -11,6 +11,9 @@ import { ViewerContext } from "@app/contexts/viewer/viewerContext";
 /** The figure is a preview, so a page renders well below its printed size. */
 const PREVIEW_SCALE = 0.5;
 
+/** The figure's bitmaps are pages at this fraction of their printed size. */
+export { PREVIEW_SCALE };
+
 /** Renders run a few at a time, as the thumbnail sidebar runs them. */
 const PREVIEW_CONCURRENCY = 3;
 

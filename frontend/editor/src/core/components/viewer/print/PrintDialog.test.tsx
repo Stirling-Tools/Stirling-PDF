@@ -235,6 +235,21 @@ describe("PrintDialog", () => {
     expect(screen.getByText("viewer.print.invalidTiles")).toBeTruthy();
   });
 
+  it("keeps the poster's overhang between zero and fifty points", () => {
+    renderDialog({ pageCount: 3 });
+
+    fireEvent.click(screen.getByText("viewer.print.presetPoster"));
+    const field = screen.getByLabelText("viewer.print.posterOverhang");
+    fireEvent.change(field, { target: { value: "51" } });
+
+    expect((confirm() as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("viewer.print.invalidOverhang")).toBeTruthy();
+
+    fireEvent.change(field, { target: { value: "12" } });
+    expect((confirm() as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.getByText("viewer.print.summaryPosterOverhang")).toBeTruthy();
+  });
+
   it("refuses a range that selects no page of the document", () => {
     renderDialog({ pageCount: 12 });
 
@@ -799,6 +814,49 @@ describe("print preview figures", () => {
 
     expect(sources(container, ".print-tiles__page")).toEqual(["blob:page-1"]);
     expect(container.querySelectorAll(".print-tiles__tile")).toHaveLength(4);
+  });
+
+  it("washes the rim two neighbours share on each internal cut line", () => {
+    // A 400 px bitmap is 800 pt of source page at the figure's half scale.
+    Object.defineProperty(HTMLImageElement.prototype, "naturalWidth", {
+      configurable: true,
+      get: () => 400,
+    });
+    try {
+      const { container } = renderFigure(
+        <PosterTilePreview
+          columns={2}
+          rows={1}
+          rightToLeft={false}
+          pageImage={() => "blob:page-1"}
+          overhang={10}
+        />,
+      );
+      fireEvent.load(container.querySelector(".print-tiles__page")!);
+
+      const rims = container.querySelectorAll<HTMLElement>(".print-tiles__rim");
+      expect(rims).toHaveLength(1);
+      // 20 pt of rim across an 800 pt page, centred on the one seam.
+      expect(rims[0].style.width).toBe("2.5%");
+      expect(rims[0].style.left).toBe("calc(48.75%)");
+    } finally {
+      delete (HTMLImageElement.prototype as { naturalWidth?: unknown })
+        .naturalWidth;
+    }
+  });
+
+  it("draws no rim for an overhang that reaches nowhere", () => {
+    const { container } = renderFigure(
+      <PosterTilePreview
+        columns={2}
+        rows={2}
+        rightToLeft={false}
+        pageImage={() => "blob:page-1"}
+        overhang={0}
+      />,
+    );
+
+    expect(container.querySelectorAll(".print-tiles__rim")).toHaveLength(0);
   });
 
   it("marks a cell whose page is still rendering", () => {

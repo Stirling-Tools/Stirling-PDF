@@ -48,11 +48,22 @@ export const POSTER_PAGE_SIZES: PosterPageSize[] = [
 export const POSTER_MIN_TILES = 1;
 export const POSTER_MAX_TILES = 10;
 
+/** An overhang stays a rim around each tile, never half of one: 0 to 50 pt. */
+export const POSTER_MAX_OVERHANG = 50;
+
+const isOverhangValid = (overhang: number): boolean =>
+  Number.isFinite(overhang) && overhang >= 0 && overhang <= POSTER_MAX_OVERHANG;
+
 export interface PosterSettings {
   pageSize: PosterPageSize;
   xFactor: number;
   yFactor: number;
   rightToLeft: boolean;
+  /**
+   * Overhang in points: each tile keeps this much past its grid edges, so
+   * assembled sheets keep their shared border content after trimming.
+   */
+  overlap: number;
 }
 
 /**
@@ -99,14 +110,21 @@ export const defaultPrintSettings = (): PrintSettings => ({
   includeAnnotations: true,
   layout: { ...defaultLayoutParameters },
   booklet: { ...defaultBookletParameters },
-  poster: { pageSize: "A4", xFactor: 2, yFactor: 2, rightToLeft: false },
+  poster: {
+    pageSize: "A4",
+    xFactor: 2,
+    yFactor: 2,
+    rightToLeft: false,
+    overlap: 0,
+  },
 });
 
 /**
  * The job these settings describe.
  *
- * The engine reads a range as written, but it has no parity token, so an odd or
- * even job states the pages it selects instead. That expansion needs a page
+ * The engine applies the pages a range names, but ascending only: a "2,1" job
+ * prints page 1 then page 2 whatever the written order, and it has no parity
+ * token, so an odd or even job states the pages it selects instead. That expansion needs a page
  * count, and callers hand over settings `printProblem` accepts: a refused
  * selection is never turned into a job.
  */
@@ -409,7 +427,7 @@ export function printSummary(
       }
       // The grid divides every page, so the tile total spans the document.
       const tiles = pageCount * xFactor * yFactor;
-      return [
+      const lines: PrintSummaryLine[] = [
         {
           key: "viewer.print.summaryPosterTiles",
           values: { pages: pageCount, tiles, count: tiles },
@@ -423,6 +441,14 @@ export function printSummary(
           },
         },
       ];
+      // A zero overhang changes nothing a reader would sense, so it names none.
+      if (settings.poster.overlap > 0) {
+        lines.push({
+          key: "viewer.print.summaryPosterOverhang",
+          values: { count: settings.poster.overlap },
+        });
+      }
+      return lines;
     }
     case "standard":
     default:
@@ -434,6 +460,7 @@ export function printSummary(
 export type PrintProblem =
   | "emptyPageRange"
   | "invalidLayout"
+  | "invalidOverhang"
   | "invalidPageRange"
   | "invalidTiles";
 
@@ -476,7 +503,9 @@ export function printProblem(
     case "poster":
       return isTileCountValid(settings.poster.xFactor) &&
         isTileCountValid(settings.poster.yFactor)
-        ? null
+        ? isOverhangValid(settings.poster.overlap)
+          ? null
+          : "invalidOverhang"
         : "invalidTiles";
     case "standard":
     default: {

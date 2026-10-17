@@ -90,6 +90,7 @@ public class PosterPdfController {
                 int xFactor = request.getXFactor();
                 int yFactor = request.getYFactor();
                 boolean rightToLeft = request.isRightToLeft();
+                float overlap = request.getOverlap();
 
                 log.debug(
                         "Processing {} pages with grid {}x{}, RTL={}",
@@ -157,13 +158,18 @@ public class PosterPdfController {
                             // Apply RTL ordering for columns if enabled
                             int actualCol = rightToLeft ? (xFactor - 1 - col) : col;
 
-                            // Calculate crop rectangle in source coordinates
-                            // PDF coordinates start at bottom-left
-                            float cropX = actualCol * cellWidth;
+                            // Each tile covers its cell plus the overlap rim on
+                            // every side, so neighbouring tiles share their
+                            // border content; the rim past the page edge draws
+                            // nothing, and trimming a sheet to its cell then
+                            // leaves the same tile a zero-overlap run makes.
+                            float regionWidth = cellWidth + 2 * overlap;
+                            float regionHeight = cellHeight + 2 * overlap;
+                            float cropX = actualCol * cellWidth - overlap;
                             // For Y: invert so row 0 shows TOP (following
                             // SplitPdfBySectionsController
                             // pattern)
-                            float cropY = (yFactor - 1 - row) * cellHeight;
+                            float cropY = (yFactor - 1 - row) * cellHeight - overlap;
 
                             // Create new output page with target size
                             PDPage outputPage = new PDPage(targetPageSize);
@@ -177,15 +183,15 @@ public class PosterPdfController {
                                             true,
                                             true)) {
 
-                                // Calculate uniform scale to fit cell into target page
-                                // Scale UP if cell is smaller than target, scale DOWN if larger
-                                float scaleX = targetPageSize.getWidth() / cellWidth;
-                                float scaleY = targetPageSize.getHeight() / cellHeight;
+                                // Fit the enlarged region into the target page
+                                float scaleX = targetPageSize.getWidth() / regionWidth;
+                                float scaleY = targetPageSize.getHeight() / regionHeight;
                                 float scale = Math.min(scaleX, scaleY);
 
-                                // Center the scaled content on the target page
-                                float scaledCellWidth = cellWidth * scale;
-                                float scaledCellHeight = cellHeight * scale;
+                                // Center the region, whose centre stays the
+                                // cell's centre because the rim is symmetric
+                                float scaledCellWidth = regionWidth * scale;
+                                float scaledCellHeight = regionHeight * scale;
                                 float offsetX = (targetPageSize.getWidth() - scaledCellWidth) / 2;
                                 float offsetY = (targetPageSize.getHeight() - scaledCellHeight) / 2;
 

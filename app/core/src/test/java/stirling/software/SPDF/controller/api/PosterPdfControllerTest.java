@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -17,6 +18,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -318,6 +321,150 @@ class PosterPdfControllerTest {
 
             assertThatThrownBy(() -> controller.posterPdf(request))
                     .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("Tile overlap")
+    class Overlap {
+
+        /**
+         * The six operands of every "cm" transform in a page's content stream. The parser readout
+         * is hand-scanned because these streams carry only plain tokens, which a token-level PDFBox
+         * parser does not surface in 3.0.
+         */
+        private float[][] transforms(PDPage page) throws IOException {
+            byte[] stream;
+            try (InputStream in = page.getContents()) {
+                stream = in.readAllBytes();
+            }
+            List<float[]> matrices = new ArrayList<>();
+            List<Float> operands = new ArrayList<>();
+            StringBuilder token = new StringBuilder();
+            for (int i = 0; i < stream.length; i++) {
+                byte current = stream[i];
+                if (current == '%') {
+                    while (i + 1 < stream.length && stream[++i] != '\n') {
+                        // skip comments
+                    }
+                    continue;
+                }
+                if (Character.isWhitespace(current)) {
+                    if (token.length() > 0) {
+                        consume(token.toString(), operands, matrices);
+                        token.setLength(0);
+                    }
+                    continue;
+                }
+                token.append((char) (current & 0xFF));
+            }
+            consume(token.toString(), operands, matrices);
+            return matrices.toArray(new float[0][]);
+        }
+
+        /**
+         * A "cm" takes its last six pending operands as a matrix; anything else resets the run, so
+         * the q/Do/Q framing never leaks in.
+         */
+        private void consume(String token, List<Float> operands, List<float[]> matrices) {
+            if ("cm".equals(token)) {
+                if (operands.size() >= 6) {
+                    float[] matrix = new float[6];
+                    for (int i = 0; i < 6; i++) {
+                        matrix[i] = operands.get(operands.size() - 6 + i);
+                    }
+                    matrices.add(matrix);
+                }
+                operands.clear();
+            } else if (token.matches("-?[0-9.]+")) {
+                operands.add(Float.parseFloat(token));
+            } else {
+                operands.clear();
+            }
+        }
+
+        private PosterPdfRequest requestWith(MockMultipartFile file) throws IOException {
+            PosterPdfRequest request = createRequest(file);
+            stubFactory(file);
+            return request;
+        }
+
+        @Test
+        @DisplayName("An overhang grows every tile's drawn region past its grid edges")
+        void overlapGrowsEachTileRegion() throws Exception {
+            PosterPdfRequest request = requestWith(createRealPdf(1, "overhang.pdf"));
+            request.setOverlap(12f);
+
+            try (PDDocument result =
+                    Loader.loadPDF(firstPdfEntry(drainBody(controller.posterPdf(request))))) {
+                // 1 source page * (2 * 2) = 4 output pages, every page drawn with the
+                // same translate, scale, translate chain.
+                assertThat(result.getNumberOfPages()).isEqualTo(4);
+
+                PDPage page = result.getPage(0);
+                float[][] matrices = transforms(page);
+                assertThat(matrices.length).isEqualTo(3);
+                float cellWidth = PDRectangle.A4.getWidth() / 2;
+                float cellHeight = PDRectangle.A4.getHeight() / 2;
+                float regionWidth = cellWidth + 2 * 12;
+                float regionHeight = cellHeight + 2 * 12;
+                float scale =
+                        Math.min(
+                                PDRectangle.A4.getWidth() / regionWidth,
+                                PDRectangle.A4.getHeight() / regionHeight);
+
+                // [scale 0 0 scale 0 0]: the enlarged region fills the target page in one
+                // direction and is centred in the other.
+                assertThat(matrices[1][0]).isCloseTo(scale, within(0.001f));
+                float offsetX = (PDRectangle.A4.getWidth() - regionWidth * scale) / 2;
+                float offsetY = (PDRectangle.A4.getHeight() - regionHeight * scale) / 2;
+                assertThat(matrices[0][4]).isCloseTo(offsetX, within(0.001f));
+                assertThat(matrices[0][5]).isCloseTo(offsetY, within(0.001f));
+
+                // [1 0 0 1 -cropX -cropY]: the top-left tile slides a half cell left and
+                // down so its neighbours' border content rides in with it.
+                assertThat(matrices[2][4]).isCloseTo(12, within(0.001f));
+                assertThat(matrices[2][5]).isCloseTo(-cellHeight + 12, within(0.001f));
+            }
+        }
+
+        @Test
+        @DisplayName("No overhang keeps the tile exactly on its grid cell")
+        void zeroOverlapKeepsCellExactly() throws Exception {
+            PosterPdfRequest request = requestWith(createRealPdf(1, "exact.pdf"));
+            assertThat(request.getOverlap()).isZero();
+
+            try (PDDocument result =
+                    Loader.loadPDF(firstPdfEntry(drainBody(controller.posterPdf(request))))) {
+                float cellHeight = PDRectangle.A4.getHeight() / 2;
+                float[][] matrices = transforms(result.getPage(0));
+                assertThat(matrices.length).isEqualTo(3);
+                // Halving an A4 page to fill an A4 page scales by exactly 2 and the
+                // first cell sits flush in the page's top-left corner.
+                assertThat(matrices[1][0]).isCloseTo(2.0f, within(0.0001f));
+                assertThat(matrices[2][4]).isCloseTo(0.0f, within(0.0001f));
+                assertThat(matrices[2][5]).isCloseTo(-cellHeight, within(0.001f));
+            }
+        }
+
+        @Test
+        @DisplayName("Right-to-left tiles swap only the column, not the overhang")
+        void rightToLeftSwapsOnlyTheColumn() throws Exception {
+            PosterPdfRequest request = requestWith(createRealPdf(1, "rtl.pdf"));
+            request.setOverlap(12f);
+            request.setRightToLeft(true);
+
+            try (PDDocument result =
+                    Loader.loadPDF(firstPdfEntry(drainBody(controller.posterPdf(request))))) {
+                float cellWidth = PDRectangle.A4.getWidth() / 2;
+                float cellHeight = PDRectangle.A4.getHeight() / 2;
+                float[][] matrices = transforms(result.getPage(0));
+                assertThat(matrices.length).isEqualTo(3);
+                // The first output page holds the rightmost column, whose crop starts a
+                // full cell over, minus the same overhang rim.
+                assertThat(matrices[2][4]).isCloseTo(12 - cellWidth, within(0.001f));
+                assertThat(matrices[2][5]).isCloseTo(-cellHeight + 12, within(0.001f));
+            }
         }
     }
 

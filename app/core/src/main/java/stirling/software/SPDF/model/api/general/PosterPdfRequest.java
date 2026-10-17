@@ -29,6 +29,15 @@ public class PosterPdfRequest extends PDFFile {
             defaultValue = "false")
     private boolean rightToLeft = false;
 
+    @Schema(
+            description =
+                    "How far each tile extends past its grid edges, in points. Tiles then share their border content, so assembled sheets keep every line after trimming",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            defaultValue = "0",
+            minimum = "0",
+            maximum = "50")
+    private float overlap = 0;
+
     @JsonProperty("xFactor")
     @Schema(
             description = "Horizontal decimation factor (how many columns to split into)",
