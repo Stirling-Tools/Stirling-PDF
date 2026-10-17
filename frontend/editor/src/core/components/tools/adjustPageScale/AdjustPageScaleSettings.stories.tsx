@@ -3,6 +3,7 @@ import AdjustPageScaleSettings from "@app/components/tools/adjustPageScale/Adjus
 import {
   AdjustPageScaleParameters,
   PageSize,
+  defaultParameters as hookDefaultParameters,
 } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 
 const meta = {
@@ -14,6 +15,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const defaultParameters: AdjustPageScaleParameters = {
+  ...hookDefaultParameters,
   scaleFactor: 1.0,
   pageSize: PageSize.KEEP,
   orientation: "PORTRAIT",
@@ -29,6 +31,7 @@ export const Default: Story = {
 export const CustomPageSize: Story = {
   args: {
     parameters: {
+      ...hookDefaultParameters,
       scaleFactor: 2.5,
       pageSize: PageSize.A4,
       orientation: "LANDSCAPE",

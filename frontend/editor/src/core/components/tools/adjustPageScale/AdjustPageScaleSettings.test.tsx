@@ -1,10 +1,11 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import AdjustPageScaleSettings from "@app/components/tools/adjustPageScale/AdjustPageScaleSettings";
 import {
   AdjustPageScaleParameters,
   PageSize,
+  defaultParameters as hookDefaultParameters,
 } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 
 // Mock useTranslation with predictable return values
@@ -22,6 +23,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe("AdjustPageScaleSettings", () => {
   const defaultParameters: AdjustPageScaleParameters = {
+    ...hookDefaultParameters,
     scaleFactor: 1.0,
     pageSize: PageSize.KEEP,
     orientation: "PORTRAIT",
@@ -50,6 +52,7 @@ describe("AdjustPageScaleSettings", () => {
 
   test("should render with custom parameters", () => {
     const customParameters: AdjustPageScaleParameters = {
+      ...hookDefaultParameters,
       scaleFactor: 2.5,
       pageSize: PageSize.A4,
       orientation: "LANDSCAPE",
@@ -67,5 +70,46 @@ describe("AdjustPageScaleSettings", () => {
     // Component renders successfully with custom parameters
     expect(screen.getByText("Scale Factor")).toBeInTheDocument();
     expect(screen.getByText("Target Page Size")).toBeInTheDocument();
+    expect(screen.queryByText("Width")).not.toBeInTheDocument();
+  });
+
+  test("shows width, height and unit inputs for a custom page size", () => {
+    render(
+      <TestWrapper>
+        <AdjustPageScaleSettings
+          parameters={{ ...defaultParameters, pageSize: PageSize.CUSTOM }}
+          onParameterChange={mockOnParameterChange}
+        />
+      </TestWrapper>,
+    );
+
+    expect(screen.getByText("Width")).toBeInTheDocument();
+    expect(screen.getByText("Height")).toBeInTheDocument();
+    expect(
+      screen.getByRole("radiogroup", { name: "Unit" }),
+    ).toBeInTheDocument();
+  });
+
+  test("converts the width and height when the unit changes", () => {
+    render(
+      <TestWrapper>
+        <AdjustPageScaleSettings
+          parameters={{
+            ...defaultParameters,
+            pageSize: PageSize.CUSTOM,
+            customWidth: 210,
+            customHeight: 297,
+            customUnit: "mm",
+          }}
+          onParameterChange={mockOnParameterChange}
+        />
+      </TestWrapper>,
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: "in" }));
+
+    expect(mockOnParameterChange).toHaveBeenCalledWith("customWidth", 8.27);
+    expect(mockOnParameterChange).toHaveBeenCalledWith("customHeight", 11.69);
+    expect(mockOnParameterChange).toHaveBeenCalledWith("customUnit", "in");
   });
 });

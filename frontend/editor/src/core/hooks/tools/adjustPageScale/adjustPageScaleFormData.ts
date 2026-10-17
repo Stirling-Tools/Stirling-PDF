@@ -19,6 +19,11 @@ export const adjustPageScaleToApiParams = (
   scaleFactor: parameters.scaleFactor,
   pageSize: parameters.pageSize,
   orientation: parameters.orientation,
+  ...(parameters.pageSize === PageSize.CUSTOM && {
+    customWidth: parameters.customWidth,
+    customHeight: parameters.customHeight,
+    customUnit: parameters.customUnit,
+  }),
 });
 
 export const adjustPageScaleFromApiParams = (
@@ -27,6 +32,18 @@ export const adjustPageScaleFromApiParams = (
   scaleFactor: apiParams.scaleFactor,
   pageSize: apiParams.pageSize as PageSize,
   orientation: apiParams.orientation,
+  // The backend omits these for preset sizes. Restoring parameters spreads the
+  // result over the defaults, so an explicit undefined would wipe the
+  // 210 x 297 mm fallback the Custom size option starts from.
+  ...(apiParams.customWidth !== undefined && {
+    customWidth: apiParams.customWidth,
+  }),
+  ...(apiParams.customHeight !== undefined && {
+    customHeight: apiParams.customHeight,
+  }),
+  ...(apiParams.customUnit !== undefined && {
+    customUnit: apiParams.customUnit,
+  }),
 });
 
 export const buildAdjustPageScaleFormData = (

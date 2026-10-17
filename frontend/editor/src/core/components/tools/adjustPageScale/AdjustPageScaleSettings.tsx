@@ -1,4 +1,4 @@
-import { Stack, NumberInput, Select } from "@mantine/core";
+import { Group, Stack, NumberInput, Select } from "@mantine/core";
 import {
   SegmentedControl,
   type SegmentedOption,
@@ -6,10 +6,19 @@ import {
 import { useTranslation } from "react-i18next";
 import {
   AdjustPageScaleParameters,
+  CustomSizeUnit,
   Orientation,
   PageSize,
+  convertCustomSide,
+  customSideLimits,
 } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+
+const CUSTOM_UNIT_OPTIONS: SegmentedOption<CustomSizeUnit>[] = [
+  { value: "mm", label: "mm" },
+  { value: "cm", label: "cm" },
+  { value: "in", label: "in" },
+];
 
 interface AdjustPageScaleSettingsProps {
   parameters: AdjustPageScaleParameters;
@@ -28,6 +37,7 @@ const AdjustPageScaleSettings = ({
   const { t } = useTranslation();
 
   const isKeepSelected = parameters.pageSize === PageSize.KEEP;
+  const isCustomSelected = parameters.pageSize === PageSize.CUSTOM;
 
   const pageSizeOptions = [
     {
@@ -49,9 +59,28 @@ const AdjustPageScaleSettings = ({
       value: PageSize.LEGAL,
       label: t("adjustPageScale.pageSize.legal", "Legal"),
     },
+    {
+      value: PageSize.CUSTOM,
+      label: t("adjustPageScale.pageSize.custom", "Custom"),
+    },
   ];
 
-  const orientationDisabled = disabled || isKeepSelected;
+  const sideLimits = customSideLimits(parameters.customUnit);
+
+  const handleCustomUnitChange = (unit: CustomSizeUnit) => {
+    const from = parameters.customUnit;
+    onParameterChange(
+      "customWidth",
+      convertCustomSide(parameters.customWidth, from, unit),
+    );
+    onParameterChange(
+      "customHeight",
+      convertCustomSide(parameters.customHeight, from, unit),
+    );
+    onParameterChange("customUnit", unit);
+  };
+
+  const orientationDisabled = disabled || isKeepSelected || isCustomSelected;
   const orientationOptions: SegmentedOption<Orientation>[] = [
     {
       value: "PORTRAIT",
@@ -99,6 +128,49 @@ const AdjustPageScaleSettings = ({
           zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
         }}
       />
+
+      {isCustomSelected && (
+        <>
+          <Group grow>
+            <NumberInput
+              label={t("adjustPageScale.customSize.width", "Width")}
+              value={parameters.customWidth}
+              onChange={(value) =>
+                onParameterChange(
+                  "customWidth",
+                  typeof value === "number" ? value : 0,
+                )
+              }
+              min={sideLimits.min}
+              max={sideLimits.max}
+              decimalScale={2}
+              disabled={disabled}
+            />
+            <NumberInput
+              label={t("adjustPageScale.customSize.height", "Height")}
+              value={parameters.customHeight}
+              onChange={(value) =>
+                onParameterChange(
+                  "customHeight",
+                  typeof value === "number" ? value : 0,
+                )
+              }
+              min={sideLimits.min}
+              max={sideLimits.max}
+              decimalScale={2}
+              disabled={disabled}
+            />
+          </Group>
+          <SegmentedControl
+            ariaLabel={t("adjustPageScale.customSize.unit", "Unit")}
+            value={parameters.customUnit}
+            onChange={handleCustomUnitChange}
+            options={CUSTOM_UNIT_OPTIONS}
+            disabled={disabled}
+            fullWidth
+          />
+        </>
+      )}
 
       <SegmentedControl
         aria-label={t("adjustPageScale.orientation.label", "Page orientation")}
