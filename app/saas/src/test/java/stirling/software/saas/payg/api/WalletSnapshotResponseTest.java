@@ -49,6 +49,7 @@ class WalletSnapshotResponseTest {
                 /* billingMode= */ "prepaid",
                 /* bundleRatePerCreditMinor= */ new BigDecimal("1"),
                 null,
+                null,
                 null);
     }
 
@@ -134,6 +135,7 @@ class WalletSnapshotResponseTest {
                         0L,
                         null,
                         "payg",
+                        null,
                         null,
                         null,
                         null);

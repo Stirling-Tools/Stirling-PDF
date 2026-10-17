@@ -535,9 +535,8 @@ const FileSidebarRow = React.memo(function FileSidebarRow({
     (s) => s.files.byId[stub.id]?.thumbnailUrl,
   );
   const isEncryptedFile = stub.processedFile?.isEncrypted === true;
-  const thumbnailUrl = isEncryptedFile
-    ? undefined
-    : (isInWorkbench ? workbenchThumbnail : undefined) || stub.thumbnailUrl;
+  const thumbnailUrl =
+    (isInWorkbench ? workbenchThumbnail : undefined) || stub.thumbnailUrl;
 
   const handleOpenWindow = useMemo(
     () =>
@@ -556,6 +555,7 @@ const FileSidebarRow = React.memo(function FileSidebarRow({
       isViewedInViewer={isViewedInViewer}
       isToolSkipped={isInWorkbench && isToolSkipped}
       thumbnailUrl={thumbnailUrl}
+      isEncrypted={isEncryptedFile}
       onClick={onFileClick}
       onEyeClick={onEyeClick}
       dataUnavailable={dataUnavailable}
