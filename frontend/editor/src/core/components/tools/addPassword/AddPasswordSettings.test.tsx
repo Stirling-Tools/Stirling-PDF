@@ -34,10 +34,10 @@ describe("AddPasswordSettings", () => {
 
     // Should render user and owner password fields labels
     expect(
-      screen.getByText("mock-addPassword.passwords.user.label"),
+      screen.getByText("mock-encryptedPdfUnlock.openingPassword"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("mock-addPassword.passwords.owner.label"),
+      screen.getByText("mock-encryptedPdfUnlock.newOwnerPassword"),
     ).toBeInTheDocument();
   });
 
@@ -69,7 +69,7 @@ describe("AddPasswordSettings", () => {
 
     // Check that main section titles are rendered
     expect(
-      screen.getByText("mock-addPassword.passwords.user.label"),
+      screen.getByText("mock-encryptedPdfUnlock.openingPassword"),
     ).toBeInTheDocument();
     expect(
       screen.getByText("mock-addPassword.encryption.keyLength.label"),
@@ -88,7 +88,7 @@ describe("AddPasswordSettings", () => {
 
     // This test is complex with Mantine's PasswordInput, just verify the component renders
     expect(
-      screen.getByText("mock-addPassword.passwords.user.label"),
+      screen.getByText("mock-encryptedPdfUnlock.openingPassword"),
     ).toBeInTheDocument();
   });
 
@@ -174,12 +174,12 @@ describe("AddPasswordSettings", () => {
 
     // Verify that translation keys are being called
     expect(mockT).toHaveBeenCalledWith(
-      "addPassword.passwords.user.label",
-      "User Password",
+      "encryptedPdfUnlock.openingPassword",
+      "Password to open",
     );
     expect(mockT).toHaveBeenCalledWith(
-      "addPassword.passwords.owner.label",
-      "Owner Password",
+      "encryptedPdfUnlock.newOwnerPassword",
+      "New permissions password",
     );
   });
 

@@ -86,7 +86,8 @@ export function useSaasOnboardingState({
 
   // Usage meter only makes sense for free-tier wallets with allowance left;
   // the team slide is for leaders (anonymous guests are never leaders).
-  const showUsageSlide = wallet?.status === "free" && wallet.freeRemaining > 0;
+  const showUsageSlide =
+    wallet?.status === "free" && !wallet.enterprise && wallet.freeRemaining > 0;
   const showTeamSlide = isTeamLeader;
 
   const flowSlideIds = useMemo(
