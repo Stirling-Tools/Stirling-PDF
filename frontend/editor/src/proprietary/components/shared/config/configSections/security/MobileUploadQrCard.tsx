@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Switch.css";
 import { useTranslation } from "react-i18next";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useNavigate } from "react-router-dom";

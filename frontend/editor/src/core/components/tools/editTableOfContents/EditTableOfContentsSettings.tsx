@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Switch.css";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Divider, Stack, Switch, Text, Tooltip } from "@mantine/core";

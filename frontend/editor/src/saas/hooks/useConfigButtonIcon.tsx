@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Avatar.css";
 import { Avatar } from "@mantine/core";
 import { useAuth } from "@app/auth/UseSession";
 

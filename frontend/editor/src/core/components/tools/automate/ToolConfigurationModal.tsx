@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Title.css";
 import { Suspense, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Title, Group, Stack, Text, Alert, Loader } from "@mantine/core";

@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Accordion.css";
 import React from "react";
 import { Accordion, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";

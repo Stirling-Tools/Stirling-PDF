@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Radio.css";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Group, Modal, Radio, Stack, Text } from "@mantine/core";

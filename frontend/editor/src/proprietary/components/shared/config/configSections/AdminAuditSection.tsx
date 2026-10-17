@@ -1,3 +1,5 @@
+import "@mantine/core/styles/Accordion.css";
+import "@mantine/core/styles/Tabs.css";
 import React, { Suspense, lazy, useState, useEffect } from "react";
 import { SettingsEmptyState } from "@app/components/shared/config/SettingsEmptyState";
 import { isAxiosError } from "axios";

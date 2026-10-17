@@ -1,3 +1,5 @@
+import "@mantine/core/styles/Code.css";
+import "@mantine/core/styles/Switch.css";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";

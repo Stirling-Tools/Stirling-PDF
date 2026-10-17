@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Accordion.css";
 import { useTranslation } from "react-i18next";
 import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
 import { NumberInput, Stack, Paper, Accordion } from "@mantine/core";

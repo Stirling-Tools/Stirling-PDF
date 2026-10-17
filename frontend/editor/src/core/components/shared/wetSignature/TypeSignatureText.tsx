@@ -1,3 +1,4 @@
+import "@mantine/core/styles/ColorPicker.css";
 import {
   Stack,
   TextInput,

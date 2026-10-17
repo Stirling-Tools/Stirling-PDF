@@ -1,3 +1,5 @@
+import "@mantine/core/styles/Avatar.css";
+import "@mantine/core/styles/Table.css";
 import React, { useState, useEffect, type ReactNode } from "react";
 import {
   TextInput,

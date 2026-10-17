@@ -1,3 +1,5 @@
+import "@mantine/core/styles/ColorSwatch.css";
+import "@mantine/core/styles/ColorPicker.css";
 import {
   Tooltip,
   Popover,

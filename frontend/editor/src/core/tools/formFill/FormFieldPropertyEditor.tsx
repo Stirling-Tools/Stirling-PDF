@@ -1,6 +1,7 @@
 /**
  * Property form shared by the create and modify panels; reports edits as partial patches.
  */
+import "@mantine/core/styles/Switch.css";
 import React from "react";
 import {
   Stack,

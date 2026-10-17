@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Switch.css";
 import { Divider, Stack, NumberInput, Switch } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { PageLayoutParameters } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";

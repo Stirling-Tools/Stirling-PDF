@@ -1,3 +1,4 @@
+import "@mantine/core/styles/SimpleGrid.css";
 import { useEffect, useState } from "react";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useNavigate } from "react-router-dom";

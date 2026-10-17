@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Code.css";
 import React from "react";
 import { Stack, Text, Code, Group, Badge, Alert, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";

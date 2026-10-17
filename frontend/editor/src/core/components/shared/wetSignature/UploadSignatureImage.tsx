@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Image.css";
 import { useState, useRef } from "react";
 import { Stack, Text, Image } from "@mantine/core";
 import { Button } from "@app/ui/Button";

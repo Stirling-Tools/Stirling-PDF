@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Title.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate, useParams } from "react-router-dom";

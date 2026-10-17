@@ -1,3 +1,5 @@
+import "@mantine/core/styles/Code.css";
+import "@mantine/core/styles/Tabs.css";
 import { useMemo } from "react";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";

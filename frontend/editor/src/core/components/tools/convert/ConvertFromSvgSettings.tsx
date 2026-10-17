@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Switch.css";
 import { Stack, Text, Switch } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";

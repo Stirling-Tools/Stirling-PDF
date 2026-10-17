@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Title.css";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Title, Stack, Divider } from "@mantine/core";

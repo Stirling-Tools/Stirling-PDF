@@ -1,3 +1,4 @@
+import "@mantine/core/styles/SimpleGrid.css";
 import React, { useState, useEffect } from "react";
 import {
   Card,

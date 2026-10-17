@@ -1,3 +1,5 @@
+import "@mantine/core/styles/Radio.css";
+import "@mantine/core/styles/Switch.css";
 import { useState, type ReactNode } from "react";
 import { Icon, type IconName } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";

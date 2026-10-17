@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Skeleton.css";
 import React, { useState } from "react";
 import { Anchor, Group, Stack, Text, Paper, Skeleton } from "@mantine/core";
 // oxlint-disable-next-line no-restricted-imports

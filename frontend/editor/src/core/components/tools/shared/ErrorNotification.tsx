@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Notification.css";
 import { Notification } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 

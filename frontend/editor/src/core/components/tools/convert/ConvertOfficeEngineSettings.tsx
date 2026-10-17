@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Switch.css";
 import { Switch } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useAppConfig } from "@app/contexts/AppConfigContext";

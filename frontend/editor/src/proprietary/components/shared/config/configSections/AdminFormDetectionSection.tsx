@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Switch.css";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";

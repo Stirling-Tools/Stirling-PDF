@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Image.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {

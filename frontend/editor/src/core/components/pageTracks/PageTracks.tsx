@@ -1,3 +1,4 @@
+import "@mantine/core/styles/LoadingOverlay.css";
 import {
   useCallback,
   useEffect,

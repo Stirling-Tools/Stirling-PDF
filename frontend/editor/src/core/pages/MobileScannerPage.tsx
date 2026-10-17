@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Switch.css";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import {

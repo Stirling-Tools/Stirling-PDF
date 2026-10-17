@@ -1,6 +1,8 @@
 /**
  * Form Editor tool panel: fill values, create new fields, or modify existing ones.
  */
+import "@mantine/core/styles/Skeleton.css";
+import "@mantine/core/styles/Switch.css";
 import React, {
   useEffect,
   useCallback,

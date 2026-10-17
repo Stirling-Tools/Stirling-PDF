@@ -1,3 +1,4 @@
+import "@mantine/core/styles/ThemeIcon.css";
 import React, { useMemo } from "react";
 import {
   Badge,

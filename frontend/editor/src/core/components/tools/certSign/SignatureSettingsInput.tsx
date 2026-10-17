@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Switch.css";
 import {
   Stack,
   Text,

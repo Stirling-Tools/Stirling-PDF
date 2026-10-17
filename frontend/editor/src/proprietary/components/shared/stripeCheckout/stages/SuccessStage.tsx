@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Code.css";
 import React from "react";
 import { Alert, Stack, Text, Paper, Code, Group, Loader } from "@mantine/core";
 import { Button } from "@app/ui/Button";

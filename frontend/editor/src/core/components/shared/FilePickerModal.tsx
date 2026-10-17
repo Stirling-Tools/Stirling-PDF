@@ -1,3 +1,4 @@
+import "@mantine/core/styles/SimpleGrid.css";
 import { useState, useEffect } from "react";
 import {
   Modal,

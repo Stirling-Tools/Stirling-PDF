@@ -1,3 +1,4 @@
+import "@mantine/core/styles/Switch.css";
 import type { ReactNode } from "react";
 import { Switch, type SwitchProps } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
