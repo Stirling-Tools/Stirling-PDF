@@ -84,9 +84,8 @@ async function renderPlan(
       const buffer = await file.arrayBuffer();
       // Thumbnails pull the PDFium engine in, which the first screen must not
       // wait for, so the service arrives with the work.
-      const { thumbnailGenerationService } = await import(
-        "@app/services/thumbnailGenerationService"
-      );
+      const { thumbnailGenerationService } =
+        await import("@app/services/thumbnailGenerationService");
       const results = await thumbnailGenerationService.generateThumbnails(
         file.fileId,
         buffer,

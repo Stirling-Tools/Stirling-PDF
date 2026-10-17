@@ -30,7 +30,9 @@ const DEBUG = process.env.NODE_ENV === "development";
 function releaseSharedDocument(): void {
   if (!wasmCompilationStarted()) return;
   void import("@app/services/pdfiumService")
-    .then(({ releaseSharedDocumentWhenIdle }) => releaseSharedDocumentWhenIdle())
+    .then(({ releaseSharedDocumentWhenIdle }) =>
+      releaseSharedDocumentWhenIdle(),
+    )
     .catch(() => {});
 }
 

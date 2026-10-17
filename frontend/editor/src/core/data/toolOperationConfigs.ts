@@ -57,56 +57,57 @@ import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 
 /** Tool ids whose operation config lives here, keyed by the registry id. */
-const OPERATION_CONFIGS: Partial<Record<ToolId, RegistryToolOperationConfig>> = {
-  merge: asRegistryConfig(mergeOperationConfig),
-  certSign: asRegistryConfig(certSignOperationConfig),
-  timestampPdf: asRegistryConfig(timestampPdfOperationConfig),
-  sign: asRegistryConfig(signOperationConfig),
-  addText: asRegistryConfig(signOperationConfig),
-  addImage: asRegistryConfig(signOperationConfig),
-  annotate: asRegistryConfig(signOperationConfig),
-  addPassword: asRegistryConfig(addPasswordOperationConfig),
-  watermark: asRegistryConfig(addWatermarkOperationConfig),
-  addStamp: asRegistryConfig(addStampOperationConfig),
-  sanitize: asRegistryConfig(sanitizeOperationConfig),
-  flatten: asRegistryConfig(flattenOperationConfig),
-  unlockPDFForms: asRegistryConfig(unlockPdfFormsOperationConfig),
-  autoFormDetection: asRegistryConfig(autoFormDetectionOperationConfig),
-  changePermissions: asRegistryConfig(changePermissionsOperationConfig),
-  changeMetadata: asRegistryConfig(changeMetadataOperationConfig),
-  editTableOfContents: asRegistryConfig(editTableOfContentsOperationConfig),
-  crop: asRegistryConfig(cropOperationConfig),
-  rotate: asRegistryConfig(rotateOperationConfig),
-  autoRotate: asRegistryConfig(autoRotateOperationConfig),
-  split: asRegistryConfig(splitOperationConfig),
-  reorganizePages: asRegistryConfig(reorganizePagesOperationConfig),
-  scalePages: asRegistryConfig(adjustPageScaleOperationConfig),
-  addPageNumbers: asRegistryConfig(addPageNumbersOperationConfig),
-  pageLayout: asRegistryConfig(pageLayoutOperationConfig),
-  bookletImposition: asRegistryConfig(bookletImpositionOperationConfig),
-  pdfToSinglePage: asRegistryConfig(singleLargePageOperationConfig),
-  addAttachments: asRegistryConfig(addAttachmentsOperationConfig),
-  createPortfolio: asRegistryConfig(createPortfolioOperationConfig),
-  extractPages: asRegistryConfig(extractPagesOperationConfig),
-  extractImages: asRegistryConfig(extractImagesOperationConfig),
-  removePages: asRegistryConfig(removePagesOperationConfig),
-  removeBlanks: asRegistryConfig(removeBlanksOperationConfig),
-  removeAnnotations: asRegistryConfig(removeAnnotationsOperationConfig),
-  removeImage: asRegistryConfig(removeImageOperationConfig),
-  removePassword: asRegistryConfig(removePasswordOperationConfig),
-  removeCertSign: asRegistryConfig(removeCertificateSignOperationConfig),
-  autoRename: asRegistryConfig(autoRenameOperationConfig),
-  adjustContrast: asRegistryConfig(adjustContrastOperationConfig),
-  repair: asRegistryConfig(repairOperationConfig),
-  scannerImageSplit: asRegistryConfig(scannerImageSplitOperationConfig),
-  overlayPdfs: asRegistryConfig(overlayPdfsOperationConfig),
-  replaceColor: asRegistryConfig(replaceColorOperationConfig),
-  classify: asRegistryConfig(classifyOperationConfig),
-  compress: asRegistryConfig(compressOperationConfig),
-  convert: asRegistryConfig(convertOperationConfig),
-  ocr: asRegistryConfig(ocrOperationConfig),
-  redact: asRegistryConfig(redactOperationConfig),
-};
+const OPERATION_CONFIGS: Partial<Record<ToolId, RegistryToolOperationConfig>> =
+  {
+    merge: asRegistryConfig(mergeOperationConfig),
+    certSign: asRegistryConfig(certSignOperationConfig),
+    timestampPdf: asRegistryConfig(timestampPdfOperationConfig),
+    sign: asRegistryConfig(signOperationConfig),
+    addText: asRegistryConfig(signOperationConfig),
+    addImage: asRegistryConfig(signOperationConfig),
+    annotate: asRegistryConfig(signOperationConfig),
+    addPassword: asRegistryConfig(addPasswordOperationConfig),
+    watermark: asRegistryConfig(addWatermarkOperationConfig),
+    addStamp: asRegistryConfig(addStampOperationConfig),
+    sanitize: asRegistryConfig(sanitizeOperationConfig),
+    flatten: asRegistryConfig(flattenOperationConfig),
+    unlockPDFForms: asRegistryConfig(unlockPdfFormsOperationConfig),
+    autoFormDetection: asRegistryConfig(autoFormDetectionOperationConfig),
+    changePermissions: asRegistryConfig(changePermissionsOperationConfig),
+    changeMetadata: asRegistryConfig(changeMetadataOperationConfig),
+    editTableOfContents: asRegistryConfig(editTableOfContentsOperationConfig),
+    crop: asRegistryConfig(cropOperationConfig),
+    rotate: asRegistryConfig(rotateOperationConfig),
+    autoRotate: asRegistryConfig(autoRotateOperationConfig),
+    split: asRegistryConfig(splitOperationConfig),
+    reorganizePages: asRegistryConfig(reorganizePagesOperationConfig),
+    scalePages: asRegistryConfig(adjustPageScaleOperationConfig),
+    addPageNumbers: asRegistryConfig(addPageNumbersOperationConfig),
+    pageLayout: asRegistryConfig(pageLayoutOperationConfig),
+    bookletImposition: asRegistryConfig(bookletImpositionOperationConfig),
+    pdfToSinglePage: asRegistryConfig(singleLargePageOperationConfig),
+    addAttachments: asRegistryConfig(addAttachmentsOperationConfig),
+    createPortfolio: asRegistryConfig(createPortfolioOperationConfig),
+    extractPages: asRegistryConfig(extractPagesOperationConfig),
+    extractImages: asRegistryConfig(extractImagesOperationConfig),
+    removePages: asRegistryConfig(removePagesOperationConfig),
+    removeBlanks: asRegistryConfig(removeBlanksOperationConfig),
+    removeAnnotations: asRegistryConfig(removeAnnotationsOperationConfig),
+    removeImage: asRegistryConfig(removeImageOperationConfig),
+    removePassword: asRegistryConfig(removePasswordOperationConfig),
+    removeCertSign: asRegistryConfig(removeCertificateSignOperationConfig),
+    autoRename: asRegistryConfig(autoRenameOperationConfig),
+    adjustContrast: asRegistryConfig(adjustContrastOperationConfig),
+    repair: asRegistryConfig(repairOperationConfig),
+    scannerImageSplit: asRegistryConfig(scannerImageSplitOperationConfig),
+    overlayPdfs: asRegistryConfig(overlayPdfsOperationConfig),
+    replaceColor: asRegistryConfig(replaceColorOperationConfig),
+    classify: asRegistryConfig(classifyOperationConfig),
+    compress: asRegistryConfig(compressOperationConfig),
+    convert: asRegistryConfig(convertOperationConfig),
+    ocr: asRegistryConfig(ocrOperationConfig),
+    redact: asRegistryConfig(redactOperationConfig),
+  };
 
 /** A tool's operation config, or undefined for a tool that has none. */
 export function getToolOperationConfig(
@@ -116,9 +117,9 @@ export function getToolOperationConfig(
 }
 
 /** `registry` with each entry's operation config merged in. */
-export function withOperationConfigs<R extends Record<string, ToolRegistryEntry>>(
-  registry: R,
-): R {
+export function withOperationConfigs<
+  R extends Record<string, ToolRegistryEntry>,
+>(registry: R): R {
   const merged: Record<string, ToolRegistryEntry> = {};
   for (const [id, entry] of Object.entries(registry)) {
     const config = entry.operationConfig ?? OPERATION_CONFIGS[id as ToolId];
@@ -137,7 +138,10 @@ export function useOperationConfigCatalog(): {
   regularTools: RegularToolRegistry;
 } {
   const { allTools, regularTools } = useToolRegistry();
-  const mergedAllTools = useMemo(() => withOperationConfigs(allTools), [allTools]);
+  const mergedAllTools = useMemo(
+    () => withOperationConfigs(allTools),
+    [allTools],
+  );
   const mergedRegularTools = useMemo(
     () => withOperationConfigs(regularTools),
     [regularTools],

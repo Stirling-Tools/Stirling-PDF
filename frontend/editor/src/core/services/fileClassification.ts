@@ -41,9 +41,8 @@ export async function readClassificationLabelsFromFile(
   try {
     // Metadata extraction drags the PDF worker in, which the first screen must
     // not wait for, so the service arrives with the work.
-    const { extractPDFMetadata } = await import(
-      "@app/services/pdfMetadataService"
-    );
+    const { extractPDFMetadata } =
+      await import("@app/services/pdfMetadataService");
     const result = await extractPDFMetadata(file);
     if (!result.success) return null;
     const entry = result.metadata.customMetadata.find(

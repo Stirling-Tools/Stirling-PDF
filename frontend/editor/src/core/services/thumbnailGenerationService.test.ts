@@ -62,7 +62,11 @@ describe("ThumbnailGenerationService page-image cache", () => {
 
     forgetCachedPageImages(fileA);
 
-    expect(thumbnailGenerationService.getThumbnailFromCache("seam-p1")).toBeNull();
-    expect(thumbnailGenerationService.getThumbnailFromCache("seam-p2")).toBe("bbb");
+    expect(
+      thumbnailGenerationService.getThumbnailFromCache("seam-p1"),
+    ).toBeNull();
+    expect(thumbnailGenerationService.getThumbnailFromCache("seam-p2")).toBe(
+      "bbb",
+    );
   });
 });

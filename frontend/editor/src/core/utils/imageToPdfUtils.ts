@@ -27,9 +27,8 @@ export async function convertImageToPdf(
 
   // The engine is a document-side chunk: importing it at the point of use
   // keeps it off the startup path.
-  const { getPdfiumModule, saveRawDocument } = await import(
-    "@app/services/pdfiumService"
-  );
+  const { getPdfiumModule, saveRawDocument } =
+    await import("@app/services/pdfiumService");
 
   try {
     const m = await getPdfiumModule();

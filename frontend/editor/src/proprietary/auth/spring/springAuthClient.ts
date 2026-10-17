@@ -347,7 +347,7 @@ class SpringAuthClient {
         return { data: { session: null }, error: null };
       }
 
-// Verify with backend Note: We pass the token explicitly here, overriding the interceptor's default.
+      // Verify with backend Note: We pass the token explicitly here, overriding the interceptor's default.
       const meConfig: AuthRequestConfig = {
         headers: {
           Authorization: `Bearer ${token}`,

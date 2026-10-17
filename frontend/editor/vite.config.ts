@@ -355,7 +355,7 @@ function compressStaticCopyPlugin(): PluginOption {
     async closeBundle() {
       const distDir = path.resolve(__dirname, "dist");
 
-// The plugin's include list skips .wasm and viteStaticCopy output never reaches it, so the walk has to cover.
+      // The plugin's include list skips .wasm and viteStaticCopy output never reaches it, so the walk has to cover.
       const files: string[] = [];
       const walk = async (dir: string) => {
         let entries;
@@ -380,7 +380,7 @@ function compressStaticCopyPlugin(): PluginOption {
 
       await compressFiles(files, distDir);
 
-// The TTFs are only ever requested through the backend, which serves the .br/.gz siblings and falls back to its.
+      // The TTFs are only ever requested through the backend, which serves the .br/.gz siblings and falls back to its.
       const fontsDir = path.join(distDir, "fonts");
       const fontEntries = await fs.readdir(fontsDir).catch(() => []);
       await Promise.all(
@@ -749,10 +749,10 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
 };
 
 export default defineConfig(async ({ mode, command }) => {
-// Dev-only browser-tab label (worktree folder basename) surfaced by the top-level dev tasks so concurrent.
+  // Dev-only browser-tab label (worktree folder basename) surfaced by the top-level dev tasks so concurrent.
   const devWorktreeLabel =
     command === "serve" ? (process.env.STIRLING_DEV_LABEL ?? "") : "";
-// Load env files relative to this config (frontend/editor/), regardless of where the build was invoked from.
+  // Load env files relative to this config (frontend/editor/), regardless of where the build was invoked from.
   const env = loadEnv(mode, import.meta.dirname, "");
   const parentEnv = loadEnv(mode, resolve(import.meta.dirname, ".."), "");
 
@@ -800,7 +800,7 @@ export default defineConfig(async ({ mode, command }) => {
     xfwd: true,
   };
 
-// Shared between `vite` (dev) and `vite preview` (production-build serve, used in CI/E2E) so the live test.
+  // Shared between `vite` (dev) and `vite preview` (production-build serve, used in CI/E2E) so the live test.
   const backendProxyConfig =
     effectiveMode === "desktop"
       ? undefined
@@ -815,7 +815,7 @@ export default defineConfig(async ({ mode, command }) => {
         };
 
   return {
-// Per-mode: the default is one shared node_modules/.vite, so two dev servers in different modes re-optimize.
+    // Per-mode: the default is one shared node_modules/.vite, so two dev servers in different modes re-optimize.
     cacheDir: resolve(
       import.meta.dirname,
       "..",

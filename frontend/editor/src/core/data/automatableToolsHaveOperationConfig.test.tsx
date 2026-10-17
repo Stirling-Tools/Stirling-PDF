@@ -38,7 +38,7 @@ describe("automatable tools", () => {
     expect(withConfig).toEqual([]);
   });
 
-// Reorganize Pages has an automatable form (organization mode + page-order string) and a context-free settings.
+  // Reorganize Pages has an automatable form (organization mode + page-order string) and a context-free settings.
   test("Reorganize Pages exposes automation settings so it is configurable, not no-settings", () => {
     const { result } = renderHook(() => useTranslatedToolCatalog());
 

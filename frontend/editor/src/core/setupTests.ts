@@ -17,7 +17,7 @@ void i18n.init({
 
 // `translatedLazy` awaits the complete dictionary before a route renders, and jsdom has no origin to resolve.
 const testFetch = globalThis.fetch;
-globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
   const url =
     typeof input === "string"
       ? input
@@ -28,7 +28,7 @@ globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
     return Promise.resolve(new Response("{}", { status: 200 }));
   }
   return testFetch(input, init);
-});
+};
 
 installFailOnConsole();
 
