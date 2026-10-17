@@ -26,19 +26,23 @@ if (!container) {
   throw new Error("Root container missing in index.html");
 }
 
-const root = ReactDOM.createRoot(container); // Finds the root DOM element
+const tree = (
+  <React.StrictMode>
+    <ColorSchemeScript />
+    <BrowserRouter basename={BASE_PATH}>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+);
 
 // Rendered once the first locale is in memory rather than immediately: a first
 // render that suspends on the locale file is held behind React's ~300 ms retry
 // throttle, which is slower than waiting for the translations outright.
 void i18nReady.then(() => {
   installFullDictionaryOnIntent();
-  root.render(
-    <React.StrictMode>
-      <ColorSchemeScript />
-      <BrowserRouter basename={BASE_PATH}>
-        <App />
-      </BrowserRouter>
-    </React.StrictMode>,
-  );
+  // The build puts the landing's own markup into #root (scripts/prerender-shell.mjs) so
+  // the first paint needs none of this code. Hydrating it is not an option: the shell is
+  // the landing screen, while the first render here is whatever route the visitor asked
+  // for behind Suspense and the session probe, so React can only discard it.
+  ReactDOM.createRoot(container).render(tree);
 });

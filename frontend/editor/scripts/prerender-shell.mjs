@@ -58,21 +58,27 @@ function stripShell(html) {
 function startStaticServer(root) {
   const server = createServer(async (request, response) => {
     const url = new URL(request.url ?? "/", "http://localhost");
-    let filePath = resolve(root, normalize(decodeURIComponent(url.pathname)).replace(/^\/+/, ""));
+    let filePath = resolve(
+      root,
+      normalize(decodeURIComponent(url.pathname)).replace(/^\/+/, ""),
+    );
     if (!filePath.startsWith(root)) {
       response.writeHead(403).end();
       return;
     }
     try {
-      if ((await stat(filePath)).isDirectory()) filePath = join(filePath, "index.html");
+      if ((await stat(filePath)).isDirectory())
+        filePath = join(filePath, "index.html");
     } catch {
       filePath = join(root, "index.html");
     }
     try {
       let body = await readFile(filePath);
-      if (filePath.endsWith("index.html")) body = Buffer.from(stripShell(body.toString("utf8")));
+      if (filePath.endsWith("index.html"))
+        body = Buffer.from(stripShell(body.toString("utf8")));
       response.writeHead(200, {
-        "content-type": CONTENT_TYPES[extname(filePath)] ?? "application/octet-stream",
+        "content-type":
+          CONTENT_TYPES[extname(filePath)] ?? "application/octet-stream",
       });
       response.end(body);
     } catch {
@@ -123,7 +129,8 @@ function installShellHelpers() {
   const walk = (root) => {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     const nodes = [];
-    while (walker.nextNode()) if (accepts(walker.currentNode)) nodes.push(walker.currentNode);
+    while (walker.nextNode())
+      if (accepts(walker.currentNode)) nodes.push(walker.currentNode);
     return nodes;
   };
   globalThis.__shellTexts = () =>
@@ -135,12 +142,14 @@ function installShellHelpers() {
    * write into. The style rule that hides the shell until those words are
    * replaced is what keeps them from ever reaching a paint.
    */
+  // The whole of #root, not only the frame: the client hydrates this markup, so it has
+  // to be exactly what React's first render produces, frame included.
   globalThis.__shellMarkup = () => {
-    const frame = document.querySelector("#root .app-frame");
-    if (!frame) return null;
-    const copy = frame.cloneNode(true);
-    copy.setAttribute("data-shell-frame", "");
-    return copy.outerHTML;
+    const root = document.getElementById("root");
+    if (!root?.querySelector(".app-frame")) return null;
+    // Exactly what React rendered: an extra attribute here is an extra attribute
+    // the client cannot account for, and hydration fails on it.
+    return root.innerHTML;
   };
   /** Resolves once the rendered text stops changing, so the capture is complete. */
   globalThis.__shellSettled = (boundMs) =>
@@ -194,14 +203,20 @@ function installShellHelpers() {
 }
 
 async function deliveredLanguages(distDir) {
-  const entries = await readdir(join(distDir, "locales"), { withFileTypes: true });
+  const entries = await readdir(join(distDir, "locales"), {
+    withFileTypes: true,
+  });
   return entries
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .sort();
 }
 
-export async function captureShell({ distDir, editorDir, viewport = { width: 1350, height: 940 } }) {
+export async function captureShell({
+  distDir,
+  editorDir,
+  viewport = { width: 1350, height: 940 },
+}) {
   const { chromium } = await import("@playwright/test");
   const { mockAppApis } = await loadStubHelper(editorDir);
   const server = await startStaticServer(distDir);
@@ -233,21 +248,26 @@ export async function captureShell({ distDir, editorDir, viewport = { width: 135
     const strings = {};
     const dropped = [];
     for (const language of await deliveredLanguages(distDir)) {
-      await page.evaluate((next) => globalThis.i18next.changeLanguage(next), language);
+      await page.evaluate(
+        (next) => globalThis.i18next.changeLanguage(next),
+        language,
+      );
       await page.evaluate(() => globalThis.__shellSettled(30_000));
       const texts = await page.evaluate(() => globalThis.__shellTexts());
       if (texts.length === nodes) strings[language] = texts;
       else dropped.push(`${language} (${texts.length})`);
     }
-    const rtl = (await readFile(join(editorDir, "src/core/i18n/languages.ts"), "utf8")).match(
-      /rtlLanguages\s*=\s*\[([^\]]*)\]/,
-    );
+    const rtl = (
+      await readFile(join(editorDir, "src/core/i18n/languages.ts"), "utf8")
+    ).match(/rtlLanguages\s*=\s*\[([^\]]*)\]/);
     return {
       markup,
       nodes,
       strings,
       dropped,
-      rtl: rtl ? [...rtl[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]) : [],
+      rtl: rtl
+        ? [...rtl[1].matchAll(/"([^"]+)"/g)].map((match) => match[1])
+        : [],
       base: SHELL_LANGUAGE,
     };
   } finally {
@@ -257,58 +277,147 @@ export async function captureShell({ distDir, editorDir, viewport = { width: 135
 }
 
 /** The resolver has to run before paint and must never leave wrong words up. */
-function shellScript(shell) {
+function shellScript({ wide, narrow }) {
+  const strings = {};
+  for (const [language, texts] of Object.entries(wide.strings)) {
+    strings[language] = { wide: texts };
+    if (narrow?.strings[language]) {
+      strings[language].narrow = narrow.strings[language];
+    }
+  }
   const payload = JSON.stringify({
-    base: shell.base,
-    rtl: shell.rtl,
-    strings: shell.strings,
+    base: wide.base,
+    rtl: wide.rtl,
+    nodes: { wide: wide.nodes, narrow: narrow?.nodes ?? 0 },
+    strings,
   }).replace(/</g, "\\u003c");
   return [
     `<script id="shell-strings" type="application/json">${payload}</script>`,
     `<script>(function(){var root=document.getElementById("root");if(!root)return;`,
-    `function drop(){var frame=root.querySelector("[data-shell-frame]");if(frame)frame.remove();root.removeAttribute("data-shell");}`,
+    `function drop(){while(root.firstChild)root.removeChild(root.firstChild);root.removeAttribute("data-shell");}`,
     `try{var data=JSON.parse(document.getElementById("shell-strings").textContent);`,
     `var stored=null;try{stored=localStorage.getItem("i18nextLng");}catch(e){}`,
     `var language=stored&&data.strings[stored]?stored:navigator.language&&data.strings[navigator.language]?navigator.language:null;`,
     `if(!language){drop();return;}`,
-    `var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);var nodes=[];`,
+    `var shell=data.strings[language];`,
+    // Both shells are in the document and the stylesheet picks one, so the first
+    // layout is already the final one; only the words have to change here.
+    `if(!shell[matchMedia("(max-width: 1024px)").matches?"narrow":"wide"]){drop();return;}`,
+    `var shells=root.querySelectorAll("[data-shell-for]");`,
+    `for(var i=0;i<shells.length;i++){var name=shells[i].getAttribute("data-shell-for");`,
+    `var list=shell[name];if(!list)continue;`,
+    `if(list.length!==data.nodes[name]){drop();return;}`,
+    `var walker=document.createTreeWalker(shells[i],NodeFilter.SHOW_TEXT);var texts=[];`,
     `while(walker.nextNode()){var node=walker.currentNode;var parent=node.parentElement;`,
     `if(!parent||parent.tagName==="SCRIPT"||parent.tagName==="STYLE")continue;`,
-    `if(!node.nodeValue||!node.nodeValue.trim())continue;nodes.push(node);}`,
-    `var strings=data.strings[language];if(nodes.length!==strings.length){drop();return;}`,
-    `for(var i=0;i<nodes.length;i++)nodes[i].nodeValue=strings[i];`,
+    `if(!node.nodeValue||!node.nodeValue.trim())continue;texts.push(node);}`,
+    `if(texts.length!==list.length){drop();return;}`,
+    `for(var j=0;j<texts.length;j++)texts[j].nodeValue=list[j];}`,
+    // React builds these through `new URL(..., import.meta.url)`, which is absolute;
+    // the capture stores them base-relative so the markup follows the deployment base.
+    `var images=root.querySelectorAll("img[src]");`,
+    `for(var k=0;k<images.length;k++){var src=images[k].getAttribute("src");`,
+    `if(src&&src.indexOf("://")<0&&src.charAt(0)!=="/"){images[k].setAttribute("src",new URL(src,document.baseURI).href);}}`,
     `if(data.rtl.indexOf(language)!==-1)document.documentElement.dir="rtl";`,
-    `document.documentElement.lang=language;root.removeAttribute("data-shell");`,
+    `document.documentElement.lang=language;`,
+    `root.removeAttribute("data-shell");`,
     `}catch(e){drop();}})();</script>`,
   ].join("");
 }
 
-export async function prerenderShell({ distDir, editorDir = resolve(distDir, "..") }) {
-  const shell = await captureShell({ distDir, editorDir });
+/** The entry module tag Vite emits: an inline module script that boots the app. */
+const ENTRY_TAG =
+  /<script\b[^>]*\btype="module"[^>]*\bsrc="([^"]+)"[^>]*><\/script>/;
+
+/**
+ * Leaves the entry inert, and boots it after `load` or the first interaction.
+ *
+ * The shell is the first paint and needs none of the app's JavaScript, yet a phone
+ * waits for every byte of it before that paint lands. The preload hints go with it:
+ * they fetch the whole graph before anything paints from it, and the boot fetches the
+ * same chunks when it runs. A tap starts the boot immediately - a person is waiting
+ * on it, and they should never wait for `load`.
+ */
+function deferEntry(html) {
+  const entry = ENTRY_TAG.exec(html);
+  if (!entry) throw new Error("index.html has no module entry script");
+  const payload = JSON.stringify({ src: entry[1] }).replace(/</g, "\\u003c");
+  return html.replace(/<link\b[^>]*\brel="modulepreload"[^>]*>/g, "").replace(
+    ENTRY_TAG,
+    `<script id="app-entry" type="application/json">${payload}</script>` +
+      "<script>(function(){var booted=false;" +
+      'var entry=document.getElementById("app-entry");if(!entry)return;' +
+      "function boot(){if(booted)return;booted=true;" +
+      'var script=document.createElement("script");script.type="module";' +
+      'script.crossOrigin="anonymous";script.src=JSON.parse(entry.textContent).src;' +
+      "document.head.appendChild(script);}" +
+      // The landing is the one screen that paints from the shell alone, so it can wait;
+      // a deep link (a tool, the editor) is an app page from its first frame, and its
+      // controls must work the moment they appear.
+      'var landing=document.baseURI;var here=location.href.split("#")[0].split("?")[0];' +
+      'if(here.slice(-1)==="/")here=here.slice(0,-1);' +
+      'if(landing.slice(-1)==="/")landing=landing.slice(0,-1);' +
+      "if(here!==landing){document.write('<script type=\"module\" crossorigin src=\"'+JSON.parse(entry.textContent).src+'\"></'+'script>');return;}" +
+      'var triggers=["pointerdown","keydown","touchstart","wheel"];' +
+      "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
+      "function idle(){if(window.requestIdleCallback)requestIdleCallback(boot,{timeout:2000});else setTimeout(boot,200);}" +
+      'function afterLoad(){if(document.readyState==="complete")idle();else addEventListener("load",idle,{once:true});}' +
+      'function afterPaint(){if(document.readyState==="complete")idle();else addEventListener("load",idle,{once:true});}' +
+      'if(window.PerformanceObserver){try{var seen=false;new PerformanceObserver(function(){if(seen)return;seen=true;afterPaint();}).observe({type:"paint",buffered:true});}catch(e){afterLoad();}}else afterLoad();})();</script>',
+  );
+}
+
+export async function prerenderShell({
+  distDir,
+  editorDir = resolve(distDir, ".."),
+}) {
+  const wide = await captureShell({ distDir, editorDir });
+  // The landing draws a different frame at a phone's width, and React hydrates
+  // whichever one the visitor's viewport chose: a single shell mismatches on the
+  // other side of the breakpoint and is thrown away.
+  let narrow = null;
+  try {
+    narrow = await captureShell({
+      distDir,
+      editorDir,
+      viewport: { width: 412, height: 823 },
+    });
+  } catch (error) {
+    console.warn(
+      `[prerender-shell] no phone-width shell: ${error instanceof Error ? error.message : error}`,
+    );
+  }
   const indexPath = join(distDir, "index.html");
   const html = stripShell(await readFile(indexPath, "utf8"));
-  const languageCount = Object.keys(shell.strings).length;
+  const languageCount = Object.keys(wide.strings).length;
   if (languageCount === 0) {
     throw new Error(
-      `no language reproduced the captured text nodes (base ${shell.nodes} nodes; ` +
-        `saw ${shell.dropped.slice(0, 5).join(", ") || "nothing"})`,
+      `no language reproduced the captured text nodes (base ${wide.nodes} nodes; ` +
+        `saw ${wide.dropped.slice(0, 5).join(", ") || "nothing"})`,
     );
   }
   const emitted = [
     SHELL_START,
-    `<style>#root[data-shell="pending"]{visibility:hidden}</style>`,
-    `<div id="root" data-shell="pending">${shell.markup}</div>`,
-    shellScript(shell),
+    // Both shells ship inline: the stylesheet picks the one the viewport draws, so
+    // the browser's first layout is the final one and nothing moves when the words
+    // are swapped in.
+    `<style>#root[data-shell="pending"]{visibility:hidden}[data-shell-for="narrow"]{display:none}@media (max-width: 1024px){[data-shell-for="wide"]{display:none}[data-shell-for="narrow"]{display:block}}</style>`,
+    `<div id="root" data-shell="pending"><div data-shell-for="wide">${wide.markup}</div>`,
+    narrow ? `<div data-shell-for="narrow">${narrow.markup}</div>` : "",
+    `</div>`,
+    shellScript({ wide, narrow }),
     SHELL_END,
   ].join("");
   const withShell = html.replace(/(<div id="root"><\/div>)/, emitted);
-  if (withShell === html) throw new Error('index.html has no <div id="root"></div>');
-  await writeFile(indexPath, withShell);
+  if (withShell === html)
+    throw new Error('index.html has no <div id="root"></div>');
+  await writeFile(indexPath, deferEntry(withShell));
   return {
-    nodes: shell.nodes,
+    nodes: wide.nodes,
     languages: languageCount,
-    dropped: shell.dropped,
+    dropped: wide.dropped,
     bytes: Buffer.byteLength(emitted),
+    narrowNodes: narrow?.nodes ?? 0,
   };
 }
 
@@ -318,11 +427,13 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     .then((result) =>
       console.log(
         `[prerender-shell] ${result.languages} languages, ${result.nodes} text nodes, ` +
-          `${(result.bytes / 1024).toFixed(1)} KiB${result.dropped.length ? `, no shell for ${result.dropped.join(", ")}` : ""}`,
+          `${(result.bytes / 1024).toFixed(1)} KiB${result.narrowNodes ? `, phone shell ${result.narrowNodes} text nodes` : ""}${result.dropped.length ? `, no shell for ${result.dropped.join(", ")}` : ""}`,
       ),
     )
     .catch((error) => {
-      console.error(`[prerender-shell] ${error instanceof Error ? error.message : error}`);
+      console.error(
+        `[prerender-shell] ${error instanceof Error ? error.message : error}`,
+      );
       process.exitCode = 1;
     });
 }
