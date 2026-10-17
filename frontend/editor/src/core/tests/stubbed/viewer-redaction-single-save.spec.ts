@@ -132,7 +132,11 @@ async function markRedactionAt(
   const redactInMenu = page
     .locator('[data-text-selection-menu] button[aria-label="Redact"]')
     .first();
-  if (await redactInMenu.isVisible({ timeout: 3_000 }).catch(() => false)) {
+  const menuAppeared = await redactInMenu
+    .waitFor({ state: "visible", timeout: 3_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (menuAppeared) {
     await redactInMenu.click();
   }
   await page.waitForTimeout(1_500);

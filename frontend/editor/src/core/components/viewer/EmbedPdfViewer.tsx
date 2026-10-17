@@ -42,7 +42,7 @@ import {
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useEventCallback } from "@app/hooks/useEventCallback";
-import { useDocumentEditSession } from "@app/contexts/documentEdit/DocumentEditSessionContext";
+import { AnnotationDirtyWatcher } from "@app/components/viewer/AnnotationDirtyWatcher";
 import { useRedaction } from "@app/contexts/RedactionContext";
 import type { RedactionPendingTrackerAPI } from "@app/components/viewer/RedactionPendingTracker";
 import type {
@@ -507,9 +507,12 @@ const EmbedPdfViewerContent = ({
     isRedactionMode,
   } = useRedaction();
 
-  const { handleToolSelectForced, readerMode, setLeftPanelView } =
-    useToolWorkflow();
-  const { workingRevision } = useDocumentEditSession();
+  const {
+    handleToolSelectForced,
+    leftPanelView,
+    readerMode,
+    setLeftPanelView,
+  } = useToolWorkflow();
 
   // Resubscribing to history emits its current state as though an edit occurred.
   const redactionsAppliedRef = useRef(redactionsApplied);
@@ -554,6 +557,10 @@ const EmbedPdfViewerContent = ({
     selectedTool === "addText" ||
     selectedTool === "addImage" ||
     selectedTool === "annotate";
+  // These create annotations without the Annotate tool; a panel moving under
+  // them would interrupt the placement they are midway through.
+  const isPlacementTool =
+    selectedTool === "addText" || selectedTool === "addImage";
   const isManualRedactMode = selectedTool === "redact";
 
   // Live layer visibility is controlled via showBakedAnnotations CSS; unmounting
@@ -1039,8 +1046,15 @@ const EmbedPdfViewerContent = ({
   // once the user leaves it, so a later edit surfaces it again.
   const annotationUiOpenedRef = useRef(false);
   useEffect(() => {
-    if (selectedTool !== "annotate") annotationUiOpenedRef.current = false;
-  }, [selectedTool]);
+    if (selectedTool !== "annotate" || leftPanelView === "toolPicker") {
+      annotationUiOpenedRef.current = false;
+    }
+  }, [selectedTool, leftPanelView]);
+  // A later document starts clean, so its edits must be able to surface the
+  // panel again.
+  useEffect(() => {
+    annotationUiOpenedRef.current = false;
+  }, [activeFileId]);
 
   const openAnnotationUi = useEventCallback(() => {
     if (
@@ -1051,13 +1065,18 @@ const EmbedPdfViewerContent = ({
     ) {
       return;
     }
-    annotationUiOpenedRef.current = true;
     // Reading stays reading: a comment edited from the sidebar keeps the reader
     // layout, and the unsaved-changes guard surfaces on the way out. Forcing
     // the Annotate tool here would trade the reader's place for the save UI.
     if (readerMode) {
       return;
     }
+    // Placement tools own their flow; moving the panel mid-task would
+    // interrupt the edit that committed.
+    if (isPlacementTool) {
+      return;
+    }
+    annotationUiOpenedRef.current = true;
     // Already annotating: only the panel needs to come back on screen
     // (collapsed rail on phones), so an edit while selected still shows the
     // save UI.
@@ -1067,10 +1086,6 @@ const EmbedPdfViewerContent = ({
     }
     handleToolSelectForced("annotate");
   });
-
-  useEffect(() => {
-    if (workingRevision > 0) openAnnotationUi();
-  }, [workingRevision, openAnnotationUi]);
 
   // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {
@@ -1894,6 +1909,7 @@ const EmbedPdfViewerContent = ({
         pointerEvents: isApplyingSignatures ? "none" : undefined,
       }}
     >
+      <AnnotationDirtyWatcher onDirty={openAnnotationUi} />
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
         <ActionIcon

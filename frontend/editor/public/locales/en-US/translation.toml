@@ -13799,8 +13799,6 @@ title = "Portfolio"
 applyAll = "Apply Redactions"
 commitErrorBody = "The pending redactions could not be applied. Try again."
 commitErrorTitle = "Could not apply redactions"
-removeMark = "Remove this mark"
-reviewAll = "Review and apply all redactions in the tool panel"
 
 [viewer.search]
 clear = "Clear search"

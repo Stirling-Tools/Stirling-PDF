@@ -132,7 +132,7 @@ function AnnotationSelectionMenuInner({
       const target = e.target as HTMLElement;
       if (
         target.closest(
-          "[data-annotation-selection-menu],[data-text-selection-menu],[data-redaction-selection-menu]",
+          "[data-annotation-selection-menu],[data-text-selection-menu]",
         )
       )
         return;
