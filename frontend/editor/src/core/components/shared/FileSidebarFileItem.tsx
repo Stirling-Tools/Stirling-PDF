@@ -52,10 +52,23 @@ export function getDateGroup(lastModified: number | undefined): DateGroup {
   return "older";
 }
 
+const fileDateCache = new Map<number, string>();
+let cachedDayStart = -1;
+const MAX_DATE_CACHE = 1000;
+
 export function formatFileDate(lastModifiedTs: number): string {
-  const lastModified = lastModifiedTs ? new Date(lastModifiedTs) : new Date();
+  if (!lastModifiedTs) return "";
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // Labels are relative to the current day, so drop stale entries at midnight.
+  if (today.getTime() !== cachedDayStart) {
+    fileDateCache.clear();
+    cachedDayStart = today.getTime();
+  }
+  const cached = fileDateCache.get(lastModifiedTs);
+  if (cached !== undefined) return cached;
+
+  const lastModified = new Date(lastModifiedTs);
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   const fileDay = new Date(
@@ -64,27 +77,35 @@ export function formatFileDate(lastModifiedTs: number): string {
     lastModified.getDate(),
   );
 
+  let result: string;
   if (fileDay.getTime() === today.getTime()) {
-    return lastModified
+    result = lastModified
       .toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
       })
       .toLowerCase();
+  } else if (fileDay.getTime() === yesterday.getTime()) {
+    result = "Yesterday";
+  } else {
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    if (fileDay >= weekAgo) {
+      result = lastModified.toLocaleDateString("en-US", { weekday: "long" });
+    } else {
+      result = lastModified.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    }
   }
-  if (fileDay.getTime() === yesterday.getTime()) {
-    return "Yesterday";
+
+  if (fileDateCache.size >= MAX_DATE_CACHE) {
+    fileDateCache.clear();
   }
-  const weekAgo = new Date(today);
-  weekAgo.setDate(weekAgo.getDate() - 7);
-  if (fileDay >= weekAgo) {
-    return lastModified.toLocaleDateString("en-US", { weekday: "long" });
-  }
-  return lastModified.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  fileDateCache.set(lastModifiedTs, result);
+  return result;
 }
 
 function CheckIcon({

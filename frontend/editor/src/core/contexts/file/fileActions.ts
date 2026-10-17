@@ -921,8 +921,9 @@ export async function addStirlingFileStubs(
   await addFilesMutex.lock();
 
   try {
-    // Show loading indicator while preparing files from storage
-    if (stirlingFileStubs.length > 0) {
+    // Show loading indicator only when preparing multiple files from storage
+    const showProgress = stirlingFileStubs.length > 1;
+    if (showProgress) {
       dispatch({
         type: "SET_PROCESSING",
         payload: { isProcessing: true, progress: 0 },
@@ -956,8 +957,8 @@ export async function addStirlingFileStubs(
         record.insertAfterPageId = options.insertAfterPageId;
       }
 
-      // Clear loading indicator after first file appears
-      if (!firstFileDispatched) {
+      // Clear loading indicator after first file appears if it was shown
+      if (showProgress && !firstFileDispatched) {
         firstFileDispatched = true;
         dispatch({
           type: "SET_PROCESSING",
