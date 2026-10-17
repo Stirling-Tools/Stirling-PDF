@@ -43,7 +43,7 @@ export function OpacityControl({
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>
-        <Stack gap="xs" style={{ minWidth: 180 }}>
+        <Stack gap="xs" pb="lg" style={{ minWidth: 180 }}>
           <Group justify="space-between" align="baseline">
             <Text size="xs" fw={500}>
               {label}
