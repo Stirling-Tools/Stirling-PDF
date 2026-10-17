@@ -699,13 +699,11 @@ class SpringAuthClient {
 
       return { data: { session }, error: null };
     } catch (error: unknown) {
-      localStorage.removeItem(JWT_STORAGE_KEY);
-
       // 401/403 means the refresh token is no longer valid - normal expired
-      // state, not an error worth surfacing. Other statuses (network, backend
-      // down) ARE worth logging.
+      // state. A transient failure keeps it so a later check can retry.
       const status = getHttpStatus(error);
       if (status === 401 || status === 403) {
+        localStorage.removeItem(JWT_STORAGE_KEY);
         return {
           data: { session: null },
           error: { message: "Token refresh failed - please log in again" },

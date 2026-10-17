@@ -280,8 +280,6 @@ function isMarkdownPackage(pkg: string): boolean {
   );
 }
 
-/** Preload for the one dictionary the app is about to fetch. */
-/** Generates the locale delivery files and injects the startup preload for one of them. */
 /** Preloads the initial route's own files from the built HTML. */
 // Every page the app can be served from gets the hints: a route page is its own
 // document, and without them it discovers the same chunks one round trip later.
@@ -340,11 +338,9 @@ async function writeLandingShell(
           : ""),
     );
   } catch (error) {
-    if (process.env.PRERENDER_SHELL_SKIP === "1") {
-      console.warn(`[prerender-shell] skipped: ${String(error)}`);
-      return;
-    }
-    throw error;
+    // A build image without browser binaries still has to produce an app.
+    if (process.env.PRERENDER_SHELL_STRICT === "1") throw error;
+    console.warn(`[prerender-shell] skipped: ${String(error)}`);
   }
 }
 
@@ -602,7 +598,7 @@ function mantineToolOnlyImports(): PluginOption {
       };
       for (const name of imports.keys()) visit(name);
 
-      // The engine is a megabyte the browser downloads before the app runs if anything a startup chunk statically.
+      // A static import from a startup chunk would make the browser preload the pdf engine.
       const eager = new Set<string>();
       const reach = (name: string): void => {
         if (eager.has(name)) return;
@@ -612,9 +608,15 @@ function mantineToolOnlyImports(): PluginOption {
       for (const file of Object.values(bundle)) {
         if (file.type === "chunk" && file.isEntry) reach(file.fileName);
       }
-      const eagerEngine = [...eager].filter((name) =>
-        /^vendor-embedpdf(-core)?-/.test(name),
-      );
+      const engineChunks = new Set(["vendor-embedpdf", "vendor-embedpdf-core"]);
+      const eagerEngine = Object.values(bundle)
+        .filter(
+          (file) =>
+            file.type === "chunk" &&
+            eager.has(file.fileName) &&
+            engineChunks.has(file.name),
+        )
+        .map((file) => file.fileName);
       if (eagerEngine.length) {
         throw new Error(
           `startup chunks statically reach the pdf engine (${eagerEngine.join(", ")}); ` +

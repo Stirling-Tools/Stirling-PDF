@@ -88,6 +88,9 @@ export class FileLifecycleManager {
    * Clean up all files and resources
    */
   cleanupAllFiles = (): void => {
+    for (const fileId of this.filesRef.current.keys()) {
+      forgetCachedPageImages(fileId);
+    }
     forgetPdfAccess([...this.filesRef.current.keys()]);
     // Revoke all blob URLs
     this.blobUrls.forEach((url) => {

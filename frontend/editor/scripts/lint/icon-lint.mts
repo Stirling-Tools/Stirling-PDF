@@ -196,7 +196,6 @@ for (const file of files) {
   const inIconsDir = isWithin(file, ICONS_DIR);
 
   const isStory = /\.stories\.tsx?$/.test(file);
-  const isTest = /\.test\.tsx?$/.test(file);
   const svgLines = new Set<number>();
   lines.forEach((line, i) => {
     if (/<svg(?:[\s>]|$)/.test(line)) svgLines.add(i);
@@ -245,7 +244,7 @@ for (const file of files) {
 
   lines.forEach((line, i) => {
     // No inline svg outside core/icons
-    if (svgLines.has(i) && !inIconsDir && !allowed.has(i) && !isTest) {
+    if (svgLines.has(i) && !inIconsDir && !allowed.has(i)) {
       problems.push(
         `${rel(file)}:${i + 1}: inline <svg>. Move it to src/core/icons/svg/ and render ` +
           `via <Icon>. If the geometry is computed at runtime, or it is svg text for a story's ` +

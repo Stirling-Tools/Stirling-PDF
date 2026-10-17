@@ -49,20 +49,20 @@ export function adjustFontSizeToFit(
     element.scrollWidth <= element.clientWidth + 1 && // tolerance
     element.scrollHeight <= maxHeight + 1;
 
-  /** Height the label may take; infinite when only its width is limited. */
-  const heightLimit = (): number => {
+  /** Height the label may take at `fontPx`; infinite when only its width is limited. */
+  const heightLimit = (fontPx: number): number => {
     if (typeof maxLines !== "number" || maxLines <= 0) {
       return Number.POSITIVE_INFINITY;
     }
     const lineHeight =
       parseFloat(window.getComputedStyle(element).lineHeight) ||
       baseFontPx * 1.2;
-    return lineHeight * maxLines + 0.1; // small epsilon
+    return (lineHeight / baseFontPx) * fontPx * maxLines + 0.1;
   };
 
   /** The room a refit depends on, and the text it has to fit into it. */
   const inputs = (): string =>
-    `${element.parentElement?.clientWidth ?? element.clientWidth}\u0000${element.textContent ?? ""}`;
+    `${element.parentElement?.clientWidth ?? 0}\u0000${element.clientWidth}\u0000${element.textContent ?? ""}`;
 
   let settled = "";
 
@@ -74,12 +74,11 @@ export function adjustFontSizeToFit(
 
     // Start from the largest size: a box that grew should get its text back.
     element.style.fontSize = `${baseFontPx}px`;
-    const maxHeight = heightLimit();
 
     let size = baseFontPx;
     let iterations = 0;
     // Guard against excessive loops
-    while (!fits(maxHeight) && size > minFontPx && iterations < 200) {
+    while (!fits(heightLimit(size)) && size > minFontPx && iterations < 200) {
       size = Math.max(minFontPx, size - stepPx);
       element.style.fontSize = `${size}px`;
       iterations += 1;
@@ -104,6 +103,7 @@ export function adjustFontSizeToFit(
   // The label's own box is what the fit changes; watching the parent is what
   // tells it when it has different room to fit into.
   if (element.parentElement) ro.observe(element.parentElement);
+  ro.observe(element);
 
   const mo = new MutationObserver(schedule);
   mo.observe(element, { characterData: true, childList: true, subtree: true });

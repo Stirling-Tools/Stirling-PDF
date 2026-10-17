@@ -357,7 +357,8 @@ function shellScript({ wide, narrow }) {
   }).replace(/</g, "\\u003c");
   return [
     `<script id="shell-strings" type="application/json">${payload}</script>`,
-    `<script>(function(){var root=document.getElementById("root");if(!root)return;`,
+    `<script>(function(){var root=document.getElementById("root");if(!root)return;` +
+      `if(document.documentElement.hasAttribute("data-shell-hidden"))return;`,
     `function drop(){while(root.firstChild)root.removeChild(root.firstChild);root.removeAttribute("data-shell");if(window.__spdfBoot)window.__spdfBoot();}`,
     `try{var data=JSON.parse(document.getElementById("shell-strings").textContent);`,
     `var stored=null;try{stored=localStorage.getItem("i18nextLng");}catch(e){}`,
@@ -466,20 +467,19 @@ function deferEntry(html) {
       // A tap on a search box must not lose what was typed while the shell was up.
       'function boot(){if(booted)return;booted=true;removeEventListener("change",onChange,true);' +
       "restore();" +
-      "if(window.__spdfLocalePreload)window.__spdfLocalePreload();" +
       'var script=document.createElement("script");script.type="module";' +
       'script.crossOrigin="anonymous";script.src=src;document.head.appendChild(script);' +
       "if(keepId){var tried=0;(function refocus(){var el=document.getElementById(keepId);" +
       'if(el&&!el.closest("[data-shell-for]")){el.value=keepValue;el.focus();return;}' +
       "if(tried++<200)setTimeout(refocus,50);})();}}" +
       "window.__spdfBoot=boot;" +
-      // A deep link is an app page from its first frame, so it boots at once, and the
-      // landing shell it would otherwise flash is dropped.
+      // A deep link is an app page from its first frame: boot at once, keep the
+      // landing shell hidden until React paints over it.
       'var clean=function(url){var cut=url.split("#")[0].split("?")[0];' +
       'if(cut.slice(-11)==="/index.html")cut=cut.slice(0,-11);' +
       'while(cut.slice(-1)==="/")cut=cut.slice(0,-1);return cut;};' +
       "if(clean(location.href)!==clean(document.baseURI)){" +
-      'var first=document.getElementById("root");if(first){while(first.firstChild)first.removeChild(first.firstChild);first.removeAttribute("data-shell");}' +
+      'document.documentElement.setAttribute("data-shell-hidden","");' +
       "restore();document.write('<script type=\"module\" crossorigin src=\"'+src+'\"></'+'script>');return;}" +
       // The shell is the first screen, so the app waits for a gesture.
       'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +

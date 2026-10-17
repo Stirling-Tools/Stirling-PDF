@@ -76,7 +76,8 @@ export function loadSidebarCategories(): Promise<void> {
       publish();
     })
     .catch(() => {
-      // A failed fetch leaves the sidebar flat rather than broken.
+      // A failed fetch leaves the sidebar flat and can be retried.
+      loading = null;
     });
   return loading;
 }

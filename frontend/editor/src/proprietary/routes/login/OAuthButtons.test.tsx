@@ -13,7 +13,7 @@ vi.mock("react-i18next", () => ({
 
 // The marks come from the icon registry, which loads every icon module.
 vi.mock("@app/ui/Icon", () => ({
-  Icon: ({ name }: { name: string }) => <svg data-icon={name} />,
+  Icon: ({ name }: { name: string }) => <span data-icon={name} />,
 }));
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -67,10 +67,13 @@ describe("OAuthButtons", () => {
 
     // An unknown provider and OIDC both fall back to the neutral glyph.
     const markOf = (label: string) =>
-      screen.getByText(label).closest("button")?.querySelector("svg, img");
+      screen
+        .getByText(label)
+        .closest("button")
+        ?.querySelector("svg, img, span[data-icon]");
     const mycompanyMark = markOf("Mycompany");
-    expect(mycompanyMark?.tagName.toLowerCase()).toBe("svg");
-    expect(markOf("OIDC")?.tagName.toLowerCase()).toBe("svg");
+    expect(mycompanyMark?.tagName.toLowerCase()).toBe("span");
+    expect(markOf("OIDC")?.tagName.toLowerCase()).toBe("span");
   });
 
   it('should call onProviderClick with actual provider ID (not "oidc")', async () => {
@@ -219,11 +222,13 @@ describe("OAuthButtons", () => {
       </TestWrapper>,
     );
 
-    // Each known provider renders its own registry mark: an svg, and a
-    // different one per provider rather than the shared fallback glyph.
+    // Each known provider renders its own registry mark: a different one per
+    // provider rather than the shared fallback glyph.
     const markOf = (label: string) =>
-      screen.getByText(label).closest("button")?.querySelector("svg")
-        ?.outerHTML;
+      screen
+        .getByText(label)
+        .closest("button")
+        ?.querySelector("svg, img, span[data-icon]")?.outerHTML;
     const marks = [
       markOf("Google"),
       markOf("GitHub"),

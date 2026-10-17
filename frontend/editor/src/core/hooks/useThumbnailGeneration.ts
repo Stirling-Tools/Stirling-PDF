@@ -83,6 +83,7 @@ async function processRequestQueue() {
             ? file.fileId
             : (createQuickKey(file) as FileId);
 
+          const epoch = thumbnailGenerationService.epoch;
           const results = await thumbnailGenerationService.generateThumbnails(
             fileId,
             arrayBuffer,
@@ -104,6 +105,7 @@ async function processRequestQueue() {
                 request.pageId,
                 result.thumbnail,
                 fileId,
+                epoch,
               );
               request.resolve(result.thumbnail);
             } else {

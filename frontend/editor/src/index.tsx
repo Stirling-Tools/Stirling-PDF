@@ -35,3 +35,7 @@ root.render(
     </BrowserRouter>
   </React.StrictMode>,
 );
+
+// The build hides the prerendered shell; React's first commit replaces it.
+container.removeAttribute("data-shell");
+document.documentElement.removeAttribute("data-shell-hidden");

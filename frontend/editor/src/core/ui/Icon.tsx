@@ -38,6 +38,14 @@ type IconEntry = {
 // signature; the value may be absent, unlike the literal-keyed entries.
 const STARTUP: Readonly<Record<string, IconEntry | undefined>> = STARTUP_ICONS;
 
+/** Reads an own key only: `constructor` and friends are inherited, not icons. */
+function ownEntry(
+  map: Readonly<Record<string, IconEntry | undefined>> | null | undefined,
+  name: string,
+): IconEntry | undefined {
+  return map && Object.hasOwn(map, name) ? map[name] : undefined;
+}
+
 let registry: Readonly<Record<string, IconEntry | undefined>> | null = null;
 let pending: Promise<void> | null = null;
 const listeners = new Set<() => void>();
@@ -105,7 +113,7 @@ export function Icon({
   // arrives late from re-rendering its route: only this svg re-renders.
   const loaded = useSyncExternalStore(subscribe, loadedRegistry);
   const known = isIconName(name);
-  const entry = STARTUP[name] ?? loaded?.[name];
+  const entry = ownEntry(STARTUP, name) ?? ownEntry(loaded, name);
   if (!entry) {
     // A registered name that is not here yet is what starts the fetch; an
     // unregistered one draws the placeholder whatever the registry holds.

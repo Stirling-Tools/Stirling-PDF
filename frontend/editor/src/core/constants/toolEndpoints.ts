@@ -15,7 +15,7 @@ const PATH_BY_NAME_EXCEPTIONS = {
   "overlay-pdf": "/api/v1/general/overlay-pdfs",
 } as const satisfies Record<string, ToolEndpoint>;
 
-/** Registry entries name their API with the backend's short endpoint names (`"compress-pdf"`), while the. */
+/** Registry entries name their API with the backend's short endpoint names (`"compress-pdf"`), while the app addresses tools by registry id. */
 const PATH_BY_NAME: ReadonlyMap<string, string> = buildPathByName();
 
 function buildPathByName(): ReadonlyMap<string, string> {

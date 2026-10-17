@@ -48,6 +48,7 @@ export class ThumbnailGenerationService {
   // A byte cap alone never bites on its own: one page image is ~100 KB, so 1 GB holds thousands of pages.
   private maxCacheEntries = 512;
   private currentCacheSize = 0;
+  private cacheEpoch = 0;
 
   // PDF document cache to reuse PDF instances and avoid creating multiple workers
   private pdfDocumentCache = new Map<FileId, CachedPDFDocument>();
@@ -250,13 +251,17 @@ export class ThumbnailGenerationService {
     pageId: string,
     thumbnail: string,
     fileId?: FileId,
+    epoch?: number,
   ): void {
+    // A result from before a cleanup must not repopulate the cache.
+    if (epoch !== undefined && epoch !== this.cacheEpoch) return;
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
     const previous = this.thumbnailCache.get(pageId)?.sizeBytes ?? 0;
+    const isNew = !this.thumbnailCache.has(pageId);
 
     // Enforce cache size limits
     while (
-      this.thumbnailCache.size >= this.maxCacheEntries ||
+      (isNew && this.thumbnailCache.size >= this.maxCacheEntries) ||
       (this.currentCacheSize + sizeBytes - previous > this.maxCacheSizeBytes &&
         this.thumbnailCache.size > 0)
     ) {
@@ -277,6 +282,7 @@ export class ThumbnailGenerationService {
 
   /** Drop every cached page image that came from one file. */
   evictThumbnailsForFile(fileId: FileId): number {
+    this.cacheEpoch += 1;
     let dropped = 0;
     for (const [key, entry] of this.thumbnailCache) {
       if (entry.fileId !== fileId) continue;
@@ -316,7 +322,13 @@ export class ThumbnailGenerationService {
     // No-op since we removed workers
   }
 
+  /** Changes whenever cached pages are dropped, so stale work can be ignored. */
+  get epoch(): number {
+    return this.cacheEpoch;
+  }
+
   clearCache(): void {
+    this.cacheEpoch += 1;
     this.thumbnailCache.clear();
     this.currentCacheSize = 0;
   }
