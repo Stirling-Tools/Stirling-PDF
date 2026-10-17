@@ -1,17 +1,9 @@
 import React, { useState, useEffect, type ReactNode } from "react";
-import {
-  TextInput,
-  Group,
-  Text,
-  Stack,
-  Alert,
-  Table,
-  Badge,
-  Menu,
-  Avatar,
-} from "@mantine/core";
+import { TextInput, Group, Text, Stack, Alert } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
+import { Avatar } from "@app/ui/Avatar";
+import { DataTable, column } from "@app/ui/DataTable";
 import { StatusBadge } from "@app/ui/StatusBadge";
 import { useTranslation } from "react-i18next";
 import { useTeamAuth } from "@app/auth/teamSession";
@@ -27,7 +19,6 @@ import {
 } from "@app/components/shared/ownership/OwnershipTransferModal";
 import apiClient from "@app/services/apiClient";
 import { useTeamAvatarUrls } from "@app/hooks/useTeamAvatarUrls";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -301,167 +292,9 @@ function InviteMemberForm({
   );
 }
 
-function ColumnHeader({ children }: { children: ReactNode }) {
-  return (
-    <Table.Th
-      style={{
-        fontWeight: 600,
-        fontSize: "0.875rem",
-        color: "var(--mantine-color-gray-7)",
-      }}
-    >
-      {children}
-    </Table.Th>
-  );
-}
-
-function MemberRoleBadge({ role }: { role: TeamMember["role"] }) {
-  const { t } = useTranslation();
-  const isOwner = role === "LEADER";
-  return (
-    <Badge
-      size="sm"
-      color={isOwner ? "blue" : undefined}
-      style={
-        isOwner
-          ? undefined
-          : {
-              backgroundColor: "var(--c-surface-raised)",
-              color: "var(--c-accent-fg)",
-            }
-      }
-    >
-      {isOwner
-        ? t("users.role.orgOwner", "Org Owner")
-        : t("users.role.member", "Member")}
-    </Badge>
-  );
-}
-
-interface MemberActionsMenuProps {
-  member: TeamMember;
-  onMakeOwner: () => void;
-  onRemove: () => void;
-}
-
-function MemberActionsMenu({
-  member,
-  onMakeOwner,
-  onRemove,
-}: MemberActionsMenuProps) {
-  const { t } = useTranslation();
-  if (member.role === "LEADER") return null;
-  return (
-    <Menu position="bottom-end" withinPortal zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
-      <Menu.Target>
-        <ActionIcon
-          variant="tertiary"
-          aria-label={t("team.members.actions", "Member actions")}
-        >
-          <Icon name="ellipsis-vertical" size="1rem" />
-        </ActionIcon>
-      </Menu.Target>
-      <Menu.Dropdown>
-        <Menu.Item onClick={onMakeOwner}>
-          {t("team.makeOwner", "Make owner")}
-        </Menu.Item>
-        <Menu.Item
-          color="red"
-          leftSection={<Icon name="user-minus" size="1rem" />}
-          onClick={onRemove}
-        >
-          {t("team.members.remove", "Remove from Team")}
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
-  );
-}
-
-interface TeamMemberRowProps extends MemberActionsMenuProps {
-  showActions: boolean;
-  /** Signed avatar URL; absent members fall back to their initial. */
-  avatarUrl?: string;
-}
-
-function TeamMemberRow({
-  showActions,
-  avatarUrl,
-  ...actions
-}: TeamMemberRowProps) {
-  const { member } = actions;
-  return (
-    <Table.Tr>
-      <Table.Td>
-        <Group gap="xs" wrap="nowrap">
-          <Avatar size={28} radius="xl" src={avatarUrl} alt="" color="blue">
-            {member.username.charAt(0).toUpperCase()}
-          </Avatar>
-          <Text size="sm" fw={500}>
-            {member.username}
-          </Text>
-        </Group>
-      </Table.Td>
-      <Table.Td>
-        <Text size="sm" c="dimmed">
-          {member.email}
-        </Text>
-      </Table.Td>
-      <Table.Td>
-        <MemberRoleBadge role={member.role} />
-      </Table.Td>
-      {showActions && (
-        <Table.Td>
-          <MemberActionsMenu {...actions} />
-        </Table.Td>
-      )}
-    </Table.Tr>
-  );
-}
-
-interface PendingInvitationRowProps {
-  invitation: TeamInvitation;
-  showActions: boolean;
-  onCancel: () => void;
-}
-
-function PendingInvitationRow({
-  invitation,
-  showActions,
-  onCancel,
-}: PendingInvitationRowProps) {
-  const { t } = useTranslation();
-  return (
-    <Table.Tr>
-      <Table.Td>
-        <Text size="sm" fw={500} c="dimmed" fs="italic">
-          {invitation.inviteeEmail.split("@")[0]}
-        </Text>
-      </Table.Td>
-      <Table.Td>
-        <Text size="sm" c="dimmed">
-          {invitation.inviteeEmail}
-        </Text>
-      </Table.Td>
-      <Table.Td>
-        <Badge size="sm" color="yellow" variant="light">
-          {t("team.members.pending", "PENDING")}
-        </Badge>
-      </Table.Td>
-      {showActions && (
-        <Table.Td>
-          <ActionIcon
-            variant="tertiary"
-            accent="danger"
-            onClick={onCancel}
-            aria-label={t("team.invite.cancelLabel", "Cancel invitation")}
-          >
-            <Icon name="x" size="1rem" />
-          </ActionIcon>
-        </Table.Td>
-      )}
-    </Table.Tr>
-  );
-}
+type TeamTableRow =
+  | { kind: "member"; member: TeamMember }
+  | { kind: "invitation"; invitation: TeamInvitation };
 
 interface TeamMembersTableProps {
   members: TeamMember[];
@@ -472,85 +305,117 @@ interface TeamMembersTableProps {
   onCancelInvitation: (invitation: TeamInvitation) => void;
 }
 
-function TeamMemberRows({
-  members,
-  invitations,
-  showActions,
-  onMakeOwner,
-  onRemove,
-  onCancelInvitation,
-}: TeamMembersTableProps) {
-  const { t } = useTranslation();
-  const avatarUrls = useTeamAvatarUrls(members);
-  if (members.length === 0 && invitations.length === 0) {
-    return (
-      <Table.Tr>
-        <Table.Td colSpan={showActions ? 4 : 3}>
-          <Text ta="center" c="dimmed" py="xl">
-            {t("team.members.empty", "No team members yet.")}
-          </Text>
-        </Table.Td>
-      </Table.Tr>
-    );
-  }
-  return (
-    <>
-      {members.map((member) => (
-        <TeamMemberRow
-          key={`member-${member.id}`}
-          member={member}
-          avatarUrl={
-            member.supabaseId ? avatarUrls[member.supabaseId] : undefined
-          }
-          showActions={showActions}
-          onMakeOwner={() => onMakeOwner(member)}
-          onRemove={() => onRemove(member)}
-        />
-      ))}
-      {invitations
-        .filter((inv) => inv.status === "PENDING")
-        .map((invitation) => (
-          <PendingInvitationRow
-            key={`invitation-${invitation.invitationId}`}
-            invitation={invitation}
-            showActions={showActions}
-            onCancel={() => onCancelInvitation(invitation)}
-          />
-        ))}
-    </>
-  );
-}
-
 function TeamMembersTable(props: TeamMembersTableProps) {
   const { t } = useTranslation();
+  const avatarUrls = useTeamAvatarUrls(props.members);
+
+  const rows: TeamTableRow[] = [
+    ...props.members.map((member) => ({ kind: "member" as const, member })),
+    ...props.invitations
+      .filter((inv) => inv.status === "PENDING")
+      .map((invitation) => ({ kind: "invitation" as const, invitation })),
+  ];
+
+  const columns = [
+    column.entity<TeamTableRow>({
+      key: "name",
+      header: t("team.members.nameColumn", "Name"),
+      icon: (row) =>
+        row.kind === "member" ? (
+          <Avatar
+            name={row.member.username}
+            size="sm"
+            src={
+              row.member.supabaseId
+                ? avatarUrls[row.member.supabaseId]
+                : undefined
+            }
+          />
+        ) : undefined,
+      primary: (row) =>
+        row.kind === "member"
+          ? row.member.username
+          : row.invitation.inviteeEmail.split("@")[0],
+    }),
+    column.muted<TeamTableRow>({
+      key: "email",
+      header: t("team.members.emailColumn", "Email"),
+      get: (row) =>
+        row.kind === "member" ? row.member.email : row.invitation.inviteeEmail,
+    }),
+    column.badge<TeamTableRow>({
+      key: "role",
+      header: t("team.members.roleColumn", "Role"),
+      get: (row) => {
+        if (row.kind === "member") {
+          return {
+            tone: row.member.role === "LEADER" ? "info" : "neutral",
+            label:
+              row.member.role === "LEADER"
+                ? t("users.role.orgOwner", "Org Owner")
+                : t("users.role.member", "Member"),
+          };
+        }
+        return {
+          tone: "warning",
+          label: t("team.members.pending", "PENDING"),
+        };
+      },
+    }),
+    ...(props.showActions
+      ? [
+          column.actions<TeamTableRow>({
+            key: "actions",
+            get: (row) => {
+              if (row.kind === "member") {
+                if (row.member.role === "LEADER") return [];
+                return [
+                  {
+                    label: t("team.members.actions", "Member actions"),
+                    glyph: "kebab",
+                    iconOnly: true,
+                    menu: [
+                      {
+                        label: t("team.makeOwner", "Make owner"),
+                        onClick: () => props.onMakeOwner(row.member),
+                      },
+                      {
+                        label: t("team.members.remove", "Remove from Team"),
+                        tone: "danger",
+                        onClick: () => props.onRemove(row.member),
+                      },
+                    ],
+                  },
+                ];
+              }
+              return [
+                {
+                  label: t("team.invite.cancelLabel", "Cancel invitation"),
+                  tone: "danger",
+                  onClick: () => props.onCancelInvitation(row.invitation),
+                },
+              ];
+            },
+          }),
+        ]
+      : []),
+  ];
+
   return (
     <div>
       <Text fw={600} size="md" mb="sm">
         {t("team.members.title", "Team Members")}
       </Text>
-      <Table
-        horizontalSpacing="md"
-        verticalSpacing="sm"
-        withRowBorders
-        highlightOnHover
-        style={{
-          "--table-border-color": "var(--mantine-color-gray-3)",
-        }}
-      >
-        <Table.Thead>
-          <Table.Tr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
-            <ColumnHeader>{t("team.members.nameColumn", "Name")}</ColumnHeader>
-            <ColumnHeader>
-              {t("team.members.emailColumn", "Email")}
-            </ColumnHeader>
-            <ColumnHeader>{t("team.members.roleColumn", "Role")}</ColumnHeader>
-            {props.showActions && <Table.Th style={{ width: 50 }}></Table.Th>}
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          <TeamMemberRows {...props} />
-        </Table.Tbody>
-      </Table>
+      <DataTable
+        columns={columns}
+        rows={rows}
+        rowKey={(row) =>
+          row.kind === "member"
+            ? `member-${row.member.id}`
+            : `invitation-${row.invitation.invitationId}`
+        }
+        empty={t("team.members.empty", "No team members yet.")}
+      />
     </div>
   );
 }
