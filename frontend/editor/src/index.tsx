@@ -6,7 +6,7 @@ import "@app/utils/patchDomForTranslators";
 // WebKit is missing several APIs the app assumes (ReadableStream async
 // iteration, which pdf.js needs for all text extraction; requestIdleCallback).
 import "@app/utils/engineShims";
-import "@mantine/core/styles.css";
+import "@app/styles/mantine";
 import "@mantine/dates/styles.css";
 import "../vite-env.d.ts"; // oxlint-disable-line no-restricted-imports -- Outside app paths
 import "@app/styles/index.css"; // Import global styles
