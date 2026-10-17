@@ -45,44 +45,75 @@ export function adjustFontSizeToFit(
   const minFontPx = baseFontPx * minScale;
   const stepPx = Math.max(0.5, baseFontPx * stepScale);
 
-  const fit = () => {
-    // Reset to largest before measuring
-    element.style.fontSize = `${baseFontPx}px`;
+  const fits = (maxHeight: number): boolean =>
+    element.scrollWidth <= element.clientWidth + 1 && // tolerance
+    element.scrollHeight <= maxHeight + 1;
 
-    // Calculate target height threshold for line limit
-    let maxHeight = Number.POSITIVE_INFINITY;
-    if (typeof maxLines === "number" && maxLines > 0) {
-      const cs = window.getComputedStyle(element);
-      const lineHeight = parseFloat(cs.lineHeight) || baseFontPx * 1.2;
-      maxHeight = lineHeight * maxLines + 0.1; // small epsilon
+  /** Height the label may take; infinite when only its width is limited. */
+  const heightLimit = (): number => {
+    if (typeof maxLines !== "number" || maxLines <= 0) {
+      return Number.POSITIVE_INFINITY;
     }
+    const lineHeight =
+      parseFloat(window.getComputedStyle(element).lineHeight) ||
+      baseFontPx * 1.2;
+    return lineHeight * maxLines + 0.1; // small epsilon
+  };
 
-    let current = baseFontPx;
-    // Guard against excessive loops
+  /** The room a refit depends on, and the text it has to fit into it. */
+  const inputs = (): string =>
+    `${element.parentElement?.clientWidth ?? element.clientWidth}\u0000${element.textContent ?? ""}`;
+
+  let settled = "";
+
+  const fit = () => {
+    const current = inputs();
+    // Writing the font size resizes the label itself, which the parent observer
+    // used to read back as a reason to fit again; the room and the text are the
+    // inputs that actually change the answer, so a settled label costs one
+    // string compare here instead of another full shrink pass.
+    if (current === settled) return;
+    settled = current;
+
+    // Start from the largest size: a box that grew should get its text back.
+    element.style.fontSize = `${baseFontPx}px`;
+    const maxHeight = heightLimit();
+
+    let size = baseFontPx;
     let iterations = 0;
-    while (iterations < 200) {
-      const fitsWidth = element.scrollWidth <= element.clientWidth + 1; // tolerance
-      const fitsHeight = element.scrollHeight <= maxHeight + 1;
-      const fits = fitsWidth && fitsHeight;
-      if (fits || current <= minFontPx) break;
-      current = Math.max(minFontPx, current - stepPx);
-      element.style.fontSize = `${current}px`;
+    // Guard against excessive loops
+    while (!fits(maxHeight) && size > minFontPx && iterations < 200) {
+      size = Math.max(minFontPx, size - stepPx);
+      element.style.fontSize = `${size}px`;
       iterations += 1;
     }
+  };
+
+  let pending = 0;
+  const schedule = () => {
+    // A mutation storm or a resize drag arrives as many callbacks; one fit per
+    // frame is all they can act on, and the rest collapse into it.
+    if (pending) return;
+    pending = requestAnimationFrame(() => {
+      pending = 0;
+      fit();
+    });
   };
 
   // Defer to next frame to ensure layout is ready
   const raf = requestAnimationFrame(fit);
 
-  const ro = new ResizeObserver(() => fit());
-  ro.observe(element);
+  const ro = new ResizeObserver(schedule);
+  // The label's own box is what the fit changes; watching the parent is what
+  // tells it when it has different room to fit into.
   if (element.parentElement) ro.observe(element.parentElement);
 
-  const mo = new MutationObserver(() => fit());
+  const mo = new MutationObserver(schedule);
   mo.observe(element, { characterData: true, childList: true, subtree: true });
 
   return () => {
     cancelAnimationFrame(raf);
+    if (pending) cancelAnimationFrame(pending);
     try {
       ro.disconnect();
     } catch {
