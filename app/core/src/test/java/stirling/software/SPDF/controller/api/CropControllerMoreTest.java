@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -159,13 +160,16 @@ class CropControllerMoreTest {
             MockMultipartFile file = pdf(1);
             CropPdfForm request = form(file, true);
 
-            // A source that saves nothing: JPDFium cannot open the empty
-            // bytes and the controller must wrap that in an IOException.
+            // A source that saves nothing: JPDFium cannot open the empty bytes.
+            // Asserting the wrapper's message and cause keeps this pinned to the
+            // controller's own IOException rather than to any failure on the path.
             PDDocument source = mock(PDDocument.class);
             when(pdfDocumentFactory.load(request)).thenReturn(source);
 
-            org.junit.jupiter.api.Assertions.assertThrows(
-                    IOException.class, () -> cropController.cropPdf(request));
+            assertThatThrownBy(() -> cropController.cropPdf(request))
+                    .isInstanceOf(IOException.class)
+                    .hasMessage("JPDFium crop failed")
+                    .hasCauseInstanceOf(RuntimeException.class);
         }
     }
 
