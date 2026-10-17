@@ -38,6 +38,7 @@ import {
   POSTER_MAX_OVERHANG,
   POSTER_MAX_TILES,
   POSTER_MIN_TILES,
+  isPageParity,
   POSTER_PAGE_SIZES,
   PRINT_PRESETS,
   bookletPass,
@@ -83,6 +84,7 @@ const PROBLEM_KEYS: Record<PrintProblem, string> = {
   invalidOverhang: "viewer.print.invalidOverhang",
   invalidPageRange: "viewer.print.invalidPageRange",
   invalidTiles: "viewer.print.invalidTiles",
+  rangeBackwards: "viewer.print.rangeBackwards",
 };
 
 /** What each imposed layout asks of the printer dialog the user reaches next. */
@@ -158,7 +160,7 @@ function ProblemNote({ text }: { text: string | null }) {
   return (
     <div className="print-problem" aria-live="polite">
       {text ? (
-        <Text size="sm" c="red">
+        <Text size="sm" c="var(--c-danger)">
           {text}
         </Text>
       ) : null}
@@ -166,7 +168,6 @@ function ProblemNote({ text }: { text: string | null }) {
   );
 }
 
-/** The label of a collapsed panel, with the facts it is hiding beside it. */
 function OptionsToggle({
   label,
   summary,
@@ -185,7 +186,6 @@ function OptionsToggle({
   );
 }
 
-/** The settings a collapsed panel is hiding, so a clean form still shows its state. */
 const optionSummary = (...facts: (string | null)[]) =>
   facts.filter((fact) => fact !== null).join(", ");
 
@@ -247,7 +247,11 @@ export const LayoutSheetPreview = memo(function LayoutSheetPreview({
               {image ? (
                 <img className="print-sheet__image" src={image} alt="" />
               ) : null}
-              {named ? <span className="print-badge">{cell.label}</span> : null}
+              {named ? (
+                <span className="print-badge" aria-hidden="true">
+                  {cell.label}
+                </span>
+              ) : null}
             </div>
           );
         })}
@@ -423,7 +427,6 @@ const RANGE_PROBLEM_ID = "print-page-range-problem";
 /** The dialog body is one form, so Enter confirms from any field in it. */
 const PRINT_FORM_ID = "print-dialog-form";
 
-/** Whether any margin is set, so the collapsed controls can say so. */
 function layoutMarginsSet(parameters: PageLayoutParameters): boolean {
   const margins = [
     parameters.innerMargin,
@@ -915,9 +918,7 @@ export function PrintDialog({
     setAdvancedOpen((open) => !open);
   }, []);
 
-  // A4 in points, the sheet the layout is computed on either way up. The
-  // figure's inputs are memoized so a memoized figure can bail out when the
-  // reader merely turns a page: they belong to the layout, not to the page.
+  // A4 in points, memoized so turning a page cannot re-render the figure.
   const { layout } = settings;
   const landscape = layout.orientation === "LANDSCAPE";
   const sheet: Sheet = useMemo(
@@ -955,27 +956,23 @@ export function PrintDialog({
     () => bookletSides(pageCount, settings.booklet.spineLocation),
     [pageCount, settings.booklet.spineLocation],
   );
-  const steps =
-    settings.preset === "pagesPerSheet"
-      ? sides
-      : settings.preset === "booklet"
-        ? Math.max(bookletSheet.length, 1)
-        : settings.preset === "standard"
-          ? Math.max(selected.length, 1)
-          : 1;
+  const steps = {
+    pagesPerSheet: sides,
+    booklet: Math.max(bookletSheet.length, 1),
+    standard: Math.max(selected.length, 1),
+    poster: 1,
+  }[settings.preset];
   // Where stepping starts: the side holding the reader's page, that page in the
   // selection, or the page itself. Zero keeps the figure following the viewer.
-  const autoStep =
-    settings.preset === "pagesPerSheet"
-      ? Math.min(
-          sides,
-          Math.floor((Math.max(currentPage, 1) - 1) / perSheet) + 1,
-        )
-      : settings.preset === "standard"
-        ? Math.max(1, selected.indexOf(currentPage) + 1)
-        : settings.preset === "booklet"
-          ? bookletSideIndex(bookletSheet, Math.max(currentPage, 1))
-          : 1;
+  const autoStep = {
+    pagesPerSheet: Math.min(
+      sides,
+      Math.floor((Math.max(currentPage, 1) - 1) / perSheet) + 1,
+    ),
+    booklet: bookletSideIndex(bookletSheet, Math.max(currentPage, 1)),
+    standard: Math.max(1, selected.indexOf(currentPage) + 1),
+    poster: 1,
+  }[settings.preset];
   const [step, setStep] = useState(0);
   const shownStep = step === 0 ? autoStep : Math.min(step, steps);
 
@@ -1003,8 +1000,6 @@ export function PrintDialog({
     selected.length > 0 ? selected[shownStep - 1] : currentPage;
   const bookletSide: BookletSide | undefined =
     bookletSheet[shownStep - 1] ?? undefined;
-  // A side's cells carry the pages they impose, so a later side numbers its own
-  // pages instead of repeating the first side's.
   const sideCells = useMemo(
     () =>
       cells.map((cell) => ({
@@ -1013,8 +1008,6 @@ export function PrintDialog({
       })),
     [cells, shownStep, perSheet],
   );
-  // The folded side's halves, memoized so turning a page cannot hand the
-  // memoized figure a new array for the same side.
   const bookletFigureCells = useMemo(
     () => (bookletSide === undefined ? null : bookletCells(bookletSide)),
     [bookletSide],
@@ -1042,7 +1035,6 @@ export function PrintDialog({
   const loading = previewPages.some((page) => pageState(page) === "loading");
   const failed = previewPages.some((page) => pageState(page) === "failed");
 
-  // A disabled Print button has to say what to fix, so every reason is named.
   const problemText = (reason: PrintProblem) =>
     t(
       PROBLEM_KEYS[reason],
@@ -1065,33 +1057,27 @@ export function PrintDialog({
     const body = (() => {
       switch (settings.preset) {
         case "pagesPerSheet":
-          return (
-            <LayoutSheetPreview
-              cells={sideCells}
-              sheet={sheet}
-              landscape={landscape}
-              bordered={settings.layout.addBorder}
-              pageImage={pageImage}
-              pageState={pageState}
-              pageCount={pageCount}
-            />
-          );
-        case "booklet":
-          return bookletFigureCells === null ? (
+        case "booklet": {
+          const booked = settings.preset === "booklet";
+          const figureCells = booked ? bookletFigureCells : sideCells;
+          return figureCells === null ? (
             <Text size="sm" c="dimmed">
               {t("viewer.print.noPreview")}
             </Text>
           ) : (
             <LayoutSheetPreview
-              cells={bookletFigureCells}
-              sheet={FOLDED_SHEET}
-              landscape
-              bordered={settings.booklet.addBorder}
+              cells={figureCells}
+              sheet={booked ? FOLDED_SHEET : sheet}
+              landscape={booked || landscape}
+              bordered={
+                booked ? settings.booklet.addBorder : settings.layout.addBorder
+              }
               pageImage={pageImage}
               pageState={pageState}
               pageCount={pageCount}
             />
           );
+        }
         case "poster":
           return (
             <PosterTilePreview
@@ -1232,7 +1218,9 @@ export function PrintDialog({
       case "standard":
       default: {
         const rangeProblem =
-          problem === "invalidPageRange" || problem === "emptyPageRange";
+          problem === "invalidPageRange" ||
+          problem === "emptyPageRange" ||
+          problem === "rangeBackwards";
 
         return (
           <Stack gap="sm">
@@ -1268,7 +1256,6 @@ export function PrintDialog({
                     placeholder={t("viewer.print.pageRangePlaceholder")}
                     name="print-page-range"
                     autoComplete="off"
-                    autoFocus
                     value={settings.pageRange}
                     onChange={(event) =>
                       update("pageRange", event.currentTarget.value)
@@ -1286,27 +1273,32 @@ export function PrintDialog({
                     errorProps={{ id: RANGE_PROBLEM_ID }}
                   />
                 ) : null}
-                <Text size="sm" fw={500} mb={6} mt="sm">
-                  {t("viewer.print.parityLabel")}
-                </Text>
-                <SegmentedControl
-                  options={[
-                    { value: "all", label: t("viewer.print.parityAll") },
-                    { value: "odd", label: t("viewer.print.parityOdd") },
-                    { value: "even", label: t("viewer.print.parityEven") },
-                  ]}
-                  value={settings.parity}
-                  onChange={(parity) => update("parity", parity)}
-                  disabled={busy}
-                  fullWidth
-                  ariaLabel={t("viewer.print.parityLabel")}
-                />
+                {pageCount === 1 ? null : (
+                  <>
+                    <Text size="sm" fw={500} mb={6} mt="sm">
+                      {t("viewer.print.parityLabel")}
+                    </Text>
+                    <SegmentedControl
+                      options={[
+                        { value: "all", label: t("viewer.print.parityAll") },
+                        { value: "odd", label: t("viewer.print.parityOdd") },
+                        { value: "even", label: t("viewer.print.parityEven") },
+                      ]}
+                      value={settings.parity}
+                      onChange={(value) => {
+                        if (isPageParity(value)) {
+                          update("parity", value);
+                        }
+                      }}
+                      disabled={busy}
+                      fullWidth
+                      ariaLabel={t("viewer.print.parityLabel")}
+                    />
+                  </>
+                )}
               </div>
             )}
-            {
-              // The system dialog decides what reaches the paper too, including
-              // whether annotations are flattened, so the toggle would lie.
-            }
+            {/* The system dialog decides what reaches the paper, so the toggle would lie. */}
             {systemPrintDialog ? null : (
               <ToggleSwitch
                 checked={settings.includeAnnotations}
@@ -1353,11 +1345,22 @@ export function PrintDialog({
     // whole document has nothing of its own to say.
     selected.length < pageCount;
   const clipped = rangeIsClipped(settings.pageRange, pageCount);
+  const guideNotes = [
+    settings.preset === "booklet" ? "viewer.print.bookletGuideNote" : null,
+    settings.preset === "poster" ? "viewer.print.posterGuideNote" : null,
+    settings.preset === "poster" && pageCount > 1
+      ? "viewer.print.posterPageNote"
+      : null,
+  ].filter((key) => key !== null);
 
   // The strip's buttons are the only focusable parts of it, so arrow presses
   // arrive here from either one.
   const stepPager = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+      return;
+    }
+    // A held key repeats; each step re-renders a whole figure, so one is enough.
+    if (event.repeat) {
       return;
     }
 
@@ -1374,6 +1377,8 @@ export function PrintDialog({
     setSettings(defaultPrintSettings());
     setPageScope("all");
     setStep(0);
+    setAdvancedOpen(false);
+    setEnlarged(false);
   };
 
   // The dialog is one form so Enter confirms from any field; the same guard the
@@ -1471,20 +1476,15 @@ export function PrintDialog({
           ))}
         </div>
       ) : null}
-      {settings.preset === "booklet" ? (
-        <Text size="xs" c="dimmed" className="print-preview__note">
-          {t("viewer.print.bookletGuideNote")}
+      {guideNotes.map((key) => (
+        <Text key={key} size="xs" c="dimmed" className="print-preview__note">
+          {t(key)}
         </Text>
-      ) : null}
-      {settings.preset === "poster" ? (
-        <Text size="xs" c="dimmed" className="print-preview__note">
-          {t("viewer.print.posterGuideNote")}
-        </Text>
-      ) : null}
+      ))}
       <div className="print-preview__status" role="status">
         {failed ? (
           <Group gap="xs" justify="center">
-            <Text size="sm" c="red">
+            <Text size="sm" c="var(--c-danger)">
               {t("viewer.print.previewFailed")}
             </Text>
             <Button variant="tertiary" size="sm" onClick={retry}>
@@ -1507,6 +1507,7 @@ export function PrintDialog({
       open={open}
       onClose={onClose}
       disableEscapeClose={enlarged}
+      disableBackdropClose={busy}
       title={t("viewer.print.title")}
       width={settings.preset === "standard" ? "md" : "lg"}
       ariaLabel={t("viewer.print.title")}
@@ -1648,7 +1649,7 @@ export function PrintDialog({
       ) : null}
 
       {error ? (
-        <Alert color="red" mt="md">
+        <Alert color="var(--c-danger)" role="alert" mt="md">
           {error}
         </Alert>
       ) : null}

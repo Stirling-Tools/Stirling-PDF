@@ -7,6 +7,28 @@ let activeFrame: HTMLIFrameElement | null = null;
 let activeUrl: string | null = null;
 
 /**
+ * The imposition endpoints answer with a ZIP holding the one PDF they made;
+ * the viewer path takes raw bytes. Unwraps the archive so both job kinds hand
+ * `printPdfBlob` a document, and passes anything that is already a PDF through
+ * untouched, so a future direct-PDF endpoint needs no change here.
+ */
+export async function toPrintDocument(blob: Blob): Promise<Blob> {
+  const magic = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
+  if (magic[0] !== 0x50 || magic[1] !== 0x4b) {
+    return blob;
+  }
+  const JSZip = (await import("jszip")).default;
+  const archive = await JSZip.loadAsync(blob);
+  const entry = Object.values(archive.files).find(
+    (candidate) => !candidate.dir && /\.pdf$/i.test(candidate.name),
+  );
+  if (!entry) {
+    throw new Error("The print archive holds no PDF");
+  }
+  return new Blob([await entry.async("blob")], { type: "application/pdf" });
+}
+
+/**
  * Drops the hidden frame and the object URL behind it. Until this runs, the
  * last printed PDF stays reachable, so callers that are done with their preview
  * use it rather than waiting for the next print.

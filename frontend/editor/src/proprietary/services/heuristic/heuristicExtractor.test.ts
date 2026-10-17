@@ -97,10 +97,16 @@ const pdf = () => new Blob(["%PDF-1.4"], { type: "application/pdf" });
 
 beforeEach(() => {
   vi.useFakeTimers();
+  // The setup's arrayBuffer polyfill reads through jsdom's FileReader, whose
+  // work the fake clock never runs; these tests stall the document, not bytes.
+  vi.spyOn(Blob.prototype, "arrayBuffer").mockResolvedValue(new ArrayBuffer(8));
   createDocument.mockReset();
   destroyDocument.mockReset();
 });
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 describe("extractHeuristicDoc with a budget", () => {
   test("a document that never opens is not classified", async () => {

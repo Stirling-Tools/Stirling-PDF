@@ -1,14 +1,6 @@
-import { MantineProvider } from "@mantine/core";
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
-import type { ReactElement, ReactNode } from "react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { ViewerContext } from "@app/contexts/viewer/viewerContext";
 import { computeBoxes } from "@app/components/tools/pageLayout/utils/computeBoxes";
 import {
   LayoutSheetPreview,
@@ -18,6 +10,8 @@ import {
 import { defaultPrintSettings } from "@app/components/viewer/print/printJob";
 import type { PrintSettings } from "@app/components/viewer/print/printJob";
 import type { PreviewPageState } from "@app/components/viewer/print/usePrintPreviewImages";
+import { renderInProviders, viewerAt } from "@app/tests/utils/printTestUtils";
+import type { PrintThumbnailAPI } from "@app/tests/utils/printTestUtils";
 
 /**
  * Records the keys and values every `t` call receives while still returning the
@@ -31,20 +25,6 @@ vi.mock("react-i18next", () => ({
   I18nextProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
-/** A viewer stub: the print hooks only need the position and the document id. */
-const viewerAt = (
-  pageCount: number,
-  thumbnailAPI: {
-    renderThumb: (index: number, scale: number) => unknown;
-  } | null = null,
-) =>
-  ({
-    activeFileId: "doc-1",
-    getScrollState: () => ({ currentPage: 3, totalPages: pageCount }),
-    registerImmediateScrollUpdate: () => () => {},
-    getThumbnailAPI: () => thumbnailAPI,
-  }) as never;
-
 const renderDialog = (props: {
   systemPrintDialog?: boolean;
   fileName?: string;
@@ -52,9 +32,7 @@ const renderDialog = (props: {
   open?: boolean;
   canPrint?: boolean;
   documentId?: string | null;
-  thumbnailAPI?: {
-    renderThumb: (index: number, scale: number) => unknown;
-  } | null;
+  thumbnailAPI?: PrintThumbnailAPI;
   onPrint?: (settings: PrintSettings, pageCount: number) => void;
 }) => {
   const onPrint = props.onPrint ?? vi.fn();
@@ -70,24 +48,19 @@ const renderDialog = (props: {
       documentId={documentId}
     />
   );
-  const tree = (open: boolean, documentId = props.documentId) => (
-    <MantineProvider env="test">
-      {props.pageCount === undefined ? (
-        dialog(open, documentId)
-      ) : (
-        <ViewerContext.Provider
-          value={viewerAt(props.pageCount, props.thumbnailAPI ?? null)}
-        >
-          {dialog(open, documentId)}
-        </ViewerContext.Provider>
-      )}
-    </MantineProvider>
-  );
-  const result = render(tree(props.open ?? true));
+  const viewer =
+    props.pageCount === undefined
+      ? undefined
+      : viewerAt(props.pageCount, {
+          currentPage: 3,
+          activeFileId: "doc-1",
+          thumbnailAPI: props.thumbnailAPI ?? null,
+        });
+  const result = renderInProviders(dialog(props.open ?? true), { viewer });
   // The viewer keeps the dialog mounted between opens, so a test can too.
-  const setOpen = (open: boolean) => result.rerender(tree(open));
+  const setOpen = (open: boolean) => result.rerender(dialog(open));
   const setDocumentId = (documentId: string | null) =>
-    result.rerender(tree(props.open ?? true, documentId));
+    result.rerender(dialog(props.open ?? true, documentId));
   return { onPrint, onClose, setOpen, setDocumentId, ...result };
 };
 
@@ -248,6 +221,35 @@ describe("PrintDialog", () => {
     fireEvent.change(field, { target: { value: "12" } });
     expect((confirm() as HTMLButtonElement).disabled).toBe(false);
     expect(screen.getByText("viewer.print.summaryPosterOverhang")).toBeTruthy();
+  });
+
+  it("names a range that runs backwards instead of the generic hint", () => {
+    renderDialog({ pageCount: 12 });
+
+    fireEvent.change(rangeField(), { target: { value: "5-2" } });
+
+    expect((confirm() as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("viewer.print.rangeBackwards")).toBeTruthy();
+  });
+
+  it("offers no odd or even pass for a single-page document", () => {
+    renderDialog({ pageCount: 1 });
+
+    expect(screen.queryByText("viewer.print.parityLabel")).toBeNull();
+  });
+
+  it("offers the odd and even passes when a document has pages to split", () => {
+    renderDialog({ pageCount: 3 });
+
+    expect(screen.getByText("viewer.print.parityLabel")).toBeTruthy();
+  });
+
+  it("says the poster figure shows the first of the tiled pages", () => {
+    renderDialog({ pageCount: 3 });
+
+    fireEvent.click(screen.getByText("viewer.print.presetPoster"));
+
+    expect(screen.getByText("viewer.print.posterPageNote")).toBeTruthy();
   });
 
   it("refuses a range that selects no page of the document", () => {
@@ -713,8 +715,7 @@ describe("PrintDialog", () => {
 const sheet = { x: 0, y: 0, width: 210, height: 297 };
 const cells = computeBoxes(sheet, defaultPrintSettings().layout);
 
-const renderFigure = (figure: ReactElement) =>
-  render(<MantineProvider env="test">{figure}</MantineProvider>);
+const renderFigure = (figure: ReactElement) => renderInProviders(figure);
 
 const sources = (container: HTMLElement, selector: string) =>
   [...container.querySelectorAll(selector)].map((image) =>
@@ -727,15 +728,36 @@ const badges = (container: HTMLElement) =>
   );
 
 describe("print preview figures", () => {
+  const sheetFigure = (
+    overrides: Partial<ComponentProps<typeof LayoutSheetPreview>> = {},
+  ) => {
+    const props = {
+      cells,
+      sheet,
+      landscape: false,
+      bordered: false,
+      ...overrides,
+    } as ComponentProps<typeof LayoutSheetPreview>;
+
+    return <LayoutSheetPreview {...props} />;
+  };
+
+  const posterFigure = (
+    overrides: Partial<ComponentProps<typeof PosterTilePreview>> = {},
+  ) => {
+    const props = {
+      columns: 2,
+      rows: 2,
+      rightToLeft: false,
+      ...overrides,
+    } as ComponentProps<typeof PosterTilePreview>;
+
+    return <PosterTilePreview {...props} />;
+  };
+
   it("holds the rendered page in each cell of the layout", () => {
     const { container } = renderFigure(
-      <LayoutSheetPreview
-        cells={cells}
-        sheet={sheet}
-        landscape={false}
-        bordered={false}
-        pageImage={(page) => `blob:page-${page}`}
-      />,
+      sheetFigure({ pageImage: (page) => `blob:page-${page}` }),
     );
 
     expect(sources(container, ".print-sheet__image")).toEqual([
@@ -751,36 +773,18 @@ describe("print preview figures", () => {
   it("keeps a sheet whose imposition did not change", () => {
     const pageImage = vi.fn(() => null);
     const pageState = vi.fn((): PreviewPageState => "ready");
-    const figure = (
-      <LayoutSheetPreview
-        cells={cells}
-        sheet={sheet}
-        landscape={false}
-        bordered={false}
-        pageImage={pageImage}
-        pageState={pageState}
-        pageCount={4}
-      />
-    );
+    const figure = sheetFigure({ pageImage, pageState, pageCount: 4 });
     const { rerender } = renderFigure(figure);
     const drawn = pageImage.mock.calls.length;
 
-    rerender(<MantineProvider env="test">{figure}</MantineProvider>);
+    rerender(figure);
 
     expect(pageState).toHaveBeenCalled();
     expect(pageImage.mock.calls.length).toBe(drawn);
   });
 
   it("leaves a cell empty when the document has no page for it", () => {
-    const { container } = renderFigure(
-      <LayoutSheetPreview
-        cells={cells}
-        sheet={sheet}
-        landscape={false}
-        bordered={false}
-        pageImage={() => null}
-      />,
-    );
+    const { container } = renderFigure(sheetFigure({ pageImage: () => null }));
 
     expect(container.querySelectorAll(".print-sheet__image")).toHaveLength(0);
     expect(container.querySelectorAll(".print-badge")).toHaveLength(4);
@@ -788,13 +792,7 @@ describe("print preview figures", () => {
 
   it("rules the cells only when the layout draws its own borders", () => {
     const { container } = renderFigure(
-      <LayoutSheetPreview
-        cells={cells}
-        sheet={sheet}
-        landscape={false}
-        bordered
-        pageImage={() => null}
-      />,
+      sheetFigure({ bordered: true, pageImage: () => null }),
     );
 
     expect(
@@ -804,12 +802,7 @@ describe("print preview figures", () => {
 
   it("draws the poster's page whole under a grid of numbered tiles", () => {
     const { container } = renderFigure(
-      <PosterTilePreview
-        columns={2}
-        rows={2}
-        rightToLeft={false}
-        pageImage={() => "blob:page-1"}
-      />,
+      posterFigure({ pageImage: () => "blob:page-1" }),
     );
 
     expect(sources(container, ".print-tiles__page")).toEqual(["blob:page-1"]);
@@ -824,13 +817,11 @@ describe("print preview figures", () => {
     });
     try {
       const { container } = renderFigure(
-        <PosterTilePreview
-          columns={2}
-          rows={1}
-          rightToLeft={false}
-          pageImage={() => "blob:page-1"}
-          overhang={10}
-        />,
+        posterFigure({
+          rows: 1,
+          pageImage: () => "blob:page-1",
+          overhang: 10,
+        }),
       );
       fireEvent.load(container.querySelector(".print-tiles__page")!);
 
@@ -847,13 +838,7 @@ describe("print preview figures", () => {
 
   it("draws no rim for an overhang that reaches nowhere", () => {
     const { container } = renderFigure(
-      <PosterTilePreview
-        columns={2}
-        rows={2}
-        rightToLeft={false}
-        pageImage={() => "blob:page-1"}
-        overhang={0}
-      />,
+      posterFigure({ pageImage: () => "blob:page-1", overhang: 0 }),
     );
 
     expect(container.querySelectorAll(".print-tiles__rim")).toHaveLength(0);
@@ -861,14 +846,7 @@ describe("print preview figures", () => {
 
   it("marks a cell whose page is still rendering", () => {
     const { container } = renderFigure(
-      <LayoutSheetPreview
-        cells={cells}
-        sheet={sheet}
-        landscape={false}
-        bordered={false}
-        pageImage={() => null}
-        pageState={() => "loading"}
-      />,
+      sheetFigure({ pageImage: () => null, pageState: () => "loading" }),
     );
 
     expect(
@@ -878,12 +856,7 @@ describe("print preview figures", () => {
 
   it("numbers the poster tiles from the right when it reads right to left", () => {
     const { container } = renderFigure(
-      <PosterTilePreview
-        columns={2}
-        rows={2}
-        rightToLeft
-        pageImage={() => null}
-      />,
+      posterFigure({ rightToLeft: true, pageImage: () => null }),
     );
 
     expect(badges(container)).toEqual(["2", "1", "4", "3"]);
@@ -891,12 +864,7 @@ describe("print preview figures", () => {
 
   it("lays the tile grid over the page the figure is drawn from", () => {
     const { container } = renderFigure(
-      <PosterTilePreview
-        columns={2}
-        rows={2}
-        rightToLeft={false}
-        pageImage={() => "blob:page-1"}
-      />,
+      posterFigure({ pageImage: () => "blob:page-1" }),
     );
 
     expect(container.querySelector(".print-tiles__paper")).toBeNull();
@@ -904,14 +872,7 @@ describe("print preview figures", () => {
   });
 
   it("shows the paper while the page it divides is missing", () => {
-    const { container } = renderFigure(
-      <PosterTilePreview
-        columns={2}
-        rows={2}
-        rightToLeft={false}
-        pageImage={() => null}
-      />,
-    );
+    const { container } = renderFigure(posterFigure({ pageImage: () => null }));
 
     expect(container.querySelector(".print-tiles__paper")).toBeTruthy();
     expect(container.querySelector(".print-tiles__page")).toBeNull();
@@ -919,14 +880,7 @@ describe("print preview figures", () => {
 
   it("leaves a cell past the end of the document unnumbered", () => {
     const { container } = renderFigure(
-      <LayoutSheetPreview
-        cells={cells}
-        sheet={sheet}
-        landscape={false}
-        bordered={false}
-        pageImage={() => null}
-        pageCount={3}
-      />,
+      sheetFigure({ pageImage: () => null, pageCount: 3 }),
     );
 
     expect(badges(container)).toEqual(["1", "2", "3"]);

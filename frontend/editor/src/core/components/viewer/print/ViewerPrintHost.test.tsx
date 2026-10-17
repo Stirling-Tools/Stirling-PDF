@@ -1,11 +1,4 @@
-import { MantineProvider } from "@mantine/core";
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -15,10 +8,14 @@ const mocks = vi.hoisted(() => ({
   viewerPrint: vi.fn(),
   printPdfBlob: vi.fn(),
   activeFileId: "doc-a" as string | null,
-  printDialogProps: [] as Array<{ documentId?: string | null }>,
+  printDialogProps: [] as Array<{
+    documentId?: string | null;
+    error?: string | null;
+  }>,
 }));
 
-vi.mock("@app/services/printService", () => ({
+vi.mock("@app/services/printService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/printService")>()),
   printPdfBlob: mocks.printPdfBlob,
 }));
 
@@ -61,19 +58,20 @@ vi.mock("@embedpdf/plugin-print/react", () => ({
 }));
 
 import { ViewerPrintHost } from "@app/components/viewer/print/ViewerPrintHost";
-import { ViewerContext } from "@app/contexts/viewer/viewerContext";
 import { expectConsole } from "@app/tests/failOnConsole";
+import { renderInProviders, viewerAt } from "@app/tests/utils/printTestUtils";
+import JSZip from "jszip";
 
 const pdf = () => new Blob(["%PDF"], { type: "application/pdf" });
 
-/** A viewer stub supplying only what the dialog's position and preview hooks read. */
-const viewerAt = (pageCount: number) =>
-  ({
-    activeFileId: "doc-a",
-    getScrollState: () => ({ currentPage: 1, totalPages: pageCount }),
-    registerImmediateScrollUpdate: () => () => {},
-    getThumbnailAPI: () => null,
-  }) as never;
+/** A promise a test settles when the request under test should complete. */
+const deferred = <T = unknown,>() => {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((settle) => {
+    resolve = settle;
+  });
+  return { promise, resolve };
+};
 
 /** Opens the dialog the way the viewer's print action does. */
 const openDialog = () => {
@@ -97,37 +95,29 @@ const choosePreset = (preset: string) => {
   fireEvent.click(screen.getByText(preset));
 };
 
-const hostTree = (systemPrintDialog = false, pageCount?: number) => {
-  const host = (
-    <ViewerPrintHost
-      fileName="report.pdf"
-      systemPrintDialog={systemPrintDialog}
-    />
-  );
+const hostTree = (systemPrintDialog = false) => (
+  <ViewerPrintHost
+    fileName="report.pdf"
+    systemPrintDialog={systemPrintDialog}
+  />
+);
 
-  return (
-    <MantineProvider env="test">
-      {pageCount === undefined ? (
-        host
-      ) : (
-        // The dialog reads the document's page count from the viewer context,
-        // which the host's own viewer is mocked out of.
-        <ViewerContext.Provider value={viewerAt(pageCount)}>
-          {host}
-        </ViewerContext.Provider>
-      )}
-    </MantineProvider>
-  );
-};
-
-const renderHost = (systemPrintDialog = false) =>
-  render(hostTree(systemPrintDialog));
+/**
+ * The dialog reads the document's page count from the viewer context, which the
+ * host's own viewer is mocked out of, so a test that needs the count supplies
+ * its own viewer.
+ */
+const renderHost = (systemPrintDialog = false, pageCount?: number) =>
+  renderInProviders(hostTree(systemPrintDialog), {
+    viewer: pageCount === undefined ? undefined : viewerAt(pageCount),
+  });
 
 describe("ViewerPrintHost", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.activeFileId = "doc-a";
     mocks.printDialogProps.length = 0;
+    mocks.viewerPrint.mockReturnValue({ toPromise: () => Promise.resolve() });
     mocks.printPdfBlob.mockResolvedValue(undefined);
     mocks.saveAsCopy.mockResolvedValue(pdf());
     mocks.post.mockResolvedValue({ data: pdf() });
@@ -153,7 +143,7 @@ describe("ViewerPrintHost", () => {
   });
 
   it("expands the odd/even filter to the pages the viewer prints", async () => {
-    render(hostTree(false, 4));
+    renderHost(false, 4);
     openDialog();
 
     fireEvent.click(screen.getByText("viewer.print.pageScopeCustom"));
@@ -189,10 +179,8 @@ describe("ViewerPrintHost", () => {
   });
 
   it("offers no print action for a document that forbids printing", () => {
-    render(
-      <MantineProvider env="test">
-        <ViewerPrintHost fileName="report.pdf" canPrint={false} />
-      </MantineProvider>,
+    renderInProviders(
+      <ViewerPrintHost fileName="report.pdf" canPrint={false} />,
     );
 
     expect(mocks.registerBridge).not.toHaveBeenCalled();
@@ -214,13 +202,49 @@ describe("ViewerPrintHost", () => {
     expect(mocks.viewerPrint).not.toHaveBeenCalled();
   });
 
-  it("aborts the backend request when the dialog is closed during preparation", async () => {
-    let settle = (_value: unknown) => {};
-    mocks.post.mockReturnValue(
-      new Promise((resolve) => {
-        settle = resolve;
-      }),
+  it("keeps the dialog open with the reason when the viewer refuses the job", async () => {
+    expectConsole.error("Print failed");
+    mocks.viewerPrint.mockReturnValue({
+      toPromise: () => Promise.reject(new Error("viewer refused")),
+    });
+    renderHost();
+    openDialog();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "viewer.print.confirm" }),
     );
+
+    await waitFor(() =>
+      expect(mocks.printDialogProps.at(-1)?.error).toBe("viewer refused"),
+    );
+    expect(dialogOpen()).toBe(true);
+  });
+
+  it("prints the PDF inside the archive the imposition endpoints answer with", async () => {
+    const zip = new JSZip();
+    zip.file("report_poster.pdf", "%PDF-1.7 poster");
+    mocks.post.mockResolvedValue({
+      data: await zip.generateAsync({ type: "blob" }),
+    });
+    renderHost();
+    openDialog();
+    choosePreset("viewer.print.presetPoster");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "viewer.print.confirm" }),
+    );
+
+    await waitFor(() => expect(mocks.printPdfBlob).toHaveBeenCalledTimes(1));
+    const [source, name] = mocks.printPdfBlob.mock.calls[0] as [Blob, string];
+    expect(name).toBe("report - poster.pdf");
+    expect(source.type).toBe("application/pdf");
+    const bytes = new Uint8Array(await source.arrayBuffer());
+    expect(String.fromCharCode(...bytes.slice(0, 5))).toBe("%PDF-");
+  });
+
+  it("aborts the backend request when the dialog is closed during preparation", async () => {
+    const pending = deferred();
+    mocks.post.mockReturnValue(pending.promise);
     renderHost();
     openDialog();
     choosePreset("viewer.print.presetPoster");
@@ -238,19 +262,15 @@ describe("ViewerPrintHost", () => {
     expect(request.signal.aborted).toBe(true);
 
     await act(async () => {
-      settle({ data: pdf() });
+      pending.resolve({ data: pdf() });
     });
     expect(mocks.printPdfBlob).not.toHaveBeenCalled();
     expect(dialogOpen()).toBe(false);
   });
 
   it("keeps a dialog reopened after a cancel untouched by the abandoned job", async () => {
-    let settle = (_value: unknown) => {};
-    mocks.post.mockReturnValue(
-      new Promise((resolve) => {
-        settle = resolve;
-      }),
-    );
+    const pending = deferred();
+    mocks.post.mockReturnValue(pending.promise);
     renderHost();
     openDialog();
     choosePreset("viewer.print.presetPoster");
@@ -264,7 +284,7 @@ describe("ViewerPrintHost", () => {
     expect(dialogOpen()).toBe(true);
 
     await act(async () => {
-      settle({ data: pdf() });
+      pending.resolve({ data: pdf() });
     });
 
     expect(dialogOpen()).toBe(true);
@@ -313,12 +333,8 @@ describe("ViewerPrintHost", () => {
   });
 
   it("cancels an in-flight job when another document opens under the same name", async () => {
-    let settle = (_value: unknown) => {};
-    mocks.post.mockReturnValue(
-      new Promise((resolve) => {
-        settle = resolve;
-      }),
-    );
+    const pending = deferred();
+    mocks.post.mockReturnValue(pending.promise);
     const view = renderHost();
     openDialog();
     choosePreset("viewer.print.presetPoster");
@@ -339,7 +355,7 @@ describe("ViewerPrintHost", () => {
     expect(request.signal.aborted).toBe(true);
 
     await act(async () => {
-      settle({ data: pdf() });
+      pending.resolve({ data: pdf() });
     });
     expect(mocks.printPdfBlob).not.toHaveBeenCalled();
     expect(
@@ -369,19 +385,11 @@ describe("ViewerPrintHost", () => {
   });
 
   it("ignores a completion from the document that was open before", async () => {
-    let settleA = (_value: unknown) => {};
-    let settleB = (_value: unknown) => {};
+    const pendingA = deferred();
+    const pendingB = deferred();
     mocks.post
-      .mockReturnValueOnce(
-        new Promise((resolve) => {
-          settleA = resolve;
-        }),
-      )
-      .mockReturnValueOnce(
-        new Promise((resolve) => {
-          settleB = resolve;
-        }),
-      );
+      .mockReturnValueOnce(pendingA.promise)
+      .mockReturnValueOnce(pendingB.promise);
 
     const view = renderHost();
     openDialog();
@@ -404,7 +412,7 @@ describe("ViewerPrintHost", () => {
 
     // A's late bytes must neither print nor clear the busy state B set.
     await act(async () => {
-      settleA({ data: pdf() });
+      pendingA.resolve({ data: pdf() });
     });
     expect(mocks.printPdfBlob).not.toHaveBeenCalled();
     expect(
@@ -412,7 +420,7 @@ describe("ViewerPrintHost", () => {
     ).toBeTruthy();
 
     await act(async () => {
-      settleB({ data: pdf() });
+      pendingB.resolve({ data: pdf() });
     });
     await waitFor(() => expect(mocks.printPdfBlob).toHaveBeenCalledTimes(1));
   });

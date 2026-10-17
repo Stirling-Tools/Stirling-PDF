@@ -3,7 +3,6 @@ import {
   bookletSideIndex,
   bookletSides,
   buildPrintJob,
-  canPrint,
   defaultPrintSettings,
   parityPages,
   POSTER_PAGE_SIZES,
@@ -163,6 +162,16 @@ describe("buildPrintJob", () => {
     });
   });
 
+  it("closes an open range end before the engine sees it", () => {
+    const job = buildPrintJob(settings({ pageRange: "3-", parity: "all" }), 5);
+
+    expect(job).toEqual({
+      kind: "viewer",
+      pageRange: "3-5",
+      includeAnnotations: true,
+    });
+  });
+
   it("leaves the range undefined when the typed range is blank", () => {
     const job = buildPrintJob(settings({ pageRange: "   ", parity: "all" }), 8);
 
@@ -229,12 +238,6 @@ describe("buildPrintJob", () => {
   });
 });
 
-describe("canPrint", () => {
-  it("accepts the default settings", () => {
-    expect(canPrint(defaultPrintSettings())).toBe(true);
-  });
-});
-
 describe("printProblem", () => {
   it("accepts the page lists the viewer's print engine takes", () => {
     for (const pageRange of ["", "  ", "7", "1-3,5", "2, 4-6", "1 - 3"]) {
@@ -243,7 +246,7 @@ describe("printProblem", () => {
   });
 
   it("rejects page ranges the engine cannot read", () => {
-    for (const pageRange of ["abc", "3-1", "1-", "-3", "1,,2", "1;2"]) {
+    for (const pageRange of ["abc", "1,,2", "1;2"]) {
       expect(printProblem(settings({ pageRange }))).toBe("invalidPageRange");
     }
   });
@@ -327,6 +330,20 @@ describe("printProblem", () => {
       "invalidPageRange",
     );
   });
+
+  it("names a range that runs backwards", () => {
+    expect(printProblem(settings({ pageRange: "5-2" }), 8)).toBe(
+      "rangeBackwards",
+    );
+    expect(printProblem(settings({ pageRange: "5-2" }))).toBe("rangeBackwards");
+    expect(printProblem(settings({ pageRange: "-" }), 8)).toBe(
+      "invalidPageRange",
+    );
+  });
+
+  it("accepts a range written in other digits", () => {
+    expect(printProblem(settings({ pageRange: "٣-٥" }), 8)).toBeNull();
+  });
 });
 
 describe("rangeIsClipped", () => {
@@ -341,6 +358,11 @@ describe("rangeIsClipped", () => {
     expect(rangeIsClipped("", 12)).toBe(false);
     expect(rangeIsClipped("abc", 12)).toBe(false);
     expect(rangeIsClipped("1-99", 99)).toBe(false);
+  });
+
+  it("measures an open end against the document it reaches for", () => {
+    expect(rangeIsClipped("3-", 12)).toBe(false);
+    expect(rangeIsClipped("99-", 12)).toBe(true);
   });
 });
 
@@ -388,6 +410,17 @@ describe("selectedPages", () => {
   it("returns nothing for a range it cannot read", () => {
     expect(selectedPages("5-2", 8)).toBeNull();
     expect(selectedPages("pages", 8)).toBeNull();
+  });
+
+  it("fills an open range end from the document", () => {
+    expect(selectedPages("3-", 5)).toEqual([3, 4, 5]);
+    expect(selectedPages("-3", 5)).toEqual([1, 2, 3]);
+    expect(selectedPages("1, 4-", 6)).toEqual([1, 4, 5, 6]);
+  });
+
+  it("reads the digits and comma glyphs other keyboards produce", () => {
+    expect(selectedPages("٣-٥", 8)).toEqual([3, 4, 5]);
+    expect(selectedPages("1، 3", 8)).toEqual([1, 3]);
   });
 
   it("selects nothing when the document has no pages", () => {
@@ -556,12 +589,14 @@ describe("printSummary", () => {
   });
 
   it("says nothing about an overhang that reaches nowhere", () => {
-    expect(
-      printSummary(
-        settings({ preset: "poster", poster: posterSettings(2, 2, 0) }),
-        12,
-      ).map((line) => line.key),
-    ).not.toContain("viewer.print.summaryPosterOverhang");
+    const lines = printSummary(
+      settings({ preset: "poster", poster: posterSettings(2, 2, 0) }),
+      12,
+    );
+    expect(lines).not.toBeNull();
+    expect((lines ?? []).map((line) => line.key)).not.toContain(
+      "viewer.print.summaryPosterOverhang",
+    );
   });
 
   it("sends the overhang to the poster endpoint with the tiles", () => {

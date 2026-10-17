@@ -72,6 +72,9 @@ export interface PosterSettings {
  */
 export type PageParity = "all" | "odd" | "even";
 
+export const isPageParity = (value: unknown): value is PageParity =>
+  value === "all" || value === "odd" || value === "even";
+
 export interface PrintSettings {
   preset: PrintPreset;
   /**
@@ -120,13 +123,10 @@ export const defaultPrintSettings = (): PrintSettings => ({
 });
 
 /**
- * The job these settings describe.
- *
- * The engine applies the pages a range names, but ascending only: a "2,1" job
- * prints page 1 then page 2 whatever the written order, and it has no parity
- * token, so an odd or even job states the pages it selects instead. That expansion needs a page
- * count, and callers hand over settings `printProblem` accepts: a refused
- * selection is never turned into a job.
+ * The job these settings describe. The engine applies a range ascending only
+ * (a "2,1" job prints page 1 first) and has no parity token, so an odd or even
+ * job states the pages it selects, which needs a page count; callers hand over
+ * settings `printProblem` accepts.
  */
 export function buildPrintJob(
   settings: PrintSettings,
@@ -158,36 +158,64 @@ export function buildPrintJob(
       };
     case "standard":
     default: {
-      const pages =
-        settings.parity === "all" ? null : selectionPages(settings, pageCount);
+      const pages = selectionPages(settings, pageCount);
+      // The engine takes closed, ascending ranges only, so a job states its
+      // pages whenever parity resolves them or the text leaves an end open.
+      const expand = settings.parity !== "all" || rangeHasOpenEnd(pageRange);
+      const stated =
+        expand && pages !== null && pages.length > 0
+          ? selectionRange(pages)
+          : normalizeRange(pageRange).trim();
       return {
         kind: "viewer",
-        pageRange:
-          (pages === null || pages.length === 0
-            ? pageRange
-            : selectionRange(pages)) || undefined,
+        pageRange: stated || undefined,
         includeAnnotations: settings.includeAnnotations,
       };
     }
   }
 }
 
-/** Page lists the viewer's print engine takes: "1-3,5", "7" and "2,4-6". */
-const PAGE_RANGE = /^\d+(?:\s*-\s*\d+)?(?:\s*,\s*\d+(?:\s*-\s*\d+)?)*$/;
+/** Page lists the viewer's print engine takes: "1-3,5", "7", "2,4-6", "3-". */
+const PAGE_RANGE =
+  /^(?:\d+(?:\s*-\s*\d*)?|-\s*\d+)(?:\s*,\s*(?:\d+(?:\s*-\s*\d*)?|-\s*\d+))*$/;
+
+/** Digits and comma glyphs a reader may type, as the engine's grammar reads them. */
+const NON_ASCII_DIGITS = /[\u0660-\u0669\u06f0-\u06f9\u0966-\u096f]/g;
+const NON_ASCII_COMMAS =
+  /[\u060c\u066b\u066c\u2e34\u2e41\u3001\uff0c\uff64\ufe10\ufe50]/g;
+
+function normalizeRange(range: string): string {
+  return range
+    .replace(NON_ASCII_DIGITS, (digit) => {
+      const code = digit.codePointAt(0) ?? 0;
+      const base = code >= 0x0966 ? 0x0966 : code >= 0x06f0 ? 0x06f0 : 0x0660;
+      return String(code - base);
+    })
+    .replace(NON_ASCII_COMMAS, ",");
+}
+
+type RangePart = { from: number; to?: number; open?: boolean };
 
 /**
- * One [from, to] per comma-separated part, `to` undefined for a single page.
+ * One part per comma-separated token: "3" a single page, "3-5" a run, "3-" a
+ * run that reaches the end of the document, "-3" one that starts at the first.
  * Only called on a range that has already parsed as a list of numbers.
  */
-function rangeParts(range: string): Array<[number, number | undefined]> {
-  return range.split(",").map((part) => {
-    const [from, to] = part.split("-").map((value) => Number(value.trim()));
-    return [from, to];
-  });
+function rangeParts(range: string): RangePart[] {
+  return normalizeRange(range)
+    .split(",")
+    .map((part) => {
+      const [rawFrom, rawTo] = part.split("-").map((value) => value.trim());
+      const from = rawFrom === "" ? 1 : Number(rawFrom);
+      if (rawTo === undefined) {
+        return { from };
+      }
+      return rawTo === "" ? { from, open: true } : { from, to: Number(rawTo) };
+    });
 }
 
 function isPageRangeValid(pageRange: string): boolean {
-  const trimmed = pageRange.trim();
+  const trimmed = normalizeRange(pageRange).trim();
   if (trimmed === "") {
     return true;
   }
@@ -195,8 +223,37 @@ function isPageRangeValid(pageRange: string): boolean {
     return false;
   }
   return rangeParts(trimmed).every(
-    ([from, to]) => to === undefined || from <= to,
+    (part) => part.to === undefined || part.from <= part.to,
   );
+}
+
+/** A range that runs high to low, which the engine will not read. */
+function rangeRunsBackwards(pageRange: string): boolean {
+  const trimmed = normalizeRange(pageRange).trim();
+  if (trimmed === "" || !PAGE_RANGE.test(trimmed)) {
+    return false;
+  }
+  return rangeParts(trimmed).some(
+    (part) => part.to !== undefined && part.from > part.to,
+  );
+}
+
+/** Whether a part of the range leaves its end to the document. */
+function rangeHasOpenEnd(pageRange: string): boolean {
+  const trimmed = normalizeRange(pageRange).trim();
+  return (
+    trimmed !== "" &&
+    PAGE_RANGE.test(trimmed) &&
+    rangeParts(trimmed).some((part) => part.open === true)
+  );
+}
+
+/** The reason a range text cannot be read, or null when it can. */
+function rangeProblem(pageRange: string): PrintProblem | null {
+  if (isPageRangeValid(pageRange)) {
+    return null;
+  }
+  return rangeRunsBackwards(pageRange) ? "rangeBackwards" : "invalidPageRange";
 }
 
 function isTileCountValid(tiles: number): boolean {
@@ -209,16 +266,15 @@ function isTileCountValid(tiles: number): boolean {
 
 /**
  * The pages a range names, in print order, clamped to the document. An empty
- * range selects every page, and null means the text is not a range the viewer's
- * engine can read, which `printProblem` already reports. Pages past the end are
- * dropped rather than refused: the engine ignores them, so the preview should
- * show what will really print instead of the dialog inventing a second verdict.
+ * range selects every page; null means the text is not a range the engine can
+ * read. Pages past the end are dropped rather than refused, as the engine
+ * ignores them.
  */
 export function selectedPages(
   pageRange: string,
   pageCount: number,
 ): number[] | null {
-  const trimmed = pageRange.trim();
+  const trimmed = normalizeRange(pageRange).trim();
   if (pageCount < 1) {
     return [];
   }
@@ -229,9 +285,9 @@ export function selectedPages(
     return null;
   }
   const pages = new Set<number>();
-  for (const [from, to] of rangeParts(trimmed)) {
-    const last = to === undefined ? from : to;
-    for (let page = from; page <= last && page <= pageCount; page += 1) {
+  for (const part of rangeParts(trimmed)) {
+    const last = part.open ? pageCount : (part.to ?? part.from);
+    for (let page = part.from; page <= last && page <= pageCount; page += 1) {
       if (page >= 1) {
         pages.add(page);
       }
@@ -240,11 +296,6 @@ export function selectedPages(
   return [...pages].sort((a, b) => a - b);
 }
 
-/**
- * The pages a parity filter keeps, in print order. Odd and even are the two
- * passes of a manual duplex run, which is why they filter a range rather than
- * replace it.
- */
 export function parityPages(pages: number[], parity: PageParity): number[] {
   if (parity === "all") {
     return pages;
@@ -254,11 +305,7 @@ export function parityPages(pages: number[], parity: PageParity): number[] {
   );
 }
 
-/**
- * The pages the standard preset prints: the range with the parity filter
- * applied. Null means the text is not a range the engine can read, which
- * `printProblem` already reports.
- */
+/** The pages the standard preset prints: the range with the parity filter applied. */
 export function selectionPages(
   settings: PrintSettings,
   pageCount: number,
@@ -355,11 +402,7 @@ export function bookletSides(
   return sides;
 }
 
-/**
- * 1-based side of the imposition that holds a page, or 1 when it holds none.
- * The sides are passed in because the caller already has them: rebuilding the
- * sheet map per lookup would repeat the whole imposition to answer one question.
- */
+/** 1-based side of the imposition that holds a page, or 1 when it holds none. */
 export function bookletSideIndex(sides: BookletSide[], page: number): number {
   const index = sides.findIndex((side) => side[0] === page || side[1] === page);
   return index < 0 ? 1 : index + 1;
@@ -462,7 +505,8 @@ export type PrintProblem =
   | "invalidLayout"
   | "invalidOverhang"
   | "invalidPageRange"
-  | "invalidTiles";
+  | "invalidTiles"
+  | "rangeBackwards";
 
 /**
  * Whether the range names pages past the end of the document. The engine drops
@@ -470,12 +514,14 @@ export type PrintProblem =
  * instead of letting the count pass for what was asked for.
  */
 export function rangeIsClipped(pageRange: string, pageCount: number): boolean {
-  const trimmed = pageRange.trim();
+  const trimmed = normalizeRange(pageRange).trim();
   if (trimmed === "" || !isPageRangeValid(trimmed)) {
     return false;
   }
-  return rangeParts(trimmed).some(
-    ([from, to]) => Math.max(from, to ?? from) > pageCount,
+  return rangeParts(trimmed).some((part) =>
+    part.to === undefined
+      ? part.from > pageCount
+      : Math.max(part.from, part.to) > pageCount,
   );
 }
 
@@ -510,19 +556,15 @@ export function printProblem(
     case "standard":
     default: {
       if (pageCount === undefined || pageCount < 1) {
-        return isPageRangeValid(settings.pageRange) ? null : "invalidPageRange";
+        return rangeProblem(settings.pageRange);
       }
       const pages = selectionPages(settings, pageCount);
       if (pages === null) {
-        return "invalidPageRange";
+        return rangeProblem(settings.pageRange) ?? "invalidPageRange";
       }
       return pages.length === 0 ? "emptyPageRange" : null;
     }
   }
-}
-
-export function canPrint(settings: PrintSettings, pageCount?: number): boolean {
-  return printProblem(settings, pageCount) === null;
 }
 
 /** Keeps the printed copy recognisable next to the original in the print queue. */

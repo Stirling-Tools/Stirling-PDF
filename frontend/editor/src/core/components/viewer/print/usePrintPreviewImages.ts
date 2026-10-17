@@ -17,6 +17,9 @@ export { PREVIEW_SCALE };
 /** Renders run a few at a time, as the thumbnail sidebar runs them. */
 const PREVIEW_CONCURRENCY = 3;
 
+/** How many visited pages the figure keeps bitmaps for before the oldest go. */
+const RETAINED_PREVIEW_PAGES = 12;
+
 /** A stable empty list, so a preset with no figure never asks for pages. */
 export const NO_PREVIEW_PAGES: number[] = [];
 
@@ -125,6 +128,34 @@ export function usePrintPreviewImages(
     const queue = wanted.filter(
       (page) => page <= pageCount && !urlsRef.current.has(page),
     );
+
+    // Stepping a long job through the pager would otherwise keep one bitmap per
+    // page ever visited; past this many the oldest go back, and the pages the
+    // figure itself asks for never do.
+    if (urlsRef.current.size > RETAINED_PREVIEW_PAGES) {
+      const held = new Set(wanted);
+      const evicted: number[] = [];
+      for (const [page, url] of urlsRef.current) {
+        if (urlsRef.current.size - evicted.length <= RETAINED_PREVIEW_PAGES) {
+          break;
+        }
+        if (held.has(page)) {
+          continue;
+        }
+        URL.revokeObjectURL(url);
+        urlsRef.current.delete(page);
+        evicted.push(page);
+      }
+      if (evicted.length > 0) {
+        setImages((current) => {
+          const next = { ...current };
+          for (const page of evicted) {
+            delete next[page];
+          }
+          return next;
+        });
+      }
+    }
 
     const renderPage = async (page: number) => {
       try {

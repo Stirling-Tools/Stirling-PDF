@@ -110,8 +110,6 @@
   }
 }
 
-/* Both column headings carry one label treatment, so the dialog reads as a
-   single panel rather than two kinds of surface. */
 /* The label row: a preview may offer one action, so it sits opposite the label. */
 .print-preview__header {
   display: flex;

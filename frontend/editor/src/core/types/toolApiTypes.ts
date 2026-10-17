@@ -1054,6 +1054,10 @@ export interface Pkcs11CertificatesRequest {
 }
 export interface PosterPdfRequest {
   /**
+   * How far each tile extends past its grid edges, in points. Tiles then share their border content, so assembled sheets keep every line after trimming
+   */
+  overlap?: number;
+  /**
    * Target page size for output chunks (e.g., 'A4', 'Letter', 'A3')
    */
   pageSize: "A4" | "Letter" | "A3" | "A5" | "Legal" | "Tabloid";

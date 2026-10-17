@@ -258,10 +258,21 @@ describe("storeStirlingFile — blob-value fallback", () => {
     // Open the database on real timers; fake-indexeddb can't run under fake ones.
     await fileStorage.getStirlingFile("warm-up" as never);
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    // The setup's arrayBuffer polyfill reads through jsdom's FileReader, whose
+    // work the fake clock never runs; the write probe just needs an answer
+    // inside this window, and only this window is faked.
+    const blobRead = vi
+      .spyOn(Blob.prototype, "arrayBuffer")
+      .mockResolvedValue(new ArrayBuffer(8));
+    const fileRead = vi
+      .spyOn(File.prototype, "arrayBuffer")
+      .mockResolvedValue(new ArrayBuffer(8));
 
     const pending = store("stalled.pdf");
     await vi.advanceTimersByTimeAsync(10_000);
     vi.useRealTimers();
+    blobRead.mockRestore();
+    fileRead.mockRestore();
     const id = await pending;
 
     expect(attempts).toEqual(["blob", "copy"]);

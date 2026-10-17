@@ -11,7 +11,7 @@ import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady"
 import { useViewer } from "@app/contexts/ViewerContext";
 import { objectToFormData } from "@app/hooks/tools/shared/toolApiMapping";
 import apiClient from "@app/services/apiClient";
-import { printPdfBlob } from "@app/services/printService";
+import { printPdfBlob, toPrintDocument } from "@app/services/printService";
 
 export interface ViewerPrintHostProps {
   fileName?: string;
@@ -98,6 +98,8 @@ export function ViewerPrintHost({
     jobRef.current?.controller.abort();
     jobRef.current = null;
     setBusy(false);
+    // A failure belongs to the attempt that produced it, not to the next open.
+    setError(null);
     setOpen(false);
   }, []);
 
@@ -122,10 +124,18 @@ export function ViewerPrintHost({
       try {
         const job = buildPrintJob(settings, pageCount);
         if (job.kind === "viewer" && !systemPrintDialog && print) {
-          print.print({
-            pageRange: job.pageRange,
-            includeAnnotations: job.includeAnnotations,
-          });
+          // The plugin reports a document it cannot prepare by rejecting this
+          // task, which the catch below turns into the dialog's error; waiting
+          // keeps the dialog open until the handoff is real.
+          await print
+            .print({
+              pageRange: job.pageRange,
+              includeAnnotations: job.includeAnnotations,
+            })
+            .toPromise();
+          if (!ownsJob()) {
+            return;
+          }
           setOpen(false);
           return;
         }
@@ -160,8 +170,13 @@ export function ViewerPrintHost({
           if (response.data.size === 0) {
             throw new Error(t("viewer.print.emptyOutput"));
           }
+          // The imposition endpoints answer with a ZIP holding the imposed PDF.
+          const imposed = await toPrintDocument(response.data);
+          if (!ownsJob()) {
+            return;
+          }
           await printPdfBlob(
-            response.data,
+            imposed,
             printFileName(name, job.suffix),
             handle.controller.signal,
           );

@@ -136,6 +136,12 @@ class PosterPdfControllerTest {
                 .thenReturn(outputDoc);
     }
 
+    private PosterPdfRequest requestWith(MockMultipartFile file) throws IOException {
+        PosterPdfRequest request = createRequest(file);
+        stubFactory(file);
+        return request;
+    }
+
     @Nested
     @DisplayName("posterPdf happy path")
     class HappyPath {
@@ -143,9 +149,7 @@ class PosterPdfControllerTest {
         @Test
         @DisplayName("Default 2x2 grid on single page yields a ZIP with a 4-page PDF")
         void defaultGrid_singlePage() throws Exception {
-            MockMultipartFile file = createRealPdf(1, "doc.pdf");
-            PosterPdfRequest request = createRequest(file);
-            stubFactory(file);
+            PosterPdfRequest request = requestWith(createRealPdf(1, "doc.pdf"));
 
             ResponseEntity<Resource> response = controller.posterPdf(request);
 
@@ -168,9 +172,7 @@ class PosterPdfControllerTest {
         @Test
         @DisplayName("ZIP entry is named <base>_poster.pdf")
         void zipEntryNamedAfterBase() throws Exception {
-            MockMultipartFile file = createRealPdf(1, "report.pdf");
-            PosterPdfRequest request = createRequest(file);
-            stubFactory(file);
+            PosterPdfRequest request = requestWith(createRealPdf(1, "report.pdf"));
 
             ResponseEntity<Resource> response = controller.posterPdf(request);
 
@@ -185,11 +187,9 @@ class PosterPdfControllerTest {
         @Test
         @DisplayName("Multi-page source multiplies output page count by grid size")
         void multiPageSource() throws Exception {
-            MockMultipartFile file = createRealPdf(3, "multi.pdf");
-            PosterPdfRequest request = createRequest(file);
+            PosterPdfRequest request = requestWith(createRealPdf(3, "multi.pdf"));
             request.setXFactor(2);
             request.setYFactor(3);
-            stubFactory(file);
 
             ResponseEntity<Resource> response = controller.posterPdf(request);
 
@@ -203,11 +203,9 @@ class PosterPdfControllerTest {
         @Test
         @DisplayName("1x1 grid produces one output page per source page")
         void oneByOneGrid() throws Exception {
-            MockMultipartFile file = createRealPdf(2, "one.pdf");
-            PosterPdfRequest request = createRequest(file);
+            PosterPdfRequest request = requestWith(createRealPdf(2, "one.pdf"));
             request.setXFactor(1);
             request.setYFactor(1);
-            stubFactory(file);
 
             ResponseEntity<Resource> response = controller.posterPdf(request);
 
@@ -220,10 +218,8 @@ class PosterPdfControllerTest {
         @Test
         @DisplayName("Right-to-left ordering still produces the full grid")
         void rightToLeft() throws Exception {
-            MockMultipartFile file = createRealPdf(1, "rtl.pdf");
-            PosterPdfRequest request = createRequest(file);
+            PosterPdfRequest request = requestWith(createRealPdf(1, "rtl.pdf"));
             request.setRightToLeft(true);
-            stubFactory(file);
 
             ResponseEntity<Resource> response = controller.posterPdf(request);
 
@@ -236,9 +232,7 @@ class PosterPdfControllerTest {
         @Test
         @DisplayName("Rotated source page (90 degrees) is handled without error")
         void rotatedSourcePage() throws Exception {
-            MockMultipartFile file = createRealPdf(1, "rot.pdf", PDRectangle.A4, 90);
-            PosterPdfRequest request = createRequest(file);
-            stubFactory(file);
+            PosterPdfRequest request = requestWith(createRealPdf(1, "rot.pdf", PDRectangle.A4, 90));
 
             ResponseEntity<Resource> response = controller.posterPdf(request);
 
@@ -252,9 +246,7 @@ class PosterPdfControllerTest {
         @Test
         @DisplayName("Filename without extension is preserved in output names")
         void filenameWithoutExtension() throws Exception {
-            MockMultipartFile file = createRealPdf(1, "noext");
-            PosterPdfRequest request = createRequest(file);
-            stubFactory(file);
+            PosterPdfRequest request = requestWith(createRealPdf(1, "noext"));
 
             ResponseEntity<Resource> response = controller.posterPdf(request);
 
@@ -277,8 +269,7 @@ class PosterPdfControllerTest {
                             null,
                             MediaType.APPLICATION_PDF_VALUE,
                             createRealPdf(1, "x.pdf").getBytes());
-            PosterPdfRequest request = createRequest(file);
-            stubFactory(file);
+            PosterPdfRequest request = requestWith(file);
 
             ResponseEntity<Resource> response = controller.posterPdf(request);
 
@@ -298,9 +289,8 @@ class PosterPdfControllerTest {
         void supportedSizes() throws Exception {
             for (String size : new String[] {"A4", "Letter", "A3", "A5", "Legal", "Tabloid"}) {
                 MockMultipartFile file = createRealPdf(1, "s.pdf");
-                PosterPdfRequest request = createRequest(file);
+                PosterPdfRequest request = requestWith(file);
                 request.setPageSize(size);
-                stubFactory(file);
 
                 ResponseEntity<Resource> response = controller.posterPdf(request);
 
@@ -315,9 +305,8 @@ class PosterPdfControllerTest {
         @DisplayName("Invalid page size throws IllegalArgumentException")
         void invalidPageSize() throws Exception {
             MockMultipartFile file = createRealPdf(1, "bad.pdf");
-            PosterPdfRequest request = createRequest(file);
+            PosterPdfRequest request = requestWith(file);
             request.setPageSize("NotAPageSize");
-            stubFactory(file);
 
             assertThatThrownBy(() -> controller.posterPdf(request))
                     .isInstanceOf(IllegalArgumentException.class);
@@ -381,12 +370,6 @@ class PosterPdfControllerTest {
             } else {
                 operands.clear();
             }
-        }
-
-        private PosterPdfRequest requestWith(MockMultipartFile file) throws IOException {
-            PosterPdfRequest request = createRequest(file);
-            stubFactory(file);
-            return request;
         }
 
         @Test
@@ -500,10 +483,7 @@ class PosterPdfControllerTest {
         @Test
         @DisplayName("Unknown size raises IllegalArgumentException")
         void unknownSize() throws Exception {
-            Method m =
-                    PosterPdfController.class.getDeclaredMethod("getTargetPageSize", String.class);
-            m.setAccessible(true);
-            assertThatThrownBy(() -> m.invoke(controller, "Unknown"))
+            assertThatThrownBy(() -> invoke("Unknown"))
                     .isInstanceOf(InvocationTargetException.class)
                     .hasCauseInstanceOf(IllegalArgumentException.class);
         }
@@ -511,10 +491,7 @@ class PosterPdfControllerTest {
         @Test
         @DisplayName("Null size raises IllegalArgumentException")
         void nullSize() throws Exception {
-            Method m =
-                    PosterPdfController.class.getDeclaredMethod("getTargetPageSize", String.class);
-            m.setAccessible(true);
-            assertThatThrownBy(() -> m.invoke(controller, new Object[] {null}))
+            assertThatThrownBy(() -> invoke(null))
                     .isInstanceOf(InvocationTargetException.class)
                     .hasCauseInstanceOf(IllegalArgumentException.class);
         }

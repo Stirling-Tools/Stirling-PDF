@@ -1,17 +1,14 @@
-import { cleanup, render } from "@testing-library/react";
+import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
 import { PrintAPIBridge } from "@app/components/viewer/PrintAPIBridge";
 import { canPrintPdf } from "@app/services/pdfPermissions";
 import { PdfPermissionFlag } from "@app/contexts/viewer/viewerBridges";
+import { renderInProviders } from "@app/tests/utils/printTestUtils";
 
 const mock = vi.hoisted(() => ({
-  print: vi.fn(),
   register: vi.fn(),
   ready: true,
-}));
-vi.mock("@embedpdf/plugin-print/react", () => ({
-  usePrintCapability: () => ({ provides: { print: mock.print } }),
 }));
 vi.mock("@app/contexts/ViewerContext", () => ({
   useViewer: () => ({ registerBridge: mock.register }),
@@ -83,12 +80,12 @@ it.each([
   },
   { encrypted: true, ownerAuthenticated: true, permissions: 0, allowed: true },
 ])("enforces effective print permission for %j", ({ allowed, ...access }) => {
-  render(<PrintAPIBridge canPrint={canPrintPdf(access)} />);
+  renderInProviders(<PrintAPIBridge canPrint={canPrintPdf(access)} />);
   expect(Boolean(printBridge())).toBe(allowed);
 });
 
 it("revokes a previously registered action when the replacement denies printing", () => {
-  const view = render(<PrintAPIBridge canPrint />);
+  const view = renderInProviders(<PrintAPIBridge canPrint />);
   expect(printBridge()).toBeTruthy();
   view.rerender(<PrintAPIBridge canPrint={false} />);
   expect(mock.register).toHaveBeenLastCalledWith("print", null);
@@ -99,14 +96,14 @@ it("revokes a previously registered action when the replacement denies printing"
 
 it("does not expose printing before the document is ready", () => {
   mock.ready = false;
-  render(<PrintAPIBridge canPrint />);
+  renderInProviders(<PrintAPIBridge canPrint />);
   expect(mock.register).not.toHaveBeenCalled();
 });
 
 it.each([false, true])(
   "reports effective print permission consistently for owner=%s",
   (owner) => {
-    render(
+    renderInProviders(
       <DocumentPermissionsAPIBridge
         isEncrypted
         isOwnerUnlocked={owner}

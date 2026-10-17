@@ -83,6 +83,14 @@ if (typeof window !== "undefined") {
  */
 export async function handleHttpError(error: unknown): Promise<boolean> {
   const axiosError = axios.isAxiosError(error) ? error : undefined;
+  // An aborted request is a job the user cancelled, not a failure to report.
+  if (
+    axios.isCancel(error) ||
+    axiosError?.code === "ERR_CANCELED" ||
+    (error instanceof DOMException && error.name === "AbortError")
+  ) {
+    return true;
+  }
   if (axiosError?.response?.status === 402) {
     const body = await normalizeAxiosErrorData(axiosError.response.data).catch(
       () => undefined,

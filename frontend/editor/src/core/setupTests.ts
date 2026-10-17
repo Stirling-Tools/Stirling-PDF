@@ -80,25 +80,27 @@ vi.mock("i18next-http-backend", () => ({
 global.URL.createObjectURL = vi.fn(() => "mocked-url");
 global.URL.revokeObjectURL = vi.fn();
 
-// Mock File and Blob API methods that aren't available in jsdom
+// Polyfill File and Blob API methods that aren't available in jsdom, reading
+// the real bytes so tests see what production code would
 if (!globalThis.File.prototype.arrayBuffer) {
   globalThis.File.prototype.arrayBuffer = function () {
-    // Return a simple ArrayBuffer with some mock data
-    const buffer = new ArrayBuffer(8);
-    const view = new Uint8Array(buffer);
-    view.set([1, 2, 3, 4, 5, 6, 7, 8]);
-    return Promise.resolve(buffer);
+    return readBlobAsArrayBuffer(this);
   };
 }
 
 if (!globalThis.Blob.prototype.arrayBuffer) {
   globalThis.Blob.prototype.arrayBuffer = function () {
-    // Return a simple ArrayBuffer with some mock data
-    const buffer = new ArrayBuffer(8);
-    const view = new Uint8Array(buffer);
-    view.set([1, 2, 3, 4, 5, 6, 7, 8]);
-    return Promise.resolve(buffer);
+    return readBlobAsArrayBuffer(this);
   };
+}
+
+function readBlobAsArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as ArrayBuffer);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(blob);
+  });
 }
 
 // Mock crypto.subtle for hashing in tests - force override even if exists
