@@ -18,6 +18,8 @@ class FleetSeatQueriesTest {
                         "CREATE TABLE stirling_pdf.saas_team_extensions (team_id BIGINT PRIMARY KEY, seats_used INT, max_seats INT)");
                 sql.execute(
                         "CREATE TABLE stirling_pdf.linked_instance (team_id BIGINT, seat_count INT, revoked_at TIMESTAMP)");
+                sql.execute(
+                        "CREATE TABLE stirling_pdf.procurement_deal (team_id BIGINT, accepted_quote_id BIGINT, enterprise_period_start TIMESTAMP, enterprise_access_until TIMESTAMP, trial_started_at TIMESTAMP, trial_ends_at TIMESTAMP)");
                 sql.execute("INSERT INTO stirling_pdf.saas_team_extensions VALUES (1, 1, 5)");
                 assertThat(total(db)).isEqualTo(1);
                 sql.execute(
@@ -34,6 +36,23 @@ class FleetSeatQueriesTest {
                 sql.execute("UPDATE stirling_pdf.saas_team_extensions SET seats_used=0");
                 sql.execute("INSERT INTO stirling_pdf.linked_instance VALUES (1, NULL, NULL)");
                 assertThat(total(db)).isZero();
+                sql.execute("UPDATE stirling_pdf.saas_team_extensions SET seats_used=10");
+                sql.execute(
+                        "INSERT INTO stirling_pdf.procurement_deal VALUES (1, NULL, NULL, NULL, CURRENT_TIMESTAMP - INTERVAL '1' DAY, CURRENT_TIMESTAMP + INTERVAL '1' DAY)");
+                assertThat(available(db)).isTrue();
+                assertThat(claim(db)).isEqualTo(1);
+                sql.execute(
+                        "UPDATE stirling_pdf.procurement_deal SET trial_ends_at=CURRENT_TIMESTAMP - INTERVAL '1' SECOND");
+                assertThat(available(db)).isFalse();
+                assertThat(claim(db)).isZero();
+                sql.execute(
+                        "UPDATE stirling_pdf.procurement_deal SET accepted_quote_id=42, enterprise_period_start=CURRENT_TIMESTAMP - INTERVAL '1' DAY, enterprise_access_until=CURRENT_TIMESTAMP + INTERVAL '1' DAY");
+                assertThat(available(db)).isTrue();
+                assertThat(claim(db)).isEqualTo(1);
+                sql.execute(
+                        "UPDATE stirling_pdf.procurement_deal SET enterprise_access_until=CURRENT_TIMESTAMP - INTERVAL '1' SECOND, trial_ends_at=CURRENT_TIMESTAMP + INTERVAL '10' DAY");
+                assertThat(available(db)).isFalse();
+                assertThat(claim(db)).isZero();
             }
         }
     }
