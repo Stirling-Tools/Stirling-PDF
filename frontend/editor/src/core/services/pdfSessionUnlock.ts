@@ -7,7 +7,7 @@ import {
   type PdfAccess,
 } from "@app/services/pdfPasswordStore";
 import type { StirlingFile } from "@app/types/fileContext";
-import { PdfPermissionFlag } from "@embedpdf/models";
+import { PdfPermissionFlag } from "@app/constants/pdfPermissionFlags";
 import { zipFileService } from "@app/services/zipFileService";
 
 /** An override grants actions without changing the document's actual authentication role. */
