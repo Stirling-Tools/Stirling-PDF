@@ -23,13 +23,13 @@ const OUR_DRAWINGS = "@app/icons/svg/stirling/";
 const EDITOR_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const FRONTEND_ROOT = resolve(EDITOR_ROOT, "..");
 
-/** @type {{ heading: string, kinds: import("./startupIcons.d.mts").StartupIconKind[] }[]} */
+/** @type {{ heading: string, kinds: ("lucide"|"stirling"|"brand")[] }[]} */
 const GROUPS = [
   { heading: "lucide-static", kinds: ["lucide"] },
   { heading: "our drawings", kinds: ["stirling", "brand"] },
 ];
 
-/** @type {import("./startupIcons.d.mts").StartupIconSource[]} */
+/** @type {{ name: string, kind: "lucide"|"stirling"|"brand", specifier: string }[]} */
 export const STARTUP_ICON_SOURCES = [
   {
     name: "annotation-off",

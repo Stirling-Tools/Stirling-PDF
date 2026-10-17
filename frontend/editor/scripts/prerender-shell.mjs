@@ -358,12 +358,22 @@ function deferEntry(html) {
       'if(here.slice(-1)==="/")here=here.slice(0,-1);' +
       'if(landing.slice(-1)==="/")landing=landing.slice(0,-1);' +
       "if(here!==landing){document.write('<script type=\"module\" crossorigin src=\"'+JSON.parse(entry.textContent).src+'\"></'+'script>');return;}" +
-      'var triggers=["pointerdown","keydown","touchstart","wheel"];' +
+      // The shell is the first screen, so the app waits for a gesture.
+      'var triggers=["pointerdown","keydown","touchstart","wheel","focusin"];' +
       "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
-      "function idle(){if(window.requestIdleCallback)requestIdleCallback(boot,{timeout:2000});else setTimeout(boot,200);}" +
-      'function afterLoad(){if(document.readyState==="complete")idle();else addEventListener("load",idle,{once:true});}' +
-      'function afterPaint(){if(document.readyState==="complete")idle();else addEventListener("load",idle,{once:true});}' +
-      'if(window.PerformanceObserver){try{var seen=false;new PerformanceObserver(function(){if(seen)return;seen=true;afterPaint();}).observe({type:"paint",buffered:true});}catch(e){afterLoad();}}else afterLoad();})();</script>',
+      // A file picked before the app is up is carried over to its input.
+      "var pending=null;" +
+      'addEventListener("change",function(event){var target=event.target;' +
+      'if(!target||target.tagName!=="INPUT"||target.type!=="file"||!target.files||!target.files.length)return;' +
+      "pending=target.files;boot();handOff();},true);" +
+      "function handOff(){if(!pending)return;" +
+      'var input=document.querySelector("input[type=file]");' +
+      "if(!input){setTimeout(handOff,50);return;}" +
+      "try{var carrier=new DataTransfer();" +
+      "for(var j=0;j<pending.length;j++)carrier.items.add(pending[j]);" +
+      'input.files=carrier.files;input.dispatchEvent(new Event("change",{bubbles:true}));}catch(e){}' +
+      "pending=null;}" +
+      "})();</script>",
   );
 }
 
