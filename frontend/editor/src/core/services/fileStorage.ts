@@ -18,6 +18,7 @@ import {
 } from "@app/services/indexedDBManager";
 import { alert } from "@app/components/toast";
 import i18n from "i18next";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 
 /**
  * Storage record - single source of truth
@@ -33,6 +34,8 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   quickKey: string; // Matches runtime StirlingFile.quickKey exactly
   thumbnail?: string;
   thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
+  /** Whether opening these bytes requires a password; undefined for legacy records. */
+  isEncrypted?: boolean;
   url?: string; // For compatibility with existing components
   // Disk path this file came from (desktop only). Persisted so the link to the
   // real file survives a reload - without it every restart drops to the stored copy.
@@ -285,6 +288,12 @@ class FileStorageService {
 
   /** Returns thumbnail if within TTL, otherwise undefined. */
   private isThumbnailFresh(record: StoredStirlingFileRecord): boolean {
+    // Legacy PDF previews predate encryption metadata and cannot prove the file is openable.
+    if (
+      record.isEncrypted === undefined &&
+      (record.type === "application/pdf" || /\.pdf$/i.test(record.name))
+    )
+      return false;
     if (!record.thumbnail) return false;
     if (!record.thumbnailStoredAt) return false;
     return Date.now() - record.thumbnailStoredAt < THUMBNAIL_TTL_MS;
@@ -371,6 +380,9 @@ class FileStorageService {
         : await copyBlobBytes(stirlingFile),
       thumbnail: stub.thumbnailUrl,
       thumbnailStoredAt: stub.thumbnailUrl ? Date.now() : undefined,
+      isEncrypted:
+        getPdfAccess(stirlingFile)?.encrypted ??
+        stub.processedFile?.isEncrypted,
       localFilePath: stub.localFilePath,
       diskSyncedSize: stub.diskSyncedSize,
       diskSyncedModifiedMs: stub.diskSyncedModifiedMs,
@@ -733,7 +745,9 @@ class FileStorageService {
     this.reportIfUnreadable(record);
 
     // Convert to StirlingFile with preserved IDs
-    return createStirlingFile(fileFromRecord(record), record.fileId);
+    return createStirlingFile(fileFromRecord(record), record.fileId, {
+      bindSessionAccess: false,
+    });
   }
 
   /**
@@ -785,6 +799,10 @@ class FileStorageService {
           lastModified: record.lastModified,
           quickKey: record.quickKey,
           thumbnailUrl: fresh ? record.thumbnail : undefined,
+          processedFile:
+            record.isEncrypted === undefined
+              ? undefined
+              : { pages: [], isEncrypted: record.isEncrypted },
           localFilePath: record.localFilePath,
           diskSyncedSize: record.diskSyncedSize,
           diskSyncedModifiedMs: record.diskSyncedModifiedMs,
@@ -861,6 +879,10 @@ class FileStorageService {
               lastModified: record.lastModified,
               quickKey: record.quickKey,
               thumbnailUrl: fresh ? record.thumbnail : undefined,
+              processedFile:
+                record.isEncrypted === undefined
+                  ? undefined
+                  : { pages: [], isEncrypted: record.isEncrypted },
               localFilePath: record.localFilePath,
               diskSyncedSize: record.diskSyncedSize,
               diskSyncedModifiedMs: record.diskSyncedModifiedMs,
@@ -969,6 +991,10 @@ class FileStorageService {
               lastModified: record.lastModified,
               quickKey: record.quickKey,
               thumbnailUrl: fresh ? record.thumbnail : undefined,
+              processedFile:
+                record.isEncrypted === undefined
+                  ? undefined
+                  : { pages: [], isEncrypted: record.isEncrypted },
               localFilePath: record.localFilePath,
               diskSyncedSize: record.diskSyncedSize,
               diskSyncedModifiedMs: record.diskSyncedModifiedMs,
@@ -1177,12 +1203,17 @@ class FileStorageService {
   /**
    * Update thumbnail for existing file
    */
-  async updateThumbnail(id: FileId, thumbnail: string): Promise<boolean> {
+  async updateThumbnail(
+    id: FileId,
+    thumbnail: string,
+    isEncrypted?: boolean,
+  ): Promise<boolean> {
     // Reports failure as `false` rather than rejecting; callers just need an answer.
     try {
       return await this.updateRecord(id, (record) => {
         record.thumbnail = thumbnail;
         record.thumbnailStoredAt = Date.now();
+        if (isEncrypted !== undefined) record.isEncrypted = isEncrypted;
       });
     } catch (error) {
       console.error("Failed to update thumbnail:", error);
