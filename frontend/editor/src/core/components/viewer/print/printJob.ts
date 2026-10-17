@@ -55,6 +55,12 @@ export interface PosterSettings {
   rightToLeft: boolean;
 }
 
+/**
+ * Which pages a range keeps. Odd and even are the two passes of a manual duplex
+ * run, which is why they filter a range instead of replacing it.
+ */
+export type PageParity = "all" | "odd" | "even";
+
 export interface PrintSettings {
   preset: PrintPreset;
   /**
@@ -62,6 +68,11 @@ export interface PrintSettings {
    * one, so the imposed presets print the whole document.
    */
   pageRange: string;
+  /**
+   * The filter the standard preset applies to that range, kept apart from the
+   * field the reader types so going back to all restores what they wrote.
+   */
+  parity: PageParity;
   includeAnnotations: boolean;
   layout: PageLayoutParameters;
   booklet: BookletImpositionParameters;
@@ -84,13 +95,25 @@ export type PrintJob =
 export const defaultPrintSettings = (): PrintSettings => ({
   preset: "standard",
   pageRange: "",
+  parity: "all",
   includeAnnotations: true,
   layout: { ...defaultLayoutParameters },
   booklet: { ...defaultBookletParameters },
   poster: { pageSize: "A4", xFactor: 2, yFactor: 2, rightToLeft: false },
 });
 
-export function buildPrintJob(settings: PrintSettings): PrintJob {
+/**
+ * The job these settings describe.
+ *
+ * The engine reads a range as written, but it has no parity token, so an odd or
+ * even job states the pages it selects instead. That expansion needs a page
+ * count, and callers hand over settings `printProblem` accepts: a refused
+ * selection is never turned into a job.
+ */
+export function buildPrintJob(
+  settings: PrintSettings,
+  pageCount = 0,
+): PrintJob {
   const pageRange = settings.pageRange.trim();
 
   switch (settings.preset) {
@@ -116,12 +139,18 @@ export function buildPrintJob(settings: PrintSettings): PrintJob {
         suffix: "poster",
       };
     case "standard":
-    default:
+    default: {
+      const pages =
+        settings.parity === "all" ? null : selectionPages(settings, pageCount);
       return {
         kind: "viewer",
-        pageRange: pageRange || undefined,
+        pageRange:
+          (pages === null || pages.length === 0
+            ? pageRange
+            : selectionRange(pages)) || undefined,
         includeAnnotations: settings.includeAnnotations,
       };
+    }
   }
 }
 
@@ -193,6 +222,53 @@ export function selectedPages(
   return [...pages].sort((a, b) => a - b);
 }
 
+/**
+ * The pages a parity filter keeps, in print order. Odd and even are the two
+ * passes of a manual duplex run, which is why they filter a range rather than
+ * replace it.
+ */
+export function parityPages(pages: number[], parity: PageParity): number[] {
+  if (parity === "all") {
+    return pages;
+  }
+  return pages.filter((page) =>
+    parity === "odd" ? page % 2 === 1 : page % 2 === 0,
+  );
+}
+
+/**
+ * The pages the standard preset prints: the range with the parity filter
+ * applied. Null means the text is not a range the engine can read, which
+ * `printProblem` already reports.
+ */
+export function selectionPages(
+  settings: PrintSettings,
+  pageCount: number,
+): number[] | null {
+  const pages = selectedPages(settings.pageRange, pageCount);
+  return pages === null ? null : parityPages(pages, settings.parity);
+}
+
+/**
+ * A page list as the engine's range grammar, with consecutive pages compacted
+ * so a long run stays one token: [1, 2, 3, 5] becomes "1-3, 5".
+ */
+export function selectionRange(pages: number[]): string {
+  const tokens: string[] = [];
+  let index = 0;
+  while (index < pages.length) {
+    let end = index;
+    while (end + 1 < pages.length && pages[end + 1] === pages[end] + 1) {
+      end += 1;
+    }
+    tokens.push(
+      end === index ? String(pages[index]) : `${pages[index]}-${pages[end]}`,
+    );
+    index = end + 1;
+  }
+  return tokens.join(", ");
+}
+
 export interface PrintSummaryLine {
   key: string;
   values: Record<string, number | string>;
@@ -261,15 +337,13 @@ export function bookletSides(
   return sides;
 }
 
-/** 1-based side of the imposition that holds a page, or 1 when it holds none. */
-export function bookletSideIndex(
-  pageCount: number,
-  spineLocation: BookletImpositionParameters["spineLocation"],
-  page: number,
-): number {
-  const index = bookletSides(pageCount, spineLocation).findIndex(
-    (side) => side[0] === page || side[1] === page,
-  );
+/**
+ * 1-based side of the imposition that holds a page, or 1 when it holds none.
+ * The sides are passed in because the caller already has them: rebuilding the
+ * sheet map per lookup would repeat the whole imposition to answer one question.
+ */
+export function bookletSideIndex(sides: BookletSide[], page: number): number {
+  const index = sides.findIndex((side) => side[0] === page || side[1] === page);
   return index < 0 ? 1 : index + 1;
 }
 
@@ -409,7 +483,7 @@ export function printProblem(
       if (pageCount === undefined || pageCount < 1) {
         return isPageRangeValid(settings.pageRange) ? null : "invalidPageRange";
       }
-      const pages = selectedPages(settings.pageRange, pageCount);
+      const pages = selectionPages(settings, pageCount);
       if (pages === null) {
         return "invalidPageRange";
       }

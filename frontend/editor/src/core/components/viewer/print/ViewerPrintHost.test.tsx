@@ -61,9 +61,19 @@ vi.mock("@embedpdf/plugin-print/react", () => ({
 }));
 
 import { ViewerPrintHost } from "@app/components/viewer/print/ViewerPrintHost";
+import { ViewerContext } from "@app/contexts/viewer/viewerContext";
 import { expectConsole } from "@app/tests/failOnConsole";
 
 const pdf = () => new Blob(["%PDF"], { type: "application/pdf" });
+
+/** A viewer stub supplying only what the dialog's position and preview hooks read. */
+const viewerAt = (pageCount: number) =>
+  ({
+    activeFileId: "doc-a",
+    getScrollState: () => ({ currentPage: 1, totalPages: pageCount }),
+    registerImmediateScrollUpdate: () => () => {},
+    getThumbnailAPI: () => null,
+  }) as never;
 
 /** Opens the dialog the way the viewer's print action does. */
 const openDialog = () => {
@@ -87,14 +97,28 @@ const choosePreset = (preset: string) => {
   fireEvent.click(screen.getByText(preset));
 };
 
-const hostTree = (systemPrintDialog = false) => (
-  <MantineProvider env="test">
+const hostTree = (systemPrintDialog = false, pageCount?: number) => {
+  const host = (
     <ViewerPrintHost
       fileName="report.pdf"
       systemPrintDialog={systemPrintDialog}
     />
-  </MantineProvider>
-);
+  );
+
+  return (
+    <MantineProvider env="test">
+      {pageCount === undefined ? (
+        host
+      ) : (
+        // The dialog reads the document's page count from the viewer context,
+        // which the host's own viewer is mocked out of.
+        <ViewerContext.Provider value={viewerAt(pageCount)}>
+          {host}
+        </ViewerContext.Provider>
+      )}
+    </MantineProvider>
+  );
+};
 
 const renderHost = (systemPrintDialog = false) =>
   render(hostTree(systemPrintDialog));
@@ -126,6 +150,42 @@ describe("ViewerPrintHost", () => {
     expect(mocks.post).not.toHaveBeenCalled();
     expect(mocks.printPdfBlob).not.toHaveBeenCalled();
     await waitFor(() => expect(dialogOpen()).toBe(false));
+  });
+
+  it("expands the odd/even filter to the pages the viewer prints", async () => {
+    render(hostTree(false, 4));
+    openDialog();
+
+    fireEvent.click(screen.getByText("viewer.print.pageScopeCustom"));
+    fireEvent.change(
+      screen.getByPlaceholderText("viewer.print.pageRangePlaceholder"),
+      { target: { value: "1-4" } },
+    );
+
+    // The all filter hands the typed range to the viewer untouched.
+    fireEvent.click(
+      screen.getByRole("button", { name: "viewer.print.confirm" }),
+    );
+    await waitFor(() =>
+      expect(mocks.viewerPrint).toHaveBeenLastCalledWith({
+        pageRange: "1-4",
+        includeAnnotations: true,
+      }),
+    );
+
+    // Reopening keeps the reader's filter, and the job now states the pages it
+    // selects rather than a range the viewer cannot filter itself.
+    openDialog();
+    fireEvent.click(screen.getByText("viewer.print.parityOdd"));
+    fireEvent.click(
+      screen.getByRole("button", { name: "viewer.print.confirm" }),
+    );
+    await waitFor(() =>
+      expect(mocks.viewerPrint).toHaveBeenLastCalledWith({
+        pageRange: "1, 3",
+        includeAnnotations: true,
+      }),
+    );
   });
 
   it("offers no print action for a document that forbids printing", () => {

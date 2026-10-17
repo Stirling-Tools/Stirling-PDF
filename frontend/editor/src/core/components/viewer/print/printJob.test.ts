@@ -5,6 +5,7 @@ import {
   buildPrintJob,
   canPrint,
   defaultPrintSettings,
+  parityPages,
   POSTER_PAGE_SIZES,
   PRINT_PRESETS,
   printFileName,
@@ -12,6 +13,8 @@ import {
   printSummary,
   rangeIsClipped,
   selectedPages,
+  selectionPages,
+  selectionRange,
 } from "@app/components/viewer/print/printJob";
 import type { PrintSettings } from "@app/components/viewer/print/printJob";
 
@@ -45,15 +48,17 @@ const serverJob = (job: ReturnType<typeof buildPrintJob>) => {
 
 describe("bookletSideIndex", () => {
   it("finds the side of the imposition that holds a page", () => {
-    expect(bookletSideIndex(12, "LEFT", 1)).toBe(1);
-    expect(bookletSideIndex(12, "LEFT", 2)).toBe(2);
-    expect(bookletSideIndex(12, "LEFT", 3)).toBe(3);
-    expect(bookletSideIndex(12, "LEFT", 8)).toBe(5);
-    expect(bookletSideIndex(12, "LEFT", 12)).toBe(1);
+    const sides = bookletSides(12, "LEFT");
+
+    expect(bookletSideIndex(sides, 1)).toBe(1);
+    expect(bookletSideIndex(sides, 2)).toBe(2);
+    expect(bookletSideIndex(sides, 3)).toBe(3);
+    expect(bookletSideIndex(sides, 8)).toBe(5);
+    expect(bookletSideIndex(sides, 12)).toBe(1);
   });
 
   it("falls back to the first side for a page the imposition does not place", () => {
-    expect(bookletSideIndex(0, "LEFT", 4)).toBe(1);
+    expect(bookletSideIndex(bookletSides(0, "LEFT"), 4)).toBe(1);
   });
 });
 
@@ -135,6 +140,84 @@ describe("buildPrintJob", () => {
       rightToLeft: true,
     });
   });
+
+  it("passes the typed range verbatim when the filter is all", () => {
+    const job = buildPrintJob(
+      settings({ pageRange: " 1-3,5 ", parity: "all" }),
+      8,
+    );
+
+    expect(job).toEqual({
+      kind: "viewer",
+      pageRange: "1-3,5",
+      includeAnnotations: true,
+    });
+  });
+
+  it("leaves the range undefined when the typed range is blank", () => {
+    const job = buildPrintJob(settings({ pageRange: "   ", parity: "all" }), 8);
+
+    expect(job).toEqual({
+      kind: "viewer",
+      pageRange: undefined,
+      includeAnnotations: true,
+    });
+  });
+
+  it("expands an odd filter to the pages it selects", () => {
+    const job = buildPrintJob(settings({ pageRange: "1-6", parity: "odd" }), 6);
+
+    expect(job).toEqual({
+      kind: "viewer",
+      pageRange: "1, 3, 5",
+      includeAnnotations: true,
+    });
+  });
+
+  it("expands an even filter of a blank range over the whole document", () => {
+    const job = buildPrintJob(settings({ parity: "even" }), 5);
+
+    expect(job).toEqual({
+      kind: "viewer",
+      pageRange: "2, 4",
+      includeAnnotations: true,
+    });
+  });
+
+  it("clips a range that reaches past the end before applying parity", () => {
+    const job = buildPrintJob(
+      settings({ pageRange: "1-99", parity: "odd" }),
+      6,
+    );
+
+    expect(job).toEqual({
+      kind: "viewer",
+      pageRange: "1, 3, 5",
+      includeAnnotations: true,
+    });
+  });
+
+  it("falls back to the typed range when the filter selects nothing", () => {
+    // A one page document has no even page, so the job keeps what was typed
+    // rather than sending the viewer an empty range that means every page.
+    const job = buildPrintJob(settings({ pageRange: "1", parity: "even" }), 1);
+
+    expect(job).toEqual({
+      kind: "viewer",
+      pageRange: "1",
+      includeAnnotations: true,
+    });
+  });
+
+  it("ignores parity for the imposed presets", () => {
+    for (const preset of ["pagesPerSheet", "booklet", "poster"] as const) {
+      const filtered = buildPrintJob(settings({ preset, parity: "odd" }), 6);
+      const unfiltered = buildPrintJob(settings({ preset, parity: "all" }), 6);
+
+      expect(filtered).toEqual(unfiltered);
+      expect(filtered.kind).toBe("server");
+    }
+  });
 });
 
 describe("canPrint", () => {
@@ -195,6 +278,28 @@ describe("printProblem", () => {
   it("checks syntax when it has no page count to check against", () => {
     expect(printProblem(settings({ pageRange: "99" }))).toBeNull();
     expect(printProblem(settings({ pageRange: "abc" }))).toBe(
+      "invalidPageRange",
+    );
+  });
+
+  it("reports a parity filter that leaves nothing to print", () => {
+    expect(printProblem(settings({ pageRange: "1", parity: "even" }), 1)).toBe(
+      "emptyPageRange",
+    );
+    expect(printProblem(settings({ parity: "even" }), 1)).toBe(
+      "emptyPageRange",
+    );
+  });
+
+  it("accepts a range under a parity filter that keeps a page", () => {
+    expect(
+      printProblem(settings({ pageRange: "1-6", parity: "odd" }), 6),
+    ).toBeNull();
+    expect(printProblem(settings({ parity: "even" }), 5)).toBeNull();
+  });
+
+  it("still refuses a range it cannot read under a parity filter", () => {
+    expect(printProblem(settings({ pageRange: "abc", parity: "odd" }), 6)).toBe(
       "invalidPageRange",
     );
   });
@@ -263,6 +368,70 @@ describe("selectedPages", () => {
 
   it("selects nothing when the document has no pages", () => {
     expect(selectedPages("", 0)).toEqual([]);
+  });
+});
+
+describe("parityPages", () => {
+  it("keeps every page for the all filter", () => {
+    expect(parityPages([1, 2, 3, 4], "all")).toEqual([1, 2, 3, 4]);
+  });
+
+  it("keeps the odd pages of a run", () => {
+    expect(parityPages([1, 2, 3, 4, 5], "odd")).toEqual([1, 3, 5]);
+  });
+
+  it("keeps the even pages of a run", () => {
+    expect(parityPages([1, 2, 3, 4, 5], "even")).toEqual([2, 4]);
+  });
+
+  it("selects nothing when no page has the wanted parity", () => {
+    expect(parityPages([2, 4, 6], "odd")).toEqual([]);
+  });
+});
+
+describe("selectionPages", () => {
+  it("filters the range by parity", () => {
+    expect(
+      selectionPages(settings({ pageRange: "1-6", parity: "odd" }), 6),
+    ).toEqual([1, 3, 5]);
+    expect(
+      selectionPages(settings({ pageRange: "1-6", parity: "even" }), 6),
+    ).toEqual([2, 4, 6]);
+  });
+
+  it("filters every page of a blank range", () => {
+    expect(selectionPages(settings({ parity: "even" }), 5)).toEqual([2, 4]);
+  });
+
+  it("clips the range to the document before applying parity", () => {
+    expect(
+      selectionPages(settings({ pageRange: "1-99", parity: "odd" }), 6),
+    ).toEqual([1, 3, 5]);
+  });
+
+  it("returns null for a range it cannot read", () => {
+    expect(
+      selectionPages(settings({ pageRange: "abc", parity: "odd" }), 6),
+    ).toBeNull();
+  });
+});
+
+describe("selectionRange", () => {
+  it("compacts a run of consecutive pages into one token", () => {
+    expect(selectionRange([1, 2, 3, 5])).toBe("1-3, 5");
+  });
+
+  it("writes a lone page as itself", () => {
+    expect(selectionRange([7])).toBe("7");
+    expect(selectionRange([2, 4, 6])).toBe("2, 4, 6");
+  });
+
+  it("compacts each run of a broken list", () => {
+    expect(selectionRange([1, 2, 4, 5, 6, 9])).toBe("1-2, 4-6, 9");
+  });
+
+  it("writes nothing for an empty list", () => {
+    expect(selectionRange([])).toBe("");
   });
 });
 

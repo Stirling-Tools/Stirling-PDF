@@ -46,7 +46,7 @@ import {
   printProblem,
   printSummary,
   rangeIsClipped,
-  selectedPages,
+  selectionPages,
 } from "@app/components/viewer/print/printJob";
 import {
   NO_PREVIEW_PAGES,
@@ -367,6 +367,9 @@ const isPosterPageSize = isOneOf(POSTER_PAGE_SIZES);
 
 /** The range field names its own reason through `aria-describedby`. */
 const RANGE_PROBLEM_ID = "print-page-range-problem";
+
+/** The dialog body is one form, so Enter confirms from any field in it. */
+const PRINT_FORM_ID = "print-dialog-form";
 
 /** Whether any margin is set, so the collapsed controls can say so. */
 function layoutMarginsSet(parameters: PageLayoutParameters): boolean {
@@ -734,7 +737,7 @@ const BookletControls = memo(function BookletControls({
 interface PrintDialogProps {
   open: boolean;
   onClose: () => void;
-  onPrint: (settings: PrintSettings) => void;
+  onPrint: (settings: PrintSettings, pageCount: number) => void;
   /** True while the chosen layout is being prepared or sent to the printer. */
   busy?: boolean;
   error?: string | null;
@@ -803,13 +806,17 @@ export function PrintDialog({
 
   // A blank custom field cannot mean every page any more, so it is refused like
   // any other range the reader has not finished writing. Only the plain preset
-  // reads that field, so another preset must not inherit the refusal.
-  const problem: PrintProblem | null =
-    settings.preset === "standard" &&
-    pageScope === "custom" &&
-    settings.pageRange.trim() === ""
-      ? "invalidPageRange"
-      : printProblem(settings, pageCount);
+  // reads that field, so another preset must not inherit the refusal. Memoized
+  // because the viewer's scroll position re-renders this dialog.
+  const problem: PrintProblem | null = useMemo(
+    () =>
+      settings.preset === "standard" &&
+      pageScope === "custom" &&
+      settings.pageRange.trim() === ""
+        ? "invalidPageRange"
+        : printProblem(settings, pageCount),
+    [settings, pageScope, pageCount],
+  );
   const scopeNote = scopeNoteKey(settings);
 
   // Each scope writes the range the job reads, so the picker and the field
@@ -875,10 +882,13 @@ export function PrintDialog({
   // Only the standard preset can honour a range, and a preview of a page the
   // range leaves out would contradict the job, so the figure falls back to the
   // first selected page. A range that selects nothing shows no page at all.
-  const selected =
-    settings.preset === "standard"
-      ? (selectedPages(settings.pageRange, pageCount) ?? [])
-      : [];
+  const selected = useMemo(
+    () =>
+      settings.preset === "standard"
+        ? (selectionPages(settings, pageCount) ?? [])
+        : [],
+    [settings.preset, settings.pageRange, settings.parity, pageCount],
+  );
   const selectionEmpty =
     settings.preset === "standard" && selected.length === 0 && pageCount > 0;
 
@@ -912,11 +922,7 @@ export function PrintDialog({
       : settings.preset === "standard"
         ? Math.max(1, selected.indexOf(currentPage) + 1)
         : settings.preset === "booklet"
-          ? bookletSideIndex(
-              pageCount,
-              settings.booklet.spineLocation,
-              Math.max(currentPage, 1),
-            )
+          ? bookletSideIndex(bookletSheet, Math.max(currentPage, 1))
           : 1;
   const [step, setStep] = useState(0);
   const shownStep = step === 0 ? autoStep : Math.min(step, steps);
@@ -977,7 +983,10 @@ export function PrintDialog({
   );
   // An uncountable or unprintable job has no result to state, and a count from
   // settings that do not validate would contradict the error beside the fields.
-  const summary = problem === null ? printSummary(settings, pageCount) : null;
+  const summary = useMemo(
+    () => (problem === null ? printSummary(settings, pageCount) : null),
+    [problem, settings, pageCount],
+  );
   const loading = previewPages.some((page) => pageState(page) === "loading");
   const failed = previewPages.some((page) => pageState(page) === "failed");
 
@@ -1211,6 +1220,21 @@ export function PrintDialog({
                     errorProps={{ id: RANGE_PROBLEM_ID }}
                   />
                 ) : null}
+                <Text size="sm" fw={500} mb={6} mt="sm">
+                  {t("viewer.print.parityLabel")}
+                </Text>
+                <SegmentedControl
+                  options={[
+                    { value: "all", label: t("viewer.print.parityAll") },
+                    { value: "odd", label: t("viewer.print.parityOdd") },
+                    { value: "even", label: t("viewer.print.parityEven") },
+                  ]}
+                  value={settings.parity}
+                  onChange={(parity) => update("parity", parity)}
+                  disabled={busy}
+                  fullWidth
+                  ariaLabel={t("viewer.print.parityLabel")}
+                />
               </div>
             )}
             {
@@ -1284,6 +1308,16 @@ export function PrintDialog({
     setSettings(defaultPrintSettings());
     setPageScope("all");
     setStep(0);
+  };
+
+  // The dialog is one form so Enter confirms from any field; the same guard the
+  // confirm button carries keeps a refused or in-flight job out of the print
+  // path, since a form can be submitted from a field it left enabled.
+  const submit = () => {
+    if (busy || problem !== null || !canPrint) {
+      return;
+    }
+    onPrint(settings, pageCount);
   };
 
   // The figure column renders twice: once in the dialog and, larger, in the
@@ -1431,13 +1465,10 @@ export function PrintDialog({
             </Button>
             <Button
               variant="primary"
+              type="submit"
+              form={PRINT_FORM_ID}
               loading={busy}
               disabled={busy || problem !== null || !canPrint}
-              onClick={() => {
-                if (canPrint) {
-                  onPrint(settings);
-                }
-              }}
             >
               {busy ? t("viewer.print.preparing") : t("viewer.print.confirm")}
             </Button>
@@ -1445,10 +1476,15 @@ export function PrintDialog({
         </Group>
       }
     >
-      <div
+      <form
+        id={PRINT_FORM_ID}
         className={`print-body${
           settings.preset === "standard" ? " print-body--plain" : ""
         }`}
+        onSubmit={(event) => {
+          event.preventDefault();
+          submit();
+        }}
       >
         <div className="print-body__document">
           {fileName || pageCount > 0 ? (
@@ -1532,7 +1568,7 @@ export function PrintDialog({
         </div>
 
         <div className="print-body__figure">{previewColumn(true)}</div>
-      </div>
+      </form>
 
       {enlarged ? (
         <Modal

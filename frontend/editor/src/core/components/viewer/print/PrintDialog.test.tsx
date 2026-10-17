@@ -6,7 +6,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ViewerContext } from "@app/contexts/viewer/viewerContext";
 import { computeBoxes } from "@app/components/tools/pageLayout/utils/computeBoxes";
@@ -18,6 +18,18 @@ import {
 import { defaultPrintSettings } from "@app/components/viewer/print/printJob";
 import type { PrintSettings } from "@app/components/viewer/print/printJob";
 import type { PreviewPageState } from "@app/components/viewer/print/usePrintPreviewImages";
+
+/**
+ * Records the keys and values every `t` call receives while still returning the
+ * raw key, so a test can assert what the dialog asked a counter to render.
+ */
+const mockT = vi.hoisted(() => vi.fn((key: string) => key));
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({ t: mockT, i18n: { changeLanguage: vi.fn() } }),
+  initReactI18next: { type: "3rdParty", init: vi.fn() },
+  I18nextProvider: ({ children }: { children: ReactNode }) => children,
+}));
 
 /** A viewer stub: the print hooks only need the position and the document id. */
 const viewerAt = (
@@ -43,7 +55,7 @@ const renderDialog = (props: {
   thumbnailAPI?: {
     renderThumb: (index: number, scale: number) => unknown;
   } | null;
-  onPrint?: (settings: PrintSettings) => void;
+  onPrint?: (settings: PrintSettings, pageCount: number) => void;
 }) => {
   const onPrint = props.onPrint ?? vi.fn();
   const onClose = vi.fn();
@@ -87,6 +99,18 @@ const rangeField = () => {
   return screen.getByPlaceholderText("viewer.print.pageRangePlaceholder");
 };
 
+/**
+ * The dialog body form. jsdom does not submit a form when Enter is pressed in a
+ * field, so a test submits it directly to exercise the same path.
+ */
+const printForm = (): HTMLElement => {
+  const form = document.getElementById("print-dialog-form");
+  if (!form) {
+    throw new Error("the print dialog form was not rendered");
+  }
+  return form;
+};
+
 describe("PrintDialog", () => {
   it("prints the standard layout with the typed page range", () => {
     const { onPrint } = renderDialog({});
@@ -103,6 +127,7 @@ describe("PrintDialog", () => {
         pageRange: "2-4",
         includeAnnotations: true,
       }),
+      0,
     );
   });
 
@@ -136,6 +161,7 @@ describe("PrintDialog", () => {
         preset: "booklet",
         booklet: expect.objectContaining({ pagesPerSheet: 2 }),
       }),
+      0,
     );
   });
 
@@ -144,7 +170,7 @@ describe("PrintDialog", () => {
 
     fireEvent.click(confirm());
 
-    expect(onPrint).toHaveBeenCalledWith(defaultPrintSettings());
+    expect(onPrint).toHaveBeenCalledWith(defaultPrintSettings(), 0);
   });
 
   it("shows the annotation setting only where the viewer honours it", () => {
@@ -173,6 +199,7 @@ describe("PrintDialog", () => {
     fireEvent.click(confirm());
     expect(onPrint).toHaveBeenLastCalledWith(
       expect.objectContaining({ pageRange: "3" }),
+      12,
     );
 
     fireEvent.change(rangeField(), { target: { value: "5-6" } });
@@ -278,7 +305,7 @@ describe("PrintDialog", () => {
     fireEvent.click(screen.getByText("viewer.print.reset"));
     fireEvent.click(confirm());
 
-    expect(onPrint).toHaveBeenCalledWith(defaultPrintSettings());
+    expect(onPrint).toHaveBeenCalledWith(defaultPrintSettings(), 12);
   });
 
   it("announces the job summary and the output position", () => {
@@ -309,6 +336,7 @@ describe("PrintDialog", () => {
           duplexPass: "FIRST",
         }),
       }),
+      12,
     );
   });
 
@@ -333,6 +361,7 @@ describe("PrintDialog", () => {
       expect.objectContaining({
         layout: expect.objectContaining({ mode: "DEFAULT", pagesPerSheet: 2 }),
       }),
+      12,
     );
   });
 
@@ -495,6 +524,7 @@ describe("PrintDialog", () => {
         poster: expect.objectContaining({ pageSize: "A3" }),
         booklet: expect.objectContaining({ spineLocation: "RIGHT" }),
       }),
+      12,
     );
 
     // The selection belonged to the previous document, so it is gone: the
@@ -507,6 +537,7 @@ describe("PrintDialog", () => {
     fireEvent.click(confirm());
     expect(onPrint).toHaveBeenLastCalledWith(
       expect.objectContaining({ preset: "standard", pageRange: "" }),
+      12,
     );
   });
 
@@ -575,6 +606,92 @@ describe("PrintDialog", () => {
     });
     expect(confirm()).toBeDisabled();
     expect(document.body.textContent ?? "").not.toMatch(/Infinity|NaN/);
+  });
+
+  it("offers the odd/even filter with its three choices", () => {
+    renderDialog({ pageCount: 6 });
+
+    expect(screen.getByText("viewer.print.parityLabel")).toBeTruthy();
+    expect(screen.getByText("viewer.print.parityAll")).toBeTruthy();
+    expect(screen.getByText("viewer.print.parityOdd")).toBeTruthy();
+    expect(screen.getByText("viewer.print.parityEven")).toBeTruthy();
+  });
+
+  it("leaves the odd/even filter to the system print dialog", () => {
+    renderDialog({ systemPrintDialog: true });
+
+    expect(screen.queryByText("viewer.print.parityLabel")).toBeNull();
+    expect(screen.queryByText("viewer.print.parityAll")).toBeNull();
+    expect(screen.queryByText("viewer.print.parityOdd")).toBeNull();
+    expect(screen.queryByText("viewer.print.parityEven")).toBeNull();
+  });
+
+  it("counts the pages an odd filter selects and prints those", () => {
+    const { onPrint } = renderDialog({ pageCount: 6 });
+
+    fireEvent.click(screen.getByText("viewer.print.parityOdd"));
+
+    // Six pages hold three odd ones, and the counter says so before printing.
+    expect(mockT).toHaveBeenCalledWith("viewer.print.rangeSelection", {
+      count: 3,
+      total: 6,
+    });
+
+    fireEvent.click(confirm());
+
+    expect(onPrint).toHaveBeenCalledWith(
+      expect.objectContaining({ preset: "standard", parity: "odd" }),
+      6,
+    );
+  });
+
+  it("keeps the odd/even filter when another document resets the range", () => {
+    const { onPrint, setDocumentId } = renderDialog({
+      pageCount: 6,
+      documentId: "doc-1",
+    });
+
+    fireEvent.change(rangeField(), { target: { value: "1-4" } });
+    fireEvent.click(screen.getByText("viewer.print.parityOdd"));
+
+    setDocumentId("doc-2");
+
+    // The range and its scope belonged to the previous document, so both reset;
+    // the filter is the reader's intent and stays.
+    expect(
+      screen.queryByPlaceholderText("viewer.print.pageRangePlaceholder"),
+    ).toBeNull();
+
+    fireEvent.click(confirm());
+
+    expect(onPrint).toHaveBeenCalledWith(
+      expect.objectContaining({ pageRange: "", parity: "odd" }),
+      6,
+    );
+  });
+
+  it("confirms from the range field through the dialog form", () => {
+    const { onPrint } = renderDialog({ pageCount: 6 });
+
+    fireEvent.change(rangeField(), { target: { value: "1-4" } });
+
+    fireEvent.submit(printForm());
+
+    expect(onPrint).toHaveBeenCalledWith(
+      expect.objectContaining({ pageRange: "1-4" }),
+      6,
+    );
+  });
+
+  it("refuses a blank custom range submitted through the form", () => {
+    const { onPrint } = renderDialog({ pageCount: 6 });
+
+    fireEvent.change(rangeField(), { target: { value: "" } });
+
+    fireEvent.submit(printForm());
+
+    expect(onPrint).not.toHaveBeenCalled();
+    expect(confirm()).toBeDisabled();
   });
 });
 

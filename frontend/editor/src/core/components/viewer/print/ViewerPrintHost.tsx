@@ -102,7 +102,7 @@ export function ViewerPrintHost({
   }, []);
 
   const handlePrint = useCallback(
-    async (settings: PrintSettings) => {
+    async (settings: PrintSettings, pageCount: number) => {
       if (!canPrint || jobRef.current) {
         // A forbidden document must not start a job, and busy is a render old,
         // so the ref is what stops a duplicate start.
@@ -120,7 +120,7 @@ export function ViewerPrintHost({
       const ownsJob = () => jobRef.current === handle;
 
       try {
-        const job = buildPrintJob(settings);
+        const job = buildPrintJob(settings, pageCount);
         if (job.kind === "viewer" && !systemPrintDialog && print) {
           print.print({
             pageRange: job.pageRange,
