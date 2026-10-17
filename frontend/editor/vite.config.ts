@@ -16,6 +16,24 @@ const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Locks page zoom in the mobile app, where pinch and double-tap zooming the
+ * whole UI makes it feel like a web page. The PDF viewer handles pinch itself
+ * (components/viewer/ViewerZoomGestures).
+ */
+function lockViewportZoomPlugin(): PluginOption {
+  return {
+    name: "lock-viewport-zoom",
+    transformIndexHtml(html) {
+      return html.replace(
+        /(<meta\s+name="viewport"\s+content=")([^"]*)(")/,
+        (_match, open: string, content: string, close: string) =>
+          `${open}${content}, maximum-scale=1, user-scalable=no${close}`,
+      );
+    },
+  };
+}
+
 function compressStaticCopyPlugin(): PluginOption {
   return {
     name: "compress-static-copy",
@@ -397,6 +415,7 @@ export default defineConfig(async ({ mode, command }) => {
       }),
       compressStaticCopyPlugin(),
       prerenderOgPlugin(effectiveMode === "saas"),
+      ...(effectiveMode === "mobile" ? [lockViewportZoomPlugin()] : []),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.
