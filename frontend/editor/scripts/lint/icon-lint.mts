@@ -20,6 +20,7 @@ const BANNED_IMPORTS = [
 
 const ICON_SVG_DIR = path.join(ICONS_DIR, "svg");
 const REGISTRY = path.join(ICONS_DIR, "icons.ts");
+const STARTUP = path.join(ICONS_DIR, "iconStartup.ts");
 
 /** The frame every icon is drawn on, so one `size` renders them all alike. */
 const ICON_FRAME = "0 0 24 24";
@@ -195,6 +196,7 @@ for (const file of files) {
   const inIconsDir = isWithin(file, ICONS_DIR);
 
   const isStory = /\.stories\.tsx?$/.test(file);
+  const isTest = /\.test\.tsx?$/.test(file);
   const svgLines = new Set<number>();
   lines.forEach((line, i) => {
     if (/<svg(?:[\s>]|$)/.test(line)) svgLines.add(i);
@@ -243,7 +245,7 @@ for (const file of files) {
 
   lines.forEach((line, i) => {
     // No inline svg outside core/icons
-    if (svgLines.has(i) && !inIconsDir && !allowed.has(i)) {
+    if (svgLines.has(i) && !inIconsDir && !allowed.has(i) && !isTest) {
       problems.push(
         `${rel(file)}:${i + 1}: inline <svg>. Move it to src/core/icons/svg/ and render ` +
           `via <Icon>. If the geometry is computed at runtime, or it is svg text for a story's ` +
@@ -264,9 +266,9 @@ for (const file of files) {
       );
     }
 
-    // Only the registry turns an svg into a component: one made anywhere else skips the name
-    // check, the frame and the gallery, which is how a second icon system starts. No opt-out.
-    if (/\.svg\?react\b/.test(line) && file !== REGISTRY) {
+    // Only the registry and the startup subset turn an svg into a component: anywhere else
+    // skips the name check, the frame and the gallery, which is how a second icon system starts.
+    if (/\.svg\?react\b/.test(line) && file !== REGISTRY && file !== STARTUP) {
       problems.push(
         `${rel(file)}:${i + 1}: imports an svg as a component. Add it to ` +
           `src/core/icons/icons.ts and render <Icon name="…" />, or import the file as a ` +

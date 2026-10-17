@@ -8,12 +8,7 @@ import {
 import { COLORLESS_CLASS } from "@app/icons/colorless";
 import { DEFAULT_SIZE, STROKE_WIDTH } from "@app/icons/icons.config";
 import { ICON_NAMES } from "@app/icons/iconNames";
-import { StartupIcon } from "@app/icons/StartupIcon";
-import {
-  PLACEHOLDER_ICON_BODY,
-  SELF_PAINTED_ICON_NAMES,
-  STARTUP_ICON_BODIES,
-} from "@app/icons/startupIcons.generated";
+import { PLACEHOLDER_ICON, STARTUP_ICONS } from "@app/icons/iconStartup";
 import type { IconName } from "@app/icons/icons";
 
 export { DEFAULT_SIZE, STROKE_WIDTH, type IconName };
@@ -39,11 +34,9 @@ type IconEntry = {
   kind: "lucide" | "stirling" | "brand";
 };
 
-// The generated table is a plain index signature, so reads go through an
-// optional value: a name outside the startup set is absent, not `undefined`
-// by accident.
-const STARTUP_BODIES: Readonly<Record<string, string | undefined>> =
-  STARTUP_ICON_BODIES;
+// `STARTUP_ICONS` is generated `as const`, so reads go through an index
+// signature; the value may be absent, unlike the literal-keyed entries.
+const STARTUP: Readonly<Record<string, IconEntry | undefined>> = STARTUP_ICONS;
 
 let registry: Readonly<Record<string, IconEntry | undefined>> | null = null;
 let pending: Promise<void> | null = null;
@@ -53,10 +46,9 @@ const listeners = new Set<() => void>();
  * Loads the complete map from `src/core/icons/icons.ts`.
  *
  * The landing screen paints about 70 names, so the entry chunk carries only
- * their markup (`startupIcons.generated.ts`); this starts on the first name
- * outside that subset and the remaining ~340 arrive with the screen that needs
- * them. Settles on failure too, leaving the name's empty box in place; the next
- * miss retries.
+ * those (`iconStartup.ts`); this starts on the first name outside that subset
+ * and the remaining ~340 arrive with the screen that needs them. Settles on
+ * failure too, leaving the name's empty box in place; the next miss retries.
  */
 export function loadIconRegistry(): Promise<void> {
   pending ??= import("@app/icons/icons").then(
@@ -120,48 +112,35 @@ export function Icon({
   // arrives late from re-rendering its route: only this svg re-renders.
   const loaded = useSyncExternalStore(subscribe, loadedRegistry);
   const known = isIconName(name);
-  // The startup markup answers for the names the landing screen paints, so the
-  // registry is only consulted for a name outside that subset.
-  const startupBody = STARTUP_BODIES[name];
-  const entry = startupBody === undefined ? loaded?.[name] : undefined;
-  if (startupBody === undefined && !entry) {
+  const entry = STARTUP[name] ?? loaded?.[name];
+  if (!entry) {
     // A registered name that is not here yet is what starts the fetch; an
     // unregistered one draws the placeholder whatever the registry holds.
     if (known) void loadIconRegistry();
     else reportUnknown(name);
   }
-  const brand = entry
-    ? entry.kind === "brand"
-    : SELF_PAINTED_ICON_NAMES.has(name);
-  const shared: SVGProps<SVGSVGElement> = {
-    width: size,
-    height: size,
-    // A brand mark paints itself, so the weight and fill would flatten it.
-    ...(brand ? {} : { strokeWidth, fill: filled ? "currentColor" : "none" }),
-    className:
-      colorless && brand
-        ? [COLORLESS_CLASS, className].filter(Boolean).join(" ")
-        : className,
-    style,
-    focusable: false,
-    "aria-hidden": title ? undefined : true,
-    role: title ? "img" : undefined,
-    "aria-label": title,
-  };
+  const { Component, kind } = entry ?? PLACEHOLDER_ICON;
+  const brand = kind === "brand";
 
-  if (!entry) {
-    // An unresolvable name draws the placeholder's own markup rather than a
-    // registry component, so it stays correct while the fetch is in flight.
-    return (
-      <StartupIcon
-        body={startupBody ?? PLACEHOLDER_ICON_BODY}
-        selfPainted={brand}
-        data-missing-icon={known ? undefined : name}
-        {...shared}
-      />
-    );
-  }
-
-  const { Component } = entry;
-  return <Component data-missing-icon={known ? undefined : name} {...shared} />;
+  return (
+    <Component
+      data-missing-icon={known ? undefined : name}
+      width={size}
+      height={size}
+      // A brand mark paints itself, so the weight and fill would flatten it.
+      {...(brand
+        ? {}
+        : { strokeWidth, fill: filled ? "currentColor" : "none" })}
+      className={
+        colorless && brand
+          ? [COLORLESS_CLASS, className].filter(Boolean).join(" ")
+          : className
+      }
+      style={style}
+      focusable={false}
+      aria-hidden={title ? undefined : true}
+      role={title ? "img" : undefined}
+      aria-label={title}
+    />
+  );
 }

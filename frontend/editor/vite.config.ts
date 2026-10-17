@@ -330,8 +330,10 @@ function isMarkdownPackage(pkg: string): boolean {
  * now just one of the languages.
  */
 function localePreloadTag(codes: string[]): string {
+  // The landing boots on intent, so its dictionary rides that boot; a deep route boots
+  // at parse time and gets the preload ahead of the app's own request.
   return `<script>
-      (function () {
+      window.__spdfLocalePreload = function () {
         var supported = ${JSON.stringify(codes)};
         var stored = null;
         try {
@@ -360,7 +362,7 @@ function localePreloadTag(codes: string[]): string {
         link.href =
           "locales/" + encodeURIComponent(match) + "/startup.json";
         document.head.appendChild(link);
-      })();
+      };
     </script>`;
 }
 
@@ -384,36 +386,42 @@ function localePreloadTag(codes: string[]): string {
  * belong to other routes as well, and preloading those would compete with the
  * resources this one waits for.
  */
+// Every page the app can be served from gets the hints: a route page is its own
+// document, and without them it discovers the same chunks one round trip later.
 async function writeRouteHints(
   distDir: string,
   route: { js: string; css: string[] },
 ): Promise<void> {
-  const indexPath = resolve(distDir, "index.html");
-  let html: string;
-  try {
-    html = await fs.readFile(indexPath, "utf8");
-  } catch {
-    return;
+  const pages = (await fs.readdir(distDir, { withFileTypes: true }))
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".html"))
+    .map((entry) => resolve(distDir, entry.name));
+  for (const page of pages) {
+    let html: string;
+    try {
+      html = await fs.readFile(page, "utf8");
+    } catch {
+      continue;
+    }
+    if (html.includes(route.js)) continue;
+
+    // Take the href prefix from a link Vite already wrote, so a subpath
+    // deployment is handled the same way its own preloads are.
+    const existing = /<link rel="modulepreload" href="([^"]+)"/.exec(html);
+    const prefix = existing
+      ? existing[1].slice(0, existing[1].lastIndexOf("/") + 1)
+      : "/";
+
+    const tags = [
+      `<link rel="modulepreload" href="${prefix}${route.js}" crossorigin>`,
+      ...route.css.map(
+        (file) => `<link rel="preload" as="style" href="${prefix}${file}">`,
+      ),
+    ];
+    await fs.writeFile(
+      page,
+      html.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`),
+    );
   }
-  if (html.includes(route.js)) return;
-
-  // Take the href prefix from a link Vite already wrote, so a subpath
-  // deployment is handled the same way its own preloads are.
-  const existing = /<link rel="modulepreload" href="([^"]+)"/.exec(html);
-  const prefix = existing
-    ? existing[1].slice(0, existing[1].lastIndexOf("/") + 1)
-    : "/";
-
-  const tags = [
-    `<link rel="modulepreload" href="${prefix}${route.js}" crossorigin>`,
-    ...route.css.map(
-      (file) => `<link rel="preload" as="style" href="${prefix}${file}">`,
-    ),
-  ];
-  await fs.writeFile(
-    indexPath,
-    html.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`),
-  );
 }
 
 /**
@@ -441,7 +449,11 @@ async function writeLandingShell(
           : ""),
     );
   } catch (error) {
-    console.warn(`[prerender-shell] skipped: ${String(error)}`);
+    if (process.env.PRERENDER_SHELL_SKIP === "1") {
+      console.warn(`[prerender-shell] skipped: ${String(error)}`);
+      return;
+    }
+    throw error;
   }
 }
 
@@ -608,7 +620,8 @@ async function writeOpenGraphPages(
     let robots = await fs.readFile(robotsPath, "utf8");
     if (!/^\s*Sitemap:/im.test(robots)) {
       robots =
-        robots.replace(/\s*$/, "\n") + `Sitemap: ${canonicalBase}/sitemap.xml\n`;
+        robots.replace(/\s*$/, "\n") +
+        `Sitemap: ${canonicalBase}/sitemap.xml\n`;
       await fs.writeFile(robotsPath, robots);
     }
   } catch {
@@ -686,7 +699,11 @@ function mantineToolOnlyImports(): PluginOption {
     for (const raw of statement[1].split(",")) {
       const entry = raw.trim().replace(/^type\s+/, "");
       if (!entry) continue;
-      const exported = entry.split(/\s+as\s+/).pop()?.trim() ?? entry;
+      const exported =
+        entry
+          .split(/\s+as\s+/)
+          .pop()
+          ?.trim() ?? entry;
       exportedAt.set(exported, file);
     }
   }

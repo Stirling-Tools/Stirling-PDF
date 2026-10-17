@@ -36,15 +36,11 @@ The component lives with the other shared primitives, in `core/ui/Icon.tsx` — 
 | `core/ui/Icon.tsx` | The only icon component, plus `isIconName()`. Re-exports `IconName`, so `@app/ui/Icon` is the single import. |
 | `icons.ts` | Name → component and where it came from (lucide, ours, a brand mark). Every icon the app can render, and the source of `IconName`. |
 | `icons.config.ts` | Stroke weight and default size. |
-| `startupIcons.generated.ts` | The drawings the landing screen paints, so it never waits for the registry. Generated from those svgs by `editor/scripts/icons/generate-startup-icons.mjs`; edit the drawing, then regenerate, or the freshness test fails. |
-| `StartupIcon.tsx` | The single `<svg>` root every one of those drawings is inlined into. |
 | `colorless.ts` / `colorless.css` | The `colorless` class, which dims a brand mark for a disabled source. |
 | `svg/stirling/*.svg` | Our own drawings, for glyphs lucide has no equivalent for. |
 | `svg/third-party/*.svg` | Brand marks (S3, Slack, Jira…), which keep their own colours. |
 
 `?react` compiles each svg into a component at build time, configured once in `editor/scripts/icons/svgrOptions.mts` so the app, Storybook and the tests transform them the same way. Lucide's own svgs are read from `lucide-static` in `node_modules`, so none of its artwork is checked in.
-
-The names the landing screen paints skip that: they are inlined as markup and share one `<svg>` root, so the bundle carries the viewBox and stroke attributes once instead of once per icon. Everything else — an icon first seen on a tool screen, a tool panel — still comes from the registry through `?react`.
 
 ## Adding an icon
 

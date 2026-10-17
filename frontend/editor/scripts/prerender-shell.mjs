@@ -16,7 +16,7 @@
  * could not reproduce gets no shell at all.
  */
 import { createServer } from "node:http";
-import { readFile, readdir, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { extname, join, normalize, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -147,7 +147,18 @@ function installShellHelpers() {
   globalThis.__shellCritical = () => {
     const root = document.getElementById("root");
     if (!root) return "";
-    const elements = [root, ...root.querySelectorAll("*")];
+    const elements = [
+      document.documentElement,
+      document.body,
+      root,
+      ...root.querySelectorAll("*"),
+    ];
+    const seen = new Set();
+    const once = (text) => {
+      if (!text || seen.has(text)) return "";
+      seen.add(text);
+      return text;
+    };
     const applies = (selector) => {
       for (const part of selector.split(",")) {
         const test = part.trim();
@@ -166,15 +177,16 @@ function installShellHelpers() {
         if (rule.cssRules && rule.cssRules.length) {
           const inner = walk(rule.cssRules);
           if (inner)
-            kept +=
+            kept += once(
               rule.cssText.slice(0, rule.cssText.indexOf("{")) +
-              "{" +
-              inner +
-              "}";
+                "{" +
+                inner +
+                "}",
+            );
         } else if (rule.selectorText) {
-          if (applies(rule.selectorText)) kept += rule.cssText;
+          if (applies(rule.selectorText)) kept += once(rule.cssText);
         } else {
-          kept += rule.cssText;
+          kept += once(rule.cssText);
         }
       }
       return kept;
@@ -187,7 +199,41 @@ function installShellHelpers() {
         // A sheet the page cannot read cannot be inlined.
       }
     }
+    // A custom property nothing in the shell reads is a byte the visitor pays for.
+    const markup = root.outerHTML;
+    for (let pass = 0; pass < 4; pass++) {
+      const names = new Set();
+      for (const match of (out + markup).matchAll(/var\(\s*--([\w-]+)/g)) {
+        names.add(match[1]);
+      }
+      const before = out;
+      out = out.replace(/--([\w-]+)\s*:[^;}]*;?/g, (declaration, name) =>
+        names.has(name) ? declaration : "",
+      );
+      if (out === before) break;
+    }
     return out;
+  };
+
+  /** Swaps the shell's svg images for data URIs, so its paint fetches no artwork. */
+  globalThis.__shellInlineImages = async () => {
+    const root = document.getElementById("root");
+    if (!root) return 0;
+    let count = 0;
+    for (const image of root.querySelectorAll("img[src$='.svg']")) {
+      const source = image.getAttribute("src");
+      if (!source || source.startsWith("data:")) continue;
+      try {
+        const text = await (await fetch(source)).text();
+        const utf8 = `data:image/svg+xml;utf8,${encodeURIComponent(text)}`;
+        const base64 = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(text)))}`;
+        image.setAttribute("src", utf8.length <= base64.length ? utf8 : base64);
+        count += 1;
+      } catch {
+        // An image the capture cannot read stays a request; the shell still paints.
+      }
+    }
+    return count;
   };
 
   globalThis.__shellMarkup = () => {
@@ -282,6 +328,7 @@ export async function captureShell({
     await page.goto(`${server.origin}/`, { waitUntil: "load" });
     await page.waitForSelector("#root .app-frame", { timeout: 60_000 });
     await page.evaluate(() => globalThis.__shellReady(10, 500, 120_000));
+    await page.evaluate(() => globalThis.__shellInlineImages());
 
     const captured = await page.evaluate(() => globalThis.__shellMarkup());
     if (!captured) throw new Error("the landing screen rendered no app frame");
@@ -337,21 +384,36 @@ function shellScript({ wide, narrow }) {
     base: wide.base,
     rtl: wide.rtl,
     nodes: { wide: wide.nodes, narrow: narrow?.nodes ?? 0 },
-    strings,
+    langs: Object.keys(strings),
+    // Only the base language's words ride the document; the rest live in
+    // `dist/shells/<language>.json` and are fetched when they are needed.
+    strings: { [wide.base]: strings[wide.base] },
   }).replace(/</g, "\\u003c");
   return [
     `<script id="shell-strings" type="application/json">${payload}</script>`,
     `<script>(function(){var root=document.getElementById("root");if(!root)return;`,
-    `function drop(){while(root.firstChild)root.removeChild(root.firstChild);root.removeAttribute("data-shell");}`,
+    `function drop(){while(root.firstChild)root.removeChild(root.firstChild);root.removeAttribute("data-shell");if(window.__spdfBoot)window.__spdfBoot();}`,
     `try{var data=JSON.parse(document.getElementById("shell-strings").textContent);`,
     `var stored=null;try{stored=localStorage.getItem("i18nextLng");}catch(e){}`,
-    `var language=stored&&data.strings[stored]?stored:navigator.language&&data.strings[navigator.language]?navigator.language:null;`,
+    // A tag arrives in any case and with either separator, so match it exactly, then
+    // case-insensitively, then by language, and fall back to the captured base.
+    `function pick(name){if(!name)return null;name=String(name).replace(/_/g,"-");`,
+    `var keys=data.langs;var lower=name.toLowerCase();if(keys.indexOf(name)!==-1)return name;`,
+    `for(var i=0;i<keys.length;i++)if(keys[i].toLowerCase()===lower)return keys[i];`,
+    `var primary=lower.split("-")[0];for(var j=0;j<keys.length;j++){var k=keys[j].toLowerCase();`,
+    `if(k===primary||k.split("-")[0]===primary)return keys[j];}return null;}`,
+    `var language=pick(stored)||pick(navigator.language)||pick(data.base);`,
     `if(!language){drop();return;}`,
-    `var shell=data.strings[language];`,
+    `function apply(shell){try{`,
     // Both shells are in the document and the stylesheet picks one, so the first
     // layout is already the final one; only the words have to change here.
-    `if(!shell[matchMedia("(max-width: 1024px)").matches?"narrow":"wide"]){drop();return;}`,
+    `var active=matchMedia("(max-width: 1024px)").matches?"narrow":"wide";`,
+    `if(!shell[active]){drop();return;}`,
     `var shells=root.querySelectorAll("[data-shell-for]");`,
+    // Two copies of an id confuse a label or a search box that looks one up, so the
+    // shell the viewport does not draw gives its ids up.
+    `for(var s=0;s<shells.length;s++)if(shells[s].getAttribute("data-shell-for")!==active){`,
+    `var staled=shells[s].querySelectorAll("[id]");for(var t=0;t<staled.length;t++)staled[t].removeAttribute("id");}`,
     `for(var i=0;i<shells.length;i++){var name=shells[i].getAttribute("data-shell-for");`,
     `var list=shell[name];if(!list)continue;`,
     `if(list.length!==data.nodes[name]){drop();return;}`,
@@ -365,10 +427,18 @@ function shellScript({ wide, narrow }) {
     // the capture stores them base-relative so the markup follows the deployment base.
     `var images=root.querySelectorAll("img[src]");`,
     `for(var k=0;k<images.length;k++){var src=images[k].getAttribute("src");`,
-    `if(src&&src.indexOf("://")<0&&src.charAt(0)!=="/"){images[k].setAttribute("src",new URL(src,document.baseURI).href);}}`,
+    `if(src&&src.indexOf("://")<0&&src.indexOf("data:")!==0&&src.charAt(0)!=="/"){images[k].setAttribute("src",new URL(src,document.baseURI).href);}}`,
     `if(data.rtl.indexOf(language)!==-1)document.documentElement.dir="rtl";`,
     `document.documentElement.lang=language;`,
     `root.removeAttribute("data-shell");`,
+    `}catch(e){drop();}}`,
+    // The base language is in the document; every other one loads its words first,
+    // and a shell that cannot get them stays hidden and boots the app instead.
+    `var inline=data.strings[language];`,
+    `if(inline){apply(inline);}else{`,
+    `fetch(new URL("shells/"+encodeURIComponent(language)+".json",document.baseURI))`,
+    `.then(function(response){return response.ok?response.json():null;})`,
+    `.then(function(shell){if(shell)apply(shell);else drop();},function(){drop();});}`,
     `}catch(e){drop();}})();</script>`,
   ].join("");
 }
@@ -378,65 +448,116 @@ const ENTRY_TAG =
   /<script\b[^>]*\btype="module"[^>]*\bsrc="([^"]+)"[^>]*><\/script>/;
 
 /**
- * Leaves the entry inert, and boots it after `load` or the first interaction.
- *
- * The shell is the first paint and needs none of the app's JavaScript, yet a phone
- * waits for every byte of it before that paint lands. The preload hints go with it:
- * they fetch the whole graph before anything paints from it, and the boot fetches the
- * same chunks when it runs. A tap starts the boot immediately - a person is waiting
- * on it, and they should never wait for `load`.
+ * Leaves the entry inert and boots it on the first gesture, a deep link or a file, so
+ * the shell's paint never waits for the app's graph.
  */
 function deferEntry(html) {
   const entry = ENTRY_TAG.exec(html);
   if (!entry) throw new Error("index.html has no module entry script");
-  const payload = JSON.stringify({ src: entry[1] }).replace(/</g, "\\u003c");
-  // The shell carries its own rules; the app's sheets arrive with the app, not before it.
+  const hints = [
+    ...html.matchAll(
+      /<link\b[^>]*\brel="modulepreload"[^>]*\bhref="([^"]+)"[^>]*>/g,
+    ),
+  ].map((match) => match[1]);
+  const payload = JSON.stringify({ src: entry[1], hints }).replace(
+    /</g,
+    "\\u003c",
+  );
+  // The shell carries its own rules; the app's sheets and hints arrive with the app.
   const held = (page) =>
     page
       .replace(/<link\b[^>]*\brel="preload"[^>]*\bas="style"[^>]*>/g, "")
+      .replace(/<link\b[^>]*\brel="modulepreload"[^>]*>/g, "")
       .replace(
         /<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+)"[^>]*>/g,
         (_match, href) =>
           `<link rel="stylesheet" data-href="${href}" disabled>`,
       );
-  return held(html)
-    .replace(/<link\b[^>]*\brel="modulepreload"[^>]*>/g, "")
-    .replace(
-      ENTRY_TAG,
-      `<script id="app-entry" type="application/json">${payload}</script>` +
-        "<script>(function(){var booted=false;" +
-        'var entry=document.getElementById("app-entry");if(!entry)return;' +
-        'function restore(){var links=document.querySelectorAll("link[data-href]");' +
-        'for(var k=0;k<links.length;k++){var l=document.createElement("link");' +
-        'l.rel="stylesheet";l.href=links[k].getAttribute("data-href");document.head.appendChild(l);}}' +
-        "function boot(){if(booted)return;booted=true;restore();" +
-        'var script=document.createElement("script");script.type="module";' +
-        'script.crossOrigin="anonymous";script.src=JSON.parse(entry.textContent).src;' +
-        "document.head.appendChild(script);}" +
-        // The landing is the one screen that paints from the shell alone, so it can wait;
-        // a deep link (a tool, the editor) is an app page from its first frame, and its
-        // controls must work the moment they appear.
-        'var landing=document.baseURI;var here=location.href.split("#")[0].split("?")[0];' +
-        'if(here.slice(-1)==="/")here=here.slice(0,-1);' +
-        'if(landing.slice(-1)==="/")landing=landing.slice(0,-1);' +
-        "if(here!==landing){restore();document.write('<script type=\"module\" crossorigin src=\"'+JSON.parse(entry.textContent).src+'\"></'+'script>');return;}" +
-        // The shell is the first screen, so the app waits for a gesture.
-        'var triggers=["pointerdown","keydown","touchstart","wheel","focusin"];' +
-        "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
-        // A file picked before the app is up is carried over to its input.
-        "var pending=null;" +
-        'addEventListener("change",function(event){var target=event.target;' +
-        'if(!target||target.tagName!=="INPUT"||target.type!=="file"||!target.files||!target.files.length)return;' +
-        "pending=target.files;boot();handOff();},true);" +
-        "function handOff(){if(!pending)return;" +
-        'var input=document.querySelector("input[type=file]");' +
-        "if(!input){setTimeout(handOff,50);return;}" +
-        "try{var carrier=new DataTransfer();" +
-        "for(var j=0;j<pending.length;j++)carrier.items.add(pending[j]);" +
-        'input.files=carrier.files;input.dispatchEvent(new Event("change",{bubbles:true}));}catch(e){}' +
-        "pending=null;}" +
-        "})();</script>",
-    );
+  return held(html).replace(
+    ENTRY_TAG,
+    `<script id="app-entry" type="application/json">${payload}</script>` +
+      "<script>(function(){var booted=false;" +
+      'var entry=document.getElementById("app-entry");if(!entry)return;' +
+      "var payload=JSON.parse(entry.textContent);var src=payload.src;" +
+      // Hints and sheets arrive with the app rather than before its first paint.
+      "function restore(){var hints=payload.hints||[];" +
+      'for(var h=0;h<hints.length;h++){var hint=document.createElement("link");hint.rel="modulepreload";' +
+      'hint.crossOrigin="anonymous";hint.href=hints[h];document.head.appendChild(hint);}' +
+      'var links=document.querySelectorAll("link[data-href]");' +
+      'for(var k=0;k<links.length;k++){var l=links[k];l.href=l.getAttribute("data-href");l.removeAttribute("data-href");l.disabled=false;}}' +
+      "var focused=document.activeElement;" +
+      'var keepId=focused&&focused.tagName==="INPUT"&&focused.id?focused.id:null;' +
+      "var keepValue=keepId?focused.value:null;" +
+      // A tap on a search box must not lose what was typed while the shell was up.
+      'function boot(){if(booted)return;booted=true;removeEventListener("change",onChange,true);' +
+      "restore();" +
+      "if(window.__spdfLocalePreload)window.__spdfLocalePreload();" +
+      'var script=document.createElement("script");script.type="module";' +
+      'script.crossOrigin="anonymous";script.src=src;document.head.appendChild(script);' +
+      "if(keepId){var tried=0;(function refocus(){var el=document.getElementById(keepId);" +
+      'if(el&&!el.closest("[data-shell-for]")){el.value=keepValue;el.focus();return;}' +
+      "if(tried++<200)setTimeout(refocus,50);})();}}" +
+      "window.__spdfBoot=boot;" +
+      // A deep link is an app page from its first frame, so it boots at once, and the
+      // landing shell it would otherwise flash is dropped.
+      'var clean=function(url){var cut=url.split("#")[0].split("?")[0];' +
+      'if(cut.slice(-11)==="/index.html")cut=cut.slice(0,-11);' +
+      'while(cut.slice(-1)==="/")cut=cut.slice(0,-1);return cut;};' +
+      "if(clean(location.href)!==clean(document.baseURI)){" +
+      'var first=document.getElementById("root");if(first){while(first.firstChild)first.removeChild(first.firstChild);first.removeAttribute("data-shell");}' +
+      "restore();document.write('<script type=\"module\" crossorigin src=\"'+src+'\"></'+'script>');return;}" +
+      // The shell is the first screen, so the app waits for a gesture.
+      'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +
+      "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
+      // A shell link boots and routes, instead of a page load the app then undoes.
+      'addEventListener("click",function(event){if(booted)return;' +
+      'var link=event.target&&event.target.closest?event.target.closest("a[href]"):null;' +
+      'if(!link)return;var href=link.getAttribute("href");' +
+      'if(!href||href.charAt(0)==="#"||/^[a-z]+:/i.test(href))return;' +
+      "event.preventDefault();boot();" +
+      'var waited=0;(function route(){if(document.querySelector("[data-shell-for]")&&waited++<200){setTimeout(route,50);return;}' +
+      'try{history.pushState({},"",href);dispatchEvent(new PopStateEvent("popstate"));}catch(e){location.href=href;}})();},true);' +
+      // A file picked before the app is up is carried over to its input.
+      "var pending=null;var tries=0;" +
+      "function onChange(event){var target=event.target;" +
+      'if(!target||target.tagName!=="INPUT"||target.type!=="file"||!target.files||!target.files.length)return;' +
+      "pending=target.files;boot();handOff();}" +
+      'addEventListener("change",onChange,true);' +
+      "function handOff(){if(!pending)return;" +
+      'if(document.querySelector("[data-shell-for]")&&tries++<200){setTimeout(handOff,50);return;}' +
+      'var input=document.querySelector("input[type=file]");' +
+      "if(!input){pending=null;return;}" +
+      "var files=pending;pending=null;" +
+      "try{var carrier=new DataTransfer();" +
+      "for(var j=0;j<files.length;j++)carrier.items.add(files[j]);" +
+      'input.files=carrier.files;input.dispatchEvent(new Event("change",{bubbles:true}));}catch(e){}}' +
+      "})();</script>",
+  );
+}
+
+/**
+ * Swaps the page's #root element for the shell markup.
+ *
+ * An OpenGraph build puts crawlable copy inside that element, so matching an empty
+ * one would skip the shell; the element is replaced to its matching close instead.
+ */
+function replaceRoot(html, markup) {
+  const open = html.indexOf('<div id="root"');
+  if (open === -1) throw new Error('index.html has no <div id="root"></div>');
+  const tag = /<\/?div\b/g;
+  tag.lastIndex = open;
+  let depth = 0;
+  for (let match = tag.exec(html); match; match = tag.exec(html)) {
+    depth += match[0] === "</div" ? -1 : 1;
+    if (depth === 0) {
+      return (
+        html.slice(0, open) +
+        markup +
+        html.slice(match.index + match[0].length + 1)
+      );
+    }
+  }
+  throw new Error('index.html has no <div id="root"></div>');
 }
 
 export async function prerenderShell({
@@ -455,8 +576,9 @@ export async function prerenderShell({
       viewport: { width: 412, height: 823 },
     });
   } catch (error) {
-    console.warn(
-      `[prerender-shell] no phone-width shell: ${error instanceof Error ? error.message : error}`,
+    throw new Error(
+      `the phone-width shell did not render: ${error instanceof Error ? error.message : error}`,
+      { cause: error },
     );
   }
   const indexPath = join(distDir, "index.html");
@@ -481,10 +603,16 @@ export async function prerenderShell({
     shellScript({ wide, narrow }),
     SHELL_END,
   ].join("");
-  const withShell = html.replace(/(<div id="root"><\/div>)/, emitted);
-  if (withShell === html)
-    throw new Error('index.html has no <div id="root"></div>');
+  const withShell = replaceRoot(html, emitted);
   await writeFile(indexPath, deferEntry(withShell));
+  const shellsDir = join(distDir, "shells");
+  await mkdir(shellsDir, { recursive: true });
+  for (const language of Object.keys(wide.strings)) {
+    if (language === wide.base) continue;
+    const both = { wide: wide.strings[language] };
+    if (narrow?.strings[language]) both.narrow = narrow.strings[language];
+    await writeFile(join(shellsDir, `${language}.json`), JSON.stringify(both));
+  }
   return {
     nodes: wide.nodes,
     languages: languageCount,

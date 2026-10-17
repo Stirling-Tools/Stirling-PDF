@@ -17,7 +17,6 @@
     "editor/src/core/data/ogImageMap.json",
     "editor/src/core/data/urlSeoOverrides.json",
     "editor/src/core/generated/docsManifest.json",
-    "editor/src/core/icons/startupIcons.generated.ts",
     "editor/public/pdfjs*/",
     "editor/public/js/thirdParty/",
     "editor/public/css/cookieconsent.css",

@@ -107,7 +107,7 @@ export class ThumbnailGenerationService {
    */
   private evictLeastRecentlyUsedPDF(): void {
     let oldestEntry: [FileId, CachedPDFDocument] | null = null;
-    let oldestTime = Date.now();
+    let oldestTime = Infinity;
 
     for (const [key, value] of this.pdfDocumentCache.entries()) {
       if (value.lastUsed < oldestTime && value.refCount === 0) {
@@ -248,18 +248,25 @@ export class ThumbnailGenerationService {
     return null;
   }
 
-  addThumbnailToCache(pageId: string, thumbnail: string, fileId?: FileId): void {
+  addThumbnailToCache(
+    pageId: string,
+    thumbnail: string,
+    fileId?: FileId,
+  ): void {
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
+    const previous = this.thumbnailCache.get(pageId)?.sizeBytes ?? 0;
 
     // Enforce cache size limits
     while (
       this.thumbnailCache.size >= this.maxCacheEntries ||
-      (this.currentCacheSize + sizeBytes > this.maxCacheSizeBytes &&
+      (this.currentCacheSize + sizeBytes - previous > this.maxCacheSizeBytes &&
         this.thumbnailCache.size > 0)
     ) {
       this.evictLeastRecentlyUsed();
     }
 
+    // A page that is cached again replaces its bytes instead of adding them.
+    const replaced = this.thumbnailCache.get(pageId)?.sizeBytes ?? 0;
     this.thumbnailCache.set(pageId, {
       thumbnail,
       lastUsed: Date.now(),
@@ -267,7 +274,7 @@ export class ThumbnailGenerationService {
       ...(fileId ? { fileId } : {}),
     });
 
-    this.currentCacheSize += sizeBytes;
+    this.currentCacheSize += sizeBytes - replaced;
   }
 
   /**
@@ -289,7 +296,7 @@ export class ThumbnailGenerationService {
 
   private evictLeastRecentlyUsed(): void {
     let oldestEntry: [string, CachedThumbnail] | null = null;
-    let oldestTime = Date.now();
+    let oldestTime = Infinity;
 
     for (const [key, value] of this.thumbnailCache.entries()) {
       if (value.lastUsed < oldestTime) {
