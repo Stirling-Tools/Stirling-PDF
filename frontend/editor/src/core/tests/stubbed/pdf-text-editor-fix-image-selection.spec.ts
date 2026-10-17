@@ -38,7 +38,6 @@ interface Rect {
 }
 
 async function openSample(page: Page): Promise<void> {
-  await page.route("**/encode-charcodes", (route) => route.abort());
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
@@ -128,10 +127,6 @@ async function gutter(page: Page): Promise<{
 
 test.describe("PDF text editor - selection survives resize, marquee never wipes blind", () => {
   test.setTimeout(120_000);
-
-  test.beforeEach(async ({ page }) => {
-    await page.route("**/encode-charcodes", (route) => route.abort());
-  });
 
   // (A) Before the fix: imageIds went ["p0-i46"] -> [] the instant the corner
   // handle was pressed, and the overlay outline fell back from solid to none.

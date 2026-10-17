@@ -1,5 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import type { Page, Route } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import path from "path";
 
 /** Coverage for two save/open safety features. */
@@ -16,7 +16,6 @@ const SAMPLE = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
 const ENCRYPTED_PASSWORD = "testpass123";
 
 async function gotoEditor(page: Page): Promise<void> {
-  await page.route("**/encode-charcodes", (route: Route) => route.abort());
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 20_000,
@@ -36,7 +35,6 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
         ? "reuses the session unlock when opening and saving a workbench PDF"
         : "refuses to save or download an export that lost its protection",
       async ({ page }) => {
-        await page.route("**/encode-charcodes", (route) => route.abort());
         let inspections = 0;
         await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
           inspections++;

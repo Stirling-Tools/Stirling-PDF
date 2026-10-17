@@ -23,7 +23,7 @@ import {
   _clearFontForCharCacheForTests,
   _clearFontNameCacheForTests,
   _clearReusableFontCacheForTests,
-} from "@app/tools/pdfTextEditor/charcode/BackendResolver";
+} from "@app/tools/pdfTextEditor/charcode/FontHelpers";
 import type { ResolverContext } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
 
 const TEXT_PAGE = 555;
