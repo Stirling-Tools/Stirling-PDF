@@ -17,8 +17,6 @@ import urlSeoOverrides from "@editor/data/urlSeoOverrides.json";
 import { useBaseUrl } from "@editor/hooks/useBaseUrl";
 import { useIsMobile, useIsTouch } from "@editor/hooks/useIsMobile";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
-import { LogoIcon } from "@editor/components/shared/LogoIcon";
-import { Wordmark } from "@editor/components/shared/Wordmark";
 import { useFileContext } from "@editor/contexts/file/fileHooks";
 import {
   useNavigationState,
@@ -48,9 +46,6 @@ import { PolicyAutoRunController } from "@editor/components/policies/PolicyAutoR
 import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@editor/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@editor/contexts/QuickNavHostContext";
-import { useQuickNavHost } from "@editor/contexts/QuickNavHostContext";
-import { SignMenu } from "@editor/components/shared/signing/SignMenu";
-import { useOpenSigning } from "@editor/hooks/signing/useOpenSigning";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
 import {
   getToolDisabledReason,
@@ -76,11 +71,15 @@ import { useProcessingFolderCreation } from "@editor/hooks/useProcessingFolderCr
 import { consumeProcessingFolderCreationRequest } from "@editor/utils/pendingProcessingFolderCreation";
 import type { FileSidebarProps } from "@editor/components/shared/FileSidebar";
 
-import { Button } from "@editor/ui/Button";
 import {
   INITIAL_MOBILE_VIEW,
   type MobileView,
 } from "@editor/pages/initialMobileView";
+import { PhoneLayout } from "@editor/pages/PhoneLayout";
+import {
+  PhoneBottomBar,
+  type PhoneNavigationProps,
+} from "@editor/pages/PhoneBottomBar";
 import "@editor/components/layout/WorkspaceFrame.css";
 import "@editor/pages/HomePage.css";
 
@@ -163,9 +162,6 @@ export default function HomePage() {
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
-  const quickNavHost = useQuickNavHost();
-  const openSigning = useOpenSigning();
-  const [mobileSignOpen, setMobileSignOpen] = useState(false);
 
   // From the processor's Reader entry. Ref-guarded: one-shot, and StrictMode double-invokes.
   const consumedReaderRequest = useRef(false);
@@ -598,104 +594,27 @@ export default function HomePage() {
         : baseUrl,
   });
 
-  const mobileNavigation = (
-    <div className="mobile-bottom-bar">
-      <SignMenu
-        opened={mobileSignOpen}
-        onClose={() => setMobileSignOpen(false)}
-        reasons={quickNavHost?.toolReasons ?? {}}
-        items={quickNavHost?.signingItems ?? []}
-        onOpenSigning={openSigning}
-        onSelect={(tool) => {
-          handleToolSelect(tool);
-          setActiveMobileView("tools");
-        }}
-      >
-        <Button
-          variant="tertiary"
-          className="mobile-bottom-button"
-          aria-label={
-            quickNavHost?.signingBadge
-              ? t(
-                  "signMenu.triggerUnreadCount",
-                  "Sign · {{count}} unread sessions",
-                  { count: quickNavHost.signingBadge },
-                )
-              : t("signMenu.title", "Sign")
-          }
-          onClick={() => setMobileSignOpen((open) => !open)}
-        >
-          <Icon name="pen-tool" size="1.5rem" />
-          {quickNavHost && quickNavHost.signingBadge > 0 && (
-            <span className="sign-menu__trigger-badge" aria-hidden>
-              {quickNavHost.signingBadge}
-            </span>
-          )}
-          <span className="mobile-bottom-button-label">
-            {t("signMenu.title", "Sign")}
-          </span>
-        </Button>
-      </SignMenu>
-      <Button
-        variant="tertiary"
-        className="mobile-bottom-button"
-        aria-label={t("quickAccess.allTools", "Tools")}
-        onClick={() => {
-          leaveMyFiles();
-          handleBackToTools();
-          if (isMobile) {
-            setActiveMobileView("tools");
-          }
-        }}
-      >
-        <Icon name="layout-grid" size={"1.5rem"} />
-        <span className="mobile-bottom-button-label">
-          {t("quickAccess.allTools", "Tools")}
-        </span>
-      </Button>
-      {toolAvailability["automate"]?.available !== false && (
-        <Button
-          variant="tertiary"
-          className="mobile-bottom-button"
-          aria-label={t("quickAccess.automate", "Automate")}
-          onClick={() => {
+  const phoneNavigation: PhoneNavigationProps = {
+    onShowTools: () => {
+      leaveMyFiles();
+      handleBackToTools();
+      setActiveMobileView("tools");
+    },
+    onShowAutomate:
+      toolAvailability["automate"]?.available !== false
+        ? () => {
             leaveMyFiles();
             handleToolSelect("automate");
-            if (isMobile) {
-              setActiveMobileView("tools");
-            }
-          }}
-        >
-          <Icon name="automate" size="1.5rem" />
-          <span className="mobile-bottom-button-label">
-            {t("quickAccess.automate", "Automate")}
-          </span>
-        </Button>
-      )}
-      <Button
-        variant="tertiary"
-        className="mobile-bottom-button"
-        aria-label={t("home.mobile.openFiles", "Open files")}
-        onClick={() => navigate("/files")}
-      >
-        <Icon name="folder" size="1.5rem" />
-        <span className="mobile-bottom-button-label">
-          {t("quickAccess.files", "Files")}
-        </span>
-      </Button>
-      <Button
-        variant="tertiary"
-        className="mobile-bottom-button"
-        aria-label={t("quickAccess.config", "Config")}
-        onClick={openSettings}
-      >
-        <Icon name="settings" size="1.5rem" />
-        <span className="mobile-bottom-button-label">
-          {t("quickAccess.config", "Config")}
-        </span>
-      </Button>
-    </div>
-  );
+            setActiveMobileView("tools");
+          }
+        : null,
+    onShowFiles: () => navigate("/files"),
+    onOpenSettings: openSettings,
+    onSelectSigningTool: (tool) => {
+      handleToolSelect(tool);
+      setActiveMobileView("tools");
+    },
+  };
 
   return (
     <div className="h-screen overflow-hidden">
@@ -721,98 +640,15 @@ export default function HomePage() {
       <FilesPageProvider>
         {/* Keep signing in the same tree across breakpoints to preserve drafts and placed signatures. */}
         {isMobile && navigationState.workbench !== "signing" ? (
-          <div className="mobile-layout" data-files-mode={isWorkspaceHub}>
-            {/* The library brings its own tabs and folder path, so the
-              tools/workspace toggle would only cost it vertical space. Every
-              other view keeps the toggle. */}
-            {!isWorkspaceHub && (
-              <div className="mobile-toggle">
-                <div className="mobile-brand">
-                  <LogoIcon className="mobile-brand-icon" />
-                  <Wordmark alt={brandAltText} className="mobile-brand-text" />
-                </div>
-                <div
-                  className="mobile-toggle-buttons"
-                  role="tablist"
-                  aria-label={t(
-                    "home.mobile.viewSwitcher",
-                    "Switch workspace view",
-                  )}
-                >
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={activeMobileView === "tools"}
-                    className={`mobile-toggle-button ${activeMobileView === "tools" ? "active" : ""}`}
-                    onClick={() => handleSelectMobileView("tools")}
-                  >
-                    {t("home.mobile.tools", "Tools")}
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={activeMobileView === "workbench"}
-                    className={`mobile-toggle-button ${activeMobileView === "workbench" ? "active" : ""}`}
-                    onClick={() => handleSelectMobileView("workbench")}
-                  >
-                    {t("home.mobile.workspace", "Workspace")}
-                  </button>
-                </div>
-              </div>
-            )}
-            {isWorkspaceHub ? (
-              /* /files takes the whole viewport. Skipping the slider keeps
-                the FileManagerView from being trapped inside a 100vw
-                horizontal-scroll container (which truncated buttons and
-                created a stray side-scroll surface on touch). */
-              <div className="mobile-files-full">
-                <div className="flex-1 min-h-0 flex" style={{ minWidth: 0 }}>
-                  <Workbench />
-                </div>
-              </div>
-            ) : (
-              <div className="mobile-slider-wrap">
-                <div ref={sliderRef} className="mobile-slider">
-                  <div
-                    className="mobile-slide"
-                    aria-label={t(
-                      "home.mobile.toolsSlide",
-                      "Tool selection panel",
-                    )}
-                  >
-                    <div className="mobile-slide-content">
-                      <RightSidebar />
-                    </div>
-                  </div>
-                  <div
-                    className="mobile-slide"
-                    aria-label={t(
-                      "home.mobile.workbenchSlide",
-                      "Workspace panel",
-                    )}
-                  >
-                    <div className="mobile-slide-content">
-                      <div
-                        className="flex-1 min-h-0 flex"
-                        style={{ minWidth: 0 }}
-                      >
-                        <Workbench />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {isTouch && showSwipeHint && (
-                  <span className="mobile-swipe-hint" aria-hidden="true">
-                    {t(
-                      "home.mobile.swipeHint",
-                      "Swipe left or right to switch views",
-                    )}
-                  </span>
-                )}
-              </div>
-            )}
-            {mobileNavigation}
-          </div>
+          <PhoneLayout
+            view={activeMobileView}
+            onSelectView={handleSelectMobileView}
+            sliderRef={sliderRef}
+            showSwipeHint={isTouch && showSwipeHint}
+            filesMode={isWorkspaceHub}
+            brandAltText={brandAltText}
+            {...phoneNavigation}
+          />
         ) : (
           <Group
             align={isMobile ? "stretch" : "flex-start"}
@@ -838,7 +674,7 @@ export default function HomePage() {
               </div>
             )}
             <Workbench />
-            {isMobile && mobileNavigation}
+            {isMobile && <PhoneBottomBar {...phoneNavigation} />}
             {/* The reader's rail takes the slot the tool panel holds otherwise: the
                 panel's controls are the editor's, and reading wants the viewer's.
                 Both render together only while the panel is on its way out. */}
