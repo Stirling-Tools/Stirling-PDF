@@ -39,7 +39,7 @@ export function StartupSetup({
   refreshConfigOnMount?: boolean;
 }) {
   const { t } = useTranslation();
-  const { config, refetch } = useAppConfig();
+  const { config, error: configError, refetch, carriedIn } = useAppConfig();
   const { user, signOut, isAnonymous } = useAuth();
   const { effectiveIsAdmin } = useServerExperience();
   const accountLogout = useAccountLogout();
@@ -54,7 +54,13 @@ export function StartupSetup({
     queryFn: async () => {
       // Editor and Processor have separate query caches. Re-read server settings
       // on entry so an analytics choice made in the other app is respected.
-      if (refreshConfigOnMount) await refetch();
+      // Only a config carried in from the other app can be stale; on a cold
+      // entry the provider's own fetch is already this session's answer.
+      // A failed cold fetch is the exception: the provider falls back to the
+      // default config, so retry once here instead of running on wrong flags.
+      if (refreshConfigOnMount && (carriedIn || configError)) {
+        await refetch();
+      }
       if (!loginEnabled || !user || isAnonymous) return null;
       const [account, login] = await Promise.all([
         accountService.getAccountData(),
