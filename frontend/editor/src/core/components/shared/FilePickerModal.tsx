@@ -16,6 +16,7 @@ import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbn
 import { FileId } from "@app/types/file";
 import type { StoredStirlingFileRecord } from "@app/services/fileStorage";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
 
 type StoredFileItem = Partial<StoredStirlingFileRecord> & {
   id: FileId;
@@ -90,6 +91,12 @@ interface StoredFileCardProps {
 
 function StoredFileCard({ file, selected, onToggle }: StoredFileCardProps) {
   const { t } = useTranslation();
+  const access = usePdfAccess(file.id);
+  const encrypted = file.isEncrypted ?? file.processedFile?.isEncrypted;
+  const locked = Boolean(encrypted) && !access;
+  const unverifiedPdf =
+    encrypted === undefined &&
+    (file.type === "application/pdf" || /\.pdf$/i.test(file.name ?? ""));
   return (
     <Box
       p="sm"
@@ -128,10 +135,8 @@ function StoredFileCard({ file, selected, onToggle }: StoredFileCardProps) {
         >
           <DocumentThumbnail
             file={file.file ?? null}
-            thumbnail={
-              file.processedFile?.isEncrypted ? undefined : file.thumbnail
-            }
-            isEncrypted={Boolean(file.processedFile?.isEncrypted)}
+            thumbnail={locked || unverifiedPdf ? undefined : file.thumbnail}
+            isEncrypted={locked}
             iconSize="2rem"
           />
         </Box>

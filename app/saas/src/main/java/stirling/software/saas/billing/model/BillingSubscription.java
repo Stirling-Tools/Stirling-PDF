@@ -24,7 +24,7 @@ import lombok.Setter;
  * record a tenant's subscription state.
  */
 @Entity
-@Table(name = "billing_subscriptions")
+@Table(name = "billing_subscriptions", schema = "public")
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "saas-subscriptions")
 @NoArgsConstructor
