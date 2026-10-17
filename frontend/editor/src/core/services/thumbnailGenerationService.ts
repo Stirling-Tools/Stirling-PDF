@@ -68,7 +68,9 @@ export class ThumbnailGenerationService {
     }
 
     while (this.pdfDocumentCache.size >= this.maxPdfCacheSize) {
-      this.evictLeastRecentlyUsedPDF();
+      // Every entry can be pinned by an in-flight render; without this guard
+      // the synchronous loop below never terminates.
+      if (!this.evictLeastRecentlyUsedPDF()) break;
     }
 
     const docPtr = await openRawDocumentSafe(
@@ -97,23 +99,27 @@ export class ThumbnailGenerationService {
   }
 
   /**
-   * Evict the least recently used PDF document
+   * Drop the least recently used unreferenced document. Returns false when
+   * every cached document is still referenced and nothing could be evicted.
    */
-  private evictLeastRecentlyUsedPDF(): void {
+  private evictLeastRecentlyUsedPDF(): boolean {
     let oldestEntry: [FileId, CachedPDFDocument] | null = null;
-    let oldestTime = Date.now();
 
     for (const [key, value] of this.pdfDocumentCache.entries()) {
-      if (value.lastUsed < oldestTime && value.refCount === 0) {
-        oldestTime = value.lastUsed;
+      // Compared against the oldest candidate, not against Date.now(): entries
+      // touched in the same millisecond would all look too recent to evict.
+      if (
+        value.refCount === 0 &&
+        (!oldestEntry || value.lastUsed < oldestEntry[1].lastUsed)
+      ) {
         oldestEntry = [key, value];
       }
     }
 
-    if (oldestEntry) {
-      void closeRawDocument(oldestEntry[1].docPtr);
-      this.pdfDocumentCache.delete(oldestEntry[0]);
-    }
+    if (!oldestEntry) return false;
+    void closeRawDocument(oldestEntry[1].docPtr);
+    this.pdfDocumentCache.delete(oldestEntry[0]);
+    return true;
   }
 
   /**
@@ -172,62 +178,67 @@ export class ThumbnailGenerationService {
   ): Promise<ThumbnailResult[]> {
     const docPtr = await this.getCachedPDFDocument(fileId, pdfArrayBuffer);
 
-    const allResults: ThumbnailResult[] = [];
-    let completed = 0;
-    const batchSize = 3; // Smaller batches for better UI responsiveness
+    try {
+      const allResults: ThumbnailResult[] = [];
+      let completed = 0;
+      const batchSize = 3; // Smaller batches for better UI responsiveness
 
-    // Process pages in small batches
-    for (let i = 0; i < pageNumbers.length; i += batchSize) {
-      const batch = pageNumbers.slice(i, i + batchSize);
+      // Process pages in small batches
+      for (let i = 0; i < pageNumbers.length; i += batchSize) {
+        const batch = pageNumbers.slice(i, i + batchSize);
 
-      // Process batch sequentially (to avoid canvas conflicts)
-      for (const pageNumber of batch) {
-        try {
-          const thumbnail = await renderPdfiumPageDataUrl(
-            docPtr,
-            pageNumber - 1,
-            scale,
-            { applyRotation: false, format: "jpeg", quality },
-          );
-          if (!thumbnail) {
-            throw new Error(`Could not render page ${pageNumber}`);
+        // Process batch sequentially (to avoid canvas conflicts)
+        for (const pageNumber of batch) {
+          try {
+            const thumbnail = await renderPdfiumPageDataUrl(
+              docPtr,
+              pageNumber - 1,
+              scale,
+              { applyRotation: false, format: "jpeg", quality },
+            );
+            if (!thumbnail) {
+              throw new Error(`Could not render page ${pageNumber}`);
+            }
+            allResults.push({ pageNumber, thumbnail, success: true });
+          } catch (error) {
+            console.error(
+              `Failed to generate thumbnail for page ${pageNumber}:`,
+              error,
+            );
+            allResults.push({
+              pageNumber,
+              thumbnail: "",
+              success: false,
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
           }
-          allResults.push({ pageNumber, thumbnail, success: true });
-        } catch (error) {
-          console.error(
-            `Failed to generate thumbnail for page ${pageNumber}:`,
-            error,
-          );
-          allResults.push({
-            pageNumber,
-            thumbnail: "",
-            success: false,
-            error: error instanceof Error ? error.message : "Unknown error",
+        }
+
+        completed += batch.length;
+
+        // Report progress
+        if (onProgress) {
+          onProgress({
+            completed,
+            total: pageNumbers.length,
+            thumbnails: allResults
+              .slice(-batch.length)
+              .filter((r) => r.success),
           });
         }
+
+        // Yield control to prevent UI blocking
+        await new Promise((resolve) => setTimeout(resolve, 1));
       }
 
-      completed += batch.length;
-
-      // Report progress
-      if (onProgress) {
-        onProgress({
-          completed,
-          total: pageNumbers.length,
-          thumbnails: allResults.slice(-batch.length).filter((r) => r.success),
-        });
-      }
-
-      // Yield control to prevent UI blocking
-      await new Promise((resolve) => setTimeout(resolve, 1));
+      return allResults;
+    } finally {
+      // Runs even when `onProgress` throws. A callback that throws used to
+      // leave the reference counted and the document open, which made the
+      // entry permanently un-evictable.
+      this.releasePDFDocument(fileId);
+      this.cleanupCompletedDocument(fileId);
     }
-
-    // Release reference to PDF document (don't destroy - keep in cache)
-    this.releasePDFDocument(fileId);
-
-    this.cleanupCompletedDocument(fileId);
-
-    return allResults;
   }
 
   /**
@@ -244,6 +255,14 @@ export class ThumbnailGenerationService {
 
   addThumbnailToCache(pageId: string, thumbnail: string): void {
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
+
+    // Replace rather than add: leaving the old entry in place would count its
+    // bytes twice and evict healthy thumbnails later.
+    const existing = this.thumbnailCache.get(pageId);
+    if (existing) {
+      this.thumbnailCache.delete(pageId);
+      this.currentCacheSize -= existing.sizeBytes;
+    }
 
     // Enforce cache size limits
     while (
