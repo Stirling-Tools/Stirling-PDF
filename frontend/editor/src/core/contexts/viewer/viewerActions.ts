@@ -196,6 +196,11 @@ export function createViewerActions({
     },
   };
 
+  // The bridge reports `currentZoom` asynchronously, so a second click can still
+  // read the level the first one started from. Remember what the last click asked
+  // for and keep stepping from there until the bridge catches up.
+  let pendingZoom: { from: number; to: number } | null = null;
+
   // A button step is a single commit. Animating it would re-request zoom on
   // every frame and re-render the whole tile layer each time, which blanks the
   // page mid-gesture; one commit matches how the wheel/pinch gesture lands.
@@ -203,10 +208,14 @@ export function createViewerActions({
     const api = registry.current.zoom?.api;
     if (!api?.requestZoom) return;
     const current = getZoomState().currentZoom;
-    const base = Number.isFinite(current) && current > 0 ? current : 1;
+    const bridge = Number.isFinite(current) && current > 0 ? current : 1;
+    const base =
+      pendingZoom && pendingZoom.from === bridge ? pendingZoom.to : bridge;
     const target =
       direction === "in" ? base * ZOOM_STEP_FACTOR : base / ZOOM_STEP_FACTOR;
-    api.requestZoom(clampZoom(target));
+    const level = clampZoom(target);
+    pendingZoom = { from: bridge, to: level };
+    api.requestZoom(level);
   };
 
   const zoomActions: ZoomActions = {
@@ -225,12 +234,15 @@ export function createViewerActions({
     requestZoom: (level: ZoomLevel, center?: Point) => {
       const api = registry.current.zoom?.api;
       if (api?.requestZoom) {
+        // An explicit level supersedes any pending click step.
+        pendingZoom = null;
         api.requestZoom(level, center);
       }
     },
     setZoomLevel: (factor: number) => {
       const api = registry.current.zoom?.api;
       if (api?.requestZoom) {
+        pendingZoom = null;
         triggerImmediateZoomUpdate(Math.round(factor * 100));
         api.requestZoom(factor);
       }

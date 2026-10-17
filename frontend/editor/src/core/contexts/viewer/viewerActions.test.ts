@@ -54,4 +54,20 @@ describe("viewerActions — button zoom", () => {
     });
     expect(() => actions.zoomActions.zoomIn()).not.toThrow();
   });
+
+  it("steps from the pending target while the bridge lags", () => {
+    const { actions, requestZoom } = makeActions(1);
+    actions.zoomActions.zoomIn();
+    actions.zoomActions.zoomIn();
+    // The bridge still reports 1, so the second step has to build on the 1.25
+    // the first click asked for instead of asking for it again.
+    expect(requestZoom.mock.calls).toEqual([[1.25], [1.5625]]);
+  });
+
+  it("clears the pending step when an explicit level arrives", () => {
+    const { actions, requestZoom } = makeActions(1);
+    actions.zoomActions.requestZoom(2);
+    actions.zoomActions.zoomIn();
+    expect(requestZoom.mock.calls).toEqual([[2, undefined], [1.25]]);
+  });
 });
