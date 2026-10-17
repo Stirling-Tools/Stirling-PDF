@@ -115,7 +115,7 @@ describe("detectSaveRisks", () => {
     expect(r.encrypted).toBe(true);
     expect(hasSaveRisks(r)).toBe(true);
     expect(describeSaveRisks(r)).toContain(
-      "This PDF is encrypted; the saved copy will NOT be encrypted (password and access restrictions are removed).",
+      "Saving this PDF may change its encryption or access restrictions.",
     );
     expect(detectSaveRisks(mkDoc({ throwOnEncrypt: true })).encrypted).toBe(
       false,

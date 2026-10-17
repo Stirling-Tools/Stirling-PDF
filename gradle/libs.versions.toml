@@ -21,7 +21,7 @@ jackson2 = "2.22.3"
 bucket4j = "8.19.0"
 archunit = "1.5.0"
 batik = "1.19"
-jpdfium = "1.1.5"
+jpdfium = "1.1.6"
 jwt = "0.13.0"
 aws-sdk = "2.54.13"
 jsch = "2.28.7"
@@ -29,6 +29,7 @@ commons-net = "3.13.0"
 smbj = "0.14.0"
 tink = "1.23.0"
 testcontainers = "1.21.4"
+mockito = "5.2.0"
 onnxruntime = "1.26.0"
 java-security-toolkit = "1.2.3"
 owasp-html-sanitizer = "20260924.2"
@@ -133,6 +134,7 @@ testcontainers-minio = { module = "org.testcontainers:minio", version.ref = "tes
 testcontainers-localstack = { module = "org.testcontainers:localstack", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
 
 # Jackson 2 transitive overrides
 jackson2-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson2" }

@@ -56,6 +56,9 @@ dependencies {
     implementation libs.pdfbox.xmpbox
 
     implementation libs.verapdf.validation.model
+    // CVE-2025-66453: verapdf depends on an old rhino, so pin the fixed line explicitly here
+    // rather than relying on the resolution strategy alone.
+    implementation libs.rhino
 
     // CVE-2022-25647: tabula pulls an old gson with unsafe deserialization. The central
     // resolutionStrategy.force is not enough on its own - a module only pulled transitively

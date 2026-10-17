@@ -274,6 +274,7 @@ subprojects {
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+        testRuntimeOnly rootProject.libs.mockito.inline
         testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
         testImplementation platform(rootProject.libs.okhttp.bom)
