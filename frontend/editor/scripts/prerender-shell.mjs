@@ -422,7 +422,13 @@ function deferEntry(html) {
       /<link\b[^>]*\brel="modulepreload"[^>]*\bhref="([^"]+)"[^>]*>/g,
     ),
   ].map((match) => match[1]);
-  const payload = JSON.stringify({ src: entry[1], hints }).replace(
+  // The tab icon and the manifest are fetched after the first paint, not before it.
+  const meta = [
+    ...html.matchAll(
+      /<link\b[^>]*\brel="(icon|apple-touch-icon|manifest)"[^>]*\bhref="([^"]+)"[^>]*>/g,
+    ),
+  ].map((match) => ({ rel: match[1], href: match[2] }));
+  const payload = JSON.stringify({ src: entry[1], hints, meta }).replace(
     /</g,
     "\\u003c",
   );
@@ -431,6 +437,10 @@ function deferEntry(html) {
     page
       .replace(/<link\b[^>]*\brel="preload"[^>]*\bas="style"[^>]*>/g, "")
       .replace(/<link\b[^>]*\brel="modulepreload"[^>]*>/g, "")
+      .replace(
+        /<link\b[^>]*\brel="(?:icon|apple-touch-icon|manifest)"[^>]*>/g,
+        "",
+      )
       .replace(
         /<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+)"[^>]*>/g,
         (_match, href) =>
@@ -446,6 +456,8 @@ function deferEntry(html) {
       "function restore(){var hints=payload.hints||[];" +
       'for(var h=0;h<hints.length;h++){var hint=document.createElement("link");hint.rel="modulepreload";' +
       'hint.crossOrigin="anonymous";hint.href=hints[h];document.head.appendChild(hint);}' +
+      'var meta=payload.meta||[];for(var m=0;m<meta.length;m++){var icon=document.createElement("link");' +
+      "icon.rel=meta[m].rel;icon.href=meta[m].href;document.head.appendChild(icon);}" +
       'var links=document.querySelectorAll("link[data-href]");' +
       'for(var k=0;k<links.length;k++){var l=links[k];l.href=l.getAttribute("data-href");l.removeAttribute("data-href");l.disabled=false;}}' +
       "var focused=document.activeElement;" +
