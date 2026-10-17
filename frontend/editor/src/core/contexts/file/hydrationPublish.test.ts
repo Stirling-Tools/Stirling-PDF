@@ -48,8 +48,9 @@ async function harness(ids: string[]) {
   const stateRef = { current: state };
   const filesRef = { current: new Map<FileId, File>() };
   const published: FileId[] = [];
+  const updateStirlingFileStub = vi.fn();
   const lifecycleManager = {
-    updateStirlingFileStub: (fileId: FileId) => published.push(fileId),
+    updateStirlingFileStub,
     removeFiles: () => {},
     trackBlobUrl: () => {},
   };
@@ -59,19 +60,29 @@ async function harness(ids: string[]) {
     {},
     stateRef,
     filesRef,
-    () => {},
+    (action) => {
+      if (action.type === "ADD_FILES")
+        published.push(
+          ...action.payload.stirlingFileStubs.map((stub) => stub.id),
+        );
+    },
     lifecycleManager as never,
   );
-  return { filesRef, published };
+  return { filesRef, published, updateStirlingFileStub };
 }
 
 describe("workbench hydration — a stalled parse can't hide the file", () => {
   test("publishes every file's bytes while their parses hang", async () => {
     // Three, because the parse queue only runs two at a time: the third proves
     // loading isn't queued behind parses that never finish.
-    const { filesRef, published } = await harness(["a", "b", "c"]);
+    const { filesRef, published, updateStirlingFileStub } = await harness([
+      "a",
+      "b",
+      "c",
+    ]);
 
     await vi.waitFor(() => expect(published).toHaveLength(3));
     expect([...filesRef.current.keys()]).toEqual(["a", "b", "c"]);
+    expect(updateStirlingFileStub).not.toHaveBeenCalled();
   });
 });

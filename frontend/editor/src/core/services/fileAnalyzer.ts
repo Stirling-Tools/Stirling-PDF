@@ -7,6 +7,8 @@ import {
   PdfiumOpenError,
   FPDF_ERR_PASSWORD,
 } from "@app/services/pdfiumService";
+import { ensurePdfAccess } from "@app/services/pdfSessionUnlock";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 
 // Bounded window scanned at each end of the PDF for an /Encrypt entry. The
@@ -87,23 +89,35 @@ export class FileAnalyzer {
     return analysis;
   }
 
+  /** Detect encryption and admit empty-password documents without prompting.
+   * The marker is an upload optimisation, not authorisation; operations inspect original bytes.
+   */
+  static async isPDFEncrypted(file: File): Promise<boolean> {
+    const access = getPdfAccess(file);
+    if (access) return access.encrypted;
+    if (!(await hasEncryptMarker(file))) return false;
+    if (file.size >= LARGE_PDF_PARSE_LIMIT) return true;
+    if (await this.requiresOpeningPassword(file)) return true;
+    try {
+      return (await ensurePdfAccess(file)).encrypted;
+    } catch {
+      return true;
+    }
+  }
+
   /**
-   * Cheap encryption-only probe for the upload-time detection path.
-   *
-   * Looks for a /Encrypt entry in a bounded window at either end of the file
-   * (where PDF trailers live). If absent, the file is definitely not encrypted
-   * and we can skip a full document parse. If present, falls back to a PDFium
-   * open so we can distinguish user-password (blocks open) from
-   * owner-password-only (opens fine); only the former should prompt.
+   * Opens the document with an empty password to tell a user-password file
+   * (blocks open) from owner-password-only (opens fine); only the former
+   * should prompt.
    *
    * Runs inside the addFiles mutex, so it must always settle: an unbounded
    * parse here stalls every later upload as well as this one.
    */
-  static async isPDFUserPasswordProtected(file: File): Promise<boolean> {
+  private static async requiresOpeningPassword(file: File): Promise<boolean> {
     if (!(await hasEncryptMarker(file))) return false;
 
-    // Too big to hand pdf.js: that full-buffer parse is the renderer OOM the
-    // large-file path exists to avoid, so trust the marker instead of it.
+    // Too big to parse in full: that whole-buffer parse is the OOM the large-file
+    // path exists to avoid, so trust the marker instead of it.
     if (file.size >= LARGE_PDF_PARSE_LIMIT) return true;
 
     let m: Awaited<ReturnType<typeof getPdfiumModule>> | null = null;
@@ -144,7 +158,7 @@ export class FileAnalyzer {
       const pageCount = await getRawPageCount(docPtr);
       return {
         pageCount,
-        isEncrypted: false,
+        isEncrypted: getPdfAccess(file)?.encrypted ?? false,
         isCorrupted: false,
       };
     } catch (error) {
