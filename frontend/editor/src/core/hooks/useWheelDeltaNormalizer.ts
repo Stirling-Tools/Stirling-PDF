@@ -58,6 +58,11 @@ interface HoldState {
   gestureStartSize: string | null;
   /** A preview the library cleared before the committed zoom re-laid-out. */
   held: HeldPreview | null;
+  /**
+   * The element the library previews a gesture on; set from the first non-empty
+   * preview, so unrelated style writes cannot end a hold or re-base the start size.
+   */
+  wrapperElement: HTMLElement | null;
 }
 
 /**
@@ -95,6 +100,7 @@ export function useWheelDeltaNormalizer(documentId: string): void {
     gestureInFlight: false,
     gestureStartSize: null,
     held: null,
+    wrapperElement: null,
   });
   const releaseRef = useRef<() => void>(() => {});
 
@@ -124,6 +130,7 @@ export function useWheelDeltaNormalizer(documentId: string): void {
     const endGesture = (): void => {
       state.gestureInFlight = false;
       state.gestureStartSize = null;
+      state.wrapperElement = null;
       dropHeldPreview();
     };
     releaseRef.current = endGesture;
@@ -165,7 +172,14 @@ export function useWheelDeltaNormalizer(documentId: string): void {
           continue;
         }
 
-        if (target.style.transform !== "none") {
+        const preview = target.style.transform;
+        if (!preview || preview === "none") {
+          // The library cleared its preview; only the element that carried one
+          // can be held, and any other element's rewrite must not touch the hold.
+          if (target !== state.wrapperElement) continue;
+        } else {
+          if (state.wrapperElement && target !== state.wrapperElement) continue;
+          state.wrapperElement = target;
           // A live preview does not change layout, so whatever the wrapper
           // measures right now is the size the gesture started from.
           dropHeldPreview();
@@ -198,6 +212,7 @@ export function useWheelDeltaNormalizer(documentId: string): void {
         base = Number.isFinite(current) && current > 0 ? current : 1;
         projected = 1;
         state.gestureStartSize = null;
+        state.wrapperElement = null;
       }
       burstStart = now;
       state.gestureInFlight = true;
@@ -244,6 +259,7 @@ export function useWheelDeltaNormalizer(documentId: string): void {
       if (event.touches.length !== 2) return;
       state.gestureInFlight = true;
       state.gestureStartSize = null;
+      state.wrapperElement = null;
     };
 
     previewObserver.observe(host, {

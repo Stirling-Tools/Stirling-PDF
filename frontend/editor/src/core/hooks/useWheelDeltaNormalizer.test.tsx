@@ -372,4 +372,32 @@ describe("useWheelDeltaNormalizer", () => {
 
     expect(wrapper.style.transform).toBe("translate(0px, 0px) scale(3)");
   });
+
+  it("keeps a held preview when another element's style is rewritten", async () => {
+    const resize = stubResizeObserver();
+    const { viewport, wrapper, setLayoutWidth } = makeViewportWithWrapper();
+    const unrelated = document.createElement("div");
+    viewport.parentElement!.append(unrelated);
+    mocks.viewport.current = viewport;
+    renderHook(() => useWheelDeltaNormalizer("doc"));
+
+    wheel(viewport, { ctrlKey: true, deltaY: -16, deltaMode: 0 });
+    wrapper.style.transform = "translate(-10px, -5px) scale(2)";
+    await flushMutations();
+    wrapper.style.transform = "none";
+    await flushMutations();
+    expect(wrapper.style.transform).toBe("translate(-10px, -5px) scale(2)");
+
+    unrelated.style.transform = "translate(1px, 1px)";
+    await flushMutations();
+    unrelated.style.transform = "";
+    await flushMutations();
+
+    // An unrelated element's rewrite must not clear the hold or re-base the size
+    // the wrapper started from; the hold still ends with the wrapper's layout.
+    expect(wrapper.style.transform).toBe("translate(-10px, -5px) scale(2)");
+    setLayoutWidth(250);
+    resize.fire();
+    expect(wrapper.style.transform).toBe("none");
+  });
 });
