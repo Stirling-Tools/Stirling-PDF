@@ -10,6 +10,7 @@ import {
 import { render, renderHook, screen, waitFor } from "@testing-library/react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
+import { withOperationConfigs } from "@app/data/toolOperationConfigs";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { SidebarProvider } from "@app/contexts/SidebarContext";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -258,7 +259,7 @@ class CaptureBoundary extends Component<
 describe("PipelineStepSettings: every tool's settings render in the portal", () => {
   it("renders each tool's automation settings without throwing", async () => {
     const { result } = renderHook(() => useTranslatedToolCatalog());
-    const catalog = result.current.allTools;
+    const catalog = withOperationConfigs(result.current.allTools);
     // getExecutableTools is exactly what PipelineBuilder feeds its "Add a tool" picker, so this
     // sweeps precisely the tools a user can add. Narrow to "editable" (renders a settings
     // component); "noSettings"/"unsupported" steps show a Banner instead and can't crash.

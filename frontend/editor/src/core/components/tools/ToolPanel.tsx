@@ -1,15 +1,21 @@
+import { Suspense, lazy } from "react";
 import { ScrollArea } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import ToolPicker from "@app/components/tools/ToolPicker";
 import SearchResults from "@app/components/tools/SearchResults";
 import ToolRenderer from "@app/components/tools/ToolRenderer";
-import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
 import { ToolPanelViewerBar } from "@app/components/tools/ToolPanelViewerBar";
 import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { ToolId } from "@app/types/toolId";
+
+// The sidebar renders the panel search only on a narrow viewport, so it loads
+// when that width first appears rather than with the panel.
+const ToolSearch = lazy(
+  () => import("@app/components/tools/toolPicker/ToolSearch"),
+);
 
 interface ToolPanelProps {
   /** Whether to expand into the full categorised tools view (with search). */
@@ -67,12 +73,14 @@ export default function ToolPanel({
 
       {panelSearch && (
         <div className="tool-panel__search">
-          <ToolSearch
-            value={searchQuery}
-            onChange={setSearchQuery}
-            toolRegistry={toolRegistry}
-            mode="filter"
-          />
+          <Suspense fallback={null}>
+            <ToolSearch
+              value={searchQuery}
+              onChange={setSearchQuery}
+              toolRegistry={toolRegistry}
+              mode="filter"
+            />
+          </Suspense>
         </div>
       )}
 

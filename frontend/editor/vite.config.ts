@@ -1,7 +1,9 @@
 import react from "@vitejs/plugin-react-swc";
 import { compression, defineAlgorithm } from "vite-plugin-compression2";
 import { randomUUID } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
 import fs from "node:fs/promises";
+import { createRequire } from "node:module";
 import path, { resolve } from "node:path";
 import { constants, brotliCompress, gzip } from "node:zlib";
 import { fileURLToPath } from "node:url";
@@ -174,13 +176,55 @@ function startupModules(meta: ManualChunkMeta): Set<string> {
   return modules;
 }
 
-/**
- * The npm package a normalized module id belongs to, or null for app code. Ids
- * are absolute paths, often through a pnpm store, so the package is the segment
- * after the last node_modules. Matching on that segment, rather than a raw path
- * substring, keeps a directory that merely looks like a package from steering
- * the split.
- */
+/** Mantine components only lazy screens use. */
+const MANTINE_TOOL_ONLY_COMPONENTS = [
+  "Autocomplete",
+  "Avatar",
+  "Card",
+  "Code",
+  "ColorInput",
+  "ColorPicker",
+  "ColorSwatch",
+  "CopyButton",
+  "Drawer",
+  "FileButton",
+  "FileInput",
+  "Grid",
+  "Image",
+  "List",
+  "LoadingOverlay",
+  "MultiSelect",
+  "Notification",
+  "NumberFormatter",
+  "NumberInput",
+  "Pagination",
+  "SimpleGrid",
+  "Skeleton",
+  "Slider",
+  "Table",
+  "TableTbody",
+  "TableTd",
+  "TableTh",
+  "TableThead",
+  "TableTr",
+  "Tabs",
+  "TagsInput",
+  "ThemeIcon",
+  "Title",
+];
+
+/** Filled by `mantineToolOnlyImports` while the config is built, then read by `manualChunks` during the build. */
+const mantineToolOnlyImplementations = new Map<string, string>();
+const mantineToolOnlyFamilies = new Map<string, string>();
+
+function mantineToolOnlyChunk(id: string): string | undefined {
+  for (const [dir, family] of mantineToolOnlyFamilies) {
+    if (id.startsWith(dir)) return `vendor-mantine-${family}`;
+  }
+  return undefined;
+}
+
+/** The npm package a normalized module id belongs to, or null for app code. */
 function packageNameOf(id: string): string | null {
   const marker = "node_modules/";
   const index = id.lastIndexOf(marker);
@@ -195,9 +239,7 @@ function inScope(pkg: string, scope: string): boolean {
   return pkg === scope || pkg.startsWith(`${scope}/`);
 }
 
-// react-markdown and its remark/micromark/mdast/hast closure is heavy and only
-// needed when a disclaimer, document or chat message renders. Matching on the
-// package name keeps an app file named like one of these out of the chunk.
+// react-markdown and its remark/micromark/mdast/hast closure is heavy and only needed when a disclaimer.
 const MARKDOWN_PACKAGE_PREFIXES = [
   "remark-",
   "rehype-",
@@ -238,6 +280,74 @@ function isMarkdownPackage(pkg: string): boolean {
   );
 }
 
+/** Preload for the one dictionary the app is about to fetch. */
+/** Generates the locale delivery files and injects the startup preload for one of them. */
+/** Preloads the initial route's own files from the built HTML. */
+// Every page the app can be served from gets the hints: a route page is its own
+// document, and without them it discovers the same chunks one round trip later.
+async function writeRouteHints(
+  distDir: string,
+  route: { js: string; css: string[] },
+): Promise<void> {
+  const pages = (await fs.readdir(distDir, { withFileTypes: true }))
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".html"))
+    .map((entry) => resolve(distDir, entry.name));
+  for (const page of pages) {
+    let html: string;
+    try {
+      html = await fs.readFile(page, "utf8");
+    } catch {
+      continue;
+    }
+    if (html.includes(route.js)) continue;
+
+    // Take the href prefix from a link Vite already wrote, so a subpath
+    // deployment is handled the same way its own preloads are.
+    const existing = /<link rel="modulepreload" href="([^"]+)"/.exec(html);
+    const prefix = existing
+      ? existing[1].slice(0, existing[1].lastIndexOf("/") + 1)
+      : "/";
+
+    const tags = [
+      `<link rel="modulepreload" href="${prefix}${route.js}" crossorigin>`,
+      ...route.css.map(
+        (file) => `<link rel="preload" as="style" href="${prefix}${file}">`,
+      ),
+    ];
+    await fs.writeFile(
+      page,
+      html.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`),
+    );
+  }
+}
+
+/** Puts the landing screen's first paint into index.html, so the largest paint does not wait for the Landing. */
+async function writeLandingShell(
+  distDir: string,
+  editorDir: string,
+): Promise<void> {
+  try {
+    const { prerenderShell } =
+      // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+      await import("./scripts/prerender-shell.mjs");
+    const result = await prerenderShell({ distDir, editorDir });
+    console.log(
+      `[prerender-shell] ${result.languages} languages, ${result.nodes} text nodes, ${(
+        result.bytes / 1024
+      ).toFixed(1)} KiB` +
+        (result.dropped.length
+          ? `; no shell for ${result.dropped.join(", ")}`
+          : ""),
+    );
+  } catch (error) {
+    if (process.env.PRERENDER_SHELL_SKIP === "1") {
+      console.warn(`[prerender-shell] skipped: ${String(error)}`);
+      return;
+    }
+    throw error;
+  }
+}
+
 function compressStaticCopyPlugin(): PluginOption {
   return {
     name: "compress-static-copy",
@@ -245,10 +355,7 @@ function compressStaticCopyPlugin(): PluginOption {
     async closeBundle() {
       const distDir = path.resolve(__dirname, "dist");
 
-      // The plugin's include list skips .wasm and viteStaticCopy output never
-      // reaches it, so the walk has to cover the rest of dist. HTML, sitemap.xml
-      // and robots.txt stay with the prerender hook, which rewrites them in a
-      // concurrent closeBundle.
+      // The plugin's include list skips .wasm and viteStaticCopy output never reaches it, so the walk has to cover.
       const files: string[] = [];
       const walk = async (dir: string) => {
         let entries;
@@ -273,11 +380,7 @@ function compressStaticCopyPlugin(): PluginOption {
 
       await compressFiles(files, distDir);
 
-      // The TTFs are only ever requested through the backend, which serves the
-      // .br/.gz siblings and falls back to its own classpath copy of the raw
-      // file. Shipping the raw set in dist would duplicate ~100 MB for nothing.
-      // NotoSans-Regular.ttf stays: the text editor's Unicode fallback fetches
-      // it directly, and static hosts have no classpath to fall back to.
+      // The TTFs are only ever requested through the backend, which serves the .br/.gz siblings and falls back to its.
       const fontsDir = path.join(distDir, "fonts");
       const fontEntries = await fs.readdir(fontsDir).catch(() => []);
       await Promise.all(
@@ -292,162 +395,322 @@ function compressStaticCopyPlugin(): PluginOption {
 }
 
 // Bake per-route Open Graph / Twitter Card tags into static HTML at build time.
-//
-// The SPA sets these client-side for real browsers, but link-unfurling crawlers
-// (Slack, Facebook, X, LinkedIn, iMessage, ...) do not run JavaScript. Prerendering
-// flat per-route files (e.g. dist/compress.html) means every static host - Cloudflare
-// Pages, Docker's bundled static dir, desktop - serves correct previews with NO
-// server-side rendering. Cloudflare Pages serves `compress.html` at `/compress`
-// automatically (clean URLs), and the Spring backend serves the same file.
-//
-// Absolute URLs (best for Facebook/X) are used when the deploy origin is known:
-// VITE_OG_BASE_URL (custom domain) or CF_PAGES_URL (set automatically by Cloudflare
-// Pages). Otherwise URLs stay root-relative, which still resolves against whatever
-// origin serves the page (correct for self-hosted Docker). Indexing signals
-// (canonical, JSON-LD, sitemap) need VITE_OG_BASE_URL specifically - see below.
-// Logic lives in scripts/og-prerender.mjs so it can be unit-tested without a full build.
-function prerenderOgPlugin(options: {
-  isSaas: boolean;
-  precompress: boolean;
-}): PluginOption {
-  const { isSaas, precompress } = options;
-  // SaaS (stirling.com) prerenders the marketing cards from a dedicated
-  // manifest; every other flavour uses the tool-registry manifest.
+async function writeOpenGraphPages(
+  distDir: string,
+  isSaas: boolean,
+): Promise<void> {
+  const { prerenderOg, buildSitemap, resolveDeployBases } =
+    // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
+    await import("./scripts/og-prerender.mjs");
+  const canonicalOrigin = process.env.VITE_OG_BASE_URL || "";
+  const deployOrigin = process.env.CF_PAGES_URL || "";
+  // Absolute deploy base for nested routes' <base href> (matches vite `base`).
+  const subpath = (process.env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
+  const baseHref = subpath ? `/${subpath}/` : "/";
+  const { ogBase, canonicalBase } = resolveDeployBases({
+    canonicalOrigin,
+    deployOrigin,
+    baseHref,
+  });
+  if (!canonicalBase && ogBase) {
+    console.warn(
+      "[prerender-og] VITE_OG_BASE_URL is unset: falling back to CF_PAGES_URL " +
+        `(${ogBase}) for social-card URLs only. No canonical links, JSON-LD ` +
+        "or sitemap will be emitted - set VITE_OG_BASE_URL to the public " +
+        "origin to enable them.",
+    );
+  }
   const manifestFile = isSaas
     ? "public/og-metadata.saas.json"
     : "public/og-metadata.json";
+  let manifest;
+  try {
+    manifest = JSON.parse(
+      await fs.readFile(path.resolve(__dirname, manifestFile), "utf8"),
+    );
+  } catch {
+    console.warn(
+      `[prerender-og] ${manifestFile} missing; skipping OG prerender. ` +
+        "Run `node scripts/generate-og-metadata.mjs`.",
+    );
+    return;
+  }
+  // The crawlable landing body only pays for itself where a crawler can reach
+  // the page; self-hosted and desktop builds just get the flash.
+  const injectLanding = Boolean(ogBase);
+  const count = await prerenderOg({
+    distDir,
+    manifest,
+    ogBase,
+    canonicalBase,
+    baseHref,
+    injectLanding,
+  });
+  console.log(
+    `[prerender-og] wrote ${count} prerendered route pages` +
+      (ogBase
+        ? ` (absolute URLs, base=${ogBase}, crawlable landing body)`
+        : " (root-relative URLs, no landing body)"),
+  );
+
+  // Sitemaps are an indexing instruction, so they need the canonical origin,
+  // not just any absolute one. Self-hosted and preview builds skip it.
+  const sitemap = buildSitemap(manifest, { canonicalBase });
+  if (!sitemap) return;
+  await fs.writeFile(path.join(distDir, "sitemap.xml"), sitemap);
+  // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
+  const robotsPath = path.join(distDir, "robots.txt");
+  try {
+    let robots = await fs.readFile(robotsPath, "utf8");
+    if (!/^\s*Sitemap:/im.test(robots)) {
+      robots =
+        robots.replace(/\s*$/, "\n") +
+        `Sitemap: ${canonicalBase}/sitemap.xml\n`;
+      await fs.writeFile(robotsPath, robots);
+    }
+  } catch {
+    // no robots.txt in dist - nothing to link
+  }
+  console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
+}
+
+/** Precompresses the HTML the passes above produced, after the last of them has run: the bundler wrote siblings. */
+async function compressHtmlOutput(distDir: string): Promise<void> {
+  const files: string[] = [];
+  const walk = async (dir: string) => {
+    let entries;
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const p = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(p);
+      else if (
+        entry.name.endsWith(".html") ||
+        entry.name === "sitemap.xml" ||
+        entry.name === "robots.txt"
+      )
+        files.push(p);
+    }
+  };
+  await walk(distDir);
+  // The shell's per-language words are fetched during the first paint of a
+  // visitor whose language is not the base one.
+  try {
+    const shells = path.join(distDir, "shells");
+    for (const entry of await fs.readdir(shells, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.endsWith(".json"))
+        files.push(path.join(shells, entry.name));
+    }
+  } catch {
+    // no shells directory: the prerender pass was skipped
+  }
+  await Promise.all(
+    files
+      .filter((file) => file.endsWith(".html"))
+      .flatMap((file) => [`${file}.br`, `${file}.gz`])
+      .map((file) => fs.rm(file, { force: true })),
+  );
+  await compressFiles(files, distDir);
+}
+
+/** Rewrites the app's `@mantine/core` imports of `MANTINE_TOOL_ONLY_COMPONENTS` to the implementation files the. */
+function mantineToolOnlyImports(): PluginOption {
+  const packageDir = path.dirname(
+    createRequire(import.meta.url).resolve("@mantine/core/styles.css"),
+  );
+  const esmDir = path.join(packageDir, "esm");
+  const componentRoot = `${path.join(esmDir, "components")}/`;
+  const barrel = readFileSync(path.join(esmDir, "index.mjs"), "utf8");
+
+  // The barrel is the only place that maps an exported name to its file, and the naming is not uniform (`Slider`.
+  const exportedAt = new Map<string, string>();
+  for (const statement of barrel.matchAll(
+    /export\s*\{([^}]*)\}\s*from\s*["']([^"']+)["']/g,
+  )) {
+    if (!statement[2].startsWith(".")) continue;
+    const file = path.resolve(esmDir, statement[2]);
+    for (const raw of statement[1].split(",")) {
+      const entry = raw.trim().replace(/^type\s+/, "");
+      if (!entry) continue;
+      const exported =
+        entry
+          .split(/\s+as\s+/)
+          .pop()
+          ?.trim() ?? entry;
+      exportedAt.set(exported, file);
+    }
+  }
+
+  for (const name of MANTINE_TOOL_ONLY_COMPONENTS) {
+    const file = exportedAt.get(name);
+    if (!file || !file.startsWith(componentRoot) || !existsSync(file)) {
+      throw new Error(
+        `mantine-tool-only-imports: @mantine/core no longer exports ${name} from a component ` +
+          `directory (resolved ${file ?? "nothing"}); check the package layout and update ` +
+          "MANTINE_TOOL_ONLY_COMPONENTS",
+      );
+    }
+    mantineToolOnlyImplementations.set(name, file);
+    const family = file.slice(componentRoot.length).split("/")[0];
+    mantineToolOnlyFamilies.set(`${componentRoot}${family}/`, family);
+  }
+
+  let appDir: string | undefined;
+
   return {
-    name: "prerender-og",
+    name: "mantine-tool-only-imports",
     apply: "build" as const,
-    async closeBundle() {
-      const { prerenderOg, buildSitemap, resolveDeployBases } =
-        // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
-        await import("./scripts/og-prerender.mjs");
-      const canonicalOrigin = process.env.VITE_OG_BASE_URL || "";
-      const deployOrigin = process.env.CF_PAGES_URL || "";
-      // Absolute deploy base for nested routes' <base href> (matches vite `base`).
-      const subpath = (process.env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
-      const baseHref = subpath ? `/${subpath}/` : "/";
-      const { ogBase, canonicalBase } = resolveDeployBases({
-        canonicalOrigin,
-        deployOrigin,
-        baseHref,
-      });
-      if (!canonicalBase && ogBase) {
-        console.warn(
-          "[prerender-og] VITE_OG_BASE_URL is unset: falling back to CF_PAGES_URL " +
-            `(${ogBase}) for social-card URLs only. No canonical links, JSON-LD ` +
-            "or sitemap will be emitted - set VITE_OG_BASE_URL to the public " +
-            "origin to enable them.",
-        );
-      }
-      let manifest;
-      try {
-        manifest = JSON.parse(
-          await fs.readFile(path.resolve(__dirname, manifestFile), "utf8"),
-        );
-      } catch {
-        console.warn(
-          `[prerender-og] ${manifestFile} missing; skipping OG prerender. ` +
-            "Run `node scripts/generate-og-metadata.mjs`.",
-        );
-        return;
-      }
-      const distDir = path.resolve(__dirname, "dist");
-      // The crawlable landing body only pays for itself where a crawler can
-      // reach the page; self-hosted and desktop builds just get the flash.
-      const injectLanding = Boolean(ogBase);
-      const count = await prerenderOg({
-        distDir,
-        manifest,
-        ogBase,
-        canonicalBase,
-        baseHref,
-        injectLanding,
-      });
-      console.log(
-        `[prerender-og] wrote ${count} prerendered route pages` +
-          (ogBase
-            ? ` (absolute URLs, base=${ogBase}, crawlable landing body)`
-            : " (root-relative URLs, no landing body)"),
+    configResolved(config) {
+      appDir = `${resolve(config.root, "src")}/`;
+    },
+    generateBundle(_options, bundle) {
+      // A moved family that a startup chunk still imports lands back in the preload set, and the two chunks importing.
+      const names = new Set(
+        Object.values(bundle)
+          .filter((file) => file.type === "chunk")
+          .map((file) => file.fileName),
       );
-
-      // prerenderOg rewrote index.html, so the bundler's siblings for the
-      // original shell are stale.
-      await Promise.all(
-        ["index.html.br", "index.html.gz"].map((name) =>
-          fs.rm(path.join(distDir, name), { force: true }),
-        ),
-      );
-
-      const lateFiles: string[] = [path.join(distDir, "index.html")];
-
-      // Sitemaps are an indexing instruction, so they need the canonical origin,
-      // not just any absolute one. Self-hosted and preview builds skip it.
-      const sitemap = buildSitemap(manifest, { canonicalBase });
-      if (sitemap) {
-        const sitemapPath = path.join(distDir, "sitemap.xml");
-        await fs.writeFile(sitemapPath, sitemap);
-        lateFiles.push(sitemapPath);
-        // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
-        // Static hosts only: packaged builds exclude dist/robots.txt and serve it
-        // from RobotsController, gated on system.googlevisibility.
-        const robotsPath = path.join(distDir, "robots.txt");
-        try {
-          let robots = await fs.readFile(robotsPath, "utf8");
-          if (!/^\s*Sitemap:/im.test(robots)) {
-            robots =
-              robots.replace(/\s*$/, "\n") +
-              `Sitemap: ${canonicalBase}/sitemap.xml\n`;
-            await fs.writeFile(robotsPath, robots);
-          }
-        } catch {
-          // no robots.txt in dist - nothing to link
-        }
-        console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
+      const imports = new Map<string, string[]>();
+      for (const file of Object.values(bundle)) {
+        if (file.type === "chunk")
+          imports.set(
+            file.fileName,
+            file.imports.filter((target) => names.has(target)),
+          );
       }
-      // Rewritten above when the sitemap points at it.
-      const robotsPath = path.join(distDir, "robots.txt");
-      try {
-        await fs.access(robotsPath);
-        lateFiles.push(robotsPath);
-      } catch {
-        // absent
-      }
-      // These are written here, and closeBundle hooks run concurrently, so the
-      // walk in the other plugin cannot compress them reliably.
-      const walkHtml = async (dir: string) => {
-        let entries;
-        try {
-          entries = await fs.readdir(dir, { withFileTypes: true });
-        } catch {
-          return;
+      const visiting = new Set<string>();
+      const done = new Set<string>();
+      const trail: string[] = [];
+      const visit = (name: string): void => {
+        if (done.has(name)) return;
+        if (visiting.has(name)) {
+          throw new Error(
+            `mantine-tool-only-imports: chunks import each other in a cycle ` +
+              `(${[...trail.slice(trail.indexOf(name)), name].join(" -> ")}); ` +
+              "a component family a startup chunk reaches has to stay in vendor-ui",
+          );
         }
-        for (const entry of entries) {
-          const p = path.join(dir, entry.name);
-          if (entry.isDirectory()) await walkHtml(p);
-          else if (entry.name.endsWith(".html") && entry.name !== "index.html")
-            lateFiles.push(p);
-        }
+        visiting.add(name);
+        trail.push(name);
+        for (const target of imports.get(name) ?? []) visit(target);
+        trail.pop();
+        visiting.delete(name);
+        done.add(name);
       };
-      await walkHtml(distDir);
-      // The HTML, sitemap and robots.txt written above skip the other plugin's
-      // walk, so they are compressed here (desktop is embedded and compressed by
-      // Tauri). The siblings only serve static hosts: Jetty gzips the Spring
-      // responses in memory, so it never reads them.
-      if (precompress) {
-        await compressFiles(lateFiles, distDir);
+      for (const name of imports.keys()) visit(name);
+
+      // The engine is a megabyte the browser downloads before the app runs if anything a startup chunk statically.
+      const eager = new Set<string>();
+      const reach = (name: string): void => {
+        if (eager.has(name)) return;
+        eager.add(name);
+        for (const target of imports.get(name) ?? []) reach(target);
+      };
+      for (const file of Object.values(bundle)) {
+        if (file.type === "chunk" && file.isEntry) reach(file.fileName);
       }
+      const eagerEngine = [...eager].filter((name) =>
+        /^vendor-embedpdf(-core)?-/.test(name),
+      );
+      if (eagerEngine.length) {
+        throw new Error(
+          `startup chunks statically reach the pdf engine (${eagerEngine.join(", ")}); ` +
+            "the browser would preload it before the app runs, so keep the engine " +
+            "behind a dynamic import",
+        );
+      }
+    },
+    transform(code, id) {
+      if (!appDir || !id.startsWith(appDir) || !code.includes("@mantine/core"))
+        return null;
+      let cursor = 0;
+      let rewritten = "";
+      for (const node of this.parse(code).body) {
+        if (
+          node.type !== "ImportDeclaration" ||
+          node.source.value !== "@mantine/core"
+        )
+          continue;
+        const moved: Array<{
+          specifier: (typeof node.specifiers)[number];
+          file: string;
+        }> = [];
+        const staying: Array<(typeof node.specifiers)[number]> = [];
+        for (const specifier of node.specifiers) {
+          const file =
+            specifier.type === "ImportSpecifier" &&
+            specifier.imported.type === "Identifier"
+              ? mantineToolOnlyImplementations.get(specifier.imported.name)
+              : undefined;
+          if (file) moved.push({ specifier, file });
+          else staying.push(specifier);
+        }
+        if (moved.length === 0) continue;
+        rewritten += code.slice(cursor, node.start);
+        cursor = node.end;
+        if (staying.length > 0) {
+          rewritten += `import { ${staying
+            .map((specifier) => code.slice(specifier.start, specifier.end))
+            .join(", ")} } from "@mantine/core";\n`;
+        }
+        for (const { specifier, file } of moved) {
+          rewritten += `import { ${code.slice(specifier.start, specifier.end)} } from "${file}";\n`;
+        }
+      }
+      if (cursor === 0) return null;
+      return { code: rewritten + code.slice(cursor), map: null };
     },
   };
 }
 
-/**
- * When the app is served under a subpath (RUN_SUBPATH → base like "/app/"), Vite
- * serves index.html at "/app/" and redirects "/" → the base, but a bare "/app"
- * (no trailing slash) 404s. This middleware redirects "/app" → "/app/" so either
- * form loads the app in dev and `vite preview`. Query strings are preserved.
- */
+/** The Open Graph pages, the route hints, the landing shell and the precompressed siblings all rewrite or derive. */
+function htmlOutputPlugin(options: {
+  routeChunk: string;
+  isSaas: boolean;
+  precompress: boolean;
+}): PluginOption {
+  const { routeChunk, isSaas, precompress } = options;
+  let distDir: string | undefined;
+  let editorDir: string | undefined;
+  let route: { js: string; css: string[] } | undefined;
+
+  return {
+    name: "html-output",
+    apply: "build" as const,
+    enforce: "post" as const,
+    configResolved(config) {
+      // `outDir` is whatever the config said (the CLI's root is relative here),
+      // and the capture needs the source tree for its stub helper either way.
+      distDir = resolve(config.root, config.build.outDir);
+      editorDir = config.root;
+    },
+    writeBundle(_output: Rollup.OutputOptions, bundle: Rollup.OutputBundle) {
+      const chunk = Object.values(bundle).find(
+        (file): file is Rollup.OutputChunk =>
+          file.type === "chunk" &&
+          file.isDynamicEntry &&
+          file.name === routeChunk,
+      );
+      if (chunk)
+        route = {
+          js: chunk.fileName,
+          css: [...(chunk.viteMetadata?.importedCss ?? [])],
+        };
+    },
+    async closeBundle() {
+      if (!distDir) return;
+      await writeOpenGraphPages(distDir, isSaas);
+      if (route) await writeRouteHints(distDir, route);
+      if (editorDir) await writeLandingShell(distDir, editorDir);
+      if (precompress) await compressHtmlOutput(distDir);
+    },
+  };
+}
+
+/** When the app is served under a subpath (RUN_SUBPATH → base like "/app/"), Vite serves index.html at "/app/". */
 function subpathBareRedirectPlugin(subpath: string): PluginOption {
   const bare = `/${subpath}`;
   const withSlash = `${bare}/`;
@@ -474,10 +737,7 @@ function subpathBareRedirectPlugin(subpath: string): PluginOption {
   };
 }
 
-// NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled
-// into the saas and desktop builds. It has no entry here and no vite tsconfig;
-// it is only typechecked standalone via editor/src/cloud/tsconfig.json
-// (task frontend:typecheck:cloud) to prove it carries no saas/desktop-only deps.
+// NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled into the saas and desktop builds.
 const VALID_MODES = ["core", "proprietary", "saas", "desktop"] as const;
 type BuildMode = (typeof VALID_MODES)[number];
 
@@ -489,16 +749,10 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
 };
 
 export default defineConfig(async ({ mode, command }) => {
-  // Dev-only browser-tab label (worktree folder basename) surfaced by the
-  // top-level dev tasks so concurrent worktrees have distinguishable tabs.
-  // Only injected during `vite` (dev serve) — never baked into a production
-  // build — and carries only the folder name, no path/host/user info.
+  // Dev-only browser-tab label (worktree folder basename) surfaced by the top-level dev tasks so concurrent.
   const devWorktreeLabel =
     command === "serve" ? (process.env.STIRLING_DEV_LABEL ?? "") : "";
-  // Load env files relative to this config (frontend/editor/), regardless of
-  // where the build was invoked from. The previous `process.cwd()` worked when
-  // this file lived at frontend/, but after the editor was moved under
-  // frontend/editor/ the cwd-based lookup would miss editor/.env*.
+  // Load env files relative to this config (frontend/editor/), regardless of where the build was invoked from.
   const env = loadEnv(mode, import.meta.dirname, "");
   const parentEnv = loadEnv(mode, resolve(import.meta.dirname, ".."), "");
 
@@ -546,10 +800,7 @@ export default defineConfig(async ({ mode, command }) => {
     xfwd: true,
   };
 
-  // Shared between `vite` (dev) and `vite preview` (production-build serve, used
-  // in CI/E2E) so the live test suite still resolves /api → :8080. /fonts is
-  // deliberately absent: the stubbed suite runs backend-free and proxying font
-  // requests would turn a static 404 into a connection error.
+  // Shared between `vite` (dev) and `vite preview` (production-build serve, used in CI/E2E) so the live test.
   const backendProxyConfig =
     effectiveMode === "desktop"
       ? undefined
@@ -564,10 +815,7 @@ export default defineConfig(async ({ mode, command }) => {
         };
 
   return {
-    // Per-mode: the default is one shared node_modules/.vite, so two dev servers in
-    // different modes re-optimize over each other and the browser 504s on a stale dep
-    // hash. Anchored to frontend/ because a relative path resolves against the vite
-    // root (editor/) and would create a second node_modules there.
+    // Per-mode: the default is one shared node_modules/.vite, so two dev servers in different modes re-optimize.
     cacheDir: resolve(
       import.meta.dirname,
       "..",
@@ -584,6 +832,7 @@ export default defineConfig(async ({ mode, command }) => {
     plugins: [
       iconSvgr(),
       react(),
+      mantineToolOnlyImports(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
       tsconfigPaths({
         projects: [tsconfigProject],
@@ -662,7 +911,8 @@ export default defineConfig(async ({ mode, command }) => {
         ],
       }),
       ...(effectiveMode === "desktop" ? [] : [compressStaticCopyPlugin()]),
-      prerenderOgPlugin({
+      htmlOutputPlugin({
+        routeChunk: "Landing",
         isSaas: effectiveMode === "saas",
         precompress: effectiveMode !== "desktop",
       }),
@@ -737,9 +987,10 @@ export default defineConfig(async ({ mode, command }) => {
             // enums, so they get their own chunks.
             if (pkg === "@embedpdf/engines") return "vendor-embedpdf";
             if (pkg === "@embedpdf/pdfium") return "vendor-pdfium";
+            // models is the only embedpdf package the startup path imports (PdfPermissionFlag), so grouping it with.
+            if (pkg === "@embedpdf/models") return "vendor-embedpdf-models";
             if (
               pkg === "@embedpdf/core" ||
-              pkg === "@embedpdf/models" ||
               pkg === "@embedpdf/utils" ||
               pkg === "@embedpdf/plugin-spread"
             ) {
@@ -753,6 +1004,19 @@ export default defineConfig(async ({ mode, command }) => {
             // vendor-ui.
             if (pkg === "@mui/icons-material") return "vendor-mui-icons";
             if (pkg === "@iconify/react") return "vendor-iconify";
+            // Only lazy screens import these (DataTable, reached through the ui barrel), but the substring match on "react".
+            if (
+              pkg === "@tanstack/react-table" ||
+              pkg === "@tanstack/table-core"
+            ) {
+              return "vendor-tanstack-table";
+            }
+            // A component family only lazy screens open, in its own chunk, so the preloaded chunk stops carrying it; see.
+            const toolOnly = mantineToolOnlyChunk(id);
+            if (toolOnly) return toolOnly;
+            // react-number-format is imported by NumberInput and NumberFormatter and nothing else, so it travels with the.
+            if (pkg === "react-number-format")
+              return "vendor-mantine-NumberInput";
             // These packages are mutually circular: splitting them breaks
             // module init order at runtime. Only startup modules land in
             // vendor-ui; libraries only some screens use (the markdown

@@ -1,4 +1,6 @@
 import {
+  Suspense,
+  lazy,
   forwardRef,
   startTransition,
   useCallback,
@@ -45,7 +47,6 @@ import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { READER_PATH } from "@app/routes/readerRoute";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
-import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
@@ -68,7 +69,6 @@ import {
 import { useFolders } from "@app/contexts/FolderContext";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
-import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { useAuth } from "@app/auth/UseSession";
 import { canPickDirectory } from "@app/services/directoryPicker";
@@ -83,12 +83,19 @@ import "@app/pages/HomePage.css";
 
 const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
 
-/**
- * The wings' slide is `--wings-ms` (dimensions.css). Read from the document so one
- * value drives both, with the literal as the fallback for a test environment that
- * loads no stylesheet, and a frame of headroom so the unmount never clips the
- * last frame of the animation.
- */
+/** The mobile hand-off is opened from a rail action and carries the transfer machinery, so it mounts on the. */
+const MobileUploadModal = lazy(
+  () => import("@app/components/shared/MobileUploadModal"),
+);
+
+/** Policies and their recovery run once per editor, and the pass pulls the policy chain with it, so the. */
+const PolicyAutoRunController = lazy(() =>
+  import("@app/components/policies/PolicyAutoRunController").then((m) => ({
+    default: m.PolicyAutoRunController,
+  })),
+);
+
+/** The wings' slide is `--wings-ms` (dimensions.css). */
 const WINGS_FALLBACK_MS = 220;
 const WINGS_HEADROOM_MS = 60;
 
@@ -700,7 +707,11 @@ export default function HomePage() {
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
       {processingFolderCreation.dialog}
-      {policiesEnabled && <PolicyAutoRunController />}
+      {policiesEnabled && (
+        <Suspense fallback={null}>
+          <PolicyAutoRunController />
+        </Suspense>
+      )}
       <QuickNavHostBridge
         requestNavigation={requestNavigation}
         readerMode={readerMode}
@@ -884,6 +895,8 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { isAnonymous } = useAuth();
     const { config: appConfig } = useAppConfig();
     const [mobileUploadOpen, setMobileUploadOpen] = useState(false);
+    // A lazy component fetches as soon as it renders, so it waits for the open.
+    const [mobileUploadMounted, setMobileUploadMounted] = useState(false);
     const isMobileViewport = useIsMobile();
     // The scanner sends files from a phone to this screen, so it is a desktop
     // affordance: on a phone you are already where the files are.
@@ -944,20 +957,27 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
                       "filesPage.uploadFromMobile",
                       "Upload from Mobile",
                     ),
-                    onClick: () => setMobileUploadOpen(true),
+                    onClick: () => {
+                      setMobileUploadMounted(true);
+                      setMobileUploadOpen(true);
+                    },
                     testId: "files-rail-mobile-upload",
                   },
                 ]
               : []),
           ]}
         />
-        <MobileUploadModal
-          opened={mobileUploadOpen}
-          onClose={() => setMobileUploadOpen(false)}
-          onFilesReceived={(files) => {
-            if (files.length > 0) void handleUpload(files);
-          }}
-        />
+        {mobileUploadMounted && (
+          <Suspense fallback={null}>
+            <MobileUploadModal
+              opened={mobileUploadOpen}
+              onClose={() => setMobileUploadOpen(false)}
+              onFilesReceived={(files) => {
+                if (files.length > 0) void handleUpload(files);
+              }}
+            />
+          </Suspense>
+        )}
       </>
     );
   },

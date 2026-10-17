@@ -1,7 +1,14 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { LibraryFilePicker } from "@app/components/filesPage/LibraryFilePicker";
+import { translatedLazy } from "@app/i18n/translatedLazy";
 import { LibraryPickerModal } from "@app/components/filesPage/LibraryPickerModal";
+
+/** Deferred: the picker drags in the file grid, its virtualiser, the details panel and the share dialog - the. */
+const LibraryFilePicker = translatedLazy(() =>
+  import("@app/components/filesPage/LibraryFilePicker").then((module) => ({
+    default: module.LibraryFilePicker,
+  })),
+);
 
 interface FileManagerProps {
   selectedTool?: { supportedFormats?: string[] } | null;
@@ -21,11 +28,15 @@ export default function FileManager({ selectedTool }: FileManagerProps) {
       externalPickerOpen={externalPickerOpen}
     >
       {isFilesModalOpen && (
-        <LibraryFilePicker
-          supportedFormats={supportedFormats ?? selectedTool?.supportedFormats}
-          onBusyChange={setBusy}
-          onExternalPickerChange={setExternalPickerOpen}
-        />
+        <Suspense fallback={null}>
+          <LibraryFilePicker
+            supportedFormats={
+              supportedFormats ?? selectedTool?.supportedFormats
+            }
+            onBusyChange={setBusy}
+            onExternalPickerChange={setExternalPickerOpen}
+          />
+        </Suspense>
       )}
     </LibraryPickerModal>
   );

@@ -374,7 +374,6 @@
 .file-sidebar-empty-hint {
   font-size: 11px;
   color: var(--c-text-subtle);
-  opacity: 0.7;
   margin: 0;
 }
 

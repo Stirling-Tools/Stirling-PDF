@@ -13,7 +13,7 @@ import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
 import { useConnectedServer } from "@app/hooks/useConnectedServer";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { useOperationConfigCatalog } from "@app/data/toolOperationConfigs";
 import { AutomationConfig, ExecutionStep } from "@app/types/automation";
 import { EXECUTION_STATUS } from "@app/constants/automation";
 import { useResourceCleanup } from "@app/utils/resourceManager";
@@ -32,7 +32,7 @@ export default function AutomationRun({
 }: AutomationRunProps) {
   const { t } = useTranslation();
   const selectedFiles = useViewScopedFiles();
-  const { regularTools } = useToolRegistry();
+  const { regularTools } = useOperationConfigCatalog();
   const toolRegistry = regularTools;
   const cleanup = useResourceCleanup();
 

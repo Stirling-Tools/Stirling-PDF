@@ -15,7 +15,7 @@ import AutomationRun from "@app/components/tools/automate/AutomationRun";
 
 import { useAutomateOperation } from "@app/hooks/tools/automate/useAutomateOperation";
 import { BaseToolProps } from "@app/types/tool";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { useOperationConfigCatalog } from "@app/data/toolOperationConfigs";
 import { useSavedAutomations } from "@app/hooks/tools/automate/useSavedAutomations";
 import {
   AutomationConfig,
@@ -39,7 +39,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 
   const automateOperation = useAutomateOperation();
-  const { regularTools: toolRegistry } = useToolRegistry();
+  const { regularTools: toolRegistry } = useOperationConfigCatalog();
   const hasResults =
     automateOperation.files.length > 0 ||
     automateOperation.downloadUrl !== null;

@@ -9,6 +9,7 @@ import {
   closeRawDocument,
 } from "@app/services/pdfiumService";
 import { renderPdfiumPageDataUrl } from "@app/utils/pdfiumPageRender";
+import { registerPageImageCache } from "@app/services/pageImageCache";
 
 export interface ThumbnailResult {
   pageNumber: number;
@@ -28,6 +29,7 @@ interface CachedThumbnail {
   thumbnail: string;
   lastUsed: number;
   sizeBytes: number;
+  fileId?: FileId;
 }
 
 interface CachedPDFDocument {
@@ -43,6 +45,8 @@ export class ThumbnailGenerationService {
     CachedThumbnail
   >();
   private maxCacheSizeBytes = 1024 * 1024 * 1024; // 1GB cache limit
+  // A byte cap alone never bites on its own: one page image is ~100 KB, so 1 GB holds thousands of pages.
+  private maxCacheEntries = 512;
   private currentCacheSize = 0;
 
   // PDF document cache to reuse PDF instances and avoid creating multiple workers
@@ -101,7 +105,7 @@ export class ThumbnailGenerationService {
    */
   private evictLeastRecentlyUsedPDF(): void {
     let oldestEntry: [FileId, CachedPDFDocument] | null = null;
-    let oldestTime = Date.now();
+    let oldestTime = Infinity;
 
     for (const [key, value] of this.pdfDocumentCache.entries()) {
       if (value.lastUsed < oldestTime && value.refCount === 0) {
@@ -242,29 +246,50 @@ export class ThumbnailGenerationService {
     return null;
   }
 
-  addThumbnailToCache(pageId: string, thumbnail: string): void {
+  addThumbnailToCache(
+    pageId: string,
+    thumbnail: string,
+    fileId?: FileId,
+  ): void {
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
+    const previous = this.thumbnailCache.get(pageId)?.sizeBytes ?? 0;
 
     // Enforce cache size limits
     while (
-      this.currentCacheSize + sizeBytes > this.maxCacheSizeBytes &&
-      this.thumbnailCache.size > 0
+      this.thumbnailCache.size >= this.maxCacheEntries ||
+      (this.currentCacheSize + sizeBytes - previous > this.maxCacheSizeBytes &&
+        this.thumbnailCache.size > 0)
     ) {
       this.evictLeastRecentlyUsed();
     }
 
+    // A page that is cached again replaces its bytes instead of adding them.
+    const replaced = this.thumbnailCache.get(pageId)?.sizeBytes ?? 0;
     this.thumbnailCache.set(pageId, {
       thumbnail,
       lastUsed: Date.now(),
       sizeBytes,
+      ...(fileId ? { fileId } : {}),
     });
 
-    this.currentCacheSize += sizeBytes;
+    this.currentCacheSize += sizeBytes - replaced;
+  }
+
+  /** Drop every cached page image that came from one file. */
+  evictThumbnailsForFile(fileId: FileId): number {
+    let dropped = 0;
+    for (const [key, entry] of this.thumbnailCache) {
+      if (entry.fileId !== fileId) continue;
+      this.thumbnailCache.delete(key);
+      this.currentCacheSize -= entry.sizeBytes;
+      dropped++;
+    }
+    return dropped;
   }
 
   private evictLeastRecentlyUsed(): void {
     let oldestEntry: [string, CachedThumbnail] | null = null;
-    let oldestTime = Date.now();
+    let oldestTime = Infinity;
 
     for (const [key, value] of this.thumbnailCache.entries()) {
       if (value.lastUsed < oldestTime) {
@@ -332,3 +357,9 @@ export class ThumbnailGenerationService {
 
 // Global singleton instance
 export const thumbnailGenerationService = new ThumbnailGenerationService();
+
+// Only the app's own cache takes the seam: a test instance must not take over
+// pruning for the singleton the running app uses.
+registerPageImageCache((fileId) =>
+  thumbnailGenerationService.evictThumbnailsForFile(fileId),
+);

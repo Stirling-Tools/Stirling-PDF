@@ -44,9 +44,6 @@ import type {
 } from "@app/tools/formFill/types";
 import { pendingIdFrom } from "@app/tools/formFill/pendingSelection";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
-import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
-import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
-import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService";
 import { applyFieldEdits } from "@app/tools/formFill/formApi";
 import { mergeSignatureAppearances } from "@app/tools/formFill/formFieldMerge";
 
@@ -372,9 +369,28 @@ export function useAllFormValues(): Record<string, string> {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
-/** Singleton provider instances */
-const pdfiumProvider = new PdfiumFormProvider();
-const pdfBoxProvider = new PdfBoxFormProvider();
+type FormProviderMode = "pdflib" | "pdfbox";
+
+/** What each provider reports as its name, without loading either one. */
+const PROVIDER_NAMES: Record<FormProviderMode, string> = {
+  pdflib: "pdf-lib",
+  pdfbox: "pdfbox",
+};
+
+/** Loaded on the first form operation instead of at module scope: the pdfium provider carries the WASM engine. */
+const PROVIDER_LOADERS: Record<
+  FormProviderMode,
+  () => Promise<IFormDataProvider>
+> = {
+  pdflib: () =>
+    import("@app/tools/formFill/providers/PdfiumFormProvider").then(
+      (module) => new module.PdfiumFormProvider(),
+    ),
+  pdfbox: () =>
+    import("@app/tools/formFill/providers/PdfBoxFormProvider").then(
+      (module) => new module.PdfBoxFormProvider(),
+    ),
+};
 
 export function FormFillProvider({
   children,
@@ -384,17 +400,24 @@ export function FormFillProvider({
   /** Override the initial provider. If not given, defaults to pdf-lib. */
   provider?: IFormDataProvider;
 }) {
-  const initialMode = providerProp?.name === "pdfbox" ? "pdfbox" : "pdflib";
-  const [providerMode, setProviderModeState] = useState<"pdflib" | "pdfbox">(
-    initialMode,
-  );
-  const providerModeRef = useRef(initialMode);
+  const initialMode: FormProviderMode =
+    providerProp?.name === "pdfbox" ? "pdfbox" : "pdflib";
+  const [providerMode, setProviderModeState] =
+    useState<FormProviderMode>(initialMode);
+  const providerModeRef = useRef<FormProviderMode>(initialMode);
   providerModeRef.current = providerMode;
-  const provider =
-    providerProp ??
-    (providerMode === "pdfbox" ? pdfBoxProvider : pdfiumProvider);
-  const providerRef = useRef(provider);
-  providerRef.current = provider;
+  const providersRef = useRef(new Map<FormProviderMode, IFormDataProvider>());
+
+  /** The provider for the current mode, built on first use. */
+  const resolveProvider = useCallback(async (): Promise<IFormDataProvider> => {
+    if (providerProp) return providerProp;
+    const mode = providerModeRef.current;
+    const cached = providersRef.current.get(mode);
+    if (cached) return cached;
+    const provider = await PROVIDER_LOADERS[mode]();
+    providersRef.current.set(mode, provider);
+    return provider;
+  }, [providerProp]);
 
   const [state, dispatch] = useReducer(reducer, initialState);
   const fieldsRef = useRef<FormField[]>([]);
@@ -579,7 +602,7 @@ export function FormFillProvider({
           providerModeRef.current === "pdfbox";
         let fields = usable
           ? bundled.fields
-          : await providerRef.current.fetchFields(file);
+          : await (await resolveProvider()).fetchFields(file);
         // If another fetch or reset happened while we were waiting, discard this result
         if (fetchVersionRef.current !== version) {
           console.debug(
@@ -597,6 +620,10 @@ export function FormFillProvider({
           try {
             // Convert File/Blob to ArrayBuffer for pdfiumService
             const arrayBuffer = await file.arrayBuffer();
+            // Only pdfbox mode reaches this, and only for a file that already has
+            // signature fields, so the engine loads here rather than with the app.
+            const { fetchSignatureFieldsWithAppearances } =
+              await import("@app/services/pdfiumService");
             const sigFields =
               await fetchSignatureFieldsWithAppearances(arrayBuffer);
             if (fetchVersionRef.current !== version) return; // stale check after async
@@ -637,7 +664,7 @@ export function FormFillProvider({
         dispatch({ type: "FETCH_ERROR", error: msg });
       }
     },
-    [valuesStore, clearEditingState],
+    [valuesStore, clearEditingState, resolveProvider],
   );
 
   const validateFieldDebounced = useDebouncedCallback((fieldName: string) => {
@@ -687,14 +714,12 @@ export function FormFillProvider({
 
   const submitForm = useCallback(
     async (file: File | Blob, flatten = false) => {
-      const blob = await providerRef.current.fillForm(
-        file,
-        valuesStore.values,
-        flatten,
-      );
+      const blob = await (
+        await resolveProvider()
+      ).fillForm(file, valuesStore.values, flatten);
       return blob;
     },
-    [valuesStore],
+    [valuesStore, resolveProvider],
   );
 
   const setProviderMode = useCallback(
@@ -703,9 +728,8 @@ export function FormFillProvider({
       // relying on stale closure state and allows the early return.
       if (providerModeRef.current === mode) return;
 
-      // provider (pdfbox vs pdflib).
-      const newProvider = mode === "pdfbox" ? pdfBoxProvider : pdfiumProvider;
-      providerRef.current = newProvider;
+      // provider (pdfbox vs pdflib). The next fetch builds and caches the one
+      // the new mode needs.
       providerModeRef.current = mode;
 
       fetchVersionRef.current++;
@@ -950,7 +974,8 @@ export function FormFillProvider({
       reset,
       fieldsByPage,
       effectiveFieldsByPage,
-      activeProviderName: providerRef.current.name,
+      activeProviderName:
+        providerProp?.name ?? PROVIDER_NAMES[providerModeRef.current],
       setProviderMode,
       forFileId,
       // editing

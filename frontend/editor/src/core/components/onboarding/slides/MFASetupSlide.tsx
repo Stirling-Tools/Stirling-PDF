@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useRef,
@@ -15,7 +17,6 @@ import {
   TextInput,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import { QRCodeSVG } from "qrcode.react";
 import { useTranslation } from "react-i18next";
 import { SlideConfig } from "@app/types/types";
 import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
@@ -27,6 +28,10 @@ import { BASE_PATH, withBasePath } from "@app/constants/app";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
 import i18n from "@app/i18n";
+
+const QRCodeSVG = lazy(() =>
+  import("qrcode.react").then((module) => ({ default: module.QRCodeSVG })),
+);
 
 interface MFASetupSlideProps {
   onMfaSetupComplete?: () => void;
@@ -136,17 +141,19 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   const mfaSetupContent = mfaSetupData ? (
     <div className={styles.mfaSetupGrid}>
       <Box className={styles.mfaQrCard}>
-        <QRCodeSVG
-          value={mfaSetupData.otpauthUri ?? ""}
-          size={168}
-          level="H"
-          imageSettings={{
-            src: qrLogoSrc,
-            height: 36,
-            width: 36,
-            excavate: true,
-          }}
-        />
+        <Suspense fallback={null}>
+          <QRCodeSVG
+            value={mfaSetupData.otpauthUri ?? ""}
+            size={168}
+            level="H"
+            imageSettings={{
+              src: qrLogoSrc,
+              height: 36,
+              width: 36,
+              excavate: true,
+            }}
+          />
+        </Suspense>
       </Box>
 
       <Stack gap="xs">

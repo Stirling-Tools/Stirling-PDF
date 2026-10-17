@@ -14,6 +14,9 @@ export const pdfiumWasmUrl = getWasmUrl();
 let resolvePromise: (module: WebAssembly.Module | null) => void;
 let compilationStarted = false;
 
+/** True once something asked for the engine's WASM. */
+export const wasmCompilationStarted = (): boolean => compilationStarted;
+
 export const pdfiumWasmModulePromise = new Promise<WebAssembly.Module | null>(
   (resolve) => {
     resolvePromise = resolve;

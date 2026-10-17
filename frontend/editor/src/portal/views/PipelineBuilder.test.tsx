@@ -21,12 +21,14 @@ const render = (
   options?: Parameters<typeof baseRender>[1],
 ) => baseRender(ui, { wrapper: PortalTestProviders, ...options });
 
-// Deterministic i18n: keys returned verbatim.
+// Deterministic i18n: keys returned verbatim. The tool configs this view now pulls in reach the
+// app's i18n module, which registers this plugin at import time.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
     i18n: { changeLanguage: vi.fn() },
   }),
+  initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 
 vi.mock("@portal/hooks/useAiEngineEnabled", () => ({

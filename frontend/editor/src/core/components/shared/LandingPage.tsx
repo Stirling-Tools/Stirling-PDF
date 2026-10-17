@@ -1,16 +1,24 @@
-import React, { useState } from "react";
+import React, { Suspense, lazy, useState } from "react";
 import { Container } from "@mantine/core";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import { Logo } from "@app/ui/Logo";
 import { LandingActions } from "@app/components/shared/LandingActions";
 import "@app/components/shared/LandingPage.css";
 
+// The hand-off is opened from a call to action and carries the transfer
+// machinery, so it mounts on the first open rather than with the landing.
+const MobileUploadModal = lazy(
+  () => import("@app/components/shared/MobileUploadModal"),
+);
+
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
+  // A lazy component fetches as soon as it renders, so it waits for the open.
+  const [mobileUploadModalMounted, setMobileUploadModalMounted] =
+    useState(false);
 
   const handleNativeUploadClick = async () => {
     const files = await openFilesFromDisk({
@@ -61,17 +69,24 @@ const LandingPage = () => {
           <LandingActions
             fileInputRef={fileInputRef}
             onUploadClick={() => void handleNativeUploadClick()}
-            onMobileUploadClick={() => setMobileUploadModalOpen(true)}
+            onMobileUploadClick={() => {
+              setMobileUploadModalMounted(true);
+              setMobileUploadModalOpen(true);
+            }}
             onFileSelect={handleFileSelect}
           />
         </div>
       </div>
 
-      <MobileUploadModal
-        opened={mobileUploadModalOpen}
-        onClose={() => setMobileUploadModalOpen(false)}
-        onFilesReceived={handleFilesReceivedFromMobile}
-      />
+      {mobileUploadModalMounted && (
+        <Suspense fallback={null}>
+          <MobileUploadModal
+            opened={mobileUploadModalOpen}
+            onClose={() => setMobileUploadModalOpen(false)}
+            onFilesReceived={handleFilesReceivedFromMobile}
+          />
+        </Suspense>
+      )}
     </Container>
   );
 };

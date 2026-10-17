@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { Center, Group, Loader, Modal, Text } from "@mantine/core";
@@ -9,7 +9,15 @@ import { fileStorage } from "@app/services/fileStorage";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useIndexedDBRevision } from "@app/contexts/IndexedDBContext";
-import { VersionTimeline } from "@app/components/filesPage/VersionTimeline";
+import { translatedLazy } from "@app/i18n/translatedLazy";
+
+// Reached only while this modal is open on a file with earlier versions, so the
+// rail's markup waits for the modal instead of riding the landing graph.
+const VersionTimeline = translatedLazy(() =>
+  import("@app/components/filesPage/VersionTimeline").then((module) => ({
+    default: module.VersionTimeline,
+  })),
+);
 
 interface VersionHistoryModalProps {
   opened: boolean;
@@ -118,13 +126,21 @@ export function VersionHistoryModal({
           <Loader size="sm" />
         </Center>
       ) : chain.length > 1 && file ? (
-        <VersionTimeline
-          chain={chain}
-          currentId={file.id}
-          onAddToWorkspace={handleAddToWorkspace}
-          onRemove={handleRemove}
-          hideHeader
-        />
+        <Suspense
+          fallback={
+            <Center py="lg">
+              <Loader size="sm" />
+            </Center>
+          }
+        >
+          <VersionTimeline
+            chain={chain}
+            currentId={file.id}
+            onAddToWorkspace={handleAddToWorkspace}
+            onRemove={handleRemove}
+            hideHeader
+          />
+        </Suspense>
       ) : (
         <Text size="sm" c="dimmed" py="sm">
           {t(

@@ -337,9 +337,17 @@ class SpringAuthClient {
         return { data: { session }, error: null };
       }
 
-      // Verify with backend
-      // Note: We pass the token explicitly here, overriding the interceptor's default
-      // console.debug('[SpringAuth] getSession: Verifying JWT with /api/v1/auth/me');
+      // A token whose exp has passed cannot satisfy /me, and asking anyway spends a full round-trip before the.
+      if (this.getTokenExpiry(token).expiresIn <= 0) {
+        const refreshResult = await this.refreshSession();
+        if (!refreshResult.error && refreshResult.data.session) {
+          return refreshResult;
+        }
+        localStorage.removeItem(JWT_STORAGE_KEY);
+        return { data: { session: null }, error: null };
+      }
+
+      // Verify with backend Note: We pass the token explicitly here, overriding the interceptor's default.
       const meConfig: AuthRequestConfig = {
         headers: {
           Authorization: `Bearer ${token}`,

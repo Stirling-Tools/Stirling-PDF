@@ -16,6 +16,7 @@ import { readStubClassificationLabels } from "@app/services/fileClassification";
 import { hasInFlightPolicyRuns } from "@app/components/policies/policyRunStore";
 import {
   getSidebarCategories,
+  loadSidebarCategories,
   subscribeSidebarCategories,
 } from "@app/services/fileSidebarCategories";
 import { buildLabelGroups } from "@app/components/shared/fileSidebarGroupingLogic";
@@ -96,6 +97,12 @@ export function useFileSidebarGroups(
       if (retryTimer !== undefined) window.clearTimeout(retryTimer);
     };
   }, [enabled, stubs, bumpRevision, retryTick]);
+
+  // The category vocabulary is a large static file that only this feature
+  // renders, so it is fetched here rather than shipped with every startup.
+  useEffect(() => {
+    if (enabled) void loadSidebarCategories();
+  }, [enabled]);
 
   const categories = useSyncExternalStore(
     subscribeSidebarCategories,

@@ -86,6 +86,11 @@ describe("automatic form tab selection", () => {
         await result.current.fetchFields(file, "A");
       });
       rerender({ active: true });
+      // The provider is built on first use now, so its fetch starts once the
+      // module has loaded rather than during the effect that requested it.
+      await act(async () => {
+        await vi.waitFor(() => expect(fetchBackend).toHaveBeenCalled());
+      });
       expect(result.current.state.loading).toBe(true);
       expect(result.current.mode).toBe("fill");
       await act(async () => finish([field]));

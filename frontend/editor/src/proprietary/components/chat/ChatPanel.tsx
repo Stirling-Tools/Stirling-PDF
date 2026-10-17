@@ -38,6 +38,7 @@ import {
 } from "@app/components/chat/ChatContext";
 import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
+import { toolEndpointPath } from "@app/constants/toolEndpoints";
 import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
@@ -47,18 +48,14 @@ type TranslateFn = TFunction;
 /** Resolver mapping a tool endpoint path to its translated display name. */
 type ToolNameResolver = (endpoint: string) => string | null;
 
-/**
- * Look up a tool's translated name from the tool catalog. The catalog's {@code operationConfig}
- * exposes the full API endpoint path for each tool, so we key the lookup on the exact path that
- * arrives in SSE progress events — no string parsing.
- */
+/** Look up a tool's translated name from the tool catalog. */
 function useToolNameResolver(): ToolNameResolver {
   const { allTools } = useTranslatedToolCatalog();
   return useMemo(() => {
     const nameByEndpoint = new Map<string, string>();
     Object.values(allTools).forEach((tool) => {
-      const endpoint = tool.operationConfig?.endpoint;
-      if (typeof endpoint === "string") {
+      const endpoint = toolEndpointPath(tool.endpoints?.[0]);
+      if (endpoint) {
         nameByEndpoint.set(endpoint, tool.name);
       }
     });
@@ -69,17 +66,14 @@ function useToolNameResolver(): ToolNameResolver {
 /** Resolver mapping a tool endpoint path to its registry icon ReactNode. */
 type ToolIconResolver = (endpoint: string) => ReactNode | null;
 
-/**
- * Look up a tool's icon ReactNode from the tool catalog, keyed by API endpoint path.
- * Returns null when the endpoint is not found (use a generic fallback icon in that case).
- */
+/** Look up a tool's icon ReactNode from the tool catalog, keyed by the endpoint path a progress event names. */
 function useToolIconResolver(): ToolIconResolver {
   const { allTools } = useTranslatedToolCatalog();
   return useMemo(() => {
     const iconByEndpoint = new Map<string, ReactNode>();
     Object.values(allTools).forEach((tool) => {
-      const endpoint = tool.operationConfig?.endpoint;
-      if (typeof endpoint === "string") {
+      const endpoint = toolEndpointPath(tool.endpoints?.[0]);
+      if (endpoint) {
         iconByEndpoint.set(endpoint, tool.icon);
       }
     });

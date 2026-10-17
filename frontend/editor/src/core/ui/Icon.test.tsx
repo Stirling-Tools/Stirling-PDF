@@ -1,11 +1,17 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/react";
 
-import { Icon, isIconName, MISSING_ICON } from "@app/ui/Icon";
+import { Icon, isIconName, loadIconRegistry, MISSING_ICON } from "@app/ui/Icon";
 import { ICONS, type IconName } from "@app/icons/icons";
 import { STROKE_WIDTH } from "@app/icons/icons.config";
 
 const names = Object.keys(ICONS) as IconName[];
+
+// The subset `Icon` carries eagerly covers the landing screen only, so the
+// per-name cases below need the complete map in memory to render synchronously.
+beforeAll(async () => {
+  await loadIconRegistry();
+});
 
 function renderIcon(
   name: IconName,

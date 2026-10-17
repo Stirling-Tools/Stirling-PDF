@@ -77,247 +77,247 @@
   },
   "/compress": {
     "title": "Compress PDF",
-    "description": "Compress PDFs to reduce their file size."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/compress-pdf": {
     "title": "Compress PDF",
-    "description": "Compress PDFs to reduce their file size."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/merge": {
     "title": "Merge PDF",
-    "description": "Merge multiple PDFs into a single document"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/merge-pdfs": {
     "title": "Merge PDF",
-    "description": "Merge multiple PDFs into a single document"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/split": {
     "title": "Split PDF",
-    "description": "Split PDFs into multiple documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/split-pdfs": {
     "title": "Split PDF",
-    "description": "Split PDFs into multiple documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/auto-split-pdf": {
     "title": "Split PDF",
-    "description": "Split PDFs into multiple documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/auto-size-split-pdf": {
     "title": "Split PDF",
-    "description": "Split PDFs into multiple documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/split-by-size-or-count": {
     "title": "Split PDF",
-    "description": "Split PDFs into multiple documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/split-pdf-by-sections": {
     "title": "Split PDF",
-    "description": "Split PDFs into multiple documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/split-pdf-by-chapters": {
     "title": "Split PDF",
-    "description": "Split PDFs into multiple documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/rotate": {
     "title": "Rotate PDF",
-    "description": "Easily rotate your PDFs."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/rotate-pdf": {
     "title": "Rotate PDF",
-    "description": "Easily rotate your PDFs."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/convert": {
     "title": "PDF Converter",
-    "description": "Convert files to and from PDF format"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/convert-pdf": {
     "title": "PDF Converter",
-    "description": "Convert files to and from PDF format"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/ocr": {
     "title": "OCR PDF",
-    "description": "Extract text from scanned PDFs using Optical Character Recognition"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/ocr-pdf": {
     "title": "OCR PDF",
-    "description": "Extract text from scanned PDFs using Optical Character Recognition"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/watermark": {
     "title": "Add Watermark to PDF",
-    "description": "Add a custom watermark to your PDF document."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/add-watermark": {
     "title": "Add Watermark to PDF",
-    "description": "Add a custom watermark to your PDF document."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/sign": {
     "title": "Sign PDF",
-    "description": "Adds signature to PDF by drawing, text or image"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/cert-sign": {
     "title": "Sign PDF with a Certificate",
-    "description": "Sign PDF documents using digital certificates"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/manage-signatures": {
     "title": "Sign PDF with a Certificate",
-    "description": "Sign PDF documents using digital certificates"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/redact": {
     "title": "Redact PDF",
-    "description": "Permanently remove sensitive information from PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/auto-redact": {
     "title": "Redact PDF",
-    "description": "Permanently remove sensitive information from PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/crop": {
     "title": "Crop PDF",
-    "description": "Crop a PDF to reduce its size (maintains text!)"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/flatten": {
     "title": "Flatten PDF",
-    "description": "Remove all interactive elements and forms from a PDF"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/repair": {
     "title": "Repair PDF",
-    "description": "Repair corrupted or damaged PDF files"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/compare": {
     "title": "Compare PDF Files",
-    "description": "Compare two PDF documents and highlight differences"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/sanitize": {
     "title": "Sanitize PDF",
-    "description": "Remove potentially harmful elements from PDF files"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/sanitize-pdf": {
     "title": "Sanitize PDF",
-    "description": "Remove potentially harmful elements from PDF files"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/add-password": {
     "title": "Password Protect PDF",
-    "description": "Add password protection and restrictions to PDF files"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/remove-password": {
     "title": "Remove PDF Password",
-    "description": "Remove the opening password, permissions password, or both."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/change-permissions": {
     "title": "Change PDF Permissions",
-    "description": "Change document restrictions and permissions"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/add-page-numbers": {
     "title": "Add Page Numbers to PDF",
-    "description": "Add Page numbers throughout a document in a set location"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/add-text": {
     "title": "Add Text to PDF",
-    "description": "Add custom text anywhere in your PDF"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/add-image": {
     "title": "Add Image to PDF",
-    "description": "Add images anywhere in your PDF"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/add-stamp": {
     "title": "Add Stamp to PDF",
-    "description": "Add text or add image stamps at set locations"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/stamp": {
     "title": "Add Stamp to PDF",
-    "description": "Add text or add image stamps at set locations"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/add-attachments": {
     "title": "Manage PDF Attachments",
-    "description": "View, add, extract, rename, or delete embedded PDF attachments"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/extract-pages": {
     "title": "Extract PDF Pages",
-    "description": "Extract specific pages from a PDF document"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/extract-page": {
     "title": "Extract PDF Pages",
-    "description": "Extract specific pages from a PDF document"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/remove-pages": {
     "title": "Delete Pages from PDF",
-    "description": "Remove specific pages from a PDF document"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/remove-blanks": {
     "title": "Remove Blank Pages from PDF",
-    "description": "Remove blank pages from PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/remove-image": {
     "title": "Remove Images from PDF",
-    "description": "Remove all images from a PDF document"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/remove-image-pdf": {
     "title": "Remove Images from PDF",
-    "description": "Remove all images from a PDF document"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/remove-annotations": {
     "title": "Remove Annotations from PDF",
-    "description": "Remove annotations and comments from PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/reorganize-pages": {
     "title": "Organize PDF Pages",
-    "description": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/pdf-organizer": {
     "title": "Organize PDF Pages",
-    "description": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/extract-images": {
     "title": "Extract Images from PDF",
-    "description": "Extract images from PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/page-layout": {
     "title": "PDF Multi-Page Layout",
-    "description": "Merge multiple pages of a PDF document into a single page"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/multi-page-layout": {
     "title": "PDF Multi-Page Layout",
-    "description": "Merge multiple pages of a PDF document into a single page"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/scale-pages": {
     "title": "Resize PDF Pages",
-    "description": "Change the size/scale of a page and/or its contents."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/pdf-to-single-page": {
     "title": "Combine PDF into a Single Page",
-    "description": "Merges all PDF pages into one large single page"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/single-large-page": {
     "title": "Combine PDF into a Single Page",
-    "description": "Merges all PDF pages into one large single page"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/adjust-contrast": {
     "title": "Adjust PDF Colors and Contrast",
-    "description": "Adjust colors and contrast of PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/replace-color": {
     "title": "Replace and Invert PDF Colors",
-    "description": "Replace or invert colors in PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/replace-color-pdf": {
     "title": "Replace and Invert PDF Colors",
-    "description": "Replace or invert colors in PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/replace-and-invert-color-pdf": {
     "title": "Replace and Invert PDF Colors",
-    "description": "Replace or invert colors in PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/change-metadata": {
     "title": "Edit PDF Metadata",
-    "description": "Change/Remove/Add metadata from a PDF document"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/get-pdf-info": {
     "title": "PDF Info and Metadata Viewer",
-    "description": "Grabs any and all information possible on PDFs"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/get-info-on-pdf": {
     "title": "PDF Info and Metadata Viewer",
-    "description": "Grabs any and all information possible on PDFs"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/overlay-pdfs": {
     "title": "Overlay PDFs",
@@ -329,94 +329,94 @@
   },
   "/edit-table-of-contents": {
     "title": "Edit PDF Bookmarks",
-    "description": "Add or edit bookmarks and table of contents in PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/pdf-text-editor": {
     "title": "Edit PDF Text",
-    "description": "Review and edit text and images in PDFs with grouped text editing and PDF regeneration"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/form-fill": {
     "title": "Fill PDF Forms",
-    "description": "Fill, create, edit, and delete PDF form fields with a visual editor"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/multi-tool": {
     "title": "PDF Page Editor",
-    "description": "Use multiple tools on a single PDF document"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/read": {
     "title": "PDF Viewer",
-    "description": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/view-pdf": {
     "title": "PDF Viewer",
-    "description": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/annotate": {
     "title": "Annotate PDF",
-    "description": "Highlight, draw, add notes, and shapes directly in the viewer"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/annotations": {
     "title": "Annotate PDF",
-    "description": "Highlight, draw, add notes, and shapes directly in the viewer"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/automate": {
     "title": "PDF Workflow Automation",
-    "description": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/pipeline": {
     "title": "PDF Workflow Automation",
-    "description": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/scanner-image-split": {
     "title": "Split Scanned Photos",
-    "description": "Detect and split scanned photos into separate pages"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/extract-image-scans": {
     "title": "Split Scanned Photos",
-    "description": "Detect and split scanned photos into separate pages"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/auto-rename": {
     "title": "Auto Rename PDF Files",
-    "description": "Automatically rename PDF files based on their content"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/booklet-imposition": {
     "title": "Create a PDF Booklet",
-    "description": "Create booklets with proper page ordering and multi-page layout for printing and binding"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/unlock-p-d-f-forms": {
     "title": "Unlock PDF Forms",
-    "description": "Remove read-only property of form fields in a PDF document."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/unlock-pdf-forms": {
     "title": "Unlock PDF Forms",
-    "description": "Remove read-only property of form fields in a PDF document."
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/remove-cert-sign": {
     "title": "Remove PDF Certificate Signature",
-    "description": "Remove digital signature from PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/remove-certificate-sign": {
     "title": "Remove PDF Certificate Signature",
-    "description": "Remove digital signature from PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/validate-signature": {
     "title": "Validate PDF Signature",
-    "description": "Verify digital signatures and certificates in PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/timestamp-pdf": {
     "title": "Timestamp PDF",
-    "description": "Add an RFC 3161 document timestamp to prove when your PDF existed"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/show-j-s": {
     "title": "Show JavaScript in PDF",
-    "description": "Extract and display JavaScript code from PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/show-js": {
     "title": "Show JavaScript in PDF",
-    "description": "Extract and display JavaScript code from PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   },
   "/show-javascript": {
     "title": "Show JavaScript in PDF",
-    "description": "Extract and display JavaScript code from PDF documents"
+    "description": "A free, private PDF editor you can run on any infrastructure."
   }
 }

@@ -18,7 +18,7 @@ import {
   Select,
   Spinner,
 } from "@app/ui";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { useOperationConfigCatalog } from "@app/data/toolOperationConfigs";
 import {
   activeFileFields,
   assetRef,
@@ -198,7 +198,7 @@ export function PipelineBuilder() {
     classificationEnabled: aiClassificationEnabled,
     loading: aiAvailabilityLoading,
   } = useAiEngineEnabled();
-  const { allTools } = useToolRegistry();
+  const { allTools } = useOperationConfigCatalog();
   const executableTools = useMemo(
     () => getExecutableTools(allTools),
     [allTools],

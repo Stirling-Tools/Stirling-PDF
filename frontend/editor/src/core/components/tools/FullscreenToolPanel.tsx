@@ -1,11 +1,16 @@
-import { useEffect, useMemo } from "react";
+import { Suspense, lazy, useEffect, useMemo } from "react";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
-import FullscreenToolSurface from "@app/components/tools/FullscreenToolSurface";
 import { ToolId } from "@app/types/toolId";
 import type { ToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
+
+// The surface is the fullscreen takeover, which only the expanded tool panel
+// renders, so it loads then rather than with the panel.
+const FullscreenToolSurface = lazy(
+  () => import("@app/components/tools/FullscreenToolSurface"),
+);
 
 /** Derives whether the fullscreen tool picker is currently expanded. */
 export function useIsFullscreenExpanded(): boolean {
@@ -67,23 +72,25 @@ export function FullscreenToolPanel({ geometry }: FullscreenToolPanelProps) {
   if (!fullscreenExpanded) return null;
 
   return (
-    <FullscreenToolSurface
-      searchQuery={searchQuery}
-      toolRegistry={toolRegistry}
-      filteredTools={filteredTools}
-      selectedToolKey={selectedToolKey}
-      showDescriptions={preferences.showLegacyToolDescriptions}
-      matchedTextMap={matchedTextMap}
-      onSearchChange={setSearchQuery}
-      onSelect={(id: ToolId) => handleToolSelect(id)}
-      onToggleDescriptions={() =>
-        updatePreference(
-          "showLegacyToolDescriptions",
-          !preferences.showLegacyToolDescriptions,
-        )
-      }
-      onExitFullscreenMode={() => setToolPanelMode("sidebar")}
-      geometry={geometry}
-    />
+    <Suspense fallback={null}>
+      <FullscreenToolSurface
+        searchQuery={searchQuery}
+        toolRegistry={toolRegistry}
+        filteredTools={filteredTools}
+        selectedToolKey={selectedToolKey}
+        showDescriptions={preferences.showLegacyToolDescriptions}
+        matchedTextMap={matchedTextMap}
+        onSearchChange={setSearchQuery}
+        onSelect={(id: ToolId) => handleToolSelect(id)}
+        onToggleDescriptions={() =>
+          updatePreference(
+            "showLegacyToolDescriptions",
+            !preferences.showLegacyToolDescriptions,
+          )
+        }
+        onExitFullscreenMode={() => setToolPanelMode("sidebar")}
+        geometry={geometry}
+      />
+    </Suspense>
   );
 }

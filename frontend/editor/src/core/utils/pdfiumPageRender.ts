@@ -6,10 +6,7 @@
  * per-page thumbnail service (thumbnailGenerationService.ts) so the pixel-
  * copy + white-background logic lives in one place.
  */
-import {
-  getPdfiumModule,
-  type ExtendedPdfiumRuntime,
-} from "@app/services/pdfiumService";
+import type { ExtendedPdfiumRuntime } from "@app/services/pdfiumService";
 
 /** Row-by-row copy for padded strides, where rows are not contiguous. */
 function copyRows(
@@ -52,6 +49,9 @@ export async function renderPdfiumPageDataUrl(
   options: RenderPdfiumPageOptions = {},
 ): Promise<string | null> {
   const { applyRotation = true, format = "png", quality } = options;
+  // The engine is a document-side chunk: importing it at the point of use
+  // keeps it off the startup path.
+  const { getPdfiumModule } = await import("@app/services/pdfiumService");
   const m = await getPdfiumModule();
 
   const pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
@@ -129,6 +129,7 @@ export async function readPdfiumPageMetadata(
   docPtr: number,
   pageIndex: number,
 ): Promise<{ width: number; height: number; rotation: number } | null> {
+  const { getPdfiumModule } = await import("@app/services/pdfiumService");
   const m = await getPdfiumModule();
   const pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
   if (!pagePtr) return null;

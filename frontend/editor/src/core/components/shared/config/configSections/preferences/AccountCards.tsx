@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Icon } from "@app/ui/Icon";
 import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import {
@@ -18,10 +25,13 @@ import { alert as showToast } from "@app/components/toast";
 import { useAuth } from "@app/auth/UseSession";
 import { accountService } from "@app/services/accountService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import { QRCodeSVG } from "qrcode.react";
 import { useAccountLogout } from "@app/extensions/accountLogout";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
+
+const QRCodeSVG = lazy(() =>
+  import("qrcode.react").then((module) => ({ default: module.QRCodeSVG })),
+);
 
 /** The signed-in user's shape is layer-specific, so read fields defensively. */
 function userField(source: unknown, key: string): string | undefined {
@@ -593,17 +603,19 @@ export function AccountCards() {
                     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <QRCodeSVG
-                    value={mfaSetupData.otpauthUri || ""}
-                    size={180}
-                    level="H"
-                    imageSettings={{
-                      src: qrLogoSrc,
-                      height: 40,
-                      width: 40,
-                      excavate: true,
-                    }}
-                  />
+                  <Suspense fallback={null}>
+                    <QRCodeSVG
+                      value={mfaSetupData.otpauthUri || ""}
+                      size={180}
+                      level="H"
+                      imageSettings={{
+                        src: qrLogoSrc,
+                        height: 40,
+                        width: 40,
+                        excavate: true,
+                      }}
+                    />
+                  </Suspense>
                 </Box>
                 <Text size="sm" c="dimmed">
                   {t("account.mfa.manualKey", "Manual setup key")}:{" "}

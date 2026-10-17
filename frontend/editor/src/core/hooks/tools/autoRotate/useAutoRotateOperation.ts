@@ -2,14 +2,6 @@ import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import apiClient from "@app/services/apiClient";
 import {
-  getPdfiumModule,
-  openRawDocumentSafe,
-  setPageRotation,
-  degreesToPdfiumRotation,
-  saveRawDocument,
-  closeDocAndFreeBuffer,
-} from "@app/services/pdfiumService";
-import {
   useToolOperation,
   defineCustomTool,
   CustomProcessorResult,
@@ -135,6 +127,16 @@ const createAutoRotateProcessor =
         continue;
       }
 
+      // The engine is a document-side chunk: importing it at the point of use
+      // keeps it off the startup path.
+      const {
+        getPdfiumModule,
+        openRawDocumentSafe,
+        setPageRotation,
+        degreesToPdfiumRotation,
+        saveRawDocument,
+        closeDocAndFreeBuffer,
+      } = await import("@app/services/pdfiumService");
       const pdfium = await getPdfiumModule();
       const docPtr = await openRawDocumentSafe(await inputFile.arrayBuffer());
       try {

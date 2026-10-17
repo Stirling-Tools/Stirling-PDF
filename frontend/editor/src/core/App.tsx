@@ -1,4 +1,5 @@
-import { Suspense, lazy } from "react";
+import { Suspense } from "react";
+import { translatedLazy } from "@app/i18n/translatedLazy";
 import { Routes, Route } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
 import { AppFrame } from "@app/components/layout/AppFrame";
@@ -9,8 +10,12 @@ import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { AppRoot } from "@app/components/layout/AppRoot";
 import Onboarding from "@app/components/onboarding/Onboarding";
 
-const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
-const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
+const MobileScannerPage = translatedLazy(
+  () => import("@app/pages/MobileScannerPage"),
+);
+const MobileSignPage = translatedLazy(
+  () => import("@app/pages/MobileSignPage"),
+);
 
 // Import global styles
 import "@app/styles/tailwind.css";

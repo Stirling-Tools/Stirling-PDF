@@ -4,7 +4,7 @@ import {
 } from "@app/hooks/tools/shared/useToolOperation";
 import { useCallback } from "react";
 import { executeAutomationSequence } from "@app/utils/automationExecutor";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { useOperationConfigCatalog } from "@app/data/toolOperationConfigs";
 import { useFileContext } from "@app/contexts/FileContext";
 import { AutomateParameters } from "@app/types/automation";
 import {
@@ -14,7 +14,7 @@ import {
 import { isStirlingFile } from "@app/types/fileContext";
 
 export function useAutomateOperation() {
-  const { allTools } = useToolRegistry();
+  const { allTools } = useOperationConfigCatalog();
   const toolRegistry = allTools;
   const { selectors } = useFileContext();
 

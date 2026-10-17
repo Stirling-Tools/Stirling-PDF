@@ -3,8 +3,9 @@
  */
 
 import { FileId } from "@app/types/file";
-import { releaseSharedDocumentWhenIdle } from "@app/services/pdfiumService";
 import { releaseDocumentBytes } from "@app/services/documentBytesCache";
+import { forgetCachedPageImages } from "@app/services/pageImageCache";
+import { wasmCompilationStarted } from "@app/services/wasmPrecompiler";
 import {
   forgetPdfAccess,
   getPdfAccess,
@@ -24,6 +25,16 @@ import {
 } from "@app/contexts/file/storedFileReconciler";
 
 const DEBUG = process.env.NODE_ENV === "development";
+
+/** Drops the engine's shared handle on a document once it leaves the workbench. */
+function releaseSharedDocument(): void {
+  if (!wasmCompilationStarted()) return;
+  void import("@app/services/pdfiumService")
+    .then(({ releaseSharedDocumentWhenIdle }) =>
+      releaseSharedDocumentWhenIdle(),
+    )
+    .catch(() => {});
+}
 
 /**
  * Resource tracking and cleanup utilities
@@ -94,7 +105,7 @@ export class FileLifecycleManager {
     this.fileGenerations.clear();
 
     // No file survives teardown, so neither should its shared document.
-    releaseSharedDocumentWhenIdle();
+    releaseSharedDocument();
 
     // Clear files ref
     this.filesRef.current.clear();
@@ -179,8 +190,12 @@ export class FileLifecycleManager {
     // A scan queued before this removal can still open the document, so the
     // release runs behind the queue. The byte cache entry is keyed by the file
     // and cannot be reused once it leaves the workbench.
-    releaseSharedDocumentWhenIdle();
+    releaseSharedDocument();
     if (file) releaseDocumentBytes(file);
+
+    // Page images are keyed by page id, so the cache has to be told which file
+    // they came from; nothing else drops them when the file goes.
+    forgetCachedPageImages(fileId);
 
     // Clean up blob URLs from file record if we have access to state
     if (stateRef) {
