@@ -26,6 +26,7 @@ function UnlockDemo(
   return (
     <EncryptedPdfUnlockModal
       opened
+      sessionUnlock
       fileName="contract-final.pdf"
       password={password}
       errorMessage={null}
@@ -33,6 +34,7 @@ function UnlockDemo(
       remainingCount={0}
       onPasswordChange={setPassword}
       onUnlock={() => {}}
+      onRemovePassword={() => {}}
       onUnlockAll={() => {}}
       onSkip={() => {}}
       {...props}

@@ -49,7 +49,11 @@ interface IndexedDBContextValue {
     available: number;
     fileCount: number;
   }>;
-  updateThumbnail: (fileId: FileId, thumbnail: string) => Promise<boolean>;
+  updateThumbnail: (
+    fileId: FileId,
+    thumbnail: string,
+    isEncrypted?: boolean,
+  ) => Promise<boolean>;
   markFileAsProcessed: (fileId: FileId) => Promise<boolean>;
 
   // Folder operations
@@ -242,8 +246,16 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   }, []);
 
   const updateThumbnail = useCallback(
-    async (fileId: FileId, thumbnail: string): Promise<boolean> => {
-      const result = await fileStorage.updateThumbnail(fileId, thumbnail);
+    async (
+      fileId: FileId,
+      thumbnail: string,
+      isEncrypted?: boolean,
+    ): Promise<boolean> => {
+      const result = await fileStorage.updateThumbnail(
+        fileId,
+        thumbnail,
+        isEncrypted,
+      );
       if (result) bumpRevision();
       return result;
     },

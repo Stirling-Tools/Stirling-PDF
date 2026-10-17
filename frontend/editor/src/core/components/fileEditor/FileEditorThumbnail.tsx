@@ -40,6 +40,8 @@ import ShareFileModal from "@app/components/shared/ShareFileModal";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { Tooltip as StirlingTooltip } from "@app/components/shared/Tooltip";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import { truncateCenter } from "@app/utils/textUtils";
@@ -71,6 +73,7 @@ const FileEditorThumbnail = ({
   policies = [],
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
+  const pdfAccess = usePdfAccess(file.id);
   const eligibleFileIds = useToolEligibleFileIds();
   const isToolSkipped =
     eligibleFileIds !== null && !eligibleFileIds.has(file.id);
@@ -676,6 +679,30 @@ const FileEditorThumbnail = ({
           <span className={styles.fileNameText}>
             <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
           </span>
+          {pdfAccess?.encrypted && (
+            <StirlingTooltip
+              content={t(
+                "encryptedPdfUnlock.sessionSuccessBody",
+                "Unlocked for this session. Password protection is retained.",
+              )}
+              position="top"
+              maxWidth={230}
+              arrow
+            >
+              <span
+                className={styles.unlockedIndicator}
+                role="img"
+                aria-label={t(
+                  "encryptedPdfUnlock.sessionSuccessTitle",
+                  "PDF unlocked",
+                )}
+                tabIndex={0}
+                data-no-select
+              >
+                <Icon name="lock-open" size={14} />
+              </span>
+            </StirlingTooltip>
+          )}
           <PolicyBadges policies={policies} className={styles.fileNameBadges} />
         </p>
         <p className={styles.fileMeta}>{metaLine}</p>
