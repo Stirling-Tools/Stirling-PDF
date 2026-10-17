@@ -5,8 +5,6 @@ import type { IconName } from "@app/ui/Icon";
 // category isn't rendered as a group; its files fall to "Other". Presentational only — the
 // classifier never sees categories.
 
-import { LABEL_FAMILIES } from "@app/data/classificationLabels";
-
 export interface SidebarCategory {
   /** Stable id (the label family's id). */
   id: string;
@@ -20,14 +18,14 @@ export interface SidebarCategory {
 
 const HIDDEN_STORAGE_KEY = "stirling.fileSidebarHiddenCategories.v1";
 
-/** The fixed, shared category set — never mutated. */
-const BASE_CATEGORIES: readonly Omit<SidebarCategory, "hidden">[] =
-  LABEL_FAMILIES.map((family) => ({
-    id: family.id,
-    name: family.name,
-    icon: family.icon,
-    labelKeys: family.labels.map((label) => label.id),
-  }));
+/**
+ * The fixed, shared category set, empty until the vocabulary arrives. The
+ * vocabulary is a large static file that only a classification-enabled library
+ * renders, so it is fetched when groups are first asked for rather than shipped
+ * with every startup.
+ */
+let baseCategories: readonly Omit<SidebarCategory, "hidden">[] | null = null;
+let loading: Promise<void> | null = null;
 
 function readHidden(): Set<string> {
   try {
@@ -49,11 +47,16 @@ const listeners = new Set<() => void>();
 let effective: SidebarCategory[] = compute();
 
 function compute(): SidebarCategory[] {
-  return BASE_CATEGORIES.map((c) => ({
+  return (baseCategories ?? []).map((c) => ({
     ...c,
     labelKeys: [...c.labelKeys],
     hidden: hiddenIds.has(c.id),
   }));
+}
+
+function publish() {
+  effective = compute();
+  for (const listener of listeners) listener();
 }
 
 function persist() {
@@ -62,8 +65,28 @@ function persist() {
   } catch {
     // Quota/private-mode failures degrade to session-only visibility.
   }
-  effective = compute();
-  for (const listener of listeners) listener();
+  publish();
+}
+
+/**
+ * Fetches the built-in vocabulary once. Callers subscribe to the store, so the
+ * categories and the groups built from them appear when the fetch lands.
+ */
+export function loadSidebarCategories(): Promise<void> {
+  loading ??= import("@app/data/classificationLabels")
+    .then((mod) => {
+      baseCategories = mod.LABEL_FAMILIES.map((family) => ({
+        id: family.id,
+        name: family.name,
+        icon: family.icon,
+        labelKeys: family.labels.map((label) => label.id),
+      }));
+      publish();
+    })
+    .catch(() => {
+      // A failed fetch leaves the sidebar flat rather than broken.
+    });
+  return loading;
 }
 
 /** The shared categories, each flagged with the user's device-local visibility. */
