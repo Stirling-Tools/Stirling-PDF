@@ -69,7 +69,6 @@ import {
 import { useFolders } from "@app/contexts/FolderContext";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
-import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { useAuth } from "@app/auth/UseSession";
 import { canPickDirectory } from "@app/services/directoryPicker";
@@ -83,6 +82,14 @@ import "@app/components/layout/WorkspaceFrame.css";
 import "@app/pages/HomePage.css";
 
 const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
+
+/**
+ * The mobile hand-off is opened from a rail action and carries the transfer
+ * machinery, so it mounts on the first open rather than with the page.
+ */
+const MobileUploadModal = lazy(
+  () => import("@app/components/shared/MobileUploadModal"),
+);
 
 /**
  * Policies and their recovery run once per editor, and the pass pulls the policy
@@ -899,6 +906,8 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { isAnonymous } = useAuth();
     const { config: appConfig } = useAppConfig();
     const [mobileUploadOpen, setMobileUploadOpen] = useState(false);
+    // A lazy component fetches as soon as it renders, so it waits for the open.
+    const [mobileUploadMounted, setMobileUploadMounted] = useState(false);
     const isMobileViewport = useIsMobile();
     // The scanner sends files from a phone to this screen, so it is a desktop
     // affordance: on a phone you are already where the files are.
@@ -959,20 +968,27 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
                       "filesPage.uploadFromMobile",
                       "Upload from Mobile",
                     ),
-                    onClick: () => setMobileUploadOpen(true),
+                    onClick: () => {
+                      setMobileUploadMounted(true);
+                      setMobileUploadOpen(true);
+                    },
                     testId: "files-rail-mobile-upload",
                   },
                 ]
               : []),
           ]}
         />
-        <MobileUploadModal
-          opened={mobileUploadOpen}
-          onClose={() => setMobileUploadOpen(false)}
-          onFilesReceived={(files) => {
-            if (files.length > 0) void handleUpload(files);
-          }}
-        />
+        {mobileUploadMounted && (
+          <Suspense fallback={null}>
+            <MobileUploadModal
+              opened={mobileUploadOpen}
+              onClose={() => setMobileUploadOpen(false)}
+              onFilesReceived={(files) => {
+                if (files.length > 0) void handleUpload(files);
+              }}
+            />
+          </Suspense>
+        )}
       </>
     );
   },
