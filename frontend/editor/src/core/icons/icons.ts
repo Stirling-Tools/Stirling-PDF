@@ -255,6 +255,7 @@ import ScanText from "lucide-static/icons/scan-text.svg?react";
 import School from "lucide-static/icons/school.svg?react";
 import Scissors from "lucide-static/icons/scissors.svg?react";
 import ScrollText from "lucide-static/icons/scroll-text.svg?react";
+import Share from "lucide-static/icons/share.svg?react";
 import Search from "lucide-static/icons/search.svg?react";
 import Send from "lucide-static/icons/send.svg?react";
 import SendToBack from "lucide-static/icons/send-to-back.svg?react";
@@ -662,6 +663,7 @@ export const ICONS = {
   scissors: { Component: Scissors, kind: "lucide" },
   "scroll-text": { Component: ScrollText, kind: "lucide" },
   search: { Component: Search, kind: "lucide" },
+  share: { Component: Share, kind: "lucide" },
   send: { Component: Send, kind: "lucide" },
   "send-to-back": { Component: SendToBack, kind: "lucide" },
   server: { Component: Server, kind: "lucide" },

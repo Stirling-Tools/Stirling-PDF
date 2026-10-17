@@ -6070,6 +6070,15 @@ notConnected = "You are not connected to a server. Sign in to Stirling Cloud or 
 notConnected = "Not connected"
 signedOutBody = "Sign in to run tools on Stirling Cloud or your own server."
 
+[mobile.document]
+allTools = "All tools"
+back = "Documents"
+save = "Save to device"
+search = "Search in document"
+share = "Share"
+shareFailed = "Couldn't share this file"
+switch = "Switch document"
+
 [mobile.files]
 addFiles = "Add files"
 addPrompt = "Add a document to get started"
