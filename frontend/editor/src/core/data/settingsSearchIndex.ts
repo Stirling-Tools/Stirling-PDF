@@ -266,6 +266,20 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
     keywords: ["audit", "log", "retention", "events"],
   },
   {
+    section: "adminSecurity",
+    anchor: "pdfPermissions",
+    labelKey: "admin.settings.security.honorOwnerPasswords.label",
+    labelFallback: "Honor PDF permissions",
+    keywords: [
+      "pdf",
+      "owner",
+      "password",
+      "permissions",
+      "restrictions",
+      "honorOwnerPasswords",
+    ],
+  },
+  {
     section: "adminDatabase",
     anchor: "adminDatabase",
     labelKey: "settings.configuration.database",

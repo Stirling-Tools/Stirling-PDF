@@ -32,7 +32,7 @@ interface TeamDetailsDTO {
   memberCount: number;
   seatCount: number;
   seatsUsed: number;
-  maxSeats: number;
+  maxSeats: number | null;
   isLeader: boolean;
   current?: boolean;
   currentUserId?: number;
@@ -69,7 +69,7 @@ const FREE_USER_ALLOWANCE = 5;
  * `SaasTeamExtensions.licensedUsers()`: a team on the free allowance has no limit to show, and the
  * unlimited sentinel is never a number.
  */
-function normalizeSeatLimit(max: number | undefined): number | null {
+function normalizeSeatLimit(max: number | null | undefined): number | null {
   if (!max || max <= FREE_USER_ALLOWANCE || max >= 2147483647) return null;
   return max;
 }

@@ -50,7 +50,7 @@ test.describe("Encrypted PDF: unlock then merge", () => {
       );
       return;
     }
-    await passwordInput.fill("test");
+    await passwordInput.fill("testpass123");
     await page
       .getByRole("button", { name: /unlock/i })
       .first()
