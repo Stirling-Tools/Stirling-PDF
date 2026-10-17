@@ -72,9 +72,14 @@ export function useAnchoredOverlay({
     if (!anchor || !overlay) return;
 
     const rect = anchor.getBoundingClientRect();
+    // The overlay is centred on the anchor with translateX(-50%), so hold the
+    // centre far enough in that neither edge can leave the viewport.
+    const halfWidth = overlay.offsetWidth / 2;
+    const minLeft = 8 + halfWidth;
+    const maxLeft = window.innerWidth - 8 - halfWidth;
     const next: OverlayAnchorRect = {
       top: placement === "above" ? rect.top - offset : rect.bottom + offset,
-      left: rect.left + rect.width / 2,
+      left: Math.max(minLeft, Math.min(maxLeft, rect.left + rect.width / 2)),
     };
     const previous = lastPositionRef.current;
     if (previous && previous.top === next.top && previous.left === next.left) {
