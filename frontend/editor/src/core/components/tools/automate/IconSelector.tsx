@@ -1,4 +1,3 @@
-import "@mantine/core/styles/SimpleGrid.css";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Text, Stack, SimpleGrid, Tooltip, Popover } from "@mantine/core";

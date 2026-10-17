@@ -1,4 +1,3 @@
-import "@mantine/core/styles/SimpleGrid.css";
 import React, {
   useCallback,
   useEffect,

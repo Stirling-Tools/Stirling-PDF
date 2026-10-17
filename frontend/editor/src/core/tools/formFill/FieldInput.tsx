@@ -5,7 +5,6 @@
  * Each instance subscribes to its own field value via useFieldValue(),
  * so only the active widget re-renders when its value changes.
  */
-import "@mantine/core/styles/Radio.css";
 import React, { useCallback, memo } from "react";
 import {
   TextInput,

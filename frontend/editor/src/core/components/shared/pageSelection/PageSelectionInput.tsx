@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Switch.css";
 import { TextInput, Text, Flex, Switch } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";

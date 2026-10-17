@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Accordion.css";
 import { useTranslation } from "react-i18next";
 import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { InfoTooltip } from "@app/ui/InfoTooltip";

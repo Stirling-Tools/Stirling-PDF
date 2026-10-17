@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Drawer.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Drawer, Text } from "@mantine/core";

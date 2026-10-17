@@ -1,4 +1,3 @@
-import "@mantine/core/styles/LoadingOverlay.css";
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Center, Box, LoadingOverlay } from "@mantine/core";
 import { useTranslation } from "react-i18next";

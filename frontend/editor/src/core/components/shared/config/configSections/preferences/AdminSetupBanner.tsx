@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Code.css";
 import { useState } from "react";
 import { Icon } from "@app/ui/Icon";
 import { Anchor, Code, Group, Paper, Stack, Text } from "@mantine/core";

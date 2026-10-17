@@ -1,4 +1,3 @@
-import "@mantine/core/styles/SimpleGrid.css";
 import React from "react";
 import { Group, MultiSelect, Stack, SimpleGrid, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";

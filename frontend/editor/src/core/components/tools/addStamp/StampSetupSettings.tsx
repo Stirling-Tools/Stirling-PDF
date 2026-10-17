@@ -1,5 +1,3 @@
-import "@mantine/core/styles/Accordion.css";
-import "@mantine/core/styles/Code.css";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {

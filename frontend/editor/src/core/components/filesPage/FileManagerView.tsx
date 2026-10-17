@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Drawer.css";
 import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { Icon } from "@app/ui/Icon";
 import React, {

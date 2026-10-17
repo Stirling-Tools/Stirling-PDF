@@ -1,6 +1,3 @@
-import "@mantine/core/styles/Code.css";
-import "@mantine/core/styles/Pagination.css";
-import "@mantine/core/styles/Table.css";
 import React, { useState, useEffect, type ReactNode } from "react";
 import {
   Card,

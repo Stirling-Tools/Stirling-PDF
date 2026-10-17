@@ -1,4 +1,3 @@
-import "@mantine/core/styles/ThemeIcon.css";
 import {
   Center,
   Loader,

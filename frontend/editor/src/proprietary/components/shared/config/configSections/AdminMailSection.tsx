@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Switch.css";
 import { useCallback } from "react";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";

@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Tabs.css";
 import { useEffect, useMemo, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";

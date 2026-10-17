@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Switch.css";
 import { useRef } from "react";
 import { createPortal } from "react-dom";
 import { ScrollArea, Switch } from "@mantine/core";

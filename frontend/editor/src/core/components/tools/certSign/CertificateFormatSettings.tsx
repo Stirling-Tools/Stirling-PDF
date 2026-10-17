@@ -1,4 +1,3 @@
-import "@mantine/core/styles/SimpleGrid.css";
 import { SimpleGrid } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";

@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Switch.css";
 import { useId } from "react";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { Paper, Select, Stack, Switch, Text } from "@mantine/core";

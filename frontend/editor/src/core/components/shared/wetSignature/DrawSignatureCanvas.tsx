@@ -1,4 +1,3 @@
-import "@mantine/core/styles/ColorPicker.css";
 import { useRef, useEffect, useState } from "react";
 import { Stack, Group, ColorPicker, Slider, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";

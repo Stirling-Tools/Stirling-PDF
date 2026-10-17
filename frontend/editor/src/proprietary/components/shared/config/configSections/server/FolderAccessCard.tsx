@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Code.css";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";

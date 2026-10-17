@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Switch.css";
 import { useTranslation } from "react-i18next";
 import { Stack, Paper, Text, Group, Switch } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";

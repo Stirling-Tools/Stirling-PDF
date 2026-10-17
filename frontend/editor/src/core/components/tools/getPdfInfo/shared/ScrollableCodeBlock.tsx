@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Code.css";
 import React from "react";
 import { Code, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";

@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Grid.css";
 import React, { useCallback, useEffect, useState } from "react";
 import { Group, NumberInput, Select, Stack, Text, Grid } from "@mantine/core";
 import { useTranslation } from "react-i18next";

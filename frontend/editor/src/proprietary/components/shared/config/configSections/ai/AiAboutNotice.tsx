@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Code.css";
 import { useTranslation } from "react-i18next";
 import { Alert, Group, Text, Code } from "@mantine/core";
 import { Button } from "@app/ui/Button";

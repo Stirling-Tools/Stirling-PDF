@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Grid.css";
 import React from "react";
 import { Stack, Text, Grid, Paper, Alert, Divider } from "@mantine/core";
 import { Button } from "@app/ui/Button";

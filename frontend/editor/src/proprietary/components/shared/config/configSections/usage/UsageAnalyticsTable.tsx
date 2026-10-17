@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Table.css";
 import React from "react";
 import {
   Card,

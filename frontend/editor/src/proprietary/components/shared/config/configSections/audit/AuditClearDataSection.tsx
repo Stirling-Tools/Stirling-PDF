@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Code.css";
 import React, { useState } from "react";
 import {
   Card,

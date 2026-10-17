@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Table.css";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Badge,

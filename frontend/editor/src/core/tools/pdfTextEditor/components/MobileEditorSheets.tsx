@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Drawer.css";
 import { useEffect, type ComponentProps } from "react";
 import { Drawer } from "@mantine/core";
 import { useTranslation } from "react-i18next";

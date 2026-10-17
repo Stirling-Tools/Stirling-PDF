@@ -1,4 +1,3 @@
-import "@mantine/core/styles/Skeleton.css";
 import { memo, useState } from "react";
 import {
   Stack,
