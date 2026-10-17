@@ -42,14 +42,7 @@ let registry: Readonly<Record<string, IconEntry | undefined>> | null = null;
 let pending: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
-/**
- * Loads the complete map from `src/core/icons/icons.ts`.
- *
- * The landing screen paints about 70 names, so the entry chunk carries only
- * those (`iconStartup.ts`); this starts on the first name outside that subset
- * and the remaining ~340 arrive with the screen that needs them. Settles on
- * failure too, leaving the name's empty box in place; the next miss retries.
- */
+/** Loads the complete map from `src/core/icons/icons.ts`. */
 export function loadIconRegistry(): Promise<void> {
   pending ??= import("@app/icons/icons").then(
     (module) => {

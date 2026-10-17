@@ -78,10 +78,7 @@ const SIDEBAR_WIDTH = "var(--sidebar-w)";
 // FileItem isn't re-rendered by a fresh `?? []` identity on every list render.
 const NO_POLICIES: never[] = [];
 
-/**
- * Mounts the folder tree, which only the Files workbench shows. Loading it here
- * and not with the sidebar keeps the files-page machinery off the startup path.
- */
+/** Mounts the folder tree, which only the Files workbench shows. */
 const FileSidebarFolderTree = lazy(
   () => import("@app/components/shared/FileSidebarFolderTree"),
 );

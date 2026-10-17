@@ -377,12 +377,7 @@ const PROVIDER_NAMES: Record<FormProviderMode, string> = {
   pdfbox: "pdfbox",
 };
 
-/**
- * Loaded on the first form operation instead of at module scope: the pdfium
- * provider carries the WASM engine, the PDFBox provider its own field reader,
- * and neither can serve a first paint. `resolveProvider` keeps one instance per
- * mode for the session.
- */
+/** Loaded on the first form operation instead of at module scope: the pdfium provider carries the WASM engine. */
 const PROVIDER_LOADERS: Record<
   FormProviderMode,
   () => Promise<IFormDataProvider>
@@ -414,10 +409,7 @@ export function FormFillProvider({
   providerModeRef.current = providerMode;
   const providersRef = useRef(new Map<FormProviderMode, IFormDataProvider>());
 
-  /**
-   * The provider for the current mode, built on first use. Async because the
-   * implementation is a separate chunk; every caller is already async.
-   */
+/** The provider for the current mode, built on first use. */
   const resolveProvider = useCallback(async (): Promise<IFormDataProvider> => {
     if (providerProp) return providerProp;
     const mode = providerModeRef.current;

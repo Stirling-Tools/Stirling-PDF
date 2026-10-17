@@ -18,12 +18,7 @@ export interface SidebarCategory {
 
 const HIDDEN_STORAGE_KEY = "stirling.fileSidebarHiddenCategories.v1";
 
-/**
- * The fixed, shared category set, empty until the vocabulary arrives. The
- * vocabulary is a large static file that only a classification-enabled library
- * renders, so it is fetched when groups are first asked for rather than shipped
- * with every startup.
- */
+/** The fixed, shared category set, empty until the vocabulary arrives. */
 let baseCategories: readonly Omit<SidebarCategory, "hidden">[] | null = null;
 let loading: Promise<void> | null = null;
 
@@ -68,10 +63,7 @@ function persist() {
   publish();
 }
 
-/**
- * Fetches the built-in vocabulary once. Callers subscribe to the store, so the
- * categories and the groups built from them appear when the fetch lands.
- */
+/** Fetches the built-in vocabulary once. */
 export function loadSidebarCategories(): Promise<void> {
   loading ??= import("@app/data/classificationLabels")
     .then((mod) => {

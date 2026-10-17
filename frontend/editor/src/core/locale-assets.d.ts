@@ -1,9 +1,4 @@
-/**
- * Types for the standalone Node scripts the build imports.
- *
- * `scripts/generate-locale-assets.mjs` is plain JavaScript because Vite loads
- * it directly; the declaration keeps the tests that call it type-checked.
- */
+/** Types for the standalone Node scripts the build imports. */
 declare module "*generate-locale-assets.mjs" {
   export interface LocaleAssetsResult {
     written: Array<{ code: string; bytes: number }>;

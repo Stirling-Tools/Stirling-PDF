@@ -1,36 +1,4 @@
-/**
- * Writes the locale files the app fetches at runtime.
- *
- * `public/locales/<lng>/translation.toml` stays the authoring format - Crowdin
- * writes it, the structure tests read it - but shipping it as-is costs every
- * visitor whose language is not en-US a second full dictionary, because
- * i18next loads the fallback language eagerly. Each delivery file is therefore
- * the locale's own strings with the en-US values merged in for keys the locale
- * does not define: the same result the runtime fallback would have produced,
- * from one request, without the TOML parse.
- *
- * Only keys the locale is missing are filled, so an empty string or a short
- * string stays the translator's decision rather than being overwritten.
- *
- * Each language gets two delivery files: `translation.json` (the complete
- * dictionary) and `startup.json` (the keys the first screen resolves). The app
- * fetches the subset before it renders and the complete file once the user
- * acts, so ~120 KB of keys no first screen can reach stop sitting in front of
- * the first paint.
- *
- * `locale-startup-keys.json` names those keys. `tests/walkthrough/perf/probe-keys.mjs`
- * records what a landing render resolves; the startup overlays that mount but
- * paint later (`src/core/components/onboarding`, `src/core/components/startup`)
- * contribute the literals their `t()` calls and `i18nKey` props read.
- *
- * A listed key the source locale does not define is an error rather than a
- * skip: the app renders such a key verbatim, so a stale list would only show up
- * as untranslated text in production.
- *
- * Invoked by the `locale-assets` plugin in vite.config.ts for both dev and
- * build; can also be run directly:
- *   node editor/scripts/generate-locale-assets.mjs [--force]
- */
+/** Writes the locale files the app fetches at runtime. */
 
 import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -48,11 +16,7 @@ const STARTUP_KEYS = resolve(HERE, "locale-startup-keys.json");
 const isPlainObject = (value) =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-/**
- * Fills keys `target` does not define from `source`, in place. Arrays are
- * leaves: a locale that translated two of three items keeps its own list
- * rather than inheriting the source's.
- */
+/** Fills keys `target` does not define from `source`, in place. */
 function fillFromFallback(target, source) {
   for (const [key, value] of Object.entries(source)) {
     if (!(key in target)) {
@@ -86,12 +50,7 @@ function readStartupKeys(source, path = STARTUP_KEYS) {
   return keys;
 }
 
-/**
- * The subset of `dictionary` the startup list names, nested as i18next stores
- * it. Plurals and contexts are separate keys (`foo_one`, `foo_male`), so every
- * `<leaf>_*` sibling comes along; without them `t(key, {count})` falls through
- * to the key itself.
- */
+/** The subset of `dictionary` the startup list names, nested as i18next stores it. */
 function pickStartupKeys(dictionary, keys) {
   const subset = {};
   for (const key of keys) {
@@ -134,15 +93,7 @@ const mtimeOf = (path) => statSync(path).mtimeMs;
 
 const kib = (bytes) => `${(bytes / 1024).toFixed(1)} KiB`;
 
-/**
- * Generates every delivery file. Returns what was written so a caller can log
- * a summary; skips locales whose files are already newer than the authored
- * file, the source locale, the startup key list and this script unless `force`
- * is set.
- *
- * `localesDir` and `startupKeysPath` are for tests, which run against a fixture
- * tree instead of the checked-in locales.
- */
+/** Generates every delivery file. */
 export function generateLocaleAssets({
   force = false,
   log = () => {},

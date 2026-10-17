@@ -15,10 +15,7 @@ const ShareLinkPage = translatedLazy(() => import("@app/routes/ShareLinkPage"));
 const ParticipantView = translatedLazy(
   () => import("@app/components/workflow/ParticipantView"),
 );
-// Not `translatedLazy`: the overlay mounts on the landing screen but paints
-// nothing until its eligibility check resolves, so gating it on the complete
-// dictionary would put ~120 KiB of it in front of the first paint. Its own keys
-// are in the startup subset instead.
+// Not `translatedLazy`: the overlay mounts on the landing screen but paints nothing until its eligibility check.
 const Onboarding = lazy(() => import("@app/components/onboarding/Onboarding"));
 
 const MobileScannerPage = translatedLazy(

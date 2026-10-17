@@ -5,10 +5,7 @@ import { ICON_NAMES } from "@app/icons/iconNames";
 import { PLACEHOLDER_ICON, STARTUP_ICONS } from "@app/icons/iconStartup";
 import { MISSING_ICON } from "@app/ui/Icon";
 
-// Both generated files sit between `icons.ts` and the app: `iconNames.ts` lets
-// `isIconName` answer exactly before the registry is fetched, and
-// `iconStartup.ts` carries the names the landing screen paints. They are
-// written by the same script, so drift here means one of them is stale.
+// Both generated files sit between `icons.ts` and the app: `iconNames.ts` lets `isIconName` answer exactly.
 describe("icon delivery split", () => {
   it("lists exactly the registry's names", () => {
     expect([...ICON_NAMES].sort()).toEqual(Object.keys(ICONS).sort());

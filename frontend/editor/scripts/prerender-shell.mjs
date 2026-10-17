@@ -1,20 +1,4 @@
-/**
- * Puts the landing screen's first paint into index.html.
- *
- * Nothing React renders exists until the Landing chunk's JavaScript parses and
- * runs, so the biggest paint on the landing screen waits on JavaScript. This
- * module renders `/` once against the built app, captures the markup, and
- * records the text of that screen in every delivered language, so a synchronous
- * script at the end of the body can put the resolved language's words in place
- * before the browser paints.
- *
- * The capture runs the app's own API stubs (`mockAppApis`), the same responses
- * the E2E specs and the audit server serve, so the shell is what a default
- * install renders. An install whose feature flags differ gets shell chrome that
- * React replaces; the language rule in the emitted script is the hard guard
- * against ever showing a visitor the wrong words, and a language the capture
- * could not reproduce gets no shell at all.
- */
+/** Puts the landing screen's first paint into index.html. */
 import { createServer } from "node:http";
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { extname, join, normalize, resolve } from "node:path";
@@ -96,10 +80,7 @@ function startStaticServer(root) {
   });
 }
 
-/**
- * The stub module imports only types from Playwright, so a plain transpile
- * leaves a module that evaluates in this process.
- */
+/** The stub module imports only types from Playwright, so a plain transpile leaves a module that evaluates in. */
 async function loadStubHelper(editorDir) {
   const source = await readFile(
     join(editorDir, "src/core/tests/helpers/api-stubs.ts"),
@@ -115,10 +96,7 @@ async function loadStubHelper(editorDir) {
   return import(dataUrl);
 }
 
-/**
- * Installed on every navigation so the capture, the per-language passes and the
- * emitted script all agree on which text nodes count, and in which order.
- */
+/** Installed on every navigation so the capture, the per-language passes and the emitted script all agree on. */
 function installShellHelpers() {
   const accepts = (node) => {
     const parent = node.parentElement;
@@ -136,12 +114,7 @@ function installShellHelpers() {
   globalThis.__shellTexts = () =>
     walk(document.getElementById("root")).map((node) => node.nodeValue);
   globalThis.__shellCount = () => walk(document.getElementById("root")).length;
-  /**
-   * The source language's words stay in the markup: a text node emptied here
-   * does not survive serialization, so the emitted script would have nothing to
-   * write into. The style rule that hides the shell until those words are
-   * replaced is what keeps them from ever reaching a paint.
-   */
+  /** The source language's words stay in the markup: a text node emptied here does not survive serialization, so. */
   // The whole of #root, not only the frame: the client hydrates this markup, so it has
   // to be exactly what React's first render produces, frame included.
   globalThis.__shellCritical = () => {
@@ -265,12 +238,7 @@ function installShellHelpers() {
       };
       requestAnimationFrame(tick);
     });
-  /**
-   * The app frame is chrome, and it renders before the lazy landing route and
-   * the startup dictionary arrive. Waiting on the frame alone can settle on the
-   * chrome, and then every language disagrees with a base capture taken too
-   * early, so this waits for the dictionary and a count that holds still.
-   */
+  /** The app frame is chrome, and it renders before the lazy landing route and the startup dictionary arrive. */
   globalThis.__shellReady = (quietSamples, intervalMs, boundMs) =>
     new Promise((ready) => {
       let previous = -1;
@@ -332,9 +300,7 @@ export async function captureShell({
 
     const captured = await page.evaluate(() => globalThis.__shellMarkup());
     if (!captured) throw new Error("the landing screen rendered no app frame");
-    // Assets imported as `new URL(..., import.meta.url)` resolve against the capture server,
-    // so its origin would be baked into every visitor's first paint. A base-relative path
-    // resolves against the document's <base> instead, which follows the deployment base.
+    // Assets imported as `new URL(..., import.meta.url)` resolve against the capture server, so its origin would be.
     const markup = captured.split(`${server.origin}/`).join("");
     const nodes = await page.evaluate(() => globalThis.__shellCount());
     const critical = await page.evaluate(() => globalThis.__shellCritical());
@@ -447,10 +413,7 @@ function shellScript({ wide, narrow }) {
 const ENTRY_TAG =
   /<script\b[^>]*\btype="module"[^>]*\bsrc="([^"]+)"[^>]*><\/script>/;
 
-/**
- * Leaves the entry inert and boots it on the first gesture, a deep link or a file, so
- * the shell's paint never waits for the app's graph.
- */
+/** Leaves the entry inert and boots it on the first gesture, a deep link or a file, so the shell's paint never. */
 function deferEntry(html) {
   const entry = ENTRY_TAG.exec(html);
   if (!entry) throw new Error("index.html has no module entry script");
@@ -535,12 +498,7 @@ function deferEntry(html) {
   );
 }
 
-/**
- * Swaps the page's #root element for the shell markup.
- *
- * An OpenGraph build puts crawlable copy inside that element, so matching an empty
- * one would skip the shell; the element is replaced to its matching close instead.
- */
+/** Swaps the page's #root element for the shell markup. */
 function replaceRoot(html, markup) {
   const open = html.indexOf('<div id="root"');
   if (open === -1) throw new Error('index.html has no <div id="root"></div>');
@@ -565,9 +523,7 @@ export async function prerenderShell({
   editorDir = resolve(distDir, ".."),
 }) {
   const wide = await captureShell({ distDir, editorDir });
-  // The landing draws a different frame at a phone's width, and React hydrates
-  // whichever one the visitor's viewport chose: a single shell mismatches on the
-  // other side of the breakpoint and is thrown away.
+  // The landing draws a different frame at a phone's width, and React hydrates whichever one the visitor's.
   let narrow = null;
   try {
     narrow = await captureShell({
@@ -592,9 +548,7 @@ export async function prerenderShell({
   }
   const emitted = [
     SHELL_START,
-    // Both shells ship inline: the stylesheet picks the one the viewport draws, so
-    // the browser's first layout is the final one and nothing moves when the words
-    // are swapped in.
+    // Both shells ship inline: the stylesheet picks the one the viewport draws, so the browser's first layout is.
     `<style>#root[data-shell="pending"]{visibility:hidden}[data-shell-for="narrow"]{display:none}@media (max-width: 1024px){[data-shell-for="wide"]{display:none}[data-shell-for="narrow"]{display:block}}</style>`,
     `<style id="shell-critical">${wide.critical}${narrow ? narrow.critical : ""}</style>`,
     `<div id="root" data-shell="pending"><div data-shell-for="wide">${wide.markup}</div>`,

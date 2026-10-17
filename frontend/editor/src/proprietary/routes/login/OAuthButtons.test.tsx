@@ -11,9 +11,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-// The marks come from the icon registry, which loads every icon module. What
-// this suite asserts is which registry name a provider resolves to, so the
-// artwork itself is stubbed with the name it was asked for.
+// The marks come from the icon registry, which loads every icon module.
 vi.mock("@app/ui/Icon", () => ({
   Icon: ({ name }: { name: string }) => <svg data-icon={name} />,
 }));

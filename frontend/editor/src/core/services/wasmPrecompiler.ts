@@ -14,11 +14,7 @@ export const pdfiumWasmUrl = getWasmUrl();
 let resolvePromise: (module: WebAssembly.Module | null) => void;
 let compilationStarted = false;
 
-/**
- * True once something asked for the engine's WASM. Teardown paths use this to
- * avoid importing the engine at all: with no compilation started there is no
- * shared document to release and no queue to drain.
- */
+/** True once something asked for the engine's WASM. */
 export const wasmCompilationStarted = (): boolean => compilationStarted;
 
 export const pdfiumWasmModulePromise = new Promise<WebAssembly.Module | null>(

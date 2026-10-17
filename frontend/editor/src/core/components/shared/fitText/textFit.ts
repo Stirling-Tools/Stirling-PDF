@@ -68,10 +68,7 @@ export function adjustFontSizeToFit(
 
   const fit = () => {
     const current = inputs();
-    // Writing the font size resizes the label itself, which the parent observer
-    // used to read back as a reason to fit again; the room and the text are the
-    // inputs that actually change the answer, so a settled label costs one
-    // string compare here instead of another full shrink pass.
+    // Writing the font size resizes the label itself, which the parent observer used to read back as a reason to.
     if (current === settled) return;
     settled = current;
 

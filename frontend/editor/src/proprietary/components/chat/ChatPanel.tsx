@@ -48,10 +48,7 @@ type TranslateFn = TFunction;
 /** Resolver mapping a tool endpoint path to its translated display name. */
 type ToolNameResolver = (endpoint: string) => string | null;
 
-/**
- * Look up a tool's translated name from the tool catalog. Progress events carry the endpoint
- * path the engine is executing, so the map is keyed by the same path each tool resolves to.
- */
+/** Look up a tool's translated name from the tool catalog. */
 function useToolNameResolver(): ToolNameResolver {
   const { allTools } = useTranslatedToolCatalog();
   return useMemo(() => {
@@ -69,10 +66,7 @@ function useToolNameResolver(): ToolNameResolver {
 /** Resolver mapping a tool endpoint path to its registry icon ReactNode. */
 type ToolIconResolver = (endpoint: string) => ReactNode | null;
 
-/**
- * Look up a tool's icon ReactNode from the tool catalog, keyed by the endpoint path a progress
- * event names. Returns null when the endpoint is not found (use a generic fallback icon then).
- */
+/** Look up a tool's icon ReactNode from the tool catalog, keyed by the endpoint path a progress event names. */
 function useToolIconResolver(): ToolIconResolver {
   const { allTools } = useTranslatedToolCatalog();
   return useMemo(() => {

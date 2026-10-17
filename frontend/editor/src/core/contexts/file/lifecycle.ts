@@ -26,14 +26,7 @@ import {
 
 const DEBUG = process.env.NODE_ENV === "development";
 
-/**
- * Drops the engine's shared handle on a document once it leaves the workbench.
- *
- * The engine is a separate chunk and a session that only browsed the landing
- * screen never fetched it, so this checks the warm-up flag first rather than
- * pulling 38 KB to run a no-op; without a started compilation there is no shared
- * document to release and no queued scan to wait behind.
- */
+/** Drops the engine's shared handle on a document once it leaves the workbench. */
 function releaseSharedDocument(): void {
   if (!wasmCompilationStarted()) return;
   void import("@app/services/pdfiumService")

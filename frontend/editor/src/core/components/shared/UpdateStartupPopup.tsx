@@ -5,19 +5,10 @@ import { useIsMobile } from "@app/hooks/useIsMobile";
 import { updateService, type UpdateSummary } from "@app/services/updateService";
 import { isUpdatePopupAllowed } from "@app/components/shared/updatePopupGate";
 
-/**
- * The modal can only ever render after the 15s startup check plus a version
- * comparison finds a newer release, so its code belongs in the request that
- * actually shows it rather than in everything every visitor downloads.
- */
+/** The modal can only ever render after the 15s startup check plus a version comparison finds a newer release. */
 const UpdateModal = lazy(() => import("@app/components/shared/UpdateModal"));
 
-/**
- * How long to wait after mount before checking for an update. Matches the
- * desktop popup delay (15s) so the first-launch experience feels the same
- * in both environments and the check doesn't race with initial app config
- * load / auth handshake on slow networks.
- */
+/** How long to wait after mount before checking for an update. */
 const STARTUP_DELAY_MS = 15_000;
 
 /**

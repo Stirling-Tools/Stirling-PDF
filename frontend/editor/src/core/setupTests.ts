@@ -15,10 +15,7 @@ void i18n.init({
   interpolation: { escapeValue: false },
 });
 
-// `translatedLazy` awaits the complete dictionary before a route renders, and
-// jsdom has no origin to resolve `/locales/...` against. Answer those requests
-// the way the init above stands in for the startup subset - empty resources -
-// and leave every other request to the test's own stub.
+// `translatedLazy` awaits the complete dictionary before a route renders, and jsdom has no origin to resolve.
 const testFetch = globalThis.fetch;
 globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
   const url =

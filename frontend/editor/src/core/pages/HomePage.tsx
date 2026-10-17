@@ -83,30 +83,19 @@ import "@app/pages/HomePage.css";
 
 const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
 
-/**
- * The mobile hand-off is opened from a rail action and carries the transfer
- * machinery, so it mounts on the first open rather than with the page.
- */
+/** The mobile hand-off is opened from a rail action and carries the transfer machinery, so it mounts on the. */
 const MobileUploadModal = lazy(
   () => import("@app/components/shared/MobileUploadModal"),
 );
 
-/**
- * Policies and their recovery run once per editor, and the pass pulls the policy
- * chain with it, so the controller loads with the pass rather than with the page.
- */
+/** Policies and their recovery run once per editor, and the pass pulls the policy chain with it, so the. */
 const PolicyAutoRunController = lazy(() =>
   import("@app/components/policies/PolicyAutoRunController").then((m) => ({
     default: m.PolicyAutoRunController,
   })),
 );
 
-/**
- * The wings' slide is `--wings-ms` (dimensions.css). Read from the document so one
- * value drives both, with the literal as the fallback for a test environment that
- * loads no stylesheet, and a frame of headroom so the unmount never clips the
- * last frame of the animation.
- */
+/** The wings' slide is `--wings-ms` (dimensions.css). */
 const WINGS_FALLBACK_MS = 220;
 const WINGS_HEADROOM_MS = 60;
 

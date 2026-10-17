@@ -1,10 +1,4 @@
-/**
- * `toolEndpointPath` is the seam that lets the boot registry stay free of the operation configs:
- * a registry entry names its API with a short endpoint name (`"compress-pdf"`) or a conversion
- * name (`"file-to-pdf"`), and the consumers that need a request path (the tool picker's cloud
- * badge, chat progress events) resolve it through the generated `TOOL_ENDPOINTS` instead of
- * importing the tool's hooks. Nothing links the two lists at type level, so this pins them.
- */
+/** `toolEndpointPath` is the seam that lets the boot registry stay free of the operation configs: a registry. */
 import { describe, expect, test, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { withOperationConfigs } from "@app/data/toolOperationConfigs";
@@ -42,9 +36,7 @@ describe("toolEndpointPath", () => {
     expect(mismatches).toEqual([]);
   });
 
-  // Some registry entries name surfaces no operation addresses (`view-pdf`, the developer docs
-  // links), so a name may stay unresolved. What must never happen is resolving to a path the
-  // engine cannot be asked to call.
+  // Some registry entries name surfaces no operation addresses (`view-pdf`, the developer docs links), so a name.
   test("only resolves names to generated endpoints", () => {
     const { result } = renderHook(() => useTranslatedToolCatalog());
     const generated: ReadonlySet<string> = new Set(TOOL_ENDPOINTS);

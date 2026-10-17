@@ -3,11 +3,7 @@ import { useFilesPage } from "@app/contexts/FilesPageContext";
 import type { FolderId, FolderRecord } from "@app/types/folder";
 import type { FileId } from "@app/types/file";
 
-/**
- * The library's folder tree. It lives in its own module because only the Files
- * workbench renders it, and keeping it in the sidebar's module put the whole
- * files-page machinery on the startup path.
- */
+/** The library's folder tree. */
 export default function FileSidebarFolderTree() {
   const filesPage = useFilesPage();
   return (

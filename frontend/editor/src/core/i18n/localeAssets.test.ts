@@ -59,9 +59,7 @@ describe("generateLocaleAssets", () => {
     const german = author("de-DE", 'app.name = "Stirling"\n');
     generateLocaleAssets({ localesDir: dir, startupKeysPath: keysPath });
 
-    // The source string changes and is touched; every other language's files
-    // stay exactly as fresh as they were. Their mtimes are current, so only the
-    // source locale can make them stale.
+// The source string changes and is touched; every other language's files stay exactly as fresh as they were.
     const english = author("en-US", 'app.name = "Stirling"\napp.title = "Editor"\n');
     const now = new Date();
     touch(join(dir, "de-DE", "translation.json"), now);

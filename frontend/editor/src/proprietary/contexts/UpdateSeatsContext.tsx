@@ -11,10 +11,7 @@ import React, {
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import licenseService from "@app/services/licenseService";
-// The seat dialog is the only startup-reachable consumer of Mantine's
-// NumberInput, which carries react-number-format. Loading it here keeps that
-// family out of the preloaded chunk the landing fetches for a dialog only the
-// seat flow opens.
+// The seat dialog is the only startup-reachable consumer of Mantine's NumberInput, which carries.
 const UpdateSeatsModal = lazy(
   () => import("@app/components/shared/UpdateSeatsModal"),
 );

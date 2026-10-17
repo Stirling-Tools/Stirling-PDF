@@ -45,9 +45,7 @@ export class ThumbnailGenerationService {
     CachedThumbnail
   >();
   private maxCacheSizeBytes = 1024 * 1024 * 1024; // 1GB cache limit
-  // A byte cap alone never bites on its own: one page image is ~100 KB, so 1 GB
-  // holds thousands of pages. Without an entry cap a long session keeps every
-  // page it has ever shown.
+  // A byte cap alone never bites on its own: one page image is ~100 KB, so 1 GB holds thousands of pages.
   private maxCacheEntries = 512;
   private currentCacheSize = 0;
 
@@ -277,12 +275,7 @@ export class ThumbnailGenerationService {
     this.currentCacheSize += sizeBytes - replaced;
   }
 
-  /**
-   * Drop every cached page image that came from one file. Page ids are chosen
-   * by the caller, so the cache cannot find a file's entries by key: it has to
-   * remember which file each image belongs to, or a deleted document keeps its
-   * base64 page images for the rest of the session.
-   */
+  /** Drop every cached page image that came from one file. */
   evictThumbnailsForFile(fileId: FileId): number {
     let dropped = 0;
     for (const [key, entry] of this.thumbnailCache) {

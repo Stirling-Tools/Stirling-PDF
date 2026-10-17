@@ -9,25 +9,13 @@ export const REMOVE_PASSWORD_ENDPOINT =
 
 export const REPAIR_ENDPOINT = "/api/v1/misc/repair" satisfies ToolEndpoint;
 
-/**
- * Registry endpoint names that are not the last segment of the path they address. Listed rather
- * than derived; `toolEndpoints.test.ts` fails if one drifts from the tool's own operation config.
- */
+/** Registry endpoint names that are not the last segment of the path they address. */
 const PATH_BY_NAME_EXCEPTIONS = {
   "form-detection": "/api/v1/form/form-detection/detect",
   "overlay-pdf": "/api/v1/general/overlay-pdfs",
 } as const satisfies Record<string, ToolEndpoint>;
 
-/**
- * Registry entries name their API with the backend's short endpoint names (`"compress-pdf"`),
- * while the operations themselves address full paths. Deriving the path here keeps the boot
- * registry free of a second copy of every route: a registered name either ends the path it
- * addresses, or is a conversion key, whose path is spelled out in {@link CONVERSION_ENDPOINTS}.
- *
- * Conversion *names* (`"pdf-to-img"`) are deliberately not in here: only the convert tool
- * registers them, and its operation resolves its endpoint from the chosen formats rather than
- * from the registry.
- */
+/** Registry entries name their API with the backend's short endpoint names (`"compress-pdf"`), while the. */
 const PATH_BY_NAME: ReadonlyMap<string, string> = buildPathByName();
 
 function buildPathByName(): ReadonlyMap<string, string> {
@@ -42,11 +30,7 @@ function buildPathByName(): ReadonlyMap<string, string> {
   return map;
 }
 
-/**
- * Resolve a registry `endpoints` name to the request path it addresses. A value that is already
- * a path is returned unchanged, so callers can pass either. Returns undefined for a name no
- * registered route ends with, which callers treat as "unknown endpoint".
- */
+/** Resolve a registry `endpoints` name to the request path it addresses. */
 export function toolEndpointPath(
   nameOrPath: string | undefined,
 ): string | undefined {

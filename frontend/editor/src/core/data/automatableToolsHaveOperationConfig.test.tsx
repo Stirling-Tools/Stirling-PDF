@@ -1,13 +1,4 @@
-/**
- * Registry invariant: the Automate picker offers a tool whenever it doesn't opt out via
- * `supportsAutomate: false`, but automationExecutor resolves each step through the tool's
- * `operationConfig`. A tool that is offered without one is selectable in the builder and
- * only fails when the automation runs, with "Tool operation not supported: <toolId>".
- *
- * So a tool must either resolve to an operationConfig or declare supportsAutomate: false.
- * The boot registry keeps configs out of its chunks, so the config now arrives through
- * `withOperationConfigs`; the invariant is checked on that merged registry.
- */
+/** Registry invariant: the Automate picker offers a tool whenever it doesn't opt out via `supportsAutomate. */
 import { describe, expect, test, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
@@ -47,9 +38,7 @@ describe("automatable tools", () => {
     expect(withConfig).toEqual([]);
   });
 
-  // Reorganize Pages has an automatable form (organization mode + page-order string) and a
-  // context-free settings component, but its registry entry once left automationSettings null,
-  // so both Automate and the pipeline builder showed "no configurable settings". Guard the wiring.
+// Reorganize Pages has an automatable form (organization mode + page-order string) and a context-free settings.
   test("Reorganize Pages exposes automation settings so it is configurable, not no-settings", () => {
     const { result } = renderHook(() => useTranslatedToolCatalog());
 

@@ -1,18 +1,4 @@
-/** Icons the landing screen renders, so its first paint does not wait for the registry.
- *
- * The names come from `tests/walkthrough/perf/probe-icons.mjs` and
- * `tests/walkthrough/perf/probe-icons-viewport.mjs`, which record every name
- * `<Icon>` renders while the landing surface is used on desktop and on a
- * 412x915 phone. Both widths are needed: a narrow layout swaps some controls
- * (`settings`, `layout-grid` replace `images`, `upload`), and a name that is
- * registered but not listed here starts the registry fetch. Everything else
- * stays in `icons.ts`, which `Icon.tsx` loads on the first name that is not
- * listed here. `MISSING_ICON` is pinned on top of the recording, because the
- * placeholder a bad name falls back to must paint in that same render.
- * Re-record at both widths when the landing screen starts using a new icon -
- * a name missing from this list still renders, one tick later, at the cost of
- * that one fetch.
- */
+/** Icons the landing screen renders, so its first paint does not wait for the registry. */
 import type { ComponentType, SVGProps } from "react";
 
 import AnnotationOff from "@app/icons/svg/stirling/annotation-off.svg?react";

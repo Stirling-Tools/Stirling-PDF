@@ -37,9 +37,7 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    // No fallback language. Each delivery file already carries the source
-    // strings for the keys its language is missing, so a fallback would only
-    // download a second full dictionary to answer keys already in memory.
+// No fallback language. Each delivery file already carries the source strings for the keys its language is.
     fallbackLng: false,
     supportedLngs: Object.keys(supportedLanguages),
     load: "currentOnly",
@@ -54,16 +52,10 @@ i18n
     },
 
     backend: {
-      // JSON rather than the authored TOML: the parse happens at build time,
-      // and `scripts/generate-locale-assets.mjs` has already merged the source
-      // strings into every file.
+// JSON rather than the authored TOML: the parse happens at build time, and `scripts/generate-locale-assets.mjs`.
       loadPath: (lngs: string[]) => {
         const language = lngs[0];
-        // The language loaded at init needs only the startup subset: the keys
-        // the first screen resolves, ~7 KiB brotli rather than ~127 KiB. Every
-        // later load is a language switch, which i18next awaits before it
-        // reports the change, so it gets the complete file - a screen switched
-        // into another language must not render the subset's gaps.
+// The language loaded at init needs only the startup subset: the keys the first screen resolves, ~7 KiB brotli.
         if (i18n.isInitialized) {
           return localeFileUrl(language, FULL_FILE);
         }
@@ -93,15 +85,7 @@ i18n
     },
   });
 
-/**
- * Resolves once the first locale is loaded. Callers that render on load must
- * wait for it: `useSuspense` means a first render that starts before the
- * translations arrive suspends, and React then holds that commit behind its
- * ~300 ms retry throttle, which costs more time than the fetch it waits for.
- *
- * Resolves on failure too - i18next emits `initialized` even when a locale file
- * 404s - so this only hangs on a request that never settles.
- */
+/** Resolves once the first locale is loaded. */
 export const i18nReady: Promise<void> = i18n.isInitialized
   ? Promise.resolve()
   : new Promise((resolve) => {
@@ -110,20 +94,7 @@ export const i18nReady: Promise<void> = i18n.isInitialized
       });
     });
 
-/**
- * Loads the complete dictionary for a route that renders keys outside the
- * startup subset, and reports failure to its caller.
- *
- * The subset covers the keys the first screen resolves; tool pages, dialogs and
- * the file list need the rest of the ~9 900 keys, which is ~120 KiB brotli that
- * no first paint can use. The merge only fills keys the subset does not already
- * define, so it cannot blank text that is on screen.
- *
- * A load already running for the language is joined rather than repeated, and a
- * failed one rejects instead of reporting readiness: a route that renders the
- * subset's gaps is a broken screen, not a thin one, so the error boundary above
- * it owns the retry.
- */
+/** Loads the complete dictionary for a route that renders keys outside the startup subset, and reports failure. */
 export async function loadFullDictionary(
   language: string = i18n.language,
 ): Promise<void> {
@@ -142,24 +113,7 @@ export async function loadFullDictionary(
   });
 }
 
-/**
- * Fetches the complete dictionary on the user's first interaction.
- *
- * Nothing the landing screen renders comes from outside the subset, and every
- * other screen loads the complete file before it renders, so the only visitor
- * who pays for the remaining ~120 KiB brotli is one who is about to use the
- * app. A timer would charge every visitor for it whether or not they ever
- * leave the landing screen.
- *
- * Failure stays quiet here: the subset still covers the screen the user is on,
- * and an environment with no delivery server (unit tests, a worker) is not a
- * production fault. A response that arrives broken is worth reporting, because
- * it means a file the build should have written is missing or corrupt.
- *
- * Idempotent, and deliberately installed by the entry rather than by this
- * module: the listeners belong to the browser entry point, and a test that
- * dispatches a pointer event should not start a fetch.
- */
+/** Fetches the complete dictionary on the user's first interaction. */
 export function installFullDictionaryOnIntent(): void {
   const load = () => {
     document.removeEventListener("pointerdown", load, { capture: true });
@@ -295,11 +249,7 @@ export function updateSupportedLanguages(
     return;
   }
 
-  // The language to move to when the current one is not allowed: prefer
-  // validDefault if in the list, then en-US, then the first valid language.
-  // Deliberately not assigned to `i18n.options.fallbackLng`: the delivery
-  // files already contain the source strings, so a fallback language would
-  // only fetch a dictionary the bundle is not missing.
+// The language to move to when the current one is not allowed: prefer validDefault if in the list, then en-US.
   const fallback =
     validDefault && validLanguages.includes(validDefault)
       ? validDefault

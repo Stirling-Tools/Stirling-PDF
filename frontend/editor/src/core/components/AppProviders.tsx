@@ -55,9 +55,7 @@ function BrandingAssetManager() {
       return;
     }
 
-    // index.html ships base-relative hrefs (`modern-logo/favicon.ico`) while this effect
-    // computes base-path absolute ones (`/modern-logo/favicon.ico`). Both resolve to the same
-    // URL, but writing the attribute re-requests the asset, so compare resolved URLs first.
+    // index.html ships base-relative hrefs (`modern-logo/favicon.ico`) while this effect computes base-path.
     const resolved = (url: string) => {
       try {
         return new URL(url, document.baseURI).href;

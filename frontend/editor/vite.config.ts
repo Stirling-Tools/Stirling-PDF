@@ -176,37 +176,7 @@ function startupModules(meta: ManualChunkMeta): Set<string> {
   return modules;
 }
 
-/**
- * Mantine components only lazy screens use. The barrel re-exports all of them,
- * so the startup walk above counts those re-export edges as reachability and
- * `manualChunks` files every implementation with vendor-ui, which the editor
- * preloads. `mantineToolOnlyImports` rewrites the app's imports to the
- * implementations, and `manualChunks` gives each component family its own
- * chunk, so a screen that opens one fetches only that family.
- *
- * Inclusion is measured twice. First, every application module that imports one
- * of these has to land in a lazy chunk, or a startup screen would fetch it.
- * Second, after the build, no preloaded chunk may statically import the family's
- * chunk: Mantine's own preloaded modules reach into each other (`Menu` renders a
- * `Popover`, `Modal` a `FocusTrap`), and a family a preloaded chunk imports both
- * re-enters the preload set and can close an initialisation cycle that breaks
- * the app. A `generateBundle` check in the plugin fails the build on that cycle
- * rather than shipping a page that cannot render.
- *
- * `Accordion`, `Checkbox`, `Combobox`, `Flex`, `FocusTrap`, `Overlay`, `Pill`,
- * `Popover`, `Select`, `Transition` and `VisuallyHidden` were removed for the
- * second reason. Some came back as modulepreload links and stopped the app from
- * rendering; the rest are reached by the first screen: `Landing`, the route the
- * build preloads, statically imports `Flex`'s family (`Footer`), `Pill`'s
- * (`Chip`) and `Select`'s (the onboarding `SecurityCheckSlide`), and `Checkbox`
- * and `Combobox` arrive through Mantine's own `Select`/`Flex` internals.
- * `useCombobox` went with them: it resolves into the same `Combobox` family, so
- * leaving it listed kept the very chunk that closed the cycle.
- * `NumberInput` qualified once `UpdateSeatsModal`, its only startup-reachable
- * consumer, moved behind a lazy import; `SegmentedControl` is out because its
- * wrapper's chunk is fetched immediately after first paint, so it would drag
- * its family with it.
- */
+/** Mantine components only lazy screens use. */
 const MANTINE_TOOL_ONLY_COMPONENTS = [
   "Autocomplete",
   "Avatar",
@@ -243,11 +213,7 @@ const MANTINE_TOOL_ONLY_COMPONENTS = [
   "Title",
 ];
 
-/**
- * Filled by `mantineToolOnlyImports` while the config is built, then read by
- * `manualChunks` during the build. An empty implementations map leaves every
- * app import alone and every implementation in vendor-ui.
- */
+/** Filled by `mantineToolOnlyImports` while the config is built, then read by `manualChunks` during the build. */
 const mantineToolOnlyImplementations = new Map<string, string>();
 const mantineToolOnlyFamilies = new Map<string, string>();
 
@@ -258,13 +224,7 @@ function mantineToolOnlyChunk(id: string): string | undefined {
   return undefined;
 }
 
-/**
- * The npm package a normalized module id belongs to, or null for app code. Ids
- * are absolute paths, often through a pnpm store, so the package is the segment
- * after the last node_modules. Matching on that segment, rather than a raw path
- * substring, keeps a directory that merely looks like a package from steering
- * the split.
- */
+/** The npm package a normalized module id belongs to, or null for app code. */
 function packageNameOf(id: string): string | null {
   const marker = "node_modules/";
   const index = id.lastIndexOf(marker);
@@ -279,9 +239,7 @@ function inScope(pkg: string, scope: string): boolean {
   return pkg === scope || pkg.startsWith(`${scope}/`);
 }
 
-// react-markdown and its remark/micromark/mdast/hast closure is heavy and only
-// needed when a disclaimer, document or chat message renders. Matching on the
-// package name keeps an app file named like one of these out of the chunk.
+// react-markdown and its remark/micromark/mdast/hast closure is heavy and only needed when a disclaimer.
 const MARKDOWN_PACKAGE_PREFIXES = [
   "remark-",
   "rehype-",
@@ -322,13 +280,7 @@ function isMarkdownPackage(pkg: string): boolean {
   );
 }
 
-/**
- * Preload for the one dictionary the app is about to fetch.
- *
- * en-US is only the answer when the browser asks for nothing else: the delivery
- * files carry the source strings, so the language every visitor used to need is
- * now just one of the languages.
- */
+/** Preload for the one dictionary the app is about to fetch. */
 function localePreloadTag(codes: string[]): string {
   // The landing boots on intent, so its dictionary rides that boot; a deep route boots
   // at parse time and gets the preload ahead of the app's own request.
@@ -366,26 +318,8 @@ function localePreloadTag(codes: string[]): string {
     </script>`;
 }
 
-/**
- * Generates the locale delivery files and injects the startup preload for one
- * of them.
- *
- * `public/locales/<lng>/translation.toml` stays the authored source; the build
- * writes both the complete `translation.json` beside it and the `startup.json`
- * subset that the first screen actually fetches. Logic lives in
- * scripts/generate-locale-assets.mjs so it can be run and tested on its own.
- */
-/**
- * Preloads the initial route's own files from the built HTML.
- *
- * The route is reached through a dynamic import, so its chunk is discovered only
- * once the entry has downloaded and run: one more serial hop on exactly the
- * chain the largest contentful paint waits for. Filenames are hashed and known
- * only after bundling, so the links are written once the bundle exists. Only the
- * route chunk and the CSS it needs are preloaded - the chunks it imports later
- * belong to other routes as well, and preloading those would compete with the
- * resources this one waits for.
- */
+/** Generates the locale delivery files and injects the startup preload for one of them. */
+/** Preloads the initial route's own files from the built HTML. */
 // Every page the app can be served from gets the hints: a route page is its own
 // document, and without them it discovers the same chunks one round trip later.
 async function writeRouteHints(
@@ -424,13 +358,7 @@ async function writeRouteHints(
   }
 }
 
-/**
- * Puts the landing screen's first paint into index.html, so the largest paint
- * does not wait for the Landing chunk to parse and run. The capture drives a
- * real browser against the finished dist and the app's own API stubs, so it can
- * fail (browser download missing, stubs drifted) on a machine that still has a
- * working build: warn and leave the page alone rather than fail the build.
- */
+/** Puts the landing screen's first paint into index.html, so the largest paint does not wait for the Landing. */
 async function writeLandingShell(
   distDir: string,
   editorDir: string,
@@ -488,10 +416,7 @@ function compressStaticCopyPlugin(): PluginOption {
     async closeBundle() {
       const distDir = path.resolve(__dirname, "dist");
 
-      // The plugin's include list skips .wasm and viteStaticCopy output never
-      // reaches it, so the walk has to cover the rest of dist. HTML, sitemap.xml
-      // and robots.txt are left to the html-output pass, which owns every one of
-      // those writes and compresses them once it has made them.
+// The plugin's include list skips .wasm and viteStaticCopy output never reaches it, so the walk has to cover.
       const files: string[] = [];
       const walk = async (dir: string) => {
         let entries;
@@ -516,11 +441,7 @@ function compressStaticCopyPlugin(): PluginOption {
 
       await compressFiles(files, distDir);
 
-      // The TTFs are only ever requested through the backend, which serves the
-      // .br/.gz siblings and falls back to its own classpath copy of the raw
-      // file. Shipping the raw set in dist would duplicate ~100 MB for nothing.
-      // NotoSans-Regular.ttf stays: the text editor's Unicode fallback fetches
-      // it directly, and static hosts have no classpath to fall back to.
+// The TTFs are only ever requested through the backend, which serves the .br/.gz siblings and falls back to its.
       const fontsDir = path.join(distDir, "fonts");
       const fontEntries = await fs.readdir(fontsDir).catch(() => []);
       await Promise.all(
@@ -535,20 +456,6 @@ function compressStaticCopyPlugin(): PluginOption {
 }
 
 // Bake per-route Open Graph / Twitter Card tags into static HTML at build time.
-//
-// The SPA sets these client-side for real browsers, but link-unfurling crawlers
-// (Slack, Facebook, X, LinkedIn, iMessage, ...) do not run JavaScript. Prerendering
-// flat per-route files (e.g. dist/compress.html) means every static host - Cloudflare
-// Pages, Docker's bundled static dir, desktop - serves correct previews with NO
-// server-side rendering. Cloudflare Pages serves `compress.html` at `/compress`
-// automatically (clean URLs), and the Spring backend serves the same file.
-//
-// Absolute URLs (best for Facebook/X) are used when the deploy origin is known:
-// VITE_OG_BASE_URL (custom domain) or CF_PAGES_URL (set automatically by Cloudflare
-// Pages). Otherwise URLs stay root-relative, which still resolves against whatever
-// origin serves the page (correct for self-hosted Docker). Indexing signals
-// (canonical, JSON-LD, sitemap) need VITE_OG_BASE_URL specifically - see below.
-// Logic lives in scripts/og-prerender.mjs so it can be unit-tested without a full build.
 async function writeOpenGraphPages(
   distDir: string,
   isSaas: boolean,
@@ -613,8 +520,6 @@ async function writeOpenGraphPages(
   if (!sitemap) return;
   await fs.writeFile(path.join(distDir, "sitemap.xml"), sitemap);
   // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
-  // Static hosts only: packaged builds exclude dist/robots.txt and serve it
-  // from RobotsController, gated on system.googlevisibility.
   const robotsPath = path.join(distDir, "robots.txt");
   try {
     let robots = await fs.readFile(robotsPath, "utf8");
@@ -630,11 +535,7 @@ async function writeOpenGraphPages(
   console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
 }
 
-/**
- * Precompresses the HTML the passes above produced, after the last of them has
- * run: the bundler wrote siblings for the pre-prerender `index.html`, which
- * describes a document that no longer exists.
- */
+/** Precompresses the HTML the passes above produced, after the last of them has run: the bundler wrote siblings. */
 async function compressHtmlOutput(distDir: string): Promise<void> {
   const files: string[] = [];
   const walk = async (dir: string) => {
@@ -676,19 +577,7 @@ async function compressHtmlOutput(distDir: string): Promise<void> {
   await compressFiles(files, distDir);
 }
 
-/**
- * Rewrites the app's `@mantine/core` imports of `MANTINE_TOOL_ONLY_COMPONENTS`
- * to the implementation files the barrel re-exports them from. That removes the
- * barrel edge which otherwise tells `manualChunks` the component is reachable
- * from the entry. Central here so no application file names an internal Mantine
- * path. Reads the installed barrel to find those files, and fails the build when
- * a name stops resolving to a component directory.
- *
- * Build-only: dev resolves `@mantine/core` through the dependency optimizer, so
- * a raw `.mjs` import beside it would load a second copy of Mantine's context
- * modules and the components would lose the provider theme. The type checker
- * never sees this rewrite, so types keep resolving through the package.
- */
+/** Rewrites the app's `@mantine/core` imports of `MANTINE_TOOL_ONLY_COMPONENTS` to the implementation files the. */
 function mantineToolOnlyImports(): PluginOption {
   const packageDir = path.dirname(
     createRequire(import.meta.url).resolve("@mantine/core/styles.css"),
@@ -697,10 +586,7 @@ function mantineToolOnlyImports(): PluginOption {
   const componentRoot = `${path.join(esmDir, "components")}/`;
   const barrel = readFileSync(path.join(esmDir, "index.mjs"), "utf8");
 
-  // The barrel is the only place that maps an exported name to its file, and the
-  // naming is not uniform (`Slider` lives in `Slider/Slider/Slider.mjs`,
-  // `TableTr` in `Table/Table.components.mjs`), so read it rather than template
-  // a path. A name it no longer exports fails loudly below.
+  // The barrel is the only place that maps an exported name to its file, and the naming is not uniform (`Slider`.
   const exportedAt = new Map<string, string>();
   for (const statement of barrel.matchAll(
     /export\s*\{([^}]*)\}\s*from\s*["']([^"']+)["']/g,
@@ -742,10 +628,7 @@ function mantineToolOnlyImports(): PluginOption {
       appDir = `${resolve(config.root, "src")}/`;
     },
     generateBundle(_options, bundle) {
-      // A moved family that a startup chunk still imports lands back in the
-      // preload set, and the two chunks importing each other let the browser
-      // execute a module before its dependency: the app dies with
-      // "Cannot access 'x' before initialization". Fail the build instead.
+      // A moved family that a startup chunk still imports lands back in the preload set, and the two chunks importing.
       const names = new Set(
         Object.values(bundle)
           .filter((file) => file.type === "chunk")
@@ -780,11 +663,7 @@ function mantineToolOnlyImports(): PluginOption {
       };
       for (const name of imports.keys()) visit(name);
 
-      // The engine is a megabyte the browser downloads before the app runs if
-      // anything a startup chunk statically imports pulls it in: every static
-      // import of an entry becomes a modulepreload. Only the opened viewer
-      // needs it; pdfium's url glue and the shared enums stay in their own
-      // chunks and are small enough to keep.
+      // The engine is a megabyte the browser downloads before the app runs if anything a startup chunk statically.
       const eager = new Set<string>();
       const reach = (name: string): void => {
         if (eager.has(name)) return;
@@ -848,15 +727,7 @@ function mantineToolOnlyImports(): PluginOption {
   };
 }
 
-/**
- *
- * The Open Graph pages, the route hints, the landing shell and the precompressed
- * siblings all rewrite or derive from the same documents. As separate plugins
- * their `closeBundle` hooks ran in parallel, so a hint could be overwritten by a
- * later template and a `.br` sibling could describe an older copy than the HTML
- * beside it; `enforce: "post"` orders plugins in the array, not their async
- * hooks. One hook running the passes in order is the ordering that was wanted.
- */
+/** The Open Graph pages, the route hints, the landing shell and the precompressed siblings all rewrite or derive. */
 function htmlOutputPlugin(options: {
   routeChunk: string;
   isSaas: boolean;
@@ -900,12 +771,7 @@ function htmlOutputPlugin(options: {
   };
 }
 
-/**
- * When the app is served under a subpath (RUN_SUBPATH → base like "/app/"), Vite
- * serves index.html at "/app/" and redirects "/" → the base, but a bare "/app"
- * (no trailing slash) 404s. This middleware redirects "/app" → "/app/" so either
- * form loads the app in dev and `vite preview`. Query strings are preserved.
- */
+/** When the app is served under a subpath (RUN_SUBPATH → base like "/app/"), Vite serves index.html at "/app/". */
 function subpathBareRedirectPlugin(subpath: string): PluginOption {
   const bare = `/${subpath}`;
   const withSlash = `${bare}/`;
@@ -932,10 +798,7 @@ function subpathBareRedirectPlugin(subpath: string): PluginOption {
   };
 }
 
-// NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled
-// into the saas and desktop builds. It has no entry here and no vite tsconfig;
-// it is only typechecked standalone via editor/src/cloud/tsconfig.json
-// (task frontend:typecheck:cloud) to prove it carries no saas/desktop-only deps.
+// NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled into the saas and desktop builds.
 const VALID_MODES = ["core", "proprietary", "saas", "desktop"] as const;
 type BuildMode = (typeof VALID_MODES)[number];
 
@@ -947,16 +810,10 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
 };
 
 export default defineConfig(async ({ mode, command }) => {
-  // Dev-only browser-tab label (worktree folder basename) surfaced by the
-  // top-level dev tasks so concurrent worktrees have distinguishable tabs.
-  // Only injected during `vite` (dev serve) — never baked into a production
-  // build — and carries only the folder name, no path/host/user info.
+// Dev-only browser-tab label (worktree folder basename) surfaced by the top-level dev tasks so concurrent.
   const devWorktreeLabel =
     command === "serve" ? (process.env.STIRLING_DEV_LABEL ?? "") : "";
-  // Load env files relative to this config (frontend/editor/), regardless of
-  // where the build was invoked from. The previous `process.cwd()` worked when
-  // this file lived at frontend/, but after the editor was moved under
-  // frontend/editor/ the cwd-based lookup would miss editor/.env*.
+// Load env files relative to this config (frontend/editor/), regardless of where the build was invoked from.
   const env = loadEnv(mode, import.meta.dirname, "");
   const parentEnv = loadEnv(mode, resolve(import.meta.dirname, ".."), "");
 
@@ -1004,10 +861,7 @@ export default defineConfig(async ({ mode, command }) => {
     xfwd: true,
   };
 
-  // Shared between `vite` (dev) and `vite preview` (production-build serve, used
-  // in CI/E2E) so the live test suite still resolves /api → :8080. /fonts is
-  // deliberately absent: the stubbed suite runs backend-free and proxying font
-  // requests would turn a static 404 into a connection error.
+// Shared between `vite` (dev) and `vite preview` (production-build serve, used in CI/E2E) so the live test.
   const backendProxyConfig =
     effectiveMode === "desktop"
       ? undefined
@@ -1022,10 +876,7 @@ export default defineConfig(async ({ mode, command }) => {
         };
 
   return {
-    // Per-mode: the default is one shared node_modules/.vite, so two dev servers in
-    // different modes re-optimize over each other and the browser 504s on a stale dep
-    // hash. Anchored to frontend/ because a relative path resolves against the vite
-    // root (editor/) and would create a second node_modules there.
+// Per-mode: the default is one shared node_modules/.vite, so two dev servers in different modes re-optimize.
     cacheDir: resolve(
       import.meta.dirname,
       "..",
@@ -1198,9 +1049,7 @@ export default defineConfig(async ({ mode, command }) => {
             // enums, so they get their own chunks.
             if (pkg === "@embedpdf/engines") return "vendor-embedpdf";
             if (pkg === "@embedpdf/pdfium") return "vendor-pdfium";
-            // models is the only embedpdf package the startup path imports
-            // (PdfPermissionFlag), so grouping it with core/utils/plugins
-            // preloads the engine for one enum.
+            // models is the only embedpdf package the startup path imports (PdfPermissionFlag), so grouping it with.
             if (pkg === "@embedpdf/models") return "vendor-embedpdf-models";
             if (
               pkg === "@embedpdf/core" ||
@@ -1217,23 +1066,17 @@ export default defineConfig(async ({ mode, command }) => {
             // vendor-ui.
             if (pkg === "@mui/icons-material") return "vendor-mui-icons";
             if (pkg === "@iconify/react") return "vendor-iconify";
-            // Only lazy screens import these (DataTable, reached through the
-            // ui barrel), but the substring match on "react" below would file
-            // them with the startup modules.
+            // Only lazy screens import these (DataTable, reached through the ui barrel), but the substring match on "react".
             if (
               pkg === "@tanstack/react-table" ||
               pkg === "@tanstack/table-core"
             ) {
               return "vendor-tanstack-table";
             }
-            // A component family only lazy screens open, in its own chunk, so
-            // the preloaded chunk stops carrying it; see
-            // `mantineToolOnlyImports`.
+            // A component family only lazy screens open, in its own chunk, so the preloaded chunk stops carrying it; see.
             const toolOnly = mantineToolOnlyChunk(id);
             if (toolOnly) return toolOnly;
-            // react-number-format is imported by NumberInput and NumberFormatter
-            // and nothing else, so it travels with the NumberInput family rather
-            // than with the preloaded chunk.
+            // react-number-format is imported by NumberInput and NumberFormatter and nothing else, so it travels with the.
             if (pkg === "react-number-format")
               return "vendor-mantine-NumberInput";
             // These packages are mutually circular: splitting them breaks

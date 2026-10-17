@@ -56,12 +56,7 @@ import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOpera
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 
-/**
- * Tool ids whose operation config lives here, keyed by the registry id. Kept out of the
- * registry the app boots with: nothing on the first screen reads a config, and each module
- * here pulls in one tool's hooks and parameter defaults, so only the automation and pipeline
- * chunks - which drive tools by their config - import this file.
- */
+/** Tool ids whose operation config lives here, keyed by the registry id. */
 const OPERATION_CONFIGS: Partial<Record<ToolId, RegistryToolOperationConfig>> = {
   merge: asRegistryConfig(mergeOperationConfig),
   certSign: asRegistryConfig(certSignOperationConfig),
@@ -120,11 +115,7 @@ export function getToolOperationConfig(
   return OPERATION_CONFIGS[toolId as ToolId];
 }
 
-/**
- * `registry` with each entry's operation config merged in. An entry that already carries a
- * config wins, so a caller can assemble its own registry (tests do) and still get this map
- * for the tools it leaves out.
- */
+/** `registry` with each entry's operation config merged in. */
 export function withOperationConfigs<R extends Record<string, ToolRegistryEntry>>(
   registry: R,
 ): R {
@@ -140,11 +131,7 @@ export function withOperationConfigs<R extends Record<string, ToolRegistryEntry>
   return merged as R;
 }
 
-/**
- * The registry as the automation and pipeline surfaces need it: every tool carries its
- * operation config. Boot-path consumers read `useToolRegistry()` directly instead, which
- * keeps these config modules out of the startup chunks.
- */
+/** The registry as the automation and pipeline surfaces need it: every tool carries its operation config. */
 export function useOperationConfigCatalog(): {
   allTools: ToolRegistry;
   regularTools: RegularToolRegistry;

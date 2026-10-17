@@ -1,8 +1,4 @@
-/**
- * PDF permission bits (ISO 32000-1, Table 22). The viewer engine exposes the
- * same set, but importing them from that package puts its whole bundle on the
- * startup path for the two flags the shell reads, so the app owns the numbers.
- */
+/** PDF permission bits (ISO 32000-1, Table 22). */
 export enum PdfPermissionFlag {
   Print = 0x0004,
   ModifyContents = 0x0008,
