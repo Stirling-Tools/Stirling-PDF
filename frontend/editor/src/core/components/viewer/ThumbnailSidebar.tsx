@@ -173,22 +173,27 @@ export function ThumbnailSidebar({
     };
   }, [registerImmediateScrollUpdate, scrollState.currentPage]);
 
-  // Clear thumbnails when active file changes
-  useEffect(() => {
-    // Revoke old blob URLs to prevent memory leaks
-    Object.values(thumbnails).forEach((thumbUrl) => {
-      if (typeof thumbUrl === "string" && thumbUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(thumbUrl);
-      }
-    });
-    setThumbnails({});
-  }, [activeFileId]);
-
   // Keep a ref to thumbnails for cleanup on unmount
   const thumbnailsRef = useRef(thumbnails);
   useEffect(() => {
     thumbnailsRef.current = thumbnails;
   }, [thumbnails]);
+
+  // Clear thumbnails when the active file or its loaded plugin document changes:
+  // the viewer tree persists across both, so a stale map would suppress renders
+  // for the new document (the queue skips pages it believes are already rendered).
+  useEffect(() => {
+    // Revoke old blob URLs to prevent memory leaks
+    Object.values(thumbnailsRef.current).forEach((thumbUrl) => {
+      if (typeof thumbUrl === "string" && thumbUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(thumbUrl);
+      }
+    });
+    // Reset the ref synchronously: the generation effect below runs in this same
+    // commit and reads it to decide which pages still need rendering.
+    thumbnailsRef.current = {};
+    setThumbnails({});
+  }, [activeFileId, pluginDocumentId]);
 
   // Clear thumbnails when sidebar closes and revoke blob URLs to prevent memory leaks
   useEffect(() => {
@@ -439,6 +444,11 @@ export function ThumbnailSidebar({
       if (commitTimer !== null) {
         clearTimeout(commitTimer);
         commitTimer = null;
+      }
+      // Staged blobs never reached state, so the clear effects (which revoke
+      // committed URLs) do not cover them.
+      for (const thumbUrl of commitBuffer.values()) {
+        if (thumbUrl.startsWith("blob:")) URL.revokeObjectURL(thumbUrl);
       }
       commitBuffer.clear();
       wakeThumbnailWorkers();

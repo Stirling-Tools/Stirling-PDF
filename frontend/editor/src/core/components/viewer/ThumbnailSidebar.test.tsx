@@ -401,4 +401,121 @@ describe("ThumbnailSidebar", () => {
       "blob:http://localhost/test-thumb-blob",
     );
   });
+
+  it("renders fresh thumbnails when only the plugin document changes", async () => {
+    vi.useFakeTimers();
+    try {
+      const requestedA: number[] = [];
+      const requestedB: number[] = [];
+      const resolversA: Array<(blob: Blob) => void> = [];
+      const resolversB: Array<(blob: Blob) => void> = [];
+      const forDocumentMock = vi.fn((docId: string) => ({
+        renderThumb: (pageIndex: number) => ({
+          toPromise: () =>
+            new Promise<Blob>((resolve) => {
+              if (docId === "doc-A") {
+                requestedA.push(pageIndex);
+                resolversA.push(resolve);
+              } else {
+                requestedB.push(pageIndex);
+                resolversB.push(resolve);
+              }
+            }),
+        }),
+      }));
+      thumbnailAPI.forDocument =
+        forDocumentMock as unknown as typeof thumbnailAPI.forDocument;
+      pluginDoc.id = "doc-A";
+
+      const { rerender } = render(
+        <MantineProvider>
+          <ThumbnailSidebar
+            visible={true}
+            onToggle={vi.fn()}
+            activeFileId="file-A"
+          />
+        </MantineProvider>,
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      resolversA.forEach((resolve) =>
+        resolve(new Blob(["a"], { type: "image/png" })),
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+      expect(screen.getByAltText("Page 1 thumbnail")).toBeInTheDocument();
+
+      // Same file, new plugin document: the previous document's rendered map
+      // must not suppress the pages the new document still needs.
+      pluginDoc.id = "doc-B";
+      rerender(
+        <MantineProvider>
+          <ThumbnailSidebar
+            visible={true}
+            onToggle={vi.fn()}
+            activeFileId="file-A"
+          />
+        </MantineProvider>,
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      expect(forDocumentMock).toHaveBeenCalledWith("doc-B");
+      expect([...requestedB].sort((a, b) => a - b)).toEqual([0, 1, 2]);
+    } finally {
+      thumbnailAPI.forDocument = (_docId: string) => ({
+        renderThumb: renderThumbMock,
+      });
+      vi.useRealTimers();
+    }
+  });
+
+  it("revokes a staged thumbnail when the generation is cancelled", async () => {
+    vi.useFakeTimers();
+    try {
+      let resolveThumb: (blob: Blob) => void = () => {};
+      renderThumbMock.mockImplementation(() => ({
+        toPromise: () =>
+          new Promise<Blob>((resolve) => {
+            resolveThumb = resolve;
+          }),
+      }));
+      const { rerender } = render(
+        <MantineProvider>
+          <ThumbnailSidebar
+            visible={true}
+            onToggle={vi.fn()}
+            activeFileId="file-A"
+          />
+        </MantineProvider>,
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      // Buffered but not flushed: the file switch cancels the generation before
+      // the commit tick, so only the cleanup can release this object URL.
+      resolveThumb(new Blob(["page-0"], { type: "image/png" }));
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      rerender(
+        <MantineProvider>
+          <ThumbnailSidebar
+            visible={true}
+            onToggle={vi.fn()}
+            activeFileId="file-B"
+          />
+        </MantineProvider>,
+      );
+
+      expect(global.URL.revokeObjectURL).toHaveBeenCalledWith(
+        "blob:http://localhost/test-thumb-blob",
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
