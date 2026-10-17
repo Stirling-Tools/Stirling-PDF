@@ -97,6 +97,16 @@ export interface ThumbnailAPIWrapper {
   ) => {
     toPromise: () => Promise<Blob>;
   };
+  // Pins renders to one plugin document. The unscoped renderThumb falls back
+  // to the plugin's mutable active document, which can change mid-render.
+  forDocument: (documentId: string) => {
+    renderThumb: (
+      pageIndex: number,
+      scale: number,
+    ) => {
+      toPromise: () => Promise<Blob>;
+    };
+  };
 }
 
 export interface ExportAPIWrapper {
