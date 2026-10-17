@@ -144,6 +144,52 @@ function installShellHelpers() {
    */
   // The whole of #root, not only the frame: the client hydrates this markup, so it has
   // to be exactly what React's first render produces, frame included.
+  globalThis.__shellCritical = () => {
+    const root = document.getElementById("root");
+    if (!root) return "";
+    const elements = [root, ...root.querySelectorAll("*")];
+    const applies = (selector) => {
+      for (const part of selector.split(",")) {
+        const test = part.trim();
+        if (!test || test.includes("::")) return true;
+        try {
+          if (elements.some((element) => element.matches(test))) return true;
+        } catch {
+          return true;
+        }
+      }
+      return false;
+    };
+    const walk = (rules) => {
+      let kept = "";
+      for (const rule of rules) {
+        if (rule.cssRules && rule.cssRules.length) {
+          const inner = walk(rule.cssRules);
+          if (inner)
+            kept +=
+              rule.cssText.slice(0, rule.cssText.indexOf("{")) +
+              "{" +
+              inner +
+              "}";
+        } else if (rule.selectorText) {
+          if (applies(rule.selectorText)) kept += rule.cssText;
+        } else {
+          kept += rule.cssText;
+        }
+      }
+      return kept;
+    };
+    let out = "";
+    for (const sheet of document.styleSheets) {
+      try {
+        out += walk(sheet.cssRules);
+      } catch {
+        // A sheet the page cannot read cannot be inlined.
+      }
+    }
+    return out;
+  };
+
   globalThis.__shellMarkup = () => {
     const root = document.getElementById("root");
     if (!root?.querySelector(".app-frame")) return null;
@@ -244,6 +290,7 @@ export async function captureShell({
     // resolves against the document's <base> instead, which follows the deployment base.
     const markup = captured.split(`${server.origin}/`).join("");
     const nodes = await page.evaluate(() => globalThis.__shellCount());
+    const critical = await page.evaluate(() => globalThis.__shellCritical());
 
     const strings = {};
     const dropped = [];
@@ -263,6 +310,7 @@ export async function captureShell({
     return {
       markup,
       nodes,
+      critical,
       strings,
       dropped,
       rtl: rtl
@@ -342,39 +390,53 @@ function deferEntry(html) {
   const entry = ENTRY_TAG.exec(html);
   if (!entry) throw new Error("index.html has no module entry script");
   const payload = JSON.stringify({ src: entry[1] }).replace(/</g, "\\u003c");
-  return html.replace(/<link\b[^>]*\brel="modulepreload"[^>]*>/g, "").replace(
-    ENTRY_TAG,
-    `<script id="app-entry" type="application/json">${payload}</script>` +
-      "<script>(function(){var booted=false;" +
-      'var entry=document.getElementById("app-entry");if(!entry)return;' +
-      "function boot(){if(booted)return;booted=true;" +
-      'var script=document.createElement("script");script.type="module";' +
-      'script.crossOrigin="anonymous";script.src=JSON.parse(entry.textContent).src;' +
-      "document.head.appendChild(script);}" +
-      // The landing is the one screen that paints from the shell alone, so it can wait;
-      // a deep link (a tool, the editor) is an app page from its first frame, and its
-      // controls must work the moment they appear.
-      'var landing=document.baseURI;var here=location.href.split("#")[0].split("?")[0];' +
-      'if(here.slice(-1)==="/")here=here.slice(0,-1);' +
-      'if(landing.slice(-1)==="/")landing=landing.slice(0,-1);' +
-      "if(here!==landing){document.write('<script type=\"module\" crossorigin src=\"'+JSON.parse(entry.textContent).src+'\"></'+'script>');return;}" +
-      // The shell is the first screen, so the app waits for a gesture.
-      'var triggers=["pointerdown","keydown","touchstart","wheel","focusin"];' +
-      "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
-      // A file picked before the app is up is carried over to its input.
-      "var pending=null;" +
-      'addEventListener("change",function(event){var target=event.target;' +
-      'if(!target||target.tagName!=="INPUT"||target.type!=="file"||!target.files||!target.files.length)return;' +
-      "pending=target.files;boot();handOff();},true);" +
-      "function handOff(){if(!pending)return;" +
-      'var input=document.querySelector("input[type=file]");' +
-      "if(!input){setTimeout(handOff,50);return;}" +
-      "try{var carrier=new DataTransfer();" +
-      "for(var j=0;j<pending.length;j++)carrier.items.add(pending[j]);" +
-      'input.files=carrier.files;input.dispatchEvent(new Event("change",{bubbles:true}));}catch(e){}' +
-      "pending=null;}" +
-      "})();</script>",
-  );
+  // The shell carries its own rules; the app's sheets arrive with the app, not before it.
+  const held = (page) =>
+    page
+      .replace(/<link\b[^>]*\brel="preload"[^>]*\bas="style"[^>]*>/g, "")
+      .replace(
+        /<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+)"[^>]*>/g,
+        (_match, href) =>
+          `<link rel="stylesheet" data-href="${href}" disabled>`,
+      );
+  return held(html)
+    .replace(/<link\b[^>]*\brel="modulepreload"[^>]*>/g, "")
+    .replace(
+      ENTRY_TAG,
+      `<script id="app-entry" type="application/json">${payload}</script>` +
+        "<script>(function(){var booted=false;" +
+        'var entry=document.getElementById("app-entry");if(!entry)return;' +
+        'function restore(){var links=document.querySelectorAll("link[data-href]");' +
+        'for(var k=0;k<links.length;k++){var l=document.createElement("link");' +
+        'l.rel="stylesheet";l.href=links[k].getAttribute("data-href");document.head.appendChild(l);}}' +
+        "function boot(){if(booted)return;booted=true;restore();" +
+        'var script=document.createElement("script");script.type="module";' +
+        'script.crossOrigin="anonymous";script.src=JSON.parse(entry.textContent).src;' +
+        "document.head.appendChild(script);}" +
+        // The landing is the one screen that paints from the shell alone, so it can wait;
+        // a deep link (a tool, the editor) is an app page from its first frame, and its
+        // controls must work the moment they appear.
+        'var landing=document.baseURI;var here=location.href.split("#")[0].split("?")[0];' +
+        'if(here.slice(-1)==="/")here=here.slice(0,-1);' +
+        'if(landing.slice(-1)==="/")landing=landing.slice(0,-1);' +
+        "if(here!==landing){restore();document.write('<script type=\"module\" crossorigin src=\"'+JSON.parse(entry.textContent).src+'\"></'+'script>');return;}" +
+        // The shell is the first screen, so the app waits for a gesture.
+        'var triggers=["pointerdown","keydown","touchstart","wheel","focusin"];' +
+        "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
+        // A file picked before the app is up is carried over to its input.
+        "var pending=null;" +
+        'addEventListener("change",function(event){var target=event.target;' +
+        'if(!target||target.tagName!=="INPUT"||target.type!=="file"||!target.files||!target.files.length)return;' +
+        "pending=target.files;boot();handOff();},true);" +
+        "function handOff(){if(!pending)return;" +
+        'var input=document.querySelector("input[type=file]");' +
+        "if(!input){setTimeout(handOff,50);return;}" +
+        "try{var carrier=new DataTransfer();" +
+        "for(var j=0;j<pending.length;j++)carrier.items.add(pending[j]);" +
+        'input.files=carrier.files;input.dispatchEvent(new Event("change",{bubbles:true}));}catch(e){}' +
+        "pending=null;}" +
+        "})();</script>",
+    );
 }
 
 export async function prerenderShell({
@@ -412,6 +474,7 @@ export async function prerenderShell({
     // the browser's first layout is the final one and nothing moves when the words
     // are swapped in.
     `<style>#root[data-shell="pending"]{visibility:hidden}[data-shell-for="narrow"]{display:none}@media (max-width: 1024px){[data-shell-for="wide"]{display:none}[data-shell-for="narrow"]{display:block}}</style>`,
+    `<style id="shell-critical">${wide.critical}${narrow ? narrow.critical : ""}</style>`,
     `<div id="root" data-shell="pending"><div data-shell-for="wide">${wide.markup}</div>`,
     narrow ? `<div data-shell-for="narrow">${narrow.markup}</div>` : "",
     `</div>`,
