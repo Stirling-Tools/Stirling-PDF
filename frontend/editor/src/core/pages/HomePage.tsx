@@ -17,8 +17,6 @@ import urlSeoOverrides from "@app/data/urlSeoOverrides.json";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile, useIsTouch } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { LogoIcon } from "@app/components/shared/LogoIcon";
-import { Wordmark } from "@app/components/shared/Wordmark";
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import {
   useNavigationState,
@@ -74,11 +72,11 @@ import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreat
 import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProcessingFolderCreation";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
-import { Button } from "@app/ui/Button";
 import {
   INITIAL_MOBILE_VIEW,
   type MobileView,
 } from "@app/pages/initialMobileView";
+import { PhoneLayout } from "@app/pages/PhoneLayout";
 import "@app/components/layout/WorkspaceFrame.css";
 import "@app/pages/HomePage.css";
 
@@ -603,160 +601,30 @@ export default function HomePage() {
       />
       <FilesPageProvider>
         {isMobile ? (
-          <div
-            className="mobile-layout"
-            data-files-mode={navigationState.workbench === "myFiles"}
-          >
-            {/* The library brings its own tabs and folder path, so the
-              tools/workspace toggle would only cost it vertical space. Every
-              other view keeps the toggle. */}
-            {navigationState.workbench !== "myFiles" && (
-              <div className="mobile-toggle">
-                <div className="mobile-brand">
-                  <LogoIcon className="mobile-brand-icon" />
-                  <Wordmark alt={brandAltText} className="mobile-brand-text" />
-                </div>
-                <div
-                  className="mobile-toggle-buttons"
-                  role="tablist"
-                  aria-label={t(
-                    "home.mobile.viewSwitcher",
-                    "Switch workspace view",
-                  )}
-                >
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={activeMobileView === "tools"}
-                    className={`mobile-toggle-button ${activeMobileView === "tools" ? "active" : ""}`}
-                    onClick={() => handleSelectMobileView("tools")}
-                  >
-                    {t("home.mobile.tools", "Tools")}
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={activeMobileView === "workbench"}
-                    className={`mobile-toggle-button ${activeMobileView === "workbench" ? "active" : ""}`}
-                    onClick={() => handleSelectMobileView("workbench")}
-                  >
-                    {t("home.mobile.workspace", "Workspace")}
-                  </button>
-                </div>
-              </div>
-            )}
-            {navigationState.workbench === "myFiles" ? (
-              /* /files takes the whole viewport. Skipping the slider keeps
-                the FileManagerView from being trapped inside a 100vw
-                horizontal-scroll container (which truncated buttons and
-                created a stray side-scroll surface on touch). */
-              <div className="mobile-files-full">
-                <div className="flex-1 min-h-0 flex" style={{ minWidth: 0 }}>
-                  <Workbench />
-                </div>
-              </div>
-            ) : (
-              <div className="mobile-slider-wrap">
-                <div ref={sliderRef} className="mobile-slider">
-                  <div
-                    className="mobile-slide"
-                    aria-label={t(
-                      "home.mobile.toolsSlide",
-                      "Tool selection panel",
-                    )}
-                  >
-                    <div className="mobile-slide-content">
-                      <RightSidebar />
-                    </div>
-                  </div>
-                  <div
-                    className="mobile-slide"
-                    aria-label={t(
-                      "home.mobile.workbenchSlide",
-                      "Workspace panel",
-                    )}
-                  >
-                    <div className="mobile-slide-content">
-                      <div
-                        className="flex-1 min-h-0 flex"
-                        style={{ minWidth: 0 }}
-                      >
-                        <Workbench />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {isTouch && showSwipeHint && (
-                  <span className="mobile-swipe-hint" aria-hidden="true">
-                    {t(
-                      "home.mobile.swipeHint",
-                      "Swipe left or right to switch views",
-                    )}
-                  </span>
-                )}
-              </div>
-            )}
-            <div className="mobile-bottom-bar">
-              <Button
-                variant="tertiary"
-                className="mobile-bottom-button"
-                aria-label={t("quickAccess.allTools", "Tools")}
-                onClick={() => {
-                  leaveMyFiles();
-                  handleBackToTools();
-                  if (isMobile) {
-                    setActiveMobileView("tools");
-                  }
-                }}
-              >
-                <Icon name="layout-grid" size={"1.5rem"} />
-                <span className="mobile-bottom-button-label">
-                  {t("quickAccess.allTools", "Tools")}
-                </span>
-              </Button>
-              {toolAvailability["automate"]?.available !== false && (
-                <Button
-                  variant="tertiary"
-                  className="mobile-bottom-button"
-                  aria-label={t("quickAccess.automate", "Automate")}
-                  onClick={() => {
+          <PhoneLayout
+            view={activeMobileView}
+            onSelectView={handleSelectMobileView}
+            sliderRef={sliderRef}
+            showSwipeHint={isTouch && showSwipeHint}
+            filesMode={navigationState.workbench === "myFiles"}
+            brandAltText={brandAltText}
+            onShowTools={() => {
+              leaveMyFiles();
+              handleBackToTools();
+              setActiveMobileView("tools");
+            }}
+            onShowAutomate={
+              toolAvailability["automate"]?.available !== false
+                ? () => {
                     leaveMyFiles();
                     handleToolSelect("automate");
-                    if (isMobile) {
-                      setActiveMobileView("tools");
-                    }
-                  }}
-                >
-                  <Icon name="waypoints" size="1.5rem" />
-                  <span className="mobile-bottom-button-label">
-                    {t("quickAccess.automate", "Automate")}
-                  </span>
-                </Button>
-              )}
-              <Button
-                variant="tertiary"
-                className="mobile-bottom-button"
-                aria-label={t("home.mobile.openFiles", "Open files")}
-                onClick={() => navigate("/files")}
-              >
-                <Icon name="folder" size="1.5rem" />
-                <span className="mobile-bottom-button-label">
-                  {t("quickAccess.files", "Files")}
-                </span>
-              </Button>
-              <Button
-                variant="tertiary"
-                className="mobile-bottom-button"
-                aria-label={t("quickAccess.config", "Config")}
-                onClick={openSettings}
-              >
-                <Icon name="settings" size="1.5rem" />
-                <span className="mobile-bottom-button-label">
-                  {t("quickAccess.config", "Config")}
-                </span>
-              </Button>
-            </div>
-          </div>
+                    setActiveMobileView("tools");
+                  }
+                : null
+            }
+            onShowFiles={() => navigate("/files")}
+            onOpenSettings={openSettings}
+          />
         ) : (
           <Group
             align="flex-start"
