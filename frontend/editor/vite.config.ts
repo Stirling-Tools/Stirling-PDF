@@ -656,6 +656,17 @@ async function compressHtmlOutput(distDir: string): Promise<void> {
     }
   };
   await walk(distDir);
+  // The shell's per-language words are fetched during the first paint of a
+  // visitor whose language is not the base one.
+  try {
+    const shells = path.join(distDir, "shells");
+    for (const entry of await fs.readdir(shells, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.endsWith(".json"))
+        files.push(path.join(shells, entry.name));
+    }
+  } catch {
+    // no shells directory: the prerender pass was skipped
+  }
   await Promise.all(
     files
       .filter((file) => file.endsWith(".html"))

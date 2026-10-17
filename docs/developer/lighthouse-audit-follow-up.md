@@ -28,3 +28,11 @@ then `$T/lh/node_modules/.bin/lighthouse http://localhost:4181/ --only-categorie
 | findings 1.1–1.9, 3.1, 3.3 | 100 (FCP 921–943, LCP 1201, 8 requests, 53,100 B, CLS 0) | 100 (FCP 247–251, LCP 321) |
 | 3.2 (words per language) | 100 (FCP 777–779, LCP 1065–1066, 9 requests, 35,888 B, CLS 0) | 100 (FCP 207–211, LCP 285) |
 | final build (3.2 + icon revert) | 100 (FCP 777–799, LCP 1064–1068, 9 requests, 35,984 B, CLS 0) | 100 (FCP 207–212, LCP 285) |
+| shells precompressed | 100 (FCP 790–792, LCP 1065, 9 requests, 35,871 B, CLS 0) | 100 (FCP 206–211, LCP 284) |
+
+## Further passes
+
+| Candidate | Result |
+|-----------|--------|
+| Prefetching the boot graph in idle time after the first paint | rejected: mobile 87/87/86 (FCP 2271, LCP 3676, 16 requests, 494,857 B) against 100 at FCP 777–799; Lantern charges the whole graph |
+| Precompressing the per-language shell words | shipped: `dist/shells/*.json` gained `.br`/`.gz` siblings (de-DE 2,034 → 599 B); the base-language path is unchanged |
