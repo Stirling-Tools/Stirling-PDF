@@ -923,7 +923,9 @@ export function LocalEmbedPDF({
   // The edit scope keeps the stricter reading: an unknown access still locks,
   // because the save/replace flow settles against that lock.
   const annotationsLocked = !pdfAccess || pdfAccess.encrypted;
-  const showAnnotations = enableAnnotations || annotationsReadOnly;
+  // The layers keep the stricter reading too: flapping them off while access is
+  // unknown unmounts the viewer's engine document and reloads it.
+  const showAnnotations = enableAnnotations || annotationsLocked;
   const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
     Array<{ id: string; pageIndex: number; rect: Rect }>

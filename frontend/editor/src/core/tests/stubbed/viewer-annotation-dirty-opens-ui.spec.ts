@@ -16,6 +16,24 @@ async function loadAnnotatedViewer(page: import("@playwright/test").Page) {
   return firstPage;
 }
 
+/**
+ * The first laid-out page-0 node, read in one pass: a document replacement
+ * briefly holds two nodes, so a locator read can land on the outgoing one.
+ */
+async function readLaidOutPageBox(
+  page: import("@playwright/test").Page,
+): Promise<{ x: number; y: number; width: number; height: number } | null> {
+  return page.evaluate(() => {
+    for (const node of document.querySelectorAll("[data-page-index='0']")) {
+      const rect = node.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+      }
+    }
+    return null;
+  });
+}
+
 /** Annotation A on page 1 of the fixture, rect [100,686,116,708] on 612x792. */
 async function selectAnnotationA(page: import("@playwright/test").Page) {
   const firstPage = page.locator('[data-page-index="0"]').first();
@@ -104,30 +122,15 @@ test("saving from the auto-opened Annotate UI clears the dirty state", async ({
   await expect(save).toBeDisabled({ timeout: 20_000 });
 
   // The save also survives the view: leaving the viewer must not warn about
-  // work that was already persisted. The replacement document puts a new page
-  // node in place, so read a laid-out page in one atomic pass instead of
-  // holding a locator across the swap.
-  let box: { x: number; y: number; width: number; height: number } | null =
-    null;
+  // work that was already persisted. The replacement document holds two page
+  // nodes for a moment, so wait for a laid-out one and then read it fresh
+  // rather than holding a locator across the swap.
   await expect(async () => {
-    box = await page.evaluate(() => {
-      for (const node of document.querySelectorAll('[data-page-index="0"]')) {
-        const rect = node.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          return {
-            x: rect.x,
-            y: rect.y,
-            width: rect.width,
-            height: rect.height,
-          };
-        }
-      }
-      return null;
-    });
-    expect(box).not.toBeNull();
+    expect(await readLaidOutPageBox(page)).not.toBeNull();
   }).toPass({ timeout: 20_000 });
-  if (!box) throw new Error("Sample page has no bounding box");
-  await page.mouse.click(box.x + 16, box.y + box.height - 16);
+  const laidOut = await readLaidOutPageBox(page);
+  if (!laidOut) throw new Error("Sample page has no bounding box");
+  await page.mouse.click(laidOut.x + 16, laidOut.y + laidOut.height - 16);
   await page.waitForTimeout(500);
   await page.getByRole("button", { name: "Form Editor" }).first().click();
   await expect(page.getByText("Unsaved changes").first()).not.toBeVisible({
