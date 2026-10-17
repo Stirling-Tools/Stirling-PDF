@@ -20,15 +20,21 @@ import { alert } from "@app/components/toast";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import {
-  useVirtualFileRows,
-  rowHeightPx,
-} from "@app/components/filesPage/useVirtualFileRows";
+import { useVirtualFileRows } from "@app/components/filesPage/useVirtualFileRows";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 import styles from "@app/components/fileEditor/FileEditor.module.css";
 
 const EMPTY_POLICIES: FileItemPolicyRef[] = [];
 const DEFAULT_SUPPORTED_EXTENSIONS = ["pdf"];
+
+/**
+ * Row pitch of the file-editor grid, matching the thumbnail card in
+ * FileEditorThumbnail.module.css: 10px top padding + 26px toolchain bar +
+ * 310px thumb wrap + 76px bottom padding, plus the grid's 24px row gap. The
+ * shared grid estimate is a third of this, which leaves the virtualizer
+ * rendering too few rows for a scrolled-in viewport.
+ */
+const FILE_EDITOR_ROW_PITCH = 446;
 
 function normalizeMaxFiles(
   toolMode: boolean,
@@ -357,7 +363,7 @@ const FileEditor = ({
     padBottom,
     active: isVirtualActive,
     setContainer,
-  } = useVirtualFileRows(totalItems, rowHeightPx(true), true);
+  } = useVirtualFileRows(totalItems, FILE_EDITOR_ROW_PITCH, true);
 
   // Before virtualization activates (before scroll container attaches and measures),
   // avoid mounting the entire dataset on frame 0. Once active, always render the exact virtual range.
