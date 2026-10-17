@@ -60,6 +60,12 @@ class ToolIODeclarationCoverageTest {
                     // requires the original protected document as well as the working result.
                     "/api/v1/security/inspect-pdf-security",
                     "/api/v1/security/restore-pdf-protection",
+                    "/api/v1/security/prepare-pdf-session",
+                    "/api/v1/security/remove-pdf-opening-password",
+                    "/api/v1/security/remove-pdf-passwords",
+                    "/api/v1/security/remove-pdf-protection",
+                    "/api/v1/security/set-pdf-protection",
+                    "/api/v1/security/change-pdf-permissions",
                     // Signing sessions, certificate checks and hardware token enumeration; the
                     // signing tool itself is /api/v1/security/cert-sign, which is declared.
                     "/api/v1/security/cert-sign/sessions",

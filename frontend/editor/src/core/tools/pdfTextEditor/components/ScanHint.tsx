@@ -68,7 +68,7 @@ export function ScanHint({
             <Tooltip
               content={t(
                 "encryptedPdfUnlock.removePasswordHelp",
-                "Open Remove Password to create an unprotected copy.",
+                "Open Remove Password to choose which passwords to remove.",
               )}
               position="top"
               maxWidth={230}

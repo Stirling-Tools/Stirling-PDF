@@ -35,5 +35,11 @@ export const removePasswordFromApiParams = (
 export const buildRemovePasswordFormData = (
   parameters: RemovePasswordParameters,
   file: File,
-): FormData =>
-  objectToFormData(removePasswordToApiParams(parameters), { fileInput: file });
+): FormData => {
+  const form = objectToFormData(removePasswordToApiParams(parameters), {
+    fileInput: file,
+  });
+  if (parameters.ownerPassword)
+    form.set("ownerPassword", parameters.ownerPassword);
+  return form;
+};

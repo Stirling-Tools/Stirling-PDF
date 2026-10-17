@@ -6,6 +6,7 @@ interface PendingDocument {
   name: string;
   fileKey: string;
   password?: string;
+  honorOwnerPasswords?: boolean;
 }
 
 interface DocumentSwapBridgeProps {
@@ -45,6 +46,9 @@ export function DocumentSwapBridge({
             buffer: pending.buffer,
             name: pending.name,
             password: pending.password,
+            permissions: {
+              enforceDocumentPermissions: pending.honorOwnerPasswords !== false,
+            },
             autoActivate: false,
           })
           .toPromise(),

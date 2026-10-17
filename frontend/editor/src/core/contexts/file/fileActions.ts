@@ -502,9 +502,11 @@ export async function addFiles(
         try {
           fileStub.processedFile = {
             pages: [],
-            isEncrypted: await FileAnalyzer.isPDFUserPasswordProtected(file),
+            isEncrypted: await FileAnalyzer.isPDFEncrypted(file),
           };
+          bindPdfAccess(file, fileId);
         } catch (error) {
+          fileStub.processedFile = { pages: [], isEncrypted: true };
           // Never block upload on analysis failure — but log so it's debuggable
           // if an unencrypted file later appears to "hang" during processing.
           console.warn(
@@ -1014,15 +1016,14 @@ export async function addStirlingFileStubs(
           if (
             (stirlingFile.type === "application/pdf" ||
               /\.pdf$/i.test(stirlingFile.name)) &&
-            (decision.contentReplaced ||
-              record.processedFile?.isEncrypted === undefined)
+            (decision.contentReplaced || !getPdfAccess(stirlingFile))
           ) {
             record.processedFile = {
               pages: [],
-              isEncrypted:
-                await FileAnalyzer.isPDFUserPasswordProtected(stirlingFile),
+              isEncrypted: await FileAnalyzer.isPDFEncrypted(stirlingFile),
             };
           }
+          bindPdfAccess(stirlingFile, fileId);
           dispatch({
             type: "ADD_FILES",
             payload: { stirlingFileStubs: [record] },

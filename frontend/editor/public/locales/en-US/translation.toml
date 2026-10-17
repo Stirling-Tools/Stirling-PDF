@@ -301,7 +301,6 @@ title = "Page Number Results"
 
 [addPassword]
 desc = "Encrypt your PDF document with a password."
-submit = "Encrypt"
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Add Password"
 
@@ -313,17 +312,6 @@ label = "Encryption Key Length"
 
 [addPassword.error]
 failed = "An error occurred while encrypting the PDF."
-
-[addPassword.passwords]
-stepTitle = "Passwords & Encryption"
-
-[addPassword.passwords.owner]
-label = "Owner Password"
-placeholder = "Enter owner password"
-
-[addPassword.passwords.user]
-label = "User Password"
-placeholder = "Enter user password"
 
 [addPassword.results]
 title = "Encrypted PDFs"
@@ -339,13 +327,13 @@ title = "Encryption Levels"
 title = "Password Protection Overview"
 
 [addPassword.tooltip.passwords]
-bullet1 = "User Password: Required to open the PDF"
-bullet2 = "Owner Password: Controls document permissions (not supported by all PDF viewers)"
-text = "User passwords restrict opening the document, while owner passwords control what can be done with the document once opened. You can set both or just one."
+bullet1 = "Password to open: Required to view the PDF"
+bullet2 = "Permissions password: Protects restrictions on printing, copying and editing. Some apps or viewers may ignore these restrictions."
+text = "Set either password or both. Opening the PDF does not verify the permissions password."
 title = "Password Types"
 
 [addPassword.tooltip.permissions]
-text = "These permissions control what users can do with the PDF. Most effective when combined with an owner password."
+text = "Choose which actions to restrict. A separate permissions password is required to change these restrictions."
 title = "Change Permissions"
 
 [addStamp]
@@ -1629,6 +1617,7 @@ title = "Restart Required"
 [admin.settings.security]
 authentication = "Authentication"
 description = "Configure authentication, login behavior, and security policies."
+pdfPermissions = "PDF permissions"
 title = "Security"
 
 [admin.settings.security.audit]
@@ -1676,6 +1665,10 @@ label = "Disable CSRF Protection"
 [admin.settings.security.enableLogin]
 description = "Require users to log in before accessing the application"
 label = "Enable Login"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Require the permissions password for restricted actions. Turning this off still requires passwords needed to open PDFs."
+label = "Honor PDF permissions"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Advanced Settings"
@@ -3173,7 +3166,6 @@ unknown = "Unknown"
 [changePermissions]
 desc = "Change document restrictions and permissions."
 loading = "Loading current permissions..."
-multipleFiles = "Select a single PDF to automatically load its current permissions. These settings will apply to all selected PDFs."
 submit = "Change Permissions"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Change Permissions"
@@ -3204,7 +3196,7 @@ label = "Prevent annotation modification"
 label = "Prevent printing"
 
 [changePermissions.permissions.preventPrintingFaithful]
-label = "Prevent printing different formats"
+label = "Prevent high-quality printing"
 
 [changePermissions.results]
 title = "Modified PDFs"
@@ -3216,7 +3208,7 @@ text = "Changes document permissions, allowing/disallowing access to different f
 title = "Change Permissions"
 
 [changePermissions.tooltip.warning]
-text = "To make these permissions unchangeable, use the Add Password tool to set an owner password."
+text = "Compatible PDF applications honour these permissions. Keep a separate permissions password to control changes to the restrictions."
 
 [chat.actions]
 copy = "Copy message"
@@ -3654,6 +3646,7 @@ continue = "Continue"
 copied = "Copied!"
 copy = "Copy"
 copyCode = "Copy code"
+copyFailed = "Copy failed"
 dismiss = "Dismiss"
 done = "Done"
 enterValue = "Enter value"
@@ -4491,26 +4484,67 @@ description = "Select the Edit Table of Contents tool to load its workspace."
 title = "Open the tool to start editing"
 
 [encryptedPdfUnlock]
-copyCreated = "Unprotected copy created"
+actionIgnored = "{{action}} restriction ignored"
+actionUnlocked = "{{action}} unlocked for this session"
+advanced = "Advanced"
+allowed = "Allowed"
+annotations = "Annotations"
+authoriseAction = "This PDF requires permission to use {{action}}."
+changeOwnerPassword = "Change permissions password"
+chooseOwnerPassword = "Choose a different password"
+continue = "Continue"
+copyFailed = "Unable to create the copy. Your PDF is unchanged."
+copying = "Copying content"
+editing = "Editing"
+enterPassword = "Enter password"
+ignoredByServer = "Permissions are ignored by this server's settings. The PDF's protection is unchanged."
 incorrectPassword = "Incorrect password"
+lowQualityPrintUnsupported = "This PDF allows low-quality printing only, which this viewer does not support."
+lowResolutionOnly = "Low resolution only"
+manageProtection = "Manage protection"
 missingFile = "The selected file is no longer available."
-originalProtected = "The original PDF stays protected."
-passwordHint = "Enter the PDF password to continue."
+mixedProtection = "These PDFs have separate protection settings. Process them individually."
+newOwnerPassword = "New permissions password"
+notRequired = "Not required"
+openingPassword = "Password to open"
+openingPasswordRemoved = "Opening password removed. Restrictions retained."
+openingRequired = "Enter the password used to open this PDF."
+openPdf = "Open PDF"
+ownerPassword = "Permissions password"
+ownerRequired = "Enter the permissions password to continue."
+ownerTitle = "Enter permissions password"
+passwordRetained = "Kept unchanged"
+passwordsMustDiffer = "The two passwords must be different."
+permissionsUnlocked = "Permissions unlocked for this session"
 prepareFailed = "Unable to prepare this protected PDF for processing."
-removePasswordHelp = "Open Remove Password to create an unprotected copy."
+printing = "Printing"
+printRestricted = "Printing is restricted. Verify permissions in Manage protection."
+protectedPdf = "Protected PDF"
+protectionRetained = "Protection retained"
+protectionSaved = "Protection saved"
+removePasswordHelp = "Open Remove Password to choose which passwords to remove."
+removeProtection = "Create an unprotected copy"
+replaceProtection = "These settings replace the PDF's current protection."
 required = "Enter the password to continue."
+requiredStatus = "Required"
+requiredToApply = "Required to apply changes"
 restoreFailed = "Unable to preserve PDF protection. No unprotected result was saved."
-restrictedOperation = "This PDF restricts this operation. Reopen it with the owner password to continue."
-sessionDetails = "Unlock for this session. The PDF stays protected. Remove Password creates an unprotected copy."
+restrictActions = "Restrict actions"
+restricted = "Restricted"
+restrictedActions = "restricted actions"
+restrictedOperation = "This action requires the permissions password."
+retainOwnerVerification = "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it."
+saveProtection = "Save protection"
+securityChangeFailed = "Unable to change protection. Check the permissions password and the new security settings."
+sessionDetails = "Open for this session. The PDF stays protected."
 sessionDetailsLabel = "About session unlocking"
 sessionFailed = "Unable to unlock this PDF. Please try again."
-sessionSuccessBody = "Unlocked for this session. Password protection is retained."
-sessionSuccessBodyWithName = "Unlocked {{fileName}} for this session. Password protection is retained."
-sessionSuccessTitle = "PDF unlocked"
-sessionTitle = "Unlock PDF"
-signedReadOnly = "This PDF has digital signatures. Session unlocking supports viewing it, but processing signed PDFs is not supported yet."
-skip = "Skip for now"
-title = "Remove password to continue"
+sessionSuccessBody = "Protection retained."
+sessionSuccessBodyWithName = "Protection retained for {{fileName}}."
+sessionSuccessTitle = "PDF opened"
+sessionTitle = "Open PDF"
+signedReadOnly = "This signed PDF can be viewed, but cannot be edited here."
+title = "Enter PDF password"
 toolUnavailable = "This tool doesn't support encrypted PDFs. Remove the password first."
 toolUnavailableDetails = "Why {{name}} is unavailable"
 unlock = "Unlock"
@@ -4518,10 +4552,14 @@ unlockAll = "Use for all ({{count}})"
 unlockAllPartialFail = "Wrong password for: {{names}}"
 unlockAllSuccess_one = "Unlocked {{count}} file."
 unlockAllSuccess_other = "Unlocked {{count}} files."
-unlockPrompt = "Unlock PDF to continue"
-unsupportedTool = "This tool does not yet support session-unlocked PDFs. Use Remove Password explicitly to create an unprotected copy."
+unlockedForSession = "Unlocked for this session using your permissions password."
+unlockPrompt = "Open PDF to continue"
+unprotectedCopyConsequence = "The copy will have no passwords or restrictions. The original stays protected."
+unsupportedTool = "This tool cannot yet preserve this PDF's protection."
+verifiedForSession = "Verified for this session"
+verifyPermissions = "Verify permissions for this session"
 viewerLocked = "This PDF is password-protected"
-viewerUnlock = "Unlock"
+viewerUnlock = "Open PDF"
 
 [encryptedPdfUnlock.password]
 label = "PDF password"
@@ -5794,7 +5832,7 @@ tags = "delete,extract,exclude,remove pages,delete pages,remove page,delete page
 title = "Remove Pages"
 
 [home.removePassword]
-desc = "Remove password protection from your PDF document."
+desc = "Remove the opening password, permissions password, or both."
 tags = "unlock,remove password,unlock PDF,decrypt,remove encryption,unprotect,open protected PDF,password removal,unlock protected,disable password,remove security,remove owner password"
 title = "Remove Password"
 
@@ -7350,7 +7388,7 @@ nothingSelectedHint = "Click any text, image or shape on the page to edit it her
 ocrDocumentChanged = "The document changed while OCR was running. Run OCR again to include your latest changes."
 ocrInvalidResult = "OCR did not return a PDF. Please try again."
 ocrNoLanguages = "No OCR languages are installed on the server."
-ocrProtected = "OCR cannot keep this PDF's password protection. Use Remove Password to create an unprotected copy first."
+ocrProtected = "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing."
 ocrRunning = "Recognizing text..."
 ocrUnavailable = "OCR is unavailable on this server."
 oneImage = "Image"
@@ -11421,7 +11459,19 @@ text = "Specify which pages to remove from your PDF. You can select individual p
 title = "Page Selection"
 
 [removePassword]
-desc = "Remove password protection from your PDF document."
+appliesTo = "Set on {{count}} of {{total}} PDFs"
+batchRemoved = "Entered passwords removed where set. Blank fields kept unchanged."
+bothRemoved = "Both passwords and restrictions removed."
+checkingProtection = "Checking protection…"
+keepBlank = "Leave a field blank to keep that password."
+notSet = "Not set"
+openingOnlyRemoved = "Opening password removed."
+openWithReaderFirst = "Reopen this PDF using its opening password before removing only the permissions password."
+ownerOnlyRemoved = "Permissions password and restrictions removed."
+ownerRemoved = "Permissions password and restrictions removed. Opening password kept."
+protectionUnavailable = "Unable to check protection"
+selectiveHelp = "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions."
+selectPasswords = "Passwords to remove"
 submit = "Remove Password"
 tags = "secure,Decrypt,security,unpassword,delete password"
 title = "Remove Password"
@@ -11432,13 +11482,9 @@ failed = "An error occurred while removing the password from the PDF."
 [removePassword.password]
 label = "Current Password"
 placeholder = "Enter current password"
-stepTitle = "Remove Password"
 
 [removePassword.results]
-title = "Decrypted PDFs"
-
-[removePassword.tooltip]
-description = "Removing password protection requires the password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password."
+title = "Updated PDFs"
 
 [reorganizePages]
 submit = "Reorganize Pages"

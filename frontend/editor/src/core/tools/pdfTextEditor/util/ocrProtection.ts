@@ -16,7 +16,7 @@ export function getEditorOcrBlockedReason(
   ) {
     return t(
       "pdfTextEditor.inspector.ocrProtected",
-      "OCR cannot keep this PDF's password protection. Use Remove Password to create an unprotected copy first.",
+      "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing.",
     );
   }
   return null;
