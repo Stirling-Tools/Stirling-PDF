@@ -36,7 +36,9 @@ export function useFreeCreditsSummary(): NavFooterCredits | null {
   );
 
   const live = wallet
-    ? toCredits(wallet.status, wallet.freeRemaining, wallet.freeAllowance)
+    ? wallet.enterprise
+      ? null
+      : toCredits(wallet.status, wallet.freeRemaining, wallet.freeAllowance)
     : undefined;
 
   // useWallet reuses the snapshot reference when nothing changed, so keying on

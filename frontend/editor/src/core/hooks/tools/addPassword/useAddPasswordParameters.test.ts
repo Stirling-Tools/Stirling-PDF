@@ -121,19 +121,25 @@ describe("useAddPasswordParameters", () => {
         hook.permissions.updateParameter("preventAssembly", true);
       },
     },
-  ])("should validate parameters correctly $description", ({ setup }) => {
-    const { result } = renderHook(() => useAddPasswordParameters());
+  ])(
+    "should validate parameters correctly $description",
+    ({ setup, description }) => {
+      const { result } = renderHook(() => useAddPasswordParameters());
 
-    // Default state should be valid
-    expect(result.current.validateParameters()).toBe(true);
+      expect(result.current.validateParameters()).toBe(false);
 
-    // Apply the test scenario setup
-    act(() => {
-      setup(result.current);
-    });
+      // Apply the test scenario setup
+      act(() => {
+        setup(result.current);
+      });
 
-    expect(result.current.validateParameters()).toBe(true);
-  });
+      expect(result.current.validateParameters()).toBe(
+        !["with restrictions only", "with passwords and restrictions"].includes(
+          description,
+        ),
+      );
+    },
+  );
 
   test.each(
     Object.keys(defaultChangePermissionsParameters) as Array<
@@ -147,6 +153,8 @@ describe("useAddPasswordParameters", () => {
       result.current.permissions.updateParameter(param, true);
     });
 
+    expect(result.current.validateParameters()).toBe(false);
+    act(() => result.current.updateParameter("ownerPassword", "permissions"));
     expect(result.current.validateParameters()).toBe(true);
   });
 

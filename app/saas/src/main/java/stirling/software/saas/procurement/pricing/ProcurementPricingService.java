@@ -101,7 +101,10 @@ public class ProcurementPricingService {
         lines.add(
                 new QuoteLineItem(
                         "seats",
-                        "Unlimited users + SSO / SCIM / RBAC / audit",
+                        cfg.users() > 0
+                                ? String.format(
+                                        "%,d agreed users + SSO / RBAC / audit", cfg.users())
+                                : "Users + SSO / RBAC / audit",
                         QuoteLineItem.Kind.INCLUDED,
                         0L));
         if (termDiscountMinor < 0) {
