@@ -2,7 +2,7 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 const MCID = "MCID";
-const ARTIFACT = "Artifact";
+export const ARTIFACT_TAG = "Artifact";
 
 /**
  * A marked-content tag that links a page object to the structure tree, or
@@ -32,7 +32,7 @@ export function readTagMarks(
       if (!mark) continue;
       const name = markName(m, mark);
       const mcid = markMcid(m, mark);
-      if (mcid !== null || name === ARTIFACT) tags.push({ name, mcid });
+      if (mcid !== null || name === ARTIFACT_TAG) tags.push({ name, mcid });
     }
   } catch {
     return [];

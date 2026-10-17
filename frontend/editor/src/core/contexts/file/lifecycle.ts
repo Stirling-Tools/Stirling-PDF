@@ -6,6 +6,11 @@ import { FileId } from "@app/types/file";
 import { releaseSharedDocumentWhenIdle } from "@app/services/pdfiumService";
 import { releaseDocumentBytes } from "@app/services/documentBytesCache";
 import {
+  forgetPdfAccess,
+  getPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfPasswordStore";
+import {
   FileContextAction,
   FileContextState,
   StirlingFileStub,
@@ -76,6 +81,7 @@ export class FileLifecycleManager {
    * Clean up all files and resources
    */
   cleanupAllFiles = (): void => {
+    forgetPdfAccess([...this.filesRef.current.keys()]);
     // Revoke all blob URLs
     this.blobUrls.forEach((url) => {
       try {
@@ -162,6 +168,7 @@ export class FileLifecycleManager {
     fileId: FileId,
     stateRef?: React.RefObject<FileContextState>,
   ): void => {
+    forgetPdfAccess([fileId]);
     const file = this.filesRef.current.get(fileId);
     this.filesRef.current.delete(fileId);
 
@@ -226,11 +233,14 @@ export class FileLifecycleManager {
     // must replace it or the next tool run brings the old name back.
     const held = this.filesRef.current.get(fileId);
     if (held && updates.name !== undefined && updates.name !== held.name) {
+      const access = getPdfAccess(held);
       const renamed = new File([held], updates.name, {
         type: held.type,
         lastModified: held.lastModified,
       });
-      this.filesRef.current.set(fileId, createStirlingFile(renamed, fileId));
+      const renamedFile = createStirlingFile(renamed, fileId);
+      this.filesRef.current.set(fileId, renamedFile);
+      if (access) rememberPdfAccess(renamedFile, access);
     }
 
     this.dispatch({

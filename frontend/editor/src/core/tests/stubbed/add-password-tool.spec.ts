@@ -8,21 +8,21 @@ test.describe("9. Add Password Tool", () => {
 
   test.describe("9.1 Add Password - Multi-Step Form", () => {
     test("should display all configuration steps", async ({ page }) => {
-      // Step 1: Verify a 3-step workflow: Files, Passwords & Encryption, Change Permissions
       await expect(page.getByText("Files").first()).toBeVisible();
       await expect(
-        page.getByText(/Passwords?\s*&?\s*Encryption/i).first(),
+        page.getByText("Password to open", { exact: true }).first(),
       ).toBeVisible();
-      await expect(page.getByText(/Change Permissions/i).first()).toBeVisible();
+      await expect(
+        page.getByText("Restrict actions", { exact: true }),
+      ).toBeVisible();
 
-      // Step 2: Verify the Encrypt button is disabled
-      const encryptButton = page
-        .getByRole("button", { name: /encrypt/i })
-        .first();
-      await expect(encryptButton).toBeVisible();
-      await expect(encryptButton).toBeDisabled();
+      const saveButton = page.getByRole("button", {
+        name: "Save protection",
+        exact: true,
+      });
+      await expect(saveButton).toBeVisible();
+      await expect(saveButton).toBeDisabled();
 
-      // Step 3: Verify the file upload area is present
       await expect(page.getByText(/upload/i).first()).toBeVisible();
     });
   });

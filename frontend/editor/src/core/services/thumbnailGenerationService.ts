@@ -3,6 +3,7 @@
  */
 
 import { FileId } from "@app/types/file";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 import {
   openRawDocumentSafe,
   closeRawDocument,
@@ -71,7 +72,10 @@ export class ThumbnailGenerationService {
       this.evictLeastRecentlyUsedPDF();
     }
 
-    const docPtr = await openRawDocumentSafe(pdfArrayBuffer);
+    const docPtr = await openRawDocumentSafe(
+      pdfArrayBuffer,
+      getPdfAccess(fileId)?.password,
+    );
 
     this.pdfDocumentCache.set(fileId, {
       docPtr,
