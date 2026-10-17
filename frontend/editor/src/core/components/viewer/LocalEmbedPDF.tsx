@@ -915,7 +915,14 @@ export function LocalEmbedPDF({
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const pdfAccess = usePdfAccess(file ?? fileId);
-  const annotationsReadOnly = !pdfAccess || pdfAccess.encrypted;
+  // Unknown access must not read as restricted: the permission inspection is
+  // async, and treating its pending state as locked would kill annotation
+  // editing, links and the selection menu for the whole inspection. A positive
+  // encrypted verdict still locks once it resolves.
+  const annotationsReadOnly = Boolean(pdfAccess?.encrypted);
+  // The edit scope keeps the stricter reading: an unknown access still locks,
+  // because the save/replace flow settles against that lock.
+  const annotationsLocked = !pdfAccess || pdfAccess.encrypted;
   const showAnnotations = enableAnnotations || annotationsReadOnly;
   const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
@@ -1708,7 +1715,7 @@ export function LocalEmbedPDF({
               <>
                 <AnnotationInteractionLock
                   documentId={documentId}
-                  readOnly={annotationsReadOnly}
+                  readOnly={annotationsLocked}
                 />
                 <DocumentViewport
                   documentId={documentId}

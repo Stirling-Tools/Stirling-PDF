@@ -93,7 +93,7 @@ test("saving from the auto-opened Annotate UI clears the dirty state", async ({
   page,
 }) => {
   test.setTimeout(180_000);
-  const firstPage = await loadAnnotatedViewer(page);
+  await loadAnnotatedViewer(page);
 
   await selectAnnotationA(page);
   await changeSelectedAnnotationColor(page);
@@ -104,8 +104,28 @@ test("saving from the auto-opened Annotate UI clears the dirty state", async ({
   await expect(save).toBeDisabled({ timeout: 20_000 });
 
   // The save also survives the view: leaving the viewer must not warn about
-  // work that was already persisted.
-  const box = await firstPage.boundingBox();
+  // work that was already persisted. The replacement document puts a new page
+  // node in place, so read a laid-out page in one atomic pass instead of
+  // holding a locator across the swap.
+  let box: { x: number; y: number; width: number; height: number } | null =
+    null;
+  await expect(async () => {
+    box = await page.evaluate(() => {
+      for (const node of document.querySelectorAll('[data-page-index="0"]')) {
+        const rect = node.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          return {
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+          };
+        }
+      }
+      return null;
+    });
+    expect(box).not.toBeNull();
+  }).toPass({ timeout: 20_000 });
   if (!box) throw new Error("Sample page has no bounding box");
   await page.mouse.click(box.x + 16, box.y + box.height - 16);
   await page.waitForTimeout(500);
