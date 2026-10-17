@@ -485,12 +485,25 @@ const EmbedPdfViewerContent = ({
     }
     if (!applyScrollNow()) return false;
     pendingScrollSwappedRef.current = true;
+    // The hide only has to survive until the carried scroll lands; the settle
+    // chains can lag behind it, and the fallback cap would leave the page
+    // unclickable - selection, links - for the whole window.
+    if (hiddenScrollerRef.current) {
+      requestAnimationFrame(() => {
+        revealSwappedDocument();
+        if (zoomRestorePendingRef.current) {
+          settleZoomRestore();
+        }
+      });
+    }
     return true;
   }, [
     applyScrollNow,
     hideSwappedDocument,
     attachScrollIntentListeners,
     resolvePendingScrollPage,
+    revealSwappedDocument,
+    settleZoomRestore,
   ]);
 
   const formApplyInProgressRef = useRef(false);
