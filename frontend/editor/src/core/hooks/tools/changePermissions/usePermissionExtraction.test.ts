@@ -8,6 +8,7 @@ import {
 import { usePermissionExtraction } from "@app/hooks/tools/changePermissions/usePermissionExtraction";
 import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
+import { rememberPdfAccess } from "@app/services/pdfPasswordStore";
 
 const {
   getDocumentBytes,
@@ -68,6 +69,29 @@ beforeEach(() => {
 });
 
 describe("usePermissionExtraction", () => {
+  test("reads stored restrictions using the verified session credential", async () => {
+    const file = new File([], "owner.pdf");
+    rememberPdfAccess(file, {
+      password: "verified-owner",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: true,
+      permissions: 0,
+      canModify: true,
+      canAssemble: true,
+      pageCount: 1,
+    });
+    mockPermissions(0);
+    const { result } = renderExtraction(file);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(openRawDocument).toHaveBeenCalledWith(
+      expect.any(ArrayBuffer),
+      "verified-owner",
+    );
+    expect(result.current.parameters.preventExtractContent).toBe(true);
+    expect(result.current.parameters.preventPrinting).toBe(true);
+  });
+
   test.each([
     [PdfPermissionFlag.AssembleDocument, "preventAssembly"],
     [PdfPermissionFlag.CopyContents, "preventExtractContent"],
@@ -95,7 +119,7 @@ describe("usePermissionExtraction", () => {
       [restriction]: true,
     });
     expect(getDocumentBytes).toHaveBeenCalledWith(file);
-    expect(openRawDocument).toHaveBeenCalledWith(bytes);
+    expect(openRawDocument).toHaveBeenCalledWith(bytes, undefined);
     expect(pdfiumModule.FPDF_GetDocUserPermissions).toHaveBeenCalledWith(1);
     expect(closeDocAndFreeBuffer).toHaveBeenCalledExactlyOnceWith(
       pdfiumModule,

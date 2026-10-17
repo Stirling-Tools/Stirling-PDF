@@ -51,7 +51,9 @@ import { HistoryPluginPackage } from "@embedpdf/plugin-history/react";
 import {
   AnnotationLayer,
   AnnotationPluginPackage,
+  useAnnotationCapability,
 } from "@embedpdf/plugin-annotation/react";
+import { LockModeType } from "@embedpdf/plugin-annotation";
 import type { AnnotationEvent } from "@embedpdf/plugin-annotation";
 import type { BoxedAnnotationRenderer } from "@embedpdf/plugin-annotation/react";
 import {
@@ -101,6 +103,15 @@ import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectio
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
 import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvents";
 import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
+import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
+import { isStirlingFile } from "@app/types/fileContext";
+import {
+  hasPdfPermissionOverride,
+  pdfAllows,
+} from "@app/services/pdfSessionUnlock";
+import { PdfPermissionFlag } from "@embedpdf/models";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { canPrintPdf } from "@app/services/pdfPermissions";
 import {
   DocumentRestoreBridge,
   type DocumentRestoreEvent,
@@ -186,6 +197,7 @@ interface LocalEmbedPDFProps {
   onDocumentReady?: (fileKey: string) => void;
   /** Includes byte-read failures, engine errors and cancelled loads. */
   onDocumentLoadFailed?: (fileKey: string, error: unknown) => void;
+  onPasswordRequired?: () => void;
   /** True while a view restore is in flight; gates the per-page layout hook. */
   restorePending?: boolean;
   restoreRequest?: DocumentRestoreRequest | null;
@@ -410,6 +422,8 @@ interface PageLayerOptions {
   enableFormFill: boolean;
   formEditingActive: boolean;
   enableAnnotations: boolean;
+  annotationsReadOnly: boolean;
+  canCopy: boolean;
   enableRedaction: boolean;
   showBakedAnnotations: boolean;
   onAnnotationMenuAnchor: (anchor: AnnotationMenuAnchor | null) => void;
@@ -443,7 +457,12 @@ function PageTiles({
   );
 }
 
-function PageTextSelection({ documentId, pageIndex }: PageLayerProps) {
+function PageTextSelection({
+  documentId,
+  pageIndex,
+  readOnly,
+  canCopy,
+}: PageLayerProps & { readOnly: boolean; canCopy: boolean }) {
   return (
     <>
       <div
@@ -458,7 +477,13 @@ function PageTextSelection({ documentId, pageIndex }: PageLayerProps) {
           documentId={documentId}
           pageIndex={pageIndex}
           background="var(--pdf-selection-bg)"
-          selectionMenu={(props) => <TextSelectionMenu {...props} />}
+          selectionMenu={(props) => (
+            <TextSelectionMenu
+              {...props}
+              readOnly={readOnly}
+              canCopy={canCopy}
+            />
+          )}
         />
       </div>
       <TextSelectionHandler documentId={documentId} pageIndex={pageIndex} />
@@ -597,6 +622,8 @@ function PageLayers({
   enableFormFill,
   formEditingActive,
   enableAnnotations,
+  annotationsReadOnly,
+  canCopy,
   enableRedaction,
   showBakedAnnotations,
   onAnnotationMenuAnchor,
@@ -612,7 +639,12 @@ function PageLayers({
         renderMode={pdfRenderMode}
       />
       <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
-      <PageTextSelection documentId={documentId} pageIndex={pageIndex} />
+      <PageTextSelection
+        documentId={documentId}
+        pageIndex={pageIndex}
+        readOnly={annotationsReadOnly}
+        canCopy={canCopy}
+      />
       <FormFillLayers
         enabled={enableFormFill}
         editing={formEditingActive}
@@ -645,7 +677,8 @@ function PageLayers({
       <LinkLayer
         documentId={documentId}
         pageIndex={pageIndex}
-        selectionActive={isAnnotationMode}
+        selectionActive={isAnnotationMode && !annotationsReadOnly}
+        readOnly={annotationsReadOnly}
       />
       {readOnlySignaturePreviews && (
         <SignaturePreviewLayer
@@ -739,6 +772,7 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
 
 interface DocumentCommentsProps {
   enabled: boolean;
+  readOnly: boolean;
   documentId: string;
   authorName: string;
   visible: boolean;
@@ -747,6 +781,7 @@ interface DocumentCommentsProps {
 
 function DocumentComments({
   enabled,
+  readOnly,
   documentId,
   authorName,
   visible,
@@ -756,12 +791,32 @@ function DocumentComments({
   return (
     <CommentAuthorProvider displayName={authorName}>
       <CommentsSidebar
+        key={documentId}
+        readOnly={readOnly}
         documentId={documentId}
         visible={visible}
         rightOffset={rightOffset}
       />
     </CommentAuthorProvider>
   );
+}
+
+function AnnotationInteractionLock({
+  documentId,
+  readOnly,
+}: {
+  documentId: string;
+  readOnly: boolean;
+}) {
+  const { provides } = useAnnotationCapability();
+  useLayoutEffect(() => {
+    const scope = provides?.forDocument(documentId);
+    scope?.setLocked({
+      type: readOnly ? LockModeType.All : LockModeType.None,
+    });
+    if (readOnly) scope?.setActiveTool(null);
+  }, [provides, documentId, readOnly]);
+  return null;
 }
 
 type EditingBridgesProps = Pick<
@@ -876,12 +931,16 @@ export function LocalEmbedPDF({
   onDocumentSwapFailed,
   onDocumentReady,
   onDocumentLoadFailed,
+  onPasswordRequired,
   restorePending = false,
   restoreRequest = null,
   onRestoreEvent,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
+  const pdfAccess = usePdfAccess(file ?? fileId);
+  const annotationsReadOnly = !pdfAccess || pdfAccess.encrypted;
+  const showAnnotations = enableAnnotations || annotationsReadOnly;
   const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
     Array<{ id: string; pageIndex: number; rect: Rect }>
@@ -1016,14 +1075,19 @@ export function LocalEmbedPDF({
     buffer: ArrayBuffer;
     name: string;
     fileKey: string;
+    password?: string;
+    honorOwnerPasswords?: boolean;
   } | null>(null);
   const [pendingDocument, setPendingDocument] = useState<{
     buffer: ArrayBuffer;
     name: string;
     fileKey: string;
+    password?: string;
+    honorOwnerPasswords?: boolean;
   } | null>(null);
   const initialDocumentOpenedRef = useRef(false);
   const openedContentKeyRef = useRef<string | null>(null);
+  const openedPermissionOverrideRef = useRef(false);
   // Anchors survive deselection per annotation id, so a delete that happens
   // while no menu is open (keyboard, sidebar) still has somewhere to appear.
   const annotationAnchorsByIdRef = useRef<Map<string, AnnotationMenuAnchor>>(
@@ -1062,9 +1126,16 @@ export function LocalEmbedPDF({
   // Reads bytes on the main thread for the worker, and lands bytes plus URL in
   // one commit so the registry rebuilds once per replacement.
   useEffect(() => {
-    if (fileStableKey && shouldSkipBytes?.(fileStableKey)) {
+    if (
+      fileStableKey &&
+      openedPermissionOverrideRef.current ===
+        hasPdfPermissionOverride(pdfAccess) &&
+      (openedContentKeyRef.current === fileStableKey ||
+        shouldSkipBytes?.(fileStableKey))
+    ) {
       // The live document already shows this save; swapping the bytes would
       // reopen it and lose the scroll position for no visual gain.
+      openedContentKeyRef.current = fileStableKey;
       return;
     }
     let cancelled = false;
@@ -1076,14 +1147,33 @@ export function LocalEmbedPDF({
     ) => {
       // A repeat run for the same content (a rename, a FileContext churn) must
       // not reopen the document.
-      if (!contentKey || openedContentKeyRef.current === contentKey) return;
+      if (
+        !contentKey ||
+        (openedContentKeyRef.current === contentKey &&
+          openedPermissionOverrideRef.current ===
+            hasPdfPermissionOverride(pdfAccess))
+      )
+        return;
+      openedPermissionOverrideRef.current = hasPdfPermissionOverride(pdfAccess);
       openedContentKeyRef.current = contentKey;
       if (!initialDocumentOpenedRef.current) {
         initialDocumentOpenedRef.current = true;
-        setInitialDocument({ buffer, name, fileKey: contentKey });
+        setInitialDocument({
+          buffer,
+          name,
+          fileKey: contentKey,
+          password: pdfAccess?.password,
+          honorOwnerPasswords: pdfAccess?.honorOwnerPasswords,
+        });
         return;
       }
-      setPendingDocument({ buffer, name, fileKey: contentKey });
+      setPendingDocument({
+        buffer,
+        name,
+        fileKey: contentKey,
+        password: pdfAccess?.password,
+        honorOwnerPasswords: pdfAccess?.honorOwnerPasswords,
+      });
     };
     const fail = (source: string) => (err: unknown) => {
       if (cancelled) return;
@@ -1137,6 +1227,8 @@ export function LocalEmbedPDF({
     url,
     shouldSkipBytes,
     exportFileName,
+    pdfAccess?.ownerAuthenticated,
+    pdfAccess?.honorOwnerPasswords,
     onDocumentLoadFailed,
   ]);
 
@@ -1219,7 +1311,17 @@ export function LocalEmbedPDF({
     if (!initialSource) return [];
     const initialDocuments: InitialDocumentOptions[] =
       "buffer" in initialSource
-        ? [{ buffer: initialSource.buffer, name: initialSource.name }]
+        ? [
+            {
+              buffer: initialSource.buffer,
+              name: initialSource.name,
+              password: initialSource.password,
+              permissions: {
+                enforceDocumentPermissions:
+                  initialSource.honorOwnerPasswords !== false,
+              },
+            },
+          ]
         : [{ url: initialSource.url, name: initialSource.name }];
 
     // Calculate 3.5rem in pixels dynamically based on root font size
@@ -1242,7 +1344,7 @@ export function LocalEmbedPDF({
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
         withForms: !enableFormFill,
-        withAnnotations: !enableAnnotations, // Show baked annotations only when annotation layer is OFF; live layer visibility is controlled via CSS
+        withAnnotations: !showAnnotations,
       }),
 
       // Register interaction manager (required for zoom and selection features)
@@ -1312,7 +1414,7 @@ export function LocalEmbedPDF({
 
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [initialDocument, urlPluginsSource, enableAnnotations]);
+  }, [initialDocument, urlPluginsSource, showAnnotations]);
 
   const fontFallbackConfig = useFontFallbackConfig();
 
@@ -1436,7 +1538,7 @@ export function LocalEmbedPDF({
     if (!annotationPlugin || !annotationPlugin.provides) return;
 
     const annotationApi = annotationPlugin.provides();
-    if (!annotationApi || !enableAnnotations) return;
+    if (!annotationApi) return;
 
     registerAnnotationTools(annotationApi);
 
@@ -1510,7 +1612,9 @@ export function LocalEmbedPDF({
     pdfRenderMode,
     enableFormFill,
     formEditingActive,
-    enableAnnotations,
+    enableAnnotations: showAnnotations,
+    annotationsReadOnly,
+    canCopy: pdfAllows(pdfAccess, PdfPermissionFlag.CopyContents),
     enableRedaction,
     showBakedAnnotations,
     onAnnotationMenuAnchor: handleAnnotationMenuAnchor,
@@ -1570,7 +1674,9 @@ export function LocalEmbedPDF({
           />
           <ZoomAPIBridge />
           <ScrollAPIBridge />
-          <SelectionAPIBridge />
+          <SelectionAPIBridge
+            canCopy={pdfAllows(pdfAccess, PdfPermissionFlag.CopyContents)}
+          />
           <FormCreationInteractionLock />
           <PanAPIBridge />
           <SpreadAPIBridge />
@@ -1580,7 +1686,9 @@ export function LocalEmbedPDF({
           <EditingBridges
             enableAnnotations={enableAnnotations}
             enableRedaction={enableRedaction}
-            isManualRedactionMode={isManualRedactionMode}
+            isManualRedactionMode={
+              isManualRedactionMode && !annotationsReadOnly
+            }
             isSignMode={isSignMode}
             historyApiRef={historyApiRef}
             signatureApiRef={signatureApiRef}
@@ -1591,11 +1699,29 @@ export function LocalEmbedPDF({
             deletedAnnotationMenu={deletedAnnotationMenu}
             onDismissDeletedAnnotationMenu={dismissDeletedAnnotationMenu}
           />
-          <ExportAPIBridge />
+          <PdfPasswordBridge
+            fileId={file && isStirlingFile(file) ? file.fileId : undefined}
+            password={pdfAccess?.password}
+            onPasswordRequired={onPasswordRequired}
+          />
+          <ExportAPIBridge
+            originalFile={pdfAccess?.encrypted ? file : undefined}
+            disabled={pdfAccess?.encrypted && !file}
+          />
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />
-          <PrintAPIBridge file={file} url={pdfUrl} fileName={fileName} />
-          <DocumentPermissionsAPIBridge />
+          <PrintAPIBridge
+            file={file}
+            url={pdfUrl}
+            fileName={fileName}
+            canPrint={canPrintPdf(pdfAccess)}
+          />
+          <DocumentPermissionsAPIBridge
+            isEncrypted={pdfAccess?.encrypted ?? true}
+            isOwnerUnlocked={pdfAccess?.ownerAuthenticated}
+            honorOwnerPasswords={pdfAccess?.honorOwnerPasswords}
+            permissions={pdfAccess?.permissions ?? 0}
+          />
           <DocumentReadyWrapper
             fallback={
               <Center
@@ -1616,12 +1742,17 @@ export function LocalEmbedPDF({
           >
             {(documentId) => (
               <>
+                <AnnotationInteractionLock
+                  documentId={documentId}
+                  readOnly={annotationsReadOnly}
+                />
                 <DocumentViewport
                   documentId={documentId}
                   pageOptions={pageOptions}
                 />
                 <DocumentComments
-                  enabled={enableAnnotations}
+                  enabled={showAnnotations}
+                  readOnly={annotationsReadOnly}
                   documentId={documentId}
                   authorName={commentAuthorName}
                   visible={isCommentsSidebarVisible}

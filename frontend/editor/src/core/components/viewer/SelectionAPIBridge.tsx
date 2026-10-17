@@ -8,11 +8,20 @@ import { useDocumentState } from "@embedpdf/core/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { copyText } from "@app/utils/copyText";
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    (target instanceof HTMLElement && target.isContentEditable)
+  );
+}
 
 /**
  * Connects the PDF selection plugin to the shared ViewerContext.
  */
-export function SelectionAPIBridge() {
+export function SelectionAPIBridge({ canCopy = false }: { canCopy?: boolean }) {
   const { provides: selection } = useSelectionCapability();
   const { plugin: selectionPlugin } = useSelectionPlugin();
   const { registerBridge } = useViewer();
@@ -25,6 +34,15 @@ export function SelectionAPIBridge() {
 
   const hasSelectionRef = useRef(false);
   const selectedTextRef = useRef("");
+  const textLookupRef = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      hasSelectionRef.current = false;
+      selectedTextRef.current = "";
+      textLookupRef.current += 1;
+    };
+  }, [activeDocumentId]);
 
   useEffect(() => {
     if (!selection || !documentReady) return;
@@ -130,7 +148,7 @@ export function SelectionAPIBridge() {
 
     const buildApi = () => ({
       copyToClipboard: () =>
-        selection.copyToClipboard(activeDocumentId ?? undefined),
+        canCopy ? copyText(selectedTextRef.current) : Promise.resolve(false),
       getFormattedSelection: () =>
         selection.getFormattedSelection(activeDocumentId ?? undefined),
       selectAll: async (totalPages: number) => {
@@ -159,6 +177,10 @@ export function SelectionAPIBridge() {
         api: buildApi(),
       });
 
+      // Cleared before the async lookup so a copy in the gap fails rather than
+      // writing the previous selection's text.
+      selectedTextRef.current = "";
+      const lookup = ++textLookupRef.current;
       if (hasText) {
         try {
           const result = selection.getSelectedText(
@@ -166,7 +188,8 @@ export function SelectionAPIBridge() {
           );
           result?.wait?.(
             (texts: string[]) => {
-              selectedTextRef.current = texts.join("\n");
+              if (lookup === textLookupRef.current)
+                selectedTextRef.current = texts.join("\n");
             },
             () => {
               /* ignore errors */
@@ -175,36 +198,18 @@ export function SelectionAPIBridge() {
         } catch {
           // Engine access failed
         }
-      } else {
-        selectedTextRef.current = "";
       }
     });
 
-    // Fallback: subscribe to the plugin's copy event for navigator.clipboard writes
-    const unsubCopy = selection.onCopyToClipboard(
-      ({ text }: { text: string }) => {
-        if (text) {
-          navigator.clipboard.writeText(text).catch(() => {
-            /* ignore */
-          });
-        }
-      },
-    );
-
+    // Ctrl+C must reach this event uncancelled: writing clipboardData here
+    // works over plain HTTP, where navigator.clipboard is absent. Copies from
+    // editable fields, including copyText's fallback textarea, keep their own text.
     const handleCopy = (event: ClipboardEvent) => {
+      if (isEditableTarget(event.target)) return;
       if (!hasSelectionRef.current || !selectedTextRef.current) return;
-      event.clipboardData?.setData("text/plain", selectedTextRef.current);
+      if (canCopy)
+        event.clipboardData?.setData("text/plain", selectedTextRef.current);
       event.preventDefault();
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        (event.ctrlKey || event.metaKey) &&
-        event.key === "c" &&
-        hasSelectionRef.current
-      ) {
-        selection.copyToClipboard(activeDocumentId ?? undefined);
-      }
     };
 
     // Right-click anywhere inside a PDF page: suppress the browser's "Copy
@@ -230,14 +235,11 @@ export function SelectionAPIBridge() {
     };
 
     document.addEventListener("copy", handleCopy);
-    document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("contextmenu", handleContextMenu);
 
     return () => {
       unsubChange?.();
-      unsubCopy?.();
       document.removeEventListener("copy", handleCopy);
-      document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("contextmenu", handleContextMenu);
       registerBridge("selection", null);
     };
@@ -247,6 +249,7 @@ export function SelectionAPIBridge() {
     activeDocumentId,
     documentReady,
     registerBridge,
+    canCopy,
   ]);
 
   return null;

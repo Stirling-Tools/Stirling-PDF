@@ -4,7 +4,13 @@ import {
   toLatin1,
   undoPngPredictor,
 } from "@app/tools/pdfTextEditor/pdfdoc/bytes";
-import { RawPdf } from "@app/tools/pdfTextEditor/pdfdoc/raw";
+import {
+  RawPdf,
+  arrayItems,
+  removeDictEntry,
+  setDictEntry,
+  spliceValue,
+} from "@app/tools/pdfTextEditor/pdfdoc/raw";
 import {
   buildClassicPdf,
   buildXrefStreamPdf,
@@ -65,6 +71,20 @@ describe("RawPdf.parse", () => {
     );
     expect(pdf?.objectBody(12)).toContain("/Decoy true");
     expect(pdf?.pageNumbers()).toEqual([912]);
+  });
+});
+
+describe("RawPdf.encrypted", () => {
+  it.each([
+    ["by reference", "/Encrypt 9 0 R"],
+    ["written directly", "/Encrypt << /Filter /Standard /V 1 /R 2 >>"],
+  ])("sees an /Encrypt dictionary %s", async (_, entry) => {
+    const plain = toLatin1(singleContentPdf());
+    const bytes = fromLatin1(
+      plain.replace("trailer\n<<", `trailer\n<< ${entry}`),
+    );
+    expect((await RawPdf.parse(bytes))?.encrypted).toBe(true);
+    expect((await RawPdf.parse(singleContentPdf()))?.encrypted).toBe(false);
   });
 });
 
@@ -219,6 +239,200 @@ describe("RawPdf streams and pages", () => {
       (await pdf?.pageContent(page)) ?? new Uint8Array(),
     );
     expect(content).toBe("q 1 0 0\n1 0 0 cm\nQ\n");
+  });
+});
+
+const CATALOG = { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" };
+const PAGES = { num: 2, body: "<< /Type /Pages /Kids [] /Count 0 >>" };
+
+async function treePdf(...objects: { num: number; body: string }[]) {
+  const pdf = await RawPdf.parse(
+    buildClassicPdf([CATALOG, PAGES, ...objects], 1),
+  );
+  if (!pdf) throw new Error("fixture did not parse");
+  return pdf;
+}
+
+describe("RawPdf.numberTreeEntry", () => {
+  it("finds a value in a tree written directly in its holder", async () => {
+    const pdf = await treePdf({
+      num: 5,
+      body: "<< /Type /StructTreeRoot /ParentTree << /Nums [0 [8 0 R] 1 9 0 R] >> >>",
+    });
+    const entry = pdf.numberTreeEntry(5, "ParentTree", 1);
+    expect(entry?.objNum).toBe(5);
+    expect(entry?.span.text).toBe("9 0 R");
+    const body = pdf.objectBody(5)!;
+    expect(body.slice(entry!.span.start, entry!.span.end)).toBe("9 0 R");
+  });
+
+  it("follows a referenced tree through /Kids, skipping kids whose /Limits exclude the key", async () => {
+    const pdf = await treePdf(
+      { num: 5, body: "<< /Type /StructTreeRoot /ParentTree 6 0 R >>" },
+      { num: 6, body: "<< /Kids [7 0 R 8 0 R] >>" },
+      // Holds a decoy for key 3 outside its own limits, so a search that
+      // ignored /Limits would stop here.
+      { num: 7, body: "<< /Limits [0 1] /Nums [0 [10 0 R] 3 (decoy)] >>" },
+      {
+        num: 8,
+        body: "<< /Limits [2 4] /Nums [2 [11 0 R] 3 [12 0 R 13 0 R]] >>",
+      },
+    );
+    const entry = pdf.numberTreeEntry(5, "ParentTree", 3);
+    expect(entry?.objNum).toBe(8);
+    expect(entry?.span.text).toBe("[12 0 R 13 0 R]");
+  });
+
+  it("searches kids that have no /Limits", async () => {
+    const pdf = await treePdf(
+      { num: 5, body: "<< /ParentTree << /Kids [6 0 R] >> >>" },
+      { num: 6, body: "<< /Nums [4 [9 0 R]] >>" },
+    );
+    expect(pdf.numberTreeEntry(5, "ParentTree", 4)?.objNum).toBe(6);
+  });
+
+  it("does not read a key out of a value's position", async () => {
+    // 9 appears in the array, but only as part of a value.
+    const pdf = await treePdf({
+      num: 5,
+      body: "<< /ParentTree << /Nums [0 [9 0 R] 1 9] >> >>",
+    });
+    expect(pdf.numberTreeEntry(5, "ParentTree", 9)).toBeNull();
+  });
+
+  it("returns null rather than hanging on a cyclic tree", async () => {
+    const pdf = await treePdf(
+      { num: 5, body: "<< /ParentTree 6 0 R >>" },
+      { num: 6, body: "<< /Kids [7 0 R] >>" },
+      { num: 7, body: "<< /Kids [6 0 R] >>" },
+    );
+    expect(pdf.numberTreeEntry(5, "ParentTree", 0)).toBeNull();
+  });
+
+  it("honours /Limits and /Kids written as references", async () => {
+    const pdf = await treePdf(
+      { num: 5, body: "<< /ParentTree 6 0 R >>" },
+      { num: 6, body: "<< /Kids 20 0 R >>" },
+      { num: 20, body: "[7 0 R 8 0 R]" },
+      { num: 7, body: "<< /Limits 21 0 R /Nums [0 [10 0 R] 3 (decoy)] >>" },
+      { num: 21, body: "[0 1]" },
+      { num: 8, body: "<< /Limits 22 0 R /Nums [3 [12 0 R]] >>" },
+      { num: 22, body: "[2 4]" },
+    );
+    expect(pdf.numberTreeEntry(5, "ParentTree", 3)?.span.text).toBe("[12 0 R]");
+  });
+
+  it("searches a tree wider than a few dozen nodes", async () => {
+    const leaves = Array.from({ length: 100 }, (_, i) => ({
+      num: 100 + i,
+      body: `<< /Nums [${i} [${i + 1000} 0 R]] >>`,
+    }));
+    const kids = leaves.map((l) => `${l.num} 0 R`).join(" ");
+    const pdf = await treePdf(
+      { num: 5, body: "<< /ParentTree 6 0 R >>" },
+      { num: 6, body: `<< /Kids [${kids}] >>` },
+      ...leaves,
+    );
+    expect(pdf.numberTreeEntry(5, "ParentTree", 99)?.span.text).toBe(
+      "[1099 0 R]",
+    );
+  });
+
+  it("returns null when the holder has no such tree", async () => {
+    const pdf = await treePdf({ num: 5, body: "<< /Type /StructTreeRoot >>" });
+    expect(pdf.numberTreeEntry(5, "ParentTree", 0)).toBeNull();
+  });
+
+  it("gives a span a replacement can be spliced into", async () => {
+    const pdf = await treePdf(
+      { num: 5, body: "<< /ParentTree 6 0 R >>" },
+      { num: 6, body: "<< /Nums [0 [8 0 R] 1 [9 0 R]] >>" },
+    );
+    const entry = pdf.numberTreeEntry(5, "ParentTree", 1)!;
+    const body = pdf.objectBody(entry.objNum)!;
+    expect(spliceValue(body, entry.span, "[9 0 R 14 0 R]")).toContain(
+      "/Nums [0 [8 0 R] 1 [9 0 R 14 0 R]]",
+    );
+  });
+});
+
+describe("setDictEntry", () => {
+  it("replaces an existing value", () => {
+    expect(setDictEntry("<< /S /Figure /Alt (old) >>", "Alt", "(new)")).toBe(
+      "<< /S /Figure /Alt (new) >>",
+    );
+  });
+
+  it("adds a missing entry to the outermost dictionary, not a nested one", () => {
+    const out = setDictEntry("<< /A << /B 1 >> >>", "Alt", "(x)");
+    expect(out).toBe("<< /A << /B 1 >>  /Alt (x) >>");
+  });
+
+  it("is not fooled by a matching key inside a nested dictionary", () => {
+    const out = setDictEntry("<< /A << /Alt (inner) >> >>", "Alt", "(outer)");
+    expect(out).toContain("/A << /Alt (inner) >>");
+    expect(out).toContain("/Alt (outer) >>");
+  });
+
+  it("keeps the result lexable when the value abuts its key", () => {
+    expect(setDictEntry("<< /K[1 2] >>", "K", "3")).toBe("<< /K 3 >>");
+  });
+
+  it("returns null for a body with no dictionary", () => {
+    expect(setDictEntry("[1 2 3]", "K", "4")).toBeNull();
+    expect(setDictEntry("<< /K 1", "Alt", "(x)")).toBeNull();
+  });
+});
+
+describe("removeDictEntry", () => {
+  it("removes the key and its value from the outermost dictionary only", () => {
+    const out = removeDictEntry(
+      "<< /A << /Alt (inner) >> /Alt (outer) /S /Figure >>",
+      "Alt",
+    );
+    expect(out).toBe("<< /A << /Alt (inner) >>  /S /Figure >>");
+  });
+
+  it("leaves a body without the key unchanged", () => {
+    expect(removeDictEntry("<< /S /P >>", "Alt")).toBe("<< /S /P >>");
+  });
+});
+
+describe("arrayItems", () => {
+  it("reads an indirect reference as one element", () => {
+    expect(arrayItems("[8 0 R 9 0 R 3]")?.map((i) => i.text)).toEqual([
+      "8 0 R",
+      "9 0 R",
+      "3",
+    ]);
+  });
+
+  it("keeps nested arrays, dictionaries and strings whole", () => {
+    expect(
+      arrayItems("[[1 2] << /Type /MCR /MCID 0 >> (a ] b) <FEFF> /N]")?.map(
+        (i) => i.text,
+      ),
+    ).toEqual(["[1 2]", "<< /Type /MCR /MCID 0 >>", "(a ] b)", "<FEFF>", "/N"]);
+  });
+
+  it("skips comments", () => {
+    expect(arrayItems("[1 % one ]\n2]")?.map((i) => i.text)).toEqual([
+      "1",
+      "2",
+    ]);
+  });
+
+  it("gives spans into the text it was handed", () => {
+    const text = "[ 8 0 R  (x) ]";
+    for (const item of arrayItems(text)!) {
+      expect(text.slice(item.start, item.end)).toBe(item.text);
+    }
+  });
+
+  it("returns null for anything it cannot read", () => {
+    expect(arrayItems("<< /K 1 >>")).toBeNull();
+    expect(arrayItems("[1 2")).toBeNull();
+    expect(arrayItems("[1 ) 2]")).toBeNull();
   });
 });
 

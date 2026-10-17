@@ -17,7 +17,8 @@ export interface WorkbenchBarActionsProps {
   downloadLabel: string;
   downloadIconName: IconName;
   saveAsIconName?: IconName;
-  onPrint: () => void;
+  onPrint?: () => void;
+  printDisabledReason?: string;
   onExport: (forceNewFile?: boolean) => void;
   onClose: () => void;
 }
