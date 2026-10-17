@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
@@ -58,7 +59,10 @@ export function usePermissionExtraction(
           if (signal.cancelled) return;
           const module = await getPdfiumModule();
           if (signal.cancelled) return;
-          const docPtr = await openRawDocument(bytes);
+          const docPtr = await openRawDocument(
+            bytes,
+            getPdfAccess(file)?.password,
+          );
           try {
             if (signal.cancelled) return;
             // Owner access must not hide the document's stored user restrictions.

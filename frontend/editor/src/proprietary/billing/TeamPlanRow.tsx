@@ -40,6 +40,37 @@ export function TeamPlanRow({
   legacyAllowance?: LegacyTeamAllowance;
 }) {
   const { t } = useTranslation();
+  if (wallet?.enterprise) {
+    const agreed = wallet.enterprise.agreedSeats;
+    const used = wallet.team.fleet
+      ? fleetUsersInUse(wallet.team, deviceId, occupiedSeats)
+      : (occupiedSeats ?? wallet.team.usersInUse);
+    const over =
+      agreed != null && agreed > 0 && used != null
+        ? Math.max(0, used - agreed)
+        : 0;
+    return (
+      <MeterRow
+        name={t("portal.billing.team.rowName", "Users")}
+        mid={
+          over > 0
+            ? t("portal.billing.enterprise.usersOver", { count: over })
+            : t("portal.billing.enterprise.included")
+        }
+        fact={
+          agreed != null && agreed > 0
+            ? t("portal.billing.enterprise.usersAgreed", {
+                used: used ?? "—",
+                agreed,
+              })
+            : t("portal.billing.team.factNoLimit", { users: used ?? "—" })
+        }
+        tone={over > 0 ? "warn" : "paid"}
+        showTrack={agreed != null && agreed > 0 && used != null}
+        pct={agreed && used != null ? (used / agreed) * 100 : 0}
+      />
+    );
+  }
   if (serverPlan) {
     const unlimited = serverPlan.licenseType === "SERVER";
     const users = serverPlan.usersInUse;
