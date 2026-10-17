@@ -280,7 +280,10 @@ export async function captureShell({
   const { chromium } = await import("@playwright/test");
   const { mockAppApis } = await loadStubHelper(editorDir);
   const server = await startStaticServer(distDir);
-  const browser = await chromium.launch();
+  // A build image can point at its own browser instead of Playwright's download.
+  const browser = await chromium.launch({
+    executablePath: process.env.PRERENDER_CHROMIUM_PATH || undefined,
+  });
   try {
     const context = await browser.newContext({ viewport });
     await context.addInitScript(`(${installShellHelpers.toString()})();`);

@@ -11,6 +11,10 @@ RUN npm ci
 
 COPY frontend .
 
+# The shell capture drives a browser; Alpine's Chromium is musl-native.
+RUN apk add --no-cache chromium
+ENV PRERENDER_CHROMIUM_PATH=/usr/bin/chromium
+
 # Defaults match prior behaviour. Supabase values are client-publishable build args.
 ARG STIRLING_FLAVOR=proprietary
 ARG VITE_BUILD_MODE=production
