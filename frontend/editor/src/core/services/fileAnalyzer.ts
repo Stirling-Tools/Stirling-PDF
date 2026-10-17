@@ -1,16 +1,20 @@
 import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import {
+  getPdfiumModule,
+  openRawDocumentSafe,
+  closeDocAndFreeBuffer,
+  getRawPageCount,
+  PdfiumOpenError,
+  FPDF_ERR_PASSWORD,
+} from "@app/services/pdfiumService";
 import { ensurePdfAccess } from "@app/services/pdfSessionUnlock";
 import { getPdfAccess } from "@app/services/pdfPasswordStore";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
-import type { PDFDocumentProxy } from "pdfjs-dist";
 
 // Bounded window scanned at each end of the PDF for an /Encrypt entry. The
 // trailer sits at the tail; linearized files also keep a first-page trailer at
 // the head. Sliced, so a multi-GB file is never read into memory.
 const ENCRYPT_PROBE_BYTES = 64 * 1024;
-const PROBE_TIMEOUT = "pdf-probe-timeout";
-const PROBE_TIMEOUT_MS = 30_000;
 
 function bufferHasEncryptMarker(buffer: ArrayBuffer): boolean {
   const view = new Uint8Array(buffer);
@@ -63,29 +67,24 @@ export class FileAnalyzer {
     };
 
     try {
-      // Quick validation and page count estimation
-      const quickAnalysis = await this.quickPDFAnalysis(file);
-      analysis.estimatedPageCount = quickAnalysis.pageCount;
-      analysis.isEncrypted = quickAnalysis.isEncrypted;
-      analysis.isCorrupted = quickAnalysis.isCorrupted;
-
-      // Determine strategy based on file characteristics
-      analysis.recommendedStrategy = this.determineStrategy(
-        file.size,
-        quickAnalysis.pageCount,
-      );
-
-      // Estimate processing time
-      analysis.estimatedProcessingTime = this.estimateProcessingTime(
-        file.size,
-        quickAnalysis.pageCount,
-        analysis.recommendedStrategy,
-      );
-    } catch (error) {
-      console.error("File analysis failed:", error);
+      const quick = await this.quickPDFAnalysis(file);
+      analysis.estimatedPageCount = quick.pageCount;
+      analysis.isEncrypted = quick.isEncrypted;
+      analysis.isCorrupted = quick.isCorrupted;
+    } catch {
       analysis.isCorrupted = true;
-      analysis.recommendedStrategy = "metadata_only";
     }
+
+    analysis.recommendedStrategy = this.determineStrategy(
+      analysis.fileSize,
+      analysis.estimatedPageCount,
+    );
+
+    analysis.estimatedProcessingTime = this.estimateProcessingTime(
+      analysis.fileSize,
+      analysis.estimatedPageCount,
+      analysis.recommendedStrategy,
+    );
 
     return analysis;
   }
@@ -106,48 +105,35 @@ export class FileAnalyzer {
     }
   }
 
+  /**
+   * Opens the document with an empty password to tell a user-password file
+   * (blocks open) from owner-password-only (opens fine); only the former
+   * should prompt.
+   *
+   * Runs inside the addFiles mutex, so it must always settle: an unbounded
+   * parse here stalls every later upload as well as this one.
+   */
   private static async requiresOpeningPassword(file: File): Promise<boolean> {
     if (!(await hasEncryptMarker(file))) return false;
 
-    // Too big to hand pdf.js: that full-buffer parse is the renderer OOM the
-    // large-file path exists to avoid, so trust the marker instead of it.
+    // Too big to parse in full: that whole-buffer parse is the OOM the large-file
+    // path exists to avoid, so trust the marker instead of it.
     if (file.size >= LARGE_PDF_PARSE_LIMIT) return true;
 
-    const arrayBuffer = await file.arrayBuffer();
-    let timedOut = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const opening = pdfWorkerManager
-      .createDocument(arrayBuffer, { stopAtErrors: false, verbosity: 0 })
-      .then((pdf) => {
-        // Arrived after the timeout won the race - nothing else frees it.
-        if (timedOut) pdfWorkerManager.destroyDocument(pdf);
-        return pdf;
-      });
-
+    let m: Awaited<ReturnType<typeof getPdfiumModule>> | null = null;
+    let docPtr: number | null = null;
     try {
-      const pdf = await Promise.race<PDFDocumentProxy>([
-        opening,
-        new Promise<never>((_, reject) => {
-          timer = setTimeout(() => {
-            timedOut = true;
-            reject(new Error(PROBE_TIMEOUT));
-          }, PROBE_TIMEOUT_MS);
-        }),
-      ]);
-      pdfWorkerManager.destroyDocument(pdf);
-      // pdf.js opened it — owner-password-only case, no prompt needed.
+      m = await getPdfiumModule();
+      const arrayBuffer = await file.arrayBuffer();
+      docPtr = await openRawDocumentSafe(arrayBuffer, "");
       return false;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message.toLowerCase() : "";
-      // Unconfirmed either way; the /Encrypt marker is the better guess, and a
-      // spurious prompt beats a card that never stops spinning.
-      if (errorMessage === PROBE_TIMEOUT) return true;
-      return (
-        errorMessage.includes("password") || errorMessage.includes("encrypted")
-      );
+    } catch {
+      // Any open failure prompts: a spurious prompt beats a card that never stops spinning.
+      return true;
     } finally {
-      clearTimeout(timer);
+      if (m != null && docPtr != null) {
+        closeDocAndFreeBuffer(m, docPtr);
+      }
     }
   }
 
@@ -156,40 +142,37 @@ export class FileAnalyzer {
     isEncrypted: boolean;
     isCorrupted: boolean;
   }> {
-    let pdf: PDFDocumentProxy | undefined;
+    if (file.size >= LARGE_PDF_PARSE_LIMIT) {
+      return {
+        pageCount: 0,
+        isEncrypted: await hasEncryptMarker(file),
+        isCorrupted: false,
+      };
+    }
+
+    const m = await getPdfiumModule();
+    let docPtr: number | null = null;
     try {
-      // For small files, read the whole file
-      // For large files, try the whole file first (PDF.js needs the complete structure)
       const arrayBuffer = await file.arrayBuffer();
-
-      pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
-        stopAtErrors: false, // Don't stop at minor errors
-        verbosity: 0, // Suppress PDF.js warnings
-      });
-
-      const pageCount = pdf.numPages;
-
+      docPtr = await openRawDocumentSafe(arrayBuffer, "");
+      const pageCount = await getRawPageCount(docPtr);
       return {
         pageCount,
-        isEncrypted:
-          getPdfAccess(file)?.encrypted ??
-          (await pdf.getPermissions()) !== null,
+        isEncrypted: getPdfAccess(file)?.encrypted ?? false,
         isCorrupted: false,
       };
     } catch (error) {
-      // Try to determine if it's corruption vs encryption
-      const errorMessage =
-        error instanceof Error ? error.message.toLowerCase() : "";
       const isEncrypted =
-        errorMessage.includes("password") || errorMessage.includes("encrypted");
-
+        error instanceof PdfiumOpenError && error.code === FPDF_ERR_PASSWORD;
       return {
         pageCount: 0,
         isEncrypted,
-        isCorrupted: !isEncrypted, // If not encrypted, probably corrupted
+        isCorrupted: !isEncrypted,
       };
     } finally {
-      if (pdf) pdfWorkerManager.destroyDocument(pdf);
+      if (docPtr != null) {
+        closeDocAndFreeBuffer(m, docPtr);
+      }
     }
   }
 

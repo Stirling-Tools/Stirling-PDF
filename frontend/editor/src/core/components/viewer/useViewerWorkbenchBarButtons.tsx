@@ -41,7 +41,6 @@ export function useViewerWorkbenchBarButtons(
     isBookmarkSidebarVisible,
     isAttachmentSidebarVisible,
     isLayerSidebarVisible,
-    hasLayers,
     isCommentsSidebarVisible,
     toggleCommentsSidebar,
     isSearchInterfaceVisible,
@@ -343,22 +342,18 @@ export function useViewerWorkbenchBarButtons(
           viewer.toggleAttachmentSidebar();
         },
       },
-      ...(hasLayers
-        ? [
-            {
-              id: "viewer-toggle-layers",
-              icon: <Icon name="layers" size={"1rem"} />,
-              tooltip: layersLabel,
-              ariaLabel: layersLabel,
-              section: "top" as const,
-              order: 56.3,
-              active: isLayerSidebarVisible,
-              onClick: () => {
-                viewer.toggleLayerSidebar();
-              },
-            },
-          ]
-        : []),
+      {
+        id: "viewer-toggle-layers",
+        icon: <Icon name="layers" size={"1rem"} />,
+        tooltip: layersLabel,
+        ariaLabel: layersLabel,
+        section: "top" as const,
+        order: 56.3,
+        active: isLayerSidebarVisible,
+        onClick: () => {
+          viewer.toggleLayerSidebar();
+        },
+      },
       {
         id: "viewer-toggle-comments",
         icon: <Icon name="message-square" size="1rem" />,
@@ -571,7 +566,6 @@ export function useViewerWorkbenchBarButtons(
     isBookmarkSidebarVisible,
     isAttachmentSidebarVisible,
     isLayerSidebarVisible,
-    hasLayers,
     isSearchInterfaceVisible,
     isPanning,
     searchLabel,

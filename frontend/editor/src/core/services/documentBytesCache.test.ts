@@ -97,12 +97,22 @@ describe("documentBytesCache", () => {
       .mockImplementation(() => Promise.resolve(bytesOf([7, 8, 9])));
 
     const first = await getDocumentBytes(file);
-    releaseDocumentBytes(file);
+    await releaseDocumentBytes(file);
     const second = await getDocumentBytes(file);
 
     expect(spy).toHaveBeenCalledTimes(2);
     expect(Array.from(new Uint8Array(second))).toEqual([7, 8, 9]);
     expect(second).not.toBe(first);
+  });
+
+  it("release without a prior read touches no Blob and never rejects", async () => {
+    const file = makeFile("released.pdf", [7, 8, 9]);
+    const arrayBuffer = vi.spyOn(file, "arrayBuffer");
+    const slice = vi.spyOn(file, "slice");
+
+    await expect(releaseDocumentBytes(file)).resolves.toBeUndefined();
+    expect(arrayBuffer).not.toHaveBeenCalled();
+    expect(slice).not.toHaveBeenCalled();
   });
 
   it("does not cache a failed read, so a retry re-reads", async () => {
@@ -116,5 +126,41 @@ describe("documentBytesCache", () => {
     const buffer = await getDocumentBytes(blob);
     expect(buffer.byteLength).toBe(1);
     expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not share bytes across identical metadata with different content", async () => {
+    const bytesA = new Uint8Array([1, 2, 3, 4]);
+    const bytesB = new Uint8Array([9, 8, 7, 6]);
+    const stubSlices = (file: File, bytes: Uint8Array) => {
+      vi.spyOn(file, "slice").mockImplementation(
+        (start?: number, end?: number) => {
+          const part = bytes.slice(start ?? 0, end ?? bytes.length);
+          return {
+            size: part.length,
+            arrayBuffer: async () =>
+              part.buffer.slice(
+                part.byteOffset,
+                part.byteOffset + part.byteLength,
+              ),
+          } as unknown as Blob;
+        },
+      );
+      return file;
+    };
+    const first = stubSlices(makeFile("same.pdf", [1, 2, 3, 4]), bytesA);
+    const second = stubSlices(makeFile("same.pdf", [9, 8, 7, 6]), bytesB);
+    const firstSpy = vi
+      .spyOn(first, "arrayBuffer")
+      .mockResolvedValue(bytesA.buffer);
+    const secondSpy = vi
+      .spyOn(second, "arrayBuffer")
+      .mockResolvedValue(bytesB.buffer);
+
+    const a = await getDocumentBytes(first);
+    const b = await getDocumentBytes(second);
+
+    expect(firstSpy).toHaveBeenCalledTimes(1);
+    expect(secondSpy).toHaveBeenCalledTimes(1);
+    expect(a).not.toBe(b);
   });
 });
