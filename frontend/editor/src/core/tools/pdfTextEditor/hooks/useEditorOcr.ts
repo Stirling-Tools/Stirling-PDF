@@ -4,6 +4,7 @@ import apiClient from "@app/services/apiClient";
 import { ensureBackendReady } from "@app/services/backendReadinessGuard";
 import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import { useCreditCheck } from "@app/hooks/useCreditCheck";
 import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
 import {
@@ -15,6 +16,10 @@ import { defaultParameters } from "@app/hooks/tools/ocr/useOCRParameters";
 import { getAutoOcrLanguage } from "@app/utils/languageMapping";
 import { extractErrorMessage } from "@app/utils/toolErrorHandler";
 import { exportToBlob } from "@app/tools/pdfTextEditor/util/exportPdf";
+import {
+  assertEditorOcrAllowed,
+  getEditorOcrBlockedReason,
+} from "@app/tools/pdfTextEditor/util/ocrProtection";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { FileId } from "@app/types/file";
 
@@ -39,6 +44,8 @@ export function useEditorOcr({
 }: EditorOcrOptions) {
   const { t, i18n } = useTranslation();
   const { enabled } = useEndpointEnabled("ocr-pdf");
+  usePdfAccess(fileId);
+  const blockedReason = getEditorOcrBlockedReason(store.document, fileId, t);
   const { checkCredits } = useCreditCheck("ocr", OCR_ENDPOINT);
   const { extractZipFiles } = useToolResources();
   const [running, setRunning] = useState(false);
@@ -92,6 +99,7 @@ export function useEditorOcr({
     });
 
     try {
+      assertEditorOcrAllowed(doc, fileId, t);
       assertFilesNotBlocked([fileId ?? undefined]);
       const creditError = await checkCredits(OCR_ENDPOINT);
       if (!isCurrent()) return;
@@ -128,6 +136,7 @@ export function useEditorOcr({
         type: "application/pdf",
       });
       assertFilesNotBlocked([fileId ?? undefined]);
+      assertEditorOcrAllowed(doc, fileId, t);
       const response = await apiClient.post<Blob>(
         OCR_ENDPOINT,
         buildOCRFormData(
@@ -153,6 +162,7 @@ export function useEditorOcr({
         );
       }
       assertFilesNotBlocked([fileId ?? undefined]);
+      assertEditorOcrAllowed(doc, fileId, t);
       await onComplete(pdfs[0], isCurrent);
     } catch (error) {
       if (isSameDocument()) store.setError(extractErrorMessage(error));
@@ -188,5 +198,6 @@ export function useEditorOcr({
     runOcr,
     running,
     available: enabled,
+    blockedReason,
   };
 }
