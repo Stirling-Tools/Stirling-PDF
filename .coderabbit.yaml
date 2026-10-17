@@ -1,0 +1,211 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: en-US
+early_access: false
+
+tone_instructions: "Stirling-PDF style: direct, concise, no greeting or filler. Lead with the defect, then trigger, impact, and smallest safe fix. Cite file and line. Mark defect vs suggestion. Do not restate the diff, invent APIs or results, or push cosmetic churn."
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      # Repo-wide review practices, including the historic_regressions section.
+      - files: ".coderabbit-practices.yaml"
+        applyTo: "**/*"
+      # Comment authority; task comment-lint enforces the mechanical half.
+      - files: "devGuide/CODE_COMMENTS.md"
+        applyTo: "**/*"
+      # Error-handling and user-message-key authority.
+      - files: "devGuide/EXCEPTION_HANDLING_GUIDE.md"
+        applyTo: "**/*.java,**/*.ts,**/*.tsx,**/*.js,**/*.jsx,**/*.py"
+      # Frontend layering and override architecture.
+      - files: "frontend/editor/DeveloperGuide.md"
+        applyTo: "frontend/**"
+      # At-rest storage-encryption contract.
+      - files: "devGuide/STORAGE_ENCRYPTION_AT_REST.md"
+        applyTo: "app/**,engine/**,docker/**"
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  allow_author_approval: false
+  high_level_summary: true
+  high_level_summary_instructions: >-
+    Describe behavior changes, affected deployment flavors (standard, fat,
+    ultra-lite, backend, embedded, desktop, native), and the security, PDF
+    integrity, translation, and resource-lifetime implications. State what the
+    operation preserves and what it deliberately changes. Clearly distinguish
+    checks executed from checks proposed. Never claim tests, benchmarks, scans, or
+    external verification ran without results.
+  collapse_walkthrough: true
+  changed_files_summary: true
+  review_status: true
+  sequence_diagrams: false
+  poem: false
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+
+  path_filters:
+    - "!**/.gradle/**"
+    - "!**/build/**"
+    - "!**/coverage/**"
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/BOOT-INF/**"
+    - "!**/.vite*/**"
+    - "!**/*.lock"
+
+  path_instructions:
+    - path: "app/**/*.java"
+      instructions: |
+        Spring Boot 4.1.1, Jackson 3 (tools.jackson.*), and JDK 25 are the
+        baseline. Do not suggest Jackson 2 (com.fasterxml.jackson.*) or a Spring
+        Boot 2/3 pattern; verify the package in a sibling module or the resolved
+        JAR before recommending an import. Follow the Java 25, Spring, Hibernate,
+        serialization, regex, resource-ownership, and performance rules.
+        Respect the optional-feature and DOCKER_ENABLE_SECURITY compile boundary:
+        a shared module must not depend unconditionally on a security-only class.
+
+    - path: "app/common/**"
+      instructions: |
+        Preserve the shared OSS boundary and extension contracts.
+        Do not introduce dependencies on proprietary or SaaS implementations.
+        Inspect caller-owned versus operation-owned document and stream lifetimes.
+        Preserve CustomPDFDocumentFactory loading and storage policy, and use
+        SsrfProtectionService rather than duplicating SSRF checks.
+        Global Java, Spring, security, persistence, PDF, and JPDFium rules apply.
+
+    - path: "app/core/**"
+      instructions: |
+        Preserve intended OSS and optional-feature behavior.
+        Inspect dependencies, conditional beans, startup work, and native loading
+        for accidental coupling to proprietary, SaaS, office, or OCR capabilities.
+
+    - path: "app/proprietary/**"
+      instructions: |
+        Preserve common/core extension seams and proprietary feature boundaries.
+        Shared defects must be fixed in their actual shared implementation, not
+        hidden by a proprietary-only workaround.
+
+    - path: "app/saas/**"
+      instructions: |
+        Inspect tenant identity, atomic quota enforcement, metering, billing,
+        retries, workflow lineage, split/merge outputs, supporting files,
+        desktop-to-SaaS routing, and failed-operation charging semantics.
+
+    - path: "frontend/editor/src/**/*.{ts,tsx,js,jsx}"
+      instructions: |
+        Normal code imports @app/* only. Do not import @core/* or @proprietary/*
+        unless intentionally overriding a lower layer. Preserve the
+        core/proprietary/cloud/saas/desktop cascade and the stub/shadow pattern
+        instead of runtime isTauri() checks.
+        Application document workflows use FileContext and the established tool
+        hooks (useToolOperation and its supporting hooks). Low-level
+        implementations may manipulate File, Blob, workers, or PDF primitives when
+        ownership and cleanup are explicit.
+        Update translations only in en-US and run task pre-commit:fix.
+
+    - path: "frontend/editor/src/cloud/**/*.{ts,tsx,js,jsx}"
+      instructions: |
+        Preserve the shared SaaS/desktop layer. Use the established platform
+        seams instead of coupling shared code directly to Supabase, Tauri, browser
+        storage, platform transport, or deployment environment variables. The
+        linter forbids @supabase/*, @tauri-apps/*, raw fetch, window.location,
+        localStorage, sessionStorage, and import.meta.env.VITE_* here.
+
+    - path: "frontend/editor/src/{desktop,saas}/**/*.{ts,tsx,js,jsx}"
+      instructions: |
+        These leaves override the shared cloud layer per platform. Keep the
+        override at the same @app/* path, do not copy cloud code, and do not leak
+        platform imports back into shared modules.
+
+    - path: "frontend/editor/src-tauri/**"
+      instructions: |
+        Tauri/Rust native shell. Preserve error propagation, resource ownership,
+        command input validation, and cross-platform behavior. Do not weaken
+        update, signing, or file-access boundaries for convenience.
+
+    - path: "frontend/editor/public/locales/**"
+      instructions: |
+        Only en-US is edited by hand; other locales are synced separately. Verify
+        the en-US key exists, the interpolation placeholders are intact, and no
+        user-facing English was hardcoded instead of keyed.
+
+    - path: "engine/**/*.py"
+      instructions: |
+        Preserve the typed reasoning-service boundary and thin routing.
+        Avoid duplicating backend durable state or document execution.
+        Review provider requests, streaming, cancellation, secrets, SSRF,
+        context-window limits, and deterministic versus model-derived facts.
+
+    - path: ".github/**"
+      instructions: |
+        Workflow and release changes. Preserve required checks, permissions,
+        caching, and release/signing steps. Do not drop a quality gate to make a
+        job pass.
+
+    - path: "docker/**"
+      instructions: |
+        Preserve the standard/fat/ultra-lite/backend/embedded/desktop flavors and
+        their base images. Prefer non-root execution and bounded writable
+        directories; do not bake build tools, caches, or credentials into the
+        runtime image.
+
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+    custom_checks:
+      - name: Changed invariants and regression coverage
+        mode: warning
+        instructions: |
+          Identify the changed contract and its focused regression coverage.
+          PDF mutation, native ownership, security, persistence concurrency, and
+          async lifecycle changes need meaningful behavior assertions, not only
+          construction, mock interactions, or output-file existence.
+
+      - name: Performance and memory evidence
+        mode: warning
+        instructions: |
+          Performance claims require workload, baseline, changed condition,
+          metric, repeatability, correctness verification, and trade-offs.
+          Distinguish an expected benefit from a measured result. A pick-up in
+          empty-page startup must not hide a regression in first-document
+          readiness.
+
+      - name: Stirling-PDF codebase invariants
+        mode: warning
+        instructions: |
+          Check the repository-specific rules: @app/* imports and the cloud-layer
+          import restrictions; FileContext ownership and PDF.js/blob/worker
+          cleanup; useToolOperation and its supporting hooks; comments follow
+          devGuide/CODE_COMMENTS.md; Jackson 3 (tools.jackson.*) and Spring Boot
+          4.1.1 rather than older patterns.
+
+      - name: Translations and user-facing text
+        mode: warning
+        instructions: |
+          Any new user-visible text needs its en-US key in the same change, with
+          interpolation placeholders intact. Flag hardcoded English and edits to
+          non-en-US locales.
+
+      - name: Deployment flavor and packaging impact
+        mode: warning
+        instructions: |
+          State which flavors are affected (standard, fat, ultra-lite, backend,
+          embedded, desktop, native) and whether the change is inside or outside
+          the DOCKER_ENABLE_SECURITY compile boundary. Flag changes that silently
+          alter packaging, native assets, or a security-mode build.
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+    autofix:
+      enabled: false
+
+chat:
+  auto_reply: true
