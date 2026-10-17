@@ -117,10 +117,14 @@ export class PdfiumPageRenderer {
         bufferPtr,
         stride * h,
       );
-      for (let y = 0; y < h; y++) {
-        const srcRow = y * stride;
-        const dstRow = y * w * 4;
-        pixels.set(heap.subarray(srcRow, srcRow + w * 4), dstRow);
+      if (stride === w * 4) {
+        pixels.set(heap);
+      } else {
+        for (let y = 0; y < h; y++) {
+          const srcRow = y * stride;
+          const dstRow = y * w * 4;
+          pixels.set(heap.subarray(srcRow, srcRow + w * 4), dstRow);
+        }
       }
       return new ImageData(pixels, w, h);
     } finally {
