@@ -1,4 +1,4 @@
-import { Stack, PasswordInput, Select } from "@mantine/core";
+import { Stack, PasswordInput, Select, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPasswordParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -10,44 +10,62 @@ interface AddPasswordSettingsProps {
     value: AddPasswordParameters[K],
   ) => void;
   disabled?: boolean;
+  showOwnerPassword?: boolean;
 }
 
 const AddPasswordSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
+  showOwnerPassword = true,
 }: AddPasswordSettingsProps) => {
   const { t } = useTranslation();
 
   return (
     <Stack gap="md">
-      {/* Password Settings */}
       <Stack gap="sm">
         <PasswordInput
-          label={t("addPassword.passwords.user.label", "User Password")}
-          placeholder={t(
-            "addPassword.passwords.user.placeholder",
-            "Enter user password",
+          size="xs"
+          label={
+            showOwnerPassword
+              ? t("encryptedPdfUnlock.openingPassword", "Password to open")
+              : undefined
+          }
+          aria-label={t(
+            "encryptedPdfUnlock.openingPassword",
+            "Password to open",
           )}
+          placeholder={t("encryptedPdfUnlock.enterPassword", "Enter password")}
           value={parameters.password}
           onChange={(e) => onParameterChange("password", e.target.value)}
           disabled={disabled}
         />
-        <PasswordInput
-          label={t("addPassword.passwords.owner.label", "Owner Password")}
-          placeholder={t(
-            "addPassword.passwords.owner.placeholder",
-            "Enter owner password",
-          )}
-          value={parameters.ownerPassword}
-          onChange={(e) => onParameterChange("ownerPassword", e.target.value)}
-          disabled={disabled}
-        />
+        {showOwnerPassword && (
+          <PasswordInput
+            size="xs"
+            label={t(
+              "encryptedPdfUnlock.newOwnerPassword",
+              "New permissions password",
+            )}
+            placeholder={t(
+              "encryptedPdfUnlock.chooseOwnerPassword",
+              "Choose a different password",
+            )}
+            value={parameters.ownerPassword}
+            onChange={(e) => onParameterChange("ownerPassword", e.target.value)}
+            disabled={disabled}
+          />
+        )}
       </Stack>
 
-      {/* Encryption Settings */}
-      <Stack gap="sm">
+      <details>
+        <summary>
+          <Text component="span" size="xs">
+            {t("encryptedPdfUnlock.advanced", "Advanced")}
+          </Text>
+        </summary>
         <Select
+          size="xs"
           label={t(
             "addPassword.encryption.keyLength.label",
             "Encryption Key Length",
@@ -87,7 +105,7 @@ const AddPasswordSettings = ({
             zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
           }}
         />
-      </Stack>
+      </details>
     </Stack>
   );
 };

@@ -6,7 +6,7 @@ import {
   ComparePlansModal,
   type ComparePlan,
 } from "@app/billing/ComparePlansModal";
-import { formatMinor } from "@app/billing/format";
+import { formatMinor, formatPeriodDate } from "@app/billing/format";
 import { KvRow } from "@app/billing/KvRow";
 import { TeamPlanRow } from "@app/billing/TeamPlanRow";
 import { ProcessorPlanRow } from "@app/billing/ProcessorPlanRow";
@@ -131,7 +131,8 @@ export function BillingScreen({
   const { t } = useTranslation();
   const [comparing, setComparing] = useState(false);
 
-  const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
+  const enterpriseProcessor =
+    Boolean(wallet?.enterprise) || serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active) && !enterpriseProcessor;
   const teamHeld = Boolean(wallet?.team?.held);
   const processedCount =
@@ -140,6 +141,21 @@ export function BillingScreen({
       : pdfsProcessed;
 
   const identity = useMemo(() => {
+    if (wallet?.enterprise) {
+      const agreement = wallet.enterprise;
+      return {
+        name: t("portal.billing.serverPlan.enterprise", "Enterprise"),
+        sub: t(`portal.billing.enterprise.${agreement.status}`, {
+          date: formatPeriodDate(agreement.accessUntil, { year: true }),
+          days: Math.ceil(
+            (Date.parse(agreement.periodEnd) -
+              Date.parse(agreement.periodStart)) /
+              86_400_000,
+          ),
+        }),
+        chips: [],
+      };
+    }
     if (serverPlan)
       return {
         name:
@@ -239,15 +255,17 @@ export function BillingScreen({
    * The column the matrix marks as the caller's own. A Server licence sits in the Team column:
    * it is the same hundred-user deal the cloud sells, bought locally instead.
    */
-  const currentPlan: ComparePlan | null = serverPlan
-    ? serverPlan.licenseType === "ENTERPRISE"
-      ? "enterprise"
-      : "team"
-    : !wallet
-      ? null
-      : paying || teamHeld
-        ? "team"
-        : "free";
+  const currentPlan: ComparePlan | null = wallet?.enterprise
+    ? "enterprise"
+    : serverPlan
+      ? serverPlan.licenseType === "ENTERPRISE"
+        ? "enterprise"
+        : "team"
+      : !wallet
+        ? null
+        : paying || teamHeld
+          ? "team"
+          : "free";
 
   /**
    * {@code freeAllowance} is whatever grant the WALLET carries, so it describes the Team column
