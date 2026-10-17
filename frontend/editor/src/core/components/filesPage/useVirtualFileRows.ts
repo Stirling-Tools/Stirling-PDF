@@ -28,7 +28,9 @@ function useScrollParent(el: HTMLElement | null): HTMLElement | null {
   const [parent, setParent] = useState<HTMLElement | null>(null);
   useEffect(() => {
     setParent(
-      el?.closest<HTMLElement>(".files-page-list, .files-page-content") ?? null,
+      el?.closest<HTMLElement>(
+        ".files-page-list, .files-page-content, .file-editor-content",
+      ) ?? null,
     );
   }, [el]);
   return parent;
@@ -41,6 +43,8 @@ interface VirtualFileRows {
   padTop: number;
   padBottom: number;
   columns: number;
+  /** True when the scrolling ancestor has been attached and virtual rows are active. */
+  active: boolean;
   setContainer: (el: HTMLDivElement | null) => void;
 }
 
@@ -76,6 +80,7 @@ export function useVirtualFileRows(
       padTop: 0,
       padBottom: 0,
       columns,
+      active: false,
       setContainer,
     };
   }
@@ -90,6 +95,7 @@ export function useVirtualFileRows(
     padTop: first.start,
     padBottom: Math.max(0, virtualizer.getTotalSize() - last.end),
     columns,
+    active: true,
     setContainer,
   };
 }
