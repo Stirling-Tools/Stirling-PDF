@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { Slider } from "@mantine/core";
+import type { SliderProps } from "@mantine/core";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 
 const RENDER_LABEL = "annotationValueSlider";
@@ -12,6 +13,9 @@ interface ValueSliderProps {
   onChange: (value: number) => void;
   /** Appended to the readout, e.g. "%" or "px". Omit for no label. */
   suffix?: string;
+  /** Fixed stops drawn on the track, e.g. the opacity presets. */
+  marks?: SliderProps["marks"];
+  disabled?: boolean;
 }
 
 /**
@@ -27,6 +31,8 @@ export const ValueSlider = memo(function ValueSlider({
   max,
   onChange,
   suffix,
+  marks,
+  disabled,
 }: ValueSliderProps) {
   // Dev-only counter; annotationMenuSliders.test.tsx asserts the memo contract.
   useRenderCount(RENDER_LABEL);
@@ -37,6 +43,8 @@ export const ValueSlider = memo(function ValueSlider({
       min={min}
       max={max}
       label={suffix ? (v: number) => `${v}${suffix}` : undefined}
+      marks={marks}
+      disabled={disabled}
     />
   );
 });

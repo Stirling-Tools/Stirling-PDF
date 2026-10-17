@@ -151,13 +151,12 @@ describe("ManualRedactionControls save action", () => {
     );
   });
 
-  test("does nothing when the viewer offers no save", async () => {
+  test("disables the save button when the viewer offers no save", async () => {
     redaction.applyChanges = undefined;
     redaction.pendingCount = 1;
     renderPanel();
 
-    fireEvent.click(applyButton()!);
-    await waitFor(() => expect(commitAllPending).not.toHaveBeenCalled());
+    expect((applyButton() as HTMLButtonElement).disabled).toBe(true);
   });
 
   test("recovers when the save throws", async () => {

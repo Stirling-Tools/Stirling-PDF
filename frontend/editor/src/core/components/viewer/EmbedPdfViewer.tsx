@@ -507,7 +507,8 @@ const EmbedPdfViewerContent = ({
     isRedactionMode,
   } = useRedaction();
 
-  const { handleToolSelectForced } = useToolWorkflow();
+  const { handleToolSelectForced, readerMode, setLeftPanelView } =
+    useToolWorkflow();
   const { workingRevision } = useDocumentEditSession();
 
   // Resubscribing to history emits its current state as though an edit occurred.
@@ -1045,13 +1046,25 @@ const EmbedPdfViewerContent = ({
     if (
       annotationUiOpenedRef.current ||
       previewFile ||
-      isInAnnotationTool ||
       isManualRedactMode ||
       isRedactionMode
     ) {
       return;
     }
     annotationUiOpenedRef.current = true;
+    // Reading stays reading: a comment edited from the sidebar keeps the reader
+    // layout, and the unsaved-changes guard surfaces on the way out. Forcing
+    // the Annotate tool here would trade the reader's place for the save UI.
+    if (readerMode) {
+      return;
+    }
+    // Already annotating: only the panel needs to come back on screen
+    // (collapsed rail on phones), so an edit while selected still shows the
+    // save UI.
+    if (isInAnnotationTool) {
+      setLeftPanelView("toolContent");
+      return;
+    }
     handleToolSelectForced("annotate");
   });
 

@@ -8,12 +8,13 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));
 
-const handleToolSelect = vi.fn();
+const handleToolSelectForced = vi.fn();
+const setLeftPanelView = vi.fn();
 const commitPending = vi.fn();
 const removePending = vi.fn();
 
 vi.mock("@app/contexts/ToolWorkflowContext", () => ({
-  useToolWorkflow: () => ({ handleToolSelect }),
+  useToolWorkflow: () => ({ handleToolSelectForced, setLeftPanelView }),
 }));
 
 vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
@@ -65,7 +66,8 @@ describe("RedactionSelectionMenu", () => {
 
     fireEvent.click(screen.getByRole("button", { name: REVIEW }));
 
-    expect(handleToolSelect).toHaveBeenCalledWith("redact");
+    expect(handleToolSelectForced).toHaveBeenCalledWith("redact");
+    expect(setLeftPanelView).toHaveBeenCalledWith("toolContent");
     expect(commitPending).not.toHaveBeenCalled();
   });
 

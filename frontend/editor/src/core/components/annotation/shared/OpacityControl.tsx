@@ -2,7 +2,8 @@ import { Tooltip, Popover, Stack, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Icon } from "@app/ui/Icon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { useEventCallback } from "@app/hooks/useEventCallback";
+import { ValueSlider } from "@app/components/annotation/shared/ValueSlider";
 import { OPACITY_PRESETS } from "@app/components/annotation/shared/opacityPresets";
 
 interface OpacityControlProps {
@@ -11,8 +12,8 @@ interface OpacityControlProps {
   disabled?: boolean;
 }
 
-const OPACITY_OPTIONS = OPACITY_PRESETS.map((preset) => ({
-  value: String(preset),
+const OPACITY_MARKS = OPACITY_PRESETS.map((preset) => ({
+  value: preset,
   label: `${preset}%`,
 }));
 
@@ -23,13 +24,8 @@ export function OpacityControl({
 }: OpacityControlProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
+  const handleChange = useEventCallback(onChange);
   const label = t("annotation.opacity", "Opacity");
-  // Highlight a preset only when the value is exactly one. Showing the nearest
-  // as selected would make clicking that preset a no-op, because Mantine treats
-  // a checked radio as unchanged and never calls back.
-  const selectedPreset = OPACITY_PRESETS.some((preset) => preset === value)
-    ? String(value)
-    : "";
 
   return (
     <Popover opened={opened} onChange={setOpened} position="top" withArrow>
@@ -52,18 +48,20 @@ export function OpacityControl({
             <Text size="xs" fw={500}>
               {label}
             </Text>
-            {/* The exact value, which the presets only approximate. */}
+            {/* The exact value; the presets are marks on the track, not the
+                only choices, so a document arriving at 40% stays at 40%. */}
             <Text size="xs" c="dimmed">
               {Math.round(value)}%
             </Text>
           </Group>
-          <SegmentedControl
-            ariaLabel={label}
-            size="xs"
-            fullWidth
-            value={selectedPreset}
-            onChange={(next) => onChange(Number(next))}
-            options={OPACITY_OPTIONS}
+          <ValueSlider
+            value={value}
+            min={10}
+            max={100}
+            onChange={handleChange}
+            suffix="%"
+            marks={OPACITY_MARKS}
+            disabled={disabled}
           />
         </Stack>
       </Popover.Dropdown>

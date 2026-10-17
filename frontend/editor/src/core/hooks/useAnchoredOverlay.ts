@@ -50,7 +50,11 @@ export function useAnchoredOverlay({
   const frameRef = useRef<number | null>(null);
   const lastPositionRef = useRef<OverlayAnchorRect | null>(null);
   const onPositionRef = useRef(onPosition);
-  onPositionRef.current = onPosition;
+  // Follows commits, not renders: measure() reads this from rAF/listeners,
+  // which only run after a commit.
+  useLayoutEffect(() => {
+    onPositionRef.current = onPosition;
+  }, [onPosition]);
 
   // Whether the overlay exists. Separate from the position so that moving it
   // never touches React state.

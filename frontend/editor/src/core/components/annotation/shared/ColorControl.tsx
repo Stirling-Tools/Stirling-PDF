@@ -45,8 +45,9 @@ interface ColorControlProps {
 /**
  * Mantine computes every swatch (and its luminance) on each render of an
  * ancestor; the menu sits under a viewer that re-renders during layout changes,
- * so rebuilding the palette reads as flicker. Key on colour alone: the callbacks
- * are read through a ref so handler identity is not part of the compare.
+ * so rebuilding the palette reads as flicker. The memo compares every prop, so
+ * the callers stabilise their handlers with useEventCallback: the palette then
+ * only rebuilds when the colour does.
  */
 const Picker = memo(function Picker({
   value,

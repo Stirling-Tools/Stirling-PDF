@@ -40,7 +40,7 @@ function RedactionSelectionMenuInner({
   const pageIndex = context?.pageIndex;
   const { t } = useTranslation();
   const { provides } = useEmbedPdfRedaction(documentId);
-  const { handleToolSelect } = useToolWorkflow();
+  const { handleToolSelectForced, setLeftPanelView } = useToolWorkflow();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Merge refs - menuWrapperProps.ref is a callback ref
@@ -63,8 +63,9 @@ function RedactionSelectionMenuInner({
   // affect that mark. Applying is permanent and applies *every* pending mark, so
   // it lives in the redaction review panel where that scope is visible.
   const onReviewPanel = useCallback(() => {
-    handleToolSelect("redact");
-  }, [handleToolSelect]);
+    handleToolSelectForced("redact");
+    setLeftPanelView("toolContent");
+  }, [handleToolSelectForced, setLeftPanelView]);
 
   const { overlayRef, mounted } = useAnchoredOverlay({
     anchorRef: wrapperRef,

@@ -117,6 +117,7 @@ export default function ManualRedactionControls({
   // The commit goes through the bridge directly so the save cannot race an
   // uncommitted mark into the exported file as a stale annotation.
   const handleApplyRedactions = useCallback(async () => {
+    // The button disables without a save; the guard keeps the call itself typed.
     if (!applyChanges) return;
     setIsApplying(true);
     try {
@@ -191,6 +192,7 @@ export default function ManualRedactionControls({
             size="md"
             accent="danger"
             loading={isApplying}
+            disabled={disabled || !isApiReady || !applyChanges}
             onClick={handleApplyRedactions}
           >
             {applyLabel}
