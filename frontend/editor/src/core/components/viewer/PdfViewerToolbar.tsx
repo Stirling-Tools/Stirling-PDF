@@ -15,6 +15,15 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import "@app/components/viewer/PdfViewerToolbar.css";
 import { Icon } from "@app/ui/Icon";
 
+/**
+ * `/PageLabels` can leave individual pages unlabelled (an entry with no `/S` or
+ * `/P`), and `getPageLabels` reports those as empty strings, so an empty label
+ * must fall back to the page index rather than render a blank field.
+ */
+function pageLabelOrIndex(label: string | undefined, index: number): string {
+  return label || String(index);
+}
+
 // Sizing constants for the page number input
 const MIN_PAGE_DIGITS = 2;
 const MIN_INPUT_WIDTH_PX = 48;
@@ -77,12 +86,16 @@ export function PdfViewerToolbar({
   const [labelInput, setLabelInput] = useState("");
 
   const currentPageLabel = hasPageLabels
-    ? (pageLabels?.[scrollState.currentPage - 1] ??
-      String(scrollState.currentPage))
+    ? pageLabelOrIndex(
+        pageLabels?.[scrollState.currentPage - 1],
+        scrollState.currentPage,
+      )
     : "";
   const totalLabel = hasPageLabels
-    ? (pageLabels?.[scrollState.totalPages - 1] ??
-      String(scrollState.totalPages))
+    ? pageLabelOrIndex(
+        pageLabels?.[scrollState.totalPages - 1],
+        scrollState.totalPages,
+      )
     : String(scrollState.totalPages);
 
   useEffect(() => {
@@ -152,7 +165,7 @@ export function PdfViewerToolbar({
     // programmatic jump into its scroll state once the smooth scroll settles,
     // so reading the label back from there would leave the field stale.
     if (hasPageLabels) {
-      setLabelInput(pageLabels?.[page - 1] ?? String(page));
+      setLabelInput(pageLabelOrIndex(pageLabels?.[page - 1], page));
     }
   };
 
