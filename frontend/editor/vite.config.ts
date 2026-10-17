@@ -1,5 +1,6 @@
 import react from "@vitejs/plugin-react-swc";
 import { compression, defineAlgorithm } from "vite-plugin-compression2";
+import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path, { resolve } from "node:path";
@@ -608,6 +609,17 @@ export default defineConfig(async ({ mode, command }) => {
               ],
             }),
           ]),
+      // sharp quantizes RGB PNGs even at quality 100; without palette:false
+      // the og:image cards and icons come out with shifted pixels.
+      ViteImageOptimizer({
+        logStats: false,
+        png: {
+          quality: 100,
+          palette: false,
+          compressionLevel: 9,
+          adaptiveFiltering: true,
+        },
+      }),
       // ANALYZE=true emits dist/stats.json; the visualizer is ESM-only, hence
       // the dynamic import.
       ...(process.env.ANALYZE === "true"
