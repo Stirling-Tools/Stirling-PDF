@@ -269,15 +269,43 @@ for (const m of mapSrc.matchAll(/"([^"]+)":\s*"([^"]+)"/g))
 const regSrc = read("src/core/data/useTranslatedToolRegistry.tsx");
 const titleById = {};
 const descById = {};
+const tomlSrc = read("public/locales/en-GB/translation.toml");
+let tomlSection = null;
+for (const line of tomlSrc.split(/\r?\n/)) {
+  const sm = /^\[home\.([A-Za-z0-9_-]+)\]\s*$/.exec(line.trim());
+  if (sm) {
+    tomlSection = sm[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    continue;
+  }
+  if (/^\[/.test(line.trim())) {
+    tomlSection = null;
+    continue;
+  }
+  if (tomlSection) {
+    const kv = /^(title|desc)\s*=\s*"((?:[^"\\]|\\.)*)"/.exec(line.trim());
+    if (kv) {
+      const val = JSON.parse('"' + kv[2] + '"');
+      if (kv[1] === "title") titleById[tomlSection] = val;
+      else descById[tomlSection] = val;
+    }
+  }
+}
+// The English dictionary carries the tool copy the registry no longer repeats.
+const enUs = JSON.parse(read("public/locales/en-US/translation.json"));
+for (const [id, entry] of Object.entries(enUs.home ?? {})) {
+  if (typeof entry?.title === "string" && !titleById[id]) titleById[id] = entry.title;
+  if (typeof entry?.desc === "string" && !descById[id]) descById[id] = entry.desc;
+}
+
 const STR = '"((?:[^"\\\\]|\\\\.)*)"';
 for (const m of regSrc.matchAll(
-  new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_]+)\\.title"\\s*,\\s*' + STR, "g"),
+  new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_]+)\\.title"(?:\\s*,\\s*' + STR + ')?', "g"),
 ))
-  titleById[m[1]] = m[2];
+  if (m[2] !== undefined) titleById[m[1]] = m[2];
 for (const m of regSrc.matchAll(
-  new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_]+)\\.desc"\\s*,\\s*' + STR, "g"),
+  new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_]+)\\.desc"(?:\\s*,\\s*' + STR + ')?', "g"),
 ))
-  descById[m[1]] = m[2];
+  if (m[2] !== undefined) descById[m[1]] = m[2];
 
 // --- available images -------------------------------------------------------
 const imageDir = "public/og_images";
@@ -433,6 +461,7 @@ for (const [routePath, seo] of Object.entries(CONVERT_SEO_PAGES)) {
     description: seo.description,
   };
 }
+
 
 // Base-tool keyword copy for the running SPA, on every alias of the tool, so the
 // hydrated English <title> matches the prerendered one. Convert pages set above

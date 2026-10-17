@@ -8,310 +8,310 @@
     "certSign": {
       "image": "/og_images/certSign.png",
       "title": "Sign PDF with a Certificate - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Signs a PDF with a Certificate/Key (PEM/P12)"
     },
     "sign": {
       "image": "/og_images/sign.png",
       "title": "Sign PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Adds signature to PDF by drawing, text or image"
     },
     "addText": {
       "image": "/og_images/add-text.png",
       "title": "Add Text to PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Add custom text anywhere in your PDF"
     },
     "addPassword": {
       "image": "/og_images/add-password.png",
       "title": "Password Protect PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Add password protection and restrictions to PDF files"
     },
     "removePassword": {
       "image": "/og_images/remove-password.png",
       "title": "Remove PDF Password - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Remove password protection from your PDF document."
     },
     "removePages": {
       "image": "/og_images/remove.png",
       "title": "Delete Pages from PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Remove specific pages from a PDF document"
     },
     "removeBlanks": {
       "image": "/og_images/remove-blank-pages.png",
       "title": "Remove Blank Pages from PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Detects and removes blank pages from a document"
     },
     "removeAnnotations": {
       "image": "/og_images/remove-annotations.png",
       "title": "Remove Annotations from PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Removes all comments/annotations from a PDF"
     },
     "removeImage": {
       "image": "/og_images/remove-image.png",
       "title": "Remove Images from PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Remove image from PDF to reduce file size"
     },
     "changePermissions": {
       "image": "/og_images/change-permissions.png",
       "title": "Change PDF Permissions - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Change document restrictions and permissions"
     },
     "watermark": {
       "image": "/og_images/add-watermark.png",
       "title": "Add Watermark to PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Add a custom watermark to your PDF document."
     },
     "sanitize": {
       "image": "/og_images/sanitize.png",
       "title": "Sanitize PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Remove potentially harmful elements from PDF files"
     },
     "split": {
       "image": "/og_images/split.png",
       "title": "Split PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Split PDFs into multiple documents"
     },
     "merge": {
       "image": "/og_images/mergePdfs.png",
       "title": "Merge PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Easily merge multiple PDFs into one."
     },
     "convert": {
       "image": "/og_images/convert.png",
       "title": "PDF Converter - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Convert files between different formats"
     },
     "ocr": {
       "image": "/og_images/ocr.png",
       "title": "OCR PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Cleanup scans and detects text from images within a PDF and re-adds it as text."
     },
     "addImage": {
       "image": "/og_images/add-image.png",
       "title": "Add Image to PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Adds a image onto a set location on the PDF"
     },
     "rotate": {
       "image": "/og_images/rotate.png",
       "title": "Rotate PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Easily rotate your PDFs."
     },
     "autoRotate": {
       "image": "/og_images/home.png",
       "title": "Auto Rotate - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Detect each page's orientation and rotate it upright automatically."
     },
     "annotate": {
       "image": "/og_images/annotate.png",
       "title": "Annotate PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Highlight, draw, add notes and shapes in the viewer"
     },
     "scannerImageSplit": {
       "image": "/og_images/detect-split-scanned-photos.png",
       "title": "Split Scanned Photos - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Detect and split scanned photos into separate pages"
     },
     "editTableOfContents": {
       "image": "/og_images/edit-table-of-contents.png",
       "title": "Edit PDF Bookmarks - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Add or edit bookmarks and table of contents in PDF documents"
     },
     "autoRename": {
       "image": "/og_images/auto-rename-pdf-file.png",
       "title": "Auto Rename PDF Files - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Auto renames a PDF file based on its detected header"
     },
     "pageLayout": {
       "image": "/og_images/multi-page-layout.png",
       "title": "PDF Multi-Page Layout - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Merge multiple pages of a PDF document into a single page"
     },
     "scalePages": {
       "image": "/og_images/adjust-page-size-scale.png",
       "title": "Resize PDF Pages - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Change the size/scale of a page and/or its contents."
     },
     "adjustContrast": {
       "image": "/og_images/adjust-colors-contrast.png",
       "title": "Adjust PDF Colors and Contrast - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Adjust Colours/Contrast, Saturation and Brightness of a PDF"
     },
     "crop": {
       "image": "/og_images/cropPdf.png",
       "title": "Crop PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Crop a PDF to reduce its size (maintains text!)"
     },
     "pdfToSinglePage": {
       "image": "/og_images/single-large-page.png",
       "title": "Combine PDF into a Single Page - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Merges all PDF pages into one large single page"
     },
     "repair": {
       "image": "/og_images/repair.png",
       "title": "Repair PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Tries to repair a corrupt/broken PDF"
     },
     "compare": {
       "image": "/og_images/compare.png",
       "title": "Compare PDF Files - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Compares and shows the differences between 2 PDF Documents"
     },
     "addPageNumbers": {
       "image": "/og_images/add-page-numbers.png",
       "title": "Add Page Numbers to PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Add Page numbers throughout a document in a set location"
     },
     "redact": {
       "image": "/og_images/redact.png",
       "title": "Redact PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
     "flatten": {
       "image": "/og_images/flatten.png",
       "title": "Flatten PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Remove all interactive elements and forms from a PDF"
     },
     "removeCertSign": {
       "image": "/og_images/remove-certificate-sign.png",
       "title": "Remove PDF Certificate Signature - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Remove certificate signature from PDF"
     },
     "unlockPDFForms": {
       "image": "/og_images/unlock-pdf-forms.png",
       "title": "Unlock PDF Forms - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Remove read-only property of form fields in a PDF document."
     },
     "compress": {
       "image": "/og_images/compress.png",
       "title": "Compress PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Compress PDFs to reduce their file size."
     },
     "classify": {
       "image": "/og_images/home.png",
       "title": "Classify - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Identify what kind of document this is and tag it."
     },
     "extractPages": {
       "image": "/og_images/extract-pages.png",
       "title": "Extract PDF Pages - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Extract specific pages from a PDF document"
     },
     "reorganizePages": {
       "image": "/og_images/reorganize-pages.png",
       "title": "Organize PDF Pages - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
     },
     "extractImages": {
       "image": "/og_images/extract-images.png",
       "title": "Extract Images from PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Extracts all images from a PDF and saves them to zip"
     },
     "addStamp": {
       "image": "/og_images/add-stamp.png",
       "title": "Add Stamp to PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Add text or add image stamps at set locations"
     },
     "addAttachments": {
       "image": "/og_images/add-attachments.png",
       "title": "Manage PDF Attachments - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Add or remove embedded files (attachments) to/from a PDF"
     },
     "createPortfolio": {
       "image": "/og_images/home.png",
       "title": "Create Portfolio - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Bundle multiple files into an Adobe PDF Portfolio"
     },
     "changeMetadata": {
       "image": "/og_images/change-metadata.png",
       "title": "Edit PDF Metadata - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Change/Remove/Add metadata from a PDF document"
     },
     "overlayPdfs": {
       "image": "/og_images/overlay-pdfs.png",
       "title": "Overlay PDFs - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Overlay one PDF on top of another"
     },
     "getPdfInfo": {
       "image": "/og_images/get-all-info-on-pdf.png",
       "title": "PDF Info and Metadata Viewer - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Grabs any and all information possible on PDFs"
     },
     "validateSignature": {
       "image": "/og_images/validate-pdf-signature.png",
       "title": "Validate PDF Signature - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Verify digital signatures and certificates in PDF documents"
     },
     "timestampPdf": {
       "image": "/og_images/timestamp-pdf.png",
       "title": "Timestamp PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Add an RFC 3161 document timestamp to prove when your PDF existed"
     },
     "replaceColor": {
       "image": "/og_images/replace-and-invert-color.png",
       "title": "Replace and Invert PDF Colors - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Replace or invert colours in PDF documents"
     },
     "showJS": {
       "image": "/og_images/show-javascript.png",
       "title": "Show JavaScript in PDF - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Searches and displays any JS injected into a PDF"
     },
     "bookletImposition": {
       "image": "/og_images/booklet-imposition.png",
       "title": "Create a PDF Booklet - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Create booklets with proper page ordering and multi-page layout for printing and binding"
     },
     "pdfTextEditor": {
       "image": "/og_images/pdf-text-editor.png",
       "title": "Edit PDF Text - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Edit existing text and images inside PDFs"
     },
     "formFill": {
       "image": "/og_images/form-fill.png",
       "title": "Fill PDF Forms - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Fill PDF form fields interactively with a visual editor"
     },
     "autoFormDetection": {
       "image": "/og_images/home.png",
       "title": "Auto Form Detection - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Automatically detect form fields with AI and make your PDF fillable."
     },
     "multiTool": {
       "image": "/og_images/multi-tool.png",
       "title": "PDF Page Editor - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Merge, Rotate, Rearrange, Split, and Remove pages"
     },
     "read": {
       "image": "/og_images/read.png",
       "title": "PDF Viewer - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
     },
     "automate": {
       "image": "/og_images/automate.png",
       "title": "PDF Workflow Automation - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure."
+      "description": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
     },
     "devApi": {
       "image": "/og_images/dev-api.png",
-      "title": "Dev Api - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "title": "API - Stirling PDF",
+      "description": "Link to API documentation",
       "noindex": true
     },
     "devFolderScanning": {
       "image": "/og_images/dev-folder-scanning.png",
-      "title": "Dev Folder Scanning - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "title": "Automated Folder Scanning - Stirling PDF",
+      "description": "Link to automated folder scanning guide",
       "noindex": true
     },
     "devSsoGuide": {
       "image": "/og_images/dev-sso-guide.png",
-      "title": "Dev Sso Guide - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "title": "SSO Guide - Stirling PDF",
+      "description": "Link to SSO guide",
       "noindex": true
     },
     "devAirgapped": {
       "image": "/og_images/dev-airgapped.png",
-      "title": "Dev Airgapped - Stirling PDF",
-      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "title": "Air-gapped Setup - Stirling PDF",
+      "description": "Link to air-gapped setup guide",
       "noindex": true
     },
     "/editor": {
