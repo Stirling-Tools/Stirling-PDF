@@ -28,7 +28,7 @@ interface Team {
   memberCount: number;
   seatCount: number;
   seatsUsed: number;
-  maxSeats: number;
+  maxSeats: number | null;
   isLeader: boolean;
 }
 
