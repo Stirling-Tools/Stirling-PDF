@@ -23,6 +23,10 @@ export function AnnotationMenuEvents({
 
   useEffect(() => {
     if (!provides || !documentId) return;
+    // Previews mount their document under a preview- key but share this
+    // bridge; their committed edits are not edits of the open document, and
+    // counting them would surface the save UI once the preview closes.
+    if (documentId.startsWith("preview-")) return;
 
     return provides.onAnnotationEvent((event) => {
       if (event.type === "loaded") return;

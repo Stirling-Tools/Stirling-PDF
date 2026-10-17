@@ -100,6 +100,7 @@ import { useTranslation } from "react-i18next";
 import { LinkLayer } from "@app/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
+import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvents";
 import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
 import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
@@ -598,7 +599,11 @@ function AnnotationEditingLayers({
         }
       />
       {enableRedaction && (
-        <RedactionLayer documentId={documentId} pageIndex={pageIndex} />
+        <RedactionLayer
+          documentId={documentId}
+          pageIndex={pageIndex}
+          selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
+        />
       )}
     </>
   );

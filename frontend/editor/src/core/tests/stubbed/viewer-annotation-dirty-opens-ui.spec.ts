@@ -125,8 +125,13 @@ test("the Annotate UI comes back after leaving it and editing again", async ({
   await changeSelectedAnnotationColor(page);
   await expect(saveChangesButton(page)).toBeVisible({ timeout: 10_000 });
 
-  // Leave the Annotate tool without saving.
-  await page.getByRole("button", { name: "Reader" }).first().click();
+  // Leave the Annotate tool without saving. Form Editor, not Reader: Reader
+  // now deliberately keeps a sidebar edit's reader layout, so leaving through
+  // it would exercise the reader guard rather than the latch this test covers.
+  await page.getByRole("button", { name: "Form Editor" }).first().click();
+  // Leaving while dirty asks first; discarding is the leave that ends the
+  // Annotate session unsaved, which is the state this test comes back from.
+  await page.getByRole("button", { name: "Discard & Leave" }).first().click();
   await expect(saveChangesButton(page)).toHaveCount(0, { timeout: 10_000 });
 
   // Editing again must surface the panel once more. Keying this off the dirty

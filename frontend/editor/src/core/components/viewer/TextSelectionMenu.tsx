@@ -96,11 +96,25 @@ function TextSelectionMenuInner({
   );
 
   const showAbove = placement?.suggestTop ?? true;
-  const { overlayRef, mounted } = useAnchoredOverlay({
+  const { overlayRef, mounted, measure } = useAnchoredOverlay({
     anchorRef: wrapperRef,
     enabled: Boolean(selected),
     placement: showAbove ? "above" : "below",
   });
+
+  // The plugin can move the selection wrapper through menuWrapperProps.style
+  // with no scroll or resize to re-measure on, so the wrapper's own style
+  // attribute is the only signal that its position changed.
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!selected || !wrapper) return;
+    const observer = new MutationObserver(() => measure());
+    observer.observe(wrapper, {
+      attributes: true,
+      attributeFilter: ["style"],
+    });
+    return () => observer.disconnect();
+  }, [selected, measure]);
 
   // Copies through the selection bridge rather than the plugin: the plugin
   // writes only via navigator.clipboard, which does not exist over plain HTTP.
