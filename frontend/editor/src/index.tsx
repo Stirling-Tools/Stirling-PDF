@@ -15,7 +15,7 @@ import ReactDOM from "react-dom/client";
 import { ColorSchemeScript } from "@mantine/core";
 import { BrowserRouter } from "react-router-dom";
 import App from "@app/App";
-import { i18nReady, installFullDictionaryOnIntent } from "@app/i18n"; // Initialize i18next and expose its readiness
+import "@app/i18n"; // Initialize i18next
 import { BASE_PATH } from "@app/constants/app";
 import { applyDevWorktreeLabel } from "@app/utils/applyDevWorktreeLabel";
 
@@ -26,18 +26,12 @@ if (!container) {
   throw new Error("Root container missing in index.html");
 }
 
-const tree = (
+const root = ReactDOM.createRoot(container); // Finds the root DOM element
+root.render(
   <React.StrictMode>
     <ColorSchemeScript />
     <BrowserRouter basename={BASE_PATH}>
       <App />
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
-
-// Rendered once the first locale is in memory rather than immediately: a first render that suspends on the.
-void i18nReady.then(() => {
-  installFullDictionaryOnIntent();
-  // The build puts the landing's own markup into #root (scripts/prerender-shell.mjs) so the first paint needs.
-  ReactDOM.createRoot(container).render(tree);
-});

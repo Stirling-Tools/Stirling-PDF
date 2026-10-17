@@ -281,43 +281,6 @@ function isMarkdownPackage(pkg: string): boolean {
 }
 
 /** Preload for the one dictionary the app is about to fetch. */
-function localePreloadTag(codes: string[]): string {
-  // The landing boots on intent, so its dictionary rides that boot; a deep route boots
-  // at parse time and gets the preload ahead of the app's own request.
-  return `<script>
-      window.__spdfLocalePreload = function () {
-        var supported = ${JSON.stringify(codes)};
-        var stored = null;
-        try {
-          stored = localStorage.getItem("i18nextLng");
-        } catch (e) {
-          /* storage blocked: the browser language below still applies */
-        }
-        var wanted = String(stored || navigator.language || "en-US").replace(
-          "_",
-          "-",
-        );
-        var match = null;
-        for (var i = 0; i < supported.length; i++) {
-          if (supported[i].toLowerCase() === wanted.toLowerCase()) {
-            match = supported[i];
-            break;
-          }
-        }
-        // No match - including a bare "en" - means en-US, the same mapping the
-        // app applies in detection.convertDetectedLanguage.
-        if (!match) match = "en-US";
-        var link = document.createElement("link");
-        link.rel = "preload";
-        link.as = "fetch";
-        link.crossOrigin = "anonymous";
-        link.href =
-          "locales/" + encodeURIComponent(match) + "/startup.json";
-        document.head.appendChild(link);
-      };
-    </script>`;
-}
-
 /** Generates the locale delivery files and injects the startup preload for one of them. */
 /** Preloads the initial route's own files from the built HTML. */
 // Every page the app can be served from gets the hints: a route page is its own
@@ -383,30 +346,6 @@ async function writeLandingShell(
     }
     throw error;
   }
-}
-
-function localeAssetsPlugin(): PluginOption {
-  return {
-    name: "locale-assets",
-    async configResolved() {
-      const { generateLocaleAssets } =
-        // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
-        await import("./scripts/generate-locale-assets.mjs");
-      generateLocaleAssets({ log: (message: string) => console.log(message) });
-    },
-    transformIndexHtml: {
-      order: "pre",
-      async handler(html: string) {
-        const { deliveredLocaleCodes } =
-          // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
-          await import("./scripts/generate-locale-assets.mjs");
-        return html.replace(
-          "<!--LOCALE_PRELOAD-->",
-          localePreloadTag(deliveredLocaleCodes()),
-        );
-      },
-    },
-  };
 }
 
 function compressStaticCopyPlugin(): PluginOption {
@@ -898,7 +837,6 @@ export default defineConfig(async ({ mode, command }) => {
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
-      localeAssetsPlugin(),
       // Desktop/mobile output is embedded in the Tauri binary, which brotli-
       // compresses every asset itself and never negotiates encodings, so the
       // .br/.gz siblings would only add their full size (tens of MB) to the

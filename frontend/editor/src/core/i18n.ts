@@ -1,15 +1,7 @@
-import i18n, { type ResourceKey } from "i18next";
+import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import LocaleBackend, {
-  FULL_FILE,
-  STARTUP_FILE,
-  localeFileUrl,
-  markDictionaryComplete,
-  isDictionaryComplete,
-  pendingDictionaryLoad,
-  startDictionaryLoad,
-} from "@app/i18n/localeBackend";
+import TomlBackend from "@app/i18n/tomlBackend";
 import {
   supportedLanguages,
   rtlLanguages,
@@ -33,12 +25,11 @@ export {
 };
 
 i18n
-  .use(LocaleBackend)
+  .use(TomlBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-// No fallback language. Each delivery file already carries the source strings for the keys its language is.
-    fallbackLng: false,
+    fallbackLng: "en-US",
     supportedLngs: Object.keys(supportedLanguages),
     load: "currentOnly",
     nonExplicitSupportedLngs: false,
@@ -52,17 +43,14 @@ i18n
     },
 
     backend: {
-// JSON rather than the authored TOML: the parse happens at build time, and `scripts/generate-locale-assets.mjs`.
-      loadPath: (lngs: string[]) => {
-        const language = lngs[0];
-// The language loaded at init needs only the startup subset: the keys the first screen resolves, ~7 KiB brotli.
-        if (i18n.isInitialized) {
-          return localeFileUrl(language, FULL_FILE);
-        }
-        return localeFileUrl(language, STARTUP_FILE);
+      loadPath: (lngs: string[], namespaces: string[]) => {
+        const lng = lngs[0];
+        const basePath = import.meta.env.BASE_URL || "/";
+        const cleanBasePath = basePath.endsWith("/")
+          ? basePath.slice(0, -1)
+          : basePath;
+        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.toml`;
       },
-      // Covers a missing or corrupt file, not missing keys.
-      fallbackLocale: "en-US",
     },
 
     detection: {
@@ -84,62 +72,6 @@ i18n
       transKeepBasicHtmlNodesFor: ["br", "strong", "i", "p"],
     },
   });
-
-/** Resolves once the first locale is loaded. */
-export const i18nReady: Promise<void> = i18n.isInitialized
-  ? Promise.resolve()
-  : new Promise((resolve) => {
-      i18n.on("initialized", () => {
-        resolve();
-      });
-    });
-
-/** Loads the complete dictionary for a route that renders keys outside the startup subset, and reports failure. */
-export async function loadFullDictionary(
-  language: string = i18n.language,
-): Promise<void> {
-  if (!language || isDictionaryComplete(language)) return;
-  const pending = pendingDictionaryLoad(language);
-  if (pending) return pending;
-  await startDictionaryLoad(language, async () => {
-    const url = localeFileUrl(language, FULL_FILE);
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to load translation file: ${url} (${response.status})`);
-    }
-    const dictionary = (await response.json()) as ResourceKey;
-    i18n.addResourceBundle(language, "translation", dictionary, true, false);
-    markDictionaryComplete(language);
-  });
-}
-
-/** Fetches the complete dictionary on the user's first interaction. */
-export function installFullDictionaryOnIntent(): void {
-  const load = () => {
-    document.removeEventListener("pointerdown", load, { capture: true });
-    document.removeEventListener("keydown", load, { capture: true });
-    void prefetchFullDictionary();
-  };
-  document.addEventListener("pointerdown", load, {
-    capture: true,
-    passive: true,
-  });
-  document.addEventListener("keydown", load, { capture: true, passive: true });
-}
-
-/** `loadFullDictionary` with its failure reduced to a warning. */
-async function prefetchFullDictionary(
-  language: string = i18n.language,
-): Promise<void> {
-  try {
-    await loadFullDictionary(language);
-  } catch (error) {
-    // A rejected fetch means no delivery server answered at all; anything else
-    // is a file the build should have written, which is worth naming.
-    if (error instanceof TypeError) return;
-    console.warn(`[i18n] ${String(error)}`);
-  }
-}
 
 // Set document direction based on language
 i18n.on("languageChanged", (lng) => {
@@ -211,9 +143,8 @@ export function setUserLanguage(language: string): void {
 /**
  * Updates the supported languages list dynamically based on config
  * If configLanguages is null/empty, all languages remain available
- * Otherwise, only the specified languages are enabled, and the first valid
- * option (preferring en-US when present) becomes the language used when the
- * current one is not allowed.
+ * Otherwise, only the specified languages are enabled with the first valid
+ * option (preferring en-US when present) used as the fallback language.
  *
  * @param configLanguages - Optional array of language codes from server config (ui.languages)
  * @param defaultLocale - Optional default language for new users (system.defaultLocale)
@@ -249,7 +180,7 @@ export function updateSupportedLanguages(
     return;
   }
 
-// The language to move to when the current one is not allowed: prefer validDefault if in the list, then en-US.
+  // Determine fallback: prefer validDefault if in the list, then en-US, then first valid language
   const fallback =
     validDefault && validLanguages.includes(validDefault)
       ? validDefault
@@ -258,6 +189,7 @@ export function updateSupportedLanguages(
         : validLanguages[0];
 
   i18n.options.supportedLngs = validLanguages;
+  i18n.options.fallbackLng = fallback;
 
   // If current language is not in the new supported list, switch to fallback with higher priority to override browser detection
   const currentLang = normalizeLanguageCode(i18n.language || "");

@@ -9,11 +9,5 @@ import {
 export function translatedLazy<T extends ComponentType<ComponentProps<T>>>(
   load: () => Promise<{ default: T }>,
 ): LazyExoticComponent<T> {
-  return lazy(async () => {
-    const [route] = await Promise.all([
-      load(),
-      import("@app/i18n").then((module) => module.loadFullDictionary()),
-    ]);
-    return route;
-  });
+  return lazy(load);
 }
