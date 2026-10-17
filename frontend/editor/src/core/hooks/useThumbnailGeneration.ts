@@ -101,13 +101,13 @@ async function processRequestQueue() {
             );
 
             if (result && result.success && result.thumbnail) {
-              thumbnailGenerationService.addThumbnailToCache(
+              const cached = thumbnailGenerationService.addThumbnailToCache(
                 request.pageId,
                 result.thumbnail,
                 fileId,
                 epoch,
               );
-              request.resolve(result.thumbnail);
+              request.resolve(cached ? result.thumbnail : null);
             } else {
               console.warn(`No result for page ${request.pageNumber}`);
               request.resolve(null);
@@ -162,11 +162,20 @@ export function useThumbnailGeneration() {
   );
 
   const addThumbnailToCache = useCallback(
-    (pageId: string, thumbnail: string, fileId?: FileId) => {
-      thumbnailGenerationService.addThumbnailToCache(pageId, thumbnail, fileId);
+    (pageId: string, thumbnail: string, fileId?: FileId, epoch?: number) => {
+      thumbnailGenerationService.addThumbnailToCache(
+        pageId,
+        thumbnail,
+        fileId,
+        epoch,
+      );
     },
     [],
   );
+
+  const getCacheEpoch = useCallback((): number => {
+    return thumbnailGenerationService.epoch;
+  }, []);
 
   const getThumbnailFromCache = useCallback((pageId: string): string | null => {
     return thumbnailGenerationService.getThumbnailFromCache(pageId);
@@ -263,6 +272,7 @@ export function useThumbnailGeneration() {
   return {
     generateThumbnails,
     addThumbnailToCache,
+    getCacheEpoch,
     getThumbnailFromCache,
     getCacheStats,
     stopGeneration,

@@ -252,9 +252,9 @@ export class ThumbnailGenerationService {
     thumbnail: string,
     fileId?: FileId,
     epoch?: number,
-  ): void {
+  ): boolean {
     // A result from before a cleanup must not repopulate the cache.
-    if (epoch !== undefined && epoch !== this.cacheEpoch) return;
+    if (epoch !== undefined && epoch !== this.cacheEpoch) return false;
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
     const previous = this.thumbnailCache.get(pageId)?.sizeBytes ?? 0;
     const isNew = !this.thumbnailCache.has(pageId);
@@ -278,6 +278,7 @@ export class ThumbnailGenerationService {
     });
 
     this.currentCacheSize += sizeBytes - replaced;
+    return true;
   }
 
   /** Drop every cached page image that came from one file. */

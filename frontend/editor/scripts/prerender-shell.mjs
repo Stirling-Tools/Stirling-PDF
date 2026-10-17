@@ -80,7 +80,7 @@ function startStaticServer(root) {
   });
 }
 
-/** The stub module imports only types from Playwright, so a plain transpile leaves a module that evaluates in. */
+/** The stub module only imports Playwright types, so esbuild can strip types and load it directly in Node. */
 async function loadStubHelper(editorDir) {
   const source = await readFile(
     join(editorDir, "src/core/tests/helpers/api-stubs.ts"),
@@ -96,7 +96,7 @@ async function loadStubHelper(editorDir) {
   return import(dataUrl);
 }
 
-/** Installed on every navigation so the capture, the per-language passes and the emitted script all agree on. */
+/** Installed on every navigation so capture, per-language passes, and the client script share one text walk. */
 function installShellHelpers() {
   const accepts = (node) => {
     const parent = node.parentElement;
@@ -114,7 +114,6 @@ function installShellHelpers() {
   globalThis.__shellTexts = () =>
     walk(document.getElementById("root")).map((node) => node.nodeValue);
   globalThis.__shellCount = () => walk(document.getElementById("root")).length;
-  /** The source language's words stay in the markup: a text node emptied here does not survive serialization, so. */
   // The whole of #root, not only the frame: the client hydrates this markup, so it has
   // to be exactly what React's first render produces, frame included.
   globalThis.__shellCritical = () => {
@@ -134,8 +133,10 @@ function installShellHelpers() {
     };
     const applies = (selector) => {
       for (const part of selector.split(",")) {
-        const test = part.trim();
-        if (!test || test.includes("::")) return true;
+        const raw = part.trim();
+        if (!raw) return true;
+        const test = raw.replace(/::[\w-]+(?:\([^)]*\))?/g, "").trim();
+        if (!test) return true;
         try {
           if (elements.some((element) => element.matches(test))) return true;
         } catch {
@@ -172,8 +173,10 @@ function installShellHelpers() {
         // A sheet the page cannot read cannot be inlined.
       }
     }
-    // A custom property nothing in the shell reads is a byte the visitor pays for.
-    const markup = root.outerHTML;
+    // Strip inline style/script tags from the clone so Mantine's full variable dump does not block pruning.
+    const cleanRoot = root.cloneNode(true);
+    cleanRoot.querySelectorAll("script, style").forEach((el) => el.remove());
+    const markup = cleanRoot.outerHTML;
     for (let pass = 0; pass < 4; pass++) {
       const names = new Set();
       for (const match of (out + markup).matchAll(/var\(\s*--([\w-]+)/g)) {
@@ -212,9 +215,10 @@ function installShellHelpers() {
   globalThis.__shellMarkup = () => {
     const root = document.getElementById("root");
     if (!root?.querySelector(".app-frame")) return null;
-    // Exactly what React rendered: an extra attribute here is an extra attribute
-    // the client cannot account for, and hydration fails on it.
-    return root.innerHTML;
+    // Strip inline <style>/<script> tags that were already extracted into #shell-critical or clobber dark mode.
+    const clean = root.cloneNode(true);
+    clean.querySelectorAll("script, style").forEach((el) => el.remove());
+    return clean.innerHTML;
   };
   /** Resolves once the rendered text stops changing, so the capture is complete. */
   globalThis.__shellSettled = (boundMs) =>
@@ -301,12 +305,12 @@ export async function captureShell({
     await page.evaluate(() => globalThis.__shellReady(10, 500, 120_000));
     await page.evaluate(() => globalThis.__shellInlineImages());
 
+    const critical = await page.evaluate(() => globalThis.__shellCritical());
     const captured = await page.evaluate(() => globalThis.__shellMarkup());
     if (!captured) throw new Error("the landing screen rendered no app frame");
-    // Assets imported as `new URL(..., import.meta.url)` resolve against the capture server, so its origin would be.
+    // Strip the temporary capture server origin so asset URLs stay relative to the deployment base.
     const markup = captured.split(`${server.origin}/`).join("");
     const nodes = await page.evaluate(() => globalThis.__shellCount());
-    const critical = await page.evaluate(() => globalThis.__shellCritical());
 
     const strings = {};
     const dropped = [];
@@ -340,29 +344,78 @@ export async function captureShell({
   }
 }
 
-/** The resolver has to run before paint and must never leave wrong words up. */
-function shellScript({ wide, narrow }) {
-  const strings = {};
-  for (const [language, texts] of Object.entries(wide.strings)) {
-    strings[language] = { wide: texts };
-    if (narrow?.strings[language]) {
-      strings[language].narrow = narrow.strings[language];
+/** Deduplicates top-level rules across wide and narrow critical CSS and drops empty blocks and unused keyframes. */
+function mergeCriticalCss(wideCss, narrowCss, combinedMarkup) {
+  const splitRules = (css) => {
+    const out = [];
+    let depth = 0;
+    let start = 0;
+    for (let i = 0; i < css.length; i++) {
+      if (css[i] === "{") depth++;
+      else if (css[i] === "}") {
+        depth--;
+        if (depth === 0) {
+          const rule = css.slice(start, i + 1).trim();
+          if (rule) out.push(rule);
+          start = i + 1;
+        }
+      }
+    }
+    return out;
+  };
+  let merged = [...new Set(splitRules(`${wideCss}\n${narrowCss}`))].join("\n");
+  for (let pass = 0; pass < 4; pass++) {
+    const names = new Set();
+    for (const m of (merged + combinedMarkup).matchAll(/var\(\s*--([\w-]+)/g)) {
+      names.add(m[1]);
+    }
+    const before = merged;
+    merged = merged.replace(/--([\w-]+)\s*:[^;{}]*;?/g, (decl, name) =>
+      names.has(name) ? decl : "",
+    );
+    if (merged === before) break;
+  }
+  const nonEmpty = splitRules(merged).filter((rule) => {
+    const inner = rule
+      .slice(rule.indexOf("{") + 1, rule.lastIndexOf("}"))
+      .trim();
+    if (!inner || /^:root\s*\{\s*\}$/.test(inner)) return false;
+    return true;
+  });
+  const usedKeyframes = new Set();
+  for (const rule of nonEmpty) {
+    if (!rule.startsWith("@keyframes")) {
+      for (const m of rule.matchAll(/animation(?:-name)?\s*:[^;}]+/g)) {
+        for (const token of m[0].split(/[\s,:()]+/)) usedKeyframes.add(token);
+      }
     }
   }
+  return nonEmpty
+    .filter((rule) => {
+      if (!rule.startsWith("@keyframes")) return true;
+      const name = /^@keyframes\s+([^\s{]+)/.exec(rule)?.[1];
+      return !name || usedKeyframes.has(name);
+    })
+    .join("");
+}
+
+/** The resolver has to run before paint and must never leave wrong words up. */
+function shellScript({ wide, narrow }) {
+  const langs = Object.keys(wide.strings);
   const payload = JSON.stringify({
     base: wide.base,
     rtl: wide.rtl,
     nodes: { wide: wide.nodes, narrow: narrow?.nodes ?? 0 },
-    langs: Object.keys(strings),
-    // Only the base language's words ride the document; the rest live in
-    // `dist/shells/<language>.json` and are fetched when they are needed.
-    strings: { [wide.base]: strings[wide.base] },
+    langs,
+    // Base language strings are already in the DOM markup; non-base packs live in `dist/shells/<lang>.json`.
+    strings: {},
   }).replace(/</g, "\\u003c");
   return [
     `<script id="shell-strings" type="application/json">${payload}</script>`,
     `<script>(function(){var root=document.getElementById("root");if(!root)return;` +
-      `if(document.documentElement.hasAttribute("data-shell-hidden"))return;`,
-    `function drop(){while(root.firstChild)root.removeChild(root.firstChild);root.removeAttribute("data-shell");if(window.__spdfBoot)window.__spdfBoot();}`,
+      `function clearShells(){var s=root.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();}` +
+      `if(document.documentElement.hasAttribute("data-shell-hidden")){clearShells();root.removeAttribute("data-shell");return;}`,
+    `function drop(){clearShells();root.removeAttribute("data-shell");if(window.__spdfBoot)window.__spdfBoot();}`,
     `try{var data=JSON.parse(document.getElementById("shell-strings").textContent);`,
     `var stored=null;try{stored=localStorage.getItem("i18nextLng");}catch(e){}`,
     // A tag arrives in any case and with either separator, so match it exactly, then
@@ -374,17 +427,18 @@ function shellScript({ wide, narrow }) {
     `if(k===primary||k.split("-")[0]===primary)return keys[j];}return null;}`,
     `var language=pick(stored)||pick(navigator.language)||pick(data.base);`,
     `if(!language){drop();return;}`,
-    `function apply(shell){try{`,
+    `function apply(shell){try{` +
+      `if(shell&&shell.both){shell={wide:shell.both,narrow:shell.both};}`,
+    `var shells=root.querySelectorAll("[data-shell-for]");if(!shells.length)return;`,
     // Both shells are in the document and the stylesheet picks one, so the first
     // layout is already the final one; only the words have to change here.
     `var active=matchMedia("(max-width: 1024px)").matches?"narrow":"wide";`,
-    `if(!shell[active]){drop();return;}`,
-    `var shells=root.querySelectorAll("[data-shell-for]");`,
+    `if(shell&&!shell[active]){drop();return;}`,
     // Two copies of an id confuse a label or a search box that looks one up, so the
     // shell the viewport does not draw gives its ids up.
     `for(var s=0;s<shells.length;s++)if(shells[s].getAttribute("data-shell-for")!==active){`,
     `var staled=shells[s].querySelectorAll("[id]");for(var t=0;t<staled.length;t++)staled[t].removeAttribute("id");}`,
-    `for(var i=0;i<shells.length;i++){var name=shells[i].getAttribute("data-shell-for");`,
+    `if(shell){for(var i=0;i<shells.length;i++){var name=shells[i].getAttribute("data-shell-for");`,
     `var list=shell[name];if(!list)continue;`,
     `if(list.length!==data.nodes[name]){drop();return;}`,
     `var walker=document.createTreeWalker(shells[i],NodeFilter.SHOW_TEXT);var texts=[];`,
@@ -392,7 +446,7 @@ function shellScript({ wide, narrow }) {
     `if(!parent||parent.tagName==="SCRIPT"||parent.tagName==="STYLE")continue;`,
     `if(!node.nodeValue||!node.nodeValue.trim())continue;texts.push(node);}`,
     `if(texts.length!==list.length){drop();return;}`,
-    `for(var j=0;j<texts.length;j++)texts[j].nodeValue=list[j];}`,
+    `for(var j=0;j<texts.length;j++)texts[j].nodeValue=list[j];}}`,
     // React builds these through `new URL(..., import.meta.url)`, which is absolute;
     // the capture stores them base-relative so the markup follows the deployment base.
     `var images=root.querySelectorAll("img[src]");`,
@@ -402,10 +456,8 @@ function shellScript({ wide, narrow }) {
     `document.documentElement.lang=language;`,
     `root.removeAttribute("data-shell");`,
     `}catch(e){drop();}}`,
-    // The base language is in the document; every other one loads its words first,
-    // and a shell that cannot get them stays hidden and boots the app instead.
-    `var inline=data.strings[language];`,
-    `if(inline){apply(inline);}else{`,
+    // The base language is already in the DOM; every other language fetches its pack first.
+    `if(language===data.base){apply(null);}else{`,
     `fetch(new URL("shells/"+encodeURIComponent(language)+".json",document.baseURI))`,
     `.then(function(response){return response.ok?response.json():null;})`,
     `.then(function(shell){if(shell)apply(shell);else drop();},function(){drop();});}`,
@@ -417,7 +469,7 @@ function shellScript({ wide, narrow }) {
 const ENTRY_TAG =
   /<script\b[^>]*\btype="module"[^>]*\bsrc="([^"]+)"[^>]*><\/script>/;
 
-/** Leaves the entry inert and boots it on the first gesture, a deep link or a file, so the shell's paint never. */
+/** Holds the module entry until the first gesture, deep link, or file selection so the shell paints first. */
 function deferEntry(html) {
   const entry = ENTRY_TAG.exec(html);
   if (!entry) throw new Error("index.html has no module entry script");
@@ -425,7 +477,9 @@ function deferEntry(html) {
     ...html.matchAll(
       /<link\b[^>]*\brel="modulepreload"[^>]*\bhref="([^"]+)"[^>]*>/g,
     ),
-  ].map((match) => match[1]);
+  ]
+    .map((match) => match[1])
+    .filter((href) => href !== entry[1]);
   // The tab icon and the manifest are fetched after the first paint, not before it.
   const meta = [
     ...html.matchAll(
@@ -460,37 +514,41 @@ function deferEntry(html) {
       "function restore(){var hints=payload.hints||[];" +
       'for(var h=0;h<hints.length;h++){var hint=document.createElement("link");hint.rel="modulepreload";' +
       'hint.crossOrigin="anonymous";hint.href=hints[h];document.head.appendChild(hint);}' +
+      'var lng=document.documentElement.lang;if(lng&&lng!=="en"){var lp=document.createElement("link");' +
+      'lp.rel="preload";lp.as="fetch";lp.crossOrigin="anonymous";lp.href=new URL("locales/"+lng+"/translation.toml",document.baseURI).href;document.head.appendChild(lp);}' +
       'var meta=payload.meta||[];for(var m=0;m<meta.length;m++){var icon=document.createElement("link");' +
       "icon.rel=meta[m].rel;icon.href=meta[m].href;document.head.appendChild(icon);}" +
       'var links=document.querySelectorAll("link[data-href]");' +
       'for(var k=0;k<links.length;k++){var l=links[k];l.href=l.getAttribute("data-href");l.removeAttribute("data-href");l.disabled=false;}}' +
-      "var focused=document.activeElement;" +
-      'var keepId=focused&&focused.tagName==="INPUT"&&focused.id?focused.id:null;' +
-      "var keepValue=keepId?focused.value:null;" +
+      "var keepId=null;var keepValue=null;" +
+      'addEventListener("focusin",function(e){var t=e.target;if(t&&t.tagName==="INPUT"&&t.id&&t.closest&&t.closest("[data-shell-for]")){keepId=t.id;keepValue=t.value||"";}},true);' +
+      'addEventListener("input",function(e){var t=e.target;if(t&&t.id&&t.id===keepId&&"value" in t)keepValue=t.value||"";},true);' +
       // A tap on a search box must not lose what was typed while the shell was up.
-      'function boot(){if(booted)return;booted=true;removeEventListener("change",onChange,true);' +
+      "function boot(){if(booted)return;booted=true;" +
       "restore();" +
       'var script=document.createElement("script");script.type="module";' +
       'script.crossOrigin="anonymous";script.src=src;document.head.appendChild(script);' +
       "if(keepId){var tried=0;(function refocus(){var el=document.getElementById(keepId);" +
-      'if(el&&!el.closest("[data-shell-for]")){el.value=keepValue;el.focus();return;}' +
+      'if(el&&!el.closest("[data-shell-for]")){if(keepValue){var d=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");if(d&&d.set)d.set.call(el,keepValue);else el.value=keepValue;el.dispatchEvent(new Event("input",{bubbles:true}));}el.focus();return;}' +
       "if(tried++<200)setTimeout(refocus,50);})();}}" +
       "window.__spdfBoot=boot;" +
       // A deep link is an app page from its first frame: boot at once, keep the
       // landing shell hidden until React paints over it.
-      'var clean=function(url){var cut=url.split("#")[0].split("?")[0];' +
-      'if(cut.slice(-11)==="/index.html")cut=cut.slice(0,-11);' +
-      'while(cut.slice(-1)==="/")cut=cut.slice(0,-1);return cut;};' +
-      "if(clean(location.href)!==clean(document.baseURI)){" +
+      'var basePath=new URL(src,document.baseURI).pathname.replace(/\\/assets\\/[^/]+$/,"").replace(/\\/+$/,"");' +
+      'var curPath=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");' +
+      "if(curPath!==basePath){" +
       'document.documentElement.setAttribute("data-shell-hidden","");' +
-      "restore();document.write('<script type=\"module\" crossorigin src=\"'+src+'\"></'+'script>');return;}" +
+      "boot();return;}" +
       // The shell is the first screen, so the app waits for a gesture.
       'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +
       "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
-      // A shell link boots and routes, instead of a page load the app then undoes.
-      'addEventListener("click",function(event){if(booted)return;' +
-      'var link=event.target&&event.target.closest?event.target.closest("a[href]"):null;' +
-      'if(!link)return;var href=link.getAttribute("href");' +
+      // A shell link or file button boots and forwards the action to the live app.
+      'addEventListener("click",function(event){if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;' +
+      'var t=event.target;if(!t||!t.closest||!t.closest("[data-shell-for]"))return;' +
+      'var btn=t.closest("button[data-testid=\\"files-button\\"],button[data-testid=\\"pdf-library-add-files\\"],button.sui-btn--primary");' +
+      'if(btn){var sh=btn.closest("[data-shell-for]");var fi=sh&&sh.querySelector("input[type=file]");if(fi)fi.click();boot();return;}' +
+      'var link=t.closest("a[href]");' +
+      'if(!link||link.target||link.hasAttribute("download"))return;var href=link.getAttribute("href");' +
       'if(!href||href.charAt(0)==="#"||/^[a-z]+:/i.test(href))return;' +
       "event.preventDefault();boot();" +
       'var waited=0;(function route(){if(document.querySelector("[data-shell-for]")&&waited++<200){setTimeout(route,50);return;}' +
@@ -498,8 +556,8 @@ function deferEntry(html) {
       // A file picked before the app is up is carried over to its input.
       "var pending=null;var tries=0;" +
       "function onChange(event){var target=event.target;" +
-      'if(!target||target.tagName!=="INPUT"||target.type!=="file"||!target.files||!target.files.length)return;' +
-      "pending=target.files;boot();handOff();}" +
+      'if(!target||target.tagName!=="INPUT"||target.type!=="file"||!target.closest||!target.closest("[data-shell-for]")||!target.files||!target.files.length)return;' +
+      'removeEventListener("change",onChange,true);pending=target.files;boot();handOff();}' +
       'addEventListener("change",onChange,true);' +
       "function handOff(){if(!pending)return;" +
       'if(document.querySelector("[data-shell-for]")&&tries++<200){setTimeout(handOff,50);return;}' +
@@ -538,7 +596,7 @@ export async function prerenderShell({
   editorDir = resolve(distDir, ".."),
 }) {
   const wide = await captureShell({ distDir, editorDir });
-  // The landing draws a different frame at a phone's width, and React hydrates whichever one the visitor's.
+  // Capture both desktop and mobile frames so CSS media queries can pick the matching layout before JS runs.
   let narrow = null;
   try {
     narrow = await captureShell({
@@ -561,11 +619,17 @@ export async function prerenderShell({
         `saw ${wide.dropped.slice(0, 5).join(", ") || "nothing"})`,
     );
   }
+  const criticalCss = mergeCriticalCss(
+    wide.critical,
+    narrow ? narrow.critical : "",
+    `${wide.markup}\n${narrow ? narrow.markup : ""}`,
+  );
   const emitted = [
     SHELL_START,
-    // Both shells ship inline: the stylesheet picks the one the viewport draws, so the browser's first layout is.
+    // Ship both shells inline and let the media query pick one so the first layout matches the viewport.
     `<style>#root[data-shell="pending"]{visibility:hidden}[data-shell-for="narrow"]{display:none}@media (max-width: 1024px){[data-shell-for="wide"]{display:none}[data-shell-for="narrow"]{display:block}}</style>`,
-    `<style id="shell-critical">${wide.critical}${narrow ? narrow.critical : ""}</style>`,
+    `<noscript><style>#root[data-shell="pending"]{visibility:visible!important}</style></noscript>`,
+    `<style id="shell-critical">${criticalCss}</style>`,
     `<div id="root" data-shell="pending"><div data-shell-for="wide">${wide.markup}</div>`,
     narrow ? `<div data-shell-for="narrow">${narrow.markup}</div>` : "",
     `</div>`,
@@ -578,9 +642,15 @@ export async function prerenderShell({
   await mkdir(shellsDir, { recursive: true });
   for (const language of Object.keys(wide.strings)) {
     if (language === wide.base) continue;
-    const both = { wide: wide.strings[language] };
-    if (narrow?.strings[language]) both.narrow = narrow.strings[language];
-    await writeFile(join(shellsDir, `${language}.json`), JSON.stringify(both));
+    const wideStrings = wide.strings[language];
+    const narrowStrings = narrow?.strings[language];
+    const same = narrowStrings
+      ? JSON.stringify(narrowStrings) === JSON.stringify(wideStrings)
+      : true;
+    const pack = same
+      ? { both: wideStrings }
+      : { wide: wideStrings, narrow: narrowStrings };
+    await writeFile(join(shellsDir, `${language}.json`), JSON.stringify(pack));
   }
   return {
     nodes: wide.nodes,
