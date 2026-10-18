@@ -711,6 +711,10 @@ export default defineConfig(async ({ mode, command }) => {
       // Minifies better than esbuild for this esnext target.
       cssMinify: "lightningcss" as const,
       rollupOptions: {
+        input: {
+          index: path.resolve(__dirname, "index.html"),
+          "msal-redirect": path.resolve(__dirname, "msal-redirect.html"),
+        },
         output: {
           assetFileNames: mjsToJsAssetFileNames,
           manualChunks(id: string, meta: ManualChunkMeta) {

@@ -11,6 +11,7 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.microsoft.GraphEndpoints;
 
 class ConnectedAccountCallbackTest {
 
@@ -19,7 +20,11 @@ class ConnectedAccountCallbackTest {
     private ConnectedAccountController controller() {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getSystem().setFrontendUrl("https://stirling.example");
-        return new ConnectedAccountController(service, properties);
+        return new ConnectedAccountController(
+                service,
+                properties,
+                new GraphEndpoints(
+                        GraphEndpoints.DEFAULT_GRAPH_URL, GraphEndpoints.DEFAULT_LOGIN_URL));
     }
 
     @Test

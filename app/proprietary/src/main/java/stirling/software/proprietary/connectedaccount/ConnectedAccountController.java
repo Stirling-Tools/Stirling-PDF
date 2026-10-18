@@ -1,10 +1,13 @@
 package stirling.software.proprietary.connectedaccount;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.microsoft.GraphEndpoints;
 import stirling.software.proprietary.security.model.User;
 
 @Slf4j
@@ -42,9 +47,12 @@ public class ConnectedAccountController {
     private static final String NONCE_COOKIE = "stirling_connect_nonce";
     private static final String CONNECT_FAILED = "The account could not be connected.";
     private static final String PERSONAL_MICROSOFT_TENANT = "9188040d-6c67-4c5b-b112-36a304b66dad";
+    private static final Set<String> SHAREPOINT_HOST_SUFFIXES =
+            Set.of(".sharepoint.com", ".sharepoint.us", ".sharepoint.de", ".sharepoint.cn");
 
     private final ConnectedAccountService service;
     private final ApplicationProperties applicationProperties;
+    private final GraphEndpoints graphEndpoints;
 
     @GetMapping
     public ConnectedAccountsResponse list(@AuthenticationPrincipal User user) {
@@ -150,6 +158,62 @@ public class ConnectedAccountController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/access-token")
+    public AccessTokenResponse accessToken(
+            @PathVariable long id,
+            @RequestBody AccessTokenRequest request,
+            @AuthenticationPrincipal User user) {
+        requireUser(user);
+        ConnectedAccount account =
+                service.findOwned(user, id)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        List<String> scopes = scopesFor(account.cloudProvider(), request.resource());
+        try {
+            return new AccessTokenResponse(service.accessToken(id, scopes));
+        } catch (AccountReconnectRequiredException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, e.getMessage());
+        }
+    }
+
+    private List<String> scopesFor(CloudProvider provider, String resource) {
+        if (resource == null || resource.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "resource is required");
+        }
+        if (provider == CloudProvider.GOOGLE) {
+            if (!"drive".equals(resource)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
+            }
+            return List.of();
+        }
+        if ("graph".equals(resource)) {
+            return List.of(MicrosoftOAuthClient.BROWSER_SCOPE);
+        }
+        URI uri;
+        try {
+            uri = URI.create(resource);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
+        }
+        String origin = uri.getScheme() + "://" + uri.getAuthority();
+        if (!isSharePoint(uri) && !origin.equals(graphOrigin())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
+        }
+        return List.of(origin + "/.default");
+    }
+
+    private static boolean isSharePoint(URI uri) {
+        String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.ROOT);
+        return "https".equals(uri.getScheme())
+                && SHAREPOINT_HOST_SUFFIXES.stream().anyMatch(host::endsWith);
+    }
+
+    private String graphOrigin() {
+        URI graph = URI.create(graphEndpoints.graphUrl());
+        return graph.getScheme() + "://" + graph.getAuthority();
+    }
+
     private String publicBaseUrl() {
         String configured = applicationProperties.getSystem().getFrontendUrl();
         if (configured != null && !configured.isBlank()) {
@@ -244,4 +308,8 @@ public class ConnectedAccountController {
             boolean personal,
             String lastError,
             LocalDateTime createdAt) {}
+
+    public record AccessTokenRequest(String resource) {}
+
+    public record AccessTokenResponse(String accessToken) {}
 }
