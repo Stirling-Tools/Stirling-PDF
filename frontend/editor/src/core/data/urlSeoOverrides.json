@@ -137,11 +137,11 @@
   },
   "/ocr": {
     "title": "OCR PDF",
-    "description": "Cleans up scans and detects text from images within a PDF and re-adds it as text."
+    "description": "Cleanup scans and detects text from images within a PDF and re-adds it as text."
   },
   "/ocr-pdf": {
     "title": "OCR PDF",
-    "description": "Cleans up scans and detects text from images within a PDF and re-adds it as text."
+    "description": "Cleanup scans and detects text from images within a PDF and re-adds it as text."
   },
   "/watermark": {
     "title": "Add Watermark to PDF",
@@ -217,7 +217,7 @@
   },
   "/add-image": {
     "title": "Add Image to PDF",
-    "description": "Adds an image onto a set location on the PDF"
+    "description": "Adds a image onto a set location on the PDF"
   },
   "/add-stamp": {
     "title": "Add Stamp to PDF",
