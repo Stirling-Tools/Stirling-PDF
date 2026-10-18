@@ -1,5 +1,3 @@
-/* Shared brand lockup (mark + "Stirling" wordmark). The wordmark toggles by
-   colour scheme so one component works in the editor and the portal. */
 .sui-logo {
   display: inline-flex;
   align-items: center;
@@ -20,31 +18,5 @@
   display: block;
   width: auto;
   aspect-ratio: 58 / 21;
-}
-
-/* Light wordmark by default; dark wordmark under dark scheme or dark OS preference. */
-.sui-logo__wordmark--dark {
-  display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-mantine-color-scheme="light"]):not([data-theme="light"])
-    .sui-logo__wordmark--light {
-    display: none;
-  }
-
-  :root:not([data-mantine-color-scheme="light"]):not([data-theme="light"])
-    .sui-logo__wordmark--dark {
-    display: block;
-  }
-}
-
-[data-mantine-color-scheme="dark"] .sui-logo__wordmark--light,
-[data-theme="dark"] .sui-logo__wordmark--light {
-  display: none;
-}
-
-[data-mantine-color-scheme="dark"] .sui-logo__wordmark--dark,
-[data-theme="dark"] .sui-logo__wordmark--dark {
-  display: block;
+  color: var(--c-text);
 }
