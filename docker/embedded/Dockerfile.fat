@@ -61,11 +61,14 @@ COPY . .
 
 # Include the processor (admin portal) in the bundled editor; false leaves it out.
 ARG BUILD_PORTAL=true
+ARG PRERENDER_SHELL=0
+ENV PRERENDER_SHELL=${PRERENDER_SHELL}
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
 RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locked \
     --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=locked \
     JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
+    PRERENDER_SHELL=${PRERENDER_SHELL} \
     DISABLE_ADDITIONAL_FEATURES=false \
     gradle clean build \
       -PbuildWithFrontend=true \

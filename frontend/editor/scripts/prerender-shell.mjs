@@ -1,5 +1,6 @@
 /** Puts the landing screen's first paint into index.html. */
 import { createServer } from "node:http";
+import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { extname, join, normalize, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -71,6 +72,7 @@ function startStaticServer(root) {
   });
   return new Promise((ready) => {
     server.listen(0, "127.0.0.1", () => {
+      server.unref();
       const { port } = server.address();
       ready({
         origin: `http://127.0.0.1:${port}`,
@@ -282,13 +284,43 @@ export async function captureShell({
   viewport = { width: 1350, height: 940 },
 }) {
   const { chromium } = await import("@playwright/test");
+  const execPath = process.env.PRERENDER_CHROMIUM_PATH || undefined;
+  if (execPath) {
+    if (!existsSync(execPath)) {
+      throw new Error(
+        `Chromium binary not found at PRERENDER_CHROMIUM_PATH=${execPath}`,
+      );
+    }
+  } else {
+    try {
+      const defaultPath = chromium.executablePath();
+      if (!defaultPath || !existsSync(defaultPath)) {
+        throw new Error(
+          `Playwright Chromium browser is not installed (${defaultPath || "unknown"})`,
+        );
+      }
+    } catch (e) {
+      throw new Error(
+        `Playwright Chromium browser is not available: ${e instanceof Error ? e.message : String(e)}`,
+        { cause: e },
+      );
+    }
+  }
+
   const { mockAppApis } = await loadStubHelper(editorDir);
-  const server = await startStaticServer(distDir);
-  // A build image can point at its own browser instead of Playwright's download.
-  const browser = await chromium.launch({
-    executablePath: process.env.PRERENDER_CHROMIUM_PATH || undefined,
-  });
+  let server = null;
+  let browser = null;
   try {
+    server = await startStaticServer(distDir);
+    browser = await chromium.launch({
+      executablePath: execPath,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+      ],
+    });
     const context = await browser.newContext({ viewport });
     await context.addInitScript(`(${installShellHelpers.toString()})();`);
     await context.addInitScript((language) => {
@@ -339,8 +371,8 @@ export async function captureShell({
       base: SHELL_LANGUAGE,
     };
   } finally {
-    await browser.close();
-    await server.close();
+    if (browser) await browser.close().catch(() => {});
+    if (server) await server.close().catch(() => {});
   }
 }
 

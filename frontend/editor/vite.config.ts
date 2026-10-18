@@ -329,6 +329,12 @@ async function writeLandingShell(
   distDir: string,
   editorDir: string,
 ): Promise<void> {
+  if (
+    process.env.PRERENDER_SHELL === "0" ||
+    process.env.PRERENDER_SHELL === "false"
+  ) {
+    return;
+  }
   try {
     const { prerenderShell } =
       // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist

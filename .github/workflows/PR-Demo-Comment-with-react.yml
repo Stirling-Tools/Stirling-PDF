@@ -169,6 +169,7 @@ jobs:
     environment: pr-preview
     needs: check-comment
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     permissions:
       contents: read # actions/checkout, incl. the PR merge ref
       issues: write # reactions, 'pr-deployed' label, deployment URL comment
@@ -211,9 +212,11 @@ jobs:
           context: .
           file: ./docker/embedded/Dockerfile
           push: true
+          cache-from: type=gha,scope=stirling-pdf-latest
           tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:pr-${{ needs.check-comment.outputs.pr_number }}
           build-args: |
             VERSION_TAG=alpha
+            PRERENDER_SHELL=0
           platforms: linux/amd64
 
       - name: Build and push engine image
