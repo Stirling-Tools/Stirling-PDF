@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import { resolveRootTarget } from "@app/utils/loginLanding";
+import { initialRootTarget, resolveRootTarget } from "@app/utils/loginLanding";
 
 /** A decision, tagged with the visit it was made for so it can never go stale. */
 interface Decision {
@@ -43,10 +43,19 @@ export function RootGate({ children }: { children: ReactNode }) {
   const location = useLocation();
   // useLocation is already basename-relative, so this holds under subpath deploys.
   const isRoot = location.pathname === "/";
-  const [decision, setDecision] = useState<Decision | null>(null);
+  const [decision, setDecision] = useState<Decision | null>(() => {
+    if (!isRoot) return null;
+    const target = initialRootTarget();
+    return target !== undefined ? { visit: location.key, target } : null;
+  });
 
   useEffect(() => {
     if (!isRoot) return;
+    const initial = initialRootTarget();
+    if (initial !== undefined) {
+      setDecision({ visit: location.key, target: initial });
+      return;
+    }
     let active = true;
     void resolveRootTarget().then((target) => {
       // Ignore a stale lookup cancelled by a re-run; the live one decides.

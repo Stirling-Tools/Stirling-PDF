@@ -3,6 +3,7 @@ import { springAuth } from "@app/auth/spring/springAuthClient";
 import { getSpringAuthConfig } from "@app/auth/config";
 import { isAdminRole } from "@app/auth/roles";
 import { AuthContext } from "@app/auth/context";
+import { JWT_STORAGE_KEY } from "@app/auth/httpClient";
 import {
   defaultTranslate,
   type AuthContextValue,
@@ -13,6 +14,54 @@ import {
   type AuthTranslate,
 } from "@app/auth/types";
 import { suspendWorkbenchSession } from "@app/services/workbenchSession";
+
+/**
+ * Decodes the stored JWT payload synchronously so the authenticated shell
+ * mounts on the first render without waiting for the network check.
+ */
+function decodeInitialSpringSession(): AuthSession | null {
+  try {
+    if (typeof window === "undefined") return null;
+    const token = window.localStorage.getItem(JWT_STORAGE_KEY);
+    if (!token) return null;
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd(Math.ceil(base64Url.length / 4) * 4, "=");
+    const payload = JSON.parse(atob(base64)) as Record<string, unknown>;
+    if (!payload || typeof payload !== "object") return null;
+    const expSeconds = typeof payload.exp === "number" ? payload.exp : 0;
+    const expiresAt = expSeconds > 0 ? expSeconds * 1000 : 0;
+    if (expiresAt > 0 && expiresAt <= Date.now()) {
+      return null;
+    }
+    const username =
+      (typeof payload.sub === "string" ? payload.sub : "") ||
+      (typeof payload.username === "string" ? payload.username : "");
+    const email = typeof payload.email === "string" ? payload.email : "";
+    const role = typeof payload.role === "string" ? payload.role : "USER";
+    const user: AuthUser = {
+      id: username || "user",
+      username,
+      email,
+      role,
+    };
+    return {
+      user,
+      access_token: token,
+      expires_in:
+        expiresAt > 0
+          ? Math.max(0, Math.floor((expiresAt - Date.now()) / 1000))
+          : 3600,
+      expires_at: expiresAt,
+    };
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Strip the configured base path so route comparisons work under subpath
@@ -59,7 +108,9 @@ export function SpringAuthProvider({
   children,
   translate = defaultTranslate,
 }: SpringAuthProviderProps) {
-  const [session, setSession] = useState<AuthSession | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(
+    decodeInitialSpringSession,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<AuthError | null>(null);
 
@@ -141,6 +192,7 @@ export function SpringAuthProvider({
         if (error) {
           console.error("[Auth] Initial session error:", error);
           setError(error);
+          setSession(null);
         } else {
           setSession(data.session);
         }
@@ -151,6 +203,7 @@ export function SpringAuthProvider({
         );
         if (mounted) {
           setError(err as AuthError);
+          setSession(null);
         }
       } finally {
         if (mounted) {

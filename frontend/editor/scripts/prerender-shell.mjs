@@ -586,7 +586,8 @@ function shellScript({ wide, narrow }) {
       `function clearShells(){var s=root.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();}` +
       `var bPath=new URL(".",document.baseURI).pathname.replace(/\\/+$/,"");` +
       `var cPath=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");` +
-      `if(cPath!==bPath||document.documentElement.hasAttribute("data-shell-hidden")){clearShells();root.removeAttribute("data-shell");document.documentElement.setAttribute("data-shell-hidden","");return;}`,
+      `var isEditorPath=cPath===bPath||cPath===bPath+"/editor";` +
+      `if(!isEditorPath||document.documentElement.hasAttribute("data-shell-hidden")){clearShells();root.removeAttribute("data-shell");document.documentElement.setAttribute("data-shell-hidden","");return;}`,
     `function drop(){if(!root.hasAttribute("data-shell"))return;clearShells();root.removeAttribute("data-shell");if(window.__spdfBoot)window.__spdfBoot();}`,
     `try{var data=JSON.parse(document.getElementById("shell-strings").textContent);`,
     `var stored=null;try{stored=localStorage.getItem("i18nextLng");}catch(e){}`,
@@ -725,7 +726,7 @@ function deferEntry(html) {
       // landing shell hidden until React paints over it.
       'var basePath=new URL(src,document.baseURI).pathname.replace(/\\/assets\\/[^/]+$/,"").replace(/\\/+$/,"");' +
       'var curPath=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");' +
-      "if(curPath!==basePath){" +
+      "if(curPath!==basePath&&curPath!==basePath+\"/editor\"){" +
       'document.documentElement.setAttribute("data-shell-hidden","");' +
       'var r=document.getElementById("root");if(r){var s=r.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();r.removeAttribute("data-shell");}' +
       "boot();return;}" +
@@ -869,6 +870,12 @@ export async function prerenderShell({
   ].join("");
   const withShell = replaceRoot(html, emitted);
   await writeFile(indexPath, deferEntry(withShell));
+  const editorPath = join(distDir, "editor.html");
+  if (existsSync(editorPath)) {
+    const editorHtml = stripShell(await readFile(editorPath, "utf8"));
+    const editorWithShell = replaceRoot(editorHtml, emitted);
+    await writeFile(editorPath, deferEntry(editorWithShell));
+  }
   const shellsDir = join(distDir, "shells");
   await mkdir(shellsDir, { recursive: true });
   for (const language of Object.keys(wide.strings)) {

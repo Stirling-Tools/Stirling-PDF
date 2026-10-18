@@ -42,6 +42,16 @@ function hasAnyStoredSession(): boolean {
   }
 }
 
+/**
+ * Synchronous root destination when known without network IO.
+ * Returns null to render "/", EDITOR_BASENAME to redirect immediately, or undefined when /me is needed.
+ */
+export function initialRootTarget(): string | null | undefined {
+  if (editorRegardless()) return EDITOR_BASENAME;
+  if (!hasAnyStoredSession()) return null;
+  return undefined;
+}
+
 export async function resolveRootTarget(): Promise<string | null> {
   if (editorRegardless()) return EDITOR_BASENAME;
   const destination = await fetchRootDestination();

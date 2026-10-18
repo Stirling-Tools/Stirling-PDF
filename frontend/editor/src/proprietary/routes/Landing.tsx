@@ -28,7 +28,7 @@ export default function Landing() {
 
   // The probe gates only the signed-out backend-down screen: a session means
   // /auth/me already answered.
-  const loading = authLoading || (configLoading && !config);
+  const loading = authLoading || (!session && configLoading && !config);
   const probePending = backendProbe.loading;
 
   // The backend-down screen is not the app. Loading is: it resolves in a moment.
