@@ -18,14 +18,44 @@ permissions:
   contents: read
 
 jobs:
+  hash_pr:
+    name: Hash files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      npm_files_hash: ${{ steps.hash.outputs.npm_files_hash }}
+      frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Hash Gradle and Cargo files
+        id: hash
+        env:
+          NPM_HASH: ${{ hashFiles('frontend/package-lock.json') }}
+          FRONTEND_DIST_HASH: ${{ hashFiles('frontend/editor/src/**') }}
+        shell: bash
+        run: |
+          echo "npm_files_hash=$NPM_HASH" >> "$GITHUB_OUTPUT"
+          echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"
   playwright-all-browsers:
     name: Playwright (stubbed, all browsers)
+    needs: hash_pr
     permissions:
       contents: write
     uses: ./.github/workflows/e2e-stubbed.yml
     with:
-      frontend-dist-hash: ${{ hashFiles('frontend/editor/src/**') }}
-      npm-hash: ${{ hashFiles('frontend/package-lock.json') }}
+      frontend-dist-hash: ${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
+      npm-hash: ${{ needs.hash_pr.outputs.npm_files_hash }}
 
   # Whole-suite accessibility sweep. Pull requests only scan the stories they
   # touch (frontend-a11y.yml) because a full pass takes ~30 minutes; this covers
