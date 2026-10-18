@@ -48,6 +48,7 @@ export interface TrackPageTileProps {
   onViewPage: (pageId: string) => void;
   onRotate: (pageIds: string[], delta: number) => void;
   onDelete: (pageIds: string[]) => void;
+  onDuplicate: (pageIds: string[]) => void;
   /** Swaps the page with its neighbour: -1 left, 1 right. */
   onShift: (pageId: string, by: -1 | 1) => void;
 }
@@ -107,6 +108,7 @@ function TrackPageTileImpl({
   onViewPage,
   onRotate,
   onDelete,
+  onDuplicate,
   onShift,
 }: TrackPageTileProps) {
   const { t } = useTranslation();
@@ -173,6 +175,15 @@ function TrackPageTileImpl({
         },
       },
       {
+        id: "duplicate",
+        icon: <Icon name="copy-plus" size={16} />,
+        label: t("pageTracks.duplicate.page", "Duplicate page"),
+        onClick: (event) => {
+          event.stopPropagation();
+          onDuplicate([page.id]);
+        },
+      },
+      {
         id: "delete",
         icon: <Icon name="trash" size={16} />,
         label: t("pageTracks.delete.page", "Delete page"),
@@ -183,7 +194,7 @@ function TrackPageTileImpl({
         },
       },
     ],
-    [t, onViewPage, onRotate, onDelete, page.id],
+    [t, onViewPage, onRotate, onDelete, onDuplicate, page.id],
   );
 
   return (
