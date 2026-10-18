@@ -14,9 +14,6 @@ export const Z_INDEX_OVER_SETTINGS_MODAL = 1500;
 
 export const Z_INDEX_FILE_MANAGER_MODAL = 1200;
 
-// Chat FAB overlay — sits above normal app chrome (fullscreen surface: 1000)
-// but below all modals (automate: 1100, file manager: 1200, config: 1400).
-export const Z_INDEX_CHAT_FAB_OVERLAY = 1050;
 export const Z_INDEX_OVER_FILE_MANAGER_MODAL = 1300;
 
 export const Z_INDEX_AUTOMATE_MODAL = 1100;
@@ -31,8 +28,11 @@ export const Z_INDEX_DRAG_BADGE = 1001;
 // Modal that appears on top of config modal (e.g., restart confirmation, update modal)
 export const Z_INDEX_OVER_CONFIG_MODAL = 2000;
 
-// Cookie-consent banner — above the chat FAB (1050), below all modals and onboarding; reaches CSS via --z-index-cookie-consent
+// Reaches CSS via --z-index-cookie-consent.
 export const Z_INDEX_COOKIE_CONSENT_BANNER = 1060;
+// Onboarding sits below the cookie banner alone: the two are on screen together on first
+// launch, and the banner was being dimmed and blocked by the card's overlay.
+export const Z_INDEX_ONBOARDING_CARD = 1040;
 // Cookie-consent preferences dialog — above the config modal it opens from; reaches CSS via --z-index-cookie-preferences
 export const Z_INDEX_COOKIE_PREFERENCES_MODAL = 1450;
 

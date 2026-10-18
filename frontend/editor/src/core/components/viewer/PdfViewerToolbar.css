@@ -46,3 +46,12 @@
     animation: none;
   }
 }
+
+/* The rails' hairline divider, horizontal bar orientation. */
+.pdf-viewer-toolbar__divider {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--c-border-subtle);
+  flex-shrink: 0;
+  margin: 0 0.25rem;
+}

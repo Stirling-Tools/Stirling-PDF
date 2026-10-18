@@ -37,12 +37,16 @@ export interface Member {
   lastActive: string;
   /** Optional avatar image; falls back to initials when absent. */
   avatarUrl?: string;
+  /** Also the member's avatar storage path prefix. */
+  supabaseId?: string | null;
   /** Backend linkage for row actions (absent on pure fixtures). */
   username?: string;
   teamId?: number;
   teamName?: string;
   /** Holds a LEADER membership on their team (independent of displayed role). */
   teamLead?: boolean;
+  orgOwner?: boolean;
+  isFirstLogin?: boolean;
   /** The signed-in admin's own row; self-directed actions are disabled. */
   isSelf?: boolean;
   /** Account locked after failed logins (admin can unlock). */
@@ -222,8 +226,11 @@ interface AdminUserSummaryDto {
   rolesAsString?: string;
   enabled: boolean;
   teamLead?: boolean;
+  orgOwner?: boolean;
+  isFirstLogin?: boolean;
   team?: { id: number; name: string };
   authenticationType?: string;
+  supabaseId?: string | null;
   /** Authoritative server-side portal access (honors the configured default policy). */
   portalAccess?: boolean;
 }
@@ -294,6 +301,8 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
     teamName: u.team?.name,
     role: roleIdFor(u),
     teamLead: u.teamLead === true,
+    orgOwner: u.orgOwner === true,
+    isFirstLogin: u.isFirstLogin === true,
     canAccessPortal: u.portalAccess === true,
     isSelf: !!data.currentUsername && data.currentUsername === u.username,
     status: u.enabled ? "active" : "suspended",
@@ -301,6 +310,7 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
     locked: locked.has(u.username),
     mfaEnabled: data.userSettings?.[u.username]?.mfaEnabled === "true",
     authType: u.authenticationType,
+    supabaseId: u.supabaseId,
     authority: u.rolesAsString,
   }));
   const seatLimit = normalizeSeatLimit(data.maxAllowedUsers);
@@ -339,6 +349,10 @@ export async function changeMemberRole(
   member: Member,
   target: RoleId,
 ): Promise<void> {
+  if (member.orgOwner)
+    throw new Error(
+      "Transfer organization ownership before changing this role.",
+    );
   if (!member.username) throw new Error("Member has no backend identity");
   if (target === member.role) return;
 
@@ -574,4 +588,28 @@ export async function inviteMember(
     "/api/v1/user/admin/inviteUsers",
     params,
   );
+}
+
+/** Transfers deployment ownership; the target becomes an admin and the caller remains one. */
+export async function transferOwnership(member: Member): Promise<void> {
+  await apiClient.local.json("/api/v1/user/admin/transferOwnership", {
+    method: "POST",
+    body: { userId: Number(member.id) },
+  });
+}
+
+/** Transfers the current SaaS team's existing leadership without changing the member's global role. */
+export async function transferTeamOwnership(member: Member): Promise<void> {
+  if (!member.teamId) throw new Error("Member has no team");
+  await apiClient.local.json(
+    `/api/v1/team/${member.teamId}/members/${member.id}/transfer-leadership`,
+    { method: "POST" },
+  );
+}
+
+/** An accepted member may recover their own shared team only when it has no leader. */
+export async function claimTeamOwnership(teamId: number): Promise<void> {
+  await apiClient.local.json(`/api/v1/team/${teamId}/claim-leadership`, {
+    method: "POST",
+  });
 }

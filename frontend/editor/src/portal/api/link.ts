@@ -1,10 +1,19 @@
-import { apiClient } from "@portal/api/http";
+import { apiClient } from "@app/portal/api/http";
+import type { LinkedInstanceRow } from "@app/types/linkedInstance";
+
+export type { LinkedInstanceRow };
 
 /** Link status for this instance (GET /api/v1/account-link/status). */
 export interface LinkStatus {
   linked: boolean;
-  /** Display name the local backend stored at link time; null when unset. */
-  name: string | null;
+  connection?: {
+    state: "connected" | "offline" | "expired" | "revoked" | "unlinked";
+    lastSuccessAt: string | null;
+    offlineAccessUntil: string | null;
+  } | null;
+  /** Matches the cloud instance row; older status responses may omit it. */
+  deviceId?: string | null;
+  name?: string | null;
 }
 
 /** Locally-accrued usage not yet reported to SaaS (GET /api/v1/account-link/usage). */
@@ -30,25 +39,16 @@ export interface FreeTierBalance {
   periodEnd: string;
 }
 
-/** A linked instance row (GET /api/v1/account-link/instances). */
-export interface LinkedInstanceRow {
-  instanceId: number;
-  deviceId: string;
-  name: string | null;
-  /** ISO timestamp the instance was registered. */
-  createdAt: string | null;
-  /** ISO timestamp the instance last presented its credential; null if never. */
-  lastSeenAt: string | null;
-  revoked: boolean;
-}
-
 /** Account-link client (combined billing). */
 
 const BASE = "/api/v1/account-link";
 
 /** Linked / Not-linked for this instance. */
-export async function fetchStatus(): Promise<LinkStatus> {
-  return apiClient.local.json<LinkStatus>(`${BASE}/status`);
+export async function fetchStatus(force = false): Promise<LinkStatus> {
+  return apiClient.local.json<LinkStatus>(
+    `${BASE}/${force ? "recheck" : "status"}`,
+    { method: force ? "POST" : "GET" },
+  );
 }
 
 /**
@@ -83,7 +83,8 @@ export type ConnectPhase =
   | "LINKED"
   | "EXPIRED"
   | "REJECTED"
-  | "UNAVAILABLE";
+  | "UNAVAILABLE"
+  | "CALLBACK_MISMATCH";
 
 export interface ConnectStatus {
   phase: ConnectPhase;

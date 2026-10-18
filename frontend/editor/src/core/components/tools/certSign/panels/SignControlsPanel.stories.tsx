@@ -25,8 +25,6 @@ export const Default: Story = {
     placementMode: false,
     onPlacementModeChange: () => {},
     onSignatureSelected: () => {},
-    onComplete: () => {},
-    canComplete: true,
     signatureConfig: textSignatureConfig,
     hasSelectedAnnotation: true,
     onDeleteSelected: () => {},
@@ -37,7 +35,6 @@ export const PlacingNoSelection: Story = {
   args: {
     ...Default.args,
     placementMode: true,
-    canComplete: false,
     hasSelectedAnnotation: false,
   },
 };

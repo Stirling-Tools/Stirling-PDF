@@ -42,7 +42,6 @@ const TOOL_IDS = [
   "annotate",
   "scannerImageSplit",
   "editTableOfContents",
-  "scannerEffect",
   "autoRename",
   "pageLayout",
   "scalePages",
@@ -91,7 +90,7 @@ async function verifyToolPageLoads(
   urlPath: string,
 ) {
   // waitUntil: 'domcontentloaded' avoids hanging on third-party CDN resources
-  // (iconify, posthog, stripe) the stub doesn't mock — the default 'load'
+  // (posthog, stripe) the stub doesn't mock — the default 'load'
   // event waits for ALL subresources, which can time out on slow runners.
   await page.goto(urlPath, { waitUntil: "domcontentloaded" });
 

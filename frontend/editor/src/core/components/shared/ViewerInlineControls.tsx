@@ -4,9 +4,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
-import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import ZoomOutIcon from "@mui/icons-material/ZoomOut";
-
+import { Icon } from "@app/ui/Icon";
 /**
  * Compact zoom controls rendered inline in the WorkbenchBar when the current workbench is "viewer".
  */
@@ -15,17 +13,25 @@ export function ViewerInlineControls() {
   const { workbench } = useNavigationState();
   const viewer = useViewer();
 
-  const [zoomPercent, setZoomPercent] = useState(100);
+  const [zoomPercent, setZoomPercent] = useState(
+    () => viewer.getZoomState().zoomPercent || 100,
+  );
 
   useEffect(() => {
     const zoomState = viewer.getZoomState();
     setZoomPercent(zoomState.zoomPercent || 100);
 
     const unregister = viewer.registerImmediateZoomUpdate((pct) => {
+      // A carried zoom's fit pass is intermediate; its settled tick re-syncs.
+      if (viewer.zoomRestorePendingRef.current) return;
       setZoomPercent(pct);
     });
     return () => unregister?.();
-  }, [viewer.registerImmediateZoomUpdate]);
+  }, [
+    viewer.registerImmediateZoomUpdate,
+    viewer.zoomRestorePendingRef,
+    viewer.zoomRestoreSettledTick,
+  ]);
 
   if (workbench !== "viewer") return null;
 
@@ -43,7 +49,7 @@ export function ViewerInlineControls() {
         onClick={() => viewer.zoomActions.zoomOut()}
         aria-label={t("viewer.zoomOut", "Zoom out")}
       >
-        <ZoomOutIcon sx={{ fontSize: "1rem" }} />
+        <Icon name="zoom-out" size={"1rem"} />
       </ActionIcon>
 
       <div className="viewer-inline-controls__slider-wrap">
@@ -71,7 +77,7 @@ export function ViewerInlineControls() {
         onClick={() => viewer.zoomActions.zoomIn()}
         aria-label={t("viewer.zoomIn", "Zoom in")}
       >
-        <ZoomInIcon sx={{ fontSize: "1rem" }} />
+        <Icon name="zoom-in" size={"1rem"} />
       </ActionIcon>
 
       <span className="viewer-inline-controls__zoom-pct">

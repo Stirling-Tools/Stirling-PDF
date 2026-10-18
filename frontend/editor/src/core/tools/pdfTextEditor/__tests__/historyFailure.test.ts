@@ -17,7 +17,7 @@ function cmd(opts: { failRevert?: boolean; failApply?: boolean }): Command {
     revert: () => {
       if (opts.failRevert) throw new Error("revert blew up");
     },
-  } as unknown as Command;
+  };
 }
 
 describe("HistoryStack failure handling", () => {

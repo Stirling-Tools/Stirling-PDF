@@ -520,7 +520,10 @@ export function useToolbarController(
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,
-    selectionCount: selection.runIds.length + selection.imageIds.length,
+    selectionCount:
+      selection.runIds.length +
+      selection.imageIds.length +
+      selection.shapeIds.length,
     canAlignLines,
     disabled:
       !state.hasDocument ||

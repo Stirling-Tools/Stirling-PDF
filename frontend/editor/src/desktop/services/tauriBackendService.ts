@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { fetch } from "@tauri-apps/plugin-http";
 import { alert } from "@app/components/toast";
+import i18n from "i18next";
 
 export type BackendStatus = "stopped" | "starting" | "healthy" | "unhealthy";
 
@@ -100,8 +101,14 @@ export class TauriBackendService {
       );
       alert({
         alertType: "error",
-        title: "Backend failed to restart",
-        body: "The local backend could not be recovered. Please restart the app.",
+        title: i18n.t(
+          "backendHealth.restart.failedTitle",
+          "Backend failed to restart",
+        ),
+        body: i18n.t(
+          "backendHealth.restart.failedBody",
+          "The local backend could not be recovered. Please restart the app.",
+        ),
         isPersistentPopup: true,
       });
       return;
@@ -112,8 +119,18 @@ export class TauriBackendService {
     );
     alert({
       alertType: "warning",
-      title: "Backend stopped unexpectedly",
-      body: `Attempting to restart... (${this.restartAttempts}/${TauriBackendService.MAX_RESTART_ATTEMPTS})`,
+      title: i18n.t(
+        "backendHealth.restart.stoppedTitle",
+        "Backend stopped unexpectedly",
+      ),
+      body: i18n.t(
+        "backendHealth.restart.attempting",
+        "Attempting to restart... ({{attempt}}/{{max}})",
+        {
+          attempt: this.restartAttempts,
+          max: TauriBackendService.MAX_RESTART_ATTEMPTS,
+        },
+      ),
       durationMs: 5000,
     });
     this.isRecovering = true;
@@ -137,8 +154,14 @@ export class TauriBackendService {
       console.log("[TauriBackendService] Backend restarted successfully.");
       alert({
         alertType: "success",
-        title: "Backend restarted",
-        body: "The local backend is back online.",
+        title: i18n.t(
+          "backendHealth.restart.successTitle",
+          "Backend restarted",
+        ),
+        body: i18n.t(
+          "backendHealth.restart.successBody",
+          "The local backend is back online.",
+        ),
         durationMs: 4000,
       });
     } catch (err) {

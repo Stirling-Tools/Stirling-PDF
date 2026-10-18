@@ -13,6 +13,7 @@ import { Button } from "@app/ui/Button";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useSignature } from "@app/contexts/SignatureContext";
+import { useHistoryAvailability } from "@app/hooks/useHistoryAvailability";
 import { useViewer } from "@app/contexts/ViewerContext";
 import {
   PLACEMENT_ACTIVATION_DELAY,
@@ -25,7 +26,6 @@ import { DrawingControls } from "@app/components/annotation/shared/DrawingContro
 import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
 import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
 import {
   useSavedSignatures,
   SavedSignature,
@@ -41,6 +41,7 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { buildSignaturePreview } from "@app/utils/signaturePreview";
 
+import { Icon, type IconName } from "@app/ui/Icon";
 type SignatureDrafts = {
   canvas?: string;
   image?: string;
@@ -97,11 +98,7 @@ const SignSettings = ({
   const { t } = useTranslation();
   const { isPlacementMode, signaturesApplied, historyApiRef } = useSignature();
   const { activeFileIndex } = useViewer();
-  const [historyAvailability, setHistoryAvailability] = useState({
-    canUndo: false,
-    canRedo: false,
-  });
-  const historyApiInstance = historyApiRef.current;
+  const historyAvailability = useHistoryAvailability(historyApiRef);
   const translate = useCallback(
     (key: string, defaultValue: string, options?: Record<string, unknown>) =>
       t(`${translationScope}.${key}`, { defaultValue, ...options }),
@@ -403,7 +400,7 @@ const SignSettings = ({
     isReady: boolean,
     onClick: (scope: "personal" | "shared") => void,
     scope: "personal" | "shared",
-    icon: string,
+    icon: IconName,
     label: string,
     fullWidth: boolean = false,
   ) => {
@@ -457,7 +454,7 @@ const SignSettings = ({
         disabled={
           !isReady || disabled || isSavedSignatureLimitReached || !hasChanges
         }
-        leftSection={<LocalIcon icon={icon} width={16} height={16} />}
+        leftSection={<Icon name={icon} size={16} />}
         fullWidth={fullWidth}
       >
         {buttonLabel}
@@ -499,7 +496,7 @@ const SignSettings = ({
       isReady,
       onClick,
       "personal",
-      "material-symbols:person-rounded",
+      "user",
       translate("saved.savePersonal", "Save Personal"),
       isLocalStorageMode,
     );
@@ -509,7 +506,7 @@ const SignSettings = ({
       isReady,
       onClick,
       "shared",
-      "material-symbols:groups-rounded",
+      "users",
       translate("saved.saveShared", "Save Shared"),
       false,
     );
@@ -586,27 +583,6 @@ const SignSettings = ({
       setPlacementManuallyPaused(false);
     }
   }, [signaturesApplied]);
-
-  useEffect(() => {
-    if (!historyApiInstance) {
-      setHistoryAvailability({ canUndo: false, canRedo: false });
-      return;
-    }
-
-    const updateAvailability = () => {
-      setHistoryAvailability({
-        canUndo: historyApiInstance.canUndo?.() ?? false,
-        canRedo: historyApiInstance.canRedo?.() ?? false,
-      });
-    };
-
-    const unsubscribe = historyApiInstance.subscribe?.(updateAvailability);
-    updateAvailability();
-
-    return () => {
-      unsubscribe?.();
-    };
-  }, [historyApiInstance]);
 
   // Handle image upload
   const handleImageChange = async (file: File | null) => {
@@ -1257,9 +1233,7 @@ const SignSettings = ({
             aria-label={translate("mode.pause", "Pause placement")}
             onClick={handlePausePlacement}
             disabled={disabled || !onDeactivateSignature}
-            leftSection={
-              <LocalIcon icon="pause-circle-rounded" width={20} height={20} />
-            }
+            leftSection={<Icon name="circle-pause" size={20} />}
           >
             {translate("mode.pause", "Pause placement")}
           </Button>
@@ -1273,9 +1247,7 @@ const SignSettings = ({
             disabled={
               disabled || !isCurrentTypeReady || !onActivateSignaturePlacement
             }
-            leftSection={
-              <LocalIcon icon="play-arrow-rounded" width={20} height={20} />
-            }
+            leftSection={<Icon name="play" size={20} />}
           >
             {translate("mode.resume", "Resume placement")}
           </Button>
@@ -1298,7 +1270,7 @@ const SignSettings = ({
               variant="secondary"
               fullWidth
               disabled={disabled}
-              leftSection={<LocalIcon icon="qr-code-rounded" width="1rem" />}
+              leftSection={<Icon name="qr-code" size="1rem" />}
               onClick={() => setIsMobileSignModalOpen(true)}
             >
               {t("sign.mobile.createFromPhone", "Mobile upload")}

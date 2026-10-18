@@ -103,12 +103,13 @@ describe("record hygiene", () => {
   it("drops the previous record when a write fails, rather than leaving it stale", () => {
     writeWorkbenchSession({ fileIds: ["old"], selectedFileIds: [] });
     const setItem = vi
-      .spyOn(Storage.prototype, "setItem")
+      .spyOn(Object.getPrototypeOf(sessionStorage), "setItem")
       .mockImplementation(() => {
         throw new Error("QuotaExceededError");
       });
 
     writeWorkbenchSession({ fileIds: ["new"], selectedFileIds: [] });
+    expect(setItem).toHaveBeenCalledOnce();
     setItem.mockRestore();
 
     // Better to restore nothing than to restore a workbench the user has moved on from.
@@ -188,8 +189,8 @@ describe("views the restore may reopen", () => {
     expect(isSeedableView("pageEditor")).toBe(true);
   });
 
-  it("leaves URL-owned and tool-owned views alone", () => {
-    // HomePage pins myFiles to /files and bounces it elsewhere; custom views belong to a tool.
+  it("leaves path-seeded and tool-owned views alone", () => {
+    // The library arrives with the path that names the folder; custom views belong to a tool.
     expect(isSeedableView("myFiles")).toBe(false);
     expect(isSeedableView("custom:compare")).toBe(false);
     expect(isSeedableView(undefined)).toBe(false);

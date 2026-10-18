@@ -1,5 +1,6 @@
 /* oxlint-disable typescript/no-explicit-any -- Axios-compatible API requires matching axios's `any` signatures */
 import { fetch } from "@tauri-apps/plugin-http";
+import { enforceDocumentPrivacy } from "@app/services/documentPrivacyService";
 import {
   shouldUseFastLocalTransport,
   fetchViaLocalProxy,
@@ -31,10 +32,13 @@ export interface TauriHttpRequestConfig {
   withCredentials?: boolean;
   // Custom properties for desktop
   operationName?: string;
+  /** Pins background automation requests to the account and server that started them. */
+  automationSession?: string;
   skipBackendReadyCheck?: boolean;
   skipAuthRedirect?: boolean;
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
+  accountLinkBlockContext?: import("@app/services/accountLinkBlock").AccountLinkBlockContext;
   cancelToken?: any;
   signal?: AbortSignal;
 }
@@ -209,6 +213,11 @@ class TauriHttpClient {
 
     const url = this.buildUrl(finalConfig);
     const method = (finalConfig.method || "GET").toUpperCase();
+    const localProcessingOnly = await enforceDocumentPrivacy(
+      url,
+      method,
+      finalConfig.data,
+    );
 
     // Prepare request body and headers
     let body: BodyInit | undefined;
@@ -226,6 +235,16 @@ class TauriHttpClient {
           if (key.toLowerCase() === "content-type") {
             delete headers[key];
           }
+        }
+      } else if (finalConfig.data instanceof URLSearchParams) {
+        body = finalConfig.data.toString();
+        if (
+          !Object.keys(headers).some(
+            (key) => key.toLowerCase() === "content-type",
+          )
+        ) {
+          headers["Content-Type"] =
+            "application/x-www-form-urlencoded;charset=UTF-8";
         }
       } else if (typeof finalConfig.data === "object") {
         // Serialize as JSON
@@ -247,14 +266,20 @@ class TauriHttpClient {
       // Make the request using Tauri's native HTTP client (standard Fetch API)
       // Enable certificate bypass for HTTPS to handle missing intermediate certs and self-signed certs
       const fetchOptions: RequestInit & {
+        maxRedirections?: number;
         danger?: {
           acceptInvalidCerts: boolean;
           acceptInvalidHostnames: boolean;
         };
       } = {
         method,
-        headers,
+        // The dev webview has a Vite origin; cloud CORS accepts the packaged app origin.
+        // task desktop:dev alone enables the plugin feature needed to override Origin.
+        headers: import.meta.env.DEV
+          ? { Origin: "tauri://localhost", ...headers }
+          : headers,
         body,
+        ...(localProcessingOnly ? { maxRedirections: 0 } : {}),
         credentials,
         ...(finalConfig.signal ? { signal: finalConfig.signal } : {}),
       };

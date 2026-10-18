@@ -1,0 +1,57 @@
+name: PR turn labels
+
+# Adds waiting-on-author on a changes-requested review and removes it on an approval
+# or when the PR author responds. The rules live in .github/scripts/pr-turn.ts.
+# Reviews arrive through pr-review-events.yml. Runs whatever STALE_PR_BOT_LIVE says:
+# a label left stale while the triage is off would date its warning from before.
+
+on:
+  workflow_run:
+    workflows: ["PR review events"]
+    types: [completed]
+  pull_request_target:
+    types: [synchronize, ready_for_review, review_requested]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    name: Update the turn label
+    # Skips only events pr-turn.ts would do nothing with: a push, ready, re-request or comment
+    # that is not the author's, or on a PR without the label. Must not skip anything
+    # turnChangeForEvent acts on.
+    if: >-
+      vars.CI_PROFILE != 'lite' && (
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+        (github.event.pull_request && github.event.sender.login == github.event.pull_request.user.login &&
+          contains(github.event.pull_request.labels.*.name, 'waiting-on-author')) ||
+        (github.event.issue.pull_request && github.event.comment.user.login == github.event.issue.user.login &&
+          contains(github.event.issue.labels.*.name, 'waiting-on-author'))
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # actions/checkout
+      issues: write # add/remove labels
+      pull-requests: write # add/remove labels on PRs
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out the scripts
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+
+      - name: Update the turn label
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const { updateTurnLabel } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/pr-turn.ts`);
+            await updateTurnLabel({ github, context, core });

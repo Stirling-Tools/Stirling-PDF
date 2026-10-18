@@ -64,7 +64,7 @@ test.describe("PDF text editor - identity-preserving pdfium re-read", () => {
       const before = await page.evaluate(RUN_IDS);
       expect(before.length).toBeGreaterThan(0);
 
-      const result = (await page.evaluate(RESYNC)) as SyncResult | null;
+      const result = await page.evaluate(RESYNC);
       expect(result, "resyncPage should return a result").not.toBeNull();
       // Every live run must be claimed by exactly one re-read run.
       expect(result!.matched).toBe(before.length);
@@ -100,7 +100,7 @@ test.describe("PDF text editor - identity-preserving pdfium re-read", () => {
     }, tid);
     await page.waitForTimeout(300);
 
-    const result = (await page.evaluate(RESYNC)) as SyncResult | null;
+    const result = await page.evaluate(RESYNC);
     expect(result).not.toBeNull();
     // The edit replaces objects, so pointer matching is what has to hold up.
     expect(result!.unmatched).toBe(0);

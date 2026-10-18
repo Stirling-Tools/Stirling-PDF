@@ -17,6 +17,7 @@ export default function LayoutPreview({
   const aspectRatio = sheet.width / sheet.height;
 
   return (
+    // icon-lint-allow: runtime-generated-svg -- page grid is computed from the layout settings
     <svg
       viewBox={`${sheet.x} ${sheet.y} ${sheet.width} ${sheet.height}`}
       preserveAspectRatio="xMidYMid meet"

@@ -264,7 +264,7 @@ async function appendToRun(
       range.collapse(false);
       sel.removeAllRanges();
       sel.addRange(range);
-      document.execCommand("insertText", false, txt as string);
+      document.execCommand("insertText", false, txt);
     },
     [runId, text] as const,
   );

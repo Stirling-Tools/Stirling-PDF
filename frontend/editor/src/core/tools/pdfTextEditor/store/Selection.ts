@@ -35,7 +35,7 @@ export class Selection {
   readonly highlight: FindHighlight;
 
   constructor() {
-    this.state = { runIds: [], imageIds: [], caret: null };
+    this.state = { runIds: [], imageIds: [], shapeIds: [], caret: null };
     this.listeners = new Set();
     this.highlight = new FindHighlight();
   }
@@ -50,11 +50,11 @@ export class Selection {
   }
 
   clear(): void {
-    this.set({ runIds: [], imageIds: [], caret: null });
+    this.set({ runIds: [], imageIds: [], shapeIds: [], caret: null });
   }
 
   selectOne(runId: string, caret: number | null = null): void {
-    this.set({ runIds: [runId], imageIds: [], caret });
+    this.set({ runIds: [runId], imageIds: [], shapeIds: [], caret });
   }
 
   toggle(runId: string): void {
@@ -74,24 +74,46 @@ export class Selection {
   }
 
   selectImage(imageId: string): void {
-    this.set({ runIds: [], imageIds: [imageId], caret: null });
+    this.set({ runIds: [], imageIds: [imageId], shapeIds: [], caret: null });
+  }
+
+  selectShape(shapeId: string): void {
+    this.set({ runIds: [], imageIds: [], shapeIds: [shapeId], caret: null });
+  }
+
+  toggleShape(shapeId: string): void {
+    const shapeIds = this.state.shapeIds.includes(shapeId)
+      ? this.state.shapeIds.filter((id) => id !== shapeId)
+      : [...this.state.shapeIds, shapeId];
+    this.set({ ...this.state, shapeIds, caret: null });
   }
 
   /**
-   * Replace the selection with `runIds`, or union them into it when additive
-   * (an extending rectangle-select). Additive keeps order, dedupes, and leaves
-   * any selected images alone.
+   * Replace the selection with the given runs, images and shapes, or union
+   * them into it when additive (an extending rectangle-select). Additive keeps
+   * order and dedupes.
    */
-  selectMany(runIds: string[], additive = false): void {
+  selectMany(
+    runIds: string[],
+    additive = false,
+    imageIds: string[] = [],
+    shapeIds: string[] = [],
+  ): void {
     if (!additive) {
-      this.set({ runIds: [...runIds], imageIds: [], caret: null });
+      this.set({
+        runIds: [...runIds],
+        imageIds: [...imageIds],
+        shapeIds: [...shapeIds],
+        caret: null,
+      });
       return;
     }
-    const merged = [...this.state.runIds];
-    for (const id of runIds) {
-      if (!merged.includes(id)) merged.push(id);
-    }
-    this.set({ ...this.state, runIds: merged, caret: null });
+    this.set({
+      runIds: unionInOrder(this.state.runIds, runIds),
+      imageIds: unionInOrder(this.state.imageIds, imageIds),
+      shapeIds: unionInOrder(this.state.shapeIds, shapeIds),
+      caret: null,
+    });
   }
 
   subscribe(listener: (s: SelectionState) => void): () => void {
@@ -110,4 +132,12 @@ export class Selection {
       }
     }
   }
+}
+
+function unionInOrder(existing: string[], added: string[]): string[] {
+  const merged = [...existing];
+  for (const id of added) {
+    if (!merged.includes(id)) merged.push(id);
+  }
+  return merged;
 }

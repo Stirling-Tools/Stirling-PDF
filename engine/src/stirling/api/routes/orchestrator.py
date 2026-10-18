@@ -12,6 +12,7 @@ from fastapi.responses import StreamingResponse
 
 from stirling.agents import OrchestratorAgent
 from stirling.api.dependencies import get_orchestrator_agent
+from stirling.api.linked_instance import LINKED_INSTANCE
 from stirling.contracts import OrchestratorRequest, OrchestratorResponse, ProgressEvent
 from stirling.services import reset_progress_emitter, set_progress_emitter
 
@@ -26,7 +27,7 @@ HEARTBEAT_INTERVAL_SECONDS = 10.0
 router = APIRouter(prefix="/api/v1/orchestrator", tags=["orchestrator"])
 
 
-@router.post("")
+@router.post("", openapi_extra=LINKED_INSTANCE)
 async def orchestrate(
     request: OrchestratorRequest,
     agent: Annotated[OrchestratorAgent, Depends(get_orchestrator_agent)],

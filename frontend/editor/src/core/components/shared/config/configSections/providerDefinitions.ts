@@ -1,6 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
-
 export type ProviderType = "oauth2" | "saml2" | "telegram" | "googledrive";
 
 /** Value of a provider field, keyed by its `type`: text/password/textarea -> string,
@@ -24,6 +22,7 @@ export interface Provider {
   /** Which settings page lists it; defaults to "signin" when unset. */
   category?: ProviderCategory;
   name: string;
+  /** A registry icon name, or a URL to an image (ProviderCard branches on it). */
   icon: string;
   type: ProviderType;
   scope: string; // Summary of what this provider does
@@ -38,7 +37,7 @@ const useGoogleProvider = (): Provider => {
   return {
     id: "google",
     name: "Google",
-    icon: oauthIconUrl("google.svg"),
+    icon: "google",
     type: "oauth2",
     scope: t("provider.oauth2.google.scope", "Sign-in authentication"),
     documentationUrl:
@@ -96,7 +95,7 @@ const useGitHubProvider = (): Provider => {
   return {
     id: "github",
     name: "GitHub",
-    icon: oauthIconUrl("github.svg"),
+    icon: "github",
     type: "oauth2",
     scope: t("provider.oauth2.github.scope", "Sign-in authentication"),
     documentationUrl:
@@ -153,7 +152,7 @@ const useKeycloakProvider = (): Provider => {
   return {
     id: "keycloak",
     name: "Keycloak",
-    icon: "key-rounded",
+    icon: "key",
     type: "oauth2",
     scope: t("provider.oauth2.keycloak.scope", "SSO"),
     businessTier: false,
@@ -224,7 +223,7 @@ const useGenericOAuth2Provider = (): Provider => {
   return {
     id: "oauth2-generic",
     name: t("provider.oauth2.generic.name", "Generic OAuth2"),
-    icon: "link-rounded",
+    icon: "link",
     type: "oauth2",
     scope: t("provider.oauth2.generic.scope", "SSO"),
     businessTier: false,
@@ -342,7 +341,7 @@ const useSMTPProvider = (): Provider => {
     id: "smtp",
     category: "integration",
     name: t("provider.smtp.name", "SMTP Mail"),
-    icon: "mail-rounded",
+    icon: "mail",
     type: "oauth2",
     scope: t("provider.smtp.scope", "Email Notifications"),
     documentationUrl:
@@ -417,7 +416,7 @@ const useTelegramProvider = (): Provider => {
     id: "telegram",
     category: "integration",
     name: t("admin.settings.telegram.title", "Telegram Bot"),
-    icon: "send-rounded",
+    icon: "send",
     type: "telegram",
     scope: t(
       "admin.settings.telegram.description",
@@ -670,7 +669,7 @@ const useSAML2Provider = (): Provider => {
   return {
     id: "saml2",
     name: t("provider.saml2.name", "SAML2"),
-    icon: "verified-user-rounded",
+    icon: "shield-check",
     type: "saml2",
     scope: t("provider.saml2.scope", "SSO (SAML)"),
     businessTier: true,
@@ -818,7 +817,7 @@ const useGoogleDriveProvider = (): Provider => {
     id: "googledrive",
     category: "integration",
     name: t("provider.googledrive.name", "Google Drive"),
-    icon: "/images/google-drive.svg",
+    icon: "googledrive",
     type: "googledrive",
     scope: t("provider.googledrive.scope", "File Import"),
     documentationUrl:

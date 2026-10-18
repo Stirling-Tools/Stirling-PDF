@@ -147,6 +147,7 @@ class AdminSettingsQueryPerfTest {
                         Map.of());
         User internalTeamUser =
                 harness.mkUser("internal-team", savedTeams.get(1), Role.USER.getRoleId(), Map.of());
+        adminUser.setEmail("admin@example.com");
         harness.users().saveAll(List.of(adminUser, mfaUser, apiUser, internalTeamUser));
         harness.em().flush();
         harness.em().clear();
@@ -176,6 +177,7 @@ class AdminSettingsQueryPerfTest {
                         .findFirst()
                         .orElseThrow();
         assertTrue(adminSummary.isPortalAccess(), "admin should have portal access");
+        assertEquals("admin@example.com", adminSummary.getEmail());
     }
 
     @SpringBootConfiguration

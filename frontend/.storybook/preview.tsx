@@ -63,7 +63,7 @@ for (const [path, raw] of Object.entries(localeModules)) {
   if (!lng) continue;
   let translation: Record<string, unknown>;
   try {
-    translation = parseToml(raw) as Record<string, unknown>;
+    translation = parseToml(raw);
   } catch {
     translation = {};
   }

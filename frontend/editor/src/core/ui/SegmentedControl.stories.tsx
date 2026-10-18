@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
+import { Icon } from "@app/ui/Icon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 
 const meta: Meta<typeof SegmentedControl> = {
@@ -114,7 +113,7 @@ export const WithIcons: Story = {
             value: "viewer",
             label: (
               <>
-                <InsertDriveFileOutlinedIcon fontSize="small" />
+                <Icon name="file" size={20} />
                 <span>Viewer</span>
               </>
             ),
@@ -123,7 +122,7 @@ export const WithIcons: Story = {
             value: "files",
             label: (
               <>
-                <FolderOutlinedIcon fontSize="small" />
+                <Icon name="folder" size={20} />
                 <span>Active Files</span>
               </>
             ),

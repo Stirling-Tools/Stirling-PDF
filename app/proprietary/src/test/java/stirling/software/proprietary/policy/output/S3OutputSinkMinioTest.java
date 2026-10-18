@@ -18,6 +18,7 @@ import org.springframework.core.io.Resource;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.ResultFile;
@@ -44,7 +45,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 /**
- * End-to-end {@link S3OutputSink} test against a real S3 API (MinIO): uploads, collision renaming,
+ * End-to-end {@link S3OutputSink} test against a real S3 API (Silo): uploads, collision renaming,
  * and - composed with {@link S3InputSource} - the loop-safety guarantee that a policy writing into
  * a bucket it also watches never re-ingests its own outputs, while a second policy still can.
  */
@@ -57,7 +58,9 @@ class S3OutputSinkMinioTest {
 
     @Container
     static MinIOContainer minio =
-            new MinIOContainer("minio/minio:latest")
+            new MinIOContainer(
+                            DockerImageName.parse("pgsty/silo:RELEASE.2026-09-03T13-18-01Z")
+                                    .asCompatibleSubstituteFor("minio/minio"))
                     .withUserName(ACCESS_KEY)
                     .withPassword(SECRET_KEY);
 

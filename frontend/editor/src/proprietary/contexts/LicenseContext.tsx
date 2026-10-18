@@ -26,10 +26,13 @@ const LicenseContext = createContext<LicenseContextValue | undefined>(
 
 interface LicenseProviderProps {
   children: ReactNode;
+  /** Hosted billing has no installation licence to read or refresh. */
+  enabled?: boolean;
 }
 
 export const LicenseProvider: React.FC<LicenseProviderProps> = ({
   children,
+  enabled = true,
 }) => {
   const { config } = useAppConfig();
   const location = useLocation();
@@ -44,6 +47,12 @@ export const LicenseProvider: React.FC<LicenseProviderProps> = ({
   }, [config]);
 
   const refetchLicense = useCallback(async () => {
+    if (!enabled) {
+      setLicenseInfo(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
     // Wait for config to load if it's not available yet
     let currentConfig = configRef.current;
     if (!currentConfig) {
@@ -96,7 +105,7 @@ export const LicenseProvider: React.FC<LicenseProviderProps> = ({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   // Fetch license info when config changes (only if user is admin)
   useEffect(() => {

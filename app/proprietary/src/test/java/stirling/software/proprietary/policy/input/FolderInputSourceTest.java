@@ -208,6 +208,39 @@ class FolderInputSourceTest {
     }
 
     @Test
+    void trackModeInHashIdentityDoesNotReprocessAnInPlaceOutputOnALaterTouch() throws IOException {
+        Path dir = Files.createDirectories(tempDir.resolve("track-hash"));
+        Path file = dir.resolve("doc.pdf");
+        Files.writeString(file, "original");
+        InputSpec spec =
+                new InputSpec(
+                        "folder",
+                        Map.of(
+                                "directory", dir.toString(),
+                                "mode", "track",
+                                "identity", "hash"));
+
+        // A run that rewrites the file in place, as an OCR-and-replace pipeline does.
+        ResolvedInput first = source.resolve(spec, ctx).get(0);
+        Files.writeString(file, "processed");
+        first.onComplete().accept(true);
+
+        assertTrue(source.resolve(spec, ctx).isEmpty(), "the in-place output must not re-claim");
+
+        // A metadata-only bump a month later: a backup restore, an rsync, an antivirus rewrite.
+        Files.setLastModifiedTime(file, FileTime.from(Instant.now().plusSeconds(60)));
+
+        // Settling a null hash here would leave nothing to compare against, so the content
+        // check would fail against null and reprocess an unchanged document.
+        assertTrue(
+                source.resolve(spec, ctx).isEmpty(),
+                "an unchanged tracked file must not reprocess on a touch under identity: hash");
+
+        Files.writeString(file, "edited by a person");
+        assertEquals(1, source.resolve(spec, ctx).size(), "a real edit must still be picked up");
+    }
+
+    @Test
     void hashModeRetriesAFailureOnARealContentChange() throws IOException {
         Path inputDir = Files.createDirectories(tempDir.resolve("in"));
         Path file = inputDir.resolve("doc.pdf");

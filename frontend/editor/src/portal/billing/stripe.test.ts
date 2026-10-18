@@ -11,7 +11,9 @@ const { getClient, invoke, rpc } = vi.hoisted(() => ({
   rpc: vi.fn(),
 }));
 
-vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => getClient(),
   configureSupabase: vi.fn(),
@@ -24,18 +26,29 @@ import {
   createCheckoutSession,
   createPortalSession,
   fetchBundleQuotePdf,
+  fetchBundlePricing,
+  fetchCheckoutPricing,
   finalizeBundleInvoice,
   getLatestBundleQuote,
   StripeFunctionError,
   upsertBundleQuote,
-} from "@portal/billing/stripe";
+} from "@app/portal/billing/stripe";
+import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
 
 const req = { teamId: 1, successUrl: "s", cancelUrl: "c" } as const;
 
 beforeEach(() => {
   invoke.mockReset();
   rpc.mockReset();
-  getClient.mockReset().mockReturnValue({ functions: { invoke }, rpc });
+  getClient.mockReset().mockReturnValue({
+    functions: { invoke },
+    rpc,
+    auth: {
+      getSession: async () => ({
+        data: { session: { access_token: "billing-token" } },
+      }),
+    },
+  });
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -216,6 +229,18 @@ describe("upsertBundleQuote", () => {
     eulaVersion: "2026-07-draft",
   } as const;
 
+  it("does not replay a quote mutation after a 401", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { message: "expired" },
+      status: 401,
+    });
+    await expect(upsertBundleQuote(quoteInput)).rejects.toBeInstanceOf(
+      SaasSessionRequiredError,
+    );
+    expect(rpc).toHaveBeenCalledOnce();
+  });
+
   it("maps the RPC row and sends p_* args (create — no p_quote_id)", async () => {
     rpc.mockResolvedValue({
       data: [
@@ -268,6 +293,31 @@ describe("upsertBundleQuote", () => {
     expect(err).toBeInstanceOf(StripeFunctionError);
     expect((err as StripeFunctionError).code).toBe("42501");
   });
+});
+
+it("renews once when reading a saved quote returns 401", async () => {
+  const refreshSession = vi
+    .fn()
+    .mockResolvedValue({ data: { session: { access_token: "renewed" } } });
+  getClient.mockReturnValue({
+    rpc,
+    auth: {
+      getSession: vi
+        .fn()
+        .mockResolvedValue({ data: { session: { access_token: "old" } } }),
+      refreshSession,
+    },
+  });
+  rpc
+    .mockResolvedValueOnce({
+      data: null,
+      error: { message: "expired" },
+      status: 401,
+    })
+    .mockResolvedValueOnce({ data: [], error: null, status: 200 });
+  await expect(getLatestBundleQuote(1)).resolves.toBeNull();
+  expect(refreshSession).toHaveBeenCalledOnce();
+  expect(rpc).toHaveBeenCalledTimes(2);
 });
 
 describe("finalizeBundleInvoice", () => {
@@ -380,5 +430,175 @@ describe("createPortalSession", () => {
     await expect(
       createPortalSession({ teamId: 1, returnUrl: "r" }),
     ).rejects.toBeInstanceOf(StripeFunctionError);
+  });
+});
+
+it("reads Stripe's billing currency and fractional credit rate before prepay", async () => {
+  invoke.mockResolvedValue({
+    data: { success: true, currency: "gbp", unit_amount_minor: 0.75 },
+    error: null,
+  });
+  expect(await fetchBundlePricing(42)).toEqual({
+    currency: "gbp",
+    unitAmountMinor: 0.75,
+    availableCurrencies: ["gbp"],
+    currencyLocked: true,
+  });
+  expect(invoke).toHaveBeenCalledWith("create-payg-bundle-quote", {
+    body: { team_id: 42, preview: true },
+    headers: { Authorization: "Bearer billing-token" },
+  });
+});
+
+it.each([
+  { currency: "GBP" },
+  { currency: "not-a-currency" },
+  { currency: ["usd"] },
+  { currency: 123 },
+  { available_currencies: "usd" },
+  { available_currencies: {} },
+  { available_currencies: ["usd", "GBP"] },
+  { available_currencies: ["usd", null] },
+  { available_currencies: [["usd"]] },
+  { unit_amount_minor: "1" },
+  { unit_amount_minor: 0 },
+  { unit_amount_minor: Infinity },
+])("rejects malformed bundle pricing: %j", async (invalidFields) => {
+  invoke.mockResolvedValue({
+    data: {
+      success: true,
+      currency: "usd",
+      unit_amount_minor: 1,
+      ...invalidFields,
+    },
+    error: null,
+  });
+  await expect(fetchBundlePricing(42)).rejects.toThrow(
+    "Bundle pricing is unavailable.",
+  );
+});
+
+it("requests a chosen quote currency without setting a Checkout currency", async () => {
+  invoke.mockResolvedValue({
+    data: {
+      success: true,
+      currency: "eur",
+      unit_amount_minor: 0.9,
+      available_currencies: ["usd", "eur"],
+      currency_locked: false,
+    },
+    error: null,
+  });
+  expect(await fetchBundlePricing(42, "eur")).toEqual({
+    currency: "eur",
+    unitAmountMinor: 0.9,
+    availableCurrencies: ["usd", "eur"],
+    currencyLocked: false,
+  });
+  expect(invoke).toHaveBeenCalledWith("create-payg-bundle-quote", {
+    body: { team_id: 42, preview: true, currency: "eur" },
+    headers: { Authorization: "Bearer billing-token" },
+  });
+});
+
+it("uses the minted quote's currency and total instead of the estimate", async () => {
+  invoke.mockResolvedValue({
+    data: {
+      success: true,
+      stripe_quote_id: "qt_1",
+      currency: "gbp",
+      amount_subtotal: 12000,
+      amount_total: 10000,
+    },
+    error: null,
+  });
+  expect(
+    await createBundleStripeQuote({ teamId: 42, quoteId: 7 }),
+  ).toMatchObject({
+    currency: "gbp",
+    amountSubtotal: 12000,
+    amountTotal: 10000,
+  });
+});
+
+it("shows Stripe's error details when a quote request fails", async () => {
+  invoke.mockResolvedValue({
+    data: null,
+    error: {
+      message: "Edge Function returned a non-2xx status code",
+      context: new Response(
+        JSON.stringify({
+          error: "quote_creation_failed",
+          stripe_error: "Currency mismatch",
+        }),
+        { status: 500 },
+      ),
+    },
+  });
+  await expect(
+    createBundleStripeQuote({ teamId: 42, quoteId: 7 }),
+  ).rejects.toMatchObject({
+    code: "quote_creation_failed",
+    message: "Currency mismatch",
+  });
+});
+
+describe("checkout pricing preview", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.stubGlobal("navigator", { languages: ["en-GB"] });
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
+  it.each([
+    [null, "gbp"],
+    ["aud", "aud"],
+  ])(
+    "uses browser detection unless a manual preference exists (%s)",
+    async (manual, expected) => {
+      if (manual) localStorage.setItem("explicitPricingCurrency", manual);
+      invoke.mockResolvedValue({
+        data: {
+          success: true,
+          currency: expected,
+          currency_locked: false,
+          unit_amount_minor: 2,
+        },
+        error: null,
+      });
+      expect(await fetchCheckoutPricing(42, "processor")).toEqual({
+        currency: expected,
+        currencyLocked: false,
+        unitAmountMinor: 2,
+      });
+      expect(invoke).toHaveBeenCalledWith(
+        "create-checkout-session",
+        expect.objectContaining({
+          body: { team_id: 42, preview: "processor", currency: expected },
+        }),
+      );
+    },
+  );
+  it("accepts the customer's confirmed currency over browser and manual preference", async () => {
+    localStorage.setItem("explicitPricingCurrency", "aud");
+    invoke.mockResolvedValue({
+      data: { success: true, currency: "usd", currency_locked: true },
+      error: null,
+    });
+    expect(await fetchCheckoutPricing(42, "currency")).toMatchObject({
+      currency: "usd",
+      currencyLocked: true,
+    });
+  });
+  it("rejects a malformed rate instead of substituting the USD wallet rate", async () => {
+    invoke.mockResolvedValue({
+      data: { success: true, currency: "gbp", currency_locked: false },
+      error: null,
+    });
+    await expect(fetchCheckoutPricing(42, "processor")).rejects.toThrow(
+      "Couldn't load checkout pricing",
+    );
   });
 });

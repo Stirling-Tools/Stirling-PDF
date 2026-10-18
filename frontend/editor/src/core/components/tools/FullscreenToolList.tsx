@@ -11,8 +11,7 @@ import { ToolId } from "@app/types/toolId";
 import { useToolSections } from "@app/hooks/useToolSections";
 import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import ThumbUpRoundedIcon from "@mui/icons-material/ThumbUpRounded";
+import { Icon } from "@app/ui/Icon";
 import Badge from "@app/components/shared/Badge";
 import "@app/components/tools/ToolPanel.css";
 import DetailedToolItem from "@app/components/tools/fullscreen/DetailedToolItem";
@@ -155,7 +154,7 @@ const FullscreenToolList = ({
                     }}
                     aria-hidden
                   >
-                    <StarRoundedIcon />
+                    <Icon name="star" filled />
                   </span>
                   <Text size="sm" fw={600} tt="uppercase" lts={0.5} c="dimmed">
                     {t("toolPanel.fullscreen.favorites", "Favourites")}
@@ -201,7 +200,7 @@ const FullscreenToolList = ({
                     }}
                     aria-hidden
                   >
-                    <ThumbUpRoundedIcon />
+                    <Icon name="thumbs-up" />
                   </span>
                   <Text size="sm" fw={600} tt="uppercase" lts={0.5} c="dimmed">
                     {t("toolPanel.fullscreen.recommended", "Recommended")}

@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon, Button, FormField, Select } from "@app/ui";
 
 /**
@@ -25,6 +24,8 @@ interface DestinationPickerProps {
   onCreateNew: () => void;
   /** Edit the chosen destination's own settings (opens the source modal on it). */
   onEdit: (sourceId: string) => void;
+  /** Overrides the field label; routing renames this picker to the fallback it becomes. */
+  label?: string;
 }
 
 export function DestinationPicker({
@@ -33,6 +34,7 @@ export function DestinationPicker({
   onChange,
   onCreateNew,
   onEdit,
+  label,
 }: DestinationPickerProps) {
   const { t } = useTranslation();
   const chosen = value[0] ?? "";
@@ -43,7 +45,7 @@ export function DestinationPicker({
   return (
     <>
       {hasSources && (
-        <FormField label={t("portal.pipelines.composer.output")}>
+        <FormField label={label ?? t("portal.pipelines.composer.output")}>
           <div className="portal-builder__input-row">
             <div className="portal-builder__input-field">
               <Select
@@ -66,7 +68,7 @@ export function DestinationPicker({
               disabled={chosen === ""}
               onClick={() => onEdit(chosen)}
             >
-              <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+              <Icon name="pencil" size={"1rem"} />
             </ActionIcon>
           </div>
         </FormField>
@@ -75,7 +77,7 @@ export function DestinationPicker({
         variant="tertiary"
         size="sm"
         onClick={onCreateNew}
-        leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+        leftSection={<Icon name="plus" size={"1.125rem"} />}
       >
         {t("portal.sources.actions.connectSource")}
       </Button>

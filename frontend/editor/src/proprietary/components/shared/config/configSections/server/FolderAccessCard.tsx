@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,7 +12,6 @@ import {
   TextInput,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import apiClient from "@app/services/apiClient";
@@ -130,13 +130,7 @@ export function FolderAccessCard({
                     "admin.settings.folderAccess.roots.remove",
                     "Remove folder root",
                   )}
-                  leftSection={
-                    <LocalIcon
-                      icon="close-rounded"
-                      width="1.1rem"
-                      height="1.1rem"
-                    />
-                  }
+                  leftSection={<Icon name="x" size="1.1rem" />}
                   onClick={() => removeRoot(root)}
                   disabled={!loginEnabled}
                   style={{ flexShrink: 0 }}
@@ -204,7 +198,7 @@ export function FolderAccessCard({
                     <Text size="xs" c="dimmed">
                       {reasonLabel(root.reason)}
                     </Text>
-                    <LocalIcon icon="lock" width="1rem" height="1rem" />
+                    <Icon name="lock" size="1rem" />
                   </Group>
                 </Group>
               ))}

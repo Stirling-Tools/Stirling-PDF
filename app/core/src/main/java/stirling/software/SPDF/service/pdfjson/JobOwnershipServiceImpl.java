@@ -64,6 +64,14 @@ public class JobOwnershipServiceImpl
         return jobId;
     }
 
+    @Override
+    public String createScopedJobKey(String jobId, String owner) {
+        if (owner == null || owner.isBlank() || "anonymousUser".equals(owner)) {
+            throw new IllegalArgumentException("An authenticated job must have an owner");
+        }
+        return owner + ":" + jobId;
+    }
+
     /**
      * Validate that the current user has access to the given job.
      *

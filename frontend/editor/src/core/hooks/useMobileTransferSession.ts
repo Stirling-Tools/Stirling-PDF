@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BASE_PATH } from "@app/constants/app";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { buildMobileRouteUrl } from "@app/utils/mobileScannerUrl";
 import apiClient from "@app/services/apiClient";
 
@@ -66,8 +67,6 @@ interface UseMobileTransferSessionParams {
   sessionCreateErrorMessage: string;
   /** Message shown when polling for uploads fails. */
   pollingErrorMessage: string;
-  /** Host the phone should reach, when configured (server_url / frontendUrl). */
-  configuredUrl?: string;
 }
 
 export function useMobileTransferSession({
@@ -76,8 +75,8 @@ export function useMobileTransferSession({
   onFileReceived,
   sessionCreateErrorMessage,
   pollingErrorMessage,
-  configuredUrl,
 }: UseMobileTransferSessionParams) {
+  const { config } = useAppConfig();
   const [sessionId, setSessionId] = useState(() => generateSessionId());
   const [sessionInfo, setSessionInfo] =
     useState<MobileTransferSessionInfo | null>(null);
@@ -92,8 +91,11 @@ export function useMobileTransferSession({
   // The QR-code URL the phone opens. It must land on the public route under
   // the app's base path, otherwise the phone hits the auth-gated catch-all
   // route and is bounced to the login page.
+  const configuredUrl =
+    localStorage.getItem("server_url") ||
+    (import.meta.env.DEV ? "" : config?.frontendUrl || "");
   const mobileUrl = buildMobileRouteUrl({
-    configuredUrl: configuredUrl ?? "",
+    configuredUrl,
     sessionId,
     origin: window.location.origin,
     basePath: BASE_PATH,

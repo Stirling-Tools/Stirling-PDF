@@ -63,11 +63,11 @@ jobs:
       RUN_ENGINE: ${{ github.event_name != 'workflow_dispatch' || inputs.build_engine }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Cache Gradle
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -84,7 +84,7 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
@@ -122,7 +122,7 @@ jobs:
           password: ${{ github.token }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
 
       - name: Convert repository owner to lowercase
         id: repoowner
@@ -141,12 +141,13 @@ jobs:
           tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/release' }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/release' }}
+            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/testMain' }}
 
       - name: Build and push Unified Dockerfile (latest variant)
         id: build-push-latest
         # Empty-tag guard: build-push-action errors when asked to push with no tags.
         if: env.RUN_MAIN_APP == 'true' && steps.meta.outputs.tags != ''
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -193,7 +194,7 @@ jobs:
 
       - name: Build and push Unified Dockerfile (fat variant)
         id: build-push-fat
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-fat.outputs.tags != ''
         with:
           builder: ${{ steps.buildx.outputs.name }}
@@ -237,7 +238,7 @@ jobs:
 
       - name: Build and push Unified Dockerfile (ultra-lite variant)
         id: build-push-lite
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-lite.outputs.tags != ''
         with:
           builder: ${{ steps.buildx.outputs.name }}
@@ -289,7 +290,11 @@ jobs:
             docker/unoserver/Dockerfile \
             docker/unoserver/entrypoint.sh \
             docker/unoserver/healthcheck.sh \
+            docker/unoserver/fonts.conf \
             docker/unoserver/VERSION \
+            docker/base/lo-sandbox.c \
+            docker/base/stirling-hardening.xcd \
+            docker/base/unoserver-pipe-transport.py \
             | sha256sum | cut -d' ' -f1)
           echo "hash=${hash}" >> "$GITHUB_OUTPUT"
           echo "Unoserver source hash: ${hash}"
@@ -366,7 +371,7 @@ jobs:
       - name: Build and push unoserver image
         id: build-push-unoserver
         if: env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode != 'skip'
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -482,7 +487,7 @@ jobs:
       - name: Build and push engine image
         id: build-push-engine
         if: env.RUN_ENGINE == 'true' && steps.engineDecision.outputs.mode != 'skip'
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .

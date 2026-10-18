@@ -8,6 +8,14 @@
         "./src/proprietary/*",
         "./src/core/*"
       ],
+      "@app/portal/*": [
+        "./src/saas/portal/*",
+        "./src/cloud/portal/*",
+        "./src/proprietary/portal/*",
+        "./src/core/portal/*",
+        "./src/portal-saas/*",
+        "./src/portal/*"
+      ],
       "@portal/*": ["./src/portal-saas/*", "./src/portal/*"],
       "@portal-proprietary/*": ["./src/portal/*"],
       "@cloud/*": ["./src/cloud/*"],

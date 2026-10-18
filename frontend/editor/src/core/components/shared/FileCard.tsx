@@ -3,10 +3,7 @@ import { Card, Stack, Text, Group, Badge, Box, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import StorageIcon from "@mui/icons-material/Storage";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import EditIcon from "@mui/icons-material/Edit";
-
+import { Icon } from "@app/ui/Icon";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { getFileSize, getFileDate } from "@app/utils/fileUtils";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
@@ -121,7 +118,7 @@ const FileCard = ({
                       onView();
                     }}
                   >
-                    <VisibilityIcon style={{ fontSize: 16 }} />
+                    <Icon name="eye" size={16} />
                   </ActionIcon>
                 </Tooltip>
               )}
@@ -142,7 +139,7 @@ const FileCard = ({
                       onEdit();
                     }}
                   >
-                    <EditIcon style={{ fontSize: 16 }} />
+                    <Icon name="pencil" size={16} />
                   </ActionIcon>
                 </Tooltip>
               )}
@@ -173,7 +170,7 @@ const FileCard = ({
               color="green"
               variant="light"
               size="sm"
-              leftSection={<StorageIcon style={{ fontSize: 12 }} />}
+              leftSection={<Icon name="server" size={12} />}
             >
               DB
             </Badge>

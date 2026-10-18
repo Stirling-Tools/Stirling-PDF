@@ -17,26 +17,24 @@ export function SuggestedToolsSection(): React.ReactElement {
       </Text>
 
       <Stack gap="xs">
-        {suggestedTools.map((tool) => {
-          const IconComponent = tool.icon;
-          return (
-            <Anchor
-              key={tool.id}
-              href={tool.href}
-              onClick={tool.onClick}
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <Card p="sm" withBorder style={{ cursor: "pointer" }}>
-                <Group gap="xs">
-                  <ToolIcon icon={<IconComponent />} />
-                  <Text size="sm" fw={500}>
-                    {tool.title}
-                  </Text>
-                </Group>
-              </Card>
-            </Anchor>
-          );
-        })}
+        {suggestedTools.map((tool) => (
+          <Anchor
+            key={tool.id}
+            href={tool.href}
+            onClick={tool.onClick}
+            data-tour={`suggested-tool-${tool.id}`}
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            <Card p="sm" withBorder style={{ cursor: "pointer" }}>
+              <Group gap="xs">
+                <ToolIcon icon={tool.icon} />
+                <Text size="sm" fw={500}>
+                  {tool.title}
+                </Text>
+              </Group>
+            </Card>
+          </Anchor>
+        ))}
       </Stack>
     </Stack>
   );

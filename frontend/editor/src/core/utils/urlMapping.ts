@@ -81,13 +81,13 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   // Image and visual tools
   "/extract-images": "extractImages",
   "/adjust-contrast": "adjustContrast",
-  "/fake-scan": "scannerEffect",
   "/replace-color-pdf": "replaceColor",
 
   // Metadata and info
   "/change-metadata": "changeMetadata",
   "/get-pdf-info": "getPdfInfo",
   "/add-attachments": "addAttachments",
+  "/create-portfolio": "createPortfolio",
 
   // Advanced tools
   "/overlay-pdfs": "overlayPdfs",
@@ -128,7 +128,6 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   "/pipeline": "automate",
   "/extract-image-scans": "scannerImageSplit",
   "/show-javascript": "showJS",
-  "/scanner-effect": "scannerEffect",
   "/split-by-size-or-count": "split",
   "/overlay-pdf": "overlayPdfs",
   "/split-pdf-by-sections": "split",

@@ -5,7 +5,7 @@ export const getSynonyms = (t: TFunction, toolId: string): string[] => {
   try {
     const candidateKeys = [`home.${toolId}.tags`, `${toolId}.tags`];
     const tags = candidateKeys
-      .map((key) => ({ key, value: t(key) as unknown as string }))
+      .map((key) => ({ key, value: t(key) }))
       .find(({ key, value }) => value && value !== key)?.value;
 
     if (!tags) return [];

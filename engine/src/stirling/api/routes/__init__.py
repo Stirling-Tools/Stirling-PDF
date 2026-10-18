@@ -1,6 +1,7 @@
 from .agent_capabilities import router as agent_capabilities_router
 from .agent_drafts import router as agent_draft_router
 from .config import router as config_router
+from .docparse import router as docparse_router
 from .document_classifier import router as document_classifier_router
 from .documents import router as document_router
 from .execution import router as execution_router
@@ -14,6 +15,7 @@ __all__ = [
     "agent_capabilities_router",
     "agent_draft_router",
     "config_router",
+    "docparse_router",
     "document_classifier_router",
     "document_router",
     "execution_router",

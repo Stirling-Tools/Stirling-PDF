@@ -2,6 +2,7 @@ import apiClient from "@app/services/apiClient";
 import { supabase, isSupabaseConfigured } from "@app/services/supabaseClient";
 
 export interface User {
+  orgOwner?: boolean;
   id: number;
   username: string;
   email?: string;

@@ -3,10 +3,7 @@ import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import type { PdfAnnotationObject } from "@embedpdf/models";
 import { OpacityControl } from "@app/components/annotation/shared/OpacityControl";
 import { WidthControl } from "@app/components/annotation/shared/WidthControl";
-import {
-  PropertiesPopover,
-  type PropertiesAnnotationType,
-} from "@app/components/annotation/shared/PropertiesPopover";
+import { PropertiesPopover } from "@app/components/annotation/shared/PropertiesPopover";
 import { ColorControl } from "@app/components/annotation/shared/ColorControl";
 import {
   DeleteButton,
@@ -16,7 +13,6 @@ import {
   LinkButton,
 } from "@app/components/viewer/AnnotationMenuButtons";
 import type {
-  AnnotationType,
   AnnotationMenuState,
   AnnotationMenuHandlers,
 } from "@app/components/viewer/useAnnotationMenuHandlers";
@@ -70,7 +66,7 @@ export function AnnotationTypeButtons(props: AnnotationTypeButtonsProps) {
     />
   );
 
-  switch (annotationType as AnnotationType) {
+  switch (annotationType) {
     case "textMarkup":
       return (
         <>
@@ -141,7 +137,7 @@ export function AnnotationTypeButtons(props: AnnotationTypeButtonsProps) {
           />
           <EditTextButton onEdit={onEdit} />
           <PropertiesPopover
-            annotationType={annotationType as PropertiesAnnotationType}
+            annotationType={annotationType}
             annotation={annotation}
             onUpdate={onPropertiesUpdate}
           />

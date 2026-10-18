@@ -1,4 +1,5 @@
 import { TFunction } from "i18next";
+import i18n from "i18next";
 import { CheckoutStage } from "@app/components/shared/stripeCheckout/types/checkout";
 
 /**
@@ -11,7 +12,10 @@ export const validateEmail = (
   if (!emailRegex.test(email)) {
     return {
       valid: false,
-      error: "Please enter a valid email address",
+      error: i18n.t(
+        "signup.invalidEmail",
+        "Please enter a valid email address",
+      ),
     };
   }
   return { valid: true, error: "" };
@@ -26,10 +30,6 @@ export const getModalTitle = (
   t: TFunction,
 ): string => {
   switch (stage) {
-    case "email":
-      return t("payment.emailStage.modalTitle", "Get Started - {{planName}}", {
-        planName,
-      });
     case "plan-selection":
       return t(
         "payment.planStage.modalTitle",

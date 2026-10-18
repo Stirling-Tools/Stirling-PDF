@@ -11,7 +11,8 @@
 import puppeteer from "puppeteer";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import { existsSync, mkdirSync, statSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, statSync } from "fs";
+import { createRequire } from "module";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,6 +20,34 @@ const __dirname = dirname(__filename);
 const TEMPLATE_PATH = join(__dirname, "template.html");
 const OUTPUT_DIR = join(__dirname, "../../public/samples");
 const OUTPUT_PATH = join(OUTPUT_DIR, "Sample.pdf");
+
+const require = createRequire(import.meta.url);
+
+/**
+ * The template marks each icon `<i data-lucide="name">` and this swaps in the
+ * svg from lucide-static, so no icon geometry is copied into the template. The
+ * icons stay inline because they take their card's colour through currentColor,
+ * which an <img> could not.
+ */
+async function inlineLucideIcons(page) {
+  const names = await page.$$eval("[data-lucide]", (els) => [
+    ...new Set(els.map((el) => el.dataset.lucide)),
+  ]);
+  const svgs = Object.fromEntries(
+    names.map((name) => [
+      name,
+      readFileSync(require.resolve(`lucide-static/icons/${name}.svg`), "utf8"),
+    ]),
+  );
+  await page.$$eval(
+    "[data-lucide]",
+    (els, markup) => {
+      for (const el of els) el.outerHTML = markup[el.dataset.lucide];
+    },
+    svgs,
+  );
+  console.log(`🎨 Inlined ${names.length} lucide icons`);
+}
 
 async function generatePDF() {
   console.log("🚀 Starting Stirling PDF sample document generation...\n");
@@ -61,6 +90,7 @@ async function generatePDF() {
     await page.goto(fileUrl, {
       waitUntil: "networkidle0", // Wait for all resources to load
     });
+    await inlineLucideIcons(page);
 
     // Generate PDF with A4 dimensions
     console.log("📝 Generating PDF...");

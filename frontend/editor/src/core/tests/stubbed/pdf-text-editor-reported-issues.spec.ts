@@ -71,7 +71,7 @@ async function runText(
       const r = (window as unknown as EditorTestWindow).__editor_store.doc
         .page(pageIdx)
         .runs.find((x) => x.id === id);
-      return r ? (r.text as string) : "(gone)";
+      return r ? r.text : "(gone)";
     },
     { pageIdx, id },
   );
@@ -368,11 +368,10 @@ test.describe("PDF text editor - reported issue: character insertion + font inte
       () => ((window as unknown as EditorTestWindow).__charcode_events = []),
     );
     await appendViaOverlay(page, id, "S");
-    const outcomes = await page.evaluate(
-      () =>
-        ((window as unknown as EditorTestWindow).__charcode_events ?? []).map(
-          (e) => `${e.strategy}:${e.outcome}`,
-        ) as string[],
+    const outcomes = await page.evaluate(() =>
+      ((window as unknown as EditorTestWindow).__charcode_events ?? []).map(
+        (e) => `${e.strategy}:${e.outcome}`,
+      ),
     );
     expect(
       outcomes,
@@ -395,11 +394,10 @@ test.describe("PDF text editor - reported issue: character insertion + font inte
           []) as unknown as void,
     );
     await appendViaOverlay(page, id, "S");
-    const outcomes = await page.evaluate(
-      () =>
-        ((window as unknown as EditorTestWindow).__charcode_events ?? []).map(
-          (e) => e.outcome,
-        ) as string[],
+    const outcomes = await page.evaluate(() =>
+      ((window as unknown as EditorTestWindow).__charcode_events ?? []).map(
+        (e) => e.outcome,
+      ),
     );
     // At least one emit event fired for the edit.
     expect(outcomes.length).toBeGreaterThan(0);

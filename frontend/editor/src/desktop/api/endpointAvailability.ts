@@ -1,4 +1,8 @@
 import { isAxiosError } from "axios";
+import {
+  isLocalProcessingOnly,
+  isOffDeviceEndpointName,
+} from "@app/services/documentPrivacyService";
 import apiClient from "@app/services/apiClient";
 import { tauriBackendService } from "@app/services/tauriBackendService";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
@@ -126,6 +130,14 @@ async function resolveOffline(
 export async function resolveEndpointsAvailability(
   endpoints: string[],
 ): Promise<EndpointAvailabilityMap> {
+  if (await isLocalProcessingOnly()) {
+    const map = await resolveOffline(endpoints);
+    for (const endpoint of endpoints) {
+      if (isOffDeviceEndpointName(endpoint))
+        map[endpoint] = { enabled: false, reason: "NOT_SUPPORTED_LOCALLY" };
+    }
+    return map;
+  }
   if (isSelfHostedOffline()) {
     return resolveOffline(endpoints);
   }
@@ -152,6 +164,8 @@ export async function resolveEndpointsAvailability(
 export async function resolveEndpointEnabled(
   endpoint: string,
 ): Promise<boolean> {
+  if (await isLocalProcessingOnly())
+    return (await resolveEndpointsAvailability([endpoint]))[endpoint].enabled;
   if (isSelfHostedOffline()) {
     // ConvertSettings already filters unsupported endpoints from the dropdown,
     // so a selected endpoint is supported locally by the time it reaches here.

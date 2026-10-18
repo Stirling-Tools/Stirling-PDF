@@ -1,8 +1,6 @@
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import CheckIcon from "@mui/icons-material/Check";
-import SwapVertIcon from "@mui/icons-material/SwapVert";
-
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
@@ -10,17 +8,13 @@ import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 interface FilesToolbarSortMenuProps {
   value: FilesPageSortMode;
   onChange: (mode: FilesPageSortMode) => void;
+  zIndex?: number;
 }
 
-/**
- * Sort control collapsed to a single icon. The desktop Select needs 160px and
- * still truncated its longest label ("Recent first" → "Recent fi") once the
- * toolbar got tight, so on narrow viewports the options move into a menu where
- * they have room to read in full.
- */
 export function FilesToolbarSortMenu({
   value,
   onChange,
+  zIndex,
 }: FilesToolbarSortMenuProps) {
   const { t } = useTranslation();
 
@@ -46,7 +40,13 @@ export function FilesToolbarSortMenu({
   const current = options.find((o) => o.value === value)?.label ?? "";
 
   return (
-    <Menu shadow="md" width={200} position="bottom-end" withinPortal>
+    <Menu
+      shadow="md"
+      width={200}
+      position="bottom-end"
+      withinPortal
+      zIndex={zIndex}
+    >
       <Menu.Target>
         <div>
           <Tooltip content={`${label} · ${current}`} position="bottom">
@@ -56,7 +56,7 @@ export function FilesToolbarSortMenu({
               aria-label={`${label}: ${current}`}
               className="files-page-toolbar-icon-btn"
             >
-              <SwapVertIcon sx={{ fontSize: "1.1rem" }} />
+              <Icon name="arrow-up-down" size={"1.1rem"} />
             </ActionIcon>
           </Tooltip>
         </div>
@@ -69,7 +69,7 @@ export function FilesToolbarSortMenu({
             onClick={() => onChange(option.value)}
             leftSection={
               option.value === value ? (
-                <CheckIcon sx={{ fontSize: "1rem" }} />
+                <Icon name="check" size={"1rem"} />
               ) : (
                 <span style={{ display: "inline-block", width: "1rem" }} />
               )

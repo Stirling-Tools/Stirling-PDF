@@ -25,14 +25,24 @@ class PdfErrorUtilsTest {
                 "ICCBased colorspace array must have a stream",
                 "1-based index not found",
                 "Invalid dictionary, found:",
-                "AES initialization vector not fully read",
-                "BadPaddingException",
-                "Given final block not properly padded",
                 "End-of-File, expected line"
             })
     void isCorruptedPdfError_ioException_corruptionIndicators_returnsTrue(String message) {
         IOException e = new IOException(message);
         assertTrue(PdfErrorUtils.isCorruptedPdfError(e));
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "AES initialization vector not fully read",
+                "BadPaddingException",
+                "Given final block not properly padded"
+            })
+    void isCorruptedPdfError_decryptionFailures_returnsFalse(String message) {
+        // Matched by ExceptionUtils#isEncryptionError instead. Claiming them here too let
+        // whichever check ran first decide the kind, and corruption ran first.
+        assertFalse(PdfErrorUtils.isCorruptedPdfError(new IOException(message)));
     }
 
     @ParameterizedTest

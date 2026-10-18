@@ -1,5 +1,5 @@
 import { Tooltip } from "@mantine/core";
-import AutorenewIcon from "@mui/icons-material/Autorenew";
+import { Icon } from "@app/ui/Icon";
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import { useTranslation } from "react-i18next";
 import "@app/components/shared/PolicyBadges.css";
@@ -66,9 +66,9 @@ export function PolicyBadges({
               style={{ color: policy.accentColor }}
             >
               {running ? (
-                <AutorenewIcon sx={{ fontSize: "0.7rem" }} />
+                <Icon name="refresh-cw" size={"0.7rem"} />
               ) : (
-                policyCategoryIcon(policy.id, { fontSize: "0.7rem" })
+                policyCategoryIcon(policy.id, "0.7rem")
               )}
             </span>
           </Tooltip>

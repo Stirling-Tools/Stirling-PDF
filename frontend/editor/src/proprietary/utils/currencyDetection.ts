@@ -1,142 +1,106 @@
-/**
- * Currency detection utility
- * Auto-detects user's preferred currency from browser locale
- */
+const STORAGE_KEY = "explicitPricingCurrency";
 
-const STORAGE_KEY = "preferredCurrency";
-
-/**
- * Map of locale codes to currency codes
- * Covers all major locales and their corresponding currencies
- */
-const LOCALE_TO_CURRENCY_MAP: Record<string, string> = {
-  // English variants
-  "en-US": "usd",
-  "en-CA": "usd",
-  "en-AU": "usd",
-  "en-NZ": "usd",
-  "en-GB": "gbp",
-  "en-IE": "eur",
-
-  // European locales - Euro
-  "de-DE": "eur",
-  "de-AT": "eur",
-  "de-CH": "eur",
-  "fr-FR": "eur",
-  "fr-BE": "eur",
-  "fr-CH": "eur",
-  "it-IT": "eur",
-  "es-ES": "eur",
-  "pt-PT": "eur",
-  "nl-NL": "eur",
-  "nl-BE": "eur",
-  "pl-PL": "eur",
-  "ro-RO": "eur",
-  "el-GR": "eur",
-  "fi-FI": "eur",
-  "sv-SE": "eur",
-  "da-DK": "eur",
-  "no-NO": "eur",
-
-  // Chinese variants
-  "zh-CN": "cny",
-  "zh-TW": "cny",
-  "zh-HK": "cny",
-  "zh-SG": "cny",
-
-  // Indian locales
-  "hi-IN": "inr",
-  "en-IN": "inr",
-  "bn-IN": "inr",
-  "te-IN": "inr",
-  "ta-IN": "inr",
-  "mr-IN": "inr",
-
-  // Brazilian Portuguese
-  "pt-BR": "brl",
-
-  // Indonesian
-  "id-ID": "idr",
-  "jv-ID": "idr",
-
-  // Other major locales defaulting to USD
-  "ja-JP": "usd",
-  "ko-KR": "usd",
-  "ru-RU": "usd",
-  "ar-SA": "usd",
-  "th-TH": "usd",
-  "vi-VN": "usd",
-  "tr-TR": "usd",
+const REGION_CURRENCIES: Record<string, string> = {
+  US: "usd",
+  GB: "gbp",
+  CA: "cad",
+  AU: "aud",
+  NZ: "nzd",
+  CN: "cny",
+  TW: "twd",
+  HK: "hkd",
+  SG: "sgd",
+  IN: "inr",
+  BR: "brl",
+  ID: "idr",
+  JP: "jpy",
+  KR: "krw",
+  CH: "chf",
+  SE: "sek",
+  DK: "dkk",
+  NO: "nok",
+  PL: "pln",
+  RO: "ron",
+  CZ: "czk",
+  HU: "huf",
+  MX: "mxn",
+  ZA: "zar",
+  TH: "thb",
+  VN: "vnd",
+  TR: "try",
+  AE: "aed",
+  SA: "sar",
+  MY: "myr",
+  PH: "php",
+  IL: "ils",
 };
+const EURO_REGIONS = new Set([
+  "AD",
+  "AT",
+  "BE",
+  "CY",
+  "DE",
+  "EE",
+  "ES",
+  "FI",
+  "FR",
+  "GR",
+  "HR",
+  "IE",
+  "IT",
+  "LT",
+  "LU",
+  "LV",
+  "MC",
+  "ME",
+  "MT",
+  "NL",
+  "PT",
+  "SI",
+  "SK",
+  "SM",
+  "VA",
+]);
 
-/**
- * Detect currency from browser locale
- * @param locale - Browser locale string (e.g., 'en-US', 'de-DE')
- * @returns Currency code ('usd', 'gbp', 'eur', etc.)
- */
-export function detectCurrencyFromLocale(locale: string): string {
-  // Try exact match first
-  if (LOCALE_TO_CURRENCY_MAP[locale]) {
-    return LOCALE_TO_CURRENCY_MAP[locale];
-  }
-
-  // Try matching just the language code (e.g., 'en' from 'en-US')
-  const languageCode = locale.split("-")[0];
-  const matchingLocale = Object.keys(LOCALE_TO_CURRENCY_MAP).find((key) =>
-    key.startsWith(languageCode),
-  );
-
-  if (matchingLocale) {
-    return LOCALE_TO_CURRENCY_MAP[matchingLocale];
-  }
-
-  // Default fallback to USD
-  return "usd";
-}
-
-/**
- * Get cached currency preference from localStorage
- * @returns Cached currency code or null if not set
- */
+/** A display preference only; Stripe owns checkout currency selection. */
 export function getCachedCurrency(): string | null {
   try {
-    return localStorage.getItem(STORAGE_KEY);
-  } catch (error) {
-    console.warn("Failed to read currency from localStorage:", error);
+    const currency = localStorage.getItem(STORAGE_KEY);
+    return currency && /^[a-z]{3}$/.test(currency) ? currency : null;
+  } catch {
     return null;
   }
 }
 
-/**
- * Save currency preference to localStorage
- * @param currency - Currency code to cache
- */
+/** Stores an explicit selection, never a browser-language guess. */
 export function setCachedCurrency(currency: string): void {
   try {
-    localStorage.setItem(STORAGE_KEY, currency);
-  } catch (error) {
-    console.warn("Failed to save currency to localStorage:", error);
+    if (/^[a-z]{3}$/.test(currency))
+      localStorage.setItem(STORAGE_KEY, currency);
+  } catch {
+    // Private browsing may disable storage.
   }
 }
 
-/**
- * Get preferred currency with auto-detection fallback
- * Priority: localStorage > locale detection > default (USD)
- * @param currentLocale - Current browser/i18n locale
- * @returns Currency code
- */
-export function getPreferredCurrency(currentLocale: string): string {
-  // 1. Check localStorage (user has previously selected)
-  const cached = getCachedCurrency();
-  if (cached) {
-    return cached;
+/** Uses browser regions as price-lookup hints; unknown regions fall back to USD. */
+export function getPreferredCurrency(): string {
+  const explicit = getCachedCurrency();
+  if (explicit) return explicit;
+  const languages =
+    typeof navigator === "undefined"
+      ? []
+      : navigator.languages?.length
+        ? navigator.languages
+        : [navigator.language];
+  for (const language of languages) {
+    try {
+      const region = new Intl.Locale(language).region;
+      if (!region) continue;
+      if (EURO_REGIONS.has(region)) return "eur";
+      if (REGION_CURRENCIES[region]) return REGION_CURRENCIES[region];
+    } catch {
+      // A malformed locale must not prevent checkout.
+    }
   }
-
-  // 2. Auto-detect from locale
-  const detected = detectCurrencyFromLocale(currentLocale);
-
-  // 3. Cache the detection for future visits
-  setCachedCurrency(detected);
-
-  return detected;
+  return "usd";
 }

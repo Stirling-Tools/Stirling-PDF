@@ -27,7 +27,10 @@ import org.springframework.core.io.ByteArrayResource;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
+import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.storage.model.FilePurpose;
+import stirling.software.proprietary.storage.model.Folder;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.repository.FolderRepository;
@@ -49,6 +52,9 @@ class StorageFolderInputSourceTest {
     @Mock private StoredFileRepository storedFileRepository;
     @Mock private FolderRepository folderRepository;
     @Mock private StorageProvider storageProvider;
+    @Mock private UserService userService;
+
+    private User owner;
 
     private StorageFolderInputSource source;
     private InProcessProcessedLedger ledger;
@@ -58,6 +64,17 @@ class StorageFolderInputSourceTest {
 
     @BeforeEach
     void setUp() throws IOException {
+        owner = new User();
+        owner.setId(7L);
+        owner.setUsername("alice");
+        Folder folder = new Folder();
+        folder.setId(FOLDER);
+        folder.setOwner(owner);
+        lenient().when(userService.getCurrentUsername()).thenReturn("alice");
+        lenient().when(userService.findByUsername("alice")).thenReturn(Optional.of(owner));
+        lenient()
+                .when(folderRepository.findByIdAndOwner(FOLDER, owner))
+                .thenReturn(Optional.of(folder));
         lenient()
                 .when(storageProvider.load(anyString()))
                 .thenAnswer(invocation -> new ByteArrayResource(blobContent));
@@ -66,7 +83,8 @@ class StorageFolderInputSourceTest {
                         storedFileRepository,
                         folderRepository,
                         storageProvider,
-                        storageEnabledProperties());
+                        storageEnabledProperties(),
+                        userService);
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
     }
@@ -74,8 +92,9 @@ class StorageFolderInputSourceTest {
     @Test
     void claimsEachFileOncePerContentVersion() throws IOException {
         StoredFile file = storedFile(1L, "doc.pdf", T1);
-        when(storedFileRepository.findAllByFolderId(FOLDER)).thenReturn(List.of(file));
-        when(storedFileRepository.findById(1L)).thenReturn(Optional.of(file));
+        when(storedFileRepository.findAllByFolderIdAndOwner(FOLDER, owner))
+                .thenReturn(List.of(file));
+        when(storedFileRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(file));
 
         List<ResolvedInput> work = source.resolve(spec(), ctx);
 
@@ -92,13 +111,14 @@ class StorageFolderInputSourceTest {
     @Test
     void anInPlaceOutputDoesNotRetriggerTheFolder() throws IOException {
         StoredFile file = storedFile(1L, "doc.pdf", T1);
-        when(storedFileRepository.findAllByFolderId(FOLDER)).thenReturn(List.of(file));
+        when(storedFileRepository.findAllByFolderIdAndOwner(FOLDER, owner))
+                .thenReturn(List.of(file));
 
         List<ResolvedInput> work = source.resolve(spec(), ctx);
 
         // The run replaces the file's content in place before completion fires.
         file.setUpdatedAt(T2);
-        when(storedFileRepository.findById(1L)).thenReturn(Optional.of(file));
+        when(storedFileRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(file));
         work.get(0).onComplete().accept(true);
 
         // The next sweep sees the bumped version already settled — no self-feeding loop.
@@ -108,8 +128,9 @@ class StorageFolderInputSourceTest {
     @Test
     void aGenuineEditIsPickedUpAgain() throws IOException {
         StoredFile file = storedFile(1L, "doc.pdf", T1);
-        when(storedFileRepository.findAllByFolderId(FOLDER)).thenReturn(List.of(file));
-        when(storedFileRepository.findById(1L)).thenReturn(Optional.of(file));
+        when(storedFileRepository.findAllByFolderIdAndOwner(FOLDER, owner))
+                .thenReturn(List.of(file));
+        when(storedFileRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(file));
 
         source.resolve(spec(), ctx).get(0).onComplete().accept(true);
 
@@ -122,8 +143,9 @@ class StorageFolderInputSourceTest {
     @Test
     void aMetadataOnlyBumpDoesNotReprocess() throws IOException {
         StoredFile file = storedFile(1L, "doc.pdf", T1);
-        when(storedFileRepository.findAllByFolderId(FOLDER)).thenReturn(List.of(file));
-        when(storedFileRepository.findById(1L)).thenReturn(Optional.of(file));
+        when(storedFileRepository.findAllByFolderIdAndOwner(FOLDER, owner))
+                .thenReturn(List.of(file));
+        when(storedFileRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(file));
 
         source.resolve(spec(), ctx).get(0).onComplete().accept(true);
 
@@ -137,7 +159,8 @@ class StorageFolderInputSourceTest {
     void purposeBoundFilesAreNeverIngested() throws IOException {
         StoredFile signing = storedFile(2L, "contract.pdf", T1);
         signing.setPurpose(FilePurpose.SIGNING_ORIGINAL);
-        when(storedFileRepository.findAllByFolderId(FOLDER)).thenReturn(List.of(signing));
+        when(storedFileRepository.findAllByFolderIdAndOwner(FOLDER, owner))
+                .thenReturn(List.of(signing));
 
         assertTrue(source.resolve(spec(), ctx).isEmpty());
         assertTrue(ctx.present.isEmpty());
@@ -146,8 +169,9 @@ class StorageFolderInputSourceTest {
     @Test
     void aFailedRunLeavesTheFileForItsNextVersion() throws IOException {
         StoredFile file = storedFile(1L, "doc.pdf", T1);
-        when(storedFileRepository.findAllByFolderId(FOLDER)).thenReturn(List.of(file));
-        when(storedFileRepository.findById(1L)).thenReturn(Optional.of(file));
+        when(storedFileRepository.findAllByFolderIdAndOwner(FOLDER, owner))
+                .thenReturn(List.of(file));
+        when(storedFileRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(file));
 
         source.resolve(spec(), ctx).get(0).onComplete().accept(false);
 
@@ -160,7 +184,7 @@ class StorageFolderInputSourceTest {
 
     @Test
     void validateRejectsAnUnknownFolder() {
-        when(folderRepository.existsById(FOLDER)).thenReturn(false);
+        when(folderRepository.findByIdAndOwner(FOLDER, owner)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> source.validate(spec()));
     }
@@ -179,7 +203,8 @@ class StorageFolderInputSourceTest {
                         storedFileRepository,
                         folderRepository,
                         storageProvider,
-                        new ApplicationProperties());
+                        new ApplicationProperties(),
+                        userService);
 
         assertThrows(IllegalArgumentException.class, () -> disabled.validate(spec()));
     }
@@ -188,13 +213,17 @@ class StorageFolderInputSourceTest {
         return new InputSpec("storage-folder", Map.of("folderId", FOLDER.toString()));
     }
 
-    private static StoredFile storedFile(Long id, String name, LocalDateTime updatedAt) {
+    private StoredFile storedFile(Long id, String name, LocalDateTime updatedAt) {
         StoredFile file = new StoredFile();
         file.setId(id);
         file.setOriginalFilename(name);
         file.setStorageKey("key-" + id);
         file.setSizeBytes(100);
         file.setUpdatedAt(updatedAt);
+        file.setOwner(owner);
+        lenient()
+                .when(storedFileRepository.findByIdAndOwner(id, owner))
+                .thenReturn(Optional.of(file));
         return file;
     }
 

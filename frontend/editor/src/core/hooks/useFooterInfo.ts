@@ -19,6 +19,6 @@ export function useFooterInfo() {
     // Callers render legal links off this, so a failure must still yield an object.
     footerInfo: data ?? (error ? FALLBACK : null),
     loading: isPending,
-    error: (error as Error | null) ?? null,
+    error: error ?? null,
   };
 }

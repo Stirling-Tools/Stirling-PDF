@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Popover } from "@mantine/core";
-import SettingsIcon from "@mui/icons-material/Settings";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip, type TooltipProps } from "@app/components/shared/Tooltip";
 import { ScaleSettingsPanel } from "@app/components/viewer/ScaleSettingsPanel";
 import type { MeasureScale } from "@app/utils/measurementTypes";
@@ -55,7 +55,7 @@ export function RulerScaleSettingsButton({
               disabled={disabled}
               aria-label={label}
             >
-              <SettingsIcon sx={{ fontSize: "1rem" }} />
+              <Icon name="settings" size={"1rem"} />
             </ActionIcon>
           </Tooltip>
         </div>

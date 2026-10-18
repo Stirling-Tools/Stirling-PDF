@@ -32,6 +32,9 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // Supplies GenericObjectPoolConfig for the Lettuce pool, which today backs only the single
+    // shared native connection; headroom for a future dedicated-connection path.
+    implementation 'org.apache.commons:commons-pool2'
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.53'
     implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
     // Lettuce-backed Bucket4j ProxyManager used by ValkeyRateLimitStore for cluster-wide
@@ -111,6 +114,14 @@ dependencies {
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersMinioVersion}"
 }
 
+// Golden extraction fixtures live in :common; the advanced converter is graded against the same
+// corpus as the built-in one rather than a forked copy of it.
+processTestResources {
+    from(project(':common').file('src/test/resources/pdf-ingestion-fixtures')) {
+        into 'pdf-ingestion-fixtures'
+    }
+}
+
 tasks.register('prepareKotlinBuildScriptModel') {}
 
 tasks.register('type3SignatureTool', JavaExec) {
@@ -119,4 +130,15 @@ tasks.register('type3SignatureTool', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'stirling.software.SPDF.service.pdfjson.type3.tool.Type3SignatureTool'
     standardInput = System.in
+}
+
+// FailureKindTest asserts the enum against two files outside this project, found by walking up to
+// the repo root: the kind-to-code fixture the frontend also reads, and the English copy every kind
+// must have a key in. Gradle cannot infer either, so without this the task is up-to-date when only
+// one of them changed and the mismatch surfaces on the next unrelated Java edit instead.
+tasks.named('test', Test).configure {
+    inputs.files(
+        rootProject.file('testing/failure-kind-codes.json'),
+        rootProject.file('frontend/editor/public/locales/en-US/translation.toml')
+    ).withPropertyName('sharedConformanceFixtures').optional()
 }

@@ -17,3 +17,10 @@ export default meta;
 type Story = StoryObj<typeof RenameTeamModal>;
 
 export const Default: Story = {};
+
+export const FromDefaultTeam: Story = {
+  args: {
+    teamId: 1,
+    currentName: "Default",
+  },
+};

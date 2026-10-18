@@ -143,12 +143,12 @@ export function useToolSections(
     const subMap = {} as SubcategoryIdMap;
     const seen = new Set<ToolId>();
     filteredTools.forEach(({ item: [id, tool] }) => {
-      const toolId = id as ToolId;
+      const toolId = id;
       if (seen.has(toolId)) return;
       seen.add(toolId);
       const sub = tool.subcategoryId;
       if (!subMap[sub]) subMap[sub] = [];
-      subMap[sub].push({ id: toolId as ToolId, tool });
+      subMap[sub].push({ id: toolId, tool });
     });
     const entries = Object.entries(subMap);
 
@@ -165,7 +165,7 @@ export function useToolSections(
           const ai = order.indexOf(a as SubcategoryId);
           const bi = order.indexOf(b as SubcategoryId);
           if (ai !== bi) return ai - bi;
-          return (a as SubcategoryId).localeCompare(b as SubcategoryId);
+          return (a as SubcategoryId).localeCompare(b);
         })
         .map(
           ([subcategoryId, tools]) =>

@@ -3,7 +3,7 @@
  * PDF itself, so partial failures arrive in a response header, not the body.
  */
 import { Alert, List, Text } from "@mantine/core";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 
@@ -15,7 +15,7 @@ export function SkippedEditsAlert() {
 
   return (
     <Alert
-      icon={<WarningAmberIcon sx={{ fontSize: 16 }} />}
+      icon={<Icon name="triangle-alert" size={16} />}
       color="yellow"
       variant="light"
       p="xs"

@@ -1,10 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook as baseRenderHook, waitFor } from "@testing-library/react";
+import {
+  act,
+  renderHook as baseRenderHook,
+  waitFor,
+} from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { qk } from "@app/query/keys";
 
 const get = vi.fn();
 let currentUserId: string | null = null;
+let authLoading = false;
+let isAnonymous = false;
 
 vi.mock("@app/services/apiClient", () => ({
   default: {
@@ -13,10 +20,15 @@ vi.mock("@app/services/apiClient", () => ({
 }));
 
 vi.mock("@app/auth/UseSession", () => ({
-  useAuth: () => ({ user: currentUserId ? { id: currentUserId } : null }),
+  useAuth: () => ({
+    user: currentUserId ? { id: currentUserId } : null,
+    loading: authLoading,
+    isAnonymous,
+  }),
 }));
 
-const { usePortalAccess } = await import("@app/hooks/usePortalAccess");
+const { usePortalAccess, usePortalAccessState } =
+  await import("@app/hooks/usePortalAccess");
 
 function meReturning(portalAccess: boolean) {
   return { data: { user: { portalAccess } } };
@@ -41,6 +53,8 @@ describe("usePortalAccess", () => {
     localStorage.clear();
     get.mockReset();
     currentUserId = null;
+    authLoading = false;
+    isAnonymous = false;
     client = new QueryClient({
       defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
     });
@@ -53,6 +67,76 @@ describe("usePortalAccess", () => {
     const { result } = renderHook(() => usePortalAccess());
 
     await waitFor(() => expect(result.current).toBe(true));
+  });
+
+  it("skips the access request for guests even with cached access, then queries after signup", async () => {
+    currentUserId = "guest-1";
+    isAnonymous = true;
+    client.setQueryData(qk.portalAccess(currentUserId), true);
+    get.mockResolvedValue(meReturning(true));
+
+    const { result, rerender } = renderHook(() => usePortalAccessState());
+    expect(result.current).toEqual({ granted: false, settled: true });
+    expect(get).not.toHaveBeenCalled();
+
+    isAnonymous = false;
+    rerender();
+    await waitFor(() => expect(result.current.granted).toBe(true));
+    expect(get).toHaveBeenCalledOnce();
+  });
+
+  it("does not report a settled denial while the incoming session is loading", async () => {
+    authLoading = true;
+    const { result, rerender } = renderHook(() => usePortalAccessState());
+    expect(result.current.settled).toBe(false);
+
+    currentUserId = "admin-1";
+    authLoading = false;
+    get.mockResolvedValue(meReturning(false));
+    rerender();
+    expect(result.current.settled).toBe(false);
+    await waitFor(() =>
+      expect(result.current).toEqual({ granted: false, settled: true }),
+    );
+  });
+
+  it("does not give a signed-out mount access from the previous browser cache", async () => {
+    currentUserId = "admin-1";
+    get.mockResolvedValue(meReturning(true));
+    const first = renderHook(() => usePortalAccessState());
+    await waitFor(() =>
+      expect(first.result.current).toEqual({ granted: true, settled: true }),
+    );
+    first.unmount();
+
+    currentUserId = null;
+    client.clear();
+    const signedOut = renderHook(() => usePortalAccessState());
+    expect(signedOut.result.current).toEqual({ granted: false, settled: true });
+    expect(get).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks a cached answer unsettled while the incoming view revalidates it", async () => {
+    currentUserId = "admin-1";
+    get.mockResolvedValue(meReturning(true));
+    client.setDefaultOptions({ queries: { retry: false, gcTime: Infinity } });
+    const first = renderHook(() => usePortalAccessState());
+    await waitFor(() => expect(first.result.current.settled).toBe(true));
+    first.unmount();
+
+    let resolveAccess = (_value: ReturnType<typeof meReturning>) => {};
+    get.mockReturnValue(
+      new Promise<ReturnType<typeof meReturning>>((resolve) => {
+        resolveAccess = resolve;
+      }),
+    );
+    const next = renderHook(() => usePortalAccessState());
+    expect(next.result.current).toEqual({ granted: true, settled: false });
+
+    await act(async () => resolveAccess(meReturning(false)));
+    await waitFor(() =>
+      expect(next.result.current).toEqual({ granted: false, settled: true }),
+    );
   });
 
   it("re-asks the backend when a different user signs in without a reload", async () => {

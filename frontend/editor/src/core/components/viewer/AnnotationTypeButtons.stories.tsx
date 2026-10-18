@@ -14,7 +14,6 @@ const baseArgs = {
   documentId: "doc-1",
   pageIndex: 0,
   annotationId: "annotation-1",
-  menuWidth: 260,
   obj: undefined,
   firstLinkTarget: null,
   hasCommentContent: false,

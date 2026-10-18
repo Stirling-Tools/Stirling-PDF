@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import { Icon } from "@app/ui/Icon";
 import { Banner, EmptyState } from "@app/ui";
 import "@portal/theme/surface.css";
 import "@portal/components/pipelines/PipelineInspector.css";
@@ -68,7 +68,7 @@ export function PipelineInspector({
       {/* The title stays put while the settings scroll: it names the node being edited, which is
           what makes a long form legible. */}
       <div className="portal-inspector__title">
-        {icon ?? <TuneRoundedIcon style={{ fontSize: "1.125rem" }} />}
+        {icon ?? <Icon name="sliders-horizontal" size={"1.125rem"} />}
         <span>{title}</span>
       </div>
       <div className="portal-inspector__body">

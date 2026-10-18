@@ -1,3 +1,4 @@
+import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 export interface DownloadRequest {
   data: Blob | File;
   filename: string;
@@ -15,6 +16,7 @@ export interface DownloadResult {
 export async function downloadFile(
   request: DownloadRequest,
 ): Promise<DownloadResult> {
+  assertFilesNotBlocked([request.fileId]);
   const url = URL.createObjectURL(request.data);
 
   const link = document.createElement("a");
@@ -34,6 +36,7 @@ export async function downloadFromUrl(
   filename: string,
   localPath?: string,
 ): Promise<DownloadResult> {
+  assertFilesNotBlocked();
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;

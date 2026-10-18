@@ -2,11 +2,11 @@ import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@app/components/toast/ToastContext";
 import { ToastInstance, ToastLocation } from "@app/components/toast/types";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import "@app/components/toast/ToastRenderer.css";
 
+import { Icon, type IconName } from "@app/ui/Icon";
 const locationToClass: Record<ToastLocation, string> = {
   "top-left": "toast-container--top-left",
   "top-right": "toast-container--top-right",
@@ -27,14 +27,14 @@ function getActionButtonClass(t: ToastInstance): string {
   return `toast-action-button toast-action-button--${t.alertType}`;
 }
 
-function getDefaultIconName(t: ToastInstance): string {
+function getDefaultIconName(t: ToastInstance): IconName {
   switch (t.alertType) {
     case "success":
-      return "check-circle-rounded";
+      return "circle-check";
     case "error":
-      return "cancel";
+      return "circle-x";
     case "warning":
-      return "warning";
+      return "triangle-alert";
     case "neutral":
     default:
       return "info";
@@ -81,13 +81,7 @@ export default function ToastRenderer() {
                 <div className="toast-header">
                   {/* Icon */}
                   <div className="toast-icon">
-                    {t.icon ?? (
-                      <LocalIcon
-                        icon={getDefaultIconName(t)}
-                        width={20}
-                        height={20}
-                      />
-                    )}
+                    {t.icon ?? <Icon name={getDefaultIconName(t)} size={20} />}
                   </div>
 
                   {/* Title + count badge */}
@@ -115,7 +109,7 @@ export default function ToastRenderer() {
                         }}
                         className={`toast-button toast-expand-button ${t.isExpanded ? "toast-expand-button--expanded" : ""}`}
                       >
-                        <LocalIcon icon="expand-more-rounded" />
+                        <Icon name="chevron-down" size="1em" />
                       </ActionIcon>
                     )}
                     <ActionIcon

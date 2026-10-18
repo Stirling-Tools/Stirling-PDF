@@ -1,7 +1,7 @@
 import React from "react";
 import { Trans } from "react-i18next";
 import { Button } from "@app/ui/Button";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { Icon } from "@app/ui/Icon";
 import i18n from "@app/i18n";
 import { SlideConfig } from "@app/types/types";
 import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
@@ -44,7 +44,7 @@ export default function AnalyticsChoiceSlide({
                 "_blank",
               )
             }
-            rightSection={<OpenInNewIcon style={{ fontSize: 16 }} />}
+            rightSection={<Icon name="external-link" size={16} />}
           >
             {i18n.t("analytics.learnMore", "Learn more about our analytics")}
           </Button>

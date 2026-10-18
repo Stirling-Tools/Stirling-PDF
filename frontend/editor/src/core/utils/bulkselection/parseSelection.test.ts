@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { parseSelection } from "@app/utils/bulkselection/parseSelection";
 
@@ -26,6 +27,15 @@ describe("parseSelection", () => {
 
   it("6) supports odd keyword", () => {
     expect(parseSelection("odd", 10)).toEqual([1, 3, 5, 7, 9]);
+  });
+
+  it("6b) supports all keyword (case-insensitive)", () => {
+    expect(parseSelection("all", 5)).toEqual([1, 2, 3, 4, 5]);
+    expect(parseSelection("ALL", 3)).toEqual([1, 2, 3]);
+  });
+
+  it("6c) all in combination selects the full range", () => {
+    expect(parseSelection("all & even", 6)).toEqual([2, 4, 6]);
   });
 
   it("7) supports 2n progression", () => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { defaultAppService } from "@app/services/defaultAppService";
 import { alert } from "@app/components/toast";
@@ -7,40 +7,19 @@ export const useDefaultApp = () => {
   const { t } = useTranslation();
   const [isDefault, setIsDefault] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [promptDismissed, setPromptDismissed] = useState(() =>
-    defaultAppService.hasUserDismissedPrompt(),
-  );
 
-  useEffect(() => {
-    checkDefaultStatus();
-  }, []);
-
-  useEffect(() => {
-    return defaultAppService.subscribePromptDismissed(() => {
-      setPromptDismissed(defaultAppService.hasUserDismissedPrompt());
-    });
-  }, []);
-
-  const checkDefaultStatus = async () => {
+  const checkDefaultStatus = useCallback(async () => {
     try {
       const status = await defaultAppService.isDefaultPdfHandler();
       setIsDefault(status);
     } catch (error) {
       console.error("Failed to check default status:", error);
     }
-  };
+  }, []);
 
-  /** Permanently stop showing the banner (same as turning off the settings toggle). */
-  const dontRemindAgain = () => {
-    defaultAppService.setPromptDismissed(true);
-    setPromptDismissed(true);
-  };
-
-  /** Settings toggle: remind is on by default until the user opts out. */
-  const setRemindWhenNotDefault = (remind: boolean) => {
-    defaultAppService.setPromptDismissed(!remind);
-    setPromptDismissed(!remind);
-  };
+  useEffect(() => {
+    void checkDefaultStatus();
+  }, [checkDefaultStatus]);
 
   const handleSetDefault = async () => {
     setIsLoading(true);
@@ -85,10 +64,7 @@ export const useDefaultApp = () => {
   return {
     isDefault,
     isLoading,
-    promptDismissed,
     checkDefaultStatus,
-    dontRemindAgain,
-    setRemindWhenNotDefault,
     handleSetDefault,
   };
 };

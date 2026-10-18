@@ -12,6 +12,7 @@ interface PinOptions {
   label: string;
   icon: React.ReactNode;
   component: CustomWorkbenchViewRegistration["component"];
+  takeOverScreen: boolean;
 }
 
 // Register the custom workbench view and open it when the editor tool is
@@ -22,6 +23,7 @@ export function useWorkbenchPin({
   label,
   icon,
   component,
+  takeOverScreen,
 }: PinOptions): () => void {
   const {
     registerCustomWorkbenchView,
@@ -43,15 +45,26 @@ export function useWorkbenchPin({
     component,
   });
   viewRef.current = { workbenchId, workbenchViewId, label, icon, component };
+  const register = useCallback(
+    (fullScreen: boolean) => {
+      const v = viewRef.current;
+      registerCustomWorkbenchView({
+        id: v.workbenchViewId,
+        workbenchId: v.workbenchId,
+        label: v.label,
+        icon: v.icon,
+        component: v.component,
+        hideToolPanel: fullScreen,
+        hideTopControls: fullScreen,
+      });
+    },
+    [registerCustomWorkbenchView],
+  );
+  const takeOverRef = useRef(takeOverScreen);
+  takeOverRef.current = takeOverScreen;
   useEffect(() => {
     const v = viewRef.current;
-    registerCustomWorkbenchView({
-      id: v.workbenchViewId,
-      workbenchId: v.workbenchId,
-      label: v.label,
-      icon: v.icon,
-      component: v.component,
-    });
+    register(takeOverRef.current);
     setCustomWorkbenchViewData(v.workbenchViewId, { kind: "pdfTextEditor" });
     setLeftPanelView("toolContent");
     return () => {
@@ -59,12 +72,19 @@ export function useWorkbenchPin({
       unregisterCustomWorkbenchView(v.workbenchViewId);
     };
   }, [
-    registerCustomWorkbenchView,
+    register,
     unregisterCustomWorkbenchView,
     setCustomWorkbenchViewData,
     clearCustomWorkbenchViewData,
     setLeftPanelView,
   ]);
+
+  const registeredTakeOverRef = useRef(takeOverScreen);
+  useEffect(() => {
+    if (registeredTakeOverRef.current === takeOverScreen) return;
+    registeredTakeOverRef.current = takeOverScreen;
+    register(takeOverScreen);
+  }, [register, takeOverScreen]);
 
   const actionsRef = useRef(navigationActions);
   actionsRef.current = navigationActions;

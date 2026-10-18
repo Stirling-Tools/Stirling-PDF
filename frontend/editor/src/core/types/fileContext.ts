@@ -5,6 +5,12 @@
 import { PageOperation } from "@app/types/pageEditor";
 import { FileId, BaseFileMetadata } from "@app/types/file";
 import { generateId } from "@app/utils/generateId";
+import {
+  bindPdfAccess,
+  getPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfPasswordStore";
+import type { DiskUnavailableReason } from "@app/services/desktopFileLink";
 
 // Re-export FileId for convenience
 export type { FileId };
@@ -53,6 +59,20 @@ export interface StirlingFileStub extends BaseFileMetadata {
   thumbnailUrl?: string; // Generated thumbnail blob URL for visual display
   blobUrl?: string; // File access blob URL for downloads/processing
   localFilePath?: string; // Original local filesystem path (desktop app only)
+  // Size/mtime of the disk file the last time we read it. An external edit moves
+  // one of them, which is how a stale stored copy is spotted without hashing.
+  diskSyncedSize?: number;
+  diskSyncedModifiedMs?: number;
+  // Disk path whose original is deleted, kept so the badge keeps saying "not on
+  // disk" long after the toast has gone.
+  orphanedFilePath?: string;
+  // Epoch ms of an unresolved divergence: disk moved on while we held unsaved
+  // edits, so two real versions exist and the user has not picked one yet.
+  diskConflictAt?: number;
+  // Epoch ms of the last pickup of an external edit, so the user can tell whose
+  // version is on screen instead of having to catch a toast.
+  diskReloadedAt?: number;
+  diskUnavailableReason?: DiskUnavailableReason;
   processedFile?: ProcessedFileMetadata; // PDF page data and processing results
   insertAfterPageId?: string; // Page ID after which this file should be inserted
   isPinned?: boolean; // Protected from tool consumption (replace/remove)
@@ -72,6 +92,14 @@ export interface StirlingFileStub extends BaseFileMetadata {
    * stands, an unsure one escalates to the AI. Undefined when the labels came from the AI.
    */
   classificationConfidence?: ClassificationConfidence;
+  /**
+   * This file's classification is final. It was produced outside the policy system — by
+   * desktop onboarding's classification demo — so no policy may reclassify it and an unsure
+   * verdict must never be escalated to the AI classifier. Rides on the stub, so
+   * {@code createChildStub} carries it onto every later version; a dispatch marker would
+   * not, being keyed to the file id that a new version replaces.
+   */
+  classificationLocked?: boolean;
   /**
    * This session proved the stored bytes unreadable (WebKit losing a blob's
    * backing store). The row renders as "data lost" instead of pretending the
@@ -115,9 +143,11 @@ export function isStirlingFile(file: File | Blob): file is StirlingFile {
 }
 
 /**
- * Generate a unique identifier for form fill state tracking.
- * This ensures that form widgets/values are correctly isolated between files
- * even if they have the same name or are re-scanned.
+ * Identity of the bytes on screen, for state that must not outlive them: form
+ * widgets and values, and the viewer's document mount.
+ *
+ * <p>Keyed on content, not on the file: a disk reload swaps the bytes under an
+ * unchanged fileId, and an id-only key leaves the previous document mounted.
  */
 export function getFormFillFileId(
   file: File | Blob | null | undefined,
@@ -125,7 +155,7 @@ export function getFormFillFileId(
   if (!file) return null;
 
   if (isStirlingFile(file)) {
-    return `stirling-${file.fileId}`;
+    return `stirling-${file.fileId}-${file.quickKey}`;
   }
 
   if (file instanceof File) {
@@ -136,8 +166,31 @@ export function getFormFillFileId(
   return `blob-${file.size || 0}`;
 }
 
-// Create a StirlingFile from a regular File object
-export function createStirlingFile(file: File, id?: FileId): StirlingFile {
+/** A document as the viewer tracks it: which workbench record, and which bytes.
+ *  The key is a {@link getFormFillFileId} value. */
+export interface DocumentIdentity {
+  id: FileId;
+  key: string;
+}
+
+/** Whether the same record is now showing different bytes, which is what
+ *  accepting a disk reload does. A different record is a file switch and a
+ *  missing side is a first sighting; neither invalidates work held against the
+ *  document that was on screen. */
+export function documentBytesReplaced(
+  previous: DocumentIdentity | null,
+  current: DocumentIdentity | null,
+): boolean {
+  if (!previous || !current) return false;
+  return previous.id === current.id && previous.key !== current.key;
+}
+
+/** Storage reads opt out of rebinding: reading a copy must not revoke access to the active bytes. */
+export function createStirlingFile(
+  file: File,
+  id?: FileId,
+  options?: { bindSessionAccess?: boolean },
+): StirlingFile {
   // If the file already has Stirling metadata and we aren't trying to override it,
   // return as–is. When a new id is requested we clone the File so we can embed
   // the fresh identifier without mutating the original object.
@@ -146,10 +199,12 @@ export function createStirlingFile(file: File, id?: FileId): StirlingFile {
       return file;
     }
 
+    const access = getPdfAccess(file);
     file = new File([file], file.name, {
       type: file.type,
       lastModified: file.lastModified,
     });
+    if (access) rememberPdfAccess(file, access);
   }
 
   const fileId = id || createFileId();
@@ -171,6 +226,7 @@ export function createStirlingFile(file: File, id?: FileId): StirlingFile {
     configurable: false,
   });
 
+  if (options?.bindSessionAccess !== false) bindPdfAccess(file, fileId);
   return file as StirlingFile;
 }
 
@@ -181,7 +237,7 @@ export function extractFileIds(files: StirlingFile[]): FileId[] {
 
 // Extract regular File objects from StirlingFile array
 export function extractFiles(files: StirlingFile[]): File[] {
-  return files as File[];
+  return files;
 }
 
 // Check if an object is a File or StirlingFile (replaces instanceof File checks)
@@ -383,6 +439,9 @@ export interface FileContextActions {
     id: FileId,
     updates: Partial<StirlingFileStub>,
   ) => void;
+  /** Something changed at these source locations; settle any open record
+   *  that came from one of them. */
+  reconcileOpenFiles: (locations: string[]) => Promise<void>;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
   clearAllData: () => Promise<void>;
@@ -425,6 +484,20 @@ export interface FileContextActions {
   scheduleCleanup: (fileId: FileId, delay?: number) => void;
   cleanupFile: (fileId: FileId) => void;
   openEncryptedUnlockPrompt: (fileId: FileId) => void;
+  /** Resolves false on cancellation or document closure; never exposes the credential. */
+  requestPdfOwnerAccess: (
+    fileId: FileId,
+    action: string,
+    preservationReason?: string,
+  ) => Promise<boolean>;
+  /** Creates a separate unprotected version after verifying owner access. */
+  createUnprotectedCopy: (fileId: FileId) => Promise<void>;
+  /** Authenticates preview bytes without adding a library record. Abort when the preview closes. */
+  unlockPreviewPdf: (
+    file: File,
+    password: string,
+    signal: AbortSignal,
+  ) => Promise<void>;
 }
 
 // File selectors (separate from actions to avoid re-renders)

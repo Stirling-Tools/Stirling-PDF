@@ -12,8 +12,21 @@ export interface HeuristicDoc {
   allZone: string;
 }
 
-// "none" = no match or non-English; a real runtime value, not just a type state.
+// "none" = no label cleared the floor; a real runtime value, not just a type state.
 export type HeuristicConfidence = ClassificationConfidence;
+
+export interface LanguageCandidate {
+  language: string;
+  score: number;
+}
+
+export interface LanguageDetection {
+  language: string | null;
+  script: string | null;
+  candidates: LanguageCandidate[];
+  assumed: boolean;
+  lowText: boolean;
+}
 
 /** One scored candidate label with the rule hits that produced its score (debug only). */
 export interface LabelScoreExplanation {
@@ -27,9 +40,13 @@ export interface LabelScoreExplanation {
 
 /** Why a document scored the way it did; produced only when explain is requested. */
 export interface HeuristicExplanation {
-  isEnglish: boolean;
+  language: string | null;
+  script: string | null;
+  assumed: boolean;
   lowText: boolean;
-  /** Top candidates by score, best first. Empty when rejected as non-English. */
+  packs: string[];
+  languageCandidates: LanguageCandidate[];
+  /** Top candidates by score, best first. */
   candidates: LabelScoreExplanation[];
 }
 
@@ -38,7 +55,8 @@ export interface HeuristicResult {
   labels: string[];
   confidence: HeuristicConfidence;
   score: number;
-  isEnglish: boolean;
+  language: string | null;
+  packs: string[];
   /** Present only when classify was called with `{ explain: true }`. */
   explain?: HeuristicExplanation;
 }

@@ -4,10 +4,10 @@ import { ClassificationCategoryManager } from "@app/components/policies/Classifi
 import type { SidebarCategory } from "@app/services/fileSidebarCategories";
 
 const CATEGORIES: SidebarCategory[] = [
-  { id: "finance", name: "Financial", icon: "payments", labelKeys: [] },
+  { id: "finance", name: "Financial", icon: "banknote", labelKeys: [] },
   { id: "legal", name: "Legal", icon: "gavel", labelKeys: [] },
   { id: "hr", name: "HR", icon: "badge", labelKeys: [] },
-  { id: "reports", name: "Reports", icon: "monitoring", labelKeys: [] },
+  { id: "reports", name: "Reports", icon: "activity", labelKeys: [] },
 ];
 
 const COUNTS = new Map<string, number>([

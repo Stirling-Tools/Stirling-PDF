@@ -12,14 +12,14 @@ const mockFile: StirlingFileStub = {
   size: 2_400_000,
   lastModified: Date.now(),
   isLeaf: true,
-  originalFileId: "file-1" as FileId,
+  originalFileId: "file-1",
   versionNumber: 1,
 };
 
 const mockUploadedFile: StirlingFileStub = {
   ...mockFile,
   id: "file-2" as FileId,
-  originalFileId: "file-2" as FileId,
+  originalFileId: "file-2",
   remoteStorageId: 2,
 };
 

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { authService, UserInfo } from "@app/services/authService";
 import { buildOAuthCallbackHtml } from "@app/utils/oauthCallbackHtml";
-import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
+import { ProviderMark } from "@app/auth/ui/ProviderMark";
 import { STIRLING_SAAS_URL } from "@app/constants/connection";
 import { Button } from "@app/ui/Button";
 import "@app/components/SetupWizard/desktopOAuth.css";
@@ -160,11 +160,9 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
             >
               <span className="oauth-button-left-desktop">
                 <span className="oauth-icon-wrapper-desktop">
-                  <img
-                    src={oauthIconUrl(
-                      iconConfig?.file || GENERIC_PROVIDER_ICON,
-                    )}
-                    alt={label}
+                  <ProviderMark
+                    file={iconConfig?.file || GENERIC_PROVIDER_ICON}
+                    label={label}
                     className="oauth-icon-tiny-desktop"
                   />
                 </span>

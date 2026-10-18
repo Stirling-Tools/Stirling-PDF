@@ -1,10 +1,7 @@
 import { ReactNode } from "react";
 import { Modal, Stack, Text, Box, Alert } from "@mantine/core";
 import { QRCodeSVG } from "qrcode.react";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
-import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
-import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
+import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 import { useMobileTransferSession } from "@app/hooks/useMobileTransferSession";
 
@@ -56,8 +53,6 @@ export default function MobileTransferModal({
   qrTitle = title,
   qrSize = 240,
 }: MobileTransferModalProps) {
-  const { config } = useAppConfig();
-
   const { mobileUrl, filesReceived, error, timeRemaining, showExpiryWarning } =
     useMobileTransferSession({
       active: opened,
@@ -65,13 +60,6 @@ export default function MobileTransferModal({
       onFileReceived,
       sessionCreateErrorMessage,
       pollingErrorMessage,
-      // In dev the backend-advertised frontendUrl is the backend origin, which
-      // serves no SPA — the phone must open the Vite origin this page runs on,
-      // so let the URL builder fall back to it. An explicit server_url still
-      // wins, as an escape hatch.
-      configuredUrl:
-        localStorage.getItem("server_url") ||
-        (import.meta.env.DEV ? "" : config?.frontendUrl || ""),
     });
 
   return (
@@ -88,7 +76,7 @@ export default function MobileTransferModal({
     >
       <Stack gap="md">
         <Alert
-          icon={<InfoRoundedIcon style={{ fontSize: "1rem" }} />}
+          icon={<Icon name="info" size={"1rem"} />}
           color="blue"
           variant="light"
         >
@@ -97,7 +85,7 @@ export default function MobileTransferModal({
 
         {showExpiryWarning && timeRemaining !== null && (
           <Alert
-            icon={<WarningRoundedIcon style={{ fontSize: "1rem" }} />}
+            icon={<Icon name="triangle-alert" size={"1rem"} />}
             title={expiryWarningTitle}
             color="orange"
           >
@@ -109,7 +97,7 @@ export default function MobileTransferModal({
 
         {error && (
           <Alert
-            icon={<ErrorRoundedIcon style={{ fontSize: "1rem" }} />}
+            icon={<Icon name="circle-alert" size={"1rem"} />}
             title={errorTitle}
             color="red"
           >

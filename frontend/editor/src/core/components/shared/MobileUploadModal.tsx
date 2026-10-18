@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import { Icon } from "@app/ui/Icon";
 import MobileTransferModal from "@app/components/shared/MobileTransferModal";
 import { convertImageToPdf, isImageFile } from "@app/utils/imageToPdfUtils";
 
@@ -115,7 +115,7 @@ export default function MobileUploadModal({
           variant="filled"
           color="green"
           size="lg"
-          leftSection={<CheckRoundedIcon style={{ fontSize: "1rem" }} />}
+          leftSection={<Icon name="check" size={"1rem"} />}
         >
           {t("mobileUpload.filesReceived", "{{count}} file(s) received", {
             count,

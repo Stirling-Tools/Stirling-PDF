@@ -1,8 +1,6 @@
 import { Menu, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import CheckIcon from "@mui/icons-material/Check";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import { useAllFiles } from "@app/contexts/FileContext";
 import type { FileId } from "@app/types/file";
@@ -27,7 +25,7 @@ export function EditorFileSwitcher({
   const pdfs = files.filter((f) => /\.pdf$/i.test(f.name));
   const label = (
     <span className="pdf-editor-topbar__file">
-      <DescriptionIcon fontSize="small" style={{ flexShrink: 0 }} />
+      <Icon name="file-text" size={20} style={{ flexShrink: 0 }} />
       <span className="pdf-editor-topbar__filename">{currentFileName}</span>
       {dirty && (
         <span
@@ -62,7 +60,7 @@ export function EditorFileSwitcher({
           size="sm"
           variant="tertiary"
           accent="neutral"
-          rightSection={<ExpandMoreIcon fontSize="small" />}
+          rightSection={<Icon name="chevron-down" size={20} />}
           data-testid="pdf-editor-file-switcher"
           title={currentFileName}
         >
@@ -81,9 +79,9 @@ export function EditorFileSwitcher({
               key={fileId ?? file.name}
               leftSection={
                 current ? (
-                  <CheckIcon fontSize="small" />
+                  <Icon name="check" size={20} />
                 ) : (
-                  <DescriptionIcon fontSize="small" />
+                  <Icon name="file-text" size={20} />
                 )
               }
               disabled={fileId == null}

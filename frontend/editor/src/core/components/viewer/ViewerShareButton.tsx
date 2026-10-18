@@ -3,9 +3,7 @@ import { Group, Loader, Modal, Progress, Stack, Text } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import ShareIcon from "@mui/icons-material/Share";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import ShareManagementModal from "@app/components/shared/ShareManagementModal";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -77,7 +75,7 @@ export default function ViewerShareButton({
   const tooltipContent = enforcing ? (
     <Stack gap={6} py={2} w={200}>
       <Group gap={6} wrap="nowrap">
-        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Icon name="shield" size={13} />
         <Text size="xs" fw={600}>
           {t(
             "policy.blockingAction",
@@ -191,7 +189,7 @@ export default function ViewerShareButton({
             disabled={isDisabled}
             aria-label={label}
           >
-            <ShareIcon sx={{ fontSize: "1rem" }} />
+            <Icon name="share-2" size={"1rem"} />
           </ActionIcon>
         </div>
       </Tooltip>
@@ -236,7 +234,7 @@ export default function ViewerShareButton({
             <Button
               variant="primary"
               style={{ width: BUTTON_WIDTH }}
-              leftSection={<CloudUploadIcon fontSize="small" />}
+              leftSection={<Icon name="cloud-upload" size={20} />}
               onClick={handleSaveAndShare}
               loading={saving}
             >

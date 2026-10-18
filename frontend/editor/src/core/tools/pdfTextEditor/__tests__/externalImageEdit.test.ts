@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { deflateSync, inflateSync } from "node:zlib";
 import {
@@ -54,7 +55,7 @@ function fakeHandle() {
           bytes.buffer.slice(
             bytes.byteOffset,
             bytes.byteOffset + bytes.byteLength,
-          ) as ArrayBuffer,
+          ),
       };
     },
   };

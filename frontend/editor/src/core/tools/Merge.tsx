@@ -138,7 +138,7 @@ const Merge = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: "Sort Files",
+        title: t("merge.sortFiles.title", "Sort Files"),
         isCollapsed: base.settingsCollapsed,
         content: (
           <MergeFileSorter
@@ -148,7 +148,7 @@ const Merge = (props: BaseToolProps) => {
         ),
       },
       {
-        title: "Settings",
+        title: t("merge.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed
           ? base.handleSettingsReset

@@ -1,9 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
-import PrintIcon from "@mui/icons-material/Print";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   PolicyEnforcingTooltip,
   renderWithTooltip,
@@ -21,13 +19,14 @@ interface WorkbenchBarDesktopActionsProps extends WorkbenchBarActionsProps {
  */
 export default function WorkbenchBarDesktopActions({
   currentView,
-  isCustomView,
+  showsFileActions,
   actionsDisabled,
   policyEnforcing,
   downloadLabel,
   downloadIconName,
   saveAsIconName,
   onPrint,
+  printDisabledReason,
   onExport,
   onClose,
   enforcingProgress,
@@ -35,7 +34,7 @@ export default function WorkbenchBarDesktopActions({
   const { t } = useTranslation();
   const exportDisabled = actionsDisabled || policyEnforcing;
   const closeLabel =
-    currentView === "fileEditor"
+    currentView === "fileEditor" || currentView === "pageEditor"
       ? t("workbenchBar.closeAll", "Close All")
       : t("workbenchBar.closePdf", "Close PDF");
 
@@ -56,16 +55,18 @@ export default function WorkbenchBarDesktopActions({
             hover={false}
             className="workbench-bar-action-icon"
             onClick={onPrint}
-            disabled={exportDisabled}
+            disabled={exportDisabled || !onPrint}
             aria-label={t("workbenchBar.print", "Print PDF")}
           >
-            <PrintIcon sx={{ fontSize: "1rem" }} />
+            <Icon name="printer" size={"1rem"} />
           </ActionIcon>,
-          tooltipFor(t("workbenchBar.print", "Print PDF")),
+          tooltipFor(
+            printDisabledReason ?? t("workbenchBar.print", "Print PDF"),
+          ),
         )}
 
-      {/* Download (file-level action — not relevant in custom views) */}
-      {!isCustomView &&
+      {/* Saving, and closing what was saved: only where a document is open. */}
+      {showsFileActions &&
         renderWithTooltip(
           <ActionIcon
             variant="tertiary"
@@ -75,12 +76,12 @@ export default function WorkbenchBarDesktopActions({
             disabled={exportDisabled}
             aria-label={downloadLabel}
           >
-            <LocalIcon icon={downloadIconName} width="1rem" height="1rem" />
+            <Icon name={downloadIconName} size="1rem" />
           </ActionIcon>,
           tooltipFor(downloadLabel),
         )}
 
-      {!isCustomView &&
+      {showsFileActions &&
         saveAsIconName &&
         renderWithTooltip(
           <ActionIcon
@@ -91,18 +92,18 @@ export default function WorkbenchBarDesktopActions({
             disabled={exportDisabled}
             aria-label={t("workbenchBar.saveAs", "Save As")}
           >
-            <LocalIcon icon={saveAsIconName} width="1rem" height="1rem" />
+            <Icon name={saveAsIconName} size="1rem" />
           </ActionIcon>,
           tooltipFor(t("workbenchBar.saveAs", "Save As")),
         )}
 
       {/* Separator: export group | close */}
-      {!isCustomView && (
+      {showsFileActions && (
         <div className="workbench-bar-divider workbench-bar-globals-sep" />
       )}
 
       {/* Close (context-aware: close all / close viewer file / close page editor) */}
-      {!isCustomView &&
+      {showsFileActions &&
         renderWithTooltip(
           <ActionIcon
             variant="tertiary"
@@ -112,7 +113,7 @@ export default function WorkbenchBarDesktopActions({
             disabled={actionsDisabled}
             aria-label={closeLabel}
           >
-            <CloseIcon sx={{ fontSize: "1rem" }} />
+            <Icon name="x" size={"1rem"} />
           </ActionIcon>,
           closeLabel,
         )}

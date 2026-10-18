@@ -12,15 +12,23 @@ import {
   type EditorDeploymentResponse,
 } from "@portal/api/editorDeploy";
 import type { Tier } from "@portal/contexts/TierContext";
+import { useFleetStatsAccess } from "@portal/hooks/useFleetStatsAccess";
 
-/** Base query: fleet processing stats (GET /api/v1/usage/fleet-stats). */
+/** Optional fleet metrics: unauthorized sessions never fetch, and failures leave figures unavailable. */
 export function useFleetStats(): AsyncState<FleetStats> {
-  return toAsyncState(
-    useQuery({
-      queryKey: qk.fleetStats(),
-      queryFn: ({ signal }) => fetchFleetStats(signal),
-    }),
-  );
+  const scope = useFleetStatsAccess();
+  const enabled = scope !== null;
+  const query = useQuery({
+    queryKey: [...qk.fleetStats(), scope],
+    queryFn: ({ signal }) => fetchFleetStats(enabled, signal),
+    enabled,
+    retry: false,
+  });
+  return {
+    data: enabled ? (query.data ?? null) : null,
+    loading: enabled && query.isPending,
+    error: null,
+  };
 }
 
 /** Base query: recent audit-log activity (tier-scoped). */

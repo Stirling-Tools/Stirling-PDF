@@ -57,6 +57,11 @@ export interface SweepDeliveryCallbacks {
   includeRunIds?: ReadonlySet<string>;
 }
 
+export interface SweepDeliveryFileOptions {
+  /** Library folder that owns imported disk results. */
+  folderId?: string;
+}
+
 /** The folder's current run ids — captured before a sweep so its delivery can ignore them. */
 export async function currentRunIds(
   policyId: string,
@@ -158,8 +163,9 @@ export function deliverSweepResults(
   expected: number | null,
   addFiles: (
     files: File[],
-    options?: { selectFiles?: boolean },
+    options?: { selectFiles?: boolean; folderId?: string },
   ) => Promise<unknown>,
+  fileOptions: SweepDeliveryFileOptions = {},
   callbacks?:
     | SweepDeliveryCallbacks
     | ((progress: SweepDeliveryProgress) => void),
@@ -169,6 +175,7 @@ export function deliverSweepResults(
       policyId,
       expected,
       addFiles,
+      fileOptions,
       callbacks,
     );
   }
@@ -180,6 +187,7 @@ export function deliverSweepResults(
     policyId,
     expected,
     addFiles,
+    fileOptions,
   ).finally(() => {
     if (deliveriesInFlight.get(policyId) === started) {
       deliveriesInFlight.delete(policyId);
@@ -194,8 +202,9 @@ async function deliverSweepResultsUntracked(
   expected: number | null,
   addFiles: (
     files: File[],
-    options?: { selectFiles?: boolean },
+    options?: { selectFiles?: boolean; folderId?: string },
   ) => Promise<unknown>,
+  fileOptions: SweepDeliveryFileOptions,
   callbacks?:
     | SweepDeliveryCallbacks
     | ((progress: SweepDeliveryProgress) => void),
@@ -206,6 +215,7 @@ async function deliverSweepResultsUntracked(
       policyId,
       expected,
       addFiles,
+      fileOptions,
       callbacks,
     );
   } finally {
@@ -218,8 +228,9 @@ async function deliverSweepResultsLoop(
   expected: number | null,
   addFiles: (
     files: File[],
-    options?: { selectFiles?: boolean },
+    options?: { selectFiles?: boolean; folderId?: string },
   ) => Promise<unknown>,
+  fileOptions: SweepDeliveryFileOptions,
   callbacks?:
     | SweepDeliveryCallbacks
     | ((progress: SweepDeliveryProgress) => void),
@@ -308,7 +319,7 @@ async function deliverSweepResultsLoop(
     if (opened.length > 0) {
       // One addFiles per poll batch, never selecting: a selection isn't meaningful
       // across a folderful of results.
-      await addFiles(opened);
+      await addFiles(opened, { selectFiles: false, ...fileOptions });
       progress.opened += opened.length;
     }
     onProgress?.({ ...progress });

@@ -3,18 +3,7 @@ import { createPortal } from "react-dom";
 import { Group, Loader, Menu, Stack, Text, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
-import CloudDoneIcon from "@mui/icons-material/CloudDone";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineOutlined";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import HistoryIcon from "@mui/icons-material/History";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
+import { Icon } from "@app/ui/Icon";
 import type { FileId } from "@app/types/file";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import {
@@ -23,6 +12,7 @@ import {
 } from "@app/components/shared/PolicyBadges";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
+import { useInViewport } from "@app/hooks/useInViewport";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { formatFileSize, IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
@@ -105,33 +95,19 @@ function CheckIcon({
   style?: React.CSSProperties;
 }) {
   return (
-    <svg
+    <Icon
+      name="check"
+      size={14}
+      strokeWidth={3}
       className={className}
       style={style}
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
+    />
   );
 }
 
 function getSidebarFileIcon(ext: string): React.ReactElement {
   const cls = "file-sidebar-file-icon file-sidebar-file-icon-hover-hide";
   return <FileDocIcon className={cls} variant={getFileDocVariant(ext)} />;
-}
-
-/** A Watched Folder this file currently belongs to, used for the membership dots. */
-export interface FileItemFolderRef {
-  id: string;
-  name: string;
-  accentColor: string;
 }
 
 export interface FileItemProps {
@@ -144,15 +120,9 @@ export interface FileItemProps {
   isViewedInViewer: boolean;
   isToolSkipped?: boolean;
   thumbnailUrl?: string;
+  isEncrypted?: boolean;
   onClick: (fileId: FileId) => void;
   onEyeClick: (fileId: FileId, e: React.MouseEvent) => void;
-  /** When true, the row can be dragged (e.g. onto a Watched Folder). */
-  draggable?: boolean;
-  onDragStart?: (e: React.DragEvent, fileId: FileId) => void;
-  /** Watched Folders this file is in — rendered as small accent dots. */
-  folders?: FileItemFolderRef[];
-  /** Clicking a membership dot opens that folder. */
-  onFolderClick?: (folderId: string) => void;
   /** Policies that have run on this file — rendered as small shield badges. */
   policies?: FileItemPolicyRef[];
   /** The file's primary classification label (display name), shown in the meta
@@ -182,8 +152,6 @@ export interface FileItemProps {
    *  says so instead of pretending the file can open. */
   dataUnavailable?: boolean;
 }
-
-const MAX_VISIBLE_FOLDER_TAGS = 2;
 
 /** One kebab row. `disabledReason`, when set, greys the row out and says why. */
 function FileMenuItem({
@@ -238,12 +206,9 @@ export const FileItem = React.memo(function FileItem({
   isToolSkipped = false,
   dataUnavailable,
   thumbnailUrl,
+  isEncrypted,
   onClick,
   onEyeClick,
-  draggable,
-  onDragStart,
-  folders = [],
-  onFolderClick,
   policies = [],
   primaryLabel,
   onDelete,
@@ -262,7 +227,7 @@ export const FileItem = React.memo(function FileItem({
     ? t("files.notIncludedInToolRun", "Not included in this tool run")
     : undefined;
   const terminology = useFileActionTerminology();
-  const DownloadIcon = useFileActionIcons().download;
+  const downloadIcon = useFileActionIcons().download;
   const ext = getFileExtension(name);
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
@@ -274,7 +239,7 @@ export const FileItem = React.memo(function FileItem({
   const enforcingTooltip = (action: string): React.ReactNode => (
     <Stack gap={6} py={2} w={200}>
       <Group gap={6} wrap="nowrap">
-        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Icon name="shield" size={13} />
         <Text size="xs" fw={600}>
           {t(
             "policy.blockingAction",
@@ -306,18 +271,18 @@ export const FileItem = React.memo(function FileItem({
     ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
     : t("fileSidebar.fileItem.openInViewer", "Open in viewer");
 
-  const visibleFolders = folders.slice(0, MAX_VISIBLE_FOLDER_TAGS);
-  const overflowFolders = folders.slice(MAX_VISIBLE_FOLDER_TAGS);
-
   // Only use raster thumbnails for PDFs and images — everything else uses scalable SVG icons
   const useRasterThumb = ext === "pdf" || IMAGE_EXTENSIONS.has(ext);
+  const itemRef = useRef<HTMLDivElement>(null);
+  const isNearViewport = useInViewport(itemRef);
   const resolvedThumbnail = useLazyThumbnail(
     fileId,
     size ?? 0,
     useRasterThumb ? thumbnailUrl : undefined,
+    isEncrypted,
+    isNearViewport,
   );
 
-  const itemRef = useRef<HTMLDivElement>(null);
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
   const [menuOpened, setMenuOpened] = useState(false);
 
@@ -346,10 +311,6 @@ export const FileItem = React.memo(function FileItem({
         aria-description={toolSkipReason}
         className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
-        draggable={draggable}
-        onDragStart={
-          draggable && onDragStart ? (e) => onDragStart(e, fileId) : undefined
-        }
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && onClick(fileId)}
@@ -400,7 +361,7 @@ export const FileItem = React.memo(function FileItem({
                 position="top"
               >
                 <span className="file-sidebar-datalost-badge" data-no-select>
-                  <ErrorOutlineIcon sx={{ fontSize: "0.85rem" }} />
+                  <Icon name="circle-alert" size={"0.85rem"} />
                   {t("fileSidebar.fileItem.dataLost", "Data lost")}
                 </span>
               </Tooltip>
@@ -415,60 +376,12 @@ export const FileItem = React.memo(function FileItem({
                 position="top"
               >
                 <span className="file-sidebar-cloud-badge" data-no-select>
-                  <CloudDoneIcon sx={{ fontSize: "0.85rem" }} />
+                  <Icon name="cloud-check" size={"0.85rem"} />
                 </span>
               </Tooltip>
             )}
             <PolicyBadges policies={policies} />
           </span>
-          {folders.length > 0 && (
-            <span className="file-sidebar-folder-tags" data-no-select>
-              {visibleFolders.map((folder) => (
-                <Tooltip
-                  key={folder.id}
-                  label={folder.name}
-                  withArrow
-                  position="top"
-                  withinPortal
-                >
-                  <span
-                    className="file-sidebar-folder-tag"
-                    style={{
-                      backgroundColor: `${folder.accentColor}1f`,
-                      borderColor: `${folder.accentColor}55`,
-                    }}
-                    role="button"
-                    tabIndex={-1}
-                    aria-label={folder.name}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onFolderClick?.(folder.id);
-                    }}
-                  >
-                    <span
-                      className="file-sidebar-folder-tag-dot"
-                      style={{ backgroundColor: folder.accentColor }}
-                    />
-                    <span className="file-sidebar-folder-tag-label">
-                      {folder.name}
-                    </span>
-                  </span>
-                </Tooltip>
-              ))}
-              {overflowFolders.length > 0 && (
-                <Tooltip
-                  label={overflowFolders.map((f) => f.name).join(", ")}
-                  withArrow
-                  position="top"
-                  withinPortal
-                >
-                  <span className="file-sidebar-folder-tag-more">
-                    +{overflowFolders.length}
-                  </span>
-                </Tooltip>
-              )}
-            </span>
-          )}
         </div>
         <div className="file-sidebar-file-actions">
           <ActionIcon
@@ -482,13 +395,15 @@ export const FileItem = React.memo(function FileItem({
             tabIndex={-1}
             aria-label={viewerLabel}
           >
-            <VisibilityOutlinedIcon
+            <Icon
+              name="eye"
+              size={"1.1rem"}
               className="file-sidebar-eye-open"
-              sx={{ fontSize: "1.1rem" }}
             />
-            <VisibilityOffOutlinedIcon
+            <Icon
+              name="eye-off"
+              size={"1.1rem"}
               className="file-sidebar-eye-closed"
-              sx={{ fontSize: "1.1rem" }}
             />
           </ActionIcon>
           <Menu
@@ -510,7 +425,7 @@ export const FileItem = React.memo(function FileItem({
                   "More actions",
                 )}
               >
-                <MoreVertIcon sx={{ fontSize: "1.1rem" }} />
+                <Icon name="ellipsis-vertical" size={"1.1rem"} />
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
@@ -527,9 +442,9 @@ export const FileItem = React.memo(function FileItem({
                 disabledReason={blockedReason(viewerLabel)}
                 icon={
                   isViewedInViewer ? (
-                    <VisibilityOffOutlinedIcon sx={{ fontSize: 16 }} />
+                    <Icon name="eye-off" size={16} />
                   ) : (
-                    <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
+                    <Icon name="eye" size={16} />
                   )
                 }
                 onClick={(e) => onEyeClick(fileId, e)}
@@ -542,7 +457,7 @@ export const FileItem = React.memo(function FileItem({
                   disabledReason={blockedReason(
                     t("openInNewWindow", "Open in new window"),
                   )}
-                  icon={<OpenInNewIcon sx={{ fontSize: 16 }} />}
+                  icon={<Icon name="external-link" size={16} />}
                   onClick={() => onOpenInNewWindow(fileId)}
                 >
                   {t("openInNewWindow", "Open in new window")}
@@ -554,7 +469,7 @@ export const FileItem = React.memo(function FileItem({
               {onDownload && (
                 <FileMenuItem
                   disabledReason={blockedReason(terminology.download)}
-                  icon={<DownloadIcon sx={{ fontSize: 16 }} />}
+                  icon={<Icon name={downloadIcon} size={16} />}
                   onClick={() => onDownload(fileId)}
                 >
                   {terminology.download}
@@ -567,7 +482,7 @@ export const FileItem = React.memo(function FileItem({
                     t("fileSidebar.fileItem.rename", "Rename"),
                     false,
                   )}
-                  icon={<DriveFileRenameOutlineIcon sx={{ fontSize: 16 }} />}
+                  icon={<Icon name="file-pen" size={16} />}
                   onClick={() => onRename(fileId)}
                 >
                   {t("fileSidebar.fileItem.rename", "Rename")}
@@ -579,7 +494,7 @@ export const FileItem = React.memo(function FileItem({
                   disabledReason={blockedReason(
                     t("fileSidebar.fileItem.duplicate", "Duplicate"),
                   )}
-                  icon={<ContentCopyOutlinedIcon sx={{ fontSize: 16 }} />}
+                  icon={<Icon name="copy" size={16} />}
                   onClick={() => onDuplicate(fileId)}
                 >
                   {t("fileSidebar.fileItem.duplicate", "Duplicate")}
@@ -604,7 +519,7 @@ export const FileItem = React.memo(function FileItem({
                   return (
                     <FileMenuItem
                       disabledReason={blockedReason(uploadLabel)}
-                      icon={<CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />}
+                      icon={<Icon name="cloud-upload" size={16} />}
                       onClick={() => onSaveToCloud(fileId)}
                     >
                       {uploadLabel}
@@ -618,7 +533,7 @@ export const FileItem = React.memo(function FileItem({
                     t("fileSidebar.fileItem.versionHistory", "Version history"),
                     false,
                   )}
-                  icon={<HistoryIcon sx={{ fontSize: 16 }} />}
+                  icon={<Icon name="rotate-ccw-clock" size={16} />}
                   onClick={() => onVersionHistory(fileId)}
                 >
                   {t("fileSidebar.fileItem.versionHistory", "Version history")}
@@ -634,7 +549,7 @@ export const FileItem = React.memo(function FileItem({
                       false,
                     )}
                     color="red"
-                    icon={<DeleteOutlineIcon sx={{ fontSize: 16 }} />}
+                    icon={<Icon name="trash" size={16} />}
                     onClick={() => onDelete(fileId)}
                   >
                     {t("fileSidebar.fileItem.delete", "Delete")}

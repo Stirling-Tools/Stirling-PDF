@@ -1,3 +1,4 @@
+import { UIProvider } from "@portal/contexts/UIContext";
 import {
   afterAll,
   afterEach,
@@ -94,7 +95,9 @@ function renderUsers(client: QueryClient): RenderResult {
     <MantineProvider>
       <QueryClientProvider client={client}>
         <MemoryRouter>
-          <Users />
+          <UIProvider>
+            <Users />
+          </UIProvider>
         </MemoryRouter>
       </QueryClientProvider>
     </MantineProvider>,

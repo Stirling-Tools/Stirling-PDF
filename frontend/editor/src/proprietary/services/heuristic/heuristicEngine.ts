@@ -1,11 +1,18 @@
 // Heuristic (non-AI) document classifier: string/regex/structural scoring over
-// extracted text, filename and metadata. Rules lazy-load as a separate chunk.
+// extracted text, filename and metadata. Rules lazy-load per detected language.
 
+import LANGUAGE_DATA from "@app/services/heuristic/rules/languages.json";
+import {
+  LANGUAGE_PACKS,
+  loadCoreRules,
+} from "@app/services/heuristic/rules/index";
 import type {
   HeuristicConfidence,
   HeuristicDoc,
   HeuristicExplanation,
   HeuristicResult,
+  LanguageCandidate,
+  LanguageDetection,
 } from "@app/services/heuristic/types";
 
 export type {
@@ -13,6 +20,7 @@ export type {
   HeuristicDoc,
   HeuristicExplanation,
   HeuristicResult,
+  LanguageDetection,
 };
 
 // --- scoring constants ---
@@ -28,285 +36,104 @@ const SEC_FRAC = 0.5;
 const SEC_SIGNALS = 2;
 const SEC_MAX = 4;
 
-const STOPWORDS = new Set<string>([
-  "the",
-  "and",
-  "of",
-  "to",
-  "in",
-  "is",
-  "that",
-  "for",
-  "on",
-  "with",
-  "as",
-  "are",
-  "this",
-  "be",
-  "by",
-  "at",
-  "from",
-  "or",
-  "an",
-  "not",
-  "your",
-  "you",
-  "we",
-  "has",
-  "have",
-  "will",
-  "was",
-  "were",
-  "been",
-  "their",
-  "they",
-  "which",
-  "any",
-  "all",
-  "may",
-  "shall",
-  "if",
-  "can",
-  "our",
-  "its",
-  "it",
-  "no",
-  "but",
-  "other",
-  "than",
-  "these",
-  "such",
-  "must",
-  "each",
-  "per",
-  "under",
-  "more",
-  "when",
-  "also",
-  "into",
-  "only",
-  "should",
-  "would",
-]);
+const SECOND_PACK_BAR = 0.75;
+const MAX_PACKS_CONFIDENT = 2;
+const MAX_PACKS_UNSURE = 5;
+const UNSURE_MAX_CHARS = 20000;
+const NO_PACK_CONFIDENCE_CAP: HeuristicConfidence = "medium";
 
-// Non-Latin scripts end English classification outright when they dominate.
-const SCRIPT_RANGES: RegExp[] = [
-  /[一-鿿぀-ヿ]/g, // CJK + Kana
-  /[가-힯ᄀ-ᇿ]/g, // Hangul
-  /[Ѐ-ӿ]/g, // Cyrillic
-  /[؀-ۿݐ-ݿ]/g, // Arabic
-  /[Ͱ-Ϳ]/g, // Greek
-  /[ऀ-ॿ]/g, // Devanagari
-  /[֐-׿]/g, // Hebrew
-  /[฀-๿]/g, // Thai
-];
+// Language-neutral structural patterns. Anything with a word in it lives in
+// `rules/`; these are digits, punctuation and glyph shapes.
+const NUMERIC_TOKEN = new RegExp("^[\\d$£€.,%-]+$");
+const DIGIT = /\d/;
+const UNDERSCORE4 = /_{4,}/;
+const CHECKBOX = /[☐☑□■]\s/;
+const DOT_LEADER = /\.{5,}\s*\d+\s*$/;
+const BULLET = /^[•▪◦*-]\s+\S/;
+const URL = /https?:\/\/|www\./gi;
+const CITATION = /\[\d{1,3}\]|\(\d{4}\)/;
 
-interface LatinProfile {
-  words: Set<string>;
-  dia: RegExp | null;
-}
-
-// Function-word and diacritic profiles for common Latin-script languages.
-const LATIN_PROFILES: LatinProfile[] = [
-  {
-    words: new Set([
-      "el",
-      "los",
-      "las",
-      "que",
-      "para",
-      "una",
-      "por",
-      "según",
-      "más",
-    ]),
-    dia: /[áéíóúñ¿¡]/g,
-  },
-  {
-    words: new Set([
-      "le",
-      "les",
-      "des",
-      "une",
-      "est",
-      "pour",
-      "avec",
-      "dans",
-      "vous",
-      "votre",
-      "être",
-      "nous",
-      "cette",
-      "sont",
-      "été",
-    ]),
-    dia: /[àâçèéêëîïôùûœ]/g,
-  },
-  {
-    words: new Set([
-      "der",
-      "die",
-      "das",
-      "und",
-      "ist",
-      "für",
-      "mit",
-      "von",
-      "nicht",
-      "ein",
-      "eine",
-      "werden",
-      "wird",
-      "bei",
-      "sind",
-      "dem",
-    ]),
-    dia: /[äöüß]/g,
-  },
-  {
-    words: new Set([
-      "il",
-      "di",
-      "che",
-      "per",
-      "con",
-      "una",
-      "del",
-      "della",
-      "sono",
-      "questo",
-      "essere",
-      "più",
-      "nel",
-      "anche",
-      "gli",
-    ]),
-    dia: /[àèéìòù]/g,
-  },
-  {
-    words: new Set([
-      "os",
-      "as",
-      "que",
-      "para",
-      "com",
-      "uma",
-      "por",
-      "são",
-      "não",
-      "você",
-      "está",
-      "mais",
-    ]),
-    dia: /[ãõçáéíóúâêô]/g,
-  },
-  {
-    words: new Set([
-      "het",
-      "een",
-      "van",
-      "voor",
-      "met",
-      "aan",
-      "niet",
-      "zijn",
-      "wordt",
-      "deze",
-      "als",
-      "bij",
-      "ook",
-      "naar",
-    ]),
-    dia: null,
-  },
-  {
-    words: new Set([
-      "och",
-      "att",
-      "det",
-      "som",
-      "på",
-      "är",
-      "av",
-      "för",
-      "med",
-      "den",
-      "till",
-      "inte",
-      "har",
-      "ett",
-      "du",
-    ]),
-    dia: /[åäö]/g,
-  },
-  {
-    words: new Set([
-      "nie",
-      "jest",
-      "się",
-      "że",
-      "oraz",
-      "dla",
-      "przez",
-      "lub",
-      "być",
-      "może",
-      "przy",
-      "jak",
-    ]),
-    dia: /[ąćęłńśźż]/g,
-  },
-  {
-    words: new Set([
-      "ve",
-      "bir",
-      "bu",
-      "için",
-      "ile",
-      "olarak",
-      "olan",
-      "gibi",
-      "daha",
-      "çok",
-      "her",
-      "kadar",
-      "sonra",
-    ]),
-    dia: /[çğışöü]/g,
-  },
-];
-
-// detectEnglish helper patterns (global for counting; \p{L} needs the u flag).
 const LETTERS = /\p{L}/gu;
 const LATIN_LETTER = /[a-z]/gi;
 const WORD = /[\p{L}']+/gu;
 
 // ASCII whitespace plus the no-break spaces pdf.js extraction commonly emits.
 // oxlint-disable-next-line no-control-regex -- vertical tab is intentional ASCII whitespace
-const WHITESPACE = /[\t\n\x0B\f\r \u00A0\u2007\u202F]+/g;
+const WHITESPACE = /[\t\n\x0B\f\r    ]+/g;
+const CURLY_APOSTROPHE = /[‘’]/g;
+const COMBINING_MARKS = /[\u0300-\u036F]/g;
+const FOLD_PAIRS: [RegExp, string][] = [
+  [/ß/g, "ss"],
+  [/æ/g, "ae"],
+  [/œ/g, "oe"],
+  [/ø/g, "o"],
+  [/ł/g, "l"],
+  [/đ|ð/g, "d"],
+  [/ı/g, "i"],
+  [/þ/g, "th"],
+];
+const LIGATURE_FI = /ﬁ/g;
+const LIGATURE_FL = /ﬂ/g;
 
-// Structural signal patterns. Boolean-presence ones stay non-global (safe .test()),
-// counting ones are global (used via countAll). Currency symbols are \u-escaped.
-const CURRENCY = new RegExp(
-  "[$£€]\\s?\\d[\\d,.]*|\\d[\\d,.]*\\s?(usd|gbp|eur)\\b",
-  "gi",
+interface ScriptGroup {
+  id: string;
+  range: RegExp;
+  languages: string[];
+}
+interface LanguageProfile {
+  language: string;
+  words: Set<string>;
+  chars: RegExp | null;
+}
+
+interface RawScript {
+  id?: unknown;
+  range?: unknown;
+  languages?: unknown;
+}
+interface RawProfile {
+  language?: unknown;
+  words?: unknown;
+  chars?: unknown;
+}
+interface LanguagesFile {
+  english?: { words?: unknown };
+  scripts?: RawScript[];
+  latin?: { languages?: unknown };
+  profiles?: RawProfile[];
+}
+
+const languages = LANGUAGE_DATA as LanguagesFile;
+
+const ENGLISH_WORDS = new Set<string>(
+  strings(languages.english?.words).map((w) => fold(w.toLowerCase())),
 );
-const NUMERIC_TOKEN = new RegExp("^[\\d$£€.,%-]+$");
-const DIGIT = /\d/;
-const FORM_LABEL = /^[A-Za-z][A-Za-z /()&']{2,30}:\s*$/;
-const UNDERSCORE4 = /_{4,}/;
-const CHECKBOX = /[☐☑□■]\s/;
-const DOT_LEADER = /\.{5,}\s*\d+\s*$/;
-const BULLET = /^[•▪◦*-]\s+\S/;
-const URL = /https?:\/\/|www\./gi;
-const TOC = /table of contents/i;
-const SIG1 = /\b(signature|signed by|authorized signature|\/s\/)\b/i;
-const SIG2 = /_{6,}\s*\n\s*(date|name|sign)/i;
-const REF1 = /\b(references|bibliography)\b/i;
-const REF2 = /\[\d{1,3}\]|\(\d{4}\)/;
-const EMAIL_FROM = /\bfrom:\s.+\n(.*\n){0,3}?\s*(to|sent|date):\s/i;
-const EMAIL_SUBJ = /subject:\s/i;
-const ADDRESS = /\b\d{5}(-\d{4})?\b|\b[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}\b/g;
+
+const SCRIPTS: ScriptGroup[] = (languages.scripts ?? []).flatMap((s) => {
+  const range = compileRegex(str(s.range), "g");
+  const langs = strings(s.languages);
+  if (range == null || langs.length === 0) return [];
+  return [{ id: str(s.id) ?? langs[0], range, languages: langs }];
+});
+
+const LATIN_LANGUAGES: string[] = strings(languages.latin?.languages);
+
+const PROFILES = new Map<string, LanguageProfile>(
+  (languages.profiles ?? []).flatMap((p) => {
+    const language = str(p.language);
+    if (language == null) return [];
+    return [
+      [
+        language,
+        {
+          language,
+          words: new Set(strings(p.words).map((w) => fold(w.toLowerCase()))),
+          chars: compileRegex(str(p.chars), "g"),
+        },
+      ] as const,
+    ];
+  }),
+);
 
 // --- prepared rule model ---
 interface Phrase {
@@ -352,7 +179,16 @@ interface Prior {
   max: number | null;
 }
 
-// Raw JSON shapes (loose - the pack is authored by hand).
+type SignalPatterns = Map<string, RegExp[]>;
+
+interface PreparedSet {
+  labels: PreparedLabel[];
+  priors: Map<string, Prior>;
+  signals: SignalPatterns;
+  packs: string[];
+}
+
+// Raw JSON shapes (the rule files are authored by hand).
 interface RawRule {
   text?: unknown;
   pattern?: unknown;
@@ -372,36 +208,152 @@ interface RawLabel {
   negatives?: RawRule[];
   structural?: RawRule[];
 }
-interface RulesFile {
+interface RawRules {
   labels?: RawLabel[];
   priors?: Record<string, unknown>;
+  patterns?: Record<string, RawRule[]>;
 }
 
-let PREPARED: PreparedLabel[] | null = null;
-let PRIORS: Map<string, Prior> | null = null;
-let loadPromise: Promise<void> | null = null;
+const RULE_KINDS = [
+  "phrases",
+  "regexes",
+  "filenames",
+  "metadata",
+  "negatives",
+  "structural",
+] as const;
 
-/** Load and prepare the rules pack once. Must resolve before classifyHeuristic. */
-export async function ensureRulesLoaded(): Promise<void> {
-  if (PREPARED && PRIORS) return;
-  if (!loadPromise) {
-    loadPromise = import("@app/services/heuristic/heuristicRules.json").then(
+let CORE: RawRules | null = null;
+let corePromise: Promise<RawRules> | null = null;
+const PACKS = new Map<string, RawRules>();
+const packPromises = new Map<string, Promise<RawRules>>();
+const SETS = new Map<string, PreparedSet>();
+
+function unwrap(mod: unknown): RawRules {
+  const withDefault = mod as { default?: RawRules };
+  return withDefault.default ?? (mod as RawRules);
+}
+
+function loadCore(): Promise<RawRules> {
+  if (CORE != null) return Promise.resolve(CORE);
+  if (corePromise == null) {
+    corePromise = loadCoreRules().then(
       (mod) => {
-        const root = (mod as { default?: RulesFile }).default ?? mod;
-        PREPARED = prepare(root.labels ?? []);
-        PRIORS = loadPriors(root.priors ?? {});
+        CORE = unwrap(mod);
+        return CORE;
       },
       (err) => {
         // A failed chunk load (flaky network) must not poison later attempts.
-        loadPromise = null;
+        corePromise = null;
         throw err;
       },
     );
   }
-  await loadPromise;
+  return corePromise;
 }
 
-// --- Preparation ---
+function loadPack(language: string): Promise<RawRules | null> {
+  const existing = PACKS.get(language);
+  if (existing != null) return Promise.resolve(existing);
+  const loader = LANGUAGE_PACKS[language];
+  if (loader == null) return Promise.resolve(null);
+  let pending = packPromises.get(language);
+  if (pending == null) {
+    pending = loader().then(
+      (mod) => {
+        const pack = unwrap(mod);
+        PACKS.set(language, pack);
+        return pack;
+      },
+      (err) => {
+        packPromises.delete(language);
+        throw err;
+      },
+    );
+    packPromises.set(language, pending);
+  }
+  return pending;
+}
+
+export async function ensureRulesLoaded(
+  langs: readonly string[] = ["en"],
+): Promise<void> {
+  await Promise.all([loadCore(), ...langs.map((l) => loadPack(l))]);
+}
+
+// --- merging and preparation ---
+
+function mergeRaw(core: RawRules, packs: RawRules[]): RawRules {
+  if (packs.length === 0) return core;
+
+  const byId = new Map<string, RawLabel>();
+  const order: string[] = [];
+  for (const label of core.labels ?? []) {
+    const id = str(label.id);
+    if (id == null) continue;
+    byId.set(id, { ...label });
+    order.push(id);
+  }
+
+  for (const pack of packs) {
+    for (const label of pack.labels ?? []) {
+      const id = str(label.id);
+      const target = id == null ? undefined : byId.get(id);
+      if (target == null) continue;
+      for (const kind of RULE_KINDS) {
+        const extra = label[kind];
+        if (extra == null || extra.length === 0) continue;
+        target[kind] = [...(target[kind] ?? []), ...extra];
+      }
+    }
+  }
+
+  const patterns: Record<string, RawRule[]> = {};
+  for (const source of [core, ...packs]) {
+    for (const [group, rules] of Object.entries(source.patterns ?? {})) {
+      patterns[group] = [...(patterns[group] ?? []), ...rules];
+    }
+  }
+
+  return {
+    labels: order.map((id) => byId.get(id)!),
+    priors: core.priors,
+    patterns,
+  };
+}
+
+function buildSet(core: RawRules, langs: string[]): PreparedSet {
+  const key = langs.join("+");
+  const cached = SETS.get(key);
+  if (cached != null) return cached;
+
+  const packs = langs.flatMap((l) => {
+    const pack = PACKS.get(l);
+    return pack == null ? [] : [pack];
+  });
+  const merged = mergeRaw(core, packs);
+  const set: PreparedSet = {
+    labels: prepare(merged.labels ?? []),
+    priors: loadPriors(merged.priors ?? {}),
+    signals: prepareSignals(merged.patterns ?? {}),
+    packs: langs,
+  };
+  SETS.set(key, set);
+  return set;
+}
+
+function prepareSignals(groups: Record<string, RawRule[]>): SignalPatterns {
+  const out: SignalPatterns = new Map();
+  for (const [group, rules] of Object.entries(groups)) {
+    const compiled: RegExp[] = [];
+    for (const rule of rules) {
+      const re = compileRegex(str(rule.pattern), flags(rule));
+      if (re != null) compiled.push(re);
+    }
+    if (compiled.length > 0) out.set(group, compiled);
+  }
+  return out;
+}
 
 function prepare(labels: RawLabel[]): PreparedLabel[] {
   const out: PreparedLabel[] = [];
@@ -521,6 +473,191 @@ export function compileRegex(
   }
 }
 
+// --- language identification ---
+
+const MIN_WORDS_FOR_FOREIGN = 12;
+const MIN_DISTINCTIVE_CHARS = 3;
+const MIN_WORD_HITS = 2;
+const SCRIPT_SHARE = 0.25;
+
+export function detectLanguage(text: string): LanguageDetection {
+  const raw = nz(text);
+  const letters = countAll(LETTERS, raw);
+  if (letters < 25) {
+    return {
+      language: null,
+      script: null,
+      candidates: [],
+      assumed: false,
+      lowText: true,
+    };
+  }
+
+  const words = allMatches(WORD, normalize(raw));
+  const totalWords = Math.max(words.length, 1);
+
+  for (const script of SCRIPTS) {
+    if (countAll(script.range, raw) / letters <= SCRIPT_SHARE) continue;
+    if (script.languages.length === 1) {
+      const only = script.languages[0];
+      return {
+        language: only,
+        script: script.id,
+        candidates: [{ language: only, score: 1 }],
+        assumed: false,
+        lowText: false,
+      };
+    }
+    const candidates = rankLanguages(raw, words, totalWords, script.languages);
+    return {
+      language: candidates[0]?.language ?? script.languages[0],
+      script: script.id,
+      candidates,
+      assumed: false,
+      lowText: false,
+    };
+  }
+
+  const latinRatio = countAll(LATIN_LETTER, fold(raw)) / letters;
+  const lowText = totalWords < 30;
+
+  let englishHits = 0;
+  const englishSeen = new Set<string>();
+  for (const w of words) {
+    if (ENGLISH_WORDS.has(w)) {
+      englishHits++;
+      englishSeen.add(w);
+    }
+  }
+  const englishScore = englishHits / totalWords;
+
+  const candidates = rankLanguages(raw, words, totalWords, LATIN_LANGUAGES);
+  const best = candidates[0];
+  const bestProfile = best == null ? null : PROFILES.get(best.language);
+  let bestDistinct = 0;
+  if (bestProfile != null) {
+    const seen = new Set<string>();
+    for (const w of words) if (bestProfile.words.has(w)) seen.add(w);
+    bestDistinct = seen.size;
+  }
+  const bestChars =
+    bestProfile?.chars == null ? 0 : countAll(bestProfile.chars, raw);
+  const bestRatio =
+    bestProfile == null ? 0 : countWords(words, bestProfile).total / totalWords;
+
+  // Affirmative evidence of a specific other language, not merely an absence of
+  // English: a shared function word or stray accent must not unseat English.
+  const foreignEvidence = bestDistinct >= 3 || bestChars >= 6;
+  const foreignWins =
+    latinRatio >= 0.7 &&
+    totalWords >= MIN_WORDS_FOR_FOREIGN &&
+    foreignEvidence &&
+    (bestChars >= 3 || bestRatio >= 0.1) &&
+    (best?.score ?? 0) > englishScore * 1.2 &&
+    (englishScore < 0.04 || bestRatio > englishScore * 1.5);
+
+  if (foreignWins) {
+    return {
+      language: best?.language ?? null,
+      script: "latin",
+      candidates,
+      assumed: false,
+      lowText,
+    };
+  }
+
+  const bar = lowText ? 0.03 : 0.045;
+  const englishProven =
+    latinRatio >= 0.75 &&
+    englishScore >= bar &&
+    englishSeen.size >= MIN_WORD_HITS;
+  const englishAssumed = latinRatio >= 0.75 && !foreignEvidence;
+  if (!englishProven && !englishAssumed) {
+    return {
+      language: null,
+      script: latinRatio >= 0.7 ? "latin" : null,
+      candidates,
+      assumed: false,
+      lowText,
+    };
+  }
+  return {
+    language: "en",
+    script: "latin",
+    candidates: [{ language: "en", score: englishScore }, ...candidates],
+    assumed: !englishProven,
+    lowText,
+  };
+}
+
+function countWords(
+  words: string[],
+  profile: LanguageProfile,
+): { total: number; distinct: number } {
+  let total = 0;
+  const seen = new Set<string>();
+  for (const w of words) {
+    if (profile.words.has(w)) {
+      total++;
+      seen.add(w);
+    }
+  }
+  return { total, distinct: seen.size };
+}
+
+function rankLanguages(
+  raw: string,
+  words: string[],
+  totalWords: number,
+  candidates: readonly string[],
+): LanguageCandidate[] {
+  const ranked: (LanguageCandidate & { tiebreak: number })[] = [];
+  for (const language of candidates) {
+    const profile = PROFILES.get(language);
+    if (profile == null) continue;
+    const chars = profile.chars == null ? 0 : countAll(profile.chars, raw);
+    const charEvidence = chars >= MIN_DISTINCTIVE_CHARS ? chars : 0;
+    const hits = countWords(words, profile);
+    if (hits.distinct < MIN_WORD_HITS && charEvidence === 0) continue;
+    const ratio = hits.total / totalWords;
+    const score = ratio + Math.min(charEvidence / totalWords, 0.15) * 6;
+    const tiebreak = chars / totalWords;
+    if (score > 0 || tiebreak > 0) ranked.push({ language, score, tiebreak });
+  }
+  ranked.sort((a, b) => b.score - a.score || b.tiebreak - a.tiebreak);
+  return ranked.map(({ language, score }) => ({ language, score }));
+}
+
+function packsFor(
+  detection: LanguageDetection,
+  chars: number,
+  localeHint?: string,
+): string[] {
+  const ranked =
+    detection.candidates.length > 0
+      ? detection.candidates
+      : detection.language != null
+        ? [{ language: detection.language, score: 1 }]
+        : [];
+  const best = ranked[0]?.score ?? 0;
+  const unsure =
+    (detection.assumed || detection.lowText) && chars <= UNSURE_MAX_CHARS;
+  const max = unsure ? MAX_PACKS_UNSURE : MAX_PACKS_CONFIDENT;
+  const bar = detection.assumed ? 0 : best * SECOND_PACK_BAR;
+  const out: string[] = [];
+  if (detection.assumed && localeHint != null) {
+    const hinted = localeHint.slice(0, 2).toLowerCase();
+    if (hinted !== "en" && hinted in LANGUAGE_PACKS) out.push(hinted);
+  }
+  for (const candidate of ranked) {
+    if (out.length >= max) break;
+    if (candidate.score < bar) break;
+    if (!(candidate.language in LANGUAGE_PACKS)) continue;
+    if (!out.includes(candidate.language)) out.push(candidate.language);
+  }
+  return out;
+}
+
 // --- Public API ---
 
 interface ScoredLabel {
@@ -538,12 +675,20 @@ const EXPLAIN_SIGNALS = 12;
 const fmt = (n: number) => Math.round(n * 10) / 10;
 
 function toExplanation(
-  en: { isEnglish: boolean; lowText: boolean },
+  detection: LanguageDetection,
+  packs: string[],
   scored: ScoredLabel[],
 ): HeuristicExplanation {
   return {
-    isEnglish: en.isEnglish,
-    lowText: en.lowText,
+    language: detection.language,
+    script: detection.script,
+    assumed: detection.assumed,
+    lowText: detection.lowText,
+    packs,
+    languageCandidates: detection.candidates.map((c) => ({
+      language: c.language,
+      score: fmt(c.score * 100) / 100,
+    })),
     candidates: scored.slice(0, EXPLAIN_CANDIDATES).map((s) => ({
       id: s.label.id,
       emit: s.label.emit,
@@ -554,30 +699,25 @@ function toExplanation(
   };
 }
 
-/** Classify a document; returns emitted label ids (primary + secondaries, capped at 5). */
-export function classifyHeuristic(
+export async function classifyHeuristic(
   doc: HeuristicDoc,
+  opts?: { explain?: boolean; localeHint?: string },
+): Promise<HeuristicResult> {
+  const detection = detectLanguage(doc.allZone);
+  const wanted = packsFor(detection, nz(doc.allZone).length, opts?.localeHint);
+  const core = await loadCore();
+  await Promise.all(wanted.map((l) => loadPack(l)));
+  const loaded = wanted.filter((l) => PACKS.has(l));
+  return score(doc, buildSet(core, loaded), detection, opts);
+}
+
+function score(
+  doc: HeuristicDoc,
+  set: PreparedSet,
+  detection: LanguageDetection,
   opts?: { explain?: boolean },
 ): HeuristicResult {
-  if (!PREPARED || !PRIORS) {
-    throw new Error(
-      "Heuristic rules not loaded; await ensureRulesLoaded() before classifyHeuristic().",
-    );
-  }
   const explain = opts?.explain === true;
-
-  const en = detectEnglish(doc.allZone);
-  // Non-English with real text: honestly out of scope for the English heuristics.
-  if (!en.isEnglish && !en.lowText) {
-    return {
-      labels: [],
-      confidence: "none",
-      score: 0,
-      isEnglish: false,
-      ...(explain ? { explain: toExplanation(en, []) } : {}),
-    };
-  }
-
   const titleRaw = nz(doc.titleZone);
   const firstRaw = nz(doc.firstZone);
   const anyRaw = nz(doc.allZone);
@@ -587,10 +727,10 @@ export function classifyHeuristic(
   const fileNameLower = nz(doc.fileName).toLowerCase();
   const meta = doc.meta ?? {};
   const metaAll = Object.values(meta).join(" \n ");
-  const struct = computeStructural(doc);
+  const struct = computeStructural(doc, set.signals);
 
   const scored: ScoredLabel[] = [];
-  for (const label of PREPARED) {
+  for (const label of set.labels) {
     let score = 0;
     let distinct = 0;
     const sig: string[] | null = explain ? [] : null;
@@ -679,7 +819,7 @@ export function classifyHeuristic(
     }
 
     if (score > 0) {
-      const prior = pagePriorMultiplier(label.id, doc.pageCount);
+      const prior = pagePriorMultiplier(set.priors, label.id, doc.pageCount);
       if (prior !== 1) sig?.push(`page-prior x${fmt(prior)}`);
       score *= prior;
       scored.push({ label, score, distinct, signals: sig });
@@ -709,28 +849,26 @@ export function classifyHeuristic(
       confidence = "low";
     }
   }
+  if (set.packs.length === 0 && confidence === "high") {
+    confidence = NO_PACK_CONFIDENCE_CAP;
+  }
 
   const roundedScore = Math.round(s1);
-  const explanation = explain ? { explain: toExplanation(en, scored) } : {};
+  const explanation = explain
+    ? { explain: toExplanation(detection, set.packs, scored) }
+    : {};
+  const base = {
+    confidence,
+    score: roundedScore,
+    language: detection.language,
+    packs: set.packs,
+    ...explanation,
+  };
   if (top == null || confidence === "none") {
-    return {
-      labels: [],
-      confidence: "none",
-      score: roundedScore,
-      isEnglish: en.isEnglish,
-      ...explanation,
-    };
+    return { ...base, labels: [], confidence: "none" };
   }
   // Internal-only winner (book, menu...): suppress output rather than mislabel.
-  if (!top.label.emit) {
-    return {
-      labels: [],
-      confidence,
-      score: roundedScore,
-      isEnglish: en.isEnglish,
-      ...explanation,
-    };
-  }
+  if (!top.label.emit) return { ...base, labels: [] };
 
   const labels: string[] = [top.label.id];
   for (let i = 1; i < scored.length && labels.length < 5; i++) {
@@ -745,13 +883,7 @@ export function classifyHeuristic(
       labels.push(s.label.id);
     }
   }
-  return {
-    labels,
-    confidence,
-    score: roundedScore,
-    isEnglish: en.isEnglish,
-    ...explanation,
-  };
+  return { ...base, labels };
 }
 
 /** True when the top match cleared the high-confidence bar. */
@@ -764,77 +896,35 @@ export function isDefinitive(r: HeuristicResult): boolean {
   return isHighConfidence(r) && r.labels.length > 0;
 }
 
-// --- English detection ---
-
-interface EnglishResult {
-  isEnglish: boolean;
-  lowText: boolean;
-}
-
-export function detectEnglish(text: string): EnglishResult {
-  const raw = nz(text);
-  const letters = countAll(LETTERS, raw);
-  if (letters < 25) return { isEnglish: false, lowText: true };
-
-  for (const re of SCRIPT_RANGES) {
-    const hits = countAll(re, raw);
-    if (hits / letters > 0.25) return { isEnglish: false, lowText: false };
-  }
-
-  const latinRatio = countAll(LATIN_LETTER, raw) / letters;
-  const words = allMatches(WORD, normalize(raw));
-  const totalWords = Math.max(words.length, 1);
-  let enHits = 0;
-  for (const w of words) if (STOPWORDS.has(w)) enHits++;
-  const stopRatio = enHits / totalWords;
-
-  let bestScore = 0;
-  let bestRatio = 0;
-  let bestDistinct = 0;
-  let bestDia = 0;
-  for (const profile of LATIN_PROFILES) {
-    let hits = 0;
-    const distinct = new Set<string>();
-    for (const w of words) {
-      if (profile.words.has(w)) {
-        hits++;
-        distinct.add(w);
-      }
-    }
-    const diaCount = profile.dia == null ? 0 : countAll(profile.dia, raw);
-    const ratio = hits / totalWords;
-    const score = ratio + Math.min(diaCount / totalWords, 0.15) * 6;
-    if (score > bestScore) {
-      bestScore = score;
-      bestRatio = ratio;
-      bestDistinct = distinct.size;
-      bestDia = diaCount;
-    }
-  }
-
-  const lowText = totalWords < 30;
-  const nonEnglish =
-    latinRatio >= 0.7 &&
-    totalWords >= 12 &&
-    (bestDistinct >= 3 || bestDia >= 6) &&
-    (bestDia >= 3 || bestRatio >= 0.1) &&
-    bestScore > stopRatio * 1.2 &&
-    (stopRatio < 0.04 || bestRatio > stopRatio * 1.5);
-  if (nonEnglish) return { isEnglish: false, lowText };
-
-  const bar = lowText ? 0.03 : 0.045;
-  // Data-dense docs (tickets, itineraries, prescriptions) are mostly names and numbers with few
-  // function words in ANY language; reject stop-poor text only on affirmative foreign evidence.
-  const foreignEvidence = bestDistinct >= 3 || bestDia >= 6;
-  return {
-    isEnglish: latinRatio >= 0.75 && (stopRatio >= bar || !foreignEvidence),
-    lowText,
-  };
-}
-
 // --- Structural signals ---
 
-function computeStructural(doc: HeuristicDoc): Record<string, number> {
+function anyMatch(
+  signals: SignalPatterns,
+  group: string,
+  hay: string,
+): boolean {
+  const patterns = signals.get(group);
+  if (patterns == null) return false;
+  for (const re of patterns) if (countRegex(re, hay) > 0) return true;
+  return false;
+}
+
+function countGroup(
+  signals: SignalPatterns,
+  group: string,
+  hay: string,
+): number {
+  const patterns = signals.get(group);
+  if (patterns == null) return 0;
+  let total = 0;
+  for (const re of patterns) total += countAll(re, hay);
+  return total;
+}
+
+function computeStructural(
+  doc: HeuristicDoc,
+  signals: SignalPatterns,
+): Record<string, number> {
   const all = nz(doc.allZone);
   const lines: string[] = [];
   for (const l of all.split("\n")) {
@@ -847,15 +937,21 @@ function computeStructural(doc: HeuristicDoc): Record<string, number> {
   }
   const totalTokens = Math.max(tokens.length, 1);
 
-  const currency = countAll(CURRENCY, all);
+  const currency = countGroup(signals, "currency", all);
   let numericTokens = 0;
   for (const t of tokens) {
     if (NUMERIC_TOKEN.test(t) && DIGIT.test(t)) numericTokens++;
   }
+  const formLabels = signals.get("form_label") ?? [];
   let formLines = 0;
   for (const l of lines) {
-    if (FORM_LABEL.test(l) || UNDERSCORE4.test(l) || CHECKBOX.test(l))
+    if (
+      UNDERSCORE4.test(l) ||
+      CHECKBOX.test(l) ||
+      formLabels.some((re) => countRegex(re, l) > 0)
+    ) {
       formLines++;
+    }
   }
   let dotLeaders = 0;
   for (const l of lines) if (DOT_LEADER.test(l)) dotLeaders++;
@@ -869,21 +965,35 @@ function computeStructural(doc: HeuristicDoc): Record<string, number> {
   s["currency_heavy"] = currency >= 8 ? 1.0 : Math.min(currency / 8.0, 1.0);
   s["number_table"] = numericTokens / totalTokens >= 0.22 ? 1.0 : 0.0;
   s["form_like"] = formLines >= 6 ? 1.0 : formLines >= 3 ? 0.5 : 0.0;
-  s["toc"] = TOC.test(all) || dotLeaders >= 5 ? 1.0 : 0.0;
-  s["signature_block"] = SIG1.test(tail) || SIG2.test(tail) ? 1.0 : 0.0;
+  s["toc"] = anyMatch(signals, "toc", all) || dotLeaders >= 5 ? 1.0 : 0.0;
+  s["signature_block"] =
+    anyMatch(signals, "signature", tail) ||
+    anyMatch(signals, "signature_form", tail)
+      ? 1.0
+      : 0.0;
   s["references_section"] =
-    REF1.test(last4000) && REF2.test(last4000) ? 1.0 : 0.0;
+    anyMatch(signals, "references", last4000) && CITATION.test(last4000)
+      ? 1.0
+      : 0.0;
   s["short_doc"] = doc.pageCount > 0 && doc.pageCount <= 2 ? 1.0 : 0.0;
   s["long_doc"] = doc.pageCount >= 40 ? 1.0 : 0.0;
   s["bullet_heavy"] = bullets >= 12 ? 1.0 : bullets >= 6 ? 0.5 : 0.0;
-  s["email_headers"] = EMAIL_FROM.test(all) && EMAIL_SUBJ.test(all) ? 1.0 : 0.0;
+  s["email_headers"] =
+    anyMatch(signals, "email_from", all) &&
+    anyMatch(signals, "email_subject", all)
+      ? 1.0
+      : 0.0;
   s["url_heavy"] = urls >= 6 ? 1.0 : 0.0;
-  s["address_block"] = countAll(ADDRESS, all) >= 2 ? 1.0 : 0.0;
+  s["address_block"] = countGroup(signals, "address", all) >= 2 ? 1.0 : 0.0;
   return s;
 }
 
-function pagePriorMultiplier(labelId: string, pageCount: number): number {
-  const prior = PRIORS!.get(labelId);
+function pagePriorMultiplier(
+  priors: Map<string, Prior>,
+  labelId: string,
+  pageCount: number,
+): number {
+  const prior = priors.get(labelId);
   if (prior == null || pageCount < 1) return 1;
   if (prior.max != null && pageCount > prior.max) {
     return Math.max(0.3, prior.max / pageCount);
@@ -903,22 +1013,30 @@ function num(v: unknown): number {
 }
 
 function str(v: unknown): string | null {
-  return typeof v === "string" ? v : null;
+  return typeof v === "string" && v.length > 0 ? v : null;
 }
 
-// Curly apostrophes and fi/fl ligatures survive pdf.js extraction in many PDFs;
-// fold them to ASCII so rule phrases authored with ' / fi / fl still match.
-const CURLY_APOSTROPHE = /[\u2018\u2019]/g;
-const LIGATURE_FI = /\uFB01/g;
-const LIGATURE_FL = /\uFB02/g;
+function strings(v: unknown): string[] {
+  return Array.isArray(v)
+    ? v.filter((x): x is string => typeof x === "string")
+    : [];
+}
 
 function normalize(text: string | null | undefined): string {
-  return nz(text)
-    .toLowerCase()
-    .replace(CURLY_APOSTROPHE, "'")
-    .replace(LIGATURE_FI, "fi")
-    .replace(LIGATURE_FL, "fl")
-    .replace(WHITESPACE, " ");
+  return fold(
+    nz(text)
+      .toLowerCase()
+      .replace(CURLY_APOSTROPHE, "'")
+      .replace(LIGATURE_FI, "fi")
+      .replace(LIGATURE_FL, "fl")
+      .replace(WHITESPACE, " "),
+  );
+}
+
+function fold(text: string): string {
+  let out = text.normalize("NFD").replace(COMBINING_MARKS, "");
+  for (const [re, to] of FOLD_PAIRS) out = out.replace(re, to);
+  return out;
 }
 
 function damp(count: number): number {
@@ -929,23 +1047,25 @@ function damp(count: number): number {
 function countOccurrences(haystack: string, needle: string | null): number {
   if (needle == null || needle.length === 0) return 0;
   let count = 0;
-  let idx = haystack.indexOf(needle);
-  while (idx !== -1 && count < 12) {
+  let from = 0;
+  for (;;) {
+    const at = haystack.indexOf(needle, from);
+    if (at < 0) break;
     count++;
-    idx = haystack.indexOf(needle, idx + needle.length);
+    from = at + needle.length;
   }
   return count;
 }
 
-// Non-overlapping matches capped at 12.
 function countRegex(re: RegExp | null, text: string | null): number {
   if (re == null || text == null || text.length === 0) return 0;
   re.lastIndex = 0;
   let count = 0;
-  let m: RegExpExecArray | null;
-  while (count < 12 && (m = re.exec(text)) !== null) {
+  for (;;) {
+    const m = re.exec(text);
+    if (m == null) break;
     count++;
-    if (m.index === re.lastIndex) re.lastIndex++; // advance past zero-width match
+    if (m.index === re.lastIndex) re.lastIndex++;
   }
   return count;
 }
@@ -954,8 +1074,9 @@ function countAll(re: RegExp, text: string | null): number {
   if (text == null || text.length === 0) return 0;
   re.lastIndex = 0;
   let count = 0;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text)) !== null) {
+  for (;;) {
+    const m = re.exec(text);
+    if (m == null) break;
     count++;
     if (m.index === re.lastIndex) re.lastIndex++;
   }
@@ -963,11 +1084,12 @@ function countAll(re: RegExp, text: string | null): number {
 }
 
 function allMatches(re: RegExp, text: string | null): string[] {
-  const out: string[] = [];
-  if (text == null || text.length === 0) return out;
+  if (text == null || text.length === 0) return [];
   re.lastIndex = 0;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text)) !== null) {
+  const out: string[] = [];
+  for (;;) {
+    const m = re.exec(text);
+    if (m == null) break;
     out.push(m[0]);
     if (m.index === re.lastIndex) re.lastIndex++;
   }

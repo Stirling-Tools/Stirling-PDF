@@ -69,9 +69,8 @@ interface AdminStepSpec {
 }
 
 const NAV = {
-  people: [
-    '[data-tour="admin-people-nav"]',
-    '[data-tour="admin-teams-nav"]',
+  users: [
+    '[data-tour="admin-users-nav"]',
     '[data-tour="settings-content-area"]',
   ],
   adminGeneral: [
@@ -124,14 +123,14 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
   },
   {
     step: AdminTourStep.TEAMS_AND_USERS,
-    selector: '[data-tour="admin-people-nav"]',
+    selector: '[data-tour="admin-users-nav"]',
     contentKey: "adminOnboarding.teamsAndUsers",
     contentDefault:
       "Manage <strong>Teams</strong> and individual users here. You can invite new users via email, shareable links, or create custom accounts for them yourself.",
     position: "right",
-    section: "people",
-    glow: [...NAV.people],
-    highlightedSelectors: [...NAV.people],
+    section: "users",
+    glow: [...NAV.users],
+    highlightedSelectors: [...NAV.users],
   },
   {
     step: AdminTourStep.SYSTEM_CUSTOMIZATION,

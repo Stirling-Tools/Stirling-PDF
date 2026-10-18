@@ -6,6 +6,7 @@ import React, {
   Suspense,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { useSectionHeadings } from "@app/components/settings/useSectionHeadings";
@@ -13,12 +14,12 @@ import { useActiveHeading } from "@app/components/settings/useActiveHeading";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { Badge, Tooltip } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { SettingsMobileBackButton } from "@app/components/shared/config/SettingsMobileBackButton";
 import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
 import { useSettingsNav } from "@app/components/settings/useSettingsNav";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
+import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import type { NavKey } from "@app/components/shared/config/types";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
@@ -27,8 +28,9 @@ import {
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
-import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { READER_PATH } from "@app/routes/readerRoute";
+import { usePreferences } from "@app/contexts/PreferencesContext";
 import { stripBasePath } from "@app/constants/app";
 import { takeSettingsOrigin } from "@app/utils/settingsNavigation";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
@@ -52,12 +54,22 @@ const SettingsPageInner: React.FC = () => {
   const isMobile = useIsMobile();
   const licenseAlert = useLicenseAlert();
   const { confirmIfDirty } = useUnsavedChanges();
-  // The rail sits outside every app, so each page tells it what only the
-  // signed-in session knows.
-  const otherApp = useOtherAppSwitch();
+  const { preferences } = usePreferences();
+  const goToStartupView = () => {
+    const view = preferences.defaultStartupView;
+    navigate(
+      view === "read"
+        ? READER_PATH
+        : view === "automate"
+          ? "/automate"
+          : EDITOR_BASENAME,
+    );
+  };
   // The same bar as the editor and the processor, so search is one thing
   // everywhere; settings results deep-link straight back into this page.
   const searchScopes = useEditorSearchScopes();
+  // A title-bar strip already hosts the one Super Search; don't add a second here.
+  const strip = useTitleBarStrip();
   const [mobilePane, setMobilePane] = useState<"nav" | "content">(() =>
     sectionFromPath(window.location.pathname) ? "content" : "nav",
   );
@@ -89,13 +101,12 @@ const SettingsPageInner: React.FC = () => {
     // `pending` matters as much as an empty list: the permission-gated sections
     // arrive a request later, so a deep link to one of them is not unknown yet.
     if (items.length === 0 || activeItem || pending) return;
-    const target =
-      (urlSection && aliases?.[urlSection]) ??
-      items.find((i) => !i.disabled)?.key ??
-      items[0].key;
-    // The hash rides along: an aliased bookmark addresses a control, and the
-    // control it names is still there under whatever absorbed its section.
-    navigate(`/settings/${target}${location.search}${location.hash}`, {
+    const alias = urlSection ? aliases?.[urlSection] : undefined;
+    const target = alias ?? items.find((i) => !i.disabled)?.key ?? items[0].key;
+    // An aliased link keeps its hash; without one it lands on the card that
+    // took the retired row's key as its id.
+    const hash = location.hash || (alias ? `#${urlSection}` : "");
+    navigate(`/settings/${target}${location.search}${hash}`, {
       replace: true,
     });
   }, [
@@ -147,12 +158,8 @@ const SettingsPageInner: React.FC = () => {
       const key = (ev as CustomEvent<{ key?: NavKey }>).detail?.key;
       if (key) switchSection(key);
     };
-    window.addEventListener("appConfig:navigate", handler as EventListener);
-    return () =>
-      window.removeEventListener(
-        "appConfig:navigate",
-        handler as EventListener,
-      );
+    window.addEventListener("appConfig:navigate", handler);
+    return () => window.removeEventListener("appConfig:navigate", handler);
   }, [switchSection]);
 
   const headings = useSectionHeadings(activeItem?.key, contentRef);
@@ -197,8 +204,8 @@ const SettingsPageInner: React.FC = () => {
   return (
     <div className="settings-page" data-tour="settings-modal">
       <QuickNavHostBridge
-        portalAccess={Boolean(otherApp)}
         requestNavigation={requestNavigation}
+        onGoToStartupView={goToStartupView}
       />
 
       <aside
@@ -255,10 +262,9 @@ const SettingsPageInner: React.FC = () => {
                         // saying why it is off is reachable by keyboard.
                         aria-disabled={isDisabled || undefined}
                       >
-                        <LocalIcon
-                          icon={item.icon}
-                          width={18}
-                          height={18}
+                        <Icon
+                          name={item.icon}
+                          size={18}
                           className="settings-page__nav-icon"
                         />
                         <span className="settings-page__nav-label">
@@ -275,10 +281,9 @@ const SettingsPageInner: React.FC = () => {
                           </Badge>
                         )}
                         {showPlanWarning && (
-                          <LocalIcon
-                            icon="warning-rounded"
-                            width={14}
-                            height={14}
+                          <Icon
+                            name="triangle-alert"
+                            size={14}
                             className="settings-page__nav-warning"
                           />
                         )}
@@ -336,13 +341,15 @@ const SettingsPageInner: React.FC = () => {
           isMobile && mobilePane !== "content" ? { display: "none" } : undefined
         }
       >
-        <div className="settings-page__search-bar">
-          <SuperSearch
-            inputId="settings-search-input"
-            scopes={searchScopes}
-            dropdownClassName="settings-search-dropdown"
-          />
-        </div>
+        {!strip.enabled && (
+          <div className="settings-page__search-bar">
+            <SuperSearch
+              inputId="settings-search-input"
+              scopes={searchScopes}
+              dropdownClassName="settings-search-dropdown"
+            />
+          </div>
+        )}
         <div className="modal-content-scroll" ref={setContentRef}>
           {isMobile && (
             <div className="settings-page__mobile-bar modal-header">

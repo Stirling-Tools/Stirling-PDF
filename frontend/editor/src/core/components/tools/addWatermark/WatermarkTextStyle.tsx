@@ -50,7 +50,10 @@ const WatermarkTextStyle = ({
           aria-labelledby={alphabetLabelId}
           value={parameters.alphabet}
           onChange={(value) => value && onParameterChange("alphabet", value)}
-          data={alphabetOptions}
+          data={alphabetOptions.map((option) => ({
+            value: option.value,
+            label: t(option.labelKey, option.label),
+          }))}
           disabled={disabled}
           comboboxProps={{
             withinPortal: true,

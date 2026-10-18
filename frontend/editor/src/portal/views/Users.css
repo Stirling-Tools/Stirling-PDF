@@ -278,14 +278,6 @@
   align-items: center;
 }
 
-.portal-users__link {
-  color: var(--c-accent-text);
-  text-decoration: none;
-}
-.portal-users__link:hover {
-  text-decoration: underline;
-}
-
 .portal-users__directory {
   display: flex;
   flex-direction: column;
@@ -535,4 +527,38 @@
   font-size: 0.875rem;
   line-height: 1.5;
   color: var(--c-text-subtle);
+}
+
+/* A disabled button dispatches no pointer events, so the hit test has to fall
+   through to the Tooltip's wrapper for the explanation to be reachable. */
+.portal-users__blocked:disabled {
+  pointer-events: none;
+}
+
+/* The team strip leads; the selected team's actions and the search sit at the
+   far end. Top-aligned, because the strip wraps to a second row on a big org. */
+.portal-users__filters {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.portal-users__teams {
+  flex: 1;
+  min-width: 0;
+}
+.portal-users__filter-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+/* A hit-target-sized stub that grows into a field in place. */
+.portal-users__search {
+  width: 2rem;
+  display: flex;
+  justify-content: flex-end;
+  transition: width var(--motion-fast, 120ms);
+}
+.portal-users__search[data-open] {
+  width: 16rem;
 }

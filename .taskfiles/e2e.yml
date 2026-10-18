@@ -15,6 +15,15 @@ tasks:
     cmds:
       - npx playwright test --project=stubbed {{.CLI_ARGS}}
 
+  stubbed-desktop:
+    desc: "Run the disk-link E2E suite against a desktop-mode build"
+    dir: frontend/editor
+    deps: [ ':frontend:prepare' ]
+    env:
+      PW_DESKTOP: "1"
+    cmds:
+      - npx playwright test --project=stubbed-desktop {{.CLI_ARGS}}
+
   stubbed-project:
     desc: "Run the stubbed E2E suite for a single Playwright project"
     dir: frontend/editor

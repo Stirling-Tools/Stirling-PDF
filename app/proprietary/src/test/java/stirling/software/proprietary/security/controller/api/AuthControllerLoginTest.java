@@ -91,6 +91,8 @@ class AuthControllerLoginTest {
                         new stirling.software.proprietary.service.AiUserDataService(null),
                         resourceAccessService,
                         teamLeadLookup,
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.service.OrgOwnerService.class),
                         loginLandingService);
         lenient()
                 .when(loginLandingService.getLandingView(any()))

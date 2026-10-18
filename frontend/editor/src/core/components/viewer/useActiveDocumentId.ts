@@ -1,9 +1,14 @@
-import { useActiveDocument } from "@app/components/viewer/ActiveDocumentContext";
+import { useActiveDocument } from "@embedpdf/plugin-document-manager/react";
 
-/**
- * Hook to get the currently active document ID.
- * Uses a shared context to avoid multiple subscriptions.
- */
 export function useActiveDocumentId(): string | null {
-  return useActiveDocument();
+  return useActiveDocument().activeDocumentId;
+}
+
+export function useDocumentReady(): boolean {
+  const { activeDocumentId, activeDocument } = useActiveDocument();
+  return Boolean(
+    activeDocumentId &&
+    activeDocument?.status === "loaded" &&
+    activeDocument?.document,
+  );
 }

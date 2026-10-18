@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import HistoryIcon from "@mui/icons-material/History";
+import { Icon } from "@app/ui/Icon";
 import { Center, Group, Loader, Modal, Text } from "@mantine/core";
 
 import type { FileId } from "@app/types/file";
@@ -102,8 +102,9 @@ export function VersionHistoryModal({
       size="md"
       title={
         <Group gap="xs" align="center">
-          <HistoryIcon
-            fontSize="small"
+          <Icon
+            name="rotate-ccw-clock"
+            size={20}
             style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
           <Text fw={600} size="md" c="var(--c-text)">

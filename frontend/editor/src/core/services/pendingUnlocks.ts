@@ -1,5 +1,5 @@
 /**
- * The uploads still waiting on their unlock prompt. Published by the workbench, read by anything
+ * The uploads still waiting on an unlock decision or decrypted bytes. Published by the workbench, read by anything
  * that would otherwise act on a document the user is in the middle of decrypting.
  *
  * A module store rather than context: the reader is a policy hook in another layer, and it needs
@@ -9,7 +9,7 @@
 const pending = new Set<string>();
 const listeners = new Set<() => void>();
 
-/** Replaces the set wholesale, since the prompt queue is authoritative about who is waiting. */
+/** Replaces the prompt queue and any holds for encrypted bytes opened in another editor. */
 export function setPendingUnlocks(fileIds: readonly string[]): void {
   const next = new Set(fileIds);
   if (next.size === pending.size && [...next].every((id) => pending.has(id))) {
@@ -19,6 +19,11 @@ export function setPendingUnlocks(fileIds: readonly string[]): void {
   for (const id of next) pending.add(id);
   version += 1;
   for (const listener of listeners) listener();
+}
+
+/** Holds new encrypted records before their first policy effect can observe them. */
+export function addPendingUnlocks(fileIds: readonly string[]): void {
+  setPendingUnlocks([...pending, ...fileIds]);
 }
 
 /**

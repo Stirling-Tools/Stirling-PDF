@@ -108,7 +108,7 @@ def write_readme(progress_list: list[tuple[str, int]]) -> None:
         None
     """
     with open(
-        os.path.join(os.getcwd(), "devGuide", "HowToAddNewLanguage.md"),
+        os.path.join(os.getcwd(), "docs", "developer", "HowToAddNewLanguage.md"),
         encoding="utf-8",
     ) as file:
         content = file.readlines()
@@ -124,7 +124,7 @@ def write_readme(progress_list: list[tuple[str, int]]) -> None:
                     )
 
     with open(
-        os.path.join(os.getcwd(), "devGuide", "HowToAddNewLanguage.md"),
+        os.path.join(os.getcwd(), "docs", "developer", "HowToAddNewLanguage.md"),
         "w",
         encoding="utf-8",
         newline="\n",

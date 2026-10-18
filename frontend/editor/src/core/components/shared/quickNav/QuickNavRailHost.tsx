@@ -1,6 +1,9 @@
 import { useTranslation } from "react-i18next";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { useState } from "react";
+import { SignMenu } from "@app/components/shared/signing/SignMenu";
+import { requestSigningIntent } from "@app/utils/pendingSigningIntent";
 import { useLocation, useNavigate } from "react-router-dom";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { QuickNavRailContainer } from "@app/components/shared/quickNav/QuickNavRailContainer";
 import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
 import type { ToolId } from "@app/types/toolId";
@@ -16,7 +19,12 @@ import { HAS_PORTAL } from "@app/routes/hasPortal";
 import { DOCS_PATH, HAS_DOCS } from "@app/routes/docsRoute";
 import { stripBasePath } from "@app/constants/app";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
+import { canCreateProcessingFolders } from "@app/hooks/useProcessingFolderCreation";
+import { requestProcessingFolderCreation } from "@app/utils/pendingProcessingFolderCreation";
+import { requestProcessorSignup } from "@app/services/processorSignup";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
 
+import { Icon } from "@app/ui/Icon";
 const SIZE = "1.125rem";
 
 /** Entries come from the URL, not either app's context, so the rail survives a switch. */
@@ -25,9 +33,15 @@ const ACCOUNT_ANCHOR = "account";
 
 export function QuickNavRailHost() {
   const { t } = useTranslation();
+  const localOnly = useLocalProcessingOnly();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const host = useQuickNavHost();
+  const [signMenuOpen, setSignMenuOpen] = useState(false);
+  // Processing folders run on the non-core API server. True on web (served by that backend);
+  // on desktop it tracks the signed-in connection, so the entry falls inert until the user
+  // signs in to Stirling Cloud or a self-hosted server.
+  const connectedServer = useConnectedServer();
 
   const appMounted = Boolean(host?.appMounted);
 
@@ -46,12 +60,21 @@ export function QuickNavRailHost() {
     else navigate(inPortal ? PORTAL_BASENAME : EDITOR_BASENAME);
   };
 
-  // Guarded where the app supplies a guard, so leaving mid-edit still prompts.
-  const go = (to: string) => {
-    const guard = host?.actions.current?.requestNavigation;
-    if (guard) guard(() => navigate(to));
-    else navigate(to);
+  // The brand goes where the app launches; the Editor entry stays in the editor.
+  const goToStartupView = () => {
+    const start = host?.actions.current?.goToStartupView;
+    if (start) start();
+    else returnHome();
   };
+
+  // Guarded where the app supplies a guard, so leaving mid-edit still prompts.
+  const guarded = (leave: () => void) => {
+    const guard = host?.actions.current?.requestNavigation;
+    if (guard) guard(leave);
+    else leave();
+  };
+
+  const go = (to: string) => guarded(() => navigate(to));
 
   // Through the app where possible: its route only selects a tool on a fresh mount.
   const openTool = (toolId: ToolId, route: string) => {
@@ -67,16 +90,15 @@ export function QuickNavRailHost() {
     return { disabled: Boolean(reason), reason };
   };
 
-  // The three apps you switch between. Reader is a mode over the editor rather
-  // than a place of its own, but it leads the group because it is where most
-  // visits start.
+  // Reading is a surface of its own rather than a tool inside the editor, and it
+  // leads the group because it is where most visits start.
   const reader: QuickNavEntry = {
     id: "reader",
     label: t("quickNav.reader", "Reader"),
-    icon: (
-      <LocalIcon icon="menu-book-outline-rounded" width={SIZE} height={SIZE} />
-    ),
-    pressed: Boolean(host?.readerMode),
+    icon: <Icon name="book-open" size={SIZE} />,
+    // Current means the surface you are on, not a switch left on: reader mode set
+    // from the processor does not count until you are in the editor.
+    current: inEditor && Boolean(host?.readerMode),
     // From the processor there is no editor to toggle - see pendingReaderMode.
     onClick: () => {
       const setMode = host?.actions.current?.setReaderMode;
@@ -92,12 +114,14 @@ export function QuickNavRailHost() {
   const editor: QuickNavEntry = {
     id: "editor",
     label: t("quickNav.editor", "Editor"),
-    icon: inEditor ? (
-      <LocalIcon icon="edit-rounded" width={SIZE} height={SIZE} />
-    ) : (
-      <LocalIcon icon="edit-outline-rounded" width={SIZE} height={SIZE} />
-    ),
-    current: inEditor,
+    icon: <Icon name="pencil" size={SIZE} />,
+    // The library and reading are places of their own, not the editor with a
+    // different centre.
+    current:
+      inEditor &&
+      !host?.fileLibrary &&
+      !host?.readerMode &&
+      path !== "/shared-sign",
     onClick: () => {
       if (inEditor) {
         returnHome();
@@ -111,19 +135,19 @@ export function QuickNavRailHost() {
   const processor: QuickNavEntry = {
     id: "processor",
     label: t("quickNav.processor", "Processor"),
-    // Two literals, not a computed name: the offline icon bundle scans for `icon="..."`.
-    icon: inPortal ? (
-      <LocalIcon icon="memory-rounded" width={SIZE} height={SIZE} />
-    ) : (
-      <LocalIcon icon="memory-outline-rounded" width={SIZE} height={SIZE} />
-    ),
+    icon: <Icon name="cpu" size={SIZE} />,
     current: inPortal,
-    disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
+    disabled:
+      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous,
     reason:
-      HAS_PORTAL && !inPortal && !host?.portalAccess
+      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous
         ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
         : undefined,
     onClick: () => {
+      if (host?.isAnonymous) {
+        requestProcessorSignup();
+        return;
+      }
       if (inPortal) {
         returnHome();
         return;
@@ -133,41 +157,116 @@ export function QuickNavRailHost() {
     },
   };
 
-  // Editor and processor only pair off where there is a processor to reach.
-  const apps: QuickNavEntry[] = HAS_PORTAL
-    ? [reader, editor, processor]
-    : [reader];
+  // The processor is additive: dropping the editor with it left a lone reader
+  // entry in builds without a portal, with no way back out of reading.
+  const surfaces: QuickNavEntry[] = [
+    reader,
+    editor,
+    ...(HAS_PORTAL && !localOnly ? [processor] : []),
+  ];
 
   const within: QuickNavEntry[] = [
+    ...(!host?.hasOpenFromComputer
+      ? []
+      : [
+          {
+            id: "openFromComputer",
+            label: t("fileSidebar.openFromComputer", "Open from computer"),
+            icon: <Icon name="file-up" size={SIZE} />,
+            testId: "files-button",
+            tourId: "files-button",
+            onClick: () => host?.actions.current?.openFromComputer?.(),
+          },
+        ]),
     {
       id: "files",
       label: t("fileSidebar.myFiles", "File library"),
-      icon: (
-        <LocalIcon icon="folder-outline-rounded" width={SIZE} height={SIZE} />
-      ),
-      onClick: () => go("/files"),
+      icon: <Icon name="folder" size={SIZE} />,
+      current: Boolean(host?.fileLibrary),
+      testId: "my-files-button",
+      // Through the app where possible: the library is a view, not a route. From the
+      // processor there is no editor to ask, so the path carries it and HomePage seeds
+      // the view on arrival. Unwrapped: setting the view runs the app's own
+      // unsaved-changes check, and asking twice leaves the second ask nowhere to
+      // prompt.
+      onClick: () => {
+        const show = host?.actions.current?.showFileLibrary;
+        // Unwrapped: setting the view runs the app's own unsaved-changes check, and
+        // asking twice leaves the second ask with nowhere to prompt.
+        if (show) show();
+        else go("/files");
+      },
     },
+    ...(canCreateProcessingFolders && !localOnly
+      ? [
+          {
+            id: "createProcessingFolder",
+            label: t("processingFolders.setup.title"),
+            icon: <Icon name="folder-plus" size={SIZE} />,
+            disabled: !connectedServer,
+            reason: connectedServer
+              ? undefined
+              : t("quickNav.signInToUse", "Sign in to use this"),
+            onClick: () => {
+              if (host?.isAnonymous) {
+                requestProcessorSignup();
+                return;
+              }
+              const open = host?.actions.current?.createProcessingFolder;
+              if (open) open();
+              else
+                guarded(() => {
+                  requestProcessingFolderCreation();
+                  navigate(EDITOR_BASENAME);
+                });
+            },
+          },
+        ]
+      : []),
     {
       id: "automate",
       label: t("quickAccess.automate", "Automate"),
-      icon: (
-        <LocalIcon icon="rebase-outline-rounded" width={SIZE} height={SIZE} />
-      ),
+      icon: <Icon name="git-branch" size={SIZE} />,
       ...openingTool("automate"),
       ...unusable("automate"),
       onClick: () => openTool("automate", "/automate"),
     },
     {
-      id: "sharedSign",
-      label: t("home.sharedSign.title", "Shared Signing"),
-      icon: (
-        <LocalIcon icon="draw-outline-rounded" width={SIZE} height={SIZE} />
-      ),
+      id: "sign",
+      label: host?.signingBadge
+        ? t("signMenu.triggerUnreadCount", "Sign · {{count}} unread sessions", {
+            count: host.signingBadge,
+          })
+        : t("signMenu.title", "Sign"),
+      icon: <Icon name="pen-tool" size={SIZE} />,
       badge: host?.signingBadge,
+      badgeMax: null,
       badgeTone: "warning",
-      ...openingTool("sharedSign"),
-      ...unusable("sharedSign"),
-      onClick: () => openTool("sharedSign", "/shared-sign"),
+      current:
+        host?.activeTool === "sign" ||
+        host?.activeTool === "certSign" ||
+        path === "/shared-sign",
+      expanded: signMenuOpen,
+      onClick: () => setSignMenuOpen((open) => !open),
+      wrap: (button) => (
+        <SignMenu
+          opened={signMenuOpen}
+          onClose={() => setSignMenuOpen(false)}
+          reasons={host?.toolReasons ?? {}}
+          items={host?.signingItems ?? []}
+          onOpenSigning={(intent) =>
+            guarded(() => {
+              requestSigningIntent(intent);
+              navigate("/shared-sign");
+            })
+          }
+          onSelect={(tool) =>
+            openTool(tool, tool === "certSign" ? "/cert-sign" : "/sign")
+          }
+        >
+          {button}
+        </SignMenu>
+      ),
     },
   ];
 
@@ -193,8 +292,11 @@ export function QuickNavRailHost() {
 
   return (
     <QuickNavRailContainer
-      groups={[apps, within]}
-      onReturnHome={returnHome}
+      groups={[
+        surfaces,
+        localOnly ? within.filter((entry) => entry.id !== "automate") : within,
+      ]}
+      onReturnHome={() => guarded(goToStartupView)}
       identity={host?.identity ?? null}
       onOpenAccount={openAccount}
       // The avatar stands for the whole page, not just its own section.

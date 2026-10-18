@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon, isIconName, type IconName } from "@app/ui/Icon";
 import "@app/components/shared/AppBanner.css";
 
 /** Picks the whole look. Callers choose meaning, never colours. */
@@ -17,12 +17,12 @@ const TONE_BUTTON = {
 } as const;
 
 interface AppBannerProps {
-  /** A LocalIcon name, or a pre-rendered node (e.g. a logo) dropped in as-is. */
-  icon?: string | ReactNode;
+  /** A registry icon name, or a pre-rendered node (e.g. a logo) dropped in as-is. */
+  icon?: IconName | ReactNode;
   title?: ReactNode;
   message: ReactNode;
   buttonText?: string;
-  buttonIcon?: string;
+  buttonIcon?: IconName;
   onButtonClick?: () => void;
   /** Muted secondary action, e.g. "Don't remind me again". */
   secondaryButtonText?: string;
@@ -41,7 +41,7 @@ export const AppBanner: React.FC<AppBannerProps> = ({
   title,
   message,
   buttonText,
-  buttonIcon = "check-circle-rounded",
+  buttonIcon = "circle-check",
   onButtonClick,
   secondaryButtonText,
   onSecondaryButtonClick,
@@ -69,11 +69,7 @@ export const AppBanner: React.FC<AppBannerProps> = ({
     >
       {icon != null && (
         <span className="app-banner__icon" aria-hidden>
-          {typeof icon === "string" ? (
-            <LocalIcon icon={icon} width={iconSize} height={iconSize} />
-          ) : (
-            icon
-          )}
+          {isIconName(icon) ? <Icon name={icon} size={iconSize} /> : icon}
         </span>
       )}
 
@@ -90,9 +86,7 @@ export const AppBanner: React.FC<AppBannerProps> = ({
             size="sm"
             loading={loading}
             onClick={onButtonClick}
-            leftSection={
-              <LocalIcon icon={buttonIcon} width="0.9rem" height="0.9rem" />
-            }
+            leftSection={<Icon name={buttonIcon} size="0.9rem" />}
           >
             {buttonText}
           </Button>
@@ -115,7 +109,7 @@ export const AppBanner: React.FC<AppBannerProps> = ({
             onClick={() => onDismiss?.()}
             aria-label={t("appBanner.dismiss", "Dismiss")}
           >
-            <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+            <Icon name="x" size="1rem" />
           </ActionIcon>
         )}
       </div>

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SettingsIcon from "@mui/icons-material/Settings";
+import { Icon } from "@app/ui/Icon";
 import { ToolPanelHeader } from "@app/components/shared/ToolPanelHeader";
 
 const meta: Meta<typeof ToolPanelHeader> = {
@@ -12,7 +12,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    icon: <SettingsIcon sx={{ fontSize: 18 }} />,
+    icon: <Icon name="settings" size={18} />,
     title: "Split",
   },
 };
@@ -20,7 +20,7 @@ export const Default: Story = {
 /** Trailing close button only renders when `onClose` is supplied. */
 export const WithCloseButton: Story = {
   args: {
-    icon: <SettingsIcon sx={{ fontSize: 18 }} />,
+    icon: <Icon name="settings" size={18} />,
     title: "Split",
     onClose: () => {},
     closeLabel: "Close tool panel",

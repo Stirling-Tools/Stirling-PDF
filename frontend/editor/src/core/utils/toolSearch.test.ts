@@ -35,10 +35,6 @@ const registry: Partial<ToolRegistry> = {
     "Change Metadata",
     "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties",
   ),
-  scannerEffect: makeEntry(
-    "Scanner Effect",
-    "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan",
-  ),
   adjustContrast: makeEntry(
     "Adjust Colours/Contrast",
     "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance",

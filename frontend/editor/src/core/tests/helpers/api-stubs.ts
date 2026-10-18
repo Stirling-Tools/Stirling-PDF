@@ -1,4 +1,4 @@
-import type { Page, Route } from "@playwright/test";
+import type { BrowserContext, Page, Route } from "@playwright/test";
 
 /**
  * Shared Playwright API stubs for Stirling-PDF E2E tests.
@@ -120,6 +120,8 @@ export interface MockAppApiOptions {
   enableLogin?: boolean;
   /** Override `isAdmin` in app-config. Default `false`. */
   isAdmin?: boolean;
+  /** Null leaves the server analytics choice unconfigured. */
+  enableAnalytics?: boolean | null;
   /** Override the logged-in user returned by `/auth/me`. */
   user?: {
     id?: number;
@@ -130,6 +132,7 @@ export interface MockAppApiOptions {
     role?: string;
     /** Portal (Processor) access flag — gates the super search's Processor lanes. */
     portalAccess?: boolean;
+    orgOwner?: boolean;
   } | null;
   /** Languages advertised by `/config/app-config`. */
   languages?: string[];
@@ -142,6 +145,23 @@ export interface MockAppApiOptions {
 }
 
 /**
+ * Answers every `/api/v1` request no other route claims with the empty 500 the
+ * dev proxy sends when no backend is listening. A request that reaches the proxy
+ * instead hits whatever backend runs locally, and in CI a large upload can hang
+ * there and crash the Chromium renderer.
+ *
+ * Register it before any other route on the context, so it is the last handler
+ * Playwright tries.
+ */
+export async function fulfillUnstubbedApis(
+  context: BrowserContext,
+): Promise<void> {
+  await context.route("**/api/v1/**", (route: Route) =>
+    route.fulfill({ status: 500, contentType: "text/plain", body: "" }),
+  );
+}
+
+/**
  * Register stub routes for the endpoints the app calls during bootstrap.
  * Call this inside `test.beforeEach` before any `page.goto(...)`.
  */
@@ -149,9 +169,23 @@ export async function mockAppApis(
   page: Page,
   opts: MockAppApiOptions = {},
 ): Promise<void> {
+  await page.route("**/api/v1/security/inspect-pdf-security", (route) =>
+    route.fulfill({
+      json: {
+        encrypted: false,
+        signed: false,
+        ownerAuthenticated: false,
+        permissions: -4,
+        canModify: true,
+        canAssemble: true,
+        pageCount: 1,
+      },
+    }),
+  );
   const {
     enableLogin = false,
     isAdmin = false,
+    enableAnalytics = false,
     user = {
       id: 1,
       username: "testuser",
@@ -175,6 +209,7 @@ export async function mockAppApis(
       json: {
         enableLogin,
         isAdmin,
+        enableAnalytics,
         languages,
         defaultLocale,
       },

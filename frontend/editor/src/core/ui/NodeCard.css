@@ -42,6 +42,13 @@
   overflow: visible;
 }
 
+/* Callers pass glyphs of mixed provenance (kind icons, registry tool icons, brand marks); the badge
+   draws them all at one size so a chain of cards reads as one set. */
+.sui-node-card .sui-iconbadge svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
 .sui-node-card__text {
   display: flex;
   flex-direction: column;

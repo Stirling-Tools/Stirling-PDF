@@ -6,10 +6,8 @@ import type { PlatformSessionUser } from "@proprietary/extensions/platformSessio
 export async function isDesktopSaaSAuthMode(): Promise<boolean> {
   try {
     const mode = await connectionModeService.getCurrentMode();
-    // Return true for ANY desktop auth mode (SaaS or self-hosted with desktop authService)
-    // This skips redundant backend validation in springAuthClient since desktop authService
-    // already manages the token lifecycle
-    return mode === "saas" || mode === "selfhosted";
+    // Self-hosted sessions need the server profile for roles and organisation ownership.
+    return mode === "saas";
   } catch {
     return false;
   }
@@ -119,19 +117,29 @@ export async function getPlatformSessionUser(): Promise<PlatformSessionUser | nu
   };
 }
 
+/** Keeps a verified, unexpired session usable when a refresh fails temporarily. */
 export async function refreshPlatformSession(): Promise<boolean> {
   try {
     const mode = await connectionModeService.getCurrentMode();
+    let refreshed: boolean;
     if (mode === "saas") {
-      return await authService.refreshSupabaseToken(STIRLING_SAAS_URL);
+      refreshed = await authService.refreshSupabaseToken(STIRLING_SAAS_URL);
     } else if (mode === "selfhosted") {
       const serverConfig = await connectionModeService.getServerConfig();
       if (!serverConfig) {
         return false;
       }
-      return await authService.refreshToken(serverConfig.url);
+      refreshed = await authService.refreshToken(serverConfig.url);
+    } else {
+      return false;
     }
-    return false;
+    if (refreshed) return true;
+    const token = await authService.getAuthToken();
+    return (
+      !!token &&
+      !authService.isTokenExpiringSoon(token, 0) &&
+      (await authService.hasManagedSession())
+    );
   } catch {
     return false;
   }

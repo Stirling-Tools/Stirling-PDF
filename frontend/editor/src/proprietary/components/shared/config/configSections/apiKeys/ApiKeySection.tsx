@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Group, Paper } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import FitText from "@app/components/shared/FitText";
 import { useTranslation } from "react-i18next";
 
@@ -60,9 +60,7 @@ export default function ApiKeySection({
             variant="secondary"
             accent="neutral"
             onClick={() => onCopy(publicKey, "public")}
-            leftSection={
-              <LocalIcon icon="content-copy-rounded" width={14} height={14} />
-            }
+            leftSection={<Icon name="copy" size={14} />}
             style={{
               marginLeft: 12,
             }}
@@ -77,9 +75,7 @@ export default function ApiKeySection({
             variant="secondary"
             accent="neutral"
             onClick={onRefresh}
-            leftSection={
-              <LocalIcon icon="refresh-rounded" width={14} height={14} />
-            }
+            leftSection={<Icon name="refresh-cw" size={14} />}
             style={{
               marginLeft: 8,
             }}

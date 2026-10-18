@@ -6,6 +6,7 @@ import {
   useToolWorkflowData,
 } from "@app/contexts/ToolWorkflowContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import {
   connectionModeService,
   type ConnectionMode,
@@ -24,6 +25,7 @@ const ToolButton: React.FC<CoreToolButtonProps> = (props) => {
   const { toolAvailability } = useToolWorkflowData();
   const { handleToolSelectForced } = useToolWorkflowActions();
   const { config } = useAppConfig();
+  const localOnly = useLocalProcessingOnly();
   const premiumEnabled = config?.premiumEnabled;
   const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(
     null,
@@ -48,12 +50,14 @@ const ToolButton: React.FC<CoreToolButtonProps> = (props) => {
   // user can see the settings; the disabled execute button handles the sign-in prompt.
   // comingSoon and selfHostedOffline tools remain dimmed — they have no usable UI to show.
   const handleUnavailableClick =
+    !localOnly &&
     connectionMode === "local" &&
     disabledReason !== "comingSoon" &&
     disabledReason !== "selfHostedOffline"
       ? () => handleToolSelectForced(props.id)
       : undefined;
 
+  if (localOnly && props.tool.hiddenFromToolList) return null;
   return (
     <CoreToolButton {...props} onUnavailableClick={handleUnavailableClick} />
   );

@@ -41,6 +41,19 @@ class EntitlementCacheTest {
     }
 
     @Test
+    void relinkingDoesNotReuseAnotherDevicesEntitlement() {
+        when(store.get()).thenReturn(Optional.of(cred()));
+        when(client.fetchEntitlement(anyString(), anyString()))
+                .thenReturn(new InstanceEntitlement(true, 0, 1, 100L, EntitlementState.OK));
+        assertTrue(cache.current().isPresent());
+        DeviceCredential other = cred();
+        other.setDeviceId("dev-2");
+        when(store.get()).thenReturn(Optional.of(other));
+        when(client.fetchEntitlement(anyString(), anyString())).thenReturn(null);
+        assertTrue(cache.current().isEmpty());
+    }
+
+    @Test
     void unlinked_returnsEmpty() {
         when(store.get()).thenReturn(Optional.empty());
         assertTrue(cache.current().isEmpty());
@@ -110,5 +123,13 @@ class EntitlementCacheTest {
         cache.invalidate();
         cache.current();
         verify(client, times(2)).fetchEntitlement(any(), any());
+    }
+
+    @Test
+    void syncReplyFromPreviousDeviceDoesNotRestoreItsAllowance() {
+        when(store.get()).thenReturn(Optional.of(cred()));
+        cache.accept(
+                "previous-device", new InstanceEntitlement(true, 0, 1, 100L, EntitlementState.OK));
+        assertTrue(cache.current().isEmpty());
     }
 }

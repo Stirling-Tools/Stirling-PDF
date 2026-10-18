@@ -1,6 +1,8 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.util.HexFormat;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
@@ -36,6 +38,8 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class PasswordController {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
@@ -50,8 +54,9 @@ public class PasswordController {
     @Operation(
             summary = "Remove password from a PDF file",
             description =
-                    "This endpoint removes the password from a protected PDF file. Users need to"
-                            + " provide the existing password.")
+                    "This endpoint removes the password from a protected PDF file while preserving"
+                            + " its document permissions. Users need to provide the existing"
+                            + " password.")
     public ResponseEntity<Resource> removePassword(@ModelAttribute PDFPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
@@ -59,6 +64,22 @@ public class PasswordController {
 
         try (PDDocument document = pdfDocumentFactory.load(fileInput, password)) {
             document.setAllSecurityToBeRemoved(true);
+            if (document.isEncrypted()) {
+                // Owner-password access reports all permissions, so read the stored flags.
+                AccessPermission permissions =
+                        new AccessPermission(document.getEncryption().getPermissions());
+                if (!permissions.isOwnerPermission()) {
+                    // An empty owner password would grant unrestricted access on opening.
+                    byte[] ownerPasswordBytes = new byte[32];
+                    SECURE_RANDOM.nextBytes(ownerPasswordBytes);
+                    StandardProtectionPolicy protection =
+                            new StandardProtectionPolicy(
+                                    HexFormat.of().formatHex(ownerPasswordBytes), "", permissions);
+                    protection.setEncryptionKeyLength(256);
+                    document.setAllSecurityToBeRemoved(false);
+                    document.protect(protection);
+                }
+            }
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(

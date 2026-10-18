@@ -1,10 +1,13 @@
 import { useState, useCallback } from "react";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { fileStorage } from "@app/services/fileStorage";
+import { pruneMissingRecentFiles } from "@app/services/pruneMissingRecentFiles";
 import { StirlingFileStub, StirlingFile } from "@app/types/fileContext";
 import { FileId } from "@app/types/fileContext";
 import apiClient from "@app/services/apiClient";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAuth } from "@app/auth/UseSession";
+import { useDiskLinkReconcile } from "@app/hooks/useDiskLinkReconcile";
 
 interface StoredFileResponse {
   id: number;
@@ -35,6 +38,11 @@ export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
   const indexedDB = useIndexedDB();
   const { config } = useAppConfig();
+  const { isAnonymous } = useAuth();
+
+  // Refs inside, so loadRecentFiles isn't recreated on every workbench change -
+  // its consumers re-run it on identity change, which would loop.
+  const { openFileIdsRef, onOpenFilesDetached } = useDiskLinkReconcile();
 
   const normalizeServerFileName = useCallback(
     (fileName: string | undefined | null): string => {
@@ -105,7 +113,13 @@ export const useFileManager = () => {
       }
 
       // Load only leaf files metadata (processed files that haven't been used as input for other tools)
-      const stirlingFileStubs = await fileStorage.getLeafStirlingFileStubs();
+      const storedStubs = await fileStorage.getLeafStirlingFileStubs();
+      // A file deleted outside the app must not be offered here, so reconcile
+      // before the list is built.
+      const stirlingFileStubs = await pruneMissingRecentFiles(storedStubs, {
+        openFileIds: new Set(openFileIdsRef.current),
+        onOpenFilesDetached,
+      });
       const remoteIdSet = new Set(
         stirlingFileStubs
           .map((stub) => stub.remoteStorageId)
@@ -113,7 +127,9 @@ export const useFileManager = () => {
       );
       let combinedStubs = stirlingFileStubs;
 
-      const shouldFetchServerFiles = config?.storageEnabled === true;
+      // Guests have no server storage; the request would only 401.
+      const shouldFetchServerFiles =
+        config?.storageEnabled === true && !isAnonymous;
 
       if (shouldFetchServerFiles) {
         try {
@@ -368,7 +384,10 @@ export const useFileManager = () => {
     config?.enableLogin,
     config?.storageEnabled,
     config?.storageShareLinksEnabled,
+    isAnonymous,
     normalizeServerFileName,
+    openFileIdsRef,
+    onOpenFilesDetached,
   ]);
 
   const handleRemoveFile = useCallback(

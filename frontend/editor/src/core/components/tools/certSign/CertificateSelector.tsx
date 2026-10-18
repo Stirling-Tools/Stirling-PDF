@@ -1,12 +1,70 @@
-import { Stack, Radio, Divider, TextInput, Text, Group } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Stack, Text } from "@mantine/core";
+import { Radio } from "@app/ui/Radio";
+import { Icon, type IconName } from "@app/ui/Icon";
+import { FormField } from "@app/ui/FormField";
+import { Input } from "@app/ui/Input";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import FileUploadButton from "@app/components/shared/FileUploadButton";
+import "@app/components/tools/certSign/CertificateSelector.css";
 
 export type CertificateType = "USER_CERT" | "SERVER" | "UPLOAD";
 export type UploadFormat = "PKCS12" | "PFX" | "PEM" | "JKS";
+
+function CertificateChoice({
+  name,
+  value,
+  selected,
+  onSelect,
+  disabled,
+  icon,
+  title,
+  description,
+}: {
+  name: string;
+  value: CertificateType;
+  selected: CertificateType;
+  onSelect: (value: CertificateType) => void;
+  disabled: boolean;
+  icon: IconName;
+  title: string;
+  description: string;
+}) {
+  const titleId = useId();
+  const descriptionId = useId();
+  return (
+    <Radio
+      className="certificate-choice"
+      name={name}
+      value={value}
+      checked={selected === value}
+      onChange={() => onSelect(value)}
+      disabled={disabled}
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+      label={
+        <span className="certificate-choice__content">
+          <span className="certificate-choice__icon" aria-hidden>
+            <Icon name={icon} size={22} />
+          </span>
+          <span className="certificate-choice__copy">
+            <span id={titleId} className="certificate-choice__title">
+              {title}
+            </span>
+            <span
+              id={descriptionId}
+              className="certificate-choice__description"
+            >
+              {description}
+            </span>
+          </span>
+        </span>
+      }
+    />
+  );
+}
 
 interface CertificateSelectorProps {
   certType: CertificateType;
@@ -44,15 +102,26 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
   disabled = false,
 }) => {
   const { t } = useTranslation();
+  const choiceName = useId();
   const { config } = useAppConfig();
-  const isServerPlan = config?.runningProOrHigher ?? false;
+  const personalCertificateAvailable = config?.runningProOrHigher ?? false;
+  const serverCertificateAvailable = config?.serverCertificateEnabled ?? false;
+  const managedCertificateAvailable =
+    personalCertificateAvailable || serverCertificateAvailable;
 
-  // If managed cert types are not available, reset to UPLOAD
   useEffect(() => {
-    if (!isServerPlan && (certType === "USER_CERT" || certType === "SERVER")) {
-      onCertTypeChange("UPLOAD");
+    if (
+      (certType === "USER_CERT" && !personalCertificateAvailable) ||
+      (certType === "SERVER" && !serverCertificateAvailable)
+    ) {
+      onCertTypeChange(serverCertificateAvailable ? "SERVER" : "UPLOAD");
     }
-  }, [isServerPlan, certType, onCertTypeChange]);
+  }, [
+    personalCertificateAvailable,
+    serverCertificateAvailable,
+    certType,
+    onCertTypeChange,
+  ]);
 
   const handleFormatChange = (fmt: UploadFormat) => {
     onUploadFormatChange(fmt);
@@ -70,98 +139,93 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
 
   return (
     <Stack gap="md">
-      {/* Managed certificate options — Team plan only */}
-      {isServerPlan && (
-        <Radio.Group
-          value={certType}
-          onChange={(val) => onCertTypeChange(val as CertificateType)}
+      {managedCertificateAvailable && (
+        <div
+          className="certificate-choices"
+          role="radiogroup"
+          aria-label={t(
+            "certSign.collab.signRequest.certificateChoice",
+            "Select a certificate to sign with",
+          )}
         >
-          <Stack gap="sm">
-            <Radio
+          {personalCertificateAvailable && (
+            <CertificateChoice
+              name={choiceName}
               value="USER_CERT"
+              selected={certType}
+              onSelect={onCertTypeChange}
               disabled={disabled}
-              label={
-                <Stack gap={1}>
-                  <Text size="sm" fw={500}>
-                    {t(
-                      "certSign.collab.signRequest.usePersonalCert",
-                      "Personal Certificate",
-                    )}
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {t(
-                      "certSign.collab.signRequest.usePersonalCertDesc",
-                      "Auto-generated for your account",
-                    )}
-                  </Text>
-                </Stack>
-              }
-            />
-            <Radio
-              value="SERVER"
-              disabled={disabled}
-              label={
-                <Stack gap={1}>
-                  <Text size="sm" fw={500}>
-                    {t(
-                      "certSign.collab.signRequest.useServerCert",
-                      "Organization Certificate",
-                    )}
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {t(
-                      "certSign.collab.signRequest.useServerCertDesc",
-                      "Shared organization certificate",
-                    )}
-                  </Text>
-                </Stack>
-              }
-            />
-            <Radio
-              value="UPLOAD"
-              disabled={disabled}
-              label={
-                <Text size="sm" fw={500}>
-                  {t(
-                    "certSign.collab.signRequest.uploadCert",
-                    "Custom Certificate",
-                  )}
-                </Text>
-              }
-            />
-          </Stack>
-        </Radio.Group>
-      )}
-
-      {/* Upload section */}
-      {certType === "UPLOAD" && (
-        <Stack gap="sm">
-          {isServerPlan && (
-            <Divider
-              label={t(
-                "certSign.collab.signRequest.uploadCert",
-                "Custom Certificate",
+              icon="user"
+              title={t(
+                "certSign.collab.signRequest.usePersonalCert",
+                "Stirling Sign · Personal",
               )}
-              labelPosition="left"
+              description={t(
+                "certSign.collab.signRequest.usePersonalCertDesc",
+                "Sign with the certificate created for your account.",
+              )}
             />
           )}
+          {serverCertificateAvailable && (
+            <CertificateChoice
+              name={choiceName}
+              value="SERVER"
+              selected={certType}
+              onSelect={onCertTypeChange}
+              disabled={disabled}
+              icon="building-2"
+              title={t(
+                "certSign.collab.signRequest.useServerCert",
+                "Stirling Sign · Organization",
+              )}
+              description={t(
+                "certSign.collab.signRequest.useServerCertDesc",
+                "Sign with this server's shared organization certificate.",
+              )}
+            />
+          )}
+          <CertificateChoice
+            name={choiceName}
+            value="UPLOAD"
+            selected={certType}
+            onSelect={onCertTypeChange}
+            disabled={disabled}
+            icon="upload"
+            title={t(
+              "certSign.collab.signRequest.uploadCert",
+              "Upload a certificate",
+            )}
+            description={t(
+              "certSign.collab.signRequest.uploadCertDesc",
+              "Use your own PKCS12, PFX, PEM or JKS certificate.",
+            )}
+          />
+        </div>
+      )}
 
-          {/* Format picker */}
-          <Group gap="xs">
-            {(["PKCS12", "PFX", "PEM", "JKS"] as UploadFormat[]).map((fmt) => (
-              <Button
-                key={fmt}
-                size="sm"
-                variant={uploadFormat === fmt ? "primary" : "secondary"}
-                onClick={() => handleFormatChange(fmt)}
-                disabled={disabled}
-              >
-                {fmt}
-              </Button>
-            ))}
-          </Group>
+      {certType === "UPLOAD" && (
+        <Stack gap="md" className="certificate-upload">
+          <Text size="sm" fw={600} c="var(--c-text)">
+            {t(
+              "certSign.collab.signRequest.certModal.format",
+              "Certificate format",
+            )}
+          </Text>
+          <SegmentedControl<UploadFormat>
+            options={(["PKCS12", "PFX", "PEM", "JKS"] as UploadFormat[]).map(
+              (format) => ({ value: format, label: format }),
+            )}
+            value={uploadFormat}
+            onChange={handleFormatChange}
+            disabled={disabled}
+            ariaLabel={t(
+              "certSign.collab.signRequest.certModal.format",
+              "Certificate format",
+            )}
+            fullWidth
+            variant="secondary"
+          />
 
-          {/* PKCS12 / PFX */}
           {(uploadFormat === "PKCS12" || uploadFormat === "PFX") && (
             <FileUploadButton
               file={p12File ?? undefined}
@@ -218,7 +282,6 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
             </Stack>
           )}
 
-          {/* JKS */}
           {uploadFormat === "JKS" && (
             <FileUploadButton
               file={jksFile ?? undefined}
@@ -229,23 +292,24 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
             />
           )}
 
-          {/* Password */}
           {showPassword && (
-            <TextInput
+            <FormField
               label={t(
                 "certSign.collab.signRequest.password",
                 "Certificate Password",
               )}
-              type="password"
-              placeholder={t(
-                "certSign.passwordOptional",
-                "Leave empty if no password",
-              )}
-              value={password}
-              onChange={(e) => onPasswordChange(e.target.value)}
-              disabled={disabled}
-              size="sm"
-            />
+            >
+              <Input
+                type="password"
+                placeholder={t(
+                  "certSign.passwordOptional",
+                  "Leave empty if no password",
+                )}
+                value={password}
+                onChange={(e) => onPasswordChange(e.target.value)}
+                disabled={disabled}
+              />
+            </FormField>
           )}
         </Stack>
       )}

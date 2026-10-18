@@ -25,11 +25,9 @@ export interface FreeSnapshot {
 }
 
 /**
- * Derive the free-grant snapshot from a wallet. Null (not yet loaded) yields a
- * zeroed view over the default 500 grant, the brief first-paint placeholder.
+ * Derive usage from the wallet's current allowance and remaining balance.
  */
-export function freeSnapshotFromWallet(wallet: Wallet | null): FreeSnapshot {
-  if (!wallet) return { billableUsed: 0, billableLimit: 500 };
+export function freeSnapshotFromWallet(wallet: Wallet): FreeSnapshot {
   return {
     billableUsed: Math.max(0, wallet.freeAllowance - wallet.freeRemaining),
     billableLimit: wallet.freeAllowance,
@@ -37,16 +35,19 @@ export function freeSnapshotFromWallet(wallet: Wallet | null): FreeSnapshot {
 }
 
 /**
- * Read the free-grant snapshot from the live wallet. Falls back to a zeroed
- * view over the default grant until the wallet loads.
+ * Returns null until the live wallet supplies the team's allowance.
  */
-export function useFreeSnapshot(): FreeSnapshot {
+export function useFreeSnapshot(): FreeSnapshot | null {
   const { wallet } = useWallet();
-  return useMemo(() => freeSnapshotFromWallet(wallet), [wallet]);
+  return useMemo(
+    () => (wallet ? freeSnapshotFromWallet(wallet) : null),
+    [wallet],
+  );
 }
 
-export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
+export function FreeMeterPanel({ snap }: { snap: FreeSnapshot | null }) {
   const { t } = useTranslation();
+  if (!snap) return null;
   const remaining = Math.max(0, snap.billableLimit - snap.billableUsed);
   const { state, pct } = remainingMeter(remaining, snap.billableLimit);
   const stateLabel =

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { TextInput } from "@app/components/shared/TextInput";
 import "@app/components/tools/toolPicker/ToolPicker.css";
@@ -100,9 +100,7 @@ const ToolSearch = ({
       }
       icon={
         iconOverride ??
-        (hideIcon ? undefined : (
-          <LocalIcon icon="search-rounded" width="1.25rem" height="1.25rem" />
-        ))
+        (hideIcon ? undefined : <Icon name="search" size="1.25rem" />)
       }
       iconClickable={!!iconOverride}
       autoComplete="off"

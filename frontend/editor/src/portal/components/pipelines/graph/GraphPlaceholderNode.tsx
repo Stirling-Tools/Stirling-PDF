@@ -1,4 +1,4 @@
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui";
 import "@portal/components/pipelines/graph/GraphPlaceholderNode.css";
 
@@ -22,7 +22,7 @@ export function GraphPlaceholderNode({
       variant="quiet"
       className="portal-graph-placeholder"
       onClick={onAdd}
-      leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+      leftSection={<Icon name="plus" size={"1.125rem"} />}
     >
       <span className="portal-graph-placeholder__title">{label}</span>
     </Button>

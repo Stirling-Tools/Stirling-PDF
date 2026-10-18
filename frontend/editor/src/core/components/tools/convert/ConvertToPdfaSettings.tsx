@@ -38,9 +38,36 @@ const ConvertToPdfaSettings = ({
     ...(taggingAvailable === false
       ? []
       : [
-          { value: "pdfa-1a", label: "PDF/A-1a (accessible)" },
-          { value: "pdfa-2a", label: "PDF/A-2a (accessible)" },
-          { value: "pdfa-3a", label: "PDF/A-3a (accessible)" },
+          {
+            value: "pdfa-1a",
+            label: t(
+              "convert.pdfaAccessibleFormat",
+              "{{format}} (accessible)",
+              {
+                format: "PDF/A-1a",
+              },
+            ),
+          },
+          {
+            value: "pdfa-2a",
+            label: t(
+              "convert.pdfaAccessibleFormat",
+              "{{format}} (accessible)",
+              {
+                format: "PDF/A-2a",
+              },
+            ),
+          },
+          {
+            value: "pdfa-3a",
+            label: t(
+              "convert.pdfaAccessibleFormat",
+              "{{format}} (accessible)",
+              {
+                format: "PDF/A-3a",
+              },
+            ),
+          },
         ]),
   ];
 

@@ -274,7 +274,7 @@ alert({
   alertType: 'neutral',
   title: 'New feature available',
   body: 'Check out the latest updates.',
-  icon: <LocalIcon icon="star" />
+  icon: <Icon name="star" />
 });
 ```
 

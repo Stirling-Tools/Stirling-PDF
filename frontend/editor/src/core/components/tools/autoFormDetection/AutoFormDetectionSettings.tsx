@@ -1,7 +1,7 @@
 import { Stack, Text, Group } from "@mantine/core";
+import { Icon, type IconName } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   AutoFormDetectionParameters,
   DetectionSensitivity,
@@ -16,14 +16,14 @@ interface AutoFormDetectionSettingsProps {
   disabled?: boolean;
 }
 
-const FIELD_TYPES = [
-  { icon: "text-fields-rounded", key: "text", fallback: "Text fields" },
+const FIELD_TYPES: { icon: IconName; key: string; fallback: string }[] = [
+  { icon: "type", key: "text", fallback: "Text fields" },
   {
-    icon: "check-box-outline-rounded",
+    icon: "square-check",
     key: "checkboxes",
     fallback: "Checkboxes",
   },
-  { icon: "signature-rounded", key: "signatures", fallback: "Signatures" },
+  { icon: "signature", key: "signatures", fallback: "Signatures" },
 ] as const;
 
 export default function AutoFormDetectionSettings({
@@ -67,7 +67,7 @@ export default function AutoFormDetectionSettings({
                 padding: "0.125rem 0.5rem",
               }}
             >
-              <LocalIcon icon={f.icon} width="0.9rem" height="0.9rem" />
+              <Icon name={f.icon} size="0.9rem" />
               <Text size="xs">
                 {t(`autoFormDetection.detects.${f.key}`, f.fallback)}
               </Text>

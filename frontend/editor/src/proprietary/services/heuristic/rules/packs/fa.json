@@ -1,0 +1,425 @@
+{
+  "version": 2,
+  "language": "fa",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "فاکتور", "weight": 24, "where": "title" },
+        { "text": "مالیات بر ارزش افزوده", "weight": 8 }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [{ "text": "برگ خرید", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "purchase-order",
+      "phrases": [{ "text": "سفارش خرید", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "برگ خرید", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bank-statement",
+      "phrases": [{ "text": "گواهی تمکن مالی", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "payslip",
+      "phrases": [{ "text": "حقوق و دستمزد", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "expense-report",
+      "phrases": [{ "text": "برآمد", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "صورت مالی", "weight": 20, "where": "title" },
+        { "text": "ترازنامه", "weight": 12 }
+      ]
+    },
+    {
+      "id": "tax-return",
+      "phrases": [
+        { "text": "اظهارنامه مالیاتی", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "tax-form",
+      "phrases": [
+        { "text": "اظهارنامه مالیاتی", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "قرارداد", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [{ "text": "قرارداد کاری", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "lease-agreement",
+      "phrases": [
+        { "text": "واسپاری", "weight": 18, "where": "title" },
+        { "text": "صاحب‌خانه", "weight": 8 }
+      ]
+    },
+    {
+      "id": "nda",
+      "phrases": [
+        { "text": "پیمان‌نامه عدم افشا", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "terms-and-conditions",
+      "phrases": [
+        { "text": "شرایط و مقررات سرویس‌دهی", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "وصیت‌نامه", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "mortgage-document",
+      "phrases": [{ "text": "وام مسکن", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "insurance-policy",
+      "phrases": [{ "text": "خودپرداخت", "weight": 8 }]
+    },
+    {
+      "id": "resume",
+      "phrases": [{ "text": "رزومه", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [{ "text": "نامه پوششی", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "timesheet",
+      "phrases": [{ "text": "کارت آمدوشد", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "certificate",
+      "phrases": [
+        { "text": "مدرک تحصیلی", "weight": 16, "where": "title" },
+        { "text": "دیپلم", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "thesis",
+      "phrases": [{ "text": "پایان‌نامه", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "research-paper",
+      "phrases": [{ "text": "نشر دانشگاهی", "weight": 10 }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "ثبت اختراع", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "نسخه پزشک", "weight": 20, "where": "title" },
+        { "text": "داروسازی", "weight": 10 }
+      ]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [
+        { "text": "مدارک پزشکی", "weight": 18, "where": "title" },
+        { "text": "تشخیص", "weight": 10 }
+      ]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "واکسیناسیون", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [{ "text": "پرسش‌نامه", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "warranty-document",
+      "phrases": [{ "text": "ضمانت‌نامه", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "user-guide",
+      "phrases": [{ "text": "راهنمای کاربر", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        { "text": "برگ اطلاعات ایمنی", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [{ "text": "ترسیم فنی", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bill-of-materials",
+      "phrases": [
+        { "text": "فهرست مواد اولیه", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "press-release",
+      "phrases": [{ "text": "اعلامیه مطبوعاتی", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "newsletter",
+      "phrases": [{ "text": "خبرنامه", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "دفترک", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [{ "text": "طرح کسب‌وکار", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "اوراق سفید", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-minutes",
+      "phrases": [{ "text": "صورتجلسه", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-agenda",
+      "phrases": [{ "text": "دستور کار", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "تفهیم‌نامه", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "invitation",
+      "phrases": [{ "text": "کارت دعوت", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "ticket",
+      "phrases": [{ "text": "بلیت", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "روادید", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [{ "text": "کنتور", "weight": 12 }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [{ "text": "دستور غذا", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "ارائه", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "گزارش", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "نامه", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "مجوز", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "legal-notice",
+      "phrases": [{ "text": "توقف و انصراف", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "حسابرسی", "weight": 12 }]
+    },
+    {
+      "id": "risk-assessment",
+      "phrases": [{ "text": "ارزیابی ریسک", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "inspection-report",
+      "phrases": [{ "text": "بازرسی", "weight": 10 }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "املاک و مستغلات", "weight": 8 }]
+    },
+    {
+      "id": "grant-agreement",
+      "phrases": [{ "text": "کمک‌هزینه", "weight": 12 }]
+    },
+    {
+      "id": "tender-document",
+      "phrases": [{ "text": "مناقصه", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "subscription-confirmation",
+      "phrases": [{ "text": "آبونمان", "weight": 10 }]
+    },
+    {
+      "id": "donation-receipt",
+      "phrases": [{ "text": "کمک مالی", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "ایمیل", "weight": 8 }]
+    },
+    {
+      "id": "book-ebook",
+      "phrases": [{ "text": "فهرست مطالب", "weight": 6 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "مجله", "weight": 10 }]
+    },
+    {
+      "id": "course-syllabus",
+      "phrases": [{ "text": "سیلابس", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "نیرویابی", "weight": 8 }]
+    },
+    {
+      "id": "statement-of-work",
+      "phrases": [{ "text": "بیانیه کار", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "service-agreement",
+      "phrases": [
+        { "text": "موافقت‌نامه سطح خدمات", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "purchase-agreement",
+      "phrases": [{ "text": "عقد بیع", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "legal-opinion",
+      "phrases": [{ "text": "نظر حقوقی", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "consent-form",
+      "phrases": [{ "text": "رضایت آگاهانه", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "discharge-summary",
+      "phrases": [
+        { "text": "مراقبت از بیمار بستری", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "lab-report",
+      "phrases": [{ "text": "علوم آزمایشگاهی", "weight": 12 }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "بیمه", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "quality-report",
+      "phrases": [{ "text": "کنترل کیفیت", "weight": 10 }]
+    },
+    {
+      "id": "test-report",
+      "phrases": [{ "text": "کالیبراسیون", "weight": 12 }]
+    },
+    {
+      "id": "safety-procedure",
+      "phrases": [{ "text": "ایمنی و بهداشت حرفه‌ای", "weight": 10 }]
+    },
+    {
+      "id": "datasheet",
+      "phrases": [{ "text": "دیتاشیت", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "api-documentation",
+      "phrases": [{ "text": "واسط برنامه‌نویسی کاربردی", "weight": 8 }]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [
+        { "text": "توافق‌نامه مجوز کاربر نهایی", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "sales-proposal",
+      "phrases": [{ "text": "پیشنهاد تجاری", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "proposal",
+      "phrases": [
+        { "text": "درخواست طرح پیشنهادی", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "بودجه", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "statement-of-account",
+      "phrases": [{ "text": "گواهی تمکن مالی", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "gift-certificate",
+      "phrases": [{ "text": "گیفت کارت", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "organization-chart",
+      "phrases": [{ "text": "چارت سازمانی", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "case-study",
+      "phrases": [{ "text": "مطالعه موردی", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "هیئت‌مدیره", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "سرمایه‌گذاری", "weight": 8 }]
+    },
+    {
+      "id": "letter-of-intent",
+      "phrases": [{ "text": "استعلام بها", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "analytics-report",
+      "phrases": [{ "text": "آنالیز وب", "weight": 10 }]
+    },
+    {
+      "id": "appraisal-report",
+      "phrases": [{ "text": "ارزیابی املاک", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "benefits-summary",
+      "phrases": [{ "text": "مزایای شغلی", "weight": 14 }]
+    },
+    {
+      "id": "grade-report",
+      "phrases": [{ "text": "کارنامه", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "کار در خانه", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "toc": [{ "pattern": "فهرست\\ مطالب" }],
+    "references": [{ "pattern": "کتاب‌شناسی" }],
+    "signature": [{ "pattern": "امضا" }]
+  }
+}

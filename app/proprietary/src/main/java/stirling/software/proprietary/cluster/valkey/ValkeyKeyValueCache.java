@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.ScanOptions;
@@ -26,8 +25,7 @@ public class ValkeyKeyValueCache implements KeyValueCache {
 
     @Override
     public void put(String namespace, String key, String value, Duration ttl) {
-        template.opsForValue()
-                .set(buildKey(namespace, key), value, ttl.toMillis(), TimeUnit.MILLISECONDS);
+        template.opsForValue().set(buildKey(namespace, key), value, ttl);
     }
 
     @Override
@@ -50,8 +48,10 @@ public class ValkeyKeyValueCache implements KeyValueCache {
                 keys.add(cursor.next());
             }
         }
-        if (!keys.isEmpty()) {
-            template.delete(keys);
+        // Batched UNLINK, 500 keys a call. On Cluster spring-data splits a cross-slot batch
+        // into one command per key (fanned out per node), so expect n commands there, not n/500.
+        for (int i = 0; i < keys.size(); i += 500) {
+            template.unlink(keys.subList(i, Math.min(i + 500, keys.size())));
         }
     }
 

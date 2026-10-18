@@ -15,6 +15,7 @@
 
 import type { ClassificationConfidence } from "@app/types/fileContext";
 import type { PoliciesByKey } from "@app/types/policies";
+import { editorTriggerOf } from "@app/policies/runOn";
 
 /** Key of the built-in Classification policy. */
 export const CLASSIFICATION_POLICY_KEY = "classification";
@@ -54,11 +55,8 @@ export function orderedRewritingPolicies(policies: PoliciesByKey): string[] {
   return Object.entries(policies)
     .filter(
       ([id, s]) =>
-        s.configured &&
-        s.enabled &&
-        Boolean(s.backendId) &&
-        s.runsOnEditor &&
-        (s.runOn ?? "upload") === "upload" &&
+        editorTriggerOf(s) === "upload" &&
+        !s.externalOutput &&
         policyDeliversOutputFiles(id),
     )
     .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))

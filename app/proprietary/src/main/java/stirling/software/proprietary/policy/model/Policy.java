@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.model;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /** A stored automation: ordered tool steps, input bindings, and output destinations. */
 public record Policy(
@@ -18,7 +19,8 @@ public record Policy(
         Long teamId,
         EditorConfig editor,
         /** The owning product surface; {@link #SURFACE_POLICY} unless stamped otherwise. */
-        String surface) {
+        String surface,
+        List<RoutingRule> routingRules) {
 
     public Policy {
         icon = icon == null ? "" : icon;
@@ -28,6 +30,7 @@ public record Policy(
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
         editor = editor == null ? EditorConfig.disabled() : editor;
         surface = surface == null || surface.isBlank() ? SURFACE_POLICY : surface;
+        routingRules = routingRules == null ? List.of() : List.copyOf(routingRules);
     }
 
     /** The record belongs to the org policies surface (the default). */
@@ -65,7 +68,8 @@ public record Policy(
                 outputIds,
                 teamId,
                 null,
-                SURFACE_POLICY);
+                SURFACE_POLICY,
+                List.of());
     }
 
     /**
@@ -97,7 +101,8 @@ public record Policy(
                 outputIds,
                 teamId,
                 editor,
-                SURFACE_POLICY);
+                SURFACE_POLICY,
+                List.of());
     }
 
     /**
@@ -158,15 +163,39 @@ public record Policy(
     /** A copy with the inline output replaced (e.g. resolved for the engine, or migrated). */
     public Policy withOutput(OutputSpec resolved) {
         return new Policy(
-                id, name, owner, enabled, required, icon, inputs, steps, resolved, outputIds,
-                teamId, editor, surface);
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                resolved,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                routingRules);
     }
 
     /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
     public Policy withOwner(String newOwner) {
         return new Policy(
-                id, name, newOwner, enabled, required, icon, inputs, steps, output, outputIds,
-                teamId, editor, surface);
+                id,
+                name,
+                newOwner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                routingRules);
     }
 
     /** A copy referencing the given saved output destinations. */
@@ -184,7 +213,8 @@ public record Policy(
                 newOutputIds,
                 teamId,
                 editor,
-                surface);
+                surface,
+                routingRules);
     }
 
     public Policy withEnabled(boolean newEnabled) {
@@ -201,7 +231,37 @@ public record Policy(
                 outputIds,
                 teamId,
                 editor,
-                surface);
+                surface,
+                routingRules);
+    }
+
+    public Policy withSteps(List<PipelineStep> newSteps) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                newSteps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                routingRules);
+    }
+
+    /**
+     * Every saved destination this policy can deliver to: the {@code outputIds} fallback plus each
+     * routing rule's destination. Used to resolve them all up front and to validate references.
+     */
+    public List<String> allOutputIds() {
+        return Stream.concat(outputIds.stream(), routingRules.stream().map(RoutingRule::outputId))
+                .filter(outputId -> outputId != null && !outputId.isBlank())
+                .distinct()
+                .toList();
     }
 
     public Policy withSurface(String newSurface) {
@@ -218,7 +278,8 @@ public record Policy(
                 outputIds,
                 teamId,
                 editor,
-                newSurface);
+                newSurface,
+                routingRules);
     }
 
     /**

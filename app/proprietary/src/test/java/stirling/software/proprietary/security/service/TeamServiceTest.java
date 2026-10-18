@@ -27,7 +27,7 @@ class TeamServiceTest {
         var team = new Team();
         team.setName("Marleyans");
 
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+        when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                 .thenReturn(Optional.of(team));
 
         Team result = teamService.getOrCreateDefaultTeam();
@@ -42,7 +42,7 @@ class TeamServiceTest {
         defaultTeam.setId(1L);
         defaultTeam.setName(teamName);
 
-        when(teamRepository.findByName(teamName)).thenReturn(Optional.empty());
+        when(teamRepository.findFirstByNameOrderByIdAsc(teamName)).thenReturn(Optional.empty());
         when(teamRepository.save(any(Team.class))).thenReturn(defaultTeam);
 
         Team result = teamService.getOrCreateDefaultTeam();
@@ -55,7 +55,7 @@ class TeamServiceTest {
         var team = new Team();
         team.setName("Eldians");
 
-        when(teamRepository.findByName(TeamService.INTERNAL_TEAM_NAME))
+        when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.INTERNAL_TEAM_NAME))
                 .thenReturn(Optional.of(team));
 
         Team result = teamService.getOrCreateInternalTeam();
@@ -70,10 +70,8 @@ class TeamServiceTest {
         internalTeam.setId(2L);
         internalTeam.setName(teamName);
 
-        when(teamRepository.findByName(teamName)).thenReturn(Optional.empty());
+        when(teamRepository.findFirstByNameOrderByIdAsc(teamName)).thenReturn(Optional.empty());
         when(teamRepository.save(any(Team.class))).thenReturn(internalTeam);
-        when(teamRepository.findByName(TeamService.INTERNAL_TEAM_NAME))
-                .thenReturn(Optional.empty());
 
         Team result = teamService.getOrCreateInternalTeam();
 

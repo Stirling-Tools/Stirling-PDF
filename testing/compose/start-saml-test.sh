@@ -116,7 +116,7 @@ if [ -z "$PREMIUM_KEY" ]; then
 fi
 
 if [ "$AUTO_LOGIN" = true ]; then
-    export PREMIUM_PROFEATURES_SSOAUTOLOGIN=true
+    export SECURITY_SSOAUTOLOGIN=true
     export SECURITY_LOGINMETHOD=saml2
     COMPOSE_UP_ARGS+=(--force-recreate)
     echo -e "${GREEN}✓ SSO auto-login enabled (SAML-only)${NC}"

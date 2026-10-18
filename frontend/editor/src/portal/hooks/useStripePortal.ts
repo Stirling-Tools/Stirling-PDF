@@ -3,7 +3,7 @@ import type { Wallet } from "@portal/api/billing";
 import { createPortalSession } from "@portal/billing/stripe";
 
 /**
- * Opens the Stripe customer portal for the wallet's team in a new tab. Card,
+ * Opens the Stripe customer portal for the wallet's team. Card,
  * invoice, and cancellation changes all live in Stripe's hosted portal — both
  * the header "Manage Payment" action and the payment-method card's "Update"
  * button route through here.
@@ -22,7 +22,7 @@ export function useStripePortal(wallet: Wallet | null) {
         teamId,
         returnUrl: window.location.href,
       });
-      window.open(url, "_blank", "noopener,noreferrer");
+      window.location.assign(url);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {

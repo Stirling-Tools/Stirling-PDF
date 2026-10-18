@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, render } from "@testing-library/react";
 import AuthCallback from "@app/routes/AuthCallback";
 import { supabase } from "@app/auth/supabase";
 import {
@@ -29,11 +29,11 @@ vi.mock("@app/utils/loginLanding", () => ({
 async function arriveAtCallback(search = "") {
   window.history.replaceState({}, "", `/auth/callback${search}`);
   render(<AuthCallback />);
-  // Real timers: the redirect timeout is only scheduled once the awaited session
-  // resolves, which a fake-timer sweep races rather than observes.
-  await waitFor(() => expect(mockNavigate).toHaveBeenCalled(), {
-    timeout: 3000,
-  });
+  // The redirect timeout is only scheduled once the awaited session resolves;
+  // the async sweep yields to pending promises before each timer, so it still
+  // fires, without waiting out the real delay.
+  await act(() => vi.runAllTimersAsync());
+  expect(mockNavigate).toHaveBeenCalled();
 }
 
 function landedOn() {
@@ -42,6 +42,7 @@ function landedOn() {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers();
   localStorage.clear();
   resetPendingDestinationForTests();
   mockNavigate.mockClear();
@@ -51,9 +52,13 @@ beforeEach(() => {
   } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>);
 });
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe("AuthCallback destination", () => {
   it("prefers an explicit next over anything remembered", async () => {
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     await arriveAtCallback("?next=%2Fprocessor%2Fusers");
     expect(landedOn()).toBe("/processor/users");
   });
@@ -65,15 +70,15 @@ describe("AuthCallback destination", () => {
 
   it("prefers a pending connect request over a remembered destination", async () => {
     rememberPendingConnect("req-1");
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     await arriveAtCallback();
     expect(landedOn()).toBe("/link?request=req-1");
   });
 
   it("uses a remembered destination when the URL carries nothing", async () => {
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     await arriveAtCallback();
-    expect(landedOn()).toBe("/processor/procurement");
+    expect(landedOn()).toBe("/procurement");
   });
 
   it("falls back to the role-based landing when nothing is remembered", async () => {
@@ -87,7 +92,7 @@ describe("AuthCallback destination", () => {
   });
 
   it("claims the remembered destination even when an explicit next wins", async () => {
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     await arriveAtCallback("?next=%2Fprocessor%2Fusers");
     expect(landedOn()).toBe("/processor/users");
 
@@ -99,7 +104,7 @@ describe("AuthCallback destination", () => {
 
   it("claims it even when a pending connect request wins", async () => {
     rememberPendingConnect("req-1");
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     await arriveAtCallback();
     expect(landedOn()).toBe("/link?request=req-1");
 

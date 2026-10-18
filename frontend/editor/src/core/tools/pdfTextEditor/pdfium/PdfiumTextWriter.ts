@@ -4,6 +4,7 @@ import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
 import { writeUtf16 } from "@app/services/pdfiumService";
 import { collectMemberPtrs } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 // Narrowest base-14 glyph ("i") is ~0.22em, so ink well under ~0.15em per
 // visible char means the font produced .notdef / zero-width filler.
@@ -85,20 +86,11 @@ function measureObjBboxPt(
   m: WrappedPdfiumModule,
   objPtr: number,
 ): { left: number; right: number } | null {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!m.FPDFPageObj_GetBounds(objPtr, l, b, r, t)) return null;
-    return {
-      left: m.pdfium.getValue(l, "float"),
-      right: m.pdfium.getValue(r, "float"),
-    };
-  } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
-  }
+  const buf = scratchPtr(m, SCRATCH.writerBbox, 16);
+  if (!m.FPDFPageObj_GetBounds(objPtr, buf, buf + 4, buf + 8, buf + 12))
+    return null;
+  return {
+    left: m.pdfium.getValue(buf, "float"),
+    right: m.pdfium.getValue(buf + 8, "float"),
+  };
 }

@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TextInput, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Icon } from "@app/ui/Icon";
 import "@app/tools/pdfTextEditor/components/FindBar.css";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextCommand";
 import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
@@ -305,7 +303,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
               disabled={matches.length === 0}
               aria-label={t("pdfTextEditor.find.previous", "Previous match")}
               data-testid="pdf-editor-find-prev"
-              leftSection={<KeyboardArrowUpIcon fontSize="small" />}
+              leftSection={<Icon name="chevron-up" size={20} />}
             />
           </Tooltip>
           <Tooltip label={t("pdfTextEditor.find.next", "Next match")}>
@@ -317,7 +315,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
               disabled={matches.length === 0}
               aria-label={t("pdfTextEditor.find.next", "Next match")}
               data-testid="pdf-editor-find-next"
-              leftSection={<KeyboardArrowDownIcon fontSize="small" />}
+              leftSection={<Icon name="chevron-down" size={20} />}
             />
           </Tooltip>
         </div>
@@ -392,7 +390,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           onClick={onClose}
           aria-label={t("pdfTextEditor.find.close", "Close find bar")}
           data-testid="pdf-editor-find-close"
-          leftSection={<CloseIcon fontSize="small" />}
+          leftSection={<Icon name="x" size={20} />}
         />
       </Tooltip>
     </div>

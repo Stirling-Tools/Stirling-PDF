@@ -5,13 +5,10 @@ import {
 import {
   objectToFormData,
   type ToolApiParams,
-  type ToolEndpoint,
 } from "@app/hooks/tools/shared/toolApiMapping";
+import { REMOVE_PASSWORD_ENDPOINT } from "@app/constants/toolEndpoints";
 
-// Defined here (not in the operation config) so both the mappers and the config
-// share one endpoint constant without a circular import via FileContext.
-export const REMOVE_PASSWORD_ENDPOINT =
-  "/api/v1/security/remove-password" satisfies ToolEndpoint;
+export { REMOVE_PASSWORD_ENDPOINT };
 type RemovePasswordApiParams = ToolApiParams[typeof REMOVE_PASSWORD_ENDPOINT];
 
 // Convert the tool's UI parameters into the remove-password request body. The
@@ -38,5 +35,11 @@ export const removePasswordFromApiParams = (
 export const buildRemovePasswordFormData = (
   parameters: RemovePasswordParameters,
   file: File,
-): FormData =>
-  objectToFormData(removePasswordToApiParams(parameters), { fileInput: file });
+): FormData => {
+  const form = objectToFormData(removePasswordToApiParams(parameters), {
+    fileInput: file,
+  });
+  if (parameters.ownerPassword)
+    form.set("ownerPassword", parameters.ownerPassword);
+  return form;
+};

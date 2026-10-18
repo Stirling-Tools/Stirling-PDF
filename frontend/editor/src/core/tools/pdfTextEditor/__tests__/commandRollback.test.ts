@@ -27,7 +27,7 @@ function tracked(
       if (fail?.revert) throw new Error(`${name} revert blew up`);
       log.push(`-${name}`);
     },
-  } as unknown as Command;
+  };
 }
 
 describe("CompositeCommand rollback", () => {
@@ -150,11 +150,10 @@ describe("HistoryStack forward-apply failures", () => {
   it("a failed execute does not coalesce the next edit into it", () => {
     const h = new HistoryStack();
     const log: string[] = [];
-    const keyed = (name: string, fail?: boolean): Command =>
-      ({
-        ...tracked(name, log, fail ? { apply: true } : undefined),
-        coalesceKey: () => "same",
-      }) as unknown as Command;
+    const keyed = (name: string, fail?: boolean): Command => ({
+      ...tracked(name, log, fail ? { apply: true } : undefined),
+      coalesceKey: () => "same",
+    });
     h.execute(keyed("a"), doc);
     try {
       h.execute(keyed("b", true), doc);

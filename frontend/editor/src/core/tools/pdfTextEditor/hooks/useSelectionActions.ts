@@ -3,6 +3,7 @@ import { DeleteImageCommand } from "@app/tools/pdfTextEditor/commands/DeleteImag
 import { ReplaceImageCommand } from "@app/tools/pdfTextEditor/commands/ReplaceImageCommand";
 import type { DecodedImage } from "@app/utils/pdfiumBitmapUtils";
 import { DeleteObjectCommand } from "@app/tools/pdfTextEditor/commands/DeleteObjectCommand";
+import { DeleteShapeCommand } from "@app/tools/pdfTextEditor/commands/DeleteShapeCommand";
 import { DuplicateRunCommand } from "@app/tools/pdfTextEditor/commands/DuplicateRunCommand";
 import { SetColourCommand } from "@app/tools/pdfTextEditor/commands/SetColourCommand";
 import { SetTextOutlineCommand } from "@app/tools/pdfTextEditor/commands/SetTextOutlineCommand";
@@ -170,10 +171,15 @@ export function useSelectionActions(store: EditorStore) {
     const sel = store.selection.value;
     const doc = store.document;
     if (!doc) return;
-    if (sel.runIds.length === 0 && sel.imageIds.length === 0) return;
+    if (
+      sel.runIds.length === 0 &&
+      sel.imageIds.length === 0 &&
+      sel.shapeIds.length === 0
+    )
+      return;
     // Collect one command per object but dispatch them as ONE composite: a
     // 30-object delete must be a single undo step, not 30.
-    const cmds: Array<DeleteObjectCommand | DeleteImageCommand> = [];
+    const cmds: Command[] = [];
     for (const page of doc.loadedPages()) {
       for (const run of page.runs) {
         if (sel.runIds.includes(run.id) && !run.locked) {
@@ -191,6 +197,16 @@ export function useSelectionActions(store: EditorStore) {
             new DeleteImageCommand({
               pageIndex: img.pageIndex,
               imageId: img.id,
+            }),
+          );
+        }
+      }
+      for (const shape of page.shapes) {
+        if (sel.shapeIds.includes(shape.id)) {
+          cmds.push(
+            new DeleteShapeCommand({
+              pageIndex: shape.pageIndex,
+              shapeId: shape.id,
             }),
           );
         }

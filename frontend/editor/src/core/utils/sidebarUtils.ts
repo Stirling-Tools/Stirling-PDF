@@ -11,10 +11,10 @@ export function getSidebarInfo(
   state: SidebarState,
 ): SidebarInfo {
   const { quickAccessRef, toolPanelRef } = refs;
-  const { sidebarsVisible, readerMode } = state;
+  const { readerMode } = state;
 
-  // Determine if tool panel should be active based on state
-  const isToolPanelActive = sidebarsVisible && !readerMode;
+  // Reading swaps the tool panel out for the reader's own rail.
+  const isToolPanelActive = !readerMode;
 
   let rect: DOMRect | null = null;
 

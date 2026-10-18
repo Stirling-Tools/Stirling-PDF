@@ -1,7 +1,8 @@
-"""Step definitions for the multi-node regression suite: drive the stack (testing/compose/docker-compose-multinode.yml) via the LB, docker exec curl/psql on individual nodes, and a throwaway minio/mc container."""
+"""Step definitions for the multi-node regression suite: drive the stack (testing/compose/docker-compose-multinode.yml) via the LB, docker exec curl/psql on individual nodes, and a throwaway Silo client container."""
 
 import io
 import json
+import re
 import subprocess
 import time
 import uuid
@@ -11,13 +12,22 @@ from behave import given, then, when
 
 LB_URL = "http://localhost:8080"
 NODES = ["multinode-stirling-1", "multinode-stirling-2"]
+# Must match CLUSTER_NODE_ID in testing/compose/docker-compose-multinode.yml.
+NODE_IDS = ["multinode-1", "multinode-2"]
 PG = "multinode-postgres"
 MINIO = "multinode-minio"
+# The container name is stable but its Valkey role is not (cluster shards, sentinel failover), so
+# every keyspace probe must fan out in cluster mode - see _backplane_keys.
+VALKEY = "multinode-valkey"
 BUCKET = "policy-data"
 SOURCE_PREFIX = "incoming/"
 OUTPUT_PREFIX = "processed/"
 ADMIN_USER = "admin"
 ADMIN_PASS = "stirling"
+# Seeded with ROLE_EXTRA_LIMITED_API_USER; admin and the other seeded users are unlimited.
+RATELIMIT_USER = "ratelimit@stirling.test"
+RATELIMIT_PASS = "Password123!"
+RATELIMIT_QUOTA = 20  # Role.EXTRA_LIMITED_API_USER.webCallsPerDay
 
 
 # --------------------------------------------------------------------------- helpers
@@ -95,9 +105,11 @@ def _names_on_node(node, path, token):
 
 
 def _policy_body(name, source_ids=None, enabled=True):
+    # Must be the 'inputs' shape. Policy has no sourceIds field, so a legacy
+    # {sourceIds, trigger} body binds inputs=null and silently stores a policy referencing nothing.
     return json.dumps({
-        "name": name, "enabled": enabled, "trigger": None,
-        "sourceIds": source_ids or [],
+        "name": name, "enabled": enabled,
+        "inputs": [{"sourceId": sid, "trigger": None} for sid in (source_ids or [])],
         "steps": [{"operation": "/api/v1/misc/compress-pdf", "parameters": {}}],
         "output": {"type": "inline", "options": {}},
     })
@@ -169,12 +181,12 @@ def _pdf_bytes(marker):
 
 
 def _mc(context, script, stdin=None):
-    """Run an mc script in a throwaway minio/mc container on the cluster network."""
+    """Run an mc script in a throwaway Silo client container on the cluster network."""
     net = getattr(context, "_net", None) or _network()
     context._net = net
     full = f"mc alias set local http://minio:9000 minioadmin minioadmin >/dev/null 2>&1 && {script}"
     args = ["docker", "run", "-i", "--rm", "--network", net, "--entrypoint", "/bin/sh",
-            "minio/mc", "-c", full]
+            "pgsty/mc:RELEASE.2026-09-13T00-00-00Z", "-c", full]
     return _sh(args, stdin=stdin, timeout=90)
 
 
@@ -397,15 +409,83 @@ def step_run_visible_every(context):
 
 
 # --------------------------------------------------------------------------- rate limiting
+# --cluster call prefixes each node's reply with 'host:port: '; a stirling: key never looks like that.
+_NODE_PREFIX = re.compile(r"^[A-Za-z0-9_.\-]+:\d+:\s?")
+
+
+def _cluster_mode():
+    """True when this Valkey runs in cluster mode, so a plain KEYS would see one shard only."""
+    rc, out, err = _sh(["docker", "exec", VALKEY, "valkey-cli", "info", "cluster"], timeout=30)
+    assert rc == 0, f"valkey INFO cluster failed: {err.strip() or out.strip()}"
+    return "cluster_enabled:1" in out
+
+
+def _backplane_keys():
+    """Every stirling:* key in the backplane, whatever the Valkey topology."""
+    if _cluster_mode():
+        # A fan-out failure must be loud: falling back to a single-shard KEYS would silently
+        # report a fraction of the keyspace and every downstream count would be wrong.
+        rc, out, err = _sh(["docker", "exec", VALKEY, "valkey-cli", "--cluster", "call",
+                            "--cluster-only-masters", "127.0.0.1:6379", "keys", "stirling:*"],
+                           timeout=60)
+        assert rc == 0, f"valkey cluster fan-out failed: {err.strip() or out.strip()}"
+    else:
+        rc, out, err = _sh(["docker", "exec", VALKEY, "valkey-cli", "keys", "stirling:*"], timeout=30)
+        assert rc == 0, f"valkey probe failed: {err.strip() or out.strip()}"
+    return [k for k in (_NODE_PREFIX.sub("", ln.strip()) for ln in out.splitlines())
+            if k.startswith("stirling:")]
+
+
+def _ratelimit_login():
+    """Token for the seeded EXTRA_LIMITED_API_USER (20 web calls/day, unlike the unlimited admin)."""
+    r = requests.post(f"{LB_URL}/api/v1/auth/login",
+                      json={"username": RATELIMIT_USER, "password": RATELIMIT_PASS}, timeout=15)
+    assert r.status_code == 200, (
+        f"login as the rate-limit probe user {RATELIMIT_USER} failed: HTTP {r.status_code}. "
+        "The stack must be seeded (start-multinode-test.sh without --no-seed).")
+    return r.json()["session"]["access_token"]
+
+
+def _post_until_limited(token, budget):
+    """POST through the LB until a 429; returns (requests_made, limited)."""
+    for i in range(1, budget + 1):
+        marker = uuid.uuid4().hex[:8]
+        r = requests.post(f"{LB_URL}/api/v1/general/rotate-pdf",
+                          headers={"Authorization": f"Bearer {token}"},
+                          files={"fileInput": (f"rl-{marker}.pdf", _pdf_bytes(marker),
+                                               "application/pdf")},
+                          data={"angle": 90}, timeout=60)
+        if r.status_code == 429:
+            return i, True
+    return budget, False
+
+
 @then("the rate-limit counter should be shared across nodes")
 def step_ratelimit_shared(context):
-    # In cluster mode the ValkeyRateLimitStore holds counters in Valkey; probe that a key exists.
-    net = context._net or _network()
-    rc, out, err = _sh(["docker", "run", "--rm", "--network", net, "--entrypoint", "/bin/sh",
-                        "valkey/valkey:8-alpine", "-c",
-                        "valkey-cli -h valkey keys '*'"], timeout=30)
-    assert rc == 0, f"valkey probe failed: {err.strip()}"
-    assert out.strip(), "no keys in Valkey - rate-limit/backplane state is not shared"
+    # nginx round-robins with no affinity, so per-node buckets would need ~quota x nodes requests
+    # to trip. Budgeting quota + 4 means a 429 in time proves one shared counter.
+    token = _ratelimit_login()
+    budget = RATELIMIT_QUOTA + 4
+    made, limited = _post_until_limited(token, budget)
+    assert limited, (
+        f"{budget} POSTs through the LB never hit 429 although {RATELIMIT_USER} is capped at "
+        f"{RATELIMIT_QUOTA}/day - each node is counting in its own process, so the effective "
+        "limit multiplied by the node count")
+    buckets = [k for k in _backplane_keys() if k.startswith("stirling:rl:")]
+    assert buckets, (
+        f"429 arrived after {made} requests but the backplane holds no stirling:rl: key - the "
+        "counters are not in Valkey")
+
+
+@then("every application node should be registered in the backplane")
+def step_nodes_registered(context):
+    # Assert the exact node ids: counting keys lets a stale heartbeat from an earlier run stand in
+    # for a node that never registered.
+    keys = set(_backplane_keys())
+    missing = [nid for nid in NODE_IDS if f"stirling:nodes:{nid}" not in keys]
+    assert not missing, (
+        f"no stirling:nodes: heartbeat for {missing}; the backplane holds "
+        f"{sorted(k for k in keys if k.startswith('stirling:nodes:'))}")
 
 
 # --------------------------------------------------------------------------- failover

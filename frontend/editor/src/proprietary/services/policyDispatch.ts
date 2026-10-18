@@ -17,8 +17,10 @@ import {
   markDispatched,
   recordRunStart,
 } from "@app/components/policies/policyRunStore";
-import type { FileId } from "@app/types/file";
+import type { DispatchableFileId } from "@app/components/policies/policyLocalPass";
 import type { StirlingFile } from "@app/types/fileContext";
+import { extractErrorMessage } from "@app/utils/toolErrorHandler";
+import { generateId } from "@app/utils/generateId";
 
 /** Wait for an upload's bytes to land in IndexedDB (~5s): the stub surfaces in the
  *  file list before its bytes are committed, so an eager fetch would miss the file. */
@@ -27,15 +29,18 @@ const FILE_WAIT_MS = 250;
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Resolve the file's bytes, fire a backend run, and record it. */
+/** Dispatch a file and record the attempt, including request failures so required policies block it. */
 export async function runPolicyOnFile(
   policyKey: string,
   backendId: string,
-  fileId: FileId,
+  // Branded, so a file whose classification is locked cannot be dispatched: the only
+  // way to obtain one is dispatchableFileId(), which refuses locked stubs.
+  fileId: DispatchableFileId,
   fileName: string,
   // Chained (downstream) dispatch — jumps the dispatch queue so a file mid-chain
   // finishes its flow before new files start (see acquireDispatchSlot).
   priority = false,
+  externalOutput = false,
 ): Promise<void> {
   // A freshly-uploaded file's bytes are written to IndexedDB asynchronously, so
   // its stub can appear in the file list a beat before getStirlingFile resolves
@@ -56,41 +61,87 @@ export async function runPolicyOnFile(
     await delay(FILE_WAIT_MS);
     file = await tryGetFile();
   }
+  // Reinforces the branded parameter at the boundary: read from the persisted stub rather
+  // than the caller's word, so an authoritative classification stays settled whichever
+  // route reached here.
+  const persisted = await fileStorage
+    .getStirlingFileStub(fileId)
+    .catch(() => null);
+  if (persisted?.classificationLocked === true) return;
   if (!file) {
     // File genuinely gone (removed before it could run) — mark so we don't loop.
     markDispatched(policyKey, fileId);
     return;
   }
+  await dispatchPolicyFile(
+    policyKey,
+    backendId,
+    file,
+    fileId,
+    priority,
+    externalOutput,
+    fileName,
+  );
+}
+
+/** Submit a copy; external delivery records activity without importing results into the editor. */
+export async function dispatchPolicyFile(
+  policyKey: string,
+  backendId: string,
+  file: File,
+  fileId?: string,
+  priority = false,
+  externalOutput = false,
+  fileName = file.name,
+): Promise<void> {
   // Bounded upload window — see MAX_CONCURRENT_DISPATCHES. Only the POST is
   // gated; the IDB wait above never holds a slot.
+  const target = resolvePolicyRunTarget();
   await acquireDispatchSlot(priority);
+  const startedAt = Date.now();
   try {
-    const target = resolvePolicyRunTarget();
     // Recorded against a document this browser can resolve. One file per run, which is the only
     // shape the server keeps a reference for.
-    const runId = await runStoredPolicy(backendId, [file], fileId);
+    const runId = await runStoredPolicy(
+      backendId,
+      [file],
+      fileId,
+      "background",
+    );
     // recordRunStart marks this (policy, file) dispatched as it records the run.
     recordRunStart({
       runId,
       policyKey,
-      fileId,
+      fileId: fileId ?? "",
       fileName,
+      externalOutput,
       fileSize: file.size,
       target,
       status: "PENDING",
       outputs: [],
       error: null,
-      startedAt: Date.now(),
+      startedAt,
     });
   } catch (err) {
-    // Dispatch failed (e.g. policy deleted/404 or backend offline). Mark dispatched so we don't hammer;
-    // the absent run simply won't appear in the activity feed. If the backend did
-    // start a run we never recorded, reconcileServerRuns rediscovers it.
+    // No server run ID is available. The terminal local record blocks required-policy inputs
+    // and exposes manual recovery without sending status polls for an invented server run.
+    recordRunStart({
+      runId: `dispatch-failed:${generateId()}`,
+      policyKey,
+      fileId: fileId ?? "",
+      fileName,
+      fileSize: file.size,
+      target,
+      externalOutput,
+      status: "FAILED",
+      outputs: [],
+      error: extractErrorMessage(err),
+      startedAt,
+    });
     console.debug(
       `[PolicyAutoRun] Failed to dispatch policy ${policyKey} (${backendId}):`,
       err,
     );
-    markDispatched(policyKey, fileId);
   } finally {
     releaseDispatchSlot();
   }

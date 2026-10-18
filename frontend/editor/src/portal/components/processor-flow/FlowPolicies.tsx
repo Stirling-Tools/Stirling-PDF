@@ -45,7 +45,7 @@ export function FlowPolicies({
             }}
           >
             <span className="portal-pf__policy-icon" aria-hidden>
-              {policyCategoryIcon(policy.key, { fontSize: "1.125rem" })}
+              {policyCategoryIcon(policy.key, "1.125rem")}
             </span>
             <span className="portal-pf__policy-label">
               {t(policy.labelKey)}

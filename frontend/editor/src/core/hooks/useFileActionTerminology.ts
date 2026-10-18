@@ -21,6 +21,18 @@ export function useFileActionTerminology() {
     download: t("download", "Download"),
     downloadAll: t("workbenchBar.downloadAll", "Download All"),
     downloadSelected: t("fileManager.downloadSelected", "Download Selected"),
+    downloadSelectedPages: t(
+      "pageTracks.downloadSelectedPages",
+      "Download selected pages",
+    ),
+    downloadEachPage: t(
+      "pageTracks.downloadEachPage",
+      "Download each page individually",
+    ),
+    downloadAsOneFile: t(
+      "pageTracks.downloadAsOneFile",
+      "Download as one file",
+    ),
     downloadUnavailable: t(
       "downloadUnavailable",
       "Download unavailable for this item",

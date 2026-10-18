@@ -28,6 +28,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import stirling.software.proprietary.billing.BillingStepLimit;
 import stirling.software.saas.payg.model.JobSource;
 
 /**
@@ -81,6 +82,10 @@ public class PricingPolicy implements Serializable {
     @Column(name = "free_tier_units", nullable = false)
     private Long freeTierUnits = 0L;
 
+    /** Null inherits the default policy's Team allowance. */
+    @Column(name = "team_included_units")
+    private Long teamIncludedUnits;
+
     /**
      * Max tool steps allowed in one process before it splits, keyed by the caller's {@link
      * JobSource}. Self-hosted teams typically get a higher limit via a per-team policy override.
@@ -96,6 +101,11 @@ public class PricingPolicy implements Serializable {
     @MapKeyColumn(name = "job_source", length = 32)
     @Column(name = "step_limit", nullable = false)
     private Map<JobSource, Integer> stepLimits = new HashMap<>();
+
+    /** Successful tool calls covered by one charge, using the shared fallback if unconfigured. */
+    public int resolveStepLimit(JobSource source) {
+        return BillingStepLimit.resolve(stepLimits == null ? null : stepLimits.get(source));
+    }
 
     /**
      * Stripe Price IDs this policy resolves to — one per currency we support. Currency is not

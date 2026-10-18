@@ -133,6 +133,7 @@ public class PortalInfraAuditService {
             return "processing";
         }
         return switch (t) {
+            case ORG_OWNERSHIP_CHANGE -> "elevation";
             case USER_LOGIN, USER_LOGOUT, USER_FAILED_LOGIN -> "auth";
             case SETTINGS_CHANGED, USER_PROFILE_UPDATE -> "config";
             case PDF_PROCESS, FILE_OPERATION -> isSecurityPath(path) ? "security" : "processing";
@@ -190,6 +191,7 @@ public class PortalInfraAuditService {
             return prettyTool(path);
         }
         return switch (t) {
+            case ORG_OWNERSHIP_CHANGE -> "Organization ownership changed";
             case USER_LOGIN -> "User signed in";
             case USER_LOGOUT -> "User signed out";
             case USER_FAILED_LOGIN -> "Failed sign-in attempt";

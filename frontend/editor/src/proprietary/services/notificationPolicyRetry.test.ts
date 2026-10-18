@@ -34,12 +34,15 @@ const policies = vi.hoisted(() => ({
 }));
 vi.mock("@app/services/policyStorage", () => ({
   loadPolicies: () => policies.value,
+  // Derived from the same fixture, so swapping it invalidates the placeability cache exactly as
+  // a real write to storage would.
+  rawStoredPolicies: () => JSON.stringify(policies.value ?? null),
 }));
 
 // The REAL run store: a mock would assert the call and prove nothing about the record.
 const { getRun, isDispatched, recordRunStart, resetPolicyRuns, updateRun } =
   await import("@app/components/policies/policyRunStore");
-const { rerunPolicy, rechainPolicyOnDocument } =
+const { canPlacePolicy, rerunPolicy, rechainPolicyOnDocument } =
   await import("@app/services/notificationPolicyRetry");
 
 const target = { policyId: "pol-1", fileId: "f-1" };
@@ -50,6 +53,21 @@ beforeEach(() => {
   policies.value = { security: { backendId: "pol-1" } };
   localStorage.clear();
   resetPolicyRuns();
+});
+
+describe("canPlacePolicy", () => {
+  it("is true only while this browser still holds the policy the failure names", () => {
+    expect(canPlacePolicy("pol-1")).toBe(true);
+
+    // What a team switch leaves behind: the row still names a policy this cache never had.
+    policies.value = { security: { backendId: "pol-other" } };
+    expect(canPlacePolicy("pol-1")).toBe(false);
+  });
+
+  it("is false rather than throwing when the cache cannot be read at all", () => {
+    policies.value = null as unknown as typeof policies.value;
+    expect(canPlacePolicy("pol-1")).toBe(false);
+  });
 });
 
 describe("rerunPolicy", () => {

@@ -13,6 +13,7 @@ import {
 } from "@app/constants/connection";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 import i18n from "@app/i18n";
+import { requireAutomationSession } from "@app/services/serverAutomationSession";
 
 /**
  * Auth headers for raw fetch() calls (the AI SSE stream) — desktop variant.
@@ -34,9 +35,12 @@ let lastBackendToast = 0;
 
 // Extended config for custom properties
 interface ExtendedRequestConfig extends InternalAxiosRequestConfig {
+  automationSession?: string;
   operationName?: string;
   skipBackendReadyCheck?: boolean;
   skipAuthRedirect?: boolean;
+  /** Caller reports its own failures; the shared error toasts stay quiet. */
+  suppressErrorToast?: boolean;
   _retry?: boolean;
   _isSaaSRequest?: boolean;
 }
@@ -56,10 +60,14 @@ export function setupApiInterceptors(client: AxiosInstance): void {
   client.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
       const extendedConfig = config as ExtendedRequestConfig;
+      if (extendedConfig.automationSession) {
+        await requireAutomationSession(extendedConfig.automationSession);
+      }
 
       // IMPORTANT: Check backend readiness BEFORE modifying URL
       // Pattern matching in shouldSkipBackendReadyCheck() needs original relative URL
       const originalUrl = extendedConfig.url;
+
       const skipCheck = extendedConfig.skipBackendReadyCheck === true;
       const skipForSaaSBackend =
         await operationRouter.shouldSkipBackendReadyCheck(originalUrl);
@@ -124,9 +132,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
           extendedConfig.withCredentials = false;
         }
       } catch (error) {
-        console.error("[apiClientSetup] Error in request interceptor:", error);
-        // Continue with request even if routing/auth logic fails
-        // This ensures requests aren't blocked by interceptor errors
+        return Promise.reject(error);
       }
 
       // Backend readiness check (for local backend)
@@ -265,19 +271,6 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         window.dispatchEvent(
           new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }),
         );
-      }
-
-      // Handle 403 Forbidden - unauthorized access
-      if (error.response?.status === 403) {
-        alert({
-          alertType: "error",
-          title: i18n.t("auth.accessDenied", "Access Denied"),
-          body: i18n.t(
-            "auth.insufficientPermissions",
-            "You do not have permission to perform this action.",
-          ),
-          isPersistentPopup: false,
-        });
       }
 
       return Promise.reject(error);

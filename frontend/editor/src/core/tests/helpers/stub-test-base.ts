@@ -1,9 +1,9 @@
 import { test as base, expect } from "@playwright/test";
 import {
   bypassOnboarding,
+  fulfillUnstubbedApis,
   mockAppApis,
   seedCookieConsent,
-  skipOnboarding,
   type MockAppApiOptions,
 } from "@app/tests/helpers/api-stubs";
 import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
@@ -15,7 +15,8 @@ import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
  *   1. Has the cookie-consent cookie seeded (banner never renders)
  *   2. Has onboarding flags set in localStorage (modal never renders)
  *   3. Has all bootstrap API endpoints stubbed via `mockAppApis()`
- *   4. Has already navigated to `/` by default (set `autoGoto: false` to skip)
+ *   4. Gets an empty 500 for any other `/api/v1` call, never the dev proxy
+ *   5. Has already navigated to `/` by default (set `autoGoto: false` to skip)
  *
  * Usage:
  *   import { test, expect } from "@app/tests/helpers/stub-test-base";
@@ -45,6 +46,8 @@ type StubFixtures = {
   stubOptions: MockAppApiOptions;
   autoGoto: false | string;
   seedJwt: boolean;
+  /** The library's view. Set it where a test reads cards or rows by shape. */
+  filesViewMode: "grid" | "list" | null;
 };
 
 // Minimal JWT-shaped value — the proprietary auth client only checks for
@@ -59,25 +62,41 @@ export const test = base.extend<StubFixtures>({
   // the app instead of racing a redirect on every single test.
   autoGoto: ["/editor", { option: true }],
   seedJwt: [false, { option: true }],
+  filesViewMode: [null, { option: true }],
 
-  page: async ({ page, stubOptions, autoGoto, seedJwt }, use) => {
+  // Set up with the context, before any hook adds its own context routes, so
+  // the fallback stays the last handler tried.
+  context: async ({ context }, use) => {
+    await fulfillUnstubbedApis(context);
+    await use(context);
+  },
+
+  page: async (
+    { page, stubOptions, autoGoto, seedJwt, filesViewMode },
+    use,
+  ) => {
     suppressNativeFilePicker(page);
     await seedCookieConsent(page);
+    await bypassOnboarding(page);
     if (seedJwt) {
-      // Logged-in users hit the orchestrator path that surfaces the
-      // analytics opt-in / MFA prompts — use the stronger bypass-all flag
-      // so those overlays don't block clicks.
-      await bypassOnboarding(page);
       await page.addInitScript((token) => {
         localStorage.setItem("stirling_jwt", token);
       }, STUB_JWT);
-    } else {
-      await skipOnboarding(page);
+    }
+    if (filesViewMode) {
+      await page.addInitScript((mode) => {
+        localStorage.setItem("stirling.filesPageViewMode", mode);
+      }, filesViewMode);
+    }
+    if (filesViewMode) {
+      await page.addInitScript((mode) => {
+        localStorage.setItem("stirling.filesPageViewMode", mode);
+      }, filesViewMode);
     }
     await mockAppApis(page, stubOptions);
     if (autoGoto !== false) {
       // waitUntil: 'domcontentloaded' avoids hanging on third-party CDN
-      // resources (iconify, posthog, stripe) the stub doesn't mock — the
+      // resources (posthog, stripe) the stub doesn't mock — the
       // default 'load' event waits for ALL subresources, which can time out
       // on slow runners and is rarely what tests actually need.
       await page.goto(autoGoto, { waitUntil: "domcontentloaded" });

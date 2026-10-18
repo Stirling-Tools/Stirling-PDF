@@ -1,4 +1,5 @@
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { useTranslation } from "react-i18next";
+import { Icon } from "@app/ui/Icon";
 import "@app/components/tools/validateSignature/reportView/styles.css";
 
 const ThumbnailPreview = ({
@@ -8,12 +9,19 @@ const ThumbnailPreview = ({
   thumbnailUrl?: string | null;
   fileName: string;
 }) => {
+  const { t } = useTranslation();
   if (thumbnailUrl) {
     return (
       <div className="thumbnail-container">
         <img
           src={thumbnailUrl}
-          alt={`${fileName} thumbnail`}
+          alt={t(
+            "validateSignature.report.thumbnailAlt",
+            "{{fileName}} thumbnail",
+            {
+              fileName,
+            },
+          )}
           className="thumbnail-image"
         />
       </div>
@@ -22,7 +30,7 @@ const ThumbnailPreview = ({
 
   return (
     <div className="thumbnail-placeholder">
-      <PictureAsPdfIcon fontSize="large" />
+      <Icon name="file-pdf" size={35} />
     </div>
   );
 };

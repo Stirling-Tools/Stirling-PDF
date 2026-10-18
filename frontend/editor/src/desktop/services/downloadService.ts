@@ -2,6 +2,7 @@ import type {
   DownloadRequest,
   DownloadResult,
 } from "@core/services/downloadService";
+import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 import {
   saveToLocalPath,
   showSaveDialog,
@@ -12,6 +13,7 @@ export type { DownloadRequest, DownloadResult };
 export async function downloadFile(
   request: DownloadRequest,
 ): Promise<DownloadResult> {
+  assertFilesNotBlocked([request.fileId]);
   if (request.localPath) {
     const result = await saveToLocalPath(request.data, request.localPath);
     if (!result.success) {
@@ -25,6 +27,7 @@ export async function downloadFile(
     return { cancelled: true };
   }
 
+  assertFilesNotBlocked([request.fileId]);
   const result = await saveToLocalPath(request.data, savePath);
   if (!result.success) {
     throw new Error(result.error || "Failed to save file");

@@ -28,6 +28,27 @@ describe("policyStorage", () => {
     expect(reloaded.retention.configured).toBe(false);
   });
 
+  it.each(["security", "builder-pipeline"])(
+    "validates cached input endpoints for %s without losing the unloaded state",
+    (policyKey) => {
+      for (const [stored, expected] of [
+        ["/api/v1/misc/compress-pdf", "/api/v1/misc/compress-pdf"],
+        ["/unknown", null],
+        [null, null],
+        [undefined, undefined],
+      ]) {
+        localStorage.setItem(
+          "stirling-policies-state",
+          JSON.stringify({
+            [policyKey]: { configured: true, firstOperation: stored },
+          }),
+        );
+
+        expect(loadPolicies()[policyKey].firstOperation).toBe(expected);
+      }
+    },
+  );
+
   it("merges partial field-value updates without clobbering siblings", () => {
     updatePolicy("security", { fieldValues: { detectPII: false } });
     updatePolicy("security", { reviewerEmail: "x@y.com" });

@@ -48,12 +48,12 @@ export default function InviteAccept() {
     title: `${t("invite.welcome", "Welcome to Stirling PDF")} - Stirling PDF`,
     description: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogTitle: `${t("invite.welcome", "Welcome to Stirling PDF")} - Stirling PDF`,
     ogDescription: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogImage: `${baseUrl}/og_images/home.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
@@ -205,9 +205,10 @@ export default function InviteAccept() {
               {inviteData.email}
             </Text>
             <Text size="xs" c="dimmed">
-              {t("invite.linkExpires", "Link expires")}:{" "}
-              {new Date(inviteData.expiresAt).toLocaleDateString()} at{" "}
-              {new Date(inviteData.expiresAt).toLocaleTimeString()}
+              {t("invite.linkExpiresAt", "Link expires: {{date}} at {{time}}", {
+                date: new Date(inviteData.expiresAt).toLocaleDateString(),
+                time: new Date(inviteData.expiresAt).toLocaleTimeString(),
+              })}
             </Text>
           </Stack>
         </Paper>

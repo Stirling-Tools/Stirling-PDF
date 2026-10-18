@@ -1,7 +1,6 @@
 package stirling.software.common.util;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -74,12 +73,11 @@ public class CbzUtils {
                 }
 
                 // Pass 2: load ONE image at a time peak memory = max(single image)
+                ZipBombGuard.Budget budget = new ZipBombGuard.Budget();
                 for (String imageName : sortedImageNames) {
                     ZipEntry entry = zipFile.getEntry(imageName);
                     try (InputStream is = zipFile.getInputStream(entry)) {
-                        ByteArrayOutputStream imgBaos = new ByteArrayOutputStream();
-                        is.transferTo(imgBaos);
-                        byte[] imageBytes = imgBaos.toByteArray();
+                        byte[] imageBytes = budget.readEntry(is);
                         try {
                             PDImageXObject pdImage =
                                     PDImageXObject.createFromByteArray(
@@ -102,6 +100,8 @@ public class CbzUtils {
                             log.warn("Error processing image {}: {}", imageName, e.getMessage());
                         }
                         // imageBytes eligible for GC after each iteration
+                    } catch (ZipBombGuard.ZipBombException e) {
+                        throw ExceptionUtils.createCbzInvalidFormatException(e);
                     } catch (IOException e) {
                         log.warn("Error reading image {}: {}", imageName, e.getMessage());
                     }

@@ -21,21 +21,22 @@ const { fetchSnapshot, startAgreement, issueQuote } = vi.hoisted(() => ({
   issueQuote: vi.fn(),
 }));
 
-vi.mock("@portal/api/procurement", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@portal/api/procurement")>()),
+vi.mock("@app/portal/api/procurement", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/portal/api/procurement")>()),
   fetchSnapshot,
   startAgreement,
   issueQuote,
 }));
-vi.mock("@portal/contexts/usePortalLinked", () => ({
+vi.mock("@app/portal/contexts/usePortalLinked", () => ({
   usePortalLinked: () => true,
 }));
 
 import {
   useProcurement,
   type ProcurementController,
-} from "@portal/components/procurement/useProcurement";
-import type { QuoteResult } from "@portal/api/procurement";
+} from "@app/portal/components/procurement/useProcurement";
+import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
+import type { QuoteResult } from "@app/portal/api/procurement";
 
 const SNAPSHOT = {
   dealId: 1,
@@ -134,4 +135,27 @@ describe("useProcurement", () => {
     expect(ctl.open).toBe(true);
     expect(ctl.error).toBeNull();
   });
+});
+
+it("does not compete with session recovery when the procurement read needs sign-in", async () => {
+  fetchSnapshot.mockRejectedValue(new SaasSessionRequiredError());
+  mount();
+  await waitFor(() => expect(ctl.loading).toBe(false));
+  expect(ctl.loadError).toBeNull();
+});
+it("closes the purchase dialog on expired authorization without replaying the mutation", async () => {
+  mount();
+  await waitFor(() => expect(ctl.started).toBe(true));
+  act(() => {
+    ctl.setOpen(true);
+    ctl.setExtra("setup");
+  });
+  startAgreement.mockRejectedValue(new SaasSessionRequiredError());
+  await act(async () => {
+    await ctl.onAcceptQuote();
+  });
+  expect(ctl.open).toBe(false);
+  expect(ctl.extra).toBeNull();
+  expect(ctl.error).toBeNull();
+  expect(startAgreement).toHaveBeenCalledOnce();
 });

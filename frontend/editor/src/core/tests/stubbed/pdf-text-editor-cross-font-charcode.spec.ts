@@ -61,12 +61,12 @@ test("editor sends the run's font name to encode-charcodes", async ({
     sel.removeAllRanges();
     sel.addRange(range);
     document.execCommand("insertText", false, "s");
-  }, id as string);
+  }, id);
   await page.waitForTimeout(1500);
 
   expect(bodies.length, "endpoint was called").toBeGreaterThan(0);
   const named = bodies.filter(
-    (b) => typeof b.fontName === "string" && (b.fontName as string).length > 0,
+    (b) => typeof b.fontName === "string" && b.fontName.length > 0,
   );
   expect(
     named.length,
@@ -79,8 +79,7 @@ test("editor sends the run's font name to encode-charcodes", async ({
   // "ABCDEF+Family" subset as bare "Family".
   const hashed = bodies.filter(
     (b) =>
-      typeof b.fontSha256 === "string" &&
-      /^[0-9a-f]{64}$/.test(b.fontSha256 as string),
+      typeof b.fontSha256 === "string" && /^[0-9a-f]{64}$/.test(b.fontSha256),
   );
   expect(
     hashed.length,

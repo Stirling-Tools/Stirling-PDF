@@ -10,7 +10,7 @@ const serverPlan: PlanTier = {
   period: "month",
   features: [],
   highlights: [],
-  lookupKey: "selfhosted:server:monthly",
+  lookupKey: "selfhosted:team:monthly",
 };
 
 /**

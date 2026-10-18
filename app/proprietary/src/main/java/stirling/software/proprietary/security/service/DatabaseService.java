@@ -109,15 +109,18 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     private final ApplicationProperties.Datasource datasourceProps;
     private final DataSource dataSource;
+    private final org.springframework.context.ApplicationEventPublisher events;
     private final DatabaseNotificationServiceInterface backupNotificationService;
 
     public DatabaseService(
             ApplicationProperties.Datasource datasourceProps,
             DataSource dataSource,
-            DatabaseNotificationServiceInterface backupNotificationService) {
+            DatabaseNotificationServiceInterface backupNotificationService,
+            org.springframework.context.ApplicationEventPublisher events) {
         this.BACKUP_DIR = Path.of(InstallationPathConfig.getBackupPath()).normalize();
         this.datasourceProps = datasourceProps;
         this.dataSource = dataSource;
+        this.events = events;
         this.backupNotificationService = backupNotificationService;
         moveBackupFiles();
     }
@@ -267,6 +270,7 @@ public class DatabaseService implements DatabaseServiceInterface {
                         BACKUP_PREFIX + "user_" + dateNow.format(myFormatObj) + SQL_SUFFIX);
         Files.copy(tempTemplatePath, insertOutputFilePath);
         Files.deleteIfExists(tempTemplatePath);
+        events.publishEvent(new stirling.software.proprietary.service.DatabaseRestored());
         return true;
     }
 

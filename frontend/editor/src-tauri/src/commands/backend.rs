@@ -1,14 +1,39 @@
 use tauri_plugin_shell::ShellExt;
 use tauri::Manager;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use crate::utils::{add_log, app_data_dir};
 use crate::state::connection_state::{AppConnectionState, ConnectionMode};
+
+/// Removes shutdown markers left by previous sessions. The current path cannot
+/// exist yet, so it is never a sweep target.
+fn sweep_stale_shutdown_files(work_dir: &Path, keep: &Path) {
+    let Ok(entries) = std::fs::read_dir(work_dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path == keep {
+            continue;
+        }
+        let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+            continue;
+        };
+        if name.starts_with(".backend-stop") {
+            let _ = std::fs::remove_file(&path);
+        }
+    }
+}
 
 // Store backend process handle and port globally
 static BACKEND_PROCESS: Mutex<Option<tauri_plugin_shell::process::CommandChild>> = Mutex::new(None);
 static BACKEND_STARTING: Mutex<bool> = Mutex::new(false);
 static BACKEND_PORT: Mutex<Option<u16>> = Mutex::new(None);
+// Set by the event loop when the backend exits, so cleanup can wait for it.
+static BACKEND_EXITED: AtomicBool = AtomicBool::new(true);
+static BACKEND_SHUTDOWN_FILE: Mutex<Option<PathBuf>> = Mutex::new(None);
 
 // Helper function to reset starting flag
 fn reset_starting_flag() {
@@ -100,16 +125,107 @@ fn find_stirling_jar(resource_dir: &PathBuf) -> Result<PathBuf, String> {
         return Err(error_msg);
     }
 
-    // Sort by filename to get the latest version (case-insensitive)
+    // Sort by parsed version, newest first. A name sort would rank 3.9.0 above
+    // 3.10.0, launching an older backend than the one that shipped.
     jar_files.sort_by(|a, b| {
-        let name_a = a.file_name().to_string_lossy().to_ascii_lowercase();
-        let name_b = b.file_name().to_string_lossy().to_ascii_lowercase();
-        name_b.cmp(&name_a) // Reverse order to get latest first
+        let key_a = version_key(&a.file_name().to_string_lossy());
+        let key_b = version_key(&b.file_name().to_string_lossy());
+        key_b.cmp(&key_a)
     });
 
     let jar_path = jar_files[0].path();
     add_log(format!("📋 Selected JAR: {:?}", jar_path.file_name().unwrap()));
     Ok(jar_path)
+}
+
+/// One component of a prerelease suffix. Recognized stages sort by maturity
+/// (snapshot < alpha < beta < milestone < rc) rather than alphabetically, so a
+/// development `SNAPSHOT` cannot outrank a release candidate. Unrecognized words
+/// stay text, and a bare stage sorts below the same stage with a number (`rc` <
+/// `rc1`) because a shorter token list precedes its own extension.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum PrereleaseToken {
+    Stage(u8),
+    Numeric(u64),
+    Text(String),
+}
+
+/// Maturity rank for a known prerelease stage, or `None` to keep the word as
+/// text. Rankings ascend toward the release candidate so a validated build wins.
+fn stage_rank(word: &str) -> Option<u8> {
+    Some(match word {
+        "snapshot" | "dev" => 0,
+        "alpha" => 1,
+        "beta" => 2,
+        "milestone" => 3,
+        "rc" => 4,
+        _ => return None,
+    })
+}
+
+/// Split a prerelease suffix into ordered tokens, dropping separators so
+/// `rc.10` and `rc10` compare the same.
+fn prerelease_tokens(suffix: &str) -> Vec<PrereleaseToken> {
+    let mut tokens = Vec::new();
+    let mut chars = suffix.chars().peekable();
+    while let Some(&current) = chars.peek() {
+        if current.is_ascii_digit() {
+            let mut value: u64 = 0;
+            while let Some(&digit) = chars.peek() {
+                match digit.to_digit(10) {
+                    Some(d) => {
+                        value = value.saturating_mul(10).saturating_add(u64::from(d));
+                        chars.next();
+                    }
+                    None => break,
+                }
+            }
+            tokens.push(PrereleaseToken::Numeric(value));
+        } else if current.is_ascii_alphabetic() {
+            let mut text = String::new();
+            while let Some(&letter) = chars.peek() {
+                if letter.is_ascii_alphabetic() {
+                    text.push(letter.to_ascii_lowercase());
+                    chars.next();
+                } else {
+                    break;
+                }
+            }
+            match stage_rank(&text) {
+                Some(rank) => tokens.push(PrereleaseToken::Stage(rank)),
+                None => tokens.push(PrereleaseToken::Text(text)),
+            }
+        } else {
+            chars.next();
+        }
+    }
+    tokens
+}
+
+/// Ordering key for `stirling-pdf-<version>.jar`: the numeric release components,
+/// whether the version is a final release (1 for final release, 0 for prerelease),
+/// and the prerelease identifiers. Anything unparseable counts as zero so comparison never
+/// panics, while final releases sort above prereleases, and prereleases order by stage
+/// maturity (snapshot < alpha < beta < milestone < rc) then by stage number (rc2 < rc10).
+fn version_key(name: &str) -> (Vec<u64>, u8, Vec<PrereleaseToken>) {
+    let lower = name.to_ascii_lowercase();
+    let version = lower
+        .split_once("stirling-pdf-")
+        .map(|(_, rest)| rest)
+        .and_then(|rest| rest.strip_suffix(".jar"))
+        .unwrap_or(&lower);
+    let (release, suffix) = match version.split_once(['-', '_']) {
+        Some((release, suffix)) => (release, suffix),
+        None => (version, ""),
+    };
+    (
+        release
+            .split('.')
+            .map(|part| part.parse::<u64>().unwrap_or(0))
+            .collect(),
+        if suffix.is_empty() { 1 } else { 0 },
+        prerelease_tokens(suffix),
+    )
 }
 
 // Normalize path to remove Windows UNC prefix
@@ -261,6 +377,21 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         }
     }
 
+    // Sentinel for a graceful stop on every platform; signals are not portable.
+    // The name is per launch so a marker a previous session failed to clear can
+    // never stop this one; stale markers are swept here, before this launch
+    // owns one.
+    let shutdown_file = work_dir.join(format!(
+        ".backend-stop-{}-{}",
+        std::process::id(),
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|elapsed| elapsed.as_millis())
+            .unwrap_or(0)
+    ));
+    sweep_stale_shutdown_files(&work_dir, &shutdown_file);
+    *BACKEND_SHUTDOWN_FILE.lock().unwrap() = Some(shutdown_file.clone());
+
     let sidecar_command = app
         .shell()
         .command(java_path.to_str().unwrap())
@@ -269,7 +400,8 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         .env("TAURI_PARENT_PID", std::process::id().to_string())
         .env("STIRLING_PDF_CONFIG_DIR", config_dir.to_str().unwrap())
         .env("STIRLING_PDF_LOG_DIR", log_dir.to_str().unwrap())
-        .env("STIRLING_PDF_WORK_DIR", work_dir.to_str().unwrap());
+        .env("STIRLING_PDF_WORK_DIR", work_dir.to_str().unwrap())
+        .env("STIRLING_PDF_SHUTDOWN_FILE", shutdown_file.to_str().unwrap());
 
     add_log("⚙️ Starting backend with bundled JRE...".to_string());
 
@@ -281,7 +413,7 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
             error_msg
         })?;
 
-    // Store the process handle
+    BACKEND_EXITED.store(false, Ordering::Release);
     {
         let mut process_guard = BACKEND_PROCESS.lock().unwrap();
         *process_guard = Some(child);
@@ -366,7 +498,7 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
                             _ => println!("❌ Process terminated with code: {}", code),
                         }
                     }
-                    // Clear the stored process handle
+                    BACKEND_EXITED.store(true, Ordering::Release);
                     let mut process_guard = BACKEND_PROCESS.lock().unwrap();
                     *process_guard = None;
                 }
@@ -467,21 +599,172 @@ pub fn get_backend_port() -> Option<u16> {
     *port_guard
 }
 
-// Cleanup function to stop backend on app exit
+// Stop the backend on app exit: request a graceful Spring shutdown, then force.
 pub fn cleanup_backend() {
-    let mut process_guard = BACKEND_PROCESS.lock().unwrap();
-    if let Some(child) = process_guard.take() {
-        let pid = child.pid();
-        add_log(format!("🧹 App shutting down, cleaning up backend process (PID: {})", pid));
+    let child = BACKEND_PROCESS.lock().unwrap().take();
+    let Some(child) = child else { return };
+    let pid = child.pid();
+    add_log(format!("App shutting down, stopping backend (PID: {})", pid));
 
-        match child.kill() {
-            Ok(_) => {
-                add_log(format!("✅ Backend process (PID: {}) terminated during cleanup", pid));
-            }
-            Err(e) => {
-                add_log(format!("❌ Failed to terminate backend process during cleanup: {}", e));
-                println!("❌ Failed to terminate backend process during cleanup: {}", e);
-            }
+    if let Some(path) = BACKEND_SHUTDOWN_FILE.lock().unwrap().clone() {
+        if let Err(e) = std::fs::write(&path, b"stop") {
+            add_log(format!("Could not write shutdown file: {}", e));
         }
+    }
+
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while !BACKEND_EXITED.load(Ordering::Acquire) && Instant::now() < deadline {
+        std::thread::sleep(Duration::from_millis(50));
+    }
+
+    if BACKEND_EXITED.load(Ordering::Acquire) {
+        add_log(format!("Backend (PID: {}) stopped gracefully", pid));
+    } else {
+        add_log(format!("Backend (PID: {}) did not stop in time, killing", pid));
+        let _ = child.kill();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{find_stirling_jar, version_key};
+
+    #[test]
+    fn version_key_orders_numerically_not_lexically() {
+        let mut names = [
+            "stirling-pdf-2.9.0.jar",
+            "stirling-pdf-3.9.0.jar",
+            "stirling-pdf-3.10.0.jar",
+            "stirling-pdf-2.14.2.jar",
+        ];
+        names.sort_by_key(|name| std::cmp::Reverse(version_key(name)));
+        assert_eq!(
+            names,
+            [
+                "stirling-pdf-3.10.0.jar",
+                "stirling-pdf-3.9.0.jar",
+                "stirling-pdf-2.14.2.jar",
+                "stirling-pdf-2.9.0.jar",
+            ]
+        );
+    }
+
+    #[test]
+    fn version_key_ranks_prereleases_below_the_release() {
+        assert!(
+            version_key("stirling-pdf-3.0.0-SNAPSHOT.jar") < version_key("stirling-pdf-3.0.0.jar")
+        );
+        assert!(version_key("stirling-pdf-3.0.0-rc1.jar") < version_key("stirling-pdf-3.0.0.jar"));
+        assert!(
+            version_key("stirling-pdf-3.0.0-rc1.jar") < version_key("stirling-pdf-3.0.0-rc2.jar")
+        );
+
+        let mut names = [
+            "stirling-pdf-3.0.0-rc1.jar",
+            "stirling-pdf-3.0.0.jar",
+            "stirling-pdf-3.0.0-rc2.jar",
+            "stirling-pdf-2.14.3.jar",
+        ];
+        names.sort_by_key(|name| std::cmp::Reverse(version_key(name)));
+        assert_eq!(
+            names,
+            [
+                "stirling-pdf-3.0.0.jar",
+                "stirling-pdf-3.0.0-rc2.jar",
+                "stirling-pdf-3.0.0-rc1.jar",
+                "stirling-pdf-2.14.3.jar",
+            ]
+        );
+    }
+
+    #[test]
+    fn version_key_orders_prerelease_numbers_numerically() {
+        assert!(
+            version_key("stirling-pdf-3.0.0-rc2.jar") < version_key("stirling-pdf-3.0.0-rc10.jar")
+        );
+
+        let mut names = [
+            "stirling-pdf-3.0.0-rc10.jar",
+            "stirling-pdf-3.0.0-rc2.jar",
+            "stirling-pdf-3.0.0-rc1.jar",
+        ];
+        names.sort_by_key(|name| std::cmp::Reverse(version_key(name)));
+        assert_eq!(
+            names,
+            [
+                "stirling-pdf-3.0.0-rc10.jar",
+                "stirling-pdf-3.0.0-rc2.jar",
+                "stirling-pdf-3.0.0-rc1.jar",
+            ]
+        );
+    }
+
+    #[test]
+    fn version_key_tolerates_non_numeric_versions() {
+        let key = version_key("not-a-version.jar");
+        assert_eq!(key.0, vec![0]);
+        assert_eq!(key.1, 0);
+        assert_eq!(version_key("stirling-pdf-3.0.0.jar").1, 1);
+    }
+
+    #[test]
+    fn version_key_parses_the_token_anywhere_in_the_name() {
+        // find_stirling_jar accepts any name containing "stirling-pdf", so a
+        // prefixed build must still yield a real version rather than 0.
+        assert!(
+            version_key("stirling-pdf-3.9.0.jar") < version_key("vendor-stirling-pdf-3.10.0.jar")
+        );
+
+        let mut names = ["vendor-stirling-pdf-3.10.0.jar", "stirling-pdf-3.9.0.jar"];
+        names.sort_by_key(|name| std::cmp::Reverse(version_key(name)));
+        assert_eq!(
+            names,
+            ["vendor-stirling-pdf-3.10.0.jar", "stirling-pdf-3.9.0.jar"]
+        );
+    }
+
+    #[test]
+    fn version_key_ranks_snapshot_below_release_candidates() {
+        // A development SNAPSHOT must never outrank a validated release candidate.
+        assert!(
+            version_key("stirling-pdf-3.0.0-SNAPSHOT.jar")
+                < version_key("stirling-pdf-3.0.0-rc1.jar")
+        );
+        assert!(
+            version_key("stirling-pdf-3.0.0-alpha1.jar")
+                < version_key("stirling-pdf-3.0.0-beta1.jar")
+        );
+        assert!(
+            version_key("stirling-pdf-3.0.0-beta1.jar") < version_key("stirling-pdf-3.0.0-rc1.jar")
+        );
+
+        let mut names = [
+            "stirling-pdf-3.0.0-SNAPSHOT.jar",
+            "stirling-pdf-3.0.0-rc1.jar",
+            "stirling-pdf-3.0.0.jar",
+        ];
+        names.sort_by_key(|name| std::cmp::Reverse(version_key(name)));
+        assert_eq!(
+            names,
+            [
+                "stirling-pdf-3.0.0.jar",
+                "stirling-pdf-3.0.0-rc1.jar",
+                "stirling-pdf-3.0.0-SNAPSHOT.jar",
+            ]
+        );
+    }
+
+    #[test]
+    fn find_stirling_jar_prefers_release_candidate_over_snapshot() {
+        let dir = std::env::temp_dir().join(format!("stirling-jar-select-{}", std::process::id()));
+        let libs = dir.join("libs");
+        std::fs::create_dir_all(&libs).unwrap();
+        std::fs::write(libs.join("stirling-pdf-3.0.0-SNAPSHOT.jar"), b"").unwrap();
+        std::fs::write(libs.join("stirling-pdf-3.0.0-rc1.jar"), b"").unwrap();
+
+        let selected = find_stirling_jar(&dir).unwrap();
+
+        assert_eq!(selected.file_name().unwrap(), "stirling-pdf-3.0.0-rc1.jar");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

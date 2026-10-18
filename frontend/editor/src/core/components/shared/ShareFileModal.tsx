@@ -10,8 +10,7 @@ import {
   Select,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import LinkIcon from "@mui/icons-material/Link";
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 
 import apiClient from "@app/services/apiClient";
@@ -255,9 +254,7 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({
                   <Button
                     variant="tertiary"
                     size="sm"
-                    leftSection={
-                      <ContentCopyRoundedIcon style={{ fontSize: 16 }} />
-                    }
+                    leftSection={<Icon name="copy" size={16} />}
                     onClick={handleCopyLink}
                   >
                     {t("storageShare.copy", "Copy")}
@@ -311,7 +308,7 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({
             {t("cancel", "Cancel")}
           </Button>
           <Button
-            leftSection={<LinkIcon style={{ fontSize: 18 }} />}
+            leftSection={<Icon name="link" size={18} />}
             onClick={handleGenerateLink}
             loading={isWorking}
             disabled={!shareLinksEnabled}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { Icon } from "@app/ui/Icon";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
@@ -35,7 +35,7 @@ const ValidateSignature = (props: BaseToolProps) => {
 
   const REPORT_VIEW_ID = "validateSignatureReport";
   const REPORT_WORKBENCH_ID = "custom:validateSignatureReport" as const;
-  const reportIcon = useMemo(() => <PictureAsPdfIcon fontSize="small" />, []);
+  const reportIcon = useMemo(() => <Icon name="file-pdf" size={20} />, []);
 
   const base = useBaseTool(
     "validateSignature",

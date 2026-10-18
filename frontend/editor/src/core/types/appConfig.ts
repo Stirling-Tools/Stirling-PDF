@@ -6,8 +6,8 @@ export interface AppConfig {
   appNameNavbar?: string;
   languages?: string[];
   defaultLocale?: string;
-  logoStyle?: "modern" | "classic";
   enableLogin?: boolean;
+  honorOwnerPasswords?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
   enableOAuth?: boolean;
@@ -15,6 +15,7 @@ export interface AppConfig {
   isAdmin?: boolean;
   shouldShowUpdate?: boolean;
   enableAlphaFunctionality?: boolean;
+  stirlingOfficeConversion?: boolean;
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;
   enableScarf?: boolean | null;
@@ -71,6 +72,14 @@ export interface AppConfig {
   timestampCustomTsaUrls?: string[];
   timestampTsaPresets?: { label: string; url: string }[];
   aiEngineEnabled?: boolean;
+  aiFeatures?: {
+    chat?: boolean;
+    documentQuestions?: boolean;
+    createPdf?: boolean;
+    mathAuditor?: boolean;
+    pdfComment?: boolean;
+    classify?: boolean;
+  };
 }
 
 export type AppConfigBootstrapMode = "blocking" | "non-blocking";

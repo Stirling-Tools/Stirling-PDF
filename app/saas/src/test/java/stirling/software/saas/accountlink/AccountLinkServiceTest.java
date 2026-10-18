@@ -92,6 +92,31 @@ class AccountLinkServiceTest {
         verify(repo, never()).save(any());
     }
 
+    @Test
+    void rename_updatesOnlyTheLabelAndAllowsClearingIt() {
+        when(repo.renameForTeam(42L, 11L, "London production")).thenReturn(1);
+        when(repo.renameForTeam(42L, 11L, null)).thenReturn(1);
+
+        assertThat(service.rename(42L, 11L, "  London production  ")).isTrue();
+        assertThat(service.rename(42L, 11L, "  ")).isTrue();
+        verify(repo).renameForTeam(42L, 11L, "London production");
+        verify(repo).renameForTeam(42L, 11L, null);
+        verify(repo, never()).save(any());
+    }
+
+    @Test
+    void rename_cannotChangeAnotherTeamsInstance() {
+        assertThat(service.rename(42L, 11L, "London production")).isFalse();
+        verify(repo).renameForTeam(42L, 11L, "London production");
+        verify(repo, never()).save(any());
+    }
+
+    @Test
+    void rename_unknownInstanceReturnsFalse() {
+        assertThat(service.rename(42L, 404L, "London production")).isFalse();
+        verify(repo, never()).save(any());
+    }
+
     private static LinkedInstance instance(Long id, Long teamId, LocalDateTime revokedAt) {
         LinkedInstance i = new LinkedInstance();
         i.setInstanceId(id);

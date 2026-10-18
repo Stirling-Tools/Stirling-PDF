@@ -6,13 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import jakarta.persistence.LockModeType;
 
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
 
-@Repository
 public interface PaygTeamExtensionsRepository extends JpaRepository<PaygTeamExtensions, Long> {
 
     Optional<PaygTeamExtensions> findByStripeCustomerId(String stripeCustomerId);

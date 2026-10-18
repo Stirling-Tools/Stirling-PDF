@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { Blob as NodeBlob } from "node:buffer";
 
 import {
   FREE_LIMIT_MODAL_EVENT,
@@ -9,7 +10,59 @@ import {
   extractSignupCategory,
   extractSubscribed,
   handlePaygError,
+  normalizePaygError,
 } from "@app/services/paygErrorInterceptor";
+
+describe("download entitlement errors", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("recognises a signup-required JSON Blob before session refresh", async () => {
+    vi.stubGlobal("Blob", NodeBlob);
+    const error = {
+      response: {
+        status: 401,
+        data: new NodeBlob(
+          [
+            JSON.stringify({
+              error: "SIGNUP_REQUIRED",
+              category: "AI",
+            }),
+          ],
+          { type: "application/json" },
+        ),
+      },
+    };
+    await normalizePaygError(error);
+    expect(classifyPaygError(error)).toBe("SIGNUP_REQUIRED");
+    const listener = vi.fn();
+    window.addEventListener("payg:signupRequired", listener);
+    try {
+      handlePaygError("SIGNUP_REQUIRED", error);
+      expect(listener.mock.calls[0][0].detail).toEqual({
+        category: "AI",
+      });
+    } finally {
+      window.removeEventListener("payg:signupRequired", listener);
+    }
+  });
+
+  it("leaves non-JSON authentication errors for the existing handler", async () => {
+    vi.stubGlobal("Blob", NodeBlob);
+    const data = new NodeBlob(["Unauthorized"]);
+    const error = { response: { status: 401, data } };
+    await normalizePaygError(error);
+    expect(error.response.data).toBe(data);
+    expect(classifyPaygError(error)).toBeNull();
+  });
+
+  it("also recognises string JSON and keeps ordinary failures unchanged", async () => {
+    const error = {
+      response: { status: 402, data: '{"error":"FEATURE_DEGRADED"}' },
+    };
+    await normalizePaygError(error);
+    expect(classifyPaygError(error)).toBe("FEATURE_DEGRADED");
+  });
+});
 
 describe("classifyPaygError", () => {
   it("returns FEATURE_DEGRADED for 402 + error sentinel", () => {

@@ -65,6 +65,8 @@ class JwtAuthenticationFilterTest {
 
     @Mock private AuthenticationEntryPoint authenticationEntryPoint;
 
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @InjectMocks private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test

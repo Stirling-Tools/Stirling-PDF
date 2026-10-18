@@ -1,7 +1,7 @@
 import React from "react";
 import { Group, Loader, Progress, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 
 /** Wrap a bar control in the bar's standard tooltip, or pass it through when
@@ -40,7 +40,7 @@ export function PolicyEnforcingTooltip({
   return (
     <Stack gap={6} py={2} w={200}>
       <Group gap={6} wrap="nowrap">
-        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Icon name="shield" size={13} />
         <Text size="xs" fw={600}>
           {t(
             "policy.blockingAction",

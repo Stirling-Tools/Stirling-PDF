@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.constraints.NotBlank;
@@ -36,11 +41,11 @@ import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.workflow.dto.CertificateInfo;
 import stirling.software.proprietary.workflow.dto.CertificateValidationResponse;
 import stirling.software.proprietary.workflow.dto.ParticipantRequest;
+import stirling.software.proprietary.workflow.dto.SignRequestSummaryDTO;
 import stirling.software.proprietary.workflow.dto.WorkflowCreationRequest;
-import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
-import stirling.software.proprietary.workflow.service.SigningFinalizationService;
+import stirling.software.proprietary.workflow.service.SigningSessionFinalizationService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 
 import tools.jackson.databind.ObjectMapper;
@@ -48,6 +53,7 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/security")
+@PreAuthorize("@principalPolicy.isHumanUser(authentication)")
 @Tag(
         name = "Signing Sessions",
         description = "Signing session lifecycle and participant management")
@@ -56,7 +62,7 @@ public class SigningSessionController {
 
     private final WorkflowSessionService workflowSessionService;
     private final UserService userService;
-    private final SigningFinalizationService signingFinalizationService;
+    private final SigningSessionFinalizationService signingSessionFinalizationService;
     private final CertificateSubmissionValidator certificateSubmissionValidator;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -152,6 +158,8 @@ public class SigningSessionController {
             User owner = getCurrentUser(principal);
             workflowSessionService.deleteSession(sessionId, owner);
             return ResponseEntity.noContent().build();
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         } catch (Exception e) {
             log.error("Error deleting session {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -176,6 +184,8 @@ public class SigningSessionController {
                     workflowSessionService.getSessionWithParticipantsForOwner(sessionId, owner);
             return ResponseEntity.ok(
                     stirling.software.proprietary.workflow.util.WorkflowMapper.toResponse(session));
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error adding participants to session {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -240,38 +250,10 @@ public class SigningSessionController {
 
         try {
             User owner = getCurrentUser(principal);
-            WorkflowSession session =
-                    workflowSessionService.getSessionWithParticipantsForOwner(sessionId, owner);
-
-            byte[] originalPdf = workflowSessionService.getOriginalFile(sessionId);
-            byte[] pdf = signingFinalizationService.finalizeDocument(session, originalPdf);
-
-            String filename = session.getDocumentName().replace(".pdf", "") + "_shared_signed.pdf";
-            workflowSessionService.storeProcessedFile(session, pdf, filename);
-            workflowSessionService.finalizeSession(sessionId, owner);
-            workflowSessionService.deleteOriginalFile(session);
-
-            try {
-                signingFinalizationService.clearSensitiveMetadata(session);
-            } catch (Exception e) {
-                log.error(
-                        "SECURITY: Failed to clear sensitive metadata for session {} "
-                                + "(participants: {}). Keystore credentials may remain in the "
-                                + "database until manual cleanup.",
-                        sessionId,
-                        session.getParticipants() != null
-                                ? session.getParticipants().stream()
-                                        .map(WorkflowParticipant::getEmail)
-                                        .toList()
-                                : "unknown",
-                        e);
-                throw new ResponseStatusException(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Document signed successfully but post-signing cleanup failed. "
-                                + "Contact your administrator to complete the cleanup.");
-            }
-
-            return WebResponseUtils.bytesToWebResponse(pdf, filename);
+            var document = signingSessionFinalizationService.finalizeSession(sessionId, owner);
+            return WebResponseUtils.bytesToWebResponse(document.bytes(), document.filename());
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error finalizing session {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -307,6 +289,18 @@ public class SigningSessionController {
     // ===== SIGN REQUESTS (Participant View) =====
 
     @Operation(summary = "List sign requests for authenticated user")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Participant requests, including finalized, declined and expired access",
+            content =
+                    @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array =
+                                    @ArraySchema(
+                                            schema =
+                                                    @Schema(
+                                                            implementation =
+                                                                    SignRequestSummaryDTO.class))))
     @Transactional(readOnly = true)
     @GetMapping(value = "/cert-sign/sign-requests")
     public ResponseEntity<?> listSignRequests(Principal principal) {
@@ -324,8 +318,18 @@ public class SigningSessionController {
         }
     }
 
-    @Transactional(readOnly = true)
     @Operation(summary = "Get sign request detail for participant")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Participant request with submitted signature previews and progress",
+            content =
+                    @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema =
+                                    @Schema(
+                                            implementation =
+                                                    stirling.software.proprietary.workflow.dto
+                                                            .SignRequestDetailDTO.class)))
     @GetMapping(value = "/cert-sign/sign-requests/{sessionId}")
     public ResponseEntity<?> getSignRequestDetail(
             @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
@@ -380,6 +384,8 @@ public class SigningSessionController {
             User user = getCurrentUser(principal);
             workflowSessionService.signDocument(sessionId, user, request);
             return ResponseEntity.noContent().build();
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (IllegalArgumentException e) {
             log.error("Invalid sign request for session {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -402,6 +408,8 @@ public class SigningSessionController {
             User user = getCurrentUser(principal);
             workflowSessionService.declineSignRequest(sessionId, user);
             return ResponseEntity.noContent().build();
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error declining sign request for session {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -423,6 +431,8 @@ public class SigningSessionController {
             @RequestParam("certType") String certType,
             @RequestParam(value = "password", required = false) String password,
             @RequestParam(value = "p12File", required = false) MultipartFile p12File,
+            @RequestParam(value = "privateKeyFile", required = false) MultipartFile privateKeyFile,
+            @RequestParam(value = "certFile", required = false) MultipartFile certFile,
             @RequestParam(value = "jksFile", required = false) MultipartFile jksFile,
             Principal principal) {
 
@@ -431,7 +441,8 @@ public class SigningSessionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (!"SERVER".equalsIgnoreCase(certType)
+        if (!"PEM".equalsIgnoreCase(certType)
+                && !"SERVER".equalsIgnoreCase(certType)
                 && !"USER_CERT".equalsIgnoreCase(certType)
                 && (p12File == null || p12File.isEmpty())
                 && (jksFile == null || jksFile.isEmpty())) {
@@ -441,7 +452,11 @@ public class SigningSessionController {
 
         try {
             byte[] keystoreBytes = null;
-            if (p12File != null && !p12File.isEmpty()) {
+            if ("PEM".equalsIgnoreCase(certType)) {
+                keystoreBytes =
+                        workflowSessionService.buildPkcs12FromPem(
+                                privateKeyFile, certFile, password);
+            } else if (p12File != null && !p12File.isEmpty()) {
                 keystoreBytes = p12File.getBytes();
             } else if (jksFile != null && !jksFile.isEmpty()) {
                 keystoreBytes = jksFile.getBytes();

@@ -14,8 +14,7 @@ export const CREDIT_COSTS = {
  * Based on backend ResourceWeight annotations.
  *
  * Typed as {@code Partial} so overlays can contribute per-build-only tool ids
- * (e.g. experimental tools in the prototypes build) without every overlay
- * needing to know every other overlay's ids. Unknown ids fall back to
+ * without every overlay needing to know every other overlay's ids. Unknown ids fall back to
  * {@link CREDIT_COSTS.MEDIUM} in {@link getToolCreditCost}.
  */
 export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
@@ -72,7 +71,6 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   pageLayout: CREDIT_COSTS.MEDIUM,
   redact: CREDIT_COSTS.MEDIUM,
   removeCertSign: CREDIT_COSTS.MEDIUM,
-  scannerEffect: CREDIT_COSTS.MEDIUM,
   replaceColor: CREDIT_COSTS.MEDIUM,
   annotate: CREDIT_COSTS.MEDIUM,
   formFill: CREDIT_COSTS.MEDIUM,

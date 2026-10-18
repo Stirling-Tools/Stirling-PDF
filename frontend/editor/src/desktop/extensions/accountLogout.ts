@@ -34,8 +34,8 @@ export function useAccountLogout() {
       ) {
         localStorage.setItem("server_url", currentConfig.server_config.url);
       }
-      // Always switch to local after logout so the app remains usable
-      await connectionModeService.switchToLocal();
+      if (!currentConfig.require_sign_in)
+        await connectionModeService.switchToLocal();
 
       window.history.replaceState({}, "", "/");
       // No reload needed — AppProviders remounts the SaaS provider tree via

@@ -22,6 +22,7 @@ export function RenameTeamModal({
   onDone,
 }: RenameTeamModalProps) {
   const { t } = useTranslation();
+  const createsFromDefault = currentName === "Default";
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +53,11 @@ export function RenameTeamModal({
       open={open}
       onClose={onClose}
       width="sm"
-      title={t("users.renameTeam.title", "Rename team")}
+      title={
+        createsFromDefault
+          ? t("users.renameTeam.defaultTitle", "Create team from Default")
+          : t("users.renameTeam.title", "Rename team")
+      }
       footer={
         <div className="portal-users__modal-footer">
           <Button variant="tertiary" size="sm" onClick={onClose}>
@@ -63,12 +68,22 @@ export function RenameTeamModal({
             onClick={() => void submit()}
             disabled={saving || !name.trim()}
           >
-            {t("users.renameTeam.apply", "Rename")}
+            {createsFromDefault
+              ? t("users.renameTeam.defaultApply", "Create and move")
+              : t("users.renameTeam.apply", "Rename")}
           </Button>
         </div>
       }
     >
       <div className="portal-users__invite-body">
+        {createsFromDefault && (
+          <p className="portal-users__sub">
+            {t(
+              "users.renameTeam.defaultDescription",
+              "Default will remain available for new users. Everyone currently in Default will be moved to the new team.",
+            )}
+          </p>
+        )}
         <FormField label={t("users.renameTeam.name", "Team name")} required>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
         </FormField>

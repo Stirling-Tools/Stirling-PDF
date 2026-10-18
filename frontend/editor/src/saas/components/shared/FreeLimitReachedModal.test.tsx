@@ -19,6 +19,7 @@ const wallet: Wallet = {
   billingPeriodEnd: "2026-06-30",
   billableUsed: 500,
   billableLimit: 500,
+  freeUserAllowance: 5,
   freeAllowance: 500,
   freeRemaining: 0,
   pricePerDocMinor: 2,

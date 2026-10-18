@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { fitTextToWidth, NO_FIT } from "@app/tools/pdfTextEditor/util/fitText";
 

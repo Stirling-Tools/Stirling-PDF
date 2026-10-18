@@ -35,9 +35,7 @@ export default function Footer({
   const finalCookiePolicy = cookiePolicy ?? footerInfo?.cookiePolicy;
   const finalImpressum = impressum ?? footerInfo?.impressum;
 
-  const { showCookiePreferences } = useCookieConsent({
-    analyticsEnabled: finalAnalyticsEnabled,
-  });
+  const { showCookiePreferences } = useCookieConsent();
 
   // Default URLs
   const defaultTermsUrl = "https://www.stirling.com/terms";

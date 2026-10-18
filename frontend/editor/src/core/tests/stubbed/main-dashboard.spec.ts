@@ -2,6 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import {
   openSettings,
   expandSettingsGroups,
+  revealInPicker,
 } from "@app/tests/helpers/ui-helpers";
 
 test.describe("2. Main Dashboard / Home Page", () => {
@@ -23,29 +24,35 @@ test.describe("2. Main Dashboard / Home Page", () => {
       // Tool search lives in the global super search bar, always mounted.
       await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
 
+      // Both wings are fixed open, so they are on screen with nothing to press.
       await expect(
-        page.getByRole("button", { name: /fullscreen|sidebar/i }).first(),
+        page.locator('[data-sidebar="file-sidebar"]').first(),
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-sidebar="tool-panel"]').first(),
       ).toBeVisible();
 
       const categories = [
-        /Recommended/,
-        /Signing/,
-        /Document Security/,
-        /Verification/,
-        /Document Review/,
-        /Page Formatting/,
-        /Extraction/,
-        /Removal/,
-        /Automation/,
-        /General/,
-        /Advanced Formatting/,
-        /Developer Tools/,
+        "Recommended",
+        "Signing",
+        "Document Security",
+        "Verification",
+        "Document Review",
+        "Page Formatting",
+        "Extraction",
+        "Removal",
+        "Automation",
+        "General",
+        "Advanced Formatting",
+        "Developer Tools",
       ];
 
       for (const category of categories) {
-        await expect(page.getByText(category).first()).toBeVisible({
-          timeout: 10000,
-        });
+        const header = await revealInPicker(
+          page,
+          page.getByText(category, { exact: true }).first(),
+        );
+        await expect(header).toBeVisible({ timeout: 10000 });
       }
     });
   });

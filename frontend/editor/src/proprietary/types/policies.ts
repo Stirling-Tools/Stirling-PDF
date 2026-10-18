@@ -1,14 +1,12 @@
 /**
  * Types for Policies — a proprietary, automation-backed enforcement feature.
  *
- * A Policy is conceptually like a Watch Folder (a configured automation that
- * runs over documents) but backend-driven and triggered by *sources/events*
- * (editor save/export, device sweeps, cloud connectors) rather than just a
- * folder. Per-policy state is persisted locally (localStorage). Activity + stats
- * shown in the detail view are derived live from the user's real uploaded files.
+ * Policies run on the backend in response to sources/events (editor save/export,
+ * device sweeps, cloud connectors). Per-policy state is cached locally in localStorage.
  */
 
 import type { ReactNode } from "react";
+import type { ToolEndpoint } from "@app/types/toolApiTypes";
 
 /** Static definition of a policy category (the "what it does"). */
 export interface PolicyCategory {
@@ -45,8 +43,15 @@ export interface PolicyState {
   sources: string[];
   /** The policy's own name. Set for builder pipelines, which have no built-in category label. */
   name?: string;
+  /** The owner's username (email on SaaS), used to direct recovery requests. */
+  owner?: string;
   /** Whether the policy runs in the editor as each file passes through (resolved at decode). */
   runsOnEditor?: boolean;
+  /**
+   * A policy (blocking) rather than an ordinary pipeline: when it fails on an editor file the file
+   * is blocked (unusable), whereas a pipeline failure only warns. See the pipeline `Policy.required`.
+   */
+  required?: boolean;
   /** When non-empty, narrows the policy to these document types. */
   scopeTypes: string[];
   /** Email that low-confidence enforcements are routed to. */
@@ -56,6 +61,7 @@ export interface PolicyState {
   /** How a run's output is delivered: a separate new file, or a new version of
    *  the input file the policy ran on. Defaults to "new_version". */
   outputMode?: "new_file" | "new_version";
+  externalOutput?: boolean;
   /** Rename rule for the output. When empty (the default) the output keeps the
    *  input's filename; when set, it's applied as a prefix/suffix per the policy's
    *  name-position setting. */
@@ -73,18 +79,12 @@ export interface PolicyState {
    */
   order?: number;
   /**
-   * The backing folder-trigger record (a Watched Folders `WatchedFolder`) that
-   * holds this policy's editable steps (its automation), output config and run
-   * state. Present once the policy is configured. The folder trigger reuses the
-   * Watched Folders engine; this is the link to it. Maps to the backend's
-   * `Policy.trigger` (folder) + `steps` + `output`.
-   */
-  folderId?: string;
-  /**
    * Id of this policy's record on the backend (the source of truth). Present once
    * it has been persisted server-side; used to update/delete/run it.
    */
   backendId?: string;
+  /** First stored step's endpoint; absent before fetch, null for an empty or unknown first step. */
+  firstOperation?: ToolEndpoint | null;
   /**
    * A built-in policy (one of the shipped catalog categories) rather than a
    * user-created one. Default policies are configurable but NOT deletable — the
@@ -95,10 +95,7 @@ export interface PolicyState {
 
 export type PoliciesByKey = Record<string, PolicyState>;
 
-/**
- * Output + retry settings applied by the Watch Folders engine to a policy's
- * backing folder (the real, working settings reused from the folder setup).
- */
+/** Editor trigger, output and retry settings decoded from a backend policy. */
 export interface PolicyFolderSettings {
   /** The editor event the policy runs on: "upload" or "export". */
   runOn: "upload" | "export";

@@ -16,6 +16,7 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.proprietary.security.repository.TeamRepository;
 
 /**
  * Keeps team_memberships in step with users.team_id on self-hosted admin flows and holds the
@@ -29,12 +30,13 @@ public class TeamMembershipService {
 
     private final TeamMembershipRepository membershipRepository;
     private final Environment environment;
+    private final TeamRepository teamRepository;
 
     private boolean isSaas() {
         return Arrays.asList(environment.getActiveProfiles()).contains("saas");
     }
 
-    /** Reflects users.team_id into membership rows, preserving an existing role on the team. */
+    /** Preserves existing roles; the first member of a custom self-hosted team becomes its lead. */
     @Transactional
     public void syncMembership(User user) {
         if (isSaas() || user == null || user.getId() == null) {
@@ -50,7 +52,15 @@ public class TeamMembershipService {
             }
         }
         if (teamId != null && !present) {
-            membershipRepository.save(newRow(user.getTeam(), user, TeamRole.MEMBER));
+            Team team = teamRepository.lockById(teamId).orElseThrow();
+            boolean customTeam =
+                    !TeamService.DEFAULT_TEAM_NAME.equals(team.getName())
+                            && !TeamService.INTERNAL_TEAM_NAME.equals(team.getName());
+            TeamRole role =
+                    customTeam && membershipRepository.countByTeamId(teamId) == 0
+                            ? TeamRole.LEADER
+                            : TeamRole.MEMBER;
+            membershipRepository.save(newRow(team, user, role));
         }
     }
 

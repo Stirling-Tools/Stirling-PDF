@@ -30,6 +30,9 @@ export function ImageHandle({
 }: ImageHandleProps) {
   const [dragging, setDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
+  // Shift during a corner drag keeps the proportions, as in Acrobat. Read
+  // from every resize event, so pressing or releasing it mid-drag applies.
+  const [keepRatio, setKeepRatio] = useState(false);
 
   // Map the image's raw-PDF AABB into display-PDF space (4 corners through the
   // transform, then min/max), then to CSS px.
@@ -101,10 +104,13 @@ export function ImageHandle({
         setDragging(true);
         onSelect();
       }}
-      onResizeStart={() => {
+      lockAspectRatio={keepRatio}
+      onResizeStart={(e) => {
+        setKeepRatio(e.shiftKey);
         if (locked) return;
         onSelect();
       }}
+      onResize={(e) => setKeepRatio(e.shiftKey)}
       onDragStop={(_, data) => {
         setDragging(false);
         const next = cssToPdfBounds(data.x, data.y, width, height);
@@ -115,6 +121,7 @@ export function ImageHandle({
         onTransformCommit(next);
       }}
       onResizeStop={(_e, _dir, ref, _delta, position) => {
+        setKeepRatio(false);
         const next = cssToPdfBounds(
           position.x,
           position.y,

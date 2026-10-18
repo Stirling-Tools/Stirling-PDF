@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.cluster.FileStore;
+import stirling.software.common.util.ExceptionUtils;
 
 /** Local-disk {@link FileStore} storing files under a base directory keyed by a UUID file id. */
 @Slf4j
@@ -119,7 +120,7 @@ public class LocalDiskFileStore implements FileStore {
     public byte[] retrieveBytes(String fileId) throws IOException {
         Path filePath = resolve(fileId);
         if (!Files.exists(filePath)) {
-            throw new IOException("File not found with ID: " + fileId);
+            throw ExceptionUtils.createFileNotFoundException(fileId);
         }
         return Files.readAllBytes(filePath);
     }
@@ -128,7 +129,7 @@ public class LocalDiskFileStore implements FileStore {
     public long size(String fileId) throws IOException {
         Path filePath = resolve(fileId);
         if (!Files.exists(filePath)) {
-            throw new IOException("File not found with ID: " + fileId);
+            throw ExceptionUtils.createFileNotFoundException(fileId);
         }
         return Files.size(filePath);
     }

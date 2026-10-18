@@ -37,7 +37,6 @@ class FolderAccessGuardTest {
 
     private FolderAccessGuard guard(List<String> allowedRoots, String... activeProfiles) {
         ApplicationProperties properties = new ApplicationProperties();
-        // The allowlist gates logged-in installs; without login the operator is trusted.
         properties.getSecurity().setEnableLogin(true);
         properties.getPolicies().setAllowedFolderRoots(allowedRoots);
         StandardEnvironment environment = new StandardEnvironment();
@@ -119,6 +118,17 @@ class FolderAccessGuardTest {
                         assertEquals(
                                 tempDir.toAbsolutePath().normalize(),
                                 guardWithLoginOff().requirePermitted(tempDir)));
+    }
+
+    @Test
+    void permitsAnyDirectoryInTheDesktopBundleWithLoginOn() {
+        // Signing in identifies the operator rather than demoting them: the desktop bundle is the
+        // whole trust claim, so a login-enabled install still reaches the operator's own files.
+        withDesktopBundle(
+                () ->
+                        assertEquals(
+                                tempDir.toAbsolutePath().normalize(),
+                                guard(List.of()).requirePermitted(tempDir)));
     }
 
     private FolderAccessGuard guardWithLoginOff() {

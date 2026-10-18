@@ -5,24 +5,40 @@ import { useFolders } from "@app/contexts/FolderContext";
 import { useFilesPage } from "@app/contexts/FilesPageContext";
 import { canPickDirectory, pickDirectory } from "@app/services/directoryPicker";
 import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
+import { folderKind } from "@app/types/folder";
 
-/** The folder-creation flows, shared by every surface that offers them so they
- *  cannot drift apart. */
+/**
+ * Mounts and opens picked directories; otherwise opens the creation dialog.
+ * Reports picker and mount failures through FolderContext.
+ */
 export function useNewFolderFlow() {
   const { t } = useTranslation();
   const folders = useFolders();
-  const { openNewFolderDialog } = useFilesPage();
+  const { currentTab, openNewFolderDialog } = useFilesPage();
   const navigate = useNavigate();
   const serverFolderBlock = useServerFolderBlock();
+  const currentFolder = folders.currentFolderId
+    ? folders.foldersById.get(folders.currentFolderId)
+    : undefined;
+  const needsServer =
+    (currentFolder && folderKind(currentFolder) === "server") ||
+    (folders.currentFolderId === null && !canPickDirectory);
+  const createFolderHereBlockedReason =
+    currentTab !== "all" && currentTab !== "cloud"
+      ? t(
+          "filesPage.newFolderTabUnavailable",
+          "Switch to Stirling library to create folders.",
+        )
+      : needsServer
+        ? serverFolderBlock
+        : null;
 
-  // No dialog: the picker is the whole interaction and the directory names the folder.
   const addLocalFolder = useCallback(async () => {
     try {
       const picked = await pickDirectory();
       if (!picked) return;
       const record = await folders.mountLocalFolder(picked.path, picked.name);
-      // The path owns folder selection: setting state here races the effect that
-      // re-runs with the old pathname and snaps back to root.
+      // The URL owns folder selection; updating folder state first races navigation.
       navigate(`/files/${record.id}`);
     } catch (err) {
       folders.setError(
@@ -36,10 +52,8 @@ export function useNewFolderFlow() {
     }
   }, [folders, navigate, t]);
 
-  // Single-click New folder for surfaces with no menu: the picker where the build
-  // can see the disk, a server folder on the web, and blocked rather than silent
-  // when the server cannot take one. Inside a folder the kind is inherited.
   const createFolderHere = useCallback(() => {
+    if (createFolderHereBlockedReason !== null) return;
     if (folders.currentFolderId !== null) {
       openNewFolderDialog(folders.currentFolderId);
       return;
@@ -48,23 +62,18 @@ export function useNewFolderFlow() {
       void addLocalFolder();
       return;
     }
-    // Backstop: surfaces disable themselves, so a click here means stale UI.
-    if (serverFolderBlock === null) {
-      openNewFolderDialog(null, "server");
-    }
+    openNewFolderDialog(null, "server");
   }, [
     addLocalFolder,
+    createFolderHereBlockedReason,
     folders.currentFolderId,
     openNewFolderDialog,
-    serverFolderBlock,
   ]);
 
-  // Why the single-click surfaces are disabled, or null. Only the web root blocks:
-  // desktop always has the picker, and subfolders inherit their kind.
-  const createFolderHereBlockedReason =
-    folders.currentFolderId === null && !canPickDirectory
-      ? serverFolderBlock
-      : null;
-
-  return { addLocalFolder, createFolderHere, createFolderHereBlockedReason };
+  return {
+    addLocalFolder,
+    createFolderHere,
+    createFolderHereBlockedReason,
+    serverFolderBlock,
+  };
 }

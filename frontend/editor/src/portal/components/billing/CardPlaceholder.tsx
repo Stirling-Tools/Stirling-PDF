@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { LockIcon } from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import "@portal/theme/surface.css";
 
 /**
@@ -16,7 +16,7 @@ export function CardPlaceholder() {
         <span className="portal-billing__card-placeholder-badge">Stripe</span>
       </div>
       <div className="portal-billing__card-placeholder-field">
-        <LockIcon size={13} />
+        <Icon name="lock" size={13} />
         <span>
           {t(
             "portal.billing.checkout.card.fields",

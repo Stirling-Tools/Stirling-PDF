@@ -2,9 +2,7 @@ import React from "react";
 import { Menu, Loader, Group, Text, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import FitText from "@app/components/shared/FitText";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { FileId } from "@app/types/file";
@@ -45,7 +43,7 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
           {switchingTo === "viewer" ? (
             <Loader size="xs" />
           ) : (
-            <InsertDriveFileIcon fontSize="small" style={{ flexShrink: 0 }} />
+            <Icon name="file" size={20} style={{ flexShrink: 0 }} />
           )}
           <PrivateContent>
             <FitText
@@ -54,7 +52,7 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
               style={{ maxWidth: "12rem", display: "inline-block" }}
             />
           </PrivateContent>
-          <KeyboardArrowDownIcon fontSize="small" style={{ flexShrink: 0 }} />
+          <Icon name="chevron-down" size={20} style={{ flexShrink: 0 }} />
         </div>
       </Menu.Target>
       <Menu.Dropdown
@@ -122,7 +120,7 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
                         }}
                         style={{ flexShrink: 0 }}
                       >
-                        <CloseIcon style={{ fontSize: 14 }} />
+                        <Icon name="x" size={14} />
                       </ActionIcon>
                     </Tooltip>
                   )}

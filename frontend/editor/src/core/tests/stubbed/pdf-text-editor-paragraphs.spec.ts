@@ -2,6 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import { selectWrapWidthMode } from "@app/tests/stubbed/widthModeHelpers";
 
 const SAMPLE = path.join(
   import.meta.dirname,
@@ -22,13 +23,7 @@ async function gotoWrap(page: Page): Promise<void> {
     timeout: 30_000,
   });
   await page.waitForTimeout(700);
-  await page.getByTestId("pdf-editor-tab-document").click();
-  await page.getByTestId("pdf-editor-advanced-toggle").click();
-  await page
-    .getByTestId("pdf-editor-width-mode-control")
-    .getByText("Wrap", { exact: true })
-    .click();
-  await page.getByTestId("pdf-editor-tab-selected").click();
+  await selectWrapWidthMode(page);
   await page.waitForTimeout(150);
 }
 
@@ -200,13 +195,22 @@ test.describe("PDF text editor - paragraph editing battery", () => {
       " ZZZZ YYYY XXXX WWWW VVVV UUUU TTTT SSSS RRRR QQQQ PPPP OOOO",
     );
     await blurRun(page, id);
+    // The reflow lands a variable number of frames after blur (WebKit under load
+    // is the slow case), so poll until the glyphs are back on the page rather
+    // than reading them one-shot mid-reflow.
+    await expect
+      .poll(
+        async () => {
+          const g = await readGlyphs(page, id);
+          return g
+            ? Math.max(...g.glyphs.map((x) => x.right)) - g.pageWidth
+            : Number.POSITIVE_INFINITY;
+        },
+        { timeout: 15_000 },
+      )
+      .toBeLessThanOrEqual(0);
     const info = await readGlyphs(page, id);
     if (!info) throw new Error("vanished");
-    const maxRight = Math.max(...info.glyphs.map((g) => g.right));
-    expect(
-      maxRight,
-      `text ran off the page (maxRight=${maxRight}, pageWidth=${info.pageWidth})`,
-    ).toBeLessThanOrEqual(info.pageWidth);
     expect(lineCount(info)).toBeGreaterThan(1);
   });
 
@@ -225,24 +229,28 @@ test.describe("PDF text editor - paragraph editing battery", () => {
       " ZZZZ YYYY XXXX WWWW VVVV UUUU TTTT SSSS RRRR QQQQ PPPP OOOO",
     );
     // NO blur - the box the user SEES while editing must stay within the page.
-    await page.waitForTimeout(120);
-    const box = await page.evaluate((rid: string) => {
-      const el = document.querySelector<HTMLElement>(
-        `[data-testid="pdf-editor-run-${rid}"]`,
-      );
-      const pageEl = document.querySelector<HTMLElement>(
-        '[data-testid="pdf-editor-page-1"]',
-      );
-      if (!el || !pageEl) return null;
-      const er = el.getBoundingClientRect();
-      const pr = pageEl.getBoundingClientRect();
-      return { elRight: er.right, pageRight: pr.right };
-    }, id);
-    expect(box, "elements missing").not.toBeNull();
-    expect(
-      box!.elRight,
-      `editing box overflowed the page while typing (boxRight=${box!.elRight}, pageRight=${box!.pageRight})`,
-    ).toBeLessThanOrEqual(box!.pageRight + 4);
+    // WebKit can apply the live reflow a few frames after the keystrokes land, so
+    // poll the visible box until it settles inside the page instead of reading it
+    // one-shot after a fixed wait.
+    await expect
+      .poll(
+        async () =>
+          page.evaluate((rid: string) => {
+            const el = document.querySelector<HTMLElement>(
+              `[data-testid="pdf-editor-run-${rid}"]`,
+            );
+            const pageEl = document.querySelector<HTMLElement>(
+              '[data-testid="pdf-editor-page-1"]',
+            );
+            if (!el || !pageEl) return Number.POSITIVE_INFINITY;
+            return (
+              el.getBoundingClientRect().right -
+              pageEl.getBoundingClientRect().right
+            );
+          }, id),
+        { timeout: 15_000 },
+      )
+      .toBeLessThanOrEqual(4);
 
     // After click-off the baked glyphs stay on the page too.
     await blurRun(page, id);
@@ -349,7 +357,7 @@ test.describe("PDF text editor - paragraph editing battery", () => {
     const baseNew = firstBaselineOfWord(info, "NEWLINEWORD");
     expect(baseNew !== null, `NEW word missing: ${info.text}`).toBe(true);
     if (baseProc !== null) {
-      expect(baseNew!).toBeLessThan(baseProc! - 1);
+      expect(baseNew!).toBeLessThan(baseProc - 1);
     }
   });
 

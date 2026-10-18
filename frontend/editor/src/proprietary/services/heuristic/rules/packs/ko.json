@@ -1,0 +1,430 @@
+{
+  "version": 2,
+  "language": "ko",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "송장", "weight": 24, "where": "title" },
+        { "text": "부가가치세", "weight": 8 }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [{ "text": "영수증", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "purchase-order",
+      "phrases": [{ "text": "구매 주문서", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "영수증", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "payslip",
+      "phrases": [{ "text": "페이롤", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "expense-report",
+      "phrases": [{ "text": "비용", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "재무제표", "weight": 20, "where": "title" },
+        { "text": "재무상태표", "weight": 12 }
+      ]
+    },
+    {
+      "id": "tax-return",
+      "phrases": [{ "text": "연말정산", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "tax-form",
+      "phrases": [{ "text": "연말정산", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "계약", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [{ "text": "고용계약", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "lease-agreement",
+      "phrases": [
+        { "text": "리스", "weight": 18, "where": "title" },
+        { "text": "보증금", "weight": 10 }
+      ]
+    },
+    {
+      "id": "nda",
+      "phrases": [{ "text": "기밀유지 협약", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "terms-and-conditions",
+      "phrases": [{ "text": "이용 약관", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "privacy-policy",
+      "phrases": [
+        { "text": "개인정보처리방침", "weight": 24, "where": "title" },
+        { "text": "일반 데이터 보호 규칙", "weight": 10 }
+      ]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "유언", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "deed",
+      "phrases": [{ "text": "부동산 양도문서", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "mortgage-document",
+      "phrases": [{ "text": "모기지 론", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "insurance-policy",
+      "phrases": [{ "text": "보험계약", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "resume",
+      "phrases": [
+        { "text": "커리큘럼 비타이", "weight": 24, "where": "title" },
+        { "text": "이력서", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [{ "text": "자기소개서", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "reference-letter",
+      "phrases": [{ "text": "추천서", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "job-description",
+      "phrases": [{ "text": "직무기술서", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "timesheet",
+      "phrases": [{ "text": "타임시트", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "certificate",
+      "phrases": [
+        { "text": "졸업장", "weight": 16, "where": "title" },
+        { "text": "디플로마", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "thesis",
+      "phrases": [{ "text": "학위논문", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "research-paper",
+      "phrases": [{ "text": "학술 출판", "weight": 10 }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "특허", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "처방전", "weight": 20, "where": "title" },
+        { "text": "약학", "weight": 10 }
+      ]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [{ "text": "진료 기록", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "예방접종", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [{ "text": "설문지", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "warranty-document",
+      "phrases": [{ "text": "워런티", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "user-guide",
+      "phrases": [{ "text": "사용 설명서", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        { "text": "물질 안전 보건 자료", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [{ "text": "제도", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bill-of-materials",
+      "phrases": [{ "text": "자재 명세서", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "press-release",
+      "phrases": [{ "text": "보도자료", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "newsletter",
+      "phrases": [{ "text": "소식지", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "브로슈어", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [{ "text": "사업계획서", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "백서", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-minutes",
+      "phrases": [{ "text": "회의록", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-agenda",
+      "phrases": [{ "text": "회의 의제", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "비망록", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "invitation",
+      "phrases": [{ "text": "청첩장", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "ticket",
+      "phrases": [{ "text": "입장권", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "waybill",
+      "phrases": [{ "text": "웨이빌", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "customs-declaration",
+      "phrases": [{ "text": "세관신고서", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "사증", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [{ "text": "전력량계", "weight": 12 }]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "차림표", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [{ "text": "요리법", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "프레젠테이션", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "보고서", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "편지", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "면허", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "legal-notice",
+      "phrases": [{ "text": "정지명령", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "감사", "weight": 12 }]
+    },
+    {
+      "id": "risk-assessment",
+      "phrases": [{ "text": "리스크 평가제도", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "inspection-report",
+      "phrases": [{ "text": "점검", "weight": 10 }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "부동산", "weight": 8 }]
+    },
+    {
+      "id": "subscription-confirmation",
+      "phrases": [{ "text": "구독 사업 모형", "weight": 10 }]
+    },
+    {
+      "id": "donation-receipt",
+      "phrases": [{ "text": "기부", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "전자우편", "weight": 8 }]
+    },
+    {
+      "id": "book-ebook",
+      "phrases": [{ "text": "목차", "weight": 6 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "잡지", "weight": 10 }]
+    },
+    {
+      "id": "course-syllabus",
+      "phrases": [{ "text": "강의계획서", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "lesson-plan",
+      "phrases": [{ "text": "수업계획", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "performance-review",
+      "phrases": [{ "text": "인사고과", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "채용", "weight": 8 }]
+    },
+    {
+      "id": "service-agreement",
+      "phrases": [
+        { "text": "서비스 수준 협약서", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "purchase-agreement",
+      "phrases": [{ "text": "매매", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "shareholder-agreement",
+      "phrases": [{ "text": "주주협약", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "settlement-agreement",
+      "phrases": [{ "text": "소송상 합의", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "subpoena",
+      "phrases": [{ "text": "소환", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "consent-form",
+      "phrases": [{ "text": "사전동의", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "lab-report",
+      "phrases": [{ "text": "임상검사실", "weight": 12 }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "보험", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "regulatory-filing",
+      "phrases": [{ "text": "컴플라이언스", "weight": 10 }]
+    },
+    {
+      "id": "quality-report",
+      "phrases": [{ "text": "품질 관리", "weight": 10 }]
+    },
+    {
+      "id": "test-report",
+      "phrases": [{ "text": "교정", "weight": 12 }]
+    },
+    {
+      "id": "safety-procedure",
+      "phrases": [{ "text": "직업안전보건", "weight": 10 }]
+    },
+    {
+      "id": "datasheet",
+      "phrases": [{ "text": "데이터시트", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "technical-specification",
+      "phrases": [{ "text": "시방서", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [
+        { "text": "소프트웨어 사용권 동의", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "sales-proposal",
+      "phrases": [{ "text": "주식공개매수", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "proposal",
+      "phrases": [{ "text": "제안요청서", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "예산", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "gift-certificate",
+      "phrases": [{ "text": "기프트 카드", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "organization-chart",
+      "phrases": [{ "text": "조직도", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "case-study",
+      "phrases": [{ "text": "사례 연구", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "이사회", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "투자", "weight": 8 }]
+    },
+    {
+      "id": "analytics-report",
+      "phrases": [{ "text": "웹 애널리틱스", "weight": 10 }]
+    },
+    {
+      "id": "benefits-summary",
+      "phrases": [{ "text": "복리 후생", "weight": 14 }]
+    },
+    {
+      "id": "grade-report",
+      "phrases": [{ "text": "성적표", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "숙제", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "toc": [{ "pattern": "목차" }],
+    "references": [{ "pattern": "서지학" }],
+    "signature": [{ "pattern": "서명" }]
+  }
+}

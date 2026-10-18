@@ -1,12 +1,11 @@
-import { STIRLING_SAAS_BACKEND_API_URL } from "@app/constants/connection";
+import { operationRouter } from "@app/services/operationRouter";
 import type { PolicyExecutionTarget } from "@app/services/policyPipeline";
 
 /**
  * Desktop: a policy run's outputs live on the backend that executed it.
  */
-export function getPolicyOutputBaseUrl(target: PolicyExecutionTarget): string {
-  if (target === "saas") {
-    return (STIRLING_SAAS_BACKEND_API_URL ?? "").replace(/\/$/, "");
-  }
-  return "";
+export async function getPolicyOutputBaseUrl(
+  _target: PolicyExecutionTarget,
+): Promise<string> {
+  return operationRouter.getBaseUrl("/api/v1/policies");
 }

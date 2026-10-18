@@ -5,12 +5,13 @@ import {
   handlePaygError,
 } from "@app/services/paygErrorInterceptor";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
+import { alert } from "@app/components/toast";
+import i18n from "@app/i18n";
 
 /**
- * Desktop override of handleHttpError.
- * In desktop builds, 401 errors must never navigate to /login — the legacy web
- * login page must not appear. Instead, open the SignInModal for re-authentication.
- * All other error handling delegates to the core implementation.
+ * Desktop authentication uses token refresh and the sign-in modal, so 401s must
+ * never reach core's web login redirect. Permission failures are reported once
+ * here; remaining errors delegate to core.
  */
 export async function handleHttpError(error: unknown): Promise<boolean> {
   const status = isAxiosError(error) ? error.response?.status : undefined;
@@ -46,6 +47,23 @@ export async function handleHttpError(error: unknown): Promise<boolean> {
     // shown by apiClientSetup). Authentication is done via the onboarding modal or
     // SignInModal — never by navigating to /login or opening a popup here.
     return true; // Suppress toast
+  }
+
+  if (isAxiosError(error) && error.config?.suppressErrorToast === true) {
+    return false;
+  }
+
+  if (status === 403) {
+    alert({
+      alertType: "error",
+      title: i18n.t("auth.accessDenied", "Access Denied"),
+      body: i18n.t(
+        "auth.insufficientPermissions",
+        "You do not have permission to perform this action.",
+      ),
+      isPersistentPopup: false,
+    });
+    return true;
   }
 
   return coreHandleHttpError(error);

@@ -25,7 +25,7 @@ export interface WorkbenchSession {
 
 /** A file's stable identity across versions - what the session records. */
 export function originalIdOf(stub: StirlingFileStub): string {
-  return stub.originalFileId || (stub.id as string);
+  return stub.originalFileId || stub.id;
 }
 
 export function readWorkbenchSession(): WorkbenchSession | null {
@@ -125,8 +125,9 @@ export function clearWorkbenchSession(): void {
   }
 }
 
-/** Views a restore may seed directly. "myFiles" is URL-owned (HomePage pins it to /files) and a
- *  custom view belongs to its tool - the editor return path restores those instead. */
+/** Views a restore may seed directly. The library arrives with the path that names the
+ *  folder, and a custom view belongs to its tool - the editor return path restores those
+ *  instead. */
 const SEEDABLE_VIEWS = ["viewer", "fileEditor", "pageEditor"];
 
 // Raised while a restore is applying its recorded view, so writers that pick a default view from

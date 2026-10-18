@@ -1,11 +1,7 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
-import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
-import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
-import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
-import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon, Button, FilePicker, Spinner } from "@app/ui";
 import { type RunOutputFile } from "@portal/api/pipelines";
 import "@portal/components/pipelines/PipelineGraphToolbar.css";
@@ -67,7 +63,7 @@ export function PipelineGraphToolbar({
           onTest(file);
           resetPicker.current?.();
         }}
-        leftSection={<ScienceOutlinedIcon style={{ fontSize: "1.125rem" }} />}
+        leftSection={<Icon name="flask-conical" size="1.125rem" />}
       >
         {t("portal.pipelines.builder.testRun")}
       </FilePicker>
@@ -89,7 +85,7 @@ export function PipelineGraphToolbar({
           onClick={onViewDefinition}
           aria-label={t("portal.pipelines.builder.viewDefinition")}
         >
-          <CodeRoundedIcon style={{ fontSize: "1.125rem" }} />
+          <Icon name="code" size={"1.125rem"} />
         </ActionIcon>
       </Tooltip>
     </div>
@@ -111,15 +107,17 @@ function RunResultStrip({ result, onDownload }: RunResultStripProps) {
       <div className="portal-pipeline-toolbar__result-status">
         {result.status === "running" && <Spinner size="sm" />}
         {result.status === "completed" && (
-          <CheckCircleOutlineRoundedIcon
+          <Icon
+            name="circle-check"
+            size={"1.25rem"}
             className="portal-pipeline-toolbar__result-icon is-ok"
-            style={{ fontSize: "1.25rem" }}
           />
         )}
         {result.status === "failed" && (
-          <ErrorOutlineRoundedIcon
+          <Icon
+            name="circle-alert"
+            size={"1.25rem"}
             className="portal-pipeline-toolbar__result-icon is-bad"
-            style={{ fontSize: "1.25rem" }}
           />
         )}
         <span>
@@ -144,7 +142,7 @@ function RunResultStrip({ result, onDownload }: RunResultStripProps) {
           variant="tertiary"
           size="sm"
           onClick={() => onDownload(output)}
-          leftSection={<DownloadRoundedIcon style={{ fontSize: "1.125rem" }} />}
+          leftSection={<Icon name="download" size={"1.125rem"} />}
         >
           {output.fileName ?? output.fileId}
         </Button>

@@ -4,8 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { ToggleSwitch } from "@app/ui/ToggleSwitch";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Icon } from "@app/ui/Icon";
 import { SpellcheckControl } from "@app/tools/pdfTextEditor/components/SpellcheckControl";
 import {
   Section,
@@ -76,9 +75,9 @@ export function DocumentSettings({
           data-testid="pdf-editor-advanced-toggle"
           rightSection={
             advancedOpen ? (
-              <ExpandMoreIcon fontSize="small" />
+              <Icon name="chevron-down" size={20} />
             ) : (
-              <ChevronRightIcon fontSize="small" />
+              <Icon name="chevron-right" size={20} />
             )
           }
         >

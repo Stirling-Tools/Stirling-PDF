@@ -4,13 +4,7 @@ import { Button, CodeBlock, Modal, SegmentedControl } from "@app/ui";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
 import { markEditorInstalled } from "@portal/hooks/useEditorInstalled";
 import { DOWNLOAD_URLS } from "@app/constants/downloads";
-import DownloadRounded from "@mui/icons-material/DownloadRounded";
-import DnsRounded from "@mui/icons-material/DnsRounded";
-import LayersRounded from "@mui/icons-material/LayersRounded";
-import TerminalRounded from "@mui/icons-material/TerminalRounded";
-import ChevronRightRounded from "@mui/icons-material/ChevronRightRounded";
-import OpenInNewRounded from "@mui/icons-material/OpenInNewRounded";
-import type { SvgIconComponent } from "@mui/icons-material";
+import { Icon, type IconName } from "@app/ui/Icon";
 import "@portal/components/DownloadEditorModal.css";
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -43,13 +37,13 @@ type DockerVariant = "latest" | "latest-fat" | "latest-ultra-lite";
 const DESKTOP: OptionId[] = ["windows", "mac", "linux"];
 const SELF_HOSTED: OptionId[] = ["docker", "kubernetes", "manual"];
 
-const ICONS: Record<OptionId, SvgIconComponent> = {
-  windows: DownloadRounded,
-  mac: DownloadRounded,
-  linux: DownloadRounded,
-  docker: DnsRounded,
-  kubernetes: LayersRounded,
-  manual: TerminalRounded,
+const ICONS: Record<OptionId, IconName> = {
+  windows: "download",
+  mac: "download",
+  linux: "download",
+  docker: "server",
+  kubernetes: "network",
+  manual: "terminal",
 };
 
 interface Props {
@@ -97,7 +91,7 @@ export function DownloadEditorModal({ open, onClose }: Props) {
       {t("portal.home.download.guide", {
         name: t(`portal.home.download.${id}.title`),
       })}
-      <OpenInNewRounded sx={{ fontSize: 15 }} />
+      <Icon name="external-link" size={15} />
     </button>
   );
 
@@ -117,7 +111,7 @@ export function DownloadEditorModal({ open, onClose }: Props) {
           <>
             <Button
               variant="primary"
-              leftSection={<DownloadRounded sx={{ fontSize: 16 }} />}
+              leftSection={<Icon name="download" size={16} />}
               onClick={() => download(url)}
             >
               {t(`portal.home.download.${id}.downloadBtn`)}
@@ -136,7 +130,7 @@ export function DownloadEditorModal({ open, onClose }: Props) {
             {note("linux")}
             <Button
               variant="secondary"
-              leftSection={<OpenInNewRounded sx={{ fontSize: 16 }} />}
+              leftSection={<Icon name="external-link" size={16} />}
               onClick={() => openUrl(GUIDES.linux)}
             >
               {t("portal.home.download.linux.guideBtn")}
@@ -182,7 +176,7 @@ export function DownloadEditorModal({ open, onClose }: Props) {
           <>
             <Button
               variant="primary"
-              leftSection={<DownloadRounded sx={{ fontSize: 16 }} />}
+              leftSection={<Icon name="download" size={16} />}
               onClick={() => download(JAR_URL)}
             >
               {t("portal.home.download.manual.downloadBtn")}
@@ -199,7 +193,6 @@ export function DownloadEditorModal({ open, onClose }: Props) {
   }
 
   const renderRow = (id: OptionId) => {
-    const Icon = ICONS[id];
     return (
       <button
         key={id}
@@ -208,15 +201,16 @@ export function DownloadEditorModal({ open, onClose }: Props) {
         onClick={() => setSelected(id)}
       >
         <span className="portal-install__option-icon" aria-hidden>
-          <Icon sx={{ fontSize: 20 }} />
+          <Icon name={ICONS[id]} size={20} />
         </span>
         <span className="portal-install__option-text">
           <strong>{t(`portal.home.download.${id}.title`)}</strong>
           <span>{t(`portal.home.download.${id}.tagline`)}</span>
         </span>
-        <ChevronRightRounded
+        <Icon
+          name="chevron-right"
+          size={20}
           className="portal-install__option-chevron"
-          sx={{ fontSize: 20 }}
           aria-hidden
         />
       </button>
@@ -253,7 +247,7 @@ export function DownloadEditorModal({ open, onClose }: Props) {
         ) : (
           <Button
             variant="secondary"
-            leftSection={<OpenInNewRounded sx={{ fontSize: 15 }} />}
+            leftSection={<Icon name="external-link" size={15} />}
             onClick={() => {
               window.open(EDITOR_URL, "_blank", "noopener,noreferrer");
             }}

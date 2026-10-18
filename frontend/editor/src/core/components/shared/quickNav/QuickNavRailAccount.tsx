@@ -6,7 +6,7 @@ import "@app/components/shared/quickNav/QuickNavRailAccount.css";
 
 export interface QuickNavRailAccountProps {
   onOpen: () => void;
-  /** Null between apps; the disc still renders, so the bar keeps its shape. */
+  /** Null until an identity is first resolved, or when explicitly cleared. */
   identity: QuickNavIdentity | null;
   /** Drawn as the current destination while the settings page is open. */
   active?: boolean;

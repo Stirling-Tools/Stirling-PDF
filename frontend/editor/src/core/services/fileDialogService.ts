@@ -15,6 +15,9 @@ export interface FileDialogOptions {
   }>;
 }
 
+/** Whether cancelling the picker should finish instead of opening a browser fallback. */
+export const hasNativeFileDialog = false;
+
 /**
  * Open native file dialog and read selected files
  * Core stub - returns empty array (no native dialog in web)

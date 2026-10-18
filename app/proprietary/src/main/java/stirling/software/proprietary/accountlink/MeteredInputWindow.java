@@ -8,11 +8,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * The workflow-window dedup rule, shared by both meters so an op costs the same either way. An
- * identical input set inside {@code metering.workflow-window} is chaining, not a new charge.
- *
- * <p>Not a bean: each meter constructs one, so the rule cannot be on for one ledger and off for the
- * other. {@link MeteredInputSignature} rows are shared, so callers namespace their own.
+ * Groups successful steps by run/document key until the step limit or workflow window is reached.
+ * Both ledgers share this rule; callers namespace keys to keep free-tier and cloud usage separate.
  */
 @Slf4j
 class MeteredInputWindow {
@@ -26,33 +23,40 @@ class MeteredInputWindow {
     }
 
     /**
-     * Charge when unseen this period, or last seen outside the window. Records a first sighting as
-     * an atomic insert-as-claim, and fails toward charging so a store hiccup drops nothing.
+     * Records one successful step and returns whether it starts a charge. Concurrent completions
+     * share the persisted allowance; persistence errors fail toward charging.
      */
-    boolean shouldCharge(LocalDateTime periodStart, String opSignature) {
+    boolean shouldCharge(LocalDateTime periodStart, String dedupKey, int stepLimit) {
         LocalDateTime now = LocalDateTime.now();
-        MeteredInputSignature seen =
-                signatureRepo.findByPeriodStartAndSignature(periodStart, opSignature).orElse(null);
-        if (seen == null) {
-            try {
-                signatureRepo.saveAndFlush(
-                        new MeteredInputSignature(periodStart, opSignature, now));
-                return true; // first sighting this period
-            } catch (DataIntegrityViolationException raced) {
-                return false; // a concurrent op just claimed it — within window → chaining
-            } catch (RuntimeException e) {
-                log.debug("Signature claim failed for {}: {}", periodStart, e.getMessage());
-                return true;
-            }
-        }
-        LocalDateTime last = seen.getLastMeteredAt() != null ? seen.getLastMeteredAt() : now;
-        boolean withinWindow = last.isAfter(now.minus(window));
+        LocalDateTime cutoff = now.minus(window);
         try {
-            seen.touch(now);
-            signatureRepo.save(seen);
+            while (true) {
+                if (signatureRepo.restartIfFullOrExpired(
+                                periodStart, dedupKey, now, cutoff, stepLimit)
+                        > 0) {
+                    return true;
+                }
+                if (signatureRepo.joinIfWithinLimit(periodStart, dedupKey, now, cutoff, stepLimit)
+                        > 0) {
+                    return false;
+                }
+                try {
+                    signatureRepo.saveAndFlush(
+                            new MeteredInputSignature(periodStart, dedupKey, now));
+                    return true;
+                } catch (DataIntegrityViolationException raced) {
+                    // Another completion inserted or filled this key between the conditional
+                    // updates. Retry so this successful step still counts toward the limit.
+                    if (signatureRepo
+                            .findByPeriodStartAndSignature(periodStart, dedupKey)
+                            .isEmpty()) {
+                        throw raced;
+                    }
+                }
+            }
         } catch (RuntimeException e) {
-            log.debug("Signature touch failed for {}: {}", periodStart, e.getMessage());
+            log.debug("Step counting failed for {}: {}", periodStart, e.getMessage());
+            return true;
         }
-        return !withinWindow;
     }
 }

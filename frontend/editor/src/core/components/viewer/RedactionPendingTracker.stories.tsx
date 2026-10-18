@@ -1,10 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { RedactionPendingTracker } from "@app/components/viewer/RedactionPendingTracker";
 
-// RedactionPendingTracker reads the active document from ActiveDocumentContext, which
-// defaults to `null` outside of a live EmbedPDF document-manager session (not something the
-// shared preview can stub). With no active document it short-circuits and renders nothing,
-// so this story only exercises that no-active-document mount path without throwing.
+// RedactionPendingTracker reads the active document, which defaults to null outside a live EmbedPDF session.
 const meta = {
   title: "Viewer/RedactionPendingTracker",
   component: RedactionPendingTracker,

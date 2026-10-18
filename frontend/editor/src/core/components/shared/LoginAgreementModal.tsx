@@ -1,9 +1,18 @@
-import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import {
+  Component,
+  Suspense,
+  lazy,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Box,
+  Center,
   Divider,
   Group,
+  Loader,
   Modal,
   ScrollArea,
   Stack,
@@ -11,13 +20,42 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import Markdown, { type Components } from "react-markdown";
-import remarkGfm from "remark-gfm";
 import apiClient from "@app/services/apiClient";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
 import { withBasePath } from "@app/constants/app";
 import { Z_INDEX_SIGN_IN_MODAL } from "@app/styles/zIndex";
+
+// The markdown renderer (react-markdown + remark-gfm + micromark, ~120 KB gz)
+// is only needed when an administrator set a disclaimer, so the modal body
+// loads it as its own chunk.
+const LoginAgreementBody = lazy(
+  () => import("@app/components/shared/LoginAgreementBody"),
+);
+
+/**
+ * Catches a failed login-agreement chunk so the modal can offer a retry. Without
+ * it the rejection surfaces at the nearest ancestor boundary, outside this
+ * modal, leaving the mandatory agreement impossible to pass.
+ */
+class BodyBoundary extends Component<
+  { children: ReactNode; onError: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch() {
+    this.props.onError();
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 const ACCEPTED_STORAGE_KEY = "loginAgreementAccepted";
 
@@ -56,34 +94,31 @@ function getLoginNonce(loginEnabled: boolean, userId?: string): string {
   return "session";
 }
 
-const markdownComponents: Components = {
-  // Strip react-markdown's `node` prop so it isn't spread onto the DOM element.
-  a({ node, ...props }) {
-    return <a {...props} target="_blank" rel="noopener noreferrer" />;
-  },
-};
-
 /**
  * Blocking login agreement / disclaimer shown once per login (and once per app session in
  * anonymous mode). Text is fetched live for the user's current language; admins manage it via
  * customFiles/disclaimer/<locale>.md.
  */
-export default function LoginAgreementModal() {
+export default function LoginAgreementModal({
+  children,
+}: {
+  children?: ReactNode;
+}) {
   const { t, i18n } = useTranslation();
   const { config } = useAppConfig();
   const { user, signOut } = useAuth();
-  const { pathname } = useLocation();
 
   const [opened, setOpened] = useState(false);
+  const [resolved, setResolved] = useState(false);
   const [content, setContent] = useState("");
+  const [bodyError, setBodyError] = useState(false);
   const nonceRef = useRef("anon");
 
   useEffect(() => {
     if (!config) return;
-    // Never gate the login/auth screens themselves. pathname is a dep (not window.location) so
-    // the gate re-runs when the SPA navigates from /login to / after an interactive login -
-    // AppLayout stays mounted across that route change, so nothing else would re-trigger it.
-    if (pathname.startsWith("/login")) return;
+    setResolved(false);
+    setOpened(false);
+    setBodyError(false);
 
     const loginEnabled = config.enableLogin !== false;
     let cancelled = false;
@@ -119,13 +154,15 @@ export default function LoginAgreementModal() {
       } catch {
         // On fetch error (unreachable/unauthorized) fail OPEN: don't block app usage on a
         // disclaimer we couldn't load.
+      } finally {
+        if (!cancelled) setResolved(true);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [config, i18n.language, user?.id, pathname]);
+  }, [config, i18n.language, user?.id]);
 
   const handleAccept = () => {
     try {
@@ -139,6 +176,7 @@ export default function LoginAgreementModal() {
   const handleDecline = async () => {
     const loginEnabled = config?.enableLogin !== false;
     if (loginEnabled) {
+      setResolved(false);
       setOpened(false);
       try {
         await signOut();
@@ -154,7 +192,7 @@ export default function LoginAgreementModal() {
     }
   };
 
-  if (!opened) return null;
+  if (!opened) return resolved ? <>{children}</> : null;
 
   return (
     <Modal
@@ -170,33 +208,67 @@ export default function LoginAgreementModal() {
       zIndex={Z_INDEX_SIGN_IN_MODAL}
     >
       <Stack>
-        <ScrollArea.Autosize mah="50vh" type="auto">
-          <Box px="xs">
-            <Markdown
-              remarkPlugins={[remarkGfm]}
-              components={markdownComponents}
+        {bodyError ? (
+          <Stack align="center" gap="md">
+            <Text size="sm" c="dimmed" ta="center">
+              {t(
+                "loginAgreementLoadFailed",
+                "The login agreement could not be loaded.",
+              )}
+            </Text>
+            <Group gap="sm">
+              <Button variant="secondary" onClick={handleDecline}>
+                {t("loginAgreementDecline", "Decline")}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => window.location.reload()}
+              >
+                {t("loginAgreementRetry", "Retry")}
+              </Button>
+            </Group>
+          </Stack>
+        ) : (
+          /* The controls share the boundary: acceptance must not be reachable
+             before the agreement text itself has loaded. */
+          <BodyBoundary onError={() => setBodyError(true)}>
+            <Suspense
+              fallback={
+                <Center mih="8rem">
+                  <Loader size="sm" />
+                </Center>
+              }
             >
-              {content}
-            </Markdown>
-          </Box>
-        </ScrollArea.Autosize>
-        <Divider />
-        <Group justify="space-between" gap="sm" align="center" wrap="wrap">
-          <Text size="xs" c="dimmed" style={{ flex: 1, minWidth: 0 }}>
-            {t(
-              "loginAgreementProvider",
-              "This notice is provided by your administrator, not Stirling PDF Inc.",
-            )}
-          </Text>
-          <Group gap="sm" wrap="nowrap">
-            <Button variant="secondary" onClick={handleDecline}>
-              {t("loginAgreementDecline", "Decline")}
-            </Button>
-            <Button variant="primary" onClick={handleAccept}>
-              {t("loginAgreementAccept", "Accept")}
-            </Button>
-          </Group>
-        </Group>
+              <ScrollArea.Autosize mah="50vh" type="auto">
+                <Box px="xs">
+                  <LoginAgreementBody content={content} />
+                </Box>
+              </ScrollArea.Autosize>
+              <Divider />
+              <Group
+                justify="space-between"
+                gap="sm"
+                align="center"
+                wrap="wrap"
+              >
+                <Text size="xs" c="dimmed" style={{ flex: 1, minWidth: 0 }}>
+                  {t(
+                    "loginAgreementProvider",
+                    "This notice is provided by your administrator, not Stirling PDF Inc.",
+                  )}
+                </Text>
+                <Group gap="sm" wrap="nowrap">
+                  <Button variant="secondary" onClick={handleDecline}>
+                    {t("loginAgreementDecline", "Decline")}
+                  </Button>
+                  <Button variant="primary" onClick={handleAccept}>
+                    {t("loginAgreementAccept", "Accept")}
+                  </Button>
+                </Group>
+              </Group>
+            </Suspense>
+          </BodyBoundary>
+        )}
       </Stack>
     </Modal>
   );

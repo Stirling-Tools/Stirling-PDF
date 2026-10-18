@@ -34,7 +34,10 @@ export function useSelectionGeometry(
   return useMemo(() => {
     const runId = selection.runIds[0];
     const imageId = selection.imageIds[0];
-    const total = selection.runIds.length + selection.imageIds.length;
+    const total =
+      selection.runIds.length +
+      selection.imageIds.length +
+      selection.shapeIds.length;
     if (total !== 1) return { single: null };
 
     if (runId) {
@@ -42,7 +45,9 @@ export function useSelectionGeometry(
         const run = page.runs.find((r) => r.id === runId);
         if (!run) continue;
         const pageIndex = page.pageIndex;
-        const bounds = run.bounds;
+        const bounds = run.wrapWidthPt
+          ? { ...run.bounds, width: run.wrapWidthPt }
+          : run.bounds;
         return {
           single: {
             bounds,
@@ -72,6 +77,7 @@ export function useSelectionGeometry(
                   pageIndex,
                   runId,
                   maxWidthPt: Math.max(1, next),
+                  explicit: true,
                 }),
               ),
           },

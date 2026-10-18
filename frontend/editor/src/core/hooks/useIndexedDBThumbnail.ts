@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
-import { FileId } from "@app/types/fileContext";
-import { useFileManagement } from "@app/contexts/FileContext";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { useFileManagement, useFileSelectors } from "@app/contexts/FileContext";
 
 /**
  * Hook for IndexedDB-aware thumbnail loading
@@ -19,6 +19,7 @@ export function useIndexedDBThumbnail(
   const [generating, setGenerating] = useState(false);
   const indexedDB = useIndexedDB();
   const { updateStirlingFileStub } = useFileManagement();
+  const selectors = useFileSelectors();
 
   useEffect(() => {
     let cancelled = false;
@@ -53,7 +54,8 @@ export function useIndexedDBThumbnail(
           );
         }
 
-        const loadedFile = await indexedDB.loadFile(file.id as FileId);
+        const loadedFile =
+          selectors.getFile(file.id) ?? (await indexedDB.loadFile(file.id));
         if (!loadedFile) {
           throw new Error("not in IndexedDB (likely remote-only stub)");
         }
@@ -65,12 +67,16 @@ export function useIndexedDBThumbnail(
 
         if (file.id && indexedDB && thumbnail) {
           try {
-            await indexedDB.updateThumbnail(file.id as FileId, thumbnail);
+            await indexedDB.updateThumbnail(
+              file.id,
+              thumbnail,
+              getPdfAccess(loadedFile)?.encrypted ?? false,
+            );
             // Also sync the in-memory stub so subsequent re-mounts hit tier 1
             // instead of regenerating. IndexedDB persistence alone only helps
             // the next page load; the current session reads file.thumbnailUrl
             // from the FileContext stub.
-            updateStirlingFileStub(file.id as FileId, {
+            updateStirlingFileStub(file.id, {
               thumbnailUrl: thumbnail,
             });
           } catch (error) {
@@ -93,7 +99,14 @@ export function useIndexedDBThumbnail(
     // set by this effect, and including it caused the effect to cancel
     // itself mid-flight (orphaning the render and leaving generating=true
     // stuck forever).
-  }, [file, file?.thumbnailUrl, file?.id, indexedDB, updateStirlingFileStub]);
+  }, [
+    file,
+    file?.thumbnailUrl,
+    file?.id,
+    indexedDB,
+    updateStirlingFileStub,
+    selectors,
+  ]);
 
   return { thumbnail: thumb, isGenerating: generating };
 }

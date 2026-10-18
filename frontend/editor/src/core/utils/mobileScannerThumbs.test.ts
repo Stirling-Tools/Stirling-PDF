@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Unit tests for fitThumbs, which sizes the mobile scanner's thumbnail strip.
  *

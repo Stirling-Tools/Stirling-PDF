@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { runsToStats, runsToActivity } from "@app/policies/runs";
 import type { PolicyRunView } from "@app/policies/types";

@@ -164,21 +164,39 @@ class TaskManagerCleanupTest {
     }
 
     @Test
-    void forcedCleanupRunsEvenWhenTheBackplaneOwnsScheduledExpiry() {
-        // The scheduled sweep defers to the backplane TTL in cluster mode, but an explicit
-        // request to release this node's storage still has to do something.
+    void forcedCleanupDeletesTheSharedRowEvenWhenTheBackplaneOwnsScheduledExpiry() {
+        // A forced sweep drops files ahead of the TTL, so it must delete the shared row too -
+        // otherwise peers sticky-410 clients to files this node has already freed.
         when(clusterBackplane.shouldRunLocalCleanup()).thenReturn(false);
         String jobId = "clustered-job";
         taskManager.createTask(jobId);
         completeWithFile(jobId, "result-file");
 
-        taskManager.cleanupOldJobs();
-        assertTrue(jobResults().containsKey(jobId));
-
         TaskManager.CleanupSummary summary = taskManager.cleanupFinishedJobsNow(id -> true);
 
         assertEquals(1, summary.jobsRemoved());
         assertFalse(jobResults().containsKey(jobId));
+        verify(jobStore).delete(jobId);
+    }
+
+    @Test
+    void scheduledCleanupFreesFilesAndHeapWhenTheBackplaneOwnsExpiry() {
+        // Regression guard: the sweep used to return early here, so a Valkey-backplane node never
+        // dropped a JobResult from memory nor deleted a single result file.
+        when(clusterBackplane.shouldRunLocalCleanup()).thenReturn(false);
+        String jobId = "clustered-expired-job";
+        taskManager.createTask(jobId);
+        completeWithFile(jobId, "result-file");
+        ReflectionTestUtils.setField(
+                jobResults().get(jobId), "completedAt", LocalDateTime.now().minusHours(1));
+
+        TaskManager.CleanupSummary summary = taskManager.cleanupOldJobs();
+
+        assertEquals(1, summary.jobsRemoved());
+        assertEquals(1, summary.filesDeleted());
+        assertFalse(jobResults().containsKey(jobId));
+        // The shared row is left to its own TTL rather than deleted a second time.
+        verify(jobStore, never()).delete(jobId);
     }
 
     @Test

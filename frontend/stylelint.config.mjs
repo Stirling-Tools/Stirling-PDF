@@ -3,6 +3,7 @@
 export default {
   ignoreFiles: [
     "**/dist/**",
+    "**/coverage/**",
     "**/src-tauri/**",
     // Vendored third-party CSS (its first-party customisation file IS linted).
     "**/editor/public/css/cookieconsent.css",

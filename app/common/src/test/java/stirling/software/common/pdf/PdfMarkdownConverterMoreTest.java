@@ -16,8 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import stirling.software.jpdfium.PdfDocument;
-import stirling.software.jpdfium.text.PageText;
-import stirling.software.jpdfium.text.Table;
 import stirling.software.jpdfium.text.TextChar;
 import stirling.software.jpdfium.text.TextLine;
 import stirling.software.jpdfium.text.TextWord;
@@ -146,53 +144,6 @@ class PdfMarkdownConverterMoreTest {
             rows.add(row(320f, word("left", 50f, 40f), word("rareoutlier", 400f, 60f)));
             List<float[]> cols = PdfMarkdownConverter.findColumnRangesFromLines(rows);
             assertThat(cols).hasSize(1);
-        }
-    }
-
-    // ---- package-private extraction helpers ---------------------------------
-
-    @Nested
-    @DisplayName("extraction helpers")
-    class ExtractionHelpers {
-
-        @Test
-        @DisplayName("extractAllPageText returns one PageText per page")
-        void extractAllPageText() throws IOException {
-            Path pdf = fixture("bordered-table-test_widget.pdf");
-            try (PdfDocument doc = PdfDocument.open(pdf)) {
-                List<PageText> pages = new PdfMarkdownConverter().extractAllPageText(doc);
-                assertThat(pages).isNotNull();
-                assertThat(pages).hasSize(doc.pageCount());
-            }
-        }
-
-        @Test
-        @DisplayName("extractTables returns a non-null list for the first page")
-        void extractTables() throws IOException {
-            Path pdf = fixture("bordered-table-test_widget.pdf");
-            try (PdfDocument doc = PdfDocument.open(pdf)) {
-                List<Table> tables = new PdfMarkdownConverter().extractTables(doc, 0);
-                assertThat(tables).isNotNull();
-            }
-        }
-
-        @Test
-        @DisplayName("renderTables maps each extracted table to a markdown string")
-        void renderTables() throws IOException {
-            Path pdf = fixture("bordered-table-test_widget.pdf");
-            PdfMarkdownConverter converter = new PdfMarkdownConverter();
-            try (PdfDocument doc = PdfDocument.open(pdf)) {
-                List<Table> tables = converter.extractTables(doc, 0);
-                List<String> rendered = converter.renderTables(tables);
-                assertThat(rendered).isNotNull();
-                assertThat(rendered).hasSameSizeAs(tables);
-            }
-        }
-
-        @Test
-        @DisplayName("renderTables on an empty table list returns an empty list")
-        void renderTablesEmpty() {
-            assertThat(new PdfMarkdownConverter().renderTables(List.of())).isEmpty();
         }
     }
 

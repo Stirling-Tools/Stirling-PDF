@@ -1,8 +1,3 @@
-// Supabase client. Relocated out of frontend/src/core/services/ during the SaaS<->OSS
-// consolidation so the Supabase SDK never reaches the OSS core bundle. Lives in
-// :proprietary because licensing/checkout/billing flows in proprietary mode use it; the
-// :saas mode bundle picks it up via the existing @app/* path mapping (saas to proprietary
-// to core).
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -11,9 +6,11 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 // Check if Supabase is configured
 export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
 
-// Create client only if configured, otherwise export null
+// Licensing uses installation/license-key identity; attended sessions belong to the portal client.
 export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { detectSessionInUrl: false, persistSession: false },
+    })
   : null;
 
 // Log warning if not configured (for self-hosted installations)

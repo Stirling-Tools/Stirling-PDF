@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Alert, Divider, Stack, Switch, Text, Tooltip } from "@mantine/core";
 import { Button as DSButton } from "@app/ui/Button";
 import { FilePicker } from "@app/ui/FilePicker";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { BookmarkNode } from "@app/utils/editTableOfContents";
 
 interface EditTableOfContentsSettingsProps {
@@ -82,7 +82,7 @@ export default function EditTableOfContentsSettings({
       <Stack gap="sm">
         <DSButton
           variant="secondary"
-          leftSection={<LocalIcon icon="folder-rounded" />}
+          leftSection={<Icon name="folder" size="1em" />}
           onClick={onSelectFiles}
           fullWidth
         >
@@ -103,7 +103,7 @@ export default function EditTableOfContentsSettings({
         >
           <DSButton
             variant="secondary"
-            leftSection={<LocalIcon icon="picture-as-pdf-rounded" />}
+            leftSection={<Icon name="file-text" size="1em" />}
             onClick={onLoadFromPdf}
             loading={isLoading}
             disabled={disabled || !selectedFileName}
@@ -117,7 +117,7 @@ export default function EditTableOfContentsSettings({
           accept="application/json"
           disabled={disabled}
           variant="secondary"
-          leftSection={<LocalIcon icon="upload-rounded" />}
+          leftSection={<Icon name="upload" size="1em" />}
           fullWidth
         >
           {t("editTableOfContents.actions.importJson", "Import JSON")}
@@ -135,7 +135,7 @@ export default function EditTableOfContentsSettings({
         >
           <DSButton
             variant="secondary"
-            leftSection={<LocalIcon icon="content-paste-rounded" />}
+            leftSection={<Icon name="clipboard" size="1em" />}
             onClick={onImportClipboard}
             disabled={disabled || !canReadClipboard}
             fullWidth
@@ -152,7 +152,7 @@ export default function EditTableOfContentsSettings({
         <Alert
           color="red"
           radius="md"
-          icon={<LocalIcon icon="error-outline-rounded" />}
+          icon={<Icon name="circle-alert" size="1em" />}
         >
           {loadError}
         </Alert>
@@ -169,7 +169,7 @@ export default function EditTableOfContentsSettings({
       <Stack gap="sm">
         <DSButton
           variant="secondary"
-          leftSection={<LocalIcon icon="download-rounded" />}
+          leftSection={<Icon name="download" size="1em" />}
           onClick={onExportJson}
           disabled={disabled || bookmarks.length === 0}
           fullWidth
@@ -189,7 +189,7 @@ export default function EditTableOfContentsSettings({
         >
           <DSButton
             variant="secondary"
-            leftSection={<LocalIcon icon="content-copy-rounded" />}
+            leftSection={<Icon name="copy" size="1em" />}
             onClick={onExportClipboard}
             disabled={disabled || bookmarks.length === 0 || !canWriteClipboard}
             fullWidth

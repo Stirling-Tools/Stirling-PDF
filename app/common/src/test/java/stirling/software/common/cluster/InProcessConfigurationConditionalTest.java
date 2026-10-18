@@ -11,11 +11,6 @@ import org.springframework.context.annotation.Configuration;
 import stirling.software.common.cluster.inprocess.InProcessClusterConfiguration;
 import stirling.software.common.model.ApplicationProperties;
 
-/**
- * Verifies the {@link InProcessClusterConfiguration} conditional wiring: in-process beans wire when
- * cluster mode is off or {@code backplane=inprocess}, and are skipped when {@code
- * backplane=valkey}.
- */
 class InProcessConfigurationConditionalTest {
 
     private final ApplicationContextRunner runner =
@@ -76,9 +71,8 @@ class InProcessConfigurationConditionalTest {
     }
 
     /**
-     * Hand-rolled {@link ApplicationProperties} bean: the production class loads YAML at startup
-     * via a {@code @PostConstruct} hook that isn't appropriate for the slice runner, so we wire a
-     * defaults-only instance here.
+     * Defaults-only bean: the production class loads YAML in {@code @PostConstruct}, which the
+     * slice runner cannot do.
      */
     @Configuration
     static class TestAppPropertiesConfig {

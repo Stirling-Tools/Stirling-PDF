@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTheme } from "@app/components/shared/ThemeProvider";
 import LanguageSelector from "@app/components/shared/LanguageSelector";
-import { type ThemeMode } from "@app/constants/theme";
 
 /** How the app looks: theme and display language. Both write through at once. */
 export function AppearanceCard() {
@@ -35,7 +34,7 @@ export function AppearanceCard() {
           </div>
           <SegmentedControl
             value={themeMode}
-            onChange={(val) => setTheme(val as ThemeMode)}
+            onChange={(val) => setTheme(val)}
             options={[
               {
                 label: t("settings.general.themeLight", "Light"),

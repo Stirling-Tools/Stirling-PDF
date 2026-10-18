@@ -1,8 +1,8 @@
 import { useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { Anchor, Code, Group, Paper, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
@@ -48,14 +48,13 @@ export function AdminSetupBanner() {
         onClick={handleDismissBanner}
         aria-label={t("settings.general.enableFeatures.dismiss", "Dismiss")}
       >
-        <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+        <Icon name="x" size="1rem" />
       </ActionIcon>
       <Stack gap="sm">
         <Group gap="xs">
-          <LocalIcon
-            icon="admin-panel-settings-rounded"
-            width="1.2rem"
-            height="1.2rem"
+          <Icon
+            name="shield-user"
+            size="1.2rem"
             style={{ color: "var(--c-accent-text)" }}
           />
           <Text

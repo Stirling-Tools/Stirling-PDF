@@ -41,16 +41,10 @@ export function useLicenseAlert(): LicenseAlertState {
       }
     };
 
-    window.addEventListener(
-      UPGRADE_BANNER_ALERT_EVENT,
-      handleAlert as EventListener,
-    );
+    window.addEventListener(UPGRADE_BANNER_ALERT_EVENT, handleAlert);
 
     return () => {
-      window.removeEventListener(
-        UPGRADE_BANNER_ALERT_EVENT,
-        handleAlert as EventListener,
-      );
+      window.removeEventListener(UPGRADE_BANNER_ALERT_EVENT, handleAlert);
     };
   }, []);
 

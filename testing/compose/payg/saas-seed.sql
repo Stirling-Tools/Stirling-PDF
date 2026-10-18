@@ -16,8 +16,8 @@
 -- NOTE: free_tier_units is supplied explicitly because the cucumber harness
 -- disables Flyway (see docker-compose-saas.yml). Hibernate's DDL emits NOT
 -- NULL without a SQL DEFAULT (the JPA field default `= 0L` is JVM-side only),
--- so the column would otherwise reject this INSERT. 500 matches the launch
--- free tier, now granted per billing period rather than once per team.
+-- so the column would otherwise reject this INSERT. 1000 matches the default
+-- free tier granted per billing period.
 -- (Named free_tier_units_per_cycle here until the rename in V19; the harness
 -- builds its schema from Hibernate, so the old name made the INSERT fail.)
 INSERT INTO stirling_pdf.pricing_policy (
@@ -27,7 +27,7 @@ INSERT INTO stirling_pdf.pricing_policy (
 )
 SELECT
     'v1-cucumber', CURRENT_TIMESTAMP, 25, 5242880,
-    1, 1000, 500, TRUE,
+    1, 1000, 1000, TRUE,
     'Cucumber test default policy', 'system',
     CURRENT_TIMESTAMP
 WHERE NOT EXISTS (

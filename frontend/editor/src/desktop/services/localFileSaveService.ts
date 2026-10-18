@@ -2,7 +2,10 @@ import type {
   SaveResult,
   MultiFileSaveResult,
 } from "@core/services/localFileSaveService";
+import i18n from "i18next";
+import { beginSelfWrite, endSelfWrite } from "@app/services/diskFileSync";
 export type { SaveResult, MultiFileSaveResult };
+import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 
 /**
  * Save file data to a local filesystem path (Tauri desktop only)
@@ -15,12 +18,17 @@ export async function saveToLocalPath(
   data: Blob | File,
   filePath: string,
 ): Promise<SaveResult> {
+  // Muted before the first byte so the watcher cannot report our own write as an
+  // external change. Released by the post-save re-baseline, or by its deadline.
+  beginSelfWrite(filePath);
   try {
     const { writeFile } = await import("@tauri-apps/plugin-fs");
     const arrayBuffer = await data.arrayBuffer();
+    assertFilesNotBlocked();
     await writeFile(filePath, new Uint8Array(arrayBuffer));
     return { success: true };
   } catch (error) {
+    endSelfWrite(filePath);
     const message = error instanceof Error ? error.message : String(error);
     console.error("[LocalFileSave] Failed to save:", message);
     return { success: false, error: message };
@@ -51,7 +59,7 @@ export async function showSaveDialog(
         ? `${defaultDirectory}/${defaultFilename}`
         : defaultFilename,
       filters,
-      title: "Save As",
+      title: i18n.t("workbenchBar.saveAs", "Save As"),
     });
 
     return selectedPath;
@@ -82,7 +90,9 @@ export async function saveMultipleFilesWithPrompt(
       directory: true,
       multiple: false,
       defaultPath: defaultDirectory,
-      title: `Save ${files.length} file${files.length > 1 ? "s" : ""}`,
+      title: i18n.t("desktop.fileSave.saveFilesTitle", "Save {{count}} files", {
+        count: files.length,
+      }),
     });
 
     // User cancelled

@@ -1,6 +1,8 @@
 package stirling.software.common.pdf;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -11,8 +13,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -40,6 +49,33 @@ class PdfMarkdownConverterTest {
     private static final double THRESHOLD = 0.95;
 
     @TempDir Path tmp;
+
+    @Test
+    void rebasesASecondLevelHeadingBeforeBuildingItsPath() throws IOException {
+        Path pdf = tmp.resolve("heading.pdf");
+        try (PDDocument document = new PDDocument()) {
+            PDPage page = new PDPage();
+            document.addPage(page);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                var font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+                content.beginText();
+                content.setFont(font, 15.6f);
+                content.newLineAtOffset(50, 700);
+                content.showText("Section");
+                content.setFont(font, 12);
+                content.newLineAtOffset(0, -40);
+                content.showText(
+                        "This body text establishes the normal font size for this document.");
+                content.endText();
+            }
+            document.save(pdf.toFile());
+        }
+        try (PdfDocument document = PdfDocument.open(pdf)) {
+            List<MarkdownBlock> blocks = new PdfMarkdownConverter().extractBlocks(document);
+            assertEquals("# Section", blocks.getFirst().markdown());
+            assertEquals(List.of("Section"), blocks.getFirst().headingPath());
+        }
+    }
 
     /** Fixtures that meet the accuracy threshold today and therefore gate CI. */
     static Stream<Arguments> gatedFixtures() {
@@ -97,7 +133,82 @@ class PdfMarkdownConverterTest {
                 "implausible page span should disable column detection, not allocate from it");
     }
 
-    private void assertConversionMatchesGolden(String pdfName, String mdName) throws IOException {
+    /**
+     * The block list carries the pages a reader would cite, so it must survive a page break: this
+     * fixture's third table runs off page 2 and is stitched back together on page 3.
+     */
+    @Test
+    void blocksCarryPagesAndAStitchedTableSpansThePageBreak() throws IOException {
+        Path pdfPath = copyFixture("many-tables-test_stress.pdf");
+
+        List<MarkdownBlock> blocks;
+        int pageCount;
+        try (PdfDocument doc = PdfDocument.open(pdfPath)) {
+            pageCount = doc.pageCount();
+            blocks = new PdfMarkdownConverter().extractBlocks(doc);
+        }
+
+        assertFalse(blocks.isEmpty(), "the fixture has text on every page");
+        Set<Integer> covered = new TreeSet<>();
+        int previousStart = 0;
+        for (MarkdownBlock block : blocks) {
+            assertTrue(block.pageStart() >= 1, "page numbers are 1-based: " + block.pageStart());
+            assertTrue(block.pageEnd() >= block.pageStart(), "pageEnd cannot precede pageStart");
+            assertTrue(block.pageEnd() <= pageCount, "pageEnd cannot exceed the document");
+            assertTrue(block.pageStart() >= previousStart, "blocks come out in reading order");
+            previousStart = block.pageStart();
+            for (int p = block.pageStart(); p <= block.pageEnd(); p++) {
+                covered.add(p);
+            }
+        }
+        assertEquals(pageCount, covered.size(), "every page of the fixture contributes a block");
+
+        List<MarkdownBlock> spanning =
+                blocks.stream().filter(b -> b.pageEnd() > b.pageStart()).toList();
+        assertEquals(1, spanning.size(), "only the stitched table spans a page break");
+        MarkdownBlock stitched = spanning.getFirst();
+        assertEquals(2, stitched.pageStart());
+        assertEquals(3, stitched.pageEnd());
+        assertTrue(stitched.markdown().startsWith("|"), "the stitched block is the GFM table");
+    }
+
+    @Test
+    void headingPathsFollowTheHeadingStack() throws IOException {
+        Path pdfPath = copyFixture("many-tables-test_stress.pdf");
+
+        List<MarkdownBlock> blocks;
+        try (PdfDocument doc = PdfDocument.open(pdfPath)) {
+            blocks = new PdfMarkdownConverter().extractBlocks(doc);
+        }
+
+        int subIndex = indexOfMarkdown(blocks, "## Section 3 Heading");
+        assertEquals(
+                List.of("Section 2 Heading", "Section 3 Heading"),
+                blocks.get(subIndex).headingPath(),
+                "a heading includes itself under its parent");
+        assertEquals(
+                blocks.get(subIndex).headingPath(),
+                blocks.get(subIndex + 1).headingPath(),
+                "the block under a heading inherits its chain");
+
+        int topIndex = indexOfMarkdown(blocks, "# Section 5 Heading");
+        assertEquals(
+                List.of("Section 5 Heading"),
+                blocks.get(topIndex).headingPath(),
+                "a top-level heading pops everything below it");
+    }
+
+    private static int indexOfMarkdown(List<MarkdownBlock> blocks, String markdown) {
+        for (int i = 0; i < blocks.size(); i++) {
+            if (blocks.get(i).markdown().equals(markdown)) {
+                return i;
+            }
+        }
+        fail("No block rendered as '" + markdown + "'");
+        return -1;
+    }
+
+    private Path copyFixture(String pdfName) throws IOException {
         Path pdfPath = tmp.resolve(pdfName);
         try (InputStream in =
                 getClass().getResourceAsStream("/pdf-ingestion-fixtures/" + pdfName)) {
@@ -106,6 +217,11 @@ class PdfMarkdownConverterTest {
             }
             Files.copy(in, pdfPath);
         }
+        return pdfPath;
+    }
+
+    private void assertConversionMatchesGolden(String pdfName, String mdName) throws IOException {
+        Path pdfPath = copyFixture(pdfName);
 
         String actual;
         try (PdfDocument doc = PdfDocument.open(pdfPath)) {

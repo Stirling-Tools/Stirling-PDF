@@ -20,6 +20,7 @@ export interface AuthUser {
   portalAccess?: boolean;
   /** Whether the user owns (leads) any team; drives elevated self-serve UI. */
   teamLead?: boolean;
+  orgOwner?: boolean;
   /** The user's team (self-hosted single-team model), when they have one. */
   team?: { id: number; name: string };
   app_metadata?: Record<string, unknown>;

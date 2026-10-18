@@ -10,8 +10,9 @@ import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
 import ToolButton from "@app/components/tools/toolPicker/ToolButton";
+import { LazyToolSection } from "@app/components/tools/toolPicker/LazyToolSection";
 import { useToolWorkflowData } from "@app/contexts/ToolWorkflowContext";
-import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
+import { useIsScrolled } from "@app/hooks/useIsScrolled";
 import { ToolId } from "@app/types/toolId";
 import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
 import { ToolPickerFooterExtensions } from "@app/components/tools/toolPicker/ToolPickerFooterExtensions";
@@ -28,6 +29,8 @@ interface ToolPickerProps {
   compact?: boolean;
   /** Called when the user clicks "View all tools" in compact mode. */
   onShowAllTools?: () => void;
+  /** Pinned above the list; gains a rule once rows scroll beneath it. */
+  header?: React.ReactNode;
 }
 
 const EMPTY_FILTERED_TOOLS: ToolPickerProps["filteredTools"] = [];
@@ -65,10 +68,14 @@ const ToolPicker = ({
   isSearching = false,
   compact = false,
   onShowAllTools,
+  header,
 }: ToolPickerProps) => {
   const { t } = useTranslation();
 
-  const scrollableRef = useRef<HTMLDivElement>(null);
+  const { scrolled, scrollRef } = useIsScrolled();
+  // The lazy sections observe against the scroller itself, so they need a
+  // stable ref alongside the callback ref that drives the header divider.
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
   const { favoriteTools, toolRegistry } = useToolWorkflowData();
@@ -80,29 +87,13 @@ const ToolPicker = ({
     [visibleSections],
   );
 
-  // Signing items needing the user's attention: requests awaiting their
-  // signature, plus their own sessions newly signed since last opened
-  // (0 when group signing is disabled).
-  const signingBadgeCount = useSigningBadgeCount();
-
   const recommendedItems = useMemo(() => {
     const items: Array<{ id: string; tool: ToolRegistryEntry }> = [];
     quickSection?.subcategories.forEach((sc: SubcategoryGroup) =>
       sc.tools.forEach((toolEntry) => items.push(toolEntry)),
     );
-    // While signing needs the user's attention, surface Shared Signing at the
-    // top of Recommended so it's easy to find without hunting in the Signing group.
-    if (signingBadgeCount > 0) {
-      const sharedSignTool = toolRegistry["sharedSign" as ToolId];
-      if (sharedSignTool) {
-        return [
-          { id: "sharedSign", tool: sharedSignTool },
-          ...items.filter(({ id }) => id !== "sharedSign"),
-        ];
-      }
-    }
     return items;
-  }, [quickSection, signingBadgeCount, toolRegistry]);
+  }, [quickSection]);
 
   const allSection = useMemo(
     () => visibleSections.find((s) => s.key === "all"),
@@ -116,8 +107,19 @@ const ToolPicker = ({
 
   return (
     <Box h="100%" style={CONTAINER_STYLE}>
+      {header && (
+        <div
+          className="tool-picker__header"
+          data-scrolled={scrolled || undefined}
+        >
+          {header}
+        </div>
+      )}
       <Box
-        ref={scrollableRef}
+        ref={(el: HTMLDivElement | null) => {
+          scrollerRef.current = el;
+          return scrollRef(el);
+        }}
         style={SCROLLABLE_STYLE}
         className="tool-picker-scrollable"
       >
@@ -144,7 +146,7 @@ const ToolPicker = ({
           /* Resting state: flat list of pinned + recommended only. */
           <Box className="tool-picker__compact">
             <div style={HEADER_TEXT_STYLE}>
-              {t("toolPanel.toolsHeader", "Tools")}
+              {t("toolPanel.toolsHeader", "PDF Tools")}
             </div>
             {favoriteToolItems.length === 0 && recommendedItems.length === 0 ? (
               <NoToolsFound />
@@ -174,9 +176,6 @@ const ToolPicker = ({
                       onSelect={onSelect}
                       hasStars
                       showDescription
-                      badgeCount={
-                        id === "sharedSign" ? signingBadgeCount : undefined
-                      }
                     />
                   ))}
               </div>
@@ -231,9 +230,6 @@ const ToolPicker = ({
                         isSelected={selectedToolKey === id}
                         onSelect={onSelect}
                         hasStars
-                        badgeCount={
-                          id === "sharedSign" ? signingBadgeCount : undefined
-                        }
                       />
                     ))}
                   </div>
@@ -241,21 +237,30 @@ const ToolPicker = ({
               )}
               {allSection &&
                 allSection.subcategories.map((sc: SubcategoryGroup) => (
-                  <Box key={sc.subcategoryId} w="100%">
-                    <div style={HEADER_TEXT_STYLE}>
-                      {toTitleCase(getSubcategoryLabel(t, sc.subcategoryId))}
-                    </div>
-                    {renderToolButtons(
-                      t,
-                      sc,
-                      selectedToolKey,
-                      onSelect,
-                      false,
-                      false,
-                      undefined,
-                      true,
+                  <LazyToolSection
+                    key={sc.subcategoryId}
+                    estimatedHeight={32 + sc.tools.length * 44}
+                    scrollRoot={scrollerRef}
+                    label={toTitleCase(
+                      getSubcategoryLabel(t, sc.subcategoryId),
                     )}
-                  </Box>
+                  >
+                    <Box w="100%">
+                      <div style={HEADER_TEXT_STYLE}>
+                        {toTitleCase(getSubcategoryLabel(t, sc.subcategoryId))}
+                      </div>
+                      {renderToolButtons(
+                        t,
+                        sc,
+                        selectedToolKey,
+                        onSelect,
+                        false,
+                        false,
+                        undefined,
+                        true,
+                      )}
+                    </Box>
+                  </LazyToolSection>
                 ))}
             </Stack>
 

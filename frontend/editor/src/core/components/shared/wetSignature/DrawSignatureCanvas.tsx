@@ -2,8 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { Stack, Group, ColorPicker, Slider, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import DeleteIcon from "@mui/icons-material/Delete";
-
+import { Icon } from "@app/ui/Icon";
 interface DrawSignatureCanvasProps {
   signature: string | null;
   onChange: (signature: string | null) => void;
@@ -46,8 +45,8 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = ((e.clientX - rect.left) * canvas.width) / rect.width;
+    const y = ((e.clientY - rect.top) * canvas.height) / rect.height;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -60,8 +59,8 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = ((e.clientX - rect.left) * canvas.width) / rect.width;
+    const y = ((e.clientY - rect.top) * canvas.height) / rect.height;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -169,7 +168,7 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
       <Button
         variant="secondary"
         accent="danger"
-        leftSection={<DeleteIcon sx={{ fontSize: 16 }} />}
+        leftSection={<Icon name="trash" size={16} />}
         onClick={clearCanvas}
         disabled={disabled || !signature}
         fullWidth

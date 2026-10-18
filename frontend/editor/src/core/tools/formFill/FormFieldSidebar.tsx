@@ -18,8 +18,7 @@ import {
   FIELD_TYPE_COLOR,
 } from "@app/tools/formFill/fieldMeta";
 import type { FormField } from "@app/tools/formFill/types";
-import CloseIcon from "@mui/icons-material/Close";
-import TextFieldsIcon from "@mui/icons-material/TextFields";
+import { Icon } from "@app/ui/Icon";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 interface FormFieldSidebarProps {
@@ -101,9 +100,9 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <TextFieldsIcon sx={{ fontSize: 18, opacity: 0.7 }} />
+          <Icon name="type" size={18} style={{ opacity: 0.7 }} />
           <Text fw={600} size="sm">
-            Form Fields
+            {t("formFill.sidebar.title", "Form Fields")}
           </Text>
           <Badge size="xs" variant="light" color="blue" radius="sm">
             {fields.length}
@@ -115,7 +114,7 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
           onClick={onToggle}
           aria-label={t("formFill.sidebar.close", "Close sidebar")}
         >
-          <CloseIcon sx={{ fontSize: 16 }} />
+          <Icon name="x" size={16} />
         </ActionIcon>
       </div>
 
@@ -124,7 +123,7 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
         {loading && (
           <div className={styles.emptyState}>
             <Text size="sm" c="dimmed">
-              Loading form fields...
+              {t("formFill.sidebar.loading", "Loading form fields...")}
             </Text>
           </div>
         )}
@@ -132,7 +131,7 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
         {!loading && fields.length === 0 && (
           <div className={styles.emptyState}>
             <span className={styles.emptyStateText}>
-              No form fields found in this PDF
+              {t("formFill.sidebar.empty", "No form fields found in this PDF")}
             </span>
           </div>
         )}
@@ -146,7 +145,9 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
                   style={i === 0 ? { marginTop: 0 } : undefined}
                 >
                   <Text className={styles.pageDividerLabel}>
-                    Page {pageIdx + 1}
+                    {t("formFill.sidebar.pageNumber", "Page {{page}}", {
+                      page: pageIdx + 1,
+                    })}
                   </Text>
                 </div>
 
@@ -161,22 +162,33 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
                       onClick={() => handleFieldClick(field.name)}
                     >
                       <div className={styles.fieldHeader}>
-                        <Tooltip label={field.type} withArrow position="left">
+                        <Tooltip
+                          label={t(
+                            `formFill.fieldTypes.${field.type}`,
+                            field.type,
+                          )}
+                          withArrow
+                          position="left"
+                        >
                           <span
                             className={styles.fieldTypeIcon}
                             style={{
                               color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
-                              fontSize: "0.875rem",
                             }}
                           >
-                            {FIELD_TYPE_ICON[field.type]}
+                            <Icon
+                              name={FIELD_TYPE_ICON[field.type]}
+                              size={14}
+                            />
                           </span>
                         </Tooltip>
                         <span className={styles.fieldName}>
                           {field.label || field.name}
                         </span>
                         {field.required && (
-                          <span className={styles.fieldRequired}>req</span>
+                          <span className={styles.fieldRequired}>
+                            {t("formFill.requiredAbbreviation", "req")}
+                          </span>
                         )}
                       </div>
 
