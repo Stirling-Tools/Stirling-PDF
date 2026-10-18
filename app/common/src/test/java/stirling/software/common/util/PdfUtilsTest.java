@@ -20,15 +20,26 @@ import org.junit.jupiter.params.provider.CsvSource;
 class PdfUtilsTest {
 
     @ParameterizedTest
-    @CsvSource({"0", "99", "100n", "n+100"})
-    void filtersRejectInvalidSelectionsInsteadOfTreatingThemAsNoMatch(String selection)
-            throws IOException {
+    @CsvSource({"0", "-1", "abc", "3-1"})
+    void filtersRejectMalformedSelections(String selection) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage());
             assertThrows(IllegalArgumentException.class, () -> PdfUtils.hasImages(doc, selection));
             assertThrows(
                     IllegalArgumentException.class,
                     () -> PdfUtils.hasText(doc, selection, "hello"));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"99", "5-10", "100n", "n+100"})
+    void filtersTreatPagesPastTheEndAsNoMatch(String selection) throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage();
+            page.setResources(new PDResources());
+            doc.addPage(page);
+            assertFalse(PdfUtils.hasImages(doc, selection));
+            assertFalse(PdfUtils.hasText(doc, selection, "hello"));
         }
     }
 
