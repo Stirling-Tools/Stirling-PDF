@@ -62,6 +62,8 @@ ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
 ARG BUILD_PORTAL=true
 ARG PRERENDER_SHELL=1
 ENV PRERENDER_SHELL=${PRERENDER_SHELL}
+ARG PRERENDER_SHELL_STRICT=1
+ENV PRERENDER_SHELL_STRICT=${PRERENDER_SHELL_STRICT}
 
 # Which Stirling account the portal connects to. Build-time because Vite inlines VITE_* into the
 # bundle; there is no runtime override. Empty keeps the committed frontend .env defaults, which are
@@ -83,6 +85,7 @@ RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo li
     if [ -z "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then unset VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY; fi; \
     if [ -z "${VITE_SAAS_API_URL}" ]; then unset VITE_SAAS_API_URL; fi; \
     PRERENDER_SHELL=${PRERENDER_SHELL} \
+    PRERENDER_SHELL_STRICT=${PRERENDER_SHELL_STRICT} \
     STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=true \

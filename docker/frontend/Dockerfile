@@ -24,11 +24,13 @@ ARG VITE_INCLUDE_PORTAL=true
 ARG VITE_SUPABASE_URL=""
 # pragma: allowlist secret
 ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""
+ARG PRERENDER_SHELL_STRICT=1
 
 # Build vite from editor/, output lands in editor/dist/.
 RUN set -eu; \
     export UV_THREADPOOL_SIZE="${UV_THREADPOOL_SIZE:-16}"; \
     export STIRLING_FLAVOR="${STIRLING_FLAVOR}"; \
+    export PRERENDER_SHELL_STRICT="${PRERENDER_SHELL_STRICT}"; \
     if [ -n "${VITE_SUPABASE_URL}" ]; then export VITE_SUPABASE_URL="${VITE_SUPABASE_URL}"; fi; \
     if [ -n "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then export VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY="${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}"; fi; \
     npx vite build editor --mode "${VITE_BUILD_MODE}"

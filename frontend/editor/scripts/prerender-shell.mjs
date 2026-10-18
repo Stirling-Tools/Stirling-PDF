@@ -294,7 +294,11 @@ function installShellHelpers() {
       const bound = setTimeout(ready, boundMs);
       const tick = () => {
         const count = globalThis.__shellCount();
-        if (globalThis.i18next?.isInitialized && count === previous) {
+        if (
+          globalThis.i18next?.isInitialized &&
+          count > 10 &&
+          count === previous
+        ) {
           if (++stable >= quietSamples) {
             clearTimeout(bound);
             ready();
@@ -342,6 +346,9 @@ async function captureShellPage({
     await mockAppApis(page);
     await page.goto(`${serverOrigin}/`, { waitUntil: "load" });
     await page.waitForSelector("#root .app-frame", { timeout: 60_000 });
+    await page.waitForSelector("#root .landing-actions-enter", {
+      timeout: 60_000,
+    });
     await page.evaluate(() => globalThis.__shellReady(3, 100, 30_000));
     await page.evaluate(() => globalThis.__shellInlineImages());
 
