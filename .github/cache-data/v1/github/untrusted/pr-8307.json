@@ -16398,25 +16398,25 @@
       "workflow_run_id": 39105894262
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/test-tauri-target/macos-arm64/9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-cache-e1b7946154cca207/v6": {
-      "object": "sha256:b1db115c59869563bf6d4349f78cd5b4fdb1d0887092825d91b0732eb561764e",
+      "object": "sha256:5548f3aa45c939607914ed8f7a21a65d6e507bb6ffba2667367f6587f96fe4d8",
       "storage": "github-artifact",
-      "updated_at": "2026-10-16T15:43:57.768Z",
+      "updated_at": "2026-10-18T07:09:06.887Z",
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
       "size": 999,
       "parts": [
         {
           "index": 0,
-          "object": "sha256:b1db115c59869563bf6d4349f78cd5b4fdb1d0887092825d91b0732eb561764e",
+          "object": "sha256:5548f3aa45c939607914ed8f7a21a65d6e507bb6ffba2667367f6587f96fe4d8",
           "size": 999,
-          "artifact_id": 12055844847,
-          "artifact_name": "cache-untrusted-pr-8307-test-tauri-target-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--b1db115c59869563bf6d4349f78cd5b4fdb1d08870928-part-000000",
-          "workflow_run_id": 38924744022
+          "artifact_id": 12128612888,
+          "artifact_name": "cache-untrusted-pr-8307-test-tauri-target-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--5548f3aa45c939607914ed8f7a21a65d6e507bb6ffba2-part-000000",
+          "workflow_run_id": 39105894262
         }
       ],
-      "artifact_id": 12055844847,
-      "artifact_name": "cache-untrusted-pr-8307-test-tauri-target-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--b1db115c59869563bf6d4349f78cd5b4fdb1d08870928-part-000000",
-      "workflow_run_id": 38924744022
+      "artifact_id": 12128612888,
+      "artifact_name": "cache-untrusted-pr-8307-test-tauri-target-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--5548f3aa45c939607914ed8f7a21a65d6e507bb6ffba2-part-000000",
+      "workflow_run_id": 39105894262
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/test-task-state-cache/macos-arm64/f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-cache-e1b7946154cca207/v6": {
       "object": "sha256:26c650c6efe9d93392e8585d76ff966bb5b65d275982f882ce88da9e5ca83839",
@@ -16992,6 +16992,6 @@
   },
   "monitoring": {
     "window_started_at": "2026-10-18T06:59:32.286Z",
-    "writes": 35
+    "writes": 36
   }
 }
