@@ -13789,41 +13789,41 @@
       "workflow_run_id": 38883434118
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-cargo-registry/macos-arm64/9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-cache-e1b7946154cca207/v6": {
-      "object": "sha256:16c7ddd382e4ea654be4c8d4267cee70442983aaa8a6a6bf31b0d494ee7ddc0a",
+      "object": "sha256:1764e88450cc2929408c760976189e1eb4bf81c072e4c1530644f98040c2f772",
       "storage": "github-artifact",
-      "updated_at": "2026-10-16T10:14:52.038Z",
+      "updated_at": "2026-10-18T07:37:17.486Z",
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
-      "size": 59140509,
+      "size": 59122775,
       "parts": [
         {
           "index": 0,
-          "object": "sha256:3fadbebd783759cda54cce1cc5930c488e4de1d631faa29fa54dc27be61a6bb0",
+          "object": "sha256:8f49a1c7de113b52c32371505d63e14f56a7df68de0897b8c3a0189020bda8af",
           "size": 25165824,
-          "artifact_id": 12038889755,
-          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--16c7ddd382e4ea654be4c8d4267cee70442983aaa8-part-000000",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12129810734,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--1764e88450cc2929408c760976189e1eb4bf81c072-part-000000",
+          "workflow_run_id": 39106642268
         },
         {
           "index": 1,
-          "object": "sha256:73f128bcc193b16ac8feaf60bc6703aa58a9d859d8712ae2841f4d010e49800e",
+          "object": "sha256:905a99285274d7ad7fd2fd9800c48f64d6f8cc657463dabe7b04cfa5012f400b",
           "size": 25165824,
-          "artifact_id": 12038864783,
-          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--16c7ddd382e4ea654be4c8d4267cee70442983aaa8-part-000001",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12129402077,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--1764e88450cc2929408c760976189e1eb4bf81c072-part-000001",
+          "workflow_run_id": 39106642268
         },
         {
           "index": 2,
-          "object": "sha256:eefd883e8f6ce119045f1d3c9b389fbbf606584ecaf3e2435e8e72fb00b54f30",
-          "size": 8808861,
-          "artifact_id": 12038864788,
-          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--16c7ddd382e4ea654be4c8d4267cee70442983aaa8-part-000002",
-          "workflow_run_id": 38883434118
+          "object": "sha256:8a82cf4faea61f75a7cebb76a4f4f3116adca5a1ba2c59f017c5396b5e6a9801",
+          "size": 8791127,
+          "artifact_id": 12129456682,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--1764e88450cc2929408c760976189e1eb4bf81c072-part-000002",
+          "workflow_run_id": 39106642268
         }
       ],
-      "artifact_id": 12038889755,
-      "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--16c7ddd382e4ea654be4c8d4267cee70442983aaa8-part-000000",
-      "workflow_run_id": 38883434118
+      "artifact_id": 12129810734,
+      "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--1764e88450cc2929408c760976189e1eb4bf81c072-part-000000",
+      "workflow_run_id": 39106642268
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-frontend-dist/macos-arm64/96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-cache-e1b7946154cca207/v6": {
       "object": "sha256:8daa8567e598b46a41048ed8e2d95110b3e29ece1dabd5ceb547b66707ae0c2a",
@@ -17162,6 +17162,6 @@
   },
   "monitoring": {
     "window_started_at": "2026-10-18T06:59:32.286Z",
-    "writes": 63
+    "writes": 64
   }
 }
