@@ -36,6 +36,14 @@ const DEFAULT_SUPPORTED_EXTENSIONS = ["pdf"];
  */
 const FILE_EDITOR_ROW_PITCH = 446;
 
+/**
+ * The grid's rowGap in px (1.5rem). The pitch above already counts the gap
+ * between card rows, so the top spacer must subtract the gap the grid adds
+ * after it; otherwise the first rendered row sits a gap below its virtual
+ * offset.
+ */
+const FILE_EDITOR_GRID_GAP = 24;
+
 function normalizeMaxFiles(
   toolMode: boolean,
   rawMax: number | null | undefined,
@@ -399,7 +407,7 @@ const FileEditor = ({
               <div
                 aria-hidden="true"
                 className={styles.virtualPad}
-                style={{ height: padTop }}
+                style={{ height: Math.max(0, padTop - FILE_EDITOR_GRID_GAP) }}
               />
             )}
 

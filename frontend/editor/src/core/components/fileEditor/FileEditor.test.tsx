@@ -4,6 +4,7 @@ import { expect, it, vi } from "vitest";
 import type { StirlingFile } from "@app/types/fileContext";
 
 const virtualRows = vi.hoisted(() => vi.fn());
+const virtualState = vi.hoisted(() => ({ padTop: 0 }));
 const stubs = vi.hoisted(() => [
   { id: "a", name: "a.pdf" } as unknown as StirlingFile,
   { id: "b", name: "b.pdf" } as unknown as StirlingFile,
@@ -14,7 +15,7 @@ vi.mock("@app/components/filesPage/useVirtualFileRows", () => ({
     virtualRows(...args);
     return {
       range: { start: 0, end: 3 },
-      padTop: 0,
+      padTop: virtualState.padTop,
       padBottom: 0,
       columns: 1,
       active: false,
@@ -88,4 +89,21 @@ it("virtualises the grid with the thumbnail card's own row pitch", () => {
   // 422px card (FileEditorThumbnail.module.css) + the grid's 24px row gap.
   // The shared grid estimate would under-count rows for a scrolled viewport.
   expect(virtualRows).toHaveBeenCalledWith(3, 446, true);
+});
+
+it("subtracts the grid's own row gap from the top spacer", () => {
+  virtualState.padTop = 446;
+  const { container } = render(
+    <MantineProvider>
+      <FileEditor />
+    </MantineProvider>,
+  );
+  virtualState.padTop = 0;
+
+  // One row above: 446px pitch, minus the 24px gap the grid adds after the
+  // spacer, keeps the first rendered row on its virtual offset.
+  const spacer = container.querySelector(
+    '[aria-hidden="true"][class*="virtualPad"]',
+  );
+  expect(spacer?.getAttribute("style")).toContain("height: 422px");
 });
