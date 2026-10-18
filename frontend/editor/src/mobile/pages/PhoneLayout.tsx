@@ -75,6 +75,7 @@ export function PhoneLayout({
   const { onRecentFileSelect } = useFilesModalContext();
   const { setActiveFileId } = useViewer();
   const [homeRequested, setHomeRequested] = useState(false);
+  const [collapseRequest, setCollapseRequest] = useState(0);
 
   // Bringing a file in from the home opens it, so the home steps aside.
   const previousFileCount = useRef(fileIds.length);
@@ -119,7 +120,16 @@ export function PhoneLayout({
     <div className="mobile-layout phone-layout" data-files-mode={filesMode}>
       {documentOpen && <DocumentHeader onBack={showHome} />}
       <div className="phone-layout-stage">
-        <div className="phone-layout-workbench">
+        <div
+          className="phone-layout-workbench"
+          // Placing, marking or scrolling the page wants the page, so a docked
+          // tool steps aside; the event still reaches the document.
+          onPointerDownCapture={() => {
+            if (sheetOpen && selectedToolKey !== null) {
+              setCollapseRequest((n) => n + 1);
+            }
+          }}
+        >
           <Workbench hideWorkbenchBar={documentOpen} />
         </div>
         {homeShown && (
@@ -133,6 +143,7 @@ export function PhoneLayout({
             open={sheetOpen}
             docked={selectedToolKey !== null}
             onClose={() => onSelectView("workbench")}
+            collapseRequest={collapseRequest}
           >
             <RightSidebar />
           </ToolSheet>
