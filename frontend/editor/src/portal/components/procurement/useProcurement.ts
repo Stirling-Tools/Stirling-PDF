@@ -154,6 +154,11 @@ export function useProcurement(): ProcurementController {
     try {
       await fn();
       queryClient.setQueryData(snapshotKey, await fetchSnapshot());
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: qk.wallet(true) }),
+        queryClient.invalidateQueries({ queryKey: qk.teamMy() }),
+        queryClient.invalidateQueries({ queryKey: ["portal", "users"] }),
+      ]);
       if (opts?.closeOnSuccess) setOpen(false);
       return true;
     } catch (e) {

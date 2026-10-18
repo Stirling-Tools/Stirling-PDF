@@ -14,6 +14,39 @@ function scanPage(hasText = false): PageSnapshot {
 }
 
 describe("scan hint action", () => {
+  it("keeps OCR visible, explains protection, and offers Remove Password", () => {
+    const onRunOcr = vi.fn();
+    const onRemovePassword = vi.fn();
+    const reason =
+      "OCR cannot keep this PDF's password protection. Use Remove Password to create an unprotected copy first.";
+    render(
+      <MantineProvider env="test">
+        <ScanHint
+          pages={[scanPage()]}
+          onRunOcr={onRunOcr}
+          ocrRunning={false}
+          ocrAvailable
+          ocrBlockedReason={reason}
+          onRemovePassword={onRemovePassword}
+        />
+      </MantineProvider>,
+    );
+    const ocr = screen.getByTestId("pdf-editor-scan-hint-ocr");
+    expect(ocr).toBeVisible();
+    expect(ocr).toBeDisabled();
+    expect(ocr).toHaveAccessibleDescription(reason);
+    expect(screen.getByRole("note")).toBeVisible();
+    expect(
+      screen.queryByText("pdfTextEditor.inspector.ocrUnavailable"),
+    ).not.toBeInTheDocument();
+    fireEvent.click(ocr);
+    expect(onRunOcr).not.toHaveBeenCalled();
+    fireEvent.click(
+      screen.getByRole("button", { name: "removePassword.submit" }),
+    );
+    expect(onRemovePassword).toHaveBeenCalledTimes(1);
+  });
+
   it("runs the supplied OCR action in one click", () => {
     const onRunOcr = vi.fn();
     render(

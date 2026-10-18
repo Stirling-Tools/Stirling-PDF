@@ -47,4 +47,18 @@ class GeneralUtilsPageSelectionTest {
         GeneralUtils.requireValidPageSelection("2n+1", 5);
         assertEquals(List.of(3, 5), GeneralUtils.parsePageList("2n+1", 5, true));
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"99", "5-10", "100n"})
+    void wellFormedCheckAllowsSelectionsThatMatchNoPage(String selection) {
+        assertDoesNotThrow(() -> GeneralUtils.requireWellFormedPageSelection(selection, 3));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "-1", "abc", "3-1"})
+    void wellFormedCheckStillRejectsMalformedTokens(String selection) {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> GeneralUtils.requireWellFormedPageSelection(selection, 3));
+    }
 }

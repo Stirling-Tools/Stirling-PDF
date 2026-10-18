@@ -8,6 +8,17 @@
 export type WalletStatus = "free" | "subscribed";
 export type WalletRole = "leader" | "member";
 
+/** Current agreement quantities and actual PDF inputs for its service period. */
+export interface EnterpriseHolding {
+  status: "trial" | "payment_pending" | "active";
+  periodStart: string;
+  periodEnd: string;
+  accessUntil: string;
+  agreedSeats: number | null;
+  annualVolume: number | null;
+  pdfsUsed: number;
+}
+
 /** One team member's billing-relevant row (name/email + their period spend). */
 export interface WalletMember {
   userId: string;
@@ -66,6 +77,7 @@ export interface ProcessorHolding {
 }
 
 export interface Wallet {
+  enterprise?: EnterpriseHolding | null;
   /** Caller's primary team_id; null on the synthetic empty snapshot for team-less callers. */
   teamId: number | null;
   /**

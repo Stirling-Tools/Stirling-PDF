@@ -390,15 +390,15 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       bridgeRefs.current.permissions?.state || {
         isEncrypted: false,
         isOwnerUnlocked: false,
-        permissions: PdfPermissionFlag.AllowAll,
-        canPrint: true,
-        canModifyContents: true,
-        canCopyContents: true,
-        canModifyAnnotations: true,
-        canFillForms: true,
+        permissions: 0,
+        canPrint: false,
+        canModifyContents: false,
+        canCopyContents: false,
+        canModifyAnnotations: false,
+        canFillForms: false,
         canExtractForAccessibility: true,
-        canAssembleDocument: true,
-        canPrintHighQuality: true,
+        canAssembleDocument: false,
+        canPrintHighQuality: false,
       }
     );
   }, []);
@@ -408,13 +408,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     if (api?.hasPermission) {
       return api.hasPermission(flag);
     }
-    // Default: allow all permissions - warn in development
-    if (process.env.NODE_ENV === "development") {
-      console.warn(
-        "[ViewerContext] Permissions API not available, defaulting to allow",
-      );
-    }
-    return true;
+    return false;
   }, []);
 
   // Action handlers - call APIs directly
