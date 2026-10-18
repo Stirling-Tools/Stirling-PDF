@@ -67,7 +67,7 @@ export function PhoneLayout({
   const { workbench } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const { fileIds, fileStubs } = useAllFiles();
-  const { toolRegistry, selectedToolKey } = useToolWorkflow();
+  const { leftPanelView, toolRegistry, selectedToolKey } = useToolWorkflow();
   const { onRecentFileSelect } = useFilesModalContext();
   const { activeFileId, setActiveFileId } = useViewer();
   const [homeRequested, setHomeRequested] = useState(false);
@@ -86,7 +86,12 @@ export function PhoneLayout({
   const homeShown = !filesMode && (homeRequested || fileIds.length === 0);
   const documentOpen =
     !homeShown && !filesMode && workbench === "viewer" && fileIds.length > 0;
-  const tool = selectedToolKey ? toolRegistry[selectedToolKey] : null;
+  // The tool panel shows the picker over a still-selected tool, so a key alone
+  // does not mean a tool is open.
+  const tool =
+    leftPanelView !== "toolPicker" && selectedToolKey
+      ? (toolRegistry[selectedToolKey] ?? null)
+      : null;
   const currentDocument =
     fileStubs.find((stub) => stub.id === activeFileId) ?? fileStubs[0];
 
@@ -142,8 +147,8 @@ export function PhoneLayout({
       >
         <PipPane
           front={!toolsInFront}
-          // Only an open document waits in the corner, not the home or library.
-          pip={documentOpen}
+          // Only waits in the corner behind an open tool, never behind the list.
+          pip={documentOpen && tool !== null}
           variant="live"
           scale={documentPipScale}
           onScale={setDocumentPipScale}
