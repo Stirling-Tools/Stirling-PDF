@@ -60,6 +60,15 @@ describe("usePageTracksShortcuts", () => {
     });
   });
 
+  it("duplicates the selection with Meta+D", () => {
+    const { dispatch } = setup(["a1", "a2"]);
+    press("d", { metaKey: true });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "duplicate",
+      pageIds: ["a1", "a2"],
+    });
+  });
+
   it("leaves Ctrl+D to the browser when nothing is selected", () => {
     const { dispatch } = setup([]);
     const event = press("d", { ctrlKey: true });
