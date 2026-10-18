@@ -6325,6 +6325,7 @@ signInButton = "Sign in to continue"
 signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
 title = "Authorize access"
 unknownApp = "A third-party application"
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
 verifiedDomain = "Published by {{domain}}"
 

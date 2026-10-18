@@ -54,6 +54,13 @@ export function ConsentCard({
     details.client?.name ||
     t("oauthConsent.unknownApp", "A third-party application");
   const scopes = (details.scope || "").split(/\s+/).filter(Boolean);
+  const domain = details.client?.domain;
+  const redirectHost = details.client?.redirectHost;
+  const redirectsElsewhere =
+    !!domain &&
+    !!redirectHost &&
+    redirectHost !== domain &&
+    !redirectHost.endsWith(`.${domain}`);
   return (
     <>
       <Text component="h2" ta="center" fw={700} fz="xl" mb="xs">
@@ -82,6 +89,15 @@ export function ConsentCard({
           {t("oauthConsent.unverifiedApp", {
             host: details.client.redirectHost,
             defaultValue: `Unverified app name. Access goes to ${details.client.redirectHost}, so only continue if you trust that site.`,
+          })}
+        </Text>
+      )}
+      {details.client?.verified && redirectsElsewhere && (
+        <Text ta="center" size="sm" fw={600} mb="lg">
+          {t("oauthConsent.redirectsElsewhere", {
+            host: redirectHost,
+            domain,
+            defaultValue: `Access goes to ${redirectHost}, not ${domain}, so only continue if you trust that site.`,
           })}
         </Text>
       )}
