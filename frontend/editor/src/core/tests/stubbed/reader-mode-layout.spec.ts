@@ -1,9 +1,10 @@
-import { test, expect, type Page } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
+import type { Page } from "@playwright/test";
 
 /**
- * The fullscreen catalogue is measured from the tool panel's box, and the
- * reader wings slide that box. Measuring mid-slide leaves the surface over the
- * file sidebar and past the viewport's trailing edge.
+ * Guards the fullscreen catalogue's box across the reader wings, RTL and
+ * viewport changes: the surface is measured from the tool panel's box, which
+ * the wings slide.
  */
 test.use({ autoGoto: false });
 
@@ -70,21 +71,29 @@ async function enableRtl(page: Page): Promise<void> {
 }
 
 async function wingsSettled(page: Page): Promise<void> {
-  await expect(page.locator("[data-wings]")).toHaveCount(0, { timeout: 5_000 });
+  await expect(page.locator("[data-wings]")).toHaveCount(0);
 }
 
 function isSettled(surface: Surface | null, before: Surface | null): boolean {
   if (!surface || !before) return false;
   return (
+    touchesSidebar(surface) &&
+    Math.abs(surface.left - before.left) < 1 &&
+    Math.abs(surface.right - before.right) < 1
+  );
+}
+
+/** The surface starts at the sidebar's trailing edge and nothing covers the sidebar. */
+function touchesSidebar(surface: Surface | null): boolean {
+  if (!surface) return false;
+  return (
     Math.abs(surface.left - surface.sidebarRight) < 1 &&
     surface.right <= surface.viewportWidth + 0.5 &&
-    Math.abs(surface.left - before.left) < 1 &&
-    Math.abs(surface.right - before.right) < 1 &&
     surface.sidebarHit
   );
 }
 
-/** RTL: the surface anchors to the trailing (right) edge and the sidebar keeps its side. */
+/** RTL: anchored to the trailing edge, sidebar untouched. */
 function isSettledRtl(surface: Surface | null): boolean {
   if (!surface) return false;
   return (
@@ -97,11 +106,7 @@ function isSettledRtl(surface: Surface | null): boolean {
 
 function isSettledAtWidth(surface: Surface | null, width: number): boolean {
   if (!surface) return false;
-  return (
-    Math.abs(surface.right - width) < 1 &&
-    Math.abs(surface.left - surface.sidebarRight) < 1 &&
-    surface.sidebarHit
-  );
+  return touchesSidebar(surface) && Math.abs(surface.right - width) < 1;
 }
 
 test("fullscreen tool catalogue keeps its box across reader wings", async ({
@@ -114,10 +119,15 @@ test("fullscreen tool catalogue keeps its box across reader wings", async ({
   await page.goto("/editor", { waitUntil: "domcontentloaded" });
   await expect(page.locator(".tool-panel__fullscreen-surface")).toBeVisible();
   await wingsSettled(page);
+  // WebKit paints the first box before the sidebar finishes laying out; the
+  // baseline is the settled one.
+  await expect
+    .poll(async () => touchesSidebar(await readSurface(page)))
+    .toBe(true);
   const before = await readSurface(page);
 
-  // A destination is only negotiable once the previous wings transition has
-  // finished; clicking through one strands the shell without the sidebar.
+  // Wait for the wings to settle: a click mid-slide leaves the shell without
+  // its sidebar.
   await rail("Reader").click();
   await expect(page.locator(".reader-rail")).toBeVisible();
   await wingsSettled(page);
@@ -127,9 +137,7 @@ test("fullscreen tool catalogue keeps its box across reader wings", async ({
   await wingsSettled(page);
   // Flush with the sidebar, inside the viewport, same box as before the trip.
   await expect
-    .poll(async () => isSettled(await readSurface(page), before), {
-      timeout: 5_000,
-    })
+    .poll(async () => isSettled(await readSurface(page), before))
     .toBe(true);
 });
 
@@ -143,7 +151,7 @@ test("fullscreen catalogue anchors to the trailing edge in RTL", async ({
   await expect(page.locator(".tool-panel__fullscreen-surface")).toBeVisible();
   await wingsSettled(page);
   await expect
-    .poll(async () => isSettledRtl(await readSurface(page)), { timeout: 5_000 })
+    .poll(async () => isSettledRtl(await readSurface(page)))
     .toBe(true);
 });
 
@@ -159,8 +167,6 @@ test("fullscreen catalogue re-measures when the viewport changes", async ({
   const narrow = { width: 1400, height: 900 };
   await page.setViewportSize(narrow);
   await expect
-    .poll(async () => isSettledAtWidth(await readSurface(page), narrow.width), {
-      timeout: 5_000,
-    })
+    .poll(async () => isSettledAtWidth(await readSurface(page), narrow.width))
     .toBe(true);
 });

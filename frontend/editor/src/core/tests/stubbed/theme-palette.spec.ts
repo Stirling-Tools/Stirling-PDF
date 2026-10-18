@@ -1,28 +1,30 @@
-import { test, expect, type Page } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
+import type { Page } from "@playwright/test";
 
-/**
- * Design guardrails for the catalogue palette: category marks must stay
- * distinguishable from each other, and the accent must stay readable as text
- * and as a fill. Catches the "everything collapsed to one blue" drift.
- */
+/** Palette guardrails: category marks stay distinguishable, the accent stays readable as text and as a fill. */
 test.use({ autoGoto: false, viewport: { width: 1920, height: 1080 } });
 
 interface PaletteReport {
   sectionColours: string[];
   accentTextOnBg: number;
   onPrimary: number;
+  tokens: Record<string, string>;
 }
 
 async function readPalette(page: Page): Promise<PaletteReport> {
   return page.evaluate(() => {
+    // Resolved by the browser, not by a hex parser: pre-built CSS minifies
+    // #ffffff to #fff, and color-mix() never parses as a hex at all.
     const toRgb = (value: string): [number, number, number] => {
-      const hex = value.trim().match(/^#([0-9a-f]{6})$/i);
-      if (hex) {
-        const n = parseInt(hex[1], 16);
-        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-      }
-      const nums = (value.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
-      return [nums[0] ?? 0, nums[1] ?? 0, nums[2] ?? 0];
+      const probe = document.createElement("canvas");
+      probe.width = 1;
+      probe.height = 1;
+      const ctx = probe.getContext("2d");
+      if (!ctx) return [0, 0, 0];
+      ctx.fillStyle = value;
+      ctx.fillRect(0, 0, 1, 1);
+      const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+      return [r, g, b];
     };
     const luminance = ([r, g, b]: [number, number, number]): number => {
       const channel = (v: number): number => {
@@ -46,10 +48,15 @@ async function readPalette(page: Page): Promise<PaletteReport> {
       ).map((el) => getComputedStyle(el).color),
       accentTextOnBg: contrast(token("--c-accent-text"), token("--c-bg")),
       onPrimary: contrast(token("--c-text-on-primary"), token("--c-primary")),
+      tokens: {
+        accentText: token("--c-accent-text"),
+        bg: token("--c-bg"),
+        onPrimary: token("--c-text-on-primary"),
+        primary: token("--c-primary"),
+      },
     };
   });
 }
-
 async function seedDark(page: Page): Promise<void> {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.addInitScript(() => {
@@ -82,9 +89,10 @@ test("catalogue palette keeps the categories distinguishable and the accent read
   await expect(page.locator("[data-wings]")).toHaveCount(0);
 
   const light = await readPalette(page);
-  expect(new Set(light.sectionColours).size).toBeGreaterThanOrEqual(8);
-  expect(light.accentTextOnBg).toBeGreaterThanOrEqual(4.5);
-  expect(light.onPrimary).toBeGreaterThanOrEqual(4.5);
+  const tokens = JSON.stringify(light.tokens);
+  expect(new Set(light.sectionColours).size, tokens).toBeGreaterThanOrEqual(8);
+  expect(light.accentTextOnBg, tokens).toBeGreaterThanOrEqual(4.5);
+  expect(light.onPrimary, tokens).toBeGreaterThanOrEqual(4.5);
 });
 
 test("dark palette keeps the same guarantees", async ({ page }) => {
@@ -95,7 +103,8 @@ test("dark palette keeps the same guarantees", async ({ page }) => {
   await expect(page.locator("[data-wings]")).toHaveCount(0);
 
   const dark = await readPalette(page);
-  expect(new Set(dark.sectionColours).size).toBeGreaterThanOrEqual(8);
-  expect(dark.accentTextOnBg).toBeGreaterThanOrEqual(4.5);
-  expect(dark.onPrimary).toBeGreaterThanOrEqual(4.5);
+  const tokens = JSON.stringify(dark.tokens);
+  expect(new Set(dark.sectionColours).size, tokens).toBeGreaterThanOrEqual(8);
+  expect(dark.accentTextOnBg, tokens).toBeGreaterThanOrEqual(4.5);
+  expect(dark.onPrimary, tokens).toBeGreaterThanOrEqual(4.5);
 });
