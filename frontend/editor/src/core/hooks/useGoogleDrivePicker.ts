@@ -2,6 +2,11 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import {
+  ensureConnectedAccount,
+  useConnectedAccounts,
+} from "@app/hooks/useConnectedAccounts";
+import { fetchAccessToken } from "@app/services/connectedAccountsService";
+import {
   getGoogleDrivePickerService,
   isGoogleDriveConfigured,
   getGoogleDriveConfig,
@@ -21,7 +26,12 @@ interface UseGoogleDrivePickerReturn {
   openPicker: (options?: UseGoogleDrivePickerOptions) => Promise<File[]>;
 }
 
-/** Initializes Drive lazily; failed picks resolve to [] and set error until cleared or retried. */
+/**
+ * Initializes Drive lazily; failed picks resolve to [] and set error until
+ * cleared or retried. Where the server offers connected accounts, the picker
+ * runs on the user's connected Google account (connected on first use), so the
+ * same sign-in serves their pipelines.
+ */
 export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -30,6 +40,8 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
   const [error, setError] = useState<string | null>(null);
   const clearError = useCallback(() => setError(null), []);
   const [isInitialized, setIsInitialized] = useState(false);
+  const connected = useConnectedAccounts();
+  const useAccounts = connected.available("google");
 
   // Unrelated app settings must not invalidate Drive's config or picker callbacks.
   const googleDriveBackendConfig = useMemo(
@@ -84,15 +96,38 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
         setIsLoading(true);
         setError(null);
 
+        let account;
+        if (useAccounts) {
+          const connection = await ensureConnectedAccount(
+            "google",
+            connected.connect,
+          );
+          if (!connection.account) {
+            if (connection.outcome === "error") {
+              setError(
+                t(
+                  "provider.googledrive.errors.connectFailed",
+                  "Couldn't connect your Google account. Try again from Settings > Connected accounts.",
+                ),
+              );
+            }
+            return [];
+          }
+          account = connection.account;
+        }
+
         await initializeService();
 
         const service = getGoogleDrivePickerService();
-        const files = await service.openPicker({
+        const pickerOptions = {
           multiple: options.multiple ?? true,
           mimeTypes: options.mimeTypes,
-        });
-
-        return files;
+        };
+        if (account) {
+          const token = await fetchAccessToken(account.id, "drive");
+          return await service.openPickerWithToken(token, pickerOptions);
+        }
+        return await service.openPicker(pickerOptions);
       } catch (err) {
         const errorMessage =
           err instanceof Error
@@ -108,7 +143,7 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
         setIsLoading(false);
       }
     },
-    [isEnabled, initializeService, t],
+    [isEnabled, initializeService, useAccounts, connected, t],
   );
 
   return {

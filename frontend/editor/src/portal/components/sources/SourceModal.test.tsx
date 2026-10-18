@@ -48,6 +48,30 @@ vi.mock("@portal/api/integrations", () => ({
   createIntegration: (body: unknown) => createIntegration(body),
 }));
 
+const connectedAccounts = vi.hoisted(() => ({
+  available: true,
+  accounts: [
+    {
+      id: 12,
+      provider: "microsoft",
+      email: "pat@contoso.com",
+      displayName: "Pat",
+      status: "CONNECTED",
+      personal: false,
+      lastError: null,
+      createdAt: null,
+    },
+  ],
+}));
+vi.mock("@app/hooks/useConnectedAccounts", () => ({
+  useConnectedAccounts: () => ({
+    available: () => connectedAccounts.available,
+    accounts: connectedAccounts.accounts,
+    connect: vi.fn(),
+  }),
+  latestConnectedAccounts: () => connectedAccounts.accounts,
+}));
+
 function renderModal(sourceId: string | null = null) {
   const onClose = vi.fn();
   const onSaved = vi.fn();
@@ -253,7 +277,7 @@ describe("SourceModal", () => {
 
   it("lists coming-soon connectors as inert cards", () => {
     renderModal();
-    fireEvent.click(screen.getByText("portal.sources.types.sharepoint.label"));
+    fireEvent.click(screen.getByText("portal.sources.types.dropbox.label"));
     // Still on the type stage: no configure form appeared.
     expect(
       screen.queryByLabelText(/portal\.sources\.wizard\.name/),
@@ -304,5 +328,66 @@ describe("SourceModal", () => {
 
     await waitFor(() => expect(deleteSource).toHaveBeenCalledWith("src-9"));
     expect(onSaved).toHaveBeenCalled();
+  });
+
+  it("saves a OneDrive location as the user's own connected account", async () => {
+    renderModal();
+    fireEvent.click(screen.getByText("portal.sources.types.onedrive.label"));
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+      target: { value: "My scans" },
+    });
+    fireEvent.change(
+      screen.getByLabelText(/portal\.sources\.networkFields\.directory\.label/),
+      { target: { value: "Scans/In" } },
+    );
+    expect(
+      screen.queryByText("portal.sources.cloudFields.connection.label"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("portal.sources.builder.create"));
+
+    await waitFor(() => expect(createSource).toHaveBeenCalledTimes(1));
+    const saved = createSource.mock.calls[0][0] as {
+      options: Record<string, string>;
+    };
+    expect(saved.options).toMatchObject({
+      authMode: "account",
+      accountId: "12",
+      directory: "Scans/In",
+    });
+    expect(saved.options).not.toHaveProperty("connectionId");
+  });
+
+  it("shows an API-created organisation location with its connection, not an account", async () => {
+    fetchSource.mockResolvedValue({
+      id: "src-5",
+      name: "Finance",
+      type: "sharepoint",
+      options: { connectionId: "7", directory: "Invoices" },
+      enabled: true,
+    });
+    renderModal("src-5");
+
+    expect(
+      await screen.findByText("portal.sources.cloudFields.connection.label"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.sources.cloudFields.account.label"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("explains when the server does not allow connecting your own account", () => {
+    connectedAccounts.available = false;
+    try {
+      renderModal();
+      fireEvent.click(
+        screen.getByText("portal.sources.types.googledrive.label"),
+      );
+      expect(
+        screen.getByText("portal.sources.cloudFields.account.unavailable"),
+      ).toBeInTheDocument();
+    } finally {
+      connectedAccounts.available = true;
+    }
   });
 });

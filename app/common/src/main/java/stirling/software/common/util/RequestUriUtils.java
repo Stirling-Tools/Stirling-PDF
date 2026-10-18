@@ -212,6 +212,8 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith(
                         "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
                 || trimmedUri.startsWith("/api/v1/webhooks/")
+                // Provider redirect after connecting a cloud account; guarded by sealed state
+                || trimmedUri.startsWith("/api/v1/connected-accounts/callback/")
                 || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")

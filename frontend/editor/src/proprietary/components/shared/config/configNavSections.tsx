@@ -42,6 +42,8 @@ import AccountCards from "@core/components/shared/config/configSections/preferen
 import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
 import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
+import ConnectedAccountsSection from "@app/components/shared/config/configSections/ConnectedAccountsSection";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 /**
  * Self-hosted settings, grouped by who reaches for them and what they do there:
@@ -58,6 +60,7 @@ export const useConfigNavSections = (
   showSettingsWhenNoLogin: boolean = true,
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
 
   // Core ships Preferences and About; About is the small print and stays last.
   const coreSections = useCoreConfigNavSections(
@@ -88,6 +91,22 @@ export const useConfigNavSections = (
         ),
         icon: "key",
         component: <ApiKeys />,
+      });
+    }
+    if (
+      loginEnabled &&
+      (config?.microsoftAccountConnections ||
+        config?.googleDriveAccountConnections)
+    ) {
+      preferences.items.push({
+        key: "connectedAccounts",
+        label: t("settings.connectedAccounts.title", "Connected accounts"),
+        description: t(
+          "settings.connectedAccounts.description",
+          "Your own OneDrive, SharePoint and Google Drive, for opening files and for your pipelines.",
+        ),
+        icon: "link",
+        component: <ConnectedAccountsSection />,
       });
     }
   }

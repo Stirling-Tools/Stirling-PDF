@@ -45,6 +45,7 @@ import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.access.model.PrincipalType;
 import stirling.software.proprietary.access.model.ResourceType;
 import stirling.software.proprietary.access.repository.ResourceGrantRepository;
+import stirling.software.proprietary.connectedaccount.ConnectedAccountRepository;
 import stirling.software.proprietary.integration.model.IntegrationConfig;
 import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
@@ -102,6 +103,7 @@ public class UserService implements UserServiceInterface {
     private final FileShareAccessRepository fileShareAccessRepository;
     private final ResourceGrantRepository resourceGrantRepository;
     private final IntegrationConfigRepository integrationConfigRepository;
+    private final ConnectedAccountRepository connectedAccountRepository;
     private final TeamMembershipService teamMembershipService;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
     private final ToolUsageStatRepository toolUsageStatRepository;
@@ -295,6 +297,7 @@ public class UserService implements UserServiceInterface {
                     ResourceType.INTEGRATION_CONFIG, String.valueOf(cfg.getId()));
         }
         integrationConfigRepository.deleteByOwnerUser(user);
+        connectedAccountRepository.deleteByOwnerUserId(user.getId());
 
         // Membership rows and invitation references would dangle once the user row is gone
         teamMembershipService.deleteAllForUser(user);

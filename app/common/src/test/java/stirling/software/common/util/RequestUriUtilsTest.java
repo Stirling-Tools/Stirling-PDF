@@ -197,6 +197,12 @@ class RequestUriUtilsTest {
     void testIsPublicAuthEndpoint_webhookReceiver() {
         // The webhook source receiver authenticates each delivery by HMAC signature, not a session.
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/webhooks/whk_abc123", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/connected-accounts/callback/microsoft", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/connected-accounts/12/access-token", ""));
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/api/v1/webhooks/whk_abc123", "/app"));
     }
 

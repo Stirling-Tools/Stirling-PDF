@@ -12,5 +12,9 @@ public enum IntegrationType {
     PURVIEW,
     /** ConsignO Cloud (Notarius) e-signature and notarization. */
     CONSIGNO,
-    VECTOR_DB
+    VECTOR_DB,
+    /** A Microsoft Entra app registration that reads and writes OneDrive and SharePoint files. */
+    MICROSOFT_365,
+    /** A Google service account that reads and writes Google Drive for the organisation. */
+    GOOGLE_WORKSPACE
 }

@@ -3867,6 +3867,21 @@ title = "Quality Adjustment"
 [compressPdfs]
 tags = "squish,small,tiny"
 
+[connectedAccounts]
+connect = "Connect"
+connectAnother = "Connect another"
+connectFailed = "The account couldn't be connected. Check that the server's app registration is set up, then try again."
+connected = "Connected"
+disconnect = "Disconnect"
+google = "Google Drive"
+intro = "Connect your own accounts once. The editor can then open files from them without signing in again, and your pipelines can read from and save to them as you."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Sign in again: Stirling can no longer reach this account, so pipelines using it are paused."
+none = "Your administrator hasn't turned on connected accounts."
+personal = "Personal account"
+popupBlocked = "Your browser blocked the sign-in window. Allow pop-ups for this site and try again."
+reconnect = "Sign in again"
+
 [config]
 plan = "Plan"
 planDescription = "Your plan, credits and spend limit, and the invoices behind them."
@@ -4787,6 +4802,8 @@ googleDrive = "Google Drive"
 library = "PDF Library"
 myFiles = "File library"
 noFiles = "No files yet"
+oneDrive = "Open from OneDrive"
+oneDriveFailed = "Couldn't open OneDrive"
 openFileManager = "Browse all files & folders"
 openFromComputer = "Open from computer"
 openSettings = "Open settings"
@@ -8734,6 +8751,31 @@ placeholder = "X-N8N-Key"
 [portal.connections.types.n8n.fields.token]
 label = "Header value"
 
+[portal.connections.types.googleworkspace]
+description = "A service account that reads and writes Google Drive for the organisation."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Paste the service account's JSON key from Google Cloud. It is encrypted and never shown again."
+label = "Service account key (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Optional. With domain-wide delegation, the user whose Drive this acts as (a dedicated bot user keeps working when people leave). Blank reaches only shared drives and folders shared with the service account."
+label = "Act as user"
+placeholder = "stirling-bot@contoso.com"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Leave blank to use the server's Microsoft app from Settings. A separate app registration needs Microsoft Graph application permissions with admin consent."
+label = "Application (client) ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+helperText = "Leave blank when the server's Microsoft app is set to one organisation."
+label = "Directory (tenant) ID"
+placeholder = "contoso.onmicrosoft.com or tenant GUID"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "File processed documents into Nextcloud."
@@ -8762,6 +8804,15 @@ label = "Client secret"
 helperText = "Stamped onto every label as its SiteId, so Purview-aware tools know which organisation applied it."
 label = "Directory (tenant) ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
+
+[portal.connections.types.onedrive]
+description = "Read from and write to one user's OneDrive for Business."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "Whose OneDrive this connection reaches. The app registration needs the Files.ReadWrite.All application permission."
+label = "OneDrive owner"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.s3]
 description = "An S3 bucket that sources can read from and pipeline outputs can write to."
@@ -8806,6 +8857,18 @@ helperText = "Leave blank if you authenticate with a private key instead."
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Optional. Paste an OpenSSH private key to authenticate with a key instead of a password."
 label = "Private key"
+
+[portal.connections.types.sharepoint]
+description = "Read from and write to a SharePoint site's document library."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Optional. Leave blank for the site's default Documents library."
+label = "Document library"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "Site URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Post a message to Slack when a policy processes a document."
@@ -10666,6 +10729,39 @@ cancel = "Cancel"
 confirm = "Delete"
 title = "Delete source?"
 
+[portal.sources.cloudFields.account]
+connect = "Connect your account"
+connectAnother = "Connect another account"
+connectFailed = "The account couldn't be connected. Try again, or ask your administrator to check the app registration."
+label = "Account"
+placeholder = "Choose an account"
+reconnect = "sign in again"
+unavailable = "Connecting your own account is turned off on this server. Choose an organisation connection instead."
+
+[portal.sources.cloudFields.authMode]
+helperText = "Your account reaches what you can open and needs no admin. An organisation connection keeps working when people leave, and only reaches what an admin set up."
+label = "Sign in as"
+
+[portal.sources.cloudFields.authMode.options]
+account = "My account"
+organisation = "Organisation connection"
+
+[portal.sources.cloudFields.connection]
+helperText = "Set up by an administrator under Integrations. Shared by every location that uses it."
+label = "Organisation connection"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Paste the folder's link, or type a path from the top of My Drive."
+placeholder = "Folder link, or Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "A folder in your OneDrive, or paste a folder link (Copy link in OneDrive). Blank means the top."
+placeholder = "Scans/Inbox, or a folder link"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "With your account, paste the folder's link (Copy link in SharePoint). With an organisation connection, a folder inside its library."
+placeholder = "Folder link"
+
 [portal.sources.networkFields.connection]
 helperText = "The saved connection with the server address and credentials. Shared by every source that uses it."
 label = "Connection"
@@ -10759,7 +10855,7 @@ description = "Poll an FTP or FTPS server folder for new documents."
 label = "FTP"
 
 [portal.sources.types.googledrive]
-description = "Pull documents from shared Google Drive folders."
+description = "Watch a Google Drive folder for new documents, or save results to one."
 label = "Google Drive"
 
 [portal.sources.types.network]
@@ -10767,7 +10863,7 @@ description = "Watch an SMB network share for new documents."
 label = "Network drive"
 
 [portal.sources.types.onedrive]
-description = "Watch OneDrive folders for new documents."
+description = "Watch a OneDrive folder for new documents, or save results to one."
 label = "OneDrive"
 
 [portal.sources.types.s3]
@@ -10796,7 +10892,7 @@ description = "Poll an SFTP drop folder for new documents."
 label = "SFTP"
 
 [portal.sources.types.sharepoint]
-description = "Pull documents from SharePoint document libraries."
+description = "Watch a SharePoint document library folder, or save results to one."
 label = "SharePoint"
 
 [portal.sources.types.unknown]
@@ -10980,6 +11076,14 @@ scope = "File Import"
 description = "Google API Key for Google Picker API from Google Cloud Console"
 label = "API Key"
 
+[provider.googledrive.accountScope]
+description = "drive reaches every file (Google must verify a public app for it); drive.file only files people pick or Stirling creates"
+label = "Drive access"
+
+[provider.googledrive.allowAccountConnections]
+description = "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections."
+label = "Let people connect their own account"
+
 [provider.googledrive.appId]
 description = "Google Drive App ID from Google Cloud Console"
 label = "App ID"
@@ -10988,13 +11092,51 @@ label = "App ID"
 description = "Google OAuth 2.0 Client ID from Google Cloud Console"
 label = "Client ID"
 
+[provider.googledrive.clientSecret]
+description = "Lets people connect their Google account for their pipelines. Add {{redirect}} as an authorised redirect URI of the OAuth client."
+label = "Client secret"
+
 [provider.googledrive.enabled]
 description = "Allow users to import files directly from Google Drive"
 label = "Enable Google Drive File Picker"
 
 [provider.googledrive.errors]
+connectFailed = "Couldn't connect your Google account. Try again from Settings > Connected accounts."
 notConfigured = "Google Drive is not configured"
 pickerFailed = "Failed to open Google Drive picker"
+
+[provider.onedrive]
+pickerTitle = "Choose files from OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "Couldn't connect your Microsoft account. Try again from Settings > Connected accounts."
+notConfigured = "OneDrive is not configured"
+pickerFailed = "Failed to open OneDrive"
+popupBlocked = "Your browser blocked the Microsoft sign-in window. Allow pop-ups for this site and try again."
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "Files & pipelines"
+
+[provider.microsoft.allowAccountConnections]
+description = "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections."
+label = "Let people connect their own account"
+
+[provider.microsoft.clientId]
+description = "From one Microsoft Entra app registration. Add a single-page application redirect URI of {{pickerRedirect}} and a web redirect URI of {{accountRedirect}}."
+label = "Application (client) ID"
+
+[provider.microsoft.clientSecret]
+description = "Needed for connected accounts and organisation connections. Stays on the server."
+label = "Client secret"
+
+[provider.microsoft.enabled]
+description = "Let people open files from OneDrive and SharePoint, and use them in pipelines"
+label = "Enable OneDrive & SharePoint"
+
+[provider.microsoft.tenant]
+description = "common for work, school and personal accounts; organizations for work and school only; or a tenant ID to admit one organisation"
+label = "Accounts"
 
 [provider.oauth2.generic]
 name = "Generic OAuth2"
@@ -11838,6 +11980,10 @@ user = "Logged in as"
 local = "Local Only"
 saas = "Stirling Cloud"
 selfhosted = "Self-Hosted"
+
+[settings.connectedAccounts]
+description = "Your own OneDrive, SharePoint and Google Drive, for opening files and for your pipelines."
+title = "Connected accounts"
 
 [settings.developer]
 apiKeys = "API Keys"

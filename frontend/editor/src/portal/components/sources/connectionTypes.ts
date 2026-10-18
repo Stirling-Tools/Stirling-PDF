@@ -307,6 +307,78 @@ const PURVIEW_FIELDS: ConnectionFieldDef[] = [
   },
 ];
 
+/**
+ * The Entra app both Microsoft 365 presets sign in with (client credentials). Every field may be
+ * left blank to use the server's own Microsoft app from Settings; an enterprise wanting a separate,
+ * narrowly permitted app registration per connection fills them in.
+ */
+const MICROSOFT_APP_FIELDS: ConnectionFieldDef[] = [
+  {
+    key: "tenantId",
+    labelKey: `${PREFIX}.microsoft365.fields.tenantId.label`,
+    control: "text",
+    placeholderKey: `${PREFIX}.microsoft365.fields.tenantId.placeholder`,
+    helperTextKey: `${PREFIX}.microsoft365.fields.tenantId.helperText`,
+  },
+  {
+    key: "clientId",
+    labelKey: `${PREFIX}.microsoft365.fields.clientId.label`,
+    control: "text",
+    helperTextKey: `${PREFIX}.microsoft365.fields.clientId.helperText`,
+  },
+  {
+    key: "clientSecret",
+    labelKey: `${PREFIX}.microsoft365.fields.clientSecret.label`,
+    control: "password",
+  },
+];
+
+const GOOGLE_WORKSPACE_FIELDS: ConnectionFieldDef[] = [
+  {
+    key: "credentialsJson",
+    labelKey: `${PREFIX}.googleworkspace.fields.credentialsJson.label`,
+    control: "textarea",
+    required: true,
+    helperTextKey: `${PREFIX}.googleworkspace.fields.credentialsJson.helperText`,
+  },
+  {
+    key: "subject",
+    labelKey: `${PREFIX}.googleworkspace.fields.subject.label`,
+    control: "text",
+    placeholderKey: `${PREFIX}.googleworkspace.fields.subject.placeholder`,
+    helperTextKey: `${PREFIX}.googleworkspace.fields.subject.helperText`,
+  },
+];
+
+const ONEDRIVE_FIELDS: ConnectionFieldDef[] = [
+  ...MICROSOFT_APP_FIELDS,
+  {
+    key: "user",
+    labelKey: `${PREFIX}.onedrive.fields.user.label`,
+    control: "text",
+    required: true,
+    placeholderKey: `${PREFIX}.onedrive.fields.user.placeholder`,
+    helperTextKey: `${PREFIX}.onedrive.fields.user.helperText`,
+  },
+];
+
+const SHAREPOINT_FIELDS: ConnectionFieldDef[] = [
+  ...MICROSOFT_APP_FIELDS,
+  {
+    key: "siteUrl",
+    labelKey: `${PREFIX}.sharepoint.fields.siteUrl.label`,
+    control: "text",
+    required: true,
+    placeholderKey: `${PREFIX}.sharepoint.fields.siteUrl.placeholder`,
+  },
+  {
+    key: "library",
+    labelKey: `${PREFIX}.sharepoint.fields.library.label`,
+    control: "text",
+    helperTextKey: `${PREFIX}.sharepoint.fields.library.helperText`,
+  },
+];
+
 const CONSIGNO_FIELDS: ConnectionFieldDef[] = [
   {
     key: "baseUrl",
@@ -586,7 +658,7 @@ function apiPreset(spec: {
  *
  * That excludes most of the obvious names. Every e-signature vendor is multi-call (create, send,
  * then retrieve the signed file later). Azure Document Intelligence, ABBYY, VirusTotal, Rossum and
- * Mindee are all submit-then-poll. SharePoint, Drive, Box, Salesforce and the rest are OAuth. They
+ * Mindee are all submit-then-poll. Google Drive, Box, Salesforce and the rest are OAuth. They
  * are not missing by oversight - they cannot work correctly here yet, and listing them would be a
  * promise the engine cannot keep.
  */
@@ -859,6 +931,44 @@ export const CREATABLE_CONNECTION_TYPES: CreatableConnectionType[] = [
     ],
     presetConfig: { protocol: "SMB" },
     fields: SMB_FIELDS,
+  },
+  {
+    id: "onedrive",
+    integrationType: "MICROSOFT_365",
+    kind: "preset",
+    category: "storage",
+    labelKey: `${PREFIX}.onedrive.label`,
+    descriptionKey: `${PREFIX}.onedrive.description`,
+    searchTerms: ["microsoft 365", "office 365", "m365", "entra", "azure"],
+    presetConfig: { drive: "onedrive" },
+    fields: ONEDRIVE_FIELDS,
+  },
+  {
+    id: "sharepoint",
+    integrationType: "MICROSOFT_365",
+    kind: "preset",
+    category: "storage",
+    labelKey: `${PREFIX}.sharepoint.label`,
+    descriptionKey: `${PREFIX}.sharepoint.description`,
+    searchTerms: [
+      "microsoft 365",
+      "office 365",
+      "m365",
+      "teams",
+      "document library",
+    ],
+    presetConfig: { drive: "sharepoint" },
+    fields: SHAREPOINT_FIELDS,
+  },
+  {
+    id: "googleworkspace",
+    integrationType: "GOOGLE_WORKSPACE",
+    kind: "preset",
+    category: "storage",
+    labelKey: `${PREFIX}.googleworkspace.label`,
+    descriptionKey: `${PREFIX}.googleworkspace.description`,
+    searchTerms: ["google", "drive", "workspace", "g suite", "service account"],
+    fields: GOOGLE_WORKSPACE_FIELDS,
   },
   {
     id: "purview",

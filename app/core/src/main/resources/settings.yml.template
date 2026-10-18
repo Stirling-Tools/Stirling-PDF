@@ -106,6 +106,15 @@ premium:
       clientId: "" # Google OAuth 2.0 client ID (obtain from Google Cloud Console)
       apiKey: "" # Google API key for Google Picker API (obtain from Google Cloud Console)
       appId: "" # Google Drive app ID
+      clientSecret: "" # OAuth client secret; lets users connect their Google account so pipelines can use their Drive (redirect URI <server>/api/v1/connected-accounts/callback/google)
+      allowAccountConnections: true # set to 'false' to stop users connecting their own Google account
+      accountScope: drive # Drive scope requested when a user connects: 'drive' (every file) or 'drive.file' (only files they pick or Stirling creates)
+    microsoft:
+      enabled: false # Enable OneDrive and SharePoint (editor picker, connected accounts, pipeline locations)
+      clientId: "" # Application (client) ID of the Microsoft Entra app registration
+      tenant: common # 'common' (work, school and personal accounts), 'organizations' (work and school only), or a tenant ID/domain to admit one organisation
+      clientSecret: "" # Client secret; needed for connected accounts and organisation connections (redirect URI <server>/api/v1/connected-accounts/callback/microsoft)
+      allowAccountConnections: true # set to 'false' to stop users connecting their own Microsoft account
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging for security and compliance tracking

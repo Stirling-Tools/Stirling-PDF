@@ -180,6 +180,22 @@ class GoogleDrivePickerService {
   }
 
   /**
+   * Open the picker with an access token the server minted from the user's
+   * connected Google account, so no Google sign-in happens in this browser.
+   */
+  async openPickerWithToken(
+    accessToken: string,
+    options: PickerOptions = {},
+  ): Promise<File[]> {
+    if (!this.config) {
+      throw new Error("Google Drive service not initialized");
+    }
+    this.accessToken = accessToken;
+    window.gapi.client.setToken({ access_token: accessToken });
+    return this.createPicker(options);
+  }
+
+  /**
    * Request access token from Google
    */
   private requestAccessToken(): Promise<void> {

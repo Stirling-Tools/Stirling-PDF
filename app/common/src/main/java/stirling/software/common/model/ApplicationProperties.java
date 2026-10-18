@@ -1870,13 +1870,41 @@ public class ApplicationProperties {
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
             private GoogleDrive googleDrive = new GoogleDrive();
+            private Microsoft microsoft = new Microsoft();
 
+            /**
+             * One Google OAuth client for the whole server. {@code clientId}, {@code apiKey} and
+             * {@code appId} drive the editor's picker; {@code clientSecret} additionally lets users
+             * connect their account so pipelines can read and write their Drive. {@code
+             * accountScope} is the Drive scope requested on connect: {@code drive} reaches every
+             * file, {@code drive.file} only files the user picked or Stirling created.
+             */
             @Data
             public static class GoogleDrive {
                 private boolean enabled = false;
                 private String clientId = "";
                 private String apiKey = "";
                 private String appId = "";
+                private String clientSecret = "";
+                private boolean allowAccountConnections = true;
+                private String accountScope = "drive";
+            }
+
+            /**
+             * One Microsoft Entra app registration for the whole server: the editor's OneDrive and
+             * SharePoint picker, users' connected accounts, and the default credentials of
+             * organisation connections. {@code tenant} is a tenant ID or domain to admit only that
+             * organisation, {@code organizations} for any work or school account, or {@code common}
+             * to also admit personal Microsoft accounts. {@code clientSecret} is server-only and
+             * needed for connected accounts and organisation connections.
+             */
+            @Data
+            public static class Microsoft {
+                private boolean enabled = false;
+                private String clientId = "";
+                private String tenant = "common";
+                private String clientSecret = "";
+                private boolean allowAccountConnections = true;
             }
 
             @Data

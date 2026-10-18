@@ -251,6 +251,34 @@ public class ConfigController {
             boolean enableLogin =
                     applicationProperties.getSecurity().isEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
+
+            // Connected accounts belong to a signed-in user and need the server-only secret.
+            configData.put(
+                    "googleDriveAccountConnections",
+                    enableLogin
+                            && googleDrive.isEnabled()
+                            && googleDrive.isAllowAccountConnections()
+                            && !googleDrive.getClientSecret().isBlank());
+            ApplicationProperties.Premium.ProFeatures.Microsoft microsoft =
+                    applicationProperties.getPremium().getProFeatures().getMicrosoft();
+            if (microsoft.isEnabled()) {
+                configData.put("microsoftEnabled", true);
+                configData.put("microsoftClientId", microsoft.getClientId());
+                configData.put("microsoftTenant", microsoft.getTenant());
+                configData.put(
+                        "microsoftGraphUrl",
+                        applicationContext
+                                .getEnvironment()
+                                .getProperty(
+                                        "stirling.microsoft.graph-url",
+                                        "https://graph.microsoft.com/v1.0"));
+            }
+            configData.put(
+                    "microsoftAccountConnections",
+                    enableLogin
+                            && microsoft.isEnabled()
+                            && microsoft.isAllowAccountConnections()
+                            && !microsoft.getClientSecret().isBlank());
             configData.put(
                     "honorOwnerPasswords",
                     applicationProperties.getSecurity().isHonorOwnerPasswords());

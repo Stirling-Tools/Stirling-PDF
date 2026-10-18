@@ -35,6 +35,7 @@ import {
 import { BrandMark } from "@portal/components/BrandMarks";
 import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
 import { ConnectionPicker } from "@portal/components/sources/ConnectionPicker";
+import { ConnectedAccountPicker } from "@portal/components/sources/ConnectedAccountPicker";
 import { ConnectionForm } from "@portal/components/sources/ConnectionForm";
 import {
   CREATABLE_CONNECTION_TYPES,
@@ -69,6 +70,29 @@ function optionsFor(
   const out = defaultOptions(type);
   for (const [key, value] of Object.entries(options ?? {})) {
     out[key] = value == null ? "" : String(value);
+  }
+  // A cloud location saved without the UI-only mode (e.g. over the API) is shown as whichever
+  // credential it actually carries.
+  if (
+    type.fields.some((field) => field.key === "authMode") &&
+    !options?.authMode
+  ) {
+    out.authMode = options?.connectionId ? "organisation" : "account";
+  }
+  return out;
+}
+
+/** Only what a visible field holds is saved: a hidden credential must not ride along. */
+function visibleOptions(
+  type: CreatableSourceType,
+  options: Record<string, string>,
+  visible: (field: SourceFieldDef) => boolean,
+): Record<string, string> {
+  const out = { ...options };
+  for (const field of type.fields) {
+    if (!visible(field)) {
+      delete out[field.key];
+    }
   }
   return out;
 }
@@ -231,7 +255,10 @@ export function SourceModal({
   }
 
   const requiredComplete = type.fields.every(
-    (field) => !field.required || (options[field.key] ?? "").trim() !== "",
+    (field) =>
+      !field.required ||
+      !fieldVisible(field) ||
+      (options[field.key] ?? "").trim() !== "",
   );
   const canSave = name.trim() !== "" && requiredComplete && !submitting;
 
@@ -288,7 +315,7 @@ export function SourceModal({
         id: isEdit ? (sourceId ?? undefined) : undefined,
         name: name.trim(),
         type: type.type,
-        options,
+        options: visibleOptions(type, options, fieldVisible),
         enabled,
       });
       await invalidateSources();
@@ -517,6 +544,14 @@ export function SourceModal({
         return renderS3ConnectionControl(field);
       case "connection":
         return renderConnectionControl(field);
+      case "account":
+        return (
+          <ConnectedAccountPicker
+            provider={field.provider ?? "microsoft"}
+            value={options[field.key] ?? ""}
+            onChange={(id) => setOption(field.key, id)}
+          />
+        );
       case "select":
         return renderSelectControl(field);
       default:

@@ -154,7 +154,9 @@ public class IntegrationConfigService {
     private static boolean isInfrastructureType(IntegrationType type) {
         return type == IntegrationType.S3
                 || type == IntegrationType.NETWORK
-                || type == IntegrationType.VECTOR_DB;
+                || type == IntegrationType.VECTOR_DB
+                || type == IntegrationType.MICROSOFT_365
+                || type == IntegrationType.GOOGLE_WORKSPACE;
     }
 
     /** Whether this caller may author custom API integrations, for the UI to offer or hide it. */

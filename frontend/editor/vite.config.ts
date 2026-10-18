@@ -714,6 +714,12 @@ export default defineConfig(async ({ mode, command }) => {
       // Minifies better than esbuild for this esnext target.
       cssMinify: "lightningcss" as const,
       rollupOptions: {
+        // The Microsoft sign-in popup lands on its own page so it hands the
+        // result back without booting the whole editor in the popup.
+        input: {
+          index: path.resolve(__dirname, "index.html"),
+          "msal-redirect": path.resolve(__dirname, "msal-redirect.html"),
+        },
         output: {
           assetFileNames: mjsToJsAssetFileNames,
           manualChunks(id: string, meta: ManualChunkMeta) {
