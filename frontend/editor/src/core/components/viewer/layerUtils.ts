@@ -54,14 +54,26 @@ export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
   };
 
   // Normalizes /D/Order into the shape buildLayerTree consumes: OCG ids,
-  // nested arrays, and {name, order} nodes for named groups.
+  // nested arrays, and {name, order} nodes for named groups. A labeled group
+  // is spec'd as an array whose first element is its text label
+  // (`[(Maps) 5 0 R ...]`); the {name, order} dict form is pdf.js's normalized
+  // shape and both show up in real files.
   const normalizeOrder = (
     value: PDFObject | undefined,
     depth = 0,
   ): unknown[] => {
     if (!(value instanceof PDFArray) || depth > MAX_ORDER_DEPTH) return [];
+    let label: string | undefined;
+    let start = 0;
+    if (value.size() > 0) {
+      const first = doc.context.lookup(value.get(0));
+      if (first instanceof PDFString || first instanceof PDFHexString) {
+        label = first.decodeText();
+        start = 1;
+      }
+    }
     const result: unknown[] = [];
-    for (let i = 0; i < value.size(); i++) {
+    for (let i = start; i < value.size(); i++) {
       const entry = value.get(i);
       const resolved = doc.context.lookup(entry);
       if (entry instanceof PDFRef) {
@@ -93,7 +105,7 @@ export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
         });
       }
     }
-    return result;
+    return label === undefined ? result : [{ name: label, order: result }];
   };
 
   const bytes = await file.arrayBuffer();

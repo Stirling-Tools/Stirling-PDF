@@ -219,6 +219,35 @@ describe("layerUtils", () => {
       expect(layers[1].visible).toBe(true);
     });
 
+    it("reads the spec form of a labeled /Order group", async () => {
+      const doc = await PDFDocument.create();
+      doc.addPage([400, 400]);
+      const leafRef = doc.context.register(
+        doc.context.obj({ Type: "OCG", Name: PDFString.of("Terrain") }),
+      );
+      const ocProperties = doc.context.obj({
+        OCGs: [leafRef],
+        D: doc.context.register(
+          doc.context.obj({
+            BaseState: PDFName.of("ON"),
+            Order: [doc.context.obj([PDFString.of("Maps"), leafRef])],
+          }),
+        ),
+      });
+      doc.catalog.set(
+        PDFName.of("OCProperties"),
+        doc.context.register(ocProperties),
+      );
+
+      const layers = await readPdfLayers(toBlob(await doc.save()));
+
+      expect(layers).toHaveLength(1);
+      expect(layers[0].name).toBe("Maps");
+      expect(layers[0].children?.map((child) => child.name)).toEqual([
+        "Terrain",
+      ]);
+    });
+
     it("keeps hierarchy for an indirect named group", async () => {
       const doc = await PDFDocument.create();
       doc.addPage([400, 400]);
