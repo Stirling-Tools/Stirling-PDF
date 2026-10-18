@@ -104,7 +104,7 @@ export const useConfigNavSections = (
         label: t("settings.connectedAccounts.title", "Connected accounts"),
         description: t(
           "settings.connectedAccounts.description",
-          "Your own OneDrive, SharePoint and Google Drive, for your pipelines.",
+          "Your own OneDrive, SharePoint and Google Drive, for opening files and for your pipelines.",
         ),
         icon: "link",
         component: <ConnectedAccountsSection />,

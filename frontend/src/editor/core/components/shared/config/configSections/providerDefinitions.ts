@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { absoluteWithBasePath } from "@editor/constants/app";
+import { ONEDRIVE_REDIRECT_PATH } from "@editor/services/oneDrivePickerService";
 export type ProviderType =
   | "oauth2"
   | "saml2"
@@ -931,6 +932,7 @@ const useGoogleDriveProvider = (): Provider => {
 
 const useMicrosoftProvider = (): Provider => {
   const { t } = useTranslation();
+  const pickerRedirect = absoluteWithBasePath(ONEDRIVE_REDIRECT_PATH);
   const accountRedirect = absoluteWithBasePath(
     "/api/v1/connected-accounts/callback/microsoft",
   );
@@ -952,7 +954,7 @@ const useMicrosoftProvider = (): Provider => {
         ),
         description: t(
           "provider.microsoft.enabled.description",
-          "Let people use OneDrive and SharePoint in pipelines",
+          "Let people open files from OneDrive and SharePoint, and use them in pipelines",
         ),
         defaultValue: false,
       },
@@ -978,6 +980,19 @@ const useMicrosoftProvider = (): Provider => {
           "Add this as a Web redirect URI on the Entra app registration.",
         ),
         value: accountRedirect,
+      },
+      {
+        key: "pickerRedirectUri",
+        type: "copy",
+        label: t(
+          "provider.microsoft.pickerRedirectUri.label",
+          "Single-page application redirect URI",
+        ),
+        description: t(
+          "provider.microsoft.pickerRedirectUri.description",
+          "Add this as a Single-page application redirect URI on the same app registration, for signing in from the editor.",
+        ),
+        value: pickerRedirect,
       },
       {
         key: "tenant",

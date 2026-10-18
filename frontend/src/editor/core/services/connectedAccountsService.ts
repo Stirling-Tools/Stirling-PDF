@@ -32,6 +32,18 @@ export async function disconnectAccount(id: number): Promise<void> {
   await apiClient.delete(`${BASE}/${id}`);
 }
 
+export async function fetchAccessToken(
+  id: number,
+  resource: string,
+): Promise<string> {
+  const response = await apiClient.post<{ accessToken: string }>(
+    `${BASE}/${id}/access-token`,
+    { resource },
+    { suppressErrorToast: true },
+  );
+  return response.data.accessToken;
+}
+
 export type ConnectOutcome = "connected" | "cancelled" | "error" | "closed";
 
 export async function connectAccount(

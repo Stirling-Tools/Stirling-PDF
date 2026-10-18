@@ -65,7 +65,7 @@ export default function ConnectedAccountsSection() {
       <Text size="sm" c="dimmed">
         {t(
           "connectedAccounts.intro",
-          "Connect your own accounts once. Your pipelines can then read from and save to them as you.",
+          "Connect your own accounts once. The editor can then open files from them without signing in again, and your pipelines can read from and save to them as you.",
         )}
       </Text>
       {error && (

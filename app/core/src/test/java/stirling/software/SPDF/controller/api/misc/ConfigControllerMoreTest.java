@@ -218,20 +218,25 @@ class ConfigControllerMoreTest {
         }
 
         @Test
-        @DisplayName("gates Microsoft account connections and never exposes the secret")
-        void microsoftAccountConnections() {
+        @DisplayName(
+                "exposes the Microsoft app but never its secret, and gates account connections")
+        void microsoftEnabled() {
             ApplicationProperties.Premium.ProFeatures.Microsoft microsoft =
                     applicationProperties.getPremium().getProFeatures().getMicrosoft();
             microsoft.setClientId("app-id");
             microsoft.setClientSecret("server-only");
             HttpServletRequest request = mock(HttpServletRequest.class);
             assertThat(bodyOf(newController().getAppConfig(request)))
+                    .doesNotContainKey("microsoftClientId")
                     .containsEntry("microsoftAccountConnections", false);
 
             microsoft.setEnabled(true);
+            microsoft.setTenant("organizations");
             Map<String, Object> body = bodyOf(newController().getAppConfig(request));
 
-            assertThat(body).containsKey("microsoftAccountConnections");
+            assertThat(body).containsEntry("microsoftEnabled", true);
+            assertThat(body).containsEntry("microsoftClientId", "app-id");
+            assertThat(body).containsEntry("microsoftTenant", "organizations");
             assertThat(body.values()).doesNotContain("server-only");
         }
 
