@@ -258,7 +258,10 @@ describe("matchesLicenseQuery", () => {
   it("matches the displayed label when the raw license spells it differently", () => {
     expect(
       matchesLicenseQuery(
-        dependency("spring-session-core", "The Apache Software License, Version 2.0"),
+        dependency(
+          "spring-session-core",
+          "The Apache Software License, Version 2.0",
+        ),
         "apache-2.0",
       ),
     ).toBe(true);
