@@ -13,16 +13,16 @@ knowledge_base:
       - files: ".coderabbit-practices.yaml"
         applyTo: "**/*"
       # Comment authority; task comment-lint enforces the mechanical half.
-      - files: "devGuide/CODE_COMMENTS.md"
+      - files: "docs/developer/CODE_COMMENTS.md"
         applyTo: "**/*"
       # Error-handling and user-message-key authority.
-      - files: "devGuide/EXCEPTION_HANDLING_GUIDE.md"
+      - files: "docs/developer/EXCEPTION_HANDLING_GUIDE.md"
         applyTo: "**/*.java,**/*.ts,**/*.tsx,**/*.js,**/*.jsx,**/*.py"
       # Frontend layering and override architecture.
       - files: "frontend/editor/DeveloperGuide.md"
         applyTo: "frontend/**"
       # At-rest storage-encryption contract.
-      - files: "devGuide/STORAGE_ENCRYPTION_AT_REST.md"
+      - files: "docs/developer/STORAGE_ENCRYPTION_AT_REST.md"
         applyTo: "app/**,engine/**,docker/**"
 
 reviews:
@@ -181,7 +181,7 @@ reviews:
           Check the repository-specific rules: @app/* imports and the cloud-layer
           import restrictions; FileContext ownership and PDF.js/blob/worker
           cleanup; useToolOperation and its supporting hooks; comments follow
-          devGuide/CODE_COMMENTS.md; Jackson 3 (tools.jackson.*) and Spring Boot
+          docs/developer/CODE_COMMENTS.md; Jackson 3 (tools.jackson.*) and Spring Boot
           4.1.1 rather than older patterns.
 
       - name: Translations and user-facing text
