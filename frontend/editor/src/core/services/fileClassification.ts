@@ -38,11 +38,13 @@ function parseLabelsEntry(value: string): string[] | null {
 export async function readClassificationLabelsFromFile(
   file: File,
 ): Promise<string[] | null> {
+  // The import stays outside the try: a chunk that failed to load has to
+  // reject so callers can retry, while a failed read means "no labels".
+  // Metadata extraction drags the PDF worker in, which the first screen must
+  // not wait for, so the service arrives with the work.
+  const { extractPDFMetadata } =
+    await import("@app/services/pdfMetadataService");
   try {
-    // Metadata extraction drags the PDF worker in, which the first screen must
-    // not wait for, so the service arrives with the work.
-    const { extractPDFMetadata } =
-      await import("@app/services/pdfMetadataService");
     const result = await extractPDFMetadata(file);
     if (!result.success) return null;
     const entry = result.metadata.customMetadata.find(

@@ -77,7 +77,14 @@ export function useFileSidebarGroups(
       void (async () => {
         let wrote = false;
         for (const stub of pending) {
-          const labels = await readStubClassificationLabels(stub);
+          let labels: string[] | null;
+          try {
+            labels = await readStubClassificationLabels(stub);
+          } catch {
+            // The metadata chunk could not load; leave the stub unattempted so
+            // a later pass, e.g. after the online listener fires, retries it.
+            continue;
+          }
           if (cancelled) return;
           attempted.current.add(attemptKey(stub));
           if (labels) {
@@ -91,8 +98,11 @@ export function useFileSidebarGroups(
         if (!cancelled && wrote) bumpRevision();
       })();
     });
+    const onOnline = () => setRetryTick((n) => n + 1);
+    window.addEventListener("online", onOnline);
     return () => {
       cancelled = true;
+      window.removeEventListener("online", onOnline);
       cancelIdle();
       if (retryTimer !== undefined) window.clearTimeout(retryTimer);
     };
