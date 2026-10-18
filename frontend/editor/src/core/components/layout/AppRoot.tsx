@@ -1,5 +1,4 @@
-import { Suspense } from "react";
-import { translatedLazy } from "@app/i18n/translatedLazy";
+import { Suspense, lazy } from "react";
 import { useLocation } from "react-router-dom";
 import HomePage from "@app/pages/HomePage";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
@@ -10,8 +9,8 @@ import { usePdfEngineWarmUp } from "@app/hooks/usePdfEngineWarmUp";
 
 // Their own chunks: the settings tree (admin sections, account, licence flows)
 // and the docs manifest are both large, and most sessions open neither.
-const SettingsPage = translatedLazy(() => import("@app/pages/SettingsPage"));
-const DocsPage = translatedLazy(() => import("@app/components/docs/DocsPage"));
+const SettingsPage = lazy(() => import("@app/pages/SettingsPage"));
+const DocsPage = lazy(() => import("@app/components/docs/DocsPage"));
 
 function AppContent() {
   const { pathname } = useLocation();

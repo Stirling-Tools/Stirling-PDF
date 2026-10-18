@@ -15,21 +15,6 @@ void i18n.init({
   interpolation: { escapeValue: false },
 });
 
-// `translatedLazy` awaits the complete dictionary before a route renders, and jsdom has no origin to resolve.
-const testFetch = globalThis.fetch;
-globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
-  const url =
-    typeof input === "string"
-      ? input
-      : input instanceof URL
-        ? input.href
-        : input.url;
-  if (url.includes("/locales/")) {
-    return Promise.resolve(new Response("{}", { status: 200 }));
-  }
-  return testFetch(input, init);
-};
-
 installFailOnConsole();
 
 // Mock localStorage for tests

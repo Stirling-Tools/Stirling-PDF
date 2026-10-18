@@ -68,7 +68,7 @@ export function adjustFontSizeToFit(
 
   const fit = () => {
     const current = inputs();
-    // Writing the font size resizes the label itself, which the parent observer used to read back as a reason to.
+    // Skip refitting when neither container width nor text changed to avoid resize observer feedback loops.
     if (current === settled) return;
     settled = current;
 

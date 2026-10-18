@@ -1,4 +1,4 @@
-/** Registry invariant: the Automate picker offers a tool whenever it doesn't opt out via `supportsAutomate. */
+/** Registry invariant: every tool that does not opt out via `supportsAutomate: false` must have an operationConfig. */
 import { describe, expect, test, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
@@ -38,7 +38,7 @@ describe("automatable tools", () => {
     expect(withConfig).toEqual([]);
   });
 
-  // Reorganize Pages has an automatable form (organization mode + page-order string) and a context-free settings.
+  // Reorganize Pages requires a mode and page-order string, so it must expose a settings component in Automate.
   test("Reorganize Pages exposes automation settings so it is configurable, not no-settings", () => {
     const { result } = renderHook(() => useTranslatedToolCatalog());
 

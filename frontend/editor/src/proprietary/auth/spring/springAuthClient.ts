@@ -337,14 +337,16 @@ class SpringAuthClient {
         return { data: { session }, error: null };
       }
 
-      // A token whose exp has passed cannot satisfy /me, and asking anyway spends a full round-trip before the.
+      // Skip /me when the access token has already expired and attempt a refresh directly.
       if (this.getTokenExpiry(token).expiresIn <= 0) {
         const refreshResult = await this.refreshSession();
         if (!refreshResult.error && refreshResult.data.session) {
           return refreshResult;
         }
-        localStorage.removeItem(JWT_STORAGE_KEY);
-        return { data: { session: null }, error: null };
+        if (!localStorage.getItem(JWT_STORAGE_KEY)) {
+          return { data: { session: null }, error: null };
+        }
+        return refreshResult;
       }
 
       // Verify with backend Note: We pass the token explicitly here, overriding the interceptor's default.

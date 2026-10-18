@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, Suspense } from "react";
+import { useCallback, useEffect, useState, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { Center, Group, Loader, Modal, Text } from "@mantine/core";
@@ -9,11 +9,10 @@ import { fileStorage } from "@app/services/fileStorage";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useIndexedDBRevision } from "@app/contexts/IndexedDBContext";
-import { translatedLazy } from "@app/i18n/translatedLazy";
 
 // Reached only while this modal is open on a file with earlier versions, so the
 // rail's markup waits for the modal instead of riding the landing graph.
-const VersionTimeline = translatedLazy(() =>
+const VersionTimeline = lazy(() =>
   import("@app/components/filesPage/VersionTimeline").then((module) => ({
     default: module.VersionTimeline,
   })),

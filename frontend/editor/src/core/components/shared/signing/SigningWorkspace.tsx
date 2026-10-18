@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { translatedLazy } from "@app/i18n/translatedLazy";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { Alert, Center, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
@@ -30,7 +29,7 @@ import {
 } from "@app/utils/pendingSigningIntent";
 import "@app/components/shared/signing/signing.css";
 
-const Viewer = translatedLazy(() => import("@app/components/viewer/Viewer"));
+const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
 
 /** Guests are told to sign in rather than that the server has signing off. */
 function SigningUnavailableNotice() {

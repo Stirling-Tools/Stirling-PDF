@@ -1,10 +1,9 @@
-import { Suspense, useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { translatedLazy } from "@app/i18n/translatedLazy";
 import { LibraryPickerModal } from "@app/components/filesPage/LibraryPickerModal";
 
-/** Deferred: the picker drags in the file grid, its virtualiser, the details panel and the share dialog - the. */
-const LibraryFilePicker = translatedLazy(() =>
+/** Deferred so the virtualised file grid, details panel, and share dialog stay out of the startup bundle. */
+const LibraryFilePicker = lazy(() =>
   import("@app/components/filesPage/LibraryFilePicker").then((module) => ({
     default: module.LibraryFilePicker,
   })),

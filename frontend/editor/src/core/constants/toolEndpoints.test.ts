@@ -1,4 +1,4 @@
-/** `toolEndpointPath` is the seam that lets the boot registry stay free of the operation configs: a registry. */
+/** Verifies that `toolEndpointPath` resolves the same paths as each tool's lazy operationConfig. */
 import { describe, expect, test, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { withOperationConfigs } from "@app/data/toolOperationConfigs";
@@ -36,7 +36,7 @@ describe("toolEndpointPath", () => {
     expect(mismatches).toEqual([]);
   });
 
-  // Some registry entries name surfaces no operation addresses (`view-pdf`, the developer docs links), so a name.
+  // Non-API registry entries (`view-pdf`, developer doc links) return null; every resolved path must exist in OpenAPI.
   test("only resolves names to generated endpoints", () => {
     const { result } = renderHook(() => useTranslatedToolCatalog());
     const generated: ReadonlySet<string> = new Set(TOOL_ENDPOINTS);

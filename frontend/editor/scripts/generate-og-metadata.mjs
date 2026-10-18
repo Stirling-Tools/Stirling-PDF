@@ -290,20 +290,42 @@ for (const line of tomlSrc.split(/\r?\n/)) {
     }
   }
 }
-// The English dictionary carries the tool copy the registry no longer repeats.
-const enUs = JSON.parse(read("public/locales/en-US/translation.json"));
-for (const [id, entry] of Object.entries(enUs.home ?? {})) {
-  if (typeof entry?.title === "string" && !titleById[id]) titleById[id] = entry.title;
-  if (typeof entry?.desc === "string" && !descById[id]) descById[id] = entry.desc;
+// The authored English TOML is the source: the delivery JSONs are build output.
+let enSection = null;
+for (const line of read("public/locales/en-US/translation.toml").split(
+  /\r?\n/,
+)) {
+  const sm = /^\[home\.([A-Za-z0-9_-]+)\]\s*$/.exec(line.trim());
+  if (sm) {
+    enSection = sm[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    continue;
+  }
+  if (/^\[/.test(line.trim())) {
+    enSection = null;
+    continue;
+  }
+  if (!enSection) continue;
+  const kv = /^(title|desc)\s*=\s*"((?:[^"\\]|\\.)*)"/.exec(line.trim());
+  if (!kv) continue;
+  const val = JSON.parse('"' + kv[2] + '"');
+  if (kv[1] === "title") {
+    if (!titleById[enSection]) titleById[enSection] = val;
+  } else if (!descById[enSection]) descById[enSection] = val;
 }
 
 const STR = '"((?:[^"\\\\]|\\\\.)*)"';
 for (const m of regSrc.matchAll(
-  new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_]+)\\.title"(?:\\s*,\\s*' + STR + ')?', "g"),
+  new RegExp(
+    't\\(\\s*"home\\.([A-Za-z0-9_]+)\\.title"(?:\\s*,\\s*' + STR + ")?",
+    "g",
+  ),
 ))
   if (m[2] !== undefined) titleById[m[1]] = m[2];
 for (const m of regSrc.matchAll(
-  new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_]+)\\.desc"(?:\\s*,\\s*' + STR + ')?', "g"),
+  new RegExp(
+    't\\(\\s*"home\\.([A-Za-z0-9_]+)\\.desc"(?:\\s*,\\s*' + STR + ")?",
+    "g",
+  ),
 ))
   if (m[2] !== undefined) descById[m[1]] = m[2];
 
@@ -461,7 +483,6 @@ for (const [routePath, seo] of Object.entries(CONVERT_SEO_PAGES)) {
     description: seo.description,
   };
 }
-
 
 // Base-tool keyword copy for the running SPA, on every alias of the tool, so the
 // hydrated English <title> matches the prerendered one. Convert pages set above

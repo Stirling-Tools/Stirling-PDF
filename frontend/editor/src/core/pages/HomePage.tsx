@@ -83,12 +83,12 @@ import "@app/pages/HomePage.css";
 
 const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
 
-/** The mobile hand-off is opened from a rail action and carries the transfer machinery, so it mounts on the. */
+/** Deferred until the mobile upload rail action is opened so QR/transfer code stays out of startup. */
 const MobileUploadModal = lazy(
   () => import("@app/components/shared/MobileUploadModal"),
 );
 
-/** Policies and their recovery run once per editor, and the pass pulls the policy chain with it, so the. */
+/** Deferred until after mount so the policy evaluation chain stays off the initial render path. */
 const PolicyAutoRunController = lazy(() =>
   import("@app/components/policies/PolicyAutoRunController").then((m) => ({
     default: m.PolicyAutoRunController,

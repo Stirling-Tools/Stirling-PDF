@@ -6,9 +6,9 @@ import React, {
   useEffect,
   useRef,
   Suspense,
+  lazy,
   ReactNode,
 } from "react";
-import { translatedLazy } from "@app/i18n/translatedLazy";
 import { useTranslation } from "react-i18next";
 import licenseService, {
   PlanTierGroup,
@@ -17,7 +17,7 @@ import licenseService, {
   PlanTier,
 } from "@app/services/licenseService";
 
-const StripeCheckout = translatedLazy(() =>
+const StripeCheckout = lazy(() =>
   import("@app/components/shared/stripeCheckout").then((m) => ({
     default: m.StripeCheckout,
   })),

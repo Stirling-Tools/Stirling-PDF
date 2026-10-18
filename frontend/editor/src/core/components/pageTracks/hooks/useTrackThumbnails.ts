@@ -42,8 +42,12 @@ export interface TrackThumbnailStore {
  */
 export function useTrackThumbnails(): TrackThumbnailStore {
   const selectors = useFileSelectors();
-  const { requestThumbnail, getThumbnailFromCache, addThumbnailToCache } =
-    useThumbnailGeneration();
+  const {
+    requestThumbnail,
+    getThumbnailFromCache,
+    addThumbnailToCache,
+    getCacheEpoch,
+  } = useThumbnailGeneration();
 
   const resolvedRef = useRef(new Map<string, string>());
   const listenersRef = useRef(new Set<() => void>());
@@ -84,10 +88,11 @@ export function useTrackThumbnails(): TrackThumbnailStore {
       if (!file) continue;
 
       inFlightRef.current.add(key);
+      const epoch = getCacheEpoch();
       const rendering = isPageImage(file)
         ? generateImageThumbnail(file, IMAGE_PAGE_THUMBNAIL_SIZE).then(
             (thumbnail) => {
-              addThumbnailToCache(key, thumbnail, page.sourceFileId);
+              addThumbnailToCache(key, thumbnail, page.sourceFileId, epoch);
               return thumbnail;
             },
           )
@@ -109,6 +114,7 @@ export function useTrackThumbnails(): TrackThumbnailStore {
     }
   }, [
     addThumbnailToCache,
+    getCacheEpoch,
     getThumbnailFromCache,
     requestThumbnail,
     scheduleNotify,

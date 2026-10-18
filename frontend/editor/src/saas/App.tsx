@@ -1,5 +1,4 @@
-import { Suspense, type ReactNode } from "react";
-import { translatedLazy } from "@app/i18n/translatedLazy";
+import { Suspense, lazy, type ReactNode } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@app/utils/pathUtils";
 import { AppProviders } from "@app/components/AppProviders";
@@ -10,7 +9,6 @@ import type { AppConfig } from "@app/contexts/AppConfigContext";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import OnboardingTour from "@app/components/onboarding/OnboardingTour";
-import Landing from "@app/routes/Landing";
 import Login from "@app/routes/Login";
 import { ResumePendingConnect } from "@app/routes/ResumePendingConnect";
 import Signup from "@app/routes/Signup";
@@ -27,12 +25,9 @@ import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
 import { RootGate } from "@app/routes/RootGate";
 
-const MobileScannerPage = translatedLazy(
-  () => import("@app/pages/MobileScannerPage"),
-);
-const MobileSignPage = translatedLazy(
-  () => import("@app/pages/MobileSignPage"),
-);
+const Landing = lazy(() => import("@app/routes/Landing"));
+const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
+const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
 
 // Import global styles
 import "@app/styles/tailwind.css";

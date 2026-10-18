@@ -239,7 +239,7 @@ function inScope(pkg: string, scope: string): boolean {
   return pkg === scope || pkg.startsWith(`${scope}/`);
 }
 
-// react-markdown and its remark/micromark/mdast/hast closure is heavy and only needed when a disclaimer.
+// react-markdown and its AST pipeline are only needed when a markdown modal or chat message renders.
 const MARKDOWN_PACKAGE_PREFIXES = [
   "remark-",
   "rehype-",
@@ -287,8 +287,12 @@ async function writeRouteHints(
   distDir: string,
   route: { js: string; css: string[] },
 ): Promise<void> {
+  const skip = new Set(["login.html", "signup.html", "mobile-scanner.html"]);
   const pages = (await fs.readdir(distDir, { withFileTypes: true }))
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".html"))
+    .filter(
+      (entry) =>
+        entry.isFile() && entry.name.endsWith(".html") && !skip.has(entry.name),
+    )
     .map((entry) => resolve(distDir, entry.name));
   for (const page of pages) {
     let html: string;
@@ -299,15 +303,15 @@ async function writeRouteHints(
     }
     if (html.includes(route.js)) continue;
 
-    // Take the href prefix from a link Vite already wrote, so a subpath
-    // deployment is handled the same way its own preloads are.
-    const existing = /<link rel="modulepreload" href="([^"]+)"/.exec(html);
-    const prefix = existing
-      ? existing[1].slice(0, existing[1].lastIndexOf("/") + 1)
-      : "/";
+    // Match the asset prefix Vite already emitted so subpath deployments stay consistent.
+    const existing =
+      /<link\b[^>]*\brel="modulepreload"[^>]*\bhref="([^"]*?)assets\//.exec(
+        html,
+      );
+    const prefix = existing ? existing[1] : "./";
 
     const tags = [
-      `<link rel="modulepreload" href="${prefix}${route.js}" crossorigin>`,
+      `<link rel="modulepreload" crossorigin href="${prefix}${route.js}">`,
       ...route.css.map(
         (file) => `<link rel="preload" as="style" href="${prefix}${file}">`,
       ),
@@ -319,7 +323,7 @@ async function writeRouteHints(
   }
 }
 
-/** Puts the landing screen's first paint into index.html, so the largest paint does not wait for the Landing. */
+/** Inlines the prerendered landing shell into index.html so first paint does not wait on JS bundles. */
 async function writeLandingShell(
   distDir: string,
   editorDir: string,
@@ -351,7 +355,7 @@ function compressStaticCopyPlugin(): PluginOption {
     async closeBundle() {
       const distDir = path.resolve(__dirname, "dist");
 
-      // The plugin's include list skips .wasm and viteStaticCopy output never reaches it, so the walk has to cover.
+      // Compress .wasm and viteStaticCopy outputs that rollup-plugin-compression skips.
       const files: string[] = [];
       const walk = async (dir: string) => {
         let entries;
@@ -376,7 +380,7 @@ function compressStaticCopyPlugin(): PluginOption {
 
       await compressFiles(files, distDir);
 
-      // The TTFs are only ever requested through the backend, which serves the .br/.gz siblings and falls back to its.
+      // Drop raw TTFs that already have .br/.gz siblings and a classpath fallback in the backend JAR.
       const fontsDir = path.join(distDir, "fonts");
       const fontEntries = await fs.readdir(fontsDir).catch(() => []);
       await Promise.all(
@@ -470,7 +474,7 @@ async function writeOpenGraphPages(
   console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
 }
 
-/** Precompresses the HTML the passes above produced, after the last of them has run: the bundler wrote siblings. */
+/** Re-compresses HTML and shell JSON files after the post-build HTML transforms finish. */
 async function compressHtmlOutput(distDir: string): Promise<void> {
   const files: string[] = [];
   const walk = async (dir: string) => {
@@ -512,7 +516,7 @@ async function compressHtmlOutput(distDir: string): Promise<void> {
   await compressFiles(files, distDir);
 }
 
-/** Rewrites the app's `@mantine/core` imports of `MANTINE_TOOL_ONLY_COMPONENTS` to the implementation files the. */
+/** Rewrites @mantine/core barrel imports of tool-only components to their direct ESM files. */
 function mantineToolOnlyImports(): PluginOption {
   const packageDir = path.dirname(
     createRequire(import.meta.url).resolve("@mantine/core/styles.css"),
@@ -521,7 +525,7 @@ function mantineToolOnlyImports(): PluginOption {
   const componentRoot = `${path.join(esmDir, "components")}/`;
   const barrel = readFileSync(path.join(esmDir, "index.mjs"), "utf8");
 
-  // The barrel is the only place that maps an exported name to its file, and the naming is not uniform (`Slider`.
+  // Parse the barrel because exported names do not map 1:1 to component folder names.
   const exportedAt = new Map<string, string>();
   for (const statement of barrel.matchAll(
     /export\s*\{([^}]*)\}\s*from\s*["']([^"']+)["']/g,
@@ -563,7 +567,7 @@ function mantineToolOnlyImports(): PluginOption {
       appDir = `${resolve(config.root, "src")}/`;
     },
     generateBundle(_options, bundle) {
-      // A moved family that a startup chunk still imports lands back in the preload set, and the two chunks importing.
+      // Fail the build if splitting tool-only Mantine components introduces a chunk import cycle.
       const names = new Set(
         Object.values(bundle)
           .filter((file) => file.type === "chunk")
@@ -668,7 +672,7 @@ function mantineToolOnlyImports(): PluginOption {
   };
 }
 
-/** The Open Graph pages, the route hints, the landing shell and the precompressed siblings all rewrite or derive. */
+/** Runs HTML post-processing (OG tags, route hints, landing shell, and compression) in deterministic order. */
 function htmlOutputPlugin(options: {
   routeChunk: string;
   isSaas: boolean;
@@ -712,7 +716,7 @@ function htmlOutputPlugin(options: {
   };
 }
 
-/** When the app is served under a subpath (RUN_SUBPATH → base like "/app/"), Vite serves index.html at "/app/". */
+/** Redirects bare "/<subpath>" requests to "/<subpath>/" in dev and preview servers. */
 function subpathBareRedirectPlugin(subpath: string): PluginOption {
   const bare = `/${subpath}`;
   const withSlash = `${bare}/`;
@@ -751,7 +755,7 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
 };
 
 export default defineConfig(async ({ mode, command }) => {
-  // Dev-only browser-tab label (worktree folder basename) surfaced by the top-level dev tasks so concurrent.
+  // Dev-only tab prefix so multiple worktree dev servers are distinguishable.
   const devWorktreeLabel =
     command === "serve" ? (process.env.STIRLING_DEV_LABEL ?? "") : "";
   // Load env files relative to this config (frontend/editor/), regardless of where the build was invoked from.
@@ -802,7 +806,7 @@ export default defineConfig(async ({ mode, command }) => {
     xfwd: true,
   };
 
-  // Shared between `vite` (dev) and `vite preview` (production-build serve, used in CI/E2E) so the live test.
+  // Shared between dev and preview servers so E2E tests against built assets still proxy backend routes.
   const backendProxyConfig =
     effectiveMode === "desktop"
       ? undefined
@@ -817,7 +821,7 @@ export default defineConfig(async ({ mode, command }) => {
         };
 
   return {
-    // Per-mode: the default is one shared node_modules/.vite, so two dev servers in different modes re-optimize.
+    // Isolate Vite dep caches per build mode so concurrent dev servers do not invalidate each other.
     cacheDir: resolve(
       import.meta.dirname,
       "..",
@@ -989,7 +993,7 @@ export default defineConfig(async ({ mode, command }) => {
             // enums, so they get their own chunks.
             if (pkg === "@embedpdf/engines") return "vendor-embedpdf";
             if (pkg === "@embedpdf/pdfium") return "vendor-pdfium";
-            // models is the only embedpdf package the startup path imports (PdfPermissionFlag), so grouping it with.
+            // Isolate @embedpdf/models so startup imports of PdfPermissionFlag do not pull in the viewer core.
             if (pkg === "@embedpdf/models") return "vendor-embedpdf-models";
             if (
               pkg === "@embedpdf/core" ||
@@ -1006,17 +1010,17 @@ export default defineConfig(async ({ mode, command }) => {
             // vendor-ui.
             if (pkg === "@mui/icons-material") return "vendor-mui-icons";
             if (pkg === "@iconify/react") return "vendor-iconify";
-            // Only lazy screens import these (DataTable, reached through the ui barrel), but the substring match on "react".
+            // Match @tanstack/react-table before the generic "react" rule below so it stays out of vendor-ui.
             if (
               pkg === "@tanstack/react-table" ||
               pkg === "@tanstack/table-core"
             ) {
               return "vendor-tanstack-table";
             }
-            // A component family only lazy screens open, in its own chunk, so the preloaded chunk stops carrying it; see.
+            // Place tool-only Mantine component families into dedicated lazy chunks.
             const toolOnly = mantineToolOnlyChunk(id);
             if (toolOnly) return toolOnly;
-            // react-number-format is imported by NumberInput and NumberFormatter and nothing else, so it travels with the.
+            // Co-locate react-number-format with NumberInput since no other component imports it.
             if (pkg === "react-number-format")
               return "vendor-mantine-NumberInput";
             // These packages are mutually circular: splitting them breaks

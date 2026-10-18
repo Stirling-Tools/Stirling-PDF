@@ -1,5 +1,4 @@
 import { Suspense, lazy } from "react";
-import { translatedLazy } from "@app/i18n/translatedLazy";
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
@@ -8,22 +7,17 @@ import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 
 const Landing = lazy(() => import("@app/routes/Landing"));
-const Login = translatedLazy(() => import("@app/routes/Login"));
-const AuthCallback = translatedLazy(() => import("@app/routes/AuthCallback"));
-const InviteAccept = translatedLazy(() => import("@app/routes/InviteAccept"));
-const ShareLinkPage = translatedLazy(() => import("@app/routes/ShareLinkPage"));
-const ParticipantView = translatedLazy(
+const Login = lazy(() => import("@app/routes/Login"));
+const AuthCallback = lazy(() => import("@app/routes/AuthCallback"));
+const InviteAccept = lazy(() => import("@app/routes/InviteAccept"));
+const ShareLinkPage = lazy(() => import("@app/routes/ShareLinkPage"));
+const ParticipantView = lazy(
   () => import("@app/components/workflow/ParticipantView"),
 );
-// Not `translatedLazy`: the overlay mounts on the landing screen but paints nothing until its eligibility check.
 const Onboarding = lazy(() => import("@app/components/onboarding/Onboarding"));
 
-const MobileScannerPage = translatedLazy(
-  () => import("@app/pages/MobileScannerPage"),
-);
-const MobileSignPage = translatedLazy(
-  () => import("@app/pages/MobileSignPage"),
-);
+const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
+const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import { AppFrame } from "@app/components/layout/AppFrame";
 import { NoAppChrome } from "@app/components/layout/NoAppChrome";

@@ -1,5 +1,4 @@
-import { useMemo } from "react";
-import { translatedLazy } from "@app/i18n/translatedLazy";
+import { lazy, useMemo } from "react";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { devApiLink } from "@app/constants/links";
@@ -39,9 +38,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       pdfTextEditor: {
         icon: <Icon name="square-pen" size="1.5rem" />,
         name: t("home.pdfTextEditor.title"),
-        component: translatedLazy(
-          () => import("@app/tools/pdfTextEditor/PdfTextEditor"),
-        ),
+        component: lazy(() => import("@app/tools/pdfTextEditor/PdfTextEditor")),
         description: t("home.pdfTextEditor.desc"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -68,7 +65,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       merge: {
         icon: <Icon name="copy-plus" size="1.5rem" />,
         name: t("home.merge.title"),
-        component: translatedLazy(() => import("@app/tools/Merge")),
+        component: lazy(() => import("@app/tools/Merge")),
         description: t("home.merge.desc"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -83,7 +80,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       certSign: {
         icon: <Icon name="award" size="1.5rem" />,
         name: t("home.certSign.title"),
-        component: translatedLazy(() => import("@app/tools/CertSign")),
+        component: lazy(() => import("@app/tools/CertSign")),
         description: t("home.certSign.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
@@ -98,7 +95,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       timestampPdf: {
         icon: <Icon name="clock" size="1.5rem" />,
         name: t("home.timestampPdf.title"),
-        component: translatedLazy(() => import("@app/tools/TimestampPdf")),
+        component: lazy(() => import("@app/tools/TimestampPdf")),
         description: t("home.timestampPdf.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
@@ -110,7 +107,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       sign: {
         icon: <Icon name="signature" size="1.5rem" />,
         name: t("home.sign.title"),
-        component: translatedLazy(() => import("@app/tools/Sign")),
+        component: lazy(() => import("@app/tools/Sign")),
         description: t("home.sign.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
@@ -124,7 +121,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       addText: {
         icon: <Icon name="type" size="1.5rem" />,
         name: t("home.addText.title"),
-        component: translatedLazy(() => import("@app/tools/AddText")),
+        component: lazy(() => import("@app/tools/AddText")),
         description: t("home.addText.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -136,7 +133,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       addImage: {
         icon: <Icon name="image" size="1.5rem" />,
         name: t("home.addImage.title"),
-        component: translatedLazy(() => import("@app/tools/AddImage")),
+        component: lazy(() => import("@app/tools/AddImage")),
         description: t("home.addImage.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -148,7 +145,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       annotate: {
         icon: <Icon name="pencil" size="1.5rem" />,
         name: t("home.annotate.title"),
-        component: translatedLazy(() => import("@app/tools/Annotate")),
+        component: lazy(() => import("@app/tools/Annotate")),
         description: t("home.annotate.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -164,7 +161,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       addPassword: {
         icon: <Icon name="password" size="1.5rem" />,
         name: t("home.addPassword.title"),
-        component: translatedLazy(() => import("@app/tools/AddPassword")),
+        component: lazy(() => import("@app/tools/AddPassword")),
         description: t("home.addPassword.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
@@ -178,7 +175,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       watermark: {
         icon: <Icon name="watermark" size="1.5rem" />,
         name: t("home.watermark.title"),
-        component: translatedLazy(() => import("@app/tools/AddWatermark")),
+        component: lazy(() => import("@app/tools/AddWatermark")),
         maxFiles: -1,
         description: t("home.watermark.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
@@ -193,7 +190,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       addStamp: {
         icon: <Icon name="stamp" size="1.5rem" />,
         name: t("home.addStamp.title"),
-        component: translatedLazy(() => import("@app/tools/AddStamp")),
+        component: lazy(() => import("@app/tools/AddStamp")),
         description: t("home.addStamp.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
@@ -208,7 +205,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       sanitize: {
         icon: <Icon name="brush-cleaning" size="1.5rem" />,
         name: t("home.sanitize.title"),
-        component: translatedLazy(() => import("@app/tools/Sanitize")),
+        component: lazy(() => import("@app/tools/Sanitize")),
         maxFiles: -1,
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
@@ -222,7 +219,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       flatten: {
         icon: <Icon name="layers-minus" size="1.5rem" />,
         name: t("home.flatten.title"),
-        component: translatedLazy(() => import("@app/tools/Flatten")),
+        component: lazy(() => import("@app/tools/Flatten")),
         description: t("home.flatten.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
@@ -236,7 +233,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       unlockPDFForms: {
         icon: <Icon name="file-lock-open" size="1.5rem" />,
         name: t("home.unlockPDFForms.title"),
-        component: translatedLazy(() => import("@app/tools/UnlockPdfForms")),
+        component: lazy(() => import("@app/tools/UnlockPdfForms")),
         description: t("home.unlockPDFForms.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
@@ -248,7 +245,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       formFill: {
         icon: <Icon name="form-input" size="1.5rem" />,
         name: t("home.formFill.title"),
-        component: translatedLazy(() => import("@app/tools/formFill/FormFill")),
+        component: lazy(() => import("@app/tools/formFill/FormFill")),
         description: t("home.formFill.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -273,7 +270,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       autoFormDetection: {
         icon: <Icon name="form-scan" size="1.5rem" />,
         name: t("home.autoFormDetection.title"),
-        component: translatedLazy(
+        component: lazy(
           () => import("@app/tools/autoFormDetection/AutoFormDetection"),
         ),
         description: t("home.autoFormDetection.desc"),
@@ -300,7 +297,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       changePermissions: {
         icon: <Icon name="lock" size="1.5rem" />,
         name: t("home.changePermissions.title"),
-        component: translatedLazy(() => import("@app/tools/ChangePermissions")),
+        component: lazy(() => import("@app/tools/ChangePermissions")),
         description: t("home.changePermissions.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
@@ -315,7 +312,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       getPdfInfo: {
         icon: <Icon name="clipboard-check" size="1.5rem" />,
         name: t("home.getPdfInfo.title"),
-        component: translatedLazy(() => import("@app/tools/GetPdfInfo")),
+        component: lazy(() => import("@app/tools/GetPdfInfo")),
         description: t("home.getPdfInfo.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
@@ -328,7 +325,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       validateSignature: {
         icon: <Icon name="badge-check" size="1.5rem" />,
         name: t("home.validateSignature.title"),
-        component: translatedLazy(() => import("@app/tools/ValidateSignature")),
+        component: lazy(() => import("@app/tools/ValidateSignature")),
         description: t("home.validateSignature.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
@@ -359,7 +356,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       changeMetadata: {
         icon: <Icon name="clipboard-list" size="1.5rem" />,
         name: t("home.changeMetadata.title"),
-        component: translatedLazy(() => import("@app/tools/ChangeMetadata")),
+        component: lazy(() => import("@app/tools/ChangeMetadata")),
         description: t("home.changeMetadata.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
@@ -374,9 +371,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       editTableOfContents: {
         icon: <Icon name="table-of-contents" size="1.5rem" />,
         name: t("home.editTableOfContents.title"),
-        component: translatedLazy(
-          () => import("@app/tools/EditTableOfContents"),
-        ),
+        component: lazy(() => import("@app/tools/EditTableOfContents")),
         description: t("home.editTableOfContents.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
@@ -391,7 +386,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       crop: {
         icon: <Icon name="crop" size="1.5rem" />,
         name: t("home.crop.title"),
-        component: translatedLazy(() => import("@app/tools/Crop")),
+        component: lazy(() => import("@app/tools/Crop")),
         description: t("home.crop.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -404,7 +399,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       rotate: {
         icon: <Icon name="rotate-cw" size="1.5rem" />,
         name: t("home.rotate.title"),
-        component: translatedLazy(() => import("@app/tools/Rotate")),
+        component: lazy(() => import("@app/tools/Rotate")),
         description: t("home.rotate.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -418,7 +413,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       autoRotate: {
         icon: <Icon name="rotate-cw-square" size="1.5rem" />,
         name: t("home.autoRotate.title"),
-        component: translatedLazy(() => import("@app/tools/AutoRotate")),
+        component: lazy(() => import("@app/tools/AutoRotate")),
         description: t("home.autoRotate.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -433,7 +428,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       split: {
         icon: <Icon name="scissors" size="1.5rem" />,
         name: t("home.split.title"),
-        component: translatedLazy(() => import("@app/tools/Split")),
+        component: lazy(() => import("@app/tools/Split")),
         description: t("home.split.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -446,7 +441,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       reorganizePages: {
         icon: <Icon name="move-item-down" size="1.5rem" />,
         name: t("home.reorganizePages.title"),
-        component: translatedLazy(() => import("@app/tools/ReorganizePages")),
+        component: lazy(() => import("@app/tools/ReorganizePages")),
         description: t("home.reorganizePages.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -460,7 +455,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       scalePages: {
         icon: <Icon name="scan" size="1.5rem" />,
         name: t("home.scalePages.title"),
-        component: translatedLazy(() => import("@app/tools/AdjustPageScale")),
+        component: lazy(() => import("@app/tools/AdjustPageScale")),
         description: t("home.scalePages.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -475,7 +470,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       addPageNumbers: {
         icon: <Icon name="file-digit" size="1.5rem" />,
         name: t("home.addPageNumbers.title"),
-        component: translatedLazy(() => import("@app/tools/AddPageNumbers")),
+        component: lazy(() => import("@app/tools/AddPageNumbers")),
         description: t("home.addPageNumbers.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -490,7 +485,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       pageLayout: {
         icon: <Icon name="layout-dashboard" size="1.5rem" />,
         name: t("home.pageLayout.title"),
-        component: translatedLazy(() => import("@app/tools/PageLayout")),
+        component: lazy(() => import("@app/tools/PageLayout")),
         description: t("home.pageLayout.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -504,7 +499,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       bookletImposition: {
         icon: <Icon name="book-open" size="1.5rem" />,
         name: t("home.bookletImposition.title"),
-        component: translatedLazy(() => import("@app/tools/BookletImposition")),
+        component: lazy(() => import("@app/tools/BookletImposition")),
         automationSettings: lazySettings(
           () =>
             import("@app/components/tools/bookletImposition/BookletImpositionSettings"),
@@ -517,7 +512,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       pdfToSinglePage: {
         icon: <Icon name="single-page" size="1.5rem" />,
         name: t("home.pdfToSinglePage.title"),
-        component: translatedLazy(() => import("@app/tools/SingleLargePage")),
+        component: lazy(() => import("@app/tools/SingleLargePage")),
 
         description: t("home.pdfToSinglePage.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
@@ -530,7 +525,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       addAttachments: {
         icon: <Icon name="paperclip" size="1.5rem" />,
         name: t("home.addAttachments.title"),
-        component: translatedLazy(() => import("@app/tools/AddAttachments")),
+        component: lazy(() => import("@app/tools/AddAttachments")),
         description: t("home.addAttachments.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -550,7 +545,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       createPortfolio: {
         icon: <Icon name="library" size="1.5rem" />,
         name: t("home.createPortfolio.title"),
-        component: translatedLazy(() => import("@app/tools/CreatePortfolio")),
+        component: lazy(() => import("@app/tools/CreatePortfolio")),
         description: t("home.createPortfolio.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -568,7 +563,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       extractPages: {
         icon: <Icon name="upload" size="1.5rem" />,
         name: t("home.extractPages.title"),
-        component: translatedLazy(() => import("@app/tools/ExtractPages")),
+        component: lazy(() => import("@app/tools/ExtractPages")),
         description: t("home.extractPages.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.EXTRACTION,
@@ -582,7 +577,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       extractImages: {
         icon: <Icon name="images" size="1.5rem" />,
         name: t("home.extractImages.title"),
-        component: translatedLazy(() => import("@app/tools/ExtractImages")),
+        component: lazy(() => import("@app/tools/ExtractImages")),
         description: t("home.extractImages.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.EXTRACTION,
@@ -600,7 +595,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       removePages: {
         icon: <Icon name="trash" size="1.5rem" />,
         name: t("home.removePages.title"),
-        component: translatedLazy(() => import("@app/tools/RemovePages")),
+        component: lazy(() => import("@app/tools/RemovePages")),
         description: t("home.removePages.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
@@ -614,7 +609,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       removeBlanks: {
         icon: <Icon name="file-x" size="1.5rem" />,
         name: t("home.removeBlanks.title"),
-        component: translatedLazy(() => import("@app/tools/RemoveBlanks")),
+        component: lazy(() => import("@app/tools/RemoveBlanks")),
         description: t("home.removeBlanks.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
@@ -629,7 +624,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       removeAnnotations: {
         icon: <Icon name="annotation-off" size="1.5rem" />,
         name: t("home.removeAnnotations.title"),
-        component: translatedLazy(() => import("@app/tools/RemoveAnnotations")),
+        component: lazy(() => import("@app/tools/RemoveAnnotations")),
         description: t("home.removeAnnotations.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
@@ -641,7 +636,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       removeImage: {
         icon: <Icon name="remove-selection" size="1.5rem" />,
         name: t("home.removeImage.title"),
-        component: translatedLazy(() => import("@app/tools/RemoveImage")),
+        component: lazy(() => import("@app/tools/RemoveImage")),
         description: t("home.removeImage.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
@@ -653,7 +648,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       removePassword: {
         icon: <Icon name="lock-open-password" size="1.5rem" />,
         name: t("removePassword.title"),
-        component: translatedLazy(() => import("@app/tools/RemovePassword")),
+        component: lazy(() => import("@app/tools/RemovePassword")),
         description: t("home.removePassword.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
@@ -668,9 +663,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       removeCertSign: {
         icon: <Icon name="shield-off" size="1.5rem" />,
         name: t("home.removeCertSign.title"),
-        component: translatedLazy(
-          () => import("@app/tools/RemoveCertificateSign"),
-        ),
+        component: lazy(() => import("@app/tools/RemoveCertificateSign")),
         description: t("home.removeCertSign.desc"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
@@ -685,7 +678,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       automate: {
         icon: <Icon name="automate" size="1.5rem" />,
         name: t("home.automate.title"),
-        component: translatedLazy(() => import("@app/tools/Automate")),
+        component: lazy(() => import("@app/tools/Automate")),
         description: t("home.automate.desc"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.AUTOMATION,
@@ -698,7 +691,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       autoRename: {
         icon: <Icon name="whole-word" size="1.5rem" />,
         name: t("home.autoRename.title"),
-        component: translatedLazy(() => import("@app/tools/AutoRename")),
+        component: lazy(() => import("@app/tools/AutoRename")),
         maxFiles: -1,
         endpoints: ["auto-rename"],
         description: t("home.autoRename.desc"),
@@ -712,7 +705,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       adjustContrast: {
         icon: <Icon name="palette" size="1.5rem" />,
         name: t("home.adjustContrast.title"),
-        component: translatedLazy(() => import("@app/tools/AdjustContrast")),
+        component: lazy(() => import("@app/tools/AdjustContrast")),
         description: t("home.adjustContrast.desc"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
@@ -727,7 +720,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       repair: {
         icon: <Icon name="wrench" size="1.5rem" />,
         name: t("home.repair.title"),
-        component: translatedLazy(() => import("@app/tools/Repair")),
+        component: lazy(() => import("@app/tools/Repair")),
         description: t("home.repair.desc"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
@@ -739,7 +732,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       scannerImageSplit: {
         icon: <Icon name="table-columns-split" size="1.5rem" />,
         name: t("home.scannerImageSplit.title"),
-        component: translatedLazy(() => import("@app/tools/ScannerImageSplit")),
+        component: lazy(() => import("@app/tools/ScannerImageSplit")),
         description: t("home.scannerImageSplit.desc"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
@@ -754,7 +747,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       overlayPdfs: {
         icon: <Icon name="overlay-pages" size="1.5rem" />,
         name: t("home.overlay-pdfs.title"),
-        component: translatedLazy(() => import("@app/tools/OverlayPdfs")),
+        component: lazy(() => import("@app/tools/OverlayPdfs")),
         description: t("home.overlay-pdfs.desc"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
@@ -767,7 +760,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       replaceColor: {
         icon: <Icon name="paint-bucket" size="1.5rem" />,
         name: t("home.replaceColor.title"),
-        component: translatedLazy(() => import("@app/tools/ReplaceColor")),
+        component: lazy(() => import("@app/tools/ReplaceColor")),
         description: t("home.replaceColor.desc"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
@@ -785,7 +778,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       showJS: {
         icon: <Icon name="braces" size="1.5rem" />,
         name: t("home.showJS.title"),
-        component: translatedLazy(() => import("@app/tools/ShowJS")),
+        component: lazy(() => import("@app/tools/ShowJS")),
         description: t("home.showJS.desc"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
@@ -876,7 +869,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       compare: {
         icon: <Icon name="image-compare" size="1.5rem" />,
         name: t("home.compare.title"),
-        component: translatedLazy(() => import("@app/tools/Compare")),
+        component: lazy(() => import("@app/tools/Compare")),
         description: t("home.compare.desc"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -903,7 +896,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       compress: {
         icon: <Icon name="shrink" size="1.5rem" />,
         name: t("home.compress.title"),
-        component: translatedLazy(() => import("@app/tools/Compress")),
+        component: lazy(() => import("@app/tools/Compress")),
         description: t("home.compress.desc"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -917,7 +910,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       convert: {
         icon: <Icon name="file-convert" size="1.5rem" />,
         name: t("home.convert.title"),
-        component: translatedLazy(() => import("@app/tools/Convert")),
+        component: lazy(() => import("@app/tools/Convert")),
         description: t("home.convert.desc"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -951,7 +944,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       ocr: {
         icon: <Icon name="scan-text" size="1.5rem" />,
         name: t("home.ocr.title"),
-        component: translatedLazy(() => import("@app/tools/OCR")),
+        component: lazy(() => import("@app/tools/OCR")),
         description: t("home.ocr.desc"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -965,7 +958,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       redact: {
         icon: <Icon name="redact" size="1.5rem" />,
         name: t("home.redact.title"),
-        component: translatedLazy(() => import("@app/tools/Redact")),
+        component: lazy(() => import("@app/tools/Redact")),
         description: t("home.redact.desc"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,

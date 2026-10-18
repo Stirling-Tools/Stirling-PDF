@@ -13,7 +13,7 @@ import { DEFAULT_RUNTIME_STATE } from "@app/components/onboarding/orchestrator/o
 import { Button } from "@app/ui/Button";
 import { Z_INDEX_ONBOARDING_CARD } from "@app/styles/zIndex";
 
-// The interrupt slides are the only startup-reachable consumers of the slide definitions, and a returning.
+// Lazy-loaded so returning users who skip onboarding never download the slide definitions.
 const StaticOnboardingSlide = lazy(
   () => import("@app/components/onboarding/StaticOnboardingSlide"),
 );
