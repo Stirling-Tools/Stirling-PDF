@@ -1575,25 +1575,40 @@ export interface ReadAloudTextItem {
 
 /**
  * PageViewport-compatible transform mapping PDF user space to viewer CSS
- * space, including the page's /Rotate. Matches pdf.js PageViewport for a
- * zero-based view box; width/height are the UNROTATED user-space dims.
+ * space, including the page's /Rotate. Matches pdf.js PageViewport: `width`
+ * and `height` are the UNROTATED view-box dims, `originX`/`originY` its
+ * lower-left corner — a box like `[18 18 630 810]` shifts every highlight
+ * without that origin.
  */
 export function readAloudViewportTransform(
   quarters: number,
   width: number,
   height: number,
   zoom: number,
+  originX = 0,
+  originY = 0,
 ): number[] {
-  switch (quarters & 3) {
-    case 1:
-      return [0, zoom, zoom, 0, 0, 0];
-    case 2:
-      return [-zoom, 0, 0, zoom, width * zoom, 0];
-    case 3:
-      return [0, -zoom, -zoom, 0, height * zoom, width * zoom];
-    default:
-      return [zoom, 0, 0, -zoom, 0, height * zoom];
-  }
+  const base = (() => {
+    switch (quarters & 3) {
+      case 1:
+        return [0, zoom, zoom, 0, 0, 0];
+      case 2:
+        return [-zoom, 0, 0, zoom, width * zoom, 0];
+      case 3:
+        return [0, -zoom, -zoom, 0, height * zoom, width * zoom];
+      default:
+        return [zoom, 0, 0, -zoom, 0, height * zoom];
+    }
+  })();
+  const [a, b, c, d, e, f] = base;
+  return [
+    a,
+    b,
+    c,
+    d,
+    e - (a * originX + c * originY),
+    f - (b * originX + d * originY),
+  ];
 }
 
 /**
@@ -1677,6 +1692,7 @@ export async function extractPageTextItemsForReadAloudFromDoc(
   let pagePtr: number | null = null;
   let textPagePtr: number | null = null;
   const rectMem = m.pdfium.wasmExports.malloc(32);
+  const bboxMem = m.pdfium.wasmExports.malloc(16);
   const l = rectMem;
   const r = rectMem + 8;
   const b = rectMem + 16;
@@ -1700,6 +1716,19 @@ export async function extractPageTextItemsForReadAloudFromDoc(
     const width = quarters & 1 ? rotatedHeight : rotatedWidth;
     const height = quarters & 1 ? rotatedWidth : rotatedHeight;
 
+    // Text boxes are user-space; a box origin like (18, 18) has to fold into
+    // the transform. The bounding box (crop ∩ media) is the same box the
+    // widths above are measured from. FS_RECTF order is left, top, right,
+    // bottom, so bottom sits at byte 12.
+    let originX = 0;
+    let originY = 0;
+    if (typeof m.FPDF_GetPageBoundingBox === "function") {
+      if (m.FPDF_GetPageBoundingBox(pagePtr, bboxMem)) {
+        originX = m.pdfium.getValue(bboxMem, "float");
+        originY = m.pdfium.getValue(bboxMem + 12, "float");
+      }
+    }
+
     textPagePtr = m.FPDFText_LoadPage(pagePtr);
     if (!textPagePtr) return [];
 
@@ -1711,6 +1740,8 @@ export async function extractPageTextItemsForReadAloudFromDoc(
       width,
       height,
       zoom,
+      originX,
+      originY,
     );
     const items: ReadAloudTextItem[] = [];
 
@@ -1773,6 +1804,7 @@ export async function extractPageTextItemsForReadAloudFromDoc(
 
     return sortReadAloudItems(items);
   } finally {
+    m.pdfium.wasmExports.free(bboxMem);
     m.pdfium.wasmExports.free(rectMem);
     if (textPagePtr != null) m.FPDFText_ClosePage(textPagePtr);
     if (pagePtr != null) m.FPDF_ClosePage(pagePtr);

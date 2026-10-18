@@ -50,6 +50,22 @@ describe("readAloudViewportTransform", () => {
       readAloudViewportTransform(0, 600, 800, 2),
     );
   });
+
+  // [18 18 630 810]: user-space 18 is the viewport's 0 and 810 its top.
+  it("folds a non-zero view-box origin into the translation", () => {
+    expect(readAloudViewportTransform(0, 612, 792, 1, 18, 18)).toEqual([
+      1, 0, 0, -1, -18, 810,
+    ]);
+  });
+
+  it("folds the view-box origin into rotated translations too", () => {
+    expect(readAloudViewportTransform(1, 612, 792, 1, 18, 18)).toEqual([
+      0, 1, 1, 0, -18, -18,
+    ]);
+    expect(readAloudViewportTransform(3, 612, 792, 1, 18, 18)).toEqual([
+      0, -1, -1, 0, 810, 630,
+    ]);
+  });
 });
 
 describe("sortReadAloudItems", () => {
