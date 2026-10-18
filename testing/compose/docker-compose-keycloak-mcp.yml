@@ -75,6 +75,9 @@ services:
       SECURITY_LOGINMETHOD: "normal"
       SYSTEM_DEFAULTLOCALE: en-US
       SYSTEM_BACKENDURL: "http://localhost:8080"
+      # Private /share result links need sharing plus a frontend URL.
+      SYSTEM_FRONTENDURL: "http://localhost:8080"
+      STORAGE_SHARING_ENABLED: "true"
       PREMIUM_KEY: "${PREMIUM_KEY:-00000000-0000-0000-0000-000000000000}"
       PREMIUM_ENABLED: "true"
       UI_APPNAME: Stirling-PDF MCP Test

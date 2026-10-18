@@ -20,9 +20,9 @@ public final class SecretMasker {
     private static final Pattern SENSITIVE =
             RegexPatternUtils.getInstance()
                     .getPattern(
-                            // secret[_-]?access[_-]?key precedes plain secret so camelCase keys
-                            // like secretAccessKey (no word boundary after "secret") still match.
-                            "(?i)\\b(password|token|secret[_-]?access[_-]?key|signing[_-]?secret|secret|api[_-]?key|authorization|auth|jwt|cred|cert)\\b");
+                            // Bounded by separators, not \b, so snake_case keys like refresh_token
+                            // match; longer alternatives precede their prefixes.
+                            "(?i)(?<![a-z0-9])(password|code[_-]?verifier|refresh[_-]?token|access[_-]?token|client[_-]?secret|token|secret[_-]?access[_-]?key|signing[_-]?secret|secret|api[_-]?key|authorization|auth|jwt|cred|cert)(?![a-z0-9])");
 
     private SecretMasker() {}
 

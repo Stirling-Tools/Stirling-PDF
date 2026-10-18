@@ -22,12 +22,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.proprietary.mcp.security.McpIdpPreflightService;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
@@ -58,7 +60,10 @@ class AdminSettingsControllerTest {
                         applicationProperties,
                         objectMapper,
                         applicationContext,
-                        aiEngineConfigSync);
+                        aiEngineConfigSync,
+                        new McpIdpPreflightService(
+                                applicationProperties,
+                                org.mockito.Mockito.mock(ObjectProvider.class)));
         clearPendingChanges();
     }
 

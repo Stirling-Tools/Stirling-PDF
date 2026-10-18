@@ -40,6 +40,7 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   FILE_OPERATION: "cyan",
   PDF_PROCESS: "violet",
   UI_DATA: "gray",
+  MCP_TOOL_CALL: "grape",
   HTTP_REQUEST: "indigo",
 };
 

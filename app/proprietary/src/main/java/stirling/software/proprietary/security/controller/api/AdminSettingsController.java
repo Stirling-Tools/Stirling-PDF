@@ -43,6 +43,7 @@ import stirling.software.common.util.AppArgsCapture;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.JarPathUtil;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.proprietary.mcp.security.McpIdpPreflightService;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
@@ -61,6 +62,7 @@ public class AdminSettingsController {
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
     private final AiEngineConfigSync aiEngineConfigSync;
+    private final McpIdpPreflightService mcpPreflightService;
 
     // Track settings that have been modified but not yet applied (require restart)
     private static final ConcurrentHashMap<String, Object> pendingChanges =
@@ -529,6 +531,22 @@ public class AdminSettingsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(GENERIC_SERVER_ERROR);
         }
+    }
+
+    @GetMapping("/mcp/preflight")
+    @Operation(
+            summary = "Check whether MCP clients can connect",
+            description =
+                    "Probes the current MCP configuration, and the external IdP when one is used, for what OAuth-only clients such as ChatGPT and Claude need: reachable metadata, client registration, PKCE, signing keys, token audience and account binding. Admin access required.")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Preflight result"),
+                @ApiResponse(
+                        responseCode = "403",
+                        description = "Access denied - Admin role required")
+            })
+    public ResponseEntity<Map<String, Object>> mcpPreflight() {
+        return ResponseEntity.ok(mcpPreflightService.run());
     }
 
     @PostMapping("/restart")

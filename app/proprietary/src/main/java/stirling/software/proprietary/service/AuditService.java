@@ -345,6 +345,11 @@ public class AuditService {
                     Map<String, String[]> params = new HashMap<>(req.getParameterMap());
                     // Remove CSRF token from logged parameters
                     params.remove("_csrf");
+                    // OAuth token requests carry codes and refresh tokens; never store them.
+                    if (req.getRequestURI() != null
+                            && req.getRequestURI().contains("/mcp/oauth/")) {
+                        params.clear();
+                    }
 
                     if (!params.isEmpty()) {
                         data.put("formParams", params);

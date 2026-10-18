@@ -86,6 +86,15 @@ export default function AdminIntegrationsPage() {
         "mcp.auth.usernameClaim": s.auth?.usernameClaim ?? "sub",
         "mcp.auth.requireExistingAccount":
           s.auth?.requireExistingAccount ?? true,
+        "mcp.auth.builtin.allowDynamicRegistration":
+          s.auth?.builtin?.allowDynamicRegistration ?? true,
+        "mcp.auth.builtin.allowClientMetadataDocuments":
+          s.auth?.builtin?.allowClientMetadataDocuments ?? true,
+        "mcp.downloadLinks": s.downloadLinks ?? "private",
+        // Only written when loaded, so a missing field never wipes the default allowlist.
+        ...(s.fileUrlAllowedHosts && {
+          "mcp.fileUrlAllowedHosts": s.fileUrlAllowedHosts,
+        }),
       },
     }),
   });

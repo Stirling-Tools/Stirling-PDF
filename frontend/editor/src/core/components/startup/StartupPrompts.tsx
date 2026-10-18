@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { StartupSetup } from "@app/components/startup/StartupSetup";
@@ -14,7 +15,7 @@ function StartupTracking() {
 }
 
 /** Mount once in each app's main routes, below its auth, config and theme providers. */
-export function StartupPrompts() {
+export function StartupPrompts({ children }: { children?: ReactNode } = {}) {
   const { config } = useAppConfig();
   const { user, loading } = useAuth();
 
@@ -26,6 +27,7 @@ export function StartupPrompts() {
     <StartupSetup key={user?.id ?? "anonymous"}>
       <LoginAgreementModal>
         <StartupTracking />
+        {children}
       </LoginAgreementModal>
     </StartupSetup>
   );

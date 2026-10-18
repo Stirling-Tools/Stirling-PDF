@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
   TextInput,
@@ -11,13 +10,18 @@ import {
   Text,
   Group,
   Alert,
-  Code,
-  List,
 } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import type { McpAuthData } from "@app/components/shared/config/configSections/server/serverSettings";
+import type {
+  McpAuthData,
+  McpBuiltinAuthData,
+} from "@app/components/shared/config/configSections/server/serverSettings";
 import type { McpCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
+import { McpConnectionPanel } from "@app/components/shared/config/configSections/server/McpConnectionPanel";
+import { McpBuiltinFields } from "@app/components/shared/config/configSections/server/McpBuiltinFields";
+import { McpResultsFields } from "@app/components/shared/config/configSections/server/McpResultsFields";
+import { McpGuide } from "@app/components/shared/config/configSections/server/McpGuide";
 
 /** Parse a comma/space/newline separated list into a string[]. */
 function parseOpList(raw: string): string[] {
@@ -37,6 +41,8 @@ export function McpCard({
 
   const setAuth = (patch: Partial<McpAuthData>) =>
     setSettings({ ...settings, auth: { ...(settings.auth || {}), ...patch } });
+  const setBuiltin = (patch: Partial<McpBuiltinAuthData>) =>
+    setAuth({ builtin: { ...(settings.auth?.builtin || {}), ...patch } });
 
   const baseUrl =
     typeof window !== "undefined"
@@ -45,9 +51,15 @@ export function McpCard({
   const mcpUrl = `${baseUrl}/mcp`;
   const metadataUrl = `${baseUrl}/.well-known/oauth-protected-resource`;
   const authMode = settings.auth?.mode || "oauth";
+  const connectorUrl = settings.auth?.resourceId || mcpUrl;
 
   return (
     <>
+      <McpConnectionPanel
+        enabled={settings.enabled || false}
+        mode={authMode}
+        connectorUrl={connectorUrl}
+      />
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <Group justify="space-between" align="flex-start" wrap="nowrap">
@@ -83,12 +95,19 @@ export function McpCard({
                 <InfoTooltip
                   label={t(
                     "admin.settings.mcp.mode.description",
-                    "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host.",
+                    "Built-in runs Stirling's own OAuth server with no IdP - the mode ChatGPT and the claude.ai connector need. OAuth uses an external IdP. API key uses a Stirling per-user key (X-API-KEY) and publishes no OAuth metadata.",
                   )}
                 />
               </Group>
             }
             data={[
+              {
+                value: "builtin",
+                label: t(
+                  "admin.settings.mcp.mode.builtin",
+                  "Built-in OAuth 2.1",
+                ),
+              },
               {
                 value: "oauth",
                 label: t(
@@ -125,6 +144,38 @@ export function McpCard({
             </Alert>
           )}
 
+          {authMode !== "apikey" && (
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>
+                    {t("admin.settings.mcp.resourceId.label", "Resource ID")}
+                  </span>
+                  <PendingBadge show={isFieldPending("auth.resourceId")} />
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.mcp.resourceId.description",
+                      "This server's public /mcp URL. Tokens must list it in their audience (RFC 8707) or they are rejected.",
+                    )}
+                  />
+                </Group>
+              }
+              value={settings.auth?.resourceId || ""}
+              onChange={(e) => setAuth({ resourceId: e.target.value })}
+              placeholder={mcpUrl}
+              disabled={!settings.enabled}
+            />
+          )}
+
+          {authMode === "builtin" && (
+            <McpBuiltinFields
+              builtin={settings.auth?.builtin || {}}
+              onChange={setBuiltin}
+              isFieldPending={isFieldPending}
+              disabled={!settings.enabled}
+            />
+          )}
+
           {authMode === "oauth" && (
             <>
               <TextInput
@@ -148,27 +199,6 @@ export function McpCard({
                 value={settings.auth?.issuerUri || ""}
                 onChange={(e) => setAuth({ issuerUri: e.target.value })}
                 placeholder="https://auth.example.com"
-                disabled={!settings.enabled}
-              />
-
-              <TextInput
-                label={
-                  <Group gap="xs">
-                    <span>
-                      {t("admin.settings.mcp.resourceId.label", "Resource ID")}
-                    </span>
-                    <PendingBadge show={isFieldPending("auth.resourceId")} />
-                    <InfoTooltip
-                      label={t(
-                        "admin.settings.mcp.resourceId.description",
-                        "This server's public /mcp URL. Tokens must list it in their audience (RFC 8707) or they are rejected.",
-                      )}
-                    />
-                  </Group>
-                }
-                value={settings.auth?.resourceId || ""}
-                onChange={(e) => setAuth({ resourceId: e.target.value })}
-                placeholder={mcpUrl}
                 disabled={!settings.enabled}
               />
 
@@ -312,6 +342,13 @@ export function McpCard({
             </>
           )}
 
+          <McpResultsFields
+            settings={settings}
+            onChange={(patch) => setSettings({ ...settings, ...patch })}
+            isFieldPending={isFieldPending}
+            parseList={parseOpList}
+          />
+
           <Textarea
             label={
               <Group gap="xs">
@@ -372,96 +409,11 @@ export function McpCard({
         </Stack>
       </Paper>
 
-      {/* Compact in-page setup guide */}
-      <Alert
-        variant="light"
-        color="blue"
-        title={t("admin.settings.mcp.guide.title", "Connect an MCP client")}
-        icon={<Icon name="info" size="1rem" />}
-      >
-        <Stack gap={6}>
-          <List size="xs" type="ordered" spacing={4}>
-            {authMode === "oauth" ? (
-              <>
-                <List.Item>
-                  {t(
-                    "admin.settings.mcp.guide.step1",
-                    "Enter your OAuth issuer + resource ID above, Save, and restart.",
-                  )}
-                </List.Item>
-                <List.Item>
-                  {t(
-                    "admin.settings.mcp.guide.step2",
-                    "In your MCP client add a",
-                  )}{" "}
-                  <b>streamable-HTTP</b>{" "}
-                  {t("admin.settings.mcp.guide.step2b", "server pointing at:")}{" "}
-                  <Code>{mcpUrl}</Code>
-                </List.Item>
-                <List.Item>
-                  {t(
-                    "admin.settings.mcp.guide.step3",
-                    "The client auto-discovers OAuth from:",
-                  )}{" "}
-                  <Code>{metadataUrl}</Code>
-                </List.Item>
-                <List.Item>
-                  {t(
-                    "admin.settings.mcp.guide.step4",
-                    "Approve the sign-in; the client retries with a token. Tools appear grouped: convert, pages, misc, security, ai.",
-                  )}
-                </List.Item>
-              </>
-            ) : (
-              <>
-                <List.Item>
-                  {t(
-                    "admin.settings.mcp.guide.step1ApiKey",
-                    "Create an API key under Account → API Keys (each user uses their own).",
-                  )}
-                </List.Item>
-                <List.Item>
-                  {t(
-                    "admin.settings.mcp.guide.step2",
-                    "In your MCP client add a",
-                  )}{" "}
-                  <b>streamable-HTTP</b>{" "}
-                  {t("admin.settings.mcp.guide.step2b", "server pointing at:")}{" "}
-                  <Code>{mcpUrl}</Code>
-                </List.Item>
-                <List.Item>
-                  {t(
-                    "admin.settings.mcp.guide.step3ApiKey",
-                    "Send the key in an",
-                  )}{" "}
-                  <Code>X-API-KEY</Code>{" "}
-                  {t(
-                    "admin.settings.mcp.guide.step3ApiKeyb",
-                    "header (or Authorization: Bearer <key>). No OAuth or metadata discovery is used.",
-                  )}
-                </List.Item>
-                <List.Item>
-                  {t(
-                    "admin.settings.mcp.guide.step4ApiKey",
-                    "Tools appear grouped: convert, pages, misc, security, ai - and every call is audited as the key's owner.",
-                  )}
-                </List.Item>
-              </>
-            )}
-          </List>
-          <Text size="xs" c="dimmed">
-            {authMode === "oauth"
-              ? t(
-                  "admin.settings.mcp.guide.tip",
-                  "Tip: register the resource ID as an allowed audience in your IdP. Tested with MCP Inspector and Claude Desktop.",
-                )
-              : t(
-                  "admin.settings.mcp.guide.tipApiKey",
-                  "Tip: API-key mode needs no external IdP - simplest for self-host. The key maps to its owning Stirling user.",
-                )}
-          </Text>
-        </Stack>
-      </Alert>
+      <McpGuide
+        mode={authMode}
+        mcpUrl={connectorUrl}
+        metadataUrl={metadataUrl}
+      />
     </>
   );
 }
