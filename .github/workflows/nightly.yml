@@ -21,8 +21,11 @@ jobs:
   playwright-all-browsers:
     name: Playwright (stubbed, all browsers)
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/e2e-stubbed.yml
+    with:
+      frontend-dist-hash: ${{ hashFiles('frontend/editor/src/**') }}
+      npm-hash: ${{ hashFiles('frontend/package-lock.json') }}
 
   # Whole-suite accessibility sweep. Pull requests only scan the stories they
   # touch (frontend-a11y.yml) because a full pass takes ~30 minutes; this covers
