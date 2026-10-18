@@ -186,5 +186,39 @@ describe("layerUtils", () => {
       const layers = await readPdfLayers(toBlob(await doc.save()));
       expect(layers.map((l) => l.name)).toEqual(["A (nick) B"]);
     });
+
+    it("nests named /Order groups", async () => {
+      const doc = await PDFDocument.create();
+      doc.addPage([400, 400]);
+      const ocgRef = doc.context.register(
+        doc.context.obj({ Type: "OCG", Name: PDFString.of("Terrain") }),
+      );
+      const ocProperties = doc.context.obj({
+        OCGs: [ocgRef],
+        D: doc.context.register(
+          doc.context.obj({
+            BaseState: PDFName.of("ON"),
+            Order: [
+              doc.context.obj({
+                Name: PDFString.of("Maps"),
+                Order: [ocgRef],
+              }),
+            ],
+          }),
+        ),
+      });
+      doc.catalog.set(
+        PDFName.of("OCProperties"),
+        doc.context.register(ocProperties),
+      );
+
+      const layers = await readPdfLayers(toBlob(await doc.save()));
+      expect(layers).toHaveLength(1);
+      expect(layers[0].name).toBe("Maps");
+      expect(layers[0].children?.map((child) => child.name)).toEqual([
+        "Terrain",
+      ]);
+      expect(layers[0].visible).toBe(true);
+    });
   });
 });

@@ -79,14 +79,22 @@ test.describe("Viewer PDF.js worker elimination & performance verification", () 
     ).toEqual([]);
   });
 
-  // Layers intentionally stay on pdf.js: the sidebar parses OCG structures
-  // that need a real PDF parser, so opening it loads the worker on demand.
-  // This test proves detection works on a compressed-catalog file instead of
-  // asserting worker absence here (covered for viewer open/metadata above).
-  test("layer sidebar lists layers of an object-stream-compressed file", async ({
+  // Layers no longer need pdf.js: the sidebar walks /OCProperties through
+  // pdf-lib, which also resolves compressed catalogs. This test proves
+  // detection works on an object-stream file and that opening the sidebar
+  // downloads no worker either.
+  test("layer sidebar lists layers of an object-stream-compressed file without a pdf.js worker", async ({
     page,
   }) => {
     test.setTimeout(60_000);
+
+    const workerRequests: string[] = [];
+    page.on("request", (req) => {
+      const url = req.url();
+      if (isPdfWorkerOrPdfJsRequest(url)) {
+        workerRequests.push(url);
+      }
+    });
 
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
@@ -110,5 +118,10 @@ test.describe("Viewer PDF.js worker elimination & performance verification", () 
     await expect(
       page.getByText("Watermark Layer", { exact: true }).first(),
     ).toBeVisible({ timeout: 15_000 });
+
+    expect(
+      workerRequests,
+      `Expected zero pdf.worker or vendor-pdfjs requests when opening the layer sidebar, but observed:\n${workerRequests.join("\n")}`,
+    ).toEqual([]);
   });
 });

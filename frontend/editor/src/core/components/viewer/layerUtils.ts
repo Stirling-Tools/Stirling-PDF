@@ -7,71 +7,137 @@ export interface LayerInfo {
   children?: LayerInfo[];
 }
 
-// pdfjs types its OCG groups as `any`; these are the fields we read off them.
+// The fields read off each OCG dictionary.
 interface OcGroup {
   name?: string;
   visible?: boolean;
 }
 
+// Bounds recursion into /Order trees whose arrays nest deeply or reach
+// themselves again through an object stream.
+const MAX_ORDER_DEPTH = 64;
+
 /**
- * Reads OCG layer info from a PDF file using pdfjs-dist.
- * Returns a flat list of all OCG groups with their names and default visibility.
+ * Reads OCG layer info from a PDF by walking /OCProperties with pdf-lib.
+ * Workerless on purpose: the viewer renders through PDFium, so pulling in the
+ * pdf.js worker just for layers would download it when the panel opens.
+ * Unlike a byte scan, pdf-lib resolves catalogs stored in object streams.
  */
 export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
-  const { getDocument, GlobalWorkerOptions } =
-    await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const {
+    PDFDocument,
+    PDFDict,
+    PDFArray,
+    PDFName,
+    PDFString,
+    PDFHexString,
+    PDFRef,
+  } = await import("@cantoo/pdf-lib");
 
-  if (!GlobalWorkerOptions.workerSrc) {
-    GlobalWorkerOptions.workerSrc = new URL(
-      "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-      import.meta.url,
-    ).toString();
+  const textOf = (value: PDFObject | undefined): string | undefined => {
+    if (value instanceof PDFString || value instanceof PDFHexString) {
+      return value.decodeText();
+    }
+    if (value instanceof PDFName) return value.decodeText();
+    return undefined;
+  };
+
+  const refIdSet = (value: PDFObject | undefined): Set<string> => {
+    const result = new Set<string>();
+    if (value instanceof PDFArray) {
+      for (let i = 0; i < value.size(); i++) {
+        const entry = value.get(i);
+        if (entry instanceof PDFRef) result.add(entry.toString());
+      }
+    }
+    return result;
+  };
+
+  // Normalizes /D/Order into the shape buildLayerTree consumes: OCG ids,
+  // nested arrays, and {name, order} nodes for named groups.
+  const normalizeOrder = (
+    value: PDFObject | undefined,
+    depth = 0,
+  ): unknown[] => {
+    if (!(value instanceof PDFArray) || depth > MAX_ORDER_DEPTH) return [];
+    const result: unknown[] = [];
+    for (let i = 0; i < value.size(); i++) {
+      const entry = value.get(i);
+      if (entry instanceof PDFRef) {
+        result.push(entry.toString());
+      } else if (entry instanceof PDFArray) {
+        result.push(normalizeOrder(entry, depth + 1));
+      } else if (entry instanceof PDFDict) {
+        result.push({
+          name: textOf(entry.get(PDFName.of("Name"))),
+          order: normalizeOrder(entry.get(PDFName.of("Order")), depth + 1),
+        });
+      }
+    }
+    return result;
+  };
+
+  const bytes = await file.arrayBuffer();
+  const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+  const catalog = doc.context.lookup(doc.context.trailerInfo.Root);
+  if (!(catalog instanceof PDFDict)) return [];
+
+  const ocProperties = doc.context.lookup(
+    catalog.get(PDFName.of("OCProperties")),
+  );
+  if (!(ocProperties instanceof PDFDict)) return [];
+
+  const ocgs = doc.context.lookup(ocProperties.get(PDFName.of("OCGs")));
+  if (!(ocgs instanceof PDFArray)) return [];
+
+  const groups: Record<string, OcGroup> = {};
+  const ids: string[] = [];
+  for (let i = 0; i < ocgs.size(); i++) {
+    const ref = ocgs.get(i);
+    if (!(ref instanceof PDFRef)) continue;
+    const id = ref.toString();
+    if (id in groups) continue;
+    const dict = doc.context.lookup(ref);
+    if (!(dict instanceof PDFDict)) continue;
+    groups[id] = { name: textOf(dict.get(PDFName.of("Name"))) };
+    ids.push(id);
+  }
+  if (ids.length === 0) return [];
+
+  const defaultConfigRaw = doc.context.lookup(
+    ocProperties.get(PDFName.of("D")),
+  );
+  const defaultConfig =
+    defaultConfigRaw instanceof PDFDict ? defaultConfigRaw : null;
+  const onIds = refIdSet(defaultConfig?.get(PDFName.of("ON")));
+  const offIds = refIdSet(defaultConfig?.get(PDFName.of("OFF")));
+  const baseState = textOf(defaultConfig?.get(PDFName.of("BaseState")));
+  for (const id of ids) {
+    // pdf.js starts from /BaseState and then applies /ON, then /OFF, so an id
+    // listed in both /ON and /OFF stays hidden.
+    groups[id].visible = offIds.has(id)
+      ? false
+      : onIds.has(id)
+        ? true
+        : baseState !== "OFF";
   }
 
-  const arrayBuffer = await file.arrayBuffer();
-  const loadingTask = getDocument({ data: arrayBuffer, verbosity: 0 });
-  const pdfDoc = await loadingTask.promise;
-
-  try {
-    const ocConfig = await pdfDoc.getOptionalContentConfig();
-
-    if (!ocConfig) return [];
-
-    const groups: Record<string, OcGroup> = {};
-    for (const [id, group] of ocConfig) {
-      groups[id] = group;
-    }
-    if (Object.keys(groups).length === 0) return [];
-
-    // Use getOrder() for hierarchical display
-    let order: unknown[] | null = null;
-    try {
-      order = ocConfig.getOrder?.() ?? null;
-    } catch {
-      // getOrder not available
-    }
-
-    if (order && Array.isArray(order) && order.length > 0) {
-      return buildLayerTree(order, groups);
-    }
-
-    // Fallback: flat list in enumeration order
-    return Object.entries(groups).map(([id, group]) => ({
-      id,
-      name: group.name ?? id,
-      visible: group.visible ?? true,
-    }));
-  } finally {
-    await pdfDoc.destroy();
+  const order = normalizeOrder(defaultConfig?.get(PDFName.of("Order")));
+  if (order.length > 0) {
+    return buildLayerTree(order, groups);
   }
+
+  return ids.map((id) => ({
+    id,
+    name: groups[id].name ?? id,
+    visible: groups[id].visible ?? true,
+  }));
 }
 
 /**
- * Recursively builds a LayerInfo tree from pdfjs OCG order array.
- * The order array can contain:
- *  - string: an OCG id
- *  - { name: string, order: unknown[] }: a named group with children
- *  - array: a nested group
+ * Recursively builds a LayerInfo tree from a normalized /D/Order array.
+ * Entries are: a string (an OCG id), an array (nested group), or
+ * { name, order } (named group with children).
  */
 function buildLayerTree(
   order: unknown[],
