@@ -3,7 +3,7 @@
  * (cloud) backend by `mode` and feeds the single shared AuthContext, so
  * consumers read `useAuth()` identically either way.
  */
-import { Suspense, lazy, type ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { SpringAuthProvider } from "@app/auth/spring/UseSession";
 import { type AuthMode, type AuthTranslate } from "@app/auth/types";
 

@@ -63,6 +63,17 @@ export function SpringAuthProvider({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<AuthError | null>(null);
 
+  // Debug: Track state transitions
+  useEffect(() => {
+    console.log("[Auth] State changed:", {
+      loading,
+      hasSession: !!session,
+      hasError: !!error,
+      userId: session?.user?.id,
+      timestamp: new Date().toISOString(),
+    });
+  }, [loading, session, error]);
+
   const refreshSession = useCallback(async () => {
     try {
       setLoading(true);

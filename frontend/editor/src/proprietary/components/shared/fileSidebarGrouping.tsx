@@ -101,7 +101,15 @@ export function useFileSidebarGroups(
   // The category vocabulary is a large static file that only this feature
   // renders, so it is fetched here rather than shipped with every startup.
   useEffect(() => {
-    if (enabled) void loadSidebarCategories();
+    if (!enabled) return;
+    void loadSidebarCategories();
+    const onOnline = () => {
+      void loadSidebarCategories();
+    };
+    window.addEventListener("online", onOnline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+    };
   }, [enabled]);
 
   const categories = useSyncExternalStore(

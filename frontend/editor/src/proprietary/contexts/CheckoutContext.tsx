@@ -5,8 +5,8 @@ import React, {
   useCallback,
   useEffect,
   useRef,
-  Suspense,
   lazy,
+  Suspense,
   ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";

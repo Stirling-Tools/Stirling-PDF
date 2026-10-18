@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Alert, Center, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";

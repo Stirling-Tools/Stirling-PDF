@@ -83,12 +83,12 @@
     "ocr": {
       "image": "/og_images/ocr.png",
       "title": "OCR PDF - Stirling PDF",
-      "description": "Cleanup scans and detects text from images within a PDF and re-adds it as text."
+      "description": "Cleans up scans and detects text from images within a PDF and re-adds it as text."
     },
     "addImage": {
       "image": "/og_images/add-image.png",
       "title": "Add Image to PDF - Stirling PDF",
-      "description": "Adds a image onto a set location on the PDF"
+      "description": "Adds an image onto a set location on the PDF"
     },
     "rotate": {
       "image": "/og_images/rotate.png",

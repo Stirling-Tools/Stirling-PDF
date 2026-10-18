@@ -269,49 +269,43 @@ for (const m of mapSrc.matchAll(/"([^"]+)":\s*"([^"]+)"/g))
 const regSrc = read("src/core/data/useTranslatedToolRegistry.tsx");
 const titleById = {};
 const descById = {};
-const tomlSrc = read("public/locales/en-GB/translation.toml");
-let tomlSection = null;
-for (const line of tomlSrc.split(/\r?\n/)) {
-  const sm = /^\[home\.([A-Za-z0-9_-]+)\]\s*$/.exec(line.trim());
-  if (sm) {
-    tomlSection = sm[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-    continue;
-  }
-  if (/^\[/.test(line.trim())) {
-    tomlSection = null;
-    continue;
-  }
-  if (tomlSection) {
-    const kv = /^(title|desc)\s*=\s*"((?:[^"\\]|\\.)*)"/.exec(line.trim());
-    if (kv) {
-      const val = JSON.parse('"' + kv[2] + '"');
-      if (kv[1] === "title") titleById[tomlSection] = val;
-      else descById[tomlSection] = val;
+function parseHomeToml(src, { overwrite }) {
+  let section = null;
+  for (const rawLine of src.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    const sm = /^\[home\.([A-Za-z0-9_-]+)\]\s*$/.exec(line);
+    if (sm) {
+      section = sm[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+      continue;
+    }
+    if (/^\[/.test(line)) {
+      section = null;
+      continue;
+    }
+    if (section) {
+      const kv = /^(title|desc)\s*=\s*"((?:[^"\\]|\\.)*)"/.exec(line);
+      if (kv) {
+        let val = kv[2];
+        try {
+          val = JSON.parse('"' + kv[2] + '"');
+        } catch {
+          // Keep the raw string if JSON cannot decode a non-JSON escape sequence.
+        }
+        if (kv[1] === "title") {
+          if (overwrite || !titleById[section]) titleById[section] = val;
+        } else {
+          if (overwrite || !descById[section]) descById[section] = val;
+        }
+      }
     }
   }
 }
-// The authored English TOML is the source: the delivery JSONs are build output.
-let enSection = null;
-for (const line of read("public/locales/en-US/translation.toml").split(
-  /\r?\n/,
-)) {
-  const sm = /^\[home\.([A-Za-z0-9_-]+)\]\s*$/.exec(line.trim());
-  if (sm) {
-    enSection = sm[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-    continue;
-  }
-  if (/^\[/.test(line.trim())) {
-    enSection = null;
-    continue;
-  }
-  if (!enSection) continue;
-  const kv = /^(title|desc)\s*=\s*"((?:[^"\\]|\\.)*)"/.exec(line.trim());
-  if (!kv) continue;
-  const val = JSON.parse('"' + kv[2] + '"');
-  if (kv[1] === "title") {
-    if (!titleById[enSection]) titleById[enSection] = val;
-  } else if (!descById[enSection]) descById[enSection] = val;
-}
+parseHomeToml(read("public/locales/en-GB/translation.toml"), {
+  overwrite: true,
+});
+parseHomeToml(read("public/locales/en-US/translation.toml"), {
+  overwrite: false,
+});
 
 const STR = '"((?:[^"\\\\]|\\\\.)*)"';
 for (const m of regSrc.matchAll(

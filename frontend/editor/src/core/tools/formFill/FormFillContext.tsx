@@ -405,7 +405,6 @@ export function FormFillProvider({
   const [providerMode, setProviderModeState] =
     useState<FormProviderMode>(initialMode);
   const providerModeRef = useRef<FormProviderMode>(initialMode);
-  providerModeRef.current = providerMode;
   const providersRef = useRef(new Map<FormProviderMode, IFormDataProvider>());
 
   /** The provider for the current mode, built on first use. */
@@ -974,8 +973,7 @@ export function FormFillProvider({
       reset,
       fieldsByPage,
       effectiveFieldsByPage,
-      activeProviderName:
-        providerProp?.name ?? PROVIDER_NAMES[providerModeRef.current],
+      activeProviderName: providerProp?.name ?? PROVIDER_NAMES[providerMode],
       setProviderMode,
       forFileId,
       // editing

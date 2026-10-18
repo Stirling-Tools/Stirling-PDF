@@ -75,8 +75,8 @@ export function loadSidebarCategories(): Promise<void> {
       }));
       publish();
     })
-    .catch(() => {
-      // A failed fetch leaves the sidebar flat and can be retried.
+    .catch((error: unknown) => {
+      console.error("Failed to load sidebar categories", error);
       loading = null;
     });
   return loading;

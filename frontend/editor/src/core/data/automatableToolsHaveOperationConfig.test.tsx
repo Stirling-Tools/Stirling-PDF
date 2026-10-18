@@ -27,7 +27,7 @@ describe("automatable tools", () => {
   });
 
   // The boot registry must not carry the configs: every module in OPERATION_CONFIGS pulls in a
-  // tool's hooks, so one entry.config leaking back onto the startup path costs the whole family.
+  // tool's hooks, so one `operationConfig` leaking back onto the startup path costs the whole family.
   test("the boot registry carries no operation configs", () => {
     const { result } = renderHook(() => useTranslatedToolCatalog());
 

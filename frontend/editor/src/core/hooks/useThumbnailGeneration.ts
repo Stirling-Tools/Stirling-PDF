@@ -74,6 +74,7 @@ async function processRequestQueue() {
 
         try {
           const pageNumbers = requests.map((req) => req.pageNumber);
+          const epoch = thumbnailGenerationService.epoch;
 
           // Share the cached buffer instead of minting a second copy.
           const arrayBuffer = await getDocumentBytes(file);
@@ -82,8 +83,6 @@ async function processRequestQueue() {
           const fileId = isStirlingFile(file)
             ? file.fileId
             : (createQuickKey(file) as FileId);
-
-          const epoch = thumbnailGenerationService.epoch;
           const results = await thumbnailGenerationService.generateThumbnails(
             fileId,
             arrayBuffer,

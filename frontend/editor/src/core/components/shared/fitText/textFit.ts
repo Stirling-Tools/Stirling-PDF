@@ -55,9 +55,8 @@ export function adjustFontSizeToFit(
       return Number.POSITIVE_INFINITY;
     }
     const lineHeight =
-      parseFloat(window.getComputedStyle(element).lineHeight) ||
-      baseFontPx * 1.2;
-    return (lineHeight / baseFontPx) * fontPx * maxLines + 0.1;
+      parseFloat(window.getComputedStyle(element).lineHeight) || fontPx * 1.2;
+    return lineHeight * maxLines + 0.1;
   };
 
   /** The room a refit depends on, and the text it has to fit into it. */

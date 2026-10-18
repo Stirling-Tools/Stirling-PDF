@@ -545,6 +545,8 @@ function deferEntry(html) {
       // The shell is the first screen, so the app waits for a gesture.
       'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +
       "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
+      'addEventListener("dragover",function(e){if(document.querySelector("[data-shell-for]"))e.preventDefault();},true);' +
+      'addEventListener("drop",function(e){if(!document.querySelector("[data-shell-for]"))return;e.preventDefault();var f=e.dataTransfer&&e.dataTransfer.files;if(f&&f.length){pending=f;boot();handOff();}},true);' +
       // A shell link or file button boots and forwards the action to the live app.
       'addEventListener("click",function(event){if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;' +
       'var t=event.target;if(!t||!t.closest||!t.closest("[data-shell-for]"))return;' +
@@ -647,12 +649,11 @@ export async function prerenderShell({
     if (language === wide.base) continue;
     const wideStrings = wide.strings[language];
     const narrowStrings = narrow?.strings[language];
-    const same = narrowStrings
-      ? JSON.stringify(narrowStrings) === JSON.stringify(wideStrings)
-      : true;
-    const pack = same
-      ? { both: wideStrings }
-      : { wide: wideStrings, narrow: narrowStrings };
+    const pack = !narrowStrings
+      ? { wide: wideStrings }
+      : JSON.stringify(narrowStrings) === JSON.stringify(wideStrings)
+        ? { both: wideStrings }
+        : { wide: wideStrings, narrow: narrowStrings };
     await writeFile(join(shellsDir, `${language}.json`), JSON.stringify(pack));
   }
   return {

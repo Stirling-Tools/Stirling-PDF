@@ -58,7 +58,8 @@ export function loadIconRegistry(): Promise<void> {
       pending = null;
       for (const listener of listeners) listener();
     },
-    () => {
+    (error: unknown) => {
+      console.error("Icon: failed to load the icon registry", error);
       pending = null;
     },
   );
