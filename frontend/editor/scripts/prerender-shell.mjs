@@ -516,8 +516,10 @@ function deferEntry(html) {
       "function restore(){var hints=payload.hints||[];" +
       'for(var h=0;h<hints.length;h++){var hint=document.createElement("link");hint.rel="modulepreload";' +
       'hint.crossOrigin="anonymous";hint.href=hints[h];document.head.appendChild(hint);}' +
-      'var lng=document.documentElement.lang;if(lng&&lng!=="en"){var lp=document.createElement("link");' +
-      'lp.rel="preload";lp.as="fetch";lp.crossOrigin="anonymous";lp.href=new URL("locales/"+lng+"/translation.toml",document.baseURI).href;document.head.appendChild(lp);}' +
+      'var lng=document.documentElement.lang||"en-US";var targetLng=lng==="en"?"en-US":lng;' +
+      'var pLngs=targetLng==="en-US"?["en-US"]:[targetLng,"en-US"];' +
+      'for(var p=0;p<pLngs.length;p++){var lp=document.createElement("link");lp.rel="preload";lp.as="fetch";lp.crossOrigin="anonymous";' +
+      'lp.href=new URL("locales/"+pLngs[p]+"/translation.toml",document.baseURI).href;document.head.appendChild(lp);}' +
       'var meta=payload.meta||[];for(var m=0;m<meta.length;m++){var icon=document.createElement("link");' +
       "icon.rel=meta[m].rel;icon.href=meta[m].href;document.head.appendChild(icon);}" +
       'var links=document.querySelectorAll("link[data-href]");' +
@@ -545,7 +547,8 @@ function deferEntry(html) {
       // The shell is the first screen, so the app waits for a gesture.
       'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +
       "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
-      'addEventListener("dragover",function(e){if(document.querySelector("[data-shell-for]"))e.preventDefault();},true);' +
+      'addEventListener("dragenter",function(e){if(document.querySelector("[data-shell-for]"))e.preventDefault();},true);' +
+      'addEventListener("dragover",function(e){if(document.querySelector("[data-shell-for]")){e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="copy";}},true);' +
       'addEventListener("drop",function(e){if(!document.querySelector("[data-shell-for]"))return;e.preventDefault();var f=e.dataTransfer&&e.dataTransfer.files;if(f&&f.length){pending=f;boot();handOff();}},true);' +
       // A shell link or file button boots and forwards the action to the live app.
       'addEventListener("click",function(event){if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;' +
@@ -567,7 +570,7 @@ function deferEntry(html) {
       "function handOff(){if(!pending)return;" +
       'if(document.querySelector("[data-shell-for]")&&tries++<200){setTimeout(handOff,50);return;}' +
       'var input=document.querySelector("input[type=file]");' +
-      "if(!input){pending=null;return;}" +
+      "if(!input){if(tries++<200){setTimeout(handOff,50);return;}pending=null;return;}" +
       "var files=pending;pending=null;" +
       "try{var carrier=new DataTransfer();" +
       "for(var j=0;j<files.length;j++)carrier.items.add(files[j]);" +
