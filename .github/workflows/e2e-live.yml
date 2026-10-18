@@ -120,7 +120,7 @@ jobs:
             --github-step-summary
       - name: Upload e2e:live JaCoCo report
         if: always() && steps.live-coverage.outputs.report == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: jacoco-e2e-live-${{ github.run_id }}
           path: build/reports/jacoco/e2e-live/
@@ -130,7 +130,7 @@ jobs:
         # Picked up by the coverage-aggregate workflow via the
         # `jacoco-exec-*` artifact name pattern.
         if: always() && steps.live-coverage.outputs.report == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: jacoco-exec-e2e-live
           path: .test-state/playwright/jacoco.exec
@@ -169,7 +169,7 @@ jobs:
         # someone debugging "why is this function showing as covered"
         # can trace it back to the source dump.
         if: always() && steps.pw-frontend-coverage.outputs.summary == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: playwright-frontend-coverage
           path: |
@@ -185,7 +185,7 @@ jobs:
           echo "::endgroup::"
       - name: Upload backend log
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: backend-log-live-${{ github.run_id }}
           path: .test-state/playwright/backend.log
@@ -205,7 +205,7 @@ jobs:
           echo "::endgroup::"
       - name: Upload Playwright report + traces
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: playwright-report-live-${{ github.run_id }}
           # test-results/ holds the per-test trace.zip (with browser console

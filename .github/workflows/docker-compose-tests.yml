@@ -164,7 +164,7 @@ jobs:
 
       - name: Upload cucumber JaCoCo report
         if: always() && matrix.cucumber && steps.cucumber-coverage.outputs.report == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: jacoco-cucumber-${{ github.run_id }}
           path: build/reports/jacoco/cucumber/
@@ -174,7 +174,7 @@ jobs:
         # Picked up by the coverage-aggregate workflow via the
         # `jacoco-exec-*` artifact name pattern.
         if: always() && matrix.cucumber && steps.cucumber-coverage.outputs.report == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: jacoco-exec-cucumber
           path: testing/cucumber-coverage/cucumber.exec
@@ -183,7 +183,7 @@ jobs:
 
       - name: Upload Cucumber Report
         if: always() && matrix.cucumber
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cucumber-report
           path: testing/cucumber/report.html
@@ -192,7 +192,7 @@ jobs:
 
       - name: Upload Test Reports
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: docker-compose-test-reports-${{ matrix.image }}
           path: testing/reports/

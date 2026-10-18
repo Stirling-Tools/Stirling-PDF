@@ -108,7 +108,7 @@ jobs:
           FLAKY_STRICT_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           # job-index because `shard` holds a slash, which artifact names reject.
           name: playwright-report-stubbed-${{ matrix.browser }}-${{ strategy.job-index }}-${{ github.run_id }}
