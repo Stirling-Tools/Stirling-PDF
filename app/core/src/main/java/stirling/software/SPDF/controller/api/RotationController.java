@@ -42,7 +42,7 @@ public class RotationController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Rotate all pages by 90, 180 or 270 degrees clockwise",
+            summary = "Rotate all pages clockwise by 0, 90, 180 or 270 degrees",
             description =
                     "Adds the angle (a multiple of 90) to every page's rotation. For"
                             + " per-page rotation in automated workflows, use auto-rotate-pdf with"
