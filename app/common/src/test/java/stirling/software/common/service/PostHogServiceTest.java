@@ -20,6 +20,7 @@ import org.springframework.mock.env.MockEnvironment;
 
 import com.posthog.java.PostHog;
 
+import stirling.software.common.configuration.PostHogClientFactory;
 import stirling.software.common.model.ApplicationProperties;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,6 +31,7 @@ class PostHogServiceTest {
     private static final String APP_VERSION = "9.9.9";
 
     @Mock PostHog postHog;
+    @Mock PostHogClientFactory postHogClientFactory;
     @Mock UserServiceInterface userService;
 
     /** Build an ApplicationProperties with analytics/posthog toggled. */
@@ -39,14 +41,24 @@ class PostHogServiceTest {
         return appProps;
     }
 
-    /** Construct the service under test. */
+    /** Construct the service under test with the factory wired to the shared client mock. */
     private PostHogService newService(
             ApplicationProperties appProps,
             UserServiceInterface user,
             boolean configDirMounted,
             MockEnvironment env) {
+        when(postHogClientFactory.create()).thenReturn(postHog);
+        return newDirectService(appProps, user, configDirMounted, env);
+    }
+
+    /** Construct without stubbing the factory so tests control what each create() returns. */
+    private PostHogService newDirectService(
+            ApplicationProperties appProps,
+            UserServiceInterface user,
+            boolean configDirMounted,
+            MockEnvironment env) {
         return new PostHogService(
-                postHog, UUID, configDirMounted, APP_VERSION, appProps, user, env);
+                postHogClientFactory, UUID, configDirMounted, APP_VERSION, appProps, user, env);
     }
 
     private MockEnvironment env() {
@@ -436,6 +448,105 @@ class PostHogServiceTest {
             assertNotNull(p);
             // csrfDisabled is always added regardless of config, so map is never empty.
             assertTrue(p.containsKey("security_csrfDisabled"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Lazy client lifecycle")
+    class LazyClientLifecycle {
+
+        @Test
+        @DisplayName("client is not created when telemetry is disabled")
+        void noClientWhenDisabled() {
+            PostHogService service = newService(props(false), userService, false, env());
+
+            verify(postHogClientFactory, never()).create();
+
+            service.captureEvent("evt", new HashMap<>());
+
+            verify(postHogClientFactory, never()).create();
+            verify(postHog, never()).capture(anyString(), anyString(), anyMap());
+        }
+
+        @Test
+        @DisplayName("client is created once and reused when telemetry is enabled")
+        void clientReusedWhenEnabled() {
+            PostHogService service = newService(props(true), userService, false, env());
+            clearInvocations(postHog);
+
+            service.captureEvent("one", new HashMap<>());
+            service.captureEvent("two", new HashMap<>());
+
+            verify(postHogClientFactory, times(1)).create();
+            verify(postHog).capture(eq(UUID), eq("one"), anyMap());
+            verify(postHog).capture(eq(UUID), eq("two"), anyMap());
+        }
+
+        @Test
+        @DisplayName("client is created lazily when telemetry is enabled after construction")
+        void clientCreatedAfterRuntimeEnable() {
+            ApplicationProperties appProps = props(false);
+            PostHogService service = newService(appProps, userService, false, env());
+            verify(postHogClientFactory, never()).create();
+
+            appProps.getSystem().setEnableAnalytics(true);
+            service.captureEvent("evt", new HashMap<>());
+
+            verify(postHogClientFactory).create();
+            verify(postHog).capture(eq(UUID), eq("evt"), anyMap());
+        }
+
+        @Test
+        @DisplayName("client is shut down when telemetry is disabled at runtime")
+        void clientShutdownWhenDisabled() {
+            ApplicationProperties appProps = props(true);
+            PostHogService service = newService(appProps, userService, false, env());
+            clearInvocations(postHog);
+
+            appProps.getSystem().setEnablePosthog(false);
+            service.captureEvent("evt", new HashMap<>());
+
+            verify(postHog).shutdown();
+            verify(postHog, never()).capture(anyString(), anyString(), anyMap());
+        }
+
+        @Test
+        @DisplayName("a fresh client is created if telemetry is re-enabled after a shutdown")
+        void clientRecreatedAfterReenable() {
+            PostHog secondClient = mock(PostHog.class);
+            when(postHogClientFactory.create()).thenReturn(postHog, secondClient);
+            ApplicationProperties appProps = props(true);
+            PostHogService service = newDirectService(appProps, userService, false, env());
+
+            appProps.getSystem().setEnablePosthog(false);
+            service.captureEvent("off", new HashMap<>());
+            appProps.getSystem().setEnablePosthog(true);
+            service.captureEvent("on", new HashMap<>());
+
+            verify(postHogClientFactory, times(2)).create();
+            verify(postHog).shutdown();
+            verify(secondClient).capture(eq(UUID), eq("on"), anyMap());
+        }
+
+        @Test
+        @DisplayName("shutdown() closes a created client and tolerates never creating one")
+        void shutdownLifecycle() {
+            PostHogService enabled = newService(props(true), userService, false, env());
+            enabled.shutdown();
+            verify(postHog).shutdown();
+
+            PostHogService disabled = newService(props(false), userService, false, env());
+            assertDoesNotThrow(disabled::shutdown);
+        }
+
+        @Test
+        @DisplayName("client creation failures are swallowed")
+        void creationFailureSwallowed() {
+            when(postHogClientFactory.create()).thenThrow(new IllegalStateException("no client"));
+            PostHogService service = newDirectService(props(true), userService, false, env());
+
+            assertDoesNotThrow(() -> service.captureEvent("evt", new HashMap<>()));
+            verify(postHog, never()).capture(anyString(), anyString(), anyMap());
         }
     }
 }
