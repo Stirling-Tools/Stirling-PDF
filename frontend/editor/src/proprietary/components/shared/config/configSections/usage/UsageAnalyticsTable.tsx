@@ -45,11 +45,11 @@ const UsageAnalyticsTable: FC<UsageAnalyticsTableProps> = ({ data }) => {
         format: (n) => n.toLocaleString(),
         sortable: true,
       }),
-      column.text({
+      column.number({
         key: "percentage",
         header: t("usage.table.percentage", "Percentage"),
-        get: (r) => `${r.percentage.toFixed(2)}%`,
-        sortBy: (r) => r.percentage,
+        get: (r) => r.percentage,
+        format: (n) => `${n.toFixed(2)}%`,
         sortable: true,
       }),
     ],
