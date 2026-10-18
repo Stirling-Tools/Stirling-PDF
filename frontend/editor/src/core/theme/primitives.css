@@ -102,16 +102,14 @@
   --p-brand-red: #af3434;
   --p-brand-red-600: #9a2e2e;
 
-  /* UI accent ramp (oxblood) — the app's default accent: buttons, links,
-     selection. Light fills use the brand-red scale (-600 fill, -700 text);
-     these steps are the dark-mode fill/hover and the light tint. */
+  /* UI accent (oxblood), the app's default: light fills take brand-red -600 /
+     -700, these steps are the dark fill and hover plus the light tint. */
   --p-accent-200: #e3b7b4;
   --p-accent-400: #c26a6a;
   --p-accent-500: #a84545;
 
-  /* Muted category hues: one mid tone per tool family, matched chroma so the
-     catalogue reads as a set rather than a swatch book. Shared by both themes;
-     every tone clears the 3:1 mark floor on either ground. */
+  /* Category hues: one muted mid tone per tool family, chroma-matched and
+     shared by both themes; each clears the 3:1 mark floor. */
   --p-cat-removal: #a9564f;
   --p-cat-security: #99652f;
   --p-cat-formatting: #7d5b92;
@@ -121,7 +119,7 @@
   --p-cat-verification: #5f62a8;
   --p-cat-automation: #a8577c;
 
-  /* Warm onboarding tints (paper family, replaces the blue/violet/pink set). */
+  /* Warm onboarding tints (paper family). */
   --p-tint-blush: #f6efec;
   --p-tint-clay: #f2e7e2;
 

@@ -66,9 +66,8 @@
   background: var(--button-bg, transparent) !important;
 }
 
-/* Disabled buttons read as a quiet outline rather than a dimmed accent or a
-   filled slab: hairline border, muted label, in both modes. Covers every
-   variant so a disabled primary and a disabled secondary look alike. */
+/* Disabled buttons are a quiet outline in both modes: hairline border, muted
+   label, every variant alike. */
 .sui-btn.mantine-Button-root:disabled:not([data-loading]),
 .sui-btn.mantine-Button-root[data-disabled]:not([data-loading]) {
   background: transparent;

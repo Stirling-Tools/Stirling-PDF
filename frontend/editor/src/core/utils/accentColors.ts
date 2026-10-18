@@ -21,7 +21,7 @@ export type AccentHue =
   | "violet"
   | "gray";
 
-/** Light-mode hex per hue — must match theme.css `--accent-<hue>`; the CSS owns the rendered value. */
+/** Light-mode hex per hue; must match theme.css --accent-<hue>, which owns the rendered value. */
 const LIGHT_HEX: Record<AccentHue, string> = {
   green: "#55763f",
   blue: "#4a6fa5",

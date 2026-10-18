@@ -21,8 +21,8 @@
     var(--c-surface, var(--mantine-color-body));
 }
 
-/* Collapsible step header: a button element rather than a clickable row, so
-   keyboard users can reach it and it reports its expanded state. */
+/* Collapsible step header: a button, not a clickable row, so it is focusable
+   and reports its expanded state. */
 .stepHeader {
   display: flex;
   align-items: center;

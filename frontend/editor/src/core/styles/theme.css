@@ -149,9 +149,8 @@
   --color-gray-800: var(--p-gray-800);
   --color-gray-900: var(--p-gray-900);
 
-  /* Categorical accents (sidebar groups, file-type icons, badges). One hue per
-     token, muted mid tones shared by both themes; JS consumers go through
-     utils/accentColors.ts and must match these values. */
+  /* Categorical accents (sidebar groups, file-type icons, badges): one muted
+     mid tone per hue, shared by both themes; keep utils/accentColors.ts in sync. */
   --accent-blue: var(--p-cat-general);
   --accent-green: var(--p-cat-signing);
   --accent-red: var(--p-cat-removal);
@@ -374,8 +373,7 @@
   --color-gray-800: var(--p-gray-200);
   --color-gray-900: var(--p-gray-100);
 
-  /* Categorical accents: same muted mid tones as light (they clear the 3:1
-     mark floor on either ground). */
+  /* Same tones as light; each clears the 3:1 mark floor on either ground. */
   --accent-blue: var(--p-cat-general);
   --accent-green: var(--p-cat-signing);
   --accent-red: var(--p-cat-removal);

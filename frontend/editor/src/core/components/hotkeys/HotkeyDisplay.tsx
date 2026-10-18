@@ -6,7 +6,7 @@ interface HotkeyDisplayProps {
   binding: HotkeyBinding | null | undefined;
   size?: "sm" | "md";
   muted?: boolean;
-  /** One keycap for the whole combo — for dense listings that repeat it per row. */
+  /** One keycap for the whole combo; for dense listings that repeat it per row. */
   joined?: boolean;
 }
 

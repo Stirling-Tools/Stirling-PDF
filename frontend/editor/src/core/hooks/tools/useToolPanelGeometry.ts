@@ -19,10 +19,7 @@ interface PanelBox {
   height: number;
 }
 
-/**
- * The translate applied by the element and each of its ancestors: the wings
- * slide wrappers, not the elements themselves.
- */
+/** Total translate applied to the element and each of its ancestors. */
 export function translatedBy(el: Element): { x: number; y: number } {
   let x = 0;
   let y = 0;
@@ -41,11 +38,7 @@ export function translatedBy(el: Element): { x: number; y: number } {
   return { x, y };
 }
 
-/**
- * The box the element settles at, with in-flight transforms removed.
- *
- * A rect read mid-slide is off by the animation's current offset.
- */
+/** The element's box with in-flight transforms removed: a rect read mid-slide is off by the animation's offset. */
 function settledBox(el: Element): PanelBox {
   const rect = el.getBoundingClientRect();
   const { x, y } = translatedBy(el);
