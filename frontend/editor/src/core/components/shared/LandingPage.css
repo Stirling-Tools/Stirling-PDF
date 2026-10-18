@@ -3,26 +3,8 @@
    All custom properties are defined in theme.css.
    ============================================================ */
 
-/* ── Entrance animation (editor empty state) ─────────────────
-   Actions fade/slide up (0.2s). The logo paints immediately to avoid
-   LCP animation delay. */
-@keyframes landing-fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(0.75rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 .landing-actions-enter {
-  animation: landing-fade-up 0.2s ease-out both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .landing-actions-enter {
-    animation: none;
-  }
+  display: block;
 }
 
 /* ── Hero text ───────────────────────────────────────────── */

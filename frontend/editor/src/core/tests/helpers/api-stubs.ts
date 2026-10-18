@@ -122,6 +122,8 @@ export interface MockAppApiOptions {
   isAdmin?: boolean;
   /** Null leaves the server analytics choice unconfigured. */
   enableAnalytics?: boolean | null;
+  /** Override `enableMobileScanner`. Default `true`. */
+  enableMobileScanner?: boolean;
   /** Override the logged-in user returned by `/auth/me`. */
   user?: {
     id?: number;
@@ -186,6 +188,7 @@ export async function mockAppApis(
     enableLogin = false,
     isAdmin = false,
     enableAnalytics = false,
+    enableMobileScanner = true,
     user = {
       id: 1,
       username: "testuser",
@@ -210,6 +213,7 @@ export async function mockAppApis(
         enableLogin,
         isAdmin,
         enableAnalytics,
+        enableMobileScanner,
         languages,
         defaultLocale,
       },
