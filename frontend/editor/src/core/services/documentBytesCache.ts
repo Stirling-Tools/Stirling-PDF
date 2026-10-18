@@ -10,11 +10,13 @@
  * Callers that need the bytes hold the buffer they were handed; once nothing
  * does, the next call re-reads the Blob.
  *
- * Files are also keyed by name/size/type/mtime plus a first/last-64 KB
- * fingerprint: the add path re-wraps the same bytes as fresh `File` objects, so
- * identity alone would read every document once per wrapper, and metadata alone
- * would let two different documents with identical metadata share one entry.
- * Bare Blobs stay identity-keyed, since they carry no metadata.
+ * Files whose edge windows tile their whole content are also keyed by
+ * name/size/type/mtime plus the first/last-64 KB fingerprint: the add path
+ * re-wraps the same bytes as fresh `File` objects, so identity alone would read
+ * every document once per wrapper. Larger files stay identity-keyed — their
+ * fingerprint would cover only the edges, and two large documents that differ
+ * in the middle must never share one entry. Bare Blobs stay identity-keyed,
+ * since they carry no metadata.
  */
 const resolved = new WeakMap<Blob, WeakRef<ArrayBuffer>>();
 const pending = new WeakMap<Blob, Promise<ArrayBuffer>>();
@@ -72,12 +74,15 @@ export function documentFingerprint(blob: Blob): Promise<string> {
 }
 
 /**
- * Identity of a File's content for cross-wrapper lookups: name, size, type,
- * mtime and the fingerprint above. Bare Blobs carry no metadata and return
- * null.
+ * Identity of a File's content for cross-wrapper lookups. The fingerprint
+ * covers the whole content only while both edge windows tile the file, so
+ * anything larger stays identity-keyed. Bare Blobs carry no metadata and
+ * return null.
  */
 export async function documentFileKey(blob: Blob): Promise<string | null> {
-  if (!(blob instanceof File)) return null;
+  if (!(blob instanceof File) || blob.size > 2 * FINGERPRINT_WINDOW) {
+    return null;
+  }
   const fingerprint = await documentFingerprint(blob);
   return `${blob.name}\u0000${blob.size}\u0000${blob.type}\u0000${blob.lastModified}\u0000${fingerprint}`;
 }

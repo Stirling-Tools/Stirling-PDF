@@ -163,4 +163,49 @@ describe("documentBytesCache", () => {
     expect(secondSpy).toHaveBeenCalledTimes(1);
     expect(a).not.toBe(b);
   });
+
+  // The edge windows cover the middle only while the file is at most two
+  // windows long; a fingerprint check must not alias large files to each
+  // other once it stops seeing their middle bytes.
+  it("keeps large Files identity-keyed so middle differences never alias", async () => {
+    const size = 2 * 64 * 1024 + 64;
+    const middle = 64 * 1024 + 32;
+    const make = (middleByte: number) => {
+      const bytes = new Uint8Array(size).fill(7);
+      bytes[middle] = middleByte;
+      const file = new File([bytes], "large.pdf", {
+        type: "application/pdf",
+        lastModified: 1000,
+      });
+      vi.spyOn(file, "arrayBuffer").mockResolvedValue(bytes.buffer);
+      return { file, bytes };
+    };
+    const first = make(7);
+    const second = make(9);
+
+    const a = await getDocumentBytes(first.file);
+    const b = await getDocumentBytes(second.file);
+
+    expect(a).not.toBe(b);
+    expect(new Uint8Array(a)[middle]).toBe(7);
+    expect(new Uint8Array(b)[middle]).toBe(9);
+  });
+
+  it("still shares wrappers whose edge windows tile the whole file", async () => {
+    const size = 2 * 64 * 1024;
+    const bytes = new Uint8Array(size).fill(5);
+    const make = () => {
+      const file = new File([bytes], "tiled.pdf", {
+        type: "application/pdf",
+        lastModified: 1000,
+      });
+      vi.spyOn(file, "arrayBuffer").mockResolvedValue(bytes.buffer);
+      return file;
+    };
+
+    const a = await getDocumentBytes(make());
+    const b = await getDocumentBytes(make());
+
+    expect(b).toBe(a);
+  });
 });
