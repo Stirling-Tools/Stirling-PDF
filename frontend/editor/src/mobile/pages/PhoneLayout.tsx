@@ -125,10 +125,6 @@ export function PhoneLayout({
     else onSelectView("tools");
   };
 
-  const documentLabel = homeShown
-    ? t("mobile.home.title", "Documents")
-    : currentDocument?.name;
-
   return (
     <div className="mobile-layout phone-layout" data-files-mode={filesMode}>
       <div
@@ -146,17 +142,13 @@ export function PhoneLayout({
       >
         <PipPane
           front={!toolsInFront}
-          // A document or the home is always behind the tools.
-          pip={toolsInFront}
+          // Only an open document waits in the corner, not the home or library.
+          pip={documentOpen}
           variant="live"
           scale={documentPipScale}
           onScale={setDocumentPipScale}
-          label={documentLabel ?? ""}
-          caption={
-            homeShown
-              ? t("mobile.pip.home", "Your documents")
-              : t("mobile.pip.document", "Document")
-          }
+          label={currentDocument?.name ?? ""}
+          caption={t("mobile.pip.document", "Document")}
           icon={<Icon name="file-text" size="1rem" />}
           onOpen={() => onSelectView("workbench")}
           onDrag={setPipDrag}

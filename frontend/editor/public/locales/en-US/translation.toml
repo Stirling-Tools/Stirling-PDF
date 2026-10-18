@@ -6096,7 +6096,6 @@ title = "Documents"
 
 [mobile.pip]
 document = "Document"
-home = "Your documents"
 open = "Open {{name}}"
 openSettings = "Open settings"
 toolSettings = "Tool settings"
