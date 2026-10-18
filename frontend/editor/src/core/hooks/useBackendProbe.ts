@@ -80,6 +80,10 @@ function probeShared(): Promise<BackendProbeState> {
 /**
  * Lightweight backend probe that avoids global axios interceptors.
  * Used on auth screens to decide whether to show login, anonymous mode, or a backend-starting message.
+ *
+ * `probe()` resolves with the state it applied, or with `undefined` when a
+ * newer probe superseded it before it settled; callers get no answer rather
+ * than a stale status in that case.
  */
 export function useBackendProbe() {
   const [state, setState] = useState<BackendProbeState>({
