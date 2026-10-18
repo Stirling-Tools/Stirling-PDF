@@ -13828,7 +13828,7 @@
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-frontend-dist/macos-arm64/96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-cache-e1b7946154cca207/v6": {
       "object": "sha256:8daa8567e598b46a41048ed8e2d95110b3e29ece1dabd5ceb547b66707ae0c2a",
       "storage": "github-artifact",
-      "updated_at": "2026-10-16T10:15:00.393Z",
+      "updated_at": "2026-10-18T07:37:25.889Z",
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
       "size": 29709824,
@@ -13837,22 +13837,22 @@
           "index": 0,
           "object": "sha256:a522f7644b127f3621fd436bcd18ff4f93c255815c575e833d2dc411413c84d3",
           "size": 25165824,
-          "artifact_id": 12039219102,
+          "artifact_id": 12129591502,
           "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-macos-arm64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1da-part-000000",
-          "workflow_run_id": 38883434118
+          "workflow_run_id": 39106642268
         },
         {
           "index": 1,
           "object": "sha256:6d4338e9c025f1afd1b999125327b23a2f82604cfa17c10fa9fa6a5373dcd977",
           "size": 4544000,
-          "artifact_id": 12039468475,
+          "artifact_id": 12129686121,
           "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-macos-arm64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1da-part-000001",
-          "workflow_run_id": 38883434118
+          "workflow_run_id": 39106642268
         }
       ],
-      "artifact_id": 12039219102,
+      "artifact_id": 12129591502,
       "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-macos-arm64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1da-part-000000",
-      "workflow_run_id": 38883434118
+      "workflow_run_id": 39106642268
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-frontend-node-modules/macos-arm64/fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-cache-e1b7946154cca207/v6": {
       "object": "sha256:6f1699aa57e4d3c4c0ad3c6c7eb7c4b4cce182ed5d23fb57a63271dd30fa8a73",
@@ -17162,6 +17162,6 @@
   },
   "monitoring": {
     "window_started_at": "2026-10-18T06:59:32.286Z",
-    "writes": 64
+    "writes": 65
   }
 }
