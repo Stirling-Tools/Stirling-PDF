@@ -93,12 +93,16 @@ public class PostHogService {
     }
 
     private void shutdownClientIfDisabled() {
+        PostHog client;
         synchronized (postHogClientLock) {
-            if (postHog != null && !telemetryEnabled()) {
-                postHog.shutdown();
-                postHog = null;
+            if (postHog == null || telemetryEnabled()) {
+                return;
             }
+            client = postHog;
+            postHog = null;
         }
+        // shutdown() joins the queue thread, so run it outside the lock.
+        client.shutdown();
     }
 
     @PreDestroy
