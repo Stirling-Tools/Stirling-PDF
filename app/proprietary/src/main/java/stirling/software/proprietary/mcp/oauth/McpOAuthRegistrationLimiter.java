@@ -19,7 +19,7 @@ import stirling.software.common.model.ApplicationProperties;
 @Conditional(McpBuiltinModeCondition.class)
 public class McpOAuthRegistrationLimiter {
 
-    private static final int GLOBAL_FACTOR = 10;
+    private static final int GLOBAL_FACTOR = 100;
 
     private final ApplicationProperties applicationProperties;
     private final Cache<String, Bucket> buckets =

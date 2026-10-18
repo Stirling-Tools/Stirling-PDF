@@ -164,7 +164,7 @@ public class McpOAuthController {
         String username = requireUser(authentication);
         McpAuthorizationRequest pending = requirePending(id, username);
 
-        if (oauthService.hasGrant(username, pending.getClientId())) {
+        if (oauthService.grantCovers(username, pending.getClientId(), pending.getScope())) {
             return ResponseEntity.ok(Map.of("redirect_url", oauthService.approve(pending)));
         }
 

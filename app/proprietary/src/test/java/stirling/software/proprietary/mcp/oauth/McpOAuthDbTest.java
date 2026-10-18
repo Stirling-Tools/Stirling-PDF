@@ -48,7 +48,7 @@ class McpOAuthDbTest {
     private static final String CIMD_ID =
             "https://chatgpt.com/oauth/" + "a".repeat(300) + "/client.json";
     private static final String REDIRECT = "https://chatgpt.com/connector_platform_oauth_redirect";
-    private static final String VERIFIER = "verifier-verifier-verifier-verifier-1234";
+    private static final String VERIFIER = "verifier-verifier-verifier-verifier-1234567";
 
     @Autowired private McpOAuthClientRepository clients;
     @Autowired private McpAuthorizationRequestRepository authorizations;
@@ -110,7 +110,7 @@ class McpOAuthDbTest {
         String redirect = service.approve(pending);
         String code = authorizations.findById(pending.getAuthorizationId()).get().getCode();
         assertThat(redirect).contains("code=" + code).contains("iss=");
-        assertThat(service.hasGrant(USER, CIMD_ID)).isTrue();
+        assertThat(service.grantCovers(USER, CIMD_ID, null)).isTrue();
 
         Map<String, Object> issued = service.exchangeCode(code, CIMD_ID, REDIRECT, VERIFIER);
         assertThat(issued.get("scope").toString()).contains("offline_access");
