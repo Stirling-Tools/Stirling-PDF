@@ -22,6 +22,41 @@ const meta: Meta<typeof BillingScreen> = {
 export default meta;
 type Story = StoryObj<typeof BillingScreen>;
 
+export const EnterpriseTrial: Story = {
+  args: {
+    wallet: {
+      ...freeWallet,
+      enterprise: {
+        status: "trial",
+        periodStart: "2026-10-12T00:00:00Z",
+        periodEnd: "2026-10-26T00:00:00Z",
+        accessUntil: "2026-10-26T00:00:00Z",
+        agreedSeats: null,
+        annualVolume: null,
+        pdfsUsed: 840,
+      },
+    },
+  },
+};
+
+export const EnterpriseOverAgreement: Story = {
+  args: {
+    wallet: {
+      ...freeWallet,
+      team: { ...freeWallet.team, usersInUse: 27 },
+      enterprise: {
+        status: "active",
+        periodStart: "2026-10-12T00:00:00Z",
+        periodEnd: "2027-10-12T00:00:00Z",
+        accessUntil: "2027-10-12T00:00:00Z",
+        agreedSeats: 20,
+        annualVolume: 100000,
+        pdfsUsed: 112000,
+      },
+    },
+  },
+};
+
 export const SelfHostedLicense: Story = {
   args: {
     wallet: freeWallet,

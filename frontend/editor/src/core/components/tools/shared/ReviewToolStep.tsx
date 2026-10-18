@@ -39,6 +39,7 @@ export interface ReviewToolStepProps<TParams = unknown> {
   title?: string;
   onFileClick?: (file: File) => void;
   onUndo?: () => void;
+  notice?: React.ReactNode;
   isCollapsed?: boolean;
   onCollapsedClick?: () => void;
 }
@@ -47,10 +48,12 @@ function ReviewStepContent<TParams = unknown>({
   operation,
   onFileClick,
   onUndo,
+  notice,
 }: {
   operation: ToolOperationHook<TParams>;
   onFileClick?: (file: File) => void;
   onUndo?: () => void;
+  notice?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
@@ -139,6 +142,8 @@ function ReviewStepContent<TParams = unknown>({
         onClose={operation.clearError}
       />
 
+      {notice}
+
       {previewFiles.length > 0 && (
         <ResultsPreview
           files={previewFiles}
@@ -210,6 +215,7 @@ export function createReviewToolStep<TParams = unknown>(
       operation={props.operation}
       onFileClick={props.onFileClick}
       onUndo={props.onUndo}
+      notice={props.notice}
     />,
   );
 }

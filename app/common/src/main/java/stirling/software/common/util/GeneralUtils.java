@@ -820,6 +820,18 @@ public class GeneralUtils {
      * sizes.
      */
     public void requireValidPageSelection(String selection, int totalPages) {
+        checkPageSelection(selection, totalPages, true);
+    }
+
+    /**
+     * Rejects only malformed selections; one that matches no page is allowed, for callers such as
+     * filters where a short file simply has nothing to match.
+     */
+    public void requireWellFormedPageSelection(String selection, int totalPages) {
+        checkPageSelection(selection, totalPages, false);
+    }
+
+    private void checkPageSelection(String selection, int totalPages, boolean requireMatch) {
         if (selection == null || selection.isBlank()) {
             return;
         }
@@ -850,7 +862,7 @@ public class GeneralUtils {
             }
         }
         List<String> invalid = malformed;
-        if (invalid.isEmpty() && !matchesAPage) {
+        if (requireMatch && invalid.isEmpty() && !matchesAPage) {
             invalid = pastEnd.isEmpty() ? List.of(selection) : pastEnd;
         }
         if (!invalid.isEmpty()) {

@@ -1,14 +1,14 @@
-import { useAsync } from "@portal/hooks/useAsync";
-import { fetchWallet } from "@portal/api/billing";
-import type { Tier } from "@portal/contexts/TierContext";
+import { useQuery } from "@tanstack/react-query";
+import { walletQuery } from "@app/portal/queries/wallet";
+import type { Tier } from "@app/portal/contexts/TierContext";
 
 /**
  * The plan tier the portal runs on, SaaS flavor: the signed-in account IS the
  * SaaS account, so the tier comes straight from the wallet — no link concept.
- * `subscribed` → the metered Processor tier; anything else (including while the
- * wallet is still loading) → free. Enterprise stays a mocks-only tier.
+ * Shares the billing query so trial, payment and expiry changes refresh every surface together.
  */
 export function usePlanTier(): Tier {
-  const { data: wallet } = useAsync(() => fetchWallet(), []);
+  const { data: wallet } = useQuery(walletQuery(true));
+  if (wallet?.enterprise) return "enterprise";
   return wallet?.status === "subscribed" ? "pro" : "free";
 }

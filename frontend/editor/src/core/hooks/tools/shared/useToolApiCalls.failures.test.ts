@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
+import type { AxiosRequestConfig } from "axios";
 import { expectConsole } from "@app/tests/failOnConsole";
+import { rememberUnprotectedPdf } from "@app/tests/utils/testFileHelpers";
 import type { StirlingFile } from "@app/types/fileContext";
 
 // One bad file in a batch must come back named, with its error: the caller reports each one,
@@ -21,7 +23,12 @@ const { useToolApiCalls } =
   await import("@app/hooks/tools/shared/useToolApiCalls");
 
 const file = (name: string, id: string): StirlingFile =>
-  ({ name, fileId: id, size: 10 }) as unknown as StirlingFile;
+  Object.assign(
+    rememberUnprotectedPdf(
+      new File(["test"], name, { type: "application/pdf" }),
+    ),
+    { fileId: id },
+  ) as StirlingFile;
 
 function run(files: StirlingFile[]) {
   const { processFiles } = renderHook(() => useToolApiCalls()).result.current;
@@ -42,6 +49,93 @@ beforeEach(() => {
 });
 
 describe("processFiles failure reporting", () => {
+  it.each(["add-password", "remove-password"])(
+    "discards %s results when cancelled during final inspection",
+    async (operation) => {
+      post.mockResolvedValueOnce({ data: new Blob(["result"]), status: 200 });
+      let completeInspection!: (response: {
+        data: {
+          encrypted: boolean;
+          ownerAuthenticated: boolean;
+          permissions: number;
+        };
+      }) => void;
+      post.mockImplementationOnce(
+        (_endpoint: string, _form: FormData, config: AxiosRequestConfig) => {
+          expect(config.cancelToken).toBeDefined();
+          return new Promise((resolve) => {
+            completeInspection = resolve;
+          });
+        },
+      );
+      const { result } = renderHook(() => useToolApiCalls());
+      const markFileError = vi.fn();
+      const processing = result.current.processFiles(
+        undefined,
+        [file("a.pdf", "a"), file("b.pdf", "b")],
+        {
+          endpoint: `/api/v1/security/${operation}`,
+          buildFormData: () => {
+            const form = new FormData();
+            form.set("keyLength", "256");
+            return form;
+          },
+        },
+        vi.fn(),
+        vi.fn(),
+        markFileError,
+      );
+      const cancelled = expect(processing).rejects.toThrow(
+        "Operation was cancelled",
+      );
+      await vi.waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+      result.current.cancelOperation();
+      completeInspection({
+        data: { encrypted: false, ownerAuthenticated: false, permissions: -4 },
+      });
+      await cancelled;
+      expect(post).toHaveBeenCalledTimes(2);
+      expect(markFileError).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["add-password", "remove-password"])(
+    "cancels %s without processing the remaining batch or marking files as failed",
+    async (operation) => {
+      post.mockImplementation(
+        (_endpoint: string, _form: FormData, config: AxiosRequestConfig) =>
+          new Promise((_resolve, reject) => {
+            config.cancelToken?.promise.then(reject);
+          }),
+      );
+      const { result } = renderHook(() => useToolApiCalls());
+      const markFileError = vi.fn();
+      const processing = result.current.processFiles(
+        undefined,
+        [file("a.pdf", "a"), file("b.pdf", "b")],
+        {
+          endpoint: `/api/v1/security/${operation}`,
+          buildFormData: () => {
+            const form = new FormData();
+            form.set("keyLength", "256");
+            return form;
+          },
+        },
+        vi.fn(),
+        vi.fn(),
+        markFileError,
+      );
+      const cancelled = expect(processing).rejects.toThrow(
+        "Operation was cancelled",
+      );
+      await vi.waitFor(() => expect(post).toHaveBeenCalledOnce());
+      result.current.cancelOperation();
+      await cancelled;
+      expect(post).toHaveBeenCalledOnce();
+      expect(markFileError).not.toHaveBeenCalled();
+    },
+  );
+
   it("stops at a signup gate without labelling the files as failed", async () => {
     const blocked = {
       response: { status: 401, data: { error: "SIGNUP_REQUIRED" } },

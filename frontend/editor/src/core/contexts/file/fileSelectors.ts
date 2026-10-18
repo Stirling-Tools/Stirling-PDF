@@ -20,6 +20,7 @@ export function createFileSelectors(
 ): FileContextSelectors {
   return {
     getFile: (id: FileId) => {
+      if (!stateRef.current.files.byId[id]) return undefined;
       const file = filesRef.current.get(id);
       return file ? createStirlingFile(file, id) : undefined;
     },
@@ -27,6 +28,7 @@ export function createFileSelectors(
     getFiles: (ids?: FileId[]) => {
       const currentIds = ids || stateRef.current.files.ids;
       return currentIds
+        .filter((id) => Boolean(stateRef.current.files.byId[id]))
         .map((id) => {
           const file = filesRef.current.get(id);
           return file ? createStirlingFile(file, id) : undefined;
