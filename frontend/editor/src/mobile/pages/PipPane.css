@@ -1,7 +1,6 @@
-/* The corner miniature is the full pane scaled down; these place it and the
-   tap target over it. Keep --pip-scale and the target's size in sync. */
+/* The live corner miniature is the full pane scaled down; these place it and
+   the tap target over it. Each pane sets its own --pip-scale on both. */
 .pip-stage {
-  --pip-scale: 0.34;
   --pip-gap: 12px;
   --pip-dx: 0px;
   --pip-dy: 0px;
@@ -33,7 +32,7 @@
   z-index: 1;
 }
 
-.pip-pane[data-state="pip"] {
+.pip-pane[data-state="pip-live"] {
   z-index: 2;
   transform: translate(
       calc(var(--pip-sx) * var(--pip-gap) + var(--pip-dx)),
@@ -46,6 +45,18 @@
   outline: calc(1px / var(--pip-scale)) solid var(--c-border-strong);
   box-shadow: 0 calc(8px / var(--pip-scale)) calc(24px / var(--pip-scale))
     rgb(0 0 0 / 0.18);
+}
+
+/* Fades out without scaling: controls that measure themselves (segmented
+   indicators) would record shrunken sizes and keep them when it returns. */
+.pip-pane[data-state="pip-bar"] {
+  z-index: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    visibility 0s linear 0.25s;
 }
 
 .pip-pane[data-state="hidden"] {
@@ -93,7 +104,9 @@
 }
 
 .pip-stage[data-dragging="true"] .pip-pane,
-.pip-stage[data-dragging="true"] .pip-target {
+.pip-stage[data-dragging="true"] .pip-target,
+.pip-pane[data-gesture="true"],
+.pip-target[data-gesture="true"] {
   transition: none;
 }
 
@@ -125,6 +138,25 @@
   top: var(--pip-gap);
 }
 
+.pip-target[data-variant="bar"] {
+  width: auto;
+  height: auto;
+  max-width: 60%;
+  border-radius: 999px;
+}
+
+/* Clears the viewer's floating page controls along the bottom edge. */
+.pip-stage:not([data-corner^="top-"]) .pip-target[data-variant="bar"] {
+  bottom: calc(var(--pip-gap) + 4.25rem);
+}
+
+.pip-target[data-variant="bar"] .pip-label {
+  padding: 8px 14px 8px 10px;
+  border: 1px solid var(--c-border-strong);
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.16);
+}
+
 @keyframes pip-target-in {
   from {
     opacity: 0;
@@ -136,6 +168,8 @@
   align-items: center;
   gap: 6px;
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
   padding: 6px 8px;
   border-radius: 0 0 14px 14px;
   background: var(--c-surface);
@@ -155,6 +189,7 @@
 }
 
 .pip-label-text {
+  flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -171,6 +206,9 @@
 }
 
 .pip-label-caption {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.6875rem;
   color: var(--c-text-muted);
 }

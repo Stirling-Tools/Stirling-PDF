@@ -72,6 +72,7 @@ export function PhoneLayout({
   const { activeFileId, setActiveFileId } = useViewer();
   const [homeRequested, setHomeRequested] = useState(false);
   const [pipCorner, setPipCorner] = useState<PipCorner>("bottom-right");
+  const [documentPipScale, setDocumentPipScale] = useState(0.34);
   const [pipDrag, setPipDrag] = useState<{ x: number; y: number } | null>(null);
 
   // Bringing a file in from the home opens it, so the home steps aside.
@@ -147,6 +148,9 @@ export function PhoneLayout({
           front={!toolsInFront}
           // A document or the home is always behind the tools.
           pip={toolsInFront}
+          variant="live"
+          scale={documentPipScale}
+          onScale={setDocumentPipScale}
           label={documentLabel ?? ""}
           caption={
             homeShown
@@ -175,6 +179,7 @@ export function PhoneLayout({
           front={toolsInFront}
           // Only an open tool waits in the corner; the list alone is not worth it.
           pip={!toolsInFront && tool !== null && !filesMode}
+          variant="bar"
           label={tool?.name ?? ""}
           caption={t("mobile.pip.toolSettings", "Tool settings")}
           icon={tool?.icon}
