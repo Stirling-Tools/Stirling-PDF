@@ -78,6 +78,10 @@ class UserServiceTest {
     private stirling.software.proprietary.integration.repository.IntegrationConfigRepository
             integrationConfigRepository;
 
+    @Mock
+    private stirling.software.proprietary.connectedaccount.ConnectedAccountRepository
+            connectedAccountRepository;
+
     @Mock private TeamMembershipService teamMembershipService;
     @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
     @Mock private ToolUsageStatRepository toolUsageStatRepository;

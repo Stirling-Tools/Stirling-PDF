@@ -189,9 +189,16 @@ export function PolicySetupInput({
               )}
             </div>
             {selectedInput.data &&
-              ["folder", "s3", "sftp", "ftp", "network"].includes(
-                selectedInput.data.type,
-              ) && (
+              [
+                "folder",
+                "s3",
+                "sftp",
+                "ftp",
+                "network",
+                "onedrive",
+                "sharepoint",
+                "googledrive",
+              ].includes(selectedInput.data.type) && (
                 <Banner
                   tone={
                     selectedInput.data.options.mode === "consume" ||
