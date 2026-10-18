@@ -5,6 +5,10 @@
 //! the process leave before the stop finishes. This module owns the handshake:
 //! the first exit request is prevented, the stop runs on a worker thread, and
 //! the worker releases the exit once it is done.
+//!
+//! A stop that cannot be confirmed still releases the exit: every backend
+//! watches `TAURI_PARENT_PID`, so one that outlives the app ends on its own
+//! shortly after. The worker says so in the log rather than claiming otherwise.
 
 use std::sync::Mutex;
 
@@ -14,14 +18,14 @@ use crate::utils::add_log;
 
 /// What a pending shutdown will do once the backend has stopped.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ShutdownIntent {
+enum ShutdownIntent {
     Exit(Option<i32>),
     Restart,
 }
 
 /// What the caller of [`ExitCoordinator::request_exit`] should do next.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ExitAction {
+enum ExitAction {
     /// This request started the shutdown: prevent the exit and spawn the worker.
     StartShutdown,
     /// Shutdown is running: prevent the exit and let the worker release it.
@@ -39,19 +43,19 @@ enum State {
 
 /// Idempotent exit/restart coordinator: a second request while shutdown runs
 /// never starts a second stop, and only the completed state lets an exit pass.
-pub struct ExitCoordinator {
+struct ExitCoordinator {
     state: Mutex<State>,
 }
 
 impl ExitCoordinator {
-    pub const fn new() -> Self {
+    const fn new() -> Self {
         Self {
             state: Mutex::new(State::Running),
         }
     }
 
     /// Records the request and reports what the caller has to do about it.
-    pub fn request_exit(&self, intent: ShutdownIntent) -> ExitAction {
+    fn request_exit(&self, intent: ShutdownIntent) -> ExitAction {
         let mut state = self.state.lock().unwrap();
         match *state {
             State::Running => {
@@ -72,7 +76,7 @@ impl ExitCoordinator {
 
     /// Marks the shutdown work finished and returns what it was for. `None`
     /// when it was not running, so a stray second worker cannot release an exit.
-    pub fn finish(&self) -> Option<ShutdownIntent> {
+    fn finish(&self) -> Option<ShutdownIntent> {
         let mut state = self.state.lock().unwrap();
         match *state {
             State::Stopping(intent) => {
@@ -85,11 +89,11 @@ impl ExitCoordinator {
 }
 
 /// The application's coordinator.
-pub static EXIT_COORDINATOR: ExitCoordinator = ExitCoordinator::new();
+static EXIT_COORDINATOR: ExitCoordinator = ExitCoordinator::new();
 
 /// Handles an exit request. Returns `true` when the exit must be prevented for
 /// now; the spawned worker releases it by calling [`tauri::AppHandle::exit`].
-pub fn request_exit(code: Option<i32>, app: &AppHandle) -> bool {
+pub(crate) fn request_exit(code: Option<i32>, app: &AppHandle) -> bool {
     let action = EXIT_COORDINATOR.request_exit(ShutdownIntent::Exit(code));
     match action {
         ExitAction::StartShutdown => {
@@ -103,8 +107,8 @@ pub fn request_exit(code: Option<i32>, app: &AppHandle) -> bool {
 }
 
 /// Routes an update restart through the same shutdown, so the replacement
-/// process never races a live backend.
-pub fn request_restart(app: AppHandle) {
+/// process does not start on top of a live backend.
+pub(crate) fn request_restart(app: AppHandle) {
     match EXIT_COORDINATOR.request_exit(ShutdownIntent::Restart) {
         ExitAction::StartShutdown => spawn_worker(app),
         // A quit is already draining the backend; it will be restarted instead
@@ -116,16 +120,27 @@ pub fn request_restart(app: AppHandle) {
 
 fn spawn_worker(app: AppHandle) {
     std::thread::spawn(move || {
-        // Logs the stop and everything that went wrong with it; the backend
-        // module owns those details, this module only needs it to be done.
-        crate::commands::stop_backend();
+        let report = crate::commands::stop_backend();
 
         let Some(intent) = EXIT_COORDINATOR.finish() else {
             return;
         };
         match intent {
-            ShutdownIntent::Exit(code) => app.exit(code.unwrap_or(0)),
-            ShutdownIntent::Restart => app.restart(),
+            ShutdownIntent::Exit(code) => {
+                if !report.confirmed_stopped {
+                    add_log("⚠️ Backend stop was not confirmed; quitting anyway".to_string());
+                }
+                app.exit(code.unwrap_or(0));
+            }
+            ShutdownIntent::Restart => {
+                if !report.confirmed_stopped {
+                    add_log(format!(
+                        "⚠️ Restarting with the backend stop unconfirmed ({:?}); the new instance may find its port busy",
+                        report.stop
+                    ));
+                }
+                app.restart();
+            }
         }
     });
 }

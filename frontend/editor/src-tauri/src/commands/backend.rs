@@ -2,7 +2,7 @@ use crate::state::connection_state::{AppConnectionState, ConnectionMode};
 use crate::utils::{add_log, app_data_dir};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tauri::Manager;
 use tauri_plugin_shell::process::CommandChild;
@@ -28,14 +28,30 @@ fn sweep_stale_shutdown_files(work_dir: &Path, keep: &Path) {
     }
 }
 
-// Backend lifecycle slot and port, shared by the commands and the exit path.
-static BACKEND_SLOT: Mutex<BackendSlot> = Mutex::new(BackendSlot::Empty);
+// Backend lifecycle and port, shared by the commands and the exit path.
+static BACKEND_LIFECYCLE: BackendLifecycle = BackendLifecycle::new();
 static BACKEND_PORT: Mutex<Option<u16>> = Mutex::new(None);
 
-/// The one slot a backend occupies. `Stopping` is terminal: once shutdown has
-/// committed, no start may register a backend.
+/// The backend slot and the notification that hands it from a start to the
+/// shutdown. `Stopping` is terminal: no start may own a backend after it.
+struct BackendLifecycle<P: BackendProcess = CommandChild> {
+    slot: Mutex<BackendSlot<P>>,
+    changed: Condvar,
+}
+
+/// What a shutdown found when it committed.
+enum TakeOutcome<P: BackendProcess = CommandChild> {
+    /// Nothing was running and no start was pending.
+    Nothing,
+    /// A start was still resolving when the wait ran out.
+    StartUnresolved,
+    /// The backend to stop.
+    Backend(BackendInstance<P>),
+}
+
 enum BackendSlot<P: BackendProcess = CommandChild> {
     Empty,
+    /// A start owns the slot until it publishes a child or hands it back.
     Starting,
     Running(BackendInstance<P>),
     Stopping,
@@ -45,7 +61,9 @@ enum BackendSlot<P: BackendProcess = CommandChild> {
 /// seam that lets tests drive a fake or a real child process.
 trait BackendProcess: Send + 'static {
     fn pid(&self) -> u32;
-    /// Sends a kill signal and waits for the process to exit.
+    /// Sends a kill signal. Whether the process exited is decided by the
+    /// instance's termination notification: plugin versions differ on whether
+    /// this call waits for it.
     fn kill(self) -> std::io::Result<()>;
 }
 
@@ -67,78 +85,105 @@ struct BackendInstance<P: BackendProcess = CommandChild> {
     exited: Arc<AtomicBool>,
 }
 
-/// Reserves the slot for a start.
-fn reserve_start<P: BackendProcess>(slot: &mut BackendSlot<P>) -> Result<(), String> {
-    match slot {
-        BackendSlot::Empty => {
-            *slot = BackendSlot::Starting;
-            Ok(())
-        }
-        BackendSlot::Starting => {
-            add_log("⚠️ Backend already starting, skipping duplicate start".to_string());
-            Err("Backend startup already in progress".to_string())
-        }
-        BackendSlot::Running(_) => {
-            add_log("⚠️ Backend process already running, skipping start".to_string());
-            Err("Backend already running".to_string())
-        }
-        BackendSlot::Stopping => {
-            add_log("⚠️ Backend shutdown already started, refusing to start".to_string());
-            Err("Backend is shutting down".to_string())
+impl<P: BackendProcess> BackendLifecycle<P> {
+    const fn new() -> Self {
+        Self {
+            slot: Mutex::new(BackendSlot::Empty),
+            changed: Condvar::new(),
         }
     }
-}
 
-/// Returns the slot to `Empty` when a start never reached registration.
-fn release_start<P: BackendProcess>(slot: &mut BackendSlot<P>) {
-    if matches!(slot, BackendSlot::Starting) {
-        *slot = BackendSlot::Empty;
-    }
-}
-
-fn release_start_reservation() {
-    release_start(&mut BACKEND_SLOT.lock().unwrap());
-}
-
-/// Registers a spawned backend. Hands the instance back when shutdown committed
-/// while the backend was spawning, so the caller can stop it.
-fn register_backend<P: BackendProcess>(
-    slot: &mut BackendSlot<P>,
-    instance: BackendInstance<P>,
-) -> Result<(), (String, BackendInstance<P>)> {
-    match slot {
-        BackendSlot::Starting => {
-            *slot = BackendSlot::Running(instance);
-            Ok(())
+    /// Reserves the slot for a start. The guard hands the reservation back when
+    /// the start ends without publishing a child.
+    fn reserve_start(&self) -> Result<StartReservation<'_, P>, String> {
+        let mut slot = self.slot.lock().unwrap();
+        match *slot {
+            BackendSlot::Empty => {
+                *slot = BackendSlot::Starting;
+                Ok(StartReservation { lifecycle: self })
+            }
+            BackendSlot::Starting => {
+                add_log("⚠️ Backend already starting, skipping duplicate start".to_string());
+                Err("Backend startup already in progress".to_string())
+            }
+            BackendSlot::Running(_) => {
+                add_log("⚠️ Backend process already running, skipping start".to_string());
+                Err("Backend already running".to_string())
+            }
+            BackendSlot::Stopping => {
+                add_log("⚠️ Backend shutdown already started, refusing to start".to_string());
+                Err("Backend is shutting down".to_string())
+            }
         }
-        _ => Err((
-            "Backend shutdown already started, refusing to register".to_string(),
-            instance,
-        )),
     }
-}
 
-/// Commits shutdown and takes the backend out of the slot. The slot stays
-/// `Stopping`, so a start racing the exit cannot register a new backend.
-fn begin_shutdown<P: BackendProcess>(slot: &mut BackendSlot<P>) -> Option<BackendInstance<P>> {
-    match std::mem::replace(slot, BackendSlot::Stopping) {
-        BackendSlot::Running(instance) => Some(instance),
-        _ => None,
+    /// Publishes a spawned child and wakes a waiting shutdown. A shutdown that
+    /// committed first takes it straight back out.
+    fn register_backend(&self, instance: BackendInstance<P>) {
+        let mut slot = self.slot.lock().unwrap();
+        *slot = BackendSlot::Running(instance);
+        self.changed.notify_all();
     }
-}
 
-/// Clears the slot for the backend whose monitor raised `exited`. A monitor
-/// must never retire a backend that replaced it.
-fn retire_backend<P: BackendProcess>(slot: &mut BackendSlot<P>, exited: &Arc<AtomicBool>) {
-    if let BackendSlot::Running(instance) = slot {
-        if Arc::ptr_eq(&instance.exited, exited) {
+    /// Commits shutdown and takes the backend, waiting out a start that has not
+    /// published yet.
+    fn take_for_shutdown(&self, wait: Duration) -> TakeOutcome<P> {
+        let mut slot = self.slot.lock().unwrap();
+        let deadline = Instant::now() + wait;
+        // Spurious wake-ups re-check the slot.
+        while matches!(*slot, BackendSlot::Starting) {
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
+                *slot = BackendSlot::Stopping;
+                return TakeOutcome::StartUnresolved;
+            }
+            let (guard, _) = self.changed.wait_timeout(slot, remaining).unwrap();
+            slot = guard;
+        }
+
+        match std::mem::replace(&mut *slot, BackendSlot::Stopping) {
+            BackendSlot::Running(instance) => TakeOutcome::Backend(instance),
+            _ => TakeOutcome::Nothing,
+        }
+    }
+
+    /// True once shutdown owns the slot. Racy by design: the handshake covers a
+    /// spawn already running.
+    fn shutdown_committed(&self) -> bool {
+        matches!(*self.slot.lock().unwrap(), BackendSlot::Stopping)
+    }
+
+    /// Hands an unregistered slot back. Notifies even when the slot is already
+    /// `Stopping`, which is how the shutdown learns the start is over.
+    fn release_start(&self) {
+        let mut slot = self.slot.lock().unwrap();
+        if matches!(*slot, BackendSlot::Starting) {
             *slot = BackendSlot::Empty;
         }
+        self.changed.notify_all();
+    }
+
+    /// Clears the slot for the backend whose monitor raised `exited`. A monitor
+    /// must never retire a backend that replaced it.
+    fn retire(&self, exited: &Arc<AtomicBool>) {
+        let mut slot = self.slot.lock().unwrap();
+        if let BackendSlot::Running(instance) = &*slot {
+            if Arc::ptr_eq(&instance.exited, exited) {
+                *slot = BackendSlot::Empty;
+            }
+        }
     }
 }
 
-fn check_backend_status() -> Result<(), String> {
-    reserve_start(&mut BACKEND_SLOT.lock().unwrap())
+/// Holds a start's reservation; dropping it hands an unpublished slot back.
+struct StartReservation<'a, P: BackendProcess> {
+    lifecycle: &'a BackendLifecycle<P>,
+}
+
+impl<P: BackendProcess> Drop for StartReservation<'_, P> {
+    fn drop(&mut self) {
+        self.lifecycle.release_start();
+    }
 }
 
 // Extract port number from "Stirling-PDF running on port: PORT" log line
@@ -471,24 +516,29 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         .shell()
         .command(java_path.to_str().unwrap())
         .args(java_options)
-        .current_dir(&work_dir)  // Set working directory to writable location
+        .current_dir(&work_dir) // Set working directory to writable location
         .env("TAURI_PARENT_PID", std::process::id().to_string())
         .env("STIRLING_PDF_CONFIG_DIR", config_dir.to_str().unwrap())
         .env("STIRLING_PDF_LOG_DIR", log_dir.to_str().unwrap())
         .env("STIRLING_PDF_WORK_DIR", work_dir.to_str().unwrap())
-        .env("STIRLING_PDF_SHUTDOWN_FILE", shutdown_file.to_str().unwrap());
+        .env(
+            "STIRLING_PDF_SHUTDOWN_FILE",
+            shutdown_file.to_str().unwrap(),
+        );
+
+    // A spawn that starts after shutdown committed would only be killed again.
+    if BACKEND_LIFECYCLE.shutdown_committed() {
+        add_log("⚠️ Backend shutdown already started, skipping the spawn".to_string());
+        return Err("Backend is shutting down".to_string());
+    }
 
     add_log("⚙️ Starting backend with bundled JRE...".to_string());
 
-    let (rx, child) = sidecar_command
-        .spawn()
-        .map_err(|e| {
-            // Nothing registered, so the reservation has to go back.
-            release_start_reservation();
-            let error_msg = format!("❌ Failed to spawn sidecar: {}", e);
-            add_log(error_msg.clone());
-            error_msg
-        })?;
+    let (rx, child) = sidecar_command.spawn().map_err(|e| {
+        let error_msg = format!("❌ Failed to spawn sidecar: {}", e);
+        add_log(error_msg.clone());
+        error_msg
+    })?;
 
     let exited = Arc::new(AtomicBool::new(false));
     let instance = BackendInstance {
@@ -497,24 +547,13 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         exited: exited.clone(),
     };
 
-    if let Err((message, instance)) =
-        register_backend(&mut BACKEND_SLOT.lock().unwrap(), instance)
-    {
-        // Shutdown committed while the sidecar was spawning: stop it now, or it
-        // outlives the app.
-        add_log(format!("⚠️ {}; stopping the backend just started", message));
-        if let Err(error) = instance.process.kill() {
-            add_log(format!(
-                "❌ Failed to kill the backend started during shutdown: {}",
-                error
-            ));
-        }
-        return Err(message);
-    }
+    // Shutdown may commit while the child spawns; it takes the instance back out
+    // of the slot.
+    BACKEND_LIFECYCLE.register_backend(instance);
 
     add_log("✅ Backend started with bundled JRE, monitoring output...".to_string());
 
-    // Start monitoring output
+    // The monitor raises `exited`, so it runs even when shutdown owns the instance.
     monitor_backend_output(rx, exited);
 
     Ok(())
@@ -595,7 +634,7 @@ fn monitor_backend_output(
                         }
                     }
                     exited.store(true, Ordering::Release);
-                    retire_backend(&mut BACKEND_SLOT.lock().unwrap(), &exited);
+                    BACKEND_LIFECYCLE.retire(&exited);
                 }
                 _ => {
                     println!("🔍 Unknown command event: {:?}", event);
@@ -639,32 +678,26 @@ pub async fn start_backend(
         }
     }
 
-    // Check if backend is already running or starting
-    if let Err(msg) = check_backend_status() {
-        return Ok(msg);
-    }
+    // The guard hands the slot back if this start never publishes a child.
+    let _reservation = match BACKEND_LIFECYCLE.reserve_start() {
+        Ok(reservation) => reservation,
+        Err(msg) => return Ok(msg),
+    };
 
     // Use Tauri's resource API to find the bundled JRE and JAR
     let resource_dir = app.path().resource_dir().map_err(|e| {
         let error_msg = format!("❌ Failed to get resource directory: {}", e);
         add_log(error_msg.clone());
-        release_start_reservation();
         error_msg
     })?;
 
     add_log(format!("🔍 Resource directory: {:?}", resource_dir));
 
     // Find the bundled JRE
-    let java_executable = find_bundled_jre(&resource_dir).map_err(|e| {
-        release_start_reservation();
-        e
-    })?;
+    let java_executable = find_bundled_jre(&resource_dir)?;
 
     // Find the Stirling-PDF JAR
-    let jar_path = find_stirling_jar(&resource_dir).map_err(|e| {
-        release_start_reservation();
-        e
-    })?;
+    let jar_path = find_stirling_jar(&resource_dir)?;
 
     // Normalize the paths to remove Windows UNC prefix
     let normalized_java_path = normalize_path(&java_executable);
@@ -672,16 +705,14 @@ pub async fn start_backend(
 
     add_log(format!("📦 Found JAR file: {:?}", jar_path));
     add_log(format!("📦 Normalized JAR path: {:?}", normalized_jar_path));
-    add_log(format!("📦 Normalized Java path: {:?}", normalized_java_path));
+    add_log(format!(
+        "📦 Normalized Java path: {:?}",
+        normalized_java_path
+    ));
 
     // Create and start the Java command
-    run_stirling_pdf_jar(&app, &normalized_java_path, &normalized_jar_path).map_err(|e| {
-        release_start_reservation();
-        e
-    })?;
+    run_stirling_pdf_jar(&app, &normalized_java_path, &normalized_jar_path)?;
 
-    // Clears the reservation when a start failed without releasing it.
-    release_start_reservation();
     add_log("✅ Backend startup sequence completed".to_string());
 
     Ok("Backend startup initiated successfully with bundled JRE".to_string())
@@ -696,19 +727,26 @@ pub fn get_backend_port() -> Option<u16> {
 
 // How long the backend gets to stop on its own before it is killed.
 const BACKEND_STOP_GRACE: Duration = Duration::from_secs(10);
+/// How long a kill gets to be confirmed by the termination notification.
+const BACKEND_KILL_GRACE: Duration = Duration::from_secs(5);
+/// How long the shutdown waits for a start that is still resolving. Past this,
+/// the backend's own TAURI_PARENT_PID watchdog ends any child it spawns.
+const BACKEND_START_GRACE: Duration = Duration::from_secs(30);
 const BACKEND_STOP_POLL: Duration = Duration::from_millis(50);
 
 /// How a backend stopped.
 #[derive(Debug, PartialEq, Eq)]
-enum BackendStop {
+pub enum BackendStop {
     /// It had already exited before the stop was requested.
     AlreadyExited,
     /// It exited inside the grace window.
     Graceful,
-    /// It ignored the marker and was killed.
+    /// It was killed and the termination notification confirmed the exit.
     Killed,
-    /// The kill call itself failed.
+    /// The kill call failed.
     KillFailed(String),
+    /// The kill was sent but no termination notification arrived.
+    TerminationUnconfirmed,
 }
 
 /// Result of one backend stop, carrying the errors that did not stop it.
@@ -718,14 +756,35 @@ struct ShutdownOutcome {
     marker_error: Option<String>,
 }
 
+impl ShutdownOutcome {
+    /// True only for outcomes that prove the process is gone.
+    fn confirmed(&self) -> bool {
+        matches!(
+            self.stop,
+            BackendStop::AlreadyExited | BackendStop::Graceful | BackendStop::Killed
+        )
+    }
+}
+
+/// Waits for the instance's termination notification. That notification is the
+/// only proof the process exited: `kill` implementations differ on whether they
+/// wait for it.
+fn wait_for_exit(exited: &AtomicBool, deadline: Instant, poll: Duration) -> bool {
+    while !exited.load(Ordering::Acquire) && Instant::now() < deadline {
+        std::thread::sleep(poll);
+    }
+    exited.load(Ordering::Acquire)
+}
+
 /// Asks the backend to stop, waits for it, and kills it if it does not.
 ///
-/// The deadline covers the whole stop, marker write included. `Killed` means
-/// the kill call returned: the shell plugin's kill waits for the process to
-/// exit, so nothing here is bounded by `grace` alone.
+/// The deadline covers the whole stop, marker write included. A kill only
+/// counts once the notification confirms it, so this never depends on whether
+/// the plugin's kill waits.
 fn shutdown_backend<P: BackendProcess>(
     instance: BackendInstance<P>,
     grace: Duration,
+    kill_grace: Duration,
     poll: Duration,
 ) -> ShutdownOutcome {
     if instance.exited.load(Ordering::Acquire) {
@@ -745,11 +804,7 @@ fn shutdown_backend<P: BackendProcess>(
         )),
     };
 
-    while !instance.exited.load(Ordering::Acquire) && Instant::now() < deadline {
-        std::thread::sleep(poll);
-    }
-
-    if instance.exited.load(Ordering::Acquire) {
+    if wait_for_exit(&instance.exited, deadline, poll) {
         return ShutdownOutcome {
             stop: BackendStop::Graceful,
             marker_error,
@@ -757,14 +812,20 @@ fn shutdown_backend<P: BackendProcess>(
     }
 
     let pid = instance.process.pid();
-    let stop = match instance.process.kill() {
-        Ok(()) => BackendStop::Killed,
-        Err(error) => BackendStop::KillFailed(format!("kill of PID {} failed: {}", pid, error)),
+    let kill_error = instance
+        .process
+        .kill()
+        .err()
+        .map(|error| format!("kill of PID {} failed: {}", pid, error));
+    let confirmed = wait_for_exit(&instance.exited, Instant::now() + kill_grace, poll);
+    let stop = match (kill_error, confirmed) {
+        (Some(error), _) => BackendStop::KillFailed(error),
+        (None, true) => BackendStop::Killed,
+        (None, false) => BackendStop::TerminationUnconfirmed,
     };
     ShutdownOutcome { stop, marker_error }
 }
 
-/// Logs what the stop did; the marker and kill errors each get a line.
 fn log_shutdown(pid: u32, outcome: &ShutdownOutcome) {
     if let Some(error) = outcome.marker_error.as_deref() {
         add_log(format!("⚠️ {}", error));
@@ -777,23 +838,56 @@ fn log_shutdown(pid: u32, outcome: &ShutdownOutcome) {
             pid
         )),
         BackendStop::KillFailed(error) => add_log(format!("❌ {}", error)),
+        BackendStop::TerminationUnconfirmed => add_log(format!(
+            "⚠️ Backend (PID: {}) was killed but its exit was not confirmed",
+            pid
+        )),
     }
 }
 
-/// Commits shutdown and stops the backend, blocking until it is gone or the
-/// grace window expires. Called from the shutdown worker, never from the event
-/// loop.
-pub fn stop_backend() {
-    let Some(instance) = begin_shutdown(&mut BACKEND_SLOT.lock().unwrap()) else {
-        return;
-    };
-    let pid = instance.process.pid();
-    add_log(format!(
-        "App shutting down, stopping backend (PID: {})",
-        pid
-    ));
-    let outcome = shutdown_backend(instance, BACKEND_STOP_GRACE, BACKEND_STOP_POLL);
-    log_shutdown(pid, &outcome);
+/// What [`stop_backend`] achieved. A quit may be best effort; a restart cannot
+/// claim the backend is gone without `confirmed_stopped`.
+pub struct StopReport {
+    pub confirmed_stopped: bool,
+    /// `None` when nothing was running or a pending start never resolved.
+    pub stop: Option<BackendStop>,
+}
+
+/// Commits shutdown and stops the backend, waiting out a start that has not
+/// published yet. Blocks until the process is gone or the grace window expires;
+/// called from the shutdown worker, never from the event loop.
+pub fn stop_backend() -> StopReport {
+    match BACKEND_LIFECYCLE.take_for_shutdown(BACKEND_START_GRACE) {
+        TakeOutcome::Nothing => StopReport {
+            confirmed_stopped: true,
+            stop: None,
+        },
+        TakeOutcome::StartUnresolved => {
+            add_log("⚠️ Backend startup did not finish before the exit".to_string());
+            StopReport {
+                confirmed_stopped: false,
+                stop: None,
+            }
+        }
+        TakeOutcome::Backend(instance) => {
+            let pid = instance.process.pid();
+            add_log(format!(
+                "App shutting down, stopping backend (PID: {})",
+                pid
+            ));
+            let outcome = shutdown_backend(
+                instance,
+                BACKEND_STOP_GRACE,
+                BACKEND_KILL_GRACE,
+                BACKEND_STOP_POLL,
+            );
+            log_shutdown(pid, &outcome);
+            StopReport {
+                confirmed_stopped: outcome.confirmed(),
+                stop: Some(outcome.stop),
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -940,18 +1034,21 @@ mod tests {
     }
 
     use super::{
-        begin_shutdown, register_backend, release_start, reserve_start, retire_backend,
-        shutdown_backend, BackendInstance, BackendProcess, BackendSlot, BackendStop,
+        shutdown_backend, BackendInstance, BackendLifecycle, BackendProcess, BackendSlot,
+        BackendStop, ShutdownOutcome, TakeOutcome,
     };
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::{Arc, Mutex};
+    use std::sync::mpsc;
+    use std::sync::Arc;
     use std::time::Duration;
 
-    /// A process the tests control: it records the kill and can refuse it.
+    /// Test process: records or refuses the kill and can raise the termination
+    /// notification.
     struct TestProcess {
         killed: Arc<AtomicBool>,
         fail_kill: bool,
+        exits_on_kill: Option<Arc<AtomicBool>>,
     }
 
     impl BackendProcess for TestProcess {
@@ -964,11 +1061,19 @@ mod tests {
                 return Err(std::io::Error::other("kill refused"));
             }
             self.killed.store(true, Ordering::Release);
+            if let Some(exited) = self.exits_on_kill {
+                exited.store(true, Ordering::Release);
+            }
             Ok(())
         }
     }
 
     const TEST_POLL: Duration = Duration::from_millis(5);
+    const TEST_GRACE: Duration = Duration::from_secs(5);
+
+    fn lifecycle() -> BackendLifecycle<TestProcess> {
+        BackendLifecycle::new()
+    }
 
     fn test_instance(
         shutdown_file: PathBuf,
@@ -979,6 +1084,7 @@ mod tests {
             process: TestProcess {
                 killed,
                 fail_kill: false,
+                exits_on_kill: Some(exited.clone()),
             },
             shutdown_file,
             exited,
@@ -993,129 +1099,191 @@ mod tests {
 
     #[test]
     fn reserve_start_takes_an_empty_slot() {
-        let mut slot = BackendSlot::<TestProcess>::Empty;
-        assert!(reserve_start(&mut slot).is_ok());
-        assert!(matches!(slot, BackendSlot::Starting));
+        let backend = lifecycle();
+        let reservation = backend.reserve_start();
+        assert!(reservation.is_ok());
+        assert!(matches!(
+            *backend.slot.lock().unwrap(),
+            BackendSlot::Starting
+        ));
     }
 
     #[test]
     fn reserve_start_refuses_a_second_start() {
-        let mut slot = BackendSlot::<TestProcess>::Starting;
+        let backend = lifecycle();
+        let _reservation = backend.reserve_start().unwrap();
         assert_eq!(
-            reserve_start(&mut slot),
-            Err("Backend startup already in progress".to_string())
+            backend.reserve_start().err(),
+            Some("Backend startup already in progress".to_string())
         );
     }
 
     #[test]
     fn reserve_start_refuses_while_a_backend_runs() {
-        let mut slot = BackendSlot::<TestProcess>::Empty;
+        let backend = lifecycle();
+        let _reservation = backend.reserve_start().unwrap();
         let (_dir, marker) = temp_path("backend.stop");
-        let exited = Arc::new(AtomicBool::new(false));
-        let instance = test_instance(marker, exited.clone(), Arc::new(AtomicBool::new(false)));
-        reserve_start(&mut slot).unwrap();
-        assert!(register_backend(&mut slot, instance).is_ok());
+        let instance = test_instance(
+            marker,
+            Arc::new(AtomicBool::new(false)),
+            Arc::new(AtomicBool::new(false)),
+        );
+        backend.register_backend(instance);
 
         assert_eq!(
-            reserve_start(&mut slot),
-            Err("Backend already running".to_string())
+            backend.reserve_start().err(),
+            Some("Backend already running".to_string())
         );
     }
 
     #[test]
     fn reserve_start_refuses_once_shutdown_committed() {
-        let mut slot = BackendSlot::<TestProcess>::Stopping;
+        let backend = lifecycle();
+        assert!(matches!(
+            backend.take_for_shutdown(TEST_GRACE),
+            TakeOutcome::Nothing
+        ));
         assert_eq!(
-            reserve_start(&mut slot),
-            Err("Backend is shutting down".to_string())
+            backend.reserve_start().err(),
+            Some("Backend is shutting down".to_string())
         );
     }
 
+    /// Shutdown must not finish while a start is still resolving, and must take
+    /// the child that start publishes.
     #[test]
-    fn release_start_hands_an_unregistered_slot_back() {
-        let mut slot = BackendSlot::<TestProcess>::Starting;
-        release_start(&mut slot);
-        assert!(matches!(slot, BackendSlot::Empty));
+    fn shutdown_waits_for_a_start_that_has_not_published_yet() {
+        let backend = Arc::new(lifecycle());
+        let reservation = backend.reserve_start().unwrap();
+
+        let (started_tx, started_rx) = mpsc::channel();
+        let (taken_tx, taken_rx) = mpsc::channel();
+        let worker = {
+            let backend = backend.clone();
+            std::thread::spawn(move || {
+                started_tx.send(()).unwrap();
+                taken_tx
+                    .send(backend.take_for_shutdown(TEST_GRACE))
+                    .unwrap();
+            })
+        };
+        started_rx.recv().unwrap();
+
+        assert!(
+            matches!(
+                taken_rx.recv_timeout(Duration::from_millis(50)),
+                Err(mpsc::RecvTimeoutError::Timeout)
+            ),
+            "shutdown finished before the start published"
+        );
+
+        let (_dir, marker) = temp_path("backend.stop");
+        let exited = Arc::new(AtomicBool::new(false));
+        let killed = Arc::new(AtomicBool::new(false));
+        backend.register_backend(test_instance(marker, exited, killed));
+
+        match taken_rx.recv_timeout(TEST_GRACE).unwrap() {
+            TakeOutcome::Backend(instance) => assert_eq!(instance.process.pid(), 4242),
+            _ => panic!("shutdown did not take the published backend"),
+        }
+        drop(reservation);
+        worker.join().unwrap();
+    }
+
+    /// A start that fails hands the slot back, which lets the shutdown finish.
+    #[test]
+    fn shutdown_finishes_when_a_pending_start_releases_the_slot() {
+        let backend = Arc::new(lifecycle());
+        let reservation = backend.reserve_start().unwrap();
+
+        let (started_tx, started_rx) = mpsc::channel();
+        let (taken_tx, taken_rx) = mpsc::channel();
+        let worker = {
+            let backend = backend.clone();
+            std::thread::spawn(move || {
+                started_tx.send(()).unwrap();
+                taken_tx
+                    .send(backend.take_for_shutdown(TEST_GRACE))
+                    .unwrap();
+            })
+        };
+        started_rx.recv().unwrap();
+        assert!(matches!(
+            taken_rx.recv_timeout(Duration::from_millis(50)),
+            Err(mpsc::RecvTimeoutError::Timeout)
+        ));
+
+        drop(reservation);
+
+        assert!(matches!(
+            taken_rx.recv_timeout(TEST_GRACE).unwrap(),
+            TakeOutcome::Nothing
+        ));
+        worker.join().unwrap();
     }
 
     #[test]
-    fn release_start_leaves_a_registered_backend_alone() {
-        let mut slot = BackendSlot::<TestProcess>::Empty;
+    fn take_for_shutdown_gives_up_on_a_start_that_never_resolves() {
+        let backend = lifecycle();
+        let _reservation = backend.reserve_start().unwrap();
+        assert!(matches!(
+            backend.take_for_shutdown(Duration::from_millis(20)),
+            TakeOutcome::StartUnresolved
+        ));
+        assert!(backend.shutdown_committed());
+    }
+
+    #[test]
+    fn an_unpublished_start_hands_the_slot_back() {
+        let backend = lifecycle();
+        drop(backend.reserve_start().unwrap());
+        assert!(matches!(*backend.slot.lock().unwrap(), BackendSlot::Empty));
+
+        let _reservation = backend.reserve_start().unwrap();
+        assert!(matches!(
+            *backend.slot.lock().unwrap(),
+            BackendSlot::Starting
+        ));
+    }
+
+    #[test]
+    fn a_published_backend_survives_the_start_guard() {
+        let backend = lifecycle();
+        let reservation = backend.reserve_start().unwrap();
         let (_dir, marker) = temp_path("backend.stop");
         let instance = test_instance(
             marker,
             Arc::new(AtomicBool::new(false)),
             Arc::new(AtomicBool::new(false)),
         );
-        reserve_start(&mut slot).unwrap();
-        assert!(register_backend(&mut slot, instance).is_ok());
+        backend.register_backend(instance);
 
-        release_start(&mut slot);
+        drop(reservation);
 
-        assert!(matches!(slot, BackendSlot::Running(_)));
-    }
-
-    #[test]
-    fn register_backend_refuses_after_shutdown_and_hands_the_instance_back() {
-        let mut slot = BackendSlot::<TestProcess>::Stopping;
-        let (_dir, marker) = temp_path("backend.stop");
-        let instance = test_instance(
-            marker,
-            Arc::new(AtomicBool::new(false)),
-            Arc::new(AtomicBool::new(false)),
-        );
-
-        let (message, returned) = register_backend(&mut slot, instance).unwrap_err();
-
-        assert!(message.contains("refusing to register"));
-        assert_eq!(returned.process.pid(), 4242);
-        assert!(matches!(slot, BackendSlot::Stopping));
-    }
-
-    #[test]
-    fn begin_shutdown_takes_the_backend_and_stays_committed() {
-        let mut slot = BackendSlot::<TestProcess>::Empty;
-        let (_dir, marker) = temp_path("backend.stop");
-        let instance = test_instance(
-            marker,
-            Arc::new(AtomicBool::new(false)),
-            Arc::new(AtomicBool::new(false)),
-        );
-        reserve_start(&mut slot).unwrap();
-        assert!(register_backend(&mut slot, instance).is_ok());
-
-        let taken = begin_shutdown(&mut slot);
-        assert_eq!(taken.map(|instance| instance.process.pid()), Some(4242));
-        assert!(matches!(slot, BackendSlot::Stopping));
-        assert!(begin_shutdown(&mut slot).is_none(), "idempotent");
-    }
-
-    #[test]
-    fn begin_shutdown_commits_even_without_a_backend() {
-        let mut slot = BackendSlot::<TestProcess>::Empty;
-        assert!(begin_shutdown(&mut slot).is_none());
-        assert_eq!(
-            reserve_start(&mut slot),
-            Err("Backend is shutting down".to_string()),
-            "a start racing the exit must not register"
-        );
+        assert!(matches!(
+            *backend.slot.lock().unwrap(),
+            BackendSlot::Running(_)
+        ));
     }
 
     #[test]
     fn a_monitor_only_retires_its_own_backend() {
-        let mut slot = BackendSlot::<TestProcess>::Empty;
+        let backend = lifecycle();
+        let _reservation = backend.reserve_start().unwrap();
         let (_dir, marker) = temp_path("backend.stop");
         let exited = Arc::new(AtomicBool::new(false));
         let instance = test_instance(marker, exited.clone(), Arc::new(AtomicBool::new(false)));
-        reserve_start(&mut slot).unwrap();
-        assert!(register_backend(&mut slot, instance).is_ok());
+        backend.register_backend(instance);
 
         // A stale monitor for a previous backend must not clear this one.
-        retire_backend(&mut slot, &Arc::new(AtomicBool::new(true)));
-        assert!(matches!(slot, BackendSlot::Running(_)));
+        backend.retire(&Arc::new(AtomicBool::new(true)));
+        assert!(matches!(
+            *backend.slot.lock().unwrap(),
+            BackendSlot::Running(_)
+        ));
 
-        retire_backend(&mut slot, &exited);
-        assert!(matches!(slot, BackendSlot::Empty));
+        backend.retire(&exited);
+        assert!(matches!(*backend.slot.lock().unwrap(), BackendSlot::Empty));
     }
 
     #[test]
@@ -1128,7 +1296,7 @@ mod tests {
             killed.clone(),
         );
 
-        let outcome = shutdown_backend(instance, Duration::from_secs(5), TEST_POLL);
+        let outcome = shutdown_backend(instance, TEST_GRACE, TEST_GRACE, TEST_POLL);
 
         assert_eq!(outcome.stop, BackendStop::AlreadyExited);
         assert_eq!(outcome.marker_error, None);
@@ -1150,7 +1318,7 @@ mod tests {
             exited.store(true, Ordering::Release);
         });
 
-        let outcome = shutdown_backend(instance, Duration::from_secs(5), TEST_POLL);
+        let outcome = shutdown_backend(instance, TEST_GRACE, TEST_GRACE, TEST_POLL);
         backend.join().unwrap();
 
         assert_eq!(outcome.stop, BackendStop::Graceful);
@@ -1168,7 +1336,7 @@ mod tests {
             killed.clone(),
         );
 
-        let outcome = shutdown_backend(instance, Duration::from_millis(50), TEST_POLL);
+        let outcome = shutdown_backend(instance, Duration::from_millis(50), TEST_GRACE, TEST_POLL);
 
         assert_eq!(outcome.stop, BackendStop::Killed);
         assert!(killed.load(Ordering::Acquire));
@@ -1182,7 +1350,7 @@ mod tests {
         let killed = Arc::new(AtomicBool::new(false));
         let instance = test_instance(unwritable, Arc::new(AtomicBool::new(false)), killed.clone());
 
-        let outcome = shutdown_backend(instance, Duration::from_millis(50), TEST_POLL);
+        let outcome = shutdown_backend(instance, Duration::from_millis(50), TEST_GRACE, TEST_POLL);
 
         assert_eq!(outcome.stop, BackendStop::Killed);
         assert!(killed.load(Ordering::Acquire), "the fallback still runs");
@@ -1206,7 +1374,7 @@ mod tests {
         );
         instance.process.fail_kill = true;
 
-        let outcome = shutdown_backend(instance, Duration::from_millis(50), TEST_POLL);
+        let outcome = shutdown_backend(instance, Duration::from_millis(50), TEST_GRACE, TEST_POLL);
 
         match outcome.stop {
             BackendStop::KillFailed(error) => {
@@ -1220,100 +1388,166 @@ mod tests {
         }
     }
 
-    /// A real spawned process, keeping the handle so the test can prove that a
-    /// forced stop waited for the process to exit.
-    struct SpawnedProcess {
-        child: std::process::Child,
-        exit_status: Arc<Mutex<Option<std::process::ExitStatus>>>,
-    }
-
-    impl BackendProcess for SpawnedProcess {
-        fn pid(&self) -> u32 {
-            self.child.id()
-        }
-
-        fn kill(mut self) -> std::io::Result<()> {
-            self.child.kill()?;
-            // The shell plugin's kill waits for the process; mirror that so the
-            // test can assert the process is really gone.
-            let status = self.child.wait()?;
-            *self.exit_status.lock().unwrap() = Some(status);
-            Ok(())
-        }
-    }
-
-    #[cfg(unix)]
-    fn spawn_shell(script: &str) -> std::process::Child {
-        std::process::Command::new("sh")
-            .arg("-c")
-            .arg(script)
-            .spawn()
-            .expect("the test needs a POSIX shell")
-    }
-
-    #[cfg(unix)]
     #[test]
-    fn shutdown_follows_a_real_backend_that_watches_the_marker() {
-        let (dir, marker) = temp_path("backend.stop");
-        let proof = dir.path().join("exited");
-        let script = format!(
-            "while [ ! -f {} ]; do sleep 0.05; done; echo done > {}",
-            marker.display(),
-            proof.display()
-        );
-        let child = spawn_shell(&script);
-        let exited = Arc::new(AtomicBool::new(false));
-        let instance = BackendInstance {
-            process: SpawnedProcess {
-                child,
-                exit_status: Arc::new(Mutex::new(None)),
-            },
-            shutdown_file: marker.clone(),
-            exited: exited.clone(),
-        };
-
-        // The production monitor raises the flag on the termination event; here
-        // the backend's own proof file stands in for it.
-        let watcher = {
-            let proof = proof.clone();
-            let exited = exited.clone();
-            std::thread::spawn(move || {
-                while !proof.exists() {
-                    std::thread::sleep(Duration::from_millis(5));
-                }
-                exited.store(true, Ordering::Release);
-            })
-        };
-
-        let outcome = shutdown_backend(instance, Duration::from_secs(5), TEST_POLL);
-        watcher.join().unwrap();
-
-        assert_eq!(outcome.stop, BackendStop::Graceful, "{outcome:?}");
-        assert!(proof.exists(), "the backend exited on its own");
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn shutdown_kills_a_real_backend_that_ignores_the_marker() {
+    fn shutdown_reports_an_unconfirmed_kill() {
         let (_dir, marker) = temp_path("backend.stop");
-        let child = spawn_shell("sleep 30");
-        let exit_status = Arc::new(Mutex::new(None));
-        let instance = BackendInstance {
-            process: SpawnedProcess {
-                child,
-                exit_status: exit_status.clone(),
-            },
-            shutdown_file: marker.clone(),
-            exited: Arc::new(AtomicBool::new(false)),
-        };
+        let exited = Arc::new(AtomicBool::new(false));
+        let killed = Arc::new(AtomicBool::new(false));
+        let mut instance = test_instance(marker, exited, killed.clone());
+        // The kill lands, but nothing raises the termination notification.
+        instance.process.exits_on_kill = None;
 
-        let outcome = shutdown_backend(instance, Duration::from_millis(200), TEST_POLL);
-
-        assert_eq!(outcome.stop, BackendStop::Killed, "{outcome:?}");
-        assert!(
-            exit_status.lock().unwrap().is_some(),
-            "the forced stop must wait for the process to exit"
+        let outcome = shutdown_backend(
+            instance,
+            Duration::from_millis(50),
+            Duration::from_millis(50),
+            TEST_POLL,
         );
-        assert_eq!(std::fs::read(&marker).unwrap(), b"stop");
+
+        assert_eq!(outcome.stop, BackendStop::TerminationUnconfirmed);
+        assert!(!outcome.confirmed(), "no notification, no proof");
+        assert!(killed.load(Ordering::Acquire));
+    }
+
+    #[test]
+    fn only_observed_termination_counts_as_confirmed() {
+        for (stop, confirmed) in [
+            (BackendStop::AlreadyExited, true),
+            (BackendStop::Graceful, true),
+            (BackendStop::Killed, true),
+            (BackendStop::KillFailed("kill refused".to_string()), false),
+            (BackendStop::TerminationUnconfirmed, false),
+        ] {
+            let outcome = ShutdownOutcome {
+                stop,
+                marker_error: None,
+            };
+            assert_eq!(outcome.confirmed(), confirmed, "{outcome:?}");
+        }
+    }
+
+    /// Real-process coverage, kept in its own module so nothing Unix-only is
+    /// compiled (or left unused) on Windows.
+    #[cfg(unix)]
+    mod subprocess_tests {
+        use super::*;
+        use std::sync::Mutex;
+        use std::time::Instant;
+
+        /// A real child shared with the watcher, so killing and reaping both stay
+        /// possible.
+        struct SpawnedProcess {
+            child: Arc<Mutex<std::process::Child>>,
+        }
+
+        impl BackendProcess for SpawnedProcess {
+            fn pid(&self) -> u32 {
+                self.child.lock().unwrap().id()
+            }
+
+            fn kill(self) -> std::io::Result<()> {
+                let mut child = self.child.lock().unwrap();
+                if child.try_wait()?.is_none() {
+                    child.kill()?;
+                }
+                Ok(())
+            }
+        }
+
+        impl Drop for SpawnedProcess {
+            fn drop(&mut self) {
+                let mut child = self.child.lock().unwrap();
+                if child.try_wait().ok().flatten().is_none() {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                }
+            }
+        }
+
+        /// Runs `script` with `$1`, `$2` … bound to `args`, so no path is ever
+        /// interpolated into shell source.
+        fn spawn_shell(script: &str, args: &[&str]) -> std::process::Child {
+            let mut command = std::process::Command::new("sh");
+            command.arg("-c").arg(script).arg("sh");
+            command.args(args);
+            command.spawn().expect("the test needs a POSIX shell")
+        }
+
+        /// Stands in for the output monitor: reaps the child and only then raises
+        /// the termination notification. Returns false when it gave up.
+        fn watch(
+            child: Arc<Mutex<std::process::Child>>,
+            exited: Arc<AtomicBool>,
+            exit_status: Arc<Mutex<Option<std::process::ExitStatus>>>,
+        ) -> std::thread::JoinHandle<bool> {
+            std::thread::spawn(move || {
+                let deadline = Instant::now() + Duration::from_secs(30);
+                loop {
+                    match child.lock().unwrap().try_wait() {
+                        Ok(Some(status)) => {
+                            *exit_status.lock().unwrap() = Some(status);
+                            exited.store(true, Ordering::Release);
+                            return true;
+                        }
+                        Ok(None) if Instant::now() < deadline => {
+                            std::thread::sleep(TEST_POLL);
+                        }
+                        _ => return false,
+                    }
+                }
+            })
+        }
+
+        #[test]
+        fn shutdown_follows_a_real_backend_that_watches_the_marker() {
+            let (_dir, marker) = temp_path("backend.stop");
+            let child = spawn_shell(
+                "until [ -f \"$1\" ]; do sleep 0.05; done",
+                &[marker.to_str().unwrap()],
+            );
+            let child = Arc::new(Mutex::new(child));
+            let exited = Arc::new(AtomicBool::new(false));
+            let status = Arc::new(Mutex::new(None));
+            let watcher = watch(child.clone(), exited.clone(), status.clone());
+            let instance = BackendInstance {
+                process: SpawnedProcess { child },
+                shutdown_file: marker,
+                exited,
+            };
+
+            let outcome = shutdown_backend(instance, TEST_GRACE, TEST_GRACE, TEST_POLL);
+
+            assert!(watcher.join().unwrap(), "the watcher reaped the process");
+            assert_eq!(outcome.stop, BackendStop::Graceful, "{outcome:?}");
+            let status = status.lock().unwrap().expect("exit status recorded");
+            assert!(status.success(), "the backend exited cleanly: {status:?}");
+        }
+
+        #[test]
+        fn shutdown_kills_a_real_backend_that_ignores_the_marker() {
+            let (_dir, marker) = temp_path("backend.stop");
+            let child = spawn_shell("exec sleep 30", &[]);
+            let child = Arc::new(Mutex::new(child));
+            let exited = Arc::new(AtomicBool::new(false));
+            let status = Arc::new(Mutex::new(None));
+            let watcher = watch(child.clone(), exited.clone(), status.clone());
+            let instance = BackendInstance {
+                process: SpawnedProcess { child },
+                shutdown_file: marker.clone(),
+                exited,
+            };
+
+            let outcome =
+                shutdown_backend(instance, Duration::from_millis(200), TEST_GRACE, TEST_POLL);
+
+            assert!(watcher.join().unwrap(), "the watcher reaped the process");
+            assert_eq!(outcome.stop, BackendStop::Killed, "{outcome:?}");
+            let status = status.lock().unwrap().expect("exit status recorded");
+            assert!(
+                !status.success(),
+                "the forced stop ends the process: {status:?}"
+            );
+            assert_eq!(std::fs::read(&marker).unwrap(), b"stop");
+        }
     }
 }

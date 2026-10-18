@@ -152,8 +152,9 @@ pub async fn download_and_install_update(app: AppHandle) -> Result<(), String> {
 
 /// Restart the application to apply an already-installed update.
 ///
-/// The restart is scheduled behind the same backend shutdown a quit uses, so
-/// the replacement process never starts while the old backend is still alive.
+/// The restart is scheduled behind the same backend stop a quit uses. When the
+/// stop cannot be confirmed the restart still proceeds and logs it: the backend
+/// watches `TAURI_PARENT_PID` and ends shortly after this process does.
 #[tauri::command]
 pub fn restart_app(app: AppHandle) {
     add_log("🔄 Restarting app to apply update...".to_string());
