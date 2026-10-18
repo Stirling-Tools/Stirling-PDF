@@ -87,7 +87,6 @@ interface ParsedObject {
   span: RawSpan;
 }
 
-
 function skipSpace(bytes: Uint8Array, pos: number): number {
   let p = pos;
   while (p < bytes.length) {
@@ -424,7 +423,6 @@ function parseDict(
   return { value: { kind: "dict", map }, end: q };
 }
 
-
 export function decodeStringText(bytes: Uint8Array): string {
   if (bytes.length >= 2 && bytes[0] === 0xfe && bytes[1] === 0xff) {
     let out = "";
@@ -435,7 +433,6 @@ export function decodeStringText(bytes: Uint8Array): string {
   }
   return latin1.decode(bytes);
 }
-
 
 function rotateLeft(value: number, shift: number): number {
   return ((value << shift) | (value >>> (32 - shift))) >>> 0;
@@ -792,7 +789,6 @@ function padPassword(password: string): Uint8Array {
   return out;
 }
 
-
 interface SecurityHandler {
   revision: number;
   version: number;
@@ -914,7 +910,6 @@ async function hash2B(
   }
   return k.subarray(0, 32);
 }
-
 
 export class PdfFileReader {
   readonly bytes: Uint8Array;
@@ -1246,7 +1241,6 @@ export class PdfFileReader {
     return this.security !== null;
   }
 
-
   async getObject(num: number): Promise<PdfValue | null> {
     const cached = this.objects.get(num);
     if (cached !== undefined) return cached?.value ?? null;
@@ -1466,7 +1460,6 @@ export class PdfFileReader {
   }
 }
 
-
 function takeRef(dict: Map<string, PdfValue>, key: string): PdfRef | null {
   const value = dict.get(key);
   return value?.kind === "ref" ? value.ref : null;
@@ -1585,7 +1578,6 @@ export {
   padPkcs7,
   stripPkcs7,
 };
-
 
 export interface DictEntrySpan {
   key: string;
