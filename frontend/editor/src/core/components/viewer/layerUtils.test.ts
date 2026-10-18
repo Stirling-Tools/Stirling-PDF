@@ -1,12 +1,24 @@
-import { describe, it, expect } from "vitest";
+import { beforeAll, describe, it, expect } from "vitest";
+import { webcrypto } from "node:crypto";
+
+// jsdom ships a crypto without WebCrypto's subtle API; the encrypted fixtures
+// need it.
+beforeAll(() => {
+  if (!globalThis.crypto?.subtle?.importKey) {
+    Object.defineProperty(globalThis, "crypto", {
+      value: webcrypto,
+      configurable: true,
+    });
+  }
+});
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  readPdfLayers,
   applyOCGVisibilityToPdf,
   collectLeafIds,
 } from "@app/components/viewer/layerUtils";
+import { extractLayers } from "@app/components/viewer/layerParser";
 import { PDFDocument, PDFName, PDFString } from "@cantoo/pdf-lib";
 
 function toBlob(bytes: Uint8Array): Blob {
@@ -27,7 +39,7 @@ describe("layerUtils", () => {
       const bytes = await doc.save();
       const blob = toBlob(bytes);
 
-      const layers = await readPdfLayers(blob);
+      const layers = await extractLayers(await blob.arrayBuffer());
       expect(layers).toEqual([]);
     });
   });
@@ -70,7 +82,7 @@ describe("layerUtils", () => {
       const bytes = await createPdfWithLayers();
       const blob = toBlob(bytes);
 
-      const layers = await readPdfLayers(blob);
+      const layers = await extractLayers(await blob.arrayBuffer());
       expect(layers).toHaveLength(2);
       expect(layers[0].name).toBe("Background Layer");
       expect(layers[0].visible).toBe(true);
@@ -90,7 +102,7 @@ describe("layerUtils", () => {
       );
 
       const blob = toBlob(modifiedBytes);
-      const updatedLayers = await readPdfLayers(blob);
+      const updatedLayers = await extractLayers(await blob.arrayBuffer());
 
       expect(updatedLayers).toHaveLength(2);
       const bg = updatedLayers.find((l) => l.name === "Background Layer");
@@ -158,8 +170,8 @@ describe("layerUtils", () => {
         "latin1",
       );
       expect(raw).not.toContain("/OCProperties");
-      const layers = await readPdfLayers(
-        fixtureBlob("layers-object-streams.pdf"),
+      const layers = await extractLayers(
+        await fixtureBlob("layers-object-streams.pdf").arrayBuffer(),
       );
       expect(layers.map((l) => l.name).sort()).toEqual([
         "Background Layer",
@@ -171,8 +183,8 @@ describe("layerUtils", () => {
     // is what the sidebar has; the OCG names are encrypted on disk, so they
     // only decode when the load supplies that password.
     it("decrypts layer names in an owner-password-only file", async () => {
-      const layers = await readPdfLayers(
-        fixtureBlob("layers-encrypted-owner-password.pdf"),
+      const layers = await extractLayers(
+        await fixtureBlob("layers-encrypted-owner-password.pdf").arrayBuffer(),
       );
       expect(layers.map((l) => l.name).sort()).toEqual([
         "Background Layer",
@@ -209,7 +221,9 @@ describe("layerUtils", () => {
         doc.context.register(ocProperties),
       );
 
-      const layers = await readPdfLayers(toBlob(await doc.save()));
+      const layers = await extractLayers(
+        await toBlob(await doc.save()).arrayBuffer(),
+      );
 
       expect(layers.map((l) => l.name)).toEqual([
         "Indirect Off",
@@ -239,13 +253,58 @@ describe("layerUtils", () => {
         doc.context.register(ocProperties),
       );
 
-      const layers = await readPdfLayers(toBlob(await doc.save()));
+      const layers = await extractLayers(
+        await toBlob(await doc.save()).arrayBuffer(),
+      );
 
       expect(layers).toHaveLength(1);
       expect(layers[0].name).toBe("Maps");
       expect(layers[0].children?.map((child) => child.name)).toEqual([
         "Terrain",
       ]);
+    });
+
+    // qpdf --encrypt "" <owner> 40|128|128 --use-aes=y: the RC4 and AES-128
+    // security handlers, alongside the AES-256 fixture above.
+    it("decodes names behind every security handler revision", async () => {
+      for (const name of [
+        "layers-encrypted-rc4-40.pdf",
+        "layers-encrypted-rc4-128.pdf",
+        "layers-encrypted-aes-128.pdf",
+      ]) {
+        const layers = await extractLayers(
+          await fixtureBlob(name).arrayBuffer(),
+        );
+        expect(layers.map((layer) => layer.name).sort(), name).toEqual([
+          "Background Layer",
+          "Watermark Layer",
+        ]);
+      }
+    });
+
+    it("splices visibility into an encrypted file other readers still open", async () => {
+      const bytes = await fixtureBlob(
+        "layers-encrypted-aes-128.pdf",
+      ).arrayBuffer();
+      const layers = await extractLayers(bytes);
+      const hidden = layers[0].name;
+      const visibility: Record<string, boolean> = {};
+      for (const layer of layers)
+        visibility[layer.name] = layer.name !== hidden;
+
+      const modified = await applyOCGVisibilityToPdf(bytes, visibility);
+
+      const reread = await extractLayers(modified);
+      expect(reread.find((layer) => layer.name === hidden)?.visible).toBe(
+        false,
+      );
+      for (const layer of reread) {
+        if (layer.name !== hidden) expect(layer.visible).toBe(true);
+      }
+
+      // Independent parser: the incremental update must stay a valid PDF.
+      const reopened = await PDFDocument.load(modified, { password: "" });
+      expect(reopened.getPageCount()).toBeGreaterThan(0);
     });
 
     it("keeps hierarchy for an indirect named group", async () => {
@@ -274,7 +333,9 @@ describe("layerUtils", () => {
         doc.context.register(ocProperties),
       );
 
-      const layers = await readPdfLayers(toBlob(await doc.save()));
+      const layers = await extractLayers(
+        await toBlob(await doc.save()).arrayBuffer(),
+      );
 
       expect(layers).toHaveLength(1);
       expect(layers[0].name).toBe("Group");
@@ -297,7 +358,9 @@ describe("layerUtils", () => {
         PDFName.of("OCProperties"),
         doc.context.register(ocProperties),
       );
-      const layers = await readPdfLayers(toBlob(await doc.save()));
+      const layers = await extractLayers(
+        await toBlob(await doc.save()).arrayBuffer(),
+      );
       expect(layers.map((l) => l.name)).toEqual(["A (nick) B"]);
     });
 
@@ -326,7 +389,9 @@ describe("layerUtils", () => {
         doc.context.register(ocProperties),
       );
 
-      const layers = await readPdfLayers(toBlob(await doc.save()));
+      const layers = await extractLayers(
+        await toBlob(await doc.save()).arrayBuffer(),
+      );
       expect(layers).toHaveLength(1);
       expect(layers[0].name).toBe("Maps");
       expect(layers[0].children?.map((child) => child.name)).toEqual([

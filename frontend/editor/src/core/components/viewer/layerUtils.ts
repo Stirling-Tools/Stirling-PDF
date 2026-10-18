@@ -1,333 +1,229 @@
-import type { PDFObject } from "@cantoo/pdf-lib";
+import LayerParseWorker from "@app/workers/layerParseWorker?worker";
+import {
+  PdfFileReader,
+  PdfStructureError,
+  appendIncrementalUpdate,
+  containsEncryptedString,
+  rewriteDictBuffer,
+  serializeValue,
+  type ObjectUpdate,
+  type PdfRef,
+  type PdfValue,
+} from "@app/utils/pdfObjectReader";
+import type {
+  LayerInfo,
+  LayerParseRequest,
+  LayerParseResponse,
+} from "@app/components/viewer/layerParser";
 
-export interface LayerInfo {
-  id: string;
-  name: string;
-  visible: boolean;
-  children?: LayerInfo[];
-}
-
-// The fields read off each OCG dictionary.
-interface OcGroup {
-  name?: string;
-  visible?: boolean;
-}
-
-// Bounds recursion into /Order trees whose arrays nest deeply or reach
-// themselves again through an object stream.
-const MAX_ORDER_DEPTH = 64;
+export type { LayerInfo } from "@app/components/viewer/layerParser";
 
 /**
- * Reads OCG layer info from a PDF by walking /OCProperties with pdf-lib.
- * Workerless on purpose: the viewer renders through PDFium, so pulling in the
- * pdf.js worker just for layers would download it when the panel opens.
- * Unlike a byte scan, pdf-lib resolves catalogs stored in object streams.
+ * Reads OCG layer info for the layers panel. The parse runs in a worker so a
+ * large document cannot tie up the main thread, and the worker reads the blob
+ * itself, so opening the panel never pulls pdf.js or a copy of the bytes onto
+ * the main thread.
  */
 export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
-  const {
-    PDFDocument,
-    PDFDict,
-    PDFArray,
-    PDFName,
-    PDFString,
-    PDFHexString,
-    PDFRef,
-  } = await import("@cantoo/pdf-lib");
-
-  const textOf = (value: PDFObject | undefined): string | undefined => {
-    if (value instanceof PDFString || value instanceof PDFHexString) {
-      return value.decodeText();
-    }
-    if (value instanceof PDFName) return value.decodeText();
-    return undefined;
-  };
-
-  const refIdSet = (value: PDFObject | undefined): Set<string> => {
-    const result = new Set<string>();
-    if (value instanceof PDFArray) {
-      for (let i = 0; i < value.size(); i++) {
-        const entry = value.get(i);
-        if (entry instanceof PDFRef) result.add(entry.toString());
+  return await new Promise<LayerInfo[]>((resolve, reject) => {
+    const worker = new LayerParseWorker();
+    const settle = (finish: () => void) => {
+      worker.terminate();
+      finish();
+    };
+    worker.onmessage = (event: MessageEvent<LayerParseResponse>) => {
+      const message = event.data;
+      if ("error" in message) {
+        settle(() => reject(new Error(message.error)));
+        return;
       }
-    }
-    return result;
-  };
+      settle(() => resolve(message.layers));
+    };
+    worker.onerror = (event) => {
+      settle(() =>
+        reject(new Error(event.message || "Layer parse worker failed")),
+      );
+    };
+    worker.postMessage({ blob: file } satisfies LayerParseRequest);
+  });
+}
 
-  // Normalizes /D/Order into the shape buildLayerTree consumes: OCG ids,
-  // nested arrays, and {name, order} nodes for named groups. A labeled group
-  // is spec'd as an array whose first element is its text label
-  // (`[(Maps) 5 0 R ...]`); the {name, order} dict form is pdf.js's normalized
-  // shape and both show up in real files.
-  const normalizeOrder = (
-    value: PDFObject | undefined,
-    depth = 0,
-  ): unknown[] => {
-    if (!(value instanceof PDFArray) || depth > MAX_ORDER_DEPTH) return [];
-    let label: string | undefined;
-    let start = 0;
-    if (value.size() > 0) {
-      const first = doc.context.lookup(value.get(0));
-      if (first instanceof PDFString || first instanceof PDFHexString) {
-        label = first.decodeText();
-        start = 1;
-      }
-    }
-    const result: unknown[] = [];
-    for (let i = start; i < value.size(); i++) {
-      const entry = value.get(i);
-      const resolved = doc.context.lookup(entry);
-      if (entry instanceof PDFRef) {
-        if (resolved instanceof PDFArray) {
-          result.push(normalizeOrder(resolved, depth + 1));
-        } else if (
-          resolved instanceof PDFDict &&
-          resolved.has(PDFName.of("Order"))
-        ) {
-          result.push({
-            name: textOf(resolved.lookup(PDFName.of("Name"))),
-            order: normalizeOrder(
-              resolved.lookup(PDFName.of("Order")),
-              depth + 1,
-            ),
-          });
-        } else {
-          result.push(entry.toString());
-        }
-      } else if (resolved instanceof PDFArray) {
-        result.push(normalizeOrder(resolved, depth + 1));
-      } else if (resolved instanceof PDFDict) {
-        result.push({
-          name: textOf(resolved.lookup(PDFName.of("Name"))),
-          order: normalizeOrder(
-            resolved.lookup(PDFName.of("Order")),
-            depth + 1,
-          ),
-        });
-      }
-    }
-    return label === undefined ? result : [{ name: label, order: result }];
-  };
+function refId(ref: PdfRef): string {
+  return `${ref.num} ${ref.gen} R`;
+}
 
-  const bytes = await file.arrayBuffer();
-  // An empty password opens owner-password-only files for reading; anything
-  // with a real user password fails like the pdf.js path did, instead of
-  // decoding encrypted OCG names as if they were clear text.
-  const doc = await PDFDocument.load(bytes, { password: "" });
-  const catalog = doc.context.lookup(doc.context.trailerInfo.Root);
-  if (!(catalog instanceof PDFDict)) return [];
-
-  const ocProperties = doc.context.lookup(
-    catalog.get(PDFName.of("OCProperties")),
-  );
-  if (!(ocProperties instanceof PDFDict)) return [];
-
-  const ocgs = doc.context.lookup(ocProperties.get(PDFName.of("OCGs")));
-  if (!(ocgs instanceof PDFArray)) return [];
-
-  const groups: Record<string, OcGroup> = {};
-  const ids: string[] = [];
-  for (let i = 0; i < ocgs.size(); i++) {
-    const ref = ocgs.get(i);
-    if (!(ref instanceof PDFRef)) continue;
-    const id = ref.toString();
-    if (id in groups) continue;
-    const dict = doc.context.lookup(ref);
-    if (!(dict instanceof PDFDict)) continue;
-    groups[id] = { name: textOf(dict.lookup(PDFName.of("Name"))) };
-    ids.push(id);
-  }
-  if (ids.length === 0) return [];
-
-  const defaultConfigRaw = doc.context.lookup(
-    ocProperties.get(PDFName.of("D")),
-  );
-  const defaultConfig =
-    defaultConfigRaw instanceof PDFDict ? defaultConfigRaw : null;
-  // `lookup` rather than `get`: a PDF may store these entries as indirect refs.
-  const onIds = refIdSet(defaultConfig?.lookup(PDFName.of("ON")));
-  const offIds = refIdSet(defaultConfig?.lookup(PDFName.of("OFF")));
-  const baseState = textOf(defaultConfig?.lookup(PDFName.of("BaseState")));
-  for (const id of ids) {
-    // pdf.js starts from /BaseState and then applies /ON, then /OFF, so an id
-    // listed in both /ON and /OFF stays hidden.
-    groups[id].visible = offIds.has(id)
-      ? false
-      : onIds.has(id)
-        ? true
-        : baseState !== "OFF";
-  }
-
-  const order = normalizeOrder(defaultConfig?.lookup(PDFName.of("Order")));
-  if (order.length > 0) {
-    return buildLayerTree(order, groups);
-  }
-
-  return ids.map((id) => ({
-    id,
-    name: groups[id].name ?? id,
-    visible: groups[id].visible ?? true,
-  }));
+function nameValue(key: string): string {
+  return serializeValue({ kind: "name", name: key });
 }
 
 /**
- * Recursively builds a LayerInfo tree from a normalized /D/Order array.
- * Entries are: a string (an OCG id), an array (nested group), or
- * { name, order } (named group with children).
- */
-function buildLayerTree(
-  order: unknown[],
-  groups: Record<string, OcGroup>,
-  visited = new Set<string>(),
-): LayerInfo[] {
-  const result: LayerInfo[] = [];
-
-  for (const item of order) {
-    if (typeof item === "string") {
-      // It's an OCG id
-      if (visited.has(item)) continue;
-      visited.add(item);
-      const group = groups[item];
-      if (group) {
-        result.push({
-          id: item,
-          name: group.name ?? item,
-          visible: group.visible ?? true,
-        });
-      }
-    } else if (Array.isArray(item)) {
-      // Nested group (unlabeled)
-      const children = buildLayerTree(item, groups, visited);
-      result.push(...children);
-    } else if (item && typeof item === "object") {
-      // Named group with nested items
-      const { name, order: subOrder } = item as {
-        name?: string;
-        order?: unknown[];
-      };
-      const children = subOrder
-        ? buildLayerTree(subOrder, groups, visited)
-        : [];
-      if (name && children.length > 0) {
-        // Use the first child's id as a synthetic group id
-        result.push({
-          id: `group-${name}`,
-          name: name,
-          visible: children.every((c) => c.visible),
-          children,
-        });
-      } else {
-        result.push(...children);
-      }
-    }
-  }
-
-  return result;
-}
-
-/**
- * Modifies OCG visibility in a PDF using @cantoo/pdf-lib.
- * Accepts a flat map of { layerName -> visible } and rewrites the /D config.
+ * Modifies OCG visibility by appending an incremental update to the file.
  *
- * Strategy: set /BaseState to /OFF and only list visible layers in /ON.
- * This is the most unambiguous approach and avoids conflicts between
- * /BaseState, /ON, and /OFF that can confuse some viewers.
- * Also removes /AS (auto-state) entries that can override visibility.
+ * Strategy: set /BaseState to /OFF and only list visible layers in /ON and
+ * hidden ones in /OFF. This is the most unambiguous approach and avoids
+ * conflicts between /BaseState, /ON, and /OFF that can confuse some viewers.
+ * /AS (auto-state) entries are dropped because they can override visibility.
+ *
+ * The default config is rewritten in place wherever possible: every byte of
+ * an untouched value survives, so unknown keys and encrypted strings stay
+ * valid for the object number that holds them.
  */
 export async function applyOCGVisibilityToPdf(
   pdfBytes: ArrayBuffer,
   layerVisibility: Record<string, boolean>,
 ): Promise<Uint8Array> {
-  const { PDFDocument, PDFDict, PDFName, PDFArray, PDFString, PDFHexString } =
-    await import("@cantoo/pdf-lib");
+  const reader = await PdfFileReader.open(new Uint8Array(pdfBytes));
+  if (!reader.root) throw new PdfStructureError("PDF catalog is missing");
+  const catalog = await reader.resolveValue({ kind: "ref", ref: reader.root });
+  if (catalog?.kind !== "dict") {
+    throw new PdfStructureError("PDF catalog is missing");
+  }
+  const ocPropertiesEntry = catalog.map.get("OCProperties");
+  const ocProperties = await reader.resolveValue(ocPropertiesEntry);
+  if (ocProperties?.kind !== "dict") return reader.bytes;
+  const ocgs = await reader.resolveValue(ocProperties.map.get("OCGs"));
+  if (ocgs?.kind !== "array") return reader.bytes;
 
-  const doc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
-  const context = doc.context;
-
-  // Access the catalog via the trailer's Root reference
-  const catalog = context.lookup(context.trailerInfo.Root);
-  if (!(catalog instanceof PDFDict)) {
-    return doc.save();
+  const onRefs: PdfRef[] = [];
+  const offRefs: PdfRef[] = [];
+  for (const item of ocgs.items) {
+    if (item.kind !== "ref") continue;
+    const dict = await reader.resolveValue(item);
+    if (dict?.kind !== "dict") continue;
+    const resolvedName = await reader.resolveValue(dict.map.get("Name"));
+    const name =
+      resolvedName?.kind === "string"
+        ? ((await reader.stringText(resolvedName)) ?? "")
+        : resolvedName?.kind === "name"
+          ? resolvedName.name
+          : "";
+    ((layerVisibility[name] ?? true) ? onRefs : offRefs).push(item.ref);
   }
 
-  // Get OCProperties dict (may be a direct dict or an indirect reference)
-  const ocPropsRaw = catalog.lookup(PDFName.of("OCProperties"));
-  if (!ocPropsRaw) {
-    return doc.save();
-  }
-  const ocProps =
-    ocPropsRaw instanceof PDFDict ? ocPropsRaw : context.lookup(ocPropsRaw);
-  if (!(ocProps instanceof PDFDict)) {
-    return doc.save();
-  }
+  const edits = new Map<string, string | null>([
+    ["BaseState", "/OFF"],
+    ["ON", onRefs.length > 0 ? `[${onRefs.map(refId).join(" ")}]` : null],
+    ["OFF", offRefs.length > 0 ? `[${offRefs.map(refId).join(" ")}]` : null],
+    ["AS", null],
+  ]);
 
-  // Get the /OCGs array
-  const ocgsArray = ocProps.lookup(PDFName.of("OCGs"));
-  if (!(ocgsArray instanceof PDFArray)) {
-    return doc.save();
-  }
+  const updates: ObjectUpdate[] = [];
+  const defaultEntry = ocProperties.map.get("D");
+  const defaultRef = defaultEntry?.kind === "ref" ? defaultEntry.ref : null;
 
-  // Get or create the /D (default config) dict
-  const dRaw = ocProps.lookup(PDFName.of("D"));
-  if (!dRaw) {
-    return doc.save();
-  }
-  const dDict = dRaw instanceof PDFDict ? dRaw : context.lookup(dRaw);
-  if (!(dDict instanceof PDFDict)) {
-    return doc.save();
-  }
-
-  // Collect OCG refs for ON vs OFF based on user visibility settings
-  const onRefs: PDFObject[] = [];
-  const offRefs: PDFObject[] = [];
-
-  const size = ocgsArray.size();
-  for (let i = 0; i < size; i++) {
-    const ocgRef = ocgsArray.get(i);
-    const ocgDict = context.lookup(ocgRef);
-    if (!(ocgDict instanceof PDFDict)) continue;
-
-    // Get the OCG name
-    const nameRaw = ocgDict.lookup(PDFName.of("Name"));
-    let ocgName = "";
-    if (nameRaw instanceof PDFString || nameRaw instanceof PDFHexString) {
-      ocgName = nameRaw.decodeText();
-    } else if (nameRaw) {
-      ocgName = String(nameRaw);
-    }
-
-    // Look up visibility by name
-    const shouldBeVisible = layerVisibility[ocgName] ?? true;
-
-    if (shouldBeVisible) {
-      onRefs.push(ocgRef);
+  if (defaultRef) {
+    const span = await reader.getRawSpan(defaultRef.num);
+    if (span && !span.inStream && span.buffer === reader.bytes) {
+      updates.push({
+        num: defaultRef.num,
+        gen: defaultRef.gen,
+        body: rewriteDictBuffer(reader.bytes, span.start, edits, []),
+      });
     } else {
-      offRefs.push(ocgRef);
+      updates.push({
+        num: defaultRef.num,
+        gen: defaultRef.gen,
+        body: rebuildDict(
+          reader,
+          await reader.resolveValue({ kind: "ref", ref: defaultRef }),
+          edits,
+        ),
+      });
+    }
+  } else {
+    // No indirect default config: add one and point /OCProperties at it.
+    const newNum = reader.maxObjectNum + 1;
+    updates.push({
+      num: newNum,
+      gen: 0,
+      body: rebuildDict(reader, defaultEntry, edits),
+    });
+    const replacement = `${newNum} 0 R`;
+    if (ocPropertiesEntry?.kind === "ref") {
+      const span = await reader.getRawSpan(ocPropertiesEntry.ref.num);
+      if (span && !span.inStream && span.buffer === reader.bytes) {
+        updates.push({
+          num: ocPropertiesEntry.ref.num,
+          gen: ocPropertiesEntry.ref.gen,
+          body: rewriteDictBuffer(
+            reader.bytes,
+            span.start,
+            new Map([["D", replacement]]),
+            [],
+          ),
+        });
+      } else {
+        throw new PdfStructureError("cannot rewrite OCProperties");
+      }
+    } else {
+      // A direct /OCProperties dict can only be reached through the catalog.
+      const newOcProps = reader.maxObjectNum + 2;
+      updates.push({
+        num: newOcProps,
+        gen: 0,
+        body: rebuildDict(reader, ocProperties, new Map([["D", replacement]])),
+      });
+      const catalogSpan = await reader.getRawSpan(reader.root.num);
+      if (
+        !catalogSpan ||
+        catalogSpan.inStream ||
+        catalogSpan.buffer !== reader.bytes
+      ) {
+        throw new PdfStructureError("cannot rewrite the catalog");
+      }
+      updates.push({
+        num: reader.root.num,
+        gen: reader.root.gen,
+        body: rewriteDictBuffer(
+          reader.bytes,
+          catalogSpan.start,
+          new Map([["OCProperties", `${newOcProps} 0 R`]]),
+          [],
+        ),
+      });
     }
   }
 
-  // Set /BaseState to /OFF so all layers start hidden, then /ON lists visible ones.
-  // This is unambiguous and avoids conflicts between /BaseState and /ON//OFF.
-  dDict.set(PDFName.of("BaseState"), PDFName.of("OFF"));
+  const size =
+    Math.max(reader.maxObjectNum, ...updates.map((update) => update.num)) + 1;
+  return appendIncrementalUpdate(reader.bytes, updates, {
+    size,
+    root: reader.root,
+    prev: reader.startxrefOffset,
+    id: reader.trailerId,
+  });
+}
 
-  // Set /ON to only the visible layers
-  if (onRefs.length > 0) {
-    dDict.set(PDFName.of("ON"), context.obj(onRefs));
-  } else {
-    dDict.delete(PDFName.of("ON"));
+/**
+ * Rebuilds a dict from parsed values when it cannot be spliced in place (it
+ * lives in an object stream, or it has to be constructed from scratch). Keys
+ * holding strings from an encrypted document are dropped: strings are
+ * encrypted per object number, and a rebuilt object cannot reuse them.
+ */
+function rebuildDict(
+  reader: PdfFileReader,
+  source: PdfValue | undefined,
+  edits: Map<string, string | null>,
+): string {
+  const entries =
+    source?.kind === "dict" ? source.map : new Map<string, PdfValue>();
+  const parts: string[] = [];
+  const seen = new Set<string>();
+  for (const [key, value] of entries) {
+    seen.add(key);
+    const edit = edits.get(key);
+    if (edit === null) continue;
+    if (edit !== undefined) {
+      parts.push(`${nameValue(key)} ${edit}`);
+      continue;
+    }
+    if (containsEncryptedString(value, reader.encrypted)) continue;
+    parts.push(`${nameValue(key)} ${serializeValue(value)}`);
   }
-
-  // Set /OFF to only the hidden layers (for viewers that check it)
-  if (offRefs.length > 0) {
-    dDict.set(PDFName.of("OFF"), context.obj(offRefs));
-  } else {
-    dDict.delete(PDFName.of("OFF"));
+  for (const [key, edit] of edits) {
+    if (edit && !seen.has(key)) parts.push(`${nameValue(key)} ${edit}`);
   }
-
-  // Remove /AS (auto-state) array - it can contain usage-based overrides
-  // (e.g., print vs view) that conflict with our explicit visibility settings.
-  dDict.delete(PDFName.of("AS"));
-
-  return doc.save();
+  return "<<" + (parts.length > 0 ? " " + parts.join(" ") + " " : "") + ">>";
 }
 
 /**
