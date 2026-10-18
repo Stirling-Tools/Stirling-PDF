@@ -97,11 +97,10 @@ public class RedactController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             operationId = "redactPdfManual",
-            summary = "Redacts areas and pages in a PDF document",
+            summary = "Redact areas and whole pages with boxes",
             description =
-                    "This endpoint redacts content from a PDF file based on manually specified"
-                            + " areas. Users can specify areas to redact and optionally convert the PDF to an"
-                            + " image.")
+                    "Boxes only cover the content, which can still be extracted unless"
+                            + " convertPDFToImage=true. To remove the text itself, use auto-redact.")
     public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
 
@@ -143,12 +142,12 @@ public class RedactController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Redact PDF automatically",
+            summary = "Redact text matching words or regex patterns",
             operationId = "redactPdfAuto",
             description =
-                    "This endpoint automatically redacts text from a PDF file based on specified"
-                            + " patterns. Users can provide text patterns to redact, with options for regex"
-                            + " and whole word matching.")
+                    "Removes each match and boxes it over. If removal fails it only draws"
+                            + " boxes; set convertPDFToImage=true to be sure nothing can be"
+                            + " extracted.")
     public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request)
             throws ToolFailedException {
         if (request.getFileInput() == null || request.getFileInput().isEmpty()) {
@@ -317,8 +316,9 @@ public class RedactController {
             operationId = "redactExecute",
             summary = "Execute a unified redaction plan on a PDF",
             description =
-                    "Unified redaction endpoint that accepts exact strings, regex patterns, and"
-                            + " page numbers in a single request. Supports execution strategy hints.")
+                    "Redacts exact text, regex matches and whole pages in one request."
+                            + " ranges, imageBoxes and redactImagePages only draw boxes unless"
+                            + " style.convertToImage=true or style.strategy=IMAGE_FINALIZE.")
     public ResponseEntity<Resource> executeRedaction(@ModelAttribute RedactExecuteRequest request)
             throws IOException {
 

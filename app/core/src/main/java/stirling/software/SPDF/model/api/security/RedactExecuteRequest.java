@@ -36,20 +36,20 @@ public class RedactExecuteRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Text ranges to redact by specifying a start and end anchor phrase. All"
-                            + " content between the two phrases (inclusive) is redacted. Anchors"
-                            + " work best when short and unique. They must appear"
-                            + " verbatim in the document.")
+                    "Text from a start to an end anchor phrase (inclusive). Boxes only"
+                            + " unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).")
     private List<TextRange> ranges = new ArrayList<>();
 
     @Schema(
             description =
-                    "Rectangular areas to black out, each defined by a page number and bounding box coordinates.")
+                    "Rectangular areas to black out, by page and bounding box. Boxes only"
+                            + " unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).")
     private List<ImageBox> imageBoxes = new ArrayList<>();
 
     @Schema(
             description =
-                    "1-indexed page numbers to redact all detected images from. Pass an empty list to redact images from every page. Omit or pass null to skip image redaction entirely.")
+                    "1-indexed pages whose images get boxed over; an empty list means every"
+                            + " page, null skips it.")
     private List<Integer> redactImagePages;
 
     @Schema(description = "Redaction style options")
@@ -121,11 +121,15 @@ public class RedactExecuteRequest extends PDFFile {
                 defaultValue = "0")
         private float padding = 0f;
 
-        @Schema(description = "Rasterize output to prevent text extraction", defaultValue = "false")
+        @Schema(
+                description = "Rasterize every page so no covered content can be extracted",
+                defaultValue = "false")
         private boolean convertToImage = false;
 
         @Schema(
-                description = "Execution strategy hint for the redaction pipeline",
+                description =
+                        "AUTO removes matched text; OVERLAY_ONLY only draws boxes;"
+                                + " IMAGE_FINALIZE also rasterizes pages",
                 defaultValue = "AUTO")
         private RedactionStrategy strategy = RedactionStrategy.AUTO;
     }

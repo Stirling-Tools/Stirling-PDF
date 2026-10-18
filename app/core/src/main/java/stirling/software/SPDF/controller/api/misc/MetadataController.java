@@ -66,10 +66,11 @@ public class MetadataController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Update metadata of a PDF file",
+            summary = "Update a PDF's metadata",
             description =
-                    "This endpoint allows you to update the metadata of a given PDF file. You can"
-                            + " add, modify, or delete standard and custom metadata fields.")
+                    "Standard fields left out are cleared, so send the current values of"
+                            + " the others too (see get-info-on-pdf). Dates use yyyy/MM/dd HH:mm:ss."
+                            + " deleteAll=true removes all metadata.")
     public ResponseEntity<Resource> metadata(@ModelAttribute MetadataRequest request)
             throws IOException {
 

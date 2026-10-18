@@ -14,31 +14,26 @@ import stirling.software.common.model.api.PDFFile;
 public class OverlayPdfsRequest extends PDFFile {
 
     @Schema(
-            description =
-                    "An array of PDF files to be used as overlays on the base PDF. The order in"
-                            + " these files is applied based on the selected mode.",
+            description = "PDFs drawn onto the base PDF's pages, in the order set by overlayMode",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile[] overlayFiles;
 
     @Schema(
             description =
-                    "The mode of overlaying: 'SequentialOverlay' for sequential application,"
-                            + " 'InterleavedOverlay' for round-robin application, 'FixedRepeatOverlay'"
-                            + " for fixed repetition based on provided counts",
+                    "SequentialOverlay repeats the overlay pages in order (e.g. a"
+                            + " letterhead on every page). InterleavedOverlay takes each overlay file"
+                            + " in turn. FixedRepeatOverlay uses counts.",
             allowableValues = {"SequentialOverlay", "InterleavedOverlay", "FixedRepeatOverlay"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String overlayMode;
 
     @Schema(
-            description =
-                    "An array of integers specifying the number of times each corresponding overlay"
-                            + " file should be applied in the 'FixedRepeatOverlay' mode. This should"
-                            + " match the length of the overlayFiles array.",
+            description = "FixedRepeatOverlay only: one repeat count per overlay file",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private int[] counts;
 
     @Schema(
-            description = "Overlay position 0 is Foregound, 1 is Background",
+            description = "0 = foreground (over the content), 1 = background (behind it)",
             allowableValues = {"0", "1"},
             requiredMode = Schema.RequiredMode.REQUIRED,
             type = "number")

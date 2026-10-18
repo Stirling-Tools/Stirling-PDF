@@ -111,10 +111,10 @@ public class PasswordController {
                             produces = ToolFormat.PDF,
                             arity = ToolArity.SISO))
     @Operation(
-            summary = "Add password to a PDF file",
+            summary = "Add a password and permission restrictions to a PDF",
             description =
-                    "This endpoint adds password protection to a PDF file. Users can specify a set"
-                            + " of permissions that should be applied to the file.")
+                    "password is needed to open the file. The prevent* restrictions only"
+                            + " hold when ownerPassword is set and differs from password.")
     public ResponseEntity<Resource> addPassword(@ModelAttribute AddPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
