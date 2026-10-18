@@ -12313,7 +12313,7 @@
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-frontend-dist/windows-x64/96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-cache-e1b7946154cca207/v6": {
       "object": "sha256:8daa8567e598b46a41048ed8e2d95110b3e29ece1dabd5ceb547b66707ae0c2a",
       "storage": "github-artifact",
-      "updated_at": "2026-10-16T10:11:18.803Z",
+      "updated_at": "2026-10-18T08:13:38.228Z",
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
       "size": 29709824,
@@ -12322,22 +12322,22 @@
           "index": 0,
           "object": "sha256:a522f7644b127f3621fd436bcd18ff4f93c255815c575e833d2dc411413c84d3",
           "size": 25165824,
-          "artifact_id": 12039672207,
+          "artifact_id": 12129902880,
           "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-windows-x64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1da-part-000000",
-          "workflow_run_id": 38883434118
+          "workflow_run_id": 39109918952
         },
         {
           "index": 1,
           "object": "sha256:6d4338e9c025f1afd1b999125327b23a2f82604cfa17c10fa9fa6a5373dcd977",
           "size": 4544000,
-          "artifact_id": 12039617333,
+          "artifact_id": 12129568906,
           "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-windows-x64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1da-part-000001",
-          "workflow_run_id": 38883434118
+          "workflow_run_id": 39109918952
         }
       ],
-      "artifact_id": 12039672207,
+      "artifact_id": 12129902880,
       "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-windows-x64-96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-v6--8daa8567e598b46a41048ed8e2d95110b3e29ece1da-part-000000",
-      "workflow_run_id": 38883434118
+      "workflow_run_id": 39109918952
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/valid-frontend-setup-uv-cache/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-cache-e1b7946154cca207/v6": {
       "object": "sha256:58843fd067a646c0d7086c2ef86ca5d56a690255995a9617ce88a74df0d5fe74",
@@ -17162,6 +17162,6 @@
   },
   "monitoring": {
     "window_started_at": "2026-10-18T08:13:27.626Z",
-    "writes": 1
+    "writes": 2
   }
 }
