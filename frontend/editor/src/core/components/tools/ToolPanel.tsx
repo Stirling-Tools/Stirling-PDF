@@ -73,7 +73,14 @@ export default function ToolPanel({
 
       {panelSearch && (
         <div className="tool-panel__search">
-          <Suspense fallback={null}>
+          <Suspense
+            fallback={
+              <div
+                className="search-input-container"
+                style={{ height: "2.25rem" }}
+              />
+            }
+          >
             <ToolSearch
               value={searchQuery}
               onChange={setSearchQuery}

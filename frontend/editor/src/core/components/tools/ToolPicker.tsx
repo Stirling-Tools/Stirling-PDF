@@ -236,32 +236,37 @@ const ToolPicker = ({
                 </Box>
               )}
               {allSection &&
-                allSection.subcategories.map((sc: SubcategoryGroup) => (
-                  <LazyToolSection
-                    key={sc.subcategoryId}
-                    estimatedHeight={32 + sc.tools.length * 44}
-                    scrollRoot={scrollerRef}
-                    label={toTitleCase(
-                      getSubcategoryLabel(t, sc.subcategoryId),
-                    )}
-                  >
-                    <Box w="100%">
-                      <div style={HEADER_TEXT_STYLE}>
-                        {toTitleCase(getSubcategoryLabel(t, sc.subcategoryId))}
-                      </div>
-                      {renderToolButtons(
-                        t,
-                        sc,
-                        selectedToolKey,
-                        onSelect,
-                        false,
-                        false,
-                        undefined,
-                        true,
+                allSection.subcategories.map(
+                  (sc: SubcategoryGroup, idx: number) => (
+                    <LazyToolSection
+                      key={sc.subcategoryId}
+                      initialMounted={idx < 3}
+                      estimatedHeight={24 + sc.tools.length * 28}
+                      scrollRoot={scrollerRef}
+                      label={toTitleCase(
+                        getSubcategoryLabel(t, sc.subcategoryId),
                       )}
-                    </Box>
-                  </LazyToolSection>
-                ))}
+                    >
+                      <Box w="100%">
+                        <div style={HEADER_TEXT_STYLE}>
+                          {toTitleCase(
+                            getSubcategoryLabel(t, sc.subcategoryId),
+                          )}
+                        </div>
+                        {renderToolButtons(
+                          t,
+                          sc,
+                          selectedToolKey,
+                          onSelect,
+                          false,
+                          false,
+                          undefined,
+                          true,
+                        )}
+                      </Box>
+                    </LazyToolSection>
+                  ),
+                )}
             </Stack>
 
             {!quickSection && !allSection && <NoToolsFound />}

@@ -19,8 +19,7 @@ import urlSeoOverrides from "@app/data/urlSeoOverrides.json";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile, useIsTouch } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { LogoIcon } from "@app/components/shared/LogoIcon";
-import { Wordmark } from "@app/components/shared/Wordmark";
+import { Logo } from "@app/ui/Logo";
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import {
   useNavigationState,
@@ -738,8 +737,12 @@ export default function HomePage() {
             {!isWorkspaceHub && (
               <div className="mobile-toggle">
                 <div className="mobile-brand">
-                  <LogoIcon className="mobile-brand-icon" />
-                  <Wordmark alt={brandAltText} className="mobile-brand-text" />
+                  <Logo
+                    variant="iconAndText"
+                    iconHeight="1.5rem"
+                    textHeight="1.5rem"
+                    alt={brandAltText}
+                  />
                 </div>
                 <div
                   className="mobile-toggle-buttons"

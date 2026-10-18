@@ -32,7 +32,9 @@ export default function Landing() {
   const probePending = backendProbe.loading;
 
   // The backend-down screen is not the app. Loading is: it resolves in a moment.
-  useSuppressQuickNavRail(!session && backendProbe.status !== "up");
+  useSuppressQuickNavRail(
+    !loading && !probePending && !session && backendProbe.status !== "up",
+  );
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {

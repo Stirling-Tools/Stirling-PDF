@@ -16,24 +16,19 @@ interface LazyToolSectionProps {
    * root would ignore the prefetch margin and mount sections only on sight.
    */
   scrollRoot?: RefObject<HTMLElement | null>;
-  /** Named on the keyboard placeholder so the revealed section has context. */
   label?: string;
+  initialMounted?: boolean;
 }
 
-/**
- * Mounts its children once the section comes near the picker viewport.
- * The picker renders every category eagerly otherwise, which is most of the
- * DOM on a page that may only show a couple of categories at a time. The
- * placeholder is focusable so sequential Tab still reaches every section.
- */
 export function LazyToolSection({
   estimatedHeight,
   children,
   scrollRoot,
   label,
+  initialMounted = false,
 }: LazyToolSectionProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(initialMounted);
   const focusOnMountRef = useRef(false);
 
   useEffect(() => {

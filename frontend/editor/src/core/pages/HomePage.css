@@ -48,6 +48,7 @@
 }
 
 @media (max-width: 25rem) {
+  .mobile-brand .sui-logo__wordmark,
   .mobile-brand-text {
     display: none;
   }

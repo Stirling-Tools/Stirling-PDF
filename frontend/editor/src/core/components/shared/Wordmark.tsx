@@ -7,7 +7,14 @@ interface WordmarkProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   muted?: boolean;
 }
 
-export function Wordmark({ alt = "", muted = false, ...props }: WordmarkProps) {
+export function Wordmark({
+  alt = "",
+  muted = false,
+  width = 58,
+  height = 21,
+  style,
+  ...props
+}: WordmarkProps) {
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
   const { wordmark } = useLogoAssets();
@@ -16,5 +23,14 @@ export function Wordmark({ alt = "", muted = false, ...props }: WordmarkProps) {
   // dark:  white text for both variants
   const src = isDark ? wordmark.white : muted ? wordmark.grey : wordmark.black;
 
-  return <img src={src} alt={alt} {...props} />;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      style={{ aspectRatio: "58 / 21", ...style }}
+      {...props}
+    />
+  );
 }

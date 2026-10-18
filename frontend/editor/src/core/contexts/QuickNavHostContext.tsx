@@ -98,7 +98,7 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
     updateQuickNavAccount,
     EMPTY_QUICK_NAV_ACCOUNT,
   );
-  const [view, setViewState] = useState({ ...EMPTY_VIEW, appMounted: false });
+  const [view, setViewState] = useState({ ...EMPTY_VIEW, appMounted: true });
   const [chromeless, setChromelessState] = useState(false);
   const actions = useRef<QuickNavHostActions>({});
 

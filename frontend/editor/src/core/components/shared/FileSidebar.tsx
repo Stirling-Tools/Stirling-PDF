@@ -517,7 +517,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         ),
       [],
     );
-    const [stubsLoaded, setStubsLoaded] = useState(false);
+    const [stubsLoaded, setStubsLoaded] = useState(true);
     const [saveToServerTarget, setSaveToServerTarget] = useState<
       StirlingFileStub[] | null
     >(null);

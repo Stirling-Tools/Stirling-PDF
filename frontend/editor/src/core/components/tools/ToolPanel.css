@@ -152,6 +152,8 @@
 .tool-panel__search {
   flex-shrink: 0;
   padding: 0.5rem var(--mantine-spacing-sm) 0;
+  min-height: 2.75rem;
+  box-sizing: border-box;
 }
 
 .tool-panel__search .search-input-container {

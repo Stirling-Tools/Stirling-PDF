@@ -1,25 +1,30 @@
 import { useMediaQuery } from "@mantine/hooks";
 
-/**
- * Custom hook to detect mobile viewport
- * Uses a consistent breakpoint across the application
- */
+const getInitialMatch = (query: string): boolean => {
+  if (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function"
+  ) {
+    try {
+      return Boolean(window.matchMedia(query)?.matches);
+    } catch {
+      return false;
+    }
+  }
+  return false;
+};
+
 export const useIsMobile = (): boolean => {
-  return useMediaQuery("(max-width: 1024px)") ?? false;
+  const query = "(max-width: 1024px)";
+  return useMediaQuery(query, getInitialMatch(query)) ?? false;
 };
 
-/**
- * Custom hook to detect phone-sized viewport (≤768px)
- * Use for layouts that need a more compact single-column arrangement
- */
 export const useIsPhone = (): boolean => {
-  return useMediaQuery("(max-width: 768px)") ?? false;
+  const query = "(max-width: 768px)";
+  return useMediaQuery(query, getInitialMatch(query)) ?? false;
 };
 
-/**
- * Custom hook to detect a coarse pointer (touch device)
- * Use to gate touch-only UI hints when combined with useIsMobile
- */
 export const useIsTouch = (): boolean => {
-  return useMediaQuery("(pointer: coarse)") ?? false;
+  const query = "(pointer: coarse)";
+  return useMediaQuery(query, getInitialMatch(query)) ?? false;
 };

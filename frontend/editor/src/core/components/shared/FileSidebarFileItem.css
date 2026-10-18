@@ -355,13 +355,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 0;
+  min-height: 70px;
+  padding: 12px 16px 24px 16px;
+  box-sizing: border-box;
   opacity: 0.5;
 }
 
 /* ---- Empty state ---- */
 .file-sidebar-empty {
+  min-height: 70px;
   padding: 12px 16px 24px 16px;
+  box-sizing: border-box;
   text-align: center;
 }
 
