@@ -73,6 +73,14 @@ i18n
     },
   });
 
+export const i18nReady: Promise<void> = i18n.isInitialized
+  ? Promise.resolve()
+  : new Promise((resolve) => {
+      i18n.on("initialized", () => {
+        resolve();
+      });
+    });
+
 // Set document direction based on language
 i18n.on("languageChanged", (lng) => {
   const isRTL = rtlLanguages.includes(lng);

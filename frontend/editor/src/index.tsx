@@ -14,7 +14,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "@app/App";
-import "@app/i18n"; // Initialize i18next
+import { i18nReady } from "@app/i18n";
 import { BASE_PATH } from "@app/constants/app";
 import { applyDevWorktreeLabel } from "@app/utils/applyDevWorktreeLabel";
 
@@ -25,15 +25,15 @@ if (!container) {
   throw new Error("Root container missing in index.html");
 }
 
-const root = ReactDOM.createRoot(container); // Finds the root DOM element
-root.render(
-  <React.StrictMode>
-    <BrowserRouter basename={BASE_PATH}>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>,
-);
-
-// The build hides the prerendered shell; React's first commit replaces it.
-container.removeAttribute("data-shell");
-document.documentElement.removeAttribute("data-shell-hidden");
+const root = ReactDOM.createRoot(container);
+void i18nReady.then(() => {
+  root.render(
+    <React.StrictMode>
+      <BrowserRouter basename={BASE_PATH}>
+        <App />
+      </BrowserRouter>
+    </React.StrictMode>,
+  );
+  container.removeAttribute("data-shell");
+  document.documentElement.removeAttribute("data-shell-hidden");
+});
