@@ -18,6 +18,7 @@ import {
   unlockPdfForSession,
   verifyEditedPdfProtection,
   assertPdfSessionEditable,
+  ensureAuthoritativePdfAccess,
   preflightPdfOperation,
   changePdfSecurity,
   hasPdfPermissionOverride,
@@ -347,20 +348,50 @@ describe("session PDF access", () => {
     ).not.toThrow();
   });
 
-  it("adopts native exports when the source only has locally probed protection", async () => {
+  it("rejects native exports when the source protection cannot be verified", async () => {
     post.mockResolvedValueOnce({ data: access });
     const output = new File(["export"], "edited.pdf");
-    const probedSource = {
+    await expect(
+      verifyEditedPdfProtection(output, {
+        ...access,
+        encryptionKeyLength: undefined,
+      }),
+    ).rejects.toThrow("Unable to preserve PDF protection");
+    expect(getPdfAccess(output)).toBeUndefined();
+  });
+
+  it("upgrades locally probed access with server protection metadata", async () => {
+    const source = new File(["pdf"], "source.pdf");
+    rememberPdfAccess(source, {
       ...access,
+      password: "",
+      permissions: 0,
       encryptionKeyLength: undefined,
       encryptionRevision: undefined,
       credentialFingerprint: undefined,
-    };
-    await verifyEditedPdfProtection(output, probedSource);
-    expect(getPdfAccess(output)).toEqual({
-      ...access,
-      openingPassword: access.password,
+      canModify: false,
+      canAssemble: false,
     });
+    post.mockResolvedValueOnce({ data: access });
+    const upgraded = await ensureAuthoritativePdfAccess(source);
+    expect(post).toHaveBeenCalledOnce();
+    expect(upgraded).toMatchObject({
+      credentialFingerprint: "source-credentials",
+      encryptionKeyLength: 256,
+      permissions: -4,
+    });
+    expect(getPdfAccess(source)).toMatchObject({
+      credentialFingerprint: "source-credentials",
+      encryptionRevision: 6,
+    });
+  });
+
+  it("keeps server-verified access without another inspection", async () => {
+    const source = new File(["pdf"], "source.pdf");
+    rememberPdfAccess(source, access);
+    const verified = await ensureAuthoritativePdfAccess(source);
+    expect(post).not.toHaveBeenCalled();
+    expect(verified.credentialFingerprint).toBe("source-credentials");
   });
 
   it("isolates same-name files and drops access when a document closes", () => {

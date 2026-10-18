@@ -1,6 +1,9 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { probePdfPermissions } from "@app/services/pdfPermissionProbe";
+import {
+  getProbeSnapshot,
+  probePdfPermissions,
+} from "@app/services/pdfPermissionProbe";
 import {
   buildPdfAccessFromSnapshot,
   getPdfAccess,
@@ -25,7 +28,24 @@ export function usePdfAccess(file: Blob | string | null | undefined) {
   const { config } = useAppConfig();
   const honorOwnerPasswords = config?.honorOwnerPasswords;
   useEffect(() => {
-    if (!(file instanceof File) || getPdfAccess(file)) return;
+    if (!(file instanceof File)) return;
+    const existing = getPdfAccess(file);
+    if (existing) {
+      // Policy can load or refetch after a file is opened, so rebuild probe
+      // derived access from the facts already read instead of probing again.
+      // Credentials from a real password unlock keep the server's verdict.
+      const probeDerived =
+        existing.encrypted &&
+        existing.password === "" &&
+        !existing.credentialFingerprint;
+      const snapshot = probeDerived ? getProbeSnapshot(file) : undefined;
+      if (snapshot && existing.honorOwnerPasswords !== honorOwnerPasswords)
+        rememberPdfAccess(
+          file,
+          buildPdfAccessFromSnapshot(snapshot, honorOwnerPasswords),
+        );
+      return;
+    }
     let cancelled = false;
     void probePdfPermissions(file).then((snapshot) => {
       if (cancelled || !snapshot || snapshot.requiresOpeningPassword) return;

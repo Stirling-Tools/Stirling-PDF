@@ -51,6 +51,22 @@ export async function ensurePdfAccess(file: File): Promise<PdfAccess> {
   return getPdfAccess(file)!;
 }
 
+/**
+ * Upgrade locally probed access with the server's protection metadata.
+ * Export verification compares key length, revision and fingerprint, none of
+ * which the local probe can read, so the server values must replace the
+ * probed snapshot before a native export is checked against it.
+ */
+export async function ensureAuthoritativePdfAccess(
+  file: File,
+): Promise<PdfAccess> {
+  const access = await ensurePdfAccess(file);
+  if (!access.encrypted || access.credentialFingerprint) return access;
+  const authoritative = await unlockPdfForSession(file, access.password ?? "");
+  rememberPdfAccess(file, { ...access, ...authoritative });
+  return getPdfAccess(file) ?? authoritative;
+}
+
 const SUPPORTED_ENDPOINTS = new Set([
   "/api/v1/security/add-password",
   "/api/v1/security/remove-password",
@@ -227,20 +243,16 @@ export async function verifyEditedPdfProtection(
   if (!sourceAccess?.encrypted) return;
   assertPdfSessionEditable(sourceAccess);
   const access = await unlockPdfForSession(output, sourceAccess.password);
-  // Locally probed sources carry no key length, revision or fingerprint, so
-  // compare that metadata only when the source has it; encrypted state,
-  // permissions and owner authentication always have to match, and the
-  // server re-checks key length and revision in restore-pdf-protection.
   if (
     !access.encrypted ||
     access.permissions !== sourceAccess.permissions ||
     access.ownerAuthenticated !== sourceAccess.ownerAuthenticated ||
-    (sourceAccess.encryptionKeyLength !== undefined &&
-      access.encryptionKeyLength !== sourceAccess.encryptionKeyLength) ||
-    (sourceAccess.encryptionRevision !== undefined &&
-      access.encryptionRevision !== sourceAccess.encryptionRevision) ||
-    (sourceAccess.credentialFingerprint !== undefined &&
-      access.credentialFingerprint !== sourceAccess.credentialFingerprint)
+    sourceAccess.encryptionKeyLength === undefined ||
+    access.encryptionKeyLength !== sourceAccess.encryptionKeyLength ||
+    sourceAccess.encryptionRevision === undefined ||
+    access.encryptionRevision !== sourceAccess.encryptionRevision ||
+    !sourceAccess.credentialFingerprint ||
+    access.credentialFingerprint !== sourceAccess.credentialFingerprint
   )
     throw new Error(
       i18n.t(

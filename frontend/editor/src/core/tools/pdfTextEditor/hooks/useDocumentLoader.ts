@@ -13,7 +13,7 @@ import {
 } from "@app/services/pdfPasswordStore";
 import {
   assertPdfSessionEditable,
-  ensurePdfAccess,
+  ensureAuthoritativePdfAccess,
   unlockPdfForSession,
 } from "@app/services/pdfSessionUnlock";
 import { detectSaveRisks } from "@app/tools/pdfTextEditor/util/documentRisks";
@@ -50,9 +50,12 @@ export function useDocumentLoader(store: EditorStore) {
         await yieldToBrowser();
         const doc = await EditorDocument.open(bytes, documentPassword);
         try {
+          // Exports compare key length, revision and credential fingerprint,
+          // which the local probe cannot read, so the editor stores
+          // server-verified access before anything can be exported.
           const access =
             password === undefined
-              ? await ensurePdfAccess(file)
+              ? await ensureAuthoritativePdfAccess(file)
               : await unlockPdfForSession(file, password);
           if (!store.isCurrentLoad(token)) {
             doc.dispose();
