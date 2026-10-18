@@ -26,6 +26,10 @@ import type {
 } from "@app/components/viewer/DocumentRestoreBridge";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
+import { PdfProtectionStatus } from "@app/components/viewer/PdfProtectionStatus";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { canPrintPdf } from "@app/services/pdfPermissions";
+import { PdfPreviewUnlockGate } from "@app/components/viewer/PdfPreviewUnlockGate";
 import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
 import { ThumbnailSidebar } from "@app/components/viewer/ThumbnailSidebar";
 import { BookmarkSidebar } from "@app/components/viewer/BookmarkSidebar";
@@ -128,7 +132,8 @@ const EmbedPdfViewerContent = ({
   onSignaturePreviewsChange,
   signatureOverlayApiRef,
   portfolioPinned,
-}: EmbedPdfViewerProps) => {
+  onPasswordRequired,
+}: EmbedPdfViewerProps & { onPasswordRequired?: () => void }) => {
   const { t } = useTranslation();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
@@ -656,6 +661,26 @@ const EmbedPdfViewerContent = ({
   // consume/undo paths below pass it back as a FileId.
   const currentFileStableId =
     currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
+  const previousActiveFileIdsRef = useRef(activeFileIds);
+  // Follow removals, but do not overwrite a save's new id before its bytes enter FileContext.
+  useEffect(() => {
+    const previousActiveFileIds = previousActiveFileIdsRef.current;
+    previousActiveFileIdsRef.current = activeFileIds;
+    if (
+      !previewFile &&
+      currentFileStableId &&
+      currentFileStableId !== activeFileId &&
+      (!activeFileId || previousActiveFileIds.some((id) => id === activeFileId))
+    ) {
+      setActiveFileId(currentFileStableId);
+    }
+  }, [
+    previewFile,
+    currentFileStableId,
+    activeFileId,
+    activeFileIds,
+    setActiveFileId,
+  ]);
   const fileWithUrl = useFileWithUrl(currentFile, currentFileId);
 
   // Lineage root of the open document: saves and tool outputs add a child record,
@@ -685,11 +710,16 @@ const EmbedPdfViewerContent = ({
   }, [previewFile, fileWithUrl]);
 
   // Check if the current file is encrypted (gate the viewer to prevent PDFium crash)
-  const isCurrentFileEncrypted = useFileSelector((s) =>
+  const isStoredFileEncrypted = useFileSelector((s) =>
     currentFile && isStirlingFile(currentFile)
       ? s.files.byId[currentFile.fileId]?.processedFile?.isEncrypted === true
       : false,
   );
+  const pdfAccess = usePdfAccess(previewFile ?? currentFile);
+  const isCurrentFileEncrypted =
+    isStoredFileEncrypted || Boolean(pdfAccess?.encrypted);
+  const isCurrentFileLocked = isCurrentFileEncrypted && !pdfAccess;
+  const canPrint = !isCurrentFileLocked && canPrintPdf(pdfAccess);
 
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
@@ -769,7 +799,7 @@ const EmbedPdfViewerContent = ({
               case "p":
               case "P":
                 event.preventDefault();
-                if (!policyEnforcingRef.current) {
+                if (!policyEnforcingRef.current && canPrint) {
                   printActions.print();
                 }
                 return;
@@ -889,6 +919,7 @@ const EmbedPdfViewerContent = ({
     searchInterfaceActions,
     scrollActions,
     printActions,
+    canPrint,
     exportActions,
     rotationActions,
     historyApiRef,
@@ -947,7 +978,7 @@ const EmbedPdfViewerContent = ({
       return;
     }
 
-    const updateHasChanges = () => {
+    const updateHasChanges = (historyChanged: boolean) => {
       const canUndo = historyApi.canUndo?.() ?? false;
       if (!canUndo && savedHistoryRevisionRef.current === 0) {
         historyRevisionRef.current = 0;
@@ -959,6 +990,7 @@ const EmbedPdfViewerContent = ({
         }
         return;
       }
+      if (!historyChanged) return;
       historyRevisionRef.current += 1;
       if (suppressHistoryDirtyRef.current) return;
       // A revision equal to the save point means the annotations match the
@@ -979,7 +1011,12 @@ const EmbedPdfViewerContent = ({
       }
     };
 
-    const unsubscribe = historyApi.subscribe(updateHasChanges);
+    // Reconnecting after a permissions check emits the existing history, not a new edit.
+    let subscribing = true;
+    const unsubscribe = historyApi.subscribe(() => {
+      updateHasChanges(!subscribing);
+    });
+    subscribing = false;
     return () => {
       if (typeof unsubscribe === "function") {
         unsubscribe();
@@ -1836,7 +1873,7 @@ const EmbedPdfViewerContent = ({
             )}
           </Text>
         </Center>
-      ) : isCurrentFileEncrypted ? (
+      ) : isCurrentFileLocked ? (
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
             <Icon name="lock" size={48} style={{ opacity: 0.5 }} />
@@ -1859,6 +1896,9 @@ const EmbedPdfViewerContent = ({
         </Center>
       ) : (
         <>
+          {currentFile && isStirlingFile(currentFile) && (
+            <PdfProtectionStatus key={currentFile.fileId} file={currentFile} />
+          )}
           {/* EmbedPDF Viewer */}
           <Box
             ref={pdfContainerRef}
@@ -1880,6 +1920,7 @@ const EmbedPdfViewerContent = ({
               onDocumentSwapFailed={handleDocumentSwapFailed}
               onDocumentReady={documentReady}
               onDocumentLoadFailed={documentFailed}
+              onPasswordRequired={onPasswordRequired}
               restorePending={restorePending}
               restoreRequest={restoreRequest}
               onRestoreEvent={handleRestoreEvent}
@@ -1895,11 +1936,17 @@ const EmbedPdfViewerContent = ({
                       ? effectiveFile.file.name
                       : undefined
               }
-              enableAnnotations={shouldEnableAnnotations}
+              enableAnnotations={
+                shouldEnableAnnotations && !!pdfAccess && !pdfAccess.encrypted
+              }
               isSignMode={selectedTool === "sign"}
               showBakedAnnotations={isAnnotationsVisible}
-              enableRedaction={shouldEnableRedaction}
-              enableFormFill={shouldEnableFormFill}
+              enableRedaction={
+                shouldEnableRedaction && !!pdfAccess && !pdfAccess.encrypted
+              }
+              enableFormFill={
+                shouldEnableFormFill && !!pdfAccess && !pdfAccess.encrypted
+              }
               formEditingActive={isFormFillToolActive}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}
@@ -2022,6 +2069,18 @@ const EmbedPdfViewerContent = ({
 };
 
 const EmbedPdfViewer = (props: EmbedPdfViewerProps) => {
+  if (props.previewFile) {
+    return (
+      <PdfPreviewUnlockGate file={props.previewFile} onClose={props.onClose}>
+        {(onPasswordRequired) => (
+          <EmbedPdfViewerContent
+            {...props}
+            onPasswordRequired={onPasswordRequired}
+          />
+        )}
+      </PdfPreviewUnlockGate>
+    );
+  }
   return <EmbedPdfViewerContent {...props} />;
 };
 

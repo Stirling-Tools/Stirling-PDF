@@ -195,14 +195,10 @@ public class SupabaseSecurityConfig {
         }
         String jwks = issuer + "/.well-known/jwks.json";
         log.info("Configuring JWT decoder with JWKS: {}", jwks);
-        // Supabase's newer asymmetric signing keys are ES256; legacy ones RS256.
         NimbusJwtDecoder decoder =
                 NimbusJwtDecoder.withJwkSetUri(jwks)
-                        .jwsAlgorithms(
-                                algorithms -> {
-                                    algorithms.add(SignatureAlgorithm.RS256);
-                                    algorithms.add(SignatureAlgorithm.ES256);
-                                })
+                        .jwsAlgorithm(SignatureAlgorithm.RS256)
+                        .jwsAlgorithm(SignatureAlgorithm.ES256)
                         .build();
         // Defence-in-depth: signature verification already binds the token to this Supabase
         // project's JWKS, but enforcing iss/exp/aud explicitly catches tokens that smuggle

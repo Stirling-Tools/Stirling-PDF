@@ -575,6 +575,9 @@ public class ApplicationProperties {
         /** Largest file {@code stirling_download} returns inline as base64. */
         private long maxInlineResponseBytes = 10L * 1024 * 1024;
 
+        /** Largest stored file a tool reads into memory as an input; 0 or less means no limit. */
+        private long maxInputFileBytes = 500L * 1024 * 1024;
+
         /** How long tool results stay downloadable before storage deletes them. */
         private int resultTtlMinutes = 60;
 
@@ -1048,6 +1051,7 @@ public class ApplicationProperties {
     @Data
     public static class Security {
         private boolean enableLogin;
+        private boolean honorOwnerPasswords = true;
         private boolean ssoAutoLogin;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();

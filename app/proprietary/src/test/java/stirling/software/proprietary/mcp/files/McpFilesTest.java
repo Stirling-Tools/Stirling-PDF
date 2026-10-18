@@ -88,6 +88,26 @@ class McpFilesTest {
     }
 
     @Test
+    void inputLimitRejectsAnOversizedStoredFileBeforeOpeningIt() throws Exception {
+        props.getMcp().setMaxInputFileBytes(10);
+        file.setSizeBytes(1000);
+        when(storage.getAccessibleFile(owner, 7L)).thenReturn(file);
+        McpFiles.McpFileException e =
+                assertThrows(McpFiles.McpFileException.class, () -> files.load(owner, "7"));
+        assertTrue(e.getMessage().contains("input limit"), e.getMessage());
+        verify(storage, never()).loadFile(any());
+    }
+
+    @Test
+    void inputLimitOfZeroReadsTheWholeTempFile() throws Exception {
+        props.getMcp().setMaxInputFileBytes(0);
+        props.getStorage().setEnabled(false);
+        when(tempStore.fileExists("large")).thenReturn(true);
+        when(tempStore.retrieveBytes("large")).thenReturn(new byte[1000]);
+        assertEquals(1000, files.load(owner, "large").bytes().length);
+    }
+
+    @Test
     void inlineReadStaysBoundedEvenWhenMetadataUnderstatesTheSize() throws Exception {
         props.getStorage().setEnabled(false);
         when(tempStore.fileExists("large")).thenReturn(true);
@@ -214,7 +234,8 @@ class McpFilesTest {
     @Test
     void load_tempStoreIdsStillWorkWhenStorageIsOn() throws Exception {
         when(tempStore.fileExists("tmp-1")).thenReturn(true);
-        when(tempStore.retrieveBytes("tmp-1")).thenReturn(PDF);
+        when(tempStore.getFileSize("tmp-1")).thenReturn((long) PDF.length);
+        when(tempStore.retrieveInputStream("tmp-1")).thenReturn(new ByteArrayInputStream(PDF));
 
         McpFiles.Loaded loaded = files.load(owner, "tmp-1");
 

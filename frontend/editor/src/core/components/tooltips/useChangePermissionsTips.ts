@@ -19,7 +19,7 @@ export const useChangePermissionsTips = (): TooltipContent => {
         title: t("warning.tooltipTitle", "Warning"),
         description: t(
           "changePermissions.tooltip.warning.text",
-          "To make these permissions unchangeable, use the Add Password tool to set an owner password.",
+          "Compatible PDF applications honour these permissions. Keep a separate permissions password to control changes to the restrictions.",
         ),
       },
     ],
