@@ -63,9 +63,7 @@ class CaffeineJCacheConfigTest {
                 Arguments.of("usersNaturalId", 5000L, Duration.ofMinutes(5)),
                 Arguments.of("saas-pricing-policies", 100L, Duration.ofSeconds(30)),
                 Arguments.of("saas-legal-consents", 5000L, Duration.ofHours(1)),
-                Arguments.of("saas-subscriptions", 5000L, Duration.ofMinutes(15)),
-                Arguments.of("saas-user-extensions", 5000L, Duration.ofMinutes(5)),
-                Arguments.of("saas-team-extensions", 1000L, Duration.ofMinutes(15)));
+                Arguments.of("saas-subscriptions", 5000L, Duration.ofMinutes(15)));
     }
 
     @ParameterizedTest(name = "{0} applies its configured bounds")

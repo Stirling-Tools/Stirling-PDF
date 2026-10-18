@@ -2,6 +2,10 @@ package stirling.software.proprietary.cache;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.KeyType;
@@ -27,6 +31,7 @@ import jakarta.persistence.EntityManagerFactory;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.policy.store.PolicyEntity;
 import stirling.software.proprietary.policy.store.PolicyRepository;
+import stirling.software.proprietary.repository.ToolUsageStatRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
@@ -49,6 +54,8 @@ class HibernateSecondLevelCacheTest {
     @Autowired private UserRepository userRepository;
 
     @Autowired private TeamRepository teamRepository;
+
+    @Autowired private ToolUsageStatRepository toolUsageStatRepository;
 
     @Autowired private EntityManagerFactory entityManagerFactory;
 
@@ -281,6 +288,137 @@ class HibernateSecondLevelCacheTest {
                 });
 
         assertThat(statistics.getNaturalIdCacheHitCount()).isGreaterThan(hitsBefore);
+    }
+
+    /**
+     * Usage tallies are written on almost every tool run: those writes must not disturb the user
+     * region, and an edited settings collection must be reloaded rather than served from cache.
+     */
+    @Test
+    void ormWritesKeepUnrelatedRegionsAndReloadEditedSettings() {
+        AtomicReference<Long> userIdRef = new AtomicReference<>();
+        txTemplate.executeWithoutResult(
+                status -> {
+                    User user = new User();
+                    user.setUsername("orm-writes-user");
+                    user.setPassword("secret123");
+                    Map<String, String> settings = new HashMap<>();
+                    settings.put("language", "en");
+                    settings.put("mfaSecret", "topsecret");
+                    user.setSettings(settings);
+                    userIdRef.set(userRepository.save(user).getId());
+                });
+
+        txTemplate.executeWithoutResult(
+                status -> userRepository.findById(userIdRef.get()).orElseThrow());
+        assertThat(entityManagerFactory.getCache().contains(User.class, userIdRef.get())).isTrue();
+
+        long day = LocalDate.now(ZoneOffset.UTC).toEpochDay();
+        txTemplate.executeWithoutResult(
+                status ->
+                        toolUsageStatRepository.insertCount(
+                                "orm-writes-user", "compare", "ocr", day, 1));
+
+        assertThat(entityManagerFactory.getCache().contains(User.class, userIdRef.get()))
+                .as("a tool-usage insert must not evict cached users")
+                .isTrue();
+
+        // settings edit in the shape MfaService.setSecret uses: remove, flush, re-insert
+        txTemplate.executeWithoutResult(
+                status -> {
+                    User managed = userRepository.findById(userIdRef.get()).orElseThrow();
+                    managed.getSettings().remove("mfaSecret");
+                    userRepository.flush();
+                });
+
+        assertThat(entityManagerFactory.getCache().contains(User.class, userIdRef.get()))
+                .as("a settings edit must not evict the user entity")
+                .isTrue();
+        txTemplate.executeWithoutResult(
+                status -> {
+                    User reloaded = userRepository.findById(userIdRef.get()).orElseThrow();
+                    assertThat(reloaded.getSettings())
+                            .as("deleted setting must not be served from the cached collection")
+                            .doesNotContainKey("mfaSecret");
+                    assertThat(reloaded.getSettings()).containsEntry("language", "en");
+                });
+    }
+
+    /**
+     * The username natural id is mutable: the cached mapping must follow a rename, and the released
+     * username must be reusable by another account.
+     */
+    @Test
+    void mutableNaturalIdRenameTracksOldAndNewUsername() {
+        AtomicReference<Long> renamedId = new AtomicReference<>();
+        txTemplate.executeWithoutResult(
+                status -> {
+                    User user = new User();
+                    user.setUsername("rename-old-name");
+                    user.setPassword("secret123");
+                    renamedId.set(userRepository.save(user).getId());
+                });
+        txTemplate.executeWithoutResult(
+                status -> userRepository.findByUsernameNatural("rename-old-name").orElseThrow());
+
+        txTemplate.executeWithoutResult(
+                status -> {
+                    User managed = userRepository.findById(renamedId.get()).orElseThrow();
+                    managed.setUsername("rename-new-name");
+                    userRepository.flush();
+                });
+
+        txTemplate.executeWithoutResult(
+                status ->
+                        assertThat(userRepository.findByUsernameNatural("rename-old-name"))
+                                .as("the released username must stop resolving after the rename")
+                                .isEmpty());
+        txTemplate.executeWithoutResult(
+                status ->
+                        assertThat(userRepository.findByUsernameNatural("rename-new-name"))
+                                .map(User::getId)
+                                .contains(renamedId.get()));
+
+        AtomicReference<Long> claimerId = new AtomicReference<>();
+        txTemplate.executeWithoutResult(
+                status -> {
+                    User claimer = new User();
+                    claimer.setUsername("rename-old-name");
+                    claimer.setPassword("secret123");
+                    claimerId.set(userRepository.save(claimer).getId());
+                });
+        txTemplate.executeWithoutResult(
+                status ->
+                        assertThat(userRepository.findByUsernameNatural("rename-old-name"))
+                                .as("the released username must resolve to the new holder")
+                                .map(User::getId)
+                                .contains(claimerId.get()));
+    }
+
+    /** The per-request login/JWT lookup must run no SQL once both caches are warm. */
+    @Test
+    void warmNaturalIdLookupRunsNoSql() {
+        AtomicReference<Long> userId = new AtomicReference<>();
+        txTemplate.executeWithoutResult(
+                status -> {
+                    User user = new User();
+                    user.setUsername("no-sql-user");
+                    user.setPassword("secret123");
+                    userId.set(userRepository.save(user).getId());
+                });
+        txTemplate.executeWithoutResult(
+                status -> userRepository.findByUsernameNatural("no-sql-user").orElseThrow());
+
+        statistics.clear();
+        txTemplate.executeWithoutResult(
+                status ->
+                        assertThat(userRepository.findByUsernameNatural("no-sql-user"))
+                                .map(User::getId)
+                                .contains(userId.get()));
+
+        assertThat(statistics.getPrepareStatementCount())
+                .as("a warm natural-id lookup is answered entirely from the caches")
+                .isZero();
     }
 
     @SpringBootConfiguration

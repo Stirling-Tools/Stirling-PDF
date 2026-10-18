@@ -85,6 +85,7 @@ public class ApplicationProperties {
     private Mcp mcp = new Mcp();
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
+    private SecondLevelCache secondLevelCache = new SecondLevelCache();
     private Policies policies = new Policies();
 
     @PostConstruct
@@ -629,6 +630,22 @@ public class ApplicationProperties {
              */
             private boolean requireExistingAccount = true;
         }
+    }
+
+    /**
+     * Hibernate second-level cache scope, bound under the top-level {@code secondLevelCache.*}
+     * prefix.
+     */
+    @Data
+    public static class SecondLevelCache {
+
+        /**
+         * The JCache regions are process-local: a write on one instance cannot evict another
+         * instance's entries, so a revocation or role change reaches the other instances only when
+         * the region TTL lapses. Multi-instance deployments either set {@code cluster.enabled=true}
+         * (which disables the cache) or turn it off here.
+         */
+        private boolean enabled = true;
     }
 
     /** Cluster backplane config, bound under the top-level {@code cluster.*} prefix. */
