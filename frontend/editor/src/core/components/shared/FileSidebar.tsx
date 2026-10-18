@@ -509,6 +509,22 @@ interface FileSidebarRowProps {
   onVersionHistory: (fileId: FileId) => void;
 }
 
+/**
+ * Merge a live in-memory record over the stored stub it replaces. Fields the
+ * live record does not carry stay as stored: the library record is the only
+ * place some metadata lives, and a heavy field being absent from the live
+ * record must not erase it.
+ */
+export function overlayLiveFields(
+  stored: StirlingFileStub,
+  live: StirlingFileStub,
+): StirlingFileStub {
+  const definedLive = Object.fromEntries(
+    Object.entries(live).filter(([, value]) => value !== undefined),
+  ) as Partial<StirlingFileStub>;
+  return { ...stored, ...definedLive };
+}
+
 const FileSidebarRow = React.memo(function FileSidebarRow({
   stub,
   isViewedInViewer,
@@ -677,6 +693,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         const idbIds = new Set(stubs.map((s) => s.id as string));
         const { files: liveFiles } = store.getState();
 
+        // A record updated in memory (classification labels, encryption) has no
+        // IDB write behind it, so the stored copy for the same id is the stale
+        // one; overlay the live record onto it rather than appending only ids
+        // that storage has never seen.
+        const mergedStubs = stubs.map((stored) => {
+          const live = liveFiles.byId[stored.id];
+          return live ? overlayLiveFields(stored, live) : stored;
+        });
+
         const pendingStubs = liveFiles.ids
           .map((id) => liveFiles.byId[id])
           .filter(
@@ -684,7 +709,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               !!stub && stub.isLeaf !== false && !idbIds.has(stub.id as string),
           );
 
-        const allStubs = [...stubs, ...pendingStubs];
+        const allStubs = [...mergedStubs, ...pendingStubs];
         // During a version swap, drop the superseded IDB leaf to avoid duplicate lineage keys.
         const superseded = new Set(
           allStubs.map((s) => s.parentFileId as string | undefined),
@@ -703,7 +728,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     }, [indexedDB, store]);
 
     const indexedDBRevision = useIndexedDBRevision();
-    useCoalescedCallback(refreshStubs, indexedDBRevision);
+    // In-memory record updates never touch IndexedDB, so the refresh must ride
+    // them too; the reducer hands out a fresh `files.byId` on every change,
+    // which is what this selection keys on.
+    const filesById = useFileSelector((s) => s.files.byId);
+    const stubsSyncTrigger = useMemo(
+      () => ({ indexedDBRevision, filesById }),
+      [indexedDBRevision, filesById],
+    );
+    useCoalescedCallback(refreshStubs, stubsSyncTrigger);
 
     // The hook cancels timers but cannot cancel a started run, so unmount has to
     // invalidate it here or a late scan would publish into a gone tree.
