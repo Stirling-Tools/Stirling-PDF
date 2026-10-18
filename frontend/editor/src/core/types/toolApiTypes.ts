@@ -1223,6 +1223,10 @@ export interface RedactStyle {
 }
 export interface RedactPdfRequest {
   /**
+   * Whether matching is case-sensitive, for plain text and regex alike
+   */
+  caseSensitive?: boolean;
+  /**
    * Convert the redacted PDF to an image
    */
   convertPDFToImage?: boolean;

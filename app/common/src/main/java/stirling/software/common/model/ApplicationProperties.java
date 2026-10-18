@@ -976,6 +976,7 @@ public class ApplicationProperties {
     @Data
     public static class Security {
         private boolean enableLogin;
+        private boolean honorOwnerPasswords = true;
         private boolean ssoAutoLogin;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
@@ -1043,6 +1044,9 @@ public class ApplicationProperties {
             private Boolean autoCreateUser = true;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
+
+            // Opt-in public URL for SAML endpoints; wins over system.backendUrl when set.
+            private String redirectBaseUrl;
 
             @ToString.Exclude
             @JsonProperty("idpMetadataUri")
@@ -1123,6 +1127,9 @@ public class ApplicationProperties {
             private Collection<String> scopes = new ArrayList<>();
             private String provider;
             private Client client = new Client();
+
+            // Opt-in public URL for OAuth2 callbacks; blank keeps building them from each request.
+            private String redirectBaseUrl;
 
             /**
              * When true, the OAuth2/OIDC login flow logs the full set of ID token and UserInfo

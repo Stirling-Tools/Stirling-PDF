@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { TooltipContent } from "@app/types/tips";
+import { BookletGuideDiagram } from "@app/components/tools/bookletImposition/BookletGuideDiagram";
 
+/** Booklet printing guidance, with diagrams supplementing the translated steps. */
 export const useBookletImpositionTips = (): TooltipContent => {
   const { t } = useTranslation();
 
@@ -21,6 +23,12 @@ export const useBookletImpositionTips = (): TooltipContent => {
           "bookletImposition.tooltip.description.text",
           "Creates professional booklets by arranging pages in the correct printing order. Your PDF pages are placed 2-up on landscape sheets so when folded and bound, they read in proper sequence like a real book.",
         ),
+        bullets: [
+          t(
+            "bookletImposition.paperSizeNote",
+            "Paper size is automatically derived from your first page.",
+          ),
+        ],
       },
       {
         title: t(
@@ -45,6 +53,7 @@ export const useBookletImpositionTips = (): TooltipContent => {
             "When folded & stacked: Reads 1→2→3→4→5→6→7→8",
           ),
         ],
+        body: <BookletGuideDiagram name="pageOrder" />,
       },
       {
         title: t(
@@ -73,6 +82,7 @@ export const useBookletImpositionTips = (): TooltipContent => {
             "For short-edge printers: Enable 'Flip on short edge' option",
           ),
         ],
+        body: <BookletGuideDiagram name="assembly" />,
       },
       {
         title: t(

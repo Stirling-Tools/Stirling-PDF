@@ -8,15 +8,22 @@ import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
 import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
 
-import { useAddPasswordParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
+import {
+  useAddPasswordParameters,
+  validateAddPasswordParameters,
+} from "@app/hooks/tools/addPassword/useAddPasswordParameters";
 import { useAddPasswordOperation } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
+import { usePermissionExtraction } from "@app/hooks/tools/changePermissions/usePermissionExtraction";
 import { useAddPasswordTips } from "@app/components/tooltips/useAddPasswordTips";
 import { useAddPasswordPermissionsTips } from "@app/components/tooltips/useAddPasswordPermissionsTips";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { Stack, PasswordInput, Text } from "@mantine/core";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
 
 const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const selectedFiles = useViewScopedFiles();
+  const access = usePdfAccess(selectedFiles[0]);
 
   const [collapsedPermissions, setCollapsedPermissions] = useState(true);
 
@@ -24,6 +31,27 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const addPasswordOperation = useAddPasswordOperation();
   const addPasswordTips = useAddPasswordTips();
   const addPasswordPermissionsTips = useAddPasswordPermissionsTips();
+  const hasResults =
+    addPasswordOperation.files.length > 0 ||
+    addPasswordOperation.downloadUrl !== null;
+  const permissions = usePermissionExtraction(
+    selectedFiles.length === 1 ? selectedFiles[0] : undefined,
+    addPasswordParams.permissions.setParameters,
+    !addPasswordOperation.isLoading && !hasResults,
+  );
+  const hasRestrictions = Object.entries(
+    addPasswordParams.permissions.parameters,
+  ).some(([key, value]) => key.startsWith("prevent") && value === true);
+  const outputParameters = {
+    ...addPasswordParams.fullParameters,
+    ownerPassword: hasRestrictions
+      ? addPasswordParams.parameters.ownerPassword
+      : "",
+  };
+
+  useEffect(() => {
+    if (permissions.hasError || hasRestrictions) setCollapsedPermissions(false);
+  }, [permissions.hasError, hasRestrictions]);
 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } =
@@ -32,12 +60,12 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     addPasswordOperation.resetResults();
     onPreviewFile?.(null);
-  }, [addPasswordParams.parameters]);
+  }, [addPasswordParams.parameters, addPasswordParams.permissions.parameters]);
 
   const handleAddPassword = async () => {
     try {
       await addPasswordOperation.executeOperation(
-        addPasswordParams.fullParameters,
+        outputParameters,
         selectedFiles,
       );
       if (addPasswordOperation.files && onComplete) {
@@ -70,9 +98,6 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults =
-    addPasswordOperation.files.length > 0 ||
-    addPasswordOperation.downloadUrl !== null;
   const passwordsCollapsed = !hasFiles || hasResults;
   const permissionsCollapsed = collapsedPermissions || hasResults;
 
@@ -80,50 +105,99 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     files: {
       selectedFiles:
         addPasswordOperation.getEligibleFiles?.(
-          addPasswordParams.fullParameters,
+          outputParameters,
           selectedFiles,
         ) ?? selectedFiles,
       isCollapsed: hasResults,
     },
     steps: [
       {
-        title: t("addPassword.passwords.stepTitle", "Passwords & Encryption"),
+        title: t("encryptedPdfUnlock.openingPassword", "Password to open"),
         isCollapsed: passwordsCollapsed,
         onCollapsedClick: hasResults ? handleSettingsReset : undefined,
         tooltip: addPasswordTips,
         content: (
-          <AddPasswordSettings
-            parameters={addPasswordParams.parameters}
-            onParameterChange={addPasswordParams.updateParameter}
-            disabled={endpointLoading}
-          />
+          <Stack gap="sm">
+            {access?.encrypted && (
+              <Text size="xs">
+                {t(
+                  "encryptedPdfUnlock.replaceProtection",
+                  "These settings replace the PDF's current protection.",
+                )}
+              </Text>
+            )}
+            <AddPasswordSettings
+              parameters={addPasswordParams.parameters}
+              onParameterChange={addPasswordParams.updateParameter}
+              disabled={endpointLoading}
+              showOwnerPassword={false}
+            />
+          </Stack>
         ),
       },
       {
-        title: t("changePermissions.title", "Document Permissions"),
+        title: t("encryptedPdfUnlock.restrictActions", "Restrict actions"),
         isCollapsed: permissionsCollapsed,
         onCollapsedClick: hasResults
           ? handleSettingsReset
           : () => setCollapsedPermissions(!collapsedPermissions),
         content: (
-          <ChangePermissionsSettings
-            parameters={addPasswordParams.permissions.parameters}
-            onParameterChange={addPasswordParams.permissions.updateParameter}
-            disabled={endpointLoading}
-          />
+          <Stack gap="sm">
+            <ChangePermissionsSettings
+              parameters={addPasswordParams.permissions.parameters}
+              onParameterChange={addPasswordParams.permissions.updateParameter}
+              disabled={endpointLoading || addPasswordOperation.isLoading}
+              isLoading={permissions.isLoading}
+              hasReadError={permissions.hasError}
+            />
+            {hasRestrictions && (
+              <PasswordInput
+                size="xs"
+                label={t(
+                  "encryptedPdfUnlock.newOwnerPassword",
+                  "New permissions password",
+                )}
+                value={addPasswordParams.parameters.ownerPassword}
+                onChange={(event) =>
+                  addPasswordParams.updateParameter(
+                    "ownerPassword",
+                    event.currentTarget.value,
+                  )
+                }
+                error={
+                  addPasswordParams.parameters.ownerPassword &&
+                  addPasswordParams.parameters.ownerPassword ===
+                    addPasswordParams.parameters.password
+                    ? t(
+                        "encryptedPdfUnlock.passwordsMustDiffer",
+                        "The two passwords must be different.",
+                      )
+                    : undefined
+                }
+                required
+                autoComplete="new-password"
+                disabled={addPasswordOperation.isLoading}
+              />
+            )}
+          </Stack>
         ),
         tooltip: addPasswordPermissionsTips,
       },
     ],
     executeButton: {
-      text: t("addPassword.submit", "Encrypt"),
+      text: t("encryptedPdfUnlock.saveProtection", "Save protection"),
       isVisible: !hasResults,
       loadingText: t("loading"),
       onClick: handleAddPassword,
       endpointEnabled: endpointEnabled,
-      paramsValid: addPasswordParams.validateParameters(),
+      paramsValid: validateAddPasswordParameters(outputParameters),
+      disabled: permissions.isLoading,
     },
     review: {
+      protectionSummary: t(
+        "encryptedPdfUnlock.protectionSaved",
+        "Protection saved",
+      ),
       isVisible: hasResults,
       operation: addPasswordOperation,
       title: t("addPassword.results.title", "Encrypted PDFs"),

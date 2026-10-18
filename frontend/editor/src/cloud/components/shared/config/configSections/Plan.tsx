@@ -1,4 +1,5 @@
 /** Account-owned legacy billing can coexist with the current team's wallet. */
+import { BillingScreen } from "@app/billing/BillingScreen";
 import React, { useCallback } from "react";
 import { Center, Group, Loader, Stack } from "@mantine/core";
 import { Banner, Button } from "@app/ui";
@@ -65,6 +66,8 @@ const Plan: React.FC = () => {
         </Banner>
       );
     }
+
+    if (wallet.enterprise) return <BillingScreen wallet={wallet} />;
 
     if (wallet.status === "subscribed") {
       return wallet.role === "leader" ? (

@@ -10,7 +10,10 @@ import {
   type RefCallback,
 } from "react";
 import { useMergedRef } from "@mantine/hooks";
-import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
+import {
+  preloadMarkdownRenderer,
+  renderMarkdown,
+} from "@app/components/viewer/nonpdf/MarkdownRenderer";
 import { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import {
@@ -441,6 +444,7 @@ export function ChatPanel({
   // viewport left the scroll position.
   useEffect(() => {
     if (!expanded) return;
+    preloadMarkdownRenderer();
     userScrolledUp.current = false;
     requestAnimationFrame(() => {
       const el = scrollRef.current;

@@ -17,6 +17,7 @@ describe("useRedactParameters", () => {
     { paramName: "wordsToRedact" as const, value: ["word1", "word2"] },
     { paramName: "useRegex" as const, value: true },
     { paramName: "wholeWordSearch" as const, value: true },
+    { paramName: "caseSensitive" as const, value: true },
     { paramName: "redactColor" as const, value: "#FF0000" },
     { paramName: "customPadding" as const, value: 0.5 },
     { paramName: "convertPDFToImage" as const, value: true },
@@ -138,6 +139,7 @@ describe("useRedactParameters", () => {
     expect(result.current.parameters.mode).toBe("automatic");
     expect(result.current.parameters.useRegex).toBe(false);
     expect(result.current.parameters.wholeWordSearch).toBe(false);
+    expect(result.current.parameters.caseSensitive).toBe(false);
     expect(result.current.parameters.convertPDFToImage).toBe(false);
   });
 
