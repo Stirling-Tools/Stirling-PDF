@@ -216,6 +216,6 @@ export async function revealPickerTool(
 ): Promise<Locator> {
   return revealInPicker(
     page,
-    page.locator(`[data-tour="tool-button-${toolId}"]`),
+    page.locator(`[data-tour="tool-button-${toolId}"]`).first(),
   );
 }

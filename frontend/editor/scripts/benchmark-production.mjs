@@ -156,7 +156,14 @@ async function runBenchmarkForDevice({ name, viewport, isMobile, serverUrl }) {
     }).observe({ type: "longtask", buffered: true });
   });
 
-  await page.goto(serverUrl, { waitUntil: "domcontentloaded" });
+  const response = await page.goto(serverUrl, {
+    waitUntil: "domcontentloaded",
+  });
+  if (!response || !response.ok()) {
+    throw new Error(
+      `Failed to load production build at ${serverUrl}: HTTP ${response ? response.status() : "no response"}`,
+    );
+  }
 
   // 1. Initial Shell metrics (before user interaction)
   await page.waitForTimeout(100);
@@ -196,6 +203,7 @@ async function runBenchmarkForDevice({ name, viewport, isMobile, serverUrl }) {
   }
 
   // 2. User interaction & React boot
+  const preGestureRequests = requests.length;
   console.log(`\nSimulating User Input (typing in search bar and clicking)...`);
   const interactionStart = Date.now();
 
@@ -233,7 +241,9 @@ async function runBenchmarkForDevice({ name, viewport, isMobile, serverUrl }) {
   const finalMetrics = await page.evaluate(() => {
     const paints = performance.getEntriesByType("paint");
     const fcpEntry = paints.find((p) => p.name === "first-contentful-paint");
+    const fcpTime = fcpEntry ? fcpEntry.startTime : 0;
     const totalTBT = window.__perfEntries.longTasks.reduce((sum, task) => {
+      if (task.startTime < fcpTime) return sum;
       return sum + Math.max(0, task.duration - 50);
     }, 0);
 
@@ -281,8 +291,8 @@ async function runBenchmarkForDevice({ name, viewport, isMobile, serverUrl }) {
     },
     {
       Metric: "Requests Fired Before Gesture",
-      Value: `${requests.length}`,
-      Status: requests.length <= 15 ? "GOOD" : "REVIEW",
+      Value: `${preGestureRequests}`,
+      Status: preGestureRequests <= 15 ? "GOOD" : "REVIEW",
     },
   ];
 

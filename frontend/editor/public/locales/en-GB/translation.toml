@@ -5447,7 +5447,7 @@ tags = "embed,attach,include,attachments,attach files,embed files,include files,
 title = "Add Attachments"
 
 [home.addImage]
-desc = "Adds an image onto a set location on the PDF"
+desc = "Adds a image onto a set location on the PDF"
 tags = "insert,embed,place,add image,insert image,place image,embed image,add photo,add picture,add logo,graphics,insert picture,place photo,PNG,JPG,JPEG"
 title = "Add image"
 
@@ -5633,7 +5633,7 @@ tags = "multiple,tools,multi-tool,all-in-one,swiss army,page organiser,page edit
 title = "PDF Multi Tool"
 
 [home.ocr]
-desc = "Cleans up scans and detects text from images within a PDF and re-adds it as text."
+desc = "Cleanup scans and detects text from images within a PDF and re-adds it as text."
 tags = "extract,scan,OCR,optical character recognition,text recognition,scan to text,image to text,scanned document,searchable PDF,make searchable,extract text,recognise text,read scanned"
 title = "OCR / Cleanup scans"
 
@@ -6155,7 +6155,7 @@ phone = "See your phone number"
 profile = "See your basic profile information"
 
 [ocr]
-desc = "Cleans up scans and detects text from images within a PDF and re-adds it as text."
+desc = "Cleanup scans and detects text from images within a PDF and re-adds it as text."
 tags = "recognition,text,image,scan,read,identify,detection,editable"
 title = "OCR / Scan Cleanup"
 

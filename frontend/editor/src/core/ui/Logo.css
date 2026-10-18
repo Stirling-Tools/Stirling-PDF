@@ -11,15 +11,32 @@
   justify-content: center;
 }
 
-.sui-logo__mark,
-.sui-logo__wordmark {
+.sui-logo__mark {
   display: block;
   width: auto;
 }
 
-/* Light wordmark by default; dark wordmark only under a dark scheme. */
+.sui-logo__wordmark {
+  display: block;
+  width: auto;
+  aspect-ratio: 58 / 21;
+}
+
+/* Light wordmark by default; dark wordmark under dark scheme or dark OS preference. */
 .sui-logo__wordmark--dark {
   display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mantine-color-scheme="light"]):not([data-theme="light"])
+    .sui-logo__wordmark--light {
+    display: none;
+  }
+
+  :root:not([data-mantine-color-scheme="light"]):not([data-theme="light"])
+    .sui-logo__wordmark--dark {
+    display: block;
+  }
 }
 
 [data-mantine-color-scheme="dark"] .sui-logo__wordmark--light,

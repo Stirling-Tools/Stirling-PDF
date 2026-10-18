@@ -172,7 +172,13 @@ function installShellHelpers() {
       for (const part of selector.split(",")) {
         const raw = part.trim();
         if (!raw) return true;
-        const test = raw.replace(/::[\w-]+(?:\([^)]*\))?/g, "").trim();
+        const test = raw
+          .replace(/::[\w-]+(?:\([^)]*\))?/g, "")
+          .replace(
+            /\[data-(?:mantine-color-scheme|theme|app-theme|accent)[^\]]*\]/g,
+            "",
+          )
+          .trim();
         if (!test) return true;
         try {
           if (elements.some((element) => element.matches(test))) return true;

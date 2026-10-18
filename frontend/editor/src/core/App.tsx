@@ -63,7 +63,9 @@ export default function App() {
               <AppProviders>
                 <AppLayout>
                   <AppRoot />
-                  <Onboarding />
+                  <Suspense fallback={null}>
+                    <Onboarding />
+                  </Suspense>
                 </AppLayout>
               </AppProviders>
             }
