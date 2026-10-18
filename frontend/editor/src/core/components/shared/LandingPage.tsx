@@ -61,7 +61,6 @@ const LandingPage = () => {
           iconHeight="5rem"
           textHeight="2.5rem"
           gap="1rem"
-          className="landing-logo-enter"
           style={{ marginBottom: "2.5rem" }}
         />
 

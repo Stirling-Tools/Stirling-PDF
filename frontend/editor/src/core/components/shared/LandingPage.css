@@ -4,8 +4,8 @@
    ============================================================ */
 
 /* ── Entrance animation (editor empty state) ─────────────────
-   Logo fades/slides up first (0.2s), then the actions after it finishes
-   (0.2s delay + 0.2s) — 0.4s total. */
+   Actions fade/slide up (0.2s). The logo paints immediately to avoid
+   LCP animation delay. */
 @keyframes landing-fade-up {
   from {
     opacity: 0;
@@ -16,14 +16,10 @@
     transform: translateY(0);
   }
 }
-.landing-logo-enter {
+.landing-actions-enter {
   animation: landing-fade-up 0.2s ease-out both;
 }
-.landing-actions-enter {
-  animation: landing-fade-up 0.2s ease-out 0.2s both;
-}
 @media (prefers-reduced-motion: reduce) {
-  .landing-logo-enter,
   .landing-actions-enter {
     animation: none;
   }
