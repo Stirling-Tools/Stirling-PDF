@@ -178,8 +178,10 @@ export function PhoneLayout({
         <PipPane
           front={toolsInFront}
           // Only an open tool waits in the corner; the list alone is not worth it.
-          pip={!toolsInFront && tool !== null && !filesMode}
-          variant="bar"
+          pip={tool !== null && !filesMode}
+          variant="card"
+          scale={documentPipScale}
+          onScale={setDocumentPipScale}
           label={tool?.name ?? ""}
           caption={t("mobile.pip.toolSettings", "Tool settings")}
           icon={tool?.icon}

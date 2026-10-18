@@ -6098,6 +6098,7 @@ title = "Documents"
 document = "Document"
 home = "Your documents"
 open = "Open {{name}}"
+openSettings = "Open settings"
 toolSettings = "Tool settings"
 
 [mobile.scan]

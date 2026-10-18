@@ -2,6 +2,8 @@
    the tap target over it. Each pane sets its own --pip-scale on both. */
 .pip-stage {
   --pip-gap: 12px;
+  /* Bottom corners lift the card above the viewer's floating page controls. */
+  --pip-card-lift: 4.25rem;
   --pip-dx: 0px;
   --pip-dy: 0px;
   /* Per corner: which way the gap pushes the miniature in from the edge. */
@@ -32,7 +34,7 @@
   z-index: 1;
 }
 
-.pip-pane[data-state="pip-live"] {
+.pip-pane[data-state="pip"] {
   z-index: 2;
   transform: translate(
       calc(var(--pip-sx) * var(--pip-gap) + var(--pip-dx)),
@@ -47,9 +49,55 @@
     rgb(0 0 0 / 0.18);
 }
 
-/* Fades out without scaling: controls that measure themselves (segmented
-   indicators) would record shrunken sizes and keep them when it returns. */
-.pip-pane[data-state="pip-bar"] {
+/* Shrinks into its card, then rests unscaled and hidden: controls that measure
+   themselves (segmented indicators) would otherwise record shrunken sizes and
+   keep them. Growing back out of the card is the matching keyframe. */
+.pip-pane[data-state="card"] {
+  z-index: 2;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  animation: pip-shrink-to-card 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.pip-pane[data-state="front"][data-entering="true"] {
+  z-index: 2;
+  animation: pip-grow-from-card 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes pip-shrink-to-card {
+  from {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    visibility: visible;
+    opacity: 0;
+    border-radius: 80px;
+    transform: translate(
+        calc(var(--pip-sx) * var(--pip-gap)),
+        calc(var(--pip-sy) * (var(--pip-gap) + var(--pip-card-lift)))
+      )
+      scale(0.2);
+  }
+}
+
+@keyframes pip-grow-from-card {
+  from {
+    opacity: 0.3;
+    border-radius: 80px;
+    transform: translate(
+        calc(var(--pip-sx) * var(--pip-gap)),
+        calc(var(--pip-sy) * (var(--pip-gap) + var(--pip-card-lift)))
+      )
+      scale(0.2);
+  }
+}
+
+/* Fades without scaling: controls that measure themselves (segmented
+   indicators) would otherwise record shrunken sizes and keep them. */
+.pip-pane[data-state="hidden"] {
   z-index: 0;
   opacity: 0;
   visibility: hidden;
@@ -57,13 +105,6 @@
   transition:
     opacity 0.25s ease,
     visibility 0s linear 0.25s;
-}
-
-.pip-pane[data-state="hidden"] {
-  z-index: 0;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
 }
 
 .pip-pane-body {
@@ -90,6 +131,10 @@
 .pip-stage[data-corner="bottom-left"] {
   --pip-sx: 1;
   --pip-origin: bottom left;
+}
+
+.pip-stage[data-corner^="top-"] {
+  --pip-card-lift: 0px;
 }
 
 .pip-stage[data-corner="top-right"] {
@@ -125,7 +170,7 @@
   border: none;
   border-radius: 14px;
   background: transparent;
-  animation: pip-target-in 0.35s ease;
+  animation: pip-target-in 0.35s ease 0.15s backwards;
 }
 
 .pip-stage[data-corner$="-left"] .pip-target {
@@ -138,23 +183,64 @@
   top: var(--pip-gap);
 }
 
-.pip-target[data-variant="bar"] {
-  width: auto;
+.pip-target[data-variant="card"] {
+  width: 11rem;
   height: auto;
-  max-width: 60%;
-  border-radius: 999px;
+  border-radius: 16px;
 }
 
-/* Clears the viewer's floating page controls along the bottom edge. */
-.pip-stage:not([data-corner^="top-"]) .pip-target[data-variant="bar"] {
-  bottom: calc(var(--pip-gap) + 4.25rem);
+.pip-stage:not([data-corner^="top-"]) .pip-target[data-variant="card"] {
+  bottom: calc(var(--pip-gap) + var(--pip-card-lift));
 }
 
-.pip-target[data-variant="bar"] .pip-label {
-  padding: 8px 14px 8px 10px;
+.pip-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
   border: 1px solid var(--c-border-strong);
-  border-radius: 999px;
-  box-shadow: 0 6px 18px rgb(0 0 0 / 0.16);
+  border-radius: 16px;
+  background: var(--c-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  text-align: left;
+}
+
+.pip-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pip-card-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+.pip-card-icon svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.pip-card-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
 @keyframes pip-target-in {
