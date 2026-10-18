@@ -60,6 +60,11 @@ public class StirlingAiTool implements McpTool {
     }
 
     @Override
+    public String analyticsCategory() {
+        return "ai";
+    }
+
+    @Override
     public String description() {
         return "Invoke a Stirling AI agent capability (Q&A about a PDF, edit-plan generation,"
                 + " inline comments, math audit, draft-spec helper). Call"

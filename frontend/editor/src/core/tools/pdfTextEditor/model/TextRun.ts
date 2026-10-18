@@ -1,4 +1,5 @@
 import type { ScanEditState } from "@app/tools/pdfTextEditor/commands/scanTextEdit";
+import type { TagMark } from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import type {
   Affine,
   PageRect,
@@ -79,6 +80,9 @@ export class TextRun {
   containerPtr: number;
   /** If the run was extracted from a form xobject. */
   topLevelContainerPtr: number;
+  // Structure tags every object that re-emits this run's text must carry, or
+  // the structure tree is left pointing at content that no longer exists.
+  tagMarks: readonly TagMark[];
   // When ParagraphGrouper merged multiple line groups into this run, the
   // average vertical distance between consecutive baselines (in PDF points).
   paragraphLineHeight: number;
@@ -147,6 +151,7 @@ export class TextRun {
     this.mergedFromCharStarts = [];
     this.containerPtr = init.containerPtr ?? 0;
     this.topLevelContainerPtr = init.topLevelContainerPtr ?? 0;
+    this.tagMarks = [];
     this.paragraphLineHeight = 0;
     this.paragraphMemberPtrs = [];
     this.paragraphMemberContainers = [];

@@ -2,6 +2,7 @@ package stirling.software.saas.procurement.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
 import stirling.software.saas.procurement.legal.AgreementAssembler;
 import stirling.software.saas.procurement.legal.AgreementPdfRenderer;
@@ -22,6 +24,7 @@ import stirling.software.saas.procurement.legal.AgreementSigning;
 import stirling.software.saas.procurement.legal.AssembledAgreement;
 import stirling.software.saas.procurement.license.EnterpriseLicenseService;
 import stirling.software.saas.procurement.license.LicenseEntitlements;
+import stirling.software.saas.procurement.model.ProcurementActivity;
 import stirling.software.saas.procurement.model.ProcurementAgreementSignature;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
@@ -29,6 +32,7 @@ import stirling.software.saas.procurement.model.QuoteDetails;
 import stirling.software.saas.procurement.pricing.ProcurementPricingService;
 import stirling.software.saas.procurement.pricing.QuoteBreakdown;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
+import stirling.software.saas.procurement.repository.ProcurementActivityRepository;
 import stirling.software.saas.procurement.repository.ProcurementAgreementSignatureRepository;
 import stirling.software.saas.procurement.repository.ProcurementDealRepository;
 import stirling.software.saas.procurement.repository.ProcurementQuoteRepository;
@@ -39,10 +43,10 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Orchestrates a linked team's procurement journey: start a (mock-licensed) trial, build a
- * server-priced quote, and accept it. Stripe checkout itself lives in a Supabase edge function the
- * portal calls with the accepted quote; on payment the webhook seeds {@code billing_subscriptions}
- * and this service issues the annual licence. All amounts are minor units (cents).
+ * Orchestrates a linked team's procurement journey: start a trial, build a server-priced quote, and
+ * accept it. Stripe checkout itself lives in a Supabase edge function the portal calls with the
+ * accepted quote; on payment the webhook seeds {@code billing_subscriptions} and this service
+ * issues the annual licence. All amounts are minor units (cents).
  */
 @Slf4j
 @Service
@@ -65,6 +69,8 @@ public class ProcurementService {
     // Trial-setup invitations run through the team-invite path, with its seat, role and
     // rate-limit rules rather than a second implementation here.
     private final SaasTeamService teams;
+    private final ProcurementActivityRepository activities;
+    private final TeamRepository teamRepo;
 
     public ProcurementService(
             ProcurementDealRepository dealRepo,
@@ -76,7 +82,9 @@ public class ProcurementService {
             AgreementAssembler agreementAssembler,
             AgreementPdfRenderer agreementPdfRenderer,
             ProcurementAgreementSignatureRepository signatureRepo,
-            SaasTeamService teams) {
+            SaasTeamService teams,
+            ProcurementActivityRepository activities,
+            TeamRepository teamRepo) {
         this.dealRepo = dealRepo;
         this.quoteRepo = quoteRepo;
         this.pricing = pricing;
@@ -87,6 +95,8 @@ public class ProcurementService {
         this.agreementPdfRenderer = agreementPdfRenderer;
         this.signatureRepo = signatureRepo;
         this.teams = teams;
+        this.activities = activities;
+        this.teamRepo = teamRepo;
     }
 
     /**
@@ -110,13 +120,7 @@ public class ProcurementService {
         return dealRepo.findByTeamId(teamId);
     }
 
-    /**
-     * Starting a trial is only legitimate before one exists, while the buyer is still exploring, or
-     * to restart within the trial itself. A null stage is a deal that has just been constructed.
-     *
-     * <p>Package-private so the policy can be tested without the service's ten dependencies. Adding
-     * a later stage here would let a leader replace a paying customer's committed licence.
-     */
+    /** Only an unpurchased deal may enter evaluation; an existing trial is never restarted. */
     static boolean canStartTrial(String stage) {
         return stage == null
                 || ProcurementDeal.STAGE_EXPLORING.equals(stage)
@@ -149,32 +153,13 @@ public class ProcurementService {
                         });
     }
 
-    /**
-     * Start (or restart) the free trial for a team: issue a mock trial licence and stamp the trial
-     * window on the deal. No Stripe: a no-card trial has no subscription; the entitlement is the
-     * Keygen licence, and the deal row is the journey state. The buyer's chosen deployment target
-     * ({@code cloud}/{@code selfhost}/{@code airgap}) and seat count are captured here so the quote
-     * builder opens seeded to their environment; both are still editable when the quote is built.
-     */
+    /** Starts evaluation using the same dates for SaaS access and the self-hosted licence. */
+    @Transactional
     public ProcurementDeal startTrial(Long teamId, String deployment, int seats) {
         return startTrial(teamId, deployment, seats, null, null, null, null);
     }
 
-    /**
-     * Start (or restart) the trial, capturing the buying entity if the setup step collected it.
-     * Blank details are ignored rather than written, so a re-run without them keeps what is there.
-     *
-     * <p>Only from before the trial or during it. Past that, {@code licenseRef} points at the
-     * committed annual licence, and this method would replace it with a fresh 14-day trial key
-     * while Stripe kept billing — the same hazard {@link #extendTrial} guards against, one step
-     * worse because it re-issues rather than re-dates. It would also rewind the stage and reset the
-     * extension counter.
-     *
-     * <p>The transaction is declared here rather than on the 3-arg overload: that one only
-     * delegates, and Spring's proxy cannot intercept a self-invocation, so an annotation there does
-     * nothing for either path. This is the method the controller calls, and it reaches out to
-     * Keygen between the read and the write.
-     */
+    /** Starts evaluation once; repeated requests retain the original dates and licence. */
     @Transactional
     public ProcurementDeal startTrial(
             Long teamId,
@@ -184,13 +169,15 @@ public class ProcurementService {
             String contactName,
             String contactEmail,
             String inviteEmails) {
+        teamRepo.lockById(teamId).orElseThrow(() -> new IllegalArgumentException("Team not found"));
         ProcurementDeal deal =
-                dealRepo.findByTeamId(teamId).orElseGet(() -> new ProcurementDeal(teamId));
+                dealRepo.findByTeamIdForUpdate(teamId).orElseGet(() -> new ProcurementDeal(teamId));
         if (!canStartTrial(deal.getStage())) {
             throw new IllegalStateException(
                     "Trial cannot be started from stage " + deal.getStage());
         }
-        LocalDateTime now = LocalDateTime.now();
+        if (deal.getTrialStartedAt() != null) return deal;
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         LocalDateTime ends = now.plusDays(config.getTrialDurationDays());
         deal.setStage(ProcurementDeal.STAGE_TRIAL);
         deal.setDeployment(normalizeDeployment(deployment));
@@ -269,18 +256,20 @@ public class ProcurementService {
     @Transactional
     public ProcurementDeal extendTrial(Long teamId) {
         ProcurementDeal deal =
-                dealRepo.findByTeamId(teamId)
+                dealRepo.findByTeamIdForUpdate(teamId)
                         .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
-        // Only extend while still in the trial. Past the trial (e.g. active), licenseRef points at
-        // the committed annual licence — extending would rewind its expiry.
-        if (!ProcurementDeal.STAGE_TRIAL.equals(deal.getStage())) {
-            throw new IllegalStateException("Trial extension only allowed during the trial stage");
+        if (deal.getTrialStartedAt() == null
+                || deal.getEnterprisePeriodStart() != null
+                || deal.getSubscriptionId() != null) {
+            throw new IllegalStateException("A purchased agreement cannot be extended as a trial");
         }
         if (deal.getTrialExtensionsUsed() >= config.getMaxTrialExtensions()) {
             throw new IllegalStateException("Trial extension cap reached");
         }
         LocalDateTime base =
-                deal.getTrialEndsAt() != null ? deal.getTrialEndsAt() : LocalDateTime.now();
+                deal.getTrialEndsAt() != null
+                        ? deal.getTrialEndsAt()
+                        : LocalDateTime.now(ZoneOffset.UTC);
         LocalDateTime newEnd = base.plusDays(config.getTrialExtensionDays());
         deal.setTrialEndsAt(newEnd);
         deal.setTrialExtensionsUsed(deal.getTrialExtensionsUsed() + 1);
@@ -290,13 +279,72 @@ public class ProcurementService {
         return dealRepo.save(deal);
     }
 
+    /** Staff may extend evaluation without rewinding quotes, signatures or purchase progress. */
+    @Transactional
+    public ProcurementDeal grantTrial(
+            Long teamId, LocalDateTime endsAt, String reason, String actor) {
+        teamRepo.lockById(teamId).orElseThrow(() -> new IllegalArgumentException("Team not found"));
+        if (endsAt == null
+                || !endsAt.isAfter(LocalDateTime.now(ZoneOffset.UTC))
+                || reason == null
+                || reason.isBlank()) {
+            throw new IllegalArgumentException("A future trial end and reason are required");
+        }
+        ProcurementDeal deal = dealRepo.findByTeamIdForUpdate(teamId).orElse(null);
+        if (deal != null
+                && (deal.getSubscriptionId() != null || deal.getEnterprisePeriodStart() != null)) {
+            throw new IllegalStateException("A purchased agreement cannot be replaced by a trial");
+        }
+        if (leaderEmail(teamId) == null) throw new IllegalArgumentException("Team has no leader");
+        if (deal == null) deal = new ProcurementDeal(teamId);
+        LocalDateTime previous = deal.getTrialEndsAt();
+        if (previous != null && endsAt.isBefore(previous)) {
+            throw new IllegalArgumentException("An extension cannot shorten the trial");
+        }
+        if (deal.getTrialStartedAt() == null) {
+            deal.setTrialStartedAt(LocalDateTime.now(ZoneOffset.UTC));
+            if (deal.getStage() == null || ProcurementDeal.STAGE_EXPLORING.equals(deal.getStage()))
+                deal.setStage(ProcurementDeal.STAGE_TRIAL);
+        }
+        if (deal.getLicenseRef() == null) {
+            deal.setLicenseRef(licenses.issueTrialLicense(teamId, leaderEmail(teamId), endsAt));
+        } else {
+            licenses.extendLicense(deal.getLicenseRef(), endsAt);
+        }
+        deal.setTrialEndsAt(endsAt);
+        deal = dealRepo.saveAndFlush(deal);
+        activities.save(
+                new ProcurementActivity(
+                        deal.getDealId(),
+                        "trial_granted",
+                        OBJECT_MAPPER.writeValueAsString(
+                                java.util.Map.of(
+                                        "actor",
+                                        actor,
+                                        "reason",
+                                        reason,
+                                        "previousEnd",
+                                        previous == null ? "" : previous.toString(),
+                                        "endsAt",
+                                        endsAt.toString()))));
+        log.info(
+                "[procurement] staff trial grant team={} actor={} previous={} ends={} reason={}",
+                teamId,
+                actor,
+                previous,
+                endsAt,
+                reason.replaceAll("[\\r\\n]", " "));
+        return dealRepo.save(deal);
+    }
+
     /** Price a quote config server-side and persist it as a draft against the team's deal. */
     @Transactional
     public ProcurementQuote buildQuote(Long teamId, QuoteConfig cfg, QuoteDetails details) {
         ProcurementDeal deal =
-                dealRepo.findByTeamId(teamId).orElseGet(() -> new ProcurementDeal(teamId));
-        if (ProcurementDeal.STAGE_LIVE.equals(deal.getStage())) {
-            throw new IllegalStateException("Cannot rebuild a quote on a live deal");
+                dealRepo.findByTeamIdForUpdate(teamId).orElseGet(() -> new ProcurementDeal(teamId));
+        if (ProcurementDeal.STAGE_LIVE.equals(deal.getStage())
+                || deal.getSubscriptionId() != null) {
+            throw new IllegalStateException("Cannot replace an accepted agreement");
         }
         // (Re)building a quote returns the deal to the quote stage and drops any prior acceptance,
         // so a rebuild from security/payment can't leave a stale stage or accepted-quote pointer.
@@ -544,18 +592,13 @@ public class ProcurementService {
         }
     }
 
-    /**
-     * Provision on accept: upgrade the team's licence to the committed annual term (valid
-     * immediately), so the buyer can get going the moment they accept — before the invoice is paid.
-     * Driven by the accept edge function once the subscription + invoice are created. Idempotent
-     * (upgrades the existing licence in place); deliberately does NOT change the stage — the deal
-     * stays in the payment step so the outstanding invoice remains visible until it settles.
-     */
+    /** Grants access through the verified invoice due date while payment is pending. */
     @Transactional
-    public ProcurementDeal provisionLicense(Long teamId) {
+    public ProcurementDeal provisionLicense(Long teamId, ContractPeriod period) {
         ProcurementDeal deal =
-                dealRepo.findByTeamId(teamId)
+                dealRepo.findByTeamIdForUpdate(teamId)
                         .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
+        if (!applyPeriod(deal, period, false)) return deal;
         deal.setLicenseRef(issueOrUpgradeAnnual(deal));
         deal = dealRepo.save(deal);
         log.info("[procurement] licence provisioned team={} deal={}", teamId, deal.getDealId());
@@ -563,28 +606,15 @@ public class ProcurementService {
     }
 
     /**
-     * Mark the deal fully live (advance to the active stage) once payment settles — driven by the
-     * {@code invoice.paid} webhook, and by the demo control when those are enabled. Re-affirms the
-     * annual licence in case provisioning didn't run at accept.
-     *
-     * <p>Idempotent per invoice rather than per stage, which matters because {@code invoice.paid}
-     * carries two different meanings. Stripe redelivers events, so the <em>same</em> invoice
-     * arriving twice must do nothing. But the renewal payment a year later is also an {@code
-     * invoice.paid}, and the committed licence expires term years from issue — so a
-     * <em>different</em> invoice has to re-issue, moving the expiry out, or the customer's licence
-     * lapses after they have paid. Keying on the stage alone couldn't tell those apart and treated
-     * every renewal as a duplicate.
-     *
-     * @param paidInvoiceId the Stripe invoice that was paid, or null when the caller has no invoice
-     *     to identify the payment by (the demo control). Null keeps the old conservative behaviour:
-     *     a live deal short-circuits, since there is nothing to tell a renewal from a repeat.
+     * Applies the paid invoice service period. Duplicate or older invoices cannot extend access.
      */
     @Transactional
-    public ProcurementDeal markLive(Long teamId, String paidInvoiceId) {
+    public ProcurementDeal markLive(Long teamId, String paidInvoiceId, ContractPeriod period) {
         ProcurementDeal deal =
-                dealRepo.findByTeamId(teamId)
+                dealRepo.findByTeamIdForUpdate(teamId)
                         .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
-        if (ProcurementDeal.STAGE_LIVE.equals(deal.getStage())
+        if (deal.getEnterprisePeriodStart() != null
+                && ProcurementDeal.STAGE_LIVE.equals(deal.getStage())
                 && (paidInvoiceId == null || paidInvoiceId.equals(deal.getLastPaidInvoiceId()))) {
             log.debug(
                     "[procurement] invoice.paid already applied team={} deal={} invoice={}",
@@ -593,6 +623,7 @@ public class ProcurementService {
                     paidInvoiceId);
             return deal;
         }
+        if (!applyPeriod(deal, period, true)) return deal;
         boolean renewal = ProcurementDeal.STAGE_LIVE.equals(deal.getStage());
         deal.setLicenseRef(issueOrUpgradeAnnual(deal));
         if (paidInvoiceId != null) deal.setLastPaidInvoiceId(paidInvoiceId);
@@ -608,11 +639,74 @@ public class ProcurementService {
     }
 
     /**
-     * Go live with no invoice reference — the demo control. See {@link #markLive(Long, String)}.
+     * Go live with no invoice reference — the demo control. Requires an accepted quote and
+     * subscription.
      */
     @Transactional
     public ProcurementDeal markLive(Long teamId) {
-        return markLive(teamId, null);
+        ProcurementDeal deal =
+                dealRepo.findByTeamIdForUpdate(teamId)
+                        .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
+        LocalDateTime start = LocalDateTime.now(ZoneOffset.UTC);
+        return markLive(
+                teamId,
+                null,
+                new ContractPeriod(
+                        deal.getSubscriptionId(), start, start.plusYears(1), start.plusYears(1)));
+    }
+
+    /** UTC timestamps verified against Stripe by the server-side procurement caller. */
+    public record ContractPeriod(
+            String subscriptionId,
+            LocalDateTime periodStart,
+            LocalDateTime periodEnd,
+            LocalDateTime accessUntil) {}
+
+    private boolean applyPeriod(ProcurementDeal deal, ContractPeriod period, boolean paid) {
+        if (period == null
+                || period.periodStart() == null
+                || period.periodEnd() == null
+                || period.accessUntil() == null
+                || !period.periodEnd().isAfter(period.periodStart())
+                || period.accessUntil().isAfter(period.periodEnd())
+                || !period.accessUntil().isAfter(period.periodStart())) {
+            throw new IllegalStateException("A verified service period is required");
+        }
+        if (deal.getSubscriptionId() == null
+                || !deal.getSubscriptionId().equals(period.subscriptionId())
+                || deal.getAcceptedQuoteId() == null
+                || quoteRepo
+                        .findById(deal.getAcceptedQuoteId())
+                        .filter(q -> deal.getDealId().equals(q.getDealId()))
+                        .isEmpty()) {
+            throw new IllegalStateException(
+                    "The accepted quote and subscription must match this deal");
+        }
+        if (deal.getEnterprisePeriodStart() != null
+                && period.periodStart().isBefore(deal.getEnterprisePeriodStart())) return false;
+        if (period.subscriptionId().equals(deal.getTerminatedSubscriptionId())
+                && period.periodStart().equals(deal.getEnterprisePeriodStart())) return false;
+        if (!paid && ProcurementDeal.STAGE_LIVE.equals(deal.getStage())) return false;
+        deal.setEnterprisePeriodStart(period.periodStart());
+        deal.setEnterprisePeriodEnd(period.periodEnd());
+        deal.setEnterpriseAccessUntil(paid ? period.periodEnd() : period.accessUntil());
+        deal.setTerminatedSubscriptionId(null);
+        return true;
+    }
+
+    /** Immediate subscription termination cannot affect a replacement subscription for the team. */
+    @Transactional
+    public void endAccess(Long teamId, String subscriptionId) {
+        ProcurementDeal deal = dealRepo.findByTeamIdForUpdate(teamId).orElse(null);
+        if (deal == null
+                || subscriptionId == null
+                || !subscriptionId.equals(deal.getSubscriptionId())) return;
+        LocalDateTime endedAt = LocalDateTime.now(ZoneOffset.UTC);
+        if (deal.getEnterprisePeriodStart() == null) deal.setEnterprisePeriodStart(endedAt);
+        deal.setEnterpriseAccessUntil(endedAt);
+        deal.setTerminatedSubscriptionId(subscriptionId);
+        if (deal.getLicenseRef() != null) licenses.suspendLicense(deal.getLicenseRef());
+        dealRepo.save(deal);
     }
 
     /**
@@ -649,7 +743,7 @@ public class ProcurementService {
         return licenses.issueAnnualLicense(
                 deal.getTeamId(),
                 leaderEmail(deal.getTeamId()),
-                LocalDateTime.now().plusYears(term),
+                deal.getEnterpriseAccessUntil(),
                 deal.getLicenseRef(),
                 entitlements);
     }

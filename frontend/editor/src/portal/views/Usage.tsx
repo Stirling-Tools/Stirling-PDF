@@ -221,7 +221,10 @@ export function Usage({
       return t(
         "portal.usage.error.walletUnavailable",
         "Wallet unavailable: {{status}} {{statusText}}",
-        { status: walletError.status, statusText: walletError.statusText },
+        {
+          status: walletError.status,
+          statusText: walletError.statusText,
+        },
       );
     return walletError instanceof Error
       ? walletError.message
@@ -366,7 +369,8 @@ export function Usage({
     return false;
   }, [queryClient, hasLocalInstance, refresh]);
 
-  const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
+  const enterpriseProcessor =
+    Boolean(wallet?.enterprise) || serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active || wallet?.team?.held);
   const ownsLegacySubscription = legacyBilling.subscriptions.length > 0;
   const legacyTeamSubscription = legacyBilling.subscriptions.find(
@@ -502,7 +506,9 @@ export function Usage({
       pdfsProcessed={fleetStats?.pdfsProcessed ?? null}
       licenseSection={renderLicenseSection?.(refreshAfterLicense)}
       onAddCapacity={
-        checkout && wallet?.role === "leader" ? addCapacity : undefined
+        !enterpriseProcessor && checkout && wallet?.role === "leader"
+          ? addCapacity
+          : undefined
       }
       onActivateProcessor={
         !enterpriseProcessor &&

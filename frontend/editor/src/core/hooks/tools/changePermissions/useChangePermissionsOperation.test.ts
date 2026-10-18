@@ -120,7 +120,7 @@ describe("useChangePermissionsOperation", () => {
         expect(
           formData.get(key),
           `Parameter ${key} should be set correctly`,
-        ).toBe(testParameters[key].toString());
+        ).toBe(String(testParameters[key]));
       });
     },
   );

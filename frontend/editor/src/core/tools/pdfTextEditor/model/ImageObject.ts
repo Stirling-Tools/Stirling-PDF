@@ -15,6 +15,8 @@ export class ImageObject {
   dirty: boolean;
   /** Session-only lock; see TextRun.locked. */
   locked: boolean;
+  readonly mcid: number | null;
+  readonly artifact: boolean;
 
   constructor(
     init: ImageObjectSnapshot & {
@@ -30,6 +32,8 @@ export class ImageObject {
     this.matrix = init.matrix;
     this.dirty = false;
     this.locked = init.locked ?? false;
+    this.mcid = init.mcid ?? null;
+    this.artifact = init.artifact ?? false;
   }
 
   snapshot(): ImageObjectSnapshot {
@@ -39,6 +43,8 @@ export class ImageObject {
       bounds: { ...this.bounds },
       matrix: { ...this.matrix },
       locked: this.locked || undefined,
+      mcid: this.mcid ?? undefined,
+      artifact: this.artifact || undefined,
     };
   }
 }

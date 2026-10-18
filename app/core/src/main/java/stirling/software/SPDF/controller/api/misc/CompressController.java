@@ -1088,22 +1088,22 @@ public class CompressController {
                 }
             }
 
-            // Use original if optimized file is somehow larger or currentFile is invalid
             if (!Files.exists(currentFile)) {
                 log.warn("Optimized file missing or invalid. Using the original file instead.");
-                currentFile = originalFile;
-            }
-            long finalFileSize = Files.size(currentFile);
-            if (finalFileSize >= inputFileSize) {
-                log.warn(
-                        "Optimized file is larger than the original. Using the original file"
-                                + " instead.");
                 currentFile = originalFile;
             }
 
             String outputFilename =
                     GeneralUtils.generateFilename(
                             inputFile.getOriginalFilename(), "_Optimized.pdf");
+
+            // Return the upload byte for byte: re-saving it through PDFBox can grow it, and the
+            // frontend reports "could not be compressed further" by the size being unchanged.
+            if (Files.size(currentFile) >= inputFileSize) {
+                log.info("Compression did not reduce the file size. Returning the original file.");
+                tempFiles.remove(originalTempFile);
+                return WebResponseUtils.pdfFileToWebResponse(originalTempFile, outputFilename);
+            }
 
             try {
                 try (PDDocument document = pdfDocumentFactory.load(currentFile.toFile())) {

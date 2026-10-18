@@ -70,6 +70,16 @@ const RedactAdvancedSettings = ({
         size="sm"
       />
 
+      <Checkbox
+        label={t("redact.auto.caseSensitiveLabel", "Case Sensitive Matching")}
+        checked={parameters.caseSensitive}
+        onChange={(e) =>
+          onParameterChange("caseSensitive", e.currentTarget.checked)
+        }
+        disabled={disabled}
+        size="sm"
+      />
+
       {/* Convert PDF to PDF-Image */}
       <Checkbox
         label={t(
