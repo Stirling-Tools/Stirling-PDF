@@ -152,11 +152,12 @@ pub async fn download_and_install_update(app: AppHandle) -> Result<(), String> {
 
 /// Restart the application to apply an already-installed update.
 ///
-/// This function never returns — the process is replaced by the new version.
+/// The restart is scheduled behind the same backend shutdown a quit uses, so
+/// the replacement process never starts while the old backend is still alive.
 #[tauri::command]
 pub fn restart_app(app: AppHandle) {
     add_log("🔄 Restarting app to apply update...".to_string());
-    app.restart();
+    crate::shutdown::request_restart(app);
 }
 
 /// Return the currently running application version string.
