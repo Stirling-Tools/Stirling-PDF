@@ -73,7 +73,13 @@ describe("OAuthButtons", () => {
         ?.querySelector("svg, img, span[data-icon]");
     const mycompanyMark = markOf("Mycompany");
     expect(mycompanyMark?.tagName.toLowerCase()).toBe("span");
-    expect(markOf("OIDC")?.tagName.toLowerCase()).toBe("span");
+    const oidcMark = markOf("OIDC");
+    expect(oidcMark?.tagName.toLowerCase()).toBe("span");
+    // Both fall back to the same neutral glyph, not merely to some span.
+    expect(mycompanyMark?.getAttribute("data-icon")).toBeTruthy();
+    expect(oidcMark?.getAttribute("data-icon")).toBe(
+      mycompanyMark?.getAttribute("data-icon"),
+    );
   });
 
   it('should call onProviderClick with actual provider ID (not "oidc")', async () => {
