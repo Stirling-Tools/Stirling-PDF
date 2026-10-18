@@ -76,7 +76,7 @@ const EMPTY_VIEW: QuickNavViewData = {
   fileLibrary: false,
   activeTool: null,
   notificationsOpen: false,
-  hasOpenFromComputer: false,
+  hasOpenFromComputer: true,
 };
 
 function sameReasons(

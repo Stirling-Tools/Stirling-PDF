@@ -26,6 +26,14 @@ export interface AvatarProps {
   className?: string;
 }
 
+const AVATAR_PIXELS: Record<AvatarSize, number> = {
+  xs: 20,
+  sm: 26,
+  md: 32,
+  lg: 40,
+  xl: 72,
+};
+
 function avatarInitials(name: string | undefined | null): string {
   // Defensive: a roster row whose display name never arrived used to throw
   // here and take the whole section down with it.
@@ -75,6 +83,9 @@ export function Avatar({
     <img
       src={src}
       alt={ariaLabel ?? name}
+      width={AVATAR_PIXELS[size]}
+      height={AVATAR_PIXELS[size]}
+      style={{ aspectRatio: "1 / 1" }}
       className="sui-avatar__img"
       onError={() => setSrcFailed(true)}
     />
