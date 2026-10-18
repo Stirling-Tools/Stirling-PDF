@@ -4795,7 +4795,8 @@ recent = "Recent"
 searchFiles = "Search files"
 uploadFailedBody = "Could not add the selected files."
 uploadFailedTitle = "Upload failed"
-viewAll = "View all {{count}} files"
+viewAll_one = "View the file"
+viewAll_other = "View all {{count}} files"
 
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"
