@@ -762,6 +762,11 @@
       "image": "/og_images/convert.png",
       "title": "PDF to CBZ Converter - Stirling PDF",
       "description": "Convert PDF documents into CBZ comic book archives. Free and private."
+    },
+    "/auto-redact": {
+      "image": "/og_images/redact.png",
+      "title": "Redact PDF - Stirling PDF",
+      "description": "Automatically redacts (blacks out) text matching configured patterns"
     }
   },
   "byPath": {
@@ -865,7 +870,7 @@
     "/pdf-to-presentation": "/pdf-to-presentation",
     "/pdf-to-text": "/pdf-to-text",
     "/pdf-to-html": "/pdf-to-html",
-    "/auto-redact": "redact",
+    "/auto-redact": "/auto-redact",
     "/stamp": "addStamp",
     "/view-pdf": "read",
     "/get-info-on-pdf": "getPdfInfo",
@@ -959,7 +964,6 @@
     "/pdf-organizer": "/reorganize-pages",
     "/multi-page-layout": "/page-layout",
     "/extract-page": "/extract-pages",
-    "/auto-redact": "/redact",
     "/stamp": "/add-stamp",
     "/view-pdf": "/read",
     "/get-info-on-pdf": "/get-pdf-info",

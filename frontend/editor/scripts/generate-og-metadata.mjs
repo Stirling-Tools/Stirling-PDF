@@ -488,6 +488,22 @@ for (const [id, name] of Object.entries(TOOL_SEO_TITLES)) {
       urlSeoOverrides[p] = { title: name, description: descFor(id) };
 }
 
+// /auto-redact is an alias of the redact tool but runs its own automatic
+// matching, so it gets its own crawlable copy (self-canonical, like the
+// convert aliases) instead of inheriting the manual redact description.
+const AUTO_REDACT_DESC =
+  "Automatically redacts (blacks out) text matching configured patterns";
+byTool["/auto-redact"] = {
+  image: byTool.redact?.image ?? `/og_images/${DEFAULT_IMAGE_BASENAME}.png`,
+  title: `${TOOL_SEO_TITLES.redact} - ${SITE_NAME}`,
+  description: AUTO_REDACT_DESC,
+};
+byPath["/auto-redact"] = "/auto-redact";
+urlSeoOverrides["/auto-redact"] = {
+  title: TOOL_SEO_TITLES.redact,
+  description: AUTO_REDACT_DESC,
+};
+
 // --- crawlable internal-link hub --------------------------------------------
 // One routable link per tool + each convert SEO landing page. The in-app
 // toolbar uses onClick buttons (not <a href>), and the prerendered body is
