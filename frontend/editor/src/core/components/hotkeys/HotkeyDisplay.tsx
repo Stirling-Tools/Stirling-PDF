@@ -6,6 +6,8 @@ interface HotkeyDisplayProps {
   binding: HotkeyBinding | null | undefined;
   size?: "sm" | "md";
   muted?: boolean;
+  /** One keycap for the whole combo — for dense listings that repeat it per row. */
+  joined?: boolean;
 }
 
 const baseKeyStyle: React.CSSProperties = {
@@ -27,6 +29,7 @@ export const HotkeyDisplay: React.FC<HotkeyDisplayProps> = ({
   binding,
   size = "sm",
   muted = false,
+  joined = false,
 }) => {
   const { getDisplayParts } = useHotkeys();
   const parts = getDisplayParts(binding);
@@ -50,16 +53,20 @@ export const HotkeyDisplay: React.FC<HotkeyDisplayProps> = ({
         fontWeight: muted ? 500 : 600,
       }}
     >
-      {parts.map((part, index) => (
-        <React.Fragment key={`${part}-${index}`}>
-          <kbd style={keyStyle}>{part}</kbd>
-          {index < parts.length - 1 && (
-            <span aria-hidden style={{ fontWeight: 400 }}>
-              +
-            </span>
-          )}
-        </React.Fragment>
-      ))}
+      {joined ? (
+        <kbd style={keyStyle}>{parts.join(" ")}</kbd>
+      ) : (
+        parts.map((part, index) => (
+          <React.Fragment key={`${part}-${index}`}>
+            <kbd style={keyStyle}>{part}</kbd>
+            {index < parts.length - 1 && (
+              <span aria-hidden style={{ fontWeight: 400 }}>
+                +
+              </span>
+            )}
+          </React.Fragment>
+        ))
+      )}
     </span>
   );
 };
