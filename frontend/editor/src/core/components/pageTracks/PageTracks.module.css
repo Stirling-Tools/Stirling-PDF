@@ -330,7 +330,8 @@
 }
 
 .tile:hover .tileCheckbox,
-.tile:focus-within .tileCheckbox,
+.tile:focus-visible .tileCheckbox,
+.tile:has(:focus-visible) .tileCheckbox,
 .tileSelected .tileCheckbox {
   opacity: 1;
 }
@@ -362,7 +363,8 @@
 }
 
 .tile:hover .shiftButton,
-.tile:focus-within .shiftButton,
+.tile:focus-visible .shiftButton,
+.tile:has(:focus-visible) .shiftButton,
 .shiftButton[data-force-visible="true"] {
   opacity: 1;
   pointer-events: auto;
@@ -444,7 +446,10 @@
   transform-origin: center bottom;
 }
 
-/* CSS-hover driven visibility, matching the file cards in Active Files. */
+/* CSS-hover driven visibility, matching the file cards in Active Files. The
+   rows must not stay pinned after a pointer click: mouse clicks set focus but
+   not :focus-visible, so a clicked action hides again once the pointer leaves,
+   while keyboard focus keeps the row (and its buttons) reachable. */
 .tile [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
   opacity: 0;
   pointer-events: none;
@@ -452,7 +457,9 @@
 
 .tile:hover
   [data-hover-action-menu-mode="cssHover"][data-force-visible="false"],
-.tile:focus-within
+.tile:focus-visible
+  [data-hover-action-menu-mode="cssHover"][data-force-visible="false"],
+.tile:has(:focus-visible)
   [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
   opacity: 1;
   pointer-events: auto;
