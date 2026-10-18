@@ -167,6 +167,75 @@ describe("layerUtils", () => {
       ]);
     });
 
+    it("resolves indirect /ON, /OFF and /Order entries", async () => {
+      const doc = await PDFDocument.create();
+      doc.addPage([400, 400]);
+      const hiddenRef = doc.context.register(
+        doc.context.obj({ Type: "OCG", Name: PDFString.of("Indirect Off") }),
+      );
+      const visibleRef = doc.context.register(
+        doc.context.obj({ Type: "OCG", Name: PDFString.of("Indirect On") }),
+      );
+      const offRef = doc.context.register(doc.context.obj([hiddenRef]));
+      const orderRef = doc.context.register(
+        doc.context.obj([hiddenRef, visibleRef]),
+      );
+      const dDict = doc.context.register(
+        doc.context.obj({
+          BaseState: PDFName.of("ON"),
+          OFF: offRef,
+          Order: orderRef,
+        }),
+      );
+      const ocProperties = doc.context.obj({
+        OCGs: [hiddenRef, visibleRef],
+        D: dDict,
+      });
+      doc.catalog.set(
+        PDFName.of("OCProperties"),
+        doc.context.register(ocProperties),
+      );
+
+      const layers = await readPdfLayers(toBlob(await doc.save()));
+
+      expect(layers.map((l) => l.name)).toEqual(["Indirect Off", "Indirect On"]);
+      expect(layers[0].visible).toBe(false);
+      expect(layers[1].visible).toBe(true);
+    });
+
+    it("keeps hierarchy for an indirect named group", async () => {
+      const doc = await PDFDocument.create();
+      doc.addPage([400, 400]);
+      const leafRef = doc.context.register(
+        doc.context.obj({ Type: "OCG", Name: PDFString.of("Leaf") }),
+      );
+      const groupRef = doc.context.register(
+        doc.context.obj({
+          Name: PDFString.of("Group"),
+          Order: [leafRef],
+        }),
+      );
+      const ocProperties = doc.context.obj({
+        OCGs: [leafRef],
+        D: doc.context.register(
+          doc.context.obj({
+            BaseState: PDFName.of("ON"),
+            Order: [groupRef],
+          }),
+        ),
+      });
+      doc.catalog.set(
+        PDFName.of("OCProperties"),
+        doc.context.register(ocProperties),
+      );
+
+      const layers = await readPdfLayers(toBlob(await doc.save()));
+
+      expect(layers).toHaveLength(1);
+      expect(layers[0].name).toBe("Group");
+      expect(layers[0].children?.map((child) => child.name)).toEqual(["Leaf"]);
+    });
+
     it("reads names containing escaped parens", async () => {
       const doc = await PDFDocument.create();
       doc.addPage([400, 400]);

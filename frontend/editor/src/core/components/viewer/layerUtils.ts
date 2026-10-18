@@ -63,14 +63,30 @@ export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
     const result: unknown[] = [];
     for (let i = 0; i < value.size(); i++) {
       const entry = value.get(i);
+      const resolved = doc.context.lookup(entry);
       if (entry instanceof PDFRef) {
-        result.push(entry.toString());
-      } else if (entry instanceof PDFArray) {
-        result.push(normalizeOrder(entry, depth + 1));
-      } else if (entry instanceof PDFDict) {
+        if (resolved instanceof PDFArray) {
+          result.push(normalizeOrder(resolved, depth + 1));
+        } else if (
+          resolved instanceof PDFDict &&
+          resolved.has(PDFName.of("Order"))
+        ) {
+          result.push({
+            name: textOf(resolved.lookup(PDFName.of("Name"))),
+            order: normalizeOrder(
+              resolved.lookup(PDFName.of("Order")),
+              depth + 1,
+            ),
+          });
+        } else {
+          result.push(entry.toString());
+        }
+      } else if (resolved instanceof PDFArray) {
+        result.push(normalizeOrder(resolved, depth + 1));
+      } else if (resolved instanceof PDFDict) {
         result.push({
-          name: textOf(entry.get(PDFName.of("Name"))),
-          order: normalizeOrder(entry.get(PDFName.of("Order")), depth + 1),
+          name: textOf(resolved.lookup(PDFName.of("Name"))),
+          order: normalizeOrder(resolved.lookup(PDFName.of("Order")), depth + 1),
         });
       }
     }
@@ -99,7 +115,7 @@ export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
     if (id in groups) continue;
     const dict = doc.context.lookup(ref);
     if (!(dict instanceof PDFDict)) continue;
-    groups[id] = { name: textOf(dict.get(PDFName.of("Name"))) };
+    groups[id] = { name: textOf(dict.lookup(PDFName.of("Name"))) };
     ids.push(id);
   }
   if (ids.length === 0) return [];
@@ -109,9 +125,10 @@ export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
   );
   const defaultConfig =
     defaultConfigRaw instanceof PDFDict ? defaultConfigRaw : null;
-  const onIds = refIdSet(defaultConfig?.get(PDFName.of("ON")));
-  const offIds = refIdSet(defaultConfig?.get(PDFName.of("OFF")));
-  const baseState = textOf(defaultConfig?.get(PDFName.of("BaseState")));
+  // `lookup` rather than `get`: a PDF may store these entries as indirect refs.
+  const onIds = refIdSet(defaultConfig?.lookup(PDFName.of("ON")));
+  const offIds = refIdSet(defaultConfig?.lookup(PDFName.of("OFF")));
+  const baseState = textOf(defaultConfig?.lookup(PDFName.of("BaseState")));
   for (const id of ids) {
     // pdf.js starts from /BaseState and then applies /ON, then /OFF, so an id
     // listed in both /ON and /OFF stays hidden.
@@ -122,7 +139,7 @@ export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
         : baseState !== "OFF";
   }
 
-  const order = normalizeOrder(defaultConfig?.get(PDFName.of("Order")));
+  const order = normalizeOrder(defaultConfig?.lookup(PDFName.of("Order")));
   if (order.length > 0) {
     return buildLayerTree(order, groups);
   }
