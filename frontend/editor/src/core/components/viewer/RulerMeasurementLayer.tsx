@@ -605,92 +605,19 @@ function MeasurementLine({
             filter="none"
           />
 
-          {false && isSelected && measureScale ? (
-            <>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y - Math.round(17 * zoomScale)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill={lineColor}
-                fontSize={12 * zoomScale}
-                fontFamily={mono}
-                fontWeight={600}
-                style={{ userSelect: "none" }}
-              >
-                {hoverLine1}
-              </text>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#546e7a"
-                fontSize={11 * zoomScale}
-                fontFamily={mono}
-                fontWeight={500}
-                style={{ userSelect: "none" }}
-              >
-                {hoverLine2}
-              </text>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y + Math.round(17 * zoomScale)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#5c6bc0"
-                fontSize={10 * zoomScale}
-                fontFamily={mono}
-                fontWeight={500}
-                style={{ userSelect: "none" }}
-              >
-                {contextLabel}
-              </text>
-            </>
-          ) : false && isSelected ? (
-            <>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y - Math.round(6 * zoomScale)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill={lineColor}
-                fontSize={12 * zoomScale}
-                fontFamily={mono}
-                fontWeight={600}
-                style={{ userSelect: "none" }}
-              >
-                {hoverLine1}
-              </text>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y + Math.round(13 * zoomScale)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#5c6bc0"
-                fontSize={11 * zoomScale}
-                fontFamily={mono}
-                fontWeight={500}
-                style={{ userSelect: "none" }}
-              >
-                {contextLabel}
-              </text>
-            </>
-          ) : (
-            <text
-              x={labelCenter.x}
-              y={labelCenter.y + 1}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill={lineColor}
-              fontSize={(isCompactIdle ? 10 : 12) * zoomScale}
-              fontFamily={mono}
-              fontWeight={600}
-              style={{ userSelect: "none" }}
-            >
-              {distLabel}
-            </text>
-          )}
+          <text
+            x={labelCenter.x}
+            y={labelCenter.y + 1}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill={lineColor}
+            fontSize={(isCompactIdle ? 10 : 12) * zoomScale}
+            fontFamily={mono}
+            fontWeight={600}
+            style={{ userSelect: "none" }}
+          >
+            {distLabel}
+          </text>
         </g>
       )}
 

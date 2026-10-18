@@ -381,7 +381,7 @@ export const RulerOverlay = React.forwardRef<
     firstPtRef.current = firstPt;
   }, [firstPt]);
 
-  // Nullstill påbegynt måling ved bytte av verktøy.
+  // Reset unfinished measurement when switching tools.
   useEffect(() => {
     firstPtRef.current = null;
     pendingEndRef.current = null;

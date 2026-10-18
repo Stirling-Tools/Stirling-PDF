@@ -1,3 +1,4 @@
+import { exportMeasurementExcel } from "./measurementExcelExport";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
@@ -45,13 +46,13 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
     try {
       const saved = JSON.parse(localStorage.getItem("stirling-measure-sizes") || "{}");
       return {
-        vertical: saved.vertical ?? {width:320,height:650},
-        horizontal: saved.horizontal ?? {width:850,height:340}
+        vertical: saved.vertical ?? {width:300,height:540},
+        horizontal: saved.horizontal ?? {width:760,height:300}
       };
     } catch {
       return {
-        vertical:{width:320,height:650},
-        horizontal:{width:850,height:340}
+        vertical:{width:300,height:540},
+        horizontal:{width:760,height:300}
       };
     }
   });
@@ -188,258 +189,11 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
       label: `${groupName} ${groupCounts[groupId]}` };
     });
   }, [measurements, scale, groups, t]);
-  const exportExcel = async () => {
-    if (!scale || !Number.isFinite(scale.factor) || scale.factor <= 0) {
-      window.alert(t("measurementWorkbench.scaleRequired"));
-      return;
-    }
-    if (!rows.length) { window.alert(t("measurementWorkbench.noExport")); return; }
-    try {
-      const ExcelJS = (await import("exceljs")).default;
-      const workbook = new ExcelJS.Workbook();
-      workbook.creator = t("measurementWorkbench.creator");
-      const selected = exportSelection === "all" ? groups : groups.filter(g => g.id === exportSelection);
-      const used = new Set<string>();
-      const reportDate = new Date().toLocaleDateString(i18n.language || "en-US");
+  const exportExcel = () => exportMeasurementExcel({
+    scale, rows, groups, exportSelection, unit, t,
+    language: i18n.language,
+  });
 
-      const blend = (hex: string, amount: number) => {
-        const rgb = [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16));
-        return rgb.map(v => Math.round(v + (255 - v) * amount)
-          .toString(16).padStart(2, "0")).join("").toUpperCase();
-      };
-
-      const navy = "172638";
-      const muted = "64748B";
-      const lengthFormat = `#,##0.000 "${unit}"`;
-      const areaFormat = `#,##0.000 "${unit}²"`;
-
-      for (const group of selected) {
-        const own = rows.filter(r => r.groupId === group.id);
-        if (!own.length) continue;
-
-        let name = group.name.replace(/[\\/*?:\\[\\]]/g, " ").trim().slice(0, 31) || t("measurementWorkbench.group");
-        const base = name;
-        let n = 2;
-        while (used.has(name.toLowerCase())) {
-          name = `${base.slice(0, 27)} ${n++}`;
-        }
-        used.add(name.toLowerCase());
-
-        const sheet = workbook.addWorksheet(name, {
-          pageSetup: {
-            paperSize: 9,
-            orientation: "landscape",
-            fitToPage: true,
-            fitToWidth: 1,
-            fitToHeight: 0,
-          },
-        });
-
-        sheet.columns = [
-          { key: "label", width: 31 },
-          { key: "length", width: 20 },
-          { key: "area", width: 20 },
-          { key: "perimeter", width: 20 },
-          { key: "scale", width: 19 },
-          { key: "group", width: 25 },
-        ];
-
-        const color = /^#[0-9a-fA-F]{6}$/.test(group.color)
-          ? group.color.slice(1).toUpperCase() : "299BFF";
-        const pale = blend(color, 0.91);
-        const paleAlternate = blend(color, 0.96);
-
-        const fill = (argb: string) => ({
-          type: "pattern" as const,
-          pattern: "solid" as const,
-          fgColor: { argb: `FF${argb}` },
-        });
-
-        // Rapporttittel
-        sheet.mergeCells("A1:F2");
-        const title = sheet.getCell("A1");
-        title.value = t("measurementWorkbench.reportTitle");
-        title.font = {
-          name: "Aptos Display", size: 19, bold: true,
-          color: { argb: "FFFFFFFF" },
-        };
-        title.fill = fill(navy);
-        title.alignment = { vertical: "middle", indent: 1 };
-        sheet.getRow(1).height = 23;
-        sheet.getRow(2).height = 21;
-
-        sheet.mergeCells("A3:F3");
-        const subtitle = sheet.getCell("A3");
-        subtitle.value = `${group.name}  |  Stirling PDF`;
-        subtitle.font = {
-          name: "Aptos", size: 12, bold: true,
-          color: { argb: `FF${navy}` },
-        };
-        subtitle.fill = fill(pale);
-        subtitle.alignment = { vertical: "middle", indent: 1 };
-        sheet.getRow(3).height = 29;
-
-        sheet.mergeCells("A5:B5");
-        sheet.getCell("A5").value = `${t("measurementWorkbench.date")}: ${reportDate}`;
-        sheet.mergeCells("C5:D5");
-        sheet.getCell("C5").value = `${t("measurementWorkbench.scale")}: ${scale?.ratio ? `1:${scale.ratio}` : t("measurementWorkbench.uncalibrated")}`;
-        sheet.mergeCells("E5:F5");
-        sheet.getCell("E5").value = `${t("measurementWorkbench.count")}: ${own.length}`;
-
-        for (const address of ["A5", "C5", "E5"]) {
-          const cell = sheet.getCell(address);
-          cell.font = {
-            name: "Aptos", size: 10,
-            color: { argb: `FF${muted}` },
-          };
-          cell.alignment = { vertical: "middle" };
-        }
-        sheet.getRow(5).height = 25;
-
-        const headerRow = 7;
-        const headings = [
-          t("measurementWorkbench.measurementHeading"),
-          `${t("measurementWorkbench.lengthHeading")} (${unit})`,
-          `${t("measurementWorkbench.areaHeading")} (${unit}²)`,
-          `${t("measurementWorkbench.perimeterHeading")} (${unit})`,
-          t("measurementWorkbench.scaleHeading"),
-          t("measurementWorkbench.groupHeading"),
-        ];
-
-        const header = sheet.getRow(headerRow);
-        header.values = headings;
-        header.height = 31;
-
-        for (let col = 1; col <= 6; col++) {
-          const cell = header.getCell(col);
-          cell.fill = fill(navy);
-          cell.font = {
-            name: "Aptos", size: 10, bold: true,
-            color: { argb: "FFFFFFFF" },
-          };
-          cell.alignment = {
-            vertical: "middle",
-            horizontal: col === 1 ? "left" : "center",
-            indent: col === 1 ? 1 : 0,
-          };
-          cell.border = {
-            bottom: { style: "medium", color: { argb: `FF${color}` } },
-          };
-        }
-
-        for (const item of own) {
-          const added = sheet.addRow({
-            label: item.label,
-            length: item.area ? null : convertLength(item.meters, "m", unit),
-            area: item.area ? convertArea(item.squareMeters, "m", unit) : null,
-            perimeter: item.area ? convertLength(item.meters, "m", unit) : null,
-            scale: scale?.ratio ? `1:${scale.ratio}` : t("measurementWorkbench.uncalibrated"),
-            group: group.name,
-          });
-
-          const rowIndex = added.number;
-          added.height = 27;
-          const background = (rowIndex - headerRow) % 2 === 0
-            ? paleAlternate : "FFFFFF";
-
-          for (let col = 1; col <= 6; col++) {
-            const cell = added.getCell(col);
-            cell.fill = fill(background);
-            cell.font = {
-              name: "Aptos", size: 10,
-              color: { argb: `FF${navy}` },
-              bold: col === 1,
-            };
-            cell.alignment = {
-              vertical: "middle",
-              horizontal: col >= 2 && col <= 4 ? "right" : "left",
-              indent: col === 1 || col === 6 ? 1 : 0,
-            };
-            cell.border = {
-              bottom: {
-                style: "hair",
-                color: { argb: "FFE2E8F0" },
-              },
-            };
-          }
-
-          added.getCell(2).numFmt = lengthFormat;
-          added.getCell(3).numFmt = areaFormat;
-          added.getCell(4).numFmt = lengthFormat;
-        }
-
-        const last = headerRow + own.length;
-        const total = sheet.addRow({ label: t("measurementWorkbench.grandTotal") });
-        total.height = 36;
-
-        for (let col = 1; col <= 6; col++) {
-          const cell = total.getCell(col);
-          cell.fill = fill(pale);
-          cell.font = {
-            name: "Aptos", size: 11, bold: true,
-            color: { argb: `FF${navy}` },
-          };
-          cell.alignment = {
-            vertical: "middle",
-            horizontal: col >= 2 && col <= 4 ? "right" : "left",
-            indent: col === 1 ? 1 : 0,
-          };
-          cell.border = {
-            top: { style: "medium", color: { argb: `FF${color}` } },
-          };
-        }
-
-        for (const col of [2, 3, 4]) {
-          const letter = String.fromCharCode(64 + col);
-          const cell = total.getCell(col);
-          cell.value = {
-            formula: `SUM(${letter}${headerRow + 1}:${letter}${last})`,
-          };
-          cell.numFmt = col === 3 ? areaFormat : lengthFormat;
-        }
-
-        sheet.autoFilter = {
-          from: { row: headerRow, column: 1 },
-          to: { row: last, column: 6 },
-        };
-        sheet.views = [{
-          state: "frozen",
-          ySplit: headerRow,
-          showGridLines: false,
-        }];
-
-        sheet.pageSetup.printTitlesRow = "1:7";
-        sheet.pageSetup.printArea = `A1:F${total.number}`;
-        sheet.headerFooter.oddFooter =
-          `&LStirling PDF - ${t("measurementWorkbench.reportTitle")}&R${t("measurementWorkbench.page")} &P ${t("measurementWorkbench.of")} &N`;
-      }
-      if (!workbook.worksheets.length) {
-        window.alert(t("measurementWorkbench.noSelected"));
-        return;
-      }
-      const data = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([data as BlobPart],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-      const filename = `malinger-${new Date().toISOString().slice(0,10)}.xlsx`;
-      if ("__TAURI_INTERNALS__" in window) {
-        const { showSaveDialog, saveToLocalPath } = await import(
-          "../../../desktop/services/localFileSaveService"
-        );
-        const path = await showSaveDialog(filename);
-        if (!path) return;
-        const result = await saveToLocalPath(blob, path);
-        if (!result.success) throw new Error(result.error || t("measurementWorkbench.saveFailed"));
-      } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
-      }
-    } catch(error) { console.error("Excel-eksport feilet",error); window.alert(t("measurementWorkbench.exportFailed")); }
-  };
   const totalLength = rows.filter(r=>!r.area).reduce((sum,r)=>sum+r.meters,0);
   const totalArea = rows.filter(r=>r.area).reduce((sum,r)=>sum+r.squareMeters,0);
 
@@ -452,7 +206,7 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
       top: panelPosition?.y ?? 70,
       width: panelSizes[orientation].width,
       height: panelSizes[orientation].height,
-      minWidth: 300,
+      minWidth: 280,
       minHeight: 180,
       maxWidth: "95vw",
       maxHeight: "85vh",
@@ -464,8 +218,8 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
       opacity: 1,
       color: "var(--c-text)",
       border: "1px solid var(--c-border)",
-      borderRadius: 12,
-      padding: 16,
+      borderRadius: 8,
+      padding: 10,
       zIndex: 10000,
       pointerEvents: "auto",
       boxShadow: "0 6px 24px #0006",
@@ -474,9 +228,9 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 14,
+        marginBottom: 8,
       }}>
-        <strong onMouseDown={e=>startDrag(e,"panel",panelPosition?.x ?? (window.innerWidth-336),panelPosition?.y ?? 70)} style={{cursor:"move",userSelect:"none",flex:1,padding:"8px 0"}} title={t("measurementWorkbench.drag")}>⠿ {t("measurementWorkbench.measurements")}</strong>
+        <strong onMouseDown={e=>startDrag(e,"panel",panelPosition?.x ?? (window.innerWidth-336),panelPosition?.y ?? 70)} style={{cursor:"move",userSelect:"none",flex:1,padding:"4px 0"}} title={t("measurementWorkbench.drag")}>⠿ {t("measurementWorkbench.measurements")}</strong>
         <button type="button"
           title={orientation==="vertical"?t("measurementWorkbench.horizontal"):t("measurementWorkbench.vertical")}
           onClick={()=>setOrientation(v=>v==="vertical"?"horizontal":"vertical")}
@@ -484,11 +238,11 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
             background:"var(--c-surface-raised)",
             color:"var(--c-text)",
             border:"1px solid var(--c-border)",
-            borderRadius:6,padding:"6px 10px",cursor:"pointer"
+            borderRadius:5,padding:"4px 7px",cursor:"pointer"
           }}>
           {orientation==="vertical"?"↔":"↕"}
         </button>
-        <button type="button" onClick={()=>setResultsOpen(v=>!v)} style={{background:"var(--c-surface-raised)",color:"var(--c-text)",border:"1px solid var(--c-border)",borderRadius:5,padding:6,cursor:"pointer"}}>{t("measurementWorkbench.results")}</button>
+        <button type="button" onClick={()=>setResultsOpen(v=>!v)} style={{background:"var(--c-surface-raised)",color:"var(--c-text)",border:"1px solid var(--c-border)",borderRadius:5,padding:4,cursor:"pointer"}}>{t("measurementWorkbench.results")}</button>
         <button type="button" onClick={onClose} title={t("measurementWorkbench.closePanel")} style={{background:"transparent",color:"var(--c-text)",border:0,fontSize:20,cursor:"pointer"}}>×</button>
         <select
           aria-label={t("measurementWorkbench.displayUnit")}
@@ -499,7 +253,7 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
             color: "var(--c-text)",
             border: "1px solid var(--c-border)",
             borderRadius: 6,
-            padding: 5,
+            padding: 3,
           }}
         >
           {units.map((value) => (
@@ -511,22 +265,22 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
         display: orientation==="horizontal" ? "grid" : "block",
         gridTemplateColumns: orientation==="horizontal"
           ? "repeat(3, minmax(0, 1fr))" : undefined,
-        gap: orientation==="horizontal" ? 14 : undefined,
+        gap: orientation==="horizontal" ? 9 : undefined,
         alignItems:"start"
       }}>
-      <div style={{borderBottom:"1px solid var(--c-border)",paddingBottom:12,marginBottom:16}}>
-        <div style={{fontSize:12,fontWeight:600,color:"var(--c-text-muted)",marginBottom:7}}>{t("measurementWorkbench.excelExport")}</div>
-        <select aria-label={t("measurementWorkbench.selectGroups")} value={exportSelection} onChange={e=>setExportSelection(e.target.value)} style={{width:"100%",padding:7,background:"var(--c-surface-raised)",color:"var(--c-text)",border:"1px solid var(--c-border)",marginBottom:6}}>
+      <div style={{borderBottom:"1px solid var(--c-border)",paddingBottom:8,marginBottom:10}}>
+        <div style={{fontSize:12,fontWeight:600,color:"var(--c-text-muted)",marginBottom:5}}>{t("measurementWorkbench.excelExport")}</div>
+        <select aria-label={t("measurementWorkbench.selectGroups")} value={exportSelection} onChange={e=>setExportSelection(e.target.value)} style={{width:"100%",padding:5,background:"var(--c-surface-raised)",color:"var(--c-text)",border:"1px solid var(--c-border)",marginBottom:4}}>
           <option value="all">{t("measurementWorkbench.allGroups")}</option>
           {groups.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
         </select>
-        <button type="button" onClick={exportExcel} style={{width:"100%",padding:8,background:"var(--c-surface-raised)",border:"1px solid var(--c-border)",borderRadius:7,color:"var(--c-text)",cursor:"pointer",fontSize:12,fontWeight:600}}>{t("measurementWorkbench.download")}</button>
+        <button type="button" onClick={exportExcel} style={{width:"100%",padding:5,background:"var(--c-surface-raised)",border:"1px solid var(--c-border)",borderRadius:7,color:"var(--c-text)",cursor:"pointer",fontSize:12,fontWeight:600}}>{t("measurementWorkbench.download")}</button>
       </div>
 
       <div style={{
         display: "flex",
         gap: 5,
-        marginBottom: 12,
+        marginBottom: 8,
       }}>
         {([
           ["length", t("measurementWorkbench.length")],
@@ -539,7 +293,7 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
             onClick={() => onToolChange(value)}
             style={{
               flex: 1,
-              padding: "9px 3px",
+              padding: "5px 3px",
               borderRadius: 6,
               border: tool === value
                 ? "1px solid #42a5f5"
@@ -561,8 +315,8 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
         disabled={isCalibrating}
         style={{
           width: "100%",
-          padding: "9px 12px",
-          marginBottom: 12,
+          padding: "6px 8px",
+          marginBottom: 8,
           borderRadius: 6,
           border: "1px solid var(--c-border)",
           background: isCalibrating ? "var(--c-surface-raised)" : "var(--c-surface-raised)",
@@ -595,7 +349,7 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
           }}
           style={{
             width: "100%",
-            padding: 8,
+            padding: 5,
             borderRadius: 6,
             background: "var(--c-surface-raised)",
             color: "var(--c-text)",
@@ -623,7 +377,7 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
         </div>
       )}
 
-      <div style={{borderTop:"1px solid var(--c-border)", paddingTop:10, marginBottom:10}}>
+      <div style={{borderTop:"1px solid var(--c-border)", paddingTop:7, marginBottom:7}}>
         <div style={{fontWeight:600,marginBottom:6}}>{t("measurementWorkbench.activeGroup")}</div>
         <select value={activeGroup} onChange={e=>onActiveGroupChange(e.target.value)} style={{width:"100%",background:"var(--c-surface-raised)",opacity:1,color:"var(--c-text)",padding:7}}>
           {groups.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
@@ -636,7 +390,7 @@ export function MeasurementPanel({ measurements, scale, onCalibrate, isCalibrati
           const colors = ["#299bff","#ff9e44","#35d29a","#c98cff","#ff6584","#e6cb42"];
           onGroupsChange([...groups,{id,name:name.trim(),color:colors[groups.length%colors.length],lineWidth:2}]);
           onActiveGroupChange(id);
-        }} style={{marginTop:6,padding:6,background:"var(--c-surface-raised)",opacity:1,color:"var(--c-text)",border:"1px solid var(--c-border)",borderRadius:5}}>{t("measurementWorkbench.newGroup")}</button>
+        }} style={{marginTop:4,padding:4,background:"var(--c-surface-raised)",opacity:1,color:"var(--c-text)",border:"1px solid var(--c-border)",borderRadius:5}}>{t("measurementWorkbench.newGroup")}</button>
       </div>
       {groups.map(group => {
         const own = rows.filter(r=>r.groupId===group.id);
