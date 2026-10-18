@@ -18,7 +18,7 @@ RUN apt-get update \
     && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
     && dpkg -i /tmp/task.deb \
     && rm /tmp/task.deb \
-    && npx --yes playwright@1.55.0 install --with-deps chromium \
+    && npx --yes playwright install --with-deps chromium \
     && rm -rf /var/lib/apt/lists/*
 
 # Bake the detection model in so the tool works out of the box (~26MB pull, 35MB on disk).

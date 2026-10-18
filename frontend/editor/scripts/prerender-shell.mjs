@@ -1,7 +1,8 @@
 /** Puts the landing screen's first paint into index.html. */
 import { createServer } from "node:http";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import { extname, join, normalize, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -385,6 +386,75 @@ async function captureShellPage({
   }
 }
 
+function resolveChromiumExecutablePath(chromium) {
+  const customPath = process.env.PRERENDER_CHROMIUM_PATH;
+  if (customPath) {
+    if (existsSync(customPath)) return customPath;
+    throw new Error(
+      `Chromium binary not found at PRERENDER_CHROMIUM_PATH=${customPath}`,
+    );
+  }
+
+  try {
+    const defaultPath = chromium.executablePath();
+    if (defaultPath && existsSync(defaultPath)) return defaultPath;
+  } catch {
+    // Falls through to scanning cached browser installations
+  }
+
+  const searchDirs = [
+    process.env.PLAYWRIGHT_BROWSERS_PATH,
+    join(homedir(), ".cache", "ms-playwright"),
+    "/root/.cache/ms-playwright",
+  ].filter(Boolean);
+
+  for (const cacheDir of searchDirs) {
+    if (!existsSync(cacheDir)) continue;
+    try {
+      const entries = readdirSync(cacheDir);
+      const chromiumDirs = entries
+        .filter((d) => d.startsWith("chromium-"))
+        .sort()
+        .reverse();
+
+      for (const cDir of chromiumDirs) {
+        const fullDir = join(cacheDir, cDir);
+        const candidates = [
+          join(fullDir, "chrome-linux", "chrome"),
+          join(fullDir, "chrome-linux64", "chrome"),
+          join(fullDir, "chrome-linux-arm64", "chrome"),
+          join(
+            fullDir,
+            "chrome-mac",
+            "Chromium.app",
+            "Contents",
+            "MacOS",
+            "Chromium",
+          ),
+          join(
+            fullDir,
+            "chrome-mac-arm64",
+            "Chromium.app",
+            "Contents",
+            "MacOS",
+            "Chromium",
+          ),
+          join(fullDir, "chrome-win", "chrome.exe"),
+        ];
+        for (const candidate of candidates) {
+          if (existsSync(candidate)) return candidate;
+        }
+      }
+    } catch {
+      // Continue searching next directory
+    }
+  }
+
+  throw new Error(
+    "Playwright Chromium browser is not installed in standard cache locations",
+  );
+}
+
 export async function captureShell({
   distDir,
   editorDir,
@@ -393,28 +463,9 @@ export async function captureShell({
   server: providedServer = null,
 }) {
   const { chromium } = await import("@playwright/test");
-  const execPath = process.env.PRERENDER_CHROMIUM_PATH || undefined;
-  if (!providedBrowser && execPath) {
-    if (!existsSync(execPath)) {
-      throw new Error(
-        `Chromium binary not found at PRERENDER_CHROMIUM_PATH=${execPath}`,
-      );
-    }
-  } else if (!providedBrowser) {
-    try {
-      const defaultPath = chromium.executablePath();
-      if (!defaultPath || !existsSync(defaultPath)) {
-        throw new Error(
-          `Playwright Chromium browser is not installed (${defaultPath || "unknown"})`,
-        );
-      }
-    } catch (e) {
-      throw new Error(
-        `Playwright Chromium browser is not available: ${e instanceof Error ? e.message : String(e)}`,
-        { cause: e },
-      );
-    }
-  }
+  const execPath = providedBrowser
+    ? undefined
+    : resolveChromiumExecutablePath(chromium);
 
   const { mockAppApis } = await loadStubHelper(editorDir);
   let server = providedServer;
@@ -741,28 +792,7 @@ export async function prerenderShell({
   editorDir = resolve(distDir, ".."),
 }) {
   const { chromium } = await import("@playwright/test");
-  const execPath = process.env.PRERENDER_CHROMIUM_PATH || undefined;
-  if (execPath) {
-    if (!existsSync(execPath)) {
-      throw new Error(
-        `Chromium binary not found at PRERENDER_CHROMIUM_PATH=${execPath}`,
-      );
-    }
-  } else {
-    try {
-      const defaultPath = chromium.executablePath();
-      if (!defaultPath || !existsSync(defaultPath)) {
-        throw new Error(
-          `Playwright Chromium browser is not installed (${defaultPath || "unknown"})`,
-        );
-      }
-    } catch (e) {
-      throw new Error(
-        `Playwright Chromium browser is not available: ${e instanceof Error ? e.message : String(e)}`,
-        { cause: e },
-      );
-    }
-  }
+  const execPath = resolveChromiumExecutablePath(chromium);
 
   const { mockAppApis } = await loadStubHelper(editorDir);
   let server = null;
