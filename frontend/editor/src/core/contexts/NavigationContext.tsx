@@ -211,10 +211,9 @@ export const NavigationProvider: React.FC<{
         workbench !== currentState.workbench &&
         hasUnsavedChanges);
 
-    if (currentState.workbench === workbench && !leavingWorkbenchWithChanges) {
-      return;
-    }
-
+    // A same-value call still dispatches: two calls in one event must both land
+    // (stateRef only mirrors committed state) and the reducer already returns
+    // the same state for a no-op.
     if (leavingWorkbenchWithChanges) {
       // Update state to reflect unsaved changes so modal knows
       if (!currentState.hasUnsavedChanges) {
@@ -285,14 +284,7 @@ export const NavigationProvider: React.FC<{
           workbench !== currentState.workbench &&
           hasUnsavedChanges);
 
-      if (
-        currentState.workbench === workbench &&
-        currentState.selectedTool === toolId &&
-        !leavingWorkbenchWithChanges
-      ) {
-        return;
-      }
-
+      // No same-value early return here for the same reason as setWorkbench.
       if (leavingWorkbenchWithChanges) {
         const performWorkbenchChange = () => {
           dispatch({
