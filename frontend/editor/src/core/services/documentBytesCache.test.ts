@@ -128,6 +128,27 @@ describe("documentBytesCache", () => {
     expect(spy).toHaveBeenCalledTimes(2);
   });
 
+  it("retries the fingerprint read after a failed one", async () => {
+    const file = makeFile("flaky.pdf", [1, 2, 3]);
+    let sliceCalls = 0;
+    vi.spyOn(file, "slice").mockImplementation(() => {
+      sliceCalls += 1;
+      const failing = sliceCalls === 1;
+      return {
+        size: 3,
+        arrayBuffer: async () => {
+          if (failing) throw new Error("NotReadableError");
+          return bytesOf([1, 2, 3]);
+        },
+      } as unknown as Blob;
+    });
+    vi.spyOn(file, "arrayBuffer").mockResolvedValue(bytesOf([1, 2, 3]));
+
+    await expect(getDocumentBytes(file)).rejects.toThrow("NotReadableError");
+    const buffer = await getDocumentBytes(file);
+    expect(Array.from(new Uint8Array(buffer))).toEqual([1, 2, 3]);
+  });
+
   it("does not share bytes across identical metadata with different content", async () => {
     const bytesA = new Uint8Array([1, 2, 3, 4]);
     const bytesB = new Uint8Array([9, 8, 7, 6]);

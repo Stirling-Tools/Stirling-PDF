@@ -70,6 +70,12 @@ export function documentFingerprint(blob: Blob): Promise<string> {
     return hash.toString(16).padStart(8, "0");
   })();
   fingerprints.set(blob, promise);
+  // A failed read must not leave a rejection cached: every later call would
+  // replay it instead of retrying. Only drop the entry if it still is this
+  // promise.
+  promise.catch(() => {
+    if (fingerprints.get(blob) === promise) fingerprints.delete(blob);
+  });
   return promise;
 }
 
