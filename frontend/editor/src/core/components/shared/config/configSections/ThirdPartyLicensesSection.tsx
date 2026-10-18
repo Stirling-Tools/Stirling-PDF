@@ -22,9 +22,6 @@ interface LicensesSectionBodyProps {
   dependencies: Dependency[];
 }
 
-const getModuleUrl = (dependency: Dependency) =>
-  dependency.moduleUrl || dependency.moduleLicenseUrl;
-
 function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
   const { t } = useTranslation();
   const sortedDependencies = useMemo(
@@ -67,14 +64,13 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
         key: "links",
         get: (d) => {
           const linksList: { label: string; href: string }[] = [];
-          const moduleUrl = getModuleUrl(d);
-          if (moduleUrl) {
+          if (d.moduleUrl) {
             linksList.push({
               label: t("settings.licenses.project", "Project"),
-              href: moduleUrl,
+              href: d.moduleUrl,
             });
           }
-          if (d.moduleLicenseUrl && d.moduleLicenseUrl !== moduleUrl) {
+          if (d.moduleLicenseUrl && d.moduleLicenseUrl !== d.moduleUrl) {
             linksList.push({
               label: t("settings.licenses.license", "License"),
               href: d.moduleLicenseUrl,
