@@ -111,3 +111,17 @@ it("navigates to a different label", () => {
   fireEvent.blur(input);
   expect(viewer.scrollToPage).toHaveBeenCalledWith(3);
 });
+
+it("rejects a fractional page index", () => {
+  render(
+    <MantineProvider>
+      <PdfViewerToolbar pageLabels={["i", "ii", "iii"]} />
+    </MantineProvider>,
+  );
+
+  const input = screen.getByRole("textbox");
+  fireEvent.change(input, { target: { value: "1.5" } });
+  fireEvent.blur(input);
+  expect(viewer.scrollToPage).not.toHaveBeenCalled();
+  expect(input).toHaveValue("ii");
+});

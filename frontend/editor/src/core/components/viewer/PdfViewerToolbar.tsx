@@ -195,7 +195,7 @@ export function PdfViewerToolbar({
     const page = Number(value);
     if (
       value.length > 0 &&
-      !isNaN(page) &&
+      Number.isInteger(page) &&
       page >= 1 &&
       page <= scrollState.totalPages
     ) {
