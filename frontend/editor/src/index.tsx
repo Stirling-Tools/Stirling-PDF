@@ -12,7 +12,6 @@ import "../vite-env.d.ts"; // oxlint-disable-line no-restricted-imports -- Outsi
 import "@app/styles/index.css"; // Import global styles
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { ColorSchemeScript } from "@mantine/core";
 import { BrowserRouter } from "react-router-dom";
 import App from "@app/App";
 import "@app/i18n"; // Initialize i18next
@@ -29,7 +28,6 @@ if (!container) {
 const root = ReactDOM.createRoot(container); // Finds the root DOM element
 root.render(
   <React.StrictMode>
-    <ColorSchemeScript />
     <BrowserRouter basename={BASE_PATH}>
       <App />
     </BrowserRouter>

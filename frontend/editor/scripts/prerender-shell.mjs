@@ -414,8 +414,10 @@ function shellScript({ wide, narrow }) {
     `<script id="shell-strings" type="application/json">${payload}</script>`,
     `<script>(function(){var root=document.getElementById("root");if(!root)return;` +
       `function clearShells(){var s=root.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();}` +
-      `if(document.documentElement.hasAttribute("data-shell-hidden")){clearShells();root.removeAttribute("data-shell");return;}`,
-    `function drop(){clearShells();root.removeAttribute("data-shell");if(window.__spdfBoot)window.__spdfBoot();}`,
+      `var bPath=new URL(".",document.baseURI).pathname.replace(/\\/+$/,"");` +
+      `var cPath=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");` +
+      `if(cPath!==bPath||document.documentElement.hasAttribute("data-shell-hidden")){clearShells();root.removeAttribute("data-shell");document.documentElement.setAttribute("data-shell-hidden","");return;}`,
+    `function drop(){if(!root.hasAttribute("data-shell"))return;clearShells();root.removeAttribute("data-shell");if(window.__spdfBoot)window.__spdfBoot();}`,
     `try{var data=JSON.parse(document.getElementById("shell-strings").textContent);`,
     `var stored=null;try{stored=localStorage.getItem("i18nextLng");}catch(e){}`,
     // A tag arrives in any case and with either separator, so match it exactly, then
@@ -427,7 +429,7 @@ function shellScript({ wide, narrow }) {
     `if(k===primary||k.split("-")[0]===primary)return keys[j];}return null;}`,
     `var language=pick(stored)||pick(navigator.language)||pick(data.base);`,
     `if(!language){drop();return;}`,
-    `function apply(shell){try{` +
+    `function apply(shell){if(!root.hasAttribute("data-shell"))return;try{` +
       `if(shell&&shell.both){shell={wide:shell.both,narrow:shell.both};}`,
     `var shells=root.querySelectorAll("[data-shell-for]");if(!shells.length)return;`,
     // Both shells are in the document and the stylesheet picks one, so the first
@@ -437,7 +439,7 @@ function shellScript({ wide, narrow }) {
     // Two copies of an id confuse a label or a search box that looks one up, so the
     // shell the viewport does not draw gives its ids up.
     `for(var s=0;s<shells.length;s++)if(shells[s].getAttribute("data-shell-for")!==active){`,
-    `var staled=shells[s].querySelectorAll("[id]");for(var t=0;t<staled.length;t++)staled[t].removeAttribute("id");}`,
+    `var staled=shells[s].querySelectorAll("[id],[data-testid]");for(var t=0;t<staled.length;t++){staled[t].removeAttribute("id");staled[t].removeAttribute("data-testid");}}`,
     `if(shell){for(var i=0;i<shells.length;i++){var name=shells[i].getAttribute("data-shell-for");`,
     `var list=shell[name];if(!list)continue;`,
     `if(list.length!==data.nodes[name]){drop();return;}`,
@@ -538,6 +540,7 @@ function deferEntry(html) {
       'var curPath=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");' +
       "if(curPath!==basePath){" +
       'document.documentElement.setAttribute("data-shell-hidden","");' +
+      'var r=document.getElementById("root");if(r){var s=r.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();r.removeAttribute("data-shell");}' +
       "boot();return;}" +
       // The shell is the first screen, so the app waits for a gesture.
       'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +
@@ -627,7 +630,7 @@ export async function prerenderShell({
   const emitted = [
     SHELL_START,
     // Ship both shells inline and let the media query pick one so the first layout matches the viewport.
-    `<style>#root[data-shell="pending"]{visibility:hidden}[data-shell-for="narrow"]{display:none}@media (max-width: 1024px){[data-shell-for="wide"]{display:none}[data-shell-for="narrow"]{display:block}}</style>`,
+    `<style>#root[data-shell="pending"]{visibility:hidden}[data-shell-hidden] #root[data-shell="pending"]{visibility:hidden!important}[data-shell-hidden] [data-shell-for]{display:none!important}[data-shell-for="narrow"]{display:none}@media (max-width: 1024px){[data-shell-for="wide"]{display:none}[data-shell-for="narrow"]{display:block}}</style>`,
     `<noscript><style>#root[data-shell="pending"]{visibility:visible!important}</style></noscript>`,
     `<style id="shell-critical">${criticalCss}</style>`,
     `<div id="root" data-shell="pending"><div data-shell-for="wide">${wide.markup}</div>`,

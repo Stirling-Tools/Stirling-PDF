@@ -218,8 +218,9 @@ const mantineToolOnlyImplementations = new Map<string, string>();
 const mantineToolOnlyFamilies = new Map<string, string>();
 
 function mantineToolOnlyChunk(id: string): string | undefined {
+  const normalizedId = id.replace(/\\/g, "/");
   for (const [dir, family] of mantineToolOnlyFamilies) {
-    if (id.startsWith(dir)) return `vendor-mantine-${family}`;
+    if (normalizedId.startsWith(dir)) return `vendor-mantine-${family}`;
   }
   return undefined;
 }
@@ -518,11 +519,11 @@ async function compressHtmlOutput(distDir: string): Promise<void> {
 
 /** Rewrites @mantine/core barrel imports of tool-only components to their direct ESM files. */
 function mantineToolOnlyImports(): PluginOption {
-  const packageDir = path.dirname(
-    createRequire(import.meta.url).resolve("@mantine/core/styles.css"),
-  );
-  const esmDir = path.join(packageDir, "esm");
-  const componentRoot = `${path.join(esmDir, "components")}/`;
+  const packageDir = path
+    .dirname(createRequire(import.meta.url).resolve("@mantine/core/styles.css"))
+    .replace(/\\/g, "/");
+  const esmDir = path.join(packageDir, "esm").replace(/\\/g, "/");
+  const componentRoot = `${path.join(esmDir, "components").replace(/\\/g, "/")}/`;
   const barrel = readFileSync(path.join(esmDir, "index.mjs"), "utf8");
 
   // Parse the barrel because exported names do not map 1:1 to component folder names.
@@ -531,7 +532,7 @@ function mantineToolOnlyImports(): PluginOption {
     /export\s*\{([^}]*)\}\s*from\s*["']([^"']+)["']/g,
   )) {
     if (!statement[2].startsWith(".")) continue;
-    const file = path.resolve(esmDir, statement[2]);
+    const file = path.resolve(esmDir, statement[2]).replace(/\\/g, "/");
     for (const raw of statement[1].split(",")) {
       const entry = raw.trim().replace(/^type\s+/, "");
       if (!entry) continue;
@@ -564,7 +565,7 @@ function mantineToolOnlyImports(): PluginOption {
     name: "mantine-tool-only-imports",
     apply: "build" as const,
     configResolved(config) {
-      appDir = `${resolve(config.root, "src")}/`;
+      appDir = `${resolve(config.root, "src").replace(/\\/g, "/")}/`;
     },
     generateBundle(_options, bundle) {
       // Fail the build if splitting tool-only Mantine components introduces a chunk import cycle.
@@ -630,7 +631,12 @@ function mantineToolOnlyImports(): PluginOption {
       }
     },
     transform(code, id) {
-      if (!appDir || !id.startsWith(appDir) || !code.includes("@mantine/core"))
+      const normalizedId = id.replace(/\\/g, "/");
+      if (
+        !appDir ||
+        !normalizedId.startsWith(appDir) ||
+        !code.includes("@mantine/core")
+      )
         return null;
       let cursor = 0;
       let rewritten = "";
@@ -708,6 +714,7 @@ function htmlOutputPlugin(options: {
     },
     async closeBundle() {
       if (!distDir) return;
+      if (!existsSync(path.join(distDir, "index.html"))) return;
       await writeOpenGraphPages(distDir, isSaas);
       if (route) await writeRouteHints(distDir, route);
       if (editorDir) await writeLandingShell(distDir, editorDir);
@@ -1019,10 +1026,12 @@ export default defineConfig(async ({ mode, command }) => {
             }
             // Place tool-only Mantine component families into dedicated lazy chunks.
             const toolOnly = mantineToolOnlyChunk(id);
-            if (toolOnly) return toolOnly;
+            if (toolOnly && !startupModules(meta).has(id)) return toolOnly;
             // Co-locate react-number-format with NumberInput since no other component imports it.
             if (pkg === "react-number-format")
-              return "vendor-mantine-NumberInput";
+              return startupModules(meta).has(id)
+                ? "vendor-ui"
+                : "vendor-mantine-NumberInput";
             // These packages are mutually circular: splitting them breaks
             // module init order at runtime. Only startup modules land in
             // vendor-ui; libraries only some screens use (the markdown

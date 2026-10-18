@@ -22,7 +22,7 @@
 // has a backlog; it is the mode for working through it.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -188,7 +188,7 @@ function untrackedFiles(paths = null) {
 
 function allLinesOf(file) {
   const path = insideRepo(file);
-  if (!path || !existsSync(path)) return new Set();
+  if (!path || !existsSync(path) || !statSync(path).isFile()) return new Set();
   const total = readFileSync(path, "utf8").split(/\r?\n/).length;
   return new Set(Array.from({ length: total }, (_, i) => i + 1));
 }
