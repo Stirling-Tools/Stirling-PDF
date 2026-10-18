@@ -224,6 +224,14 @@
   box-shadow: var(--pt-selection-ring);
 }
 
+/* Selection owns the ring states, so keyboard focus needs its own cue on the
+   tile: without it a tabbed-to tile and an unfocused one look identical. */
+.tile:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
 /*
  * A quarter turn is applied after layout, so the pre-rotation box has to be
  * constrained by the OPPOSITE axis or the rotated page overflows and clips.
