@@ -50,6 +50,9 @@ export class ThumbnailGenerationService {
   private currentCacheSize = 0;
   private cacheEpoch = 0;
 
+  /** Per-file eviction counts: a write token for one file survives other files' evictions. */
+  private fileEvictions = new Map<FileId, number>();
+
   // PDF document cache to reuse PDF instances and avoid creating multiple workers
   private pdfDocumentCache = new Map<FileId, CachedPDFDocument>();
   private maxPdfCacheSize = 10; // Keep up to 10 PDF documents cached
@@ -251,10 +254,10 @@ export class ThumbnailGenerationService {
     pageId: string,
     thumbnail: string,
     fileId?: FileId,
-    epoch?: number,
+    epoch?: string,
   ): boolean {
     // A result from before a cleanup must not repopulate the cache.
-    if (epoch !== undefined && epoch !== this.cacheEpoch) return false;
+    if (epoch !== undefined && epoch !== this.epochFor(fileId)) return false;
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
     const previous = this.thumbnailCache.get(pageId)?.sizeBytes ?? 0;
     const isNew = !this.thumbnailCache.has(pageId);
@@ -283,7 +286,9 @@ export class ThumbnailGenerationService {
 
   /** Drop every cached page image that came from one file. */
   evictThumbnailsForFile(fileId: FileId): number {
-    this.cacheEpoch += 1;
+    // Only this file's pending writes are stale; bumping the global epoch here
+    // would also reject in-flight thumbnails for files that are still open.
+    this.fileEvictions.set(fileId, (this.fileEvictions.get(fileId) ?? 0) + 1);
     let dropped = 0;
     for (const [key, entry] of this.thumbnailCache) {
       if (entry.fileId !== fileId) continue;
@@ -328,8 +333,18 @@ export class ThumbnailGenerationService {
     return this.cacheEpoch;
   }
 
+  /**
+   * Write token for one file: a global wipe or that file's own eviction
+   * invalidates it, while other files' evictions leave it valid.
+   */
+  epochFor(fileId?: FileId): string {
+    const fileEpoch = fileId ? (this.fileEvictions.get(fileId) ?? 0) : 0;
+    return `${this.cacheEpoch}:${fileEpoch}`;
+  }
+
   clearCache(): void {
     this.cacheEpoch += 1;
+    this.fileEvictions.clear();
     this.thumbnailCache.clear();
     this.currentCacheSize = 0;
   }

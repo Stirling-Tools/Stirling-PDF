@@ -11,7 +11,10 @@ import { FileId } from "@app/types/file";
 interface ThumbnailRequest {
   pageId: string;
   file: File;
+  fileId: FileId;
   pageNumber: number;
+  /** Write token captured when the request was queued, before any cleanup ran. */
+  epoch: string;
   resolve: (thumbnail: string | null) => void;
   reject: (error: Error) => void;
 }
@@ -53,6 +56,14 @@ async function processRequestQueue() {
       const uncachedRequests: ThumbnailRequest[] = [];
 
       for (const request of batch) {
+        // Queued before a cleanup: its file's cached pages were dropped, so a
+        // late result must not repopulate them.
+        if (
+          request.epoch !== thumbnailGenerationService.epochFor(request.fileId)
+        ) {
+          request.resolve(null);
+          continue;
+        }
         const cached = thumbnailGenerationService.getThumbnailFromCache(
           request.pageId,
         );
@@ -70,19 +81,16 @@ async function processRequestQueue() {
 
       // Process each file group with batch thumbnail generation
       for (const [file, requests] of fileGroups) {
-        if (requests.length === 0) continue;
+        const firstRequest = requests[0];
+        if (!firstRequest) continue;
 
         try {
           const pageNumbers = requests.map((req) => req.pageNumber);
-          const epoch = thumbnailGenerationService.epoch;
+          const { fileId } = firstRequest;
 
           // Share the cached buffer instead of minting a second copy.
           const arrayBuffer = await getDocumentBytes(file);
 
-          // Use quickKey for PDF document caching (same metadata, consistent format)
-          const fileId = isStirlingFile(file)
-            ? file.fileId
-            : (createQuickKey(file) as FileId);
           const results = await thumbnailGenerationService.generateThumbnails(
             fileId,
             arrayBuffer,
@@ -104,7 +112,7 @@ async function processRequestQueue() {
                 request.pageId,
                 result.thumbnail,
                 fileId,
-                epoch,
+                request.epoch,
               );
               request.resolve(cached ? result.thumbnail : null);
             } else {
@@ -161,19 +169,23 @@ export function useThumbnailGeneration() {
   );
 
   const addThumbnailToCache = useCallback(
-    (pageId: string, thumbnail: string, fileId?: FileId, epoch?: number) => {
+    (
+      pageId: string,
+      thumbnail: string,
+      fileId?: FileId,
+      epoch?: string,
+    ): boolean =>
       thumbnailGenerationService.addThumbnailToCache(
         pageId,
         thumbnail,
         fileId,
         epoch,
-      );
-    },
+      ),
     [],
   );
 
-  const getCacheEpoch = useCallback((): number => {
-    return thumbnailGenerationService.epoch;
+  const getCacheEpoch = useCallback((fileId?: FileId): string => {
+    return thumbnailGenerationService.epochFor(fileId);
   }, []);
 
   const getThumbnailFromCache = useCallback((pageId: string): string | null => {
@@ -226,11 +238,18 @@ export function useThumbnailGeneration() {
       }
 
       // Create new request promise and track it globally
+      const fileId = isStirlingFile(file)
+        ? file.fileId
+        : (createQuickKey(file) as FileId);
       const requestPromise = new Promise<string | null>((resolve, reject) => {
         requestQueue.push({
           pageId,
           file,
+          fileId,
           pageNumber,
+          // Captured before the request can wait in the queue: a cleanup after
+          // this point must reject the result, however late it is processed.
+          epoch: thumbnailGenerationService.epochFor(fileId),
           resolve: (result: string | null) => {
             activeRequests.delete(pageId);
             resolve(result);

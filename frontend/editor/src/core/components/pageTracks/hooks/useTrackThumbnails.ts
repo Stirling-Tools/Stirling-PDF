@@ -88,13 +88,13 @@ export function useTrackThumbnails(): TrackThumbnailStore {
       if (!file) continue;
 
       inFlightRef.current.add(key);
-      const epoch = getCacheEpoch();
+      const epoch = getCacheEpoch(page.sourceFileId);
       const rendering = isPageImage(file)
         ? generateImageThumbnail(file, IMAGE_PAGE_THUMBNAIL_SIZE).then(
-            (thumbnail) => {
-              addThumbnailToCache(key, thumbnail, page.sourceFileId, epoch);
-              return thumbnail;
-            },
+            (thumbnail) =>
+              addThumbnailToCache(key, thumbnail, page.sourceFileId, epoch)
+                ? thumbnail
+                : null,
           )
         : requestThumbnail(key, file, page.sourcePageNumber);
       rendering

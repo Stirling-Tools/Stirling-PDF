@@ -69,4 +69,36 @@ describe("ThumbnailGenerationService page-image cache", () => {
       "bbb",
     );
   });
+
+  it("keeps a pending write for another file valid across an eviction", () => {
+    const service = new ThumbnailGenerationService();
+    const tokenB = service.epochFor(fileB);
+    service.addThumbnailToCache("p1", "aaa", fileA);
+
+    service.evictThumbnailsForFile(fileA);
+
+    // File B was not removed, so a write that started before A's eviction
+    // still lands; only A's own pending writes go stale.
+    expect(service.addThumbnailToCache("p2", "bbb", fileB, tokenB)).toBe(true);
+    expect(service.getThumbnailFromCache("p2")).toBe("bbb");
+  });
+
+  it("rejects a write that started before its own file's eviction", () => {
+    const service = new ThumbnailGenerationService();
+    const tokenA = service.epochFor(fileA);
+    service.addThumbnailToCache("p1", "aaa", fileA);
+
+    service.evictThumbnailsForFile(fileA);
+
+    expect(service.addThumbnailToCache("p2", "bbb", fileA, tokenA)).toBe(false);
+    expect(service.getThumbnailFromCache("p2")).toBeNull();
+  });
+
+  it("rejects every pending write after a full cache clear", () => {
+    const service = new ThumbnailGenerationService();
+    const tokenB = service.epochFor(fileB);
+    service.clearCache();
+
+    expect(service.addThumbnailToCache("p2", "bbb", fileB, tokenB)).toBe(false);
+  });
 });
