@@ -13,20 +13,36 @@
   pointer-events: auto;
 }
 
+/* Height, not a transform, sets each detent so the panel's own scroll area and
+   run button always sit inside the visible part of the sheet. */
 .tool-sheet {
+  --tool-sheet-drag: 0px;
+  --tool-sheet-height: 88%;
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 88%;
+  height: calc(var(--tool-sheet-height) - var(--tool-sheet-drag));
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--c-surface);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   border-top: 1px solid var(--c-border-subtle);
+  box-shadow: 0 -4px 16px rgb(0 0 0 / 0.08);
   transform: translateY(100%);
-  transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+  transition:
+    transform 0.25s cubic-bezier(0.32, 0.72, 0, 1),
+    height 0.25s cubic-bezier(0.32, 0.72, 0, 1);
   z-index: 21;
+}
+
+.tool-sheet[data-detent="half"] {
+  --tool-sheet-height: 52%;
+}
+
+.tool-sheet[data-detent="bar"] {
+  --tool-sheet-height: 6.75rem;
 }
 
 .tool-sheet[data-open="true"] {

@@ -1,61 +1,113 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import "@app/pages/ToolSheet.css";
 
+type Detent = "bar" | "half" | "full";
+
 interface ToolSheetProps {
   open: boolean;
+  /**
+   * A tool is open. The sheet then docks over the document instead of covering
+   * it, because tools like sign and redact go back and forth with the page.
+   */
+  docked: boolean;
   onClose: () => void;
   children: ReactNode;
 }
 
-const DISMISS_DRAG_PX = 80;
+// Drag distance that moves the sheet one height up or down.
+const STEP_DRAG_PX = 60;
 
 /**
- * Bottom sheet that holds the tool panel over the document. The content stays
- * mounted while closed so a tool's settings survive dismissing the sheet.
+ * Bottom sheet holding the tool panel. Undocked (the tool list) it is either
+ * full or closed. Docked it rests at half height with the document usable
+ * above it, or shrinks to a bar showing just the tool's header; dragging down
+ * from the bar closes it. The content stays mounted while closed so a tool's
+ * settings survive.
  */
-export function ToolSheet({ open, onClose, children }: ToolSheetProps) {
+export function ToolSheet({ open, docked, onClose, children }: ToolSheetProps) {
   const { t } = useTranslation();
+  const [detent, setDetent] = useState<Detent>(docked ? "half" : "full");
   const dragStart = useRef<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
 
+  // Opening a tool from the list moves the sheet out of the document's way.
+  useEffect(() => {
+    if (open) setDetent(docked ? "half" : "full");
+  }, [open, docked]);
+
+  const lower = () => {
+    if (!docked || detent === "bar") onClose();
+    else setDetent(detent === "full" ? "half" : "bar");
+  };
+
+  const raise = () => {
+    if (detent === "bar") setDetent("half");
+    else setDetent("full");
+  };
+
   const endDrag = () => {
-    if (dragOffset > DISMISS_DRAG_PX) onClose();
+    if (dragOffset > STEP_DRAG_PX) lower();
+    else if (dragOffset < -STEP_DRAG_PX) raise();
     dragStart.current = null;
     setDragOffset(0);
   };
+
+  const toggle = () => {
+    if (detent === "full") lower();
+    else raise();
+  };
+
+  const dragging = dragStart.current !== null;
 
   return (
     <>
       <div
         className="tool-sheet-scrim"
-        data-open={open}
-        onClick={onClose}
+        data-open={open && detent === "full"}
+        onClick={lower}
         aria-hidden="true"
       />
       <section
         className="tool-sheet"
         data-open={open}
-        data-dragging={dragStart.current !== null}
+        data-detent={detent}
+        data-dragging={dragging}
         style={
-          dragOffset ? { transform: `translateY(${dragOffset}px)` } : undefined
+          dragOffset
+            ? { ["--tool-sheet-drag" as string]: `${dragOffset}px` }
+            : undefined
         }
         aria-label={t("mobile.tools.sheet", "Tools")}
         aria-hidden={!open}
         inert={!open}
+        // In the bar the first tap anywhere brings the tool back up.
+        onClickCapture={
+          detent === "bar"
+            ? (event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                setDetent("half");
+              }
+            : undefined
+        }
       >
         <button
           type="button"
           className="tool-sheet-handle"
-          aria-label={t("mobile.tools.close", "Close tools")}
-          onClick={onClose}
+          aria-label={
+            detent === "full"
+              ? t("mobile.tools.close", "Close tools")
+              : t("mobile.tools.expand", "Expand tools")
+          }
+          onClick={toggle}
           onPointerDown={(event) => {
             dragStart.current = event.clientY;
             event.currentTarget.setPointerCapture(event.pointerId);
           }}
           onPointerMove={(event) => {
             if (dragStart.current === null) return;
-            setDragOffset(Math.max(0, event.clientY - dragStart.current));
+            setDragOffset(event.clientY - dragStart.current);
           }}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}

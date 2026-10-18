@@ -6102,6 +6102,7 @@ fileName = "Scan {{date}}"
 
 [mobile.tools]
 close = "Close tools"
+expand = "Expand tools"
 sheet = "Tools"
 
 [mobileScanner]

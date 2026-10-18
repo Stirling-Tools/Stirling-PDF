@@ -71,7 +71,7 @@ export function PhoneLayout({
   const { workbench } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const { fileIds } = useAllFiles();
-  const { handleToolSelect, toolRegistry } = useToolWorkflow();
+  const { handleToolSelect, toolRegistry, selectedToolKey } = useToolWorkflow();
   const { onRecentFileSelect } = useFilesModalContext();
   const { setActiveFileId } = useViewer();
   const [homeRequested, setHomeRequested] = useState(false);
@@ -129,7 +129,11 @@ export function PhoneLayout({
           />
         )}
         {!filesMode && (
-          <ToolSheet open={sheetOpen} onClose={() => onSelectView("workbench")}>
+          <ToolSheet
+            open={sheetOpen}
+            docked={selectedToolKey !== null}
+            onClose={() => onSelectView("workbench")}
+          >
             <RightSidebar />
           </ToolSheet>
         )}
