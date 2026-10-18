@@ -47,6 +47,7 @@ jobs:
         run: |
           echo "npm_files_hash=$NPM_HASH" >> "$GITHUB_OUTPUT"
           echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"
+
   playwright-all-browsers:
     name: Playwright (stubbed, all browsers)
     needs: hash_pr
@@ -108,7 +109,7 @@ jobs:
     name: Warm Tauri Rust cache
     if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     with:
