@@ -42,7 +42,7 @@ function createEngine() {
   return {
     openDocumentBuffer: vi.fn(),
     getDocUserPermissions: vi.fn(),
-    getSignatures: vi.fn(() => taskOf([])),
+    getSignatures: vi.fn(() => taskOf<unknown[]>([])),
     closeDocument: vi.fn(() => taskOf(true)),
     destroy: vi.fn(() => taskOf(true)),
   };
