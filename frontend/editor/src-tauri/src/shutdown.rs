@@ -6,9 +6,10 @@
 //! the first exit request is prevented, the stop runs on a worker thread, and
 //! the worker releases the exit once it is done.
 //!
-//! A stop that cannot be confirmed still releases the exit: every backend
-//! watches `TAURI_PARENT_PID`, so one that outlives the app ends on its own
-//! shortly after. The worker says so in the log rather than claiming otherwise.
+//! A stop that cannot be confirmed still releases the exit. The backend's
+//! parent-PID monitor then closes it best effort: it polls every five seconds
+//! and asks for a graceful close, so it is a fallback, not a deadline. The
+//! worker logs that instead of claiming the backend is gone.
 
 use std::sync::Mutex;
 
@@ -119,30 +120,57 @@ pub(crate) fn request_restart(app: AppHandle) {
 }
 
 fn spawn_worker(app: AppHandle) {
-    std::thread::spawn(move || {
-        let report = crate::commands::stop_backend();
-
-        let Some(intent) = EXIT_COORDINATOR.finish() else {
-            return;
-        };
-        match intent {
-            ShutdownIntent::Exit(code) => {
-                if !report.confirmed_stopped {
-                    add_log("⚠️ Backend stop was not confirmed; quitting anyway".to_string());
+    let worker = std::thread::Builder::new()
+        .name("backend-shutdown".to_string())
+        .spawn({
+            let app = app.clone();
+            move || {
+                // A panic here must not leave the coordinator holding the exit
+                // forever; it is the only state the worker owns.
+                let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    let report = crate::commands::stop_backend();
+                    release_exit(&app, Some(&report));
+                }));
+                if outcome.is_err() {
+                    add_log("❌ Backend shutdown worker panicked; finishing the exit".to_string());
+                    release_exit(&app, None);
                 }
-                app.exit(code.unwrap_or(0));
             }
-            ShutdownIntent::Restart => {
+        });
+    if let Err(error) = worker {
+        add_log(format!(
+            "❌ Could not start the backend shutdown worker: {}; finishing the exit",
+            error
+        ));
+        release_exit(&app, None);
+    }
+}
+
+/// Releases the exit once the backend stop is done. The worker holds the only
+/// transition out of `Stopping`, so a missing report still has to finish.
+fn release_exit(app: &AppHandle, report: Option<&crate::commands::StopReport>) {
+    let Some(intent) = EXIT_COORDINATOR.finish() else {
+        return;
+    };
+    match intent {
+        ShutdownIntent::Exit(code) => {
+            if report.is_some_and(|report| !report.confirmed_stopped) {
+                add_log("⚠️ Backend stop was not confirmed; quitting anyway".to_string());
+            }
+            app.exit(code.unwrap_or(0));
+        }
+        ShutdownIntent::Restart => {
+            if let Some(report) = report {
                 if !report.confirmed_stopped {
                     add_log(format!(
                         "⚠️ Restarting with the backend stop unconfirmed ({:?}); the new instance may find its port busy",
                         report.stop
                     ));
                 }
-                app.restart();
             }
+            app.restart();
         }
-    });
+    }
 }
 
 #[cfg(test)]
