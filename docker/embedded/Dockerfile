@@ -18,6 +18,7 @@ RUN apt-get update \
     && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
     && dpkg -i /tmp/task.deb \
     && rm /tmp/task.deb \
+    && npx --yes playwright install --with-deps chromium \
     && rm -rf /var/lib/apt/lists/*
 
 # Bake the detection model in so the tool works out of the box (~26MB pull, 35MB on disk).
@@ -59,7 +60,7 @@ ARG STIRLING_FLAVOR=proprietary
 ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
 # Include the processor (admin portal) in the bundled editor; false leaves it out.
 ARG BUILD_PORTAL=true
-ARG PRERENDER_SHELL=0
+ARG PRERENDER_SHELL=1
 ENV PRERENDER_SHELL=${PRERENDER_SHELL}
 
 # Which Stirling account the portal connects to. Build-time because Vite inlines VITE_* into the

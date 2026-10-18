@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
     && dpkg -i /tmp/task.deb \
     && rm /tmp/task.deb \
+    && npx --yes playwright install --with-deps chromium \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -48,7 +49,7 @@ COPY . .
 # Build ultra-lite JAR with embedded frontend (minimal features).
 # Include the processor (admin portal) in the bundled editor; false leaves it out.
 ARG BUILD_PORTAL=true
-ARG PRERENDER_SHELL=0
+ARG PRERENDER_SHELL=1
 ENV PRERENDER_SHELL=${PRERENDER_SHELL}
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH

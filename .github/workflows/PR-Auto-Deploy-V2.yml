@@ -281,7 +281,6 @@ jobs:
             VITE_SUPABASE_URL=${{ steps.saas.outputs.supabase_url }}
             VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
             VITE_SAAS_API_URL=${{ steps.saas.outputs.api_base }}
-            PRERENDER_SHELL=0
           platforms: linux/amd64
 
       - name: Set up SSH

@@ -314,7 +314,8 @@ async function writeRouteHints(
     const tags = [
       `<link rel="modulepreload" crossorigin href="${prefix}${route.js}">`,
       ...route.css.map(
-        (file) => `<link rel="preload" as="style" href="${prefix}${file}">`,
+        (file) =>
+          `<link rel="preload" as="style" crossorigin href="${prefix}${file}">`,
       ),
     ];
     await fs.writeFile(

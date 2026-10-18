@@ -92,8 +92,32 @@ export default function SuperSearch({
   dropdownClassName,
 }: SuperSearchProps = {}) {
   const { t } = useTranslation();
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(() => {
+    if (typeof window !== "undefined") {
+      const handoff = (
+        window as unknown as {
+          __spdfInputHandoff?: { id?: string; value?: string };
+        }
+      ).__spdfInputHandoff;
+      if (handoff && handoff.id === inputId && handoff.value) {
+        return handoff.value;
+      }
+    }
+    return "";
+  });
+  const [open, setOpen] = useState(() => {
+    if (typeof window !== "undefined") {
+      const handoff = (
+        window as unknown as {
+          __spdfInputHandoff?: { id?: string; value?: string };
+        }
+      ).__spdfInputHandoff;
+      if (handoff && handoff.id === inputId && handoff.value) {
+        return true;
+      }
+    }
+    return false;
+  });
   const [highlight, setHighlight] = useState(0);
   const [rect, setRect] = useState<DropdownRect | null>(null);
   const [manualScopeIds, setManualScopeIds] = useState<string[]>([]);

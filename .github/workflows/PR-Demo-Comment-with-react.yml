@@ -216,7 +216,6 @@ jobs:
           tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:pr-${{ needs.check-comment.outputs.pr_number }}
           build-args: |
             VERSION_TAG=alpha
-            PRERENDER_SHELL=0
           platforms: linux/amd64
 
       - name: Build and push engine image

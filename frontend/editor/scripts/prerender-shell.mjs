@@ -630,17 +630,32 @@ function deferEntry(html) {
       "icon.rel=meta[m].rel;icon.href=meta[m].href;document.head.appendChild(icon);}" +
       'var links=document.querySelectorAll("link[data-href]");' +
       'for(var k=0;k<links.length;k++){var l=links[k];l.href=l.getAttribute("data-href");l.removeAttribute("data-href");l.disabled=false;}}' +
-      "var keepId=null;var keepValue=null;" +
-      'addEventListener("focusin",function(e){var t=e.target;if(t&&t.tagName==="INPUT"&&t.id&&t.closest&&t.closest("[data-shell-for]")){keepId=t.id;keepValue=t.value||"";}},true);' +
-      'addEventListener("input",function(e){var t=e.target;if(t&&t.id&&t.id===keepId&&"value" in t)keepValue=t.value||"";},true);' +
-      // A tap on a search box must not lose what was typed while the shell was up.
-      "function boot(){if(booted)return;booted=true;" +
-      "restore();" +
-      'var script=document.createElement("script");script.type="module";' +
-      'script.crossOrigin="anonymous";script.src=src;document.head.appendChild(script);' +
-      "if(keepId){var tried=0;(function refocus(){var el=document.getElementById(keepId);" +
-      'if(el&&!el.closest("[data-shell-for]")){if(keepValue){var d=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");if(d&&d.set)d.set.call(el,keepValue);else el.value=keepValue;el.dispatchEvent(new Event("input",{bubbles:true}));}el.focus();return;}' +
-      "if(tried++<200)setTimeout(refocus,50);})();}}" +
+      "var activeInputId=null;var activeInputValue=null;var activeSelection=null;var restoreTries=0;" +
+      'addEventListener("focusin",function(e){var t=e.target;' +
+      'if(t&&t.tagName==="INPUT"&&t.id&&t.closest&&t.closest("[data-shell-for]")){activeInputId=t.id;activeInputValue=t.value||"";try{activeSelection=[t.selectionStart,t.selectionEnd];}catch(err){}' +
+      "window.__spdfInputHandoff={id:activeInputId,value:activeInputValue,selection:activeSelection};}" +
+      "},true);" +
+      'addEventListener("input",function(e){var t=e.target;' +
+      'if(t&&t.tagName==="INPUT"&&t.id&&t.closest&&t.closest("[data-shell-for]")&&"value" in t){activeInputId=t.id;activeInputValue=t.value||"";try{activeSelection=[t.selectionStart,t.selectionEnd];}catch(err){}' +
+      "window.__spdfInputHandoff={id:activeInputId,value:activeInputValue,selection:activeSelection};}" +
+      "},true);" +
+      "function restoreInput(){" +
+      'if(!activeInputId){if(document.querySelector("[data-shell-for]")&&restoreTries++<200)setTimeout(restoreInput,50);return;}' +
+      "var el=document.getElementById(activeInputId);" +
+      'if(el&&!el.closest("[data-shell-for]")){' +
+      'if(activeInputValue!=null){var d=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");' +
+      "if(d&&d.set)d.set.call(el,activeInputValue);else el.value=activeInputValue;" +
+      'if(el._valueTracker)try{el._valueTracker.setValue("");}catch(err){}' +
+      'el.dispatchEvent(new Event("input",{bubbles:true}));' +
+      'el.dispatchEvent(new Event("change",{bubbles:true}));}' +
+      "if(activeSelection){try{el.setSelectionRange(activeSelection[0],activeSelection[1]);}catch(err){}}" +
+      "el.focus();activeInputId=null;return;}" +
+      "if(restoreTries++<200)setTimeout(restoreInput,50);}" +
+      "function boot(){if(booted)return;booted=true;restore();" +
+      'var script=document.createElement("script");script.type="module";script.crossOrigin="anonymous";script.src=src;' +
+      "script.onerror=function(){booted=false;};" +
+      "document.head.appendChild(script);" +
+      "restoreInput();}" +
       "window.__spdfBoot=boot;" +
       // A deep link is an app page from its first frame: boot at once, keep the
       // landing shell hidden until React paints over it.
@@ -650,37 +665,46 @@ function deferEntry(html) {
       'document.documentElement.setAttribute("data-shell-hidden","");' +
       'var r=document.getElementById("root");if(r){var s=r.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();r.removeAttribute("data-shell");}' +
       "boot();return;}" +
-      // The shell is the first screen, so the app waits for a gesture.
+      // The shell is the first screen, so the app waits for a gesture or idle window.
       'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +
       "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
+      'setTimeout(function(){if("requestIdleCallback" in window){requestIdleCallback(boot,{timeout:1000});}else{boot();}},3000);' +
       'addEventListener("dragenter",function(e){if(document.querySelector("[data-shell-for]"))e.preventDefault();},true);' +
       'addEventListener("dragover",function(e){if(document.querySelector("[data-shell-for]")){e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="copy";}},true);' +
       'addEventListener("drop",function(e){if(!document.querySelector("[data-shell-for]"))return;e.preventDefault();var f=e.dataTransfer&&e.dataTransfer.files;if(f&&f.length){pending=f;boot();handOff();}},true);' +
-      // A shell link or file button boots and forwards the action to the live app.
+      "var pendingButtonSelector=null;" +
       'addEventListener("click",function(event){if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;' +
       'var t=event.target;if(!t||!t.closest||!t.closest("[data-shell-for]"))return;' +
       'var btn=t.closest("button[data-testid=\\"files-button\\"],button[data-testid=\\"pdf-library-add-files\\"],button.sui-btn--primary");' +
       'if(btn){var sh=btn.closest("[data-shell-for]");var fi=sh&&sh.querySelector("input[type=file]");if(fi)fi.click();boot();return;}' +
       'var link=t.closest("a[href]");' +
-      'if(!link||link.target||link.hasAttribute("download"))return;var href=link.getAttribute("href");' +
-      'if(!href||href.charAt(0)==="#"||/^[a-z]+:/i.test(href))return;' +
+      'if(link&&!link.target&&!link.hasAttribute("download")){var href=link.getAttribute("href");' +
+      'if(href&&href.charAt(0)!=="#"&&!/^[a-z]+:/i.test(href)){' +
       'event.preventDefault();try{history.pushState({},"",href);dispatchEvent(new PopStateEvent("popstate"));}catch(e){location.href=href;}' +
       "boot();" +
       'var waited=0;(function route(){if(document.querySelector("[data-shell-for]")&&waited++<200){setTimeout(route,50);return;}' +
-      'try{if(location.pathname!==new URL(href,document.baseURI).pathname){history.pushState({},"",href);dispatchEvent(new PopStateEvent("popstate"));}}catch(e){}})();},true);' +
-      // A file picked before the app is up is carried over to its input.
+      'try{if(location.pathname!==new URL(href,document.baseURI).pathname){history.pushState({},"",href);dispatchEvent(new PopStateEvent("popstate"));}}catch(e){}})();return;}}' +
+      'var genericBtn=t.closest("button");' +
+      "if(genericBtn){" +
+      'var testId=genericBtn.getAttribute("data-testid");var aria=genericBtn.getAttribute("aria-label");' +
+      'if(testId)pendingButtonSelector="button[data-testid=\\""+testId+"\\"]";' +
+      'else if(aria)pendingButtonSelector="button[aria-label=\\""+aria+"\\"]";' +
+      'else if(genericBtn.className)pendingButtonSelector="button."+genericBtn.className.split(" ").filter(Boolean).join(".");' +
+      "boot();handOff();return;}" +
+      "},true);" +
       "var pending=null;var tries=0;" +
       "function onChange(event){var target=event.target;" +
       'if(!target||target.tagName!=="INPUT"||target.type!=="file"||!target.closest||!target.closest("[data-shell-for]")||!target.files||!target.files.length)return;' +
       'removeEventListener("change",onChange,true);pending=target.files;boot();handOff();}' +
       'addEventListener("change",onChange,true);' +
-      "function handOff(){if(!pending)return;" +
+      "function handOff(){" +
       'if(document.querySelector("[data-shell-for]")&&tries++<200){setTimeout(handOff,50);return;}' +
+      "if(pendingButtonSelector){var b=document.querySelector(pendingButtonSelector);if(b){b.click();pendingButtonSelector=null;}}" +
+      "if(!pending)return;" +
       'var input=document.querySelector("input[type=file]");' +
       "if(!input){if(tries++<200){setTimeout(handOff,50);return;}pending=null;return;}" +
       "var files=pending;pending=null;" +
-      "try{var carrier=new DataTransfer();" +
-      "for(var j=0;j<files.length;j++)carrier.items.add(files[j]);" +
+      "try{var carrier=new DataTransfer();for(var j=0;j<files.length;j++)carrier.items.add(files[j]);" +
       'input.files=carrier.files;input.dispatchEvent(new Event("change",{bubbles:true}));}catch(e){}}' +
       "})();</script>",
   );
