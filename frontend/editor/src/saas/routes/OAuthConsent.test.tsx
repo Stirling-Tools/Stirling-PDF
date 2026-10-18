@@ -9,12 +9,14 @@ import type { ReactNode } from "react";
 
 const fetchMock = vi.fn();
 let search = "?authorization_id=auth-123";
+let anonymous = false;
 
 vi.mock("@app/auth/UseSession", () => ({
   useAuth: () => ({
     session: { access_token: "token-abc" },
     loading: false,
     displayName: "Ada",
+    isAnonymous: anonymous,
   }),
 }));
 
@@ -80,6 +82,7 @@ function renderPage() {
 describe("OAuthConsent", () => {
   beforeEach(() => {
     search = "?authorization_id=auth-123";
+    anonymous = false;
     fetchMock.mockReset();
     assign.mockReset();
     vi.stubGlobal("fetch", fetchMock);
@@ -109,6 +112,15 @@ describe("OAuthConsent", () => {
 
     expect(await screen.findByText(/Claude wants to access/)).toBeTruthy();
     expect(assign).not.toHaveBeenCalled();
+  });
+
+  it("asks a guest session to sign in instead of approving the app", async () => {
+    anonymous = true;
+
+    renderPage();
+
+    expect(await screen.findByText(/Sign in to continue/)).toBeTruthy();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("follows redirect_url instead of rendering consent when the grant already exists", async () => {

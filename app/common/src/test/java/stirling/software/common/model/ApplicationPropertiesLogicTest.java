@@ -32,13 +32,13 @@ class ApplicationPropertiesLogicTest {
     }
 
     @Test
-    void storageDefaultsEnableLocalStorageAndSigningWithoutSharingOrEncryption() {
+    void storageDefaultsEnableLocalStorageSigningAndSharingWithoutEncryption() {
         ApplicationProperties.Storage storage = new ApplicationProperties().getStorage();
 
         assertTrue(storage.isEnabled());
         assertTrue(storage.getSigning().isEnabled());
         assertEquals("local", storage.getProvider());
-        assertFalse(storage.getSharing().isEnabled());
+        assertTrue(storage.getSharing().isEnabled());
         assertFalse(storage.getEncryption().isEnabled());
     }
 

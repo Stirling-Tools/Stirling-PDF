@@ -36,17 +36,21 @@ public final class McpConfigValidator {
             return findings;
         }
 
-        // Anything that isn't exactly "apikey" runs the OAuth chain (mirrors isApiKeyMode()).
+        if ("builtin".equalsIgnoreCase(auth.getMode())) {
+            return validateBuiltin(mcp, auth);
+        }
+
+        // Anything that isn't exactly "apikey"/"builtin" runs the external-IdP OAuth chain.
         String mode = auth.getMode();
         if (mode != null && !mode.isBlank() && !"oauth".equalsIgnoreCase(mode.trim())) {
             findings.add(
                     warn(
                             "mcp.auth.mode='"
                                     + mode
-                                    + "' is not recognized (expected 'oauth' or 'apikey'); it falls"
-                                    + " back to the OAuth chain, which rejects every token unless"
-                                    + " issuer-uri and resource-id are set. A near-miss like"
-                                    + " 'api-key' is NOT treated as API-key mode."));
+                                    + "' is not recognized (expected 'builtin', 'oauth' or 'apikey');"
+                                    + " it falls back to the external-IdP OAuth chain, which rejects"
+                                    + " every token unless issuer-uri and resource-id are set. A"
+                                    + " near-miss like 'api-key' is NOT treated as API-key mode."));
         }
         findings.add(info("auth mode = oauth - running as an OAuth2 resource server for /mcp."));
 
@@ -174,6 +178,113 @@ public final class McpConfigValidator {
         }
 
         return findings;
+    }
+
+    /** Builtin mode owns issuance, so the resource id is the only thing that must be right. */
+    private static List<Finding> validateBuiltin(
+            ApplicationProperties.Mcp mcp, ApplicationProperties.Mcp.Auth auth) {
+        List<Finding> findings = new ArrayList<>();
+        findings.add(
+                info(
+                        "auth mode = builtin - Stirling is its own OAuth 2.1 authorization server for"
+                                + " /mcp (registration, PKCE, consent screen); no external IdP is"
+                                + " used and OAuth-only clients such as ChatGPT and Claude can"
+                                + " connect."));
+        ApplicationProperties.Mcp.Auth.Builtin builtin = auth.getBuiltin();
+        if (isBlank(auth.getResourceId())) {
+            findings.add(
+                    warn(
+                            "mcp.auth.resource-id is not set: it is this server's public /mcp URL and"
+                                    + " both the token audience and the issuer derive from it."
+                                    + " Clients will be rejected until it is set."));
+        } else if (!looksLikeUrl(auth.getResourceId())) {
+            findings.add(
+                    warn(
+                            "mcp.auth.resource-id='"
+                                    + auth.getResourceId()
+                                    + "' is not an http(s) URL."));
+        } else if (!auth.getResourceId().trim().endsWith("/mcp") && isBlank(builtin.getIssuer())) {
+            findings.add(
+                    warn(
+                            "mcp.auth.resource-id='"
+                                    + auth.getResourceId()
+                                    + "' does not end in /mcp, so the derived issuer is wrong. Set"
+                                    + " mcp.auth.builtin.issuer explicitly."));
+        }
+        if (!builtin.isAllowDynamicRegistration() && !builtin.isAllowClientMetadataDocuments()) {
+            findings.add(
+                    warn(
+                            "mcp.auth.builtin.allow-dynamic-registration and"
+                                    + " allow-client-metadata-documents are both off: no new"
+                                    + " client can register, so nothing new can connect."));
+        }
+        if (builtin.getAccessTokenMinutes() <= 0) {
+            findings.add(
+                    warn(
+                            "mcp.auth.builtin.access-token-minutes must be positive; tokens would"
+                                    + " expire the moment they are issued."));
+        }
+        if (!mcp.isScopesEnabled()) {
+            findings.add(
+                    info(
+                            "mcp.scopes-enabled=false - scope checks are skipped even though this"
+                                    + " server mints both mcp.tools.* scopes itself."));
+        }
+        if (findings.stream().noneMatch(f -> f.severity() == Severity.WARN)) {
+            findings.add(
+                    info(
+                            "Builtin authorization server ready: clients discover it at"
+                                    + " /.well-known/oauth-authorization-server."));
+        }
+        return findings;
+    }
+
+    /** Result-file checks: link prerequisites, URLs behind a load balancer, mode typos. */
+    public static List<Finding> validateResults(ApplicationProperties props) {
+        List<Finding> findings = new ArrayList<>();
+        ApplicationProperties.Mcp mcp = props.getMcp();
+        String links = lower(mcp.getDownloadLinks(), "private");
+        if (!List.of("private", "public", "off").contains(links)) {
+            findings.add(
+                    warn(
+                            "mcp.downloadLinks='"
+                                    + mcp.getDownloadLinks()
+                                    + "' is not recognized (expected private, public or off); it"
+                                    + " behaves as 'private'."));
+        }
+        if (!List.of("auto", "always", "never").contains(lower(mcp.getInlineResults(), "auto"))) {
+            findings.add(
+                    warn(
+                            "mcp.inlineResults='"
+                                    + mcp.getInlineResults()
+                                    + "' is not recognized (expected auto, always or never); it"
+                                    + " behaves as 'auto'."));
+        }
+        if ("off".equals(links)) {
+            return findings;
+        }
+        ApplicationProperties.Storage storage = props.getStorage();
+        if (!storage.isEnabled()
+                || !storage.getSharing().isEnabled()
+                || !storage.getSharing().isLinkEnabled()
+                || isBlank(props.getSystem().getFrontendUrl())) {
+            findings.add(
+                    info(
+                            "MCP results have no download links: they need storage.enabled,"
+                                    + " storage.sharing.enabled, storage.sharing.linkEnabled and"
+                                    + " system.frontendUrl. Results still work by fileId."));
+        } else if ("public".equals(links) && isBlank(props.getSystem().getBackendUrl())) {
+            findings.add(
+                    warn(
+                            "mcp.downloadLinks=public without system.backendUrl builds links from"
+                                    + " whichever node served the call; behind a load balancer set"
+                                    + " system.backendUrl to its public URL."));
+        }
+        return findings;
+    }
+
+    private static String lower(String value, String fallback) {
+        return isBlank(value) ? fallback : value.trim().toLowerCase(Locale.ROOT);
     }
 
     private static boolean isBlank(String value) {

@@ -28,14 +28,16 @@ public class StirlingPagesTool extends AbstractCategoryTool {
 
     @Override
     public String title() {
-        return "Edit PDF pages";
+        return "Merge, split and rotate pages";
     }
 
     @Override
     public String description() {
-        return "Manipulate PDF pages: merge, split, rotate, rearrange, crop, delete, overlay,"
-                + " add blank pages. Call stirling_describe_operation with the chosen op to get"
-                + " its parameters schema before invoking this tool.";
+        return "Work with PDF pages and structure: merge, split (by pages, size, chapters or"
+                + " sections), extract, reorder or remove pages, rotate, crop, scale, page layouts"
+                + " and booklets, overlay PDFs, find and replace text, and edit bookmarks."
+                + " Each operation lists its parameters in the 'operation' field; call"
+                + " stirling_describe_operation when an option you need is not shown.";
     }
 
     @Override

@@ -29,15 +29,18 @@ public class StirlingConvertTool extends AbstractCategoryTool {
 
     @Override
     public String title() {
-        return "Convert files";
+        return "Convert to or from PDF";
     }
 
     @Override
     public String description() {
-        return "Convert files between PDF and other formats (PDF<->Word, PDF<->image, HTML->PDF,"
-                + " etc.). Inspect the `operation` enum, then call stirling_describe_operation"
-                + " with the chosen op to get its parameters JSON Schema before calling this"
-                + " tool.";
+        return "Convert files to and from PDF: Word, Excel, PowerPoint and other office files,"
+                + " images, HTML, Markdown, email, e-books, comics, PostScript, text, tables (CSV,"
+                + " Excel), XML, PDF/A and accessible PDF/UA. A scanned PDF has no text to"
+                + " convert, so run ocr-pdf on it first. To make a PDF from HTML or Markdown you"
+                + " write, send it base64 in 'file' with fileName ending .html or .md."
+                + " Each operation lists its parameters in the 'operation' field; call"
+                + " stirling_describe_operation when an option you need is not shown.";
     }
 
     @Override

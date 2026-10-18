@@ -31,7 +31,7 @@ import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg"
 
 export default function Login() {
   const navigate = useNavigate();
-  const { session, loading, refreshSession } = useAuth();
+  const { session, loading, refreshSession, isAnonymous } = useAuth();
   const { t } = useTranslation();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,10 +68,11 @@ export default function Login() {
   }, []);
 
   useEffect(() => {
-    if (session && !loading && nextPath) {
+    // A guest session is not a sign-in: stay so the user can log in to their account.
+    if (session && !isAnonymous && !loading && nextPath) {
       navigate(nextPath, { replace: true });
     }
-  }, [session, loading, nextPath, navigate]);
+  }, [session, isAnonymous, loading, nextPath, navigate]);
 
   // Stashed as well as held in the URL: leaving to create an account loses the
   // query string, and the confirmation link cannot carry a `next`.
@@ -101,8 +102,8 @@ export default function Login() {
     return <LoadingFallback />;
   }
 
-  // Show logged in state if authenticated (unless bouncing back to `next`)
-  if (session && !loading) {
+  // Show logged in state if authenticated (unless bouncing back to `next`); guests get the form.
+  if (session && !isAnonymous && !loading) {
     if (nextPath) {
       return null;
     }

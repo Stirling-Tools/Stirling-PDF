@@ -288,6 +288,17 @@ public class SupabaseSecurityConfig {
                 }
             }
 
+            // Tokens Supabase issues to connected apps (Claude, ChatGPT) are for /mcp only, which
+            // has its own decoder; API callers use API keys and the web app user sessions.
+            String clientId = token.getClaimAsString("client_id");
+            if (clientId != null && !clientId.isBlank()) {
+                errors.add(
+                        new OAuth2Error(
+                                "invalid_token",
+                                "App tokens are only valid for MCP; use an API key or sign in",
+                                null));
+            }
+
             return errors.isEmpty()
                     ? OAuth2TokenValidatorResult.success()
                     : OAuth2TokenValidatorResult.failure(errors);
@@ -401,7 +412,12 @@ public class SupabaseSecurityConfig {
                         "Accept",
                         "Origin",
                         "X-API-KEY",
-                        "X-Browser-Id"));
+                        "X-Browser-Id",
+                        // MCP Streamable HTTP headers, for browser-based MCP clients
+                        "MCP-Protocol-Version",
+                        "Mcp-Method",
+                        "Mcp-Name",
+                        "Mcp-Session-Id"));
         cfg.setExposedHeaders(
                 List.of(
                         "WWW-Authenticate",

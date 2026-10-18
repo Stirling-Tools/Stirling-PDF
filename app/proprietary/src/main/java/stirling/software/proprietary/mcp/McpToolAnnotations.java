@@ -15,7 +15,7 @@ public record McpToolAnnotations(
     public static final McpToolAnnotations PRODUCES_FILE =
             new McpToolAnnotations(false, false, false, false);
 
-    /** Like {@link #PRODUCES_FILE}, but some operations call outside services (URLs, a TSA). */
+    /** A {@link #PRODUCES_FILE} variant for tools that can call outside services (URLs, a TSA). */
     public static final McpToolAnnotations PRODUCES_FILE_OPEN_WORLD =
             new McpToolAnnotations(false, false, false, true);
 

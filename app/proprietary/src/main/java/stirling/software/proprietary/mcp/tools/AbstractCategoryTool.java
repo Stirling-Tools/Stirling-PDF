@@ -42,6 +42,16 @@ abstract class AbstractCategoryTool implements McpTool {
         return McpToolAnnotations.PRODUCES_FILE;
     }
 
+    @Override
+    public boolean rendersWidget() {
+        return true;
+    }
+
+    @Override
+    public List<String> fileParams() {
+        return List.of(McpInputFiles.ATTACHMENT_ARG);
+    }
+
     protected List<OperationMeta> enabledOperations() {
         McpToolCatalog catalog = catalogProvider.getIfAvailable();
         if (catalog == null) {
@@ -67,40 +77,34 @@ abstract class AbstractCategoryTool implements McpTool {
         op.put("type", "string");
         List<OperationMeta> enabled = enabledOperations();
         StringBuilder opDesc = new StringBuilder();
+        // Signatures inline so models can call directly instead of describing every op first.
         opDesc.append(
-                "Operation id from this category. Call stirling_describe_operation first to learn"
-                        + " the exact parameters schema. Available operations:\n");
+                "Operation id from this category. Each lists its parameters as name:type (? ="
+                        + " optional, =default, a|b allowed values, fileId = a stored file's id);"
+                        + " pass them in 'parameters'. Call stirling_describe_operation for what an"
+                        + " option means or when one you need is not shown. Available"
+                        + " operations:\n");
         ArrayNode opEnum = op.putArray("enum");
         for (OperationMeta m : enabled) {
             opEnum.add(m.id());
-            opDesc.append("- ").append(m.id()).append(" - ").append(m.summary()).append('\n');
+            String signature = McpOperationSignature.of(m.paramSchema());
+            opDesc.append("- ").append(m.id());
+            if (!signature.isEmpty()) {
+                opDesc.append(' ').append(signature);
+            }
+            if (McpFileParameters.acceptsManyFiles(m.paramSchema())) {
+                opDesc.append(" [several files: pass fileIds in order]");
+            }
+            opDesc.append(" - ").append(m.summary()).append('\n');
         }
         op.put("description", opDesc.toString().trim());
 
         ObjectNode params = props.putObject("parameters");
         params.put("type", "object");
-        params.put(
-                "description",
-                "Per-operation parameters. Schema available via stirling_describe_operation.");
+        params.put("description", "Per-operation parameters, as listed with each operation above.");
         params.put("additionalProperties", true);
 
-        McpToolSupport.stringProperty(
-                props,
-                "file",
-                "Base64-encoded file content to process. The recommended way to provide a file for"
-                        + " most uses. Bounded by the MCP request size limit; for very large files"
-                        + " use 'fileId' instead.");
-        McpToolSupport.stringProperty(
-                props,
-                "fileName",
-                "Optional original filename (with extension) for the input; helps operations that"
-                        + " key off file type.");
-        McpToolSupport.stringProperty(
-                props,
-                "fileId",
-                "Reference to a file already stored via stirling_upload. Recommended only for large"
-                        + " files or multi-step workflows; most users should pass the file inline"
-                        + " via 'file' instead.");
+        McpInputFiles.inputProperties(props);
 
         ArrayNode required = schema.putArray("required");
         required.add("operation");
@@ -120,20 +124,33 @@ abstract class AbstractCategoryTool implements McpTool {
             return McpResponses.error(mapper, "MCP catalog is not available");
         }
         OperationMeta meta = catalog.findByOperationId(opId).orElse(null);
-        // Invalid/disabled/wrong-category op: return this category's operations.
-        if (meta == null || meta.category() != category()) {
+        if (meta != null && meta.category() != category()) {
+            return McpResponses.error(
+                    mapper,
+                    opId
+                            + " is an operation of "
+                            + meta.category().toolName()
+                            + ", not "
+                            + category().toolName()
+                            + ". Call "
+                            + meta.category().toolName()
+                            + " with the same arguments.");
+        }
+        // Invalid or disabled op: return this category's operations.
+        if (meta == null) {
             return operationListError(opId);
         }
         if (!context.hasScope(meta.requiredScope())) {
             return McpResponses.error(
                     mapper,
-                    "Insufficient scope: this operation requires '" + meta.requiredScope() + "'.");
+                    "Insufficient scope: this operation requires '" + meta.requiredScope() + "'.",
+                    McpResponses.Failure.INSUFFICIENT_SCOPE);
         }
         McpOperationExecutor executor = executorProvider.getIfAvailable();
         if (executor == null) {
             return McpResponses.error(mapper, "MCP execution is not available.");
         }
-        return executor.execute(meta, arguments);
+        return executor.execute(meta, arguments, context);
     }
 
     /**

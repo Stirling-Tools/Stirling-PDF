@@ -15,7 +15,8 @@ public class MetricsConfig {
         return new MeterFilter() {
             @Override
             public MeterFilterReply accept(Meter.Id id) {
-                if ("http.requests".equals(id.getName())) {
+                if ("http.requests".equals(id.getName())
+                        || id.getName().startsWith("stirling.mcp.")) {
                     return MeterFilterReply.NEUTRAL;
                 }
                 return MeterFilterReply.DENY;
