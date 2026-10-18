@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Conditional;
@@ -65,6 +66,9 @@ public class McpOAuthService {
     private static final Duration UNUSED_CLIENT_TTL = Duration.ofDays(7);
 
     private static final SecureRandom RANDOM = new SecureRandom();
+    // RFC 7636 4.1 and 4.2.
+    private static final Pattern PKCE_VERIFIER = Pattern.compile("[A-Za-z0-9._~-]{43,128}");
+    private static final Pattern S256_CHALLENGE = Pattern.compile("[A-Za-z0-9_-]{43}");
     private static final Base64.Encoder B64 = Base64.getUrlEncoder().withoutPadding();
 
     private final ApplicationProperties applicationProperties;
@@ -329,8 +333,9 @@ public class McpOAuthService {
         if (codeChallenge == null || codeChallenge.isBlank()) {
             throw McpOAuthException.invalidRequest("PKCE code_challenge is required.");
         }
-        if (codeChallenge.length() > 128) {
-            throw McpOAuthException.invalidRequest("code_challenge is too long.");
+        if (!S256_CHALLENGE.matcher(codeChallenge).matches()) {
+            throw McpOAuthException.invalidRequest(
+                    "code_challenge must be the unpadded base64url SHA-256 of the verifier.");
         }
         if (state != null && state.length() > MAX_STATE_LENGTH) {
             throw McpOAuthException.invalidRequest("state is too long.");
@@ -463,11 +468,25 @@ public class McpOAuthService {
         return username.toLowerCase(Locale.ROOT) + "\n" + clientId;
     }
 
-    /** True when this user already granted this client, so consent can be skipped. */
-    public boolean hasGrant(String username, String clientId) {
+    /**
+     * True when this user's standing grant already covers every scope in {@code scope}; a client
+     * asking for more must go back through consent.
+     */
+    public boolean grantCovers(String username, String clientId, String scope) {
         return grants.findByUsernameAndClientId(username, clientId)
                 .filter(this::accountStillOwns)
+                .filter(grant -> scopesCover(grant.getScope(), scope))
                 .isPresent();
+    }
+
+    static boolean scopesCover(String granted, String requested) {
+        if (granted == null || granted.isBlank()) {
+            return false;
+        }
+        List<String> have = Arrays.asList(granted.trim().split("\\s+"));
+        return requested == null
+                || requested.isBlank()
+                || have.containsAll(Arrays.asList(requested.trim().split("\\s+")));
     }
 
     /** Record the standing grant, attach a single-use code, and return the client redirect. */
@@ -762,7 +781,7 @@ public class McpOAuthService {
     }
 
     static boolean verifyPkce(String challenge, String verifier) {
-        if (challenge == null || verifier == null || verifier.isBlank()) {
+        if (challenge == null || verifier == null || !PKCE_VERIFIER.matcher(verifier).matches()) {
             return false;
         }
         String computed = B64.encodeToString(sha256(verifier.getBytes(StandardCharsets.US_ASCII)));

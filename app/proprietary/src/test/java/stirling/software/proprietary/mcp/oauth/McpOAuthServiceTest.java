@@ -50,7 +50,7 @@ class McpOAuthServiceTest {
     private static final String CIMD_ID = "https://chatgpt.com/oauth/client.json";
     private static final String CHATGPT_REDIRECT =
             "https://chatgpt.com/connector_platform_oauth_redirect";
-    private static final String VERIFIER = "verifier-verifier-verifier-verifier-1234";
+    private static final String VERIFIER = "verifier-verifier-verifier-verifier-1234567";
 
     private ApplicationProperties applicationProperties;
     private McpOAuthClientRepository clients;
@@ -207,7 +207,7 @@ class McpOAuthServiceTest {
         McpOAuthException e =
                 assertThrows(
                         McpOAuthException.class,
-                        () -> authorize("nope", REDIRECT, null, "challenge", "S256"));
+                        () -> authorize("nope", REDIRECT, null, s256(VERIFIER), "S256"));
         assertEquals("invalid_client", e.getError());
     }
 
@@ -222,7 +222,7 @@ class McpOAuthServiceTest {
                                         "client-1",
                                         "https://evil.example.com/cb",
                                         null,
-                                        "challenge",
+                                        s256(VERIFIER),
                                         "S256"));
         assertEquals("invalid_request", e.getError());
     }
@@ -234,10 +234,10 @@ class McpOAuthServiceTest {
                 McpOAuthException.class, () -> authorize("client-1", REDIRECT, null, null, "S256"));
         assertThrows(
                 McpOAuthException.class,
-                () -> authorize("client-1", REDIRECT, null, "challenge", "plain"));
+                () -> authorize("client-1", REDIRECT, null, s256(VERIFIER), "plain"));
         assertThrows(
                 McpOAuthException.class,
-                () -> authorize("client-1", REDIRECT, null, "challenge", null));
+                () -> authorize("client-1", REDIRECT, null, s256(VERIFIER), null));
     }
 
     @Test
@@ -251,7 +251,7 @@ class McpOAuthServiceTest {
                         "state-1",
                         "ignored",
                         "HTTPS://PDF.example.com/mcp/",
-                        "challenge",
+                        s256(VERIFIER),
                         "S256");
         assertEquals(
                 McpOAuthService.SCOPE_READ
@@ -279,7 +279,7 @@ class McpOAuthServiceTest {
                                         "s",
                                         null,
                                         "https://evil.example/mcp",
-                                        "challenge",
+                                        s256(VERIFIER),
                                         "S256"));
         assertEquals("invalid_target", e.getError());
         verify(authorizations, never()).save(any());
@@ -318,7 +318,7 @@ class McpOAuthServiceTest {
                         null,
                         "mcp.tools.read offline_access",
                         null,
-                        "challenge",
+                        s256(VERIFIER),
                         "S256");
         assertTrue(request.getScope().contains(McpOAuthService.SCOPE_OFFLINE));
         assertTrue(service.supportedScopes().contains(McpOAuthService.SCOPE_OFFLINE));
@@ -485,7 +485,7 @@ class McpOAuthServiceTest {
                         "s",
                         "offline_access",
                         null,
-                        "challenge",
+                        s256(VERIFIER),
                         "S256");
 
         assertEquals(CIMD_ID, request.getClientId());
@@ -517,7 +517,7 @@ class McpOAuthServiceTest {
                 .setAllowClientMetadataDocuments(false);
         assertThrows(
                 McpOAuthException.class,
-                () -> authorize(CIMD_ID, CHATGPT_REDIRECT, null, "challenge", "S256"));
+                () -> authorize(CIMD_ID, CHATGPT_REDIRECT, null, s256(VERIFIER), "S256"));
         verify(metadataFetcher, never()).fetch(anyString());
     }
 
@@ -539,7 +539,7 @@ class McpOAuthServiceTest {
                                         .build()));
         assertThrows(
                 McpOAuthException.class,
-                () -> authorize(CIMD_ID, CHATGPT_REDIRECT, null, "challenge", "S256"));
+                () -> authorize(CIMD_ID, CHATGPT_REDIRECT, null, s256(VERIFIER), "S256"));
     }
 
     @Test
@@ -644,7 +644,7 @@ class McpOAuthServiceTest {
 
     @Test
     void pkceVerificationRejectsBlanksAndMismatches() {
-        String verifier = "abcdefghijklmnopqrstuvwxyz1234567890";
+        String verifier = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFG";
         assertTrue(McpOAuthService.verifyPkce(s256(verifier), verifier));
         assertFalse(McpOAuthService.verifyPkce(s256(verifier), "other"));
         assertFalse(McpOAuthService.verifyPkce(s256(verifier), null));
@@ -691,7 +691,7 @@ class McpOAuthServiceTest {
                 .state(state)
                 .scope(service.grantedScope(null))
                 .resource(ISSUER + "/mcp")
-                .codeChallenge("challenge")
+                .codeChallenge(s256(VERIFIER))
                 .codeChallengeMethod("S256")
                 .status(McpAuthorizationRequest.Status.PENDING)
                 .createdAt(Instant.now())
@@ -789,6 +789,43 @@ class McpOAuthServiceTest {
     }
 
     @Test
+    void aStandingGrantSkipsConsentOnlyForScopesItAlreadyCovers() {
+        when(grants.findByUsernameAndClientId(USER, "client-1"))
+                .thenReturn(
+                        Optional.of(
+                                McpOAuthGrant.builder()
+                                        .id(1L)
+                                        .username(USER)
+                                        .clientId("client-1")
+                                        .scope("mcp.tools.read offline_access")
+                                        .build()));
+
+        assertTrue(service.grantCovers(USER, "client-1", "mcp.tools.read offline_access"));
+        assertTrue(service.grantCovers(USER, "client-1", "mcp.tools.read"));
+        assertFalse(
+                service.grantCovers(
+                        USER, "client-1", "mcp.tools.read mcp.tools.write offline_access"));
+    }
+
+    @Test
+    void scopesCoverNeedsEveryRequestedScope() {
+        assertTrue(McpOAuthService.scopesCover("a b c", "c a"));
+        assertTrue(McpOAuthService.scopesCover("a", " "));
+        assertFalse(McpOAuthService.scopesCover("a b", "a d"));
+        assertFalse(McpOAuthService.scopesCover(null, "a"));
+    }
+
+    @Test
+    void pkceRejectsVerifiersOutsideTheRfcFormat() {
+        String shortVerifier = "a".repeat(42);
+        String badChars = "a".repeat(42) + "+";
+        assertFalse(McpOAuthService.verifyPkce(s256(shortVerifier), shortVerifier));
+        assertFalse(McpOAuthService.verifyPkce(s256(badChars), badChars));
+        String longest = "a".repeat(128);
+        assertTrue(McpOAuthService.verifyPkce(s256(longest), longest));
+    }
+
+    @Test
     void aRefreshRetriedInsideTheGraceWindowIsRefusedWithoutRevokingTheSession() {
         McpRefreshToken stored = liveRefreshToken("retried");
         stored.setConsumedAt(Instant.now().minusSeconds(2));
@@ -820,7 +857,7 @@ class McpOAuthServiceTest {
         assertThrows(McpOAuthException.class, () -> service.refresh("inherited", "client-1"));
         verify(grants).deleteByUsernameAndClientId(USER, "client-1");
         assertFalse(service.isGrantActive(USER, "client-1", "1"));
-        assertFalse(service.hasGrant(USER, "client-1"));
+        assertFalse(service.grantCovers(USER, "client-1", null));
         verifyNoTokenMinted();
     }
 
