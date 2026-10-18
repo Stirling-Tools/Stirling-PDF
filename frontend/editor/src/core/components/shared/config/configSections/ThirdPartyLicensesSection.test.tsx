@@ -2,6 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { FrontendThirdPartyLicensesSection } from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
+import {
+  dedupeDependencies,
+  resolveLicenseDisplay,
+} from "@app/components/shared/config/configSections/licenseDisplay";
+import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- row expectations must follow the generated asset
+
+const expectedRows = dedupeDependencies(
+  (frontendLicenses as { dependencies?: [] }).dependencies ?? [],
+);
 
 const viewport = vi.hoisted(() => ({ phone: false }));
 
@@ -50,6 +59,14 @@ function renderSection() {
   );
 }
 
+function requireFirstRow() {
+  const row = expectedRows[0];
+  if (!row) {
+    throw new Error("3rdPartyLicenses.json has no rows");
+  }
+  return row;
+}
+
 describe("third-party licenses layout", () => {
   it("renders the three-column table on wide viewports", () => {
     viewport.phone = false;
@@ -71,11 +88,16 @@ describe("third-party licenses layout", () => {
     expect(screen.queryByRole("table")).toBeNull();
     expect(screen.getByPlaceholderText("Search dependencies")).toBeTruthy();
     const cards = container.querySelectorAll("div[data-index]");
-    expect(cards.length).toBe(73);
-    // Each card carries the module, its version and the license label.
-    expect(cards[0].textContent).toContain("@atlaskit/pragmatic-drag-and-drop");
-    expect(cards[0].textContent).toContain("2.0.2");
-    expect(cards[0].textContent).toContain("Apache-2.0");
+    // Expected rows follow the generated asset, so a dependency change cannot
+    // fail this test without any code change.
+    expect(cards.length).toBe(expectedRows.length);
+    // Each card carries the module, its version and the resolved license label.
+    const first = requireFirstRow();
+    expect(cards[0].textContent).toContain(first.moduleName);
+    expect(cards[0].textContent).toContain(first.moduleVersion);
+    expect(cards[0].textContent).toContain(
+      resolveLicenseDisplay(first.moduleLicense, first.moduleName).short,
+    );
   });
 
   it("clears the search from the field when nothing matches", () => {
