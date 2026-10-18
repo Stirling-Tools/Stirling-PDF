@@ -174,6 +174,16 @@ export function PdfViewerToolbar({
   const handleLabelNavigation = (raw: string) => {
     const value = raw.trim();
     const lower = value.toLowerCase();
+    // A document that restarts numbering gives two pages the same label; an
+    // unchanged field must keep the current page instead of resolving the
+    // duplicate to its first occurrence. Later occurrences stay reachable by
+    // typing the page index. Compare against the page's own label, not the
+    // displayed fallback, so the index of an unlabelled page still resolves
+    // the label it collides with.
+    const currentRawLabel = pageLabels?.[scrollState.currentPage - 1];
+    if (value && currentRawLabel && lower === currentRawLabel.toLowerCase()) {
+      return;
+    }
     const byLabel =
       value && pageLabels
         ? pageLabels.findIndex((label) => label.toLowerCase() === lower)
