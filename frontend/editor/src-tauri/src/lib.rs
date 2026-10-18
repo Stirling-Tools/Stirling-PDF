@@ -9,7 +9,6 @@ mod directory_drop;
 
 use commands::{
     add_opened_file,
-    cleanup_backend,
     clear_auth_token,
     clear_opened_files,
     clear_refresh_token,
@@ -43,6 +42,7 @@ use commands::{
     get_update_mode,
     print_pdf_file_native,
     set_update_mode,
+    spawn_backend_cleanup,
     start_backend,
     start_oauth_login,
     can_install_updates,
@@ -279,7 +279,7 @@ pub fn run() {
       match event {
         RunEvent::ExitRequested { .. } => {
           add_log("🔄 App exit requested, cleaning up...".to_string());
-          cleanup_backend();
+          spawn_backend_cleanup();
           // Use Tauri's built-in cleanup
           app_handle.cleanup_before_exit();
         }

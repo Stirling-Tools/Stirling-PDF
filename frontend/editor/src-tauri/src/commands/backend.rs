@@ -599,30 +599,80 @@ pub fn get_backend_port() -> Option<u16> {
     *port_guard
 }
 
-// Stop the backend on app exit: request a graceful Spring shutdown, then force.
-pub fn cleanup_backend() {
-    let child = BACKEND_PROCESS.lock().unwrap().take();
-    let Some(child) = child else { return };
-    let pid = child.pid();
-    add_log(format!("App shutting down, stopping backend (PID: {})", pid));
+// How long the backend gets to stop on its own before it is killed.
+const BACKEND_STOP_GRACE: Duration = Duration::from_secs(10);
+const BACKEND_STOP_POLL: Duration = Duration::from_millis(50);
 
-    if let Some(path) = BACKEND_SHUTDOWN_FILE.lock().unwrap().clone() {
-        if let Err(e) = std::fs::write(&path, b"stop") {
+/// Backend teardown, split so the wait can run off the event loop.
+struct BackendTeardown {
+    pid: u32,
+    shutdown_file: Option<PathBuf>,
+    grace: Duration,
+    poll: Duration,
+    is_exited: Box<dyn Fn() -> bool + Send>,
+    kill: Box<dyn FnOnce() + Send>,
+}
+
+impl BackendTeardown {
+    /// Asks the backend to stop. Never blocks.
+    fn request_stop(&self) {
+        let Some(path) = self.shutdown_file.as_ref() else {
+            return;
+        };
+        if let Err(e) = std::fs::write(path, b"stop") {
             add_log(format!("Could not write shutdown file: {}", e));
         }
     }
 
-    let deadline = Instant::now() + Duration::from_secs(10);
-    while !BACKEND_EXITED.load(Ordering::Acquire) && Instant::now() < deadline {
-        std::thread::sleep(Duration::from_millis(50));
-    }
+    /// Waits out the grace window, then forces the backend down.
+    fn reap(self) {
+        let deadline = Instant::now() + self.grace;
+        while !(self.is_exited)() && Instant::now() < deadline {
+            std::thread::sleep(self.poll);
+        }
 
-    if BACKEND_EXITED.load(Ordering::Acquire) {
-        add_log(format!("Backend (PID: {}) stopped gracefully", pid));
-    } else {
-        add_log(format!("Backend (PID: {}) did not stop in time, killing", pid));
-        let _ = child.kill();
+        if (self.is_exited)() {
+            add_log(format!("Backend (PID: {}) stopped gracefully", self.pid));
+        } else {
+            add_log(format!(
+                "Backend (PID: {}) did not stop in time, killing",
+                self.pid
+            ));
+            (self.kill)();
+        }
     }
+}
+
+fn take_backend_teardown() -> Option<BackendTeardown> {
+    let child = BACKEND_PROCESS.lock().unwrap().take()?;
+    let pid = child.pid();
+    add_log(format!(
+        "App shutting down, stopping backend (PID: {})",
+        pid
+    ));
+
+    Some(BackendTeardown {
+        pid,
+        shutdown_file: BACKEND_SHUTDOWN_FILE.lock().unwrap().clone(),
+        grace: BACKEND_STOP_GRACE,
+        poll: BACKEND_STOP_POLL,
+        is_exited: Box::new(|| BACKEND_EXITED.load(Ordering::Acquire)),
+        kill: Box::new(move || {
+            let _ = child.kill();
+        }),
+    })
+}
+
+/// Requests the graceful stop on the caller and reaps on a worker: waiting here
+/// stalls the event loop, and the shutdown still needs it to service webview IPC.
+/// The kill is best effort, since the process can exit before the grace window ends.
+fn spawn_teardown(teardown: BackendTeardown) -> std::thread::JoinHandle<()> {
+    teardown.request_stop();
+    std::thread::spawn(move || teardown.reap())
+}
+
+pub fn spawn_backend_cleanup() -> Option<std::thread::JoinHandle<()>> {
+    Some(spawn_teardown(take_backend_teardown()?))
 }
 
 #[cfg(test)]
@@ -766,5 +816,142 @@ mod tests {
 
         assert_eq!(selected.file_name().unwrap(), "stirling-pdf-3.0.0-rc1.jar");
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    use super::{spawn_teardown, BackendTeardown};
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
+    use std::time::{Duration, Instant};
+
+    fn test_teardown(
+        shutdown_file: Option<PathBuf>,
+        grace: Duration,
+        exited: Arc<AtomicBool>,
+        killed: Arc<AtomicBool>,
+    ) -> BackendTeardown {
+        BackendTeardown {
+            pid: 4242,
+            shutdown_file,
+            grace,
+            poll: Duration::from_millis(10),
+            is_exited: Box::new(move || exited.load(Ordering::Acquire)),
+            kill: Box::new(move || killed.store(true, Ordering::Release)),
+        }
+    }
+
+    // The exit handler used to wait out the whole grace window (10 s in
+    // production) before the app could continue quitting.
+    #[test]
+    fn spawn_teardown_returns_before_the_backend_stops() {
+        let dir = tempfile::tempdir().unwrap();
+        let stop_file = dir.path().join("backend.stop");
+        let killed = Arc::new(AtomicBool::new(false));
+        let teardown = test_teardown(
+            Some(stop_file.clone()),
+            Duration::from_millis(400),
+            Arc::new(AtomicBool::new(false)),
+            killed.clone(),
+        );
+
+        let started = Instant::now();
+        let worker = spawn_teardown(teardown);
+        let elapsed = started.elapsed();
+
+        assert!(
+            elapsed < Duration::from_millis(100),
+            "exit handler blocked for {elapsed:?}"
+        );
+        assert_eq!(
+            std::fs::read(&stop_file).unwrap(),
+            b"stop",
+            "the backend must be asked to stop before the handler returns"
+        );
+
+        worker.join().unwrap();
+        assert!(
+            killed.load(Ordering::Acquire),
+            "the worker must still force a backend that never stops"
+        );
+    }
+
+    #[test]
+    fn reap_leaves_a_backend_that_stops_on_its_own() {
+        let exited = Arc::new(AtomicBool::new(false));
+        let killed = Arc::new(AtomicBool::new(false));
+        let teardown = test_teardown(None, Duration::from_secs(5), exited.clone(), killed.clone());
+
+        let backend = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(50));
+            exited.store(true, Ordering::Release);
+        });
+        teardown.reap();
+        backend.join().unwrap();
+
+        assert!(!killed.load(Ordering::Acquire));
+    }
+
+    #[test]
+    fn reap_kills_a_backend_that_never_stops() {
+        let killed = Arc::new(AtomicBool::new(false));
+        let teardown = test_teardown(
+            None,
+            Duration::from_millis(150),
+            Arc::new(AtomicBool::new(false)),
+            killed.clone(),
+        );
+
+        teardown.reap();
+
+        assert!(killed.load(Ordering::Acquire));
+    }
+
+    #[test]
+    fn reap_returns_within_the_grace_window() {
+        let teardown = test_teardown(
+            None,
+            Duration::from_millis(200),
+            Arc::new(AtomicBool::new(false)),
+            Arc::new(AtomicBool::new(false)),
+        );
+
+        let started = Instant::now();
+        teardown.reap();
+        let elapsed = started.elapsed();
+
+        assert!(elapsed >= Duration::from_millis(200));
+        assert!(
+            elapsed < Duration::from_secs(1),
+            "reap overran its grace window: {elapsed:?}"
+        );
+    }
+
+    #[test]
+    fn spawn_teardown_leaves_a_backend_that_stops_on_its_own() {
+        let exited = Arc::new(AtomicBool::new(false));
+        let killed = Arc::new(AtomicBool::new(false));
+        let teardown = test_teardown(None, Duration::from_secs(5), exited.clone(), killed.clone());
+
+        let backend = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(50));
+            exited.store(true, Ordering::Release);
+        });
+
+        let started = Instant::now();
+        spawn_teardown(teardown).join().unwrap();
+        let elapsed = started.elapsed();
+        backend.join().unwrap();
+
+        assert!(
+            elapsed < Duration::from_secs(1),
+            "a backend that stops on its own must not hold the worker: {elapsed:?}"
+        );
+        assert!(!killed.load(Ordering::Acquire));
+    }
+
+    #[test]
+    fn spawn_backend_cleanup_is_a_no_op_without_a_backend() {
+        // No test starts a backend, so the global is empty.
+        assert!(super::spawn_backend_cleanup().is_none());
     }
 }
