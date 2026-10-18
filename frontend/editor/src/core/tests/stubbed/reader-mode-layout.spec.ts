@@ -25,9 +25,11 @@ async function seedFullscreenPanel(page: Page): Promise<void> {
 interface Surface {
   left: number;
   right: number;
+  width: number;
   sidebarRight: number;
   sidebarHit: boolean;
   viewportWidth: number;
+  scrollWidth: number;
 }
 
 async function readSurface(page: Page): Promise<Surface | null> {
@@ -44,10 +46,26 @@ async function readSurface(page: Page): Promise<Surface | null> {
     return {
       left: surface.left,
       right: surface.right,
+      width: surface.width,
       sidebarRight: sidebar.right,
       sidebarHit: !!hit && sidebarEl.contains(hit),
       viewportWidth: window.innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
     };
+  });
+}
+
+/** Mirrors the app's own RTL switch: language + document direction. */
+async function enableRtl(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    localStorage.setItem("stirling-language", "ar-AR");
+    localStorage.setItem("stirling-language-source", "user");
+    const applyDir = () => {
+      document.documentElement.setAttribute("dir", "rtl");
+      document.documentElement.setAttribute("lang", "ar-AR");
+    };
+    if (document.documentElement) applyDir();
+    else document.addEventListener("DOMContentLoaded", applyDir);
   });
 }
 
@@ -62,6 +80,26 @@ function isSettled(surface: Surface | null, before: Surface | null): boolean {
     surface.right <= surface.viewportWidth + 0.5 &&
     Math.abs(surface.left - before.left) < 1 &&
     Math.abs(surface.right - before.right) < 1 &&
+    surface.sidebarHit
+  );
+}
+
+/** RTL: the surface anchors to the trailing (right) edge and the sidebar keeps its side. */
+function isSettledRtl(surface: Surface | null): boolean {
+  if (!surface) return false;
+  return (
+    Math.abs(surface.right - surface.viewportWidth) < 1 &&
+    surface.width >= 360 &&
+    surface.sidebarHit &&
+    surface.scrollWidth <= surface.viewportWidth
+  );
+}
+
+function isSettledAtWidth(surface: Surface | null, width: number): boolean {
+  if (!surface) return false;
+  return (
+    Math.abs(surface.right - width) < 1 &&
+    Math.abs(surface.left - surface.sidebarRight) < 1 &&
     surface.sidebarHit
   );
 }
@@ -90,6 +128,38 @@ test("fullscreen tool catalogue keeps its box across reader wings", async ({
   // Flush with the sidebar, inside the viewport, same box as before the trip.
   await expect
     .poll(async () => isSettled(await readSurface(page), before), {
+      timeout: 5_000,
+    })
+    .toBe(true);
+});
+
+test("fullscreen catalogue anchors to the trailing edge in RTL", async ({
+  page,
+}) => {
+  await enableRtl(page);
+  await seedFullscreenPanel(page);
+
+  await page.goto("/editor", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".tool-panel__fullscreen-surface")).toBeVisible();
+  await wingsSettled(page);
+  await expect
+    .poll(async () => isSettledRtl(await readSurface(page)), { timeout: 5_000 })
+    .toBe(true);
+});
+
+test("fullscreen catalogue re-measures when the viewport changes", async ({
+  page,
+}) => {
+  await seedFullscreenPanel(page);
+
+  await page.goto("/editor", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".tool-panel__fullscreen-surface")).toBeVisible();
+  await wingsSettled(page);
+
+  const narrow = { width: 1400, height: 900 };
+  await page.setViewportSize(narrow);
+  await expect
+    .poll(async () => isSettledAtWidth(await readSurface(page), narrow.width), {
       timeout: 5_000,
     })
     .toBe(true);

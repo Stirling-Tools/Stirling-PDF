@@ -23,7 +23,7 @@ interface PanelBox {
  * The translate applied by the element and each of its ancestors: the wings
  * slide wrappers, not the elements themselves.
  */
-function translatedBy(el: Element): { x: number; y: number } {
+export function translatedBy(el: Element): { x: number; y: number } {
   let x = 0;
   let y = 0;
   for (let node: Element | null = el; node; node = node.parentElement) {
