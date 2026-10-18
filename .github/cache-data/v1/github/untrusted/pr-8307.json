@@ -10959,145 +10959,145 @@
       "workflow_run_id": 38881385385
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/pre-commit-npm-cache/linux-x64/fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf/v6": {
-      "object": "sha256:8bca8f255bb4e9076f0e32fd453be85fa34dfc654e8829f5b1675ec93e4b7651",
+      "object": "sha256:05b856b698a555cc30b6cc27029781a6db49f3285054f43647e6ac62e5e22039",
       "storage": "github-artifact",
-      "updated_at": "2026-10-16T09:55:29.573Z",
+      "updated_at": "2026-10-18T07:00:20.617Z",
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
-      "size": 385652244,
+      "size": 385717870,
       "parts": [
         {
           "index": 0,
-          "object": "sha256:7f1ee928167bc0069b6a24f58e2f500978b098e005d91ae46f315f58b176acb8",
+          "object": "sha256:88e6cedfd91568638eae599c6b0e702e69b494a277c6290845b35e9c0f3eeb64",
           "size": 25165824,
-          "artifact_id": 12038204593,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000000",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12128846004,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000000",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 1,
-          "object": "sha256:581ac6580c94c9ac039ac03cf997932dc7a3c587ff792a259469fcbc5cfae2d0",
+          "object": "sha256:d7dd75987f281c7f068208939161d89664b154a0933cd0065eea13d3a3f209bd",
           "size": 25165824,
-          "artifact_id": 12038851113,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000001",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12127904295,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000001",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 2,
-          "object": "sha256:acf21f51657aca2b4bf957f512d1649e4835146b9630ef1fd54c74953ad53cd6",
+          "object": "sha256:ee037dcaaf056263622d1de87d9becedd9d1cbc9a9eccf9841f7adc9a0117939",
           "size": 25165824,
-          "artifact_id": 12038378782,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000002",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12128387784,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000002",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 3,
-          "object": "sha256:6263c7a77cfef0d47a54e26187ea33e784cfec1f1bc532e397bb75806e56902b",
+          "object": "sha256:39a069c1f74c5fac81d320803cd1dfb7e36af1eebadabcbff6b73705b0b2d443",
           "size": 25165824,
-          "artifact_id": 12038846145,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000003",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12127859576,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000003",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 4,
-          "object": "sha256:ddd6341961c777bce148d237c9df813a621bf68c7f5dc564c6d7327ffeee61c1",
+          "object": "sha256:4af1302c0268382a59a644b2a2e6a343164e79098b1f8e932b02838b0e415b04",
           "size": 25165824,
-          "artifact_id": 12039065640,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000004",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12128213415,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000004",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 5,
-          "object": "sha256:324d706fcf2b1c6d191f8822d5cce745f3e516cfc5be30bb47fd6d351c42b35f",
+          "object": "sha256:7ba0f74bd962fb3e6f9ddcdc2895323b76f45ee0ea83d11598f558ade16110d5",
           "size": 25165824,
-          "artifact_id": 12039060643,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000005",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12127804583,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000005",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 6,
-          "object": "sha256:5988afda6bc4335cebcdcbec1c4a3020af7ca6ff3a62a09d829c28b60b1a172d",
+          "object": "sha256:2aa62d2b428ed84a1675a7ead48475ba879e6f036973327e489c36a7590fdf9b",
           "size": 25165824,
-          "artifact_id": 12038249355,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000006",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12128093698,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000006",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 7,
-          "object": "sha256:ddf8399a1a7bd2f5995a67c5a6598d2ded11439a0dec52715570d369d8436725",
+          "object": "sha256:9a4223470108bded0d22771b81a8bd705c7af9f03605abc847f95f472a315105",
           "size": 25165824,
-          "artifact_id": 12038109961,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000007",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12128038987,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000007",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 8,
-          "object": "sha256:4d9f967a5acd86a7d37ea1d3a1b53850ea5ee45cabf9c7c525a834ba60a4a0a4",
+          "object": "sha256:63f1dca72d84db87a3133e7245f231db75dc67f7734c491f8c542a51afc00e6a",
           "size": 25165824,
-          "artifact_id": 12038204620,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000008",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12128846019,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000008",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 9,
-          "object": "sha256:4a1bed4875a3a7c5f0b758ec122e61d9f0416744093f58284c0ba2e78284a33a",
+          "object": "sha256:6e05adbde72682679226842bf93346a61429a9a426ea044391df0917387472e1",
           "size": 25165824,
-          "artifact_id": 12039315021,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000009",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12127989100,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000009",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 10,
-          "object": "sha256:24bddddef116f3adb63767201d1f2ec6bdb474089edfccc3b41bafe103e0cffe",
+          "object": "sha256:fd005e9045f32e75f455391d9a49875261c023d60ee0fba7391724e6cf7146bf",
           "size": 25165824,
-          "artifact_id": 12039220233,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000010",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12128517428,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000010",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 11,
-          "object": "sha256:8a5fce1a2002cc155e03cc79d03aa563cc43528dc284604f2d63cf2ce2314d35",
+          "object": "sha256:2180b3b1e434dcacf5020267c77b9d7963d9328e6118366036e3d7877bf6523d",
           "size": 25165824,
-          "artifact_id": 12038423664,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000011",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12128527338,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000011",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 12,
-          "object": "sha256:cf97e8f3986c10b0c4ad4c7689f3d3da96e00b88c68a2c2fb8af82d13a4c1277",
+          "object": "sha256:834ead8e59053fa45d785ee13c6cd3a9764e815179189cfc98c9bbcbe9d98150",
           "size": 25165824,
-          "artifact_id": 12039015860,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000012",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12127824628,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000012",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 13,
-          "object": "sha256:f215b0fc02de6c0eaad59439f25cdb84274e38d5948e76e33b979ace699e7388",
+          "object": "sha256:2870a4fddc67eeb5372ba2abef131cc5169cbad547d07ed532d2e15db0d44dec",
           "size": 25165824,
-          "artifact_id": 12039030762,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000013",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12127809610,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000013",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 14,
-          "object": "sha256:ef7dbdce410683d6e4d6d7101bb0034823d33b5d9868ef1caf38c629c213f680",
+          "object": "sha256:a0a0dbd76b7615f79514b756ab59803c2a64d7610bb11c3d69a136a6b26b8964",
           "size": 25165824,
-          "artifact_id": 12038234714,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000014",
-          "workflow_run_id": 38883434118
+          "artifact_id": 12128014117,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000014",
+          "workflow_run_id": 39105894262
         },
         {
           "index": 15,
-          "object": "sha256:3830bf082bdb01e46dce42284e588c8cb7ac027d7f007da80081bde5dd5c8088",
-          "size": 8164884,
-          "artifact_id": 12038129869,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000015",
-          "workflow_run_id": 38883434118
+          "object": "sha256:1bb86dc5466802ad1f131068febb89367026985a5132fbfb596c17809e48b669",
+          "size": 8230510,
+          "artifact_id": 12127859609,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000015",
+          "workflow_run_id": 39105894262
         }
       ],
-      "artifact_id": 12038204593,
-      "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--8bca8f255bb4e9076f0e32fd453be85fa34dfc654e88-part-000000",
-      "workflow_run_id": 38883434118
+      "artifact_id": 12128846004,
+      "artifact_name": "cache-untrusted-pr-8307-pre-commit-npm-cache-linux-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v6--05b856b698a555cc30b6cc27029781a6db49f3285054-part-000000",
+      "workflow_run_id": 39105894262
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/pre-commit-task-state-cache/linux-x64/f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf/v6": {
       "object": "sha256:8d725c056feb5679e2cbe407799d5141207b584493d0217a05796655c55657b7",
@@ -16992,6 +16992,6 @@
   },
   "monitoring": {
     "window_started_at": "2026-10-18T06:59:32.286Z",
-    "writes": 3
+    "writes": 4
   }
 }
