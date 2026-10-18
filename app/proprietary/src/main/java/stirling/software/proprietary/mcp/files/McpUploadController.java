@@ -36,6 +36,9 @@ import stirling.software.proprietary.security.service.UserService;
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class McpUploadController {
 
+    static final String EXPIRED_MESSAGE =
+            "This upload link has expired or was already used. Ask the assistant for a new one.";
+
     private final McpUploadLinks links;
     private final McpFiles files;
     private final UserService userService;
@@ -71,12 +74,7 @@ public class McpUploadController {
         if (user == null) {
             return browser
                     ? html(HttpStatus.NOT_FOUND, expiredPage())
-                    : json(
-                            HttpStatus.NOT_FOUND,
-                            Map.of(
-                                    "error",
-                                    "This upload link has expired or was already used. Ask the"
-                                            + " assistant for a new one."));
+                    : json(HttpStatus.NOT_FOUND, Map.of("error", EXPIRED_MESSAGE));
         }
         if (file.isEmpty()) {
             links.reopen(token, owner.get());
@@ -145,7 +143,7 @@ public class McpUploadController {
                         + " is uploaded.</p>");
     }
 
-    private static String expiredPage() {
+    static String expiredPage() {
         return page(
                 "This link has expired",
                 "<p>It was already used, or more than 15 minutes have passed. Ask the assistant"
