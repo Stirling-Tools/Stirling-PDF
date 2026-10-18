@@ -60,7 +60,6 @@ permissions:
   pull-requests: write
 
 env:
-  TASK_TEMP_DIR: ${{ github.workspace }}/.cache/task/task-state
   JAVA_VERSION: 25
   GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
   GRADLE_FILES_TO_HASH: |
@@ -240,10 +239,7 @@ jobs:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
             tauri-build-target:
               path: frontend/editor/src-tauri/target
-            tauri-task-state-cache:
-              path: .cache/task/task-state
           key: |
-            tauri-task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             tauri-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             tauri-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             tauri-cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
@@ -850,10 +846,7 @@ jobs:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
             test-tauri-target:
               path: frontend/editor/src-tauri/target
-            test-task-state-cache:
-              path: .cache/task/task-state
           key: |
-            test-task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             test-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             test-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             test-cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}

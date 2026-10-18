@@ -24,7 +24,6 @@ permissions:
   contents: read
 
 env:
-  TASK_TEMP_DIR: ${{ github.workspace }}/.cache/task/task-state
   NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
 
 jobs:
@@ -91,10 +90,7 @@ jobs:
               path: frontend/editor/dist
             e2e-subbed-npm-cache:
               path: .cache/npm
-            e2e-subbed-task-state-cache:
-              path: .cache/task/task-state
           key: |
-            e2e-subbed-task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             e2e-subbed-npm-cache=${{ inputs.npm-hash }}
             e2e-subbed-frontend-dist=${{ inputs.frontend-dist-hash }}
           token: ${{ github.token }}

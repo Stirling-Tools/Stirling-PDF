@@ -14,7 +14,6 @@ permissions:
 
 env:
   UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
-  TASK_TEMP_DIR: ${{ github.workspace }}/.cache/task/task-state
 
 jobs:
   engine:
@@ -40,10 +39,7 @@ jobs:
           multi-cache: |
             ai-engine-setup-uv-cache:
               path: .cache/setup-uv-cache
-            ai-engine-task-state-cache:
-              path: .cache/task/task-state
           key: |
-            ai-engine-task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             ai-engine-setup-uv-cache=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
 
       - name: Install uv

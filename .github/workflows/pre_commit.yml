@@ -9,9 +9,6 @@ on:
 permissions:
   contents: read
 
-env:
-  TASK_TEMP_DIR: ${{ github.workspace }}/.cache/task/task-state
-
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -49,10 +46,7 @@ jobs:
               path: .cache/uv-python-dir
             pre-commit-npm-cache:
               path: .cache/npm
-            pre-commit-task-state-cache:
-              path: .cache/task/task-state
           key: |
-            pre-commit-task-state-cache=${{ hashFiles('.taskfiles/**', 'Taskfile.yml') }}
             pre-commit-setup-uv-cache=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
             pre-commit-uv-python-dir=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
             pre-commit-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
