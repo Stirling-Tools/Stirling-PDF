@@ -86,7 +86,10 @@ export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
       } else if (resolved instanceof PDFDict) {
         result.push({
           name: textOf(resolved.lookup(PDFName.of("Name"))),
-          order: normalizeOrder(resolved.lookup(PDFName.of("Order")), depth + 1),
+          order: normalizeOrder(
+            resolved.lookup(PDFName.of("Order")),
+            depth + 1,
+          ),
         });
       }
     }
@@ -94,7 +97,10 @@ export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
   };
 
   const bytes = await file.arrayBuffer();
-  const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+  // An empty password opens owner-password-only files for reading; anything
+  // with a real user password fails like the pdf.js path did, instead of
+  // decoding encrypted OCG names as if they were clear text.
+  const doc = await PDFDocument.load(bytes, { password: "" });
   const catalog = doc.context.lookup(doc.context.trailerInfo.Root);
   if (!(catalog instanceof PDFDict)) return [];
 

@@ -167,6 +167,19 @@ describe("layerUtils", () => {
       ]);
     });
 
+    // qpdf --encrypt "" <owner> 256: opens with an empty user password, which
+    // is what the sidebar has; the OCG names are encrypted on disk, so they
+    // only decode when the load supplies that password.
+    it("decrypts layer names in an owner-password-only file", async () => {
+      const layers = await readPdfLayers(
+        fixtureBlob("layers-encrypted-owner-password.pdf"),
+      );
+      expect(layers.map((l) => l.name).sort()).toEqual([
+        "Background Layer",
+        "Watermark Layer",
+      ]);
+    });
+
     it("resolves indirect /ON, /OFF and /Order entries", async () => {
       const doc = await PDFDocument.create();
       doc.addPage([400, 400]);
@@ -198,7 +211,10 @@ describe("layerUtils", () => {
 
       const layers = await readPdfLayers(toBlob(await doc.save()));
 
-      expect(layers.map((l) => l.name)).toEqual(["Indirect Off", "Indirect On"]);
+      expect(layers.map((l) => l.name)).toEqual([
+        "Indirect Off",
+        "Indirect On",
+      ]);
       expect(layers[0].visible).toBe(false);
       expect(layers[1].visible).toBe(true);
     });
