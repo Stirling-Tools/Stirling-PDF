@@ -211,21 +211,40 @@ public class McpFiles {
                 : trimmed;
     }
 
+    /** Loads a tool input, refusing files over {@code mcp.maxInputFileBytes}. */
     public Loaded load(User user, String fileIdOrUri) throws McpFileException {
-        return load(user, fileIdOrUri, Long.MAX_VALUE);
+        long max = applicationProperties.getMcp().getMaxInputFileBytes();
+        return load(
+                user,
+                fileIdOrUri,
+                max > 0 ? max : Long.MAX_VALUE,
+                "the input limit",
+                "Use a smaller file");
     }
 
     /** Checks ownership and size before opening content; reads at most the limit plus one byte. */
     public Loaded load(User user, String fileIdOrUri, long maxBytes) throws McpFileException {
+        return load(
+                user,
+                fileIdOrUri,
+                maxBytes,
+                "the inline limit",
+                "Use the result's download link instead");
+    }
+
+    private Loaded load(
+            User user, String fileIdOrUri, long maxBytes, String limitName, String advice)
+            throws McpFileException {
+        SizeLimit limit = new SizeLimit(maxBytes, limitName, advice);
         String fileId = idOf(fileIdOrUri);
         String unknown = "Unknown or expired fileId '" + fileId + "'. Upload the file again.";
         Long storedId = parseStoredId(fileId);
         if (storedId != null && usesStoredFiles(user)) {
             try {
                 StoredFile file = storage.getAccessibleFile(user, storedId);
-                requireWithinLimit(file.getSizeBytes(), maxBytes);
+                limit.require(file.getSizeBytes());
                 try (InputStream in = storage.loadFile(file).getInputStream()) {
-                    return new Loaded(readWithinLimit(in, maxBytes), file.getOriginalFilename());
+                    return new Loaded(limit.read(in), file.getOriginalFilename());
                 }
             } catch (ResponseStatusException e) {
                 throw new McpFileException(unknown);
@@ -240,9 +259,9 @@ public class McpFiles {
             if (maxBytes == Long.MAX_VALUE) {
                 return new Loaded(tempStore.retrieveBytes(fileId), fileId);
             }
-            requireWithinLimit(tempStore.getFileSize(fileId), maxBytes);
+            limit.require(tempStore.getFileSize(fileId));
             try (InputStream in = tempStore.retrieveInputStream(fileId)) {
-                return new Loaded(readWithinLimit(in, maxBytes), fileId);
+                return new Loaded(limit.read(in), fileId);
             }
         } catch (SecurityException e) {
             throw new McpFileException(unknown);
@@ -251,25 +270,30 @@ public class McpFiles {
         }
     }
 
-    private static void requireWithinLimit(long size, long maxBytes) throws McpFileException {
-        if (size > maxBytes) {
-            throw new McpFileException(
-                    "File is "
-                            + size
-                            + " bytes, over the inline limit of "
-                            + maxBytes
-                            + " bytes. Use the result's download link instead.");
+    private record SizeLimit(long maxBytes, String name, String advice) {
+        void require(long size) throws McpFileException {
+            if (size > maxBytes) {
+                throw new McpFileException(
+                        "File is "
+                                + size
+                                + " bytes, over "
+                                + name
+                                + " of "
+                                + maxBytes
+                                + " bytes. "
+                                + advice
+                                + ".");
+            }
         }
-    }
 
-    private static byte[] readWithinLimit(InputStream in, long maxBytes)
-            throws IOException, McpFileException {
-        byte[] bytes =
-                maxBytes >= Integer.MAX_VALUE - 1L
-                        ? in.readAllBytes()
-                        : in.readNBytes((int) Math.max(0, maxBytes) + 1);
-        requireWithinLimit(bytes.length, maxBytes);
-        return bytes;
+        byte[] read(InputStream in) throws IOException, McpFileException {
+            byte[] bytes =
+                    maxBytes >= Integer.MAX_VALUE - 1L
+                            ? in.readAllBytes()
+                            : in.readNBytes((int) Math.max(0, maxBytes) + 1);
+            require(bytes.length);
+            return bytes;
+        }
     }
 
     private static LocalDateTime updated(StoredFile file) {
