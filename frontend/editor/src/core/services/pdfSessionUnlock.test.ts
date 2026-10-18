@@ -347,16 +347,20 @@ describe("session PDF access", () => {
     ).not.toThrow();
   });
 
-  it("rejects native exports when the source protection cannot be verified", async () => {
+  it("adopts native exports when the source only has locally probed protection", async () => {
     post.mockResolvedValueOnce({ data: access });
     const output = new File(["export"], "edited.pdf");
-    await expect(
-      verifyEditedPdfProtection(output, {
-        ...access,
-        encryptionKeyLength: undefined,
-      }),
-    ).rejects.toThrow("Unable to preserve PDF protection");
-    expect(getPdfAccess(output)).toBeUndefined();
+    const probedSource = {
+      ...access,
+      encryptionKeyLength: undefined,
+      encryptionRevision: undefined,
+      credentialFingerprint: undefined,
+    };
+    await verifyEditedPdfProtection(output, probedSource);
+    expect(getPdfAccess(output)).toEqual({
+      ...access,
+      openingPassword: access.password,
+    });
   });
 
   it("isolates same-name files and drops access when a document closes", () => {

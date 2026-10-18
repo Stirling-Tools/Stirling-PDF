@@ -54,6 +54,9 @@ vi.mock("@app/components/tooltips/useAddPasswordPermissionsTips", () => ({
 vi.mock("@app/services/documentBytesCache", () => ({
   getDocumentBytes: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
 }));
+vi.mock("@app/services/pdfPermissionProbe", () => ({
+  probePdfPermissions: () => Promise.resolve(null),
+}));
 vi.mock("@app/services/pdfiumService", () => ({
   getPdfiumModule: vi
     .fn()

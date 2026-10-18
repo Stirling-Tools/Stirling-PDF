@@ -11,8 +11,10 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { ComponentProps } from "react";
 import { PdfPreviewUnlockGate } from "@app/components/viewer/PdfPreviewUnlockGate";
 import type EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
+import type { PdfPermissionSnapshot } from "@app/services/pdfPermissionProbe";
 import {
   clearPdfAccess,
+  getPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
 } from "@app/services/pdfPasswordStore";
@@ -22,9 +24,16 @@ vi.mock("react-i18next", () => {
   return { useTranslation: () => ({ t }) };
 });
 
-const mock = vi.hoisted(() => ({ probe: vi.fn(), unlock: vi.fn() }));
+const mock = vi.hoisted(() => ({
+  trailer: vi.fn(),
+  unlock: vi.fn(),
+  probePermissions: vi.fn(),
+}));
 vi.mock("@app/utils/thumbnailUtils", () => ({
-  looksEncryptedFromTrailer: mock.probe,
+  looksEncryptedFromTrailer: mock.trailer,
+}));
+vi.mock("@app/services/pdfPermissionProbe", () => ({
+  probePdfPermissions: mock.probePermissions,
 }));
 vi.mock("@app/contexts/FileContext", () => ({
   useFileActions: () => ({ actions: { unlockPreviewPdf: mock.unlock } }),
@@ -58,6 +67,22 @@ const access: PdfAccess = {
   canAssemble: false,
   pageCount: 1,
 };
+const openableSnapshot: PdfPermissionSnapshot = {
+  encrypted: true,
+  requiresOpeningPassword: false,
+  permissions: -4,
+  ownerAuthenticated: true,
+  pageCount: 1,
+  signed: false,
+};
+const passwordSnapshot: PdfPermissionSnapshot = {
+  encrypted: true,
+  requiresOpeningPassword: true,
+  permissions: 0,
+  ownerAuthenticated: false,
+  pageCount: 1,
+  signed: false,
+};
 const passwordError = {
   isAxiosError: true,
   response: { status: 400, data: { type: "/errors/pdf-password" } },
@@ -75,17 +100,18 @@ function preview(pdf: File, close = vi.fn()) {
 beforeEach(() => {
   vi.resetAllMocks();
   clearPdfAccess();
-  mock.probe.mockResolvedValue(true);
+  mock.trailer.mockResolvedValue(true);
   mock.unlock.mockRejectedValue(passwordError);
+  mock.probePermissions.mockResolvedValue(openableSnapshot);
 });
 afterEach(() => {
   cleanup();
   clearPdfAccess();
 });
 
-it("keeps an ordinary preview out of the viewer until its probe completes", async () => {
+it("keeps an ordinary preview out of the viewer until its trailer probe completes", async () => {
   let finish!: (protectedPdf: boolean) => void;
-  mock.probe.mockReturnValue(
+  mock.trailer.mockReturnValue(
     new Promise<boolean>((resolve) => {
       finish = resolve;
     }),
@@ -97,7 +123,8 @@ it("keeps an ordinary preview out of the viewer until its probe completes", asyn
   expect(mock.unlock).not.toHaveBeenCalled();
 });
 
-it("unlocks a plain File preview, keeping a wrong password in the shared prompt", async () => {
+it("prompts when the local probe finds an opening password, keeping a wrong password in the shared prompt", async () => {
+  mock.probePermissions.mockResolvedValue(passwordSnapshot);
   const pdf = file();
   render(preview(pdf));
   await screen.findByRole("dialog");
@@ -125,19 +152,18 @@ it("unlocks a plain File preview, keeping a wrong password in the shared prompt"
   expect(screen.queryByRole("dialog")).toBeNull();
 });
 
-it("inspects owner-only protection without prompting and keeps its permissions", async () => {
+it("reads owner-only protection locally and keeps its permissions without prompting", async () => {
   const pdf = file();
-  mock.unlock.mockImplementation(async (bytes: File, password: string) =>
-    rememberPdfAccess(bytes, { ...access, password }),
-  );
   render(preview(pdf));
   await screen.findByText("Rendered PDF");
-  expect(mock.unlock).toHaveBeenCalledExactlyOnceWith(
-    pdf,
-    "",
-    expect.any(AbortSignal),
-  );
+  expect(mock.probePermissions).toHaveBeenCalledWith(pdf);
+  expect(mock.unlock).not.toHaveBeenCalled();
   expect(screen.queryByRole("dialog")).toBeNull();
+  expect(getPdfAccess(pdf)).toMatchObject({
+    encrypted: true,
+    ownerAuthenticated: true,
+    canModify: true,
+  });
 });
 
 it("reuses exact-byte session access without probing or prompting", () => {
@@ -145,12 +171,13 @@ it("reuses exact-byte session access without probing or prompting", () => {
   rememberPdfAccess(pdf, access);
   render(preview(pdf));
   expect(screen.getByText("Rendered PDF")).toBeVisible();
-  expect(mock.probe).not.toHaveBeenCalled();
+  expect(mock.trailer).not.toHaveBeenCalled();
+  expect(mock.probePermissions).not.toHaveBeenCalled();
   expect(mock.unlock).not.toHaveBeenCalled();
 });
 
 it("offers the unlock prompt when the native viewer detects protection missed by the probe", async () => {
-  mock.probe.mockResolvedValue(false);
+  mock.trailer.mockResolvedValue(false);
   render(preview(file()));
   fireEvent.click(await screen.findByText("Rendered PDF"));
   expect(screen.getByRole("dialog")).toBeVisible();
@@ -158,6 +185,7 @@ it("offers the unlock prompt when the native viewer detects protection missed by
 });
 
 it("closing the prompt closes the preview without rendering protected bytes", async () => {
+  mock.probePermissions.mockResolvedValue(passwordSnapshot);
   const close = vi.fn();
   render(preview(file(), close));
   fireEvent.click(await screen.findByText("Dismiss"));
@@ -165,23 +193,33 @@ it("closing the prompt closes the preview without rendering protected bytes", as
   expect(screen.queryByText("Rendered PDF")).toBeNull();
 });
 
-it("ignores a late failure when another File has identical metadata", async () => {
-  let reject!: (error: unknown) => void;
-  mock.unlock.mockReturnValueOnce(
-    new Promise<void>((_, fail) => {
-      reject = fail;
-    }),
-  );
+it("ignores a late result when another File has identical metadata", async () => {
+  let finishFirst!: (snapshot: PdfPermissionSnapshot | null) => void;
+  let finishSecond!: (snapshot: PdfPermissionSnapshot | null) => void;
+  mock.probePermissions
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishFirst = resolve;
+        }),
+    )
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishSecond = resolve;
+        }),
+    );
   const view = render(preview(file()));
-  await waitFor(() => expect(mock.unlock).toHaveBeenCalledOnce());
-  const oldSignal = mock.unlock.mock.calls[0][2] as AbortSignal;
-  mock.probe.mockResolvedValue(false);
+  await waitFor(() => expect(mock.probePermissions).toHaveBeenCalledTimes(2));
+  mock.probePermissions.mockResolvedValue(passwordSnapshot);
   view.rerender(preview(file()));
-  await screen.findByText("Rendered PDF");
-  expect(oldSignal.aborted).toBe(true);
-  await act(async () => reject(passwordError));
-  expect(screen.queryByRole("dialog")).toBeNull();
-  expect(screen.getByText("Rendered PDF")).toBeVisible();
+  await screen.findByRole("dialog");
+  await act(async () => {
+    finishFirst(null);
+    finishSecond(null);
+  });
+  expect(screen.getByRole("dialog")).toBeVisible();
+  expect(screen.queryByText("Rendered PDF")).toBeNull();
 });
 
 it("does not redisplay a rejected cached credential after dismissing its prompt", async () => {

@@ -227,16 +227,20 @@ export async function verifyEditedPdfProtection(
   if (!sourceAccess?.encrypted) return;
   assertPdfSessionEditable(sourceAccess);
   const access = await unlockPdfForSession(output, sourceAccess.password);
+  // Locally probed sources carry no key length, revision or fingerprint, so
+  // compare that metadata only when the source has it; encrypted state,
+  // permissions and owner authentication always have to match, and the
+  // server re-checks key length and revision in restore-pdf-protection.
   if (
     !access.encrypted ||
     access.permissions !== sourceAccess.permissions ||
     access.ownerAuthenticated !== sourceAccess.ownerAuthenticated ||
-    sourceAccess.encryptionKeyLength === undefined ||
-    access.encryptionKeyLength !== sourceAccess.encryptionKeyLength ||
-    sourceAccess.encryptionRevision === undefined ||
-    access.encryptionRevision !== sourceAccess.encryptionRevision ||
-    !sourceAccess.credentialFingerprint ||
-    access.credentialFingerprint !== sourceAccess.credentialFingerprint
+    (sourceAccess.encryptionKeyLength !== undefined &&
+      access.encryptionKeyLength !== sourceAccess.encryptionKeyLength) ||
+    (sourceAccess.encryptionRevision !== undefined &&
+      access.encryptionRevision !== sourceAccess.encryptionRevision) ||
+    (sourceAccess.credentialFingerprint !== undefined &&
+      access.credentialFingerprint !== sourceAccess.credentialFingerprint)
   )
     throw new Error(
       i18n.t(

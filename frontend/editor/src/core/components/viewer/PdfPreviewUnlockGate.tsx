@@ -13,6 +13,7 @@ import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
 import { useFileActions } from "@app/contexts/FileContext";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { probePdfPermissions } from "@app/services/pdfPermissionProbe";
 import { looksEncryptedFromTrailer } from "@app/utils/thumbnailUtils";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
 
@@ -61,28 +62,27 @@ export function PdfPreviewUnlockGate({
           setState({ file, status: "ready", prompt: false, error: null });
           return;
         }
-        try {
-          // Owner-only protection opens with an empty password, but still carries print restrictions.
-          await unlockPreviewPdf(file, "", controller.signal);
-          if (!controller.signal.aborted)
-            setState({ file, status: "locked", prompt: false, error: null });
-        } catch (error) {
-          const message = await handlePasswordError(
-            error,
-            "",
-            t(
+        // Owner-only protection opens with an empty password, but still carries print restrictions.
+        const snapshot = await probePdfPermissions(file);
+        if (controller.signal.aborted) return;
+        if (!snapshot) {
+          setState({
+            file,
+            status: "error",
+            prompt: false,
+            error: t(
               "encryptedPdfUnlock.sessionFailed",
               "Unable to unlock this PDF. Please try again.",
             ),
-          );
-          if (!controller.signal.aborted)
-            setState({
-              file,
-              status: "locked",
-              prompt: true,
-              error: message || null,
-            });
+          });
+          return;
         }
+        setState({
+          file,
+          status: "locked",
+          prompt: snapshot.requiresOpeningPassword,
+          error: null,
+        });
       } catch {
         if (!controller.signal.aborted)
           setState({
@@ -98,7 +98,7 @@ export function PdfPreviewUnlockGate({
     };
     void probe();
     return () => controller.abort();
-  }, [file, unlockPreviewPdf, t]);
+  }, [file, t]);
 
   const requirePassword = useCallback(() => {
     setPassword("");

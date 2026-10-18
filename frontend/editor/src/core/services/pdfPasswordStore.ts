@@ -1,3 +1,5 @@
+import { PdfPermissionFlag } from "@embedpdf/models";
+import type { PdfPermissionSnapshot } from "@app/services/pdfPermissionProbe";
 import type { FileId } from "@app/types/file";
 
 /** Session-only access to encrypted bytes. Never serialize this object or include it in tool parameters. */
@@ -13,7 +15,7 @@ export interface PdfAccess {
   /** Server policy at inspection time; older servers default to enforcing restrictions. */
   honorOwnerPasswords?: boolean;
   permissions: number;
-  /** Older servers omit these; native exports must reject unverifiable protection. */
+  /** Only server inspection provides these; local probes leave them undefined. */
   encryptionKeyLength?: number;
   encryptionRevision?: number;
   credentialFingerprint?: string;
@@ -23,6 +25,39 @@ export interface PdfAccess {
   canPrint?: boolean;
   canPrintFaithful?: boolean;
   pageCount: number;
+}
+
+/**
+ * Derive session access from a local probe snapshot. PDFium does not expose
+ * key length, revision or credential fingerprint, so those stay undefined
+ * and protection checks compare only what the source actually carries.
+ */
+export function buildPdfAccessFromSnapshot(
+  snapshot: PdfPermissionSnapshot,
+  honorOwnerPasswords?: boolean,
+): PdfAccess {
+  const override =
+    !snapshot.encrypted ||
+    snapshot.ownerAuthenticated ||
+    honorOwnerPasswords === false;
+  const allows = (flag: PdfPermissionFlag): boolean =>
+    override || (snapshot.permissions & flag) !== 0;
+  return {
+    password: "",
+    encrypted: snapshot.encrypted,
+    openingAuthenticated: true,
+    requiresOpeningPassword: false,
+    signed: snapshot.signed,
+    ownerAuthenticated: snapshot.ownerAuthenticated,
+    honorOwnerPasswords,
+    permissions: snapshot.permissions,
+    canModify: allows(PdfPermissionFlag.ModifyContents),
+    canAssemble: allows(PdfPermissionFlag.AssembleDocument),
+    canExtract: allows(PdfPermissionFlag.CopyContents),
+    canPrint: allows(PdfPermissionFlag.Print),
+    canPrintFaithful: allows(PdfPermissionFlag.PrintHighQuality),
+    pageCount: snapshot.pageCount,
+  };
 }
 
 let accessByFile = new WeakMap<Blob, PdfAccess>();
