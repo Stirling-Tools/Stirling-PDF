@@ -98,9 +98,12 @@ export function useBackendProbe() {
     sharedProbe = requestBackendState();
     const seq = ++requestSeq.current;
     const next = await sharedProbe;
-    if (seq === requestSeq.current) {
-      setState(next);
+    if (seq !== requestSeq.current) {
+      // Superseded: the newest probe owns the state, and callers must not
+      // navigate on a stale status.
+      return undefined;
     }
+    setState(next);
     return next;
   }, []);
 

@@ -41,7 +41,7 @@ export default function Landing() {
     }
     const tick = async () => {
       const result = await backendProbe.probe();
-      if (result.status === "up") {
+      if (result?.status === "up") {
         await refetch();
         if (result.loginDisabled) {
           navigate(EDITOR_BASENAME, { replace: true });
@@ -92,7 +92,7 @@ export default function Landing() {
     const backendTitle = t("backendStartup.notFoundTitle", "Backend not found");
     const handleRetry = async () => {
       const result = await backendProbe.probe();
-      if (result.status === "up") {
+      if (result?.status === "up") {
         await refetch();
         navigate(EDITOR_BASENAME, { replace: true });
       }

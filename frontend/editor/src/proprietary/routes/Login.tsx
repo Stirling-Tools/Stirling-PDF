@@ -189,7 +189,7 @@ export default function Login() {
     }
     const tick = async () => {
       const result = await backendProbe.probe();
-      if (result.status === "up") {
+      if (result?.status === "up") {
         await refetch();
         if (loginDisabled) {
           navigate(EDITOR_BASENAME, { replace: true });
@@ -427,7 +427,7 @@ export default function Login() {
   if (backendProbe.status !== "up" && !loginDisabled) {
     const handleRetry = async () => {
       const result = await backendProbe.probe();
-      if (result.status === "up") {
+      if (result?.status === "up") {
         await refetch();
         navigate("/", { replace: true });
       }
