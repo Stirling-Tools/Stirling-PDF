@@ -34,10 +34,45 @@ const CONTENT_TYPES = {
 
 /** The served copy of index.html without any shell a previous build emitted. */
 function stripShell(html) {
-  const start = html.indexOf(SHELL_START);
-  const end = html.indexOf(SHELL_END);
-  if (start === -1 || end === -1 || end < start) return html;
-  return html.slice(0, start) + html.slice(end + SHELL_END.length);
+  let cleaned = html;
+  const start = cleaned.indexOf(SHELL_START);
+  const end = cleaned.indexOf(SHELL_END);
+  if (start !== -1 && end !== -1 && end >= start) {
+    cleaned =
+      cleaned.slice(0, start) +
+      '<div id="root"></div>' +
+      cleaned.slice(end + SHELL_END.length);
+  }
+  const appEntryMatch =
+    /<script id="app-entry" type="application\/json">([\s\S]*?)<\/script>\s*<script>\(function\(\)\{var booted=false;[\s\S]*?<\/script>/.exec(
+      cleaned,
+    );
+  if (appEntryMatch) {
+    try {
+      const data = JSON.parse(appEntryMatch[1]);
+      if (data.src) {
+        let restored = `<script type="module" crossorigin src="${data.src}"></script>`;
+        if (Array.isArray(data.hints)) {
+          restored += data.hints
+            .map((h) => `<link rel="modulepreload" crossorigin href="${h}">`)
+            .join("");
+        }
+        if (Array.isArray(data.meta)) {
+          restored += data.meta
+            .map((m) => `<link rel="${m.rel}" href="${m.href}">`)
+            .join("");
+        }
+        cleaned = cleaned.replace(appEntryMatch[0], restored);
+        cleaned = cleaned.replace(
+          /<link rel="stylesheet" data-href="([^"]+)" disabled>/g,
+          '<link rel="stylesheet" crossorigin href="$1">',
+        );
+      }
+    } catch {
+      // Unparseable payload leaves index.html unmodified.
+    }
+  }
+  return cleaned;
 }
 
 function startStaticServer(root) {
@@ -278,20 +313,88 @@ async function deliveredLanguages(distDir) {
     .sort();
 }
 
+async function captureShellPage({
+  browser,
+  serverOrigin,
+  mockAppApis,
+  viewport,
+  distDir,
+  editorDir,
+}) {
+  const context = await browser.newContext({ viewport });
+  try {
+    await context.addInitScript(`(${installShellHelpers.toString()})();`);
+    await context.addInitScript((language) => {
+      try {
+        localStorage.setItem("i18nextLng", language);
+      } catch {
+        /* storage unavailable: the app detects from the browser instead */
+      }
+    }, SHELL_LANGUAGE);
+    const page = await context.newPage();
+    await mockAppApis(page);
+    await page.goto(`${serverOrigin}/`, { waitUntil: "load" });
+    await page.waitForSelector("#root .app-frame", { timeout: 60_000 });
+    await page.evaluate(() => globalThis.__shellReady(3, 100, 30_000));
+    await page.evaluate(() => globalThis.__shellInlineImages());
+
+    const critical = await page.evaluate(() => globalThis.__shellCritical());
+    const captured = await page.evaluate(() => globalThis.__shellMarkup());
+    if (!captured) throw new Error("the landing screen rendered no app frame");
+    const markup = captured.split(`${serverOrigin}/`).join("");
+    const nodes = await page.evaluate(() => globalThis.__shellCount());
+
+    const languages = await deliveredLanguages(distDir);
+    const { strings, dropped } = await page.evaluate(
+      async ({ langs, expectedNodes }) => {
+        const results = {};
+        const unrendered = [];
+        for (const language of langs) {
+          await globalThis.i18next.changeLanguage(language);
+          await globalThis.__shellSettled(10_000);
+          const texts = globalThis.__shellTexts();
+          if (texts.length === expectedNodes) results[language] = texts;
+          else unrendered.push(`${language} (${texts.length})`);
+        }
+        return { strings: results, dropped: unrendered };
+      },
+      { langs: languages, expectedNodes: nodes },
+    );
+    const rtl = (
+      await readFile(join(editorDir, "src/core/i18n/languages.ts"), "utf8")
+    ).match(/rtlLanguages\s*=\s*\[([^\]]*)\]/);
+    return {
+      markup,
+      nodes,
+      critical,
+      strings,
+      dropped,
+      rtl: rtl
+        ? [...rtl[1].matchAll(/"([^"]+)"/g)].map((match) => match[1])
+        : [],
+      base: SHELL_LANGUAGE,
+    };
+  } finally {
+    await context.close().catch(() => {});
+  }
+}
+
 export async function captureShell({
   distDir,
   editorDir,
   viewport = { width: 1350, height: 940 },
+  browser: providedBrowser = null,
+  server: providedServer = null,
 }) {
   const { chromium } = await import("@playwright/test");
   const execPath = process.env.PRERENDER_CHROMIUM_PATH || undefined;
-  if (execPath) {
+  if (!providedBrowser && execPath) {
     if (!existsSync(execPath)) {
       throw new Error(
         `Chromium binary not found at PRERENDER_CHROMIUM_PATH=${execPath}`,
       );
     }
-  } else {
+  } else if (!providedBrowser) {
     try {
       const defaultPath = chromium.executablePath();
       if (!defaultPath || !existsSync(defaultPath)) {
@@ -308,71 +411,34 @@ export async function captureShell({
   }
 
   const { mockAppApis } = await loadStubHelper(editorDir);
-  let server = null;
-  let browser = null;
+  let server = providedServer;
+  let browser = providedBrowser;
+  const ownsServer = !server;
+  const ownsBrowser = !browser;
   try {
-    server = await startStaticServer(distDir);
-    browser = await chromium.launch({
-      executablePath: execPath,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-      ],
-    });
-    const context = await browser.newContext({ viewport });
-    await context.addInitScript(`(${installShellHelpers.toString()})();`);
-    await context.addInitScript((language) => {
-      try {
-        localStorage.setItem("i18nextLng", language);
-      } catch {
-        /* storage unavailable: the app detects from the browser instead */
-      }
-    }, SHELL_LANGUAGE);
-    const page = await context.newPage();
-    await mockAppApis(page);
-    await page.goto(`${server.origin}/`, { waitUntil: "load" });
-    await page.waitForSelector("#root .app-frame", { timeout: 60_000 });
-    await page.evaluate(() => globalThis.__shellReady(10, 500, 120_000));
-    await page.evaluate(() => globalThis.__shellInlineImages());
-
-    const critical = await page.evaluate(() => globalThis.__shellCritical());
-    const captured = await page.evaluate(() => globalThis.__shellMarkup());
-    if (!captured) throw new Error("the landing screen rendered no app frame");
-    // Strip the temporary capture server origin so asset URLs stay relative to the deployment base.
-    const markup = captured.split(`${server.origin}/`).join("");
-    const nodes = await page.evaluate(() => globalThis.__shellCount());
-
-    const strings = {};
-    const dropped = [];
-    for (const language of await deliveredLanguages(distDir)) {
-      await page.evaluate(
-        (next) => globalThis.i18next.changeLanguage(next),
-        language,
-      );
-      await page.evaluate(() => globalThis.__shellSettled(30_000));
-      const texts = await page.evaluate(() => globalThis.__shellTexts());
-      if (texts.length === nodes) strings[language] = texts;
-      else dropped.push(`${language} (${texts.length})`);
+    if (!server) server = await startStaticServer(distDir);
+    if (!browser) {
+      browser = await chromium.launch({
+        executablePath: execPath,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+        ],
+      });
     }
-    const rtl = (
-      await readFile(join(editorDir, "src/core/i18n/languages.ts"), "utf8")
-    ).match(/rtlLanguages\s*=\s*\[([^\]]*)\]/);
-    return {
-      markup,
-      nodes,
-      critical,
-      strings,
-      dropped,
-      rtl: rtl
-        ? [...rtl[1].matchAll(/"([^"]+)"/g)].map((match) => match[1])
-        : [],
-      base: SHELL_LANGUAGE,
-    };
+    return await captureShellPage({
+      browser,
+      serverOrigin: server.origin,
+      mockAppApis,
+      viewport,
+      distDir,
+      editorDir,
+    });
   } finally {
-    if (browser) await browser.close().catch(() => {});
-    if (server) await server.close().catch(() => {});
+    if (ownsBrowser && browser) await browser.close().catch(() => {});
+    if (ownsServer && server) await server.close().catch(() => {});
   }
 }
 
@@ -422,8 +488,16 @@ function mergeCriticalCss(wideCss, narrowCss, combinedMarkup) {
       }
     }
   }
+  const usedProperties = new Set();
+  for (const m of (merged + combinedMarkup).matchAll(/var\(\s*--([\w-]+)/g)) {
+    usedProperties.add(m[1]);
+  }
   return nonEmpty
     .filter((rule) => {
+      if (rule.startsWith("@property")) {
+        const name = /^@property\s+--([\w-]+)/.exec(rule)?.[1];
+        return !name || usedProperties.has(name);
+      }
       if (!rule.startsWith("@keyframes")) return true;
       const name = /^@keyframes\s+([^\s{]+)/.exec(rule)?.[1];
       return !name || usedKeyframes.has(name);
@@ -590,9 +664,10 @@ function deferEntry(html) {
       'var link=t.closest("a[href]");' +
       'if(!link||link.target||link.hasAttribute("download"))return;var href=link.getAttribute("href");' +
       'if(!href||href.charAt(0)==="#"||/^[a-z]+:/i.test(href))return;' +
-      "event.preventDefault();boot();" +
+      'event.preventDefault();try{history.pushState({},"",href);dispatchEvent(new PopStateEvent("popstate"));}catch(e){location.href=href;}' +
+      "boot();" +
       'var waited=0;(function route(){if(document.querySelector("[data-shell-for]")&&waited++<200){setTimeout(route,50);return;}' +
-      'try{history.pushState({},"",href);dispatchEvent(new PopStateEvent("popstate"));}catch(e){location.href=href;}})();},true);' +
+      'try{if(location.pathname!==new URL(href,document.baseURI).pathname){history.pushState({},"",href);dispatchEvent(new PopStateEvent("popstate"));}}catch(e){}})();},true);' +
       // A file picked before the app is up is carried over to its input.
       "var pending=null;var tries=0;" +
       "function onChange(event){var target=event.target;" +
@@ -635,20 +710,69 @@ export async function prerenderShell({
   distDir,
   editorDir = resolve(distDir, ".."),
 }) {
-  const wide = await captureShell({ distDir, editorDir });
-  // Capture both desktop and mobile frames so CSS media queries can pick the matching layout before JS runs.
+  const { chromium } = await import("@playwright/test");
+  const execPath = process.env.PRERENDER_CHROMIUM_PATH || undefined;
+  if (execPath) {
+    if (!existsSync(execPath)) {
+      throw new Error(
+        `Chromium binary not found at PRERENDER_CHROMIUM_PATH=${execPath}`,
+      );
+    }
+  } else {
+    try {
+      const defaultPath = chromium.executablePath();
+      if (!defaultPath || !existsSync(defaultPath)) {
+        throw new Error(
+          `Playwright Chromium browser is not installed (${defaultPath || "unknown"})`,
+        );
+      }
+    } catch (e) {
+      throw new Error(
+        `Playwright Chromium browser is not available: ${e instanceof Error ? e.message : String(e)}`,
+        { cause: e },
+      );
+    }
+  }
+
+  const { mockAppApis } = await loadStubHelper(editorDir);
+  let server = null;
+  let browser = null;
+  let wide = null;
   let narrow = null;
+
   try {
-    narrow = await captureShell({
-      distDir,
-      editorDir,
-      viewport: { width: 412, height: 823 },
+    server = await startStaticServer(distDir);
+    browser = await chromium.launch({
+      executablePath: execPath,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+      ],
     });
-  } catch (error) {
-    throw new Error(
-      `the phone-width shell did not render: ${error instanceof Error ? error.message : error}`,
-      { cause: error },
-    );
+
+    [wide, narrow] = await Promise.all([
+      captureShellPage({
+        browser,
+        serverOrigin: server.origin,
+        mockAppApis,
+        viewport: { width: 1350, height: 940 },
+        distDir,
+        editorDir,
+      }),
+      captureShellPage({
+        browser,
+        serverOrigin: server.origin,
+        mockAppApis,
+        viewport: { width: 412, height: 823 },
+        distDir,
+        editorDir,
+      }),
+    ]);
+  } finally {
+    if (browser) await browser.close().catch(() => {});
+    if (server) await server.close().catch(() => {});
   }
   const indexPath = join(distDir, "index.html");
   const html = stripShell(await readFile(indexPath, "utf8"));
