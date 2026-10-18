@@ -61,7 +61,7 @@ export function adjustFontSizeToFit(
 
   /** The room a refit depends on, and the text it has to fit into it. */
   const inputs = (): string =>
-    `${element.parentElement?.clientWidth ?? 0}\u0000${element.clientWidth}\u0000${element.textContent ?? ""}`;
+    `${element.parentElement?.clientWidth ?? 0}\u0000${element.clientWidth}\u0000${element.clientHeight}\u0000${element.textContent ?? ""}`;
 
   let settled = "";
 
