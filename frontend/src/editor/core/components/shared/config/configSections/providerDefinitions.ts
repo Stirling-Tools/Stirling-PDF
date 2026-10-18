@@ -1,5 +1,11 @@
 import { useTranslation } from "react-i18next";
-export type ProviderType = "oauth2" | "saml2" | "telegram" | "googledrive";
+import { absoluteWithBasePath } from "@editor/constants/app";
+export type ProviderType =
+  | "oauth2"
+  | "saml2"
+  | "telegram"
+  | "googledrive"
+  | "microsoft";
 
 /** Value of a provider field, keyed by its `type`: text/password/textarea -> string,
  *  number -> number, switch -> boolean, tags -> string[]. */
@@ -866,6 +872,122 @@ const useGoogleDriveProvider = (): Provider => {
         ),
         placeholder: "xxxxxxxxxxxxx",
       },
+      {
+        key: "clientSecret",
+        type: "password",
+        label: t("provider.googledrive.clientSecret.label", "Client secret"),
+        description: t(
+          "provider.googledrive.clientSecret.description",
+          "Lets people connect their Google account for their pipelines. Add {{redirect}} as an authorised redirect URI of the OAuth client.",
+          {
+            redirect: absoluteWithBasePath(
+              "/api/v1/connected-accounts/callback/google",
+            ),
+          },
+        ),
+      },
+      {
+        key: "allowAccountConnections",
+        type: "switch",
+        label: t(
+          "provider.googledrive.allowAccountConnections.label",
+          "Let people connect their own account",
+        ),
+        description: t(
+          "provider.googledrive.allowAccountConnections.description",
+          "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections.",
+        ),
+        defaultValue: true,
+      },
+      {
+        key: "accountScope",
+        type: "text",
+        label: t("provider.googledrive.accountScope.label", "Drive access"),
+        description: t(
+          "provider.googledrive.accountScope.description",
+          "drive reaches every file (Google must verify a public app for it); drive.file only files people pick or Stirling creates",
+        ),
+        placeholder: "drive",
+        defaultValue: "drive",
+      },
+    ],
+  };
+};
+
+const useMicrosoftProvider = (): Provider => {
+  const { t } = useTranslation();
+  const accountRedirect = absoluteWithBasePath(
+    "/api/v1/connected-accounts/callback/microsoft",
+  );
+
+  return {
+    id: "microsoft",
+    category: "integration",
+    name: t("provider.microsoft.name", "Microsoft 365 (OneDrive & SharePoint)"),
+    icon: "onedrive",
+    type: "microsoft",
+    scope: t("provider.microsoft.scope", "Files & pipelines"),
+    fields: [
+      {
+        key: "enabled",
+        type: "switch",
+        label: t(
+          "provider.microsoft.enabled.label",
+          "Enable OneDrive & SharePoint",
+        ),
+        description: t(
+          "provider.microsoft.enabled.description",
+          "Let people use OneDrive and SharePoint in pipelines",
+        ),
+        defaultValue: false,
+      },
+      {
+        key: "clientId",
+        type: "text",
+        label: t(
+          "provider.microsoft.clientId.label",
+          "Application (client) ID",
+        ),
+        description: t(
+          "provider.microsoft.clientId.description",
+          "From one Microsoft Entra app registration. Add a web redirect URI of {{accountRedirect}}.",
+          { accountRedirect },
+        ),
+        placeholder: "00000000-0000-0000-0000-000000000000",
+      },
+      {
+        key: "tenant",
+        type: "text",
+        label: t("provider.microsoft.tenant.label", "Accounts"),
+        description: t(
+          "provider.microsoft.tenant.description",
+          "common for work, school and personal accounts; organizations for work and school only; or a tenant ID to admit one organisation",
+        ),
+        placeholder: "common",
+        defaultValue: "common",
+      },
+      {
+        key: "clientSecret",
+        type: "password",
+        label: t("provider.microsoft.clientSecret.label", "Client secret"),
+        description: t(
+          "provider.microsoft.clientSecret.description",
+          "Needed for connected accounts and organisation connections. Stays on the server.",
+        ),
+      },
+      {
+        key: "allowAccountConnections",
+        type: "switch",
+        label: t(
+          "provider.microsoft.allowAccountConnections.label",
+          "Let people connect their own account",
+        ),
+        description: t(
+          "provider.microsoft.allowAccountConnections.description",
+          "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections.",
+        ),
+        defaultValue: true,
+      },
     ],
   };
 };
@@ -879,6 +1001,7 @@ export const useAllProviders = (): Provider[] => {
   const telegramProvider = useTelegramProvider();
   const saml2Provider = useSAML2Provider();
   const googleDriveProvider = useGoogleDriveProvider();
+  const microsoftProvider = useMicrosoftProvider();
 
   return [
     googleProvider,
@@ -889,5 +1012,6 @@ export const useAllProviders = (): Provider[] => {
     smtpProvider,
     telegramProvider,
     googleDriveProvider,
+    microsoftProvider,
   ];
 };

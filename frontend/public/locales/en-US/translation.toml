@@ -4046,6 +4046,21 @@ failed = "Your sign-in could not be renewed. Try again, or dismiss this page and
 lead = "This server is already linked to your account. Renew your sign-in to return to billing and usage on your server."
 title = "Renew your server sign-in"
 
+[connectedAccounts]
+connect = "Connect"
+connectAnother = "Connect another"
+connected = "Connected"
+connectFailed = "The account couldn't be connected. Check that the server's app registration is set up, then try again."
+disconnect = "Disconnect"
+google = "Google Drive"
+intro = "Connect your own accounts once. Your pipelines can then read from and save to them as you."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Sign in again: Stirling can no longer reach this account, so pipelines using it are paused."
+none = "Your administrator hasn't turned on connected accounts."
+personal = "Personal account"
+popupBlocked = "Your browser blocked the sign-in window. Allow pop-ups for this site and try again."
+reconnect = "Sign in again"
+
 [convert]
 autoRotate = "Auto Rotate"
 autoRotateDescription = "Automatically rotate images to better fit the PDF page"
@@ -8731,6 +8746,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Post a message to a Google Chat space when a policy runs."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "A service account that reads and writes Google Drive for the organisation."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Paste the service account's JSON key from Google Cloud. It is encrypted and never shown again."
+label = "Service account key (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Optional. With domain-wide delegation, the user whose Drive this acts as (a dedicated bot user keeps working when people leave). Blank reaches only shared drives and folders shared with the service account."
+label = "Act as user"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Attach processed documents to a Jira issue."
@@ -8739,6 +8767,18 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "Email a document or a notification when a policy runs."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Leave blank to use the server's Microsoft app from Settings. A separate app registration needs Microsoft Graph application permissions with admin consent."
+label = "Application (client) ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+helperText = "Leave blank when the server's Microsoft app is set to one organisation."
+label = "Directory (tenant) ID"
+placeholder = "contoso.onmicrosoft.com or tenant GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8773,6 +8813,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "App password"
+
+[portal.connections.types.onedrive]
+description = "Read from and write to one user's OneDrive for Business."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "Whose OneDrive this connection reaches. The app registration needs the Files.ReadWrite.All application permission."
+label = "OneDrive owner"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8838,6 +8887,18 @@ helperText = "Leave blank if you authenticate with a private key instead."
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Optional. Paste an OpenSSH private key to authenticate with a key instead of a password."
 label = "Private key"
+
+[portal.connections.types.sharepoint]
+description = "Read from and write to a SharePoint site's document library."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Optional. Leave blank for the site's default Documents library."
+label = "Document library"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "Site URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Post a message to Slack when a policy processes a document."
@@ -10694,6 +10755,39 @@ description = "Folder automations can only use folders an administrator has allo
 openSettings = "Folder Access settings"
 title = "This folder isn't allowed"
 
+[portal.sources.cloudFields.account]
+connect = "Connect your account"
+connectAnother = "Connect another account"
+connectFailed = "The account couldn't be connected. Try again, or ask your administrator to check the app registration."
+label = "Account"
+placeholder = "Choose an account"
+reconnect = "sign in again"
+unavailable = "Connecting your own account is turned off on this server. Choose an organisation connection instead."
+
+[portal.sources.cloudFields.authMode]
+helperText = "Your account reaches what you can open and needs no admin. An organisation connection keeps working when people leave, and only reaches what an admin set up."
+label = "Sign in as"
+
+[portal.sources.cloudFields.authMode.options]
+account = "My account"
+organisation = "Organisation connection"
+
+[portal.sources.cloudFields.connection]
+helperText = "Set up by an administrator under Integrations. Shared by every location that uses it."
+label = "Organisation connection"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Paste the folder's link, or type a path from the top of My Drive."
+placeholder = "Folder link, or Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "A folder in your OneDrive, or paste a folder link (Copy link in OneDrive). Blank means the top."
+placeholder = "Scans/Inbox, or a folder link"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "With your account, paste the folder's link (Copy link in SharePoint). With an organisation connection, a folder inside its library."
+placeholder = "Folder link"
+
 [portal.sources.delete]
 body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it would need to be updated."
 cancel = "Cancel"
@@ -10793,7 +10887,7 @@ description = "Poll an FTP or FTPS server folder for new documents."
 label = "FTP"
 
 [portal.sources.types.googledrive]
-description = "Pull documents from shared Google Drive folders."
+description = "Watch a Google Drive folder for new documents, or save results to one."
 label = "Google Drive"
 
 [portal.sources.types.network]
@@ -10801,7 +10895,7 @@ description = "Watch an SMB network share for new documents."
 label = "Network drive"
 
 [portal.sources.types.onedrive]
-description = "Watch OneDrive folders for new documents."
+description = "Watch a OneDrive folder for new documents, or save results to one."
 label = "OneDrive"
 
 [portal.sources.types.s3]
@@ -10830,7 +10924,7 @@ description = "Poll an SFTP drop folder for new documents."
 label = "SFTP"
 
 [portal.sources.types.sharepoint]
-description = "Pull documents from SharePoint document libraries."
+description = "Watch a SharePoint document library folder, or save results to one."
 label = "SharePoint"
 
 [portal.sources.types.unknown]
@@ -11010,6 +11104,14 @@ waiting = "Queued ..."
 name = "Google Drive"
 scope = "File Import"
 
+[provider.googledrive.accountScope]
+description = "drive reaches every file (Google must verify a public app for it); drive.file only files people pick or Stirling creates"
+label = "Drive access"
+
+[provider.googledrive.allowAccountConnections]
+description = "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections."
+label = "Let people connect their own account"
+
 [provider.googledrive.apiKey]
 description = "Google API Key for Google Picker API from Google Cloud Console"
 label = "API Key"
@@ -11022,6 +11124,10 @@ label = "App ID"
 description = "Google OAuth 2.0 Client ID from Google Cloud Console"
 label = "Client ID"
 
+[provider.googledrive.clientSecret]
+description = "Lets people connect their Google account for their pipelines. Add {{redirect}} as an authorised redirect URI of the OAuth client."
+label = "Client secret"
+
 [provider.googledrive.enabled]
 description = "Allow users to import files directly from Google Drive"
 label = "Enable Google Drive File Picker"
@@ -11029,6 +11135,30 @@ label = "Enable Google Drive File Picker"
 [provider.googledrive.errors]
 notConfigured = "Google Drive is not configured"
 pickerFailed = "Failed to open Google Drive picker"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "Files & pipelines"
+
+[provider.microsoft.allowAccountConnections]
+description = "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections."
+label = "Let people connect their own account"
+
+[provider.microsoft.clientId]
+description = "From one Microsoft Entra app registration. Add a web redirect URI of {{accountRedirect}}."
+label = "Application (client) ID"
+
+[provider.microsoft.clientSecret]
+description = "Needed for connected accounts and organisation connections. Stays on the server."
+label = "Client secret"
+
+[provider.microsoft.enabled]
+description = "Let people use OneDrive and SharePoint in pipelines"
+label = "Enable OneDrive & SharePoint"
+
+[provider.microsoft.tenant]
+description = "common for work, school and personal accounts; organizations for work and school only; or a tenant ID to admit one organisation"
+label = "Accounts"
 
 [provider.oauth2.generic]
 name = "Generic OAuth2"
@@ -11875,6 +12005,10 @@ mcp = "MCP Server"
 privacy = "Privacy"
 storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
+
+[settings.connectedAccounts]
+description = "Your own OneDrive, SharePoint and Google Drive, for your pipelines."
+title = "Connected accounts"
 
 [settings.connectedInstances]
 confirmBody = "This revokes the instance’s access to your team in Stirling Cloud. It does not delete local files or remove usage already recorded. To connect again, follow the original connection steps on the instance."
