@@ -21,19 +21,19 @@ export type AccentHue =
   | "violet"
   | "gray";
 
-/** Light-mode hex per hue — fallbacks only; theme.css owns the rendered values. */
+/** Light-mode hex per hue — must match theme.css `--accent-<hue>`; the CSS owns the rendered value. */
 const LIGHT_HEX: Record<AccentHue, string> = {
-  green: "#16a34a",
-  blue: "#2563eb",
-  red: "#dc2626",
-  orange: "#ea580c",
-  purple: "#9333ea",
-  teal: "#0d9488",
-  pink: "#db2777",
-  amber: "#d97706",
-  indigo: "#4f46e5",
-  cyan: "#0891b2",
-  violet: "#7c3aed",
+  green: "#55763f",
+  blue: "#4a6fa5",
+  red: "#a9564f",
+  orange: "#99652f",
+  purple: "#7d5b92",
+  teal: "#2f7d75",
+  pink: "#a8577c",
+  amber: "#99652f",
+  indigo: "#5f62a8",
+  cyan: "#2f7d75",
+  violet: "#7d5b92",
   gray: "#6b7280",
 };
 

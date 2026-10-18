@@ -30,12 +30,16 @@ html[data-app-theme="light"] {
   --c-border-subtle: var(--p-gray-200);
   --c-border-strong: var(--p-gray-400);
 
-  --c-primary: var(--p-blue-500);
-  --c-primary-hover: var(--p-blue-600);
-  --c-primary-subtle: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
+  --c-primary: var(--p-brand-red-600);
+  --c-primary-hover: var(--p-brand-red-700);
+  --c-primary-subtle: color-mix(
+    in srgb,
+    var(--p-brand-red-600) 10%,
+    transparent
+  );
   /* Accent used as TEXT (links, toggles): a deeper hue that clears 4.5:1 on
      light surfaces, where --c-primary itself does not. */
-  --c-accent-text: var(--p-blue-700);
+  --c-accent-text: var(--p-brand-red-700);
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
@@ -49,12 +53,12 @@ html[data-app-theme="light"] {
   --c-danger-solid: var(--p-red-700);
   --c-warning-solid: var(--p-amber-700);
   --c-neutral-solid: var(--p-gray-600);
-  --c-accent-solid: var(--p-blue-600);
+  --c-accent-solid: var(--p-brand-red-600);
   /* Ink for surfaces that are white in both schemes — a rendered page, a
      signature sheet. Scheme-independent for the same reason the fills above
      are: the ground does not change, so the ink must not either. */
   --c-text-on-light: var(--p-ink);
-  --c-accent-on-light: var(--p-blue-700);
+  --c-accent-on-light: var(--p-brand-red-700);
   --c-document-bg: var(--p-white);
   /* Highlight/flash (search hits, compare jump-to) — same in both themes. */
   --c-highlight: var(--p-flash-yellow);
@@ -129,7 +133,7 @@ html[data-app-theme="light"] {
   --c-illustration-line-strong: var(--p-gray-300);
 
   /* Viewer active file-tab tint base. */
-  --c-tab-active-tint: var(--p-blue-200);
+  --c-tab-active-tint: var(--p-accent-200);
 
   /* Themed: file-card resting/unselected header (branded navy). */
   --c-file-header-resting: var(--p-navy-500);
@@ -137,9 +141,9 @@ html[data-app-theme="light"] {
   /* Themed: onboarding hero panel gradient + inset tile. */
   --c-onboarding-hero: linear-gradient(
     155deg,
-    var(--p-tint-blue) 0%,
-    var(--p-tint-violet) 55%,
-    var(--p-tint-pink) 100%
+    var(--p-paper) 0%,
+    var(--p-tint-blush) 55%,
+    var(--p-tint-clay) 100%
   );
   --c-onboarding-hero-tile: var(--p-white);
 }
@@ -163,7 +167,7 @@ html[data-app-theme="midnight"] {
   --c-text-subtle: var(--p-zinc-250);
   --c-text-on-primary: var(--p-white);
   /* Accent used as TEXT on dark surfaces: a lighter step for 4.5:1. */
-  --c-accent-text: var(--p-blue-400);
+  --c-accent-text: var(--p-brand-red-300);
   --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-ink);
   --c-btn-secondary: var(--p-c-1a1a1d);
@@ -173,9 +177,9 @@ html[data-app-theme="midnight"] {
   --c-border-subtle: rgba(255, 255, 255, 0.05);
   --c-border-strong: var(--p-zinc-500);
 
-  --c-primary: var(--p-blue-500);
-  --c-primary-hover: var(--p-blue-700);
-  --c-primary-subtle: color-mix(in srgb, var(--p-blue-500) 15%, transparent);
+  --c-primary: var(--p-accent-500);
+  --c-primary-hover: var(--p-accent-400);
+  --c-primary-subtle: color-mix(in srgb, var(--p-accent-500) 15%, transparent);
 
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-500);
@@ -186,16 +190,16 @@ html[data-app-theme="midnight"] {
   --c-file-header-resting: var(--p-navy-950);
   --c-onboarding-hero: linear-gradient(
     155deg,
-    var(--p-navy-850) 0%,
-    var(--p-navy-880) 55%,
+    var(--p-zinc-850) 0%,
+    var(--p-c-1a1a1d) 55%,
     var(--p-plum-900) 100%
   );
   --c-onboarding-hero-tile: var(--p-navy-900);
 }
 
-/* ── Base accent — fixed default (blue buttons); [data-accent="default"] blocks at the end keep surfaces neutral. LIGHT base here, DARK base next. ── */
+/* ── Base accent — fixed default (oxblood buttons); [data-accent="default"] blocks at the end keep surfaces neutral. LIGHT base here, DARK base next. ── */
 html[data-app-theme="custom"] {
-  --c-primary: var(--p-blue-500);
+  --c-primary: var(--p-brand-red-600);
   /* Also the accent text colour (--_text), so 80% keeps 4.5:1 on the canvas. */
   --c-primary-hover: color-mix(in srgb, var(--c-primary) 80%, var(--p-black));
   --c-primary-subtle: color-mix(in srgb, var(--c-primary) 14%, transparent);
@@ -204,7 +208,7 @@ html[data-app-theme="custom"] {
   /* Accent used as TEXT: --c-primary and its 80% hover both land under
      4.5:1 on the accent-tinted surfaces they appear on (chips, links,
      outline buttons), so accent copy takes a deeper step of the hue. */
-  --c-accent-text: var(--p-blue-700);
+  --c-accent-text: var(--p-brand-red-700);
 
   /* Primary-tinted surfaces (light base). Neutralised by the default override. */
   --c-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-paper));
@@ -322,7 +326,9 @@ html[data-app-theme="custom"] {
 
 /* ── DARK — editor dark theme: neutral text/borders/icons + accent-tinted surfaces (default override opts out). After :root so it wins for dark. ── */
 html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
-  --c-accent-text: var(--p-blue-400);
+  --c-primary: var(--p-accent-500);
+  --c-primary-hover: var(--p-accent-400);
+  --c-accent-text: var(--p-brand-red-300);
   /* Shade 600 is the ramp's text-capable step (Mantine's shade 6 — link colour
      and the tuple's default text). The light theme reaches it by mixing toward
      black; on a dark ground it has to travel the other way to stay readable. */
