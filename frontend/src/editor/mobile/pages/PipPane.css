@@ -1,0 +1,181 @@
+/* The corner miniature is the full pane scaled down; these place it and the
+   tap target over it. Keep --pip-scale and the target's size in sync. */
+.pip-stage {
+  --pip-scale: 0.34;
+  --pip-gap: 12px;
+  --pip-dx: 0px;
+  --pip-dy: 0px;
+  /* Per corner: which way the gap pushes the miniature in from the edge. */
+  --pip-sx: -1;
+  --pip-sy: -1;
+  --pip-origin: bottom right;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pip-pane {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-bg);
+  transform-origin: var(--pip-origin);
+  transition:
+    transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+    border-radius 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.2s ease;
+  will-change: transform;
+}
+
+.pip-pane[data-state="front"] {
+  z-index: 1;
+}
+
+.pip-pane[data-state="pip"] {
+  z-index: 2;
+  transform: translate(
+      calc(var(--pip-sx) * var(--pip-gap) + var(--pip-dx)),
+      calc(var(--pip-sy) * var(--pip-gap) + var(--pip-dy))
+    )
+    scale(var(--pip-scale));
+  /* Divided by the scale so the corners look 14px once shrunk. */
+  border-radius: calc(14px / var(--pip-scale));
+  overflow: hidden;
+  outline: calc(1px / var(--pip-scale)) solid var(--c-border-strong);
+  box-shadow: 0 calc(8px / var(--pip-scale)) calc(24px / var(--pip-scale))
+    rgb(0 0 0 / 0.18);
+}
+
+.pip-pane[data-state="hidden"] {
+  z-index: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.pip-pane-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.pip-pane-body > * {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Its own stacking context, so the workbench's raised layers stay under the
+   documents home drawn over it. */
+.pip-workbench {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  display: flex;
+}
+
+.pip-stage[data-corner="bottom-left"] {
+  --pip-sx: 1;
+  --pip-origin: bottom left;
+}
+
+.pip-stage[data-corner="top-right"] {
+  --pip-sy: 1;
+  --pip-origin: top right;
+}
+
+.pip-stage[data-corner="top-left"] {
+  --pip-sx: 1;
+  --pip-sy: 1;
+  --pip-origin: top left;
+}
+
+.pip-stage[data-dragging="true"] .pip-pane,
+.pip-stage[data-dragging="true"] .pip-target {
+  transition: none;
+}
+
+.pip-target {
+  position: absolute;
+  z-index: 3;
+  right: var(--pip-gap);
+  bottom: var(--pip-gap);
+  transform: translate(var(--pip-dx), var(--pip-dy));
+  touch-action: none;
+  width: calc(100% * var(--pip-scale));
+  height: calc(100% * var(--pip-scale));
+  display: flex;
+  align-items: flex-end;
+  padding: 0;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  animation: pip-target-in 0.35s ease;
+}
+
+.pip-stage[data-corner$="-left"] .pip-target {
+  right: auto;
+  left: var(--pip-gap);
+}
+
+.pip-stage[data-corner^="top-"] .pip-target {
+  bottom: auto;
+  top: var(--pip-gap);
+}
+
+@keyframes pip-target-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.pip-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 0 0 14px 14px;
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border-subtle);
+  text-align: left;
+}
+
+.pip-label-icon {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+.pip-label-icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.pip-label-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.pip-label-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.pip-label-caption {
+  font-size: 0.6875rem;
+  color: var(--c-text-muted);
+}
+
+/* The chat button sits in the corner the miniature uses. */
+body:has(.pip-target) .chat-fab-trigger {
+  display: none;
+}

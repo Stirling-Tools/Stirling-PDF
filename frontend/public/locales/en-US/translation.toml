@@ -6133,7 +6133,6 @@ notConnected = "Not connected"
 signedOutBody = "Sign in to run tools on Stirling Cloud or your own server."
 
 [mobile.document]
-allTools = "All tools"
 back = "Documents"
 save = "Save to device"
 search = "Search in document"
@@ -6157,15 +6156,16 @@ recent = "Recent"
 settings = "Settings"
 title = "Documents"
 
+[mobile.pip]
+document = "Document"
+home = "Your documents"
+open = "Open {{name}}"
+toolSettings = "Tool settings"
+
 [mobile.scan]
 button = "Scan document"
 failed = "The document could not be scanned."
 fileName = "Scan {{date}}"
-
-[mobile.tools]
-close = "Close tools"
-expand = "Expand tools"
-sheet = "Tools"
 
 [mobileScanner]
 addMore = "Add More"

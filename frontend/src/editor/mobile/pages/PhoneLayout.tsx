@@ -6,9 +6,9 @@ import { Icon } from "@editor/ui/Icon";
 import RightSidebar from "@editor/components/tools/RightSidebar";
 import Workbench from "@editor/components/layout/Workbench";
 import { alert } from "@editor/components/toast";
-import { ToolSheet } from "@editor/pages/ToolSheet";
 import { DocumentHeader } from "@editor/pages/DocumentHeader";
 import { DocumentsHome } from "@editor/pages/DocumentsHome";
+import { PipPane, type PipCorner } from "@editor/pages/PipPane";
 import {
   useNavigationActions,
   useNavigationState,
@@ -18,7 +18,6 @@ import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
-import type { ToolId } from "@editor/types/toolId";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import { PhoneSignButton } from "@editor/pages/PhoneBottomBar";
 import type { PhoneLayoutProps } from "@editor-core/pages/PhoneLayout";
@@ -49,15 +48,12 @@ function Tab({ icon, label, active, onClick }: TabProps) {
   );
 }
 
-const DOCUMENT_ACTIONS: ToolId[] = ["sign", "compress", "convert"];
-
 /**
- * Document-first layout. The screen shows one of: the documents home, an open
- * document, or the full file library, and tools open over any of them in a
- * bottom sheet. The "tools" view is that sheet being open; HomePage's own
- * transitions close it when a file arrives or a full-screen tool takes over.
- * The workbench stays mounted under the home so an open document keeps its
- * place.
+ * Two full screens, the document and the tools, with the one you are not on
+ * waiting as a live miniature in the corner; tapping it zooms it back to full
+ * screen. Both are the existing workbench and tool panel, always mounted, so a
+ * tool keeps its settings and the document its place while the other is in
+ * front. The "tools" view puts the tools in front.
  */
 export function PhoneLayout({
   view,
@@ -72,12 +68,13 @@ export function PhoneLayout({
   const navigate = useNavigate();
   const { workbench } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
-  const { fileIds } = useAllFiles();
-  const { handleToolSelect, toolRegistry, selectedToolKey } = useToolWorkflow();
+  const { fileIds, fileStubs } = useAllFiles();
+  const { toolRegistry, selectedToolKey } = useToolWorkflow();
   const { onRecentFileSelect } = useFilesModalContext();
-  const { setActiveFileId } = useViewer();
+  const { activeFileId, setActiveFileId } = useViewer();
   const [homeRequested, setHomeRequested] = useState(false);
-  const [collapseRequest, setCollapseRequest] = useState(0);
+  const [pipCorner, setPipCorner] = useState<PipCorner>("bottom-right");
+  const [pipDrag, setPipDrag] = useState<{ x: number; y: number } | null>(null);
 
   // Bringing a file in from the home opens it, so the home steps aside.
   const previousFileCount = useRef(fileIds.length);
@@ -86,10 +83,13 @@ export function PhoneLayout({
     previousFileCount.current = fileIds.length;
   }, [fileIds.length]);
 
-  const sheetOpen = view === "tools" && !filesMode;
+  const toolsInFront = view === "tools" && !filesMode;
   const homeShown = !filesMode && (homeRequested || fileIds.length === 0);
   const documentOpen =
     !homeShown && !filesMode && workbench === "viewer" && fileIds.length > 0;
+  const tool = selectedToolKey ? toolRegistry[selectedToolKey] : null;
+  const currentDocument =
+    fileStubs.find((stub) => stub.id === activeFileId) ?? fileStubs[0];
 
   const showHome = () => {
     if (filesMode) navigate(EDITOR_BASENAME);
@@ -103,6 +103,7 @@ export function PhoneLayout({
       navActions.setWorkbench("viewer");
       setActiveFileId(stub.id);
       setHomeRequested(false);
+      onSelectView("workbench");
     } catch (error) {
       alert({
         alertType: "error",
@@ -113,90 +114,102 @@ export function PhoneLayout({
     }
   };
 
-  const openTool = (tool: ToolId) => {
-    handleToolSelect(tool);
-    onSelectView("tools");
+  const documentsTab = () => {
+    if (toolsInFront && !homeShown) onSelectView("workbench");
+    else showHome();
   };
+
+  // Keep the open tool when coming from the document; tapping Tools again
+  // while the tools are in front returns to the list.
+  const toolsTab = () => {
+    if (toolsInFront || !tool) onShowTools();
+    else onSelectView("tools");
+  };
+
+  const documentLabel = homeShown
+    ? t("mobile.home.title", "Documents")
+    : currentDocument?.name;
 
   return (
     <div className="mobile-layout phone-layout" data-files-mode={filesMode}>
-      {documentOpen && <DocumentHeader onBack={showHome} />}
-      <div className="phone-layout-stage">
-        <div
-          className="phone-layout-workbench"
-          // Placing, marking or scrolling the page wants the page, so a docked
-          // tool steps aside; the event still reaches the document.
-          onPointerDownCapture={() => {
-            if (sheetOpen && selectedToolKey !== null) {
-              setCollapseRequest((n) => n + 1);
-            }
-          }}
+      <div
+        className="pip-stage"
+        data-corner={pipCorner}
+        data-dragging={pipDrag !== null}
+        style={
+          pipDrag
+            ? {
+                ["--pip-dx" as string]: `${pipDrag.x}px`,
+                ["--pip-dy" as string]: `${pipDrag.y}px`,
+              }
+            : undefined
+        }
+      >
+        <PipPane
+          front={!toolsInFront}
+          // A document or the home is always behind the tools.
+          pip={toolsInFront}
+          label={documentLabel ?? ""}
+          caption={
+            homeShown
+              ? t("mobile.pip.home", "Your documents")
+              : t("mobile.pip.document", "Document")
+          }
+          icon={<Icon name="file-text" size="1rem" />}
+          onOpen={() => onSelectView("workbench")}
+          onDrag={setPipDrag}
+          onDrop={setPipCorner}
         >
-          <Workbench hideWorkbenchBar={documentOpen} />
-        </div>
-        {homeShown && (
-          <DocumentsHome
-            onOpen={(stub) => void openDocument(stub)}
-            onBrowseAll={onShowFiles}
-          />
-        )}
-        {!filesMode && (
-          <ToolSheet
-            open={sheetOpen}
-            docked={selectedToolKey !== null}
-            onClose={() => onSelectView("workbench")}
-            collapseRequest={collapseRequest}
-          >
+          {documentOpen && <DocumentHeader onBack={showHome} />}
+          <div className="pip-pane-body">
+            <div className="pip-workbench">
+              <Workbench hideWorkbenchBar={documentOpen} />
+            </div>
+            {homeShown && (
+              <DocumentsHome
+                onOpen={(stub) => void openDocument(stub)}
+                onBrowseAll={onShowFiles}
+              />
+            )}
+          </div>
+        </PipPane>
+        <PipPane
+          front={toolsInFront}
+          // Only an open tool waits in the corner; the list alone is not worth it.
+          pip={!toolsInFront && tool !== null && !filesMode}
+          label={tool?.name ?? ""}
+          caption={t("mobile.pip.toolSettings", "Tool settings")}
+          icon={tool?.icon}
+          onOpen={() => onSelectView("tools")}
+          onDrag={setPipDrag}
+          onDrop={setPipCorner}
+        >
+          <div className="pip-pane-body">
             <RightSidebar />
-          </ToolSheet>
-        )}
+          </div>
+        </PipPane>
       </div>
-      {documentOpen ? (
-        <nav className="mobile-bottom-bar document-actions">
-          {DOCUMENT_ACTIONS.flatMap((tool) => {
-            const entry = toolRegistry[tool];
-            return entry
-              ? [
-                  <Tab
-                    key={tool}
-                    icon={entry.icon}
-                    label={entry.name}
-                    active={false}
-                    onClick={() => openTool(tool)}
-                  />,
-                ]
-              : [];
-          })}
-          <Tab
-            icon={<Icon name="layout-grid" size="1.5rem" />}
-            label={t("mobile.document.allTools", "All tools")}
-            active={sheetOpen}
-            onClick={sheetOpen ? () => onSelectView("workbench") : onShowTools}
-          />
-        </nav>
-      ) : (
-        <nav className="mobile-bottom-bar">
-          <PhoneSignButton onSelectTool={onSelectSigningTool} />
-          <Tab
-            icon={<Icon name="file-text" size="1.5rem" />}
-            label={t("mobile.home.title", "Documents")}
-            active={!sheetOpen && (homeShown || filesMode)}
-            onClick={showHome}
-          />
-          <Tab
-            icon={<Icon name="layout-grid" size="1.5rem" />}
-            label={t("quickAccess.allTools", "Tools")}
-            active={sheetOpen}
-            onClick={sheetOpen ? () => onSelectView("workbench") : onShowTools}
-          />
-          <Tab
-            icon={<Icon name="settings" size="1.5rem" />}
-            label={t("mobile.home.settings", "Settings")}
-            active={false}
-            onClick={onOpenSettings}
-          />
-        </nav>
-      )}
+      <nav className="mobile-bottom-bar">
+        <PhoneSignButton onSelectTool={onSelectSigningTool} />
+        <Tab
+          icon={<Icon name="file-text" size="1.5rem" />}
+          label={t("mobile.home.title", "Documents")}
+          active={!toolsInFront}
+          onClick={documentsTab}
+        />
+        <Tab
+          icon={<Icon name="layout-grid" size="1.5rem" />}
+          label={t("quickAccess.allTools", "Tools")}
+          active={toolsInFront}
+          onClick={toolsTab}
+        />
+        <Tab
+          icon={<Icon name="settings" size="1.5rem" />}
+          label={t("mobile.home.settings", "Settings")}
+          active={false}
+          onClick={onOpenSettings}
+        />
+      </nav>
     </div>
   );
 }
