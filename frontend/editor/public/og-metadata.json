@@ -28,7 +28,7 @@
     "removePassword": {
       "image": "/og_images/remove-password.png",
       "title": "Remove PDF Password - Stirling PDF",
-      "description": "Remove password protection from PDF documents"
+      "description": "Remove the opening password, permissions password, or both."
     },
     "removePages": {
       "image": "/og_images/remove.png",

@@ -29,7 +29,7 @@ vi.mock("@app/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata: vi.fn(),
 }));
 vi.mock("@app/services/fileAnalyzer", () => ({
-  FileAnalyzer: { isPDFUserPasswordProtected: async () => false },
+  FileAnalyzer: { isPDFEncrypted: async () => false },
 }));
 vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
 
