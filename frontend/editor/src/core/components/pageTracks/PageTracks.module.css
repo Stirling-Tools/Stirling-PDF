@@ -161,6 +161,16 @@
     0 0 0 5px color-mix(in srgb, var(--c-primary) 22%, transparent);
 }
 
+/* While the action pill (or the checkbox/shift chips) is up, the tile must
+   outrank the invisible gap handles (z-index 5): the pill is wider than the
+   tile and overhangs into the gaps, and the z-index inside it cannot climb out
+   of the thumb box's hover-transform stacking context. */
+.tile:hover,
+.tile:focus-visible,
+.tile:has(:focus-visible) {
+  z-index: 6;
+}
+
 .tileDragging {
   opacity: 0.35;
 }
@@ -437,6 +447,9 @@
  * own transform, which centres it) so the controls keep their proportion to the
  * tile at every zoom instead of swamping a shrunken page. Anchored bottom-centre
  * so it stays put over the page while it scales.
+ *
+ * Wider than the tile, it overhangs the gaps on both sides; see the hovered
+ * tile's z-index for how those clicks stay reachable.
  */
 .tile .pagePill {
   gap: 0.25rem;
