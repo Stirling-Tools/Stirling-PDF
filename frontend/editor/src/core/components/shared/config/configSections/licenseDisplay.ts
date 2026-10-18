@@ -217,6 +217,23 @@ export interface LicenseAboutLink {
   short: string;
 }
 
+/**
+ * True when any searchable field — module name, version, raw license text, or
+ * the license label the UI displays — contains `needle` (lower-cased already).
+ */
+export function matchesLicenseQuery(
+  dependency: Dependency,
+  needle: string,
+): boolean {
+  return [
+    dependency.moduleName,
+    dependency.moduleVersion,
+    dependency.moduleLicense,
+    resolveLicenseDisplay(dependency.moduleLicense, dependency.moduleName)
+      .short,
+  ].some((field) => field?.toLowerCase().includes(needle));
+}
+
 // A single license keeps its short label; a compound gets one link per part
 // with the SPDX id as its own label, so no part hides behind another.
 export function resolveAboutLinks(display: LicenseDisplay): LicenseAboutLink[] {

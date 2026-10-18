@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   dedupeDependencies,
+  matchesLicenseQuery,
   resolveAboutLinks,
   resolveLicenseDisplay,
   resolveModuleLicenseUrl,
@@ -250,5 +251,27 @@ describe("dedupeDependencies", () => {
     const first = dedupeDependencies(input).map((row) => row.rowId);
     const second = dedupeDependencies(input).map((row) => row.rowId);
     expect(first).toEqual(second);
+  });
+});
+
+describe("matchesLicenseQuery", () => {
+  it("matches the displayed label when the raw license spells it differently", () => {
+    expect(
+      matchesLicenseQuery(
+        dependency("spring-session-core", "The Apache Software License, Version 2.0"),
+        "apache-2.0",
+      ),
+    ).toBe(true);
+  });
+
+  it("still matches name, version and raw license substrings", () => {
+    const row = {
+      ...dependency("@scope/pkg", "MIT"),
+      moduleVersion: "1.2.3",
+    };
+    expect(matchesLicenseQuery(row, "@scope")).toBe(true);
+    expect(matchesLicenseQuery(row, "1.2")).toBe(true);
+    expect(matchesLicenseQuery(row, "mit")).toBe(true);
+    expect(matchesLicenseQuery(row, "nope")).toBe(false);
   });
 });

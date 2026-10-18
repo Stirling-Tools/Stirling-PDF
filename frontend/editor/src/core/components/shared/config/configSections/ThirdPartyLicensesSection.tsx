@@ -23,6 +23,7 @@ import apiClient from "@app/services/apiClient";
 import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @app alias root
 import {
   dedupeDependencies,
+  matchesLicenseQuery,
   resolveAboutLinks,
   resolveLicenseDisplay,
   resolveModuleLicenseUrl,
@@ -69,11 +70,7 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
       return sortedDependencies;
     }
     return sortedDependencies.filter((dependency) =>
-      [
-        dependency.moduleName,
-        dependency.moduleVersion,
-        dependency.moduleLicense,
-      ].some((field) => field?.toLowerCase().includes(needle)),
+      matchesLicenseQuery(dependency, needle),
     );
   }, [sortedDependencies, query]);
 
