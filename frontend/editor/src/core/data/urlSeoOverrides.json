@@ -169,7 +169,7 @@
   },
   "/auto-redact": {
     "title": "Redact PDF",
-    "description": "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
+    "description": "Automatically redacts (blacks out) text matching configured patterns"
   },
   "/crop": {
     "title": "Crop PDF",
