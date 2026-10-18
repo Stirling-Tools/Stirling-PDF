@@ -12,6 +12,8 @@ interface ToolSheetProps {
    */
   docked: boolean;
   onClose: () => void;
+  /** Bumped when the user reaches for the document; a docked sheet shrinks to its bar. */
+  collapseRequest: number;
   children: ReactNode;
 }
 
@@ -21,11 +23,17 @@ const STEP_DRAG_PX = 60;
 /**
  * Bottom sheet holding the tool panel. Undocked (the tool list) it is either
  * full or closed. Docked it rests at half height with the document usable
- * above it, or shrinks to a bar showing just the tool's header; dragging down
- * from the bar closes it. The content stays mounted while closed so a tool's
- * settings survive.
+ * above it, or shrinks to a bar showing just the tool's header (also when the
+ * user touches the document); dragging down from the bar closes it. The
+ * content stays mounted while closed so a tool's settings survive.
  */
-export function ToolSheet({ open, docked, onClose, children }: ToolSheetProps) {
+export function ToolSheet({
+  open,
+  docked,
+  onClose,
+  collapseRequest,
+  children,
+}: ToolSheetProps) {
   const { t } = useTranslation();
   const [detent, setDetent] = useState<Detent>(docked ? "half" : "full");
   const dragStart = useRef<number | null>(null);
@@ -35,6 +43,14 @@ export function ToolSheet({ open, docked, onClose, children }: ToolSheetProps) {
   useEffect(() => {
     if (open) setDetent(docked ? "half" : "full");
   }, [open, docked]);
+
+  // Only a new request collapses; opening a tool after earlier touches must not.
+  const handledCollapse = useRef(collapseRequest);
+  useEffect(() => {
+    if (collapseRequest === handledCollapse.current) return;
+    handledCollapse.current = collapseRequest;
+    if (docked) setDetent("bar");
+  }, [collapseRequest, docked]);
 
   const lower = () => {
     if (!docked || detent === "bar") onClose();
