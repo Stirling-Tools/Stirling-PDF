@@ -1,32 +1,15 @@
-import type { PDFDict, PDFDocument, PDFRawStream } from "@cantoo/pdf-lib";
 import type { PdfAttachmentObject } from "@embedpdf/models";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { PdfFileReader } from "@app/utils/pdfObjectReader";
+import type { PdfValue } from "@app/utils/pdfObjectReader";
 
 // Reads a portfolio's members from the file's own bytes. The viewer's attachment
 // capability only covers the open document, which stops being the portfolio.
 //
-// pdf-lib (~628kB raw) stays a dynamic import: this module loads with the
-// Viewer, so a static import would block every open on a portfolio-only dep.
+// The in-repo reader is imported statically: it is already in the viewer's
+// graph (the layer pipeline uses it) and parses lazily, so a portfolio-only
+// scan costs the same as the old dynamic pdf-lib import without the chunk.
 
-type PdfLib = typeof import("@cantoo/pdf-lib");
-
-let pdfLibPromise: Promise<PdfLib> | null = null;
-
-const getPdfLib = (): Promise<PdfLib> => {
-  pdfLibPromise ??= import("@cantoo/pdf-lib").then(
-    (lib) => lib,
-    (error: unknown) => {
-      // A chunk-load failure (deploy, network) must stay retryable: drop the
-      // rejection so the next caller imports again instead of inheriting it.
-      pdfLibPromise = null;
-      throw error;
-    },
-  );
-  return pdfLibPromise;
-};
-
-// Key names as plain strings; PDFName.of() is applied at runtime after the
-// dynamic import resolves, so module evaluation stays free of pdf-lib.
 const KEY_NAMES = "Names";
 const KEY_KIDS = "Kids";
 const KEY_EMBEDDED_FILES = "EmbeddedFiles";
@@ -43,8 +26,8 @@ const KEY_COLLECTION = "Collection";
 const MAX_NAME_TREE_DEPTH = 64;
 
 type LoadedPortfolio = {
-  doc: PDFDocument;
-  specs: Map<string, PDFDict>;
+  reader: PdfFileReader;
+  specs: Map<string, PdfValue>;
   isPortfolio: boolean;
 };
 
@@ -57,47 +40,52 @@ let cache: { file: File; loaded: Promise<LoadedPortfolio | null> } | null =
 // Remembering the answer avoids reparsing; no document bytes are held.
 const answers = new WeakMap<File, PdfAttachmentObject[] | null>();
 
-const decodeText = (value: unknown, pdfLib: PdfLib): string | null => {
-  if (
-    value instanceof pdfLib.PDFString ||
-    value instanceof pdfLib.PDFHexString ||
-    value instanceof pdfLib.PDFName
-  ) {
-    return value.decodeText();
+const decodeText = async (
+  reader: PdfFileReader,
+  value: PdfValue | undefined,
+): Promise<string | null> => {
+  const resolved = await reader.resolveValue(value);
+  if (resolved?.kind === "string") {
+    return (await reader.stringText(resolved)) ?? null;
   }
+  if (resolved?.kind === "name") return resolved.name;
   return null;
 };
 
-// Name trees are balanced into Kids once they grow, so both shapes must be read.
-const collectSpecs = (
-  node: PDFDict | undefined,
-  into: Map<string, PDFDict>,
-  pdfLib: PdfLib,
-  seen: Set<PDFDict> = new Set(),
-  depth = 0,
-) => {
-  if (!node || depth > MAX_NAME_TREE_DEPTH || seen.has(node)) return;
-  seen.add(node);
+const asDict = (
+  value: PdfValue | undefined,
+): Map<string, PdfValue> | undefined =>
+  value?.kind === "dict" ? value.map : undefined;
 
-  const names = node.lookupMaybe(pdfLib.PDFName.of(KEY_NAMES), pdfLib.PDFArray);
-  if (names) {
-    for (let i = 0; i + 1 < names.size(); i += 2) {
-      const name = decodeText(names.lookup(i), pdfLib);
-      const spec = names.lookupMaybe(i + 1, pdfLib.PDFDict);
+// Name trees are balanced into Kids once they grow, so both shapes must be
+// read. Resolved values carry no stable identity, so cycles are bounded by
+// depth alone; a well-formed tree never nests that far.
+const collectSpecs = async (
+  reader: PdfFileReader,
+  node: Map<string, PdfValue> | undefined,
+  into: Map<string, PdfValue>,
+  depth = 0,
+): Promise<void> => {
+  if (!node || depth > MAX_NAME_TREE_DEPTH) return;
+
+  const names = await reader.resolveValue(node.get(KEY_NAMES));
+  if (names?.kind === "array") {
+    for (let i = 0; i + 1 < names.items.length; i += 2) {
+      const name = await decodeText(reader, names.items[i]);
+      const spec = asDict(await reader.resolveValue(names.items[i + 1]));
       if (name && spec) {
-        into.set(name, spec);
+        into.set(name, { kind: "dict", map: spec });
       }
     }
   }
 
-  const kids = node.lookupMaybe(pdfLib.PDFName.of(KEY_KIDS), pdfLib.PDFArray);
-  if (kids) {
-    for (let i = 0; i < kids.size(); i += 1) {
-      collectSpecs(
-        kids.lookupMaybe(i, pdfLib.PDFDict),
+  const kids = await reader.resolveValue(node.get(KEY_KIDS));
+  if (kids?.kind === "array") {
+    for (const kid of kids.items) {
+      await collectSpecs(
+        reader,
+        asDict(await reader.resolveValue(kid)),
         into,
-        pdfLib,
-        seen,
         depth + 1,
       );
     }
@@ -106,24 +94,29 @@ const collectSpecs = (
 
 const load = async (file: File): Promise<LoadedPortfolio | null> => {
   try {
-    const pdfLib = await getPdfLib();
-    const doc = await pdfLib.PDFDocument.load(await getDocumentBytes(file), {
-      ignoreEncryption: true,
-      throwOnInvalidObject: false,
-      updateMetadata: false,
-    });
-    const specs = new Map<string, PDFDict>();
-    collectSpecs(
-      doc.catalog
-        .lookupMaybe(pdfLib.PDFName.of(KEY_NAMES), pdfLib.PDFDict)
-        ?.lookupMaybe(pdfLib.PDFName.of(KEY_EMBEDDED_FILES), pdfLib.PDFDict),
-      specs,
-      pdfLib,
+    const reader = await PdfFileReader.open(
+      new Uint8Array(await getDocumentBytes(file)),
     );
+    const catalog = await reader.resolveValue(
+      reader.root ? { kind: "ref", ref: reader.root } : undefined,
+    );
+    if (catalog?.kind !== "dict") return null;
+
+    const specs = new Map<string, PdfValue>();
+    const namesDict = asDict(
+      await reader.resolveValue(catalog.map.get("Names")),
+    );
+    const embedded = asDict(
+      await reader.resolveValue(namesDict?.get(KEY_EMBEDDED_FILES)),
+    );
+    await collectSpecs(reader, embedded, specs);
+
     return {
-      doc,
+      reader,
       specs,
-      isPortfolio: doc.catalog.get(pdfLib.PDFName.of(KEY_COLLECTION)) != null,
+      isPortfolio:
+        (await reader.resolveValue(catalog.map.get(KEY_COLLECTION))) !==
+        undefined,
     };
   } catch {
     return null;
@@ -157,16 +150,16 @@ const parsePdfDate = (value: string | null): Date | undefined => {
   return Number.isNaN(date.getTime()) ? undefined : date;
 };
 
-const streamOf = (
-  loaded: LoadedPortfolio,
-  spec: PDFDict,
-  pdfLib: PdfLib,
-): PDFRawStream | undefined => {
-  const ef = spec.lookupMaybe(pdfLib.PDFName.of(KEY_EF), pdfLib.PDFDict);
-  const ref =
-    ef?.get(pdfLib.PDFName.of(KEY_F)) ?? ef?.get(pdfLib.PDFName.of(KEY_UF));
-  const stream = ref ? loaded.doc.context.lookup(ref) : undefined;
-  return stream instanceof pdfLib.PDFRawStream ? stream : undefined;
+const streamOf = async (
+  reader: PdfFileReader,
+  spec: PdfValue,
+): Promise<PdfValue | null> => {
+  const specMap = asDict(spec);
+  const ef = asDict(await reader.resolveValue(specMap?.get(KEY_EF)));
+  if (!ef) return null;
+  const ref = ef.get(KEY_F) ?? ef.get(KEY_UF);
+  const stream = await reader.resolveValue(ref);
+  return stream?.kind === "stream" ? stream : null;
 };
 
 /** Members shaped like the viewer's attachment objects; null when not a portfolio. */
@@ -185,28 +178,27 @@ export async function readPortfolioMembers(
     return null;
   }
 
+  const { reader } = loaded;
   const members: PdfAttachmentObject[] = [];
   let index = 0;
-  const pdfLib = await getPdfLib();
   for (const [name, spec] of loaded.specs) {
-    const stream = streamOf(loaded, spec, pdfLib);
-    const params = stream?.dict.lookupMaybe(
-      pdfLib.PDFName.of(KEY_PARAMS),
-      pdfLib.PDFDict,
+    const stream = await streamOf(reader, spec);
+    const streamMap = stream?.kind === "stream" ? stream.dict : undefined;
+    const params = asDict(
+      await reader.resolveValue(streamMap?.get(KEY_PARAMS)),
     );
+    const sizeValue = params
+      ? await reader.resolveValue(params.get(KEY_SIZE))
+      : undefined;
     members.push({
       index: index++,
       name,
       description:
-        decodeText(spec.get(pdfLib.PDFName.of(KEY_DESC)), pdfLib) ?? "",
-      mimeType:
-        decodeText(stream?.dict.get(pdfLib.PDFName.of(KEY_SUBTYPE)), pdfLib) ??
-        "",
-      size: params
-        ?.lookupMaybe(pdfLib.PDFName.of(KEY_SIZE), pdfLib.PDFNumber)
-        ?.asNumber(),
+        (await decodeText(reader, asDict(spec)?.get(KEY_DESC))) ?? "",
+      mimeType: (await decodeText(reader, streamMap?.get(KEY_SUBTYPE))) ?? "",
+      size: sizeValue?.kind === "number" ? sizeValue.value : undefined,
       creationDate: parsePdfDate(
-        decodeText(params?.get(pdfLib.PDFName.of(KEY_CREATION_DATE)), pdfLib),
+        params ? await decodeText(reader, params.get(KEY_CREATION_DATE)) : null,
       ),
       checksum: "",
     });
@@ -226,9 +218,8 @@ export async function readPortfolioMemberBytes(
   if (!loaded || !spec) return null;
 
   try {
-    const pdfLib = await getPdfLib();
-    const stream = streamOf(loaded, spec, pdfLib);
-    return stream ? pdfLib.decodePDFRawStream(stream).decode() : null;
+    const stream = await streamOf(loaded.reader, spec);
+    return stream ? await loaded.reader.streamBytes(stream) : null;
   } catch {
     return null;
   }
