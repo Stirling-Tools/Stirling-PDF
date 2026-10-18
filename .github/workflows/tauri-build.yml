@@ -138,7 +138,6 @@ jobs:
     permissions:
       contents: read
     outputs:
-      java_version: ${{ steps.hash.outputs.java_version }}
       gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
       cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash}}
       frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
@@ -163,7 +162,6 @@ jobs:
           FRONTEND_TAURI_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
         shell: bash
         run: |
-          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
           echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
           echo "cargo_files_hash=$CARGO_HASH" >> "$GITHUB_OUTPUT"
           echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"

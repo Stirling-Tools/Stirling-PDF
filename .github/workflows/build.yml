@@ -128,15 +128,15 @@ jobs:
       !cancelled() &&
       needs.files-changed.outputs.backend == 'true'
     needs: [files-changed, gradle-cache-prime, files-hash]
-    with:
-      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
-      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
     permissions:
       actions: read
       contents: write
       security-events: write
       pull-requests: write
     uses: ./.github/workflows/backend-build.yml
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
     secrets: inherit
 
   db-migration-test:
@@ -147,7 +147,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.project == 'true'
-    needs: [files-changed, gradle-cache-prime]
+    needs: [files-changed]
     permissions:
       contents: write
     uses: ./.github/workflows/db-migration-test.yml
@@ -157,7 +157,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.openapi == 'true'
-    needs: [files-changed, gradle-cache-prime, files-hash]
+    needs: [files-changed, files-hash]
     permissions:
       contents: write
     uses: ./.github/workflows/check-openapi.yml
@@ -172,12 +172,12 @@ jobs:
       contents: write
       pull-requests: write
     uses: ./.github/workflows/frontend-validation.yml
-    secrets: inherit
     with:
       frontend-dist-hash: ${{ needs.files-hash.outputs.frontend_dist_files_hash }}
       uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
       cargo-hash: ${{ needs.files-hash.outputs.cargo_files_hash }}
       npm-hash: ${{ needs.files-hash.outputs.npm_files_hash }}
+    secrets: inherit
 
   # Required (in all-checks-passed). Scans the stories a branch touches in both
   # light and dark; an axe violation in either theme blocks the merge. The
@@ -189,9 +189,9 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/frontend-a11y.yml
-    secrets: inherit
     with:
       npm-hash: ${{ needs.files-hash.outputs.npm_files_hash }}
+    secrets: inherit
 
   playwright-e2e:
     if: |
@@ -209,9 +209,8 @@ jobs:
   playwright-e2e-live:
     if: |
       !cancelled() &&
-      needs.files-changed.outputs.frontend == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
-    needs: [files-changed, gradle-cache-prime, files-hash]
+      needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed, files-hash]
     permissions:
       contents: write
     uses: ./.github/workflows/e2e-live.yml
@@ -224,41 +223,41 @@ jobs:
   playwright-e2e-enterprise:
     if: |
       !cancelled() &&
-      needs.files-changed.outputs.proprietary == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
-    needs: [files-changed, gradle-cache-prime, files-hash]
+      needs.files-changed.outputs.proprietary == 'true'
+    needs: [files-changed, files-hash]
     permissions:
       contents: read
     uses: ./.github/workflows/build-enterprise.yml
-    secrets: inherit
     with:
       use_shared_cache: true
+    secrets: inherit
 
   check-licence:
     if: |
       !cancelled() && needs.files-changed.outputs.build == 'true'
-    needs: [files-changed, gradle-cache-prime, files-hash]
-    with:
-      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
+    needs: [files-changed, files-hash]
     permissions:
       contents: write
     uses: ./.github/workflows/check-licence.yml
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
     secrets: inherit
 
   docker-compose-tests:
     if: |
       !cancelled() &&
-      needs.files-changed.outputs.project == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
-    needs: [files-changed, gradle-cache-prime]
+      needs.files-changed.outputs.project == 'true'
+    needs: [files-changed, files-hash]
     permissions:
       actions: write
-      contents: read
+      contents: write
       checks: write
     uses: ./.github/workflows/docker-compose-tests.yml
-    secrets: inherit
     with:
       docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
+    secrets: inherit
 
   # The image builds compile the code inside their own build stage and do
   # not touch the Gradle cache, so they start with the rest of the fan-out
@@ -274,21 +273,20 @@ jobs:
       contents: read
       packages: read
     uses: ./.github/workflows/test-build-docker.yml
-    secrets: inherit
     with:
       docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
       dockerfiles-changed: ${{ needs.files-changed.outputs.dockerfiles }}
+    secrets: inherit
 
   tauri-build:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.tauri == 'true'
-    needs: [files-changed, gradle-cache-prime]
+    needs: [files-changed]
     permissions:
       contents: write
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
-    secrets: inherit
     # PR smoke build: macOS + Windows (the platforms our developers use).
     # sign: true only reaches macOS - tauri-build's per-platform gate keeps
     # Windows/Linux signing on main, and an unsigned .dmg cannot be opened.
@@ -298,6 +296,7 @@ jobs:
       platform: windows-macos
       sign: true
       use_shared_cache: true
+    secrets: inherit
 
   ai-engine:
     if: |
@@ -324,9 +323,9 @@ jobs:
       contents: write
       pull-requests: write
     uses: ./.github/workflows/check-generated-models.yml
-    secrets: inherit
     with:
       use_shared_cache: true
+    secrets: inherit
 
   pre-commit:
     if: ${{ !cancelled() }}
@@ -358,11 +357,11 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/coverage-aggregate.yml
-    secrets: inherit
     with:
       uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
       frontend-validation-result: ${{ needs.frontend-validation.result }}
       playwright-e2e-live-result: ${{ needs.playwright-e2e-live.result }}
+    secrets: inherit
 
   # Single status check that branch protection should mark as required.
   # Succeeds when every upstream job is either `success` or `skipped` (path-
