@@ -11,9 +11,9 @@ import {
 } from "@app/types/fileContext";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import { useAllFiles } from "@app/contexts/FileContext";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import { useFileManager } from "@app/hooks/useFileManager";
+import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 import { fileStorage } from "@app/services/fileStorage";
 import apiClient from "@app/services/apiClient";
 import {
@@ -131,43 +131,12 @@ export function FileSelectorPicker({
     rect: DOMRect;
     stub: StirlingFileStub;
   } | null>(null);
-  const [hoveredThumbnail, setHoveredThumbnail] = useState<string | null>(null);
-  const thumbCancelRef = useRef<boolean>(false);
+  const { thumbnail: hoveredThumbnail } = useFileThumbnail(hoveredStub?.stub);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { fileStubs: workbenchStubs } = useAllFiles();
-  const indexedDB = useIndexedDB();
   const { selectors } = useFileContext();
   const { loadRecentFiles } = useFileManager();
-
-  // Load thumbnail lazily when hovering over a file row
-  useEffect(() => {
-    if (!hoveredStub) {
-      setHoveredThumbnail(null);
-      return;
-    }
-    if (hoveredStub.stub.thumbnailUrl) {
-      setHoveredThumbnail(hoveredStub.stub.thumbnailUrl);
-      return;
-    }
-    thumbCancelRef.current = false;
-    setHoveredThumbnail(null);
-    (async () => {
-      try {
-        const file = await indexedDB.loadFile(hoveredStub.stub.id);
-        if (!file || thumbCancelRef.current) return;
-        const thumbnail = await generateThumbnailForFile(file);
-        if (thumbCancelRef.current || !thumbnail) return;
-        setHoveredThumbnail(thumbnail);
-        void indexedDB.updateThumbnail(hoveredStub.stub.id, thumbnail);
-      } catch {
-        // non-critical
-      }
-    })();
-    return () => {
-      thumbCancelRef.current = true;
-    };
-  }, [hoveredStub, indexedDB]);
 
   const handleTabChange = useCallback((tab: "workbench" | "saved") => {
     lsSet(LS_TAB, tab);

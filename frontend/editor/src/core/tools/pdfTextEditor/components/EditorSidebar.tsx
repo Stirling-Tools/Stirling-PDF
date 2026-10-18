@@ -52,6 +52,8 @@ export function EditorSidebar({
   onRunOcr,
   ocrRunning,
   ocrAvailable,
+  ocrBlockedReason,
+  onRemovePassword,
   initialTab = "selected",
 }: SidebarProps) {
   const { t } = useTranslation();
@@ -129,6 +131,8 @@ export function EditorSidebar({
               onRunOcr={onRunOcr}
               ocrRunning={ocrRunning}
               ocrAvailable={ocrAvailable}
+              ocrBlockedReason={ocrBlockedReason}
+              onRemovePassword={onRemovePassword}
             />
           )}
         </Tabs.Panel>
