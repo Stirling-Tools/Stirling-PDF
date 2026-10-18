@@ -7823,7 +7823,7 @@ timedOut = "Enforcement timed out before the run could finish."
 
 [policies.editorPanel]
 collapse = "Hide pipelines"
-empty = "Nothing runs on import or export yet"
+empty = "No pipelines bound to this document"
 expand = "Show pipelines"
 openProcessor = "Open the PDF Processor"
 rowFailed = "{{label}} - last run failed"
