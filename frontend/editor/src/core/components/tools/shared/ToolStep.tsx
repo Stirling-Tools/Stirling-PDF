@@ -3,6 +3,7 @@ import { Text, Stack, Flex, Divider } from "@mantine/core";
 import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { TooltipTip } from "@app/types/tips";
+import styles from "@app/components/tools/shared/createToolFlow.module.css";
 import {
   createFilesToolStep,
   FilesToolStepProps,
@@ -113,44 +114,54 @@ const ToolStep = ({
         }}
       >
         {/* Chevron icon to collapse/expand the step */}
-        <Flex
-          align="center"
-          justify="space-between"
-          mb="sm"
-          style={{
-            cursor: onCollapsedClick ? "pointer" : "default",
-          }}
-          onClick={onCollapsedClick}
-        >
-          <Flex align="center" gap="sm">
-            {shouldShowNumber && (
-              <Text fw={500} size="sm" c="dimmed" mr="0.5rem">
-                {stepNumber}
-              </Text>
-            )}
-            {renderTooltipTitle(title, tooltip, isCollapsed, alwaysShowTooltip)}
+        {onCollapsedClick ? (
+          <button
+            type="button"
+            className={styles.stepHeader}
+            aria-expanded={!isCollapsed}
+            onClick={onCollapsedClick}
+          >
+            <Flex align="center" gap="sm">
+              {shouldShowNumber && (
+                <Text fw={500} size="sm" c="dimmed" mr="0.5rem">
+                  {stepNumber}
+                </Text>
+              )}
+              {renderTooltipTitle(
+                title,
+                tooltip,
+                isCollapsed,
+                alwaysShowTooltip,
+              )}
+            </Flex>
+            <Icon
+              name={isCollapsed ? "chevron-right" : "chevron-down"}
+              size="1.2rem"
+              style={{ color: "var(--mantine-color-dimmed)" }}
+            />
+          </button>
+        ) : (
+          <Flex align="center" justify="space-between" mb="sm">
+            <Flex align="center" gap="sm">
+              {shouldShowNumber && (
+                <Text fw={500} size="sm" c="dimmed" mr="0.5rem">
+                  {stepNumber}
+                </Text>
+              )}
+              {renderTooltipTitle(
+                title,
+                tooltip,
+                isCollapsed,
+                alwaysShowTooltip,
+              )}
+            </Flex>
+            <Icon
+              name={isCollapsed ? "chevron-right" : "chevron-down"}
+              size="1.2rem"
+              style={{ color: "var(--mantine-color-dimmed)", opacity: 0.5 }}
+            />
           </Flex>
-
-          {isCollapsed ? (
-            <Icon
-              name="chevron-right"
-              size="1.2rem"
-              style={{
-                color: "var(--mantine-color-dimmed)",
-                opacity: onCollapsedClick ? 1 : 0.5,
-              }}
-            />
-          ) : (
-            <Icon
-              name="chevron-down"
-              size="1.2rem"
-              style={{
-                color: "var(--mantine-color-dimmed)",
-                opacity: onCollapsedClick ? 1 : 0.5,
-              }}
-            />
-          )}
-        </Flex>
+        )}
 
         {!isCollapsed && (
           <Stack gap="sm" pl={_noPadding ? 0 : "sm"}>
