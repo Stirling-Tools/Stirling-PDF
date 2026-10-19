@@ -2,7 +2,6 @@ package stirling.software.proprietary.security.configuration;
 
 import java.time.Duration;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -10,6 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+
+import stirling.software.common.model.ApplicationProperties;
 
 @Configuration
 @EnableCaching
@@ -27,10 +28,10 @@ public class CacheConfig {
     /** Clustered: one node's eviction never reaches another, so the TTL is the whole guarantee. */
     private static final Duration CLUSTERED_FALLBACK = Duration.ofSeconds(30);
 
-    private final boolean clusterEnabled;
+    private final ApplicationProperties applicationProperties;
 
-    public CacheConfig(@Value("${cluster.enabled:false}") boolean clusterEnabled) {
-        this.clusterEnabled = clusterEnabled;
+    public CacheConfig(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
     }
 
     /**
@@ -46,7 +47,9 @@ public class CacheConfig {
                 Caffeine.newBuilder()
                         .maximumSize(1000)
                         .expireAfterWrite(
-                                clusterEnabled ? CLUSTERED_FALLBACK : SINGLE_NODE_FALLBACK)
+                                applicationProperties.getCluster().isEnabled()
+                                        ? CLUSTERED_FALLBACK
+                                        : SINGLE_NODE_FALLBACK)
                         .recordStats());
         // 30s TTL keeps audit views near-live without re-scanning the DB; one entry per scope.
         cacheManager.registerCustomCache(

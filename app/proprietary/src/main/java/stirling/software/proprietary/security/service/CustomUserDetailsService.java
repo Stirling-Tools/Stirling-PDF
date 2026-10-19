@@ -40,15 +40,16 @@ public class CustomUserDetailsService implements UserDetailsService {
                     "Your account has been locked due to too many failed login attempts.");
         }
 
-        // Legacy users (pre-1.3.0) have no authenticationType. Derive it per read rather than
-        // back-filling: this runs in the filter chain with no transaction, so the old save() here
-        // was an auto-commit write on the hot read path of every request by such a user.
+        // Pre-1.3.0 users have no authenticationType. Back-fill it once rather than deriving it
+        // per read: MFA and SSO detection read the stored value, so a derived one leaves them
+        // broken for these users. A password means web auth; its absence means SSO.
         String authTypeStr = user.getAuthenticationType();
         if (authTypeStr == null || authTypeStr.isEmpty()) {
-            // A password means web auth; its absence means SSO, so pick the enabled provider.
-            authTypeStr =
-                    (user.hasPassword() ? AuthenticationType.WEB : determinePreferredSSOType())
-                            .name();
+            AuthenticationType detectedType =
+                    user.hasPassword() ? AuthenticationType.WEB : determinePreferredSSOType();
+            user.setAuthenticationType(detectedType);
+            userRepository.save(user);
+            authTypeStr = detectedType.name();
         }
 
         AuthenticationType userAuthenticationType =
