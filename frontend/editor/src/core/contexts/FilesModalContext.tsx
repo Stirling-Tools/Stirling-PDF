@@ -280,7 +280,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         reportUnavailable();
         return;
       }
-      if (uploads.length > 0) await addFiles(uploads);
+      const uploadedFiles = uploads.length > 0 ? await addFiles(uploads) : [];
 
       const localStubs: StirlingFileStub[] = [];
       const requestedIds: FileId[] = [];
@@ -289,7 +289,6 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
           const remote = await downloadRemoteFile(stub);
           if (!remote) {
             localStubs.push(stub);
-            requestedIds.push(stub.id);
             continue;
           }
           const importedIds = await importBundleToWorkbench(
@@ -310,12 +309,14 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       }
 
-      if (localStubs.length)
-        await actions.addStirlingFileStubs(localStubs, { selectFiles: false });
+      if (localStubs.length) {
+        const admitted = await actions.addStirlingFileStubs(localStubs, {
+          selectFiles: false,
+        });
+        requestedIds.push(...admitted.map((file) => file.fileId));
+      }
       // Adding an input must preserve a tool's existing selection.
-      const uploadedIds = uploads
-        .map((file) => fileCtx.findFileId(file))
-        .filter((id): id is FileId => Boolean(id));
+      const uploadedIds = uploadedFiles.map((file) => file.fileId);
       const currentSelected = fileCtx.selectors
         .getSelectedStirlingFileStubs()
         .map((s) => s.id);
@@ -325,7 +326,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         ),
       );
 
-      const totalAdded = requestedIds.length + uploads.length;
+      const totalAdded = requestedIds.length + uploadedIds.length;
       if (!staysOnAdd && totalAdded > 0) {
         navActions.setWorkbench(totalAdded === 1 ? "viewer" : "fileEditor");
       }

@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useCompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
+import {
+  defaultParameters,
+  MAX_COMPRESSION_LEVEL,
+  useCompressParameters,
+  usedStrongestCompression,
+} from "@app/hooks/tools/compress/useCompressParameters";
 
 describe("useCompressParameters", () => {
   test("defaults (quality mode) validate", () => {
@@ -38,5 +43,32 @@ describe("useCompressParameters", () => {
       result.current.updateParameter("fileSizeValue", "5");
     });
     expect(result.current.validateParameters()).toBe(true);
+  });
+});
+
+describe("usedStrongestCompression", () => {
+  test("is false below the top quality level", () => {
+    expect(
+      usedStrongestCompression({ ...defaultParameters, compressionLevel: 8 }),
+    ).toBe(false);
+  });
+
+  test("is true at the top quality level", () => {
+    expect(
+      usedStrongestCompression({
+        ...defaultParameters,
+        compressionLevel: MAX_COMPRESSION_LEVEL,
+      }),
+    ).toBe(true);
+  });
+
+  test("is true in file-size mode, which escalates the level itself", () => {
+    expect(
+      usedStrongestCompression({
+        ...defaultParameters,
+        compressionMethod: "filesize",
+        compressionLevel: 1,
+      }),
+    ).toBe(true);
   });
 });

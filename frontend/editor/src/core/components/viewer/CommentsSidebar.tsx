@@ -99,6 +99,7 @@ function formatCommentDate(obj: PdfAnnotationObject): string {
 }
 
 interface CommentsSidebarProps {
+  readOnly?: boolean;
   documentId: string;
   visible: boolean;
   rightOffset: string;
@@ -462,6 +463,7 @@ function CommentPageGroup({
 }
 
 interface CommentCardHeaderProps {
+  readOnly: boolean;
   ann: PdfAnnotationObject;
   authorName: string;
   typeLabel: string;
@@ -472,6 +474,7 @@ interface CommentCardHeaderProps {
 }
 
 function CommentCardHeader({
+  readOnly,
   ann,
   authorName,
   typeLabel,
@@ -518,21 +521,23 @@ function CommentCardHeader({
             <Icon name="eye" size={16} />
           </ActionIcon>
         </Tooltip>
-        <MoreActionsMenu>
-          <Menu.Item
-            leftSection={<Icon name="pencil" size={18} />}
-            onClick={onEdit}
-          >
-            {t("annotation.editText", "Edit")}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<Icon name="trash" size={18} />}
-            color="red"
-            onClick={onDelete}
-          >
-            {t("annotation.delete", "Delete")}
-          </Menu.Item>
-        </MoreActionsMenu>
+        {!readOnly && (
+          <MoreActionsMenu>
+            <Menu.Item
+              leftSection={<Icon name="pencil" size={18} />}
+              onClick={onEdit}
+            >
+              {t("annotation.editText", "Edit")}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<Icon name="trash" size={18} />}
+              color="red"
+              onClick={onDelete}
+            >
+              {t("annotation.delete", "Delete")}
+            </Menu.Item>
+          </MoreActionsMenu>
+        )}
       </Group>
     </Group>
   );
@@ -622,6 +627,7 @@ function ReplyEditor({ value, onChange, onSave }: ReplyEditorProps) {
 }
 
 interface CommentReplyProps {
+  readOnly: boolean;
   reply: SidebarAnnotationEntry["replies"][number];
   displayName: string;
   /** The text being edited, or null when the reply is not being edited. */
@@ -632,6 +638,7 @@ interface CommentReplyProps {
 }
 
 function CommentReply({
+  readOnly,
   reply,
   displayName,
   editDraft,
@@ -643,7 +650,7 @@ function CommentReply({
   const rObj = reply.object;
   const author = getAuthorName(rObj, displayName);
   const timestamp = formatCommentDate(rObj);
-  const canEdit = isReplyAuthoredByCurrentUser(rObj, displayName);
+  const canEdit = !readOnly && isReplyAuthoredByCurrentUser(rObj, displayName);
 
   return (
     <Box
@@ -681,7 +688,7 @@ function CommentReply({
             ) : null}
           </Group>
         </Group>
-        {editDraft !== null ? (
+        {!readOnly && editDraft !== null ? (
           <ReplyEditor
             value={editDraft}
             onChange={onEditChange}
@@ -783,6 +790,7 @@ interface CommentActions {
 }
 
 interface CommentRepliesProps {
+  readOnly: boolean;
   pageIndex: number;
   parentId: string;
   replies: SidebarAnnotationEntry["replies"];
@@ -792,6 +800,7 @@ interface CommentRepliesProps {
 }
 
 function CommentReplies({
+  readOnly,
   pageIndex,
   parentId,
   replies,
@@ -806,6 +815,7 @@ function CommentReplies({
         .filter((reply) => reply?.object?.id)
         .map((reply) => (
           <CommentReply
+            readOnly={readOnly}
             key={reply.object.id}
             reply={reply}
             displayName={displayName}
@@ -833,6 +843,7 @@ function CommentReplies({
 }
 
 interface CommentThreadProps {
+  readOnly: boolean;
   pageIndex: number;
   entry: SidebarAnnotationEntry;
   content: string;
@@ -843,6 +854,7 @@ interface CommentThreadProps {
 }
 
 function CommentThread({
+  readOnly,
   pageIndex,
   entry,
   content,
@@ -858,6 +870,7 @@ function CommentThread({
         {content}
       </Text>
       <CommentReplies
+        readOnly={readOnly}
         pageIndex={pageIndex}
         parentId={ann.id}
         replies={entry.replies}
@@ -865,16 +878,21 @@ function CommentThread({
         editingReply={editingReply}
         actions={actions}
       />
-      <ReplyComposer
-        value={replyDraft}
-        onChange={(value) => actions.changeReplyDraft(pageIndex, ann.id, value)}
-        onSubmit={() => actions.sendReply(pageIndex, ann.id, ann.rect)}
-      />
+      {!readOnly && (
+        <ReplyComposer
+          value={replyDraft}
+          onChange={(value) =>
+            actions.changeReplyDraft(pageIndex, ann.id, value)
+          }
+          onSubmit={() => actions.sendReply(pageIndex, ann.id, ann.rect)}
+        />
+      )}
     </>
   );
 }
 
 interface CommentCardProps {
+  readOnly: boolean;
   pageIndex: number;
   entry: SidebarAnnotationEntry;
   selected: boolean;
@@ -889,6 +907,7 @@ interface CommentCardProps {
 }
 
 function CommentCard({
+  readOnly,
   pageIndex,
   entry,
   selected,
@@ -920,6 +939,7 @@ function CommentCard({
       }}
     >
       <CommentCardHeader
+        readOnly={readOnly}
         ann={ann}
         authorName={getAuthorName(ann, displayName)}
         typeLabel={getAnnotationTypeLabel(ann, t)}
@@ -929,7 +949,7 @@ function CommentCard({
         onDelete={() => actions.requestDelete(pageIndex, id, ann)}
       />
 
-      {!hasMainContent || isEditing ? (
+      {!readOnly && (!hasMainContent || isEditing) ? (
         <CommentComposer
           value={text}
           onChange={(value) => actions.changeDraft(pageIndex, id, value)}
@@ -937,6 +957,7 @@ function CommentCard({
         />
       ) : (
         <CommentThread
+          readOnly={readOnly}
           pageIndex={pageIndex}
           entry={entry}
           content={displayContent}
@@ -1035,6 +1056,7 @@ function ClearAllCommentsModal({
 }
 
 export function CommentsSidebar({
+  readOnly = false,
   documentId,
   visible,
   rightOffset,
@@ -1494,9 +1516,9 @@ export function CommentsSidebar({
         onClose={toggleCommentsSidebar}
         closeLabel={t("viewer.comments.closeSidebar", "Close comments sidebar")}
         headerActions={
-          totalCount > 0 ? (
+          totalCount > 0 && !readOnly ? (
             <CommentsHeaderActions
-              readerMode={readerMode}
+              readerMode={readerMode || readOnly}
               onAdd={handleAddComment}
               onClearAll={() => setClearAllModalOpen(true)}
             />
@@ -1514,7 +1536,7 @@ export function CommentsSidebar({
           <CommentsEmptyState>
             <AddCommentButton
               isPlacing={isPlacingComment}
-              readerMode={readerMode}
+              readerMode={readerMode || readOnly}
               onAdd={handleAddComment}
               onCancel={handleCancelPlacingComment}
             />
@@ -1524,7 +1546,7 @@ export function CommentsSidebar({
             <AddCommentButton
               block
               isPlacing={isPlacingComment}
-              readerMode={readerMode}
+              readerMode={readerMode || readOnly}
               onAdd={handleAddComment}
               onCancel={handleCancelPlacingComment}
             />
@@ -1552,6 +1574,7 @@ export function CommentsSidebar({
                       const cardKey = `${pageIndex}_${id}`;
                       return (
                         <CommentCard
+                          readOnly={readOnly}
                           key={cardKey}
                           pageIndex={pageIndex}
                           entry={entry}
@@ -1578,14 +1601,14 @@ export function CommentsSidebar({
       </SidebarBase>
 
       <DeleteLinkedCommentModal
-        opened={!!deleteModal}
+        opened={!readOnly && !!deleteModal}
         onClose={() => setDeleteModal(null)}
         onRemoveComment={handleRemoveFromSidebar}
         onDeleteAnnotation={handleDeleteAnnotation}
       />
 
       <ClearAllCommentsModal
-        opened={clearAllModalOpen}
+        opened={!readOnly && clearAllModalOpen}
         onClose={() => setClearAllModalOpen(false)}
         onConfirm={handleClearAllComments}
       />
