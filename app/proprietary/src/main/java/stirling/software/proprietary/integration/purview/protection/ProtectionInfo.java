@@ -15,6 +15,7 @@ public record ProtectionInfo(
         String issuedTo,
         boolean issuedToOwner,
         String contentId,
+        boolean custom,
         String templateId,
         String templateName,
         boolean allowOfflineAccess,
@@ -58,6 +59,7 @@ public record ProtectionInfo(
             rightsNode.forEach(right -> rights.add(right.asString().toUpperCase(Locale.ROOT)));
         }
         JsonNode validUntil = protection.get("validUntil");
+        boolean custom = protection.path("custom").asBoolean(false);
         return new ProtectionInfo(
                 label(result.get("label")),
                 new ArrayList<>(rights),
@@ -65,8 +67,9 @@ public record ProtectionInfo(
                 emptyToNull(MipHelper.text(protection, "issuedTo")),
                 protection.path("isIssuedToOwner").asBoolean(false),
                 emptyToNull(MipHelper.text(protection, "contentId")),
-                emptyToNull(MipHelper.text(protection, "templateId")),
-                emptyToNull(MipHelper.text(protection, "name")),
+                custom,
+                custom ? null : emptyToNull(MipHelper.text(protection, "templateId")),
+                custom ? null : emptyToNull(MipHelper.text(protection, "name")),
                 protection.path("allowOfflineAccess").asBoolean(false),
                 validUntil == null || validUntil.isNull() ? null : validUntil.asLong(),
                 Permissions.from(rights));

@@ -70,4 +70,16 @@ class ProtectionInfoTest {
                         RightsManagementException.class,
                         e -> assertThat(e.getCode()).isEqualTo("not_protected"));
     }
+
+    @Test
+    void customProtectionHidesMicrosoftsGenericTemplateName() {
+        ProtectionInfo info =
+                ProtectionInfo.fromHelper(
+                        JSON.readTree(
+                                "{\"protection\":{\"rights\":[\"VIEW\"],\"custom\":true,\"templateId\":\"t\",\"name\":\"Restricted Access\"}}"));
+
+        assertThat(info.custom()).isTrue();
+        assertThat(info.templateName()).isNull();
+        assertThat(info.templateId()).isNull();
+    }
 }

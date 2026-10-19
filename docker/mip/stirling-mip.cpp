@@ -257,7 +257,8 @@ std::string describeProtection(const std::shared_ptr<mip::ProtectionHandler>& pr
                     ",\"isIssuedToOwner\":" + (protection->IsIssuedToOwner() ? "true" : "false") +
                     ",\"contentId\":" + jsonString(protection->GetContentId());
   if (auto descriptor = protection->GetProtectionDescriptor()) {
-    out += ",\"templateId\":" + jsonString(descriptor->GetTemplateId()) +
+    out += ",\"custom\":" + std::string(descriptor->GetProtectionType() == mip::ProtectionType::TemplateBased ? "false" : "true") +
+           ",\"templateId\":" + jsonString(descriptor->GetTemplateId()) +
            ",\"name\":" + jsonString(descriptor->GetName()) +
            ",\"allowOfflineAccess\":" + (descriptor->DoesAllowOfflineAccess() ? "true" : "false");
     long long validUntil = epochSeconds(descriptor->GetContentValidUntil());
