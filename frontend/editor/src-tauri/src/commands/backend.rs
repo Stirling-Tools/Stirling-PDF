@@ -14,7 +14,7 @@ const BACKEND_JVM_FLAGS: &[&str] = &[
     "-XX:+UseG1GC",
     "-XX:MaxGCPauseMillis=200",
     "-XX:G1HeapRegionSize=4m",
-    "-XX:G1PeriodicGCInterval=60000",
+    "-XX:G1PeriodicGCInterval=120000",
     "-XX:+UseStringDeduplication",
     "-XX:+UseCompactObjectHeaders",
     "-XX:+ExplicitGCInvokesConcurrent",
@@ -23,6 +23,7 @@ const BACKEND_JVM_FLAGS: &[&str] = &[
 /// Aggressive page return for the native heap. Long desktop sessions keep
 /// native buffers alive between operations, so retaining free extents costs
 /// more than faulting them back in on the next allocation.
+
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 const DESKTOP_MALLOC_CONF: &str = "narenas:1,tcache:false,dirty_decay_ms:0,muzzy_decay_ms:0";
 
