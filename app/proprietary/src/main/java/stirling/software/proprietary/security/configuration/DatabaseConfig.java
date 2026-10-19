@@ -70,8 +70,9 @@ public class DatabaseConfig {
 
     // Declaring the DataSource bean makes Boot's Hikari auto-config back off, so these have to be
     // bound by hand or spring.datasource.hikari.* is silently inert. Defaults match Hikari's own.
+    // Null only under direct construction, where nothing was injected and nothing is applied.
     @Value("${spring.datasource.hikari.maximum-pool-size:10}")
-    private int maximumPoolSize;
+    private Integer maximumPoolSize;
 
     // -1 leaves Hikari's default, where minimumIdle tracks maximumPoolSize.
     @Value("${spring.datasource.hikari.minimum-idle:-1}")
@@ -121,10 +122,18 @@ public class DatabaseConfig {
      * them. No-ops when the properties were never injected, e.g. under direct construction.
      */
     private DataSource applyPoolSettings(DataSource dataSource) {
-        if (!(dataSource instanceof HikariDataSource hikari) || maximumPoolSize <= 0) {
+        if (!(dataSource instanceof HikariDataSource hikari) || maximumPoolSize == null) {
             return dataSource;
         }
-        hikari.setMaximumPoolSize(maximumPoolSize);
+        if (maximumPoolSize > 0) {
+            hikari.setMaximumPoolSize(maximumPoolSize);
+        } else {
+            log.warn(
+                    "Ignoring spring.datasource.hikari.maximum-pool-size={}: it must be positive."
+                            + " Keeping {}; the other pool settings still apply.",
+                    maximumPoolSize,
+                    hikari.getMaximumPoolSize());
+        }
         if (minimumIdle >= 0) {
             hikari.setMinimumIdle(minimumIdle);
         }

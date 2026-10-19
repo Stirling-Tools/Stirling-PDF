@@ -53,6 +53,15 @@ class DatabaseConfigPoolTest {
     }
 
     @Test
+    void nonPositiveMaximumKeepsTheDefaultButAppliesTheRest() throws UnsupportedProviderException {
+        DataSource dataSource = configWith(0, -1, 120000L).dataSource();
+
+        HikariDataSource hikari = assertInstanceOf(HikariDataSource.class, dataSource);
+        assertEquals(10, hikari.getMaximumPoolSize());
+        assertEquals(120000L, hikari.getKeepaliveTime());
+    }
+
+    @Test
     void unsetPropertiesLeaveThePoolUntouched() throws UnsupportedProviderException {
         // Direct construction, as the existing unit tests do — nothing injected, nothing applied.
         DataSource dataSource =
