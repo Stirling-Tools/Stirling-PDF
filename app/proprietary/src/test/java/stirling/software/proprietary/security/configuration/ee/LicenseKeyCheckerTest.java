@@ -62,6 +62,23 @@ class LicenseKeyCheckerTest {
     }
 
     @Test
+    void aFailedExplicitRefreshDoesNotLeaveAnEarlierTierFresh() {
+        ApplicationProperties properties = new ApplicationProperties();
+        when(userLicenseSettingsService.refreshLinkedTeamUsers())
+                .thenReturn(300)
+                .thenThrow(new IllegalStateException("Supabase unreachable"))
+                .thenReturn(300);
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+
+        assertEquals(License.SERVER, checker.premiumTier());
+        checker.onEntitlementRefreshed();
+        assertEquals(License.SERVER, checker.premiumTier());
+
+        verify(userLicenseSettingsService, times(3)).refreshLinkedTeamUsers();
+    }
+
+    @Test
     void anUnreadableEntitlementIsRetried_notMemoised() {
         // The failure path must not stamp the memo, or a transient DB error would freeze the tier
         // for the whole window instead of being retried on the next question.
