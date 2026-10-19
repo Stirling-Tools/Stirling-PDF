@@ -19,6 +19,7 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 
@@ -42,6 +43,7 @@ public class DefaultClassificationPolicySeeder {
 
     private final PolicyStore policyStore;
     private final TeamRepository teamRepository;
+    private final PolicyTriggerManager policyTriggerManager;
 
     // The default team is created during startup, before the entity event listener is guaranteed
     // wired, so ensure it once the context is fully ready (self-hosted first boot).
@@ -73,6 +75,7 @@ public class DefaultClassificationPolicySeeder {
             return;
         }
         policyStore.save(defaultPolicy(teamId));
+        policyTriggerManager.notifyPoliciesChanged();
         log.info("Seeded default Classification policy for team {}", teamId);
     }
 
@@ -84,6 +87,7 @@ public class DefaultClassificationPolicySeeder {
             return;
         }
         policyStore.save(policy.withOwner(null));
+        policyTriggerManager.notifyPoliciesChanged();
         log.info(
                 "Cleared placeholder owner '{}' on Classification policy {}",
                 LEGACY_OWNER,
