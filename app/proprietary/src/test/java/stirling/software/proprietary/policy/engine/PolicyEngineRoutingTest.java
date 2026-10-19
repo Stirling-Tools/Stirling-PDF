@@ -101,7 +101,8 @@ class PolicyEngineRoutingTest {
                         new PolicyOutputResolver(new InProcessSourceStore()),
                         resourceMonitor,
                         jobQueue,
-                        new PolicyAssetResolver(new InProcessPolicyAssetStore()));
+                        new PolicyAssetResolver(new InProcessPolicyAssetStore()),
+                        ProtectedPdfRunsFixtures.unused());
         when(jobOwnershipService.createScopedJobKey(anyString(), any()))
                 .thenAnswer(inv -> inv.getArgument(0));
     }

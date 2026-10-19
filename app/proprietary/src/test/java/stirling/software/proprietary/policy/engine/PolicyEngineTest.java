@@ -146,7 +146,8 @@ class PolicyEngineTest {
                         outputResolver,
                         resourceMonitor,
                         jobQueue,
-                        new PolicyAssetResolver(new InProcessPolicyAssetStore()));
+                        new PolicyAssetResolver(new InProcessPolicyAssetStore()),
+                        ProtectedPdfRunsFixtures.unused());
 
         // Identity scoping: the run id is the generated UUID unchanged. Lenient because the
         // resume/cancel tests do not submit a run.

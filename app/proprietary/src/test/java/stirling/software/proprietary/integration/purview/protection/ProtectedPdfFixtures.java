@@ -15,13 +15,16 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 
-final class ProtectedPdfFixtures {
+public final class ProtectedPdfFixtures {
 
     private ProtectedPdfFixtures() {}
 
-    static byte[] wrapper(String subtype, boolean listInAssociatedFiles, boolean listInNameTree)
+    public static byte[] wrapper(
+            String subtype, boolean listInAssociatedFiles, boolean listInNameTree)
             throws IOException {
         try (PDDocument document = new PDDocument()) {
+            document.getDocument().setVersion(2.0f);
+            document.setVersion(2.0f);
             document.addPage(new PDPage());
             PDEmbeddedFile payload =
                     new PDEmbeddedFile(document, new ByteArrayInputStream(new byte[] {1, 2, 3}));
@@ -59,7 +62,7 @@ final class ProtectedPdfFixtures {
         }
     }
 
-    static byte[] plain() throws IOException {
+    public static byte[] plain() throws IOException {
         try (PDDocument document = new PDDocument()) {
             document.addPage(new PDPage());
             ByteArrayOutputStream out = new ByteArrayOutputStream();
