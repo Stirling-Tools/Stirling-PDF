@@ -7,6 +7,10 @@ import {
   springAuth,
 } from "@app/auth/spring/springAuthClient";
 import { handleAuthCallbackSuccess } from "@app/extensions/authCallback";
+import {
+  hasSignedOutInThisTab,
+  resetSsoAutoLoginCounts,
+} from "@app/auth/ssoAutoLogin";
 import { AuthShell } from "@app/auth/ui/AuthShell";
 import { Spinner } from "@app/ui/Spinner";
 import { withBasePath } from "@app/constants/app";
@@ -31,11 +35,7 @@ export default function AuthCallback() {
     const elapsed = () => `${(performance.now() - startedAt).toFixed(0)}ms`;
 
     const handleCallback = async () => {
-      if (
-        typeof window !== "undefined" &&
-        window.sessionStorage.getItem("stirling_sso_auto_login_logged_out") ===
-          "1"
-      ) {
+      if (hasSignedOutInThisTab()) {
         navigate("/login", {
           replace: true,
           state: {
@@ -95,9 +95,7 @@ export default function AuthCallback() {
         }
 
         await handleAuthCallbackSuccess(token);
-        // Login.tsx stops auto-redirecting to SSO once a tab has been sent
-        // there without signing in; a completed sign-in restores it.
-        window.sessionStorage.removeItem("stirling_sso_auto_login_attempts");
+        resetSsoAutoLoginCounts();
 
         // Wait for all context providers to process jwt-available event
         // This prevents infinite render loop when coming from cross-domain SAML redirect

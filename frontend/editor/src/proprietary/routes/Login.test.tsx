@@ -928,9 +928,10 @@ describe("Login", () => {
       expect(springAuth.signInWithOAuth).toHaveBeenCalledTimes(1);
     });
 
-    it("resets the redirect allowance once signed in", async () => {
+    it("resets the visit and error counts once signed in", async () => {
       mockLoginConfig("all");
       sessionStorage.setItem("stirling_sso_auto_login_attempts", "1");
+      sessionStorage.setItem("stirling_sso_auto_login_errors", "1");
       vi.mocked(useAuth).mockReturnValue({
         ...vi.mocked(useAuth)(),
         session: {
@@ -951,7 +952,29 @@ describe("Login", () => {
         expect(
           sessionStorage.getItem("stirling_sso_auto_login_attempts"),
         ).toBeNull();
+        expect(
+          sessionStorage.getItem("stirling_sso_auto_login_errors"),
+        ).toBeNull();
       });
+    });
+
+    it("shows the form instead of redirecting when session storage is blocked", async () => {
+      mockLoginConfig("all");
+      vi.spyOn(window, "sessionStorage", "get").mockImplementation(() => {
+        throw new DOMException("blocked", "SecurityError");
+      });
+
+      try {
+        renderAt("/login");
+
+        await waitFor(() => {
+          expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+          expect(document.getElementById("password")).toBeInTheDocument();
+        });
+        expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
+      } finally {
+        vi.restoreAllMocks();
+      }
     });
 
     it("stays on the page with the email form under ?all", async () => {
