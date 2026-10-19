@@ -281,6 +281,10 @@ public class SaasTeamService {
                             remaining));
         }
 
+        // Arm the cleanup schedule before the guards: an invite blocked by an expired-but-still-
+        // PENDING row is exactly the case that needs the sweep which expires it.
+        invitationCleanup.ensureScheduled();
+
         // Check if there's already a pending invitation
         if (invitationRepository.existsPendingInvitationByTeamIdAndEmail(teamId, inviteeEmail)) {
             throw new IllegalArgumentException("Pending invitation already exists for this email");
@@ -314,7 +318,6 @@ public class SaasTeamService {
 
         userRepository.findByEmail(inviteeEmail).ifPresent(invitation::setInviteeUser);
 
-        invitationCleanup.ensureScheduled();
         TeamInvitation savedInvitation = invitationRepository.save(invitation);
 
         // Send invitation email
