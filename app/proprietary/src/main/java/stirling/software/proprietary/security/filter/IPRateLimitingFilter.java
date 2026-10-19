@@ -12,8 +12,11 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.util.RequestUriUtils;
 
+@Slf4j
 public class IPRateLimitingFilter implements Filter {
 
     private final ConcurrentHashMap<String, AtomicInteger> requestCounts =
@@ -30,7 +33,8 @@ public class IPRateLimitingFilter implements Filter {
     }
 
     /**
-     * @param onFirstUse runs at most once, on the first non-static request
+     * @param onFirstUse runs at most once, on the first non-static request; a callback that fails
+     *     is retried by the next request
      */
     public IPRateLimitingFilter(int maxRequests, int maxGetRequests, Runnable onFirstUse) {
         this.maxRequests = maxRequests;
@@ -78,8 +82,14 @@ public class IPRateLimitingFilter implements Filter {
     }
 
     private void signalFirstUse() {
-        if (firstUseSignalled.compareAndSet(false, true)) {
+        if (firstUseSignalled.get()) {
+            return;
+        }
+        try {
             onFirstUse.run();
+            firstUseSignalled.set(true);
+        } catch (RuntimeException e) {
+            log.warn("First-use callback failed; a later request will retry", e);
         }
     }
 

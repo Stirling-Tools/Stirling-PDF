@@ -37,7 +37,7 @@ public class TempFileRegistry {
 
     /**
      * @param onFirstUse runs at most once, on the first registered file, directory or third-party
-     *     file
+     *     file; a callback that fails is retried by the next registration
      */
     public TempFileRegistry(Runnable onFirstUse) {
         this.onFirstUse = onFirstUse;
@@ -133,8 +133,14 @@ public class TempFileRegistry {
     }
 
     private void signalFirstUse() {
-        if (firstUseSignalled.compareAndSet(false, true)) {
+        if (firstUseSignalled.get()) {
+            return;
+        }
+        try {
             onFirstUse.run();
+            firstUseSignalled.set(true);
+        } catch (RuntimeException e) {
+            log.warn("First-use callback failed; a later registration will retry", e);
         }
     }
 

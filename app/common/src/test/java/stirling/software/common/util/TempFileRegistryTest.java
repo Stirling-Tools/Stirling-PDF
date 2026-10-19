@@ -58,6 +58,25 @@ class TempFileRegistryTest {
     }
 
     @Test
+    void failingFirstUseCallbackIsRetriedAndDoesNotBreakRegistration() throws IOException {
+        AtomicInteger attempts = new AtomicInteger();
+        TempFileRegistry signalling =
+                new TempFileRegistry(
+                        () -> {
+                            attempts.incrementAndGet();
+                            throw new IllegalStateException("scheduler unavailable");
+                        });
+
+        File first = Files.createTempFile(tempDir, "first", ".tmp").toFile();
+        assertDoesNotThrow(() -> signalling.register(first));
+        assertTrue(signalling.contains(first));
+
+        signalling.register(Files.createTempFile(tempDir, "second", ".tmp").toFile());
+
+        assertEquals(2, attempts.get(), "a failed first-use callback must be retried");
+    }
+
+    @Test
     void testRegisterFile() throws IOException {
         File file = Files.createTempFile(tempDir, "test", ".tmp").toFile();
         File result = registry.register(file);

@@ -17,11 +17,14 @@ import org.springframework.stereotype.Component;
 
 import jakarta.transaction.Transactional;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 
 @Component
+@Slf4j
 public class SessionPersistentRegistry implements SessionRegistry {
 
     private final SessionRepository sessionRepository;
@@ -34,7 +37,8 @@ public class SessionPersistentRegistry implements SessionRegistry {
     }
 
     /**
-     * @param onFirstUse runs at most once, on the first persisted session
+     * @param onFirstUse runs at most once, on the first persisted session; a callback that fails is
+     *     retried by the next registration
      */
     public SessionPersistentRegistry(SessionRepository sessionRepository, Runnable onFirstUse) {
         this.sessionRepository = sessionRepository;
@@ -119,8 +123,14 @@ public class SessionPersistentRegistry implements SessionRegistry {
     }
 
     private void signalFirstUse() {
-        if (firstUseSignalled.compareAndSet(false, true)) {
+        if (firstUseSignalled.get()) {
+            return;
+        }
+        try {
             onFirstUse.run();
+            firstUseSignalled.set(true);
+        } catch (RuntimeException e) {
+            log.warn("First-use callback failed; a later registration will retry", e);
         }
     }
 
