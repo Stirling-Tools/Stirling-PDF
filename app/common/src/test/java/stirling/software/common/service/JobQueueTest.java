@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -118,12 +119,25 @@ class JobQueueTest {
 
     @Test
     void staysRetryingUntilCriticalLoadClears() throws Exception {
+        CountDownLatch criticalObserved = new CountDownLatch(1);
+        when(resourceMonitor.getCurrentStatus())
+                .thenAnswer(
+                        invocation -> {
+                            if (statusRef.get() == ResourceStatus.CRITICAL) {
+                                criticalObserved.countDown();
+                            }
+                            return statusRef;
+                        });
+
         jobQueue.start();
         try {
             statusRef.set(ResourceStatus.CRITICAL);
             CompletableFuture<ResponseEntity<?>> future =
                     jobQueue.queueJob("critical-job", 50, () -> "ok", 5000);
 
+            assertTrue(
+                    criticalObserved.await(5, TimeUnit.SECONDS),
+                    "the processor must observe critical load before the retry is exercised");
             assertFalse(future.isDone(), "critical load must defer execution");
 
             statusRef.set(ResourceStatus.OK);
