@@ -148,6 +148,37 @@ public class RightsManagementController {
         }
     }
 
+    @GetMapping("/labels")
+    @Operation(summary = "Sensitivity labels the caller's Microsoft account may apply")
+    public List<RightsManagementService.AvailableLabel> labels(
+            @AuthenticationPrincipal User user, @RequestParam(required = false) Long accountId)
+            throws IOException {
+        return service.labels(account(user, accountId));
+    }
+
+    @PostMapping(value = "/apply-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Apply a sensitivity label, including any encryption it requires",
+            description = "Runs as the caller's connected Microsoft account.")
+    public ResponseEntity<byte[]> applyLabel(
+            @AuthenticationPrincipal User user,
+            @RequestPart("fileInput") MultipartFile file,
+            @RequestParam String labelId,
+            @RequestParam(required = false) Long accountId)
+            throws IOException {
+        ConnectedAccount account = account(user, accountId);
+        Path input = Files.createTempFile("stirling-mip-plain-", ".pdf");
+        try {
+            file.transferTo(input);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                    .body(service.applyLabel(account, input, labelId));
+        } finally {
+            Files.deleteIfExists(input);
+        }
+    }
+
     @ExceptionHandler(RightsManagementException.class)
     public ResponseEntity<ErrorResponse> rightsError(RightsManagementException e) {
         HttpStatus status =
