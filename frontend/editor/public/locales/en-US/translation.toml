@@ -13636,6 +13636,7 @@ validUntrusted = "Valid, signer not verified"
 [viewer]
 cannotPreviewFile = "Cannot Preview File"
 copyText = "Copy"
+coverPageView = "Show Cover Page Separately"
 disableColorFilter = "Disable Color Filter"
 documentUpdated = "Document updated"
 dualPageView = "Dual Page View"
