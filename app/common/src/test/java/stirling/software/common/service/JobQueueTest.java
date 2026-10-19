@@ -6,6 +6,8 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 
 import stirling.software.common.service.ResourceMonitor.ResourceStatus;
 
@@ -95,5 +98,40 @@ class JobQueueTest {
 
         assertTrue(jobQueue.isJobQueued(jobId));
         assertFalse(jobQueue.isJobQueued("nonexistent"));
+    }
+
+    @Test
+    void processorExecutesQueuedJobWithoutPolling() throws Exception {
+        jobQueue.start();
+        try {
+            CompletableFuture<ResponseEntity<?>> future =
+                    jobQueue.queueJob("event-job", 50, () -> "ok", 1000);
+
+            ResponseEntity<?> response = future.get(5, TimeUnit.SECONDS);
+
+            assertEquals(200, response.getStatusCode().value());
+            assertFalse(jobQueue.isJobQueued("event-job"));
+        } finally {
+            jobQueue.stop();
+        }
+    }
+
+    @Test
+    void staysRetryingUntilCriticalLoadClears() throws Exception {
+        jobQueue.start();
+        try {
+            statusRef.set(ResourceStatus.CRITICAL);
+            CompletableFuture<ResponseEntity<?>> future =
+                    jobQueue.queueJob("critical-job", 50, () -> "ok", 5000);
+
+            assertFalse(future.isDone(), "critical load must defer execution");
+
+            statusRef.set(ResourceStatus.OK);
+            ResponseEntity<?> response = future.get(5, TimeUnit.SECONDS);
+
+            assertEquals(200, response.getStatusCode().value());
+        } finally {
+            jobQueue.stop();
+        }
     }
 }

@@ -50,7 +50,11 @@ public class JobQueue implements SmartLifecycle {
     private final ExecutorService jobExecutor = ExecutorFactory.newVirtualThreadExecutor();
     private final Object queueLock = new Object(); // Lock for synchronizing queue operations
 
-    private boolean shuttingDown = false;
+    private volatile boolean shuttingDown = false;
+
+    // One permit per enqueue (and per retry) wakes the processor; an idle queue costs no wakeups.
+    private final Semaphore workAvailable = new Semaphore(0);
+    private volatile Thread processor;
 
     @Getter private int rejectedJobs = 0;
 
@@ -87,9 +91,8 @@ public class JobQueue implements SmartLifecycle {
                 baseQueueCapacity,
                 minQueueCapacity);
 
-        // Periodically process the job queue
-        scheduler.scheduleWithFixedDelay(
-                this::processQueue, 0, queueCheckIntervalMs, TimeUnit.MILLISECONDS);
+        // Wake the processor on enqueue instead of polling the empty queue every interval.
+        processor = Thread.ofVirtual().name("job-queue-processor-", 0).start(this::runProcessor);
 
         // Periodically update queue capacity based on resource usage
         scheduler.scheduleWithFixedDelay(
@@ -99,10 +102,39 @@ public class JobQueue implements SmartLifecycle {
                 TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Consumes work permits and drains the queue. Blocks while there is nothing to do; a permit is
+     * released on enqueue, after a capacity increase, and by the retry timer while jobs remain.
+     */
+    private void runProcessor() {
+        while (!shuttingDown) {
+            try {
+                workAvailable.acquire();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            if (shuttingDown) {
+                return;
+            }
+            processQueue();
+        }
+    }
+
     // Remove @PreDestroy to let SmartLifecycle control shutdown
     private void shutdownSchedulers() {
         log.info("Shutting down job queue");
         shuttingDown = true;
+        workAvailable.release();
+        Thread currentProcessor = processor;
+        if (currentProcessor != null) {
+            currentProcessor.interrupt();
+            try {
+                currentProcessor.join(5000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
 
         // Complete any futures that are still waiting
         jobMap.forEach(
@@ -217,6 +249,7 @@ public class JobQueue implements SmartLifecycle {
                         resourceWeight,
                         jobQueue.size());
 
+                workAvailable.release();
                 return future;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -264,6 +297,9 @@ public class JobQueue implements SmartLifecycle {
                         jobQueue = newQueue;
 
                         currentQueueSize = jobQueue.size();
+                        if (!jobQueue.isEmpty()) {
+                            workAvailable.release();
+                        }
                     }
                 }
             }
@@ -293,6 +329,7 @@ public class JobQueue implements SmartLifecycle {
                 if (!canExecuteJobs) {
                     // Under critical load, don't execute any jobs
                     log.debug("System under critical load, delaying job execution");
+                    scheduleRetryIfPending();
                     return;
                 }
 
@@ -355,6 +392,19 @@ public class JobQueue implements SmartLifecycle {
         // Now execute the jobs outside the synchronized block to avoid holding the lock
         for (QueuedJob job : jobsToExecute) {
             executeJob(job);
+        }
+
+        scheduleRetryIfPending();
+    }
+
+    /**
+     * Re-arms the processor while jobs remain queued, preserving the configured retry cadence under
+     * load while an empty queue schedules nothing.
+     */
+    private void scheduleRetryIfPending() {
+        if (!shuttingDown && !jobQueue.isEmpty()) {
+            scheduler.schedule(
+                    () -> workAvailable.release(), queueCheckIntervalMs, TimeUnit.MILLISECONDS);
         }
     }
 
