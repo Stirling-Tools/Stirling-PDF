@@ -104,6 +104,15 @@ RUN apt-get update \
     && sh /tmp/slim-onnxruntime.sh /layers/dependencies
 
 
+FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS mip-build
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl g++ \
+       libcurl4t64 libglib2.0-0t64 libgmime-3.0-0t64 libgsf-1-114 libsecret-1-0 libxml2 \
+    && rm -rf /var/lib/apt/lists/*
+COPY docker/mip/ /src/mip/
+RUN /src/mip/build.sh
+
+
 # Stage 3: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}
 
@@ -120,6 +129,9 @@ COPY --link --from=jar-extract --chown=1000:1000 /layers/application/           
 COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --link --chown=1000:1000 scripts/ /scripts/
+COPY --link --from=mip-build /opt/stirling-mip/ /opt/stirling-mip/
+COPY docker/mip/install-runtime.sh /tmp/install-mip-runtime.sh
+RUN sh /tmp/install-mip-runtime.sh && rm /tmp/install-mip-runtime.sh
 
 # Baked-in detection model; FormDetectionModelManager seeds it into /configs on startup.
 COPY --link --from=app-build --chown=1000:1000 /preinstalled-models/ /opt/stirling/preinstalled-models/

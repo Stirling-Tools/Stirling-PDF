@@ -273,6 +273,7 @@ describe("local inspection lifetime", () => {
         ownerPrompt,
       );
     const pending = preflight();
+    await vi.waitFor(() => expect(workers).toHaveLength(1));
     workers[0].onmessage?.({
       data: { access: { ...access, permissions: -4 } },
     });

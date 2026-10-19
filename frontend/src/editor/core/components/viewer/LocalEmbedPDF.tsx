@@ -147,6 +147,7 @@ import { accountService } from "@editor/services/accountService";
 interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
+  exportOriginal?: File;
   fileName?: string;
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
@@ -929,6 +930,7 @@ export function LocalEmbedPDF({
   onPasswordRequired,
   onRepair,
   repairingFileId,
+  exportOriginal,
   restorePending = false,
   restoreRequest = null,
   onRestoreEvent,
@@ -1716,7 +1718,9 @@ export function LocalEmbedPDF({
             onPasswordRequired={onPasswordRequired}
           />
           <ExportAPIBridge
-            originalFile={pdfAccess?.encrypted ? file : undefined}
+            originalFile={
+              exportOriginal ?? (pdfAccess?.encrypted ? file : undefined)
+            }
             disabled={pdfAccess?.encrypted && !file}
           />
           <BookmarkAPIBridge />
