@@ -62,6 +62,30 @@ describe("large PDF encryption detection", () => {
     expect(pdfWorkerManager.createDocument).not.toHaveBeenCalled();
   });
 
+  it("does not mistake a Purview wrapper's /EncryptedPayload for encryption", async () => {
+    const file = new File(
+      [
+        "%PDF-2.0 /AFRelationship /EncryptedPayload /EP << /Type /EncryptedPayload >>",
+      ],
+      "purview.pdf",
+    );
+    Object.defineProperty(file, "size", { value: LARGE_PDF_PARSE_LIMIT });
+    expect(await FileAnalyzer.isPDFEncrypted(file)).toBe(false);
+    expect(ensureLocalPdfAccess).not.toHaveBeenCalled();
+  });
+
+  it("still finds /Encrypt directly followed by a dictionary or reference", async () => {
+    for (const body of [
+      "/Encrypt<</Filter/Standard>>",
+      "/Encrypt 5 0 R",
+      "/Encrypt\n5 0 R",
+    ]) {
+      const file = new File([`%PDF-1.7 ${body}`], "x.pdf");
+      Object.defineProperty(file, "size", { value: LARGE_PDF_PARSE_LIMIT });
+      expect(await FileAnalyzer.isPDFEncrypted(file)).toBe(true);
+    }
+  });
+
   it("does not classify a large unmarked PDF as encrypted", async () => {
     const file = new File(["%PDF-1.7"], "large.pdf");
     Object.defineProperty(file, "size", { value: LARGE_PDF_PARSE_LIMIT });
