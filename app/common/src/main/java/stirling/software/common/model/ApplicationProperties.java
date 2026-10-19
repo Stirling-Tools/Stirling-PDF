@@ -1883,6 +1883,13 @@ public class ApplicationProperties {
                 private String tenant = "common";
                 private String clientSecret = "";
                 private boolean allowAccountConnections = true;
+                private RightsManagement rightsManagement = new RightsManagement();
+
+                @Data
+                public static class RightsManagement {
+                    private boolean enabled = false;
+                    private String helperPath = "/opt/stirling-mip/bin/stirling-mip";
+                }
             }
 
             @Data

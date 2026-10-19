@@ -115,6 +115,9 @@ premium:
       tenant: common # 'common' (work, school and personal accounts), 'organizations' (work and school only), or a tenant ID/domain to admit one organisation
       clientSecret: "" # Client secret; needed for connected accounts and organisation connections (redirect URI <server>/api/v1/connected-accounts/callback/microsoft)
       allowAccountConnections: true # set to 'false' to stop users connecting their own Microsoft account
+      rightsManagement:
+        enabled: false # Open and edit PDFs encrypted by Microsoft Purview sensitivity labels; the Entra app also needs Azure Rights Management Services 'user_impersonation' and Microsoft Information Protection Sync Service 'UnifiedPolicy.User.Read' (delegated)
+        helperPath: /opt/stirling-mip/bin/stirling-mip # Microsoft Information Protection helper bundled in the x86_64 Docker images
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging for security and compliance tracking
