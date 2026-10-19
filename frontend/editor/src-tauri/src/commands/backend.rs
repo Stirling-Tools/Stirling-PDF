@@ -321,12 +321,14 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
 
     // The sidecar runs on the user's machine and sits idle most of the time. G1 with a
     // periodic cycle keeps idle CPU low and returns heap to the OS after heavy jobs;
-    // string dedup offsets the G1 footprint at no measured idle-CPU cost.
+    // string dedup offsets the G1 footprint at no measured idle-CPU cost. The periodic
+    // cycle is concurrent so the idle tick never becomes a full stop-the-world GC.
     let mut java_options = vec![
         "-Xmx2g",
         "-XX:+UseG1GC",
         "-XX:MaxGCPauseMillis=200",
         "-XX:G1PeriodicGCInterval=60000",
+        "-XX:+G1PeriodicGCInvokesConcurrent",
         "-XX:+UseStringDeduplication",
         "-XX:+ExplicitGCInvokesConcurrent",
         // Product flag since JDK 25, which is what the bundled JRE is built from.
