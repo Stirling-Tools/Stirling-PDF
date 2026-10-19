@@ -7,6 +7,53 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use crate::utils::{add_log, app_data_dir};
 use crate::state::connection_state::{AppConnectionState, ConnectionMode};
 
+/// Flags for the embedded server. G1 is the JDK 25 default, but the periodic
+/// collection is not: it lets an idle app hand heap pages back instead of
+/// holding the startup peak for the whole session.
+const BACKEND_JVM_FLAGS: &[&str] = &[
+    "-XX:+UseG1GC",
+    "-XX:MaxGCPauseMillis=200",
+    "-XX:G1HeapRegionSize=4m",
+    "-XX:G1PeriodicGCInterval=60000",
+    "-XX:+UseStringDeduplication",
+    "-XX:+UseCompactObjectHeaders",
+    "-XX:+ExplicitGCInvokesConcurrent",
+];
+
+/// Aggressive page return for the native heap. Long desktop sessions keep
+/// native buffers alive between operations, so retaining free extents costs
+/// more than faulting them back in on the next allocation.
+#[cfg(any(target_os = "macos", target_os = "linux"))]
+const DESKTOP_MALLOC_CONF: &str = "narenas:1,tcache:false,dirty_decay_ms:0,muzzy_decay_ms:0";
+
+/// Resolves the bundled allocator. Windows has no dyld/LD_PRELOAD equivalent
+/// for the JVM, so those builds fall through to the platform allocator.
+fn bundled_jemalloc(resource_dir: &Path) -> Option<PathBuf> {
+    #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+    {
+        let _ = resource_dir;
+        None
+    }
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    {
+        let name = if cfg!(target_os = "macos") {
+            "libjemalloc.dylib"
+        } else {
+            "libjemalloc.so.2"
+        };
+        let path = resource_dir.join("vendor").join("jemalloc").join(name);
+        path.is_file().then_some(path)
+    }
+}
+
+/// `STIRLING_USE_JEMALLOC=false` is the same escape hatch the container images
+/// expose, so support can rule the allocator out without a rebuild.
+fn jemalloc_requested() -> bool {
+    !std::env::var("STIRLING_USE_JEMALLOC")
+        .map(|value| value.eq_ignore_ascii_case("false"))
+        .unwrap_or(false)
+}
+
 /// Removes shutdown markers left by previous sessions. The current path cannot
 /// exist yet, so it is never a sweep target.
 fn sweep_stale_shutdown_files(work_dir: &Path, keep: &Path) {
@@ -319,32 +366,20 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     // Define all Java options with Tauri-specific paths
     let log_path_option = format!("-Dlogging.file.path={}", log_dir.display());
 
-    // The sidecar runs on the user's machine and sits idle most of the time. G1 with a
-    // periodic cycle keeps idle CPU low and returns heap to the OS after heavy jobs;
-    // string dedup offsets the G1 footprint at no measured idle-CPU cost. The periodic
-    // cycle is concurrent so the idle tick never becomes a full stop-the-world GC.
-    let mut java_options = vec![
-        "-Xmx2g",
-        "-XX:+UseG1GC",
-        "-XX:MaxGCPauseMillis=200",
-        "-XX:G1PeriodicGCInterval=60000",
-        "-XX:+G1PeriodicGCInvokesConcurrent",
-        "-XX:+UseStringDeduplication",
-        "-XX:+ExplicitGCInvokesConcurrent",
-        // Product flag since JDK 25, which is what the bundled JRE is built from.
-        "-XX:+UseCompactObjectHeaders",
-        "-Dspring.threads.virtual.enabled=true",
+    let mut java_options = vec!["-Xmx2g"];
+    java_options.extend_from_slice(BACKEND_JVM_FLAGS);
+    java_options.extend_from_slice(&[
         "-DBROWSER_OPEN=false",
         "-DSTIRLING_PDF_TAURI_MODE=true",
-        &log_path_option,
         "-Dlogging.file.name=stirling-pdf.log",
-        "-Dserver.port=0",  // Let OS assign an available port
+        "-Dserver.port=0", // Let OS assign an available port
         // No reverse proxy in front of the local sidecar, so don't trust forwarded headers.
         // Stops a LAN caller spoofing X-Forwarded-For to defeat the desktop-only signing gate.
         "-Dserver.forward-headers-strategy=none",
-        "-Dsecurity.enableLogin=false",  // Disable login for desktop mode
-        "-Dsecurity.csrfDisabled=true",  // Disable CSRF for desktop mode
-    ];
+        "-Dsecurity.enableLogin=false", // Disable login for desktop mode
+        "-Dsecurity.csrfDisabled=true", // Disable CSRF for desktop mode
+    ]);
+    java_options.push(log_path_option.as_str());
 
     // Enable the login agreement on local desktop installs when it has been provisioned.
     if crate::commands::connection::login_agreement_enabled(app) {
@@ -405,16 +440,50 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     sweep_stale_shutdown_files(&work_dir, &shutdown_file);
     *BACKEND_SHUTDOWN_FILE.lock().unwrap() = Some(shutdown_file.clone());
 
+    let jemalloc_path = if jemalloc_requested() {
+        app.path()
+            .resource_dir()
+            .ok()
+            .and_then(|dir| bundled_jemalloc(&dir))
+    } else {
+        None
+    };
+    match &jemalloc_path {
+        Some(path) => add_log(format!("🧠 Preloading jemalloc: {}", path.display())),
+        None => add_log("🧠 jemalloc unavailable; using the platform allocator".to_string()),
+    }
+
     let sidecar_command = app
         .shell()
         .command(java_path.to_str().unwrap())
         .args(java_options)
-        .current_dir(&work_dir)  // Set working directory to writable location
+        .current_dir(&work_dir) // Set working directory to writable location
         .env("TAURI_PARENT_PID", std::process::id().to_string())
         .env("STIRLING_PDF_CONFIG_DIR", config_dir.to_str().unwrap())
         .env("STIRLING_PDF_LOG_DIR", log_dir.to_str().unwrap())
         .env("STIRLING_PDF_WORK_DIR", work_dir.to_str().unwrap())
         .env("STIRLING_PDF_SHUTDOWN_FILE", shutdown_file.to_str().unwrap());
+
+    // Only the backend child is preloaded; the Tauri process keeps the system
+    // allocator so a bad jemalloc config cannot take the UI down with it.
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    let sidecar_command = match &jemalloc_path {
+        Some(path) => sidecar_command
+            .env(
+                if cfg!(target_os = "macos") {
+                    "DYLD_INSERT_LIBRARIES"
+                } else {
+                    "LD_PRELOAD"
+                },
+                path.as_os_str(),
+            )
+            .env(
+                "MALLOC_CONF",
+                std::env::var("MALLOC_CONF")
+                    .unwrap_or_else(|_| DESKTOP_MALLOC_CONF.to_string()),
+            ),
+        None => sidecar_command,
+    };
 
     add_log("⚙️ Starting backend with bundled JRE...".to_string());
 

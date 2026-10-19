@@ -246,6 +246,7 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
+          JEMALLOC_UNIVERSAL: ${{ matrix.platform == 'macos-15' && '1' || '0' }}
         run: task desktop:prepare
 
       # DigiCert KeyLocker Setup (Cloud HSM)
@@ -342,6 +343,16 @@ jobs:
           echo "Certificate ID: $CERT_ID"
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported successfully."
+
+      # Notarization rejects unsigned Mach-O files, and the preload target lives
+      # outside the paths Tauri signs. Sign it before the bundle is notarized.
+      - name: Sign bundled jemalloc
+        if: env.SIGN_BUNDLE == 'true' && matrix.platform == 'macos-15'
+        run: |
+          codesign --force --options runtime --timestamp \
+            --sign "$APPLE_SIGNING_IDENTITY" \
+            frontend/editor/src-tauri/vendor/jemalloc/libjemalloc.dylib
+          codesign --verify --strict frontend/editor/src-tauri/vendor/jemalloc/libjemalloc.dylib
 
       - name: Check DMG creation dependencies (macOS only)
         if: matrix.platform == 'macos-15'
@@ -799,6 +810,7 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
+          JEMALLOC_UNIVERSAL: ${{ matrix.platform == 'macos-15' && '1' || '0' }}
         run: task desktop:prepare
 
       - name: Run Tauri/Cargo tests

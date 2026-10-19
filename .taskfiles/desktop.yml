@@ -37,6 +37,7 @@ tasks:
     desc: "Prepare desktop build dependencies"
     deps:
       - jlink
+      - jemalloc
       - task: ":frontend:prepare"
         vars: { MODE: desktop }
       - provisioner
@@ -106,6 +107,17 @@ tasks:
       - task: jlink:clean
       - cd src-tauri && cargo clean
       - rm -rf dist build
+
+  # ============================================================
+  # jemalloc — Build allocator preloaded by the backend
+  # ============================================================
+
+  jemalloc:
+    desc: "Build bundled jemalloc for the desktop backend"
+    platforms: [darwin, linux]
+    dir: editor
+    cmds:
+      - scripts/build-jemalloc.sh
 
   # ============================================================
   # JLink — Build bundled Java runtime for Tauri
