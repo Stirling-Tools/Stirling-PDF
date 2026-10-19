@@ -72,7 +72,7 @@ jobs:
 
       - name: Build Windows installers
         working-directory: frontend/editor
-        run: npx tauri build --target x86_64-pc-windows-msvc --bundles nsis,msi
+        run: npx tauri build --target x86_64-pc-windows-msvc --bundles nsis
 
       - name: Upload Windows installers
         uses: actions/upload-artifact@v4
@@ -80,6 +80,5 @@ jobs:
           name: Stirling-PDF-Windows-Test
           path: |
             frontend/editor/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe
-            frontend/editor/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
           if-no-files-found: error
           retention-days: 14
