@@ -72,7 +72,7 @@ class MipHelperTest {
         MipHelper helper =
                 helperRunning(
                         """
-                        echo '{"type":"token_request","resource":"https://psor.o365syncservice.com","scope":""}'
+                        echo '{"type":"token_request","resource":"https://syncservice.o365syncservice.com","scope":""}'
                         read reply
                         printf '{"type":"error","code":"sign_in_required","message":"%s"}\\n' "$reply"
                         exit 1

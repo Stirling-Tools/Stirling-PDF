@@ -315,7 +315,9 @@ export async function openRightsManagedPdf(
       type: "application/pdf",
       lastModified: original.lastModified,
     });
-    rememberPdfAccess(plaintext, accessForProtection(protection));
+    const access = accessForProtection(protection);
+    rememberPdfAccess(plaintext, access);
+    rememberPdfAccess(original, access);
     const opened: OpenedRightsManagedPdf = {
       original,
       plaintext,

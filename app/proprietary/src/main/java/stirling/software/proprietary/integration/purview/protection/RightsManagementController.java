@@ -163,7 +163,8 @@ public class RightsManagementController {
                     case RightsManagementException.NETWORK -> HttpStatus.BAD_GATEWAY;
                     default -> HttpStatus.INTERNAL_SERVER_ERROR;
                 };
-        if (status == HttpStatus.INTERNAL_SERVER_ERROR) {
+        if (status == HttpStatus.INTERNAL_SERVER_ERROR
+                || RightsManagementException.ACCESS_DENIED.equals(e.getCode())) {
             log.warn("Purview protection failed: {} {}", e.getCode(), e.getMessage());
         }
         return ResponseEntity.status(status)

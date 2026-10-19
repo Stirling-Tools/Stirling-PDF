@@ -13,6 +13,7 @@ import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import type { StirlingFile } from "@editor/types/fileContext";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
 import { hasPdfPermissionOverride } from "@editor/services/pdfPermissions";
+import { useRightsManagedPdf } from "@editor/hooks/useRightsManagedPdf";
 
 /** Persistent document settings; authentication is requested only when an action needs it. */
 export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
@@ -24,7 +25,8 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
   const [confirmCopy, setConfirmCopy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  if (!access?.encrypted) return null;
+  const rightsManaged = useRightsManagedPdf(file);
+  if (!access?.encrypted || rightsManaged.status === "opened") return null;
   const close = () => {
     setOpened(false);
     setConfirmCopy(false);

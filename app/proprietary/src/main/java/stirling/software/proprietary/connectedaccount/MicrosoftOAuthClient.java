@@ -27,7 +27,7 @@ public class MicrosoftOAuthClient implements CloudOAuthClient {
 
     static final String RIGHTS_MANAGEMENT_CONSENT_SCOPES =
             "https://aadrm.com/user_impersonation"
-                    + " https://psor.o365syncservice.com/UnifiedPolicy.User.Read";
+                    + " https://syncservice.o365syncservice.com/UnifiedPolicy.User.Read";
 
     private final ApplicationProperties applicationProperties;
     private final GraphEndpoints endpoints;

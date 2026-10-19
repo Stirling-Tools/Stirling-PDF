@@ -173,6 +173,7 @@ describe("opening a protected PDF", () => {
     expect(access.permissions & PdfPermissionFlag.CopyContents).toBeFalsy();
     expect(access.permissions & PdfPermissionFlag.ModifyContents).toBeFalsy();
     expect(post.mock.calls[0][0]).toBe("/api/v1/rights-management/open");
+    expect(getPdfAccess(original.fileId)).toEqual(access);
 
     forgetRightsManagedPdfs([original.fileId]);
     expect(getOpenedRightsManagedPdf(original)).toBeUndefined();
