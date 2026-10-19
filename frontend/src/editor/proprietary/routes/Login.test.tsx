@@ -639,6 +639,24 @@ describe("Login", () => {
     expect(screen.getByText(/session.*expired/i)).toBeInTheDocument();
   });
 
+  it("should explain an SSO login rejected because auto-create is disabled", async () => {
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <MemoryRouter
+            initialEntries={["/login?errorOAuth=oAuth2AutoCreateDisabled"]}
+          >
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+    });
+
+    expect(
+      screen.getByText(/automatic account creation is disabled/i),
+    ).toBeInTheDocument();
+  });
+
   it("should display account created success message", async () => {
     await act(async () => {
       render(

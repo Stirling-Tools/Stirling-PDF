@@ -98,7 +98,16 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 }
                 // Redirect to login page after logout
                 String path = checkForErrors(request);
-                getRedirectStrategy().sendRedirect(request, response, path);
+                String landingBase =
+                        RedirectBaseUrl.landingBase(
+                                        applicationProperties
+                                                .getSecurity()
+                                                .getOauth2()
+                                                .getRedirectBaseUrl(),
+                                        applicationProperties.getSystem().getFrontendUrl())
+                                .orElse("");
+                getRedirectStrategy()
+                        .sendRedirect(request, response, landingBase + "/login?" + path);
             }
         }
     }
