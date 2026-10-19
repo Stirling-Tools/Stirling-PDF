@@ -49,9 +49,12 @@ public class AuditCleanupService {
         this.dailyCleanup = new LazyScheduledTask(scheduler, this::cleanupOldAuditEvents);
     }
 
-    /** Registers the daily retention sweep on the first recorded audit event. */
+    /**
+     * Registers the daily retention sweep on the first recorded audit event. The first run happens
+     * immediately so a restart cannot postpone cleanup past the retention window.
+     */
     public void ensureScheduled() {
-        dailyCleanup.ensureFixedDelay(Duration.ofDays(1), Duration.ofDays(1));
+        dailyCleanup.ensureFixedDelay(Duration.ofDays(1));
     }
 
     /** Deletes audit events past the retention period configured in settings.yml. */
