@@ -4,6 +4,9 @@ import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@editor/i18n";
 import { useViewer } from "@editor/contexts/ViewerContext";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { pdfAllows } from "@editor/services/pdfPermissions";
+import { PdfPermissionFlag } from "@editor/contexts/viewer/viewerBridges";
 import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
@@ -115,6 +118,18 @@ export function useViewerWorkbenchBarButtons(
   const readAloudSpeedLabel = t("workbenchBar.readAloudSpeed", "Speed");
 
   const isFormFillActive = (selectedTool as string) === "formFill";
+  const access = usePdfAccess(viewer.activeFileId);
+  const restricted = access?.encrypted === true;
+  const annotationsRestricted =
+    restricted && !pdfAllows(access, PdfPermissionFlag.ModifyAnnotations);
+  const formFillRestricted =
+    restricted &&
+    !pdfAllows(access, PdfPermissionFlag.FillForms) &&
+    !pdfAllows(access, PdfPermissionFlag.ModifyAnnotations);
+  const restrictedLabel = t(
+    "encryptedPdfUnlock.changesRestricted",
+    "This PDF's protection does not allow this change.",
+  );
 
   const handleStartScaleCalibration = useCallback(() => {
     startScaleCalibration?.();
@@ -462,53 +477,63 @@ export function useViewerWorkbenchBarButtons(
         section: "top" as const,
         order: 58,
         active: isAnnotationsActive,
-        render: ({ disabled }) => (
-          <Tooltip
-            content={
-              isAnnotationsActive ? exitAnnotationsLabel : annotationsLabel
-            }
-            position={tooltipPosition}
-            offset={12}
-            arrow
-            portalTarget={document.body}
-          >
-            <ActionIcon
-              variant={isAnnotationsActive ? "primary" : "tertiary"}
-              className="workbench-bar-action-icon"
-              onClick={() => {
-                if (disabled) return;
-                if (isAnnotationsActive) {
-                  // The tool's own exit path, so pending annotations get the
-                  // same save warning Form Editor has always shown.
-                  handleBackToTools();
-                  return;
-                }
-                if (pendingCount > 0 || redactionsApplied) {
-                  // The redaction warning answers the save question, so the
-                  // forced selection here avoids a second modal.
-                  requestNavigation(() => handleToolSelectForced("annotate"));
-                } else {
-                  handleToolSelect("annotate");
-                }
-              }}
-              disabled={disabled}
-              aria-pressed={isAnnotationsActive}
-              aria-label={
-                isAnnotationsActive ? exitAnnotationsLabel : annotationsLabel
+        render: ({ disabled: barDisabled }) => {
+          const disabled = barDisabled || annotationsRestricted;
+          return (
+            <Tooltip
+              content={
+                annotationsRestricted
+                  ? restrictedLabel
+                  : isAnnotationsActive
+                    ? exitAnnotationsLabel
+                    : annotationsLabel
               }
-              data-testid="annotations-toggle"
+              position={tooltipPosition}
+              offset={12}
+              arrow
+              portalTarget={document.body}
             >
-              <Icon name="pencil" size="1rem" />
-            </ActionIcon>
-          </Tooltip>
-        ),
+              <ActionIcon
+                variant={isAnnotationsActive ? "primary" : "tertiary"}
+                className="workbench-bar-action-icon"
+                onClick={() => {
+                  if (disabled) return;
+                  if (isAnnotationsActive) {
+                    // The tool's own exit path, so pending annotations get the
+                    // same save warning Form Editor has always shown.
+                    handleBackToTools();
+                    return;
+                  }
+                  if (pendingCount > 0 || redactionsApplied) {
+                    // The redaction warning answers the save question, so the
+                    // forced selection here avoids a second modal.
+                    requestNavigation(() => handleToolSelectForced("annotate"));
+                  } else {
+                    handleToolSelect("annotate");
+                  }
+                }}
+                disabled={disabled}
+                aria-pressed={isAnnotationsActive}
+                aria-label={
+                  isAnnotationsActive ? exitAnnotationsLabel : annotationsLabel
+                }
+                data-testid="annotations-toggle"
+              >
+                <Icon name="pencil" size="1rem" />
+              </ActionIcon>
+            </Tooltip>
+          );
+        },
       },
       {
         id: "viewer-annotation-controls",
         section: "top" as const,
         order: 60,
         render: ({ disabled }) => (
-          <ViewerAnnotationControls currentView="viewer" disabled={disabled} />
+          <ViewerAnnotationControls
+            currentView="viewer"
+            disabled={disabled || annotationsRestricted}
+          />
         ),
       },
       {
@@ -517,33 +542,36 @@ export function useViewerWorkbenchBarButtons(
         ariaLabel: formFillLabel,
         section: "top" as const,
         order: 62,
-        render: ({ disabled }) => (
-          <Tooltip
-            content={formFillLabel}
-            position={tooltipPosition}
-            offset={12}
-            arrow
-            portalTarget={document.body}
-          >
-            <ActionIcon
-              variant={isFormFillActive ? "primary" : "tertiary"}
-              className="workbench-bar-action-icon"
-              onClick={() => {
-                if (disabled) return;
-                if (isFormFillActive) {
-                  handleBackToTools();
-                } else {
-                  handleToolSelect("formFill");
-                }
-              }}
-              disabled={disabled}
-              aria-pressed={isFormFillActive}
-              aria-label={formFillLabel}
+        render: ({ disabled: barDisabled }) => {
+          const disabled = barDisabled || formFillRestricted;
+          return (
+            <Tooltip
+              content={formFillRestricted ? restrictedLabel : formFillLabel}
+              position={tooltipPosition}
+              offset={12}
+              arrow
+              portalTarget={document.body}
             >
-              <Icon name="type" size={"1rem"} />
-            </ActionIcon>
-          </Tooltip>
-        ),
+              <ActionIcon
+                variant={isFormFillActive ? "primary" : "tertiary"}
+                className="workbench-bar-action-icon"
+                onClick={() => {
+                  if (disabled) return;
+                  if (isFormFillActive) {
+                    handleBackToTools();
+                  } else {
+                    handleToolSelect("formFill");
+                  }
+                }}
+                disabled={disabled}
+                aria-pressed={isFormFillActive}
+                aria-label={formFillLabel}
+              >
+                <Icon name="type" size={"1rem"} />
+              </ActionIcon>
+            </Tooltip>
+          );
+        },
       },
     ];
 
@@ -581,6 +609,9 @@ export function useViewerWorkbenchBarButtons(
     redactionActiveType,
     formFillLabel,
     isFormFillActive,
+    annotationsRestricted,
+    formFillRestricted,
+    restrictedLabel,
     rulerLabel,
     rulerSettingsLabel,
     isRulerActive,
