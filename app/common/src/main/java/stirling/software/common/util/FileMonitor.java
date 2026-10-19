@@ -114,6 +114,13 @@ public class FileMonitor {
         */
 
         if (path2KeyMapping.isEmpty()) {
+            // A configured root that does not exist yet can appear later, so
+            // keep checking, but do not warn on every tick while none exist.
+            if (rootDirs.stream().noneMatch(path -> Files.exists(path))
+                    && newlyDiscoveredFiles.isEmpty()
+                    && readyForProcessingFiles.isEmpty()) {
+                return;
+            }
             log.warn("Not monitoring any directories; attempting to re-register root paths.");
             for (Path rootDir : rootDirs) {
                 if (Files.exists(
