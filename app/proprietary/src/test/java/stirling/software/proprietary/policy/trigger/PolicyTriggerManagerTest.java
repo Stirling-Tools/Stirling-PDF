@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.trigger;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -95,6 +96,21 @@ class PolicyTriggerManagerTest {
 
         verify(triggerA).stop();
         verify(triggerB, never()).stop();
+    }
+
+    @Test
+    void ignoresPolicyChangesAfterStop() {
+        when(policyStore.findBindingsByTriggerType(anyString())).thenReturn(List.of(binding));
+        PolicyTriggerManager manager = manager();
+        manager.start();
+        manager.stop();
+        clearInvocations(triggerA, triggerB);
+
+        manager.notifyPoliciesChanged();
+
+        verify(triggerA, never()).start();
+        verify(triggerB, never()).start();
+        verify(triggerA, never()).onPoliciesChanged();
     }
 
     @Test

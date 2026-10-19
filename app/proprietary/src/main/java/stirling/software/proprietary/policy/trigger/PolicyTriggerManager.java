@@ -18,6 +18,9 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * <p>Triggers that have no enabled binding are left stopped, so a default install with no policies
  * runs no sweepers. Policy changes reconcile the set, and a store failure starts the trigger rather
  * than silently disabling an automation.
+ *
+ * <p>Lifecycle transitions and reconciliation share this instance's monitor, so a policy change
+ * cannot interleave with a stop and leave a trigger in a state that matches neither.
  */
 @Slf4j
 @Service
@@ -31,13 +34,13 @@ public class PolicyTriggerManager implements SmartLifecycle {
     private volatile boolean running;
 
     @Override
-    public void start() {
+    public synchronized void start() {
         running = true;
         reconcileTriggers();
     }
 
     @Override
-    public void stop() {
+    public synchronized void stop() {
         running = false;
         for (PolicyTrigger trigger : triggers) {
             stopTrigger(trigger);
@@ -54,7 +57,7 @@ public class PolicyTriggerManager implements SmartLifecycle {
      * promptly instead of waiting for the next periodic reconcile. Best-effort and idempotent: a
      * failing trigger is logged and the rest still run; a no-op before the subsystem has started.
      */
-    public void notifyPoliciesChanged() {
+    public synchronized void notifyPoliciesChanged() {
         if (!running) {
             return;
         }
