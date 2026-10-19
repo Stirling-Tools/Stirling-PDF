@@ -190,7 +190,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const {
     register: registerImmediateSpreadUpdate,
     trigger: triggerImmediateSpreadInternal,
-  } = useImmediateNotifier<[SpreadMode, boolean]>();
+  } = useImmediateNotifier<[SpreadMode]>();
   const {
     register: registerImmediatePanUpdate,
     trigger: triggerImmediatePanInternal,
@@ -215,8 +215,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   );
 
   const triggerImmediateSpreadUpdate = useCallback(
-    (mode: SpreadMode, isDualPage: boolean = mode !== SPREAD_NONE) => {
-      triggerImmediateSpreadInternal(mode, isDualPage);
+    (mode: SpreadMode) => {
+      triggerImmediateSpreadInternal(mode);
     },
     [triggerImmediateSpreadInternal],
   );
@@ -342,7 +342,6 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     return (
       bridgeRefs.current.spread?.state || {
         spreadMode: SPREAD_NONE,
-        isDualPage: false,
       }
     );
   }, []);

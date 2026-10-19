@@ -115,7 +115,7 @@ export interface ViewerContextType {
     callback: (currentPage: number, totalPages: number) => void,
   ) => () => void;
   registerImmediateSpreadUpdate: (
-    callback: (mode: SpreadMode, isDualPage: boolean) => void,
+    callback: (mode: SpreadMode) => void,
   ) => () => void;
   registerImmediatePanUpdate: (
     callback: (isPanning: boolean) => void,
@@ -136,10 +136,7 @@ export interface ViewerContextType {
     totalPages: number,
   ) => void;
   triggerImmediateZoomUpdate: (zoomPercent: number) => void;
-  triggerImmediateSpreadUpdate: (
-    mode: SpreadMode,
-    isDualPage?: boolean,
-  ) => void;
+  triggerImmediateSpreadUpdate: (mode: SpreadMode) => void;
   triggerImmediatePanUpdate: (isPanning: boolean) => void;
   triggerImmediateRotationUpdate: (rotation: number) => void;
 
