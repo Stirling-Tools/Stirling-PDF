@@ -185,8 +185,11 @@ test.describe("Smoke: Tool sub-modes load", () => {
         await page.waitForLoadState("domcontentloaded");
 
         // ButtonSelector renders Mantine <Button disabled> — check both visible AND enabled
-        const label = mode === "auto" ? /auto/i : /manual/i;
-        const btn = page.getByRole("button", { name: label }).first();
+        const label = mode === "auto" ? /^auto$/i : /^manual$/i;
+        const btn = page
+          .locator('[data-tour="workbench"]')
+          .getByRole("button", { name: label })
+          .first();
         const visible = await btn
           .isVisible({ timeout: 5_000 })
           .catch(() => false);
@@ -210,8 +213,11 @@ test.describe("Smoke: Tool sub-modes load", () => {
         await page.goto("/redact");
         await page.waitForLoadState("domcontentloaded");
 
-        const label = mode === "automatic" ? /automatic/i : /manual/i;
-        const btn = page.getByRole("button", { name: label }).first();
+        const label = mode === "automatic" ? /^automatic$/i : /^manual$/i;
+        const btn = page
+          .locator('[data-tour="workbench"]')
+          .getByRole("button", { name: label })
+          .first();
         const visible = await btn
           .isVisible({ timeout: 5_000 })
           .catch(() => false);
@@ -235,8 +241,11 @@ test.describe("Smoke: Tool sub-modes load", () => {
         await page.goto("/add-stamp");
         await page.waitForLoadState("domcontentloaded");
 
-        const label = mode === "quick" ? /quick/i : /custom/i;
-        const btn = page.getByRole("button", { name: label }).first();
+        const label = mode === "quick" ? /quick position/i : /custom position/i;
+        const btn = page
+          .locator('[data-tour="workbench"]')
+          .getByRole("button", { name: label })
+          .first();
         const visible = await btn
           .isVisible({ timeout: 5_000 })
           .catch(() => false);

@@ -175,6 +175,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
       // Exception: /auth/me should trigger refresh (used by getSession)
       if (
         !originalRequest ||
+        originalRequest.skipAuthRedirect ||
         (originalRequest.url?.includes("/api/v1/auth/") &&
           !originalRequest.url?.includes("/api/v1/auth/me")) ||
         originalRequest.headers?.["X-Skip-Auth-Refresh"] ||

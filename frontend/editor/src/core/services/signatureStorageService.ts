@@ -45,6 +45,7 @@ class SignatureStorageService {
       await apiClient.get("/api/v1/proprietary/signatures", {
         timeout: 3000,
         suppressErrorToast: true,
+        skipAuthRedirect: true,
       });
 
       // 200 = Backend available and accessible (authenticated)

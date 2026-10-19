@@ -86,7 +86,7 @@ export async function fetchNotifications(
   try {
     const response = await apiClient.get<NotificationsResponse>(
       `${NOTIFICATIONS_PATH}?limit=${limit}`,
-      { suppressErrorToast: true },
+      { suppressErrorToast: true, skipAuthRedirect: true },
     );
     return {
       notifications: response?.data?.notifications ?? [],
@@ -106,7 +106,7 @@ export async function reportNotificationResolved(
     await apiClient.post(
       `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/resolved`,
       undefined,
-      { suppressErrorToast: true },
+      { suppressErrorToast: true, skipAuthRedirect: true },
     );
     return true;
   } catch {
@@ -126,7 +126,7 @@ export async function dispatchNotificationAction(
     await apiClient.post(
       `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/actions/${encodeURIComponent(actionId)}`,
       undefined,
-      { suppressErrorToast: true },
+      { suppressErrorToast: true, skipAuthRedirect: true },
     );
     return null;
   } catch (error) {

@@ -611,7 +611,7 @@ function shellScript({ wide, narrow, login }) {
       `var cPath=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");` +
       `var isEditorPath=cPath===bPath||cPath===bPath+"/editor";` +
       `var isLoginRoute=cPath===bPath+"/login"||cPath===bPath+"/signup";` +
-      `var hasAuth=false;try{hasAuth=Boolean(localStorage.getItem("stirling_jwt"));for(var x=0;!hasAuth&&x<localStorage.length;x++){var k=localStorage.key(x);if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)hasAuth=true;}}catch(e){}` +
+      `var hasAuth=false;try{var t=localStorage.getItem("stirling_jwt");if(t){var p=t.split(".");if(p.length===3){var pl=JSON.parse(atob(p[1].replace(/-/g,"+").replace(/_/g,"/")));if(pl&&pl.exp&&pl.exp*1000<=Date.now()){localStorage.removeItem("stirling_jwt");t=null;}}}hasAuth=Boolean(t);for(var x=0;!hasAuth&&x<localStorage.length;x++){var k=localStorage.key(x);if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)hasAuth=true;}}catch(e){}` +
       `var reqLogin=Boolean(window.STIRLING_PDF_ENABLE_LOGIN);try{if(!reqLogin&&localStorage.getItem("stirling_login_enabled")==="true")reqLogin=true;}catch(e){}` +
       `var isLoginMode=isLoginRoute||(reqLogin&&!hasAuth&&isEditorPath);` +
       `if(isLoginMode){document.documentElement.setAttribute("data-shell-mode","login");}` +
@@ -760,7 +760,7 @@ function deferEntry(html) {
       'document.documentElement.setAttribute("data-shell-hidden","");' +
       'var r=document.getElementById("root");if(r){var s=r.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();r.removeAttribute("data-shell");}' +
       "boot();return;}" +
-      'var hasAuthSession=false;try{hasAuthSession=Boolean(localStorage.getItem("stirling_jwt"));for(var x=0;!hasAuthSession&&x<localStorage.length;x++){var k=localStorage.key(x);if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)hasAuthSession=true;}}catch(e){}' +
+      'var hasAuthSession=false;try{var tS=localStorage.getItem("stirling_jwt");if(tS){var pS=tS.split(".");if(pS.length===3){var plS=JSON.parse(atob(pS[1].replace(/-/g,"+").replace(/_/g,"/")));if(plS&&plS.exp&&plS.exp*1000<=Date.now()){localStorage.removeItem("stirling_jwt");tS=null;}}}hasAuthSession=Boolean(tS);for(var x=0;!hasAuthSession&&x<localStorage.length;x++){var k=localStorage.key(x);if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)hasAuthSession=true;}}catch(e){}' +
       'var reqLoginSession=Boolean(window.STIRLING_PDF_ENABLE_LOGIN);try{if(!reqLoginSession&&localStorage.getItem("stirling_login_enabled")==="true")reqLoginSession=true;}catch(e){}' +
       "if(isLoginCurPath||(reqLoginSession&&!hasAuthSession&&isEditorCurPath)){" +
       "setTimeout(boot,50);}" +
@@ -908,7 +908,7 @@ export async function prerenderShell({
   );
   const emitted = [
     SHELL_START,
-    `<script>(function(){var b=new URL(".",document.baseURI).pathname.replace(/\\/+$/,"");var c=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");var has=false;try{has=Boolean(localStorage.getItem("stirling_jwt"));for(var x=0;!has&&x<localStorage.length;x++){var k=localStorage.key(x);if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)has=true;}}catch(e){}var req=Boolean(window.STIRLING_PDF_ENABLE_LOGIN);try{if(!req&&localStorage.getItem("stirling_login_enabled")==="true")req=true;}catch(e){}if(c===b+"/login"||c===b+"/signup"||(req&&!has&&(c===b||c===b+"/editor"))){document.documentElement.setAttribute("data-shell-mode","login");}})();</script>`,
+    `<script>(function(){var b=new URL(".",document.baseURI).pathname.replace(/\\/+$/,"");var c=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");var has=false;try{var t=localStorage.getItem("stirling_jwt");if(t){var p=t.split(".");if(p.length===3){var pl=JSON.parse(atob(p[1].replace(/-/g,"+").replace(/_/g,"/")));if(pl&&pl.exp&&pl.exp*1000<=Date.now()){localStorage.removeItem("stirling_jwt");t=null;}}}has=Boolean(t);for(var x=0;!has&&x<localStorage.length;x++){var k=localStorage.key(x);if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)has=true;}}catch(e){}var req=Boolean(window.STIRLING_PDF_ENABLE_LOGIN);try{if(!req&&localStorage.getItem("stirling_login_enabled")==="true")req=true;}catch(e){}if(c===b+"/login"||c===b+"/signup"||(req&&!has&&(c===b||c===b+"/editor"))){document.documentElement.setAttribute("data-shell-mode","login");}})();</script>`,
     `<style>#root[data-shell="pending"]{visibility:hidden}[data-shell-hidden] #root[data-shell="pending"]{visibility:hidden!important}[data-shell-hidden] [data-shell-for]{display:none!important}[data-shell-for="narrow"]{display:none}[data-shell-for="login"]{display:none}@media (max-width: 1024px){[data-shell-for="wide"]{display:none}[data-shell-for="narrow"]{display:block}}[data-shell-mode="login"] [data-shell-for="wide"]{display:none!important}[data-shell-mode="login"] [data-shell-for="narrow"]{display:none!important}[data-shell-mode="login"] [data-shell-for="login"]{display:block!important}</style>`,
     `<noscript><style>#root[data-shell="pending"]{visibility:visible!important}</style></noscript>`,
     `<style id="shell-critical">${criticalCss}</style>`,

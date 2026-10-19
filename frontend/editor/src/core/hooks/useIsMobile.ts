@@ -28,13 +28,30 @@ export const useQueryMatch = (query: string): boolean => {
       const mediaQuery = window.matchMedia(query);
       if (!mediaQuery) return;
       if (typeof mediaQuery.addEventListener === "function") {
-        const handler = (event: MediaQueryListEvent) => setMatches(event.matches);
+        const handler = (event: MediaQueryListEvent) =>
+          setMatches(event.matches);
         mediaQuery.addEventListener("change", handler);
         return () => mediaQuery.removeEventListener("change", handler);
-      } else if (typeof (mediaQuery as { addListener?: (cb: (e: MediaQueryListEvent) => void) => void }).addListener === "function") {
-        const handler = (event: MediaQueryListEvent) => setMatches(event.matches);
-        (mediaQuery as { addListener: (cb: (e: MediaQueryListEvent) => void) => void }).addListener(handler);
-        return () => (mediaQuery as { removeListener: (cb: (e: MediaQueryListEvent) => void) => void }).removeListener(handler);
+      } else if (
+        typeof (
+          mediaQuery as {
+            addListener?: (cb: (e: MediaQueryListEvent) => void) => void;
+          }
+        ).addListener === "function"
+      ) {
+        const handler = (event: MediaQueryListEvent) =>
+          setMatches(event.matches);
+        (
+          mediaQuery as {
+            addListener: (cb: (e: MediaQueryListEvent) => void) => void;
+          }
+        ).addListener(handler);
+        return () =>
+          (
+            mediaQuery as {
+              removeListener: (cb: (e: MediaQueryListEvent) => void) => void;
+            }
+          ).removeListener(handler);
       }
     } catch {
       return undefined;

@@ -122,4 +122,18 @@ describe("self-hosted API client 401 handling", () => {
     expect(localStorage.getItem("stirling_jwt")).toBe("new-token");
     expect(retry).toHaveBeenCalledTimes(1);
   });
+
+  test("a 401 with skipAuthRedirect skips token refresh and login redirect", async () => {
+    const { post, fail } = makeClient();
+    const error = axiosError(401);
+    (error.config as { skipAuthRedirect?: boolean }).skipAuthRedirect = true;
+
+    await expect(fail(error)).rejects.toMatchObject({
+      response: { status: 401 },
+    });
+
+    expect(post).not.toHaveBeenCalled();
+    expect(localStorage.getItem("stirling_jwt")).toBe("old-token");
+    expect(href).toBe("");
+  });
 });
