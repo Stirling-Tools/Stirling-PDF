@@ -203,32 +203,41 @@ jobs:
           restore-keys: |
             gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
 
-      - name: Set up x86_64 JDK 27 (macOS universal JRE)
-        id: jdk27x64
+      # Temurin publishes no macOS x64 build of JDK 27, and actions/setup-java
+      # cannot resolve 27 for these runners. Fetch both Corretto 27 slices for
+      # the universal JRE; Gradle keeps running on the preinstalled JDK 25.
+      - name: Download JDK 27 slices (macOS universal JRE)
         if: matrix.platform == 'macos-15'
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        with:
-          distribution: "temurin"
-          java-version: "27"
-          architecture: "x64"
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/corretto-27"
+          base="https://corretto.aws/downloads/resources/27.0.0.35.1"
+          fetch() {
+            archive="$root/$1.tar.gz"
+            mkdir -p "$root/$1"
+            if [ ! -f "$archive" ]; then
+              curl -fsSL --retry 3 --retry-delay 2 -o "$archive" \
+                "$base/amazon-corretto-27.0.0.35.1-macosx-$1.tar.gz"
+            fi
+            echo "$2  $archive" | shasum -a 256 -c -
+            tar -xzf "$archive" -C "$root/$1"
+          }
+          fetch x64 8c99bcf76f7cc438893f20e28bac84313d1042074c4aab43271b2da280dc447e
+          fetch aarch64 73b4533b4ec684c67cfb87336bf1ecf0e145431350a71001f00396b0606ae202
+          echo "X64_JAVA_HOME=$root/x64/amazon-corretto-27.jdk/Contents/Home" >> "$GITHUB_ENV"
+          echo "JDK27_JAVA_HOME=$root/aarch64/amazon-corretto-27.jdk/Contents/Home" >> "$GITHUB_ENV"
+          echo "JLINK_JAVA_HOME=$root/aarch64/amazon-corretto-27.jdk/Contents/Home" >> "$GITHUB_ENV"
 
-      - name: Capture x86_64 JAVA_HOME
-        if: matrix.platform == 'macos-15'
-        run: echo "X64_JAVA_HOME=${{ steps.jdk27x64.outputs.java-home }}" >> "$GITHUB_ENV"
-
-      # Gradle still runs on 25: buildSrc's Groovy tooling rejects Java 27 class
-      # files (major version 71). JDK 27 is only the jlink source, so it is
-      # installed separately and passed to the jlink tasks.
       - name: Set up JDK 27 for jlink
         id: jdk27
-        if: matrix.platform != 'windows-11-arm'
+        if: matrix.platform != 'macos-15' && matrix.platform != 'windows-11-arm'
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: "temurin"
           java-version: "27"
 
       - name: Capture JDK 27 for jlink
-        if: matrix.platform != 'windows-11-arm'
+        if: matrix.platform != 'macos-15' && matrix.platform != 'windows-11-arm'
         run: |
           echo "JDK27_JAVA_HOME=${{ steps.jdk27.outputs.java-home }}" >> "$GITHUB_ENV"
           echo "JLINK_JAVA_HOME=${{ steps.jdk27.outputs.java-home }}" >> "$GITHUB_ENV"
@@ -813,7 +822,8 @@ jobs:
         if: matrix.platform != 'windows-11-arm'
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
-          distribution: "temurin"
+          # Universal macOS needs a 27 JDK for both arches; Corretto ships macOS x64.
+          distribution: ${{ matrix.platform == 'macos-15' && 'corretto' || 'temurin' }}
           java-version: "27"
 
       - name: Capture JDK 27 for jlink
