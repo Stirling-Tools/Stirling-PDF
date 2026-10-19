@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Scheduler;
 
 import stirling.software.common.model.ApplicationProperties;
 
@@ -60,12 +61,15 @@ public class CacheConfig {
                         .recordStats()
                         .build());
         // Bounded and idle-expiring so a token signed by a long-retired kid cannot pin its
-        // decrypted private half in memory for the life of the process.
+        // decrypted private half in memory for the life of the process. The scheduler evicts on
+        // time: Caffeine otherwise only expires during later cache activity, which an idle node
+        // may never have.
         cacheManager.registerCustomCache(
                 SIGNING_KEYS_CACHE,
                 Caffeine.newBuilder()
                         .maximumSize(50)
                         .expireAfterAccess(Duration.ofHours(1))
+                        .scheduler(Scheduler.systemScheduler())
                         .recordStats()
                         .build());
         return cacheManager;

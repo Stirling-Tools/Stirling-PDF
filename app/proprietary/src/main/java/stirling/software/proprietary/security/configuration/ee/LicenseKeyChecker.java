@@ -129,8 +129,10 @@ public class LicenseKeyChecker {
         try {
             users = purchasedTeamUsers();
         } catch (RuntimeException e) {
-            // A failed read must not revoke a known entitlement.
+            // A failed read must not revoke a known entitlement, but it must not leave an earlier
+            // stamp fresh either, or the next premiumTier() skips the retry.
             log.debug("Linked team allowance unreadable; keeping the current tier", e);
+            tierResolvedAtNanos = 0L;
             return;
         }
         boolean entitled = users != null && users > 0;
