@@ -65,29 +65,26 @@ async function applySettings(
 }
 
 /**
- * Runs Finish: the password first, when one is owed, then the settings.
- * Changing the password keeps the admin signed in, since the server leaves
- * their token valid. The token is swapped for a fresh one only as setup
- * closes: a session refresh puts the whole app into its loading state, which
- * would unmount the wizard mid-finish. `onPasswordRejected` fires when the
- * server refused the new password, the only failure fixable on a step.
+ * Saves the admin's new password, and later the settings. Changing the
+ * password keeps the admin signed in, since the server leaves their token
+ * valid. The token is swapped for a fresh one only as setup closes: a session
+ * refresh puts the whole app into its loading state, which would unmount the
+ * wizard. `savePassword` rejects with a PasswordChangeError when the server
+ * refused the password for a reason the admin can fix.
  */
 export function useSetupFinish({
   onDone,
   onPasswordChanged,
-  onPasswordRejected,
 }: {
   onDone: () => void;
   onPasswordChanged?: () => void;
-  onPasswordRejected: (error: PasswordChangeError) => void;
 }) {
   const { t } = useTranslation();
   const { refreshSession } = useAuth();
   const [state, setState] = useState<FinishState>("idle");
-  // A retry after the settings failed must not change the password again.
   const passwordChanged = useRef(false);
 
-  const changePassword = useCallback(
+  const savePassword = useCallback(
     async (draft: ServerSetupDraft) => {
       try {
         await changeAdminPassword(draft.currentPassword, draft.newPassword);
@@ -117,19 +114,9 @@ export function useSetupFinish({
   }, [onDone, refreshSession]);
 
   const finish = useCallback(
-    (
-      initial: ServerSetupDraft,
-      draft: ServerSetupDraft,
-      passwordRequired: boolean,
-    ) => {
+    (initial: ServerSetupDraft, draft: ServerSetupDraft) => {
       setState("saving");
-      const run = async () => {
-        if (passwordRequired && !passwordChanged.current) {
-          await changePassword(draft);
-        }
-        return applySettings(initial, draft);
-      };
-      run()
+      applySettings(initial, draft)
         .then(async (result) => {
           if (result === "done") {
             complete();
@@ -141,17 +128,16 @@ export function useSetupFinish({
             window.location.reload();
           }
         })
-        .catch((error: unknown) => {
-          if (error instanceof PasswordChangeError) {
-            setState("idle");
-            onPasswordRejected(error);
-            return;
-          }
-          setState("error");
-        });
+        .catch(() => setState("error"));
     },
-    [changePassword, complete, onPasswordRejected],
+    [complete],
   );
 
-  return { state, finish, complete, reset: () => setState("idle") };
+  return {
+    state,
+    finish,
+    savePassword,
+    complete,
+    reset: () => setState("idle"),
+  };
 }

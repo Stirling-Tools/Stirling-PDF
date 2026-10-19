@@ -23,9 +23,10 @@ import {
 } from "@app/components/serverSetup/SetupFields";
 import { SetupStepFrame } from "@app/components/serverSetup/SetupStepFrame";
 import {
+  PasswordChangeError,
   useSetupFinish,
-  type PasswordChangeError,
 } from "@app/components/serverSetup/useSetupFinish";
+import { DEFAULT_ADMIN_CREDENTIALS } from "@app/auth/defaultCredentials";
 import {
   checkIssuer,
   fetchServerSettings,
@@ -65,9 +66,6 @@ const STEP_COMPONENTS: Record<SetupStepId, ComponentType<SetupStepProps>> = {
   summary: QuickSummaryStep,
 };
 
-/** Must match InitialSecuritySetup's default admin password. */
-const DEFAULT_ADMIN_PASSWORD = "stirling";
-
 /** Where each server password error belongs on the Password step. */
 function passwordErrors(error: PasswordChangeError): StepErrors {
   switch (error.code) {
@@ -82,15 +80,10 @@ function passwordErrors(error: PasswordChangeError): StepErrors {
   }
 }
 
-/** draftToSave resets the Password step, which is not a setting; carry it through. */
-function passwordFields(draft: ServerSetupDraft) {
-  const { currentPassword, newPassword, confirmPassword } = draft;
-  return { currentPassword, newPassword, confirmPassword };
-}
-
 type FrameProps = ComponentProps<typeof SetupStepFrame>;
 
 type Phase =
+  | { kind: "password" }
   | { kind: "start" }
   | { kind: "step"; index: number }
   | { kind: "finish" };
@@ -166,10 +159,10 @@ function useStepCopy() {
         };
       case "password":
         return {
-          title: t("serverSetup.password.title", "Password"),
+          title: t("serverSetup.password.title", "Set your password"),
           subtitle: t(
             "serverSetup.password.subtitle",
-            "Secure your admin account.",
+            "Secure your admin account before anything else.",
           ),
         };
       case "analytics":
@@ -205,10 +198,18 @@ function ServerSetupFlow({
     ...prefillAddresses(initial, pageOrigin()),
     analytics: initial.analytics ?? true,
     mcpEnabled: true,
-    currentPassword: usingDefaultCredentials ? DEFAULT_ADMIN_PASSWORD : "",
+    currentPassword: usingDefaultCredentials
+      ? DEFAULT_ADMIN_CREDENTIALS.password
+      : "",
   }));
   const [mode, setMode] = useState<SetupMode>("quick");
-  const [phase, setPhase] = useState<Phase>({ kind: "start" });
+  // An owed password comes first, so the default login stops working before
+  // the admin spends any time on settings.
+  const [phase, setPhase] = useState<Phase>(
+    passwordChange ? { kind: "password" } : { kind: "start" },
+  );
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordFailed, setPasswordFailed] = useState(false);
   const [errors, setErrors] = useState<StepErrors>({});
   const [openSection, setOpenSection] = useState<ExpandableSection | null>(
     null,
@@ -216,20 +217,14 @@ function ServerSetupFlow({
   const [dismissing, setDismissing] = useState(false);
   const [dismissFailed, setDismissFailed] = useState(false);
 
-  const steps = stepsFor(mode, passwordChange !== undefined);
+  const steps = stepsFor(mode);
   const {
     state: finishState,
     finish,
+    savePassword,
     complete,
     reset,
-  } = useSetupFinish({
-    onDone,
-    onPasswordChanged,
-    onPasswordRejected: (error) => {
-      setPhase({ kind: "step", index: steps.indexOf("password") });
-      showErrors(passwordErrors(error));
-    },
-  });
+  } = useSetupFinish({ onDone, onPasswordChanged });
 
   // Custom's AI card starts on "Your own AI", so its fields are there to fill
   // in; only the first visit applies it, so switching AI off sticks.
@@ -259,7 +254,7 @@ function ServerSetupFlow({
     setDismissFailed(false);
     try {
       await markSetupComplete();
-      onDone();
+      complete();
     } catch {
       setDismissFailed(true);
       setDismissing(false);
@@ -339,12 +334,49 @@ function ServerSetupFlow({
 
   const startFinish = () => {
     goTo({ kind: "finish" });
-    finish(
-      initial,
-      { ...draftToSave(draft, initial, mode), ...passwordFields(draft) },
-      passwordChange !== undefined,
-    );
+    finish(initial, draftToSave(draft, initial, mode));
   };
+
+  const submitPassword = () => {
+    if (savingPassword) return;
+    const stepErrors = validateStep("password", draft, mode);
+    showErrors(stepErrors);
+    if (Object.keys(stepErrors).length > 0) return;
+    setSavingPassword(true);
+    setPasswordFailed(false);
+    savePassword(draft)
+      .then(() => goTo({ kind: "start" }))
+      .catch((error: unknown) => {
+        if (error instanceof PasswordChangeError) {
+          showErrors(passwordErrors(error));
+        } else {
+          setPasswordFailed(true);
+        }
+      })
+      .finally(() => setSavingPassword(false));
+  };
+
+  const passwordFrame = (): FrameProps => ({
+    ...stepCopy("password"),
+    primaryLabel: t("serverSetup.password.save", "Save password"),
+    primaryLoading: savingPassword,
+    onPrimary: submitPassword,
+    children: (
+      <>
+        <PasswordStep {...stepProps} />
+        {passwordFailed && (
+          <SetupNote tone="warning">
+            <p className={styles.noteText}>
+              {t(
+                "serverSetup.password.failed",
+                "Couldn't save your password. Check the server is reachable and try again.",
+              )}
+            </p>
+          </SetupNote>
+        )}
+      </>
+    ),
+  });
 
   // The analytics answer is the button itself, so it reads as consent.
   const analyticsLabel = (accept: boolean, isLast: boolean) => {
@@ -522,11 +554,13 @@ function ServerSetupFlow({
   };
 
   const frame =
-    phase.kind === "start"
-      ? startFrame()
-      : phase.kind === "finish"
-        ? finishFrame()
-        : stepFrame(phase.index);
+    phase.kind === "password"
+      ? passwordFrame()
+      : phase.kind === "start"
+        ? startFrame()
+        : phase.kind === "finish"
+          ? finishFrame()
+          : stepFrame(phase.index);
 
   // One frame for every phase, so its height animates between them.
   return (

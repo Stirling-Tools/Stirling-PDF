@@ -43,17 +43,12 @@ export const QUICK_SUMMARY_STEPS: SetupStepId[] = [
 ];
 
 /**
- * The cards after the first. Quick start's settings share one summary card
- * before Analytics. A Password card ends either flow when the admin must
- * replace their password; it is not a setting.
+ * The numbered cards after the mode choice. Quick start's settings share one
+ * summary card before Analytics. The password, when one is owed, is set on
+ * its own card before any of these and is not a setting.
  */
-export function stepsFor(
-  mode: SetupMode,
-  passwordRequired: boolean,
-): SetupStepId[] {
-  const steps: SetupStepId[] =
-    mode === "quick" ? ["summary", "analytics"] : SETUP_STEPS.custom;
-  return passwordRequired ? [...steps, "password"] : steps;
+export function stepsFor(mode: SetupMode): SetupStepId[] {
+  return mode === "quick" ? ["summary", "analytics"] : SETUP_STEPS.custom;
 }
 
 /**

@@ -24,6 +24,9 @@ import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { updateSupportedLanguages } from "@app/i18n";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
 import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
+import { DefaultSignInScreen } from "@app/auth/ui/DefaultSignInScreen";
+import { DEFAULT_ADMIN_CREDENTIALS } from "@app/auth/defaultCredentials";
+import { springAuth } from "@app/auth/spring/springAuthClient";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
@@ -71,6 +74,10 @@ export default function Login() {
   const loginDisabled =
     backendProbe.loginDisabled === true || _enableLogin === false;
   const autoLoginAttempted = useRef(false);
+  const defaultSignInAttempted = useRef(false);
+  const [defaultSignIn, setDefaultSignIn] = useState<
+    "idle" | "signingIn" | "failed"
+  >("idle");
   const autoLoginErrorRecorded = useRef(false);
 
   const AUTO_LOGIN_ATTEMPTS_KEY = "stirling_sso_auto_login_attempts";
@@ -315,6 +322,46 @@ export default function Login() {
     hasSsoLoginError,
   ]);
 
+  // A fresh server still on the default admin login signs in by itself: the
+  // credentials are printed on this page anyway, and setup's first card
+  // replaces them. If they no longer work, the form is shown as usual.
+  useEffect(() => {
+    if (
+      defaultSignInAttempted.current ||
+      !isFirstTimeSetup ||
+      !showDefaultCredentials ||
+      !login.isUserPassAllowed ||
+      loading ||
+      session ||
+      backendProbe.status !== "up" ||
+      hasSsoLoginError ||
+      hasLogoutBlock()
+    ) {
+      return;
+    }
+    defaultSignInAttempted.current = true;
+    setDefaultSignIn("signingIn");
+    void springAuth
+      .signInWithPassword({
+        email: DEFAULT_ADMIN_CREDENTIALS.username,
+        password: DEFAULT_ADMIN_CREDENTIALS.password,
+      })
+      .then(
+        ({ session: signedIn, error }) => {
+          if (error || !signedIn) setDefaultSignIn("failed");
+        },
+        () => setDefaultSignIn("failed"),
+      );
+  }, [
+    isFirstTimeSetup,
+    showDefaultCredentials,
+    login.isUserPassAllowed,
+    loading,
+    session,
+    backendProbe.status,
+    hasSsoLoginError,
+  ]);
+
   // Handle query params (email prefill, success messages, and session expiry)
   useEffect(() => {
     try {
@@ -419,6 +466,10 @@ export default function Login() {
     return <LoadingFallback />;
   }
 
+  if (defaultSignIn === "signingIn") {
+    return <DefaultSignInScreen />;
+  }
+
   if (backendProbe.loading) {
     return <LoadingFallback />;
   }
@@ -515,7 +566,10 @@ export default function Login() {
           ) : undefined
         }
         footer={
-          isFirstTimeSetup && showDefaultCredentials && isUserPassAllowed ? (
+          isFirstTimeSetup &&
+          showDefaultCredentials &&
+          isUserPassAllowed &&
+          defaultSignIn !== "failed" ? (
             <AuthDefaultCredentials />
           ) : undefined
         }

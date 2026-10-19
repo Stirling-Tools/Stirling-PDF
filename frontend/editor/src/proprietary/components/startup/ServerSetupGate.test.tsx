@@ -303,12 +303,7 @@ describe("ServerSetupGate", () => {
   });
 
   async function reachPasswordStep() {
-    await openQuickStart();
-    click("Continue"); // Quick start summary
-    click("Accept and continue"); // Analytics
-    expect(
-      screen.getByRole("heading", { name: "Password" }),
-    ).toBeInTheDocument();
+    await screen.findByRole("heading", { name: "Set your password" });
   }
 
   const typePassword = (label: string, value: string) =>
@@ -316,7 +311,7 @@ describe("ServerSetupGate", () => {
       target: { value },
     });
 
-  it("ends with a new password, keeping the admin signed in", async () => {
+  it("starts with a new password, keeping the admin signed in", async () => {
     const onPasswordChanged = vi.fn();
     renderGate({ usingDefaultCredentials: true }, onPasswordChanged);
     await reachPasswordStep();
@@ -324,39 +319,56 @@ describe("ServerSetupGate", () => {
 
     typePassword("New password", "a-new-pass");
     typePassword("Confirm new password", "a-new-pass");
-    click("Finish setup");
+    click("Save password");
 
-    await screen.findByRole("heading", { name: "Settings saved" });
+    await screen.findByRole("heading", { name: "Your server is up" });
     expect(api.changeAdminPassword).toHaveBeenCalledWith(
       "stirling",
       "a-new-pass",
     );
     expect(onPasswordChanged).toHaveBeenCalled();
-    // Refreshing reloads the app's auth state, so it waits until setup closes.
-    expect(auth.refreshSession).not.toHaveBeenCalled();
     expect(alert).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Password saved" }),
     );
-    expect(api.saveServerSettings).toHaveBeenCalled();
+    // Refreshing reloads the app's auth state, so it waits until setup closes.
+    expect(auth.refreshSession).not.toHaveBeenCalled();
+
+    click("Continue");
+    click("Continue"); // Quick start summary
+    click("Accept and finish");
+    await screen.findByRole("heading", { name: "Settings saved" });
+    expect(api.changeAdminPassword).toHaveBeenCalledTimes(1);
 
     click("Continue");
     expect(auth.refreshSession).toHaveBeenCalled();
     await screen.findByText("The app");
   });
 
-  it("checks the new password before saving anything", async () => {
+  it("rotates the token when setup is put off after the password", async () => {
+    renderGate({ usingDefaultCredentials: true });
+    await reachPasswordStep();
+    typePassword("New password", "a-new-pass");
+    typePassword("Confirm new password", "a-new-pass");
+    click("Save password");
+    await screen.findByRole("heading", { name: "Your server is up" });
+
+    click("Not now");
+    await waitFor(() => expect(auth.refreshSession).toHaveBeenCalled());
+  });
+
+  it("checks the new password before saving it", async () => {
     renderGate({ usingDefaultCredentials: true });
     await reachPasswordStep();
     typePassword("New password", "short");
     typePassword("Confirm new password", "other");
-    click("Finish setup");
+    click("Save password");
 
     expect(screen.getByText("Use at least 8 characters")).toBeInTheDocument();
     expect(screen.getByText("Passwords don't match")).toBeInTheDocument();
     expect(api.changeAdminPassword).not.toHaveBeenCalled();
   });
 
-  it("returns to the Password step when the server refuses it", async () => {
+  it("stays on the password card when the server refuses it", async () => {
     vi.mocked(api.changeAdminPassword).mockRejectedValue({
       response: { status: 401, data: { error: "incorrectPassword" } },
     });
@@ -364,27 +376,26 @@ describe("ServerSetupGate", () => {
     await reachPasswordStep();
     typePassword("New password", "a-new-pass");
     typePassword("Confirm new password", "a-new-pass");
-    click("Finish setup");
+    click("Save password");
 
     await screen.findByText("Incorrect password");
     expect(
-      screen.getByRole("heading", { name: "Password" }),
+      screen.getByRole("heading", { name: "Set your password" }),
     ).toBeInTheDocument();
-    expect(api.saveServerSettings).not.toHaveBeenCalled();
   });
 
-  it("treats a network failure on the password as a failed save", async () => {
+  it("says so when the password could not be saved at all", async () => {
     vi.mocked(api.changeAdminPassword).mockRejectedValue(new Error("offline"));
     renderGate({ usingDefaultCredentials: true });
     await reachPasswordStep();
     typePassword("New password", "a-new-pass");
     typePassword("Confirm new password", "a-new-pass");
-    click("Finish setup");
+    click("Save password");
 
-    await screen.findByRole("heading", {
-      name: "Couldn't save your settings",
-    });
-    expect(api.saveServerSettings).not.toHaveBeenCalled();
+    await screen.findByText(/Couldn't save your password/);
+    expect(
+      screen.getByRole("heading", { name: "Set your password" }),
+    ).toBeInTheDocument();
   });
 
   it("keeps one expanded section open at a time", async () => {
