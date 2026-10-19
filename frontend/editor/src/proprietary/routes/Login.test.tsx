@@ -925,6 +925,16 @@ describe("Login", () => {
       expect(screen.queryByText("Default Login Credentials")).toBeNull();
     });
 
+    it("does not try again in a tab where it already failed", async () => {
+      sessionStorage.setItem("stirling_default_sign_in_failed", "1");
+      renderFresh();
+
+      await waitFor(() =>
+        expect(document.getElementById("email")).toBeTruthy(),
+      );
+      expect(springAuth.signInWithPassword).not.toHaveBeenCalled();
+    });
+
     it("leaves a signed-out admin on the form", async () => {
       sessionStorage.setItem("stirling_sso_auto_login_logged_out", "1");
       renderFresh();

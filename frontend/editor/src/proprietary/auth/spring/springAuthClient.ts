@@ -437,7 +437,16 @@ class SpringAuthClient {
 
       return { user: data.user, session, error: null };
     } catch (error: unknown) {
-      console.error("[SpringAuth] signInWithPassword error:", error);
+      // Never the error itself: an Axios error carries the request body, which
+      // holds the password.
+      console.error(
+        "[SpringAuth] signInWithPassword error:",
+        error instanceof AxiosError
+          ? `${error.response?.status ?? "no response"} ${error.message}`
+          : error instanceof Error
+            ? error.message
+            : "unknown error",
+      );
       if (error instanceof AxiosError) {
         const errorCode = error.response?.data?.error as string | undefined;
         const errorMessage =

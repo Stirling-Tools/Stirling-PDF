@@ -85,6 +85,9 @@ export default function Login() {
   const AUTO_LOGIN_ATTEMPTS_KEY = "stirling_sso_auto_login_attempts";
   const AUTO_LOGIN_ERRORS_KEY = "stirling_sso_auto_login_errors";
   const AUTO_LOGIN_LOGOUT_KEY = "stirling_sso_auto_login_logged_out";
+  // A failed default sign-in counts against the admin's lockout, so a tab that
+  // has seen one fail never tries again.
+  const DEFAULT_SIGN_IN_FAILED_KEY = "stirling_default_sign_in_failed";
   const MAX_AUTO_LOGIN_ATTEMPTS = 2;
   const MAX_AUTO_LOGIN_ERRORS = 1;
 
@@ -334,7 +337,9 @@ export default function Login() {
     showDefaultCredentials &&
     login.isUserPassAllowed &&
     !hasSsoLoginError &&
-    !hasLogoutBlock();
+    !hasLogoutBlock() &&
+    !session &&
+    readSessionNumber(DEFAULT_SIGN_IN_FAILED_KEY) === 0;
 
   useEffect(() => {
     if (
@@ -356,13 +361,17 @@ export default function Login() {
       .then(
         ({ session: signedIn, error }) => {
           if (error || !signedIn) {
+            writeSessionNumber(DEFAULT_SIGN_IN_FAILED_KEY, 1);
             setDefaultSignIn("failed");
             return;
           }
           markSetupSignIn();
           setDefaultSignIn("signedIn");
         },
-        () => setDefaultSignIn("failed"),
+        () => {
+          writeSessionNumber(DEFAULT_SIGN_IN_FAILED_KEY, 1);
+          setDefaultSignIn("failed");
+        },
       );
   }, [defaultSignInDue, loading, session, backendProbe.status]);
 
