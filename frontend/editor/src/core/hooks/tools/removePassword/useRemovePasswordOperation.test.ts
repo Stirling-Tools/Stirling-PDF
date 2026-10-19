@@ -1,7 +1,15 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useRemovePasswordOperation } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
+import {
+  useRemovePasswordOperation,
+  removePasswordOperationConfig,
+} from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
 import type { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+import { createStirlingFile } from "@app/types/fileContext";
+import {
+  clearPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfPasswordStore";
 
 vi.mock("../shared/useToolOperation", async () => {
   const actual = await vi.importActual("../shared/useToolOperation"); // Need to keep ToolType etc.
@@ -56,8 +64,74 @@ describe("useRemovePasswordOperation", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearPdfAccess();
     mockUseToolOperation.mockReturnValue(mockToolOperationReturn);
   });
+
+  function protectedFile(opening: boolean, owner: boolean) {
+    const file = createStirlingFile(
+      new File(["PDF"], "test.pdf", { type: "application/pdf" }),
+    );
+    rememberPdfAccess(file, {
+      password: opening ? "reader" : "",
+      encrypted: opening || owner,
+      requiresOpeningPassword: opening,
+      hasOwnerPassword: owner,
+      ownerAuthenticated: false,
+      signed: false,
+      permissions: 0,
+      canModify: false,
+      canAssemble: false,
+      pageCount: 1,
+    });
+    return file;
+  }
+
+  test.each([
+    { opening: true, owner: false, password: "reader", ownerPassword: null },
+    { opening: false, owner: true, password: "", ownerPassword: "owner" },
+    { opening: true, owner: true, password: "reader", ownerPassword: "owner" },
+  ])(
+    "only submits passwords present on a file (opening=$opening, owner=$owner)",
+    ({ opening, owner, password, ownerPassword }) => {
+      renderHook(() => useRemovePasswordOperation());
+      const form = getToolConfig().buildFormData(
+        { password: "reader", ownerPassword: "owner" },
+        protectedFile(opening, owner),
+      );
+      expect(form.get("password")).toBe(password);
+      expect(form.get("ownerPassword")).toBe(ownerPassword);
+    },
+  );
+
+  test.each(["opening", "owner", "both"] as const)(
+    "leaves files without the requested %s password unchanged",
+    async (remove) => {
+      const opening = protectedFile(true, false);
+      const owner = protectedFile(false, true);
+      const both = protectedFile(true, true);
+      const plain = protectedFile(false, false);
+      const params = {
+        password: remove === "owner" ? "" : "reader",
+        ownerPassword: remove === "opening" ? "" : "owner",
+      };
+      const { result } = renderHook(() => useRemovePasswordOperation());
+      await result.current.executeOperation(params, [
+        opening,
+        owner,
+        both,
+        plain,
+      ]);
+      expect(mockToolOperationReturn.executeOperation).toHaveBeenCalledWith(
+        params,
+        remove === "opening"
+          ? [opening, both]
+          : remove === "owner"
+            ? [owner, both]
+            : [opening, owner, both],
+      );
+    },
+  );
 
   test.each([
     {
@@ -92,6 +166,14 @@ describe("useRemovePasswordOperation", () => {
 
     // Verify password parameter
     expect(formData.get("password")).toBe(password);
+  });
+
+  test("legacy automation and unprotected-copy authentication retain owner credentials", () => {
+    const form = removePasswordOperationConfig.buildFormData(
+      { password: "owner" },
+      protectedFile(false, true),
+    );
+    expect(form.get("password")).toBe("owner");
   });
 
   test("should use correct translation for error messages", () => {

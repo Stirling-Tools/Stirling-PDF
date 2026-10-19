@@ -80,6 +80,9 @@ class SaasTeamControllerTest {
     @Mock private UserService userService;
     @Mock private TeamSecurityExpressions teamSecurityExpressions;
 
+    @Mock
+    private stirling.software.saas.procurement.service.EnterpriseEntitlementService enterprise;
+
     @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
 
     @InjectMocks private SaasTeamController controller;
@@ -566,6 +569,24 @@ class SaasTeamControllerTest {
     @Nested
     @DisplayName("getMyTeams")
     class GetMyTeams {
+
+        @Test
+        void enterpriseRosterHasNoAdmissionCapAndKeepsActualUsage() {
+            stubCurrentUser();
+            Team team = team(1L, "Enterprise");
+            currentUser.setTeam(team);
+            when(membershipRepository.findByUserId(currentUser.getId()))
+                    .thenReturn(List.of(membership(team, currentUser, TeamRole.LEADER)));
+            when(saasTeamExtensionService.getMaxSeats(team)).thenReturn(20);
+            when(saasTeamExtensionService.getSeatsUsed(team)).thenReturn(27);
+            when(enterprise.isActive(1L)).thenReturn(true);
+            var response = controller.getMyTeams();
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            @SuppressWarnings("unchecked")
+            var dtos = (List<SaasTeamController.TeamDetailsDTO>) response.getBody();
+            assertThat(dtos.getFirst().getMaxSeats()).isNull();
+            assertThat(dtos.getFirst().getSeatsUsed()).isEqualTo(27);
+        }
 
         @Test
         @DisplayName(
