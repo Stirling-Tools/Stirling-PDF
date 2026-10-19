@@ -61,10 +61,14 @@ const LandingPage = () => {
           iconHeight="5rem"
           textHeight="2.5rem"
           gap="1rem"
-          style={{ marginBottom: "2.5rem" }}
+          style={{
+            height: "8.5rem",
+            minHeight: "8.5rem",
+            marginBottom: "2.5rem",
+          }}
         />
 
-        <div className="landing-actions-enter">
+        <div className="landing-actions-enter" style={{ minHeight: "3rem" }}>
           <LandingActions
             fileInputRef={fileInputRef}
             onUploadClick={() => void handleNativeUploadClick()}

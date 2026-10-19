@@ -39,7 +39,7 @@ export function LandingActions({
 
   return (
     <>
-      <Group gap="sm" justify="center" wrap="wrap" mb="xs">
+      <Group gap="sm" justify="center" wrap="wrap">
         <Button
           fat
           leftSection={<Icon name="plus" size="1rem" />}

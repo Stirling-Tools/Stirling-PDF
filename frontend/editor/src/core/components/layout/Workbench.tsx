@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
-import { Box, Loader, Center, Stack, Text } from "@mantine/core";
+import { Box } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
@@ -161,20 +161,6 @@ export default function Workbench() {
     }
 
     if (activeFiles.length === 0) {
-      // Files are open but their bytes are still loading (a cold PDF engine can
-      // take seconds). Showing the drop zone here reads as "the click did nothing".
-      if (fileIds.length > 0) {
-        return (
-          <Center h="100%" w="100%">
-            <Stack align="center" gap="md">
-              <Loader size="lg" />
-              <Text c="dimmed" size="sm">
-                {t("fileManager.loadingFiles", "Loading files...")}
-              </Text>
-            </Stack>
-          </Center>
-        );
-      }
       return <LandingPage />;
     }
 
@@ -282,15 +268,7 @@ export default function Workbench() {
           ...(currentView === "pageEditor" && { height: 0 }),
         }}
       >
-        <Suspense
-          fallback={
-            <Center style={{ height: "100%" }}>
-              <Loader />
-            </Center>
-          }
-        >
-          {renderMainContent()}
-        </Suspense>
+        <Suspense fallback={null}>{renderMainContent()}</Suspense>
       </Box>
     </Box>
   );
