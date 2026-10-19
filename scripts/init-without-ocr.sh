@@ -64,11 +64,11 @@ if [ "${STIRLING_USE_JEMALLOC:-true}" = "true" ]; then
     fi
   done
   if [ -n "$JEMALLOC_LIB" ]; then
-    export MALLOC_CONF="${MALLOC_CONF:-background_thread:true,dirty_decay_ms:1000,muzzy_decay_ms:2000}"
-    # A preloaded jemalloc whose background thread exists cannot survive the process dropping
-    # privileges: jemalloc aborts inside setpriv. So the preload must reach only the final
-    # child, never the setpriv invocation that runs as root. When nothing drops privileges
-    # (already running as the runtime user) a plain export is correct and covers every child.
+    export MALLOC_CONF="${MALLOC_CONF:-narenas:1,tcache:false,dirty_decay_ms:0,muzzy_decay_ms:0}"
+    # A container-wide preload reaches setpriv and every helper; with background_thread the
+    # app aborts inside setpriv after the privilege drop. The preload must reach only the
+    # final child, never the setpriv invocation that runs as root. When nothing drops
+    # privileges (already running as the runtime user) a plain export is correct.
     JEMALLOC_PRELOAD=(env "LD_PRELOAD=${JEMALLOC_LIB}${LD_PRELOAD:+:$LD_PRELOAD}")
     if [ "$(id -u)" -ne 0 ]; then
       export LD_PRELOAD="${JEMALLOC_LIB}${LD_PRELOAD:+:$LD_PRELOAD}"
@@ -827,7 +827,7 @@ detect_container_memory_mb() {
 }
 
 # Computes dynamic JVM memory flags based on detected container memory.
-# Uses performance-oriented settings (Shenandoah GC).
+# Uses G1 GC at production settings.
 # Sets: DYNAMIC_INITIAL_RAM_PCT, DYNAMIC_MAX_RAM_PCT, DYNAMIC_MAX_METASPACE
 compute_dynamic_memory() {
   local mem_mb=$1
@@ -1109,7 +1109,7 @@ fi
 # Memory percentages are computed dynamically by compute_dynamic_memory().
 
 # Calculate ConcGCThreads dynamically based on available CPUs
-# Shenandoah defaults to ParallelGCThreads/4; we cap it for large hosts
+# ConcGCThreads defaults to ParallelGCThreads/4; we cap it for large hosts
 AVAILABLE_CPUS=$(nproc 2>/dev/null || echo "2")
 if [ "$AVAILABLE_CPUS" -ge 16 ]; then
   CONC_GC_THREADS=4
@@ -1131,7 +1131,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
     log "Using _JVM_OPTS (ConcGCThreads=${CONC_GC_THREADS})"
   else
     log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=compact -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedGCInterval=10000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=70 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
   fi
 
   # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)
@@ -1174,6 +1174,15 @@ if java -XX:+UseCompactObjectHeaders -version >/dev/null 2>&1; then
 else
   COMPACT_HEADERS_FLAG=""
   log "JVM does not support Compact Object Headers on $(uname -m). Skipping Project Lilliput flags."
+fi
+
+# Native-heap trimming calls glibc malloc_trim, which cannot release jemalloc arenas,
+# so it is only meaningful when the jemalloc preload is not active.
+if [ -z "${JEMALLOC_LIB:-}" ]; then
+  case "${JAVA_BASE_OPTS}" in
+    *TrimNativeHeapInterval*) ;;
+    *) JAVA_BASE_OPTS="${JAVA_BASE_OPTS} -XX:TrimNativeHeapInterval=60000" ;;
+  esac
 fi
 
 # ---------- AOT Support Check ----------

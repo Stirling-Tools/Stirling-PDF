@@ -379,7 +379,7 @@ RUN gcc -O2 -Wall -Wextra -Werror -o /usr/local/bin/lo-sandbox /src/lo-sandbox.c
 
 
 # Final runtime image - the actual base image
-FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e AS runtime
+FROM eclipse-temurin:27-jre@sha256:d6bfa738df69e8dec9061b3e26f2ae564d92ad169faa36086dcfa33f0a901d35 AS runtime
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
