@@ -227,9 +227,9 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                 (metaObj instanceof Map<?, ?>) ? (Map<String, Object>) metaObj : null;
 
         try {
-            // Resolve the local User first. An already-linked, non-anonymous account reads nothing
-            // from auth.users, so that select now only happens on the paths that consume it.
-            Optional<User> linkedUser = userService.findBySupabaseId(supabaseId);
+            // One statement resolves the local User and proves its auth.users row still exists, so
+            // a deleted Supabase account falls through to the not-found path below.
+            Optional<User> linkedUser = supabaseUserService.findLinkedUser(supabaseId);
             if (linkedUser.isPresent()) {
                 User user = linkedUser.get();
                 if (!ANONYMOUS.toString().equalsIgnoreCase(user.getAuthenticationType())) {
@@ -243,7 +243,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                         : upgradeAnonymousUser(user, supabaseUser, jwt);
             }
 
-            // No local row yet: the JWT must reference a Supabase user this server can see.
+            // No linked row: provision one, but only for a Supabase user this server can see.
             supabaseUserService.getUser(supabaseId);
             return createUser(jwt, supabaseId, email, appMetadata);
         } catch (UserNotFoundException e) {
