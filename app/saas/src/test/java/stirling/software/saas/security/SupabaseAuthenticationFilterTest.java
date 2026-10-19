@@ -36,6 +36,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.model.SupabaseUser;
+import stirling.software.saas.model.exception.UserNotFoundException;
 import stirling.software.saas.service.SupabaseUserService;
 
 /** Unit tests for the saas-mode JWT filter. */
@@ -138,7 +139,7 @@ class SupabaseAuthenticationFilterTest {
         User existing = newUser("alice@example.com");
         existing.setSupabaseId(supabaseId);
         existing.setAuthenticationType(AuthenticationType.OAUTH2);
-        when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(existing));
+        when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.of(existing));
 
         request.setRequestURI("/api/v1/something");
         request.setMethod("POST");
@@ -159,6 +160,27 @@ class SupabaseAuthenticationFilterTest {
     }
 
     @Test
+    void validJwtForLinkedUserWhoseSupabaseAccountWasDeletedTriggers401() throws Exception {
+        UUID supabaseId = UUID.randomUUID();
+        when(jwtDecoder.decode("token"))
+                .thenReturn(jwtFor(supabaseId, "gone@example.com", false, "google"));
+        when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
+        when(supabaseUserService.getUser(supabaseId))
+                .thenThrow(new UserNotFoundException("Supabase user " + supabaseId + " not found"));
+
+        request.setRequestURI("/api/v1/something");
+        request.setMethod("POST");
+        request.addHeader("Authorization", "Bearer token");
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(userService, never()).saveUser(any());
+        verify(saasTeamService, never()).saveUserWithPersonalTeam(any());
+    }
+
+    @Test
     void validJwtForNewUserTriggersUserCreation() throws Exception {
         UUID supabaseId = UUID.randomUUID();
         Jwt jwt = jwtFor(supabaseId, "bob@example.com", false, "google");
@@ -166,7 +188,7 @@ class SupabaseAuthenticationFilterTest {
 
         when(supabaseUserService.getUser(supabaseId))
                 .thenReturn(supabaseUserMatching(supabaseId, "bob@example.com", false));
-        when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+        when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
         when(saasTeamService.saveUserWithPersonalTeam(any())).thenAnswer(inv -> inv.getArgument(0));
 
         request.setRequestURI("/api/v1/something");
@@ -191,7 +213,7 @@ class SupabaseAuthenticationFilterTest {
 
         when(supabaseUserService.getUser(supabaseId))
                 .thenReturn(supabaseUserMatching(supabaseId, "carol@example.com", false));
-        when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+        when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
         when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                 .thenAnswer(
                         inv -> {
@@ -219,7 +241,7 @@ class SupabaseAuthenticationFilterTest {
 
         when(supabaseUserService.getUser(supabaseId))
                 .thenReturn(supabaseUserMatching(supabaseId, "dave@example.com", false));
-        when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+        when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
         when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                 .thenAnswer(
                         inv -> {
@@ -247,7 +269,7 @@ class SupabaseAuthenticationFilterTest {
 
         when(supabaseUserService.getUser(supabaseId))
                 .thenReturn(supabaseUserMatching(supabaseId, "eve@example.com", false));
-        when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+        when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
         when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                 .thenAnswer(
                         inv -> {
