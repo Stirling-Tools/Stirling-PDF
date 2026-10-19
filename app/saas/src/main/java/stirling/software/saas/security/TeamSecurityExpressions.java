@@ -20,9 +20,9 @@ import stirling.software.proprietary.security.service.UserService;
  * {@code @PreAuthorize("@teamSecurity.isTeamLeader(#teamId)")} annotations on {@code
  * SaasTeamController} endpoints.
  *
- * <p>The current-user resolution uses the saas-mode authentication primitives ({@link
- * EnhancedJwtAuthenticationToken} from a Supabase JWT, or our existing API-key path) and looks the
- * local {@link User} row up via {@link UserService#findBySupabaseId(UUID)}.
+ * <p>The current user is the {@link User} the authentication filters already attached as the
+ * principal. Only a principal that is not a {@link User} is looked up: a guest's raw Jwt via {@link
+ * UserService#findBySupabaseId(UUID)}, a bare username via {@link UserService#findByUsername}.
  */
 @Component("teamSecurity")
 @Profile("saas")
