@@ -247,15 +247,17 @@ jobs:
       # jmods from both arches; the x64 path is captured into the env
       # before the second local JDK setup overwrites JAVA_HOME.
       - name: Set up x86_64 JDK 27 (macOS universal JRE)
+        id: jdk27x64
         if: matrix.platform == 'macos-15'
-        uses: ./.github/actions/java
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
+          distribution: "temurin"
           java-version: "27"
           architecture: "x64"
 
       - name: Capture x86_64 JAVA_HOME
         if: matrix.platform == 'macos-15'
-        run: echo "X64_JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+        run: echo "X64_JAVA_HOME=${{ steps.jdk27x64.outputs.java-home }}" >> "$GITHUB_ENV"
 
       # Gradle still runs on 25: buildSrc's Groovy tooling rejects Java 27 class
       # files (major version 71). JDK 27 is only the jlink source, so it is
