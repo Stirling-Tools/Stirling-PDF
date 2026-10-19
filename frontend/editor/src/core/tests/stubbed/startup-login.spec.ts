@@ -67,7 +67,12 @@ for (const path of [
         page.getByText("Default Login Credentials", { exact: true }),
       ).toBeVisible();
 
-      if (reload) await page.reload({ waitUntil: "domcontentloaded" });
+      if (reload) {
+        await page.reload({ waitUntil: "domcontentloaded" });
+        await expect(
+          page.getByText("Default Login Credentials", { exact: true }),
+        ).toBeVisible();
+      }
       await page.locator("#email").fill("admin");
       await page.locator("#password").fill("stirling");
       await page.getByRole("button", { name: "Login", exact: true }).click();

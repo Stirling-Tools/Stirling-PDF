@@ -1,5 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { openSettings } from "@app/tests/helpers/ui-helpers";
+import { openSettings, waitForAppReady } from "@app/tests/helpers/ui-helpers";
 import type { Page } from "@playwright/test";
 
 /**
@@ -35,7 +35,7 @@ test.describe("Super search — bar basics", () => {
     page,
   }) => {
     const input = page.locator(INPUT);
-    // The shortcut listener mounts with the bar — wait for it before pressing.
+    await waitForAppReady(page);
     await expect(input).toBeVisible();
     await page.keyboard.press("Control+KeyK");
     await expect(input).toBeFocused();

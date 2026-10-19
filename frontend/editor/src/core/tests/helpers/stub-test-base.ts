@@ -6,7 +6,10 @@ import {
   seedCookieConsent,
   type MockAppApiOptions,
 } from "@app/tests/helpers/api-stubs";
-import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
+import {
+  suppressNativeFilePicker,
+  waitForAppReady,
+} from "@app/tests/helpers/ui-helpers";
 
 /**
  * Custom Playwright fixture for backend-free specs.
@@ -100,6 +103,7 @@ export const test = base.extend<StubFixtures>({
       // default 'load' event waits for ALL subresources, which can time out
       // on slow runners and is rarely what tests actually need.
       await page.goto(autoGoto, { waitUntil: "domcontentloaded" });
+      await waitForAppReady(page);
     }
     await use(page);
   },

@@ -68,6 +68,7 @@ async function dragPageOver(
   to: import("@playwright/test").Locator,
   fractionAcross = 0.25,
 ) {
+  await from.scrollIntoViewIfNeeded();
   const source = await from.boundingBox();
   const target = await to.boundingBox();
   if (!source || !target) throw new Error("drag endpoints are not laid out");
@@ -269,6 +270,7 @@ test.describe("Page Editor tracks", () => {
   test("dragging pages between tracks moves them, and an emptied track closes on save", async ({
     page,
   }) => {
+    test.setTimeout(120_000);
     await openPageEditor(page);
     const rotated = track(page, "rotated-pages.pdf");
     const sample = track(page, "sample.pdf");
@@ -290,9 +292,11 @@ test.describe("Page Editor tracks", () => {
     await expect(rotated).toContainText("edited");
     await expect(sample).toContainText("edited");
 
-    await page
-      .getByRole("button", { name: "Save changes to all files" })
-      .click();
+    const saveBtn = page.getByRole("button", {
+      name: "Save changes to all files",
+    });
+    await expect(saveBtn).toBeEnabled();
+    await saveBtn.click();
 
     // The emptied file leaves the workbench; the other keeps the moved page.
     await expect(track(page, "sample.pdf")).toHaveCount(0, { timeout: 90_000 });

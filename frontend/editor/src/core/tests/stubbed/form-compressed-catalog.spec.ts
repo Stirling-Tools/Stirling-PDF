@@ -14,7 +14,6 @@ test("a compressed-catalog signature still renders its overlay", async ({
   page,
 }) => {
   test.setTimeout(120_000);
-  await page.goto("/editor", { waitUntil: "domcontentloaded" });
   await uploadFiles(page, FIXTURE);
   await page.locator('[data-page-index="0"]').first().waitFor({
     timeout: 60_000,

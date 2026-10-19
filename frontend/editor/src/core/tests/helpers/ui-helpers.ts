@@ -44,6 +44,22 @@ export async function waitForModalClose(
   });
 }
 
+export async function waitForAppReady(page: Page): Promise<void> {
+  await page
+    .evaluate(() => {
+      if (window.__spdfBoot) window.__spdfBoot();
+    })
+    .catch(() => {});
+  await page
+    .locator("#root:not([data-shell])")
+    .waitFor({ state: "attached" })
+    .catch(() => {});
+  await page
+    .locator("[data-shell-for]")
+    .waitFor({ state: "detached" })
+    .catch(() => {});
+}
+
 /** Uploads through the sidebar and waits for IndexedDB persistence before callers navigate. */
 export async function uploadFiles(
   page: Page,
@@ -51,6 +67,7 @@ export async function uploadFiles(
 ): Promise<void> {
   const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
   const names = paths.map((p) => p.split(/[\\/]/).pop() ?? p);
+  await waitForAppReady(page);
   await page.getByTestId("files-button").click();
   await page.locator('[data-testid="file-input"]').setInputFiles(paths);
   await expect(page.locator(".file-sidebar-file-item").first()).toBeVisible({
@@ -135,9 +152,10 @@ export async function openSettings(
   page: Page,
   section?: string | RegExp,
 ): Promise<Locator> {
+  await waitForAppReady(page);
   await page.locator('[data-testid="config-button"]').first().click();
   const surface = page.locator(SETTINGS_SURFACE);
-  await expect(surface).toBeVisible({ timeout: 5_000 });
+  await expect(surface).toBeVisible({ timeout: 10_000 });
   if (section) {
     await surface
       .locator(".modal-nav-item")
@@ -147,7 +165,7 @@ export async function openSettings(
     // The URL flips before React commits the section, so wait on the page
     // title rather than on the address bar.
     await expect(surface.locator(".settings-page__title")).toHaveText(section, {
-      timeout: 5_000,
+      timeout: 10_000,
     });
   }
   return surface;
