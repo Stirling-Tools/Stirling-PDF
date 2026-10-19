@@ -42,6 +42,10 @@ export interface SelectionActions {
 export interface SpreadActions {
   setSpreadMode: (mode: SpreadMode) => void;
   getSpreadMode: () => SpreadMode | null;
+  /**
+   * Dual page to single page, or back to the last dual pairing the user chose
+   * (cover page alone or not); pages 1-2 side by side until one is chosen.
+   */
   toggleSpreadMode: () => void;
 }
 
