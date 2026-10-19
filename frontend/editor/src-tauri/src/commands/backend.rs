@@ -15,6 +15,8 @@ const BACKEND_JVM_FLAGS: &[&str] = &[
     "-XX:MaxGCPauseMillis=200",
     "-XX:G1HeapRegionSize=4m",
     "-XX:G1PeriodicGCInterval=120000",
+    "-XX:MinHeapFreeRatio=10",
+    "-XX:MaxHeapFreeRatio=70",
     "-XX:+UseStringDeduplication",
     "-XX:+UseCompactObjectHeaders",
     "-XX:+ExplicitGCInvokesConcurrent",
