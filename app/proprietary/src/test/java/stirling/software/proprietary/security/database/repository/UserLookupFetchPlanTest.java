@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.database.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.UUID;
 
@@ -66,6 +67,36 @@ class UserLookupFetchPlanTest {
         // The filter chain hands this instance around after its session is gone.
         assertEquals("ROLE_USER", found.getAuthorities().iterator().next().getAuthority());
         assertEquals(teamId, found.getTeam().getId());
+    }
+
+    @Test
+    void severalAuthoritiesStillResolveToOneUser() {
+        UUID supabaseId = seedUser();
+        User user = userRepository.findBySupabaseId(supabaseId).orElseThrow();
+        new Authority("ROLE_ADMIN", user);
+        userRepository.saveAndFlush(user);
+        em.clear();
+
+        User found = userRepository.findBySupabaseId(supabaseId).orElseThrow();
+
+        assertEquals(2, found.getAuthorities().size());
+        assertEquals(teamId, found.getTeam().getId());
+    }
+
+    @Test
+    void userWithoutATeamStillLoads() {
+        UUID supabaseId = UUID.randomUUID();
+        User user = new User();
+        user.setUsername("teamless@example.com");
+        user.setSupabaseId(supabaseId);
+        new Authority("ROLE_USER", user);
+        userRepository.saveAndFlush(user);
+        em.clear();
+
+        User found = userRepository.findBySupabaseId(supabaseId).orElseThrow();
+
+        assertNull(found.getTeam());
+        assertEquals(1, found.getAuthorities().size());
     }
 
     private UUID seedUser() {
