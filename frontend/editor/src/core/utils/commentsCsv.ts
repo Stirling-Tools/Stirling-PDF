@@ -24,6 +24,15 @@ export interface CommentsCsvHeaders {
 
 type CommentSourceObject = Pick<PdfAnnotationObject, "author" | "contents">;
 
+type StoredDate = Date | number | string;
+
+type CommentDateSource = Pick<PdfAnnotationObject, "modified" | "created"> & {
+  modifiedDate?: StoredDate;
+  creationDate?: StoredDate;
+  M?: StoredDate;
+  customData?: { modifiedDate?: StoredDate };
+};
+
 export interface CommentSourceEntry<
   T extends CommentSourceObject = CommentSourceObject,
 > {
@@ -47,6 +56,24 @@ export function getCommentDisplayContent(entry: CommentSourceEntry): string {
   if (firstReply != null && String(firstReply).trim())
     return String(firstReply).trim();
   return "";
+}
+
+/**
+ * When a comment last changed: EmbedPDF's modified date, else its created date,
+ * else a date stored under a PDF or custom-data key. Null when there is none or
+ * it does not parse.
+ */
+export function getCommentDate(obj: CommentDateSource): Date | null {
+  const raw =
+    obj.modified ??
+    obj.created ??
+    obj.modifiedDate ??
+    obj.creationDate ??
+    obj.customData?.modifiedDate ??
+    obj.M;
+  if (raw == null) return null;
+  const d = raw instanceof Date ? raw : new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 /**

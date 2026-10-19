@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildCommentsCsv,
   commentsCsvFileName,
+  getCommentDate,
   toCommentCsvThreads,
   toCsvCell,
   type CommentsCsvHeaders,
@@ -67,6 +68,28 @@ describe("toCsvCell", () => {
     expect(toCsvCell('=HYPERLINK("x","y")')).toBe(
       '"\'=HYPERLINK(""x"",""y"")"',
     );
+  });
+});
+
+describe("getCommentDate", () => {
+  const modified = new Date("2026-10-14T09:30:00Z");
+  const created = new Date("2026-10-13T08:00:00Z");
+
+  it("reads the modified date EmbedPDF gives an annotation", () => {
+    expect(getCommentDate({ modified, created })).toBe(modified);
+  });
+
+  it("falls back to the created date", () => {
+    expect(getCommentDate({ created })).toBe(created);
+  });
+
+  it("parses a date stored under a PDF key", () => {
+    expect(getCommentDate({ M: "2026-10-14T09:30:00Z" })).toEqual(modified);
+  });
+
+  it("is null when there is no date or it does not parse", () => {
+    expect(getCommentDate({})).toBeNull();
+    expect(getCommentDate({ modifiedDate: "not a date" })).toBeNull();
   });
 });
 

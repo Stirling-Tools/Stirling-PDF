@@ -42,6 +42,7 @@ import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSide
 import {
   buildCommentsCsv,
   commentsCsvFileName,
+  getCommentDate,
   getCommentDisplayContent,
   toCommentCsvThreads,
 } from "@app/utils/commentsCsv";
@@ -65,15 +66,11 @@ const TEXT_COMMENT_TOOL_ID = "textComment" as const;
 type StirlingAnnotationCustomData = Record<string, unknown> & {
   annotationToolId?: string;
   isComment?: boolean;
-  modifiedDate?: Date | number | string;
   toolId?: string;
 };
 
 type StirlingAnnotationMetadata = {
-  creationDate?: Date | number | string;
   customData?: StirlingAnnotationCustomData;
-  M?: Date | number | string;
-  modifiedDate?: Date | number | string;
 };
 
 type StirlingAnnotationPatch = Partial<PdfAnnotationObject> & {
@@ -84,18 +81,6 @@ function getStirlingAnnotationMetadata(
   ann: PdfAnnotationObject,
 ): StirlingAnnotationMetadata {
   return ann as StirlingAnnotationMetadata;
-}
-
-function getCommentDate(obj: PdfAnnotationObject): Date | null {
-  const metadata = getStirlingAnnotationMetadata(obj);
-  const raw =
-    metadata.modifiedDate ??
-    metadata.creationDate ??
-    metadata.customData?.modifiedDate ??
-    metadata.M;
-  if (raw == null) return null;
-  const d = raw instanceof Date ? raw : new Date(raw);
-  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 /** Format annotation date for display (e.g. "Mar 11, 6:05 PM"). */
@@ -1445,6 +1430,7 @@ export function CommentsSidebar({
       provides.updateAnnotation(pageIndex, annotationId, {
         contents: trimmed,
         author: displayName,
+        modified: new Date(),
       });
       navActions?.setHasUnsavedChanges(true);
       setDraftContents((prev) => ({
@@ -1473,6 +1459,7 @@ export function CommentsSidebar({
         inReplyToId: parentId,
         replyType: PdfAnnotationReplyType.Reply,
         author: displayName,
+        created: new Date(),
       };
       provides.createAnnotation(pageIndex, reply);
       navActions?.setHasUnsavedChanges(true);
@@ -1488,6 +1475,7 @@ export function CommentsSidebar({
       provides.updateAnnotation(pageIndex, replyId, {
         contents: trimmed,
         author: displayName,
+        modified: new Date(),
       });
       navActions?.setHasUnsavedChanges(true);
       setEditingReply(null);
