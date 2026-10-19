@@ -40,6 +40,9 @@ public class PostHogService {
     private final UserServiceInterface userService;
     private final Environment env;
     private boolean configDirMounted;
+    // Under postHogClientLock. shutdown() is final: a late capture must not resurrect the queue
+    // thread, while a runtime telemetry disable stays recoverable by design.
+    private boolean closed;
     private volatile PostHog postHog;
 
     public PostHogService(
@@ -71,6 +74,9 @@ public class PostHogService {
             synchronized (postHogClientLock) {
                 client = postHog;
                 if (client == null) {
+                    if (closed) {
+                        throw new IllegalStateException("PostHogService is shut down");
+                    }
                     client = postHogClientFactory.create();
                     postHog = client;
                 }
@@ -109,6 +115,7 @@ public class PostHogService {
     public void shutdown() {
         PostHog client;
         synchronized (postHogClientLock) {
+            closed = true;
             client = postHog;
             postHog = null;
         }

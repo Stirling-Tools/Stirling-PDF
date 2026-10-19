@@ -548,5 +548,18 @@ class PostHogServiceTest {
             assertDoesNotThrow(() -> service.captureEvent("evt", new HashMap<>()));
             verify(postHog, never()).capture(anyString(), anyString(), anyMap());
         }
+
+        @Test
+        @DisplayName("shutdown() is final: a later capture does not recreate the client")
+        void noClientAfterShutdown() {
+            PostHogService service = newService(props(true), userService, false, env());
+            service.shutdown();
+            clearInvocations(postHogClientFactory, postHog);
+
+            assertDoesNotThrow(() -> service.captureEvent("late", new HashMap<>()));
+
+            verify(postHogClientFactory, never()).create();
+            verify(postHog, never()).capture(anyString(), anyString(), anyMap());
+        }
     }
 }
