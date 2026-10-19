@@ -214,7 +214,6 @@ describe("tool file selection", () => {
       ownerAuthenticated: true,
       permissions: -4,
       canModify: true,
-      canAssemble: true,
       pageCount: 1,
     });
     try {
@@ -308,13 +307,15 @@ describe("tool file selection", () => {
     expect(onPreviewRender).toHaveBeenCalledTimes(previewRenders);
 
     const original = workspace.files[0];
-    workspace.files = [
-      createStirlingFile(
-        new File(["updated pdf"], original.name, { type: original.type }),
-        original.fileId,
-      ),
-      workspace.files[1],
-    ];
+    act(() => {
+      workspace.files = [
+        createStirlingFile(
+          new File(["updated pdf"], original.name, { type: original.type }),
+          original.fileId,
+        ),
+        workspace.files[1],
+      ];
+    });
     view.rerender(renderConvert());
     await waitFor(() =>
       expect(pdfWorker.destroyDocument).toHaveBeenCalledTimes(2),

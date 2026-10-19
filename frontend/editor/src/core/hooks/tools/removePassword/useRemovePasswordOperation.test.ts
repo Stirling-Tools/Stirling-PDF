@@ -81,7 +81,6 @@ describe("useRemovePasswordOperation", () => {
       signed: false,
       permissions: 0,
       canModify: false,
-      canAssemble: false,
       pageCount: 1,
     });
     return file;

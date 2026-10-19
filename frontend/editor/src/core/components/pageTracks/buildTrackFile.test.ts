@@ -130,7 +130,6 @@ describe("buildTrackFile with images and protected PDFs", () => {
         ownerAuthenticated: false,
         permissions: -4,
         canModify: true,
-        canAssemble: true,
         pageCount: 1,
       };
       rememberPdfAccess(protectedPdf, access);

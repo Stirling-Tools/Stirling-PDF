@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import axios, { type CancelTokenSource } from "axios"; // Real axios for static methods (CancelToken, isCancel)
 import apiClient from "@app/services/apiClient"; // Our configured instance
 import {
@@ -18,6 +18,7 @@ import {
 import {
   getPdfAccess,
   rememberPdfAccess,
+  pdfAccessLifetime,
 } from "@app/services/pdfPasswordStore";
 
 /** An input that did not survive the batch, with the error it failed on. */
@@ -46,6 +47,7 @@ export const useToolApiCalls = <TParams = void>() => {
       onProgress: (progress: ProcessingProgress) => void,
       onStatus: (status: string) => void,
       markFileError?: (fileId: FileId) => void,
+      signal?: AbortSignal,
     ): Promise<{
       outputFiles: File[];
       successSourceIds: FileId[];
@@ -63,6 +65,10 @@ export const useToolApiCalls = <TParams = void>() => {
 
       const cancellation = axios.CancelToken.source();
       cancelTokenRef.current = cancellation;
+      const operationSignal = AbortSignal.any([
+        cancellation.token.toAbortSignal(),
+        ...(signal ? [signal] : []),
+      ]);
 
       // Params are the same for every file, so resolve the endpoint once. A null
       // endpoint means the tool has no backend call (e.g. client-side tools) and
@@ -91,7 +97,15 @@ export const useToolApiCalls = <TParams = void>() => {
 
         try {
           cancellation.token.throwIfRequested();
-          const workingFile = await prepareUnlockedFile(file, endpoint);
+          const fileSignal = AbortSignal.any([
+            operationSignal,
+            pdfAccessLifetime(file),
+          ]);
+          const workingFile = await prepareUnlockedFile(
+            file,
+            endpoint,
+            fileSignal,
+          );
           const formData = config.buildFormData(params, workingFile);
           console.debug("[processFiles] POST", { endpoint, name: file.name });
           const response =
@@ -103,6 +117,7 @@ export const useToolApiCalls = <TParams = void>() => {
                     formData,
                     endpoint,
                     cancellation.token,
+                    fileSignal,
                   ),
                   status: 200,
                   headers: undefined,
@@ -110,6 +125,7 @@ export const useToolApiCalls = <TParams = void>() => {
               : await apiClient.post(endpoint, formData, {
                   responseType: "blob",
                   cancelToken: cancellation.token,
+                  signal: fileSignal,
                 });
           console.debug("[processFiles] Response OK", {
             name: file.name,
@@ -144,7 +160,12 @@ export const useToolApiCalls = <TParams = void>() => {
             for (const output of responseFiles)
               rememberPdfAccess(
                 output,
-                await unlockPdfForSession(output, password, cancellation.token),
+                await unlockPdfForSession(
+                  output,
+                  password,
+                  cancellation.token,
+                  fileSignal,
+                ),
               );
           }
           // Guard: some endpoints may return an empty/0-byte file with 200
@@ -241,6 +262,8 @@ export const useToolApiCalls = <TParams = void>() => {
       cancelTokenRef.current = null;
     }
   }, []);
+
+  useEffect(() => cancelOperation, [cancelOperation]);
 
   return {
     processFiles,

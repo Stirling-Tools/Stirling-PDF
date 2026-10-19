@@ -52,12 +52,11 @@ describe("PDFium access decisions", () => {
         1,
         "reader",
       );
-      expect(access.canAssemble).toBe(revision === 2);
       expect(pdfAllows(access, Permission.AssembleDocument)).toBe(
         revision === 2,
       );
       expect(canPrintPdf(access)).toBe(revision === 2);
-      expect(access.canExtract).toBe(false);
+      expect(pdfAllows(access, Permission.CopyContents)).toBe(false);
     },
   );
 

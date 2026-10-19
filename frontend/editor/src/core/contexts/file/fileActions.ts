@@ -413,7 +413,7 @@ export async function addFiles(
         );
       }
     }
-    // Network authentication must not hold the lock needed to publish unrelated imports.
+    // Password prompts must not hold the lock needed to publish unrelated imports.
     await addFilesMutex.lock();
     ownsImportLock = true;
     const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);

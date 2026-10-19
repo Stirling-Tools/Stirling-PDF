@@ -30,7 +30,6 @@ test.beforeEach(async ({ page }) => {
         encryptionRevision: 6,
         credentialFingerprint: "fixture-credentials",
         canModify: password !== "",
-        canAssemble: password !== "",
         pageCount: 1,
       },
     });

@@ -9,7 +9,7 @@ import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
 import {
   getPdfAccess,
-  rememberPdfAccess,
+  rememberLocalPdfAccess,
 } from "@app/services/pdfPasswordStore";
 import { assertPdfSessionEditable } from "@app/services/pdfSessionUnlock";
 import { readPdfiumAccess } from "@app/services/pdfAccessReader";
@@ -28,7 +28,6 @@ export function useDocumentLoader(store: EditorStore) {
   return useCallback(
     async (file: File, password?: string): Promise<void> => {
       const documentPassword = password ?? getPdfAccess(file)?.password;
-      // Each load claims a token.
       const token = store.beginLoad();
       store.setLoading(true);
       store.setProgress({
@@ -48,20 +47,14 @@ export function useDocumentLoader(store: EditorStore) {
         await yieldToBrowser();
         const doc = await EditorDocument.open(bytes, documentPassword);
         try {
-          const previous = getPdfAccess(file);
-          const access = {
-            ...previous,
-            ...readPdfiumAccess(doc.module, doc.docPtr, documentPassword ?? ""),
-            requiresOpeningPassword:
-              previous?.requiresOpeningPassword ??
-              (documentPassword ? undefined : false),
-            honorOwnerPasswords: config?.honorOwnerPasswords,
-          };
           if (!store.isCurrentLoad(token)) {
             doc.dispose();
             return;
           }
-          rememberPdfAccess(file, access);
+          const access = rememberLocalPdfAccess(file, {
+            ...readPdfiumAccess(doc.module, doc.docPtr, documentPassword ?? ""),
+            honorOwnerPasswords: config?.honorOwnerPasswords,
+          });
           assertPdfSessionEditable(access);
           const risks = detectSaveRisks(doc);
           if (risks.encrypted !== access.encrypted)

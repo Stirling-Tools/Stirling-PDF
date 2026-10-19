@@ -37,7 +37,6 @@ describe("stored PDF protection metadata", () => {
       ownerAuthenticated: true,
       permissions: -4,
       canModify: true,
-      canAssemble: true,
       pageCount: 1,
     });
     await fileStorage.storeStirlingFile(original, stub);

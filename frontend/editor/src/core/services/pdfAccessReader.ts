@@ -31,18 +31,6 @@ export function readPdfiumAccess(
     signed: signatureCount > 0,
     pageCount: module.FPDF_GetPageCount(document),
     canModify: allows(PdfPermissionFlag.ModifyContents),
-    canAssemble: allows(
-      encryptionRevision === 2
-        ? PdfPermissionFlag.ModifyContents
-        : PdfPermissionFlag.AssembleDocument,
-    ),
-    canExtract: allows(PdfPermissionFlag.CopyContents),
-    canPrint: allows(PdfPermissionFlag.Print),
-    canPrintFaithful: allows(
-      encryptionRevision === 2
-        ? PdfPermissionFlag.Print
-        : PdfPermissionFlag.PrintHighQuality,
-    ),
     requiresOpeningPassword: password === "" ? false : undefined,
     openingAuthenticated: encrypted && !ownerAuthenticated ? true : undefined,
   };

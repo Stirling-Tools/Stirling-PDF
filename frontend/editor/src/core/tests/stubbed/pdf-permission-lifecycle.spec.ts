@@ -33,7 +33,6 @@ for (const operation of ["compress", "remove-password"] as const) {
           ownerAuthenticated: false,
           permissions: encrypted ? 0 : -4,
           canModify: !encrypted,
-          canAssemble: !encrypted,
           pageCount: encrypted ? 1 : 2,
         },
       });

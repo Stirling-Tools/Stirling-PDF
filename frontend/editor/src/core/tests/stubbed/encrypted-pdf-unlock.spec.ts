@@ -30,7 +30,6 @@ function mockUnlockSuccess(page: Page, pageCount = 1) {
           ownerAuthenticated: true,
           permissions: -4,
           canModify: true,
-          canAssemble: true,
           pageCount,
         }),
       });
@@ -285,7 +284,6 @@ test.describe("Encrypted PDF Unlock Modal", () => {
             ownerAuthenticated: !copy,
             permissions: -4,
             canModify: true,
-            canAssemble: true,
             pageCount: 1,
           },
         });

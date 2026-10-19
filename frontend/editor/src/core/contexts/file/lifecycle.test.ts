@@ -73,7 +73,6 @@ describe("FileLifecycleManager", () => {
       ownerAuthenticated: true,
       permissions: -4,
       canModify: true,
-      canAssemble: true,
       pageCount: 1,
     };
     rememberPdfAccess(original, access);

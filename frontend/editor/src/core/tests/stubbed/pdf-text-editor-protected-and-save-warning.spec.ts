@@ -56,7 +56,6 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
                 encryptionRevision: 6,
                 credentialFingerprint: "original-credentials",
                 canModify: true,
-                canAssemble: true,
                 pageCount: 1,
               },
             });
@@ -156,7 +155,6 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
             encryptionKeyLength: 256,
             encryptionRevision: 6,
             canModify: true,
-            canAssemble: true,
             pageCount: 1,
           },
         });
@@ -197,7 +195,6 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
           encryptionKeyLength: 256,
           encryptionRevision: 6,
           canModify: true,
-          canAssemble: true,
           pageCount: 1,
         },
       }),

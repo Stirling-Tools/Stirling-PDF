@@ -27,26 +27,34 @@ const RemovePassword = (props: BaseToolProps) => {
   );
   usePdfAccess(base.selectedFiles[0]);
   useEffect(() => {
-    let cancelled = false;
+    const cancellation = new AbortController();
     setCheckingProtection(true);
     void Promise.allSettled(
-      base.selectedFiles.map((file) => ensurePdfAccess(file)),
+      base.selectedFiles.map((file) =>
+        ensurePdfAccess(file, cancellation.signal),
+      ),
     ).then(() => {
-      if (!cancelled) setCheckingProtection(false);
+      if (!cancellation.signal.aborted) setCheckingProtection(false);
     });
     return () => {
-      cancelled = true;
+      cancellation.abort();
     };
   }, [base.selectedFiles]);
-  const protectionKnown = base.selectedFiles.every(
-    (file) => !!getPdfAccess(file),
-  );
+  const protectionKnown = base.selectedFiles.every((file) => {
+    const access = getPdfAccess(file);
+    return (
+      access &&
+      (!access.encrypted ||
+        (typeof access.requiresOpeningPassword === "boolean" &&
+          typeof access.hasOwnerPassword === "boolean"))
+    );
+  });
   const openingCount = base.selectedFiles.filter(
     (file) => getPdfAccess(file)?.requiresOpeningPassword === true,
   ).length;
   const ownerCount = base.selectedFiles.filter((file) => {
     const access = getPdfAccess(file);
-    return access?.encrypted && access.hasOwnerPassword !== false;
+    return access?.encrypted && access.hasOwnerPassword === true;
   }).length;
   const openingSet = protectionKnown && openingCount > 0;
   const ownerSet = protectionKnown && ownerCount > 0;
@@ -215,7 +223,6 @@ const RemovePassword = (props: BaseToolProps) => {
   });
 };
 
-// Static method to get the operation hook for automation
 RemovePassword.tool = () => useRemovePasswordOperation;
 
 export default RemovePassword as ToolComponent;

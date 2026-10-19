@@ -158,7 +158,6 @@ describe("Convert Tool Integration Tests", () => {
       ownerAuthenticated: true,
       permissions: -4,
       canModify: true,
-      canAssemble: true,
       pageCount: 1,
     });
     const files = [locked, pdf];
@@ -262,7 +261,6 @@ describe("Convert Tool Integration Tests", () => {
       ownerAuthenticated: true,
       permissions: -4,
       canModify: true,
-      canAssemble: true,
       pageCount: 1,
     });
     const files = [image, locked, pdf, svg];

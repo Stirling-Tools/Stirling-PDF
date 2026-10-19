@@ -150,12 +150,14 @@ async function requestWorkingPdf(
   form: FormData,
   message: string,
   cancelToken?: CancelToken,
+  signal?: AbortSignal,
 ): Promise<Blob> {
   try {
     const response = await apiClient.post<Blob>(endpoint, form, {
       responseType: "blob",
       suppressErrorToast: true,
       cancelToken,
+      signal,
     });
     return response.data;
   } catch (error) {
@@ -178,11 +180,12 @@ export async function preflightPdfOperation(
   endpoint: string | undefined,
   combinesFiles: boolean,
   requestOwner: (file: StirlingFile) => Promise<boolean>,
+  signal?: AbortSignal,
 ): Promise<boolean> {
   const protectedFiles: StirlingFile[] = [];
   for (const file of files) {
     if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) continue;
-    const access = await ensurePdfAccess(file);
+    const access = await ensurePdfAccess(file, signal);
     if (!access.encrypted) continue;
     if (!supportsSessionUnlock(endpoint))
       throw new Error(
@@ -208,6 +211,7 @@ export async function preflightPdfOperation(
       ),
     );
   for (const file of protectedFiles) {
+    if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
     if (endpoint === "/api/v1/security/remove-password") continue;
     const access = getPdfAccess(file)!;
     const needsOwner = endpoint?.includes("password")
@@ -215,6 +219,7 @@ export async function preflightPdfOperation(
       : !pdfAllows(access, operationPermission(endpoint));
     if (needsOwner && !(await requestOwner(file))) return false;
   }
+  if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
   return true;
 }
 
@@ -231,7 +236,12 @@ export async function unlockPdfForSession(
   file: File,
   password: string,
   cancelToken?: CancelToken,
+  signal?: AbortSignal,
 ): Promise<PdfAccess> {
+  const lifetime = pdfAccessLifetime(file);
+  const requestSignal = signal ? AbortSignal.any([lifetime, signal]) : lifetime;
+  if (requestSignal.aborted)
+    throw new axios.CanceledError("Operation cancelled");
   const form = new FormData();
   form.append("fileInput", file);
   form.append("password", password);
@@ -242,9 +252,12 @@ export async function unlockPdfForSession(
       {
         suppressErrorToast: true,
         ...(cancelToken ? { cancelToken } : {}),
+        signal: requestSignal,
       },
     );
     cancelToken?.throwIfRequested();
+    if (requestSignal.aborted)
+      throw new axios.CanceledError("Operation cancelled");
     if (
       typeof response.data?.encrypted !== "boolean" ||
       typeof response.data?.ownerAuthenticated !== "boolean" ||
@@ -302,15 +315,24 @@ export async function verifyEditedPdfProtection(
   output: File,
   sourceAccess: PdfAccess | undefined,
   source?: File,
+  signal?: AbortSignal,
 ): Promise<void> {
   if (!sourceAccess?.encrypted) return;
+  const inspectionSignal = source
+    ? AbortSignal.any([pdfAccessLifetime(source), ...(signal ? [signal] : [])])
+    : signal;
   if (sourceAccess.localInspection) {
     if (!source)
       throw new Error("The original PDF is required to verify its protection");
-    sourceAccess = await ensurePdfAccess(source);
+    sourceAccess = await ensurePdfAccess(source, inspectionSignal);
   }
   assertPdfSessionEditable(sourceAccess);
-  const access = await unlockPdfForSession(output, sourceAccess.password);
+  const access = await unlockPdfForSession(
+    output,
+    sourceAccess.password,
+    undefined,
+    inspectionSignal,
+  );
   if (
     !access.encrypted ||
     access.permissions !== sourceAccess.permissions ||
@@ -338,6 +360,7 @@ export async function verifyEditedPdfProtection(
 export async function prepareUnlockedFile(
   file: StirlingFile,
   endpoint: string | undefined,
+  signal?: AbortSignal,
 ): Promise<File> {
   if (
     endpoint === "/api/v1/security/remove-password" ||
@@ -346,7 +369,7 @@ export async function prepareUnlockedFile(
     return file;
   if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name))
     return file;
-  const access = await ensurePdfAccess(file);
+  const access = await ensurePdfAccess(file, signal);
   if (!access.encrypted) return file;
   if (!supportsSessionUnlock(endpoint))
     throw new Error(
@@ -381,6 +404,8 @@ export async function prepareUnlockedFile(
       "encryptedPdfUnlock.prepareFailed",
       "Unable to prepare this protected PDF for processing.",
     ),
+    undefined,
+    signal,
   );
   return new File([bytes], file.name, { type: "application/pdf" });
 }
@@ -472,10 +497,11 @@ export async function changePdfSecurity(
   form: FormData,
   endpoint: string,
   cancelToken?: CancelToken,
+  signal?: AbortSignal,
 ): Promise<Blob> {
   const settingProtection = endpoint === "/api/v1/security/add-password";
   if (settingProtection) {
-    const access = await ensurePdfAccess(file);
+    const access = await ensurePdfAccess(file, signal);
     if (access.encrypted && !hasPdfPermissionOverride(access))
       throw new Error(
         i18n.t(
@@ -490,7 +516,7 @@ export async function changePdfSecurity(
         form.set("password", access.openingPassword);
     }
   } else {
-    const access = await ensurePdfAccess(file);
+    const access = await ensurePdfAccess(file, signal);
     if (
       form.get("ownerPassword") &&
       !form.get("password") &&
@@ -520,5 +546,6 @@ export async function changePdfSecurity(
       "Unable to change protection. Check the permissions password and the new security settings.",
     ),
     cancelToken,
+    signal,
   );
 }

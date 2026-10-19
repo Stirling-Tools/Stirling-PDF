@@ -10,6 +10,8 @@ import {
   forgetPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
+  rememberLocalPdfAccess,
+  bindPdfAccess,
   type PdfAccess,
 } from "@app/services/pdfPasswordStore";
 import {
@@ -38,7 +40,6 @@ const access: PdfAccess = {
   encryptionRevision: 6,
   credentialFingerprint: "source-credentials",
   canModify: true,
-  canAssemble: true,
   pageCount: 2,
 };
 const rotate = "/api/v1/general/rotate-pdf";
@@ -50,6 +51,127 @@ beforeEach(() => {
 afterEach(clearPdfAccess);
 
 describe("session PDF access", () => {
+  it("retains backend verification when the editor refreshes local facts for the same credential", async () => {
+    const file = new File(["source"], "protected.pdf");
+    rememberPdfAccess(file, {
+      ...access,
+      ownerAuthenticated: true,
+      openingAuthenticated: true,
+      hasOwnerPassword: false,
+      requiresOpeningPassword: true,
+    });
+    const refreshed = rememberLocalPdfAccess(file, {
+      password: access.password,
+      encrypted: true,
+      ownerAuthenticated: true,
+      permissions: access.permissions,
+      canModify: true,
+      pageCount: 2,
+      signed: false,
+      localInspection: true,
+      openingAuthenticated: undefined,
+      requiresOpeningPassword: undefined,
+    });
+    expect(refreshed).toMatchObject({
+      credentialFingerprint: access.credentialFingerprint,
+      openingAuthenticated: true,
+      requiresOpeningPassword: true,
+      hasOwnerPassword: false,
+    });
+    expect(refreshed.localInspection).not.toBe(true);
+    await ensurePdfAccess(file);
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("invalidates credential-dependent verification when the editor authenticates with a different password", async () => {
+    const file = new File(["source"], "protected.pdf");
+    rememberPdfAccess(file, {
+      ...access,
+      ownerAuthenticated: true,
+      openingAuthenticated: false,
+    });
+    const refreshed = rememberLocalPdfAccess(file, {
+      password: "reader",
+      encrypted: true,
+      ownerAuthenticated: false,
+      permissions: access.permissions,
+      canModify: true,
+      pageCount: 2,
+      signed: false,
+      localInspection: true,
+      openingAuthenticated: true,
+    });
+    expect(refreshed.localInspection).toBe(true);
+    expect(refreshed.credentialFingerprint).toBeUndefined();
+    expect(refreshed.openingAuthenticated).toBe(true);
+    post.mockResolvedValueOnce({ data: access });
+    await ensurePdfAccess(file);
+    expect(post).toHaveBeenCalledOnce();
+  });
+
+  it.each(["close", "logout", "replace"])(
+    "aborts the backend request on %s and never adopts its late response",
+    async (action) => {
+      const file = createStirlingFile(new File(["source"], "protected.pdf"));
+      bindPdfAccess(file, file.fileId);
+      let finish!: (response: { data: PdfAccess }) => void;
+      post.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finish = resolve;
+          }),
+      );
+      const pending = ensurePdfAccess(file);
+      const rejected = expect(pending).rejects.toSatisfy(axios.isCancel);
+      const signal = post.mock.calls[0][2]?.signal;
+      expect(signal?.aborted).toBe(false);
+      if (action === "close") forgetPdfAccess([file.fileId]);
+      else if (action === "logout") clearPdfAccess();
+      else bindPdfAccess(new File(["replacement"], file.name), file.fileId);
+      expect(signal?.aborted).toBe(true);
+      finish({ data: access });
+      await rejected;
+      expect(getPdfAccess(file)).toBeUndefined();
+    },
+  );
+
+  it("cancels output inspection when its source closes", async () => {
+    const file = createStirlingFile(new File(["source"], "protected.pdf"));
+    rememberPdfAccess(file, access);
+    let finish!: (response: { data: PdfAccess }) => void;
+    post.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const output = new File(["edited"], "edited.pdf");
+    const pending = verifyEditedPdfProtection(output, access, file);
+    const rejected = expect(pending).rejects.toSatisfy(axios.isCancel);
+    forgetPdfAccess([file.fileId]);
+    expect(post.mock.calls[0][2]?.signal?.aborted).toBe(true);
+    finish({ data: access });
+    await rejected;
+    expect(getPdfAccess(output)).toBeUndefined();
+  });
+
+  it("stops tool preflight when its initiating view leaves", async () => {
+    const file = createStirlingFile(new File(["source"], "protected.pdf"));
+    post.mockReturnValueOnce(new Promise(() => {}));
+    const cancellation = new AbortController();
+    const pending = preflightPdfOperation(
+      [file],
+      rotate,
+      false,
+      vi.fn(),
+      cancellation.signal,
+    );
+    const rejected = expect(pending).rejects.toSatisfy(axios.isCancel);
+    cancellation.abort();
+    await rejected;
+    expect(post.mock.calls[0][2]?.cancelToken?.reason).toBeDefined();
+  });
+
   it("defers full verification of local access until an operation requests it", async () => {
     const file = new File(["source"], "protected.pdf");
     const local = rememberPdfAccess(file, {
@@ -445,11 +567,7 @@ describe("session PDF access", () => {
   it.each([
     ["/api/v1/security/auto-redact", access, "cannot yet preserve"],
     [rotate, { ...access, signed: true }, "digital signatures"],
-    [
-      rotate,
-      { ...access, canAssemble: false, permissions: -4 & ~1024 },
-      "permissions password",
-    ],
+    [rotate, { ...access, permissions: -4 & ~1024 }, "permissions password"],
   ])(
     "rejects unsupported or restricted processing before decrypting",
     async (endpoint, permission, message) => {

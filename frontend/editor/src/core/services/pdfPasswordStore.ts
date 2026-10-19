@@ -12,7 +12,7 @@ export interface PdfAccess {
   requiresOpeningPassword?: boolean;
   signed: boolean;
   ownerAuthenticated: boolean;
-  /** Server policy at inspection time; older servers default to enforcing restrictions. */
+  /** Active instance policy; absent configuration defaults to enforcing restrictions. */
   honorOwnerPasswords?: boolean;
   permissions: number;
   /** Older servers omit these; native exports must reject unverifiable protection. */
@@ -20,26 +20,30 @@ export interface PdfAccess {
   encryptionRevision?: number;
   credentialFingerprint?: string;
   canModify: boolean;
-  canAssemble: boolean;
-  canExtract?: boolean;
-  canPrint?: boolean;
-  canPrintFaithful?: boolean;
   pageCount: number;
 }
 
 let accessByFile = new WeakMap<Blob, PdfAccess>();
-let accessLifetimes = new WeakMap<Blob, object>();
+let sessionLifetime = new AbortController();
+let accessLifetimes = new WeakMap<
+  Blob,
+  { controller: AbortController; signal: AbortSignal }
+>();
 const filesById = new Map<string, WeakRef<Blob>>();
 const listeners = new Set<() => void>();
 let revision = 0;
-/** Invalidated by close/logout so pending inspections cannot restore discarded credentials. */
-export function pdfAccessLifetime(file: Blob): object {
+/** Aborted by replacement, close or logout; also identifies the generation allowed to retain credentials. */
+export function pdfAccessLifetime(file: Blob): AbortSignal {
   let lifetime = accessLifetimes.get(file);
   if (!lifetime) {
-    lifetime = {};
+    const controller = new AbortController();
+    lifetime = {
+      controller,
+      signal: AbortSignal.any([controller.signal, sessionLifetime.signal]),
+    };
     accessLifetimes.set(file, lifetime);
   }
-  return lifetime;
+  return lifetime.signal;
 }
 
 /** Only call after a parser or a protection-preserving export proves these bytes unencrypted. */
@@ -54,10 +58,6 @@ export function rememberUnencryptedPdf(
     ownerAuthenticated: false,
     permissions: -4,
     canModify: true,
-    canAssemble: true,
-    canExtract: true,
-    canPrint: true,
-    canPrintFaithful: true,
     pageCount,
   });
 }
@@ -100,15 +100,39 @@ export function rememberPdfAccess(file: Blob, access: PdfAccess): PdfAccess {
   return storedAccess;
 }
 
+/** Refresh local facts without discarding richer verification for the same bytes and credential. */
+export function rememberLocalPdfAccess(
+  file: Blob,
+  access: PdfAccess,
+): PdfAccess {
+  const previous = getPdfAccess(file);
+  return rememberPdfAccess(
+    file,
+    previous?.password === access.password
+      ? {
+          ...previous,
+          ...access,
+          localInspection: previous.localInspection,
+          openingAuthenticated:
+            previous.openingAuthenticated ?? access.openingAuthenticated,
+          requiresOpeningPassword:
+            previous.requiresOpeningPassword ?? access.requiresOpeningPassword,
+        }
+      : access,
+  );
+}
+
 /** Bind FileContext identity without retaining closed/library-only bytes; replacements invalidate pending access. */
 export function bindPdfAccess(file: Blob, id: FileId): void {
   const previous = filesById.get(id)?.deref();
   if (previous && previous !== file) {
     accessByFile.delete(previous);
+    accessLifetimes.get(previous)?.controller.abort();
     accessLifetimes.delete(previous);
     filesById.delete(id);
   }
   filesById.set(id, new WeakRef(file));
+  if (previous && previous !== file) publish();
 }
 
 /** Closing a document drops its credential; reopening requires authentication again. */
@@ -117,6 +141,7 @@ export function forgetPdfAccess(ids: readonly string[]): void {
     const file = filesById.get(id)?.deref();
     if (file) {
       accessByFile.delete(file);
+      accessLifetimes.get(file)?.controller.abort();
       accessLifetimes.delete(file);
     }
     filesById.delete(id);
@@ -132,12 +157,15 @@ export function forgetPreviewPdfAccess(file: Blob, access: PdfAccess): void {
   )
     return;
   accessByFile.delete(file);
+  accessLifetimes.get(file)?.controller.abort();
   accessLifetimes.delete(file);
   publish();
 }
 
 /** Clear all credentials on logout or FileContext teardown. */
 export function clearPdfAccess(): void {
+  sessionLifetime.abort();
+  sessionLifetime = new AbortController();
   accessLifetimes = new WeakMap();
   accessByFile = new WeakMap();
   filesById.clear();

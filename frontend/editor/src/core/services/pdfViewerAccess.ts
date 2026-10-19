@@ -20,7 +20,7 @@ export function bindPdfViewerSource(buffer: ArrayBuffer, source: Blob): void {
   sources.set(buffer, source);
 }
 
-/** Resolve access before the document manager publishes a loaded document, without a second parse. */
+/** Resolve access before publishing a document; encrypted sources without cached access need local inspection. */
 export function withPdfViewerAccess(
   engine: PdfEngine<Blob>,
   honorOwnerPasswords: () => boolean | undefined = () => undefined,

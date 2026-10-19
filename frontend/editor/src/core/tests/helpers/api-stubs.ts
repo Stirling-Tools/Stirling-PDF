@@ -177,7 +177,6 @@ export async function mockAppApis(
         ownerAuthenticated: false,
         permissions: -4,
         canModify: true,
-        canAssemble: true,
         pageCount: 1,
       },
     }),

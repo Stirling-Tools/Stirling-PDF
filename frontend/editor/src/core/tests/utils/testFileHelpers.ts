@@ -39,7 +39,6 @@ export function rememberUnprotectedPdf(file: File): File {
     ownerAuthenticated: false,
     permissions: -4,
     canModify: true,
-    canAssemble: true,
     pageCount: 1,
   });
   return file;

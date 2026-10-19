@@ -31,7 +31,6 @@ for (const source of ["workbench", "disk"] as const) {
             encryptionKeyLength: 256,
             encryptionRevision: 6,
             canModify: true,
-            canAssemble: true,
             pageCount: 1,
           },
         });

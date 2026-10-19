@@ -78,6 +78,7 @@ import {
   forgetPdfAccess,
   forgetPreviewPdfAccess,
   getPdfAccess,
+  pdfAccessLifetime,
   rememberPdfAccess,
   type PdfAccess,
 } from "@app/services/pdfPasswordStore";
@@ -374,10 +375,14 @@ function FileContextInner({
   // for the rest of the session. Its own effect, so a change of prompt does not clear and re-set.
   useEffect(() => () => setPendingUnlocks([]), []);
 
+  const protectionInspection = useRef<AbortController | null>(null);
   useEffect(() => {
     setUnlockPassword("");
     setUnlockError(null);
     setOpeningPasswordToRemove(null);
+    const cancellation = new AbortController();
+    protectionInspection.current = cancellation;
+    return () => cancellation.abort();
   }, [activeEncryptedFileId]);
 
   // Storage proved a file's bytes unreadable (WebKit losing a blob's backing
@@ -396,6 +401,7 @@ function FileContextInner({
   );
 
   const handleUnlockSkip = useCallback(() => {
+    protectionInspection.current?.abort();
     if (activeEncryptedFileId) {
       ownerRequests.current.get(activeEncryptedFileId)?.resolve(false);
       ownerRequests.current.delete(activeEncryptedFileId);
@@ -768,7 +774,12 @@ function FileContextInner({
         `${file.name.replace(/\.pdf$/i, "")}_unprotected.pdf`,
         { type: "application/pdf" },
       );
-      const copyAccess = await unlockPdfForSession(copy, "");
+      const copyAccess = await unlockPdfForSession(
+        copy,
+        "",
+        undefined,
+        pdfAccessLifetime(file),
+      );
       if (copyAccess.encrypted)
         throw new Error(
           t(
@@ -791,8 +802,19 @@ function FileContextInner({
     if (!file) return;
     setIsUnlocking(true);
     setUnlockError(null);
+    const signal = AbortSignal.any([
+      pdfAccessLifetime(file),
+      ...(protectionInspection.current
+        ? [protectionInspection.current.signal]
+        : []),
+    ]);
     try {
-      const access = await unlockPdfForSession(file, unlockPassword);
+      const access = await unlockPdfForSession(
+        file,
+        unlockPassword,
+        undefined,
+        signal,
+      );
       if (filesRef.current.get(fileId) !== file) return;
       if (openingPasswordToRemove === null) {
         if (!access.requiresOpeningPassword || !access.openingAuthenticated)
@@ -824,7 +846,7 @@ function FileContextInner({
       const response = await apiClient.post<Blob>(
         "/api/v1/security/remove-password",
         form,
-        { responseType: "blob", suppressErrorToast: true },
+        { responseType: "blob", suppressErrorToast: true, signal },
       );
       if (filesRef.current.get(fileId) !== file) return;
       const copy = new File(
@@ -832,7 +854,7 @@ function FileContextInner({
         `${file.name.replace(/\.pdf$/i, "")}_password_removed.pdf`,
         { type: "application/pdf" },
       );
-      const copyAccess = await unlockPdfForSession(copy, "");
+      const copyAccess = await unlockPdfForSession(copy, "", undefined, signal);
       if (
         copyAccess.requiresOpeningPassword !== false ||
         (access.hasOwnerPassword !== false &&
@@ -849,6 +871,7 @@ function FileContextInner({
       await admitProtectionCopy(fileId, file, copy, copyAccess);
       setActiveEncryptedFileId(null);
     } catch (error) {
+      if (signal.aborted) return;
       setUnlockError(
         await handlePasswordError(
           error,

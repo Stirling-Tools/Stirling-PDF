@@ -49,9 +49,14 @@ beforeEach(() => {
 });
 
 describe("processFiles failure reporting", () => {
-  it.each(["add-password", "remove-password"])(
-    "discards %s results when cancelled during final inspection",
-    async (operation) => {
+  it.each([
+    ["add-password", "cancel"],
+    ["remove-password", "cancel"],
+    ["add-password", "unmount"],
+    ["remove-password", "unmount"],
+  ])(
+    "discards %s results on %s during final inspection",
+    async (operation, stop) => {
       post.mockResolvedValueOnce({ data: new Blob(["result"]), status: 200 });
       let completeInspection!: (response: {
         data: {
@@ -68,7 +73,7 @@ describe("processFiles failure reporting", () => {
           });
         },
       );
-      const { result } = renderHook(() => useToolApiCalls());
+      const { result, unmount } = renderHook(() => useToolApiCalls());
       const markFileError = vi.fn();
       const processing = result.current.processFiles(
         undefined,
@@ -89,7 +94,8 @@ describe("processFiles failure reporting", () => {
         "Operation was cancelled",
       );
       await vi.waitFor(() => expect(post).toHaveBeenCalledTimes(2));
-      result.current.cancelOperation();
+      if (stop === "unmount") unmount();
+      else result.current.cancelOperation();
       completeInspection({
         data: { encrypted: false, ownerAuthenticated: false, permissions: -4 },
       });

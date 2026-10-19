@@ -17,7 +17,6 @@ async function unlockFixture(page: Page, filename: string, pageCount: number) {
         ownerAuthenticated: true,
         permissions: -4,
         canModify: true,
-        canAssemble: true,
         pageCount,
       },
     });

@@ -42,7 +42,6 @@ const protectedAccess = {
   ownerAuthenticated: false,
   permissions: 4,
   canModify: false,
-  canAssemble: false,
   pageCount: 1,
 };
 
@@ -238,7 +237,7 @@ describe("on-demand backend inspection", () => {
         }),
     );
     const pending = ensurePdfAccess(file);
-    const rejected = expect(pending).rejects.toThrow("Session closed");
+    const rejected = expect(pending).rejects.toThrow("Operation cancelled");
     clearPdfAccess();
     finish({ data: protectedAccess });
     await rejected;

@@ -85,10 +85,12 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const [openedFileName, setOpenedFileName] = useState<string | null>(null);
   const pendingDiskFileRef = useRef<File | null>(null);
   const mountedRef = useRef(false);
+  const inspectionCancellation = useRef<AbortController | null>(null);
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      inspectionCancellation.current?.abort();
     };
   }, []);
   // Set only when the document came from the workbench; a drag-dropped
@@ -97,6 +99,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const sourceFileIdRef = useRef<FileId | null>(null);
   const [sourceFileId, setSourceFileId] = useState<FileId | null>(null);
   const setSourceFile = useCallback((id: FileId | null) => {
+    inspectionCancellation.current?.abort();
     sourceFileIdRef.current = id;
     setSourceFileId(id);
   }, []);
@@ -177,6 +180,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         : [sourceId ?? undefined];
       assertFilesNotBlocked(policyIds);
       setApplying(true);
+      const cancellation = new AbortController();
+      inspectionCancellation.current?.abort();
+      inspectionCancellation.current = cancellation;
       try {
         if (toolId === "ocr")
           assertEditorOcrAllowed(store.document, sourceId, t);
@@ -186,6 +192,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
             edited,
             sourceAccess,
             sourceId ? (selectors.getFile(sourceId) ?? undefined) : undefined,
+            cancellation.signal,
           );
         }
         if (sourceId && parentStub) {
@@ -219,6 +226,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         }
         return added[0] ?? null;
       } finally {
+        if (inspectionCancellation.current === cancellation)
+          inspectionCancellation.current = null;
         setApplying(false);
       }
     },
