@@ -96,6 +96,19 @@ public enum FailureKind {
      * The format checks a tool runs before it reads anything: a PDF tool handed a .docx, a comic
      * reader handed something that is not the archive it names.
      */
+    INPUT_RIGHTS_MANAGED(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_USER_INPUT,
+            FailureScope.FILE,
+            errorCodes("E084"),
+            fallback(
+                    "This document is protected with Microsoft Purview, and the run could not"
+                            + " process it under its protection."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
     INPUT_WRONG_TYPE(
             FailureStage.INPUT,
             FailureSeverity.ERROR,

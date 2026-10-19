@@ -22,11 +22,13 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.proprietary.connectedaccount.CloudProvider;
 import stirling.software.proprietary.connectedaccount.ConnectedAccount;
 import stirling.software.proprietary.connectedaccount.ConnectedAccountService;
 import stirling.software.proprietary.integration.purview.protection.ProtectedPdfDetector;
 import stirling.software.proprietary.integration.purview.protection.ProtectionInfo;
+import stirling.software.proprietary.integration.purview.protection.RightsManagementException;
 import stirling.software.proprietary.integration.purview.protection.RightsManagementService;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -88,7 +90,7 @@ public class ProtectedPdfRuns {
                 } else if (protectedOriginals.size() == 1) {
                     original = protectedOriginals.getFirst();
                 } else {
-                    throw new IOException(
+                    throw ExceptionUtils.createRightsManagedInputException(
                             "This run combines several Microsoft Purview-protected PDFs into "
                                     + nameOf(file)
                                     + ", and one file can only carry one document's protection.");
@@ -105,14 +107,24 @@ public class ProtectedPdfRuns {
                 Files.copy(in, derived, StandardCopyOption.REPLACE_EXISTING);
             }
             if (!startsWith(derived, PDF_HEADER)) {
-                throw new IOException(
+                throw ExceptionUtils.createRightsManagedInputException(
                         name
                                 + " came from "
                                 + original.name()
                                 + ", which is protected with Microsoft Purview. Only PDF outputs"
                                 + " can be protected again, so it was not delivered.");
             }
-            byte[] protectedBytes = rightsManagement.protectLike(account, original.file(), derived);
+            byte[] protectedBytes;
+            try {
+                protectedBytes = rightsManagement.protectLike(account, original.file(), derived);
+            } catch (RightsManagementException e) {
+                throw ExceptionUtils.createRightsManagedInputException(
+                        name
+                                + " could not be protected like "
+                                + original.name()
+                                + ": "
+                                + e.getMessage());
+            }
             return namedFile(Files.write(derived, protectedBytes), name);
         }
 
@@ -153,7 +165,7 @@ public class ProtectedPdfRuns {
         }
         String firstName = nameOf(inputs.primary().get(protectedIndexes.getFirst()));
         if (!rightsManagement.available()) {
-            throw new IOException(
+            throw ExceptionUtils.createRightsManagedInputException(
                     firstName
                             + " is protected with Microsoft Purview, and this server is not set up"
                             + " to open protected PDFs.");
@@ -171,7 +183,7 @@ public class ProtectedPdfRuns {
                 try (InputStream in = input.getInputStream()) {
                     Files.copy(in, original, StandardCopyOption.REPLACE_EXISTING);
                 }
-                RightsManagementService.Opened opened = rightsManagement.open(account, original);
+                RightsManagementService.Opened opened = open(account, original, name);
                 requireEdit(name, opened.protection());
                 Path plaintext =
                         Files.write(
@@ -190,6 +202,16 @@ public class ProtectedPdfRuns {
             if (unlocked == null) {
                 new Unlocked(inputs, List.of(), null, workDir).close();
             }
+        }
+    }
+
+    private RightsManagementService.Opened open(
+            ConnectedAccount account, Path original, String name) throws IOException {
+        try {
+            return rightsManagement.open(account, original);
+        } catch (RightsManagementException e) {
+            throw ExceptionUtils.createRightsManagedInputException(
+                    name + " could not be opened with your Microsoft account: " + e.getMessage());
         }
     }
 
@@ -222,7 +244,7 @@ public class ProtectedPdfRuns {
     }
 
     private static IOException needsAccount(String fileName) {
-        return new IOException(
+        return ExceptionUtils.createRightsManagedInputException(
                 fileName
                         + " is protected with Microsoft Purview. Read it from a OneDrive or"
                         + " SharePoint source, or connect exactly one Microsoft account, so the run"
@@ -234,7 +256,7 @@ public class ProtectedPdfRuns {
             return;
         }
         String owner = protection.owner();
-        throw new IOException(
+        throw ExceptionUtils.createRightsManagedInputException(
                 "Your Microsoft account can view "
                         + name
                         + " but not edit it"

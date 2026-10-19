@@ -9241,6 +9241,10 @@ title = "Empty file"
 description = "Your file is password protected, so the run could not read it."
 title = "Password-protected document"
 
+[portal.failures.kind.inputRightsManaged]
+description = "Your file is protected with Microsoft Purview, and the run could not process it under its protection. The reason is shown below."
+title = "Protected with Microsoft Purview"
+
 [portal.failures.kind.inputUnavailable]
 description = "The file behind this run could not be reached, so it was never processed."
 title = "File unavailable"
