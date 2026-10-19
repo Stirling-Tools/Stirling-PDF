@@ -1,0 +1,49 @@
+name: Stirling PDF - Windows Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Configure desktop environment
+        working-directory: frontend/editor
+        run: npx tsx scripts/setup-env.mts --desktop
+
+      - name: Disable updater artifact signing for test build
+        shell: pwsh
+        working-directory: frontend/editor/src-tauri
+        run: |
+          $config = Get-Content tauri.conf.json -Raw | ConvertFrom-Json
+          $config.bundle.createUpdaterArtifacts = $false
+          $config | ConvertTo-Json -Depth 100 | Set-Content tauri.conf.json
+
+      - name: Build Windows installers
+        working-directory: frontend/editor
+        run: npx tauri build --bundles nsis,msi
+
+      - name: Upload Windows installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stirling-PDF-Windows-Test
+          path: |
+            frontend/editor/src-tauri/target/release/bundle/nsis/*.exe
+            frontend/editor/src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: error
