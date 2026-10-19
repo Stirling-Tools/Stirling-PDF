@@ -24,7 +24,8 @@ import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { updateSupportedLanguages } from "@app/i18n";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
 import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
-import { DefaultSignInScreen } from "@app/auth/ui/DefaultSignInScreen";
+import { SetupSignInScreen } from "@app/components/serverSetup/SetupScreen";
+import { markSetupSignIn } from "@app/components/serverSetup/setupSignInHandoff";
 import { DEFAULT_ADMIN_CREDENTIALS } from "@app/auth/defaultCredentials";
 import { springAuth } from "@app/auth/spring/springAuthClient";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
@@ -71,12 +72,13 @@ export default function Login() {
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
+  const [loginConfigLoaded, setLoginConfigLoaded] = useState(false);
   const loginDisabled =
     backendProbe.loginDisabled === true || _enableLogin === false;
   const autoLoginAttempted = useRef(false);
   const defaultSignInAttempted = useRef(false);
   const [defaultSignIn, setDefaultSignIn] = useState<
-    "idle" | "signingIn" | "failed"
+    "idle" | "signingIn" | "signedIn" | "failed"
   >("idle");
   const autoLoginErrorRecorded = useRef(false);
 
@@ -179,6 +181,7 @@ export default function Login() {
       setSsoAutoLogin(Boolean(data.ssoAutoLogin));
       setIsFirstTimeSetup(data.firstTimeSetup ?? false);
       setShowDefaultCredentials(data.showDefaultCredentials ?? false);
+      setLoginConfigLoaded(true);
       // Apply language configuration from server
       if (data.languages || data.defaultLocale) {
         updateSupportedLanguages(data.languages, data.defaultLocale);
@@ -325,17 +328,21 @@ export default function Login() {
   // A fresh server still on the default admin login signs in by itself: the
   // credentials are printed on this page anyway, and setup's first card
   // replaces them. If they no longer work, the form is shown as usual.
+  const defaultSignInDue =
+    defaultSignIn === "idle" &&
+    isFirstTimeSetup &&
+    showDefaultCredentials &&
+    login.isUserPassAllowed &&
+    !hasSsoLoginError &&
+    !hasLogoutBlock();
+
   useEffect(() => {
     if (
+      !defaultSignInDue ||
       defaultSignInAttempted.current ||
-      !isFirstTimeSetup ||
-      !showDefaultCredentials ||
-      !login.isUserPassAllowed ||
       loading ||
       session ||
-      backendProbe.status !== "up" ||
-      hasSsoLoginError ||
-      hasLogoutBlock()
+      backendProbe.status !== "up"
     ) {
       return;
     }
@@ -348,19 +355,16 @@ export default function Login() {
       })
       .then(
         ({ session: signedIn, error }) => {
-          if (error || !signedIn) setDefaultSignIn("failed");
+          if (error || !signedIn) {
+            setDefaultSignIn("failed");
+            return;
+          }
+          markSetupSignIn();
+          setDefaultSignIn("signedIn");
         },
         () => setDefaultSignIn("failed"),
       );
-  }, [
-    isFirstTimeSetup,
-    showDefaultCredentials,
-    login.isUserPassAllowed,
-    loading,
-    session,
-    backendProbe.status,
-    hasSsoLoginError,
-  ]);
+  }, [defaultSignInDue, loading, session, backendProbe.status]);
 
   // Handle query params (email prefill, success messages, and session expiry)
   useEffect(() => {
@@ -457,6 +461,16 @@ export default function Login() {
     return <Navigate to={EDITOR_BASENAME} replace />;
   }
 
+  // Checked before the auth state and session: once signing in starts, this
+  // card stays up until the app takes over, so nothing flashes in between.
+  if (
+    defaultSignInDue ||
+    defaultSignIn === "signingIn" ||
+    defaultSignIn === "signedIn"
+  ) {
+    return <SetupSignInScreen />;
+  }
+
   // The form is only for visitors known to be signed out; splash until then.
   if (loading) {
     return <LoadingFallback />;
@@ -464,10 +478,6 @@ export default function Login() {
 
   if (session) {
     return <LoadingFallback />;
-  }
-
-  if (defaultSignIn === "signingIn") {
-    return <DefaultSignInScreen />;
   }
 
   if (backendProbe.loading) {
@@ -526,6 +536,12 @@ export default function Login() {
         </div>
       </AuthLayout>
     );
+  }
+
+  // Until the login settings arrive it is unknown whether this server signs
+  // in by itself, so the form would only flash up and vanish.
+  if (!loginConfigLoaded) {
+    return <LoadingFallback />;
   }
 
   return (

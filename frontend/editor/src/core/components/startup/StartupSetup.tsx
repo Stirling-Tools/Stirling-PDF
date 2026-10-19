@@ -15,6 +15,7 @@ import { Button } from "@app/ui/Button";
 import { Z_INDEX_ONBOARDING_CARD } from "@app/styles/zIndex";
 import {
   ServerSetupGate,
+  ServerSetupLoading,
   useServerSetupPending,
 } from "@app/components/startup/ServerSetupGate";
 
@@ -102,7 +103,9 @@ export function StartupSetup({
     });
   };
 
-  if (requirements.isPending || requirements.isFetching) return null;
+  if (requirements.isPending || requirements.isFetching) {
+    return <ServerSetupLoading />;
+  }
 
   if (requirements.isError) {
     return (

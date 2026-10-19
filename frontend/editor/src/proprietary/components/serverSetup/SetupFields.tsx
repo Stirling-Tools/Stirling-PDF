@@ -255,6 +255,13 @@ function useErrorText() {
           "serverSetup.error.providerName",
           "Use letters, numbers, dashes or underscores only",
         );
+      case "username":
+        return t(
+          "serverSetup.error.username",
+          "Use 3 to 50 letters, numbers or . _ + - @, or an email address",
+        );
+      case "usernameTaken":
+        return t("serverSetup.error.usernameTaken", "That username is taken");
       case "passwordRejected":
         return t(
           "serverSetup.error.passwordRejected",

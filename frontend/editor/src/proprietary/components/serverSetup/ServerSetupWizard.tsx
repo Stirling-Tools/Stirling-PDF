@@ -1,16 +1,14 @@
 import {
+  useEffect,
   useRef,
   useState,
   type ComponentProps,
   type ComponentType,
-  type ReactNode,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { AuthShell } from "@app/auth/ui/AuthShell";
 import { withBasePath } from "@app/constants/app";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { Z_INDEX_ONBOARDING_CARD } from "@app/styles/zIndex";
 import styles from "@app/components/shared/setupCard/SetupCard.module.css";
 import {
   SettingRow,
@@ -23,9 +21,20 @@ import {
 } from "@app/components/serverSetup/SetupFields";
 import { SetupStepFrame } from "@app/components/serverSetup/SetupStepFrame";
 import {
+  SetupScreen,
+  SetupSignInScreen,
+} from "@app/components/serverSetup/SetupScreen";
+import {
+  clearSetupSignIn,
+  isSetupSignInPending,
+} from "@app/components/serverSetup/setupSignInHandoff";
+import {
   PasswordChangeError,
+  SignInAgainError,
+  UsernameChangeError,
   useSetupFinish,
 } from "@app/components/serverSetup/useSetupFinish";
+import { useAuth } from "@app/auth/UseSession";
 import { DEFAULT_ADMIN_CREDENTIALS } from "@app/auth/defaultCredentials";
 import {
   checkIssuer,
@@ -80,6 +89,16 @@ function passwordErrors(error: PasswordChangeError): StepErrors {
   }
 }
 
+function usernameErrors(error: UsernameChangeError): StepErrors {
+  return {
+    adminUsername:
+      error.code === "usernameExists" ? "usernameTaken" : "username",
+  };
+}
+
+/** The account card's progress; "updating" holds the card while the details save. */
+type AccountState = "editing" | "updating" | "failed" | "signInAgain";
+
 type FrameProps = ComponentProps<typeof SetupStepFrame>;
 
 type Phase =
@@ -92,15 +111,6 @@ type Phase =
 function pageOrigin(): string {
   if (!/^https?:$/.test(window.location.protocol)) return "";
   return `${window.location.origin}${withBasePath("/")}`.replace(/\/+$/, "");
-}
-
-/** Covers the whole app: setup runs before anything else is usable. */
-function SetupScreen({ children }: { children: ReactNode }) {
-  return (
-    <div className={styles.screen} style={{ zIndex: Z_INDEX_ONBOARDING_CARD }}>
-      <AuthShell>{children}</AuthShell>
-    </div>
-  );
 }
 
 function useStepCopy() {
@@ -159,10 +169,10 @@ function useStepCopy() {
         };
       case "password":
         return {
-          title: t("serverSetup.password.title", "Set your password"),
+          title: t("serverSetup.account.title", "Set up your account"),
           subtitle: t(
-            "serverSetup.password.subtitle",
-            "Secure your admin account before anything else.",
+            "serverSetup.account.subtitle",
+            "Choose how you'll sign in from now on.",
           ),
         };
       case "analytics":
@@ -189,6 +199,8 @@ function ServerSetupFlow({
   passwordChange,
   onPasswordChanged,
 }: ServerSetupWizardProps & { settings: Record<string, unknown> }) {
+  // Setup's own card is up, so the sign-in card has done its job.
+  useEffect(() => clearSetupSignIn(), []);
   const { t } = useTranslation();
   const stepCopy = useStepCopy();
   const [initial] = useState(() => draftFromSettings(settings));
@@ -203,13 +215,13 @@ function ServerSetupFlow({
       : "",
   }));
   const [mode, setMode] = useState<SetupMode>("quick");
-  // An owed password comes first, so the default login stops working before
-  // the admin spends any time on settings.
+  // Owed account details come first, so the default login stops working
+  // before the admin spends any time on settings.
   const [phase, setPhase] = useState<Phase>(
     passwordChange ? { kind: "password" } : { kind: "start" },
   );
-  const [savingPassword, setSavingPassword] = useState(false);
-  const [passwordFailed, setPasswordFailed] = useState(false);
+  const [accountState, setAccountState] = useState<AccountState>("editing");
+  const { signOut } = useAuth();
   const [errors, setErrors] = useState<StepErrors>({});
   const [openSection, setOpenSection] = useState<ExpandableSection | null>(
     null,
@@ -221,7 +233,7 @@ function ServerSetupFlow({
   const {
     state: finishState,
     finish,
-    savePassword,
+    saveAccount,
     complete,
     reset,
   } = useSetupFinish({ onDone, onPasswordChanged });
@@ -337,46 +349,90 @@ function ServerSetupFlow({
     finish(initial, draftToSave(draft, initial, mode));
   };
 
-  const submitPassword = () => {
-    if (savingPassword) return;
+  const submitAccount = () => {
+    if (accountState === "updating") return;
     const stepErrors = validateStep("password", draft, mode);
     showErrors(stepErrors);
     if (Object.keys(stepErrors).length > 0) return;
-    setSavingPassword(true);
-    setPasswordFailed(false);
-    savePassword(draft)
-      .then(() => goTo({ kind: "start" }))
-      .catch((error: unknown) => {
-        if (error instanceof PasswordChangeError) {
-          showErrors(passwordErrors(error));
-        } else {
-          setPasswordFailed(true);
-        }
+    setAccountState("updating");
+    saveAccount(draft)
+      .then(() => {
+        // Nothing needs the passwords after this, so they leave memory now.
+        setDraft((current) => ({
+          ...current,
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        }));
+        setAccountState("editing");
+        goTo({ kind: "start" });
       })
-      .finally(() => setSavingPassword(false));
+      .catch((error: unknown) => {
+        if (error instanceof SignInAgainError) {
+          setAccountState("signInAgain");
+          return;
+        }
+        if (error instanceof PasswordChangeError) {
+          setAccountState("editing");
+          showErrors(passwordErrors(error));
+        } else if (error instanceof UsernameChangeError) {
+          setAccountState("editing");
+          showErrors(usernameErrors(error));
+        } else {
+          setAccountState("failed");
+        }
+      });
   };
 
-  const passwordFrame = (): FrameProps => ({
-    ...stepCopy("password"),
-    primaryLabel: t("serverSetup.password.save", "Save password"),
-    primaryLoading: savingPassword,
-    onPrimary: submitPassword,
-    children: (
-      <>
-        <PasswordStep {...stepProps} />
-        {passwordFailed && (
-          <SetupNote tone="warning">
-            <p className={styles.noteText}>
-              {t(
-                "serverSetup.password.failed",
-                "Couldn't save your password. Check the server is reachable and try again.",
+  const accountFrame = (): FrameProps => {
+    switch (accountState) {
+      case "updating":
+        return {
+          title: t(
+            "serverSetup.account.updatingTitle",
+            "Updating your details",
+          ),
+          subtitle: t("serverSetup.account.updatingSubtitle", "One moment."),
+          primaryLabel: t("serverSetup.account.updating", "Updating"),
+          onPrimary: () => {},
+          primaryLoading: true,
+        };
+      case "signInAgain":
+        return {
+          title: t(
+            "serverSetup.account.signInAgainTitle",
+            "Your details are saved",
+          ),
+          subtitle: t(
+            "serverSetup.account.signInAgainSubtitle",
+            "Sign in again with your new username and password to carry on.",
+          ),
+          primaryLabel: t("serverSetup.account.signIn", "Sign in"),
+          onPrimary: () => void signOut(),
+        };
+      default:
+        return {
+          ...stepCopy("password"),
+          primaryLabel: t("serverSetup.account.save", "Save and continue"),
+          onPrimary: submitAccount,
+          children: (
+            <>
+              <PasswordStep {...stepProps} />
+              {accountState === "failed" && (
+                <SetupNote tone="warning">
+                  <p className={styles.noteText}>
+                    {t(
+                      "serverSetup.account.failed",
+                      "Couldn't save your details. Check the server is reachable and try again.",
+                    )}
+                  </p>
+                </SetupNote>
               )}
-            </p>
-          </SetupNote>
-        )}
-      </>
-    ),
-  });
+            </>
+          ),
+        };
+    }
+  };
 
   // The analytics answer is the button itself, so it reads as consent.
   const analyticsLabel = (accept: boolean, isLast: boolean) => {
@@ -555,7 +611,7 @@ function ServerSetupFlow({
 
   const frame =
     phase.kind === "password"
-      ? passwordFrame()
+      ? accountFrame()
       : phase.kind === "start"
         ? startFrame()
         : phase.kind === "finish"
@@ -584,7 +640,9 @@ export function ServerSetupWizard({
     retry: false,
   });
 
-  if (settings.isPending) return null;
+  if (settings.isPending) {
+    return isSetupSignInPending() ? <SetupSignInScreen /> : null;
+  }
   if (settings.isError) {
     return (
       <SetupScreen>

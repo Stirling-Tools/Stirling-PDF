@@ -64,6 +64,22 @@ export async function changeAdminPassword(
   });
 }
 
+/**
+ * Renames the signed-in admin. The server signs the session out afterwards,
+ * and tokens name the old username, so the caller must sign in again.
+ */
+export async function changeAdminUsername(
+  currentPassword: string,
+  newUsername: string,
+): Promise<void> {
+  const formData = new FormData();
+  formData.append("currentPasswordChangeUsername", currentPassword);
+  formData.append("newUsername", newUsername);
+  await apiClient.post("/api/v1/user/change-username", formData, {
+    suppressErrorToast: true,
+  });
+}
+
 /** The HTTP status of a failed request, when the server answered at all. */
 export function httpStatus(error: unknown): number | undefined {
   const status = (error as { response?: { status?: unknown } }).response

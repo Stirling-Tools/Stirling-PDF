@@ -3,6 +3,7 @@ import {
   aiProviderChange,
   draftFromSettings,
   embeddingProviderChange,
+  isValidUsername,
   issuersToCheck,
   loginChange,
   draftToSave,
@@ -331,5 +332,20 @@ describe("provider name", () => {
     expect(validateStep("signIn", draft, "quick")).toEqual({
       oauthProviderName: "providerName",
     });
+  });
+});
+
+describe("isValidUsername", () => {
+  it("takes what the server takes", () => {
+    expect(isValidUsername("pdf-admin")).toBe(true);
+    expect(isValidUsername("ops@example.com")).toBe(true);
+  });
+
+  it("turns down what the server turns down", () => {
+    expect(isValidUsername("ab")).toBe(false);
+    expect(isValidUsername("-admin")).toBe(false);
+    expect(isValidUsername("ad..min")).toBe(false);
+    expect(isValidUsername("has space")).toBe(false);
+    expect(isValidUsername("anonymousUser")).toBe(false);
   });
 });

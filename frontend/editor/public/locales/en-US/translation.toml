@@ -6054,7 +6054,6 @@ sendResetLink = "Send reset link"
 sessionExpired = "Your session has expired. Please sign in again."
 signin = "Sign in"
 signingIn = "Signing in..."
-signingInWithDefaults = "Signing in with default credentials"
 signInWith = "Sign in with"
 signInWithProvider = "Sign in with {{provider}}"
 ssoRedirectFailed = "SSO redirect failed"
@@ -11831,6 +11830,21 @@ on = "On"
 save = "Save"
 stepCount = "{{current}} of {{total}}"
 
+[serverSetup.account]
+failed = "Couldn't save your details. Check the server is reachable and try again."
+save = "Save and continue"
+saved = "Details saved"
+signIn = "Sign in"
+signInAgainSubtitle = "Sign in again with your new username and password to carry on."
+signInAgainTitle = "Your details are saved"
+subtitle = "Choose how you'll sign in from now on."
+title = "Set up your account"
+updating = "Updating"
+updatingSubtitle = "One moment."
+updatingTitle = "Updating your details"
+username = "Username"
+usernameHelp = "What you'll sign in with. An email address works too."
+
 [serverSetup.addresses]
 backendUrl = "Server address"
 backendUrlHelp = "Where sign-in providers send people back. Usually the same as the web address."
@@ -11893,6 +11907,8 @@ port = "Enter a port from 1 to 65535"
 providerName = "Use letters, numbers, dashes or underscores only"
 required = "Required"
 url = "Enter a full address, starting with http:// or https://"
+username = "Use 3 to 50 letters, numbers or . _ + - @, or an email address"
+usernameTaken = "That username is taken"
 
 [serverSetup.files]
 sharing = "File sharing"
@@ -11928,12 +11944,7 @@ label = "MCP server"
 [serverSetup.password]
 confirm = "Confirm new password"
 current = "Current password"
-failed = "Couldn't save your password. Check the server is reachable and try again."
 new = "New password"
-save = "Save password"
-saved = "Password saved"
-subtitle = "Secure your admin account before anything else."
-title = "Set your password"
 
 [serverSetup.signIn]
 clientId = "Client ID"
@@ -11947,6 +11958,11 @@ providerNameHelp = "Shown on the sign-in button, for example okta or entra."
 redirectNote = "Add this redirect URI in your provider:"
 subtitle = "How your team signs in."
 title = "Sign-in"
+
+[serverSetup.signingIn]
+button = "Signing in"
+subtitle = "You'll choose your own next."
+title = "Signing in with default credentials"
 
 [serverSetup.start]
 custom = "Custom"

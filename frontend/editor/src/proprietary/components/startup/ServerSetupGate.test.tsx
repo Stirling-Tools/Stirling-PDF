@@ -1,4 +1,5 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -17,10 +18,14 @@ const server = vi.hoisted(() => {
   const listeners = new Set<() => void>();
   const state = {
     config: {} as Record<string, unknown>,
+    loading: false,
     setupMarkedComplete: false,
     subscribe(listener: () => void) {
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+    notify() {
+      listeners.forEach((listener) => listener());
     },
     refetch() {
       if (state.setupMarkedComplete) {
@@ -37,6 +42,7 @@ vi.mock("@app/contexts/AppConfigContext", async () => {
   return {
     useAppConfig: () => ({
       config: useSyncExternalStore(server.subscribe, () => server.config),
+      loading: useSyncExternalStore(server.subscribe, () => server.loading),
       refetch: server.refetch,
     }),
   };
@@ -57,9 +63,18 @@ vi.mock(
     waitForServer: vi.fn(),
     checkIssuer: vi.fn(),
     changeAdminPassword: vi.fn(),
+    changeAdminUsername: vi.fn(),
   }),
 );
-const auth = vi.hoisted(() => ({ refreshSession: vi.fn() }));
+const auth = vi.hoisted(() => ({
+  refreshSession: vi.fn(),
+  signOut: vi.fn(),
+  user: { username: "admin" },
+}));
+const signIn = vi.hoisted(() => vi.fn());
+vi.mock("@app/auth/spring/springAuthClient", () => ({
+  springAuth: { signInWithPassword: signIn },
+}));
 vi.mock("@app/auth/UseSession", () => ({ useAuth: () => auth }));
 vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
 vi.mock("react-i18next", () => ({
@@ -130,6 +145,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   server.config = { enableLogin: true, isAdmin: true, setupCompleted: false };
   server.setupMarkedComplete = false;
+  server.loading = false;
+  sessionStorage.clear();
   vi.mocked(api.fetchServerSettings).mockResolvedValue(NEW_SERVER_SETTINGS);
   vi.mocked(api.requestRestart).mockResolvedValue("unsupported");
   vi.mocked(api.checkIssuer).mockResolvedValue(true);
@@ -143,6 +160,31 @@ describe("ServerSetupGate", () => {
     server.config.setupCompleted = true;
     renderGate();
     expect(screen.getByText("The app")).toBeInTheDocument();
+  });
+
+  it("holds the sign-in card, not the app, while the first config loads", async () => {
+    sessionStorage.setItem("stirling.setupSignInHandoff", String(Date.now()));
+    server.config = {};
+    server.loading = true;
+    renderGate();
+    expect(
+      screen.getByRole("heading", {
+        name: "Signing in with default credentials",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("The app")).not.toBeInTheDocument();
+
+    act(() => {
+      server.config = {
+        enableLogin: true,
+        isAdmin: true,
+        setupCompleted: true,
+      };
+      server.loading = false;
+      server.notify();
+    });
+    expect(screen.getByText("The app")).toBeInTheDocument();
+    expect(sessionStorage.getItem("stirling.setupSignInHandoff")).toBeNull();
   });
 
   it("never shows setup when login is off", () => {
@@ -302,33 +344,40 @@ describe("ServerSetupGate", () => {
     expect(saved).not.toHaveProperty("mcp.auth.mode");
   });
 
-  async function reachPasswordStep() {
-    await screen.findByRole("heading", { name: "Set your password" });
+  async function reachAccountStep() {
+    await screen.findByRole("heading", { name: "Set up your account" });
   }
 
-  const typePassword = (label: string, value: string) =>
+  const type = (label: string, value: string) =>
     fireEvent.change(screen.getByLabelText(new RegExp(`^${label}`)), {
       target: { value },
     });
 
-  it("starts with a new password, keeping the admin signed in", async () => {
+  const fillAccount = (username: string, password = "a-new-pass") => {
+    type("Username", username);
+    type("New password", password);
+    type("Confirm new password", password);
+  };
+
+  it("starts with the account, keeping the admin signed in", async () => {
     const onPasswordChanged = vi.fn();
     renderGate({ usingDefaultCredentials: true }, onPasswordChanged);
-    await reachPasswordStep();
+    await reachAccountStep();
     expect(screen.queryByLabelText(/^Current password/)).toBeNull();
+    expect(screen.getByRole("textbox", { name: /^Username/ })).toHaveValue("");
 
-    typePassword("New password", "a-new-pass");
-    typePassword("Confirm new password", "a-new-pass");
-    click("Save password");
+    fillAccount("admin");
+    click("Save and continue");
 
     await screen.findByRole("heading", { name: "Your server is up" });
     expect(api.changeAdminPassword).toHaveBeenCalledWith(
       "stirling",
       "a-new-pass",
     );
+    expect(api.changeAdminUsername).not.toHaveBeenCalled();
     expect(onPasswordChanged).toHaveBeenCalled();
     expect(alert).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Password saved" }),
+      expect.objectContaining({ title: "Details saved" }),
     );
     // Refreshing reloads the app's auth state, so it waits until setup closes.
     expect(auth.refreshSession).not.toHaveBeenCalled();
@@ -344,57 +393,126 @@ describe("ServerSetupGate", () => {
     await screen.findByText("The app");
   });
 
-  it("rotates the token when setup is put off after the password", async () => {
+  it("renames the admin after the password, then signs straight back in", async () => {
+    let finishSignIn: (value: unknown) => void = () => {};
+    signIn.mockReturnValue(
+      new Promise((resolve) => {
+        finishSignIn = resolve;
+      }),
+    );
     renderGate({ usingDefaultCredentials: true });
-    await reachPasswordStep();
-    typePassword("New password", "a-new-pass");
-    typePassword("Confirm new password", "a-new-pass");
-    click("Save password");
+    await reachAccountStep();
+    fillAccount("pdf-admin");
+    click("Save and continue");
+
+    expect(
+      screen.getByRole("heading", { name: "Updating your details" }),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(api.changeAdminUsername).toHaveBeenCalledWith(
+        "a-new-pass",
+        "pdf-admin",
+      ),
+    );
+    expect(
+      vi.mocked(api.changeAdminPassword).mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      vi.mocked(api.changeAdminUsername).mock.invocationCallOrder[0],
+    );
+    expect(signIn).toHaveBeenCalledWith({
+      email: "pdf-admin",
+      password: "a-new-pass",
+    });
+
+    finishSignIn({ session: { access_token: "t" }, error: null });
+    await screen.findByRole("heading", { name: "Your server is up" });
+  });
+
+  it("keeps the new password when only the username is refused", async () => {
+    vi.mocked(api.changeAdminUsername)
+      .mockRejectedValueOnce({
+        response: { status: 409, data: { error: "usernameExists" } },
+      })
+      .mockResolvedValueOnce(undefined);
+    signIn.mockResolvedValue({ session: { access_token: "t" }, error: null });
+    renderGate({ usingDefaultCredentials: true });
+    await reachAccountStep();
+    fillAccount("taken-name");
+    click("Save and continue");
+
+    await screen.findByText("That username is taken");
+    type("Username", "free-name");
+    click("Save and continue");
+
+    await screen.findByRole("heading", { name: "Your server is up" });
+    expect(api.changeAdminPassword).toHaveBeenCalledTimes(1);
+    expect(api.changeAdminUsername).toHaveBeenLastCalledWith(
+      "a-new-pass",
+      "free-name",
+    );
+  });
+
+  it("asks for a fresh sign-in when signing back in fails", async () => {
+    signIn.mockResolvedValue({ session: null, error: { message: "nope" } });
+    renderGate({ usingDefaultCredentials: true });
+    await reachAccountStep();
+    fillAccount("pdf-admin");
+    click("Save and continue");
+
+    await screen.findByRole("heading", { name: "Your details are saved" });
+    click("Sign in");
+    expect(auth.signOut).toHaveBeenCalled();
+  });
+
+  it("rotates the token when setup is put off after the account", async () => {
+    renderGate({ usingDefaultCredentials: true });
+    await reachAccountStep();
+    fillAccount("admin");
+    click("Save and continue");
     await screen.findByRole("heading", { name: "Your server is up" });
 
     click("Not now");
     await waitFor(() => expect(auth.refreshSession).toHaveBeenCalled());
   });
 
-  it("checks the new password before saving it", async () => {
+  it("checks the details before saving them", async () => {
     renderGate({ usingDefaultCredentials: true });
-    await reachPasswordStep();
-    typePassword("New password", "short");
-    typePassword("Confirm new password", "other");
-    click("Save password");
+    await reachAccountStep();
+    fillAccount("a", "short");
+    type("Confirm new password", "other");
+    click("Save and continue");
 
+    expect(
+      screen.getByText(/Use 3 to 50 letters, numbers/),
+    ).toBeInTheDocument();
     expect(screen.getByText("Use at least 8 characters")).toBeInTheDocument();
     expect(screen.getByText("Passwords don't match")).toBeInTheDocument();
     expect(api.changeAdminPassword).not.toHaveBeenCalled();
   });
 
-  it("stays on the password card when the server refuses it", async () => {
+  it("stays on the account card when the server refuses the password", async () => {
     vi.mocked(api.changeAdminPassword).mockRejectedValue({
       response: { status: 401, data: { error: "incorrectPassword" } },
     });
     renderGate({ usingDefaultCredentials: true });
-    await reachPasswordStep();
-    typePassword("New password", "a-new-pass");
-    typePassword("Confirm new password", "a-new-pass");
-    click("Save password");
+    await reachAccountStep();
+    fillAccount("admin");
+    click("Save and continue");
 
     await screen.findByText("Incorrect password");
-    expect(
-      screen.getByRole("heading", { name: "Set your password" }),
-    ).toBeInTheDocument();
+    expect(api.changeAdminUsername).not.toHaveBeenCalled();
   });
 
-  it("says so when the password could not be saved at all", async () => {
+  it("says so when the details could not be saved at all", async () => {
     vi.mocked(api.changeAdminPassword).mockRejectedValue(new Error("offline"));
     renderGate({ usingDefaultCredentials: true });
-    await reachPasswordStep();
-    typePassword("New password", "a-new-pass");
-    typePassword("Confirm new password", "a-new-pass");
-    click("Save password");
+    await reachAccountStep();
+    fillAccount("admin");
+    click("Save and continue");
 
-    await screen.findByText(/Couldn't save your password/);
+    await screen.findByText(/Couldn't save your details/);
     expect(
-      screen.getByRole("heading", { name: "Set your password" }),
+      screen.getByRole("heading", { name: "Set up your account" }),
     ).toBeInTheDocument();
   });
 

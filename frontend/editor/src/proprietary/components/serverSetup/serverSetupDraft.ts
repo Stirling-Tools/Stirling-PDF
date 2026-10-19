@@ -194,6 +194,7 @@ export interface ServerSetupDraft {
   mcpEnabled: boolean;
   mcpAuthMode: McpAuthMode;
   analytics: boolean | null;
+  adminUsername: string;
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
@@ -236,7 +237,12 @@ export const STEP_FIELDS: Record<SetupStepId, (keyof ServerSetupDraft)[]> = {
     "mcpAuthMode",
   ],
   analytics: ["analytics"],
-  password: ["currentPassword", "newPassword", "confirmPassword"],
+  password: [
+    "adminUsername",
+    "currentPassword",
+    "newPassword",
+    "confirmPassword",
+  ],
   summary: [],
 };
 
@@ -390,6 +396,7 @@ export function draftFromSettings(settings: Settings): ServerSetupDraft {
     mcpAuthMode:
       readString(settings, "mcp.auth.mode") === "apikey" ? "apikey" : "oauth",
     analytics: typeof analytics === "boolean" ? analytics : null,
+    adminUsername: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -571,10 +578,29 @@ export type ErrorCode =
   | "passwordIncorrect"
   | "passwordRejected"
   | "issuerUnreachable"
-  | "providerName";
+  | "providerName"
+  | "username"
+  | "usernameTaken";
 
 /** The provider name is the OAuth registration id and a redirect URI path segment. */
 const PROVIDER_NAME = /^[A-Za-z0-9_-]+$/;
+
+/** Mirrors RegexPatternUtils' username pattern; the server also takes an email address. */
+const SIMPLE_USERNAME =
+  /^[a-zA-Z0-9](?!.*[-@._+]{2,})[a-zA-Z0-9@._+-]{1,48}[a-zA-Z0-9]$/;
+const EMAIL_USERNAME = /^[^\s@]{1,64}@[^\s@]{1,255}$/;
+
+/** Names UserService.isUsernameValid turns down whatever their shape. */
+const RESERVED_USERNAMES = ["all_users", "anonymoususer"];
+
+/** A first check only; the server's answer is final. */
+export function isValidUsername(value: string): boolean {
+  const name = value.trim();
+  return (
+    (SIMPLE_USERNAME.test(name) || EMAIL_USERNAME.test(name)) &&
+    !RESERVED_USERNAMES.includes(name.toLowerCase())
+  );
+}
 
 /** Matches the first-login password screen's rule. */
 const MIN_PASSWORD_LENGTH = 8;
@@ -656,6 +682,10 @@ export function validateStep(
     case "summary":
       return validateSteps(QUICK_SUMMARY_STEPS, draft, mode);
     case "password":
+      require("adminUsername");
+      if (!errors.adminUsername && !isValidUsername(draft.adminUsername)) {
+        errors.adminUsername = "username";
+      }
       require("currentPassword");
       if (draft.newPassword.length < MIN_PASSWORD_LENGTH) {
         errors.newPassword = "passwordLength";

@@ -15,6 +15,18 @@ export function PasswordStep({
   return (
     <>
       <FieldGroup>
+        <TextField
+          required
+          autoComplete="username"
+          label={t("serverSetup.account.username", "Username")}
+          info={t(
+            "serverSetup.account.usernameHelp",
+            "What you'll sign in with. An email address works too.",
+          )}
+          value={draft.adminUsername}
+          onChange={(adminUsername) => update({ adminUsername })}
+          error={errors.adminUsername}
+        />
         {(!usingDefaultCredentials || errors.currentPassword) && (
           <TextField
             required
