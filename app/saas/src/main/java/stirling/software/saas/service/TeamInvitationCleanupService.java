@@ -6,7 +6,9 @@ import java.util.List;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,10 +34,24 @@ public class TeamInvitationCleanupService {
     private final LazyScheduledTask purgeExpiredTask;
 
     public TeamInvitationCleanupService(
-            TeamInvitationRepository invitationRepository, TaskScheduler scheduler) {
+            TeamInvitationRepository invitationRepository,
+            TaskScheduler scheduler,
+            PlatformTransactionManager transactionManager) {
         this.invitationRepository = invitationRepository;
-        this.markExpiredTask = new LazyScheduledTask(scheduler, this::markExpiredInvitations);
-        this.purgeExpiredTask = new LazyScheduledTask(scheduler, this::deleteOldExpiredInvitations);
+        // The scheduler invokes these callbacks directly, so the @Transactional annotations on the
+        // sweep methods never see a proxy; the template supplies the transaction that the bulk
+        // update and the purge require.
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        this.markExpiredTask =
+                new LazyScheduledTask(
+                        scheduler,
+                        () -> transaction.executeWithoutResult(status -> markExpiredInvitations()));
+        this.purgeExpiredTask =
+                new LazyScheduledTask(
+                        scheduler,
+                        () ->
+                                transaction.executeWithoutResult(
+                                        status -> deleteOldExpiredInvitations()));
     }
 
     /** Registers both invitation sweeps on the first invitation write. */
