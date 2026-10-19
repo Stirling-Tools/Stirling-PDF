@@ -80,6 +80,15 @@ describe("fetchRootDestination", () => {
     expect(h.get).not.toHaveBeenCalled();
   });
 
+  it("signedOut without a request for an expired JWT", async () => {
+    const payload = btoa(
+      JSON.stringify({ exp: Math.floor(Date.now() / 1000) - 60 }),
+    );
+    window.localStorage.setItem("stirling_jwt", `header.${payload}.sig`);
+    expect(await fetchRootDestination()).toBe("signedOut");
+    expect(h.get).not.toHaveBeenCalled();
+  });
+
   it("still calls /me for a Supabase session with no Spring JWT", async () => {
     window.localStorage.removeItem("stirling_jwt");
     window.localStorage.setItem("sb-abcdef-auth-token", "{}");

@@ -94,6 +94,14 @@ async function runBenchmarkForDevice({ name, viewport, isMobile, serverUrl }) {
       : undefined,
   });
 
+  // Playwright is a WebDriver browser, and the shell boots immediately for
+  // WebDriver so tests never wait on a gesture. Disable that signal and give
+  // the static server the flag Spring would inject, or this measures the app
+  // after an early boot instead of the prerendered shell.
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, "webdriver", { get: () => false });
+    window.STIRLING_PDF_ENABLE_LOGIN = false;
+  });
   const page = await context.newPage();
 
   const consoleWarnings = [];
@@ -172,8 +180,10 @@ async function runBenchmarkForDevice({ name, viewport, isMobile, serverUrl }) {
     const nav = performance.getEntriesByType("navigation")[0];
     const paints = performance.getEntriesByType("paint");
     const fcpEntry = paints.find((p) => p.name === "first-contentful-paint");
-    const shellElement = document.querySelector("[data-shell-for]");
-    const shellVisible = Boolean(shellElement);
+    // The wide shell is display:none on phones; any visible variant counts.
+    const shellVisible = [
+      ...document.querySelectorAll("[data-shell-for]"),
+    ].some((element) => getComputedStyle(element).display !== "none");
     const wordmark = document.querySelector(".sui-logo__wordmark");
 
     return {

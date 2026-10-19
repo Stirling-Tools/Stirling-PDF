@@ -330,6 +330,7 @@ async function writeLandingShell(
   distDir: string,
   editorDir: string,
   defaultLogin: boolean,
+  loginChunk: string | null,
 ): Promise<void> {
   if (
     process.env.PRERENDER_SHELL === "0" ||
@@ -341,7 +342,12 @@ async function writeLandingShell(
     const { prerenderShell } =
       // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
       await import("./scripts/prerender-shell.mjs");
-    const result = await prerenderShell({ distDir, editorDir, defaultLogin });
+    const result = await prerenderShell({
+      distDir,
+      editorDir,
+      defaultLogin,
+      loginChunk,
+    });
     console.log(
       `[prerender-shell] ${result.languages} languages, ${result.nodes} text nodes, ${(
         result.bytes / 1024
@@ -752,7 +758,12 @@ function htmlOutputPlugin(options: {
           (name) => name === "login.html" || name === "signup.html",
         );
       if (editorDir)
-        await writeLandingShell(distDir, editorDir, defaultLoginShell);
+        await writeLandingShell(
+          distDir,
+          editorDir,
+          defaultLoginShell,
+          loginRoute?.js ?? null,
+        );
       if (precompress) await compressHtmlOutput(distDir);
     },
   };

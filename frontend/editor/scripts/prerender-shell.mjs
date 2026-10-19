@@ -8,11 +8,14 @@ import { pathToFileURL } from "node:url";
 
 const SHELL_START = "<!--shell:start-->";
 const SHELL_END = "<!--shell:end-->";
+const SHELL_STATE_START = "<!--shell-state:start-->";
+const SHELL_STATE_END = "<!--shell-state:end-->";
 const SHELL_LANGUAGE = "en-US";
 
 /**
- * Runs before paint and records the decision the shell CSS and the deferred
- * entry both need, so neither has to re-derive auth or route state.
+ * Runs at the top of <body> and records the decision the shell CSS and the
+ * deferred entry both need, so neither has to re-derive auth or route state.
+ * It sits after the head's server flag but before the shell markup and CSS.
  *
  * An unknown login setting counts as an auth deploy in web builds: the
  * frontend-only image has no backend to inject the flag. The Spring controller
@@ -46,8 +49,13 @@ var reqLogin=flag===true||(flag!==false&&stored==="true");
 var loginUnknown=flag===undefined&&stored!=="true"&&stored!=="false";
 // Core and desktop never show /login; only web builds default to it.
 var fallbackLogin=${fallbackLogin};
-var showLogin=!hasAuth&&(isLoginRoute||(isEditorRoute&&(reqLogin||(loginUnknown&&fallbackLogin))));
-r.setAttribute("data-shell-route",isLoginRoute?"login":isEditorRoute?"editor":"deep");
+var loginPossible=flag===true||(flag!==false&&(fallbackLogin||stored==="true"));
+var showLogin=!hasAuth&&((isLoginRoute&&loginPossible)||(isEditorRoute&&(reqLogin||(loginUnknown&&fallbackLogin))));
+var route=isLoginRoute?"login":isEditorRoute?"editor":"deep";
+r.setAttribute("data-shell-route",route);
+// A deep link is an app page from its first frame: hide the shell before its
+// markup is parsed, not after the whole document has loaded.
+if(route==="deep")r.setAttribute("data-shell-hidden","");
 r.setAttribute("data-shell-auth",hasAuth?"1":"0");
 r.setAttribute("data-shell-login",showLogin?"1":"0");
 if(showLogin)r.setAttribute("data-shell-mode","login");
@@ -80,6 +88,13 @@ const CONTENT_TYPES = {
 /** The served copy of index.html without any shell a previous build emitted. */
 function stripShell(html) {
   let cleaned = html;
+  const stateStart = cleaned.indexOf(SHELL_STATE_START);
+  const stateEnd = cleaned.indexOf(SHELL_STATE_END);
+  if (stateStart !== -1 && stateEnd >= stateStart) {
+    cleaned =
+      cleaned.slice(0, stateStart) +
+      cleaned.slice(stateEnd + SHELL_STATE_END.length);
+  }
   const start = cleaned.indexOf(SHELL_START);
   const end = cleaned.indexOf(SHELL_END);
   if (start !== -1 && end !== -1 && end >= start) {
@@ -88,8 +103,19 @@ function stripShell(html) {
       '<div id="root"></div>' +
       cleaned.slice(end + SHELL_END.length);
   }
+  // The boot IIFE lives at the end of <body>, not next to the payload.
+  cleaned = cleaned.replace(
+    /<script>\(function\(\)\{var booted=false;[\s\S]*?<\/script>/,
+    "",
+  );
+  cleaned = cleaned.replace(/<html\b[^>]*>/i, (tag) =>
+    tag.replace(
+      /\sdata-shell-(?:hidden|mode|route|auth|login)(?:="[^"]*")?/g,
+      "",
+    ),
+  );
   const appEntryMatch =
-    /<script id="app-entry" type="application\/json">([\s\S]*?)<\/script>\s*<script>\(function\(\)\{var booted=false;[\s\S]*?<\/script>/.exec(
+    /<script id="app-entry" type="application\/json">([\s\S]*?)<\/script>/.exec(
       cleaned,
     );
   if (appEntryMatch) {
@@ -100,6 +126,13 @@ function stripShell(html) {
         if (Array.isArray(data.hints)) {
           restored += data.hints
             .map((h) => `<link rel="modulepreload" crossorigin href="${h}">`)
+            .join("");
+        }
+        if (Array.isArray(data.styleHints)) {
+          restored += data.styleHints
+            .map(
+              (h) => `<link rel="preload" as="style" crossorigin href="${h}">`,
+            )
             .join("");
         }
         if (Array.isArray(data.meta)) {
@@ -410,6 +443,8 @@ async function captureShellPage({
       (minCount) => globalThis.__shellReady(3, 100, 30_000, minCount),
       minReadyCount,
     );
+    // Text metrics must be final before the markup is serialized.
+    await page.evaluate(() => globalThis.document.fonts?.ready);
     await page.evaluate(() => globalThis.__shellInlineImages());
 
     const critical = await page.evaluate(() => globalThis.__shellCritical());
@@ -655,6 +690,8 @@ function shellScript({ wide, narrow, login }) {
     `<script id="shell-strings" type="application/json">${payload}</script>`,
     `<script>(function(){var root=document.getElementById("root");if(!root)return;` +
       `function clearShells(){var s=root.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();}` +
+      // Keep both responsive app shells, but drop whichever kind this page cannot show.
+      `function prune(active){var s=root.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++){var name=s[i].getAttribute("data-shell-for");if(active==="login"?name!=="login":name==="login")s[i].remove();}}` +
       `var isEditorPath=document.documentElement.getAttribute("data-shell-route")==="editor";` +
       `var isLoginMode=document.documentElement.getAttribute("data-shell-mode")==="login";` +
       // Some flavours have no login page, so the capture dropped that shell.
@@ -699,6 +736,7 @@ function shellScript({ wide, narrow, login }) {
     `if(src&&src.indexOf("://")<0&&src.indexOf("data:")!==0&&src.charAt(0)!=="/"){images[k].setAttribute("src",new URL(src,document.baseURI).href);}}`,
     `if(data.rtl.indexOf(language)!==-1)document.documentElement.dir="rtl";`,
     `document.documentElement.lang=language;`,
+    `prune(active);`,
     `root.removeAttribute("data-shell");`,
     `}catch(e){drop();}}`,
     // The base language is already in the DOM; every other language fetches its pack first.
@@ -715,7 +753,7 @@ const ENTRY_TAG =
   /<script\b[^>]*\btype="module"[^>]*\bsrc="([^"]+)"[^>]*><\/script>/;
 
 /** Holds the module entry until the first gesture, deep link, or file selection so the shell paints first. */
-function deferEntry(html) {
+function deferEntry(html, loginChunk) {
   const entry = ENTRY_TAG.exec(html);
   if (!entry) throw new Error("index.html has no module entry script");
   const hints = [
@@ -724,17 +762,25 @@ function deferEntry(html) {
     ),
   ]
     .map((match) => match[1])
-    .filter((href) => href !== entry[1]);
+    .filter((href) => href !== entry[1] && href !== loginChunk);
+  const styleHints = [
+    ...html.matchAll(
+      /<link\b[^>]*\brel="preload"[^>]*\bas="style"[^>]*\bhref="([^"]+)"[^>]*>/g,
+    ),
+  ].map((match) => match[1]);
   // The tab icon and the manifest are fetched after the first paint, not before it.
   const meta = [
     ...html.matchAll(
       /<link\b[^>]*\brel="(icon|apple-touch-icon|manifest)"[^>]*\bhref="([^"]+)"[^>]*>/g,
     ),
   ].map((match) => ({ rel: match[1], href: match[2] }));
-  const payload = JSON.stringify({ src: entry[1], hints, meta }).replace(
-    /</g,
-    "\\u003c",
-  );
+  const payload = JSON.stringify({
+    src: entry[1],
+    hints,
+    styleHints,
+    meta,
+    ...(loginChunk ? { loginChunk } : {}),
+  }).replace(/</g, "\\u003c");
   // The shell carries its own rules; the app's sheets and hints arrive with the app.
   const held = (page) =>
     page
@@ -763,6 +809,9 @@ function deferEntry(html) {
     "function restore(){var hints=payload.hints||[];" +
     'for(var h=0;h<hints.length;h++){var hint=document.createElement("link");hint.rel="modulepreload";' +
     'hint.crossOrigin="anonymous";hint.href=hints[h];document.head.appendChild(hint);}' +
+    "var styleHints=payload.styleHints||[];" +
+    'for(var q=0;q<styleHints.length;q++){var sh=document.createElement("link");sh.rel="preload";sh.as="style";' +
+    'sh.crossOrigin="anonymous";sh.href=styleHints[q];document.head.appendChild(sh);}' +
     'var lng=document.documentElement.lang||"en-US";var targetLng=lng==="en"?"en-US":lng;' +
     'var pLngs=targetLng==="en-US"?["en-US"]:[targetLng,"en-US"];' +
     'for(var p=0;p<pLngs.length;p++){var lp=document.createElement("link");lp.rel="preload";lp.as="fetch";lp.crossOrigin="anonymous";' +
@@ -793,8 +842,8 @@ function deferEntry(html) {
     "if(activeSelection){try{el.setSelectionRange(activeSelection[0],activeSelection[1]);}catch(err){}}" +
     "el.focus();activeInputId=null;return;}" +
     "if(restoreTries++<200)setTimeout(restoreInput,50);}" +
-    "function boot(){if(booted)return;booted=true;restore();" +
-    'var script=document.createElement("script");script.type="module";script.crossOrigin="anonymous";script.src=src;' +
+    "var loginGate=false;function boot(){if(booted||loginGate)return;booted=true;restore();" +
+    'var script=document.createElement("script");script.type="module";script.crossOrigin="anonymous";script.setAttribute("fetchpriority","high");script.src=src;' +
     "script.onerror=function(){booted=false;};" +
     "document.head.appendChild(script);" +
     "restoreInput();}" +
@@ -804,12 +853,25 @@ function deferEntry(html) {
     // The pre-paint script already resolved the route and auth state.
     'var route=document.documentElement.getAttribute("data-shell-route")||"";' +
     'var isLoginCurPath=route==="login";' +
+    // A failed language pack drops the shell before this script exists; boot
+    // instead of waiting for a gesture on a blank page.
+    'if(!document.querySelector("[data-shell-for]")){boot();return;}' +
     'if(route!=="editor"&&!isLoginCurPath){' +
     'document.documentElement.setAttribute("data-shell-hidden","");' +
     'var r=document.getElementById("root");if(r){var s=r.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();r.removeAttribute("data-shell");}' +
     "boot();return;}" +
     'var reqLoginSession=document.documentElement.getAttribute("data-shell-login")==="1";' +
-    "if(isLoginCurPath||reqLoginSession){setTimeout(boot,50);}" +
+    // The login route is a lazy chunk. Fetch it while the shell is still on
+    // screen, then boot; redirecting first would leave a blank.
+    "if(reqLoginSession){" +
+    'if(payload.loginChunk){loginGate=true;var loginLink=document.createElement("link");' +
+    'loginLink.rel="modulepreload";loginLink.crossOrigin="anonymous";' +
+    "loginLink.href=new URL(payload.loginChunk,document.baseURI).href;" +
+    "var loginReady=false;var bootAfterLogin=function(){if(loginReady)return;loginReady=true;loginGate=false;boot();};" +
+    "loginLink.onload=bootAfterLogin;loginLink.onerror=bootAfterLogin;" +
+    "document.head.appendChild(loginLink);setTimeout(bootAfterLogin,2000);" +
+    "}else{setTimeout(boot,50);}" +
+    "}else if(isLoginCurPath){setTimeout(boot,50);}" +
     'if(typeof navigator!=="undefined"&&navigator.webdriver){if(document.readyState==="loading"){addEventListener("DOMContentLoaded",boot,{once:true});}else{boot();}return;}' +
     // The shell is the first screen, so the app waits for a gesture or idle window.
     'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +
@@ -819,6 +881,7 @@ function deferEntry(html) {
     'addEventListener("dragover",function(e){if(document.querySelector("[data-shell-for]")){e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="copy";}},true);' +
     'addEventListener("drop",function(e){if(!document.querySelector("[data-shell-for]"))return;e.preventDefault();var f=e.dataTransfer&&e.dataTransfer.files;if(f&&f.length){pending=f;boot();handOff();}},true);' +
     "var pendingButtonSelector=null;" +
+    "function esc(v){return window.CSS&&CSS.escape?CSS.escape(String(v)):String(v);}" +
     'addEventListener("click",function(event){if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;' +
     'var t=event.target;if(!t||!t.closest||!t.closest("[data-shell-for]"))return;' +
     'var btn=t.closest("button[data-testid=\\"files-button\\"],button[data-testid=\\"pdf-library-add-files\\"],button.sui-btn--primary");' +
@@ -833,9 +896,9 @@ function deferEntry(html) {
     'var genericBtn=t.closest("button");' +
     "if(genericBtn){" +
     'var testId=genericBtn.getAttribute("data-testid");var aria=genericBtn.getAttribute("aria-label");' +
-    'if(testId)pendingButtonSelector="button[data-testid=\\""+testId+"\\"]";' +
-    'else if(aria)pendingButtonSelector="button[aria-label=\\""+aria+"\\"]";' +
-    'else if(genericBtn.className)pendingButtonSelector="button."+genericBtn.className.split(" ").filter(Boolean).join(".");' +
+    'if(testId)pendingButtonSelector="button[data-testid=\\""+esc(testId)+"\\"]";' +
+    'else if(aria)pendingButtonSelector="button[aria-label=\\""+esc(aria)+"\\"]";' +
+    'else if(genericBtn.className)pendingButtonSelector="button."+genericBtn.className.split(" ").filter(Boolean).map(esc).join(".");' +
     "boot();handOff();return;}" +
     "},true);" +
     "var pending=null;var tries=0;" +
@@ -843,9 +906,11 @@ function deferEntry(html) {
     'if(!target||target.tagName!=="INPUT"||target.type!=="file"||!target.closest||!target.closest("[data-shell-for]")||!target.files||!target.files.length)return;' +
     'removeEventListener("change",onChange,true);pending=target.files;boot();handOff();}' +
     'addEventListener("change",onChange,true);' +
+    // A static login form must not reload the document before the app boots.
+    'addEventListener("submit",function(e){if(e.target&&e.target.closest&&e.target.closest("[data-shell-for]")){e.preventDefault();boot();}},true);' +
     "function handOff(){" +
     'if(document.querySelector("[data-shell-for]")&&tries++<200){setTimeout(handOff,50);return;}' +
-    "if(pendingButtonSelector){var b=document.querySelector(pendingButtonSelector);if(b){b.click();pendingButtonSelector=null;}}" +
+    "if(pendingButtonSelector){var b=null;try{b=document.querySelector(pendingButtonSelector);}catch(e){}if(b){b.click();pendingButtonSelector=null;}}" +
     "if(!pending)return;" +
     'var input=document.querySelector("input[type=file]");' +
     "if(!input){if(tries++<200){setTimeout(handOff,50);return;}pending=null;return;}" +
@@ -883,6 +948,7 @@ export async function prerenderShell({
   distDir,
   editorDir = resolve(distDir, ".."),
   defaultLogin = true,
+  loginChunk = null,
 }) {
   const { chromium } = await import("@playwright/test");
   const execPath = resolveChromiumExecutablePath(chromium);
@@ -957,10 +1023,27 @@ export async function prerenderShell({
     [wide.critical, narrow ? narrow.critical : "", login ? login.critical : ""],
     `${wide.markup}\n${narrow ? narrow.markup : ""}\n${login ? login.markup : ""}`,
   );
+  const stateScript = `${SHELL_STATE_START}${shellStateScript(defaultLogin)}${SHELL_STATE_END}`;
+  const withState = (pageHtml) =>
+    pageHtml.replace(/<body([^>]*)>/i, (match) => `${match}${stateScript}`);
+  // Without a phone capture, keep the wide shell visible rather than hiding
+  // it behind a media query with no narrow replacement.
+  const narrowCss = narrow
+    ? '@media (max-width: 1024px){[data-shell-for="wide"]{display:none}[data-shell-for="narrow"]{display:block}}'
+    : "";
+  const shellCss =
+    '#root[data-shell="pending"]{visibility:hidden}' +
+    '[data-shell-hidden] #root[data-shell="pending"]{visibility:hidden!important}' +
+    "[data-shell-hidden] [data-shell-for]{display:none!important}" +
+    '[data-shell-for="narrow"]{display:none}' +
+    '[data-shell-for="login"]{display:none}' +
+    narrowCss +
+    '[data-shell-mode="login"] [data-shell-for="wide"]{display:none!important}' +
+    '[data-shell-mode="login"] [data-shell-for="narrow"]{display:none!important}' +
+    '[data-shell-mode="login"] [data-shell-for="login"]{display:block!important}';
   const emitted = [
     SHELL_START,
-    shellStateScript(defaultLogin),
-    `<style>#root[data-shell="pending"]{visibility:hidden}[data-shell-hidden] #root[data-shell="pending"]{visibility:hidden!important}[data-shell-hidden] [data-shell-for]{display:none!important}[data-shell-for="narrow"]{display:none}[data-shell-for="login"]{display:none}@media (max-width: 1024px){[data-shell-for="wide"]{display:none}[data-shell-for="narrow"]{display:block}}[data-shell-mode="login"] [data-shell-for="wide"]{display:none!important}[data-shell-mode="login"] [data-shell-for="narrow"]{display:none!important}[data-shell-mode="login"] [data-shell-for="login"]{display:block!important}</style>`,
+    `<style>${shellCss}</style>`,
     `<noscript><style>#root[data-shell="pending"]{visibility:visible!important}</style></noscript>`,
     `<style id="shell-critical">${criticalCss}</style>`,
     `<div id="root" data-shell="pending"><div data-shell-for="wide">${wide.markup}</div>`,
@@ -970,28 +1053,23 @@ export async function prerenderShell({
     shellScript({ wide, narrow, login }),
     SHELL_END,
   ].join("");
-  const withShell = replaceRoot(html, emitted);
-  await writeFile(indexPath, deferEntry(withShell));
+  const withShell = withState(replaceRoot(html, emitted));
+  await writeFile(indexPath, deferEntry(withShell, loginChunk));
   const editorPath = join(distDir, "editor.html");
   if (existsSync(editorPath)) {
     const editorHtml = stripShell(await readFile(editorPath, "utf8"));
-    const editorWithShell = replaceRoot(editorHtml, emitted);
-    await writeFile(editorPath, deferEntry(editorWithShell));
+    const editorWithShell = withState(replaceRoot(editorHtml, emitted));
+    await writeFile(editorPath, deferEntry(editorWithShell, loginChunk));
   }
   const loginPages = ["login.html", "signup.html"];
   for (const name of loginPages) {
     const pagePath = join(distDir, name);
     if (existsSync(pagePath)) {
       const pageHtml = stripShell(await readFile(pagePath, "utf8"));
-      const pageWithMode = pageHtml.replace(
-        /<html\b([^>]*)>/i,
-        (_match, attrs) =>
-          attrs.includes("data-shell-mode")
-            ? `<html${attrs}>`
-            : `<html${attrs} data-shell-mode="login">`,
-      );
-      const pageWithShell = replaceRoot(pageWithMode, emitted);
-      await writeFile(pagePath, deferEntry(pageWithShell));
+      // The pre-paint state script decides this; hard-coding login mode would
+      // show the login form to an already signed-in visitor.
+      const pageWithShell = withState(replaceRoot(pageHtml, emitted));
+      await writeFile(pagePath, deferEntry(pageWithShell, loginChunk));
     }
   }
   const shellsDir = join(distDir, "shells");
