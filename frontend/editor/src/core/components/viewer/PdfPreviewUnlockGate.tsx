@@ -13,7 +13,7 @@ import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
 import { useFileActions } from "@app/contexts/FileContext";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import { getPdfAccess } from "@app/services/pdfPasswordStore";
-import { looksEncryptedFromTrailer } from "@app/utils/thumbnailUtils";
+import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
 
 interface PreviewState {

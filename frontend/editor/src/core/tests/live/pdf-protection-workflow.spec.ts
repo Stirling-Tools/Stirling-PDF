@@ -364,7 +364,7 @@ test("a PDF with only an opening password opens and prints after removing its op
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   const removedResponse = page.waitForResponse(
-    "**/api/v1/security/remove-pdf-passwords",
+    "**/api/v1/security/remove-password",
   );
   await expect(
     page.getByLabel("Permissions password", { exact: true }),

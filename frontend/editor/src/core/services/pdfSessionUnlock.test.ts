@@ -198,7 +198,7 @@ describe("session PDF access", () => {
     expect(form.get("sourcePassword")).toBe(access.password);
     expect(form.get("retainedOpeningPassword")).toBe(access.password);
     expect(form.get("ownerPassword")).toBe("selected-owner");
-    expect(post.mock.calls[0][0]).toBe("/api/v1/security/remove-pdf-passwords");
+    expect(post.mock.calls[0][0]).toBe("/api/v1/security/remove-password");
     expect(getPdfAccess(file)?.ownerAuthenticated).toBe(false);
   });
 
@@ -305,7 +305,7 @@ describe("session PDF access", () => {
     await changePdfSecurity(file, form, "/api/v1/security/remove-password");
     expect(form.get("sourcePassword")).toBe(access.password);
     expect(form.has("password")).toBe(false);
-    expect(post.mock.calls[0][0]).toBe("/api/v1/security/remove-pdf-passwords");
+    expect(post.mock.calls[0][0]).toBe("/api/v1/security/remove-password");
   });
   it("authenticates without rewriting bytes or retaining credentials before adoption", async () => {
     const original = createStirlingFile(new File(["encrypted"], "locked.pdf"));

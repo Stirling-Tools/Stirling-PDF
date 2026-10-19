@@ -353,7 +353,7 @@ describe("Convert Tool Integration Tests", () => {
     });
     expect(mockedApiClient.post).toHaveBeenCalledTimes(4);
     expect(mockedApiClient.post.mock.calls[2][0]).toBe(
-      "/api/v1/security/remove-pdf-passwords",
+      "/api/v1/security/remove-password",
     );
     expect(
       (mockedApiClient.post.mock.calls[2][1] as FormData).get("password"),

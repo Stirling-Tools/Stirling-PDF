@@ -22,12 +22,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
+import stirling.software.SPDF.model.api.security.RemovePasswordRequest;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
@@ -40,6 +43,7 @@ class PdfSessionSecurityControllerTest {
     private static final String OWNER = " owner password ";
     @TempDir Path directory;
     private PdfSessionSecurityController controller;
+    private PasswordController passwordController;
     private CustomPDFDocumentFactory factory;
     private ApplicationProperties properties;
 
@@ -58,6 +62,12 @@ class PdfSessionSecurityControllerTest {
                                 Loader.loadPDF(
                                         inv.<InputStream>getArgument(0).readAllBytes(),
                                         inv.getArgument(1)));
+        when(factory.load(any(MultipartFile.class), anyString()))
+                .thenAnswer(
+                        inv ->
+                                Loader.loadPDF(
+                                        inv.<MultipartFile>getArgument(0).getBytes(),
+                                        inv.getArgument(1)));
         var tempFiles = mock(TempFileManager.class);
         when(tempFiles.createTempFile(anyString()))
                 .thenAnswer(
@@ -75,6 +85,22 @@ class PdfSessionSecurityControllerTest {
                 .deleteTempFile(any(java.io.File.class));
         properties = new ApplicationProperties();
         controller = new PdfSessionSecurityController(factory, tempFiles, properties);
+        passwordController = new PasswordController(factory, tempFiles);
+    }
+
+    private ResponseEntity<Resource> removePasswords(
+            PDFPasswordRequest input,
+            String ownerPassword,
+            String sourcePassword,
+            String retainedOpeningPassword)
+            throws IOException {
+        var request = new RemovePasswordRequest();
+        request.setFileInput(input.getFileInput());
+        request.setPassword(input.getPassword());
+        request.setOwnerPassword(ownerPassword);
+        request.setSourcePassword(sourcePassword);
+        request.setRetainedOpeningPassword(retainedOpeningPassword);
+        return passwordController.removePassword(request);
     }
 
     private byte[] pdf(boolean encrypted, int bits) throws IOException {
@@ -266,10 +292,9 @@ class PdfSessionSecurityControllerTest {
         byte[] original = pdf(true, bits);
         assertThrows(
                 ResponseStatusException.class,
-                () -> controller.removePasswords(request(original, ""), "", OWNER, USER));
+                () -> removePasswords(request(original, ""), "", OWNER, USER));
         try (var stream =
-                controller
-                        .removePasswords(request(original, USER), "", OWNER, USER)
+                removePasswords(request(original, USER), "", OWNER, USER)
                         .getBody()
                         .getInputStream()) {
             byte[] result = stream.readAllBytes();
@@ -281,8 +306,7 @@ class PdfSessionSecurityControllerTest {
             assertTrue(controller.inspect(request(result, OWNER)).ownerAuthenticated());
         }
         try (var stream =
-                controller
-                        .removePasswords(request(original, ""), OWNER, USER, USER)
+                removePasswords(request(original, ""), OWNER, USER, USER)
                         .getBody()
                         .getInputStream()) {
             byte[] result = stream.readAllBytes();
@@ -294,8 +318,7 @@ class PdfSessionSecurityControllerTest {
             assertTrue(reader.canPrint());
         }
         try (var stream =
-                        controller
-                                .removePasswords(request(original, USER), OWNER, USER, USER)
+                        removePasswords(request(original, USER), OWNER, USER, USER)
                                 .getBody()
                                 .getInputStream();
                 var result = Loader.loadPDF(stream.readAllBytes())) {
@@ -313,19 +336,19 @@ class PdfSessionSecurityControllerTest {
         byte[] original = pdf(true, 256);
         assertThrows(
                 ResponseStatusException.class,
-                () -> controller.removePasswords(request(original, OWNER), OWNER, USER, USER));
+                () -> removePasswords(request(original, OWNER), OWNER, USER, USER));
         assertThrows(
                 ResponseStatusException.class,
-                () -> controller.removePasswords(request(original, USER), USER, USER, USER));
+                () -> removePasswords(request(original, USER), USER, USER, USER));
         assertThrows(
                 ResponseStatusException.class,
-                () -> controller.removePasswords(request(original, USER), "", USER, USER));
+                () -> removePasswords(request(original, USER), "", USER, USER));
         assertThrows(
                 ResponseStatusException.class,
-                () -> controller.removePasswords(request(original, ""), OWNER, OWNER, ""));
+                () -> removePasswords(request(original, ""), OWNER, OWNER, ""));
         assertThrows(
                 ResponseStatusException.class,
-                () -> controller.removePasswords(request(original, "wrong"), OWNER, USER, USER));
+                () -> removePasswords(request(original, "wrong"), OWNER, USER, USER));
     }
 
     @ParameterizedTest
@@ -333,8 +356,7 @@ class PdfSessionSecurityControllerTest {
     void removalSupportsFilesWithOnlyOnePassword(int bits) throws Exception {
         byte[] openingOnly = protectedPdf(USER, "", bits, new AccessPermission());
         try (var stream =
-                        controller
-                                .removePasswords(request(openingOnly, USER), "", USER, USER)
+                        removePasswords(request(openingOnly, USER), "", USER, USER)
                                 .getBody()
                                 .getInputStream();
                 var result = Loader.loadPDF(stream.readAllBytes())) {
@@ -342,8 +364,7 @@ class PdfSessionSecurityControllerTest {
         }
         byte[] ownerOnly = protectedPdf("", OWNER, bits, new AccessPermission());
         try (var stream =
-                        controller
-                                .removePasswords(request(ownerOnly, ""), OWNER, "", "")
+                        removePasswords(request(ownerOnly, ""), OWNER, "", "")
                                 .getBody()
                                 .getInputStream();
                 var result = Loader.loadPDF(stream.readAllBytes())) {
@@ -387,7 +408,7 @@ class PdfSessionSecurityControllerTest {
         assertTrue(controller.inspect(request(original, OWNER)).ownerAuthenticated());
         assertThrows(
                 ResponseStatusException.class,
-                () -> controller.removePasswords(request(original, USER), "", USER, ""));
+                () -> removePasswords(request(original, USER), "", USER, ""));
     }
 
     @ParameterizedTest
@@ -463,8 +484,7 @@ class PdfSessionSecurityControllerTest {
     void removingTheOpeningPasswordRetainsKnownOwnerAccessAndStoredRestrictions() throws Exception {
         byte[] original = pdf(true, 256);
         try (var stream =
-                controller
-                        .removePasswords(request(original, USER), "", OWNER, "")
+                removePasswords(request(original, USER), "", OWNER, "")
                         .getBody()
                         .getInputStream()) {
             byte[] result = stream.readAllBytes();

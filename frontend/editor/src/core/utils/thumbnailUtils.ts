@@ -12,6 +12,7 @@ import {
 import { jpegExifOrientation } from "@app/utils/jpegOrientation";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -39,8 +40,7 @@ function reportThumbnailFailure(file: File, error: unknown): void {
   console.warn(`Thumbnail generation failed for ${file.name}:`, error);
 }
 
-/** PDFs at or above this size never get a full-buffer client-side parse
- * (renderer OOM) - only the linearized-prefix attempt below. */
+/** Thumbnail parsing above this limit uses a bounded prefix to avoid exhausting renderer memory. */
 export const LARGE_PDF_PARSE_LIMIT = 100 * 1024 * 1024;
 
 /** Linearized PDFs keep page 1 + hint tables in the first bytes, so a small
@@ -57,9 +57,6 @@ const IMAGE_HEADER_PROBE_BYTES = 256 * 1024;
 /** Extra bytes read when a JPEG's start-of-frame marker sits behind a large
  *  metadata segment; the first probe covers the common case. */
 const IMAGE_HEADER_PROBE_LIMIT = 4 * 1024 * 1024;
-
-/** Window at each end of the file searched for an /Encrypt entry. */
-const ENCRYPT_PROBE_BYTES = 64 * 1024;
 
 /** Pages read between yields while collecting whole-document metadata. */
 const METADATA_YIELD_INTERVAL = 50;
@@ -85,26 +82,6 @@ async function collectAllPageMetadata(
     pageRotations[i] = meta.rotation;
     pageDimensions[i] = { width: meta.width, height: meta.height };
   }
-}
-
-/** Decoded latin1 because the input is binary - UTF-8 replacement characters
- * can swallow the marker. \b excludes longer keys like /Encryption. */
-export function containsEncryptMarker(bytes: Uint8Array): boolean {
-  return /\/Encrypt\b/.test(new TextDecoder("latin1").decode(bytes));
-}
-
-/** /Encrypt is referenced from a trailer, never from the page data the prefix
- * parse sees. Linearized PDFs (most large ones) keep their first-page trailer at
- * the head and the main one at the tail, so both windows have to be probed.
- * Heuristic: a false positive offers unlock on a file that did not need it, a
- * false negative leaves it unopenable. */
-export async function looksEncryptedFromTrailer(file: File): Promise<boolean> {
-  const tailStart = Math.max(0, file.size - ENCRYPT_PROBE_BYTES);
-  const tail = await file.slice(tailStart).arrayBuffer();
-  if (containsEncryptMarker(new Uint8Array(tail))) return true;
-  if (tailStart === 0) return false;
-  const head = await file.slice(0, ENCRYPT_PROBE_BYTES).arrayBuffer();
-  return containsEncryptMarker(new Uint8Array(head));
 }
 
 interface PdfiumRenderResult {

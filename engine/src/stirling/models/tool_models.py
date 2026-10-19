@@ -1350,10 +1350,22 @@ class RemovePagesParams(ApiModel):
 
 class RemovePasswordParams(ApiModel):
     """
-    This endpoint removes the password from a protected PDF file while preserving its document permissions. Users need to provide the existing password. Input:PDF/PDF_ENCRYPTED Output:PDF Type:SISO
+    This endpoint removes the password from a protected PDF file while preserving its document permissions. Users need to provide the existing password. Optional ownerPassword, sourcePassword or retainedOpeningPassword enable selective removal: nonempty password and ownerPassword select which passwords to remove; blank selections retain them. Source and retained credentials never select removal. Input:PDF/PDF_ENCRYPTED Output:PDF Type:SISO
     """
 
+    owner_password: SecretStr | None = Field(
+        None,
+        description="Permissions password to remove. Supplying this field enables selective removal; leave blank to retain the permissions password.",
+    )
     password: SecretStr | None = Field(None, description="The password of the PDF file")
+    retained_opening_password: SecretStr | None = Field(
+        None,
+        description="Opening password to retain when removing only the permissions password. Supplying this field enables selective removal.",
+    )
+    source_password: SecretStr | None = Field(
+        None,
+        description="Credential for opening the source, without selecting it for removal. Supplying this field enables selective removal; password then selects the opening password to remove and ownerPassword selects the permissions password to remove. Blank selection fields keep their passwords.",
+    )
 
 
 class RenameAttachmentParams(ApiModel):

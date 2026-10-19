@@ -41,7 +41,7 @@ for (const operation of ["compress", "remove-password"] as const) {
     await page.route(
       operation === "compress"
         ? "**/api/v1/misc/compress-pdf"
-        : "**/api/v1/security/remove-pdf-passwords",
+        : "**/api/v1/security/remove-password",
       (route) => {
         processed = true;
         return route.fulfill({

@@ -2,36 +2,8 @@ import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { ensureLocalPdfAccess } from "@app/services/pdfLocalAccess";
 import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
 import type { PDFDocumentProxy } from "pdfjs-dist";
-
-// Bounded window scanned at each end of the PDF for an /Encrypt entry. The
-// trailer sits at the tail; linearized files also keep a first-page trailer at
-// the head. Sliced, so a multi-GB file is never read into memory.
-const ENCRYPT_PROBE_BYTES = 64 * 1024;
-
-function bufferHasEncryptMarker(buffer: ArrayBuffer): boolean {
-  const view = new Uint8Array(buffer);
-  // "/Encrypt" as ASCII bytes
-  const needle = [0x2f, 0x45, 0x6e, 0x63, 0x72, 0x79, 0x70, 0x74];
-  outer: for (let i = 0; i <= view.length - needle.length; i++) {
-    for (let j = 0; j < needle.length; j++) {
-      if (view[i + j] !== needle[j]) continue outer;
-    }
-    return true;
-  }
-  return false;
-}
-
-async function hasEncryptMarker(file: File): Promise<boolean> {
-  const tailStart = Math.max(0, file.size - ENCRYPT_PROBE_BYTES);
-  if (bufferHasEncryptMarker(await file.slice(tailStart).arrayBuffer())) {
-    return true;
-  }
-  if (tailStart === 0) return false;
-  return bufferHasEncryptMarker(
-    await file.slice(0, ENCRYPT_PROBE_BYTES).arrayBuffer(),
-  );
-}
 
 export class FileAnalyzer {
   private static readonly SIZE_THRESHOLDS = {
@@ -93,7 +65,7 @@ export class FileAnalyzer {
   static async isPDFEncrypted(file: File, inspect = true): Promise<boolean> {
     const access = getPdfAccess(file);
     if (access) return access.encrypted;
-    if (!(await hasEncryptMarker(file))) return false;
+    if (!(await looksEncryptedFromTrailer(file))) return false;
     if (!inspect) return true;
     try {
       return (await ensureLocalPdfAccess(file)).encrypted;

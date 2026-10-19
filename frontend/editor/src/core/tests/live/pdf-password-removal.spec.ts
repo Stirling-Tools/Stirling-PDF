@@ -107,7 +107,7 @@ for (const permissions of [false, true]) {
     await expect(dialog.getByRole("alert")).toContainText("Incorrect password");
     await dialog.getByLabel("Password to open", { exact: true }).fill(reader);
     const removalResponse = page.waitForResponse(
-      "**/api/v1/security/remove-pdf-passwords",
+      "**/api/v1/security/remove-password",
     );
     await remove.click();
     if (permissions) {
@@ -170,7 +170,7 @@ test("closing load-time owner verification leaves the protected source unchanged
   const original = await protectedPdf(page, true, true);
   let removals = 0;
   page.on("request", (request) => {
-    if (request.url().endsWith("/remove-pdf-passwords")) removals++;
+    if (request.url().endsWith("/remove-password")) removals++;
   });
   await page.goto("/editor");
   await page.getByTestId("file-input").setInputFiles({
@@ -222,7 +222,7 @@ for (const remove of ["opening", "owner", "both"] as const) {
         .getByLabel("Permissions password", { exact: true })
         .fill(owner);
     const responsePromise = page.waitForResponse(
-      "**/api/v1/security/remove-pdf-passwords",
+      "**/api/v1/security/remove-password",
     );
     await submit.click();
     if (remove === "opening") {
@@ -313,7 +313,7 @@ for (const only of ["opening", "owner"] as const) {
       .getByLabel(label, { exact: true })
       .fill(only === "opening" ? reader : owner);
     const responsePromise = page.waitForResponse(
-      "**/api/v1/security/remove-pdf-passwords",
+      "**/api/v1/security/remove-password",
     );
     await page
       .getByRole("button", { name: /^Remove Password(?: \(this file\))?$/ })
@@ -350,7 +350,7 @@ test("wrong role credentials cannot remove protection and cancelled verification
   ).toHaveValue("");
   await page.getByLabel("Permissions password", { exact: true }).fill(reader);
   const responsePromise = page.waitForResponse(
-    "**/api/v1/security/remove-pdf-passwords",
+    "**/api/v1/security/remove-password",
   );
   await page
     .getByRole("button", { name: /^Remove Password(?: \(this file\))?$/ })
@@ -402,8 +402,7 @@ for (const remove of ["opening", "owner", "both"] as const) {
     if (remove !== "opening") await ownerInput.fill(owner);
     const responses: Response[] = [];
     page.on("response", (response) => {
-      if (response.url().endsWith("/remove-pdf-passwords"))
-        responses.push(response);
+      if (response.url().endsWith("/remove-password")) responses.push(response);
     });
     await page.getByRole("button", { name: /^Remove Password/ }).click();
     if (remove === "opening") {

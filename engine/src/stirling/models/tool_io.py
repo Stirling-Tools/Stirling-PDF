@@ -281,7 +281,16 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ToolEndpoint.REDACT_EXECUTE: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.REMOVE_CERT_SIGN: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.REMOVE_PASSWORD: ToolIOSpec(
-        accepts=[ToolFormat.PDF, ToolFormat.PDF_ENCRYPTED], produces=ToolFormat.PDF, arity=ToolArity.SISO
+        accepts=[ToolFormat.PDF, ToolFormat.PDF_ENCRYPTED],
+        produces=ToolFormat.PDF,
+        arity=ToolArity.SISO,
+        cases=[
+            ToolIOCase(
+                when=[ToolIOWhen(param="password", matches=[""], default="")],
+                produces=ToolFormat.ANY,
+                arity=ToolArity.SISO,
+            )
+        ],
     ),
     ToolEndpoint.SANITIZE_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.TIMESTAMP_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),

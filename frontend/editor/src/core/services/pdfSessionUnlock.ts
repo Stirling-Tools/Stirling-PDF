@@ -466,7 +466,7 @@ export async function protectUnlockedResults(
   return protectedFiles;
 }
 
-/** Interactive security changes use stricter contracts than the legacy public API. */
+/** Session credentials authenticate the source without selecting which passwords to remove. */
 export async function changePdfSecurity(
   file: File,
   form: FormData,
@@ -513,7 +513,7 @@ export async function changePdfSecurity(
       ? form.has("keyLength")
         ? "/api/v1/security/set-pdf-protection"
         : "/api/v1/security/change-pdf-permissions"
-      : "/api/v1/security/remove-pdf-passwords",
+      : "/api/v1/security/remove-password",
     form,
     i18n.t(
       "encryptedPdfUnlock.securityChangeFailed",

@@ -174,6 +174,21 @@ describe("useRemovePasswordOperation", () => {
       protectedFile(false, true),
     );
     expect(form.get("password")).toBe("owner");
+    expect(form.has("ownerPassword")).toBe(false);
+  });
+
+  test("retains selective owner removal through API parameter conversion", () => {
+    const parameters = { password: "", ownerPassword: "owner" };
+    const api = removePasswordOperationConfig.toApiParams!(parameters);
+    expect(removePasswordOperationConfig.fromApiParams!(api)).toEqual(
+      parameters,
+    );
+    const form = removePasswordOperationConfig.buildFormData(
+      parameters,
+      protectedFile(false, true),
+    );
+    expect(form.get("password")).toBe("");
+    expect(form.get("ownerPassword")).toBe("owner");
   });
 
   test("should use correct translation for error messages", () => {

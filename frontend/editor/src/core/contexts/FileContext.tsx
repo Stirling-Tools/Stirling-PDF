@@ -822,7 +822,7 @@ function FileContextInner({
       // Authentication retains the owner password; ownerPassword would select it for removal.
       form.set("sourcePassword", access.password);
       const response = await apiClient.post<Blob>(
-        "/api/v1/security/remove-pdf-passwords",
+        "/api/v1/security/remove-password",
         form,
         { responseType: "blob", suppressErrorToast: true },
       );

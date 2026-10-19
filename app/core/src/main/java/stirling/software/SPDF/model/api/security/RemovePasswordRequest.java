@@ -1,0 +1,37 @@
+package stirling.software.SPDF.model.api.security;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * Omitting all selective fields preserves password-only behaviour. Supplying any selective field,
+ * even empty, makes nonempty password/ownerPassword select removal; blank fields retain that role.
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class RemovePasswordRequest extends PDFPasswordRequest {
+    @Schema(
+            description =
+                    "Permissions password to remove. Supplying this field enables selective removal;"
+                            + " leave blank to retain the permissions password.",
+            format = "password")
+    private String ownerPassword;
+
+    @Schema(
+            description =
+                    "Credential for opening the source, without selecting it for removal. Supplying"
+                            + " this field enables selective removal; password then selects the"
+                            + " opening password to remove and ownerPassword selects the permissions"
+                            + " password to remove. Blank selection fields keep their passwords.",
+            format = "password")
+    private String sourcePassword;
+
+    @Schema(
+            description =
+                    "Opening password to retain when removing only the permissions password."
+                            + " Supplying this field enables selective removal.",
+            format = "password")
+    private String retainedOpeningPassword;
+}

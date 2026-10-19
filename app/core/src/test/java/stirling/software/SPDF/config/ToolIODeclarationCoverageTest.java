@@ -37,6 +37,15 @@ import stirling.software.common.service.ToolIOParameterDefaults;
  */
 class ToolIODeclarationCoverageTest {
 
+    @Test
+    void selectiveRemovalMayRetainAnOpeningPassword() {
+        var removal = spec("/api/v1/security/remove-password");
+        assertEquals(
+                ToolFormat.ANY,
+                removal.resolveOutput(Map.of("password", "", "ownerPassword", "owner")).format());
+        assertEquals(ToolFormat.PDF, removal.resolveOutput(Map.of("password", "reader")).format());
+    }
+
     /** The namespaces whose endpoints act on documents. */
     private static final List<String> TOOL_NAMESPACES =
             List.of(
@@ -67,7 +76,6 @@ class ToolIODeclarationCoverageTest {
                     "/api/v1/security/inspect-pdf-security",
                     "/api/v1/security/restore-pdf-protection",
                     "/api/v1/security/prepare-pdf-session",
-                    "/api/v1/security/remove-pdf-passwords",
                     "/api/v1/security/remove-pdf-protection",
                     "/api/v1/security/set-pdf-protection",
                     "/api/v1/security/change-pdf-permissions",

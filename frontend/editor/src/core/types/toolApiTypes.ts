@@ -916,12 +916,6 @@ export interface PDFExtractImagesRequest {
    */
   format?: "png" | "jpeg" | "gif";
 }
-export interface PDFPasswordRequest {
-  /**
-   * The password of the PDF file
-   */
-  password?: string;
-}
 export type PDFVerificationRequest = Record<string, never>;
 export interface PDFWithPageNums {
   /**
@@ -1260,6 +1254,24 @@ export interface RemoveBlankPagesRequest {
    * The percentage of white color on a page to consider it as blank
    */
   whitePercent?: number;
+}
+export interface RemovePasswordRequest {
+  /**
+   * Permissions password to remove. Supplying this field enables selective removal; leave blank to retain the permissions password.
+   */
+  ownerPassword?: string;
+  /**
+   * The password of the PDF file
+   */
+  password?: string;
+  /**
+   * Opening password to retain when removing only the permissions password. Supplying this field enables selective removal.
+   */
+  retainedOpeningPassword?: string;
+  /**
+   * Credential for opening the source, without selecting it for removal. Supplying this field enables selective removal; password then selects the opening password to remove and ownerPassword selects the permissions password to remove. Blank selection fields keep their passwords.
+   */
+  sourcePassword?: string;
 }
 export interface RenameAttachmentRequest {
   /**
@@ -1789,7 +1801,7 @@ export interface ToolApiParams {
   "/api/v1/security/redact": ManualRedactPdfRequest;
   "/api/v1/security/redact-execute": RedactExecuteRequest;
   "/api/v1/security/remove-cert-sign": SecurityRemoveCertSignRequest;
-  "/api/v1/security/remove-password": PDFPasswordRequest;
+  "/api/v1/security/remove-password": RemovePasswordRequest;
   "/api/v1/security/sanitize-pdf": SanitizePdfRequest;
   "/api/v1/security/timestamp-pdf": TimestampPdfRequest;
   "/api/v1/security/validate-compliance": SecurityValidateComplianceRequest;

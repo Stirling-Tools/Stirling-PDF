@@ -390,7 +390,7 @@ describe("encrypted bytes opened by another editor", () => {
         permissions: security.permissions,
       });
       const request = post.mock.calls.find(
-        ([url]) => url === "/api/v1/security/remove-pdf-passwords",
+        ([url]) => url === "/api/v1/security/remove-password",
       )!;
       const form = request[1] as FormData;
       expect(form.get("password")).toBe("reader");

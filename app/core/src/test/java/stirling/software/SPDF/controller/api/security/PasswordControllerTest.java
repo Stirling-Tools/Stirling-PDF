@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -40,10 +42,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
-import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
+import stirling.software.SPDF.model.api.security.RemovePasswordRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.TempFile;
@@ -131,7 +135,7 @@ class PasswordControllerTest {
                             MediaType.APPLICATION_PDF_VALUE,
                             simplePdfBytes);
 
-            PDFPasswordRequest request = new PDFPasswordRequest();
+            RemovePasswordRequest request = new RemovePasswordRequest();
             request.setFileInput(pdfFile);
             request.setPassword("password");
 
@@ -155,7 +159,7 @@ class PasswordControllerTest {
                             MediaType.APPLICATION_PDF_VALUE,
                             simplePdfBytes);
 
-            PDFPasswordRequest request = new PDFPasswordRequest();
+            RemovePasswordRequest request = new RemovePasswordRequest();
             request.setFileInput(pdfFile);
             request.setPassword("pass");
 
@@ -178,7 +182,7 @@ class PasswordControllerTest {
                             MediaType.APPLICATION_PDF_VALUE,
                             simplePdfBytes);
 
-            PDFPasswordRequest request = new PDFPasswordRequest();
+            RemovePasswordRequest request = new RemovePasswordRequest();
             request.setFileInput(pdfFile);
             request.setPassword("wrong");
 
@@ -198,7 +202,7 @@ class PasswordControllerTest {
                             MediaType.APPLICATION_PDF_VALUE,
                             simplePdfBytes);
 
-            PDFPasswordRequest request = new PDFPasswordRequest();
+            RemovePasswordRequest request = new RemovePasswordRequest();
             request.setFileInput(pdfFile);
             request.setPassword("pass");
 
@@ -218,7 +222,7 @@ class PasswordControllerTest {
                             MediaType.APPLICATION_PDF_VALUE,
                             simplePdfBytes);
 
-            PDFPasswordRequest request = new PDFPasswordRequest();
+            RemovePasswordRequest request = new RemovePasswordRequest();
             request.setFileInput(pdfFile);
             request.setPassword("");
 
@@ -236,7 +240,7 @@ class PasswordControllerTest {
                     new MockMultipartFile(
                             "fileInput", null, MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
-            PDFPasswordRequest request = new PDFPasswordRequest();
+            RemovePasswordRequest request = new RemovePasswordRequest();
             request.setFileInput(pdfFile);
             request.setPassword("pass");
 
@@ -328,7 +332,7 @@ class PasswordControllerTest {
         }
 
         private byte[] removePassword(byte[] pdfBytes, String password) throws IOException {
-            PDFPasswordRequest request = new PDFPasswordRequest();
+            RemovePasswordRequest request = new RemovePasswordRequest();
             request.setFileInput(pdfFile(pdfBytes));
             request.setPassword(password);
             return drainBody(controller.removePassword(request));
@@ -352,6 +356,118 @@ class PasswordControllerTest {
                 assertEquals(
                         "Permission round trip", new PDFTextStripper().getText(document).trim());
             }
+        }
+    }
+
+    @Nested
+    class MultipartRemovalContract {
+        private MockMvc mvc;
+        private byte[] protectedBytes;
+
+        @BeforeEach
+        void useRealController() throws Exception {
+            var controller =
+                    new PasswordController(
+                            new CustomPDFDocumentFactory(mock(PdfMetadataService.class)),
+                            tempFileManager);
+            mvc = MockMvcBuilders.standaloneSetup(controller).build();
+            try (var document = Loader.loadPDF(simplePdfBytes);
+                    var output = new ByteArrayOutputStream()) {
+                var permissions = new AccessPermission();
+                permissions.setCanPrint(false);
+                var protection = new StandardProtectionPolicy("owner", "reader", permissions);
+                protection.setEncryptionKeyLength(256);
+                document.protect(protection);
+                document.save(output);
+                protectedBytes = output.toByteArray();
+            }
+        }
+
+        @Test
+        void passwordOnlyRetainsLegacyBehaviour() throws Exception {
+            byte[] output =
+                    mvc.perform(
+                                    multipart("/api/v1/security/remove-password")
+                                            .file(
+                                                    new MockMultipartFile(
+                                                            "fileInput",
+                                                            "test.pdf",
+                                                            "application/pdf",
+                                                            protectedBytes))
+                                            .param("password", "reader"))
+                            .andExpect(status().isOk())
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsByteArray();
+            try (var document = Loader.loadPDF(output)) {
+                assertTrue(document.isEncrypted());
+                assertFalse(document.getCurrentAccessPermission().canPrint());
+            }
+        }
+
+        @Test
+        void sourceCredentialRemovesOpeningPasswordAndRetainsOwner() throws Exception {
+            byte[] output =
+                    mvc.perform(
+                                    multipart("/api/v1/security/remove-password")
+                                            .file(
+                                                    new MockMultipartFile(
+                                                            "fileInput",
+                                                            "test.pdf",
+                                                            "application/pdf",
+                                                            protectedBytes))
+                                            .param("password", "reader")
+                                            .param("sourcePassword", "owner"))
+                            .andExpect(status().isOk())
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsByteArray();
+            try (var reader = Loader.loadPDF(output);
+                    var owner = Loader.loadPDF(output, "owner")) {
+                assertFalse(reader.getCurrentAccessPermission().canPrint());
+                assertFalse(owner.getCurrentAccessPermission().isReadOnly());
+            }
+        }
+
+        @Test
+        void ownerSelectionRetainsOpeningPassword() throws Exception {
+            byte[] output =
+                    mvc.perform(
+                                    multipart("/api/v1/security/remove-password")
+                                            .file(
+                                                    new MockMultipartFile(
+                                                            "fileInput",
+                                                            "test.pdf",
+                                                            "application/pdf",
+                                                            protectedBytes))
+                                            .param("ownerPassword", "owner")
+                                            .param("retainedOpeningPassword", "reader"))
+                            .andExpect(status().isOk())
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsByteArray();
+            assertThrows(
+                    org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException.class,
+                    () -> Loader.loadPDF(output));
+            try (var reader = Loader.loadPDF(output, "reader")) {
+                assertTrue(reader.getCurrentAccessPermission().canPrint());
+            }
+        }
+
+        @Test
+        void emptySelectiveFieldsCannotFallBackToLegacyRemoval() throws Exception {
+            mvc.perform(
+                            multipart("/api/v1/security/remove-password")
+                                    .file(
+                                            new MockMultipartFile(
+                                                    "fileInput",
+                                                    "test.pdf",
+                                                    "application/pdf",
+                                                    protectedBytes))
+                                    .param("password", "")
+                                    .param("ownerPassword", "")
+                                    .param("sourcePassword", "owner"))
+                    .andExpect(status().isBadRequest());
         }
     }
 

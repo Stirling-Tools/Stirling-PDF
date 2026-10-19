@@ -23,7 +23,7 @@ vi.mock("react-i18next", () => {
 });
 
 const mock = vi.hoisted(() => ({ probe: vi.fn(), unlock: vi.fn() }));
-vi.mock("@app/utils/thumbnailUtils", () => ({
+vi.mock("@app/utils/pdfEncryptionProbe", () => ({
   looksEncryptedFromTrailer: mock.probe,
 }));
 vi.mock("@app/contexts/FileContext", () => ({
