@@ -238,43 +238,6 @@ public class PdfSessionSecurityController {
     }
 
     /**
-     * Retains restrictions and a verified permissions password, or an explicitly chosen
-     * replacement.
-     */
-    @Operation(hidden = true)
-    @PostMapping(
-            value = "/remove-pdf-opening-password",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Resource> removeOpeningPassword(
-            @ModelAttribute PDFPasswordRequest request,
-            @RequestParam(defaultValue = "") String newOwnerPassword)
-            throws IOException {
-        try (PDDocument document =
-                pdfDocumentFactory.load(request.getFileInput(), request.getPassword(), true)) {
-            PdfSessionPermissions.requireOwner(
-                    document, applicationProperties.getSecurity().isHonorOwnerPasswords());
-            if (document.isEncrypted()) {
-                String owner =
-                        PdfSessionPermissions.isOwnerAuthenticated(document)
-                                ? request.getPassword()
-                                : newOwnerPassword;
-                if (owner.isEmpty()) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
-                            "Choose a new permissions password to retain restrictions");
-                }
-                var permissions = new AccessPermission(document.getEncryption().getPermissions());
-                var protection = new StandardProtectionPolicy(owner, "", permissions);
-                protection.setEncryptionKeyLength(document.getEncryption().getLength());
-                protection.setPreferAES(document.getEncryption().getVersion() >= 4);
-                document.protect(protection);
-            }
-            return WebResponseUtils.pdfDocToWebResponse(
-                    document, "opening_password_removed.pdf", tempFileManager);
-        }
-    }
-
-    /**
      * Replaces protection deliberately; source authentication is separate from the new credentials.
      */
     @Operation(hidden = true)

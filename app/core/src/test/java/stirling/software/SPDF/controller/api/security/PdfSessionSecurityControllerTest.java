@@ -178,20 +178,6 @@ class PdfSessionSecurityControllerTest {
             assertTrue(
                     controller.inspect(request(bytes, "replacement-owner")).ownerAuthenticated());
         }
-        assertThrows(
-                ResponseStatusException.class,
-                () -> controller.removeOpeningPassword(request(original, USER), ""));
-        try (var stream =
-                controller
-                        .removeOpeningPassword(request(original, USER), "replacement-owner")
-                        .getBody()
-                        .getInputStream()) {
-            byte[] bytes = stream.readAllBytes();
-            assertFalse(controller.inspect(request(bytes, "")).requiresOpeningPassword());
-            assertFalse(controller.inspect(request(bytes, "")).canPrint());
-            assertTrue(
-                    controller.inspect(request(bytes, "replacement-owner")).ownerAuthenticated());
-        }
     }
 
     private MockMultipartFile upload(byte[] bytes) {
@@ -401,7 +387,7 @@ class PdfSessionSecurityControllerTest {
         assertTrue(controller.inspect(request(original, OWNER)).ownerAuthenticated());
         assertThrows(
                 ResponseStatusException.class,
-                () -> controller.removeOpeningPassword(request(original, USER), ""));
+                () -> controller.removePasswords(request(original, USER), "", USER, ""));
     }
 
     @ParameterizedTest
@@ -478,7 +464,7 @@ class PdfSessionSecurityControllerTest {
         byte[] original = pdf(true, 256);
         try (var stream =
                 controller
-                        .removeOpeningPassword(request(original, OWNER), "")
+                        .removePasswords(request(original, USER), "", OWNER, "")
                         .getBody()
                         .getInputStream()) {
             byte[] result = stream.readAllBytes();
