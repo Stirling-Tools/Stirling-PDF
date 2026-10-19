@@ -70,7 +70,7 @@ const LandingPage = () => {
 
         <div
           className="landing-actions-enter w-full"
-          style={{ height: "2.75rem", minHeight: "2.75rem" }}
+          style={{ minHeight: "2.75rem" }}
         >
           <LandingActions
             fileInputRef={fileInputRef}

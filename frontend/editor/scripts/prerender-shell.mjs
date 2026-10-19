@@ -616,7 +616,7 @@ function shellScript({ wide, narrow, login }) {
       `var isLoginMode=isLoginRoute||(reqLogin&&!hasAuth&&isEditorPath);` +
       `if(isLoginMode){document.documentElement.setAttribute("data-shell-mode","login");}` +
       `else if(!isEditorPath||document.documentElement.hasAttribute("data-shell-hidden")){clearShells();root.removeAttribute("data-shell");document.documentElement.setAttribute("data-shell-hidden","");return;}`,
-    `function drop(){if(!root.hasAttribute("data-shell"))return;clearShells();root.removeAttribute("data-shell");if(window.__spdfBoot)window.__spdfBoot();}`,
+    `function drop(){if(!root.hasAttribute("data-shell"))return;root.removeAttribute("data-shell");if(window.__spdfBoot)window.__spdfBoot();}`,
     `try{var data=JSON.parse(document.getElementById("shell-strings").textContent);`,
     `var stored=null;try{stored=localStorage.getItem("i18nextLng");}catch(e){}`,
     // A tag arrives in any case and with either separator, so match it exactly, then

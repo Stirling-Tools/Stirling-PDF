@@ -33,7 +33,7 @@ export default function Landing() {
 
   // The backend-down screen is not the app. Loading is: it resolves in a moment.
   useSuppressQuickNavRail(
-    !loading && !probePending && !session && backendProbe.status !== "up",
+    !loading && !probePending && !session && backendProbe.status === "down",
   );
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
@@ -98,7 +98,7 @@ export default function Landing() {
   }
 
   // If backend is confirmed unreachable and not currently probing, show status screen
-  if (!probePending && backendProbe.status !== "up") {
+  if (!probePending && backendProbe.status === "down") {
     const backendTitle = t("backendStartup.notFoundTitle", "Backend not found");
     const handleRetry = async () => {
       const result = await backendProbe.probe();

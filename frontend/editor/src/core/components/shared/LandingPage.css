@@ -6,7 +6,8 @@
 .landing-actions-enter {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  min-height: 2.75rem;
   width: 100%;
 }
 

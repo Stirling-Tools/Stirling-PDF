@@ -161,6 +161,7 @@ export default function Workbench() {
     }
 
     if (activeFiles.length === 0) {
+      if (fileIds.length > 0) return null;
       return <LandingPage />;
     }
 
