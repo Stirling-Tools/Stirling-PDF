@@ -127,7 +127,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             generateAndStoreKeypair();
             return;
         }
-        for (JwtSigningKeyEntity key : keys) {}
         activeKey =
                 new JwtVerificationKey(
                         keys.getFirst().getKeyId(), keys.getFirst().getVerifyingKey());
