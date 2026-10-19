@@ -187,7 +187,7 @@
 }
 
 .pip-target[data-variant="card"] {
-  width: 11rem;
+  width: 12.5rem;
   height: auto;
   border-radius: 16px;
 }
@@ -198,22 +198,15 @@
 
 .pip-card {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  padding: 10px;
-  border: 1px solid var(--c-border-strong);
+  padding: 6px;
+  border: 1px solid var(--c-border);
   border-radius: 16px;
   background: var(--c-surface);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.14);
   text-align: left;
-}
-
-.pip-card-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
 }
 
 .pip-card-icon {
@@ -221,9 +214,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--radius-md);
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 11px;
   background: var(--c-primary-subtle);
   color: var(--c-accent-fg, var(--c-primary));
 }
@@ -233,17 +226,21 @@
   height: 1.125rem;
 }
 
+.pip-card .pip-label-caption {
+  color: var(--c-accent-fg, var(--c-primary));
+  font-weight: 500;
+}
+
 .pip-card-action {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 6px 8px;
-  border-radius: var(--radius-md);
-  background: var(--c-primary);
-  color: var(--c-text-on-primary);
-  font-size: 0.8125rem;
-  font-weight: 600;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-right: 2px;
+  border-radius: 50%;
+  color: var(--c-text-muted);
 }
 
 @keyframes pip-target-in {

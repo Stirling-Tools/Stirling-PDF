@@ -285,15 +285,12 @@ export function PipPane({
         >
           {variant === "card" ? (
             <span className="pip-card">
-              <span className="pip-card-head">
-                {icon && <span className="pip-card-icon">{icon}</span>}
-                <span className="pip-label-text">
-                  <span className="pip-label-name">{label}</span>
-                  <span className="pip-label-caption">{caption}</span>
-                </span>
+              {icon && <span className="pip-card-icon">{icon}</span>}
+              <span className="pip-label-text">
+                <span className="pip-label-name">{label}</span>
+                <span className="pip-label-caption">{caption}</span>
               </span>
               <span className="pip-card-action">
-                {t("mobile.pip.openSettings", "Open settings")}
                 <Icon name="maximize-2" size="0.875rem" />
               </span>
             </span>
