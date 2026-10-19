@@ -1,3 +1,4 @@
+import { protectLikeOriginal } from "@editor/services/rightsManagedPdf";
 import React, {
   useCallback,
   useEffect,
@@ -698,6 +699,21 @@ const EmbedPdfViewerContent = ({
   const rightsManaged = useRightsManagedPdf(previewFile ?? currentFile);
   const rightsManagedOpened =
     rightsManaged.status === "opened" ? rightsManaged.opened : null;
+  const exportProtect = React.useMemo(
+    () =>
+      rightsManagedOpened
+        ? async (bytes: ArrayBuffer) =>
+            (
+              await protectLikeOriginal(
+                rightsManagedOpened,
+                new File([bytes], rightsManagedOpened.original.name, {
+                  type: "application/pdf",
+                }),
+              )
+            ).arrayBuffer()
+        : undefined,
+    [rightsManagedOpened],
+  );
 
   // Lineage root of the open document: saves and tool outputs add a child record,
   // so mounting on the root keeps the engine alive across reloads.
@@ -1975,6 +1991,7 @@ const EmbedPdfViewerContent = ({
               file={effectiveFile.file}
               url={effectiveFile.url}
               exportOriginal={rightsManagedOpened?.original}
+              exportProtect={exportProtect}
               fileName={
                 previewFile
                   ? previewFile.name

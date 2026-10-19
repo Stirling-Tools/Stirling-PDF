@@ -5,8 +5,12 @@ import type { CloudOrigin } from "@editor/types/file";
 
 const post = vi.fn();
 vi.mock("@editor/services/apiClient", () => ({ default: { post } }));
+const isProtected = vi.fn();
+vi.mock("@editor/services/rightsManagedPdf", () => ({
+  isMicrosoftProtectedPdf: (file: File) => isProtected(file),
+}));
 
-const { saveToOneDrive, copyName } =
+const { saveToOneDrive, copyName, OneDriveSaveError } =
   await import("@editor/services/oneDriveSave");
 
 const origin: CloudOrigin = {
@@ -18,6 +22,7 @@ const origin: CloudOrigin = {
   name: "Report.pdf",
   eTag: '"{E},1"',
   webUrl: null,
+  protected: false,
 };
 
 const saved = {
@@ -59,6 +64,8 @@ const file = new File(["%PDF-1.7"], "Report.pdf", { type: "application/pdf" });
 describe("saveToOneDrive", () => {
   beforeEach(() => {
     post.mockReset();
+    isProtected.mockReset();
+    isProtected.mockResolvedValue(false);
   });
 
   it("refuses to replace a file whose OneDrive version is unknown", async () => {
@@ -138,5 +145,27 @@ describe("saveToOneDrive", () => {
     await expect(
       saveToOneDrive(file, { kind: "replace", origin }),
     ).rejects.toMatchObject({ code: "reconnect" });
+  });
+
+  it("never uploads plaintext over a Purview-protected original", async () => {
+    await expect(
+      saveToOneDrive(file, {
+        kind: "replace",
+        origin: { ...origin, protected: true },
+      }),
+    ).rejects.toBeInstanceOf(OneDriveSaveError);
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("keeps protected output protected and remembers it", async () => {
+    isProtected.mockResolvedValue(true);
+    post.mockResolvedValue({ data: saved });
+
+    const next = await saveToOneDrive(file, {
+      kind: "replace",
+      origin: { ...origin, protected: true },
+    });
+
+    expect(next.protected).toBe(true);
   });
 });

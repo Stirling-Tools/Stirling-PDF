@@ -6564,6 +6564,7 @@ saveCopyToOneDrive = "Save a copy to OneDrive"
 saved = "Saved to OneDrive"
 saveToFolder = "Save to a OneDrive folder…"
 saving = "Saving to OneDrive…"
+unprotected = "This version is no longer protected with Microsoft Purview, so it was not saved to OneDrive."
 updateOriginal = "Update original in OneDrive"
 
 [overlay-pdfs]

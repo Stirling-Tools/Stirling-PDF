@@ -100,6 +100,7 @@ export interface CloudOrigin {
   name: string;
   eTag: string | null;
   webUrl: string | null;
+  protected: boolean;
 }
 
 /**
