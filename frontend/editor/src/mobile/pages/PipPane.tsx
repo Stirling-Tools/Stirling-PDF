@@ -2,7 +2,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type CSSProperties,
   type ReactNode,
 } from "react";
 import { Icon } from "@app/ui/Icon";
@@ -20,17 +19,8 @@ type Point = { x: number; y: number };
 interface PipPaneProps {
   /** Fills the screen. */
   front: boolean;
-  /** Not in front, but waiting in the corner; otherwise hidden. */
+  /** Not in front, but waiting in the corner as a card; otherwise hidden. */
   pip: boolean;
-  /**
-   * "live" waits as the pane itself scaled down (pinch to resize); "card"
-   * shrinks into a small card naming it, for a pane you need to recognise
-   * rather than read.
-   */
-  variant: "live" | "card";
-  /** Thumbnail size as a fraction of the screen; pinch changes it. */
-  scale: number;
-  onScale: (scale: number) => void;
   label: string;
   caption: string;
   icon?: ReactNode;
@@ -43,19 +33,13 @@ interface PipPaneProps {
 }
 
 const TAP_SLOP_PX = 8;
-const MIN_SCALE = 0.2;
-const MAX_SCALE = 0.55;
-// How far ahead a flick carries the thumbnail when choosing its corner.
+// How far ahead a flick carries the card when choosing its corner.
 const FLICK_PROJECTION_MS = 180;
 // Matches .pip-stage --pip-gap.
 const GAP_PX = 12;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
-}
-
-function distance(a: Point, b: Point) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
 /** Where a box of this size sits in each corner of the stage. */
@@ -76,28 +60,24 @@ function cornerOrigin(
 }
 
 interface Gesture {
-  pointers: Map<number, Point>;
+  pointerId: number;
   start: Point;
   box: DOMRect;
   stage: DOMRect;
   offset: Point;
   last: { point: Point; time: number };
   velocity: Point;
-  pinch: { distance: number; scale: number } | null;
   moved: boolean;
 }
 
 /**
- * One of the two full screens. Behind the other one it is the same live
- * content scaled into a corner: tap to bring it back, drag it to another
- * corner, pinch to resize. Its content never unmounts.
+ * One of the two full screens. Behind the other one it shrinks into a card in
+ * a corner: tap to bring it back, drag it to another corner. Its content never
+ * unmounts.
  */
 export function PipPane({
   front,
   pip,
-  variant,
-  scale,
-  onScale,
   label,
   caption,
   icon,
@@ -107,13 +87,7 @@ export function PipPane({
   children,
 }: PipPaneProps) {
   const { t } = useTranslation();
-  const state = front
-    ? "front"
-    : pip
-      ? variant === "live"
-        ? "pip"
-        : "card"
-      : "hidden";
+  const state = front ? "front" : pip ? "card" : "hidden";
   // Growing back out of the card is played once, on the way to the front.
   const previousState = useRef(state);
   const [entering, setEntering] = useState(false);
@@ -125,7 +99,6 @@ export function PipPane({
   const gesture = useRef<Gesture | null>(null);
   const suppressClick = useRef(false);
   const [gesturing, setGesturing] = useState(false);
-  const scaleStyle = { "--pip-scale": scale } as CSSProperties;
 
   const settle = (g: Gesture) => {
     const width = g.box.width;
@@ -167,8 +140,6 @@ export function PipPane({
         className="pip-pane"
         data-state={state}
         data-entering={entering}
-        data-gesture={gesturing}
-        style={scaleStyle}
         inert={!front}
         onAnimationEnd={(event) => {
           if (event.target === event.currentTarget) setEntering(false);
@@ -176,62 +147,33 @@ export function PipPane({
       >
         {children}
       </section>
-      {(state === "pip" || state === "card") && (
+      {state === "card" && (
         <button
           type="button"
           className="pip-target"
-          data-variant={variant}
           data-gesture={gesturing}
-          style={scaleStyle}
           aria-label={t("mobile.pip.open", "Open {{name}}", { name: label })}
           onPointerDown={(event) => {
+            if (gesture.current) return;
+            const stage = event.currentTarget.parentElement;
+            if (!stage) return;
             event.currentTarget.setPointerCapture(event.pointerId);
             const point = { x: event.clientX, y: event.clientY };
-            const g = gesture.current;
-            if (!g) {
-              const stage = event.currentTarget.parentElement;
-              if (!stage) return;
-              gesture.current = {
-                pointers: new Map([[event.pointerId, point]]),
-                start: point,
-                box: event.currentTarget.getBoundingClientRect(),
-                stage: stage.getBoundingClientRect(),
-                offset: { x: 0, y: 0 },
-                last: { point, time: event.timeStamp },
-                velocity: { x: 0, y: 0 },
-                pinch: null,
-                moved: false,
-              };
-              return;
-            }
-            g.pointers.set(event.pointerId, point);
-            if (g.pointers.size === 2 && variant === "live") {
-              const [a, b] = [...g.pointers.values()];
-              g.pinch = { distance: distance(a, b), scale };
-              g.moved = true;
-              setGesturing(true);
-              onDrag(null);
-            }
+            gesture.current = {
+              pointerId: event.pointerId,
+              start: point,
+              box: event.currentTarget.getBoundingClientRect(),
+              stage: stage.getBoundingClientRect(),
+              offset: { x: 0, y: 0 },
+              last: { point, time: event.timeStamp },
+              velocity: { x: 0, y: 0 },
+              moved: false,
+            };
           }}
           onPointerMove={(event) => {
             const g = gesture.current;
-            if (!g || !g.pointers.has(event.pointerId)) return;
+            if (!g || g.pointerId !== event.pointerId) return;
             const point = { x: event.clientX, y: event.clientY };
-            g.pointers.set(event.pointerId, point);
-
-            if (g.pinch) {
-              if (g.pointers.size !== 2) return;
-              const [a, b] = [...g.pointers.values()];
-              onScale(
-                clamp(
-                  g.pinch.scale * (distance(a, b) / g.pinch.distance),
-                  MIN_SCALE,
-                  MAX_SCALE,
-                ),
-              );
-              return;
-            }
-
             const dx = point.x - g.start.x;
             const dy = point.y - g.start.y;
             if (!g.moved && Math.hypot(dx, dy) < TAP_SLOP_PX) return;
@@ -239,7 +181,7 @@ export function PipPane({
               g.moved = true;
               setGesturing(true);
             }
-            // Keep the whole thumbnail on screen.
+            // Keep the whole card on screen.
             g.offset = {
               x: clamp(
                 dx,
@@ -262,13 +204,10 @@ export function PipPane({
           }}
           onPointerUp={(event) => {
             const g = gesture.current;
-            if (!g) return;
-            g.pointers.delete(event.pointerId);
-            if (g.pointers.size > 0) return;
+            if (!g || g.pointerId !== event.pointerId) return;
             gesture.current = null;
             suppressClick.current = g.moved;
-            if (g.moved && !g.pinch) settle(g);
-            else setGesturing(false);
+            if (g.moved) settle(g);
           }}
           onPointerCancel={() => {
             gesture.current = null;
@@ -283,26 +222,16 @@ export function PipPane({
             onOpen();
           }}
         >
-          {variant === "card" ? (
-            <span className="pip-card">
-              {icon && <span className="pip-card-icon">{icon}</span>}
-              <span className="pip-label-text">
-                <span className="pip-label-name">{label}</span>
-                <span className="pip-label-caption">{caption}</span>
-              </span>
-              <span className="pip-card-action">
-                <Icon name="maximize-2" size="0.875rem" />
-              </span>
+          <span className="pip-card">
+            {icon && <span className="pip-card-icon">{icon}</span>}
+            <span className="pip-card-text">
+              <span className="pip-card-name">{label}</span>
+              <span className="pip-card-caption">{caption}</span>
             </span>
-          ) : (
-            <span className="pip-label">
-              {icon && <span className="pip-label-icon">{icon}</span>}
-              <span className="pip-label-text">
-                <span className="pip-label-name">{label}</span>
-                <span className="pip-label-caption">{caption}</span>
-              </span>
+            <span className="pip-card-action">
+              <Icon name="maximize-2" size="0.875rem" />
             </span>
-          )}
+          </span>
         </button>
       )}
     </>

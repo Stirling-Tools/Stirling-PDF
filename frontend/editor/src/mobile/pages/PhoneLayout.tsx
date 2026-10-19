@@ -49,8 +49,7 @@ function Tab({ icon, label, active, onClick }: TabProps) {
 
 /**
  * Two full screens, the document and the tools, with the one you are not on
- * waiting as a live miniature in the corner; tapping it zooms it back to full
- * screen. Both are the existing workbench and tool panel, always mounted, so a
+ * waiting as a card in the corner; tapping it grows it back to full screen. Both are the existing workbench and tool panel, always mounted, so a
  * tool keeps its settings and the document its place while the other is in
  * front. The "tools" view puts the tools in front.
  */
@@ -72,7 +71,6 @@ export function PhoneLayout({
   const { activeFileId, setActiveFileId } = useViewer();
   const [homeRequested, setHomeRequested] = useState(false);
   const [pipCorner, setPipCorner] = useState<PipCorner>("bottom-right");
-  const [documentPipScale, setDocumentPipScale] = useState(0.34);
   const [pipDrag, setPipDrag] = useState<{ x: number; y: number } | null>(null);
 
   // Bringing a file in from the home opens it, so the home steps aside.
@@ -149,11 +147,8 @@ export function PhoneLayout({
           front={!toolsInFront}
           // Only waits in the corner behind an open tool, never behind the list.
           pip={documentOpen && tool !== null}
-          variant="live"
-          scale={documentPipScale}
-          onScale={setDocumentPipScale}
           label={currentDocument?.name ?? ""}
-          caption={t("mobile.pip.document", "Document")}
+          caption={t("mobile.pip.backToDocument", "Back to document")}
           icon={<Icon name="file-text" size="1rem" />}
           onOpen={() => onSelectView("workbench")}
           onDrag={setPipDrag}
@@ -176,9 +171,6 @@ export function PhoneLayout({
           front={toolsInFront}
           // Only an open tool waits in the corner; the list alone is not worth it.
           pip={tool !== null && !filesMode}
-          variant="card"
-          scale={documentPipScale}
-          onScale={setDocumentPipScale}
           label={tool?.name ?? ""}
           caption={t("mobile.pip.openSettings", "Open settings")}
           icon={tool?.icon}
