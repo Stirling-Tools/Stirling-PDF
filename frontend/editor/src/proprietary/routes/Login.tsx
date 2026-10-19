@@ -260,7 +260,9 @@ export default function Login() {
     }
 
     autoLoginAttempted.current = true;
-    recordSsoAutoLoginAttempt();
+    if (!recordSsoAutoLoginAttempt()) {
+      return;
+    }
     void login.signInWithProvider(login.providers[0]);
   }, [
     ssoAutoLogin,

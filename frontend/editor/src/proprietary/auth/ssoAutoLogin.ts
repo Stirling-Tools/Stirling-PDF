@@ -3,9 +3,9 @@
  * to the single SSO provider. Lives in sessionStorage so a new tab starts over.
  *
  * Every access is guarded: a browser that blocks storage throws on the first
- * touch of `window.sessionStorage`. Unreadable state fails towards showing the
- * sign-in form, because without the visit count nothing stops a redirect loop
- * through a broken IdP.
+ * touch of `window.sessionStorage`, and a full one throws on write. State that
+ * cannot be read or recorded fails towards showing the sign-in form, because
+ * without the visit count nothing stops a redirect loop through a broken IdP.
  */
 
 const ATTEMPTS_KEY = "stirling_sso_auto_login_attempts";
@@ -23,12 +23,13 @@ function readCount(storage: Storage, key: string): number {
   return Number.isFinite(value) ? value : 0;
 }
 
-function incrementCount(key: string): void {
+function incrementCount(key: string): boolean {
   try {
     const storage = window.sessionStorage;
     storage.setItem(key, String(readCount(storage, key) + 1));
+    return true;
   } catch {
-    // Storage blocked: isSsoAutoLoginAllowed already reports false.
+    return false;
   }
 }
 
@@ -46,11 +47,17 @@ export function isSsoAutoLoginAllowed(): boolean {
   }
 }
 
-export function recordSsoAutoLoginAttempt(): void {
-  incrementCount(ATTEMPTS_KEY);
+/**
+ * Counts this tab's redirect. False when it could not be stored, and the caller
+ * must not redirect: the next view would not know this one happened.
+ */
+export function recordSsoAutoLoginAttempt(): boolean {
+  return incrementCount(ATTEMPTS_KEY);
 }
 
 export function recordSsoAutoLoginError(): void {
+  // Safe to drop on failure: storage that rejects this write rejects the
+  // attempt count too, and Login does not redirect without one.
   incrementCount(ERRORS_KEY);
 }
 

@@ -977,6 +977,25 @@ describe("Login", () => {
       }
     });
 
+    it("shows the form instead of redirecting when the visit cannot be recorded", async () => {
+      mockLoginConfig("all");
+      vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw new DOMException("full", "QuotaExceededError");
+      });
+
+      try {
+        renderAt("/login");
+
+        await waitFor(() => {
+          expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+          expect(document.getElementById("password")).toBeInTheDocument();
+        });
+        expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
+      } finally {
+        vi.restoreAllMocks();
+      }
+    });
+
     it("stays on the page with the email form under ?all", async () => {
       mockLoginConfig("all");
       renderAt("/login?all");
