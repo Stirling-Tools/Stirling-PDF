@@ -158,6 +158,7 @@ export async function preflightPdfOperation(
   for (const file of files) {
     if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
     if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) continue;
+    if (getOpenedRightsManagedPdf(file)) continue;
     // Password endpoints validate the requested change themselves; unknown roles need no preflight upload.
     const access = changesProtection
       ? getPdfAccess(file)

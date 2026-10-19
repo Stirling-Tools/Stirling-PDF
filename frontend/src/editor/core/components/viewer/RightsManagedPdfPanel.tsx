@@ -57,7 +57,16 @@ export function RightsManagedPdfPanel({
 
   const describe = (cause: unknown): PanelError => {
     if (cause instanceof RightsManagementError) {
-      if (cause.code === "no_permissions" || cause.code === "access_denied")
+      if (cause.code === "access_denied")
+        return {
+          message: t(
+            "rightsManagedPdf.accessDenied",
+            "Microsoft refused access. Sign in again, or ask your administrator to check Stirling's Microsoft Purview permissions.",
+          ),
+          owner: null,
+          reconnect: true,
+        };
+      if (cause.code === "no_permissions")
         return {
           message: t(
             "rightsManagedPdf.noPermissions",

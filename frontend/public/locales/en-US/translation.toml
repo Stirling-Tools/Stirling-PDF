@@ -11789,6 +11789,7 @@ text = "Completely invert all colors in the PDF, creating a negative-like effect
 title = "Invert All Colors"
 
 [rightsManagedPdf]
+accessDenied = "Microsoft refused access. Sign in again, or ask your administrator to check Stirling's Microsoft Purview permissions."
 account = "Microsoft account"
 askOwner = "Ask {{owner}} for access."
 bannerTitle = "{{label}} · Microsoft Purview"
@@ -11808,6 +11809,7 @@ noPrint = "Printing is not allowed"
 open = "Open with Microsoft"
 openFailed = "Unable to open this protected PDF. Please try again."
 openFirst = "Open this Microsoft Purview protected PDF in the viewer first, then run the tool again."
+printNotAllowed = "Your Microsoft Purview permissions do not allow printing this PDF."
 protectFailed = "Unable to re-apply Microsoft Purview protection. No unprotected result was saved."
 signInRequired = "Sign in to your Microsoft account again to open this PDF."
 title = "Protected by Microsoft Purview"

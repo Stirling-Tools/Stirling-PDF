@@ -10,6 +10,7 @@ import {
   decodePDFRawStream,
 } from "@cantoo/pdf-lib";
 import type { PdfAttachmentObject } from "@embedpdf/models";
+import { isMicrosoftProtectedPdf } from "@editor/services/rightsManagedPdf";
 
 // Reads a portfolio's members from the file's own bytes. The viewer's attachment
 // capability only covers the open document, which stops being the portfolio.
@@ -147,6 +148,11 @@ export async function readPortfolioMembers(
 ): Promise<PdfAttachmentObject[] | null> {
   const remembered = answers.get(file);
   if (remembered !== undefined) return remembered;
+
+  if (await isMicrosoftProtectedPdf(file)) {
+    answers.set(file, null);
+    return null;
+  }
 
   const loaded = await open(file);
   if (!loaded || !loaded.isPortfolio) {
