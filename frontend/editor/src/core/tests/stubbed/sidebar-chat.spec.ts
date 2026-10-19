@@ -1,4 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { waitForAppReady } from "@app/tests/helpers/ui-helpers";
 import type { Locator, Page, Route } from "@playwright/test";
 
 /** The AI agent docked at the foot of the file sidebar, and how it opens and closes. */
@@ -19,6 +20,7 @@ async function openEditorWithAi(page: Page): Promise<Locator> {
     }),
   );
   await page.goto("/editor", { waitUntil: "domcontentloaded" });
+  await waitForAppReady(page);
   const dock = page.getByRole("region", { name: "Stirling Agent" });
   await expect(dock).toBeVisible();
   return dock;

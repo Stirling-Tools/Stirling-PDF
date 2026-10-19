@@ -70,6 +70,7 @@ async function dragPageOver(
 ) {
   await from.scrollIntoViewIfNeeded();
   const source = await from.boundingBox();
+  await to.scrollIntoViewIfNeeded();
   const target = await to.boundingBox();
   if (!source || !target) throw new Error("drag endpoints are not laid out");
 
@@ -119,7 +120,9 @@ async function dragPageIntoGap(
   leftTile: import("@playwright/test").Locator,
   rightTile: import("@playwright/test").Locator,
 ) {
+  await from.scrollIntoViewIfNeeded();
   const source = await from.boundingBox();
+  await leftTile.scrollIntoViewIfNeeded();
   const left = await leftTile.boundingBox();
   const right = await rightTile.boundingBox();
   if (!source || !left || !right)

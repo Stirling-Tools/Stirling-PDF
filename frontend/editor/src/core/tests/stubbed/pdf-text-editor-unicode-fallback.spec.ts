@@ -12,6 +12,8 @@ import { waitForEditorReady } from "@app/tests/stubbed/editorReady";
 
 /** Client-side Unicode fallback font (Noto Sans, embedded on demand). */
 
+test.use({ autoGoto: false });
+
 const SAMPLE = path.join(
   import.meta.dirname,
   "../../../../public/samples/Sample.pdf",

@@ -59,6 +59,10 @@ export async function waitForAppReady(page: Page): Promise<void> {
     .locator("[data-shell-for]")
     .waitFor({ state: "detached" })
     .catch(() => {});
+  await page
+    .locator("link[data-href]")
+    .waitFor({ state: "detached" })
+    .catch(() => {});
 }
 
 /** Uploads through the sidebar and waits for IndexedDB persistence before callers navigate. */

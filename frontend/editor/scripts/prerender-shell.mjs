@@ -721,8 +721,9 @@ function deferEntry(html) {
       'lp.href=new URL("locales/"+pLngs[p]+"/translation.toml",document.baseURI).href;document.head.appendChild(lp);}' +
       'var meta=payload.meta||[];for(var m=0;m<meta.length;m++){var icon=document.createElement("link");' +
       "icon.rel=meta[m].rel;icon.href=meta[m].href;document.head.appendChild(icon);}" +
-      'var links=document.querySelectorAll("link[data-href]");' +
-      'for(var k=0;k<links.length;k++){var l=links[k];l.href=l.getAttribute("data-href");l.removeAttribute("data-href");l.disabled=false;}}' +
+      'var enableSheets=function(){var links=document.querySelectorAll("link[data-href]");' +
+      'for(var k=0;k<links.length;k++){var l=links[k];l.href=l.getAttribute("data-href");l.removeAttribute("data-href");l.disabled=false;}};' +
+      'if(document.readyState==="loading"){addEventListener("DOMContentLoaded",enableSheets,{once:true});}else{enableSheets();}}' +
       "var activeInputId=null;var activeInputValue=null;var activeSelection=null;var restoreTries=0;" +
       'addEventListener("focusin",function(e){var t=e.target;' +
       'if(t&&t.tagName==="INPUT"&&t.id&&t.closest&&t.closest("[data-shell-for]")){activeInputId=t.id;activeInputValue=t.value||"";try{activeSelection=[t.selectionStart,t.selectionEnd];}catch(err){}' +
@@ -764,7 +765,7 @@ function deferEntry(html) {
       'var reqLoginSession=Boolean(window.STIRLING_PDF_ENABLE_LOGIN);try{if(!reqLoginSession&&localStorage.getItem("stirling_login_enabled")==="true")reqLoginSession=true;}catch(e){}' +
       "if(isLoginCurPath||(reqLoginSession&&!hasAuthSession&&isEditorCurPath)){" +
       "setTimeout(boot,50);}" +
-      'if(typeof navigator!=="undefined"&&navigator.webdriver){boot();return;}' +
+      'if(typeof navigator!=="undefined"&&navigator.webdriver){if(document.readyState==="loading"){addEventListener("DOMContentLoaded",boot,{once:true});}else{boot();}return;}' +
       // The shell is the first screen, so the app waits for a gesture or idle window.
       'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +
       "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
