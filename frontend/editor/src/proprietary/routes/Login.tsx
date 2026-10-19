@@ -72,6 +72,7 @@ export default function Login() {
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
+  const [defaultSignInAllowed, setDefaultSignInAllowed] = useState(false);
   const [loginConfigLoaded, setLoginConfigLoaded] = useState(false);
   const loginDisabled =
     backendProbe.loginDisabled === true || _enableLogin === false;
@@ -184,6 +185,8 @@ export default function Login() {
       setSsoAutoLogin(Boolean(data.ssoAutoLogin));
       setIsFirstTimeSetup(data.firstTimeSetup ?? false);
       setShowDefaultCredentials(data.showDefaultCredentials ?? false);
+      // Only an explicit yes: a server too old to send it never gets the attempt.
+      setDefaultSignInAllowed(data.defaultSignIn === true);
       setLoginConfigLoaded(true);
       // Apply language configuration from server
       if (data.languages || data.defaultLocale) {
@@ -328,13 +331,12 @@ export default function Login() {
     hasSsoLoginError,
   ]);
 
-  // A fresh server still on the default admin login signs in by itself: the
-  // credentials are printed on this page anyway, and setup's first card
-  // replaces them. If they no longer work, the form is shown as usual.
+  // A server still in first-run setup on the default admin login signs in by
+  // itself: the credentials are printed on this page anyway, and setup's first
+  // card replaces them. The server decides; anything else gets the form.
   const defaultSignInDue =
     defaultSignIn === "idle" &&
-    isFirstTimeSetup &&
-    showDefaultCredentials &&
+    defaultSignInAllowed &&
     login.isUserPassAllowed &&
     !hasSsoLoginError &&
     !hasLogoutBlock() &&

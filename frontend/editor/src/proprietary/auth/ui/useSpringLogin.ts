@@ -16,6 +16,8 @@ export interface SpringLoginUiData {
   ssoAutoLogin?: boolean;
   firstTimeSetup?: boolean;
   showDefaultCredentials?: boolean;
+  /** The server allows signing in with the default admin login by itself. */
+  defaultSignIn?: boolean;
   languages?: string[] | null;
   defaultLocale?: string | null;
 }

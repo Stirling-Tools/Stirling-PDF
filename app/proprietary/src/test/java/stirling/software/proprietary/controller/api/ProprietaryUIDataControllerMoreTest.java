@@ -157,6 +157,38 @@ class ProprietaryUIDataControllerMoreTest {
             LoginData data = response.getBody();
             assertThat(data.isFirstTimeSetup()).isTrue();
             assertThat(data.isShowDefaultCredentials()).isTrue();
+            assertThat(data.isDefaultSignIn()).isTrue();
+        }
+
+        @Test
+        @DisplayName("never signs in by itself once setup is complete")
+        void noDefaultSignInAfterSetup() {
+            User admin = normalUser(1L, "admin");
+            admin.setFirstLogin(true);
+            applicationProperties.getSystem().setSetupCompleted(true);
+            when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId()))
+                    .thenReturn(1L);
+            when(userRepository.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(admin));
+
+            LoginData data = controller.getLoginData().getBody();
+
+            assertThat(data.isShowDefaultCredentials()).isTrue();
+            assertThat(data.isDefaultSignIn()).isFalse();
+        }
+
+        @Test
+        @DisplayName("never signs in by itself once the admin has set a password")
+        void noDefaultSignInAfterPasswordSet() {
+            User admin = normalUser(1L, "admin");
+            admin.setFirstLogin(false);
+            when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId()))
+                    .thenReturn(1L);
+            when(userRepository.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(admin));
+
+            LoginData data = controller.getLoginData().getBody();
+
+            assertThat(data.isShowDefaultCredentials()).isFalse();
+            assertThat(data.isDefaultSignIn()).isFalse();
         }
 
         @Test

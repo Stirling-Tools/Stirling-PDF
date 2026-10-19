@@ -891,6 +891,7 @@ describe("Login", () => {
           providerList: {},
           firstTimeSetup: true,
           showDefaultCredentials: true,
+          defaultSignIn: true,
         },
       });
     });
@@ -932,6 +933,24 @@ describe("Login", () => {
       await waitFor(() =>
         expect(document.getElementById("email")).toBeTruthy(),
       );
+      expect(springAuth.signInWithPassword).not.toHaveBeenCalled();
+    });
+
+    it("only shows the defaults once the server has finished setup", async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: {
+          enableLogin: true,
+          providerList: {},
+          firstTimeSetup: true,
+          showDefaultCredentials: true,
+          defaultSignIn: false,
+        },
+      });
+      renderFresh();
+
+      expect(
+        await screen.findByText("Default Login Credentials"),
+      ).toBeInTheDocument();
       expect(springAuth.signInWithPassword).not.toHaveBeenCalled();
     });
 
