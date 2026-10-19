@@ -94,7 +94,7 @@ struct Options {
 };
 
 Options parse(int argc, char** argv) {
-  if (argc < 2) throw std::invalid_argument("usage: stirling-mip <version|status|inspect|decrypt|protect> [--name value]...");
+  if (argc < 2) throw std::invalid_argument("usage: stirling-mip <version|status|inspect|decrypt|protect|labels|apply> [--name value]...");
   Options options;
   options.operation = argv[1];
   for (int i = 2; i < argc; ++i) {
@@ -332,6 +332,37 @@ void runProtect(const Options& options) {
   session.context->ShutDown();
 }
 
+void appendLabels(const std::vector<std::shared_ptr<mip::Label>>& labels, const std::string& parentName, std::string& out) {
+  for (const auto& label : labels) {
+    if (!label->IsActive()) continue;
+    if (out.size() > 1) out += ",";
+    out += "{\"id\":" + jsonString(label->GetId()) + ",\"name\":" + jsonString(label->GetName()) +
+           ",\"parentName\":" + jsonString(parentName) + ",\"color\":" + jsonString(label->GetColor()) +
+           ",\"sensitivity\":" + std::to_string(label->GetSensitivity()) + "}";
+    appendLabels(label->GetChildren(), label->GetName(), out);
+  }
+}
+
+void runLabels(const Options& options) {
+  Session session = openSession(options);
+  std::string labels = "[";
+  appendLabels(session.engine->ListSensitivityLabels(), "", labels);
+  emit("{\"type\":\"result\",\"labels\":" + labels + "]}");
+  session.context->ShutDown();
+}
+
+void runApply(const Options& options) {
+  Session session = openSession(options);
+  auto label = session.engine->GetLabelById(options.require("label-id"));
+  auto handler = openHandler(session, options.require("input"));
+  mip::LabelingOptions labeling(mip::AssignmentMethod::STANDARD);
+  handler->SetLabel(label, labeling, mip::ProtectionSettings());
+  if (!commit(handler, options.require("output"))) throw mip::InternalError("The SDK did not write the labelled document");
+  auto labelled = openHandler(session, options.require("output"));
+  emit("{\"type\":\"result\"," + describe(labelled) + "}");
+  session.context->ShutDown();
+}
+
 std::string errorCode(const std::exception_ptr& error, std::string& message, std::string& owner) {
   try {
     std::rethrow_exception(error);
@@ -382,6 +413,8 @@ int main(int argc, char** argv) {
     else if (options.operation == "inspect") runInspect(options);
     else if (options.operation == "decrypt") runDecrypt(options);
     else if (options.operation == "protect") runProtect(options);
+    else if (options.operation == "labels") runLabels(options);
+    else if (options.operation == "apply") runApply(options);
     else throw std::invalid_argument("unknown operation " + options.operation);
     return 0;
   } catch (...) {
