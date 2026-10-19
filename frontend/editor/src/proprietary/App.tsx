@@ -6,7 +6,7 @@ import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 
-const Landing = lazy(() => import("@app/routes/Landing"));
+import Landing from "@app/routes/Landing";
 const Login = lazy(() => import("@app/routes/Login"));
 const AuthCallback = lazy(() => import("@app/routes/AuthCallback"));
 const InviteAccept = lazy(() => import("@app/routes/InviteAccept"));
@@ -51,19 +51,21 @@ function ParticipantViewPage() {
 
 function MainRoutes() {
   return (
-    <Routes>
-      {/* Not the app: no rail over any of these, ever. */}
-      <Route element={<NoAppChrome />}>
-        <Route path="/login" element={<Login />} />
-        {/* Self-hosted has no signup: old links land on login. */}
-        <Route path="/signup" element={<Navigate to="/login" replace />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/invite/:token" element={<InviteAccept />} />
-        <Route path="/share/:token" element={<ShareLinkPage />} />
-      </Route>
-      {/* The editor and its tool routes - Landing handles auth logic */}
-      <Route path="/*" element={<Landing />} />
-    </Routes>
+    <Suspense fallback={null}>
+      <Routes>
+        {/* Not the app: no rail over any of these, ever. */}
+        <Route element={<NoAppChrome />}>
+          <Route path="/login" element={<Login />} />
+          {/* Self-hosted has no signup: old links land on login. */}
+          <Route path="/signup" element={<Navigate to="/login" replace />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/invite/:token" element={<InviteAccept />} />
+          <Route path="/share/:token" element={<ShareLinkPage />} />
+        </Route>
+        {/* The editor and its tool routes - Landing handles auth logic */}
+        <Route path="/*" element={<Landing />} />
+      </Routes>
+    </Suspense>
   );
 }
 
@@ -75,7 +77,9 @@ function MainApp() {
       <AppProviders>
         <AppLayout>
           <MainRoutes />
-          <Onboarding />
+          <Suspense fallback={null}>
+            <Onboarding />
+          </Suspense>
         </AppLayout>
       </AppProviders>
     </RootGate>
