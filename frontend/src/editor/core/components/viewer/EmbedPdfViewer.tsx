@@ -1941,6 +1941,7 @@ const EmbedPdfViewerContent = ({
           {rightsManagedOpened && (
             <RightsManagedPdfBanner
               protection={rightsManagedOpened.protection}
+              fileName={rightsManagedOpened.original.name}
             />
           )}
           {/* EmbedPDF Viewer */}
