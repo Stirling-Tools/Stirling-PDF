@@ -77,7 +77,15 @@ describe("picker protocol", () => {
           name: "Invoice.pdf",
           file: { mimeType: "application/pdf" },
           lastModifiedDateTime: "2026-10-01T10:00:00Z",
-          "@microsoft.graph.downloadUrl": "https://download.example/invoice",
+          ...(new URL(url).searchParams
+            .get("$select")
+            ?.split(",")
+            .includes("content.downloadUrl")
+            ? {
+                "@microsoft.graph.downloadUrl":
+                  "https://download.example/invoice",
+              }
+            : {}),
         });
       }
       if (url === "https://download.example/invoice") {

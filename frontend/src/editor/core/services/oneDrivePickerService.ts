@@ -346,7 +346,7 @@ class OneDrivePickerService {
     const driveId = encodeURIComponent(item.parentReference.driveId);
     const itemId = encodeURIComponent(item.id);
     const metadata = await fetch(
-      `${this.graphUrl}/drives/${driveId}/items/${itemId}?$select=name,file,lastModifiedDateTime,@microsoft.graph.downloadUrl`,
+      `${this.graphUrl}/drives/${driveId}/items/${itemId}?$select=name,file,lastModifiedDateTime,content.downloadUrl`,
       { headers: { Authorization: `Bearer ${graphToken}` } },
     );
     if (!metadata.ok) {
