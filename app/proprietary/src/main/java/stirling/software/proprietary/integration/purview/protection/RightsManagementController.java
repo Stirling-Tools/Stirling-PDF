@@ -179,6 +179,35 @@ public class RightsManagementController {
         }
     }
 
+    @PostMapping(value = "/protect-for-users", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Encrypt a PDF so only the named people get the named rights",
+            description =
+                    "grants is 'user@a.com,user@b.com=VIEW,PRINT;user@c.com=EDIT', using the"
+                            + " Rights Management usage rights. The caller becomes the owner.")
+    public ResponseEntity<byte[]> protectForUsers(
+            @AuthenticationPrincipal User user,
+            @RequestPart("fileInput") MultipartFile file,
+            @RequestParam String grants,
+            @RequestParam(required = false) Long accountId)
+            throws IOException {
+        if (!grants.matches("[^;=]+=[A-Za-z,]+(;[^;=]+=[A-Za-z,]+)*")) {
+            throw new RightsManagementException(
+                    "bad_input", "grants must look like user@example.com=VIEW,PRINT");
+        }
+        ConnectedAccount account = account(user, accountId);
+        Path input = Files.createTempFile("stirling-mip-plain-", ".pdf");
+        try {
+            file.transferTo(input);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                    .body(service.protectForUsers(account, input, grants));
+        } finally {
+            Files.deleteIfExists(input);
+        }
+    }
+
     @ExceptionHandler(RightsManagementException.class)
     public ResponseEntity<ErrorResponse> rightsError(RightsManagementException e) {
         HttpStatus status =

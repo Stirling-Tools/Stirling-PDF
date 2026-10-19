@@ -141,6 +141,11 @@ public class MipHelper {
             reply = "OK " + token;
         } catch (IOException | RuntimeException e) {
             String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            log.warn(
+                    "Token for {} (resource {}) refused: {}",
+                    scopeFor(request),
+                    text(request, "resource"),
+                    reason);
             reply = "ERR " + reason.replaceAll("[\\r\\n]+", " ");
         }
         in.write(reply);

@@ -111,6 +111,21 @@ public class RightsManagementService {
         }
     }
 
+    public byte[] protectForUsers(ConnectedAccount account, Path pdf, String grants)
+            throws IOException {
+        requireAvailable();
+        Path output = Files.createTempFile("stirling-mip-adhoc-", ".pdf");
+        try {
+            Map<String, String> args = arguments(account, pdf);
+            args.put("grants", grants);
+            args.put("output", output.toString());
+            helper.run("adhoc", args, tokensFor(account));
+            return Files.readAllBytes(output);
+        } finally {
+            Files.deleteIfExists(output);
+        }
+    }
+
     private static String emptyToNull(String value) {
         return value == null || value.isBlank() ? null : value;
     }
