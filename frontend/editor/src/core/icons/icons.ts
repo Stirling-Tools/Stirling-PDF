@@ -24,6 +24,7 @@ import Banknote from "lucide-static/icons/banknote.svg?react";
 import Bell from "lucide-static/icons/bell.svg?react";
 import Blocks from "lucide-static/icons/blocks.svg?react";
 import Bolt from "lucide-static/icons/bolt.svg?react";
+import Book from "lucide-static/icons/book.svg?react";
 import BookOpen from "lucide-static/icons/book-open.svg?react";
 import BookOpenText from "lucide-static/icons/book-open-text.svg?react";
 import Bookmark from "lucide-static/icons/bookmark.svg?react";
@@ -452,6 +453,7 @@ export const ICONS = {
   bell: { Component: Bell, kind: "lucide" },
   blocks: { Component: Blocks, kind: "lucide" },
   bolt: { Component: Bolt, kind: "lucide" },
+  book: { Component: Book, kind: "lucide" },
   "book-open": { Component: BookOpen, kind: "lucide" },
   "book-open-text": { Component: BookOpenText, kind: "lucide" },
   bookmark: { Component: Bookmark, kind: "lucide" },
