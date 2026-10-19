@@ -4523,6 +4523,7 @@ allowed = "Allowed"
 annotations = "Annotations"
 authoriseAction = "This PDF requires permission to use {{action}}."
 changeOwnerPassword = "Change permissions password"
+changesRestricted = "This PDF's protection does not allow this change."
 checkingPermissions = "Checking PDF permissions..."
 chooseOwnerPassword = "Choose a different password"
 continue = "Continue"
@@ -11829,6 +11830,7 @@ protectFailed = "Unable to re-apply Microsoft Purview protection. No unprotected
 signInRequired = "Sign in to your Microsoft account again to open this PDF."
 title = "Protected by Microsoft Purview"
 toolUnsupported = "This tool cannot keep Microsoft Purview protection yet."
+tryAgain = "Try again"
 unavailable = "This server cannot open Microsoft Purview protected PDFs. Ask your administrator to turn it on, or open the file in a Microsoft 365 app."
 
 [rotate]

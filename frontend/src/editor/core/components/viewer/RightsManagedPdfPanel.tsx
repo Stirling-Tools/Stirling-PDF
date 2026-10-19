@@ -11,6 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
+import { openExternal } from "@editor/platform/openExternal";
 import { useConnectedServer } from "@editor/hooks/useConnectedServer";
 import {
   ensureConnectedAccount,
@@ -57,10 +58,8 @@ export function RightsManagedPdfPanel({
       const connected = next.accounts.filter(
         (account) => account.status === "CONNECTED",
       );
-      if (connected.length === 1) {
-        setAccountId(connected[0].id);
-        if (next.available) void open(connected[0].id);
-      }
+      if (connected.length > 0) setAccountId(connected[0].id);
+      if (connected.length === 1 && next.available) void open(connected[0].id);
     });
     return () => controller.abort();
   }, [connectedServer, file]);
@@ -219,7 +218,16 @@ export function RightsManagedPdfPanel({
             w="100%"
           />
         )}
-        {status === null ? null : needsAccount || error?.reconnect ? (
+        {status === null || (busy && !error) ? null : error?.owner ? (
+          <Group gap="sm" justify="center">
+            <Button onClick={() => void openExternal(`mailto:${error.owner}`)}>
+              {t("protection.emailOwner", "Email the owner")}
+            </Button>
+            <Button variant="secondary" onClick={() => void open(accountId)}>
+              {t("rightsManagedPdf.tryAgain", "Try again")}
+            </Button>
+          </Group>
+        ) : needsAccount || error?.reconnect ? (
           <Button onClick={() => void connectThenOpen()} loading={busy}>
             {t("rightsManagedPdf.connect", "Sign in with Microsoft")}
           </Button>
