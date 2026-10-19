@@ -161,6 +161,9 @@
   right: var(--pip-gap);
   bottom: var(--pip-gap);
   transform: translate(var(--pip-dx), var(--pip-dy));
+  /* Must match .pip-pane's transform transition, or the label leaves the
+     miniature behind as it glides into a corner. */
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
   touch-action: none;
   width: calc(100% * var(--pip-scale));
   height: calc(100% * var(--pip-scale));
