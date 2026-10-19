@@ -319,8 +319,19 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     // Define all Java options with Tauri-specific paths
     let log_path_option = format!("-Dlogging.file.path={}", log_dir.display());
 
+    // The sidecar runs on the user's machine and sits idle most of the time. G1 with a
+    // periodic cycle keeps idle CPU low and returns heap to the OS after heavy jobs;
+    // string dedup offsets the G1 footprint at no measured idle-CPU cost.
     let mut java_options = vec![
         "-Xmx2g",
+        "-XX:+UseG1GC",
+        "-XX:MaxGCPauseMillis=200",
+        "-XX:G1PeriodicGCInterval=60000",
+        "-XX:+UseStringDeduplication",
+        "-XX:+ExplicitGCInvokesConcurrent",
+        // Product flag since JDK 25, which is what the bundled JRE is built from.
+        "-XX:+UseCompactObjectHeaders",
+        "-Dspring.threads.virtual.enabled=true",
         "-DBROWSER_OPEN=false",
         "-DSTIRLING_PDF_TAURI_MODE=true",
         &log_path_option,
