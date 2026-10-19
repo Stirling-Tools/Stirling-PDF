@@ -47,7 +47,8 @@ export async function waitForModalClose(
 export async function waitForAppReady(page: Page): Promise<void> {
   await page
     .evaluate(() => {
-      if (window.__spdfBoot) window.__spdfBoot();
+      const w = window as unknown as { __spdfBoot?: () => void };
+      if (w.__spdfBoot) w.__spdfBoot();
     })
     .catch(() => {});
   await page
