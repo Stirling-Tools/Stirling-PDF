@@ -26,6 +26,13 @@ const BACKEND_JVM_FLAGS: &[&str] = &[
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 const DESKTOP_MALLOC_CONF: &str = "narenas:1,tcache:false,dirty_decay_ms:0,muzzy_decay_ms:0";
 
+/// Mach-O builds default to the `je_` symbol prefix, which also renames the
+/// configuration variable; ELF builds keep the upstream name.
+#[cfg(target_os = "macos")]
+const JEMALLOC_CONF_ENV: &str = "JE_MALLOC_CONF";
+#[cfg(target_os = "linux")]
+const JEMALLOC_CONF_ENV: &str = "MALLOC_CONF";
+
 /// Resolves the bundled allocator. Windows has no dyld/LD_PRELOAD equivalent
 /// for the JVM, so those builds fall through to the platform allocator.
 fn bundled_jemalloc(resource_dir: &Path) -> Option<PathBuf> {
@@ -478,8 +485,8 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
                 path.as_os_str(),
             )
             .env(
-                "MALLOC_CONF",
-                std::env::var("MALLOC_CONF")
+                JEMALLOC_CONF_ENV,
+                std::env::var(JEMALLOC_CONF_ENV)
                     .unwrap_or_else(|_| DESKTOP_MALLOC_CONF.to_string()),
             ),
         None => sidecar_command,
