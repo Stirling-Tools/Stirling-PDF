@@ -20,6 +20,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.scheduling.TaskScheduler;
 
 import stirling.software.common.model.enumeration.InvitationStatus;
 import stirling.software.saas.model.TeamInvitation;
@@ -37,6 +38,7 @@ import stirling.software.saas.repository.TeamInvitationRepository;
 class TeamInvitationCleanupServiceTest {
 
     @Mock private TeamInvitationRepository invitationRepository;
+    @Mock private TaskScheduler scheduler;
 
     @InjectMocks private TeamInvitationCleanupService service;
 

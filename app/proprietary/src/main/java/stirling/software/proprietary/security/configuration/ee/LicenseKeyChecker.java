@@ -3,11 +3,12 @@ package stirling.software.proprietary.security.configuration.ee;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -15,6 +16,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.scheduling.LazyScheduledTask;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.accountlink.EntitlementRefreshedEvent;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
@@ -26,11 +28,15 @@ public class LicenseKeyChecker {
 
     private static final String FILE_PREFIX = "file:";
 
+    private static final Duration REFRESH_INTERVAL = Duration.ofDays(7);
+
     private final KeygenLicenseVerifier licenseService;
 
     private final ApplicationProperties applicationProperties;
 
     private final UserLicenseSettingsService licenseSettingsService;
+
+    private final LazyScheduledTask periodicRefresh;
 
     // Licence refreshes and request threads share these snapshots.
     private volatile License premiumEnabledResult = License.NORMAL;
@@ -41,10 +47,12 @@ public class LicenseKeyChecker {
     public LicenseKeyChecker(
             KeygenLicenseVerifier licenseService,
             ApplicationProperties applicationProperties,
-            @Lazy UserLicenseSettingsService licenseSettingsService) {
+            @Lazy UserLicenseSettingsService licenseSettingsService,
+            TaskScheduler scheduler) {
         this.licenseService = licenseService;
         this.applicationProperties = applicationProperties;
         this.licenseSettingsService = licenseSettingsService;
+        this.periodicRefresh = new LazyScheduledTask(scheduler, this::checkLicensePeriodically);
     }
 
     @PostConstruct
@@ -69,7 +77,7 @@ public class LicenseKeyChecker {
         }
     }
 
-    @Scheduled(initialDelay = 604800000, fixedRate = 604800000) // 7 days in milliseconds
+    /** Re-verifies the license and refreshes seat settings. */
     public void checkLicensePeriodically() {
         try {
             evaluateLicense();
@@ -111,6 +119,7 @@ public class LicenseKeyChecker {
     private void applyTeamPlanPromotion() {
         if (licenseKeyResult != License.NORMAL) {
             premiumEnabledResult = licenseKeyResult;
+            ensurePeriodicRefresh();
             return;
         }
         Integer users;
@@ -124,8 +133,14 @@ public class LicenseKeyChecker {
         boolean entitled = users != null && users > 0;
         if (entitled) {
             log.info("Linked cloud team holds a Team plan for {} users; running as Server.", users);
+            ensurePeriodicRefresh();
         }
         premiumEnabledResult = entitled ? License.SERVER : License.NORMAL;
+    }
+
+    /** Registers the periodic re-check once a licence key or linked team entitlement exists. */
+    private void ensurePeriodicRefresh() {
+        periodicRefresh.ensureFixedRate(REFRESH_INTERVAL, REFRESH_INTERVAL);
     }
 
     /** Throws when entitlement cannot be read; null means no purchased Team capacity. */

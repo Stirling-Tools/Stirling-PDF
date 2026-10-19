@@ -2,6 +2,7 @@ package stirling.software.proprietary.security.filter;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.servlet.Filter;
@@ -11,11 +12,8 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
-import lombok.RequiredArgsConstructor;
-
 import stirling.software.common.util.RequestUriUtils;
 
-@RequiredArgsConstructor
 public class IPRateLimitingFilter implements Filter {
 
     private final ConcurrentHashMap<String, AtomicInteger> requestCounts =
@@ -23,6 +21,22 @@ public class IPRateLimitingFilter implements Filter {
     private final ConcurrentHashMap<String, AtomicInteger> getCounts = new ConcurrentHashMap<>();
     private final int maxRequests;
     private final int maxGetRequests;
+    private final Runnable onFirstUse;
+    private final AtomicBoolean firstUseSignalled = new AtomicBoolean();
+
+    /** Construction without a first-use callback. */
+    public IPRateLimitingFilter(int maxRequests, int maxGetRequests) {
+        this(maxRequests, maxGetRequests, () -> {});
+    }
+
+    /**
+     * @param onFirstUse runs at most once, on the first non-static request
+     */
+    public IPRateLimitingFilter(int maxRequests, int maxGetRequests, Runnable onFirstUse) {
+        this.maxRequests = maxRequests;
+        this.maxGetRequests = maxGetRequests;
+        this.onFirstUse = onFirstUse;
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -40,6 +54,8 @@ public class IPRateLimitingFilter implements Filter {
                 chain.doFilter(request, response);
                 return;
             }
+
+            signalFirstUse();
 
             String clientIp = request.getRemoteAddr();
             requestCounts.computeIfAbsent(clientIp, k -> new AtomicInteger(0));
@@ -59,6 +75,12 @@ public class IPRateLimitingFilter implements Filter {
             }
         }
         chain.doFilter(request, response);
+    }
+
+    private void signalFirstUse() {
+        if (firstUseSignalled.compareAndSet(false, true)) {
+            onFirstUse.run();
+        }
     }
 
     public void resetRequestCounts() {

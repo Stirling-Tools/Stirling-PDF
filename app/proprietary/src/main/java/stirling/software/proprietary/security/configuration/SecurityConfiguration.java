@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.configuration;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -45,6 +46,7 @@ import stirling.software.proprietary.security.CustomAuthenticationFailureHandler
 import stirling.software.proprietary.security.CustomAuthenticationSuccessHandler;
 import stirling.software.proprietary.security.CustomLogoutSuccessHandler;
 import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
+import stirling.software.proprietary.security.RateLimitResetScheduler;
 import stirling.software.proprietary.security.database.repository.JPATokenRepositoryImpl;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
@@ -472,10 +474,16 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public IPRateLimitingFilter rateLimitingFilter() {
+    public IPRateLimitingFilter rateLimitingFilter(
+            ObjectProvider<RateLimitResetScheduler> rateLimitResetScheduler) {
         // Example limit TODO add config level
         int maxRequestsPerIp = 1000000;
-        return new IPRateLimitingFilter(maxRequestsPerIp, maxRequestsPerIp);
+        return new IPRateLimitingFilter(
+                maxRequestsPerIp,
+                maxRequestsPerIp,
+                () ->
+                        rateLimitResetScheduler.ifAvailable(
+                                RateLimitResetScheduler::ensureScheduled));
     }
 
     @Bean

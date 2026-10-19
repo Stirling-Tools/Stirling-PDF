@@ -51,6 +51,7 @@ public class SaasTeamService {
     private final SaasUserExtensionService saasUserExtensionService;
     private final LinkedInstanceRepository linkedInstanceRepository;
     private final stirling.software.proprietary.security.service.UserService userService;
+    private final TeamInvitationCleanupService invitationCleanup;
 
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
@@ -313,6 +314,7 @@ public class SaasTeamService {
 
         userRepository.findByEmail(inviteeEmail).ifPresent(invitation::setInviteeUser);
 
+        invitationCleanup.ensureScheduled();
         TeamInvitation savedInvitation = invitationRepository.save(invitation);
 
         // Send invitation email
@@ -392,6 +394,7 @@ public class SaasTeamService {
 
         if (invitation.isExpired()) {
             invitation.setStatus(InvitationStatus.EXPIRED);
+            invitationCleanup.ensureScheduled();
             invitationRepository.save(invitation);
             throw new IllegalStateException("Invitation expired");
         }
@@ -468,6 +471,7 @@ public class SaasTeamService {
 
         // Don't set inviteeUser; acceptance is recorded via status + TeamMembership row.
         invitation.setStatus(InvitationStatus.ACCEPTED);
+        invitationCleanup.ensureScheduled();
         invitationRepository.save(invitation);
 
         log.info(

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.session.SessionInformation;
@@ -16,17 +17,29 @@ import org.springframework.stereotype.Component;
 
 import jakarta.transaction.Transactional;
 
-import lombok.RequiredArgsConstructor;
-
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 
 @Component
-@RequiredArgsConstructor
 public class SessionPersistentRegistry implements SessionRegistry {
 
     private final SessionRepository sessionRepository;
+    private final Runnable onFirstUse;
+    private final AtomicBoolean firstUseSignalled = new AtomicBoolean();
+
+    /** Construction without a first-use callback. */
+    public SessionPersistentRegistry(SessionRepository sessionRepository) {
+        this(sessionRepository, () -> {});
+    }
+
+    /**
+     * @param onFirstUse runs at most once, on the first persisted session
+     */
+    public SessionPersistentRegistry(SessionRepository sessionRepository, Runnable onFirstUse) {
+        this.sessionRepository = sessionRepository;
+        this.onFirstUse = onFirstUse;
+    }
 
     @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;
@@ -101,6 +114,13 @@ public class SessionPersistentRegistry implements SessionRegistry {
             sessionEntity.setLastRequest(Instant.now()); // Set lastRequest to the current date
             sessionEntity.setExpired(false);
             sessionRepository.save(sessionEntity);
+            signalFirstUse();
+        }
+    }
+
+    private void signalFirstUse() {
+        if (firstUseSignalled.compareAndSet(false, true)) {
+            onFirstUse.run();
         }
     }
 

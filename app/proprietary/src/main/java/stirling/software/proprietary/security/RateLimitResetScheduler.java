@@ -1,21 +1,35 @@
 package stirling.software.proprietary.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
-
+import stirling.software.common.scheduling.LazyScheduledTask;
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
 
 @Component
 @Profile("!saas")
-@RequiredArgsConstructor
 public class RateLimitResetScheduler {
 
     private final IPRateLimitingFilter rateLimitingFilter;
+    private final LazyScheduledTask rateLimitReset;
+    private final String resetSchedule;
 
-    @Scheduled(cron = "${security.rate-limit.reset-schedule:0 0 0 * * MON}")
+    public RateLimitResetScheduler(
+            IPRateLimitingFilter rateLimitingFilter,
+            TaskScheduler scheduler,
+            @Value("${security.rate-limit.reset-schedule:0 0 0 * * MON}") String resetSchedule) {
+        this.rateLimitingFilter = rateLimitingFilter;
+        this.resetSchedule = resetSchedule;
+        this.rateLimitReset = new LazyScheduledTask(scheduler, this::resetRateLimit);
+    }
+
+    /** Registers the reset on the first request the IP filter processes. */
+    public void ensureScheduled() {
+        rateLimitReset.ensureCron(resetSchedule);
+    }
+
     public void resetRateLimit() {
         rateLimitingFilter.resetRequestCounts();
     }

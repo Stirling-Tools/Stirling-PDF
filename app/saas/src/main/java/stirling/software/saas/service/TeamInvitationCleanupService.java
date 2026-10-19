@@ -4,31 +4,47 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.enumeration.InvitationStatus;
+import stirling.software.common.scheduling.LazyScheduledTask;
 import stirling.software.saas.model.TeamInvitation;
 import stirling.software.saas.repository.TeamInvitationRepository;
 
 /**
- * Scheduled service for cleaning up expired team invitations. Runs daily to mark invitations that
- * have passed their expiration date as EXPIRED.
+ * Service for cleaning up expired team invitations: daily marking of overdue invitations and a
+ * monthly purge of old expired rows.
  */
 @Service
 @Profile("saas")
-@RequiredArgsConstructor
 @Slf4j
 public class TeamInvitationCleanupService {
 
+    private static final String MARK_EXPIRED_CRON = "0 0 2 * * *";
+    private static final String PURGE_EXPIRED_CRON = "0 0 3 1 * *";
+
     private final TeamInvitationRepository invitationRepository;
+    private final LazyScheduledTask markExpiredTask;
+    private final LazyScheduledTask purgeExpiredTask;
+
+    public TeamInvitationCleanupService(
+            TeamInvitationRepository invitationRepository, TaskScheduler scheduler) {
+        this.invitationRepository = invitationRepository;
+        this.markExpiredTask = new LazyScheduledTask(scheduler, this::markExpiredInvitations);
+        this.purgeExpiredTask = new LazyScheduledTask(scheduler, this::deleteOldExpiredInvitations);
+    }
+
+    /** Registers both invitation sweeps on the first invitation write. */
+    public void ensureScheduled() {
+        markExpiredTask.ensureCron(MARK_EXPIRED_CRON);
+        purgeExpiredTask.ensureCron(PURGE_EXPIRED_CRON);
+    }
 
     /** Mark expired invitations as EXPIRED. Runs every day at 2:00 AM. */
-    @Scheduled(cron = "0 0 2 * * *")
     @Transactional
     public void markExpiredInvitations() {
         try {
@@ -47,7 +63,6 @@ public class TeamInvitationCleanupService {
     }
 
     /** Delete old expired invitations (older than 30 days). Runs monthly on the 1st at 3:00 AM. */
-    @Scheduled(cron = "0 0 3 1 * *")
     @Transactional
     public void deleteOldExpiredInvitations() {
         try {
