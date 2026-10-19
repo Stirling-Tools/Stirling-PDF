@@ -142,7 +142,12 @@ export function useOneDriveSave(): OneDriveSave {
                   "oneDriveSave.conflict",
                   "Someone changed this file in OneDrive after you opened it. Save your version as a copy instead.",
                 )
-              : failureMessage(code),
+              : code === "unprotected"
+                ? t(
+                    "oneDriveSave.unprotected",
+                    "This version is no longer protected with Microsoft Purview, so it was not saved to OneDrive.",
+                  )
+                : failureMessage(code),
           expandable: false,
           ...(copyTarget
             ? {

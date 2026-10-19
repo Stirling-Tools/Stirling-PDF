@@ -148,6 +148,7 @@ interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
   exportOriginal?: File;
+  exportProtect?: (bytes: ArrayBuffer) => Promise<ArrayBuffer>;
   fileName?: string;
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
@@ -931,6 +932,7 @@ export function LocalEmbedPDF({
   onRepair,
   repairingFileId,
   exportOriginal,
+  exportProtect,
   restorePending = false,
   restoreRequest = null,
   onRestoreEvent,
@@ -1722,6 +1724,7 @@ export function LocalEmbedPDF({
               exportOriginal ?? (pdfAccess?.encrypted ? file : undefined)
             }
             disabled={pdfAccess?.encrypted && !file}
+            protect={exportProtect}
           />
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />

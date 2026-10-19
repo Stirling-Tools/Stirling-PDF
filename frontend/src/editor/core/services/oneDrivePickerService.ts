@@ -12,6 +12,7 @@ import {
 } from "@editor/services/connectedAccountsService";
 import type { AppConfig } from "@editor/types/appConfig";
 import { rememberCloudOrigin } from "@editor/services/cloudOrigin";
+import { isMicrosoftProtectedPdf } from "@editor/services/rightsManagedPdf";
 
 export interface OneDriveConfig {
   clientId: string;
@@ -146,6 +147,7 @@ class OneDrivePickerService {
               name: details.name,
               eTag: details.eTag ?? null,
               webUrl: details.webUrl ?? null,
+              protected: await isMicrosoftProtectedPdf(file),
             });
           }
           return file;
