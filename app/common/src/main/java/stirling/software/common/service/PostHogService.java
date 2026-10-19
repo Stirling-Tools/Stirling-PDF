@@ -62,8 +62,8 @@ public class PostHogService {
 
     /**
      * Creates the client on first use so that its QueueManager thread only exists while telemetry
-     * is enabled. Enabled installs keep the previous startup behaviour because the constructor
-     * captures the system info event.
+     * is enabled. The constructor's system-info capture creates it during startup when telemetry is
+     * on, so an enabled install still reports its startup snapshot as the first event.
      */
     private PostHog client() {
         PostHog client = postHog;
