@@ -180,7 +180,7 @@ export function PhoneLayout({
           scale={documentPipScale}
           onScale={setDocumentPipScale}
           label={tool?.name ?? ""}
-          caption={t("mobile.pip.toolSettings", "Tool settings")}
+          caption={t("mobile.pip.openSettings", "Open settings")}
           icon={tool?.icon}
           onOpen={() => onSelectView("tools")}
           onDrag={setPipDrag}

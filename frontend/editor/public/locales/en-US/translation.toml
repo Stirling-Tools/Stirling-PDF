@@ -6098,7 +6098,6 @@ title = "Documents"
 document = "Document"
 open = "Open {{name}}"
 openSettings = "Open settings"
-toolSettings = "Tool settings"
 
 [mobile.scan]
 button = "Scan document"
