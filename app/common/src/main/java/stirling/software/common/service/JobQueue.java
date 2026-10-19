@@ -3,6 +3,7 @@ package stirling.software.common.service;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -54,6 +55,10 @@ public class JobQueue implements SmartLifecycle {
 
     // One permit per enqueue (and per retry) wakes the processor; an idle queue costs no wakeups.
     private final Semaphore workAvailable = new Semaphore(0);
+
+    // At most one retry timer in flight: each fired retry clears this before releasing the permit,
+    // so the processor can arm the next timer only if jobs still remain.
+    private final AtomicBoolean retryPending = new AtomicBoolean();
     private volatile Thread processor;
 
     @Getter private int rejectedJobs = 0;
@@ -399,12 +404,20 @@ public class JobQueue implements SmartLifecycle {
 
     /**
      * Re-arms the processor while jobs remain queued, preserving the configured retry cadence under
-     * load while an empty queue schedules nothing.
+     * load while an empty queue schedules nothing. Coalesces repeated attempts onto one timer.
      */
     private void scheduleRetryIfPending() {
-        if (!shuttingDown && !jobQueue.isEmpty()) {
+        if (shuttingDown || jobQueue.isEmpty()) {
+            return;
+        }
+        if (retryPending.compareAndSet(false, true)) {
             scheduler.schedule(
-                    () -> workAvailable.release(), queueCheckIntervalMs, TimeUnit.MILLISECONDS);
+                    () -> {
+                        retryPending.set(false);
+                        workAvailable.release();
+                    },
+                    queueCheckIntervalMs,
+                    TimeUnit.MILLISECONDS);
         }
     }
 

@@ -10,7 +10,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +58,25 @@ class JobQueueMoreTest {
         } catch (Exception e) {
             throw new AssertionError("future did not complete within 5s", e);
         }
+    }
+
+    // Bounded wait for the retry timer to fire; polls the condition instead of sleeping a fixed
+    // time.
+    private void awaitRetryCleared() {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            if (!retryPending()) {
+                return;
+            }
+            LockSupport.parkNanos(1_000_000);
+        }
+        throw new AssertionError("retry timer did not fire within 5s");
+    }
+
+    private boolean retryPending() {
+        AtomicBoolean pending =
+                (AtomicBoolean) ReflectionTestUtils.getField(jobQueue, "retryPending");
+        return pending != null && pending.get();
     }
 
     @Nested
@@ -187,6 +208,27 @@ class JobQueueMoreTest {
 
             // Critical load: job remains queued, nothing executed.
             assertThat(jobQueue.isJobQueued("crit")).isTrue();
+        }
+
+        @Test
+        @DisplayName("repeated deferred passes coalesce onto one retry timer")
+        void retryTimerCoalesced() {
+            statusRef.set(ResourceStatus.CRITICAL);
+            CompletableFuture<ResponseEntity<?>> future =
+                    jobQueue.queueJob("coalesce", 50, () -> "ok", 5000);
+
+            invokeProcessQueue();
+            invokeProcessQueue();
+            invokeProcessQueue();
+
+            assertThat(retryPending()).isTrue();
+
+            awaitRetryCleared();
+            assertThat(retryPending()).isFalse();
+
+            statusRef.set(ResourceStatus.OK);
+            invokeProcessQueue();
+            awaitDone(future);
         }
 
         @Test
