@@ -49,7 +49,7 @@ run_jlink() {
   local java_home="$1"
   local out="$2"
   local compress
-  if "$java_home/bin/jlink" --help 2>&1 | grep -q 'zip-\[0-9\]'; then
+  if "$java_home/bin/jlink" --help 2>&1 | grep -q 'zip-'; then
     compress="zip-6"
   else
     compress="2"
