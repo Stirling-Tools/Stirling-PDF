@@ -25,6 +25,10 @@ public class MicrosoftOAuthClient implements CloudOAuthClient {
     private static final String SIGN_IN_SCOPES =
             "openid profile email " + DEFAULT_SCOPES + " " + BROWSER_SCOPE;
 
+    static final String RIGHTS_MANAGEMENT_CONSENT_SCOPES =
+            "https://aadrm.com/user_impersonation"
+                    + " https://psor.o365syncservice.com/UnifiedPolicy.User.Read";
+
     private final ApplicationProperties applicationProperties;
     private final GraphEndpoints endpoints;
 
@@ -49,7 +53,7 @@ public class MicrosoftOAuthClient implements CloudOAuthClient {
         query.put("response_type", "code");
         query.put("response_mode", "query");
         query.put("redirect_uri", redirectUri);
-        query.put("scope", SIGN_IN_SCOPES);
+        query.put("scope", authorizeScopes());
         query.put("state", state);
         query.put("code_challenge", codeChallenge);
         query.put("code_challenge_method", "S256");
@@ -104,6 +108,12 @@ public class MicrosoftOAuthClient implements CloudOAuthClient {
 
     @Override
     public void revoke(String refreshToken) {}
+
+    String authorizeScopes() {
+        return app().getRightsManagement().isEnabled()
+                ? SIGN_IN_SCOPES + " " + RIGHTS_MANAGEMENT_CONSENT_SCOPES
+                : SIGN_IN_SCOPES;
+    }
 
     private Map<String, String> credentials() {
         Map<String, String> form = new LinkedHashMap<>();
