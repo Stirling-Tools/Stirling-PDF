@@ -135,6 +135,28 @@ describe("tauriHttpClient — Content-Type handling", () => {
     expect(fetchMock.mock.calls[0][1].body).toBeInstanceOf(FormData);
   });
 
+  test("sends in-memory copies of FormData files, keeping fields, names and bytes", async () => {
+    const client = create({ baseURL: "https://api.test" });
+    const original = new File(["%PDF-2.0 bytes"], "Report.pdf", {
+      type: "application/pdf",
+      lastModified: 1234,
+    });
+    const form = new FormData();
+    form.append("fileInput", original);
+    form.append("accountId", "33");
+
+    await client.post("/api/v1/rights-management/open", form);
+
+    const sent = fetchMock.mock.calls[0][1].body as FormData;
+    const file = sent.get("fileInput") as File;
+    expect(file).not.toBe(original);
+    expect(file.name).toBe("Report.pdf");
+    expect(file.type).toBe("application/pdf");
+    expect(file.lastModified).toBe(1234);
+    expect(await file.text()).toBe("%PDF-2.0 bytes");
+    expect(sent.get("accountId")).toBe("33");
+  });
+
   test("keeps application/json for plain object bodies", async () => {
     const client = create({ baseURL: "https://api.test" });
     await client.post("/api/v1/x", { a: 1 });
