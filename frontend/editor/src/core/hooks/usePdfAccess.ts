@@ -1,8 +1,6 @@
-import { useEffect, useSyncExternalStore } from "react";
-import { unlockPdfForSession } from "@app/services/pdfSessionUnlock";
+import { useSyncExternalStore } from "react";
 import {
   getPdfAccess,
-  rememberPdfAccess,
   pdfAccessRevision,
   subscribePdfAccess,
 } from "@app/services/pdfPasswordStore";
@@ -14,19 +12,5 @@ export function usePdfAccess(file: Blob | string | null | undefined) {
     pdfAccessRevision,
     pdfAccessRevision,
   );
-  useEffect(() => {
-    if (!(file instanceof File) || getPdfAccess(file)) return;
-    let cancelled = false;
-    void unlockPdfForSession(file, "")
-      .then((access) => {
-        if (!cancelled && !getPdfAccess(file)) rememberPdfAccess(file, access);
-      })
-      .catch(() => {
-        /* A failed inspection cannot grant permissions. */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [file]);
   return getPdfAccess(file);
 }

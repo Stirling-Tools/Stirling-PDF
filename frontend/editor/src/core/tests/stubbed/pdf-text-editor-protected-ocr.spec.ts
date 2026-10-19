@@ -1,6 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { waitForEditorReady } from "@app/tests/stubbed/editorReady";
 import path from "path";
+import { rejectEmptyOpeningPassword } from "@app/tests/helpers/pdf-security-stubs";
 
 // qpdf --encrypt scan-password scan-password 256 -- scanned-no-ocr.pdf scanned-no-ocr-encrypted.pdf
 const SCAN = path.join(
@@ -17,20 +18,24 @@ for (const source of ["workbench", "disk"] as const) {
       if (request.url().includes("/api/v1/misc/ocr-pdf"))
         ocrRequests.push(request.url());
     });
-    await page.route("**/api/v1/security/inspect-pdf-security", (route) =>
-      route.fulfill({
-        json: {
-          encrypted: true,
-          signed: false,
-          ownerAuthenticated: true,
-          permissions: -4,
-          encryptionKeyLength: 256,
-          encryptionRevision: 6,
-          canModify: true,
-          canAssemble: true,
-          pageCount: 1,
-        },
-      }),
+    await page.route(
+      "**/api/v1/security/inspect-pdf-security",
+      async (route) => {
+        if (await rejectEmptyOpeningPassword(route)) return;
+        return route.fulfill({
+          json: {
+            encrypted: true,
+            signed: false,
+            ownerAuthenticated: true,
+            permissions: -4,
+            encryptionKeyLength: 256,
+            encryptionRevision: 6,
+            canModify: true,
+            canAssemble: true,
+            pageCount: 1,
+          },
+        });
+      },
     );
     if (source === "workbench") {
       await page.goto("/editor");

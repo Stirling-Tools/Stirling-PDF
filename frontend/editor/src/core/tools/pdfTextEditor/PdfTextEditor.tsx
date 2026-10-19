@@ -9,13 +9,9 @@ import { Icon } from "@app/ui/Icon";
 import { downloadFile } from "@app/services/downloadService";
 import {
   assertPdfSessionEditable,
-  unlockPdfForSession,
   verifyEditedPdfProtection,
 } from "@app/services/pdfSessionUnlock";
-import {
-  getPdfAccess,
-  rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 import { useFileContext, useFileSelection } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";
@@ -186,7 +182,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           assertEditorOcrAllowed(store.document, sourceId, t);
         const sourceAccess = getPdfAccess(sourceId);
         if (toolId === "pdfTextEditor" && sourceAccess?.encrypted) {
-          await verifyEditedPdfProtection(edited, sourceAccess);
+          await verifyEditedPdfProtection(
+            edited,
+            sourceAccess,
+            sourceId ? (selectors.getFile(sourceId) ?? undefined) : undefined,
+          );
         }
         if (sourceId && parentStub) {
           const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
@@ -593,11 +593,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           const opened = store.getState();
           if (!opened.hasDocument || opened.error || opened.passwordPrompt)
             return null;
-          if (password !== undefined) {
-            const access = await unlockPdfForSession(file, password);
-            if (!mountedRef.current || !store.isCurrentLoad(token)) return null;
-            rememberPdfAccess(file, access);
-          }
           return addFiles([file], {
             selectFiles: false,
           });

@@ -1,6 +1,9 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
+import { readFile, writeFile } from "node:fs/promises";
+import { PDFDocument } from "@cantoo/pdf-lib";
+import { rejectEmptyOpeningPassword } from "@app/tests/helpers/pdf-security-stubs";
 
 /** Coverage for two save/open safety features. */
 
@@ -38,23 +41,27 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
       async ({ page }) => {
         await page.route("**/encode-charcodes", (route) => route.abort());
         let inspections = 0;
-        await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
-          inspections++;
-          return route.fulfill({
-            json: {
-              encrypted: inspections === 1 || protectedOutput,
-              signed: false,
-              ownerAuthenticated: true,
-              permissions: -4,
-              encryptionKeyLength: 256,
-              encryptionRevision: 6,
-              credentialFingerprint: "original-credentials",
-              canModify: true,
-              canAssemble: true,
-              pageCount: 1,
-            },
-          });
-        });
+        await page.route(
+          "**/api/v1/security/inspect-pdf-security",
+          async (route) => {
+            if (await rejectEmptyOpeningPassword(route)) return;
+            inspections++;
+            return route.fulfill({
+              json: {
+                encrypted: inspections === 1 || protectedOutput,
+                signed: false,
+                ownerAuthenticated: true,
+                permissions: -4,
+                encryptionKeyLength: 256,
+                encryptionRevision: 6,
+                credentialFingerprint: "original-credentials",
+                canModify: true,
+                canAssemble: true,
+                pageCount: 1,
+              },
+            });
+          },
+        );
         await page.goto("/editor");
         await page
           .locator('[data-testid="file-input"]')
@@ -77,7 +84,7 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
           page.getByTestId("pdf-editor-password-modal"),
         ).toBeHidden();
         await expect(page.getByRole("dialog")).toHaveCount(0);
-        expect(inspections).toBe(1);
+        expect(inspections).toBe(0);
 
         await page.evaluate(() => {
           const run = document.querySelector<HTMLElement>(
@@ -128,24 +135,37 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
 
   test("keeps an unlocked signed PDF out of the text editor", async ({
     page,
-  }) => {
-    await page.route("**/api/v1/security/inspect-pdf-security", (route) =>
-      route.fulfill({
-        json: {
-          encrypted: true,
-          signed: true,
-          ownerAuthenticated: true,
-          permissions: -4,
-          encryptionKeyLength: 256,
-          encryptionRevision: 6,
-          canModify: true,
-          canAssemble: true,
-          pageCount: 1,
-        },
-      }),
+  }, testInfo) => {
+    const pdf = await PDFDocument.load(await readFile(SIGNED));
+    pdf.encrypt({
+      userPassword: ENCRYPTED_PASSWORD,
+      ownerPassword: ENCRYPTED_PASSWORD,
+    });
+    const signedProtected = testInfo.outputPath("signed-protected.pdf");
+    await writeFile(signedProtected, await pdf.save());
+    await page.route(
+      "**/api/v1/security/inspect-pdf-security",
+      async (route) => {
+        if (await rejectEmptyOpeningPassword(route)) return;
+        return route.fulfill({
+          json: {
+            encrypted: true,
+            signed: true,
+            ownerAuthenticated: true,
+            permissions: -4,
+            encryptionKeyLength: 256,
+            encryptionRevision: 6,
+            canModify: true,
+            canAssemble: true,
+            pageCount: 1,
+          },
+        });
+      },
     );
     await page.goto("/editor");
-    await page.locator('[data-testid="file-input"]').setInputFiles(ENCRYPTED);
+    await page
+      .locator('[data-testid="file-input"]')
+      .setInputFiles(signedProtected);
     await page
       .getByLabel("Password to open", { exact: true })
       .fill(ENCRYPTED_PASSWORD);
@@ -257,6 +277,11 @@ test.describe("PDF text editor - pre-save data-loss warning", () => {
 
   test("a normal PDF saves without any warning", async ({ page }) => {
     test.setTimeout(60_000);
+    let inspections = 0;
+    await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
+      inspections++;
+      return route.abort();
+    });
     await gotoEditor(page);
     await upload(page, SAMPLE);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -271,5 +296,6 @@ test.describe("PDF text editor - pre-save data-loss warning", () => {
     expect(await page.getByTestId("pdf-editor-save-risk-confirm").count()).toBe(
       0,
     );
+    expect(inspections).toBe(0);
   });
 });

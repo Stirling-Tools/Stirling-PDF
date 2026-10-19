@@ -11,11 +11,9 @@ import {
   getPdfAccess,
   rememberPdfAccess,
 } from "@app/services/pdfPasswordStore";
-import {
-  assertPdfSessionEditable,
-  ensurePdfAccess,
-  unlockPdfForSession,
-} from "@app/services/pdfSessionUnlock";
+import { assertPdfSessionEditable } from "@app/services/pdfSessionUnlock";
+import { readPdfiumAccess } from "@app/services/pdfAccessReader";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { detectSaveRisks } from "@app/tools/pdfTextEditor/util/documentRisks";
 
 const EAGER_PAGE_LIMIT = 5;
@@ -26,6 +24,7 @@ const yieldToBrowser = () =>
 
 /** Open a PDF in PDFium and lazily populate pages on first visibility. */
 export function useDocumentLoader(store: EditorStore) {
+  const { config } = useAppConfig();
   return useCallback(
     async (file: File, password?: string): Promise<void> => {
       const documentPassword = password ?? getPdfAccess(file)?.password;
@@ -38,7 +37,6 @@ export function useDocumentLoader(store: EditorStore) {
         total: 0,
       });
       try {
-        assertPdfSessionEditable(getPdfAccess(file));
         await yieldToBrowser();
         const bytes = new Uint8Array(await file.arrayBuffer());
         if (!store.isCurrentLoad(token)) return;
@@ -50,14 +48,20 @@ export function useDocumentLoader(store: EditorStore) {
         await yieldToBrowser();
         const doc = await EditorDocument.open(bytes, documentPassword);
         try {
-          const access =
-            password === undefined
-              ? await ensurePdfAccess(file)
-              : await unlockPdfForSession(file, password);
+          const previous = getPdfAccess(file);
+          const access = {
+            ...previous,
+            ...readPdfiumAccess(doc.module, doc.docPtr, documentPassword ?? ""),
+            requiresOpeningPassword:
+              previous?.requiresOpeningPassword ??
+              (documentPassword ? undefined : false),
+            honorOwnerPasswords: config?.honorOwnerPasswords,
+          };
           if (!store.isCurrentLoad(token)) {
             doc.dispose();
             return;
           }
+          rememberPdfAccess(file, access);
           assertPdfSessionEditable(access);
           const risks = detectSaveRisks(doc);
           if (risks.encrypted !== access.encrypted)
@@ -67,7 +71,6 @@ export function useDocumentLoader(store: EditorStore) {
             encrypted: risks.encrypted,
             signed: risks.signatures > 0,
           });
-          rememberPdfAccess(file, access);
         } catch (error) {
           doc.dispose();
           throw error;
@@ -154,7 +157,7 @@ export function useDocumentLoader(store: EditorStore) {
         }
       }
     },
-    [store],
+    [store, config?.honorOwnerPasswords],
   );
 }
 

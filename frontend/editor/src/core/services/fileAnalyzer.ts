@@ -1,16 +1,13 @@
 import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { ensurePdfAccess } from "@app/services/pdfSessionUnlock";
+import { ensureLocalPdfAccess } from "@app/services/pdfLocalAccess";
 import { getPdfAccess } from "@app/services/pdfPasswordStore";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
 // Bounded window scanned at each end of the PDF for an /Encrypt entry. The
 // trailer sits at the tail; linearized files also keep a first-page trailer at
 // the head. Sliced, so a multi-GB file is never read into memory.
 const ENCRYPT_PROBE_BYTES = 64 * 1024;
-const PROBE_TIMEOUT = "pdf-probe-timeout";
-const PROBE_TIMEOUT_MS = 30_000;
 
 function bufferHasEncryptMarker(buffer: ArrayBuffer): boolean {
   const view = new Uint8Array(buffer);
@@ -90,64 +87,18 @@ export class FileAnalyzer {
     return analysis;
   }
 
-  /** Detect encryption and admit empty-password documents without prompting.
-   * The marker is an upload optimisation, not authorisation; operations inspect original bytes.
+  /** The bounded marker is only an admission hint. Opening and operations verify actual bytes.
+   * Library-only imports defer authentication until the file is used.
    */
-  static async isPDFEncrypted(file: File): Promise<boolean> {
+  static async isPDFEncrypted(file: File, inspect = true): Promise<boolean> {
     const access = getPdfAccess(file);
     if (access) return access.encrypted;
     if (!(await hasEncryptMarker(file))) return false;
-    if (file.size >= LARGE_PDF_PARSE_LIMIT) return true;
-    if (await this.requiresOpeningPassword(file)) return true;
+    if (!inspect) return true;
     try {
-      return (await ensurePdfAccess(file)).encrypted;
+      return (await ensureLocalPdfAccess(file)).encrypted;
     } catch {
       return true;
-    }
-  }
-
-  private static async requiresOpeningPassword(file: File): Promise<boolean> {
-    if (!(await hasEncryptMarker(file))) return false;
-
-    // Too big to hand pdf.js: that full-buffer parse is the renderer OOM the
-    // large-file path exists to avoid, so trust the marker instead of it.
-    if (file.size >= LARGE_PDF_PARSE_LIMIT) return true;
-
-    const arrayBuffer = await file.arrayBuffer();
-    let timedOut = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const opening = pdfWorkerManager
-      .createDocument(arrayBuffer, { stopAtErrors: false, verbosity: 0 })
-      .then((pdf) => {
-        // Arrived after the timeout won the race - nothing else frees it.
-        if (timedOut) pdfWorkerManager.destroyDocument(pdf);
-        return pdf;
-      });
-
-    try {
-      const pdf = await Promise.race<PDFDocumentProxy>([
-        opening,
-        new Promise<never>((_, reject) => {
-          timer = setTimeout(() => {
-            timedOut = true;
-            reject(new Error(PROBE_TIMEOUT));
-          }, PROBE_TIMEOUT_MS);
-        }),
-      ]);
-      pdfWorkerManager.destroyDocument(pdf);
-      // pdf.js opened it — owner-password-only case, no prompt needed.
-      return false;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message.toLowerCase() : "";
-      // Unconfirmed either way; the /Encrypt marker is the better guess, and a
-      // spurious prompt beats a card that never stops spinning.
-      if (errorMessage === PROBE_TIMEOUT) return true;
-      return (
-        errorMessage.includes("password") || errorMessage.includes("encrypted")
-      );
-    } finally {
-      clearTimeout(timer);
     }
   }
 

@@ -20,6 +20,7 @@ import {
   assertPdfSessionEditable,
   preflightPdfOperation,
   changePdfSecurity,
+  ensurePdfAccess,
   hasPdfPermissionOverride,
   pdfAllows,
 } from "@app/services/pdfSessionUnlock";
@@ -49,6 +50,47 @@ beforeEach(() => {
 afterEach(clearPdfAccess);
 
 describe("session PDF access", () => {
+  it("defers full verification of local access until an operation requests it", async () => {
+    const file = new File(["source"], "protected.pdf");
+    const local = rememberPdfAccess(file, {
+      ...access,
+      localInspection: true,
+      credentialFingerprint: undefined,
+      encryptionKeyLength: undefined,
+    });
+    expect(post).not.toHaveBeenCalled();
+    post.mockResolvedValueOnce({ data: access });
+    const verified = await ensurePdfAccess(file);
+    expect(verified.localInspection).toBeUndefined();
+    const form = post.mock.calls[0][1];
+    if (!(form instanceof FormData)) throw new Error("Expected a PDF request");
+    expect(form.get("password")).toBe(local.password);
+    expect(getPdfAccess(file)?.credentialFingerprint).toBe(
+      access.credentialFingerprint,
+    );
+    await ensurePdfAccess(file);
+    expect(post).toHaveBeenCalledOnce();
+  });
+
+  it("verifies both original credentials and exported bytes after local opening", async () => {
+    const source = new File(["source"], "protected.pdf");
+    const output = new File(["output"], "edited.pdf");
+    const local = rememberPdfAccess(source, {
+      ...access,
+      localInspection: true,
+      credentialFingerprint: undefined,
+    });
+    post.mockResolvedValueOnce({ data: access });
+    post.mockResolvedValueOnce({
+      data: { ...access, credentialFingerprint: "changed-owner" },
+    });
+    await expect(
+      verifyEditedPdfProtection(output, local, source),
+    ).rejects.toThrow("Unable to preserve PDF protection");
+    expect(post).toHaveBeenCalledTimes(2);
+    expect(getPdfAccess(output)).toBeUndefined();
+  });
+
   it("sanitizes cancelled inspections without losing cancellation classification", async () => {
     const file = new File(["encrypted"], "restricted.pdf");
     const cancellation = axios.CancelToken.source();

@@ -8,7 +8,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import apiClient from "@app/services/apiClient";
+import { inspectLocalPdfAccess } from "@app/services/pdfLocalAccess";
 import {
   clearPdfAccess,
   getPdfAccess,
@@ -18,12 +18,15 @@ import {
 import { PermissionsPasswordButton } from "@app/tools/pdfTextEditor/components/PermissionsPasswordButton";
 
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@app/services/pdfLocalAccess", () => ({
+  inspectLocalPdfAccess: vi.fn(),
+}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, fallback?: string) => fallback ?? key,
   }),
 }));
-const post = vi.mocked(apiClient.post);
+const inspect = vi.mocked(inspectLocalPdfAccess);
 const reader: PdfAccess = {
   encrypted: true,
   password: "reader-password",
@@ -38,7 +41,7 @@ const reader: PdfAccess = {
 };
 
 beforeEach(() => {
-  post.mockReset();
+  inspect.mockReset();
 });
 afterEach(() => {
   cleanup();
@@ -86,7 +89,7 @@ describe("editor permissions verification", () => {
 
   it("rejects an opening credential and resumes only after owner verification", async () => {
     const { file, onVerified } = setup();
-    post.mockResolvedValueOnce({ data: reader });
+    inspect.mockResolvedValueOnce(reader);
     fireEvent.click(
       screen.getByRole("button", { name: "Enter permissions password" }),
     );
@@ -103,13 +106,12 @@ describe("editor permissions verification", () => {
     expect(onVerified).not.toHaveBeenCalled();
     expect(getPdfAccess(file)?.ownerAuthenticated).toBe(false);
 
-    post.mockResolvedValueOnce({
-      data: {
-        ...reader,
-        openingAuthenticated: false,
-        ownerAuthenticated: true,
-        canModify: true,
-      },
+    inspect.mockResolvedValueOnce({
+      ...reader,
+      password: "owner-password",
+      openingAuthenticated: false,
+      ownerAuthenticated: true,
+      canModify: true,
     });
     fireEvent.change(
       screen.getByLabelText("Permissions password", { exact: true }),
@@ -126,8 +128,8 @@ describe("editor permissions verification", () => {
 
   it("discards a verification response after the action unmounts", async () => {
     const { file, onVerified } = setup();
-    let complete!: (response: { data: PdfAccess }) => void;
-    post.mockImplementationOnce(
+    let complete!: (response: PdfAccess) => void;
+    inspect.mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           complete = resolve;
@@ -142,9 +144,7 @@ describe("editor permissions verification", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     cleanup();
-    await act(async () =>
-      complete({ data: { ...reader, ownerAuthenticated: true } }),
-    );
+    await act(async () => complete({ ...reader, ownerAuthenticated: true }));
     expect(onVerified).not.toHaveBeenCalled();
     expect(getPdfAccess(file)?.ownerAuthenticated).toBe(false);
   });

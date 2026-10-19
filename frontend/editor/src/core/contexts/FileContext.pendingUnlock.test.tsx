@@ -39,6 +39,19 @@ const observed = vi.hoisted(() => ({
   afterDispatch: undefined as (() => Promise<void>) | undefined,
 }));
 const id = "editor-encrypted" as FileId;
+const localInspection = vi.hoisted(() => vi.fn());
+
+vi.mock("@app/services/pdfLocalAccess", () => ({
+  inspectLocalPdfAccess: async (
+    file: File,
+    password: string,
+    signal?: AbortSignal,
+  ) => ({
+    ...(await localInspection(file, password, signal)).data,
+    password,
+    localInspection: true,
+  }),
+}));
 
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
 
@@ -139,6 +152,7 @@ function wrapper({ children }: { children: ReactNode }) {
 
 beforeEach(() => {
   vi.mocked(apiClient.post).mockReset();
+  localInspection.mockReset();
   vi.mocked(generateProcessedFileMetadata).mockResolvedValue({
     pages: [],
     totalPages: 1,
@@ -194,7 +208,7 @@ describe("protected tool replacements", () => {
         await expect(consuming).resolves.toEqual([]);
         return;
       }
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
+      localInspection.mockResolvedValueOnce({
         data: {
           encrypted: true,
           signed: false,
@@ -248,7 +262,7 @@ describe("protected tool replacements", () => {
       await act(async () => {
         consuming = result.current.actions.consumeFiles([id], outputs, stubs);
       });
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
+      localInspection.mockResolvedValueOnce({
         data: {
           encrypted: true,
           signed: false,
@@ -578,7 +592,7 @@ describe("encrypted bytes opened by another editor", () => {
     expect(result.current.selectors.getAllFileIds()).toEqual([]);
   });
   it("unlocks the original in place without adding a password-removal version", async () => {
-    vi.mocked(apiClient.post).mockResolvedValueOnce({
+    localInspection.mockResolvedValueOnce({
       data: {
         encrypted: true,
         signed: false,
@@ -617,9 +631,7 @@ describe("encrypted bytes opened by another editor", () => {
     });
     expect(getPdfAccess(id)?.password).toBe(" secret ");
     expect(isAwaitingUnlock(id)).toBe(false);
-    expect(vi.mocked(apiClient.post).mock.calls.at(-1)?.[0]).toBe(
-      "/api/v1/security/inspect-pdf-security",
-    );
+    expect(apiClient.post).not.toHaveBeenCalled();
     await act(() => result.current.actions.removeFiles([id]));
     expect(getPdfAccess(original)).toBeUndefined();
   });
@@ -664,7 +676,7 @@ describe("encrypted bytes opened by another editor", () => {
   });
 
   it("a rejected password leaves the file pending until cancelled", async () => {
-    vi.mocked(apiClient.post).mockRejectedValueOnce(new Error("bad password"));
+    localInspection.mockRejectedValueOnce(new Error("bad password"));
     const { result } = renderHook(
       () => ({ ...useFileActions(), selectors: useFileSelectors() }),
       { wrapper },
@@ -706,7 +718,7 @@ describe("preview session credentials", () => {
   afterEach(cleanup);
 
   it("unlocks without publishing or persisting a file, then forgets access on close", async () => {
-    vi.mocked(apiClient.post).mockResolvedValueOnce({ data: previewSecurity });
+    localInspection.mockResolvedValueOnce({ data: previewSecurity });
     const { result } = renderHook(
       () => ({ ...useFileActions(), selectors: useFileSelectors() }),
       { wrapper },
@@ -722,6 +734,7 @@ describe("preview session credentials", () => {
     );
     expect(getPdfAccess(preview)).toEqual({
       ...previewSecurity,
+      localInspection: true,
       password: " secret ",
       openingPassword: " secret ",
     });
@@ -733,7 +746,7 @@ describe("preview session credentials", () => {
 
   it("does not retain a password when authentication finishes after the preview closes", async () => {
     let finish!: (response: { data: typeof previewSecurity }) => void;
-    vi.mocked(apiClient.post).mockReturnValueOnce(
+    localInspection.mockReturnValueOnce(
       new Promise((resolve) => {
         finish = resolve;
       }),
@@ -756,7 +769,7 @@ describe("preview session credentials", () => {
 });
 
 it("preserves a preview credential after its bytes are admitted to FileContext", async () => {
-  vi.mocked(apiClient.post).mockResolvedValueOnce({
+  localInspection.mockResolvedValueOnce({
     data: {
       encrypted: true,
       signed: false,

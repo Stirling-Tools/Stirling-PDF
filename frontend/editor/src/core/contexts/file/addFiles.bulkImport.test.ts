@@ -9,6 +9,7 @@ import type { FileId } from "@app/types/file";
 
 const storeStirlingFile = vi.hoisted(() => vi.fn());
 const generateThumbnailPairWithMetadata = vi.hoisted(() => vi.fn());
+const isPDFEncrypted = vi.hoisted(() => vi.fn());
 vi.mock("@app/services/fileStorage", () => ({
   fileStorage: { storeStirlingFile, updateThumbnail: vi.fn() },
 }));
@@ -17,7 +18,7 @@ vi.mock("@app/utils/thumbnailUtils", () => ({
   generateThumbnailForFile: vi.fn(),
 }));
 vi.mock("@app/services/fileAnalyzer", () => ({
-  FileAnalyzer: { isPDFEncrypted: async () => false },
+  FileAnalyzer: { isPDFEncrypted },
 }));
 
 import { addFiles } from "@app/contexts/file/fileActions";
@@ -44,9 +45,47 @@ const pdf = (name: string) =>
 beforeEach(() => {
   storeStirlingFile.mockReset().mockResolvedValue(undefined);
   generateThumbnailPairWithMetadata.mockReset();
+  isPDFEncrypted.mockReset().mockResolvedValue(false);
 });
 
 describe("addFiles with skipMetadataHydration", () => {
+  test("a pending permission inspection does not block another import", async () => {
+    let finishInspection!: (encrypted: boolean) => void;
+    isPDFEncrypted.mockImplementation((file: File) =>
+      file.name === "slow.pdf"
+        ? new Promise<boolean>((resolve) => {
+            finishInspection = resolve;
+          })
+        : Promise.resolve(false),
+    );
+    const h = harness();
+    const importFile = (name: string) =>
+      addFiles(
+        {
+          files: [pdf(name)],
+          skipMetadataHydration: true,
+          skipUploadTracking: true,
+        },
+        h.stateRef,
+        h.filesRef,
+        h.dispatch,
+        h.lifecycleManager as never,
+        true,
+      );
+    const slow = importFile("slow.pdf");
+    await vi.waitFor(() => expect(finishInspection).toBeTypeOf("function"));
+    try {
+      const fast = importFile("fast.pdf");
+      await vi.waitFor(() => expect(h.filesRef.current.size).toBe(1));
+      await fast;
+      expect([...h.filesRef.current.values()][0].name).toBe("fast.pdf");
+    } finally {
+      finishInspection(false);
+      await slow;
+    }
+    expect(h.filesRef.current.size).toBe(2);
+  });
+
   test("writes the locked stub, parses nothing, and lets go of the bytes", async () => {
     const h = harness();
     await addFiles(

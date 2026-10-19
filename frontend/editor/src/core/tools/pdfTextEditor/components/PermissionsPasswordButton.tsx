@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import axios, { type CancelTokenSource } from "axios";
 import { useTranslation } from "react-i18next";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import { rememberPdfAccess } from "@app/services/pdfPasswordStore";
-import {
-  hasPdfPermissionOverride,
-  unlockPdfForSession,
-} from "@app/services/pdfSessionUnlock";
+import { hasPdfPermissionOverride } from "@app/services/pdfSessionUnlock";
+import { inspectLocalPdfAccess } from "@app/services/pdfLocalAccess";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { Button } from "@app/ui/Button";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
 
@@ -20,19 +18,20 @@ export function PermissionsPasswordButton({
   onVerified: (file: File) => void;
 }) {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
   const access = usePdfAccess(file);
   const [opened, setOpened] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const pending = useRef<CancelTokenSource | null>(null);
+  const pending = useRef<AbortController | null>(null);
 
   useEffect(() => {
     setOpened(false);
     setPassword("");
     setError(null);
     setBusy(false);
-    return () => pending.current?.cancel();
+    return () => pending.current?.abort();
   }, [file]);
 
   if (
@@ -46,17 +45,17 @@ export function PermissionsPasswordButton({
 
   const verify = async () => {
     if (busy || !password) return;
-    const cancellation = axios.CancelToken.source();
+    const cancellation = new AbortController();
     pending.current = cancellation;
     setBusy(true);
     setError(null);
     try {
-      const verified = await unlockPdfForSession(
+      const verified = await inspectLocalPdfAccess(
         file,
         password,
-        cancellation.token,
+        cancellation.signal,
       );
-      cancellation.token.throwIfRequested();
+      if (cancellation.signal.aborted) return;
       if (!verified.ownerAuthenticated) {
         setError(
           t(
@@ -66,12 +65,15 @@ export function PermissionsPasswordButton({
         );
         return;
       }
-      rememberPdfAccess(file, verified);
+      rememberPdfAccess(file, {
+        ...verified,
+        honorOwnerPasswords: config?.honorOwnerPasswords,
+      });
       setOpened(false);
       setPassword("");
       onVerified(file);
     } catch (failure) {
-      if (!axios.isCancel(failure)) {
+      if (!cancellation.signal.aborted) {
         const message = await handlePasswordError(
           failure,
           t("encryptedPdfUnlock.incorrectPassword", "Incorrect password"),
@@ -80,10 +82,10 @@ export function PermissionsPasswordButton({
             "Unable to verify this password. Please try again.",
           ),
         );
-        if (!cancellation.token.reason) setError(message);
+        if (!cancellation.signal.aborted) setError(message);
       }
     } finally {
-      if (!cancellation.token.reason) setBusy(false);
+      if (!cancellation.signal.aborted) setBusy(false);
     }
   };
 

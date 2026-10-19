@@ -13731,6 +13731,7 @@ typeReplaceText = "Replace Text"
 viewComment = "View comment"
 
 [viewer.error]
+loadError = "Failed to load PDF"
 noFileProvided = "Error: No file provided to viewer"
 
 [viewer.formBar]

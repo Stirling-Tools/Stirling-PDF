@@ -1,6 +1,6 @@
 /**
  * Backend-free coverage for session unlocks and cached preview privacy.
- * Security inspection is stubbed; EmbedPDF renders the actual encrypted fixture.
+ * PDFium authenticates real encrypted fixtures; server processing is stubbed.
  */
 
 import { test, expect, type Page } from "@playwright/test";
@@ -9,6 +9,7 @@ import fs from "fs";
 import { createHash } from "node:crypto";
 import { PDFDocument } from "@cantoo/pdf-lib";
 import JSZip from "jszip";
+import { rejectEmptyOpeningPassword } from "@app/tests/helpers/pdf-security-stubs";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
 import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
@@ -16,20 +17,24 @@ const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");
 
 function mockUnlockSuccess(page: Page, pageCount = 1) {
-  return page.route("**/api/v1/security/inspect-pdf-security", (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        encrypted: true,
-        signed: false,
-        ownerAuthenticated: true,
-        permissions: -4,
-        canModify: true,
-        canAssemble: true,
-        pageCount,
-      }),
-    }),
+  return page.route(
+    "**/api/v1/security/inspect-pdf-security",
+    async (route) => {
+      if (await rejectEmptyOpeningPassword(route)) return;
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: true,
+          permissions: -4,
+          canModify: true,
+          canAssemble: true,
+          pageCount,
+        }),
+      });
+    },
   );
 }
 
@@ -85,6 +90,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     // otherwise leak the native dialog onto the host and close the page).
     suppressNativeFilePicker(page);
     await mockAppApis(page);
+    await mockUnlockWrongPassword(page);
     await page.goto("/?bypassOnboarding=true");
     await page.waitForSelector('[data-testid="files-button"]', {
       timeout: 10000,
@@ -264,23 +270,27 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       removals++;
       return route.fulfill({ contentType: "application/pdf", body: sample });
     });
-    await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
-      const copy = (route.request().postData() ?? "").includes(
-        "encrypted_unprotected.pdf",
-      );
-      return route.fulfill({
-        json: {
-          encrypted: !copy,
-          requiresOpeningPassword: !copy,
-          signed: false,
-          ownerAuthenticated: !copy,
-          permissions: -4,
-          canModify: true,
-          canAssemble: true,
-          pageCount: 1,
-        },
-      });
-    });
+    await page.route(
+      "**/api/v1/security/inspect-pdf-security",
+      async (route) => {
+        const copy = (route.request().postData() ?? "").includes(
+          "encrypted_unprotected.pdf",
+        );
+        if (!copy && (await rejectEmptyOpeningPassword(route))) return;
+        return route.fulfill({
+          json: {
+            encrypted: !copy,
+            requiresOpeningPassword: !copy,
+            signed: false,
+            ownerAuthenticated: !copy,
+            permissions: -4,
+            canModify: true,
+            canAssemble: true,
+            pageCount: 1,
+          },
+        });
+      },
+    );
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     await fillPassword(page, "testpass123");
     await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();

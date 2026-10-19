@@ -29,11 +29,11 @@ const RemovePassword = (props: BaseToolProps) => {
   useEffect(() => {
     let cancelled = false;
     setCheckingProtection(true);
-    void Promise.allSettled(base.selectedFiles.map(ensurePdfAccess)).then(
-      () => {
-        if (!cancelled) setCheckingProtection(false);
-      },
-    );
+    void Promise.allSettled(
+      base.selectedFiles.map((file) => ensurePdfAccess(file)),
+    ).then(() => {
+      if (!cancelled) setCheckingProtection(false);
+    });
     return () => {
       cancelled = true;
     };

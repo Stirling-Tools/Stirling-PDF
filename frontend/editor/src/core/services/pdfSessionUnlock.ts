@@ -5,6 +5,7 @@ import {
   getPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
+  pdfAccessLifetime,
 } from "@app/services/pdfPasswordStore";
 import type { StirlingFile } from "@app/types/fileContext";
 import { PdfPermissionFlag } from "@embedpdf/models";
@@ -42,13 +43,90 @@ export function pdfAllows(
   );
 }
 
-/** Inspect original bytes even when an older library record missed owner-only encryption. */
-export async function ensurePdfAccess(file: File): Promise<PdfAccess> {
+interface AccessInspection {
+  generation: object;
+  promise: Promise<PdfAccess>;
+  cancel: () => void;
+  waiters: number;
+}
+const inspections = new WeakMap<File, AccessInspection>();
+
+function waitForInspection(
+  inspection: AccessInspection,
+  signal?: AbortSignal,
+): Promise<PdfAccess> {
+  inspection.waiters++;
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const release = () => {
+      if (settled) return false;
+      settled = true;
+      signal?.removeEventListener("abort", abort);
+      inspection.waiters--;
+      return true;
+    };
+    const abort = () => {
+      if (!release()) return;
+      if (inspection.waiters === 0) inspection.cancel();
+      reject(new axios.CanceledError("Operation cancelled"));
+    };
+    signal?.addEventListener("abort", abort, { once: true });
+    inspection.promise.then(
+      (access) => {
+        if (release()) resolve(access);
+      },
+      (error) => {
+        if (release()) reject(error);
+      },
+    );
+    if (signal?.aborted) abort();
+  });
+}
+
+/** Inspect exact bytes on demand; concurrent consumers share work until the last one cancels. */
+export async function ensurePdfAccess(
+  file: File,
+  signal?: AbortSignal,
+): Promise<PdfAccess> {
+  if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
   const existing = getPdfAccess(file);
-  if (existing) return existing;
-  const access = await unlockPdfForSession(file, "");
-  if (!getPdfAccess(file)) rememberPdfAccess(file, access);
-  return getPdfAccess(file)!;
+  if (existing && (!existing.encrypted || !existing.localInspection))
+    return existing;
+  const generation = pdfAccessLifetime(file);
+  const pending = inspections.get(file);
+  if (pending?.generation === generation)
+    return waitForInspection(pending, signal);
+  const cancellation = axios.CancelToken.source();
+  const promise = unlockPdfForSession(
+    file,
+    existing?.password ?? "",
+    cancellation.token,
+  )
+    .then((access) => {
+      if (generation !== pdfAccessLifetime(file))
+        throw new axios.CanceledError("Session closed");
+      const current = getPdfAccess(file);
+      if (current && current.password !== (existing?.password ?? ""))
+        throw new axios.CanceledError("PDF credentials changed");
+      return rememberPdfAccess(file, {
+        ...access,
+        openingPassword: existing?.openingPassword,
+      });
+    })
+    .finally(() => {
+      if (inspections.get(file)?.promise === promise) inspections.delete(file);
+    });
+  const inspection: AccessInspection = {
+    generation,
+    promise,
+    waiters: 0,
+    cancel: () => {
+      cancellation.cancel();
+      if (inspections.get(file) === inspection) inspections.delete(file);
+    },
+  };
+  inspections.set(file, inspection);
+  return waitForInspection(inspection, signal);
 }
 
 const SUPPORTED_ENDPOINTS = new Set([
@@ -223,8 +301,14 @@ export function assertPdfSessionEditable(
 export async function verifyEditedPdfProtection(
   output: File,
   sourceAccess: PdfAccess | undefined,
+  source?: File,
 ): Promise<void> {
   if (!sourceAccess?.encrypted) return;
+  if (sourceAccess.localInspection) {
+    if (!source)
+      throw new Error("The original PDF is required to verify its protection");
+    sourceAccess = await ensurePdfAccess(source);
+  }
   assertPdfSessionEditable(sourceAccess);
   const access = await unlockPdfForSession(output, sourceAccess.password);
   if (

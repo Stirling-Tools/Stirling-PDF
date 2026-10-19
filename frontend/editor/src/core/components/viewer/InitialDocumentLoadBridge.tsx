@@ -31,6 +31,7 @@ export function InitialDocumentLoadBridge({
     };
   }, [fileKey, onFailed]);
   useEffect(() => {
+    if (activeDocument?.status === "loading") completedRef.current = false;
     if (!fileKey || completedRef.current) return;
     if (activeDocument?.status === "loaded") {
       completedRef.current = true;

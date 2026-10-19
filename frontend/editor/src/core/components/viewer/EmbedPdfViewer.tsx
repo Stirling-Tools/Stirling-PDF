@@ -47,6 +47,7 @@ import type {
   SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
+import { rememberPlainPdfExport } from "@app/services/pdfPasswordStore";
 import {
   isStirlingFile,
   getFormFillFileId,
@@ -1111,6 +1112,7 @@ const EmbedPdfViewerContent = ({
       const blob = new Blob([arrayBuffer], { type: "application/pdf" });
       const filename = currentFile.name || "document.pdf";
       const file = new File([blob], filename, { type: "application/pdf" });
+      rememberPlainPdfExport(currentFile, file);
 
       // Step 3: Create StirlingFiles and stubs for version history
       // Only consume the current file, not all active files
@@ -1207,6 +1209,7 @@ const EmbedPdfViewerContent = ({
         const file = new File([filledBlob], filename, {
           type: "application/pdf",
         });
+        rememberPlainPdfExport(currentFile, file);
 
         // Get current file info for creating the updated version
         const currentFileId = currentFileStableId;
@@ -1291,6 +1294,7 @@ const EmbedPdfViewerContent = ({
         const file = new File([modifiedBlob], filename, {
           type: "application/pdf",
         });
+        rememberPlainPdfExport(currentFile, file);
 
         const currentFileId = currentFileStableId;
         if (!currentFileId) throw new Error("Current file ID not found");
@@ -1349,6 +1353,7 @@ const EmbedPdfViewerContent = ({
       const blob = new Blob([arrayBuffer], { type: "application/pdf" });
       const filename = currentFile.name || "document.pdf";
       const file = new File([blob], filename, { type: "application/pdf" });
+      rememberPlainPdfExport(currentFile, file);
 
       // Create StirlingFiles and stubs for version history
       const currentFileId = currentFileStableId;

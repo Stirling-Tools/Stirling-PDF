@@ -1,12 +1,14 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "node:path";
+import { rejectEmptyOpeningPassword } from "@app/tests/helpers/pdf-security-stubs";
 
 const fixtures = path.join(import.meta.dirname, "../test-fixtures");
 
 async function unlockFixture(page: Page, filename: string, pageCount: number) {
-  await page.route("**/api/v1/security/inspect-pdf-security", (route) =>
-    route.fulfill({
+  await page.route("**/api/v1/security/inspect-pdf-security", async (route) => {
+    if (await rejectEmptyOpeningPassword(route)) return;
+    return route.fulfill({
       json: {
         encrypted:
           route.request().postData()?.includes(`filename="${filename}"`) ??
@@ -18,8 +20,8 @@ async function unlockFixture(page: Page, filename: string, pageCount: number) {
         canAssemble: true,
         pageCount,
       },
-    }),
-  );
+    });
+  });
   await page.goto("/annotate", { waitUntil: "domcontentloaded" });
   await page.getByTestId("files-button").click();
   await page

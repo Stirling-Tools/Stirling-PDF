@@ -58,7 +58,7 @@ function PanAPIBridgeInner({ documentId }: { documentId: string }) {
     return () => {
       registerBridge("pan", null);
     };
-  }, [isPanning, registerBridge, triggerImmediatePanUpdate]);
+  }, [documentId, isPanning, registerBridge, triggerImmediatePanUpdate]);
 
   useEffect(() => {
     return () => {
