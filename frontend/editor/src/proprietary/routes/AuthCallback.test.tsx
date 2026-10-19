@@ -202,6 +202,42 @@ describe("AuthCallback", () => {
     expect(sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
   });
 
+  it("should restore SSO auto-login after a completed sign-in", async () => {
+    const mockToken = "oauth-jwt-token";
+    window.location.hash = `#access_token=${mockToken}`;
+    sessionStorage.setItem("stirling_sso_auto_login_attempts", "1");
+
+    vi.mocked(springAuth.getSession).mockResolvedValueOnce({
+      data: {
+        session: {
+          user: {
+            id: "123",
+            email: "oauth@example.com",
+            username: "oauthuser",
+            role: "USER",
+          },
+          access_token: mockToken,
+          expires_in: 3600,
+          expires_at: Date.now() + 3600000,
+        },
+      },
+      error: null,
+    });
+
+    render(
+      <BrowserRouter>
+        <AuthCallback />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalled();
+    });
+    expect(
+      sessionStorage.getItem("stirling_sso_auto_login_attempts"),
+    ).toBeNull();
+  });
+
   it("should fall back to the editor when the stored post-login path is unsafe", async () => {
     const mockToken = "oauth-jwt-token";
     const mockUser = {

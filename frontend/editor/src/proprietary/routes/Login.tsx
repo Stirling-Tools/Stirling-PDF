@@ -76,7 +76,10 @@ export default function Login() {
   const AUTO_LOGIN_ATTEMPTS_KEY = "stirling_sso_auto_login_attempts";
   const AUTO_LOGIN_ERRORS_KEY = "stirling_sso_auto_login_errors";
   const AUTO_LOGIN_LOGOUT_KEY = "stirling_sso_auto_login_logged_out";
-  const MAX_AUTO_LOGIN_ATTEMPTS = 2;
+  // Redirect on the first view of /login only. Landing here again in the same
+  // tab without having signed in means the IdP round trip is not working for
+  // this visitor, so the second view shows the form. Cleared on sign-in.
+  const MAX_AUTO_LOGIN_ATTEMPTS = 1;
   const MAX_AUTO_LOGIN_ERRORS = 1;
 
   const readSessionNumber = (key: string) => {
@@ -221,6 +224,7 @@ export default function Login() {
   useEffect(() => {
     if (loading) return;
     if (!session) return;
+    window.sessionStorage.removeItem(AUTO_LOGIN_ATTEMPTS_KEY);
     const stashed = consumePostLoginRedirectPath();
     const returnPath = resolveReturnPath() ?? stashed;
     if (returnPath) {

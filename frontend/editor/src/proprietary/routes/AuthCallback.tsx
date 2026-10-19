@@ -95,6 +95,9 @@ export default function AuthCallback() {
         }
 
         await handleAuthCallbackSuccess(token);
+        // Login.tsx stops auto-redirecting to SSO once a tab has been sent
+        // there without signing in; a completed sign-in restores it.
+        window.sessionStorage.removeItem("stirling_sso_auto_login_attempts");
 
         // Wait for all context providers to process jwt-available event
         // This prevents infinite render loop when coming from cross-domain SAML redirect

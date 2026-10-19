@@ -911,6 +911,49 @@ describe("Login", () => {
       });
     });
 
+    it("shows the form instead of redirecting on the second view without a sign-in", async () => {
+      mockLoginConfig("all");
+      const first = renderAt("/login");
+      await waitFor(() => {
+        expect(springAuth.signInWithOAuth).toHaveBeenCalledTimes(1);
+      });
+      first.unmount();
+
+      renderAt("/login");
+
+      await waitFor(() => {
+        expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+        expect(document.getElementById("password")).toBeInTheDocument();
+      });
+      expect(springAuth.signInWithOAuth).toHaveBeenCalledTimes(1);
+    });
+
+    it("resets the redirect allowance once signed in", async () => {
+      mockLoginConfig("all");
+      sessionStorage.setItem("stirling_sso_auto_login_attempts", "1");
+      vi.mocked(useAuth).mockReturnValue({
+        ...vi.mocked(useAuth)(),
+        session: {
+          user: {
+            id: "123",
+            email: "test@example.com",
+            username: "testuser",
+            role: "USER",
+          },
+          access_token: "mock-token",
+          expires_in: 3600,
+        },
+      });
+
+      renderAt("/login");
+
+      await waitFor(() => {
+        expect(
+          sessionStorage.getItem("stirling_sso_auto_login_attempts"),
+        ).toBeNull();
+      });
+    });
+
     it("stays on the page with the email form under ?all", async () => {
       mockLoginConfig("all");
       renderAt("/login?all");
