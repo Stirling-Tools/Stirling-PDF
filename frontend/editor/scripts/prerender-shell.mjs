@@ -10,6 +10,50 @@ const SHELL_START = "<!--shell:start-->";
 const SHELL_END = "<!--shell:end-->";
 const SHELL_LANGUAGE = "en-US";
 
+/**
+ * Runs before paint and records the decision the shell CSS and the deferred
+ * entry both need, so neither has to re-derive auth or route state.
+ *
+ * An unknown login setting counts as an auth deploy in web builds: the
+ * frontend-only image has no backend to inject the flag. The Spring controller
+ * always injects it, including `false`, so anonymous mode still paints the app
+ * immediately. Core and desktop builds pass `defaultLogin: false` because they
+ * never route to /login.
+ */
+function shellStateScript(defaultLogin) {
+  const fallbackLogin = defaultLogin ? "true" : "false";
+  return `<script>(function(){var r=document.documentElement;
+function trim(p){while(p.length&&p.charAt(p.length-1)==="/")p=p.slice(0,-1);return p;}
+var b=trim(new URL(".",document.baseURI).pathname);
+var c=location.pathname;
+if(c.length>=11&&c.slice(-11)==="/index.html")c=c.slice(0,-11);
+c=trim(c);
+function hasSession(){try{var t=localStorage.getItem("stirling_jwt");
+if(t){var parts=t.split(".");if(parts.length<3)return true;
+var p=parts[1].replace(/-/g,"+").replace(/_/g,"/");
+while(p.length%4)p+="=";
+try{var claims=JSON.parse(atob(p));
+if(!claims||typeof claims.exp!=="number"||claims.exp*1000>Date.now())return true;}catch(e){return true;}}
+for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);
+if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)return true;}
+}catch(e){return true;}return false;}
+var flag=window.STIRLING_PDF_ENABLE_LOGIN;
+var stored=null;try{stored=localStorage.getItem("stirling_login_enabled");}catch(e){}
+var hasAuth=hasSession();
+var isLoginRoute=c===b+"/login"||c===b+"/signup";
+var isEditorRoute=c===b||c===b+"/editor";
+var reqLogin=flag===true||(flag!==false&&stored==="true");
+var loginUnknown=flag===undefined&&stored!=="true"&&stored!=="false";
+// Core and desktop never show /login; only web builds default to it.
+var fallbackLogin=${fallbackLogin};
+var showLogin=!hasAuth&&(isLoginRoute||(isEditorRoute&&(reqLogin||(loginUnknown&&fallbackLogin))));
+r.setAttribute("data-shell-route",isLoginRoute?"login":isEditorRoute?"editor":"deep");
+r.setAttribute("data-shell-auth",hasAuth?"1":"0");
+r.setAttribute("data-shell-login",showLogin?"1":"0");
+if(showLogin)r.setAttribute("data-shell-mode","login");
+})();</script>`;
+}
+
 const CONTENT_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -352,6 +396,10 @@ async function captureShellPage({
         /* storage unavailable: the app detects from the browser instead */
       }
     }, SHELL_LANGUAGE);
+    // The static capture server has no Spring controller to inject the flag.
+    await context.addInitScript((loginEnabled) => {
+      globalThis.STIRLING_PDF_ENABLE_LOGIN = loginEnabled;
+    }, mockOpts.enableLogin === true);
     const page = await context.newPage();
     await mockAppApis(page, mockOpts);
     await page.goto(`${serverOrigin}${routePath}`, { waitUntil: "load" });
@@ -607,15 +655,11 @@ function shellScript({ wide, narrow, login }) {
     `<script id="shell-strings" type="application/json">${payload}</script>`,
     `<script>(function(){var root=document.getElementById("root");if(!root)return;` +
       `function clearShells(){var s=root.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();}` +
-      `var bPath=new URL(".",document.baseURI).pathname.replace(/\\/+$/,"");` +
-      `var cPath=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");` +
-      `var isEditorPath=cPath===bPath||cPath===bPath+"/editor";` +
-      `var isLoginRoute=cPath===bPath+"/login"||cPath===bPath+"/signup";` +
-      `var hasAuth=false;try{hasAuth=Boolean(localStorage.getItem("stirling_jwt"));for(var x=0;!hasAuth&&x<localStorage.length;x++){var k=localStorage.key(x);if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)hasAuth=true;}}catch(e){}` +
-      `var reqLogin=Boolean(window.STIRLING_PDF_ENABLE_LOGIN);try{if(!reqLogin&&localStorage.getItem("stirling_login_enabled")==="true")reqLogin=true;}catch(e){}` +
-      `var isLoginMode=isLoginRoute||(reqLogin&&!hasAuth&&isEditorPath);` +
-      `if(isLoginMode){document.documentElement.setAttribute("data-shell-mode","login");}` +
-      `else if(!isEditorPath||document.documentElement.hasAttribute("data-shell-hidden")){clearShells();root.removeAttribute("data-shell");document.documentElement.setAttribute("data-shell-hidden","");return;}`,
+      `var isEditorPath=document.documentElement.getAttribute("data-shell-route")==="editor";` +
+      `var isLoginMode=document.documentElement.getAttribute("data-shell-mode")==="login";` +
+      // Some flavours have no login page, so the capture dropped that shell.
+      `if(isLoginMode&&!root.querySelector("[data-shell-for=\\"login\\"]")){document.documentElement.removeAttribute("data-shell-mode");document.documentElement.setAttribute("data-shell-login","0");isLoginMode=false;}` +
+      `if(!isLoginMode&&(!isEditorPath||document.documentElement.hasAttribute("data-shell-hidden"))){clearShells();root.removeAttribute("data-shell");document.documentElement.setAttribute("data-shell-hidden","");return;}`,
     `function drop(){if(!root.hasAttribute("data-shell"))return;root.removeAttribute("data-shell");if(window.__spdfBoot)window.__spdfBoot();}`,
     `try{var data=JSON.parse(document.getElementById("shell-strings").textContent);`,
     `var stored=null;try{stored=localStorage.getItem("i18nextLng");}catch(e){}`,
@@ -705,110 +749,114 @@ function deferEntry(html) {
         (_match, href) =>
           `<link rel="stylesheet" data-href="${href}" disabled>`,
       );
-  return held(html).replace(
+  const withPayload = held(html).replace(
     ENTRY_TAG,
-    `<script id="app-entry" type="application/json">${payload}</script>` +
-      "<script>(function(){var booted=false;" +
-      'var entry=document.getElementById("app-entry");if(!entry)return;' +
-      "var payload=JSON.parse(entry.textContent);var src=payload.src;" +
-      // Hints and sheets arrive with the app rather than before its first paint.
-      "function restore(){var hints=payload.hints||[];" +
-      'for(var h=0;h<hints.length;h++){var hint=document.createElement("link");hint.rel="modulepreload";' +
-      'hint.crossOrigin="anonymous";hint.href=hints[h];document.head.appendChild(hint);}' +
-      'var lng=document.documentElement.lang||"en-US";var targetLng=lng==="en"?"en-US":lng;' +
-      'var pLngs=targetLng==="en-US"?["en-US"]:[targetLng,"en-US"];' +
-      'for(var p=0;p<pLngs.length;p++){var lp=document.createElement("link");lp.rel="preload";lp.as="fetch";lp.crossOrigin="anonymous";' +
-      'lp.href=new URL("locales/"+pLngs[p]+"/translation.toml",document.baseURI).href;document.head.appendChild(lp);}' +
-      'var meta=payload.meta||[];for(var m=0;m<meta.length;m++){var icon=document.createElement("link");' +
-      "icon.rel=meta[m].rel;icon.href=meta[m].href;document.head.appendChild(icon);}" +
-      'var enableSheets=function(){var links=document.querySelectorAll("link[data-href]");' +
-      'for(var k=0;k<links.length;k++){var l=links[k];l.href=l.getAttribute("data-href");l.removeAttribute("data-href");l.disabled=false;}};' +
-      'if(document.readyState==="loading"){addEventListener("DOMContentLoaded",enableSheets,{once:true});}else{enableSheets();}}' +
-      "var activeInputId=null;var activeInputValue=null;var activeSelection=null;var restoreTries=0;" +
-      'addEventListener("focusin",function(e){var t=e.target;' +
-      'if(t&&t.tagName==="INPUT"&&t.id&&t.closest&&t.closest("[data-shell-for]")){activeInputId=t.id;activeInputValue=t.value||"";try{activeSelection=[t.selectionStart,t.selectionEnd];}catch(err){}' +
-      "window.__spdfInputHandoff={id:activeInputId,value:activeInputValue,selection:activeSelection};}" +
-      "},true);" +
-      'addEventListener("input",function(e){var t=e.target;' +
-      'if(t&&t.tagName==="INPUT"&&t.id&&t.closest&&t.closest("[data-shell-for]")&&"value" in t){activeInputId=t.id;activeInputValue=t.value||"";try{activeSelection=[t.selectionStart,t.selectionEnd];}catch(err){}' +
-      "window.__spdfInputHandoff={id:activeInputId,value:activeInputValue,selection:activeSelection};}" +
-      "},true);" +
-      "function restoreInput(){" +
-      'if(!activeInputId){if(document.querySelector("[data-shell-for]")&&restoreTries++<200)setTimeout(restoreInput,50);return;}' +
-      "var el=document.getElementById(activeInputId);" +
-      'if(el&&!el.closest("[data-shell-for]")){' +
-      'if(activeInputValue!=null){var d=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");' +
-      "if(d&&d.set)d.set.call(el,activeInputValue);else el.value=activeInputValue;" +
-      'if(el._valueTracker)try{el._valueTracker.setValue("");}catch(err){}' +
-      'el.dispatchEvent(new Event("input",{bubbles:true}));' +
-      'el.dispatchEvent(new Event("change",{bubbles:true}));}' +
-      "if(activeSelection){try{el.setSelectionRange(activeSelection[0],activeSelection[1]);}catch(err){}}" +
-      "el.focus();activeInputId=null;return;}" +
-      "if(restoreTries++<200)setTimeout(restoreInput,50);}" +
-      "function boot(){if(booted)return;booted=true;restore();" +
-      'var script=document.createElement("script");script.type="module";script.crossOrigin="anonymous";script.src=src;' +
-      "script.onerror=function(){booted=false;};" +
-      "document.head.appendChild(script);" +
-      "restoreInput();}" +
-      "window.__spdfBoot=boot;" +
-      // A deep link is an app page from its first frame: boot at once, keep the
-      // landing shell hidden until React paints over it.
-      'var basePath=new URL(src,document.baseURI).pathname.replace(/\\/assets\\/[^/]+$/,"").replace(/\\/+$/,"");' +
-      'var curPath=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");' +
-      'var isLoginCurPath=curPath===basePath+"/login"||curPath===basePath+"/signup";' +
-      'var isEditorCurPath=curPath===basePath||curPath===basePath+"/editor";' +
-      "if(!isLoginCurPath&&!isEditorCurPath){" +
-      'document.documentElement.setAttribute("data-shell-hidden","");' +
-      'var r=document.getElementById("root");if(r){var s=r.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();r.removeAttribute("data-shell");}' +
-      "boot();return;}" +
-      'var hasAuthSession=false;try{hasAuthSession=Boolean(localStorage.getItem("stirling_jwt"));for(var x=0;!hasAuthSession&&x<localStorage.length;x++){var k=localStorage.key(x);if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)hasAuthSession=true;}}catch(e){}' +
-      'var reqLoginSession=Boolean(window.STIRLING_PDF_ENABLE_LOGIN);try{if(!reqLoginSession&&localStorage.getItem("stirling_login_enabled")==="true")reqLoginSession=true;}catch(e){}' +
-      "if(isLoginCurPath||(reqLoginSession&&!hasAuthSession&&isEditorCurPath)){" +
-      "setTimeout(boot,50);}" +
-      'if(typeof navigator!=="undefined"&&navigator.webdriver){if(document.readyState==="loading"){addEventListener("DOMContentLoaded",boot,{once:true});}else{boot();}return;}' +
-      // The shell is the first screen, so the app waits for a gesture or idle window.
-      'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +
-      "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
-      'setTimeout(function(){if("requestIdleCallback" in window){requestIdleCallback(boot,{timeout:1000});}else{boot();}},1000);' +
-      'addEventListener("dragenter",function(e){if(document.querySelector("[data-shell-for]"))e.preventDefault();},true);' +
-      'addEventListener("dragover",function(e){if(document.querySelector("[data-shell-for]")){e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="copy";}},true);' +
-      'addEventListener("drop",function(e){if(!document.querySelector("[data-shell-for]"))return;e.preventDefault();var f=e.dataTransfer&&e.dataTransfer.files;if(f&&f.length){pending=f;boot();handOff();}},true);' +
-      "var pendingButtonSelector=null;" +
-      'addEventListener("click",function(event){if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;' +
-      'var t=event.target;if(!t||!t.closest||!t.closest("[data-shell-for]"))return;' +
-      'var btn=t.closest("button[data-testid=\\"files-button\\"],button[data-testid=\\"pdf-library-add-files\\"],button.sui-btn--primary");' +
-      'if(btn){var sh=btn.closest("[data-shell-for]");var fi=sh&&sh.querySelector("input[type=file]");if(fi)fi.click();boot();return;}' +
-      'var link=t.closest("a[href]");' +
-      'if(link&&!link.target&&!link.hasAttribute("download")){var href=link.getAttribute("href");' +
-      'if(href&&href.charAt(0)!=="#"&&!/^[a-z]+:/i.test(href)){' +
-      'event.preventDefault();try{history.pushState({},"",href);dispatchEvent(new PopStateEvent("popstate"));}catch(e){location.href=href;}' +
-      "boot();" +
-      'var waited=0;(function route(){if(document.querySelector("[data-shell-for]")&&waited++<200){setTimeout(route,50);return;}' +
-      'try{if(location.pathname!==new URL(href,document.baseURI).pathname){history.pushState({},"",href);dispatchEvent(new PopStateEvent("popstate"));}}catch(e){}})();return;}}' +
-      'var genericBtn=t.closest("button");' +
-      "if(genericBtn){" +
-      'var testId=genericBtn.getAttribute("data-testid");var aria=genericBtn.getAttribute("aria-label");' +
-      'if(testId)pendingButtonSelector="button[data-testid=\\""+testId+"\\"]";' +
-      'else if(aria)pendingButtonSelector="button[aria-label=\\""+aria+"\\"]";' +
-      'else if(genericBtn.className)pendingButtonSelector="button."+genericBtn.className.split(" ").filter(Boolean).join(".");' +
-      "boot();handOff();return;}" +
-      "},true);" +
-      "var pending=null;var tries=0;" +
-      "function onChange(event){var target=event.target;" +
-      'if(!target||target.tagName!=="INPUT"||target.type!=="file"||!target.closest||!target.closest("[data-shell-for]")||!target.files||!target.files.length)return;' +
-      'removeEventListener("change",onChange,true);pending=target.files;boot();handOff();}' +
-      'addEventListener("change",onChange,true);' +
-      "function handOff(){" +
-      'if(document.querySelector("[data-shell-for]")&&tries++<200){setTimeout(handOff,50);return;}' +
-      "if(pendingButtonSelector){var b=document.querySelector(pendingButtonSelector);if(b){b.click();pendingButtonSelector=null;}}" +
-      "if(!pending)return;" +
-      'var input=document.querySelector("input[type=file]");' +
-      "if(!input){if(tries++<200){setTimeout(handOff,50);return;}pending=null;return;}" +
-      "var files=pending;pending=null;" +
-      "try{var carrier=new DataTransfer();for(var j=0;j<files.length;j++)carrier.items.add(files[j]);" +
-      'input.files=carrier.files;input.dispatchEvent(new Event("change",{bubbles:true}));}catch(e){}}' +
-      "})();</script>",
+    `<script id="app-entry" type="application/json">${payload}</script>`,
   );
+  // Vite hoists the entry tag into <head>. Keep the boot logic at the end of
+  // <body>, after the pre-paint shell script has decided the route.
+  const bootScript =
+    "<script>(function(){var booted=false;" +
+    'var entry=document.getElementById("app-entry");if(!entry)return;' +
+    "var payload=JSON.parse(entry.textContent);var src=payload.src;" +
+    // Hints and sheets arrive with the app rather than before its first paint.
+    "function restore(){var hints=payload.hints||[];" +
+    'for(var h=0;h<hints.length;h++){var hint=document.createElement("link");hint.rel="modulepreload";' +
+    'hint.crossOrigin="anonymous";hint.href=hints[h];document.head.appendChild(hint);}' +
+    'var lng=document.documentElement.lang||"en-US";var targetLng=lng==="en"?"en-US":lng;' +
+    'var pLngs=targetLng==="en-US"?["en-US"]:[targetLng,"en-US"];' +
+    'for(var p=0;p<pLngs.length;p++){var lp=document.createElement("link");lp.rel="preload";lp.as="fetch";lp.crossOrigin="anonymous";' +
+    'lp.href=new URL("locales/"+pLngs[p]+"/translation.toml",document.baseURI).href;document.head.appendChild(lp);}' +
+    'var meta=payload.meta||[];for(var m=0;m<meta.length;m++){var icon=document.createElement("link");' +
+    "icon.rel=meta[m].rel;icon.href=meta[m].href;document.head.appendChild(icon);}" +
+    'var enableSheets=function(){var links=document.querySelectorAll("link[data-href]");' +
+    'for(var k=0;k<links.length;k++){var l=links[k];l.href=l.getAttribute("data-href");l.removeAttribute("data-href");l.disabled=false;}};' +
+    'if(document.readyState==="loading"){addEventListener("DOMContentLoaded",enableSheets,{once:true});}else{enableSheets();}}' +
+    "var activeInputId=null;var activeInputValue=null;var activeSelection=null;var restoreTries=0;" +
+    'addEventListener("focusin",function(e){var t=e.target;' +
+    'if(t&&t.tagName==="INPUT"&&t.id&&t.closest&&t.closest("[data-shell-for]")){activeInputId=t.id;activeInputValue=t.value||"";try{activeSelection=[t.selectionStart,t.selectionEnd];}catch(err){}' +
+    "window.__spdfInputHandoff={id:activeInputId,value:activeInputValue,selection:activeSelection};}" +
+    "},true);" +
+    'addEventListener("input",function(e){var t=e.target;' +
+    'if(t&&t.tagName==="INPUT"&&t.id&&t.closest&&t.closest("[data-shell-for]")&&"value" in t){activeInputId=t.id;activeInputValue=t.value||"";try{activeSelection=[t.selectionStart,t.selectionEnd];}catch(err){}' +
+    "window.__spdfInputHandoff={id:activeInputId,value:activeInputValue,selection:activeSelection};}" +
+    "},true);" +
+    "function restoreInput(){" +
+    'if(!activeInputId){if(document.querySelector("[data-shell-for]")&&restoreTries++<200)setTimeout(restoreInput,50);return;}' +
+    "var el=document.getElementById(activeInputId);" +
+    'if(el&&!el.closest("[data-shell-for]")){' +
+    'if(activeInputValue!=null){var d=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");' +
+    "if(d&&d.set)d.set.call(el,activeInputValue);else el.value=activeInputValue;" +
+    'if(el._valueTracker)try{el._valueTracker.setValue("");}catch(err){}' +
+    'el.dispatchEvent(new Event("input",{bubbles:true}));' +
+    'el.dispatchEvent(new Event("change",{bubbles:true}));}' +
+    "if(activeSelection){try{el.setSelectionRange(activeSelection[0],activeSelection[1]);}catch(err){}}" +
+    "el.focus();activeInputId=null;return;}" +
+    "if(restoreTries++<200)setTimeout(restoreInput,50);}" +
+    "function boot(){if(booted)return;booted=true;restore();" +
+    'var script=document.createElement("script");script.type="module";script.crossOrigin="anonymous";script.src=src;' +
+    "script.onerror=function(){booted=false;};" +
+    "document.head.appendChild(script);" +
+    "restoreInput();}" +
+    "window.__spdfBoot=boot;" +
+    // A deep link is an app page from its first frame: boot at once, keep the
+    // landing shell hidden until React paints over it.
+    // The pre-paint script already resolved the route and auth state.
+    'var route=document.documentElement.getAttribute("data-shell-route")||"";' +
+    'var isLoginCurPath=route==="login";' +
+    'if(route!=="editor"&&!isLoginCurPath){' +
+    'document.documentElement.setAttribute("data-shell-hidden","");' +
+    'var r=document.getElementById("root");if(r){var s=r.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();r.removeAttribute("data-shell");}' +
+    "boot();return;}" +
+    'var reqLoginSession=document.documentElement.getAttribute("data-shell-login")==="1";' +
+    "if(isLoginCurPath||reqLoginSession){setTimeout(boot,50);}" +
+    'if(typeof navigator!=="undefined"&&navigator.webdriver){if(document.readyState==="loading"){addEventListener("DOMContentLoaded",boot,{once:true});}else{boot();}return;}' +
+    // The shell is the first screen, so the app waits for a gesture or idle window.
+    'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +
+    "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
+    'setTimeout(function(){if("requestIdleCallback" in window){requestIdleCallback(boot,{timeout:1000});}else{boot();}},1000);' +
+    'addEventListener("dragenter",function(e){if(document.querySelector("[data-shell-for]"))e.preventDefault();},true);' +
+    'addEventListener("dragover",function(e){if(document.querySelector("[data-shell-for]")){e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="copy";}},true);' +
+    'addEventListener("drop",function(e){if(!document.querySelector("[data-shell-for]"))return;e.preventDefault();var f=e.dataTransfer&&e.dataTransfer.files;if(f&&f.length){pending=f;boot();handOff();}},true);' +
+    "var pendingButtonSelector=null;" +
+    'addEventListener("click",function(event){if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;' +
+    'var t=event.target;if(!t||!t.closest||!t.closest("[data-shell-for]"))return;' +
+    'var btn=t.closest("button[data-testid=\\"files-button\\"],button[data-testid=\\"pdf-library-add-files\\"],button.sui-btn--primary");' +
+    'if(btn){var sh=btn.closest("[data-shell-for]");var fi=sh&&sh.querySelector("input[type=file]");if(fi)fi.click();boot();return;}' +
+    'var link=t.closest("a[href]");' +
+    'if(link&&!link.target&&!link.hasAttribute("download")){var href=link.getAttribute("href");' +
+    'if(href&&href.charAt(0)!=="#"&&!/^[a-z]+:/i.test(href)){' +
+    'event.preventDefault();try{history.pushState({},"",href);dispatchEvent(new PopStateEvent("popstate"));}catch(e){location.href=href;}' +
+    "boot();" +
+    'var waited=0;(function route(){if(document.querySelector("[data-shell-for]")&&waited++<200){setTimeout(route,50);return;}' +
+    'try{if(location.pathname!==new URL(href,document.baseURI).pathname){history.pushState({},"",href);dispatchEvent(new PopStateEvent("popstate"));}}catch(e){}})();return;}}' +
+    'var genericBtn=t.closest("button");' +
+    "if(genericBtn){" +
+    'var testId=genericBtn.getAttribute("data-testid");var aria=genericBtn.getAttribute("aria-label");' +
+    'if(testId)pendingButtonSelector="button[data-testid=\\""+testId+"\\"]";' +
+    'else if(aria)pendingButtonSelector="button[aria-label=\\""+aria+"\\"]";' +
+    'else if(genericBtn.className)pendingButtonSelector="button."+genericBtn.className.split(" ").filter(Boolean).join(".");' +
+    "boot();handOff();return;}" +
+    "},true);" +
+    "var pending=null;var tries=0;" +
+    "function onChange(event){var target=event.target;" +
+    'if(!target||target.tagName!=="INPUT"||target.type!=="file"||!target.closest||!target.closest("[data-shell-for]")||!target.files||!target.files.length)return;' +
+    'removeEventListener("change",onChange,true);pending=target.files;boot();handOff();}' +
+    'addEventListener("change",onChange,true);' +
+    "function handOff(){" +
+    'if(document.querySelector("[data-shell-for]")&&tries++<200){setTimeout(handOff,50);return;}' +
+    "if(pendingButtonSelector){var b=document.querySelector(pendingButtonSelector);if(b){b.click();pendingButtonSelector=null;}}" +
+    "if(!pending)return;" +
+    'var input=document.querySelector("input[type=file]");' +
+    "if(!input){if(tries++<200){setTimeout(handOff,50);return;}pending=null;return;}" +
+    "var files=pending;pending=null;" +
+    "try{var carrier=new DataTransfer();for(var j=0;j<files.length;j++)carrier.items.add(files[j]);" +
+    'input.files=carrier.files;input.dispatchEvent(new Event("change",{bubbles:true}));}catch(e){}}' +
+    "})();</script>";
+  const bodyEnd = withPayload.lastIndexOf("</body>");
+  return bodyEnd === -1
+    ? withPayload + bootScript
+    : `${withPayload.slice(0, bodyEnd)}${bootScript}${withPayload.slice(bodyEnd)}`;
 }
 
 /** Swaps the page's #root element for the shell markup. */
@@ -834,6 +882,7 @@ function replaceRoot(html, markup) {
 export async function prerenderShell({
   distDir,
   editorDir = resolve(distDir, ".."),
+  defaultLogin = true,
 }) {
   const { chromium } = await import("@playwright/test");
   const execPath = resolveChromiumExecutablePath(chromium);
@@ -910,7 +959,7 @@ export async function prerenderShell({
   );
   const emitted = [
     SHELL_START,
-    `<script>(function(){var b=new URL(".",document.baseURI).pathname.replace(/\\/+$/,"");var c=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");var has=false;try{has=Boolean(localStorage.getItem("stirling_jwt"));for(var x=0;!has&&x<localStorage.length;x++){var k=localStorage.key(x);if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)has=true;}}catch(e){}var req=Boolean(window.STIRLING_PDF_ENABLE_LOGIN);try{if(!req&&localStorage.getItem("stirling_login_enabled")==="true")req=true;}catch(e){}if(c===b+"/login"||c===b+"/signup"||(req&&!has&&(c===b||c===b+"/editor"))){document.documentElement.setAttribute("data-shell-mode","login");}})();</script>`,
+    shellStateScript(defaultLogin),
     `<style>#root[data-shell="pending"]{visibility:hidden}[data-shell-hidden] #root[data-shell="pending"]{visibility:hidden!important}[data-shell-hidden] [data-shell-for]{display:none!important}[data-shell-for="narrow"]{display:none}[data-shell-for="login"]{display:none}@media (max-width: 1024px){[data-shell-for="wide"]{display:none}[data-shell-for="narrow"]{display:block}}[data-shell-mode="login"] [data-shell-for="wide"]{display:none!important}[data-shell-mode="login"] [data-shell-for="narrow"]{display:none!important}[data-shell-mode="login"] [data-shell-for="login"]{display:block!important}</style>`,
     `<noscript><style>#root[data-shell="pending"]{visibility:visible!important}</style></noscript>`,
     `<style id="shell-critical">${criticalCss}</style>`,

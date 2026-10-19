@@ -35,5 +35,13 @@ void i18nReady.then(() => {
     </React.StrictMode>,
   );
   container.removeAttribute("data-shell");
-  document.documentElement.removeAttribute("data-shell-hidden");
+  for (const attribute of [
+    "data-shell-hidden",
+    "data-shell-mode",
+    "data-shell-route",
+    "data-shell-auth",
+    "data-shell-login",
+  ]) {
+    document.documentElement.removeAttribute(attribute);
+  }
 });

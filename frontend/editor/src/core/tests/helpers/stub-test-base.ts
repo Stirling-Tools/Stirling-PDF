@@ -81,15 +81,15 @@ export const test = base.extend<StubFixtures>({
     suppressNativeFilePicker(page);
     await seedCookieConsent(page);
     await bypassOnboarding(page);
+    // The preview server has no Spring controller to inject the flag; mirror
+    // what it would set so the shell and Landing follow the stubbed config.
+    await page.addInitScript((enabled) => {
+      window.STIRLING_PDF_ENABLE_LOGIN = enabled;
+    }, stubOptions.enableLogin === true);
     if (seedJwt) {
       await page.addInitScript((token) => {
         localStorage.setItem("stirling_jwt", token);
       }, STUB_JWT);
-    }
-    if (filesViewMode) {
-      await page.addInitScript((mode) => {
-        localStorage.setItem("stirling.filesPageViewMode", mode);
-      }, filesViewMode);
     }
     if (filesViewMode) {
       await page.addInitScript((mode) => {
@@ -104,6 +104,9 @@ export const test = base.extend<StubFixtures>({
       // on slow runners and is rarely what tests actually need.
       await page.goto(autoGoto, { waitUntil: "domcontentloaded" });
       await waitForAppReady(page);
+      // Booting starts the bootstrap fetches. Tests that navigate again would
+      // abort them mid-flight, and WebKit reports every abort as a page error.
+      await page.waitForLoadState("networkidle").catch(() => {});
     }
     await use(page);
   },

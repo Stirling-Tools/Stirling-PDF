@@ -26,11 +26,29 @@ function editorRegardless(): boolean {
   return loginLandingMode() !== "dynamic" || !isPortalAvailable();
 }
 
+/** A stored JWT counts while its `exp` claim is unexpired; opaque tokens have no claim to read. */
+function jwtIsUnexpired(token: string): boolean {
+  const payload = token.split(".")[1];
+  // An opaque token has no expiry to read; presence is all this check knows.
+  if (!payload) return true;
+  try {
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+    const claims = JSON.parse(atob(padded)) as { exp?: unknown };
+    return typeof claims.exp !== "number" || claims.exp * 1000 > Date.now();
+  } catch {
+    // An unreadable token is the auth layer's problem to reject, not a reason
+    // to send a signed-in visitor through login first.
+    return true;
+  }
+}
+
 function hasAnyStoredSession(): boolean {
   try {
     if (typeof window === "undefined") return true;
     const storage = window.localStorage;
-    if (storage.getItem(JWT_STORAGE_KEY)) return true;
+    const token = storage.getItem(JWT_STORAGE_KEY);
+    if (token && jwtIsUnexpired(token)) return true;
     for (let i = 0; i < storage.length; i++) {
       const key = storage.key(i);
       if (key?.startsWith("sb-") && key.endsWith("-auth-token")) return true;

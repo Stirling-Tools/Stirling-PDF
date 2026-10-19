@@ -205,14 +205,15 @@ public class ReactRoutingController {
                 BASE_HREF_PATTERN
                         .matcher(html)
                         .replaceFirst("<base href=\\\"" + baseUrl + "\\\" />");
+        // Always emit the flag: the prerendered shell treats "unknown" as an
+        // auth deploy, so anonymous mode must say so explicitly before paint.
         StringBuilder injected = new StringBuilder();
         injected.append("<script>window.STIRLING_PDF_API_BASE_URL = '")
                 .append(baseUrl)
-                .append("';");
-        if (isLoginEnabled()) {
-            injected.append("window.STIRLING_PDF_ENABLE_LOGIN = true;");
-        }
-        injected.append("</script>");
+                .append("';")
+                .append("window.STIRLING_PDF_ENABLE_LOGIN = ")
+                .append(isLoginEnabled())
+                .append(";</script>");
         return html.replace("</head>", injected + "</head>");
     }
 

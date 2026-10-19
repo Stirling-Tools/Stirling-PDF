@@ -11,6 +11,8 @@ declare global {
   interface Window {
     __STIRLING_PDF_BASE_URL__?: string;
     STIRLING_PDF_API_BASE_URL?: string;
+    /** Injected by the Spring controller; the frontend-only image leaves it unset. */
+    STIRLING_PDF_ENABLE_LOGIN?: boolean;
     endpointAvailabilityService?: unknown;
     pdfjsLib?: typeof import("pdfjs-dist");
     /**

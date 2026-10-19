@@ -281,19 +281,19 @@ function isMarkdownPackage(pkg: string): boolean {
   );
 }
 
-/** Preloads the initial route's own files from the built HTML. */
-// Every page the app can be served from gets the hints: a route page is its own
-// document, and without them it discovers the same chunks one round trip later.
+/**
+ * Preloads a route's own files from the built HTML. A prerendered route is its
+ * own document, so without the hints it rediscovers the same chunks a round
+ * trip later.
+ */
 async function writeRouteHints(
   distDir: string,
   route: { js: string; css: string[] },
+  include: (name: string) => boolean,
 ): Promise<void> {
-  const skip = new Set(["login.html", "signup.html", "mobile-scanner.html"]);
   const pages = (await fs.readdir(distDir, { withFileTypes: true }))
-    .filter(
-      (entry) =>
-        entry.isFile() && entry.name.endsWith(".html") && !skip.has(entry.name),
-    )
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".html"))
+    .filter((entry) => include(entry.name))
     .map((entry) => resolve(distDir, entry.name));
   for (const page of pages) {
     let html: string;
@@ -325,46 +325,11 @@ async function writeRouteHints(
   }
 }
 
-/** Preloads the Login chunk and its styles on auth pages so signing in avoids an extra hop. */
-async function writeLoginRouteHints(
-  distDir: string,
-  loginRoute: { js: string; css: string[] },
-): Promise<void> {
-  const loginPages = ["login.html", "signup.html"];
-  for (const name of loginPages) {
-    const page = resolve(distDir, name);
-    let html: string;
-    try {
-      html = await fs.readFile(page, "utf8");
-    } catch {
-      continue;
-    }
-    if (html.includes(loginRoute.js)) continue;
-
-    const existing =
-      /<link\b[^>]*\brel="modulepreload"[^>]*\bhref="([^"]*?)assets\//.exec(
-        html,
-      );
-    const prefix = existing ? existing[1] : "./";
-
-    const tags = [
-      `<link rel="modulepreload" crossorigin href="${prefix}${loginRoute.js}">`,
-      ...loginRoute.css.map(
-        (file) =>
-          `<link rel="preload" as="style" crossorigin href="${prefix}${file}">`,
-      ),
-    ];
-    await fs.writeFile(
-      page,
-      html.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`),
-    );
-  }
-}
-
 /** Inlines the prerendered landing shell into index.html so first paint does not wait on JS bundles. */
 async function writeLandingShell(
   distDir: string,
   editorDir: string,
+  defaultLogin: boolean,
 ): Promise<void> {
   if (
     process.env.PRERENDER_SHELL === "0" ||
@@ -376,7 +341,7 @@ async function writeLandingShell(
     const { prerenderShell } =
       // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
       await import("./scripts/prerender-shell.mjs");
-    const result = await prerenderShell({ distDir, editorDir });
+    const result = await prerenderShell({ distDir, editorDir, defaultLogin });
     console.log(
       `[prerender-shell] ${result.languages} languages, ${result.nodes} text nodes, ${(
         result.bytes / 1024
@@ -725,9 +690,10 @@ function mantineToolOnlyImports(): PluginOption {
 function htmlOutputPlugin(options: {
   routeChunk: string;
   isSaas: boolean;
+  defaultLoginShell: boolean;
   precompress: boolean;
 }): PluginOption {
-  const { routeChunk, isSaas, precompress } = options;
+  const { routeChunk, isSaas, defaultLoginShell, precompress } = options;
   let distDir: string | undefined;
   let editorDir: string | undefined;
   let route: { js: string; css: string[] } | undefined;
@@ -770,9 +736,23 @@ function htmlOutputPlugin(options: {
       if (!distDir) return;
       if (!existsSync(path.join(distDir, "index.html"))) return;
       await writeOpenGraphPages(distDir, isSaas);
-      if (route) await writeRouteHints(distDir, route);
-      if (loginRoute) await writeLoginRouteHints(distDir, loginRoute);
-      if (editorDir) await writeLandingShell(distDir, editorDir);
+      if (route)
+        await writeRouteHints(
+          distDir,
+          route,
+          (name) =>
+            name !== "login.html" &&
+            name !== "signup.html" &&
+            name !== "mobile-scanner.html",
+        );
+      if (loginRoute)
+        await writeRouteHints(
+          distDir,
+          loginRoute,
+          (name) => name === "login.html" || name === "signup.html",
+        );
+      if (editorDir)
+        await writeLandingShell(distDir, editorDir, defaultLoginShell);
       if (precompress) await compressHtmlOutput(distDir);
     },
   };
@@ -982,6 +962,8 @@ export default defineConfig(async ({ mode, command }) => {
       htmlOutputPlugin({
         routeChunk: "Landing",
         isSaas: effectiveMode === "saas",
+        defaultLoginShell:
+          effectiveMode === "proprietary" || effectiveMode === "saas",
         precompress: effectiveMode !== "desktop",
       }),
     ],

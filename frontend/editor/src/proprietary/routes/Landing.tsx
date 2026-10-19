@@ -71,23 +71,23 @@ export default function Landing() {
     location.pathname + location.search + location.hash,
   );
 
-  let isServerLoginEnabled =
-    typeof window !== "undefined" &&
-    Boolean(
-      (window as unknown as { STIRLING_PDF_ENABLE_LOGIN?: boolean })
-        .STIRLING_PDF_ENABLE_LOGIN,
-    );
-  if (!isServerLoginEnabled && typeof window !== "undefined") {
+  // The server injects the flag, so an enabled deployment never mounts the
+  // editor first. Without the flag (static/preview) the config fetch decides,
+  // and a stored result from an earlier visit is the best guess until then.
+  const loginFlag =
+    typeof window === "undefined"
+      ? undefined
+      : window.STIRLING_PDF_ENABLE_LOGIN;
+  let loginRequired = loginFlag === true;
+  if (loginFlag === undefined) {
     try {
-      if (localStorage.getItem("stirling_login_enabled") === "true") {
-        isServerLoginEnabled = true;
-      }
+      loginRequired = localStorage.getItem("stirling_login_enabled") === "true";
     } catch {
-      // Storage blocked
+      // Storage blocked: fall through to the config check below.
     }
   }
 
-  if (isServerLoginEnabled) {
+  if (loginRequired) {
     return (
       <Navigate
         to={`/login?from=${returnTo}`}

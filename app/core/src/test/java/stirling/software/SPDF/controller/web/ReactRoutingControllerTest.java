@@ -232,6 +232,15 @@ class ReactRoutingControllerTest {
     }
 
     @Test
+    void forwardRootPaths_loginDisabled_injectsExplicitFalse() throws Exception {
+        controller.init();
+
+        ResponseEntity<String> response = controller.forwardRootPaths(request, "prerender-test");
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().contains("window.STIRLING_PDF_ENABLE_LOGIN = false;"));
+    }
+
+    @Test
     void forwardPaths_unknownRoutes_neverGrowTheCache() throws Exception {
         controller.init();
 
