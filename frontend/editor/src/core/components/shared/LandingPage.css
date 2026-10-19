@@ -4,7 +4,10 @@
    ============================================================ */
 
 .landing-actions-enter {
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 /* ── Hero text ───────────────────────────────────────────── */

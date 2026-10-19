@@ -57,7 +57,7 @@ export function LandingActions({
 
         <CreateProcessingFolderButton />
 
-        {config?.enableMobileScanner && !isMobile && (
+        {config?.enableMobileScanner !== false && !isMobile && (
           <Tooltip label={terminology.mobileUpload} position="bottom">
             <Button
               variant="secondary"
