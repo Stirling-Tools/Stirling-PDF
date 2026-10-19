@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import "@editor/pages/PipPane.css";
