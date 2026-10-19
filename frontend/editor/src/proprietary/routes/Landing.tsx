@@ -62,35 +62,43 @@ export default function Landing() {
     refetch,
   ]);
 
-  // Show loading while checking auth and config
-  if (loading || (!session && probePending)) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-          <div className="text-gray-600">
-            {t("common.loading", "Loading...")}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // If login is disabled, show app directly (anonymous mode)
-  if (config?.enableLogin === false || backendProbe.loginDisabled) {
-    console.debug("[Landing] Login disabled - showing app in anonymous mode");
+  // If we have a session, show the main app directly
+  if (session) {
     return <AppRoot />;
   }
 
-  // If backend is not up yet and user is not authenticated, show a branded status screen
-  if (!session && backendProbe.status !== "up") {
+  const returnTo = encodeURIComponent(
+    location.pathname + location.search + location.hash,
+  );
+
+  let isServerLoginEnabled =
+    typeof window !== "undefined" &&
+    Boolean(
+      (window as unknown as { STIRLING_PDF_ENABLE_LOGIN?: boolean })
+        .STIRLING_PDF_ENABLE_LOGIN,
+    );
+  if (!isServerLoginEnabled && typeof window !== "undefined") {
+    try {
+      if (localStorage.getItem("stirling_login_enabled") === "true") {
+        isServerLoginEnabled = true;
+      }
+    } catch {
+      // Storage blocked
+    }
+  }
+
+  if (isServerLoginEnabled) {
+    return (
+      <Navigate
+        to={`/login?from=${returnTo}`}
+        replace
+        state={{ from: location }}
+      />
+    );
+  }
+
+  // If backend is confirmed unreachable and not currently probing, show status screen
+  if (!probePending && backendProbe.status !== "up") {
     const backendTitle = t("backendStartup.notFoundTitle", "Backend not found");
     const handleRetry = async () => {
       const result = await backendProbe.probe();
@@ -133,26 +141,16 @@ export default function Landing() {
     );
   }
 
-  // If we have a session, show the main app
-  // Note: First login password change is now handled by the onboarding flow
-  if (session) {
-    return <AppRoot />;
+  // If config resolved and login is explicitly enabled, redirect to login
+  if (!loading && config?.enableLogin === true && !backendProbe.loginDisabled) {
+    return (
+      <Navigate
+        to={`/login?from=${returnTo}`}
+        replace
+        state={{ from: location }}
+      />
+    );
   }
 
-  // No session - redirect to login page. The URL always shows /login when not
-  // authenticated, and carries where we came from so signing in returns there
-  // (going to /editor and logging in lands back on /editor, not the role
-  // router). Also passed as router state; the query is what survives a reload.
-  const returnTo = encodeURIComponent(
-    location.pathname + location.search + location.hash,
-  );
-  return config?.enableLogin === true && !backendProbe.loginDisabled ? (
-    <Navigate
-      to={`/login?from=${returnTo}`}
-      replace
-      state={{ from: location }}
-    />
-  ) : (
-    <AppRoot />
-  );
+  return <AppRoot />;
 }

@@ -219,6 +219,19 @@ class ReactRoutingControllerTest {
     }
 
     @Test
+    void forwardRootPaths_loginEnabled_injectsEnableLoginFlag() throws Exception {
+        stirling.software.common.model.ApplicationProperties props =
+                new stirling.software.common.model.ApplicationProperties();
+        props.getSecurity().setEnableLogin(true);
+        setField("applicationProperties", props);
+        controller.init();
+
+        ResponseEntity<String> response = controller.forwardRootPaths(request, "prerender-test");
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().contains("window.STIRLING_PDF_ENABLE_LOGIN = true;"));
+    }
+
+    @Test
     void forwardPaths_unknownRoutes_neverGrowTheCache() throws Exception {
         controller.init();
 

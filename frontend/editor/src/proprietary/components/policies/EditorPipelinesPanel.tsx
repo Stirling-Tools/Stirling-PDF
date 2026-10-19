@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@app/ui/Icon";
@@ -104,7 +104,7 @@ export interface EditorPipelinesPanelViewProps extends EditorPipelines {
   onOpenProcessor: (() => void) | null;
 }
 
-export function EditorPipelinesPanelView({
+export const EditorPipelinesPanelView = memo(function EditorPipelinesPanelView({
   onImport,
   onExport,
   total,
@@ -177,25 +177,25 @@ export function EditorPipelinesPanelView({
       )}
     </section>
   );
-}
+});
 
-export function EditorPipelinesPanel() {
+export const EditorPipelinesPanel = memo(function EditorPipelinesPanel() {
   const pipelines = useEditorPipelines();
   const portalAccess = usePortalAccess();
   const navigate = useNavigate();
   const { actions } = useNavigationActions();
 
+  const handleOpenProcessor = useCallback(() => {
+    actions.requestNavigation(() => {
+      saveEditorReturnPath();
+      navigate(PIPELINES_PATH);
+    });
+  }, [actions, navigate]);
+
   // Builds without the processor have no /processor route to land on.
-  const openProcessor =
-    HAS_PORTAL && portalAccess
-      ? () =>
-          actions.requestNavigation(() => {
-            saveEditorReturnPath();
-            navigate(PIPELINES_PATH);
-          })
-      : null;
+  const openProcessor = HAS_PORTAL && portalAccess ? handleOpenProcessor : null;
 
   return (
     <EditorPipelinesPanelView {...pipelines} onOpenProcessor={openProcessor} />
   );
-}
+});

@@ -47,12 +47,13 @@ function hasAnyStoredSession(): boolean {
  * Returns null to render "/", EDITOR_BASENAME to redirect immediately, or undefined when /me is needed.
  */
 export function initialRootTarget(): string | null | undefined {
-  if (editorRegardless()) return EDITOR_BASENAME;
   if (!hasAnyStoredSession()) return null;
+  if (editorRegardless()) return EDITOR_BASENAME;
   return undefined;
 }
 
 export async function resolveRootTarget(): Promise<string | null> {
+  if (!hasAnyStoredSession()) return null;
   if (editorRegardless()) return EDITOR_BASENAME;
   const destination = await fetchRootDestination();
   if (destination === "signedOut") return null;

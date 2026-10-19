@@ -325,6 +325,42 @@ async function writeRouteHints(
   }
 }
 
+/** Preloads the Login chunk and its styles on auth pages so signing in avoids an extra hop. */
+async function writeLoginRouteHints(
+  distDir: string,
+  loginRoute: { js: string; css: string[] },
+): Promise<void> {
+  const loginPages = ["login.html", "signup.html"];
+  for (const name of loginPages) {
+    const page = resolve(distDir, name);
+    let html: string;
+    try {
+      html = await fs.readFile(page, "utf8");
+    } catch {
+      continue;
+    }
+    if (html.includes(loginRoute.js)) continue;
+
+    const existing =
+      /<link\b[^>]*\brel="modulepreload"[^>]*\bhref="([^"]*?)assets\//.exec(
+        html,
+      );
+    const prefix = existing ? existing[1] : "./";
+
+    const tags = [
+      `<link rel="modulepreload" crossorigin href="${prefix}${loginRoute.js}">`,
+      ...loginRoute.css.map(
+        (file) =>
+          `<link rel="preload" as="style" crossorigin href="${prefix}${file}">`,
+      ),
+    ];
+    await fs.writeFile(
+      page,
+      html.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`),
+    );
+  }
+}
+
 /** Inlines the prerendered landing shell into index.html so first paint does not wait on JS bundles. */
 async function writeLandingShell(
   distDir: string,
@@ -695,6 +731,7 @@ function htmlOutputPlugin(options: {
   let distDir: string | undefined;
   let editorDir: string | undefined;
   let route: { js: string; css: string[] } | undefined;
+  let loginRoute: { js: string; css: string[] } | undefined;
 
   return {
     name: "html-output",
@@ -718,12 +755,23 @@ function htmlOutputPlugin(options: {
           js: chunk.fileName,
           css: [...(chunk.viteMetadata?.importedCss ?? [])],
         };
+
+      const loginChunk = Object.values(bundle).find(
+        (file): file is Rollup.OutputChunk =>
+          file.type === "chunk" && file.isDynamicEntry && file.name === "Login",
+      );
+      if (loginChunk)
+        loginRoute = {
+          js: loginChunk.fileName,
+          css: [...(loginChunk.viteMetadata?.importedCss ?? [])],
+        };
     },
     async closeBundle() {
       if (!distDir) return;
       if (!existsSync(path.join(distDir, "index.html"))) return;
       await writeOpenGraphPages(distDir, isSaas);
       if (route) await writeRouteHints(distDir, route);
+      if (loginRoute) await writeLoginRouteHints(distDir, loginRoute);
       if (editorDir) await writeLandingShell(distDir, editorDir);
       if (precompress) await compressHtmlOutput(distDir);
     },

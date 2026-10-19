@@ -109,11 +109,32 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   });
 
   useEffect(() => {
-    if (error) console.error("[AppConfig] Failed to fetch app config:", error);
+    if (error) {
+      console.error("[AppConfig] Failed to fetch app config:", error);
+      if (statusOf(error) === 401) {
+        try {
+          localStorage.setItem("stirling_login_enabled", "true");
+        } catch {
+          // Storage blocked
+        }
+      }
+    }
   }, [error]);
 
   useEffect(() => {
-    if (data) onConfigLoadedRef.current?.(data);
+    if (data) {
+      onConfigLoadedRef.current?.(data);
+      if (typeof data.enableLogin === "boolean") {
+        try {
+          localStorage.setItem(
+            "stirling_login_enabled",
+            data.enableLogin ? "true" : "false",
+          );
+        } catch {
+          // Storage blocked
+        }
+      }
+    }
   }, [data]);
 
   const value = useMemo<AppConfigContextValue>(

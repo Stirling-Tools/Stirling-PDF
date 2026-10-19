@@ -95,7 +95,7 @@ function startStaticServer(root) {
     }
     try {
       let body = await readFile(filePath);
-      if (filePath.endsWith("index.html"))
+      if (filePath.endsWith(".html"))
         body = Buffer.from(stripShell(body.toString("utf8")));
       response.writeHead(200, {
         "content-type":
@@ -256,9 +256,9 @@ function installShellHelpers() {
     return count;
   };
 
-  globalThis.__shellMarkup = () => {
+  globalThis.__shellMarkup = (selector = ".app-frame") => {
     const root = document.getElementById("root");
-    if (!root?.querySelector(".app-frame")) return null;
+    if (selector && !root?.querySelector(selector)) return null;
     // Strip inline <style>/<script> tags that were already extracted into #shell-critical or clobber dark mode.
     const clean = root.cloneNode(true);
     clean.querySelectorAll("script, style").forEach((el) => el.remove());
@@ -287,7 +287,12 @@ function installShellHelpers() {
       requestAnimationFrame(tick);
     });
   /** The app frame is chrome, and it renders before the lazy landing route and the startup dictionary arrive. */
-  globalThis.__shellReady = (quietSamples, intervalMs, boundMs) =>
+  globalThis.__shellReady = (
+    quietSamples,
+    intervalMs,
+    boundMs,
+    minCount = 10,
+  ) =>
     new Promise((ready) => {
       let previous = -1;
       let stable = 0;
@@ -296,7 +301,7 @@ function installShellHelpers() {
         const count = globalThis.__shellCount();
         if (
           globalThis.i18next?.isInitialized &&
-          count > 10 &&
+          count >= minCount &&
           count === previous
         ) {
           if (++stable >= quietSamples) {
@@ -331,6 +336,11 @@ async function captureShellPage({
   viewport,
   distDir,
   editorDir,
+  routePath = "/",
+  readySelectors = ["#root .app-frame", "#root .landing-actions-enter"],
+  markupSelector = ".app-frame",
+  minReadyCount = 10,
+  mockOpts = {},
 }) {
   const context = await browser.newContext({ viewport });
   try {
@@ -343,18 +353,24 @@ async function captureShellPage({
       }
     }, SHELL_LANGUAGE);
     const page = await context.newPage();
-    await mockAppApis(page);
-    await page.goto(`${serverOrigin}/`, { waitUntil: "load" });
-    await page.waitForSelector("#root .app-frame", { timeout: 60_000 });
-    await page.waitForSelector("#root .landing-actions-enter", {
-      timeout: 60_000,
-    });
-    await page.evaluate(() => globalThis.__shellReady(3, 100, 30_000));
+    await mockAppApis(page, mockOpts);
+    await page.goto(`${serverOrigin}${routePath}`, { waitUntil: "load" });
+    for (const selector of readySelectors) {
+      await page.waitForSelector(selector, { timeout: 60_000 });
+    }
+    await page.evaluate(
+      (minCount) => globalThis.__shellReady(3, 100, 30_000, minCount),
+      minReadyCount,
+    );
     await page.evaluate(() => globalThis.__shellInlineImages());
 
     const critical = await page.evaluate(() => globalThis.__shellCritical());
-    const captured = await page.evaluate(() => globalThis.__shellMarkup());
-    if (!captured) throw new Error("the landing screen rendered no app frame");
+    const captured = await page.evaluate(
+      (sel) => globalThis.__shellMarkup(sel),
+      markupSelector,
+    );
+    if (!captured)
+      throw new Error(`the route ${routePath} rendered no ${markupSelector}`);
     const markup = captured.split(`${serverOrigin}/`).join("");
     const nodes = await page.evaluate(() => globalThis.__shellCount());
 
@@ -506,8 +522,8 @@ export async function captureShell({
   }
 }
 
-/** Deduplicates top-level rules across wide and narrow critical CSS and drops empty blocks and unused keyframes. */
-function mergeCriticalCss(wideCss, narrowCss, combinedMarkup) {
+/** Deduplicates top-level rules across wide, narrow, and login critical CSS and drops empty blocks and unused keyframes. */
+function mergeCriticalCss(cssList, combinedMarkup) {
   const splitRules = (css) => {
     const out = [];
     let depth = 0;
@@ -525,7 +541,10 @@ function mergeCriticalCss(wideCss, narrowCss, combinedMarkup) {
     }
     return out;
   };
-  let merged = [...new Set(splitRules(`${wideCss}\n${narrowCss}`))].join("\n");
+  const sources = Array.isArray(cssList) ? cssList : [cssList];
+  let merged = [
+    ...new Set(splitRules(sources.filter(Boolean).join("\n"))),
+  ].join("\n");
   for (let pass = 0; pass < 4; pass++) {
     const names = new Set();
     for (const m of (merged + combinedMarkup).matchAll(/var\(\s*--([\w-]+)/g)) {
@@ -570,12 +589,16 @@ function mergeCriticalCss(wideCss, narrowCss, combinedMarkup) {
 }
 
 /** The resolver has to run before paint and must never leave wrong words up. */
-function shellScript({ wide, narrow }) {
+function shellScript({ wide, narrow, login }) {
   const langs = Object.keys(wide.strings);
   const payload = JSON.stringify({
     base: wide.base,
     rtl: wide.rtl,
-    nodes: { wide: wide.nodes, narrow: narrow?.nodes ?? 0 },
+    nodes: {
+      wide: wide.nodes,
+      narrow: narrow?.nodes ?? 0,
+      login: login?.nodes ?? 0,
+    },
     langs,
     // Base language strings are already in the DOM markup; non-base packs live in `dist/shells/<lang>.json`.
     strings: {},
@@ -587,7 +610,12 @@ function shellScript({ wide, narrow }) {
       `var bPath=new URL(".",document.baseURI).pathname.replace(/\\/+$/,"");` +
       `var cPath=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");` +
       `var isEditorPath=cPath===bPath||cPath===bPath+"/editor";` +
-      `if(!isEditorPath||document.documentElement.hasAttribute("data-shell-hidden")){clearShells();root.removeAttribute("data-shell");document.documentElement.setAttribute("data-shell-hidden","");return;}`,
+      `var isLoginRoute=cPath===bPath+"/login"||cPath===bPath+"/signup";` +
+      `var hasAuth=false;try{hasAuth=Boolean(localStorage.getItem("stirling_jwt"));for(var x=0;!hasAuth&&x<localStorage.length;x++){var k=localStorage.key(x);if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)hasAuth=true;}}catch(e){}` +
+      `var reqLogin=Boolean(window.STIRLING_PDF_ENABLE_LOGIN);try{if(!reqLogin&&localStorage.getItem("stirling_login_enabled")==="true")reqLogin=true;}catch(e){}` +
+      `var isLoginMode=isLoginRoute||(reqLogin&&!hasAuth&&isEditorPath);` +
+      `if(isLoginMode){document.documentElement.setAttribute("data-shell-mode","login");}` +
+      `else if(!isEditorPath||document.documentElement.hasAttribute("data-shell-hidden")){clearShells();root.removeAttribute("data-shell");document.documentElement.setAttribute("data-shell-hidden","");return;}`,
     `function drop(){if(!root.hasAttribute("data-shell"))return;clearShells();root.removeAttribute("data-shell");if(window.__spdfBoot)window.__spdfBoot();}`,
     `try{var data=JSON.parse(document.getElementById("shell-strings").textContent);`,
     `var stored=null;try{stored=localStorage.getItem("i18nextLng");}catch(e){}`,
@@ -605,7 +633,7 @@ function shellScript({ wide, narrow }) {
     `var shells=root.querySelectorAll("[data-shell-for]");if(!shells.length)return;`,
     // Both shells are in the document and the stylesheet picks one, so the first
     // layout is already the final one; only the words have to change here.
-    `var active=matchMedia("(max-width: 1024px)").matches?"narrow":"wide";`,
+    `var active=document.documentElement.getAttribute("data-shell-mode")==="login"?"login":(matchMedia("(max-width: 1024px)").matches?"narrow":"wide");`,
     `if(shell&&!shell[active]){drop();return;}`,
     // Two copies of an id confuse a label or a search box that looks one up, so the
     // shell the viewport does not draw gives its ids up.
@@ -726,14 +754,20 @@ function deferEntry(html) {
       // landing shell hidden until React paints over it.
       'var basePath=new URL(src,document.baseURI).pathname.replace(/\\/assets\\/[^/]+$/,"").replace(/\\/+$/,"");' +
       'var curPath=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");' +
-      "if(curPath!==basePath&&curPath!==basePath+\"/editor\"){" +
+      'var isLoginCurPath=curPath===basePath+"/login"||curPath===basePath+"/signup";' +
+      'var isEditorCurPath=curPath===basePath||curPath===basePath+"/editor";' +
+      "if(!isLoginCurPath&&!isEditorCurPath){" +
       'document.documentElement.setAttribute("data-shell-hidden","");' +
       'var r=document.getElementById("root");if(r){var s=r.querySelectorAll("[data-shell-for]");for(var i=0;i<s.length;i++)s[i].remove();r.removeAttribute("data-shell");}' +
       "boot();return;}" +
+      'var hasAuthSession=false;try{hasAuthSession=Boolean(localStorage.getItem("stirling_jwt"));for(var x=0;!hasAuthSession&&x<localStorage.length;x++){var k=localStorage.key(x);if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)hasAuthSession=true;}}catch(e){}' +
+      'var reqLoginSession=Boolean(window.STIRLING_PDF_ENABLE_LOGIN);try{if(!reqLoginSession&&localStorage.getItem("stirling_login_enabled")==="true")reqLoginSession=true;}catch(e){}' +
+      "if(isLoginCurPath||(reqLoginSession&&!hasAuthSession&&isEditorCurPath)){" +
+      "setTimeout(boot,50);}" +
       // The shell is the first screen, so the app waits for a gesture or idle window.
       'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +
       "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
-      'setTimeout(function(){if("requestIdleCallback" in window){requestIdleCallback(boot,{timeout:1000});}else{boot();}},3000);' +
+      'setTimeout(function(){if("requestIdleCallback" in window){requestIdleCallback(boot,{timeout:1000});}else{boot();}},1000);' +
       'addEventListener("dragenter",function(e){if(document.querySelector("[data-shell-for]"))e.preventDefault();},true);' +
       'addEventListener("dragover",function(e){if(document.querySelector("[data-shell-for]")){e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="copy";}},true);' +
       'addEventListener("drop",function(e){if(!document.querySelector("[data-shell-for]"))return;e.preventDefault();var f=e.dataTransfer&&e.dataTransfer.files;if(f&&f.length){pending=f;boot();handOff();}},true);' +
@@ -807,6 +841,7 @@ export async function prerenderShell({
   let browser = null;
   let wide = null;
   let narrow = null;
+  let login = null;
 
   try {
     server = await startStaticServer(distDir);
@@ -820,7 +855,7 @@ export async function prerenderShell({
       ],
     });
 
-    [wide, narrow] = await Promise.all([
+    [wide, narrow, login] = await Promise.all([
       captureShellPage({
         browser,
         serverOrigin: server.origin,
@@ -837,6 +872,22 @@ export async function prerenderShell({
         distDir,
         editorDir,
       }),
+      captureShellPage({
+        browser,
+        serverOrigin: server.origin,
+        mockAppApis,
+        viewport: { width: 1350, height: 940 },
+        distDir,
+        editorDir,
+        routePath: "/login",
+        readySelectors: ["#root form"],
+        markupSelector: "form",
+        minReadyCount: 5,
+        mockOpts: { enableLogin: true },
+      }).catch((err) => {
+        console.warn("[prerender-shell] login capture skipped:", err);
+        return null;
+      }),
     ]);
   } finally {
     if (browser) await browser.close().catch(() => {});
@@ -852,20 +903,20 @@ export async function prerenderShell({
     );
   }
   const criticalCss = mergeCriticalCss(
-    wide.critical,
-    narrow ? narrow.critical : "",
-    `${wide.markup}\n${narrow ? narrow.markup : ""}`,
+    [wide.critical, narrow ? narrow.critical : "", login ? login.critical : ""],
+    `${wide.markup}\n${narrow ? narrow.markup : ""}\n${login ? login.markup : ""}`,
   );
   const emitted = [
     SHELL_START,
-    // Ship both shells inline and let the media query pick one so the first layout matches the viewport.
-    `<style>#root[data-shell="pending"]{visibility:hidden}[data-shell-hidden] #root[data-shell="pending"]{visibility:hidden!important}[data-shell-hidden] [data-shell-for]{display:none!important}[data-shell-for="narrow"]{display:none}@media (max-width: 1024px){[data-shell-for="wide"]{display:none}[data-shell-for="narrow"]{display:block}}</style>`,
+    `<script>(function(){var b=new URL(".",document.baseURI).pathname.replace(/\\/+$/,"");var c=location.pathname.replace(/\\/index\\.html$/,"").replace(/\\/+$/,"");var has=false;try{has=Boolean(localStorage.getItem("stirling_jwt"));for(var x=0;!has&&x<localStorage.length;x++){var k=localStorage.key(x);if(k&&k.indexOf("sb-")===0&&k.indexOf("-auth-token")>0)has=true;}}catch(e){}var req=Boolean(window.STIRLING_PDF_ENABLE_LOGIN);try{if(!req&&localStorage.getItem("stirling_login_enabled")==="true")req=true;}catch(e){}if(c===b+"/login"||c===b+"/signup"||(req&&!has&&(c===b||c===b+"/editor"))){document.documentElement.setAttribute("data-shell-mode","login");}})();</script>`,
+    `<style>#root[data-shell="pending"]{visibility:hidden}[data-shell-hidden] #root[data-shell="pending"]{visibility:hidden!important}[data-shell-hidden] [data-shell-for]{display:none!important}[data-shell-for="narrow"]{display:none}[data-shell-for="login"]{display:none}@media (max-width: 1024px){[data-shell-for="wide"]{display:none}[data-shell-for="narrow"]{display:block}}[data-shell-mode="login"] [data-shell-for="wide"]{display:none!important}[data-shell-mode="login"] [data-shell-for="narrow"]{display:none!important}[data-shell-mode="login"] [data-shell-for="login"]{display:block!important}</style>`,
     `<noscript><style>#root[data-shell="pending"]{visibility:visible!important}</style></noscript>`,
     `<style id="shell-critical">${criticalCss}</style>`,
     `<div id="root" data-shell="pending"><div data-shell-for="wide">${wide.markup}</div>`,
     narrow ? `<div data-shell-for="narrow">${narrow.markup}</div>` : "",
+    login ? `<div data-shell-for="login">${login.markup}</div>` : "",
     `</div>`,
-    shellScript({ wide, narrow }),
+    shellScript({ wide, narrow, login }),
     SHELL_END,
   ].join("");
   const withShell = replaceRoot(html, emitted);
@@ -876,17 +927,37 @@ export async function prerenderShell({
     const editorWithShell = replaceRoot(editorHtml, emitted);
     await writeFile(editorPath, deferEntry(editorWithShell));
   }
+  const loginPages = ["login.html", "signup.html"];
+  for (const name of loginPages) {
+    const pagePath = join(distDir, name);
+    if (existsSync(pagePath)) {
+      const pageHtml = stripShell(await readFile(pagePath, "utf8"));
+      const pageWithMode = pageHtml.replace(
+        /<html\b([^>]*)>/i,
+        (_match, attrs) =>
+          attrs.includes("data-shell-mode")
+            ? `<html${attrs}>`
+            : `<html${attrs} data-shell-mode="login">`,
+      );
+      const pageWithShell = replaceRoot(pageWithMode, emitted);
+      await writeFile(pagePath, deferEntry(pageWithShell));
+    }
+  }
   const shellsDir = join(distDir, "shells");
   await mkdir(shellsDir, { recursive: true });
   for (const language of Object.keys(wide.strings)) {
     if (language === wide.base) continue;
     const wideStrings = wide.strings[language];
     const narrowStrings = narrow?.strings[language];
+    const loginStrings = login?.strings[language];
     const pack = !narrowStrings
       ? { wide: wideStrings }
       : JSON.stringify(narrowStrings) === JSON.stringify(wideStrings)
         ? { both: wideStrings }
         : { wide: wideStrings, narrow: narrowStrings };
+    if (loginStrings) {
+      pack.login = loginStrings;
+    }
     await writeFile(join(shellsDir, `${language}.json`), JSON.stringify(pack));
   }
   return {
@@ -895,6 +966,7 @@ export async function prerenderShell({
     dropped: wide.dropped,
     bytes: Buffer.byteLength(emitted),
     narrowNodes: narrow?.nodes ?? 0,
+    loginNodes: login?.nodes ?? 0,
   };
 }
 
@@ -904,7 +976,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     .then((result) =>
       console.log(
         `[prerender-shell] ${result.languages} languages, ${result.nodes} text nodes, ` +
-          `${(result.bytes / 1024).toFixed(1)} KiB${result.narrowNodes ? `, phone shell ${result.narrowNodes} text nodes` : ""}${result.dropped.length ? `, no shell for ${result.dropped.join(", ")}` : ""}`,
+          `${(result.bytes / 1024).toFixed(1)} KiB${result.narrowNodes ? `, phone shell ${result.narrowNodes} text nodes` : ""}${result.loginNodes ? `, login shell ${result.loginNodes} text nodes` : ""}${result.dropped.length ? `, no shell for ${result.dropped.join(", ")}` : ""}`,
       ),
     )
     .catch((error) => {

@@ -1,4 +1,10 @@
-import { useEffect, useState, useCallback, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from "react";
 import { springAuth } from "@app/auth/spring/springAuthClient";
 import { getSpringAuthConfig } from "@app/auth/config";
 import { isAdminRole } from "@app/auth/roles";
@@ -248,19 +254,22 @@ export function SpringAuthProvider({
   }, []);
 
   const user = session?.user ?? null;
-  const value: AuthContextValue = {
-    session,
-    user,
-    displayName: deriveDisplayName(user, translate),
-    isAnonymous: user?.is_anonymous === true,
-    isAdmin: isAdminRole(user?.role),
-    portalAccess: user?.portalAccess ?? isAdminRole(user?.role),
-    role: user?.role ?? null,
-    loading,
-    error,
-    signOut,
-    refreshSession,
-  };
+  const value: AuthContextValue = useMemo(
+    () => ({
+      session,
+      user,
+      displayName: deriveDisplayName(user, translate),
+      isAnonymous: user?.is_anonymous === true,
+      isAdmin: isAdminRole(user?.role),
+      portalAccess: user?.portalAccess ?? isAdminRole(user?.role),
+      role: user?.role ?? null,
+      loading,
+      error,
+      signOut,
+      refreshSession,
+    }),
+    [session, user, translate, loading, error, signOut, refreshSession],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

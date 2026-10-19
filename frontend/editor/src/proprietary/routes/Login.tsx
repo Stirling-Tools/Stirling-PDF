@@ -149,6 +149,14 @@ export default function Login() {
 
   const hasSsoLoginError = Boolean(errorFromState || errorFromQuery);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem("stirling_login_enabled", "true");
+    } catch {
+      // Storage blocked
+    }
+  }, []);
+
   // Shared login state + sign-in handlers + provider fetch. Editor-specific
   // behaviour (auto-login, redirects, first-time setup) is layered on here.
   const login = useSpringLogin({
@@ -165,8 +173,18 @@ export default function Login() {
     onConfigLoaded: (data) => {
       // If login is disabled, redirect to home (anonymous mode)
       if (data.enableLogin === false) {
+        try {
+          localStorage.setItem("stirling_login_enabled", "false");
+        } catch {
+          // Storage blocked
+        }
         navigate(EDITOR_BASENAME);
         return;
+      }
+      try {
+        localStorage.setItem("stirling_login_enabled", "true");
+      } catch {
+        // Storage blocked
       }
       setEnableLogin(data.enableLogin ?? true);
       setSsoAutoLogin(Boolean(data.ssoAutoLogin));
@@ -410,21 +428,13 @@ export default function Login() {
     return <Navigate to={EDITOR_BASENAME} replace />;
   }
 
-  // The form is only for visitors known to be signed out; splash until then.
-  if (loading) {
-    return <LoadingFallback />;
-  }
-
+  // Visitors with an existing session are being redirected away by useEffect.
   if (session) {
     return <LoadingFallback />;
   }
 
-  if (backendProbe.loading) {
-    return <LoadingFallback />;
-  }
-
   // If backend isn't ready yet, show a lightweight status screen instead of the form
-  if (backendProbe.status !== "up" && !loginDisabled) {
+  if (!backendProbe.loading && backendProbe.status !== "up" && !loginDisabled) {
     const handleRetry = async () => {
       const result = await backendProbe.probe();
       if (result.status === "up") {

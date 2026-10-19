@@ -170,6 +170,15 @@ export function forgetPolicies(ids: string[]): PoliciesByKey {
   return next;
 }
 
+export function reconcileAllPolicies(next: PoliciesByKey): boolean {
+  const current = loadPolicies();
+  if (JSON.stringify(current) === JSON.stringify(next)) {
+    return false;
+  }
+  persist(next);
+  return true;
+}
+
 /** Subscribe to policy-state changes (same-tab). Returns an unsubscribe fn. */
 export function onPoliciesChange(cb: () => void): () => void {
   if (typeof window === "undefined") return () => {};

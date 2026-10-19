@@ -6,6 +6,7 @@ export {
   clearPolicies,
   updatePolicy,
   forgetPolicies,
+  reconcileAllPolicies,
   onPoliciesChange,
   POLICIES_CHANGE_EVENT,
 } from "@proprietary/services/policyStorage";

@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
@@ -38,6 +39,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.ApplicationProperties;
 
 @Controller
 public class ReactRoutingController {
@@ -85,6 +87,9 @@ public class ReactRoutingController {
 
     @Value("${server.servlet.context-path:/}")
     private String contextPath;
+
+    @Autowired(required = false)
+    private ApplicationProperties applicationProperties;
 
     private String cachedIndexHtml;
     private String cachedCallbackHtml;
@@ -185,6 +190,12 @@ public class ReactRoutingController {
         }
     }
 
+    private boolean isLoginEnabled() {
+        return applicationProperties != null
+                && applicationProperties.getSecurity() != null
+                && Boolean.TRUE.equals(applicationProperties.getSecurity().isEnableLogin());
+    }
+
     // Apply the deploy's context path to a built HTML shell: fill %BASE_URL%,
     // rewrite the baked <base href>, and expose the API base to the SPA.
     private String applyContextPath(String html) {
@@ -194,9 +205,15 @@ public class ReactRoutingController {
                 BASE_HREF_PATTERN
                         .matcher(html)
                         .replaceFirst("<base href=\\\"" + baseUrl + "\\\" />");
-        String contextPathScript =
-                "<script>window.STIRLING_PDF_API_BASE_URL = '" + baseUrl + "';</script>";
-        return html.replace("</head>", contextPathScript + "</head>");
+        StringBuilder injected = new StringBuilder();
+        injected.append("<script>window.STIRLING_PDF_API_BASE_URL = '")
+                .append(baseUrl)
+                .append("';");
+        if (isLoginEnabled()) {
+            injected.append("window.STIRLING_PDF_ENABLE_LOGIN = true;");
+        }
+        injected.append("</script>");
+        return html.replace("</head>", injected + "</head>");
     }
 
     // Serve the prerendered per-route HTML (e.g. compress.html) for a clean URL so

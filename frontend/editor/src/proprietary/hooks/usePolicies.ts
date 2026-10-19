@@ -13,7 +13,7 @@ import { useAuth } from "@app/auth/UseSession";
 import {
   loadPolicies,
   onPoliciesChange,
-  updatePolicy,
+  reconcileAllPolicies,
   forgetPolicies,
 } from "@app/services/policyStorage";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
@@ -82,14 +82,11 @@ export function usePolicies() {
       // A builder pipeline the backend no longer has was deleted on the Pipelines page. Its cached
       // entry keeps a dead backendId that still satisfies the auto-run filter, so the dispatch
       // fails, the run never completes, and the chain behind it never advances.
-      forgetPolicies(
-        Object.keys(local).filter(
-          (id) => !reconciled[id] && !byCategory.has(id),
-        ),
+      const forgotten = Object.keys(local).filter(
+        (id) => !reconciled[id] && !byCategory.has(id),
       );
-      for (const [id, state] of Object.entries(reconciled)) {
-        updatePolicy(id, state);
-      }
+      if (forgotten.length > 0) forgetPolicies(forgotten);
+      reconcileAllPolicies(reconciled);
       // The backend was down at first load (we retried) — re-resolve the app
       // config so the admin/team-leader gate isn't stuck on its offline default.
       if (attempt > 0) void refetchAppConfigRef.current();
