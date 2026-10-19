@@ -144,7 +144,6 @@ export interface SelectionState {
 
 export interface SpreadState {
   spreadMode: SpreadMode;
-  isDualPage: boolean;
 }
 
 export interface RotationState {
