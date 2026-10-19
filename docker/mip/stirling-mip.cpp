@@ -27,6 +27,8 @@
 #include "mip/protection/protection_handler.h"
 #include "mip/protection/rights.h"
 #include "mip/protection_descriptor.h"
+#include "mip/protection_descriptor_builder.h"
+#include "mip/user_rights.h"
 #include "mip/upe/content_label.h"
 #include "mip/upe/label.h"
 
@@ -94,7 +96,7 @@ struct Options {
 };
 
 Options parse(int argc, char** argv) {
-  if (argc < 2) throw std::invalid_argument("usage: stirling-mip <version|status|inspect|decrypt|protect|labels|apply> [--name value]...");
+  if (argc < 2) throw std::invalid_argument("usage: stirling-mip <version|status|inspect|decrypt|protect|labels|apply|adhoc> [--name value]...");
   Options options;
   options.operation = argv[1];
   for (int i = 2; i < argc; ++i) {
@@ -363,6 +365,33 @@ void runApply(const Options& options) {
   session.context->ShutDown();
 }
 
+std::vector<std::string> split(const std::string& value, char separator) {
+  std::vector<std::string> parts;
+  std::stringstream stream(value);
+  std::string part;
+  while (std::getline(stream, part, separator)) {
+    if (!part.empty()) parts.push_back(part);
+  }
+  return parts;
+}
+
+void runAdhoc(const Options& options) {
+  std::vector<mip::UserRights> grants;
+  for (const auto& grant : split(options.require("grants"), ';')) {
+    auto equals = grant.find('=');
+    if (equals == std::string::npos) throw std::invalid_argument("grant must be users=RIGHTS: " + grant);
+    grants.emplace_back(split(grant.substr(0, equals), ','), split(grant.substr(equals + 1), ','));
+  }
+  Session session = openSession(options);
+  auto descriptor = mip::ProtectionDescriptorBuilder::CreateFromUserRights(grants)->Build();
+  auto handler = openHandler(session, options.require("input"));
+  handler->SetProtection(descriptor, mip::ProtectionSettings());
+  if (!commit(handler, options.require("output"))) throw mip::InternalError("The SDK did not write the protected document");
+  auto protectedHandler = openHandler(session, options.require("output"));
+  emit("{\"type\":\"result\"," + describe(protectedHandler) + "}");
+  session.context->ShutDown();
+}
+
 std::string errorCode(const std::exception_ptr& error, std::string& message, std::string& owner) {
   try {
     std::rethrow_exception(error);
@@ -415,6 +444,7 @@ int main(int argc, char** argv) {
     else if (options.operation == "protect") runProtect(options);
     else if (options.operation == "labels") runLabels(options);
     else if (options.operation == "apply") runApply(options);
+    else if (options.operation == "adhoc") runAdhoc(options);
     else throw std::invalid_argument("unknown operation " + options.operation);
     return 0;
   } catch (...) {
