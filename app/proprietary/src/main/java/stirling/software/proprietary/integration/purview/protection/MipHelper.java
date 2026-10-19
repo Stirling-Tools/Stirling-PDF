@@ -122,15 +122,18 @@ public class MipHelper {
     }
 
     static String scopeFor(JsonNode request) {
-        String scope = text(request, "scope");
-        if (!scope.isBlank()) {
-            return scope;
-        }
         String resource = text(request, "resource");
         while (resource.endsWith("/")) {
             resource = resource.substring(0, resource.length() - 1);
         }
-        return resource + "/.default";
+        if (!resource.isBlank()) {
+            return resource + "/.default";
+        }
+        String scope = text(request, "scope");
+        if (scope.contains("://")) {
+            return scope;
+        }
+        throw new IllegalArgumentException("The protection SDK asked for a token with no resource");
     }
 
     private static void answer(BufferedWriter in, JsonNode request, TokenSource tokens)

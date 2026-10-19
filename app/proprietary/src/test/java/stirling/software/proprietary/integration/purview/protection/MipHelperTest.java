@@ -140,12 +140,23 @@ class MipHelperTest {
     }
 
     @Test
-    void prefersTheScopeTheSdkAsksFor() {
+    void asksForTheResourceEvenWhenTheSdkScopeIsATenantId() {
         JsonNode request =
                 new ObjectMapper()
                         .readTree(
-                                "{\"resource\":\"https://aadrm.com\",\"scope\":\"https://aadrm.com/user_impersonation\"}");
+                                "{\"resource\":\"https://aadrm.com\",\"scope\":\"7148cdae-b3f2-44ef-abef-481ba8a97af3\"}");
 
-        assertThat(MipHelper.scopeFor(request)).isEqualTo("https://aadrm.com/user_impersonation");
+        assertThat(MipHelper.scopeFor(request)).isEqualTo("https://aadrm.com/.default");
+    }
+
+    @Test
+    void fallsBackToAScopeUrlWhenThereIsNoResource() {
+        JsonNode request =
+                new ObjectMapper()
+                        .readTree(
+                                "{\"resource\":\"\",\"scope\":\"https://syncservice.o365syncservice.com/.default\"}");
+
+        assertThat(MipHelper.scopeFor(request))
+                .isEqualTo("https://syncservice.o365syncservice.com/.default");
     }
 }
