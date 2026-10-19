@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Center, Select, Stack, Text, Title } from "@mantine/core";
+import {
+  Center,
+  Group,
+  Loader,
+  Select,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -37,6 +45,8 @@ export function RightsManagedPdfPanel({
   useEffect(() => {
     const controller = new AbortController();
     lifetime.current = controller;
+    setError(null);
+    setBusy(false);
     if (!connectedServer) {
       setStatus({ enabled: false, available: false, accounts: [] });
       return () => controller.abort();
@@ -47,10 +57,13 @@ export function RightsManagedPdfPanel({
       const connected = next.accounts.filter(
         (account) => account.status === "CONNECTED",
       );
-      if (connected.length === 1) setAccountId(connected[0].id);
+      if (connected.length === 1) {
+        setAccountId(connected[0].id);
+        if (next.available) void open(connected[0].id);
+      }
     });
     return () => controller.abort();
-  }, [connectedServer]);
+  }, [connectedServer, file]);
 
   const connectedAccounts =
     status?.accounts.filter((account) => account.status === "CONNECTED") ?? [];
@@ -96,9 +109,9 @@ export function RightsManagedPdfPanel({
     };
   };
 
-  const open = async (id: number | undefined) => {
+  async function open(id: number | undefined) {
     const controller = lifetime.current;
-    if (!controller || busy) return;
+    if (!controller || controller.signal.aborted) return;
     setBusy(true);
     setError(null);
     try {
@@ -108,7 +121,7 @@ export function RightsManagedPdfPanel({
     } finally {
       if (!controller.signal.aborted) setBusy(false);
     }
-  };
+  }
 
   const connectThenOpen = async () => {
     setError(null);
@@ -166,6 +179,17 @@ export function RightsManagedPdfPanel({
                 "This PDF is encrypted by a sensitivity label. Open it with the Microsoft account it was shared with.",
               )}
         </Text>
+        {busy && !error && (
+          <Group gap="xs" data-testid="rights-managed-pdf-opening">
+            <Loader size="xs" />
+            <Text size="sm" c="dimmed">
+              {t(
+                "rightsManagedPdf.opening",
+                "Opening with your Microsoft account…",
+              )}
+            </Text>
+          </Group>
+        )}
         {error && (
           <Stack gap={4} align="center" data-testid="rights-managed-pdf-error">
             <Text c="var(--c-danger)" ta="center">

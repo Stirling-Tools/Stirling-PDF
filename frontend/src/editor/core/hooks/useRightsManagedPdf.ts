@@ -1,6 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   getOpenedRightsManagedPdf,
+  getRightsManagedThumbnail,
   isMicrosoftProtectedPdf,
   rightsManagedPdfRevision,
   subscribeRightsManagedPdfs,
@@ -42,4 +43,15 @@ export function useRightsManagedPdf(
   if (opened) return { status: "opened", opened };
   if (detected?.file !== file) return { status: "checking" };
   return detected.isProtected ? { status: "locked" } : { status: "none" };
+}
+
+export function useRightsManagedThumbnail(
+  file: Blob | string | null | undefined,
+): string | undefined {
+  useSyncExternalStore(
+    subscribeRightsManagedPdfs,
+    rightsManagedPdfRevision,
+    rightsManagedPdfRevision,
+  );
+  return getRightsManagedThumbnail(file);
 }

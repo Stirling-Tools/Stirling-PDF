@@ -5,6 +5,7 @@ import React, {
   useRef,
   useEffect,
   forwardRef,
+  useSyncExternalStore,
   type RefCallback,
 } from "react";
 import { Loader, Menu, Tooltip } from "@mantine/core";
@@ -80,6 +81,11 @@ import {
   CONNECTED_ACCOUNTS_SETTINGS_PATH,
   useOneDriveSave,
 } from "@editor/hooks/useOneDriveSave";
+import {
+  getRightsManagedThumbnail,
+  rightsManagedPdfRevision,
+  subscribeRightsManagedPdfs,
+} from "@editor/services/rightsManagedPdf";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
 const SIDEBAR_WIDTH = "var(--sidebar-w)";
@@ -525,6 +531,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   ) {
     const { t } = useTranslation();
     const labelName = useLabelName();
+    useSyncExternalStore(
+      subscribeRightsManagedPdfs,
+      rightsManagedPdfRevision,
+      rightsManagedPdfRevision,
+    );
     // Classification off (non-SaaS / AI-off) → never show the per-row label chip,
     // even if a stub carries labels from an imported PDF; keeps the row plain.
     const classificationEnabled = useClassificationEnabled();
@@ -1127,9 +1138,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       const isActive = isViewedInViewer;
       const isEncryptedFile = stub.processedFile?.isEncrypted === true;
       const thumbnailUrl =
+        getRightsManagedThumbnail(stub.id) ||
         (workbenchFileId
           ? state.files.byId[workbenchFileId]?.thumbnailUrl
-          : undefined) || stub.thumbnailUrl;
+          : undefined) ||
+        stub.thumbnailUrl;
       const fileOrigin = getFileOrigin(stub);
       const dataUnavailable =
         stub.dataUnavailable === true || lostFileIds.has(stub.id);

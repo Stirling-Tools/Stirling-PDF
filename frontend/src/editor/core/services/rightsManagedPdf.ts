@@ -37,6 +37,7 @@ export interface RightsManagedProtection {
   issuedTo: string | null;
   issuedToOwner: boolean;
   contentId: string | null;
+  custom: boolean;
   templateId: string | null;
   templateName: string | null;
   allowOfflineAccess: boolean;
@@ -84,6 +85,7 @@ export class RightsManagementError extends Error {
 }
 
 const detections = new WeakMap<Blob, Promise<boolean>>();
+let thumbnails = new WeakMap<OpenedRightsManagedPdf, string>();
 let openedByFile = new WeakMap<Blob, OpenedRightsManagedPdf>();
 const filesById = new Map<string, Blob>();
 const listeners = new Set<() => void>();
@@ -170,7 +172,46 @@ export function getOpenedRightsManagedPdf(
 ): OpenedRightsManagedPdf | undefined {
   if (!file) return undefined;
   const blob = typeof file === "string" ? filesById.get(file) : file;
-  return blob ? openedByFile.get(blob) : undefined;
+  const opened = blob ? openedByFile.get(blob) : undefined;
+  if (opened && typeof file !== "string" && "fileId" in file) {
+    const fileId = (file as { fileId?: unknown }).fileId;
+    if (typeof fileId === "string") filesById.set(fileId, file);
+  }
+  return opened;
+}
+
+export function getRightsManagedThumbnail(
+  file: Blob | string | null | undefined,
+): string | undefined {
+  const opened = getOpenedRightsManagedPdf(file);
+  return opened ? thumbnails.get(opened) : undefined;
+}
+
+async function generatePlaintextThumbnail(
+  opened: OpenedRightsManagedPdf,
+): Promise<void> {
+  try {
+    const { generateThumbnailForFile } =
+      await import("@editor/utils/thumbnailUtils");
+    const thumbnail = await generateThumbnailForFile(opened.plaintext);
+    if (thumbnail && openedByFile.get(opened.original) === opened) {
+      thumbnails.set(opened, thumbnail);
+      publish();
+    }
+  } catch {
+    return;
+  }
+}
+
+function rememberOpened(opened: OpenedRightsManagedPdf): void {
+  const access = accessForProtection(opened.protection);
+  rememberPdfAccess(opened.plaintext, access);
+  rememberPdfAccess(opened.original, access);
+  openedByFile.set(opened.original, opened);
+  const fileId = (opened.original as { fileId?: unknown }).fileId;
+  if (typeof fileId === "string") filesById.set(fileId, opened.original);
+  publish();
+  void generatePlaintextThumbnail(opened);
 }
 
 export function subscribeRightsManagedPdfs(listener: () => void): () => void {
@@ -195,6 +236,7 @@ export function forgetRightsManagedPdfs(ids: readonly string[]): void {
 
 export function clearRightsManagedPdfs(): void {
   openedByFile = new WeakMap();
+  thumbnails = new WeakMap();
   filesById.clear();
   publish();
 }
@@ -315,19 +357,13 @@ export async function openRightsManagedPdf(
       type: "application/pdf",
       lastModified: original.lastModified,
     });
-    const access = accessForProtection(protection);
-    rememberPdfAccess(plaintext, access);
-    rememberPdfAccess(original, access);
     const opened: OpenedRightsManagedPdf = {
       original,
       plaintext,
       protection,
       accountId,
     };
-    openedByFile.set(original, opened);
-    if ("fileId" in original && typeof original.fileId === "string")
-      filesById.set(original.fileId, original);
-    publish();
+    rememberOpened(opened);
     return opened;
   } catch (error) {
     throw await toRightsError(error);
@@ -358,6 +394,15 @@ export async function protectLikeOriginal(
       type: "application/pdf",
     });
     detections.set(file, Promise.resolve(true));
+    rememberOpened({
+      original: file,
+      plaintext: new File([output], output.name, {
+        type: "application/pdf",
+        lastModified: output.lastModified,
+      }),
+      protection: opened.protection,
+      accountId: opened.accountId,
+    });
     return file;
   } catch (error) {
     throw await toRightsError(error);

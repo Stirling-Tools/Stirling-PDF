@@ -79,6 +79,7 @@ function protection(
     issuedTo: "bob@contoso.com",
     issuedToOwner: false,
     contentId: "c1",
+    custom: false,
     templateId: null,
     templateName: null,
     allowOfflineAccess: false,
@@ -267,6 +268,10 @@ describe("tools on protected PDFs", () => {
     const [result] = await protectUnlockedResults([output], [original], rotate);
 
     expect(await result.text()).toBe("%PDF-2.0 reprotected");
+    const reopened = getOpenedRightsManagedPdf(result)!;
+    expect(await reopened.plaintext.text()).toBe("%PDF-1.7 rotated");
+    expect(reopened.protection.permissions.edit).toBe(true);
+    expect(reopened.accountId).toBe(7);
     const [endpoint, form, config] = post.mock.calls[1];
     expect(endpoint).toBe("/api/v1/rights-management/protect");
     expect((form as FormData).get("original")).toBe(original);
