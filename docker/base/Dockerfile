@@ -343,7 +343,7 @@ RUN mkdir -p /magick-export/usr/bin \
 
 
 # Stage 4: Build Python venv
-FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS python-venv-build
+FROM ubuntu:26.04@sha256:c098726dd9b9733f3e885f8de0ef375206a311b0a317eadc40d347b1115fb944 AS python-venv-build
 ARG TARGETPLATFORM
 ARG UNOSERVER_VERSION=3.7
 
@@ -515,11 +515,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/lib/libreoffice/program/libdbu* \
            /usr/lib/libreoffice/program/libreport* 2>/dev/null || true; \
     \
-    rm -rf /usr/lib/python3.12/test \
-           /usr/lib/python3.12/idlelib \
-           /usr/lib/python3.12/tkinter \
-           /usr/lib/python3.12/lib2to3 \
-           /usr/lib/python3.12/pydoc_data; \
+    rm -rf /usr/lib/python3.14/test \
+           /usr/lib/python3.14/idlelib \
+           /usr/lib/python3.14/tkinter \
+           /usr/lib/python3.14/lib2to3 \
+           /usr/lib/python3.14/pydoc_data; \
     \
     rm -rf /usr/lib/python3/dist-packages/scipy \
            /usr/lib/python3/dist-packages/sympy \
