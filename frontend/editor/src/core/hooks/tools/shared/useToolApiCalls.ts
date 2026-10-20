@@ -13,8 +13,8 @@ import {
   prepareUnlockedFile,
   protectUnlockedResults,
   changePdfSecurity,
-  unlockPdfForSession,
 } from "@app/services/pdfSessionUnlock";
+import { inspectLocalPdfAccess } from "@app/services/pdfLocalAccess";
 import {
   getPdfAccess,
   rememberPdfAccess,
@@ -157,16 +157,20 @@ export const useToolApiCalls = <TParams = void>() => {
                         getPdfAccess(file)?.password ||
                         "",
                     ));
-            for (const output of responseFiles)
-              rememberPdfAccess(
+            for (const output of responseFiles) {
+              const access = await inspectLocalPdfAccess(
                 output,
-                await unlockPdfForSession(
-                  output,
-                  password,
-                  cancellation.token,
-                  fileSignal,
-                ),
+                password,
+                fileSignal,
               );
+              cancellation.token.throwIfRequested();
+              if (fileSignal.aborted)
+                throw new axios.CanceledError("Operation cancelled");
+              rememberPdfAccess(output, {
+                ...access,
+                honorOwnerPasswords: getPdfAccess(file)?.honorOwnerPasswords,
+              });
+            }
           }
           // Guard: some endpoints may return an empty/0-byte file with 200
           const empty = isEmptyOutput(responseFiles);
@@ -208,7 +212,11 @@ export const useToolApiCalls = <TParams = void>() => {
             );
             break;
           }
-          if (axios.isCancel(error)) {
+          if (
+            operationSignal.aborted ||
+            axios.isCancel(error) ||
+            (error instanceof DOMException && error.name === "AbortError")
+          ) {
             throw new Error("Operation was cancelled", { cause: error });
           }
           console.error("[processFiles] Failed", { name: file.name, error });

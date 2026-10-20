@@ -4,6 +4,12 @@ import type { AxiosRequestConfig } from "axios";
 import { expectConsole } from "@app/tests/failOnConsole";
 import { rememberUnprotectedPdf } from "@app/tests/utils/testFileHelpers";
 import type { StirlingFile } from "@app/types/fileContext";
+import { inspectLocalPdfAccess } from "@app/services/pdfLocalAccess";
+import {
+  getPdfAccess,
+  rememberPdfAccess,
+  type PdfAccess,
+} from "@app/services/pdfPasswordStore";
 
 // One bad file in a batch must come back named, with its error: the caller reports each one,
 // and it cannot derive the failure kind without the error the request threw.
@@ -12,6 +18,20 @@ const post = vi.fn();
 vi.mock("@app/services/apiClient", () => ({
   default: { post: (...args: unknown[]) => post(...args) },
 }));
+vi.mock("@app/services/pdfLocalAccess", () => ({
+  inspectLocalPdfAccess: vi.fn(),
+}));
+const inspectLocal = vi.mocked(inspectLocalPdfAccess);
+const plainAccess: PdfAccess = {
+  password: "",
+  encrypted: false,
+  signed: false,
+  ownerAuthenticated: false,
+  permissions: -4,
+  canModify: true,
+  pageCount: 1,
+  localInspection: true,
+};
 
 // Mirrors the response body, so a 0-byte answer really does produce an empty output.
 vi.mock("@app/utils/toolResponseProcessor", () => ({
@@ -46,6 +66,7 @@ function run(files: StirlingFile[]) {
 
 beforeEach(() => {
   post.mockReset();
+  inspectLocal.mockReset();
 });
 
 describe("processFiles failure reporting", () => {
@@ -55,21 +76,15 @@ describe("processFiles failure reporting", () => {
     ["add-password", "unmount"],
     ["remove-password", "unmount"],
   ])(
-    "discards %s results on %s during final inspection",
+    "discards %s results on %s during local result adoption",
     async (operation, stop) => {
       post.mockResolvedValueOnce({ data: new Blob(["result"]), status: 200 });
-      let completeInspection!: (response: {
-        data: {
-          encrypted: boolean;
-          ownerAuthenticated: boolean;
-          permissions: number;
-        };
-      }) => void;
-      post.mockImplementationOnce(
-        (_endpoint: string, _form: FormData, config: AxiosRequestConfig) => {
-          expect(config.cancelToken).toBeDefined();
+      let completeInspection!: () => void;
+      inspectLocal.mockImplementationOnce(
+        async (_output, _password, signal) => {
+          expect(signal).toBeDefined();
           return new Promise((resolve) => {
-            completeInspection = resolve;
+            completeInspection = () => resolve(plainAccess);
           });
         },
       );
@@ -93,15 +108,70 @@ describe("processFiles failure reporting", () => {
       const cancelled = expect(processing).rejects.toThrow(
         "Operation was cancelled",
       );
-      await vi.waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+      await vi.waitFor(() => expect(inspectLocal).toHaveBeenCalledOnce());
       if (stop === "unmount") unmount();
       else result.current.cancelOperation();
-      completeInspection({
-        data: { encrypted: false, ownerAuthenticated: false, permissions: -4 },
-      });
+      completeInspection();
       await cancelled;
-      expect(post).toHaveBeenCalledTimes(2);
+      expect(post).toHaveBeenCalledOnce();
       expect(markFileError).not.toHaveBeenCalled();
+      expect(getPdfAccess(inspectLocal.mock.calls[0][0])).toBeUndefined();
+    },
+  );
+
+  it.each([
+    ["add-password", "set-pdf-protection", "reader"],
+    ["add-password", "change-pdf-permissions", "reader"],
+    ["remove-password", "remove-password", ""],
+  ])(
+    "adopts %s results locally with only the %s processing request",
+    async (operation, target, password) => {
+      const input = file("source.pdf", "source");
+      rememberPdfAccess(input, {
+        ...getPdfAccess(input)!,
+        encrypted: true,
+        localInspection: true,
+        password: "owner",
+        openingPassword: "reader",
+        ownerAuthenticated: true,
+        honorOwnerPasswords: false,
+      });
+      post.mockResolvedValue({ data: new Blob(["output"]), status: 200 });
+      inspectLocal.mockImplementation(async (_output, credential) => ({
+        ...plainAccess,
+        encrypted: credential !== "",
+        password: credential ?? "",
+        localInspection: true,
+      }));
+      const { result } = renderHook(() => useToolApiCalls());
+      const processed = await result.current.processFiles(
+        undefined,
+        [input],
+        {
+          endpoint: `/api/v1/security/${operation}`,
+          buildFormData: () => {
+            const form = new FormData();
+            form.set("password", "reader");
+            if (target === "set-pdf-protection") form.set("keyLength", "256");
+            return form;
+          },
+        },
+        vi.fn(),
+        vi.fn(),
+      );
+      expect(processed.outputFiles).toHaveLength(1);
+      expect(post).toHaveBeenCalledOnce();
+      expect(post.mock.calls[0][0]).toBe(`/api/v1/security/${target}`);
+      expect(inspectLocal).toHaveBeenCalledWith(
+        processed.outputFiles[0],
+        password,
+        expect.any(AbortSignal),
+      );
+      expect(getPdfAccess(processed.outputFiles[0])).toMatchObject({
+        password,
+        localInspection: true,
+        honorOwnerPasswords: false,
+      });
     },
   );
 

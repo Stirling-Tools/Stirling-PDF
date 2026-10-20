@@ -60,7 +60,7 @@ export function inspectLocalPdfAccess(
   });
 }
 
-/** Reuse exact-byte access or inspect in a worker; advanced protection operations require backend verification. */
+/** Reuse exact-byte access or inspect in a worker without uploading the document. */
 export async function ensureLocalPdfAccess(
   file: Blob,
   signal?: AbortSignal,

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import RemovePassword from "@app/tools/RemovePassword";
@@ -14,6 +14,7 @@ import { createStirlingFile, type StirlingFile } from "@app/types/fileContext";
 const state = vi.hoisted(() => ({
   files: [] as StirlingFile[],
   updateParameter: vi.fn(),
+  execute: vi.fn(),
 }));
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
 vi.mock("react-i18next", () => ({
@@ -34,6 +35,7 @@ vi.mock("@app/hooks/tools/shared/useBaseTool", () => ({
     hasFiles: true,
     hasResults: false,
     operation: { isLoading: false },
+    handleExecute: state.execute,
     params: {
       parameters: { password: "reader", ownerPassword: "owner" },
       updateParameter: state.updateParameter,
@@ -43,11 +45,16 @@ vi.mock("@app/hooks/tools/shared/useBaseTool", () => ({
 vi.mock("@app/components/tools/shared/createToolFlow", () => ({
   createToolFlow: (config: {
     steps: { content: ReactNode }[];
-    executeButton: { paramsValid: boolean };
+    executeButton: { paramsValid: boolean; onClick: () => Promise<void> };
   }) => (
     <>
       {config.steps[0].content}
-      <button disabled={!config.executeButton.paramsValid}>Execute</button>
+      <button
+        disabled={!config.executeButton.paramsValid}
+        onClick={config.executeButton.onClick}
+      >
+        Execute
+      </button>
     </>
   ),
 }));
@@ -75,77 +82,69 @@ beforeEach(() => {
   clearPdfAccess();
   post.mockReset();
   state.updateParameter.mockReset();
+  state.execute.mockReset();
   state.files = [createStirlingFile(new File(["pdf"], "protected.pdf"))];
   rememberPdfAccess(state.files[0], local);
 });
 
 describe("Remove Password protection status", () => {
-  it("keeps both controls unavailable while owner-password information is unknown", () => {
-    post.mockReturnValueOnce(new Promise(() => {}));
+  it("accepts selections when local owner-password information is unknown without uploading", async () => {
     renderTool();
-    expect(screen.getAllByText("Checking protection…")).toHaveLength(2);
-    expect(screen.getByLabelText("Password to open")).toBeDisabled();
-    expect(screen.getByLabelText("Permissions password")).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Execute" })).toBeDisabled();
+    expect(screen.getByLabelText("Password to open")).toBeEnabled();
+    expect(screen.getByLabelText("Permissions password")).toBeEnabled();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Execute" }));
+    });
+    expect(state.execute).toHaveBeenCalledOnce();
     expect(state.updateParameter).not.toHaveBeenCalled();
+    expect(post).not.toHaveBeenCalled();
   });
 
-  it("shows unavailable after failure without guessing or clearing entered credentials", async () => {
-    post.mockRejectedValueOnce(new Error("Offline"));
+  it("accepts both selections when no protection information is cached", () => {
+    clearPdfAccess();
     renderTool();
-    await waitFor(() =>
-      expect(screen.getAllByText("Unable to check protection")).toHaveLength(2),
-    );
-    expect(screen.getByLabelText("Permissions password")).toBeDisabled();
+    expect(screen.getByLabelText("Password to open")).toBeEnabled();
+    expect(screen.getByLabelText("Permissions password")).toBeEnabled();
     expect(state.updateParameter).not.toHaveBeenCalled();
+    expect(post).not.toHaveBeenCalled();
   });
 
-  it("enables only the roles verified by the backend", async () => {
-    post.mockResolvedValueOnce({
-      data: { ...local, localInspection: undefined, hasOwnerPassword: false },
+  it("disables only roles already known to be absent", () => {
+    rememberPdfAccess(state.files[0], {
+      ...local,
+      requiresOpeningPassword: false,
     });
     renderTool();
-    await waitFor(() =>
-      expect(screen.getByLabelText("Password to open")).toBeEnabled(),
-    );
-    expect(screen.getByLabelText("Permissions password")).toBeDisabled();
+    expect(screen.getByLabelText("Password to open")).toBeDisabled();
+    expect(screen.getByLabelText("Permissions password")).toBeEnabled();
     expect(screen.getByText("Not set")).toBeInTheDocument();
-    expect(state.updateParameter).toHaveBeenCalledWith("ownerPassword", "");
+    expect(state.updateParameter).toHaveBeenCalledWith("password", "");
+    expect(post).not.toHaveBeenCalled();
   });
 
-  it("waits for every selected file before claiming complete protection information", async () => {
+  it("keeps a role selectable when one file is known to lack it and another is unknown", () => {
+    rememberPdfAccess(state.files[0], {
+      ...local,
+      hasOwnerPassword: false,
+    });
     const other = createStirlingFile(new File(["second"], "second.pdf"));
     rememberPdfAccess(other, local);
     state.files.push(other);
-    post.mockResolvedValueOnce({
-      data: { ...local, localInspection: undefined, hasOwnerPassword: true },
-    });
-    let finish!: (value: { data: PdfAccess }) => void;
-    post.mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          finish = resolve;
-        }),
-    );
     renderTool();
-    await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
-    expect(screen.getByLabelText("Permissions password")).toBeDisabled();
-    await act(async () =>
-      finish({
-        data: { ...local, localInspection: undefined, hasOwnerPassword: false },
-      }),
-    );
-    await waitFor(() =>
-      expect(screen.getByLabelText("Permissions password")).toBeEnabled(),
-    );
+    expect(screen.getByLabelText("Permissions password")).toBeEnabled();
+    expect(screen.queryByText("Not set")).not.toBeInTheDocument();
+    expect(state.updateParameter).not.toHaveBeenCalled();
+    expect(post).not.toHaveBeenCalled();
   });
 
-  it("cancels the pending upload on navigation", async () => {
-    post.mockReturnValueOnce(new Promise(() => {}));
-    const { unmount } = renderTool();
-    const token = post.mock.calls[0][2]?.cancelToken;
-    expect(token?.reason).toBeUndefined();
-    unmount();
-    await waitFor(() => expect(token?.reason).toBeDefined());
+  it("updates both controls when frontend access changes", () => {
+    renderTool();
+    act(() => {
+      rememberPdfAccess(state.files[0], { ...local, encrypted: false });
+    });
+    expect(screen.getByLabelText("Password to open")).toBeDisabled();
+    expect(screen.getByLabelText("Permissions password")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Execute" })).toBeDisabled();
+    expect(post).not.toHaveBeenCalled();
   });
 });

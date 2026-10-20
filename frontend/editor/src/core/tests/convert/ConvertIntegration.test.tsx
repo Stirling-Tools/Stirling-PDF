@@ -66,8 +66,13 @@ vi.mock("../../services/apiClient", () => ({
 
 // Import the mocked apiClient
 import apiClient from "@app/services/apiClient";
+import { inspectLocalPdfAccess } from "@app/services/pdfLocalAccess";
 import { notifyToolCompleted } from "@app/services/toolUsageTracker";
 const mockedApiClient = vi.mocked(apiClient, { deep: true });
+vi.mock("@app/services/pdfLocalAccess", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfLocalAccess")>()),
+  inspectLocalPdfAccess: vi.fn(),
+}));
 
 // Usage-recommendation tracking would add its own posts to the apiClient spy.
 vi.mock("../../services/toolUsageTracker", () => ({
@@ -333,15 +338,16 @@ describe("Convert Tool Integration Tests", () => {
     mockedApiClient.post.mockResolvedValueOnce({
       data: new Blob(["protected output"], { type: "application/pdf" }),
     });
-    mockedApiClient.post.mockResolvedValueOnce({
-      data: {
-        encrypted: true,
-        ownerAuthenticated: false,
-        permissions: -4,
-        requiresOpeningPassword: false,
-        signed: false,
-        keyLength: 256,
-      },
+    vi.mocked(inspectLocalPdfAccess).mockResolvedValueOnce({
+      password: "",
+      encrypted: true,
+      localInspection: true,
+      ownerAuthenticated: false,
+      permissions: -4,
+      requiresOpeningPassword: false,
+      signed: false,
+      canModify: true,
+      pageCount: 1,
     });
     await act(async () => {
       await result.current.unlock.executeOperation({ password: "secret" }, [
@@ -349,7 +355,8 @@ describe("Convert Tool Integration Tests", () => {
         locked,
       ]);
     });
-    expect(mockedApiClient.post).toHaveBeenCalledTimes(4);
+    expect(mockedApiClient.post).toHaveBeenCalledTimes(3);
+    expect(inspectLocalPdfAccess).toHaveBeenCalledOnce();
     expect(mockedApiClient.post.mock.calls[2][0]).toBe(
       "/api/v1/security/remove-password",
     );

@@ -183,10 +183,17 @@ export async function preflightPdfOperation(
   signal?: AbortSignal,
 ): Promise<boolean> {
   const protectedFiles: StirlingFile[] = [];
+  const changesProtection =
+    endpoint === "/api/v1/security/add-password" ||
+    endpoint === "/api/v1/security/remove-password";
   for (const file of files) {
+    if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
     if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) continue;
-    const access = await ensurePdfAccess(file, signal);
-    if (!access.encrypted) continue;
+    // Password endpoints validate the requested change themselves; unknown roles need no preflight upload.
+    const access = changesProtection
+      ? getPdfAccess(file)
+      : await ensurePdfAccess(file, signal);
+    if (!access?.encrypted) continue;
     if (!supportsSessionUnlock(endpoint))
       throw new Error(
         i18n.t(
@@ -500,27 +507,26 @@ export async function changePdfSecurity(
   signal?: AbortSignal,
 ): Promise<Blob> {
   const settingProtection = endpoint === "/api/v1/security/add-password";
+  const access = getPdfAccess(file);
   if (settingProtection) {
-    const access = await ensurePdfAccess(file, signal);
-    if (access.encrypted && !hasPdfPermissionOverride(access))
+    if (access?.encrypted && !hasPdfPermissionOverride(access))
       throw new Error(
         i18n.t(
           "encryptedPdfUnlock.ownerRequired",
           "Enter the permissions password to allow restricted actions.",
         ),
       );
-    form.set("sourcePassword", access.password);
+    form.set("sourcePassword", access?.password ?? "");
     if (!form.has("keyLength")) {
       form.delete("password");
-      if (access.openingPassword !== undefined)
+      if (access?.openingPassword !== undefined)
         form.set("password", access.openingPassword);
     }
   } else {
-    const access = await ensurePdfAccess(file, signal);
     if (
       form.get("ownerPassword") &&
       !form.get("password") &&
-      access.requiresOpeningPassword &&
+      access?.requiresOpeningPassword &&
       access.openingPassword === undefined
     ) {
       throw new Error(
@@ -530,8 +536,11 @@ export async function changePdfSecurity(
         ),
       );
     }
-    form.set("sourcePassword", access.password);
-    if (access.openingPassword !== undefined)
+    form.set(
+      "sourcePassword",
+      access?.password || String(form.get("password") ?? ""),
+    );
+    if (access?.openingPassword !== undefined)
       form.set("retainedOpeningPassword", access.openingPassword);
   }
   return requestWorkingPdf(

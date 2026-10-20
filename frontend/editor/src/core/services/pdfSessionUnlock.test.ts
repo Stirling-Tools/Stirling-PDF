@@ -51,6 +51,57 @@ beforeEach(() => {
 afterEach(clearPdfAccess);
 
 describe("session PDF access", () => {
+  it.each([
+    ["add-password", "set-pdf-protection"],
+    ["add-password", "change-pdf-permissions"],
+    ["remove-password", "remove-password"],
+  ])(
+    "lets %s validate unknown protection in the %s operation",
+    async (operation, target) => {
+      const file = createStirlingFile(new File(["pdf"], "unknown.pdf"));
+      const endpoint = `/api/v1/security/${operation}`;
+      const requestOwner = vi.fn();
+      expect(
+        await preflightPdfOperation([file], endpoint, false, requestOwner),
+      ).toBe(true);
+      expect(requestOwner).not.toHaveBeenCalled();
+      expect(post).not.toHaveBeenCalled();
+      const form = new FormData();
+      form.set("password", "reader");
+      if (target === "set-pdf-protection") form.set("keyLength", "256");
+      post.mockResolvedValueOnce({ data: new Blob(["result"]) });
+      await changePdfSecurity(file, form, endpoint);
+      expect(post).toHaveBeenCalledOnce();
+      expect(post.mock.calls[0][0]).toBe(`/api/v1/security/${target}`);
+      expect(form.get("sourcePassword")).toBe(
+        operation === "remove-password" ? "reader" : "",
+      );
+    },
+  );
+
+  it("submits both removal selections with incomplete local role information", async () => {
+    const file = createStirlingFile(new File(["pdf"], "protected.pdf"));
+    rememberPdfAccess(file, { ...access, localInspection: true });
+    const requestOwner = vi.fn();
+    expect(
+      await preflightPdfOperation(
+        [file],
+        "/api/v1/security/remove-password",
+        false,
+        requestOwner,
+      ),
+    ).toBe(true);
+    const form = new FormData();
+    form.set("password", "reader");
+    form.set("ownerPassword", "owner");
+    post.mockResolvedValueOnce({ data: new Blob(["result"]) });
+    await changePdfSecurity(file, form, "/api/v1/security/remove-password");
+    expect(requestOwner).not.toHaveBeenCalled();
+    expect(post).toHaveBeenCalledOnce();
+    expect(form.get("password")).toBe("reader");
+    expect(form.get("ownerPassword")).toBe("owner");
+  });
+
   it("retains backend verification when the editor refreshes local facts for the same credential", async () => {
     const file = new File(["source"], "protected.pdf");
     rememberPdfAccess(file, {

@@ -16,7 +16,9 @@ for (const operation of ["compress", "remove-password"] as const) {
     page.on("pageerror", (error) => browserErrors.push(error.message));
     const output = await readFile(links);
     let processed = false;
+    let inspections = 0;
     await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
+      inspections++;
       const encrypted =
         !processed &&
         (route
@@ -109,6 +111,7 @@ for (const operation of ["compress", "remove-password"] as const) {
       page.getByRole("button", { name: "Save Changes", exact: true }).first(),
     ).toBeEnabled();
     expect(browserErrors).toEqual([]);
+    if (operation === "remove-password") expect(inspections).toBe(0);
   });
 }
 
