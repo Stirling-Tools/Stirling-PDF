@@ -20,17 +20,6 @@ import jakarta.persistence.EntityManagerFactory;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Applies {@link CacheEviction}s to this JVM's second-level cache.
- *
- * <p>A keyed eviction on a READ_WRITE region leaves Hibernate's own soft lock behind rather than an
- * empty slot: a session that opened before the eviction and is still loading the old row cannot
- * write it back, so a stale load racing an eviction stays out of the cache. Region-wide evictions
- * have no such guard and rely on the region TTL.
- *
- * <p>Unknown roles and unparseable keys are logged and skipped, so one bad entry from a peer on a
- * different build does not drop the rest of its batch.
- */
 @Slf4j
 @Component
 public class SecondLevelCacheEvictor {
@@ -165,6 +154,8 @@ public class SecondLevelCacheEvictor {
         return owned;
     }
 
+    // A soft lock, not a plain evict: a load that started before the eviction cannot cache the old
+    // row.
     private static void guardedEvict(
             SharedSessionContractImplementor session, CachedDomainDataAccess access, Object key) {
         if (access.getAccessType() == AccessType.READ_WRITE) {

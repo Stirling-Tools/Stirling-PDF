@@ -24,10 +24,6 @@ import org.testcontainers.utility.DockerImageName;
 
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Two "nodes" on one Valkey: each has its own connection, listener container and evictor. The
- * {@code @EnabledIf} Docker probe must stay, or runners without Docker fail instead of skipping.
- */
 @Testcontainers
 @EnabledIf("isDockerAvailable")
 class ValkeyCacheEvictionBroadcasterTest {
@@ -104,7 +100,6 @@ class ValkeyCacheEvictionBroadcasterTest {
 
         verify(nodeB.evictor(), timeout(5000)).apply(List.of(EVICTION));
 
-        // Same channel, published later: once A sees B's marker, its own message has passed it by.
         nodeB.broadcaster().broadcastToPeers(List.of(MARKER));
         verify(nodeA.evictor(), timeout(5000)).apply(List.of(MARKER));
         verify(nodeA.evictor(), never()).apply(List.of(EVICTION));

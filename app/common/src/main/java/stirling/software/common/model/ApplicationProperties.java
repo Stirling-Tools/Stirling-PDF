@@ -641,26 +641,14 @@ public class ApplicationProperties {
     @Data
     public static class SecondLevelCache {
 
-        /**
-         * The JCache regions are process-local. With {@code cluster.enabled=true} and the Valkey
-         * backplane, writes are evicted on every node; any other multi-instance deployment must
-         * turn the cache off here, or a revocation or role change reaches the other instances only
-         * when the region TTL lapses.
-         */
         private boolean enabled = true;
 
-        /**
-         * Per-region overrides of the defaults in {@code application.conf}, keyed by region name. A
-         * region not listed keeps its default.
-         */
         private Map<String, Region> regions = new LinkedHashMap<>();
 
         @Data
         public static class Region {
-            /** Upper bound on cached entries; null keeps the default. */
             private Long maxEntries;
 
-            /** Time an entry lives after it is written; null keeps the default. */
             private Duration ttl;
         }
     }

@@ -1,7 +1,7 @@
 @multinode @cache
 Feature: Second-level cache eviction across nodes
 
-    Each node keeps users, roles and teams in its own Hibernate second-level cache. A write on one node is broadcast over the Valkey backplane so every other node drops its copy, and a write made outside Stirling PDF is evicted through the admin cache endpoint.
+    A write on one node, or an external write followed by the eviction endpoint, is seen by every node at once.
 
     Background:
         Given the multi-node stack is running

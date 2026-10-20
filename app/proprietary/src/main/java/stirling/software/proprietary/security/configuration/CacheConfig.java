@@ -51,12 +51,7 @@ public class CacheConfig {
         return cacheManager;
     }
 
-    /**
-     * Stands the second-level cache down when the process-local regions would be unsafe: cluster
-     * mode without the Valkey backplane has no channel to carry evictions between nodes, and an
-     * operator can rule the cache out explicitly for multi-instance setups that do not use cluster
-     * mode yet.
-     */
+    /** Turns the second-level cache off where evictions cannot reach every instance. */
     @Bean
     HibernatePropertiesCustomizer hibernateSecondLevelCacheGate() {
         return hibernateProperties -> {
