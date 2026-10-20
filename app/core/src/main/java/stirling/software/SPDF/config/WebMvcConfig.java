@@ -22,6 +22,7 @@ import org.springframework.web.servlet.resource.HttpResource;
 import org.springframework.web.servlet.resource.ResourceResolver;
 import org.springframework.web.servlet.resource.ResourceResolverChain;
 
+import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -49,6 +50,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     .cachePublic()
                     .staleWhileRevalidate(Duration.ofDays(7));
 
+    private final LazyGzipResourceResolver lazyGzipResourceResolver =
+            new LazyGzipResourceResolver();
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(endpointInterceptor);
@@ -69,7 +73,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(CacheControl.noStore())
                 .resourceChain(true)
-                .addResolver(new PreferredEncodingResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver())
+                .addResolver(lazyGzipResourceResolver);
 
         // 2. Vite fingerprinted assets (immutable)
         // These already have content hashes in filenames (e.g. index-ChAS4tCC.js)
@@ -77,7 +82,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath + "assets/", "classpath:/static/assets/")
                 .setCacheControl(IMMUTABLE_ONE_YEAR)
                 .resourceChain(true)
-                .addResolver(new PreferredEncodingResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver())
+                .addResolver(lazyGzipResourceResolver);
 
         // 3. Media and fonts (stable names, revalidated)
         // The fallback faces ship inside the JAR under names that never change,
@@ -92,7 +98,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "classpath:/static/fonts/")
                 .setCacheControl(STABLE_ONE_DAY)
                 .resourceChain(true)
-                .addResolver(new PreferredEncodingResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver())
+                .addResolver(lazyGzipResourceResolver);
 
         // 4. Branding and stable non-fingerprinted assets (1 day + SWR)
         // Use stale-while-revalidate to improve perceived performance.
@@ -152,7 +159,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(stableLocations.toArray(String[]::new))
                 .setCacheControl(STABLE_ONE_DAY)
                 .resourceChain(true)
-                .addResolver(new PreferredEncodingResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver())
+                .addResolver(lazyGzipResourceResolver);
 
         // 5. Catch-all (SPA fallback)
         // Must check with server to ensure index.html is always fresh.
@@ -160,7 +168,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(NO_CACHE)
                 .resourceChain(true)
-                .addResolver(new PreferredEncodingResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver())
+                .addResolver(lazyGzipResourceResolver);
     }
 
     /**
@@ -266,6 +275,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
                                     .getResponseHeaders()
                                     .getFirst(HttpHeaders.CONTENT_ENCODING));
         }
+    }
+
+    @PreDestroy
+    void closeGzipCache() {
+        lazyGzipResourceResolver.close();
     }
 
     @Override
