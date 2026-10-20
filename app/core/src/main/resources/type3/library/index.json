@@ -7,15 +7,15 @@
       "dejavusans"
     ],
     "program": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSans.ttf",
+      "resource": "static/fonts/DejaVuSans.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSans.ttf",
+      "resource": "static/fonts/DejaVuSans.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSans.ttf",
+      "resource": "static/fonts/DejaVuSans.ttf",
       "format": "ttf"
     },
     "source": "DejaVu Fonts 2.37",
@@ -173,15 +173,15 @@
       "dejavusans-bold"
     ],
     "program": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSans-Bold.ttf",
+      "resource": "static/fonts/DejaVuSans-Bold.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSans-Bold.ttf",
+      "resource": "static/fonts/DejaVuSans-Bold.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSans-Bold.ttf",
+      "resource": "static/fonts/DejaVuSans-Bold.ttf",
       "format": "ttf"
     },
     "source": "DejaVu Fonts 2.37",
@@ -213,15 +213,15 @@
       "dejavusans-oblique"
     ],
     "program": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSans-Oblique.ttf",
+      "resource": "static/fonts/DejaVuSans-Oblique.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSans-Oblique.ttf",
+      "resource": "static/fonts/DejaVuSans-Oblique.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSans-Oblique.ttf",
+      "resource": "static/fonts/DejaVuSans-Oblique.ttf",
       "format": "ttf"
     },
     "source": "DejaVu Fonts 2.37",
@@ -253,15 +253,15 @@
       "dejavusans-boldoblique"
     ],
     "program": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSans-BoldOblique.ttf",
+      "resource": "static/fonts/DejaVuSans-BoldOblique.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSans-BoldOblique.ttf",
+      "resource": "static/fonts/DejaVuSans-BoldOblique.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSans-BoldOblique.ttf",
+      "resource": "static/fonts/DejaVuSans-BoldOblique.ttf",
       "format": "ttf"
     },
     "source": "DejaVu Fonts 2.37",
@@ -365,15 +365,15 @@
       "dejavuserif"
     ],
     "program": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSerif.ttf",
+      "resource": "static/fonts/DejaVuSerif.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSerif.ttf",
+      "resource": "static/fonts/DejaVuSerif.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSerif.ttf",
+      "resource": "static/fonts/DejaVuSerif.ttf",
       "format": "ttf"
     },
     "source": "DejaVu Fonts 2.37",
@@ -388,15 +388,15 @@
       "dejavuserif-bold"
     ],
     "program": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSerif-Bold.ttf",
+      "resource": "static/fonts/DejaVuSerif-Bold.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSerif-Bold.ttf",
+      "resource": "static/fonts/DejaVuSerif-Bold.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSerif-Bold.ttf",
+      "resource": "static/fonts/DejaVuSerif-Bold.ttf",
       "format": "ttf"
     },
     "source": "DejaVu Fonts 2.37",
@@ -411,15 +411,15 @@
       "dejavuserif-italic"
     ],
     "program": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSerif-Italic.ttf",
+      "resource": "static/fonts/DejaVuSerif-Italic.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSerif-Italic.ttf",
+      "resource": "static/fonts/DejaVuSerif-Italic.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSerif-Italic.ttf",
+      "resource": "static/fonts/DejaVuSerif-Italic.ttf",
       "format": "ttf"
     },
     "source": "DejaVu Fonts 2.37",
@@ -433,15 +433,15 @@
       "DejaVuSerif-BoldItalic"
     ],
     "program": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSerif-BoldItalic.ttf",
+      "resource": "static/fonts/DejaVuSerif-BoldItalic.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSerif-BoldItalic.ttf",
+      "resource": "static/fonts/DejaVuSerif-BoldItalic.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSerif-BoldItalic.ttf",
+      "resource": "static/fonts/DejaVuSerif-BoldItalic.ttf",
       "format": "ttf"
     },
     "source": "DejaVu Fonts 2.37",
@@ -544,15 +544,15 @@
       "dejavusansmono"
     ],
     "program": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSansMono.ttf",
+      "resource": "static/fonts/DejaVuSansMono.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSansMono.ttf",
+      "resource": "static/fonts/DejaVuSansMono.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSansMono.ttf",
+      "resource": "static/fonts/DejaVuSansMono.ttf",
       "format": "ttf"
     },
     "source": "DejaVu Fonts 2.37",
@@ -599,15 +599,15 @@
       "DejaVuSansMono-Bold"
     ],
     "program": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-Bold.ttf",
+      "resource": "static/fonts/DejaVuSansMono-Bold.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-Bold.ttf",
+      "resource": "static/fonts/DejaVuSansMono-Bold.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-Bold.ttf",
+      "resource": "static/fonts/DejaVuSansMono-Bold.ttf",
       "format": "ttf"
     },
     "source": "DejaVu Fonts 2.37",
@@ -621,15 +621,15 @@
       "DejaVuSansMono-Oblique"
     ],
     "program": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-Oblique.ttf",
+      "resource": "static/fonts/DejaVuSansMono-Oblique.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-Oblique.ttf",
+      "resource": "static/fonts/DejaVuSansMono-Oblique.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-Oblique.ttf",
+      "resource": "static/fonts/DejaVuSansMono-Oblique.ttf",
       "format": "ttf"
     },
     "source": "DejaVu Fonts 2.37",
@@ -643,15 +643,15 @@
       "DejaVuSansMono-BoldOblique"
     ],
     "program": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-BoldOblique.ttf",
+      "resource": "static/fonts/DejaVuSansMono-BoldOblique.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-BoldOblique.ttf",
+      "resource": "static/fonts/DejaVuSansMono-BoldOblique.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-BoldOblique.ttf",
+      "resource": "static/fonts/DejaVuSansMono-BoldOblique.ttf",
       "format": "ttf"
     },
     "source": "DejaVu Fonts 2.37",
@@ -756,15 +756,15 @@
       "liberationserif"
     ],
     "program": {
-      "resource": "type3/library/fonts/liberation/LiberationSerif-Regular.ttf",
+      "resource": "static/fonts/LiberationSerif-Regular.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationSerif-Regular.ttf",
+      "resource": "static/fonts/LiberationSerif-Regular.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationSerif-Regular.ttf",
+      "resource": "static/fonts/LiberationSerif-Regular.ttf",
       "format": "ttf"
     },
     "source": "Liberation Fonts 2.1.5",
@@ -779,15 +779,15 @@
       "liberationserif-bold"
     ],
     "program": {
-      "resource": "type3/library/fonts/liberation/LiberationSerif-Bold.ttf",
+      "resource": "static/fonts/LiberationSerif-Bold.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationSerif-Bold.ttf",
+      "resource": "static/fonts/LiberationSerif-Bold.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationSerif-Bold.ttf",
+      "resource": "static/fonts/LiberationSerif-Bold.ttf",
       "format": "ttf"
     },
     "source": "Liberation Fonts 2.1.5",
@@ -801,15 +801,15 @@
       "LiberationSerif-Italic"
     ],
     "program": {
-      "resource": "type3/library/fonts/liberation/LiberationSerif-Italic.ttf",
+      "resource": "static/fonts/LiberationSerif-Italic.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationSerif-Italic.ttf",
+      "resource": "static/fonts/LiberationSerif-Italic.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationSerif-Italic.ttf",
+      "resource": "static/fonts/LiberationSerif-Italic.ttf",
       "format": "ttf"
     },
     "source": "Liberation Fonts 2.1.5",
@@ -823,15 +823,15 @@
       "LiberationSerif-BoldItalic"
     ],
     "program": {
-      "resource": "type3/library/fonts/liberation/LiberationSerif-BoldItalic.ttf",
+      "resource": "static/fonts/LiberationSerif-BoldItalic.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationSerif-BoldItalic.ttf",
+      "resource": "static/fonts/LiberationSerif-BoldItalic.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationSerif-BoldItalic.ttf",
+      "resource": "static/fonts/LiberationSerif-BoldItalic.ttf",
       "format": "ttf"
     },
     "source": "Liberation Fonts 2.1.5",
@@ -846,15 +846,15 @@
       "liberationmono"
     ],
     "program": {
-      "resource": "type3/library/fonts/liberation/LiberationMono-Regular.ttf",
+      "resource": "static/fonts/LiberationMono-Regular.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationMono-Regular.ttf",
+      "resource": "static/fonts/LiberationMono-Regular.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationMono-Regular.ttf",
+      "resource": "static/fonts/LiberationMono-Regular.ttf",
       "format": "ttf"
     },
     "source": "Liberation Fonts 2.1.5",
@@ -869,15 +869,15 @@
       "liberationmono-bold"
     ],
     "program": {
-      "resource": "type3/library/fonts/liberation/LiberationMono-Bold.ttf",
+      "resource": "static/fonts/LiberationMono-Bold.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationMono-Bold.ttf",
+      "resource": "static/fonts/LiberationMono-Bold.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationMono-Bold.ttf",
+      "resource": "static/fonts/LiberationMono-Bold.ttf",
       "format": "ttf"
     },
     "source": "Liberation Fonts 2.1.5",
@@ -891,15 +891,15 @@
       "LiberationMono-Italic"
     ],
     "program": {
-      "resource": "type3/library/fonts/liberation/LiberationMono-Italic.ttf",
+      "resource": "static/fonts/LiberationMono-Italic.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationMono-Italic.ttf",
+      "resource": "static/fonts/LiberationMono-Italic.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationMono-Italic.ttf",
+      "resource": "static/fonts/LiberationMono-Italic.ttf",
       "format": "ttf"
     },
     "source": "Liberation Fonts 2.1.5",
@@ -913,15 +913,15 @@
       "LiberationMono-BoldItalic"
     ],
     "program": {
-      "resource": "type3/library/fonts/liberation/LiberationMono-BoldItalic.ttf",
+      "resource": "static/fonts/LiberationMono-BoldItalic.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationMono-BoldItalic.ttf",
+      "resource": "static/fonts/LiberationMono-BoldItalic.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/liberation/LiberationMono-BoldItalic.ttf",
+      "resource": "static/fonts/LiberationMono-BoldItalic.ttf",
       "format": "ttf"
     },
     "source": "Liberation Fonts 2.1.5",
@@ -1344,15 +1344,15 @@
       "notosans-bold"
     ],
     "program": {
-      "resource": "type3/library/fonts/noto/NotoSans-Bold.ttf",
+      "resource": "static/fonts/NotoSans-Bold.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/noto/NotoSans-Bold.ttf",
+      "resource": "static/fonts/NotoSans-Bold.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/noto/NotoSans-Bold.ttf",
+      "resource": "static/fonts/NotoSans-Bold.ttf",
       "format": "ttf"
     },
     "source": "Noto Sans (Google Fonts)",
@@ -1476,15 +1476,15 @@
       "NotoSans-Italic"
     ],
     "program": {
-      "resource": "type3/library/fonts/noto/NotoSans-Italic.ttf",
+      "resource": "static/fonts/NotoSans-Italic.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/noto/NotoSans-Italic.ttf",
+      "resource": "static/fonts/NotoSans-Italic.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/noto/NotoSans-Italic.ttf",
+      "resource": "static/fonts/NotoSans-Italic.ttf",
       "format": "ttf"
     },
     "source": "Noto Sans (Google Fonts)",
@@ -1542,15 +1542,15 @@
       "NotoSans-BoldItalic"
     ],
     "program": {
-      "resource": "type3/library/fonts/noto/NotoSans-BoldItalic.ttf",
+      "resource": "static/fonts/NotoSans-BoldItalic.ttf",
       "format": "ttf"
     },
     "webProgram": {
-      "resource": "type3/library/fonts/noto/NotoSans-BoldItalic.ttf",
+      "resource": "static/fonts/NotoSans-BoldItalic.ttf",
       "format": "ttf"
     },
     "pdfProgram": {
-      "resource": "type3/library/fonts/noto/NotoSans-BoldItalic.ttf",
+      "resource": "static/fonts/NotoSans-BoldItalic.ttf",
       "format": "ttf"
     },
     "source": "Noto Sans (Google Fonts)",
