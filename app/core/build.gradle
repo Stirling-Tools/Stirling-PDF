@@ -146,13 +146,11 @@ bootJar {
     exclude 'static/**/*.map'
 
     // The frontend emits .br and .gz siblings for static hosting. The JAR keeps brotli for
-    // scripts, styles and locale TOML, but lets Spring compress fonts on demand: their brotli
-    // copies are larger than the raw fonts and only save CPU on the first cold request.
+    // every text asset, including the CJK fonts: gzipping a 13 MB TTF on every cold request
+    // costs roughly 0.3 s of CPU and lands on the request thread. The .gz copies stay out;
+    // clients that cannot take brotli fall back to Spring's dynamic gzip.
     eachFile { details ->
-        String path = details.path
-        boolean dropGzip = path.endsWith('.gz')
-        boolean dropFontBrotli = path.endsWith('.br') && path.contains('/static/fonts/')
-        if (dropGzip || dropFontBrotli) {
+        if (details.path.endsWith('.gz')) {
             details.exclude()
         }
     }
