@@ -16,7 +16,12 @@ const BACKEND_JVM_FLAGS: &[&str] = &[
     "-XX:+UseG1GC",
     "-XX:MaxGCPauseMillis=200",
     "-XX:G1HeapRegionSize=4m",
-    "-XX:G1PeriodicGCInterval=120000",
+    // G1's default young-gen ceiling (60% of 2 GB) lets the desktop backend
+    // commit ~1 GB during UI startup, then hold it until the next periodic GC.
+    "-XX:+UnlockExperimentalVMOptions",
+    "-XX:G1NewSizePercent=2",
+    "-XX:G1MaxNewSizePercent=20",
+    "-XX:G1PeriodicGCInterval=30000",
     "-XX:MinHeapFreeRatio=10",
     "-XX:MaxHeapFreeRatio=70",
     "-XX:+UseStringDeduplication",
@@ -762,6 +767,8 @@ mod tests {
     fn desktop_flags_disable_springdoc() {
         assert!(BACKEND_JVM_FLAGS.contains(&"-Dspringdoc.api-docs.enabled=false"));
         assert!(BACKEND_JVM_FLAGS.contains(&"-Dspringdoc.swagger-ui.enabled=false"));
+        assert!(BACKEND_JVM_FLAGS.contains(&"-XX:G1PeriodicGCInterval=30000"));
+        assert!(BACKEND_JVM_FLAGS.contains(&"-XX:G1MaxNewSizePercent=20"));
     }
 
     #[test]
