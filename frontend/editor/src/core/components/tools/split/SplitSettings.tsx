@@ -43,8 +43,9 @@ function applyNamePattern(pattern: string, number: number): string {
     : `${pattern.trim()} ${number}`;
 }
 
+/** Two examples, not three: three overflow the Select input at the default panel width. */
 function describeNamePattern(pattern: string): string {
-  return [1, 2, 3].map((n) => applyNamePattern(pattern, n)).join(", ") + "…";
+  return [1, 2].map((n) => applyNamePattern(pattern, n)).join(", ") + "…";
 }
 
 export interface SplitSettingsProps {
@@ -264,7 +265,10 @@ const SplitSettings = ({
                     "{n} becomes the file number: {{example}}",
                     { example: describeNamePattern(pattern) },
                   )
-                : undefined
+                : t(
+                    "split.outputNames.pattern.hint",
+                    "{n} becomes the file number",
+                  )
             }
             placeholder={t(
               "split.outputNames.pattern.placeholder",

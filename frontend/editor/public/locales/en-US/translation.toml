@@ -12704,6 +12704,7 @@ list = "Type each name…"
 
 [split.outputNames.pattern]
 description = "{n} becomes the file number: {{example}}"
+hint = "{n} becomes the file number"
 label = "Pattern"
 placeholder = "Invoice {n}"
 
