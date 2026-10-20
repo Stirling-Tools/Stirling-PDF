@@ -25,10 +25,10 @@ export function getLocalFontFallbackConfig(): FontFallbackConfig {
       [FontCharset.ARABIC]: "NotoSansArabic-Regular.ttf",
       [FontCharset.HEBREW]: "NotoSansHebrew-Regular.ttf",
       [FontCharset.THAI]: "NotoSansThai-Regular.ttf",
-      [FontCharset.SHIFTJIS]: "NotoSansJP-Regular.ttf",
-      [FontCharset.HANGEUL]: "NotoSansKR-Regular.ttf",
-      [FontCharset.GB2312]: "NotoSansSC-Regular.ttf",
-      [FontCharset.CHINESEBIG5]: "NotoSansTC-Regular.ttf",
+      [FontCharset.SHIFTJIS]: "StirlingSansCJK-Regular.ttf",
+      [FontCharset.HANGEUL]: "StirlingSansCJK-Regular.ttf",
+      [FontCharset.GB2312]: "StirlingSansCJK-Regular.ttf",
+      [FontCharset.CHINESEBIG5]: "StirlingSansCJK-Regular.ttf",
     },
   };
 }

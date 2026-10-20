@@ -42,6 +42,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
+import stirling.software.SPDF.utils.SystemFontResolver;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -65,7 +66,9 @@ class WatermarkControllerMoreTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        controller = new WatermarkController(pdfDocumentFactory, tempFileManager);
+        controller =
+                new WatermarkController(
+                        pdfDocumentFactory, tempFileManager, new SystemFontResolver());
 
         when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(

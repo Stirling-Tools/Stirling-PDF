@@ -426,22 +426,22 @@ class PdfJsonFallbackFontServiceTest {
         }
 
         @Test
-        @DisplayName("loaded TrueType fallback can encode basic Latin")
-        void loadedFontEncodesLatin() {
-            assertTrue(sharedService.canEncode(sharedCjkFont, "Hello"));
+        @DisplayName("loaded CJK fallback can encode CJK text")
+        void loadedFontEncodesCjk() {
+            assertTrue(sharedService.canEncode(sharedCjkFont, "中文"));
         }
 
         @Test
         @DisplayName("canEncodeFully delegates to canEncode for text")
         void canEncodeFullyDelegates() {
-            assertTrue(sharedService.canEncodeFully(sharedCjkFont, "abc"));
-            assertFalse(sharedService.canEncodeFully(null, "abc"));
+            assertTrue(sharedService.canEncodeFully(sharedCjkFont, "中文"));
+            assertFalse(sharedService.canEncodeFully(null, "中文"));
         }
 
         @Test
         @DisplayName("canEncode(font, codePoint) returns true for an encodable code point")
         void canEncodeCodePointTrue() {
-            assertTrue(sharedService.canEncode(sharedCjkFont, (int) 'A'));
+            assertTrue(sharedService.canEncode(sharedCjkFont, 0x4E2D));
         }
 
         @Test
@@ -464,7 +464,7 @@ class PdfJsonFallbackFontServiceTest {
             assertNotNull(model);
             assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID, model.getId());
             assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID, model.getUid());
-            assertEquals("NotoSansSC-Regular", model.getBaseName());
+            assertEquals("StirlingSansCJK-Regular", model.getBaseName());
             assertEquals("TrueType", model.getSubtype());
             assertEquals(Boolean.TRUE, model.getEmbedded());
             assertEquals("ttf", model.getProgramFormat());

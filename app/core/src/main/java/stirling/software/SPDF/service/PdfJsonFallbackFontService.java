@@ -89,26 +89,26 @@ public class PdfJsonFallbackFontService {
                     Map.entry(
                             FALLBACK_FONT_CJK_ID,
                             new FallbackFontSpec(
-                                    "classpath:/static/fonts/NotoSansSC-Regular.ttf",
-                                    "NotoSansSC-Regular",
+                                    "classpath:/static/fonts/StirlingSansCJK-Regular.ttf",
+                                    "StirlingSansCJK-Regular",
                                     "ttf")),
                     Map.entry(
                             FALLBACK_FONT_JP_ID,
                             new FallbackFontSpec(
-                                    "classpath:/static/fonts/NotoSansJP-Regular.ttf",
-                                    "NotoSansJP-Regular",
+                                    "classpath:/static/fonts/StirlingSansCJK-Regular.ttf",
+                                    "StirlingSansCJK-Regular",
                                     "ttf")),
                     Map.entry(
                             FALLBACK_FONT_KR_ID,
                             new FallbackFontSpec(
-                                    "classpath:/static/fonts/NotoSansKR-Regular.ttf",
-                                    "NotoSansKR-Regular",
+                                    "classpath:/static/fonts/StirlingSansCJK-Regular.ttf",
+                                    "StirlingSansCJK-Regular",
                                     "ttf")),
                     Map.entry(
                             FALLBACK_FONT_TC_ID,
                             new FallbackFontSpec(
-                                    "classpath:/static/fonts/NotoSansTC-Regular.ttf",
-                                    "NotoSansTC-Regular",
+                                    "classpath:/static/fonts/StirlingSansCJK-Regular.ttf",
+                                    "StirlingSansCJK-Regular",
                                     "ttf")),
                     Map.entry(
                             FALLBACK_FONT_AR_ID,

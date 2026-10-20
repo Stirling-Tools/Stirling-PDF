@@ -12,11 +12,17 @@ describe("pdfiumFontFallback", () => {
 
     expect(config.fonts[FontCharset.ANSI]).toBe("NotoSans-Regular.ttf");
     expect(config.fonts[FontCharset.DEFAULT]).toBe("NotoSans-Regular.ttf");
-    expect(config.fonts[FontCharset.SHIFTJIS]).toBe("NotoSansJP-Regular.ttf");
-    expect(config.fonts[FontCharset.HANGEUL]).toBe("NotoSansKR-Regular.ttf");
-    expect(config.fonts[FontCharset.GB2312]).toBe("NotoSansSC-Regular.ttf");
+    expect(config.fonts[FontCharset.SHIFTJIS]).toBe(
+      "StirlingSansCJK-Regular.ttf",
+    );
+    expect(config.fonts[FontCharset.HANGEUL]).toBe(
+      "StirlingSansCJK-Regular.ttf",
+    );
+    expect(config.fonts[FontCharset.GB2312]).toBe(
+      "StirlingSansCJK-Regular.ttf",
+    );
     expect(config.fonts[FontCharset.CHINESEBIG5]).toBe(
-      "NotoSansTC-Regular.ttf",
+      "StirlingSansCJK-Regular.ttf",
     );
     expect(config.fonts[FontCharset.ARABIC]).toBe("NotoSansArabic-Regular.ttf");
     expect(config.fonts[FontCharset.HEBREW]).toBe("NotoSansHebrew-Regular.ttf");
@@ -48,7 +54,7 @@ describe("pdfiumFontFallback", () => {
         continue;
       }
       expect(String(config.fonts[FontCharset[name]])).toMatch(
-        /^NotoSans[A-Za-z-]*\.ttf$/,
+        /^(NotoSans|StirlingSansCJK)[A-Za-z-]*\.ttf$/,
       );
     }
   });

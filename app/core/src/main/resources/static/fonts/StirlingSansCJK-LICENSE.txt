@@ -1,0 +1,6 @@
+Stirling Sans CJK is a merged fallback face built from Droid Sans Fallback
+(Copyright 2008 The Android Open Source Project, Apache License 2.0) and
+Noto Sans (Copyright 2014-2021 Adobe and Google, SIL Open Font License 1.1).
+
+The merged face is renamed to avoid the Noto Sans Reserved Font Name. Both
+licenses are included next to this file.

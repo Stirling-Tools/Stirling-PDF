@@ -34,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
+import stirling.software.SPDF.utils.SystemFontResolver;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -52,6 +53,7 @@ public class WatermarkController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final SystemFontResolver systemFontResolver;
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
@@ -179,12 +181,15 @@ public class WatermarkController {
      * the TTF per page in memory (10 MB each for the CJK faces).
      */
     private PDFont loadWatermarkFont(PDDocument document, String alphabet) throws IOException {
+        if ("chinese".equals(alphabet)
+                || "japanese".equals(alphabet)
+                || "korean".equals(alphabet)) {
+            return systemFontResolver.loadCjkFont(document, alphabet);
+        }
+
         String resourceDir =
                 switch (alphabet) {
                     case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
-                    case "japanese" -> "static/fonts/NotoSansJP-Regular.ttf";
-                    case "korean" -> "static/fonts/NotoSansKR-Regular.ttf";
-                    case "chinese" -> "static/fonts/NotoSansSC-Regular.ttf";
                     case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
                     default -> "static/fonts/NotoSans-Regular.ttf";
                 };
