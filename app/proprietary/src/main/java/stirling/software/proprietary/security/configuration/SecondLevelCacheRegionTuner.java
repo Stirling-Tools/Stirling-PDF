@@ -24,18 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.SecondLevelCache.Region;
 
-/**
- * Applies {@code secondLevelCache.regions.*} overrides to the live Caffeine caches behind
- * Hibernate's second-level cache, on top of the defaults in {@code application.conf}, and logs
- * every region's effective bounds. A no-op when the cache is off (cluster mode or {@code
- * secondLevelCache.enabled=false}).
- *
- * <p>Override keys match region names ignoring case and punctuation, because Spring lowercases map
- * keys and environment variables cannot spell a dash ({@code
- * SECONDLEVELCACHE_REGIONS_POLICYSOURCES_MAXENTRIES} reaches {@code policy-sources}). A key that
- * matches no region fails startup: a typo would otherwise leave the region on its default with no
- * sign anything was ignored.
- */
 @Slf4j
 @Component
 public class SecondLevelCacheRegionTuner {
