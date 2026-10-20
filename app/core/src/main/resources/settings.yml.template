@@ -478,8 +478,8 @@ mcp:
   engineCapabilityRefreshMinutes: 5 # How often to refresh the AI capabilities manifest from the engine
 
 secondLevelCache:
-  enabled: true # Keep users, teams and policies in memory between requests. Turn off when running several instances without cluster mode
-  regions: {} # Per-region size and lifetime, e.g. {users: {maxEntries: 200000, ttl: 5m}}
+  enabled: true # 'true' keeps users, teams and policies in memory between requests; cluster mode with backplane 'valkey' evicts changes on every node; cluster mode with any other backplane switches it off. Turn it off for several instances without cluster mode, since each instance's copy is only refreshed when its entries expire. After changing users or teams directly in the database, POST /api/v1/admin/cache/evictions
+  regions: {} # per-region size and lifetime overrides, e.g. {users: {maxEntries: 200000, ttl: 5m}}. Regions: users (3-4 entries per user), usersNaturalId, teams, policies, policy-sources, user-license-settings, saas-pricing-policies
 
 # Multi-node Stirling PDF. Two different things are called "nodes" here: cluster.node.* is THIS
 # Stirling PDF instance, cluster.valkey.* is the shared Valkey - so 'mode: cluster' is Valkey's own.
