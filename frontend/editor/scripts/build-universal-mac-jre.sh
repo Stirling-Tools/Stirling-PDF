@@ -99,6 +99,16 @@ done < <(find "$ARM_JRE" -type f -print0)
 
 echo "Universal JRE written to $OUTPUT_DIR (merged $merged Mach-O files, skipped $skipped arm-only files)"
 
+# jlink leaves local symbols in the dylibs; stripping them and restoring the
+# ad-hoc signature saves several megabytes. The release signature is applied
+# to the finished app, so this only needs to keep the runtime loadable.
+find "$OUTPUT_DIR" -type f -name '*.dylib' -exec sh -c '
+  for lib do
+    strip -x "$lib"
+    codesign --force --sign - "$lib"
+  done
+' sh {} +
+
 if [[ "$merged" -eq 0 ]]; then
   echo "Refusing to ship a JRE with zero merged Mach-O binaries" >&2
   exit 1

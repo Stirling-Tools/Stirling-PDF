@@ -202,6 +202,18 @@ tasks:
       # `desktop:build` run `jlink:clean` first to force a fresh build.
       - cmd: chmod -R u+w runtime/jre
         platforms: [linux, darwin]
+      # jlink --strip-debug leaves local symbols in the macOS dylibs. Strip
+      # them too, then restore the ad-hoc signature that stripping invalidates;
+      # an unsigned arm64 dylib is killed before main() runs. Tauri re-signs the
+      # finished app with the release identity.
+      - cmd: |
+          find runtime/jre -type f -name '*.dylib' -exec sh -c '
+            for lib do
+              strip -x "$lib"
+              codesign --force --sign - "$lib"
+            done
+          ' sh {} +
+        platforms: [darwin]
       # Single-quoted so Task's shell leaves `$_` and `$false` alone. Double
       # quotes let it expand them as its own variables, and since neither is
       # set the command PowerShell actually received was
