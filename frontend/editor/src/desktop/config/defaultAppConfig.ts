@@ -1,4 +1,4 @@
-import { AppConfig } from "@app/contexts/AppConfigContext";
+import type { AppConfig } from "@app/types/appConfig";
 
 /**
  * Default configuration used while the bundled backend starts up.

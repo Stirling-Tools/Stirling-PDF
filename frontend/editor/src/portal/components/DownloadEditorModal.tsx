@@ -4,6 +4,14 @@ import { Button, CodeBlock, Modal, SegmentedControl } from "@app/ui";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
 import { markEditorInstalled } from "@portal/hooks/useEditorInstalled";
 import { DOWNLOAD_URLS } from "@app/constants/downloads";
+import {
+  dockerRunCommand,
+  HELM_INSTALL_COMMAND,
+  JAR_RUN_COMMAND,
+  SELF_HOST_GUIDES,
+  SERVER_JAR_URL,
+  type DockerImageTag,
+} from "@app/constants/selfHosting";
 import { Icon, type IconName } from "@app/ui/Icon";
 import "@portal/components/DownloadEditorModal.css";
 
@@ -13,26 +21,15 @@ import "@portal/components/DownloadEditorModal.css";
 
 const WINGET = "winget install StirlingTools.StirlingPDF";
 const BREW = "brew install --cask stirling-pdf";
-const dockerCmd = (tag: string) =>
-  `docker run -d --name stirling-pdf -p 8080:8080 \\\n  -v ./stirling-data:/configs \\\n  stirlingtools/stirling-pdf:${tag}`;
-const HELM = `helm repo add stirling-pdf https://stirling-tools.github.io/Stirling-PDF/
-helm repo update
-helm install stirling-pdf stirling-pdf/stirling-pdf-chart \\\n  --namespace stirling-pdf --create-namespace`;
-const JAR_URL = "https://files.stirlingpdf.com/Stirling-PDF-with-login.jar";
-const JAR =
-  "java -Xmx2g -jar Stirling-PDF-with-login.jar\n# then open http://localhost:8080";
-
 const GUIDES = {
   windows: "https://docs.stirlingpdf.com/Installation/Windows%20Installation/",
   mac: "https://docs.stirlingpdf.com/Installation/Mac%20Installation/",
   linux: DOWNLOAD_URLS.LINUX_DOCS,
-  docker: "https://docs.stirlingpdf.com/Installation/Docker%20Install",
-  kubernetes: "https://docs.stirlingpdf.com/Installation/Kubernetes",
-  manual: DOWNLOAD_URLS.LINUX_DOCS,
+  ...SELF_HOST_GUIDES,
 } as const;
 
 type OptionId = keyof typeof GUIDES;
-type DockerVariant = "latest" | "latest-fat" | "latest-ultra-lite";
+type DockerVariant = DockerImageTag;
 
 const DESKTOP: OptionId[] = ["windows", "mac", "linux"];
 const SELF_HOSTED: OptionId[] = ["docker", "kubernetes", "manual"];
@@ -127,14 +124,31 @@ export function DownloadEditorModal({ open, onClose }: Props) {
       case "linux":
         return (
           <>
-            {note("linux")}
             <Button
-              variant="secondary"
-              leftSection={<Icon name="external-link" size={16} />}
-              onClick={() => openUrl(GUIDES.linux)}
+              variant="primary"
+              leftSection={<Icon name="download" size={16} />}
+              onClick={() => download(DOWNLOAD_URLS.LINUX_DEB)}
             >
-              {t("portal.home.download.linux.guideBtn")}
+              {t("portal.home.download.linux.downloadDeb")}
             </Button>
+            <div className="portal-install__row">
+              <Button
+                variant="secondary"
+                leftSection={<Icon name="download" size={16} />}
+                onClick={() => download(DOWNLOAD_URLS.LINUX_RPM)}
+              >
+                {t("portal.home.download.linux.downloadRpm")}
+              </Button>
+              <Button
+                variant="secondary"
+                leftSection={<Icon name="download" size={16} />}
+                onClick={() => download(DOWNLOAD_URLS.LINUX_APPIMAGE)}
+              >
+                {t("portal.home.download.linux.downloadAppImage")}
+              </Button>
+            </div>
+            {note("linux")}
+            {guideLink("linux")}
           </>
         );
       case "docker":
@@ -158,7 +172,7 @@ export function DownloadEditorModal({ open, onClose }: Props) {
                 },
               ]}
             />
-            <CodeBlock code={dockerCmd(dockerVariant)} lang="bash" />
+            <CodeBlock code={dockerRunCommand(dockerVariant)} lang="bash" />
             {note("docker")}
             {guideLink("docker")}
           </>
@@ -166,7 +180,7 @@ export function DownloadEditorModal({ open, onClose }: Props) {
       case "kubernetes":
         return (
           <>
-            <CodeBlock code={HELM} lang="bash" />
+            <CodeBlock code={HELM_INSTALL_COMMAND} lang="bash" />
             {note("kubernetes")}
             {guideLink("kubernetes")}
           </>
@@ -177,14 +191,14 @@ export function DownloadEditorModal({ open, onClose }: Props) {
             <Button
               variant="primary"
               leftSection={<Icon name="download" size={16} />}
-              onClick={() => download(JAR_URL)}
+              onClick={() => download(SERVER_JAR_URL)}
             >
               {t("portal.home.download.manual.downloadBtn")}
             </Button>
             <p className="portal-install__eyebrow">
               {t("portal.home.download.manual.runLabel")}
             </p>
-            <CodeBlock code={JAR} lang="bash" />
+            <CodeBlock code={JAR_RUN_COMMAND} lang="bash" />
             {note("manual")}
             {guideLink("manual")}
           </>

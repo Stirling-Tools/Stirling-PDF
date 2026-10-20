@@ -82,6 +82,12 @@
   width: 100%;
 }
 
+.portal-install__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
 .portal-install__eyebrow {
   margin: 0;
   font-size: 0.6875rem;

@@ -772,6 +772,7 @@ interface DocumentCommentsProps {
   enabled: boolean;
   readOnly: boolean;
   documentId: string;
+  fileName: string;
   authorName: string;
   visible: boolean;
   rightOffset: string;
@@ -781,6 +782,7 @@ function DocumentComments({
   enabled,
   readOnly,
   documentId,
+  fileName,
   authorName,
   visible,
   rightOffset,
@@ -792,6 +794,7 @@ function DocumentComments({
         key={documentId}
         readOnly={readOnly}
         documentId={documentId}
+        fileName={fileName}
         visible={visible}
         rightOffset={rightOffset}
       />
@@ -815,6 +818,16 @@ function AnnotationInteractionLock({
     if (readOnly) scope?.setActiveTool(null);
   }, [provides, documentId, readOnly]);
   return null;
+}
+
+function fileNameFromUrl(url: string): string {
+  const segment = url.split("/").pop()?.split("?")[0] ?? "";
+  try {
+    return decodeURIComponent(segment) || "document.pdf";
+  } catch {
+    // A stray "%" that is not an escape: keep the segment as written.
+    return segment || "document.pdf";
+  }
 }
 
 type EditingBridgesProps = Pick<
@@ -1041,7 +1054,7 @@ export function LocalEmbedPDF({
   const exportFileName = useMemo(() => {
     if (fileName) return fileName;
     if (file && "name" in file) return file.name;
-    if (url) return url.split("/").pop()?.split("?")[0] || "document.pdf";
+    if (url) return fileNameFromUrl(url);
     return "document.pdf";
   }, [fileStableKey, fileName, url]);
 
@@ -1718,6 +1731,7 @@ export function LocalEmbedPDF({
                   enabled={showAnnotations}
                   readOnly={annotationsReadOnly}
                   documentId={documentId}
+                  fileName={exportFileName}
                   authorName={commentAuthorName}
                   visible={isCommentsSidebarVisible}
                   rightOffset={commentsSidebarRightOffset}
