@@ -130,8 +130,10 @@ test.describe("Enterprise license — admin settings UI", () => {
       return;
     }
     await usersNav.click();
-    await expect(page.locator(".settings-page__title")).toHaveText(/users/i, {
-      timeout: 10_000,
+    // The roster is a full-bleed section, so its own heading is authoritative;
+    // SettingsPage does not render the shared header for full-bleed views.
+    await expect(page.locator(".portal-users__title")).toHaveText(/users/i, {
+      timeout: 20_000,
     });
 
     // The current admin user should appear in the list

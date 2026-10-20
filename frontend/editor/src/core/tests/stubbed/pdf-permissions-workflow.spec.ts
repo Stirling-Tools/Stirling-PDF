@@ -10,6 +10,10 @@ const sample = fs.readFileSync(
   path.join(import.meta.dirname, "../test-fixtures/sample.pdf"),
 );
 
+// Every test opens its own tool route; booting /editor first made the replaced
+// navigation race the restricted-file state.
+test.use({ autoGoto: false });
+
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
     const body = route.request().postData() ?? "";
