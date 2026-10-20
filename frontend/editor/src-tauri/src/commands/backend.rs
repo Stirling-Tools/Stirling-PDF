@@ -20,7 +20,7 @@ const BACKEND_JVM_FLAGS: &[&str] = &[
     // commit ~1 GB during UI startup, then hold it until the next periodic GC.
     "-XX:+UnlockExperimentalVMOptions",
     "-XX:G1NewSizePercent=2",
-    "-XX:G1MaxNewSizePercent=20",
+    "-XX:G1MaxNewSizePercent=10",
     "-XX:G1PeriodicGCInterval=30000",
     "-XX:MinHeapFreeRatio=10",
     "-XX:MaxHeapFreeRatio=70",
@@ -768,7 +768,7 @@ mod tests {
         assert!(BACKEND_JVM_FLAGS.contains(&"-Dspringdoc.api-docs.enabled=false"));
         assert!(BACKEND_JVM_FLAGS.contains(&"-Dspringdoc.swagger-ui.enabled=false"));
         assert!(BACKEND_JVM_FLAGS.contains(&"-XX:G1PeriodicGCInterval=30000"));
-        assert!(BACKEND_JVM_FLAGS.contains(&"-XX:G1MaxNewSizePercent=20"));
+        assert!(BACKEND_JVM_FLAGS.contains(&"-XX:G1MaxNewSizePercent=10"));
     }
 
     #[test]
