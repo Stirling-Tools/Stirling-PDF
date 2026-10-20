@@ -161,6 +161,12 @@ bootJar {
         if (path.contains('static/vendor/jscanify/opencv.js')) {
             details.exclude()
         }
+        // Build-time-only frontend inputs and the dev mock service worker.
+        if (path.contains('static/og-metadata.')
+                || path.contains('static/mockServiceWorker.js')
+                || path.contains('static/images/google-drive.')) {
+            details.exclude()
+        }
     }
 
     manifest {
@@ -320,6 +326,8 @@ tasks.register('copyFrontendAssets', Copy) {
         // processResources; only the precompressed siblings add anything, and
         // copying the raw set back would dirty the source tree on every build.
         exclude 'fonts/*.ttf'
+        // Public image with no route or component reference.
+        exclude 'images/google-drive.svg*'
     }
     into resourcesStaticDir
     duplicatesStrategy = DuplicatesStrategy.INCLUDE  // Let frontend overwrite when needed
