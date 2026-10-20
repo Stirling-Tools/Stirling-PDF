@@ -61,6 +61,7 @@ objc2-pdf-kit = { version = "0.3.2", features = ["PDFDocument", "objc2-app-kit"]
 codegen-units = 1
 lto = "fat"
 opt-level = "z"
+panic = "abort"
 strip = true
 
 [target.'cfg(target_os = "windows")'.dependencies]
