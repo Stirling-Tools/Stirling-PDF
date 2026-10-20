@@ -131,11 +131,13 @@ const collectFields = async (
   parentName: string,
   into: Map<string, AcroFormFieldInfo>,
   depth: number,
+  seen: Set<Map<string, PdfValue>> = new Set(),
 ): Promise<void> => {
   if (depth > MAX_FIELD_DEPTH) return;
   for (const entry of fields) {
     const field = asDict(await reader.resolveValue(entry));
-    if (!field) continue;
+    if (!field || seen.has(field)) continue;
+    seen.add(field);
     const partial = await textOf(reader, field.get("T"));
     const name =
       parentName && partial
@@ -189,7 +191,7 @@ const collectFields = async (
     }
 
     if (childFields.length > 0) {
-      await collectFields(reader, childFields, name, into, depth + 1);
+      await collectFields(reader, childFields, name, into, depth + 1, seen);
     }
   }
 };
