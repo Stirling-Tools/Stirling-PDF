@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { SpreadMode } from "@embedpdf/plugin-spread/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -56,9 +57,9 @@ export function PdfViewerToolbar({
   const [displayZoomPercent, setDisplayZoomPercent] = useState(
     () => zoomState.zoomPercent || 100,
   );
-  const [isDualPageActive, setIsDualPageActive] = useState(
-    spreadState.isDualPage,
-  );
+  const [spreadMode, setSpreadMode] = useState(spreadState.spreadMode);
+  const isDualPageActive = spreadMode !== SpreadMode.None;
+  const isCoverPageActive = spreadMode === SpreadMode.Even;
 
   // Register for immediate scroll updates and sync with actual scroll state
   useEffect(() => {
@@ -94,14 +95,14 @@ export function PdfViewerToolbar({
   ]);
 
   useEffect(() => {
-    const unregister = registerImmediateSpreadUpdate((_mode, isDual) => {
-      setIsDualPageActive(isDual);
+    const unregister = registerImmediateSpreadUpdate((mode) => {
+      setSpreadMode(mode);
     });
-    setIsDualPageActive(spreadState.isDualPage);
+    setSpreadMode(spreadState.spreadMode);
     return () => {
       unregister?.();
     };
-  }, [registerImmediateSpreadUpdate, spreadState.isDualPage]);
+  }, [registerImmediateSpreadUpdate, spreadState.spreadMode]);
 
   const handleZoomOut = () => {
     zoomActions.zoomOut();
@@ -121,6 +122,12 @@ export function PdfViewerToolbar({
 
   const handleDualPageToggle = () => {
     spreadActions.toggleSpreadMode();
+  };
+
+  const handleCoverPageToggle = () => {
+    spreadActions.setSpreadMode(
+      isCoverPageActive ? SpreadMode.Odd : SpreadMode.Even,
+    );
   };
 
   const handleFirstPage = () => {
@@ -298,6 +305,27 @@ export function PdfViewerToolbar({
         </Tooltip>
       )}
 
+      {!isPhone && isDualPageActive && (
+        <Tooltip
+          content={t("viewer.coverPageView", "Show Cover Page Separately")}
+          position="top"
+          arrow
+        >
+          <ActionIcon
+            variant={isCoverPageActive ? "primary" : "tertiary"}
+            size={buttonSize}
+            className="pdf-viewer-toolbar-wide-only"
+            onClick={handleCoverPageToggle}
+            disabled={scrollState.totalPages <= 1}
+            style={{ minWidth: buttonMinWidth }}
+            aria-pressed={isCoverPageActive}
+            aria-label={t("viewer.coverPageView", "Show Cover Page Separately")}
+          >
+            <Icon name="book" size={18} />
+          </ActionIcon>
+        </Tooltip>
+      )}
+
       {/* PDF Render Mode Toggle */}
       {!isPhone && (
         <Tooltip
@@ -448,6 +476,18 @@ export function PdfViewerToolbar({
                 ? t("viewer.singlePageView", "Single Page View")
                 : t("viewer.dualPageView", "Dual Page View")}
             </Menu.Item>
+            {isDualPageActive && (
+              <Menu.Item
+                leftSection={<Icon name="book" size={18} />}
+                rightSection={
+                  isCoverPageActive && <Icon name="check" size={16} />
+                }
+                disabled={scrollState.totalPages <= 1}
+                onClick={handleCoverPageToggle}
+              >
+                {t("viewer.coverPageView", "Show Cover Page Separately")}
+              </Menu.Item>
+            )}
             <Menu.Item
               leftSection={
                 pdfRenderMode === "normal" ? (
