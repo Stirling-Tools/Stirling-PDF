@@ -202,6 +202,10 @@ tasks:
       # `desktop:build` run `jlink:clean` first to force a fresh build.
       - cmd: chmod -R u+w runtime/jre
         platforms: [linux, darwin]
+      # jlink --strip-debug leaves local symbols in the Linux shared objects.
+      - cmd: |
+          find runtime/jre -type f -name '*.so' -exec strip --strip-unneeded {} \;
+        platforms: [linux]
       # jlink --strip-debug leaves local symbols in the macOS dylibs. Strip
       # them too, then restore the ad-hoc signature that stripping invalidates;
       # an unsigned arm64 dylib is killed before main() runs. Tauri re-signs the
