@@ -1,31 +1,34 @@
 import react from "@vitejs/plugin-react-swc";
-import { compression, defineAlgorithm } from "vite-plugin-compression2";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
+import type { Stats } from "node:fs";
 import path, { resolve } from "node:path";
-import { constants, brotliCompress, gzip } from "node:zlib";
+import { constants, brotliCompress } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
 import type { Connect, PluginOption, Rollup } from "vite";
 import type { PreRenderedAsset } from "rollup";
+import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
-const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+let outputDir = path.resolve(__dirname, "dist");
 
 // UV_THREADPOOL_SIZE is set by the build entrypoints (the Taskfiles and the
 // frontend Dockerfile): loading this config already touches the pool, so it
 // cannot be set here.
 
-// One list so the plugin's regex and the walk cannot drift.
+// Formats that are already compressed, plus temp files another closeBundle
+// hook may rename while the walk is running.
 const COMPRESSION_EXCLUDED_EXTENSIONS = [
   ".gz",
   ".br",
+  ".tmp",
   ".png",
   ".jpg",
   ".jpeg",
@@ -36,9 +39,6 @@ const COMPRESSION_EXCLUDED_EXTENSIONS = [
   ".woff",
   ".woff2",
 ];
-const COMPRESSION_EXCLUDE_REGEX = new RegExp(
-  `\\.(${COMPRESSION_EXCLUDED_EXTENSIONS.map((e) => e.slice(1)).join("|")})$`,
-);
 const EXCLUDED_EXTENSION_SET = new Set(COMPRESSION_EXCLUDED_EXTENSIONS);
 
 // Cloudflare's extension-based cache list omits .mjs, so pdf.js's hashed worker
@@ -90,38 +90,34 @@ async function writeVariantIfSmaller(
 }
 
 /** Compresses one file under `distDir`; paths outside it are ignored. */
-async function compressFile(
-  file: string,
-  distDir: string,
-  emitGzip: boolean,
-): Promise<void> {
+async function compressFile(file: string, distDir: string): Promise<void> {
   const resolved = path.resolve(file);
   if (!resolved.startsWith(`${path.resolve(distDir)}${path.sep}`)) return;
 
   const ext = path.extname(resolved).toLowerCase();
   if (EXCLUDED_EXTENSION_SET.has(ext)) return;
 
-  const gzPath = `${resolved}.gz`;
   const brPath = `${resolved}.br`;
 
-  // The bundler pass wrote some siblings; the walk runs over an existing dist,
-  // so a stale one has to be replaced rather than trusted. Each encoding is
-  // checked independently: a fresh .br next to a stale .gz is not a pair.
-  const source = await fs.stat(resolved);
-  const brFresh = await isFresh(brPath, source.mtimeMs);
-  const gzFresh = emitGzip ? await isFresh(gzPath, source.mtimeMs) : false;
-  if (brFresh && (!emitGzip || gzFresh)) {
-    if (!emitGzip) await fs.rm(gzPath, { force: true });
-    return;
-  }
+  // Build-time gzip is gone; remove a stale sibling left by an older build.
+  await fs.rm(`${resolved}.gz`, { force: true });
 
-  // A source that shrank below the threshold must not keep serving the variants
+  // The bundler pass wrote some siblings; the walk runs over an existing dist,
+  // so a stale one has to be replaced rather than trusted. Another closeBundle
+  // hook can rename a temp file out from under the walk.
+  let source: Stats;
+  try {
+    source = await fs.stat(resolved);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
+    throw error;
+  }
+  if (await isFresh(brPath, source.mtimeMs)) return;
+
+  // A source that shrank below the threshold must not keep serving a variant
   // left over from when it was larger.
   if (source.size < 1024) {
-    await Promise.all([
-      fs.rm(gzPath, { force: true }),
-      fs.rm(brPath, { force: true }),
-    ]);
+    await fs.rm(brPath, { force: true });
     return;
   }
 
@@ -131,29 +127,19 @@ async function compressFile(
       [constants.BROTLI_PARAM_QUALITY]: 11,
     },
   });
-  if (emitGzip) {
-    const gzipped = await gzipPromise(content, { level: 9 });
-    await writeVariantIfSmaller(gzPath, gzipped, content.length);
-  } else {
-    await fs.rm(gzPath, { force: true });
-  }
   await writeVariantIfSmaller(brPath, brotlied, content.length);
 }
 
-// Batching bounds the zlib queue: 16 files with both encoders in flight is up
-// to 32 jobs against the 16-thread libuv pool set by the build entrypoints.
+// Batching bounds the zlib queue against the 16-thread libuv pool set by the
+// build entrypoints.
 const COMPRESSION_BATCH_FILES = 16;
 
-async function compressFiles(
-  files: string[],
-  distDir: string,
-  emitGzip: boolean,
-): Promise<void> {
+async function compressFiles(files: string[], distDir: string): Promise<void> {
   for (let i = 0; i < files.length; i += COMPRESSION_BATCH_FILES) {
     await Promise.all(
       files
         .slice(i, i + COMPRESSION_BATCH_FILES)
-        .map((f) => compressFile(f, distDir, emitGzip)),
+        .map((f) => compressFile(f, distDir)),
     );
   }
 }
@@ -294,12 +280,17 @@ async function splitOptionalAssets(distDir: string): Promise<void> {
  * and social preview images exist for static hosting, so carrying them inside
  * the app binary costs space no desktop feature can use.
  */
-function desktopAssetsPlugin(): PluginOption {
+function desktopAssetsPlugin(
+  prunePortal: boolean,
+  portalKeep: Set<string>,
+): PluginOption {
   return {
     name: "desktop-assets",
     apply: "build" as const,
     async closeBundle() {
-      const distDir = path.resolve(__dirname, "dist");
+      const distDir = outputDir;
+      if (prunePortal) await prunePortalLocales(distDir, portalKeep);
+      await renameLocaleAssets(distDir);
       for (const name of [
         "og_images",
         "og-metadata.json",
@@ -313,40 +304,139 @@ function desktopAssetsPlugin(): PluginOption {
   };
 }
 
-function compressStaticCopyPlugin(emitGzip: boolean): PluginOption {
+/**
+ * Builds that do not ship the admin portal still carry its translation keys in
+ * every locale. Keep the families the core shell reads and drop the rest before
+ * precompression so those bytes never reach the JAR.
+ */
+const PORTAL_CORE_PREFIXES = new Set([
+  "accountLink",
+  "docs",
+  "failures",
+  "nav",
+  "shell",
+  "stepModal",
+  "users",
+]);
+
+/**
+ * Desktop, SaaS and proprietary builds also compile the licensed settings and
+ * policy screens, which read these portal families even without the processor.
+ */
+const PORTAL_FULL_PREFIXES = new Set([
+  ...PORTAL_CORE_PREFIXES,
+  "billing",
+  "error",
+  "errorFallback",
+  "infrastructure",
+  "pipelines",
+  "policies",
+  "settings",
+  "usage",
+]);
+
+/**
+ * Static hosts only compress MIME types they recognise; TOML is not one of
+ * them. The bytes stay TOML, but the extension becomes text/plain so a host
+ * such as Cloudflare compresses the locale on the fly.
+ */
+async function renameLocaleAssets(distDir: string): Promise<void> {
+  const localesDir = path.join(distDir, "locales");
+  const entries = await fs
+    .readdir(localesDir, { withFileTypes: true })
+    .catch(() => []);
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const source = path.join(localesDir, entry.name, "translation.toml");
+    const target = path.join(localesDir, entry.name, "translation.txt");
+    try {
+      await fs.writeFile(target, await fs.readFile(source));
+      await Promise.all(
+        [source, target].flatMap((name) => [
+          fs.rm(`${name}.br`, { force: true }),
+          fs.rm(`${name}.gz`, { force: true }),
+        ]),
+      );
+      await fs.rm(source, { force: true });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        console.warn(`[rename-locales] ${source}: ${error}`);
+      }
+    }
+  }
+}
+
+async function prunePortalLocales(
+  distDir: string,
+  keep: Set<string>,
+): Promise<void> {
+  const localesDir = path.join(distDir, "locales");
+  const entries = await fs
+    .readdir(localesDir, { withFileTypes: true })
+    .catch(() => []);
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const file = path.join(localesDir, entry.name, "translation.toml");
+    try {
+      const parsed = parseToml(await fs.readFile(file, "utf8"));
+      const portal = parsed.portal;
+      if (!portal || typeof portal !== "object" || Array.isArray(portal)) {
+        continue;
+      }
+      const portalTable = portal as Record<string, unknown>;
+      for (const key of Object.keys(portalTable)) {
+        if (!keep.has(key)) delete portalTable[key];
+      }
+      if (Object.keys(portalTable).length === 0) delete parsed.portal;
+      await fs.writeFile(file, stringifyToml(parsed));
+    } catch (error) {
+      console.warn(`[prune-portal] ${file}: ${error}`);
+    }
+  }
+}
+
+function compressStaticCopyPlugin(
+  prunePortal: boolean,
+  precompress: boolean,
+  portalKeep: Set<string>,
+): PluginOption {
   return {
     name: "compress-static-copy",
     apply: "build" as const,
     async closeBundle() {
-      const distDir = path.resolve(__dirname, "dist");
+      const distDir = outputDir;
+      if (prunePortal) await prunePortalLocales(distDir, portalKeep);
+      await renameLocaleAssets(distDir);
 
-      // The plugin's include list skips .wasm and viteStaticCopy output never
-      // reaches it, so the walk has to cover the rest of dist. HTML, sitemap.xml
-      // and robots.txt stay with the prerender hook, which rewrites them in a
-      // concurrent closeBundle.
-      const files: string[] = [];
-      const walk = async (dir: string) => {
-        let entries;
-        try {
-          entries = await fs.readdir(dir, { withFileTypes: true });
-        } catch {
-          return;
-        }
-        for (const entry of entries) {
-          const p = path.join(dir, entry.name);
-          if (entry.isDirectory()) await walk(p);
-          else if (
-            !entry.name.endsWith(".html") &&
-            entry.name !== "sitemap.xml" &&
-            entry.name !== "robots.txt"
-          )
-            files.push(p);
-        }
-      };
+      if (precompress) {
+        // The plugin's include list skips .wasm and viteStaticCopy output never
+        // reaches it, so the walk has to cover the rest of dist. HTML, sitemap.xml
+        // and robots.txt stay with the prerender hook, which rewrites them in a
+        // concurrent closeBundle.
+        const files: string[] = [];
+        const walk = async (dir: string) => {
+          let entries;
+          try {
+            entries = await fs.readdir(dir, { withFileTypes: true });
+          } catch {
+            return;
+          }
+          for (const entry of entries) {
+            const p = path.join(dir, entry.name);
+            if (entry.isDirectory()) await walk(p);
+            else if (
+              !entry.name.endsWith(".html") &&
+              entry.name !== "sitemap.xml" &&
+              entry.name !== "robots.txt"
+            )
+              files.push(p);
+          }
+        };
 
-      await walk(distDir);
+        await walk(distDir);
 
-      await compressFiles(files, distDir, emitGzip);
+        await compressFiles(files, distDir);
+      }
 
       // The TTFs are only ever requested through the backend, which serves the
       // brotli sibling and falls back to its own classpath copy of the raw file.
@@ -391,9 +481,8 @@ function compressStaticCopyPlugin(emitGzip: boolean): PluginOption {
 function prerenderOgPlugin(options: {
   isSaas: boolean;
   precompress: boolean;
-  emitGzip: boolean;
 }): PluginOption {
-  const { isSaas, precompress, emitGzip } = options;
+  const { isSaas, precompress } = options;
   // SaaS (stirling.com) prerenders the marketing cards from a dedicated
   // manifest; every other flavour uses the tool-registry manifest.
   const manifestFile = isSaas
@@ -436,7 +525,7 @@ function prerenderOgPlugin(options: {
         );
         return;
       }
-      const distDir = path.resolve(__dirname, "dist");
+      const distDir = outputDir;
       // The crawlable landing body only pays for itself where a crawler can
       // reach the page; self-hosted and desktop builds just get the flash.
       const injectLanding = Boolean(ogBase);
@@ -515,11 +604,11 @@ function prerenderOgPlugin(options: {
       };
       await walkHtml(distDir);
       // The HTML, sitemap and robots.txt written above skip the other plugin's
-      // walk, so they are compressed here (desktop is embedded and compressed by
-      // Tauri). The siblings only serve static hosts: Jetty gzips the Spring
-      // responses in memory, so it never reads them.
+      // walk, so they are compressed here for the embedded JAR. Desktop embeds
+      // its assets, and static hosts compress on the fly, so neither gets a
+      // sibling. Jetty builds gzip lazily for clients that cannot take brotli.
       if (precompress) {
-        await compressFiles(lateFiles, distDir, emitGzip);
+        await compressFiles(lateFiles, distDir);
       }
     },
   };
@@ -603,10 +692,21 @@ export default defineConfig(async ({ mode, command }) => {
         ? "core"
         : "proprietary");
 
-  // The embedded JAR serves brotli and gzips in memory when a client cannot
-  // take brotli. Only the SaaS static build keeps a gzip sibling, where the
-  // host may not compress on its own.
-  const emitGzip = effectiveMode === "saas";
+  // The embedded JAR serves precompressed brotli and builds gzip lazily for
+  // clients that cannot take it. Static hosts compress on the fly, so neither
+  // hosted nor desktop builds need precompressed siblings.
+  const precompress = effectiveMode !== "desktop" && effectiveMode !== "saas";
+
+  // Core and desktop deliberately shadow HAS_PORTAL with false; the other
+  // flavors only carry the portal when the build opts into it.
+  const includePortal =
+    process.env.VITE_INCLUDE_PORTAL ?? env.VITE_INCLUDE_PORTAL;
+  const prunePortal =
+    effectiveMode === "core" ||
+    effectiveMode === "desktop" ||
+    includePortal !== "true";
+  const portalKeep =
+    effectiveMode === "core" ? PORTAL_CORE_PREFIXES : PORTAL_FULL_PREFIXES;
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
@@ -670,32 +770,21 @@ export default defineConfig(async ({ mode, command }) => {
       __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
     },
     plugins: [
+      {
+        name: "resolve-output-dir",
+        configResolved(config) {
+          outputDir = path.resolve(config.root, config.build.outDir);
+        },
+      },
       iconSvgr(),
       react(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
-      // Desktop/mobile output is embedded in the Tauri binary, which brotli-
-      // compresses every asset itself and never negotiates encodings, so the
-      // siblings would only add their full size to the bundle. Embedded web
-      // builds keep brotli; only the SaaS static build also emits gzip.
-      ...(effectiveMode === "desktop"
-        ? []
-        : [
-            compression({
-              threshold: 1024,
-              exclude: [COMPRESSION_EXCLUDE_REGEX],
-              algorithms: [
-                ...(emitGzip ? [defineAlgorithm("gzip", { level: 9 })] : []),
-                defineAlgorithm("brotliCompress", {
-                  params: {
-                    [constants.BROTLI_PARAM_QUALITY]: 11,
-                  },
-                }),
-              ],
-            }),
-          ]),
+      // Brotli siblings are produced by compressStaticCopyPlugin after the
+      // build. A bundler-side pass would write them before locale assets are
+      // renamed, leaving stale .toml.br files beside the .txt payload.
       // ANALYZE=true emits dist/stats.json; the visualizer is ESM-only, hence
       // the dynamic import.
       ...(process.env.ANALYZE === "true"
@@ -736,9 +825,8 @@ export default defineConfig(async ({ mode, command }) => {
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
           },
-          // The compression pass writes the .br/.gz siblings static hosts serve;
-          // the embedded JAR keeps only the brotli copy of these fonts. Desktop is
-          // embedded and gets them from the bundled backend instead.
+          // The compression pass writes the .br siblings the embedded JAR
+          // serves; desktop gets these fonts from the bundled backend instead.
           ...(effectiveMode === "desktop"
             ? []
             : [
@@ -750,15 +838,14 @@ export default defineConfig(async ({ mode, command }) => {
         ],
       }),
       ...(effectiveMode === "desktop"
-        ? [desktopAssetsPlugin()]
-        : [compressStaticCopyPlugin(emitGzip)]),
+        ? [desktopAssetsPlugin(prunePortal, portalKeep)]
+        : [compressStaticCopyPlugin(prunePortal, precompress, portalKeep)]),
       ...(effectiveMode === "desktop"
         ? []
         : [
             prerenderOgPlugin({
               isSaas: effectiveMode === "saas",
-              precompress: effectiveMode !== "desktop",
-              emitGzip,
+              precompress,
             }),
           ]),
     ],

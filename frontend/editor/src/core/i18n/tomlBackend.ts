@@ -4,7 +4,8 @@ import { parse } from "smol-toml";
 /**
  * i18next backend that loads TOML translation files over HTTP. Shared by the
  * editor and portal so both apps consume the same locale format and the same
- * Crowdin-managed `public/locales/{lng}/{ns}.toml` layout.
+ * Crowdin-managed `public/locales/{lng}/{ns}.toml` layout. Production builds
+ * rename the payload to `.txt` so static hosts compress the text/plain body.
  */
 export interface TomlBackendOptions {
   loadPath: string | ((lngs: string[], namespaces: string[]) => string);

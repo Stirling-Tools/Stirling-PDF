@@ -49,7 +49,10 @@ i18n
         const cleanBasePath = basePath.endsWith("/")
           ? basePath.slice(0, -1)
           : basePath;
-        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.toml`;
+        // Production builds rename the TOML payload to .txt so static hosts
+        // compress text/plain; dev still reads the source .toml files.
+        const extension = import.meta.env.DEV ? "toml" : "txt";
+        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.${extension}`;
       },
     },
 
