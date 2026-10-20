@@ -524,4 +524,3 @@ cluster:
       maxWaitMillis: 2000 # Must be > 0: negative blocks forever, 0 fails the borrow instantly.
       timeBetweenEvictionRunsMillis: 30000 # Idle-evictor interval; minIdle only applies while it runs.
       testOnBorrow: true # Local isOpen() check only, no round trip.
-
