@@ -37,7 +37,13 @@ public class TempFileConfiguration {
     public TempFileRegistry tempFileRegistry(
             ObjectProvider<TempFileCleanupService> tempFileCleanup) {
         return new TempFileRegistry(
-                () -> tempFileCleanup.ifAvailable(TempFileCleanupService::ensureScheduled));
+                () -> {
+                    TempFileCleanupService cleanup = tempFileCleanup.getIfAvailable();
+                    if (cleanup == null || !cleanup.ensureScheduled()) {
+                        throw new IllegalStateException(
+                                "temp file cleanup scheduler is not available");
+                    }
+                });
     }
 
     @PostConstruct

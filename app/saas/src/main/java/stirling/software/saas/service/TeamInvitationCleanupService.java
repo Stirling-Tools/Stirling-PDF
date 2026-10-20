@@ -3,6 +3,8 @@ package stirling.software.saas.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
@@ -55,9 +57,18 @@ public class TeamInvitationCleanupService {
     }
 
     /** Registers both invitation sweeps on the first invitation write. */
-    public void ensureScheduled() {
-        markExpiredTask.ensureCron(MARK_EXPIRED_CRON);
-        purgeExpiredTask.ensureCron(PURGE_EXPIRED_CRON);
+    public boolean ensureScheduled() {
+        boolean marked = markExpiredTask.ensureCron(MARK_EXPIRED_CRON);
+        boolean purged = purgeExpiredTask.ensureCron(PURGE_EXPIRED_CRON);
+        return marked && purged;
+    }
+
+    /** Invitations persisted before the restart still need both sweeps. */
+    @EventListener(ApplicationReadyEvent.class)
+    public void armIfInvitationsExist() {
+        if (invitationRepository.count() > 0) {
+            ensureScheduled();
+        }
     }
 
     /** Mark expired invitations as EXPIRED. Runs every day at 2:00 AM. */

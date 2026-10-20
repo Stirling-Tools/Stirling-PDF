@@ -92,7 +92,18 @@ public class LicenseKeyChecker {
 
     private void evaluateLicense() {
         licenseKeyResult = verifyLicenseKey();
+        // A configured key that is temporarily unreadable or invalid must keep
+        // being re-checked, or restoring the file would never be noticed.
+        if (hasConfiguredLicenseKey()) {
+            ensurePeriodicRefresh();
+        }
         applyTeamPlanPromotion();
+    }
+
+    private boolean hasConfiguredLicenseKey() {
+        if (!applicationProperties.getPremium().isEnabled()) return false;
+        String configured = applicationProperties.getPremium().getKey();
+        return configured != null && !configured.trim().isEmpty();
     }
 
     private License verifyLicenseKey() {

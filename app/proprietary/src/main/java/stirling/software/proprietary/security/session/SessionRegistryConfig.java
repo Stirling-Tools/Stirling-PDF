@@ -22,6 +22,12 @@ public class SessionRegistryConfig {
             ObjectProvider<SessionScheduled> sessionScheduled) {
         return new SessionPersistentRegistry(
                 sessionRepository,
-                () -> sessionScheduled.ifAvailable(SessionScheduled::ensureScheduled));
+                () -> {
+                    SessionScheduled scheduled = sessionScheduled.getIfAvailable();
+                    if (scheduled == null || !scheduled.ensureScheduled()) {
+                        throw new IllegalStateException(
+                                "session expiry scheduler is not available");
+                    }
+                });
     }
 }
