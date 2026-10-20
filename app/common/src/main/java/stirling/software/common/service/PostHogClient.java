@@ -45,17 +45,30 @@ public class PostHogClient {
 
     public PostHogClient(String apiKey, String host) {
         this.apiKey = apiKey;
-        String base = host.endsWith("/") ? host.substring(0, host.length() - 1) : host;
-        this.batchEndpoint = URI.create(base + "/batch/");
+        this.batchEndpoint = toBatchEndpoint(host);
         this.httpClient = HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build();
         this.worker = new Thread(this::drainLoop, "posthog-client");
         this.worker.setDaemon(true);
         this.worker.start();
     }
 
+    private static URI toBatchEndpoint(String host) {
+        if (host == null || host.isBlank()) {
+            log.warn("PostHog host is not configured; analytics events will be dropped");
+            return null;
+        }
+        String base = host.endsWith("/") ? host.substring(0, host.length() - 1) : host;
+        try {
+            return URI.create(base + "/batch/");
+        } catch (IllegalArgumentException e) {
+            log.warn("PostHog host '{}' is not a valid URI; analytics events will be dropped", host);
+            return null;
+        }
+    }
+
     /** Queues an event without blocking the caller; drops it if the queue is full. */
     public void capture(String distinctId, String event, Map<String, Object> properties) {
-        if (!running.get()) {
+        if (!running.get() || batchEndpoint == null) {
             return;
         }
         Map<String, Object> copy = new LinkedHashMap<>(properties);
@@ -96,6 +109,9 @@ public class PostHogClient {
     }
 
     private void send(List<Event> events) {
+        if (batchEndpoint == null) {
+            return;
+        }
         List<Map<String, Object>> batch = new ArrayList<>(events.size());
         for (Event event : events) {
             Map<String, Object> item = new LinkedHashMap<>();
