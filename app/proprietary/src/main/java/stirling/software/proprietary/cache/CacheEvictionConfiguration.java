@@ -26,12 +26,26 @@ public class CacheEvictionConfiguration {
 
     @Bean
     @ConditionalOnValkeyBackplane
+    CacheEvictionChannelProbe cacheEvictionChannelProbe(
+            StringRedisTemplate template, ObjectMapper objectMapper) {
+        return new CacheEvictionChannelProbe(template, objectMapper);
+    }
+
+    @Bean
+    @ConditionalOnValkeyBackplane
     RedisMessageListenerContainer cacheEvictionListenerContainer(
-            RedisConnectionFactory connectionFactory, ValkeyCacheEvictionBroadcaster broadcaster) {
+            RedisConnectionFactory connectionFactory,
+            ValkeyCacheEvictionBroadcaster broadcaster,
+            CacheEvictionChannelProbe channelProbe,
+            SecondLevelCacheEvictor evictor) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.addMessageListener(
-                broadcaster, new ChannelTopic(ValkeyCacheEvictionBroadcaster.CHANNEL));
+        if (channelProbe.isUsable()) {
+            container.addMessageListener(
+                    broadcaster, new ChannelTopic(ValkeyCacheEvictionBroadcaster.CHANNEL));
+        } else {
+            evictor.stopCaching();
+        }
         return container;
     }
 

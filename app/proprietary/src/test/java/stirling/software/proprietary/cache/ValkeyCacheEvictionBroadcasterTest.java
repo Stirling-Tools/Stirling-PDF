@@ -1,5 +1,6 @@
 package stirling.software.proprietary.cache;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
@@ -129,6 +130,46 @@ class ValkeyCacheEvictionBroadcasterTest {
                 .convertAndSend(ValkeyCacheEvictionBroadcaster.CHANNEL, "not json");
 
         verify(nodeB.evictor(), timeout(5000)).evictAll();
+    }
+
+    @Test
+    void probeRejectsAValkeyUserWithoutChannelAccessAndAcceptsOneWithIt() throws Exception {
+        VALKEY.execInContainer(
+                "valkey-cli",
+                "ACL",
+                "SETUSER",
+                "nochan",
+                "on",
+                ">pw",
+                "~*",
+                "resetchannels",
+                "+@all");
+        VALKEY.execInContainer(
+                "valkey-cli",
+                "ACL",
+                "SETUSER",
+                "withchan",
+                "on",
+                ">pw",
+                "~*",
+                "resetchannels",
+                "&" + ValkeyCacheEvictionBroadcaster.CHANNEL,
+                "+@all");
+
+        assertThat(probeAs("nochan").isUsable()).isFalse();
+        assertThat(probeAs("withchan").isUsable()).isTrue();
+    }
+
+    private static CacheEvictionChannelProbe probeAs(String username) {
+        RedisStandaloneConfiguration config =
+                new RedisStandaloneConfiguration(VALKEY.getHost(), VALKEY.getMappedPort(6379));
+        config.setUsername(username);
+        config.setPassword("pw");
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(config);
+        factory.afterPropertiesSet();
+        factory.start();
+        return new CacheEvictionChannelProbe(
+                new StringRedisTemplate(factory), JsonMapper.builder().build());
     }
 
     private static void killPubSubClients() {

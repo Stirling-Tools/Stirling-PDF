@@ -17,8 +17,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.UserIdentity;
 import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 
 class ExternalWriteEvictionServiceTest {
@@ -28,20 +30,23 @@ class ExternalWriteEvictionServiceTest {
     private static final UUID DELETED = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
     private UserRepository users;
+    private AuthorityRepository authorities;
     private CacheEvictionBroadcaster broadcaster;
     private ExternalWriteEvictionService service;
 
     @BeforeEach
     void setUp() {
         users = mock(UserRepository.class);
+        authorities = mock(AuthorityRepository.class);
         broadcaster = mock(CacheEvictionBroadcaster.class);
-        service = new ExternalWriteEvictionService(users, broadcaster);
+        service = new ExternalWriteEvictionService(users, authorities, broadcaster);
     }
 
     @Test
     void resolvedSupabaseUserEvictsTheUserItsRolesAndItsUsername() {
         when(users.findIdentitiesBySupabaseIdIn(any()))
                 .thenReturn(List.of(new UserIdentity(5L, "a@example.com", LIVE)));
+        when(authorities.findIdsByUserIdIn(List.of(5L))).thenReturn(List.of(70L));
 
         List<CacheEviction> evicted =
                 service.evict(
@@ -50,7 +55,8 @@ class ExternalWriteEvictionServiceTest {
         assertThat(evicted)
                 .containsExactly(
                         CacheEviction.entityWithCollections(USER, "5"),
-                        CacheEviction.naturalId(USER, "a@example.com"));
+                        CacheEviction.naturalId(USER, "a@example.com"),
+                        CacheEviction.entity(Authority.class.getName(), "70"));
         verify(broadcaster).broadcast(evicted);
     }
 
@@ -64,7 +70,10 @@ class ExternalWriteEvictionServiceTest {
                         new ExternalWriteEvictionService.Request(
                                 List.of(LIVE, DELETED), null, null, null));
 
-        assertThat(evicted).contains(CacheEviction.entityRegion(USER));
+        assertThat(evicted)
+                .contains(
+                        CacheEviction.entityRegion(USER),
+                        CacheEviction.entityRegion(Authority.class.getName()));
     }
 
     @Test
