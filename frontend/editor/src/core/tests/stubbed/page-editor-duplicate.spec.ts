@@ -110,8 +110,8 @@ test.describe("Page editor duplicate", () => {
       .getByRole("button", { name: "Duplicate selected pages" })
       .click();
     await expect(rotated.locator("[data-page-id]")).toHaveCount(6);
-    // Each copy sits after its source: [0,0,90,90,270,180].
-    expect(await readRotations(rotated, 6)).toEqual([0, 0, 90, 90, 270, 180]);
+    // The selected block is copied after its last page: [0,90,0,90,270,180].
+    expect(await readRotations(rotated, 6)).toEqual([0, 90, 0, 90, 270, 180]);
 
     await page.getByRole("button", { name: "Undo" }).click();
     await expect(rotated.locator("[data-page-id]")).toHaveCount(4);

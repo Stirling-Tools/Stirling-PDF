@@ -553,6 +553,24 @@ describe("trackEditorReducer insertBlank", () => {
     expect(ids(state, B)).toEqual([`${B}:1`, `${B}:2`]);
   });
 
+  it("keeps a bulk duplicate in selection order after the block", () => {
+    let state = twoTracks();
+    const selected = pagesOf(state, A).slice(0, 3);
+    state = trackEditorReducer(state, {
+      type: "duplicate",
+      pageIds: selected.map((page) => page.id),
+    });
+
+    expect(ids(state, A)).toEqual([
+      `${A}:1`,
+      `${A}:2`,
+      `${A}:3`,
+      `${A}:1`,
+      `${A}:2`,
+      `${A}:3`,
+    ]);
+  });
+
   it("puts a copy after each given page, across tracks, as one undo step", () => {
     let state = twoTracks();
     const [a1, a2] = pagesOf(state, A);
@@ -570,8 +588,8 @@ describe("trackEditorReducer insertBlank", () => {
     expect(ids(state, A)).toEqual([
       `${A}:1`,
       "blank",
-      "blank",
       `${A}:2`,
+      "blank",
       `${A}:2`,
       `${A}:3`,
     ]);
