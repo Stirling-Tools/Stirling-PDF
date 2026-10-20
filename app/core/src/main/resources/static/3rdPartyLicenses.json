@@ -410,13 +410,6 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "com.posthog.java:posthog",
-            "moduleUrl": "http://github.com/PostHog/posthog-java",
-            "moduleVersion": "1.2.0",
-            "moduleLicense": "MIT License",
-            "moduleLicenseUrl": "http://www.opensource.org/licenses/mit-license.php"
-        },
-        {
             "moduleName": "com.sanctionco.jmail:jmail",
             "moduleUrl": "https://github.com/RohanNagar/jmail",
             "moduleVersion": "2.2.2",
@@ -1173,13 +1166,6 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "net.sf.saxon:Saxon-HE",
-            "moduleUrl": "http://www.saxonica.com/",
-            "moduleVersion": "12.8",
-            "moduleLicense": "Mozilla Public License Version 2.0",
-            "moduleLicenseUrl": "http://www.mozilla.org/MPL/2.0/"
-        },
-        {
             "moduleName": "net.shibboleth:shib-networking",
             "moduleVersion": "9.2.3",
             "moduleLicense": "The Apache Software License, Version 2.0",
@@ -1244,13 +1230,6 @@
             "moduleVersion": "3.20.0",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "org.apache.commons:commons-math3",
-            "moduleUrl": "http://commons.apache.org/proper/commons-math/",
-            "moduleVersion": "3.6.1",
-            "moduleLicense": "Apache License, Version 2.0",
-            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.commons:commons-pool2",
@@ -2579,13 +2558,6 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
-            "moduleName": "org.springframework.session:spring-session-core",
-            "moduleUrl": "https://spring.io/projects/spring-session",
-            "moduleVersion": "4.1.1",
-            "moduleLicense": "Broadcom Foundation License",
-            "moduleLicenseUrl": ""
-        },
-        {
             "moduleName": "org.springframework:spring-aop",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
             "moduleVersion": "7.0.9",
@@ -2753,13 +2725,6 @@
             "moduleVersion": "1.1.4",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "https://github.com/webjars/webjars-locator-lite/blob/main/LICENSE.md"
-        },
-        {
-            "moduleName": "org.xmlresolver:xmlresolver",
-            "moduleUrl": "https://github.com/xmlresolver/xmlresolver",
-            "moduleVersion": "5.3.3",
-            "moduleLicense": "Apache License version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.yaml:snakeyaml",
