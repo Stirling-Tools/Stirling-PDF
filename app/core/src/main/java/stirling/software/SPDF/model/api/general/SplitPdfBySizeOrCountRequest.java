@@ -31,4 +31,13 @@ public class SplitPdfBySizeOrCountRequest extends PDFFile {
                             + " Documents beyond the list keep the default name.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String outputNames;
+
+    @Schema(
+            description =
+                    "Name for every split document, where {n} is the document number (1, 2, 3...);"
+                            + " without {n} the number is appended. A name from outputNames takes"
+                            + " precedence for its document.",
+            example = "Chapter {n}",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    private String outputNamePattern;
 }

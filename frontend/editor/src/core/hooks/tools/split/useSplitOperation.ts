@@ -41,16 +41,28 @@ type SectionsApiParams =
 type PosterApiParams =
   ToolApiParams[(typeof SPLIT_ENDPOINTS)[typeof SPLIT_METHODS.BY_POSTER]];
 
+const outputNamingToApiParams = ({
+  outputNaming,
+  outputNamePattern,
+  outputNames,
+}: SplitParameters): { outputNamePattern?: string; outputNames?: string } => {
+  if (outputNaming === "list") {
+    // Leading blank lines are kept: line N names output N, and a blank line keeps its default.
+    return outputNames.trim() ? { outputNames: outputNames.trimEnd() } : {};
+  }
+  if (outputNaming && outputNamePattern.trim()) {
+    return { outputNamePattern: outputNamePattern.trim() };
+  }
+  return {};
+};
+
 // Convert the tool's UI parameters into the request body for the routed endpoint.
 export const splitToApiParams = (
   parameters: SplitParameters,
 ): SplitApiParams => {
   // Use BY_PAGES as default if no method is selected
   const method = parameters.method || SPLIT_METHODS.BY_PAGES;
-  // Leading blank lines are kept: line N names output N, and a blank line keeps its default.
-  const outputNames = parameters.outputNames.trim()
-    ? parameters.outputNames.trimEnd()
-    : undefined;
+  const outputNaming = outputNamingToApiParams(parameters);
 
   switch (method) {
     case SPLIT_METHODS.BY_PAGES:
@@ -69,11 +81,23 @@ export const splitToApiParams = (
       return sections;
     }
     case SPLIT_METHODS.BY_SIZE:
-      return { splitType: 0, splitValue: parameters.splitValue, outputNames };
+      return {
+        splitType: 0,
+        splitValue: parameters.splitValue,
+        ...outputNaming,
+      };
     case SPLIT_METHODS.BY_PAGE_COUNT:
-      return { splitType: 1, splitValue: parameters.splitValue, outputNames };
+      return {
+        splitType: 1,
+        splitValue: parameters.splitValue,
+        ...outputNaming,
+      };
     case SPLIT_METHODS.BY_DOC_COUNT:
-      return { splitType: 2, splitValue: parameters.splitValue, outputNames };
+      return {
+        splitType: 2,
+        splitValue: parameters.splitValue,
+        ...outputNaming,
+      };
     case SPLIT_METHODS.BY_CHAPTERS:
       return {
         bookmarkLevel: Number(parameters.bookmarkLevel || "1"),
@@ -149,7 +173,7 @@ export const splitFromApiParams = (
     return {
       method: methodBySplitType[apiParams.splitType as 0 | 1 | 2],
       splitValue: apiParams.splitValue ?? "",
-      outputNames: apiParams.outputNames ?? "",
+      ...outputNamingFromApiParams(apiParams),
     };
   }
   if ("duplexMode" in apiParams) {
@@ -164,6 +188,22 @@ export const splitFromApiParams = (
     pages: pages ?? defaultParameters.pages,
   };
 };
+
+// A preset's pattern is translated text, so a saved pattern cannot be told apart from a custom one.
+const outputNamingFromApiParams = ({
+  outputNamePattern,
+  outputNames,
+}: {
+  outputNamePattern?: string;
+  outputNames?: string;
+}): Pick<
+  SplitParameters,
+  "outputNaming" | "outputNamePattern" | "outputNames"
+> => ({
+  outputNaming: outputNames ? "list" : outputNamePattern ? "custom" : "",
+  outputNamePattern: outputNamePattern ?? "",
+  outputNames: outputNames ?? "",
+});
 
 // Static functions that can be used by both the hook and automation executor
 export const buildSplitFormData = (

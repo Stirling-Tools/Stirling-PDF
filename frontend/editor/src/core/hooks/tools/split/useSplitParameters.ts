@@ -9,6 +9,15 @@ import {
   BaseParametersHook,
 } from "@app/hooks/tools/shared/useBaseParameters";
 
+/** How split-by-size/count names its outputs; "" keeps the server's default naming. */
+export type OutputNaming =
+  | ""
+  | "part"
+  | "chapter"
+  | "section"
+  | "custom"
+  | "list";
+
 export interface SplitParameters extends BaseParameters {
   method: SplitMethod | null;
   pages: string;
@@ -16,6 +25,10 @@ export interface SplitParameters extends BaseParameters {
   vDiv: string;
   merge: boolean;
   splitValue: string;
+  outputNaming: OutputNaming;
+  /** Name for every output, where {n} is the output's number. Used by every naming but "list". */
+  outputNamePattern: string;
+  /** One name per line, line N naming output N. Used only by the "list" naming. */
   outputNames: string;
   bookmarkLevel: string;
   includeMetadata: boolean;
@@ -38,6 +51,8 @@ export const defaultParameters: SplitParameters = {
   vDiv: "2",
   merge: false,
   splitValue: "",
+  outputNaming: "",
+  outputNamePattern: "",
   outputNames: "",
   bookmarkLevel: "1",
   includeMetadata: false,

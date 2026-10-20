@@ -185,6 +185,18 @@ class SplitPdfBySizeControllerTest {
     }
 
     @Test
+    @DisplayName("Should name outputs from the pattern, with listed names taking precedence")
+    void shouldUseOutputNamePattern() throws Exception {
+        SplitPdfBySizeOrCountRequest request = pageCountRequest(9, 3, "Intro");
+        request.setOutputNamePattern("Chapter {n}");
+
+        ResponseEntity<Resource> response = controller.autoSplitPdf(request);
+
+        assertThat(entryNamesOf(response.getBody()))
+                .containsExactly("Intro.pdf", "Chapter 2.pdf", "Chapter 3.pdf");
+    }
+
+    @Test
     @DisplayName("Should apply output names when splitting by document count")
     void shouldUseOutputNamesForDocCount() throws Exception {
         SplitPdfBySizeOrCountRequest request = pageCountRequest(6, 0, "First\nSecond");

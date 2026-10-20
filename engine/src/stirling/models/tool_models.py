@@ -1556,6 +1556,11 @@ class SplitBySizeOrCountParams(ApiModel):
     split PDF into multiple paged documents based on size/count, ie if 20 pages and split into 5, it does 5 documents each 4 pages if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF Output:PDF Type:SIMO
     """
 
+    output_name_pattern: str | None = Field(
+        None,
+        description="Name for every split document, where {n} is the document number (1, 2, 3...); without {n} the number is appended. A name from outputNames takes precedence for its document.",
+        examples=["Chapter {n}"],
+    )
     output_names: str | None = Field(
         None,
         description="Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.",

@@ -77,6 +77,21 @@ export const BySections: Story = {
   ),
 };
 
+/** Split by page count, naming every output from a custom pattern. */
+export const ByPageCountWithNamePattern: Story = {
+  render: () => (
+    <SplitSettingsDemo
+      initialParameters={{
+        ...defaultParameters,
+        method: SPLIT_METHODS.BY_PAGE_COUNT,
+        splitValue: "5",
+        outputNaming: "custom",
+        outputNamePattern: "Invoice {n}",
+      }}
+    />
+  ),
+};
+
 /** Split by poster print: page size + division factors + orientation. */
 export const ByPoster: Story = {
   render: () => (

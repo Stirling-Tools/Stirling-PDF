@@ -1547,6 +1547,10 @@ export interface SplitPdfBySectionsRequest {
 }
 export interface SplitPdfBySizeOrCountRequest {
   /**
+   * Name for every split document, where {n} is the document number (1, 2, 3...); without {n} the number is appended. A name from outputNames takes precedence for its document.
+   */
+  outputNamePattern?: string;
+  /**
    * Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.
    */
   outputNames?: string;

@@ -12690,9 +12690,27 @@ text = "Choose how you want to split your PDF document. Each method is optimized
 title = "Split Method Selection"
 
 [split.outputNames]
+label = "Name output files"
+placeholder = "Default names"
+
+[split.outputNames.list]
 description = "One name per line, in order. A blank line, or a file beyond the list, keeps the default name."
-label = "Output file names (optional)"
-placeholder = "e.g. Chapter 1"
+label = "File names"
+placeholder = "Cover"
+
+[split.outputNames.option]
+custom = "Custom pattern…"
+list = "Type each name…"
+
+[split.outputNames.pattern]
+description = "{n} becomes the file number: {{example}}"
+label = "Pattern"
+placeholder = "Invoice {n}"
+
+[split.outputNames.preset]
+chapter = "Chapter {n}"
+part = "Part {n}"
+section = "Section {n}"
 
 [split.poster]
 rightToLeft = "Split right-to-left"

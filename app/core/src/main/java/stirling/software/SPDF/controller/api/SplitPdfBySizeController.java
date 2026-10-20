@@ -88,7 +88,10 @@ public class SplitPdfBySizeController {
                     List<int[]> ranges = computeRanges(request, sourceDocument);
                     List<String> entryNames =
                             SplitOutputNames.resolve(
-                                    request.getOutputNames(), filename, ranges.size());
+                                    request.getOutputNames(),
+                                    request.getOutputNamePattern(),
+                                    filename,
+                                    ranges.size());
 
                     int fileIndex = 0;
                     for (int[] range : ranges) {

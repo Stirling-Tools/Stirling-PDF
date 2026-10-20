@@ -67,19 +67,25 @@ describe("splitToApiParams", () => {
     });
   });
 
-  test("count methods send outputNames only when provided, keeping blank slots", () => {
+  test("the list naming sends outputNames only when provided, keeping blank slots", () => {
     expect(
       splitToApiParams(
         params({
           method: SPLIT_METHODS.BY_PAGE_COUNT,
           splitValue: "3",
+          outputNaming: "list",
           outputNames: "FileA\nFileB\n",
+          outputNamePattern: "Part {n}",
         }),
       ),
     ).toEqual({ splitType: 1, splitValue: "3", outputNames: "FileA\nFileB" });
     expect(
       splitToApiParams(
-        params({ method: SPLIT_METHODS.BY_PAGE_COUNT, outputNames: "  " }),
+        params({
+          method: SPLIT_METHODS.BY_PAGE_COUNT,
+          outputNaming: "list",
+          outputNames: "  ",
+        }),
       ),
     ).toEqual({ splitType: 1, splitValue: "" });
     expect(
@@ -87,10 +93,52 @@ describe("splitToApiParams", () => {
         params({
           method: SPLIT_METHODS.BY_DOC_COUNT,
           splitValue: "3",
+          outputNaming: "list",
           outputNames: "\n\nFileC",
         }),
       ),
     ).toEqual({ splitType: 2, splitValue: "3", outputNames: "\n\nFileC" });
+  });
+
+  test("pattern namings send outputNamePattern and ignore the list", () => {
+    expect(
+      splitToApiParams(
+        params({
+          method: SPLIT_METHODS.BY_SIZE,
+          splitValue: "10MB",
+          outputNaming: "chapter",
+          outputNamePattern: " Chapter {n} ",
+          outputNames: "FileA",
+        }),
+      ),
+    ).toEqual({
+      splitType: 0,
+      splitValue: "10MB",
+      outputNamePattern: "Chapter {n}",
+    });
+    expect(
+      splitToApiParams(
+        params({
+          method: SPLIT_METHODS.BY_SIZE,
+          splitValue: "10MB",
+          outputNaming: "custom",
+          outputNamePattern: "  ",
+        }),
+      ),
+    ).toEqual({ splitType: 0, splitValue: "10MB" });
+  });
+
+  test("no naming sends neither field", () => {
+    expect(
+      splitToApiParams(
+        params({
+          method: SPLIT_METHODS.BY_SIZE,
+          splitValue: "10MB",
+          outputNamePattern: "Part {n}",
+          outputNames: "FileA",
+        }),
+      ),
+    ).toEqual({ splitType: 0, splitValue: "10MB" });
   });
 
   test("byChapters converts bookmarkLevel to a number", () => {
@@ -178,7 +226,14 @@ describe("split round-trip", () => {
     {
       method: SPLIT_METHODS.BY_PAGE_COUNT,
       splitValue: "3",
+      outputNaming: "list",
       outputNames: "FileA\nFileB",
+    },
+    {
+      method: SPLIT_METHODS.BY_SIZE,
+      splitValue: "10MB",
+      outputNaming: "part",
+      outputNamePattern: "Part {n}",
     },
     { method: SPLIT_METHODS.BY_DOC_COUNT, splitValue: "3" },
     {

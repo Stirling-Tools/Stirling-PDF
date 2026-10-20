@@ -10,11 +10,15 @@ import java.util.regex.Pattern;
 import stirling.software.common.util.RegexPatternUtils;
 
 /**
- * Zip entry names for the documents a split produces, from an optional list of user-supplied names.
- * Every name is safe to extract on Windows, macOS and Linux, and the names are unique ignoring case
- * so a case-insensitive filesystem cannot overwrite one document with another.
+ * Zip entry names for the documents a split produces, from an optional naming pattern and an
+ * optional list of user-supplied names. Every name is safe to extract on Windows, macOS and Linux,
+ * and the names are unique ignoring case so a case-insensitive filesystem cannot overwrite one
+ * document with another.
  */
 final class SplitOutputNames {
+
+    /** Replaced by the 1-based document number in a naming pattern. */
+    static final String NUMBER_TOKEN = "{n}";
 
     /** Leaves room for a de-duplication suffix and ".pdf" under the common 255-byte limit. */
     static final int MAX_NAME_BYTES = 200;
@@ -30,11 +34,13 @@ final class SplitOutputNames {
     /**
      * One entry name ending in ".pdf" per document. Line {@code N} of {@code outputNames} names
      * document {@code N}; a blank line, a line with nothing usable after sanitising, or a document
-     * past the end of the list gets {@code baseFilename_N}. A user's name keeps its exact form, so
-     * when a default or a repeated name collides with it, the other one takes the {@code _2},
-     * {@code _3}... suffix.
+     * past the end of the list gets the default name: {@code namePattern} with {@link
+     * #NUMBER_TOKEN} replaced by {@code N} (or {@code N} appended when the token is absent), else
+     * {@code baseFilename_N}. A user's name keeps its exact form, so when a default or a repeated
+     * name collides with it, the other one takes the {@code _2}, {@code _3}... suffix.
      */
-    static List<String> resolve(String outputNames, String baseFilename, int count) {
+    static List<String> resolve(
+            String outputNames, String namePattern, String baseFilename, int count) {
         List<String> customNames = parseLines(outputNames);
         Set<String> claimedByUser = new HashSet<>();
         for (String name : customNames.subList(0, Math.min(count, customNames.size()))) {
@@ -48,7 +54,7 @@ final class SplitOutputNames {
         for (int i = 0; i < count; i++) {
             String custom = i < customNames.size() ? customNames.get(i) : "";
             boolean isCustom = !custom.isEmpty();
-            String name = isCustom ? custom : baseFilename + "_" + (i + 1);
+            String name = isCustom ? custom : defaultName(namePattern, baseFilename, i + 1);
             String unique = name;
             if (used.contains(key(name)) || (!isCustom && claimedByUser.contains(key(name)))) {
                 int suffix = 2;
@@ -115,6 +121,20 @@ final class SplitOutputNames {
                             stripped.substring(0, stripped.length() - PDF_EXTENSION.length()));
         }
         return stripped;
+    }
+
+    private static String defaultName(String namePattern, String baseFilename, int number) {
+        if (namePattern != null && !namePattern.isBlank()) {
+            String numbered =
+                    namePattern.contains(NUMBER_TOKEN)
+                            ? namePattern.replace(NUMBER_TOKEN, String.valueOf(number))
+                            : namePattern.strip() + " " + number;
+            String name = sanitize(numbered);
+            if (!name.isEmpty()) {
+                return name;
+            }
+        }
+        return baseFilename + "_" + number;
     }
 
     private static List<String> parseLines(String outputNames) {
