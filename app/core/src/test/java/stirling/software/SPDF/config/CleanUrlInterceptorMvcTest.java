@@ -78,4 +78,13 @@ class CleanUrlInterceptorMvcTest {
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl(path + "?"));
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/login?all", "/login?all=", "/login?all=1", "/login?all=true"})
+    void servesLoginShowAllWithoutRedirect(String url) throws Exception {
+        mvc.perform(get(url))
+                .andExpect(status().isOk())
+                .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().string(SPA_HTML));
+    }
 }
