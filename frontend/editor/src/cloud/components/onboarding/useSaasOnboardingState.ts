@@ -10,7 +10,10 @@ import {
   type SlideId,
 } from "@app/components/onboarding/saasOnboardingFlowConfig";
 import { resolveSaasFlow } from "@app/components/onboarding/saasFlowResolver";
-import { DOWNLOAD_URLS } from "@app/constants/downloads";
+import {
+  DESKTOP_DOWNLOAD_OPTIONS,
+  desktopDownloadForOs,
+} from "@app/components/onboarding/desktopDownloadOptions";
 import { openExternal } from "@app/platform/openExternal";
 
 interface UseSaasOnboardingStateResult {
@@ -55,29 +58,8 @@ export function useSaasOnboardingState({
     }
   }, [opened]);
 
-  // Determine OS details for desktop download
-  const os = useMemo(() => {
-    switch (osType) {
-      case "windows":
-        return { label: "Windows", url: DOWNLOAD_URLS.WINDOWS };
-      case "mac":
-        return { label: "Mac", url: DOWNLOAD_URLS.MAC };
-      case "linux-x64":
-      case "linux-arm64":
-        return { label: "Linux", url: DOWNLOAD_URLS.LINUX_DOCS };
-      default:
-        return { label: "", url: "" };
-    }
-  }, [osType]);
-
-  const osOptions = useMemo(() => {
-    const options = [
-      { label: "Windows", url: DOWNLOAD_URLS.WINDOWS, value: "windows" },
-      { label: "Mac", url: DOWNLOAD_URLS.MAC, value: "mac" },
-      { label: "Linux", url: DOWNLOAD_URLS.LINUX_DOCS, value: "linux" },
-    ];
-    return options.filter((opt) => opt.url);
-  }, []);
+  const os = useMemo(() => desktopDownloadForOs(osType), [osType]);
+  const osOptions = DESKTOP_DOWNLOAD_OPTIONS;
 
   // Store selected download URL
   const handleDownloadUrlChange = useCallback((url: string) => {
