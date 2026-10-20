@@ -113,8 +113,23 @@ sourceSets {
         resources {
             srcDirs += ['../configs']
         }
+        if (gradle.ext.desktopBundle) {
+            java {
+                exclude '**/config/SpringDocConfig.java'
+                exclude '**/config/OpenApiConfig.java'
+                exclude '**/config/GlobalErrorResponseCustomizer.java'
+            }
+        }
     }
     test {
+        if (gradle.ext.desktopBundle) {
+            java {
+                exclude '**/config/SpringDocConfigTest.java'
+                exclude '**/config/OpenApiConfigTest.java'
+                exclude '**/config/GlobalErrorResponseCustomizerTest.java'
+                exclude '**/config/ToolIOInputExtensionsTest.java'
+            }
+        }
     }
 
 }

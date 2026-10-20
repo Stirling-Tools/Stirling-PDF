@@ -28,7 +28,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
   );
   const { endpointStatus } = useMultipleEndpointsEnabled(endpoints);
   return useMemo(() => {
-    if (!localOnly) return catalog;
     const restrict = <T extends Record<string, ToolRegistryEntry>>(
       registry: T,
     ): T =>
@@ -48,11 +47,25 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           },
         ]),
       ) as T;
+    // Desktop bundles no springdoc, so the API link would open a 404 even
+    // against a self-hosted server. Remove it from every catalogue surface.
+    const withoutApiDocs = <T extends object>(registry: T): T =>
+      Object.fromEntries(
+        Object.entries(registry).filter(([id]) => id !== "devApi"),
+      ) as T;
+    const restricted = localOnly
+      ? {
+          allTools: restrict(catalog.allTools),
+          regularTools: restrict(catalog.regularTools),
+          superTools: restrict(catalog.superTools),
+          linkTools: catalog.linkTools,
+        }
+      : catalog;
     return {
-      allTools: restrict(catalog.allTools),
-      regularTools: restrict(catalog.regularTools),
-      superTools: restrict(catalog.superTools),
-      linkTools: catalog.linkTools,
+      allTools: withoutApiDocs(restricted.allTools),
+      regularTools: withoutApiDocs(restricted.regularTools),
+      superTools: withoutApiDocs(restricted.superTools),
+      linkTools: withoutApiDocs(restricted.linkTools),
     };
   }, [catalog, endpointStatus, localOnly]);
 }

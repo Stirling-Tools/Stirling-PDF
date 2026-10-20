@@ -135,6 +135,7 @@ tasks:
     dir: ..
     env:
       DISABLE_ADDITIONAL_FEATURES: "true"
+      STIRLING_DESKTOP_BUNDLE: "true"
     cmds:
       - echo "Building bootJar with JPDFium natives for {{.JPDFIUM_PLATFORMS}}"
       - cmd: cmd /c gradlew.bat bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}

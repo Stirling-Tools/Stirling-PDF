@@ -21,7 +21,14 @@ dependencies {
     api 'com.github.junrar:junrar:8.0.0' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:3.1.1'
-    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
+    if (gradle.ext.desktopBundle) {
+        // Request models still carry @Schema annotations, but the desktop build
+        // does not publish or serve an OpenAPI document.
+        api 'io.swagger.core.v3:swagger-annotations-jakarta:2.2.53'
+        api 'org.springframework.boot:spring-boot-starter-validation'
+    } else {
+        api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
+    }
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
     api 'org.simplejavamail:simple-java-mail:9.3.5'
     // MSG file support; exclude commons-math3 (only HSSF/formula needs it, MSG parsing doesn't)
@@ -91,4 +98,8 @@ dependencies {
 
     // ArchUnit: enforces module dependency direction (see ArchitectureTest)
     testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+}
+
+if (gradle.ext.desktopBundle) {
+    sourceSets.main.java.exclude '**/config/swagger/ToolIOOperationCustomizer.java'
 }

@@ -13,6 +13,11 @@ bootRun {
 }
 dependencies {
     implementation project(':common')
+    if (gradle.ext.desktopBundle) {
+        // The desktop runtime omits springdoc, but this module still compiles
+        // in the desktop build graph for the shared source set.
+        compileOnly "org.springdoc:springdoc-openapi-starter-common:3.0.3"
+    }
     api "com.google.guava:guava:${guavaVersion}"
 
     api 'org.springframework:spring-jdbc'

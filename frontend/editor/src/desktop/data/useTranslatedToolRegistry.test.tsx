@@ -17,10 +17,15 @@ vi.mock("@core/data/useTranslatedToolRegistry", () => {
     convert: { name: "Convert", endpoints: ["pdf-to-img", "pdf-to-word"] },
   };
   const catalog = {
-    allTools: tools,
+    allTools: {
+      ...tools,
+      devApi: { name: "API", link: "/swagger-ui/index.html" },
+    },
     regularTools: tools,
     superTools: {},
-    linkTools: {},
+    linkTools: {
+      devApi: { name: "API", link: "/swagger-ui/index.html" },
+    },
   };
   return { useTranslatedToolCatalog: () => catalog };
 });
@@ -58,4 +63,11 @@ test("catalogue and search hide unavailable tools but keep conversions with a lo
       ({ item }) => item[0],
     ),
   ).toContain("ocr");
+});
+
+test("removes the API docs link because desktop bundles no springdoc", () => {
+  state.localOnly = false;
+  const { result } = renderHook(useTranslatedToolCatalog);
+  expect(result.current.linkTools).not.toHaveProperty("devApi");
+  expect(result.current.allTools).not.toHaveProperty("devApi");
 });

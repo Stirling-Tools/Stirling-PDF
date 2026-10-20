@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.ApiEndpoint;
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.common.model.tool.ToolIOSource;
 import stirling.software.common.service.UserServiceInterface;
 
 import tools.jackson.databind.JsonNode;
@@ -34,20 +35,43 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 public class ApiDocService {
 
+    private static final boolean OPENAPI_PRESENT =
+            isClassPresent("org.springdoc.core.customizers.GlobalOpenApiCustomizer");
+
     private final Map<String, ApiEndpoint> apiDocumentation = new HashMap<>();
 
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
+    private final ToolIOSource toolIOSource;
     private final ObjectMapper objectMapper;
     JsonNode apiDocsJsonRootNode;
 
+    @Autowired
     public ApiDocService(
             ObjectMapper objectMapper,
             ServletContext servletContext,
-            @Autowired(required = false) UserServiceInterface userService) {
+            @Autowired(required = false) UserServiceInterface userService,
+            @Autowired(required = false) ToolIOSource toolIOSource) {
         this.objectMapper = objectMapper;
         this.servletContext = servletContext;
         this.userService = userService;
+        this.toolIOSource = toolIOSource;
+    }
+
+    ApiDocService(
+            ObjectMapper objectMapper,
+            ServletContext servletContext,
+            UserServiceInterface userService) {
+        this(objectMapper, servletContext, userService, null);
+    }
+
+    private static boolean isClassPresent(String name) {
+        try {
+            Class.forName(name, false, ApiDocService.class.getClassLoader());
+            return true;
+        } catch (ClassNotFoundException | LinkageError e) {
+            return false;
+        }
     }
 
     private String getApiDocsUrl() {
@@ -63,6 +87,9 @@ public class ApiDocService {
 
     // @EventListener(ApplicationReadyEvent.class)
     private synchronized void loadApiDocumentation() {
+        if (!OPENAPI_PRESENT) {
+            return;
+        }
         String apiDocsJson = "";
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -97,6 +124,11 @@ public class ApiDocService {
     public boolean isValidOperation(String operationName, Map<String, Object> parameters) {
         if (apiDocumentation.isEmpty()) {
             loadApiDocumentation();
+        }
+        if (apiDocumentation.isEmpty()) {
+            // Desktop builds omit springdoc. The @ToolIO registry still tells
+            // us the operation exists; required parameters fail at the endpoint.
+            return toolIOSource != null && toolIOSource.find(operationName).isPresent();
         }
         if (!apiDocumentation.containsKey(operationName)) {
             return false;
