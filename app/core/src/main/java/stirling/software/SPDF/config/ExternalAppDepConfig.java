@@ -5,7 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
@@ -18,6 +21,7 @@ import jakarta.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.util.RegexPatternUtils;
 
@@ -31,6 +35,8 @@ import stirling.software.common.util.RegexPatternUtils;
 public class ExternalAppDepConfig {
 
     private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration CACHE_TTL = Duration.ofHours(24);
+    private static final String CACHE_FILE = "dependency-check.properties";
     private static final Pattern VERSION_PATTERN = Pattern.compile("(\\d+(?:\\.\\d+){0,2})");
 
     private final EndpointConfiguration endpointConfiguration;
@@ -50,6 +56,10 @@ public class ExternalAppDepConfig {
      * accidental mutations.
      */
     private final Map<String, List<String>> commandToGroupMapping;
+
+    private final Set<String> dependencyDisabledGroups = new HashSet<>();
+    private final boolean cacheEnabled =
+            "true".equalsIgnoreCase(System.getProperty("STIRLING_PDF_TAURI_MODE"));
 
     private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -86,6 +96,14 @@ public class ExternalAppDepConfig {
     @PostConstruct
     public void checkDependencies() {
         try {
+            if (restoreCachedDependencyState()) {
+                dependenciesChecked = true;
+                log.info(
+                        "Using cached dependency status ({} disabled groups, {} old)",
+                        dependencyDisabledGroups.size(),
+                        CACHE_TTL);
+                return;
+            }
             // core checks in parallel
             List<Callable<Void>> tasks =
                     commandToGroupMapping.keySet().stream()
@@ -102,10 +120,86 @@ public class ExternalAppDepConfig {
             checkPythonAndOpenCV();
 
             dependenciesChecked = true;
+            saveCachedDependencyState();
         } finally {
             endpointConfiguration.logDisabledEndpointsSummary();
             pool.shutdown();
         }
+    }
+
+    private void disableDependencyGroup(String group) {
+        dependencyDisabledGroups.add(group);
+        endpointConfiguration.disableGroup(group, EndpointConfiguration.DisableReason.DEPENDENCY);
+    }
+
+    private boolean restoreCachedDependencyState() {
+        if (!cacheEnabled) {
+            return false;
+        }
+        Path cache = cachePath();
+        if (!Files.isRegularFile(cache)) {
+            return false;
+        }
+        try {
+            Properties props = new Properties();
+            try (var in = Files.newInputStream(cache)) {
+                props.load(in);
+            }
+            long savedAt = Long.parseLong(props.getProperty("savedAt", "0"));
+            if (Instant.now().toEpochMilli() - savedAt > CACHE_TTL.toMillis()
+                    || !pathKey().equals(props.getProperty("pathKey", ""))) {
+                return false;
+            }
+            String groups = props.getProperty("disabledGroups", "");
+            for (String group : groups.split("\\|")) {
+                if (!group.isBlank()) {
+                    disableDependencyGroup(group);
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            log.debug("Could not read dependency cache {}: {}", cache, e.getMessage());
+            return false;
+        }
+    }
+
+    private void saveCachedDependencyState() {
+        if (!cacheEnabled) {
+            return;
+        }
+        try {
+            Path cache = cachePath();
+            Files.createDirectories(cache.getParent());
+            Properties props = new Properties();
+            props.setProperty("savedAt", Long.toString(Instant.now().toEpochMilli()));
+            props.setProperty("pathKey", pathKey());
+            props.setProperty("disabledGroups", String.join("|", dependencyDisabledGroups));
+            try (var out = Files.newOutputStream(cache)) {
+                props.store(out, "Stirling PDF dependency probe cache");
+            }
+        } catch (Exception e) {
+            log.debug("Could not write dependency cache: {}", e.getMessage());
+        }
+    }
+
+    private Path cachePath() {
+        return Path.of(InstallationPathConfig.getConfigPath(), CACHE_FILE);
+    }
+
+    private String pathKey() {
+        return System.getProperty("os.name", "")
+                + "|"
+                + System.getenv().getOrDefault("PATH", "")
+                + "|"
+                + weasyprintPath
+                + "|"
+                + unoconvPath
+                + "|"
+                + calibrePath
+                + "|"
+                + ocrMyPdfPath
+                + "|"
+                + sOfficePath;
     }
 
     private void checkDependencyAndDisableGroup(String command) {
@@ -117,8 +211,7 @@ public class ExternalAppDepConfig {
 
             for (String group : affectedGroups) {
                 List<String> affectedFeatures = getAffectedFeatures(group);
-                endpointConfiguration.disableGroup(
-                        group, EndpointConfiguration.DisableReason.DEPENDENCY);
+                disableDependencyGroup(group);
                 log.warn(
                         "Missing dependency: {} - Disabling group: {} (Affected features: {})",
                         command,
@@ -143,8 +236,7 @@ public class ExternalAppDepConfig {
                                     commandToGroupMapping.getOrDefault(
                                             command, List.of("Weasyprint"));
                             for (String group : affectedGroups) {
-                                endpointConfiguration.disableGroup(
-                                        group, EndpointConfiguration.DisableReason.DEPENDENCY);
+                                disableDependencyGroup(group);
                             }
                             log.warn(
                                     "WeasyPrint version {} is below required {} - disabling"
@@ -173,8 +265,7 @@ public class ExternalAppDepConfig {
                             List<String> affectedGroups =
                                     commandToGroupMapping.getOrDefault(command, List.of("qpdf"));
                             for (String group : affectedGroups) {
-                                endpointConfiguration.disableGroup(
-                                        group, EndpointConfiguration.DisableReason.DEPENDENCY);
+                                disableDependencyGroup(group);
                             }
                             log.warn(
                                     "qpdf version {} is below required {} - disabling group(s): {}",
@@ -228,8 +319,7 @@ public class ExternalAppDepConfig {
         int ec = runAndWait(List.of(python, "-c", "import cv2"), DEFAULT_TIMEOUT).exitCode();
         if (ec != 0) {
             List<String> openCVFeatures = getAffectedFeatures("OpenCV");
-            endpointConfiguration.disableGroup(
-                    "OpenCV", EndpointConfiguration.DisableReason.DEPENDENCY);
+            disableDependencyGroup("OpenCV");
             log.warn(
                     "OpenCV not available in Python - Disabling OpenCV features: {}",
                     String.join(", ", openCVFeatures));
@@ -239,10 +329,8 @@ public class ExternalAppDepConfig {
     private void disablePythonAndOpenCV(String reason) {
         List<String> pythonFeatures = getAffectedFeatures("Python");
         List<String> openCVFeatures = getAffectedFeatures("OpenCV");
-        endpointConfiguration.disableGroup(
-                "Python", EndpointConfiguration.DisableReason.DEPENDENCY);
-        endpointConfiguration.disableGroup(
-                "OpenCV", EndpointConfiguration.DisableReason.DEPENDENCY);
+        disableDependencyGroup("Python");
+        disableDependencyGroup("OpenCV");
         log.warn(
                 "Missing dependency: Python (reason: {}) - Disabling Python features: {} and OpenCV"
                         + " features: {}",
