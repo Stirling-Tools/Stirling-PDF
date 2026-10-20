@@ -3624,7 +3624,6 @@ tooltip = "Pick colour from screen"
 hue = "Hue"
 saturation = "Saturation and brightness"
 title = "Choose colour"
-transparent = "Transparent"
 
 [common]
 actions = "Actions"
