@@ -14,6 +14,7 @@ import { StirlingFile } from "@editor/types/fileContext";
 import { useAllFiles } from "@editor/contexts/FileContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
+import { ToolScopeSwitch } from "@editor/components/tools/shared/ToolScopeSwitch";
 
 export interface ScopedOperationButtonProps extends OperationButtonProps {
   selectedFiles: StirlingFile[];
@@ -87,6 +88,9 @@ export function ScopedOperationButton({
 
   return (
     <>
+      {!disableScopeHints && !disabledForViewerMode && (
+        <ToolScopeSwitch disabled={props.isLoading} />
+      )}
       {isFilesHydrating ? (
         <Box mx="md" mt="md">
           <Button
