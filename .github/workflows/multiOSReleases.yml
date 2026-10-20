@@ -242,20 +242,44 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-tauri-releases-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
 
-      # x86_64 JDK is set up first so the aarch64 step below can leave its
-      # JAVA_HOME as the active one. The macOS universal JRE build needs
-      # jmods from both arches; the x64 path is captured into the env
-      # before the second local JDK setup overwrites JAVA_HOME.
-      - name: Set up x86_64 JDK 25 (macOS universal JRE)
+      # Temurin publishes no macOS x64 build of JDK 27, and actions/setup-java
+      # cannot resolve 27 for these runners. Fetch both Corretto 27 slices for
+      # the universal JRE; Gradle keeps running on the preinstalled JDK 25.
+      - name: Download JDK 27 slices (macOS universal JRE)
         if: matrix.platform == 'macos-15'
-        uses: ./.github/actions/java
-        with:
-          java-version: "25"
-          architecture: "x64"
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/corretto-27"
+          base="https://corretto.aws/downloads/resources/27.0.0.35.1"
+          fetch() {
+            archive="$root/$1.tar.gz"
+            mkdir -p "$root/$1"
+            if [ ! -f "$archive" ]; then
+              curl -fsSL --retry 3 --retry-delay 2 -o "$archive" \
+                "$base/amazon-corretto-27.0.0.35.1-macosx-$1.tar.gz"
+            fi
+            echo "$2  $archive" | shasum -a 256 -c -
+            tar -xzf "$archive" -C "$root/$1"
+          }
+          fetch x64 8c99bcf76f7cc438893f20e28bac84313d1042074c4aab43271b2da280dc447e
+          fetch aarch64 73b4533b4ec684c67cfb87336bf1ecf0e145431350a71001f00396b0606ae202
+          echo "X64_JAVA_HOME=$root/x64/amazon-corretto-27.jdk/Contents/Home" >> "$GITHUB_ENV"
+          echo "JDK27_JAVA_HOME=$root/aarch64/amazon-corretto-27.jdk/Contents/Home" >> "$GITHUB_ENV"
+          echo "JLINK_JAVA_HOME=$root/aarch64/amazon-corretto-27.jdk/Contents/Home" >> "$GITHUB_ENV"
 
-      - name: Capture x86_64 JAVA_HOME
-        if: matrix.platform == 'macos-15'
-        run: echo "X64_JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+      - name: Set up JDK 27 for jlink
+        id: jdk27
+        if: matrix.platform != 'macos-15' && matrix.platform != 'windows-11-arm'
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: "temurin"
+          java-version: "27"
+
+      - name: Capture JDK 27 for jlink
+        if: matrix.platform != 'macos-15' && matrix.platform != 'windows-11-arm'
+        run: |
+          echo "JDK27_JAVA_HOME=${{ steps.jdk27.outputs.java-home }}" >> "$GITHUB_ENV"
+          echo "JLINK_JAVA_HOME=${{ steps.jdk27.outputs.java-home }}" >> "$GITHUB_ENV"
 
       - name: Set up JDK 25
         if: matrix.platform != 'windows-11-arm'
@@ -263,7 +287,8 @@ jobs:
         with:
           java-version: "25"
 
-      # Windows ARM64 runners have no preinstalled JDK 25; Microsoft provides an ARM64 build.
+      # Windows ARM64 runners have no preinstalled JDK 27; Microsoft provides an ARM64 build.
+      # No Temurin 27 ARM64 Windows build yet; this target keeps the Microsoft 25 JRE.
       - name: Set up JDK 25 (Windows ARM64)
         if: matrix.platform == 'windows-11-arm'
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -280,7 +305,7 @@ jobs:
       - name: Build universal macOS JRE
         if: matrix.platform == 'macos-15'
         env:
-          AARCH64_JAVA_HOME: ${{ env.JAVA_HOME }}
+          AARCH64_JAVA_HOME: ${{ env.JDK27_JAVA_HOME }}
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
         run: task desktop:jlink:universal-mac
 
@@ -291,6 +316,7 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
+          JEMALLOC_UNIVERSAL: ${{ matrix.platform == 'macos-15' && '1' || '0' }}
         run: task desktop:prepare
 
       # DigiCert KeyLocker Setup (Cloud HSM)
@@ -387,6 +413,20 @@ jobs:
           echo "Certificate ID: $CERT_ID"
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported successfully."
+
+      # Notarization rejects unsigned Mach-O files, and the preload target lives
+      # outside the paths Tauri signs. Sign it before the bundle is notarized.
+      - name: Sign bundled jemalloc
+        if: matrix.platform == 'macos-15' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release')
+        run: |
+          codesign --force --options runtime --timestamp \
+            --sign "$APPLE_SIGNING_IDENTITY" \
+            frontend/editor/src-tauri/vendor/jemalloc/libjemalloc.dylib
+          codesign --verify --strict frontend/editor/src-tauri/vendor/jemalloc/libjemalloc.dylib
+
+      - name: Sign bundled JRE dylibs
+        if: matrix.platform == 'macos-15' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release')
+        run: frontend/editor/scripts/strip-jre-natives.sh frontend/editor/src-tauri/runtime/jre
 
       # Pre-flight: verify smctl can talk to DigiCert and sync cert before we sign.
       # Mirrors the setup from working public Tauri+KeyLocker repos (Labric, Meetily).
