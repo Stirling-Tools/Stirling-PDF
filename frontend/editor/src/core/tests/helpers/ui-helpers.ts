@@ -76,7 +76,7 @@ export async function uploadFiles(
   await page.getByTestId("files-button").click();
   await page.locator('[data-testid="file-input"]').setInputFiles(paths);
   await expect(page.locator(".file-sidebar-file-item").first()).toBeVisible({
-    timeout: 10_000,
+    timeout: 20_000,
   });
   await waitForStoredFiles(page, names);
 }

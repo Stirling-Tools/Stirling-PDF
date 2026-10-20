@@ -1,6 +1,10 @@
 import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 
+// Opens /editor directly; skip the fixture's own boot so the test is not
+// racing the requests from a replaced navigation.
+test.use({ autoGoto: false });
+
 const FIXTURES = path.join(import.meta.dirname, "../test-fixtures");
 const MULTIPAGE_PDF = path.join(FIXTURES, "annotations_out_of_order.pdf");
 

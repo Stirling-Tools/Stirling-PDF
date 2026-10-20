@@ -5,6 +5,10 @@ import {
 } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import path from "path";
 
+// The tests navigate themselves; skip the fixture's /editor boot so WebKit
+// does not report the replaced navigation's aborted requests as page errors.
+test.use({ autoGoto: false });
+
 // Regression for the CropBox/rotation positioning bug (root-caused on
 // spirit-sx-user-guide.pdf, which is NEVER committed).
 

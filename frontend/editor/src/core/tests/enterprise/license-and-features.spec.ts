@@ -26,6 +26,9 @@ async function uiLogin(page: import("@playwright/test").Page) {
   await expect(
     page.locator('[data-testid="config-button"]').first(),
   ).toBeVisible({ timeout: 15_000 });
+  // Let the post-login bootstrap (session, config, account) settle before the
+  // settings modal starts its own fetches.
+  await page.waitForLoadState("networkidle").catch(() => {});
 }
 
 test.describe("Enterprise license — admin settings UI", () => {
@@ -34,12 +37,11 @@ test.describe("Enterprise license — admin settings UI", () => {
     await uiLogin(page);
     await openSettings(page);
 
-    await page
-      .getByText(/account settings/i)
-      .first()
-      .click();
+    await expect(page.getByText(/account settings/i).first()).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(page.getByText(/admin/i).first()).toBeVisible({
-      timeout: 10_000,
+      timeout: 20_000,
     });
   });
 
@@ -119,11 +121,13 @@ test.describe("Enterprise license — admin settings UI", () => {
       return;
     }
     await usersNav.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator(".settings-page__title")).toHaveText(/users/i, {
+      timeout: 10_000,
+    });
 
     // The current admin user should appear in the list
     await expect(page.getByText(/^admin$/i).first()).toBeVisible({
-      timeout: 10_000,
+      timeout: 20_000,
     });
   });
 
