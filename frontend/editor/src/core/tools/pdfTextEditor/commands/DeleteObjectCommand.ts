@@ -7,6 +7,10 @@ import {
   collectMemberPtrs,
   removeMemberPtrs,
 } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  renderScanEdit,
+  scanEditOf,
+} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
 
 /** Remove a run from the page model and from PDFium. */
 interface CapturedPtr {
@@ -23,6 +27,8 @@ export class DeleteObjectCommand implements Command {
   private cachedPtrs: CapturedPtr[];
   /** The live run instance, re-attached on revert to keep all fields intact. */
   private removedRun: TextRun | null = null;
+  /** Set when the run was scanned text: deleting it covers the scan. */
+  private scanText: string | null = null;
 
   constructor(opts: { pageIndex: number; runId: string }) {
     this.pageIndex = opts.pageIndex;
@@ -35,6 +41,15 @@ export class DeleteObjectCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    const scan = scanEditOf(doc, run);
+    if (scan) {
+      // The words are pixels in the scan; only covering them removes them.
+      this.scanText ??= run.text;
+      this.removedRun = run;
+      renderScanEdit(doc, page, run, scan, "");
+      page.setRuns(page.runs.filter((r) => r.id !== run.id));
+      return;
+    }
     if (this.snapshot === null) {
       this.snapshot = run.snapshot();
       this.removedRun = run;
@@ -64,6 +79,13 @@ export class DeleteObjectCommand implements Command {
   }
 
   revert(doc: EditorDocument): void {
+    if (this.scanText !== null && this.removedRun?.scanEdit) {
+      const page = doc.page(this.pageIndex);
+      const run = this.removedRun;
+      if (!page.findRun(run.id)) page.setRuns([...page.runs, run]);
+      renderScanEdit(doc, page, run, run.scanEdit!, this.scanText);
+      return;
+    }
     if (!this.removedRun || this.cachedPtrs.length === 0) return;
     const page = doc.page(this.pageIndex);
     const m = doc.module;

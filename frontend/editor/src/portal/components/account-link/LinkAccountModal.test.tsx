@@ -7,6 +7,8 @@ import {
   type LinkModalMode,
 } from "@app/portal/contexts/UIContext";
 import { PortalTestProviders } from "@app/portal/test/TestQueryProvider";
+import { HttpError } from "@app/portal/api/http";
+import { readPendingConnect } from "@app/portal/auth/pendingConnect";
 
 /** The step machine: what drives each step, and what must not skip or repeat one. */
 const { startConnect, startReauth, fetchWallet, EMAIL } = vi.hoisted(() => ({
@@ -95,10 +97,11 @@ const CONNECT = /Connect Stirling account/;
 function renderModal(
   mode?: LinkModalMode,
   outcome: ConnectOutcome | null = null,
+  entry = "/processor/usage",
 ) {
   return render(
     <PortalTestProviders>
-      <MemoryRouter initialEntries={["/processor/usage"]}>
+      <MemoryRouter initialEntries={[entry]}>
         <UIProvider>
           <LinkAccountModal
             open
@@ -301,6 +304,15 @@ describe("LinkAccountModal", () => {
     ).toBeNull();
   });
 
+  it("retains the Enterprise request when leaving for account approval", async () => {
+    const entry = "/settings/billing?source=sales&procurement=start";
+    renderModal("link", null, entry);
+    click(CONNECT);
+
+    await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+    expect(readPendingConnect()?.returnTo).toBe(entry);
+  });
+
   it("hands over on the first click, showing the ghost while it goes", async () => {
     renderModal();
     click(CONNECT);
@@ -368,6 +380,24 @@ describe("LinkAccountModal", () => {
     expect(await screen.findByText(/outbound network access/)).toBeTruthy();
     expect(screen.getByText(BENEFITS)).toBeTruthy();
     expect(filledSteps()).toBe(1);
+  });
+
+  it("explains a pending ownership transfer and allows linking after it is resolved", async () => {
+    startConnect.mockRejectedValueOnce(new HttpError(409, "Conflict", {}));
+
+    renderModal();
+    click(CONNECT);
+
+    expect(
+      await screen.findByText(/Settings → Users to finish or cancel/),
+    ).toBeTruthy();
+    expect(screen.queryByText(/outbound network access/)).toBeNull();
+    expect(assign).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem("stirling.portalConnect")).toBeNull();
+    expect(filledSteps()).toBe(1);
+
+    click(CONNECT);
+    await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
   });
 
   it.each(["link", "reauth"] as const)(

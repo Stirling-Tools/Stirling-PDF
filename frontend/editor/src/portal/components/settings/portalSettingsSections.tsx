@@ -41,7 +41,7 @@ const Billing = lazy(async () => {
   return { default: m.BillingSettingsSection };
 });
 
-/** The roster's own host: it reads the tier and nothing else (see PortalRosterHost). */
+/** The roster host loads cloud sign-in only when a handover requests it. */
 function rosterHosted(View: ComponentType) {
   return function HostedRosterSection() {
     return (

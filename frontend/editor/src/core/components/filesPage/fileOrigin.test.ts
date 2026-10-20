@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { isUnfiledLocalFile } from "@app/components/filesPage/fileOrigin";
 import type { StirlingFileStub } from "@app/types/fileContext";

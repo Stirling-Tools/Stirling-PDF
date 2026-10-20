@@ -384,7 +384,7 @@ export default function StampPreview({
           <PrivateContent>
             <img
               src={pageThumbnail}
-              alt="page preview"
+              alt={t("addStamp.pagePreviewAlt", "Page preview")}
               className={styles.pageThumbnail}
               draggable={false}
             />
@@ -420,7 +420,7 @@ export default function StampPreview({
           >
             <img
               src={imageMeta.url}
-              alt="stamp preview"
+              alt={t("addStamp.stampPreviewAlt", "Stamp preview")}
               className={styles.stampImage}
             />
             {itemHandles}
@@ -457,7 +457,10 @@ export default function StampPreview({
         )}
       </div>
       <div className={styles.previewDisclaimer}>
-        Preview is approximate. Final output may vary due to PDF font metrics.
+        {t(
+          "addPageNumbers.previewDisclaimer",
+          "Preview is approximate. Final output may vary due to PDF font metrics.",
+        )}
       </div>
     </div>
   );

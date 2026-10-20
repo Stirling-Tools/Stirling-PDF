@@ -65,7 +65,10 @@ export function PolicyPurviewConfig({
       >
         <Input
           value={parameters.labelName ?? ""}
-          placeholder="Confidential"
+          placeholder={t(
+            "portal.policies.config.purview.fields.labelNamePlaceholder",
+            "Confidential",
+          )}
           onChange={(e) => set("labelName", e.target.value)}
         />
       </FormField>

@@ -88,9 +88,13 @@
   display: none;
 }
 
+/* Centred rather than pinned to the corner: the 24px frame is wider than the
+   wrapper, and the page inside it is what has to line up. */
 .file-sidebar-file-icon {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 /* Checked state */

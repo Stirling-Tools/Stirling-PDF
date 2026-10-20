@@ -18,7 +18,10 @@ import {
   reportAccountLinkBlock,
   reportFreeTierExhausted,
 } from "@app/services/accountLinkBlock";
-import { createChildStub } from "@app/contexts/file/fileActions";
+import {
+  createChildStub,
+  generateProcessedFileMetadata,
+} from "@app/contexts/file/fileActions";
 import {
   createNewStirlingFileStub,
   createStirlingFile,
@@ -490,14 +493,31 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             );
           }
         }
+        // consumeFiles takes the stubs as final and never hydrates them, so
+        // without page metadata here the page editor waits on it forever.
+        const metadata = await Promise.all(
+          files.map((file) => generateProcessedFileMetadata(file)),
+        );
         const consumedIds: StirlingFileStub["id"][] = [];
         const stubs = files.map((file, i) => {
           const source = sourceForOutput[i];
+          const thumbnail = metadata[i]?.thumbnailUrl;
           if (source && outputsPerSource.get(source.id) === 1) {
             consumedIds.push(source.id);
-            return createChildStub(source, operation, file);
+            return createChildStub(
+              source,
+              operation,
+              file,
+              thumbnail,
+              metadata[i],
+            );
           }
-          return createNewStirlingFileStub(file);
+          return createNewStirlingFileStub(
+            file,
+            undefined,
+            thumbnail,
+            metadata[i],
+          );
         });
         const stirlingFiles = files.map((file, i) =>
           createStirlingFile(file, stubs[i].id),

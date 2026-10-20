@@ -393,13 +393,14 @@ describe("useNotificationActions", () => {
   it("says it cannot hand the document over rather than navigating to nothing", async () => {
     // Spied on the prototype: jsdom's storage is a proxy, so an own-property spy does not take.
     const setItem = vi
-      .spyOn(Storage.prototype, "setItem")
+      .spyOn(Object.getPrototypeOf(window.sessionStorage), "setItem")
       .mockImplementation(() => {
         throw new Error("denied");
       });
 
     const outcome = await registry(inProcessor).VIEW_FILE?.run(context());
 
+    expect(setItem).toHaveBeenCalledOnce();
     expect(outcome).toEqual({
       ok: false,
       message:

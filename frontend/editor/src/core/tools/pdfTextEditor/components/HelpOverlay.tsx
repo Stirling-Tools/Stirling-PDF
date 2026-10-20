@@ -43,10 +43,10 @@ export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
           ),
         },
         {
-          bindings: [mod("Drag", { shift: true })],
+          bindings: [{ code: "Drag" }, mod("Drag", { shift: true })],
           description: t(
             "pdfTextEditor.help.editing.marqueeDesc",
-            "Marquee multi-select",
+            "Drag on empty space to select several objects (Shift adds)",
           ),
         },
         {
@@ -78,7 +78,7 @@ export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
           ),
         },
         {
-          bindings: [{ code: "Delete" }],
+          bindings: [{ code: "Delete" }, { code: "Backspace" }],
           description: t(
             "pdfTextEditor.help.editing.deleteDesc",
             "Remove selected",

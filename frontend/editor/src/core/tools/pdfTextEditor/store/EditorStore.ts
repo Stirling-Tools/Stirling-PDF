@@ -20,10 +20,17 @@ import {
   resetPerCharBranchPtrs,
 } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
+import { AdoptTableCommand } from "@app/tools/pdfTextEditor/commands/AdoptTableCommand";
+import {
+  adoptedTableId,
+  adoptedTableModel,
+  overlaps,
+} from "@app/tools/pdfTextEditor/util/tableAdoption";
 import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
 import type {
   GroupingMode,
   PageSnapshot,
+  TableSnapshot,
   WidthMode,
 } from "@app/tools/pdfTextEditor/types";
 import { resetEmbeddedFaces } from "@app/tools/pdfTextEditor/util/embeddedFace";
@@ -43,7 +50,7 @@ function resetCharcodeCaches(): void {
   resetEmbeddedFaces();
 }
 
-export type InteractionMode = "select" | "addText";
+export type InteractionMode = "select" | "addText" | "addTable";
 
 export interface LoadProgress {
   /** Stage description shown in the loader: "Reading file", "Parsing PDF", "Loading page 3/60", etc. */
@@ -259,8 +266,11 @@ export class EditorStore {
         revision: live.revision,
         runs: live.runs.map((r) => r.snapshot()),
         images: live.images.map((img) => img.snapshot()),
+        shapes: live.shapes.map((shape) => shape.snapshot()),
         // Regrouping re-populates the page, which re-reads its annotations.
         annotations: live.annotations,
+        tables: [],
+        rules: live.rules,
       };
     });
     this.patch({ groupingMode: mode, pages, dirty: this.isDirty() });
@@ -269,6 +279,11 @@ export class EditorStore {
   /** Begin a load and return a token. */
   beginLoad(): number {
     return ++this.loadToken;
+  }
+
+  /** Identifies the latest document load, including workbench and password opens. */
+  get currentLoadToken(): number {
+    return this.loadToken;
   }
 
   isCurrentLoad(token: number): boolean {
@@ -298,6 +313,7 @@ export class EditorStore {
   }
 
   clearDocument(): void {
+    this.loadToken++;
     this.disposeDocumentIfAny();
     resetCharcodeCaches();
     this.history.clear();
@@ -322,6 +338,63 @@ export class EditorStore {
     this.savedTop = saved;
     this.bakedDirty = false;
     this.patch({ dirty: this.isDirty() });
+  }
+
+  // Promote a recognized table to an editable session table.
+  //
+  // Paragraph grouping merges a whole table column into one run, so the same
+  // run would back several cells and a structural edit would move it once per
+  // cell. Splitting those runs first is what gives every cell its own text -
+  // that part and its grid share an undo step. A grid needing no splits is
+  // session state and must not mark the file unsaved.
+  adoptTable(table: TableSnapshot): void {
+    if (!this.doc) return;
+    const page = this.doc.page(table.pageIndex);
+    if (!page) return;
+    const baseId = adoptedTableId(table);
+    const existing = page.tables.find(
+      (t) => t.adopted && overlaps(t.snapshot().bounds, table.bounds),
+    );
+    if (existing) {
+      existing.editing = true;
+      page.bumpRevision();
+      this.resnapshot();
+      return;
+    }
+
+    const merged = [...new Set(table.cells.flatMap((c) => c.runIds))].filter(
+      (id) => (page.findRun(id)?.paragraphMemberPtrs.length ?? 0) >= 2,
+    );
+    let id = baseId;
+    let suffix = 2;
+    while (page.tables.some((t) => t.id === id))
+      id = `${table.id}-${suffix++}-editable`;
+    if (merged.length > 0) {
+      this.dispatch(new AdoptTableCommand(table, id, merged));
+      return;
+    }
+    page.tables = [
+      ...page.tables,
+      adoptedTableModel(this.doc.module, page, {
+        ...table,
+        id,
+      }),
+    ];
+    page.bumpRevision();
+    this.resnapshot();
+  }
+
+  /** Drop an adopted grid; the text it wrapped is untouched. */
+  releaseTable(pageIndex: number, tableId: string): void {
+    if (!this.doc) return;
+    const page = this.doc.page(pageIndex);
+    if (!page) return;
+    if (!page.tables.some((t) => t.id === tableId)) return;
+    const model = page.tables.find((t) => t.id === tableId);
+    if (!model?.adopted) return;
+    model.editing = false;
+    page.bumpRevision();
+    this.resnapshot();
   }
 
   /** Apply a command via the history stack, re-snapshot, and notify. */
@@ -474,6 +547,8 @@ export class EditorStore {
       page.loaded = false;
       page.setRuns([]);
       page.setImages([]);
+      page.tables = [];
+      page.setShapes([]);
       PdfiumTextReader.populate(doc, page, mode);
     }
   }
@@ -501,6 +576,11 @@ export class EditorStore {
         revision: live.revision,
         runs: live.runs.map((r) => r.snapshot()),
         images: live.images.map((img) => img.snapshot()),
+        tables: live.tables
+          .filter((tbl) => tbl.editing)
+          .map((tbl) => tbl.snapshot()),
+        rules: live.rules,
+        shapes: live.shapes.map((shape) => shape.snapshot()),
       };
     });
     if (!changed) return;
@@ -548,6 +628,7 @@ export class EditorStore {
   }
 
   dispose(): void {
+    this.loadToken++;
     this.disposeDocumentIfAny();
     this.listeners.clear();
   }

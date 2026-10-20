@@ -50,6 +50,11 @@ export class AuthService {
   private authStatus: AuthStatus = "unauthenticated";
   private userInfo: UserInfo | null = null;
   private cachedToken: string | null = null;
+  private verifiedManagedSession: {
+    mode: "saas" | "selfhosted";
+    serverUrl: string;
+    token: string;
+  } | null = null;
   private lastTokenSaveTime: number = 0;
   private authListeners = new Set<
     (status: AuthStatus, userInfo: UserInfo | null) => void
@@ -157,6 +162,7 @@ export class AuthService {
    * Clear token from all storage locations
    */
   private async clearTokenEverywhere(): Promise<void> {
+    this.verifiedManagedSession = null;
     // Invalidate cache
     this.cachedToken = null;
 
@@ -231,6 +237,7 @@ export class AuthService {
   }
 
   private setAuthStatus(status: AuthStatus, userInfo: UserInfo | null = null) {
+    if (status === "unauthenticated") this.verifiedManagedSession = null;
     this.authStatus = status;
     this.userInfo = userInfo;
     this.notifyListeners();
@@ -330,6 +337,9 @@ export class AuthService {
     password: string,
     mfaCode?: string,
   ): Promise<UserInfo> {
+    if (serverUrl !== STIRLING_SAAS_URL) {
+      await connectionModeService.assertSelfHostedAllowed(serverUrl);
+    }
     try {
       // Validate SaaS configuration if connecting to SaaS
       if (serverUrl === STIRLING_SAAS_URL) {
@@ -626,6 +636,106 @@ export class AuthService {
     return token !== null;
   }
 
+  /** Managed access requires an unexpired session verified by the selected server, including its authenticated refresh responses. */
+  async hasManagedSession(): Promise<boolean> {
+    const config = await connectionModeService.getCurrentConfig();
+    if (
+      config.mode === "local" ||
+      (config.cloud_only && config.mode !== "saas")
+    )
+      return false;
+    const serverUrl =
+      config.mode === "saas" ? STIRLING_SAAS_URL : config.server_config?.url;
+    if (!serverUrl) return false;
+    let token = await this.getAuthToken();
+    if (!token) return false;
+    if (this.isTokenExpiringSoon(token, 0)) {
+      const refreshed =
+        config.mode === "saas"
+          ? await this.refreshSupabaseToken(serverUrl)
+          : await this.refreshToken(serverUrl);
+      if (!refreshed) return false;
+      token = await this.getAuthToken();
+    }
+    if (!token || this.isTokenExpiringSoon(token, 0)) return false;
+    if (
+      this.verifiedManagedSession?.mode === config.mode &&
+      this.verifiedManagedSession?.serverUrl === serverUrl &&
+      this.verifiedManagedSession.token === token
+    )
+      return true;
+    try {
+      const response = await axios.get(
+        config.mode === "saas"
+          ? `${serverUrl}/auth/v1/user`
+          : `${serverUrl.replace(/\/+$/, "")}/api/v1/auth/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            ...(config.mode === "saas" ? { apikey: SUPABASE_KEY } : {}),
+          },
+          timeout: 15000,
+        },
+      );
+      const user = response.data?.user ?? response.data;
+      const authenticated =
+        config.mode === "saas"
+          ? !!user?.id && user.is_anonymous !== true
+          : !!user?.username && user.username !== "anonymousUser";
+      if (
+        !authenticated ||
+        token !== (await this.getAuthToken()) ||
+        this.isTokenExpiringSoon(token, 0)
+      ) {
+        this.verifiedManagedSession = null;
+        return false;
+      }
+      this.verifiedManagedSession = { mode: config.mode, serverUrl, token };
+      return true;
+    } catch {
+      this.verifiedManagedSession = null;
+      return false;
+    }
+  }
+
+  private async saveRefreshedToken(
+    mode: "saas" | "selfhosted",
+    serverUrl: string,
+    previousToken: string | null,
+    token: string,
+    refreshToken?: string | null,
+  ): Promise<void> {
+    const verified = this.verifiedManagedSession;
+    await this.saveTokenEverywhere(token, refreshToken, false);
+    // Only an authenticated refresh of this verified session can extend offline access.
+    if (
+      verified &&
+      this.verifiedManagedSession === verified &&
+      verified.mode === mode &&
+      verified.serverUrl === serverUrl &&
+      verified.token === previousToken
+    ) {
+      this.verifiedManagedSession = { mode, serverUrl, token };
+    }
+  }
+
+  private async handleRefreshFailure(error: unknown): Promise<void> {
+    const token = await this.getAuthToken();
+    if (
+      axios.isAxiosError(error) &&
+      (!error.response ||
+        error.response.status >= 500 ||
+        error.response.status === 408 ||
+        error.response.status === 429) &&
+      token &&
+      !this.isTokenExpiringSoon(token, 0)
+    ) {
+      this.setAuthStatus("authenticated", this.userInfo);
+      return;
+    }
+    await this.logout();
+  }
+
   async getUserInfo(): Promise<UserInfo | null> {
     if (this.userInfo) {
       console.log(
@@ -778,7 +888,12 @@ export class AuthService {
       }
 
       // Save token to all storage locations
-      await this.saveTokenEverywhere(token, undefined, false);
+      await this.saveRefreshedToken(
+        "selfhosted",
+        serverUrl,
+        currentToken,
+        token,
+      );
 
       const userInfo = await this.getUserInfo();
       this.setAuthStatus("authenticated", userInfo);
@@ -787,10 +902,7 @@ export class AuthService {
       return true;
     } catch (error) {
       console.error("[Desktop AuthService] Token refresh failed:", error);
-      this.setAuthStatus("unauthenticated", null);
-
-      // Clear stored credentials on refresh failure
-      await this.logout();
+      await this.handleRefreshFailure(error);
 
       return false;
     }
@@ -818,6 +930,7 @@ export class AuthService {
   ): Promise<boolean> {
     try {
       console.log("[Desktop AuthService] Refreshing Supabase token");
+      const currentToken = await this.getAuthToken();
       this.setAuthStatus("refreshing", this.userInfo);
 
       const refreshToken = await this.getRefreshToken();
@@ -844,7 +957,13 @@ export class AuthService {
       const { access_token, refresh_token: newRefreshToken } = response.data;
 
       // Save new tokens
-      await this.saveTokenEverywhere(access_token, newRefreshToken, false);
+      await this.saveRefreshedToken(
+        "saas",
+        authServerUrl,
+        currentToken,
+        access_token,
+        newRefreshToken,
+      );
 
       const userInfo = await this.getUserInfo();
       this.setAuthStatus("authenticated", userInfo);
@@ -858,10 +977,7 @@ export class AuthService {
         "[Desktop AuthService] Supabase token refresh failed:",
         error,
       );
-      this.setAuthStatus("unauthenticated", null);
-
-      // Clear stored credentials on refresh failure
-      await this.logout();
+      await this.handleRefreshFailure(error);
 
       return false;
     }
@@ -1228,6 +1344,7 @@ export class AuthService {
     serverUrl: string,
     token: string,
   ): Promise<UserInfo> {
+    await connectionModeService.assertSelfHostedAllowed(serverUrl);
     const userInfo = await this.fetchSelfHostedUserInfo(serverUrl, token);
 
     await this.saveTokenEverywhere(token);

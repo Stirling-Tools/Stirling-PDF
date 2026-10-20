@@ -82,14 +82,14 @@ interface FormFieldPropertyEditorProps {
   allowTypeChange?: boolean;
 }
 
-const TYPE_LABEL: Record<string, string> = {
-  text: "Text",
-  checkbox: "Checkbox",
-  combobox: "Dropdown",
-  listbox: "List box",
-  radio: "Radio group",
-  button: "Button",
-  signature: "Signature",
+const TYPE_LABEL: Record<string, { key: string; fallback: string }> = {
+  text: { key: "formFill.fieldTypes.text", fallback: "Text" },
+  checkbox: { key: "formFill.fieldTypes.checkbox", fallback: "Checkbox" },
+  combobox: { key: "formFill.fieldTypes.combobox", fallback: "Dropdown" },
+  listbox: { key: "formFill.fieldTypes.listbox", fallback: "List box" },
+  radio: { key: "formFill.fieldTypes.radioGroup", fallback: "Radio group" },
+  button: { key: "formFill.fieldTypes.button", fallback: "Button" },
+  signature: { key: "formFill.fieldTypes.signature", fallback: "Signature" },
 };
 
 // Type-change is only safe between the "simple" single-widget types; retyping
@@ -132,6 +132,10 @@ export function FormFieldPropertyEditor({
   allowTypeChange = false,
 }: FormFieldPropertyEditorProps) {
   const { t } = useTranslation();
+  const typeLabel = (type: string): string | undefined => {
+    const entry = TYPE_LABEL[type];
+    return entry ? t(entry.key, entry.fallback) : undefined;
+  };
   const hasOptions =
     value.type === "combobox" ||
     value.type === "listbox" ||
@@ -234,10 +238,10 @@ export function FormFieldPropertyEditor({
           value={canRetype ? value.type : null}
           data={TYPE_CHANGE_OPTIONS.map((tp) => ({
             value: tp,
-            label: TYPE_LABEL[tp],
+            label: typeLabel(tp) ?? tp,
           }))}
           disabled={!canRetype}
-          placeholder={canRetype ? undefined : TYPE_LABEL[value.type]}
+          placeholder={canRetype ? undefined : typeLabel(value.type)}
           onChange={(v) => v && onChange({ type: v })}
           comboboxProps={{ withinPortal: true }}
         />

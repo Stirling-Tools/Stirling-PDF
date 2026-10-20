@@ -7,6 +7,7 @@ export interface AppConfig {
   languages?: string[];
   defaultLocale?: string;
   enableLogin?: boolean;
+  honorOwnerPasswords?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
   enableOAuth?: boolean;
@@ -14,6 +15,7 @@ export interface AppConfig {
   isAdmin?: boolean;
   shouldShowUpdate?: boolean;
   enableAlphaFunctionality?: boolean;
+  stirlingOfficeConversion?: boolean;
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;
   enableScarf?: boolean | null;

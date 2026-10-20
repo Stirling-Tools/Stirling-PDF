@@ -35,6 +35,7 @@ interface FilesModalOptions {
   insertAfterPage?: number;
   customHandler?: CustomFileHandler;
   maxSelectable?: number | null;
+  supportedFormats?: string[];
 }
 
 interface FilesModalContextType {
@@ -42,6 +43,8 @@ interface FilesModalContextType {
   openFilesModal: (options?: FilesModalOptions) => void;
   closeFilesModal: () => void;
   maxSelectable: number | null;
+  /** A caller's format restriction takes precedence over the currently selected tool. */
+  supportedFormats?: string[];
   /** Closes the picker before ingestion; rejects on import failure. */
   onFileUpload: (files: File[]) => Promise<void>;
   /** Imports readable selections before rejecting with unavailable filenames; leaves modal state unchanged. */
@@ -67,14 +70,15 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   const { actions } = useFileActions();
   const fileCtx = useFileContext();
   const { actions: navActions } = useNavigationActions();
-  const { workbench: currentWorkbench, selectedTool } = useNavigationState();
-  const isMultiTool =
-    currentWorkbench === "pageEditor" && selectedTool === "multiTool";
+  const { workbench: currentWorkbench } = useNavigationState();
+  // The page editor lays out every open file, so an added file belongs there.
+  const staysOnAdd = currentWorkbench === "pageEditor";
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
   const [customHandler, setCustomHandler] = useState<CustomFileHandler>();
   const [maxSelectable, setMaxSelectable] = useState<number | null>(null);
+  const [supportedFormats, setSupportedFormats] = useState<string[]>();
 
   const importBundleToWorkbench = useCallback(
     async (
@@ -215,6 +219,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
     setInsertAfterPage(options?.insertAfterPage);
     setCustomHandler(() => options?.customHandler);
     setMaxSelectable(options?.maxSelectable ?? null);
+    setSupportedFormats(options?.supportedFormats);
     setIsFilesModalOpen(true);
   }, []);
 
@@ -275,7 +280,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         reportUnavailable();
         return;
       }
-      if (uploads.length > 0) await addFiles(uploads);
+      const uploadedFiles = uploads.length > 0 ? await addFiles(uploads) : [];
 
       const localStubs: StirlingFileStub[] = [];
       const requestedIds: FileId[] = [];
@@ -284,7 +289,6 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
           const remote = await downloadRemoteFile(stub);
           if (!remote) {
             localStubs.push(stub);
-            requestedIds.push(stub.id);
             continue;
           }
           const importedIds = await importBundleToWorkbench(
@@ -305,12 +309,14 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       }
 
-      if (localStubs.length)
-        await actions.addStirlingFileStubs(localStubs, { selectFiles: false });
+      if (localStubs.length) {
+        const admitted = await actions.addStirlingFileStubs(localStubs, {
+          selectFiles: false,
+        });
+        requestedIds.push(...admitted.map((file) => file.fileId));
+      }
       // Adding an input must preserve a tool's existing selection.
-      const uploadedIds = uploads
-        .map((file) => fileCtx.findFileId(file))
-        .filter((id): id is FileId => Boolean(id));
+      const uploadedIds = uploadedFiles.map((file) => file.fileId);
       const currentSelected = fileCtx.selectors
         .getSelectedStirlingFileStubs()
         .map((s) => s.id);
@@ -320,8 +326,8 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         ),
       );
 
-      const totalAdded = requestedIds.length + uploads.length;
-      if (!isMultiTool && totalAdded > 0) {
+      const totalAdded = requestedIds.length + uploadedIds.length;
+      if (!staysOnAdd && totalAdded > 0) {
         navActions.setWorkbench(totalAdded === 1 ? "viewer" : "fileEditor");
       }
       reportUnavailable();
@@ -336,7 +342,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       downloadRemoteFile,
       importBundleToWorkbench,
       navActions,
-      isMultiTool,
+      staysOnAdd,
       t,
     ],
   );
@@ -364,6 +370,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       onModalClose,
       setOnModalClose: setModalCloseCallback,
       maxSelectable,
+      supportedFormats,
     }),
     [
       isFilesModalOpen,
@@ -375,6 +382,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       onModalClose,
       setModalCloseCallback,
       maxSelectable,
+      supportedFormats,
     ],
   );
 

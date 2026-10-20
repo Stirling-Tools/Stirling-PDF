@@ -288,7 +288,9 @@ export const BookmarkSidebar = ({
       .catch((error) => {
         if (cancelled) return;
         const message =
-          error instanceof Error ? error.message : "Failed to load bookmarks";
+          error instanceof Error
+            ? error.message
+            : t("viewer.bookmarks.loadFailed", "Failed to load bookmarks");
         const fallback = cacheRef.current.get(key);
         const entry = createEntry({
           status: "error",
@@ -447,7 +449,9 @@ export const BookmarkSidebar = ({
       setNewBookmarkTitle("");
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to save bookmark";
+        error instanceof Error
+          ? error.message
+          : t("viewer.bookmarks.saveFailed", "Failed to save bookmark");
       setAddBookmarkError(message);
     } finally {
       setIsSavingBookmark(false);
@@ -626,7 +630,11 @@ export const BookmarkSidebar = ({
                 variant="tertiary"
                 size="sm"
                 className="bookmark-item__expand-icon"
-                aria-label={isNodeExpanded ? "Collapse" : "Expand"}
+                aria-label={
+                  isNodeExpanded
+                    ? t("common.collapse", "Collapse")
+                    : t("common.expand", "Expand")
+                }
                 onClick={(event) => {
                   event.stopPropagation();
                   toggleNode(node.id);
@@ -642,11 +650,13 @@ export const BookmarkSidebar = ({
             )}
             <div className="bookmark-item__content">
               <Text size="sm" fw={500} className="bookmark-item__title">
-                {node.title || "Untitled"}
+                {node.title || t("viewer.bookmarks.untitled", "Untitled")}
               </Text>
               {pageNumber && (
                 <Text size="xs" c="dimmed" className="bookmark-item__page">
-                  Page {pageNumber}
+                  {t("viewer.bookmarks.pageNumber", "Page {{page}}", {
+                    page: pageNumber,
+                  })}
                 </Text>
               )}
             </div>
@@ -733,7 +743,10 @@ export const BookmarkSidebar = ({
       {bookmarkSupport && showNoDocument && (
         <div className="sidebar-base__empty-state">
           <Text size="sm" c="dimmed" ta="center">
-            Open a PDF to view its bookmarks.
+            {t(
+              "viewer.bookmarks.noDocument",
+              "Open a PDF to view its bookmarks.",
+            )}
           </Text>
         </div>
       )}
@@ -744,7 +757,7 @@ export const BookmarkSidebar = ({
             {currentError}
           </Text>
           <Button variant="secondary" size="sm" onClick={requestReload}>
-            Retry
+            {t("common.retry", "Retry")}
           </Button>
         </Stack>
       )}
@@ -759,7 +772,7 @@ export const BookmarkSidebar = ({
         >
           <Loader size="md" type="dots" />
           <Text size="sm" ta="center">
-            Loading bookmarks...
+            {t("viewer.bookmarks.loading", "Loading bookmarks...")}
           </Text>
         </Stack>
       )}
@@ -813,7 +826,7 @@ export const BookmarkSidebar = ({
             />
             <NumberInput
               size="xs"
-              label="Page"
+              label={t("viewer.bookmarks.pageLabel", "Page")}
               min={1}
               clampBehavior="strict"
               value={newBookmarkPage}
@@ -834,7 +847,7 @@ export const BookmarkSidebar = ({
                 onClick={handleCancelAddBookmark}
                 disabled={isSavingBookmark}
               >
-                Cancel
+                {t("common.cancel", "Cancel")}
               </Button>
               <Button
                 size="sm"
@@ -843,7 +856,7 @@ export const BookmarkSidebar = ({
                 loading={isSavingBookmark}
                 disabled={!newBookmarkTitle.trim()}
               >
-                Save
+                {t("common.save", "Save")}
               </Button>
             </Group>
           </Stack>
@@ -873,7 +886,10 @@ export const BookmarkSidebar = ({
       {showSearchEmpty && (
         <div className="sidebar-base__empty-state">
           <Text size="sm" c="dimmed" ta="center">
-            No bookmarks match your search
+            {t(
+              "viewer.bookmarks.noSearchResults",
+              "No bookmarks match your search",
+            )}
           </Text>
         </div>
       )}
@@ -908,7 +924,10 @@ export const BookmarkSidebar = ({
                 ta="center"
                 style={{ textDecoration: "underline" }}
               >
-                Need to reorder or nest? Open the Bookmark Editor
+                {t(
+                  "viewer.bookmarks.openEditor",
+                  "Need to reorder or nest? Open the Bookmark Editor",
+                )}
               </Text>
             </Group>
           </Button>

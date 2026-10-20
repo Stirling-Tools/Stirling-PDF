@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 

@@ -2,6 +2,7 @@ import { Icon } from "@app/ui/Icon";
 import type { ReactNode } from "react";
 import { Menu, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
@@ -52,6 +53,7 @@ export function NewFolderButton({
   onOpenDialog,
 }: NewFolderButtonProps): ReactNode {
   const { t } = useTranslation();
+  const localOnly = useLocalProcessingOnly();
   const iconOnly = trigger === "icon";
   const asRow = trigger === "row";
 
@@ -200,23 +202,25 @@ export function NewFolderButton({
           {localFolderLabel ??
             t("filesPage.newFolderMenu.addExisting", "Add local folder")}
         </Menu.Item>
-        <Menu.Item
-          className="files-page-new-folder-option"
-          leftSection={<Icon name="cloud" size={20} />}
-          disabled={Boolean(serverDisabledReason)}
-          onClick={() => onOpenDialog(currentFolderId, "server")}
-        >
-          {t("filesPage.newFolderMenu.server", "New folder on the server")}
-          {/* The reason is the caption: a disabled item with no explanation
+        {!localOnly && (
+          <Menu.Item
+            className="files-page-new-folder-option"
+            leftSection={<Icon name="cloud" size={20} />}
+            disabled={Boolean(serverDisabledReason)}
+            onClick={() => onOpenDialog(currentFolderId, "server")}
+          >
+            {t("filesPage.newFolderMenu.server", "New folder on the server")}
+            {/* The reason is the caption: a disabled item with no explanation
               reads as broken rather than unavailable. */}
-          <Text size="xs" c="dimmed">
-            {serverDisabledReason ??
-              t(
-                "filesPage.newFolderMenu.serverHint",
-                "Synced to your account, available wherever you sign in.",
-              )}
-          </Text>
-        </Menu.Item>
+            <Text size="xs" c="dimmed">
+              {serverDisabledReason ??
+                t(
+                  "filesPage.newFolderMenu.serverHint",
+                  "Synced to your account, available wherever you sign in.",
+                )}
+            </Text>
+          </Menu.Item>
+        )}
       </Menu.Dropdown>
     </Menu>
   );

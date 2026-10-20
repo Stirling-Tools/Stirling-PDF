@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, test } from "vitest";
 import type { TFunction } from "i18next";
 import { computeSignatureStatus } from "@app/hooks/tools/validateSignature/utils/signatureStatus";

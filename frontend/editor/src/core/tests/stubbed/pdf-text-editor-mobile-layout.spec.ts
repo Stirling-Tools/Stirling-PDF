@@ -1,5 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import fs from "fs";
 import path from "path";
 
@@ -33,6 +33,21 @@ async function openEditor(page: Page, fileName?: string): Promise<void> {
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
+}
+
+// Close the open sheet once it has finished sliding in, then wait for it to go.
+async function closeSheet(page: Page, content: Locator): Promise<void> {
+  const sheet = page
+    .locator(".mantine-Drawer-content")
+    .filter({ has: content });
+  await expect
+    .poll(() =>
+      sheet.evaluate((el) => el.getAnimations({ subtree: true }).length),
+    )
+    .toBe(0);
+  await sheet.locator(".mantine-Drawer-close").click();
+  // A sheet still sliding out swallows taps meant for the action bar.
+  await expect(content).toBeHidden();
 }
 
 test.describe("PDF text editor - phone layout", () => {
@@ -123,13 +138,13 @@ test.describe("PDF text editor - phone layout", () => {
 
     await page.getByTestId("pdf-editor-mobile-style").tap();
     await expect(page.getByTestId("pdf-editor-font-size")).toBeVisible();
-    await page.locator(".mantine-Drawer-close:visible").first().click();
+    await closeSheet(page, page.getByTestId("pdf-editor-font-size"));
 
     await page.getByTestId("pdf-editor-mobile-details").tap();
     await expect(
       page.getByTestId("pdf-editor-selection-inspector"),
     ).toBeVisible();
-    await page.locator(".mantine-Drawer-close:visible").first().click();
+    await closeSheet(page, page.getByTestId("pdf-editor-selection-inspector"));
 
     await page.getByTestId("pdf-editor-mobile-done").tap();
     await expect(bar).toHaveAttribute("data-context", "idle");

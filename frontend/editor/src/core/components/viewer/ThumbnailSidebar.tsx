@@ -180,7 +180,7 @@ export function ThumbnailSidebar({
                 lts={0.5}
                 style={{ flex: 1 }}
               >
-                Pages
+                {t("viewer.thumbnails.title", "Pages")}
               </Text>
             </div>
             <ActionIcon
@@ -252,7 +252,11 @@ export function ThumbnailSidebar({
                         <PrivateContent>
                           <img
                             src={thumbnails[pageIndex]}
-                            alt={`Page ${pageIndex + 1} thumbnail`}
+                            alt={t(
+                              "viewer.thumbnails.thumbnailAlt",
+                              "Page {{page}} thumbnail",
+                              { page: pageIndex + 1 },
+                            )}
                             style={{
                               maxWidth: "100%",
                               height: "auto",
@@ -277,7 +281,7 @@ export function ThumbnailSidebar({
                             fontSize: "12px",
                           }}
                         >
-                          Failed
+                          {t("viewer.thumbnails.failed", "Failed")}
                         </div>
                       ) : (
                         <div
@@ -294,7 +298,7 @@ export function ThumbnailSidebar({
                             fontSize: "12px",
                           }}
                         >
-                          Loading...
+                          {t("loading", "Loading...")}
                         </div>
                       )}
 
@@ -309,7 +313,9 @@ export function ThumbnailSidebar({
                               : "var(--c-text-subtle)",
                         }}
                       >
-                        Page {pageIndex + 1}
+                        {t("viewer.thumbnails.pageNumber", "Page {{page}}", {
+                          page: pageIndex + 1,
+                        })}
                       </div>
                     </Box>
                   ),

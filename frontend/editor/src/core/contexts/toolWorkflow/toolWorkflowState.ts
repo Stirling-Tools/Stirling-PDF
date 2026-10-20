@@ -1,4 +1,3 @@
-import { PageEditorFunctions } from "@app/types/pageEditor";
 import { type ToolPanelMode } from "@app/constants/toolPanel";
 import { preferencesService } from "@app/services/preferencesService";
 import { stripBasePath } from "@app/constants/app";
@@ -11,7 +10,6 @@ export interface ToolWorkflowState {
   toolPanelMode: ToolPanelMode;
 
   previewFile: File | null;
-  pageEditorFunctions: PageEditorFunctions | null;
 
   // Search State
   searchQuery: string;
@@ -26,7 +24,6 @@ export type ToolWorkflowAction =
   | { type: "SET_READER_MODE"; payload: boolean }
   | { type: "SET_TOOL_PANEL_MODE"; payload: ToolPanelMode }
   | { type: "SET_PREVIEW_FILE"; payload: File | null }
-  | { type: "SET_PAGE_EDITOR_FUNCTIONS"; payload: PageEditorFunctions | null }
   | { type: "SET_SEARCH_QUERY"; payload: string }
   | { type: "RESET_UI_STATE" };
 
@@ -34,7 +31,6 @@ export const baseState: Omit<ToolWorkflowState, "toolPanelMode"> = {
   leftPanelView: "toolPicker",
   readerMode: false,
   previewFile: null,
-  pageEditorFunctions: null,
   searchQuery: "",
 };
 
@@ -67,8 +63,6 @@ export function toolWorkflowReducer(
       return { ...state, toolPanelMode: action.payload };
     case "SET_PREVIEW_FILE":
       return { ...state, previewFile: action.payload };
-    case "SET_PAGE_EDITOR_FUNCTIONS":
-      return { ...state, pageEditorFunctions: action.payload };
     case "SET_SEARCH_QUERY":
       return { ...state, searchQuery: action.payload };
     case "RESET_UI_STATE":

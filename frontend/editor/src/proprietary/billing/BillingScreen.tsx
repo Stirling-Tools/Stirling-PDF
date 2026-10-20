@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "@app/ui";
 import {
   ComparePlansModal,
   type ComparePlan,
 } from "@app/billing/ComparePlansModal";
-import { formatMinor } from "@app/billing/format";
+import { formatMinor, formatPeriodDate } from "@app/billing/format";
 import { KvRow } from "@app/billing/KvRow";
 import { TeamPlanRow } from "@app/billing/TeamPlanRow";
 import { ProcessorPlanRow } from "@app/billing/ProcessorPlanRow";
@@ -98,8 +98,6 @@ function cycleDay(
  * and the payment and invoice sections all arrive as props and slots. That is what lets one
  * component serve the cloud, self-hosted and the desktop app, and it makes a member's read-only
  * screen a matter of passing no callbacks rather than a role check.
- *
- * <p>A chip exists only where its section does, so an omitted slot removes both.
  */
 export function BillingScreen({
   usersInUse,
@@ -133,13 +131,8 @@ export function BillingScreen({
   const { t } = useTranslation();
   const [comparing, setComparing] = useState(false);
 
-  const jump = useCallback((id: string) => {
-    document
-      .getElementById(id)
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
-  const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
+  const enterpriseProcessor =
+    Boolean(wallet?.enterprise) || serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active) && !enterpriseProcessor;
   const teamHeld = Boolean(wallet?.team?.held);
   const processedCount =
@@ -147,40 +140,22 @@ export function BillingScreen({
       ? wallet?.docsProcessedThisPeriod
       : pdfsProcessed;
 
-  const chips = useMemo(() => {
-    const out: Array<[string, string]> = [];
-    if (procurementSection)
-      out.push([
-        "ub-procurement",
-        t("portal.billing.chip.procurement", "Procurement"),
-      ]);
-    if (wallet || serverPlan || legacyPlan || unavailable)
-      out.push(["ub-plan", t("portal.billing.chip.plan", "Plan")]);
-    if (wallet || unavailable)
-      out.push(["ub-usage", t("portal.billing.chip.usage", "Usage")]);
-    if (wallet && paymentSection)
-      out.push(["ub-pay", t("portal.billing.chip.payment", "Payment")]);
-    if (wallet && invoicesSection)
-      out.push(["ub-inv", t("portal.billing.chip.invoices", "Invoices")]);
-    if (licenseSection)
-      out.push([
-        "ub-license",
-        t("admin.settings.premium.inputMethod.text", "License Key"),
-      ]);
-    return out;
-  }, [
-    wallet,
-    serverPlan,
-    legacyPlan,
-    unavailable,
-    procurementSection,
-    licenseSection,
-    paymentSection,
-    invoicesSection,
-    t,
-  ]);
-
   const identity = useMemo(() => {
+    if (wallet?.enterprise) {
+      const agreement = wallet.enterprise;
+      return {
+        name: t("portal.billing.serverPlan.enterprise", "Enterprise"),
+        sub: t(`portal.billing.enterprise.${agreement.status}`, {
+          date: formatPeriodDate(agreement.accessUntil, { year: true }),
+          days: Math.ceil(
+            (Date.parse(agreement.periodEnd) -
+              Date.parse(agreement.periodStart)) /
+              86_400_000,
+          ),
+        }),
+        chips: [],
+      };
+    }
     if (serverPlan)
       return {
         name:
@@ -280,15 +255,17 @@ export function BillingScreen({
    * The column the matrix marks as the caller's own. A Server licence sits in the Team column:
    * it is the same hundred-user deal the cloud sells, bought locally instead.
    */
-  const currentPlan: ComparePlan | null = serverPlan
-    ? serverPlan.licenseType === "ENTERPRISE"
-      ? "enterprise"
-      : "team"
-    : !wallet
-      ? null
-      : paying || teamHeld
-        ? "team"
-        : "free";
+  const currentPlan: ComparePlan | null = wallet?.enterprise
+    ? "enterprise"
+    : serverPlan
+      ? serverPlan.licenseType === "ENTERPRISE"
+        ? "enterprise"
+        : "team"
+      : !wallet
+        ? null
+        : paying || teamHeld
+          ? "team"
+          : "free";
 
   /**
    * {@code freeAllowance} is whatever grant the WALLET carries, so it describes the Team column
@@ -360,22 +337,6 @@ export function BillingScreen({
           legacyPlan ||
           unavailable) && (
           <div className="billing-card">
-            <nav
-              className="billing-card__chips"
-              aria-label={t("portal.billing.chip.nav", "Sections")}
-            >
-              {chips.map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  className="billing-card__chip"
-                  onClick={() => jump(id)}
-                >
-                  {label}
-                </button>
-              ))}
-            </nav>
-
             {procurementSection && (
               <section
                 id="ub-procurement"

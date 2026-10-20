@@ -58,8 +58,8 @@ i18n
       caches: [], // Don't cache auto-detected language - only cache when user manually selects
       convertDetectedLanguage: (lng: string) => {
         // Map bare en to en-US
-        if (lng === "en") return "en-US";
-        return lng;
+        const normalized = normalizeLanguageCode(lng);
+        return normalized === "en" ? "en-US" : normalized;
       },
     },
 
@@ -119,7 +119,12 @@ function setLanguageWithPriority(
 
   // Only apply if new source has higher priority
   if (newPriority >= currentPriority) {
-    i18n.changeLanguage(language);
+    if (
+      normalizeLanguageCode(i18n.language || "") !==
+      normalizeLanguageCode(language)
+    ) {
+      i18n.changeLanguage(language);
+    }
     localStorage.setItem(I18N_STORAGE_KEYS.LANGUAGE, language);
     localStorage.setItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE, String(source));
     return true;

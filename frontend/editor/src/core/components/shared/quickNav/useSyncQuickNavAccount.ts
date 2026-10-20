@@ -15,7 +15,7 @@ export function useSyncQuickNavAccount(): void {
     loading: identityLoading,
   } = useAccountIdentity();
   const { granted, settled: accessSettled } = usePortalAccessState();
-  const { count, settled: signingSettled } = useSigningBadgeState();
+  const { count, settled: signingSettled, items } = useSigningBadgeState();
   const accountId = user?.id ?? null;
 
   useEffect(() => {
@@ -27,6 +27,7 @@ export function useSyncQuickNavAccount(): void {
         ? undefined
         : { displayName, profilePictureUrl },
       signingBadge: signingSettled ? count : undefined,
+      signingItems: signingSettled ? items : undefined,
       portalAccess: accessSettled ? granted : undefined,
     });
   }, [
@@ -38,6 +39,7 @@ export function useSyncQuickNavAccount(): void {
     displayName,
     profilePictureUrl,
     signingSettled,
+    items,
     count,
     accessSettled,
     granted,

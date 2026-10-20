@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import {
   RolledBackError,
   type Command,
@@ -62,6 +63,8 @@ export class CompositeCommand implements Command {
   }
 
   describe(): string {
-    return this.last.describe?.() ?? "Edit";
+    return (
+      this.last.describe?.() ?? i18n.t("pdfTextEditor.commands.edit", "Edit")
+    );
   }
 }

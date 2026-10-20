@@ -56,10 +56,212 @@ function CopyInline({ value, label }: { value: string; label: string }) {
   );
 }
 
+interface McpClient {
+  value: string;
+  label: string;
+  file: string;
+  config: string;
+}
+
+/** Per-client connection snippets pointing at this deployment's /mcp endpoint. */
+function buildMcpClients(mcpUrl: string): McpClient[] {
+  return [
+    {
+      value: "claude-desktop",
+      label: "Claude Desktop",
+      file: "claude_desktop_config.json",
+      // Claude Desktop loads only stdio servers from this file, so the remote
+      // HTTP endpoint is bridged through the `mcp-remote` npm package (run via
+      // npx - needs Node.js installed). First launch opens a browser to sign in.
+      config: JSON.stringify(
+        {
+          mcpServers: {
+            "stirling-pdf": {
+              command: "npx",
+              args: ["-y", "mcp-remote", mcpUrl],
+            },
+          },
+        },
+        null,
+        2,
+      ),
+    },
+    {
+      value: "claude-code",
+      label: "Claude Code",
+      file: ".mcp.json",
+      config: JSON.stringify(
+        { mcpServers: { "stirling-pdf": { type: "http", url: mcpUrl } } },
+        null,
+        2,
+      ),
+    },
+    {
+      value: "codex",
+      label: "Codex CLI",
+      file: "~/.codex/config.toml",
+      config: `[mcp_servers.stirling-pdf]\nurl = "${mcpUrl}"`,
+    },
+    {
+      value: "vscode",
+      label: "VS Code",
+      file: ".vscode/mcp.json",
+      config: JSON.stringify(
+        { servers: { "stirling-pdf": { type: "http", url: mcpUrl } } },
+        null,
+        2,
+      ),
+    },
+  ];
+}
+
+function McpGuestNotice({ onGoToAccount }: { onGoToAccount: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <Paper withBorder p="md" radius="md">
+      <Stack gap={10}>
+        <Group
+          justify="space-between"
+          wrap="nowrap"
+          align="center"
+          style={{ gap: "1rem" }}
+        >
+          <Text size="sm" c="dimmed" style={{ flex: 1 }}>
+            {t(
+              "config.mcp.guestInfo",
+              "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf.",
+            )}
+          </Text>
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={onGoToAccount}
+            style={{ flexShrink: 0 }}
+          >
+            {t("config.apiKeys.goToAccount", "Go to Account")}
+          </Button>
+        </Group>
+      </Stack>
+    </Paper>
+  );
+}
+
+function McpEndpointCard({ url }: { url: string }) {
+  const { t } = useTranslation();
+  return (
+    <Paper withBorder p="sm" radius="md">
+      <Group gap="xs" wrap="nowrap" align="center">
+        <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+          <Text fw={500} size="sm">
+            {t("config.mcp.endpoint.label", "Your MCP endpoint")}
+          </Text>
+          <Code style={{ overflowX: "auto" }}>{url}</Code>
+        </Stack>
+        <CopyInline
+          value={url}
+          label={t("config.mcp.copy.endpointLabel", "Endpoint URL")}
+        />
+      </Group>
+    </Paper>
+  );
+}
+
+function McpClientPanel({ client }: { client: McpClient }) {
+  const { t } = useTranslation();
+  return (
+    <Tabs.Panel value={client.value} pt="sm">
+      <Stack gap="xs">
+        <Group justify="space-between" align="center" wrap="nowrap">
+          <Text size="xs" c="dimmed">
+            {t("config.mcp.setup.addTo", "Add to")} <Code>{client.file}</Code>
+          </Text>
+          <CopyInline
+            value={client.config}
+            label={t("config.mcp.copy.configLabel", "Config")}
+          />
+        </Group>
+        <Code block>{client.config}</Code>
+      </Stack>
+    </Tabs.Panel>
+  );
+}
+
+function McpClientTabs({ clients }: { clients: McpClient[] }) {
+  return (
+    <Tabs defaultValue="claude-desktop" variant="pills" radius="md" mt={4}>
+      <Tabs.List>
+        {clients.map((c) => (
+          <Tabs.Tab key={c.value} value={c.value}>
+            {c.label}
+          </Tabs.Tab>
+        ))}
+      </Tabs.List>
+      {clients.map((c) => (
+        <McpClientPanel key={c.value} client={c} />
+      ))}
+    </Tabs>
+  );
+}
+
+function McpClientSetupCard({ mcpUrl }: { mcpUrl: string }) {
+  const { t } = useTranslation();
+  const clients = useMemo(() => buildMcpClients(mcpUrl), [mcpUrl]);
+  return (
+    <Paper withBorder p="sm" radius="md">
+      <Stack gap="xs">
+        <Text fw={500} size="sm">
+          {t("config.mcp.setup.title", "Connect your AI assistant")}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {t(
+            "config.mcp.setup.hint",
+            "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy.",
+          )}
+        </Text>
+        <McpClientTabs clients={clients} />
+      </Stack>
+    </Paper>
+  );
+}
+
+function McpUsageTip() {
+  const { t } = useTranslation();
+  return (
+    <Alert variant="light" color="blue" icon={<Icon name="info" size="1rem" />}>
+      <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
+        <Text size="sm">
+          {t(
+            "config.mcp.tip",
+            "Every action your assistant runs is performed as your account and counts towards your usage, just like using the Stirling PDF API and Automation.",
+          )}
+        </Text>
+        <Button
+          size="sm"
+          variant="secondary"
+          style={{ flexShrink: 0 }}
+          leftSection={<Icon name="key" size={14} />}
+          onClick={() => openAppSettings("api-keys")}
+        >
+          {t("config.mcp.viewApiKeys", "View API keys")}
+        </Button>
+      </Group>
+    </Alert>
+  );
+}
+
+function McpConnectionGuide({ mcpUrl }: { mcpUrl: string }) {
+  return (
+    <>
+      <McpEndpointCard url={mcpUrl} />
+      <McpClientSetupCard mcpUrl={mcpUrl} />
+      <McpUsageTip />
+    </>
+  );
+}
+
 // SaaS MCP guide: always shown, explains how to point an AI assistant at the
 // OAuth-protected /mcp endpoint with per-client config.
 export default function McpSection() {
-  const { t } = useTranslation();
   const { config } = useAppConfig();
   const { user } = useAuth();
   // Guests can't authorise an MCP client - the OAuth flow mints an anonymous
@@ -81,188 +283,13 @@ export default function McpSection() {
     return trimTrailingSlash(raw);
   }, [config?.baseUrl]);
 
-  const mcpUrl = `${baseUrl}/mcp`;
-
-  // Per-client connection snippets pointing at this deployment's /mcp endpoint.
-  const clients = useMemo(
-    () => [
-      {
-        value: "claude-desktop",
-        label: "Claude Desktop",
-        file: "claude_desktop_config.json",
-        // Claude Desktop loads only stdio servers from this file, so the remote
-        // HTTP endpoint is bridged through the `mcp-remote` npm package (run via
-        // npx - needs Node.js installed). First launch opens a browser to sign in.
-        config: JSON.stringify(
-          {
-            mcpServers: {
-              "stirling-pdf": {
-                command: "npx",
-                args: ["-y", "mcp-remote", mcpUrl],
-              },
-            },
-          },
-          null,
-          2,
-        ),
-      },
-      {
-        value: "claude-code",
-        label: "Claude Code",
-        file: ".mcp.json",
-        config: JSON.stringify(
-          { mcpServers: { "stirling-pdf": { type: "http", url: mcpUrl } } },
-          null,
-          2,
-        ),
-      },
-      {
-        value: "codex",
-        label: "Codex CLI",
-        file: "~/.codex/config.toml",
-        config: `[mcp_servers.stirling-pdf]\nurl = "${mcpUrl}"`,
-      },
-      {
-        value: "vscode",
-        label: "VS Code",
-        file: ".vscode/mcp.json",
-        config: JSON.stringify(
-          { servers: { "stirling-pdf": { type: "http", url: mcpUrl } } },
-          null,
-          2,
-        ),
-      },
-    ],
-    [mcpUrl],
-  );
-
   return (
     <div className="settings-section-container">
       <Stack gap="md" className="settings-section-content">
         {isAnonymous ? (
-          <Paper withBorder p="md" radius="md">
-            <Stack gap={10}>
-              <Group
-                justify="space-between"
-                wrap="nowrap"
-                align="center"
-                style={{ gap: "1rem" }}
-              >
-                <Text size="sm" c="dimmed" style={{ flex: 1 }}>
-                  {t(
-                    "config.mcp.guestInfo",
-                    "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf.",
-                  )}
-                </Text>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  onClick={goToAccount}
-                  style={{ flexShrink: 0 }}
-                >
-                  {t("config.apiKeys.goToAccount", "Go to Account")}
-                </Button>
-              </Group>
-            </Stack>
-          </Paper>
+          <McpGuestNotice onGoToAccount={goToAccount} />
         ) : (
-          <>
-            {/* Endpoint */}
-            <Paper withBorder p="sm" radius="md">
-              <Group gap="xs" wrap="nowrap" align="center">
-                <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                  <Text fw={500} size="sm">
-                    {t("config.mcp.endpoint.label", "Your MCP endpoint")}
-                  </Text>
-                  <Code style={{ overflowX: "auto" }}>{mcpUrl}</Code>
-                </Stack>
-                <CopyInline
-                  value={mcpUrl}
-                  label={t("config.mcp.copy.endpointLabel", "Endpoint URL")}
-                />
-              </Group>
-            </Paper>
-
-            {/* Per-client setup */}
-            <Paper withBorder p="sm" radius="md">
-              <Stack gap="xs">
-                <Text fw={500} size="sm">
-                  {t("config.mcp.setup.title", "Connect your AI assistant")}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {t(
-                    "config.mcp.setup.hint",
-                    "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy.",
-                  )}
-                </Text>
-                <Tabs
-                  defaultValue="claude-desktop"
-                  variant="pills"
-                  radius="md"
-                  mt={4}
-                >
-                  <Tabs.List>
-                    {clients.map((c) => (
-                      <Tabs.Tab key={c.value} value={c.value}>
-                        {c.label}
-                      </Tabs.Tab>
-                    ))}
-                  </Tabs.List>
-                  {clients.map((c) => (
-                    <Tabs.Panel key={c.value} value={c.value} pt="sm">
-                      <Stack gap="xs">
-                        <Group
-                          justify="space-between"
-                          align="center"
-                          wrap="nowrap"
-                        >
-                          <Text size="xs" c="dimmed">
-                            {t("config.mcp.setup.addTo", "Add to")}{" "}
-                            <Code>{c.file}</Code>
-                          </Text>
-                          <CopyInline
-                            value={c.config}
-                            label={t("config.mcp.copy.configLabel", "Config")}
-                          />
-                        </Group>
-                        <Code block>{c.config}</Code>
-                      </Stack>
-                    </Tabs.Panel>
-                  ))}
-                </Tabs>
-              </Stack>
-            </Paper>
-
-            {/* Tip / cross-link */}
-            <Alert
-              variant="light"
-              color="blue"
-              icon={<Icon name="info" size="1rem" />}
-            >
-              <Group
-                justify="space-between"
-                align="center"
-                wrap="nowrap"
-                gap="sm"
-              >
-                <Text size="sm">
-                  {t(
-                    "config.mcp.tip",
-                    "Every action your assistant runs is performed as your account and counts towards your usage, just like using the Stirling PDF API and Automation.",
-                  )}
-                </Text>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  style={{ flexShrink: 0 }}
-                  leftSection={<Icon name="key" size={14} />}
-                  onClick={() => openAppSettings("api-keys")}
-                >
-                  {t("config.mcp.viewApiKeys", "View API keys")}
-                </Button>
-              </Group>
-            </Alert>
-          </>
+          <McpConnectionGuide mcpUrl={`${baseUrl}/mcp`} />
         )}
       </Stack>
     </div>

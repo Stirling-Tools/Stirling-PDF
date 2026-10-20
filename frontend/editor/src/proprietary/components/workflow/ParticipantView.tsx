@@ -35,7 +35,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
   const [password, setPassword] = useState<string>("");
   const [certFile, setCertFile] = useState<File | null>(null);
   const [location, setLocation] = useState<string>("");
-  const [reason, setReason] = useState<string>("Document Signing");
+  const [reason, setReason] = useState<string>(() =>
+    t("workflow.participant.defaultReason", "Document Signing"),
+  );
   const [showSignature, _setShowSignature] = useState<boolean>(true);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [declineReason, _setDeclineReason] = useState<string>("");
@@ -123,7 +125,10 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
     if (!certFile && certType !== "SERVER") {
       setNotification({
         type: "error",
-        message: "Please select a certificate file",
+        message: t(
+          "workflow.participant.selectCertificateFile",
+          "Please select a certificate file",
+        ),
       });
       return;
     }
@@ -145,12 +150,21 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
       });
       setNotification({
         type: "success",
-        message: "Signature submitted successfully!",
+        message: t(
+          "workflow.participant.submitSuccess",
+          "Signature submitted successfully!",
+        ),
       });
     } catch (err: unknown) {
       setNotification({
         type: "error",
-        message: `Failed to submit signature: ${err instanceof Error ? err.message : String(err)}`,
+        message: t(
+          "workflow.participant.submitFailed",
+          "Failed to submit signature: {{error}}",
+          {
+            error: err instanceof Error ? err.message : String(err),
+          },
+        ),
       });
     } finally {
       setIsSubmitting(false);
@@ -159,19 +173,33 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
   const handleDecline = async () => {
     if (
-      window.confirm("Are you sure you want to decline signing this document?")
+      window.confirm(
+        t(
+          "workflow.participant.declineConfirm",
+          "Are you sure you want to decline signing this document?",
+        ),
+      )
     ) {
       setNotification(null);
       try {
         await decline(token, declineReason || "Declined by participant");
         setNotification({
           type: "success",
-          message: "You have declined this signing request.",
+          message: t(
+            "workflow.participant.declineSuccess",
+            "You have declined this signing request.",
+          ),
         });
       } catch (err: unknown) {
         setNotification({
           type: "error",
-          message: `Failed to decline: ${err instanceof Error ? err.message : String(err)}`,
+          message: t(
+            "workflow.participant.declineFailed",
+            "Failed to decline: {{error}}",
+            {
+              error: err instanceof Error ? err.message : String(err),
+            },
+          ),
         });
       }
     }

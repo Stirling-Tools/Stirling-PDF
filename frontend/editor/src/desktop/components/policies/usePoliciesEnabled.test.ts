@@ -3,10 +3,14 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { AuthStatus } from "@app/services/authService";
 import type { ConnectionMode } from "@app/services/connectionModeService";
 const state = vi.hoisted(() => ({
+  localOnly: false,
   mode: "local" as ConnectionMode,
   authenticated: false,
   authListener: (_status: AuthStatus, _user?: { username: string }) => {},
   modeListener: () => {},
+}));
+vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+  useLocalProcessingOnly: () => state.localOnly,
 }));
 vi.mock("@app/services/authService", () => ({
   authService: {
@@ -32,6 +36,7 @@ import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled"
 
 describe("desktop automation availability", () => {
   beforeEach(() => {
+    state.localOnly = false;
     state.mode = "local";
     state.authenticated = false;
   });
@@ -58,6 +63,14 @@ describe("desktop automation availability", () => {
     expect(result.current).toBe(false);
   });
   test("local mode stays disabled even if a token remains", async () => {
+    state.authenticated = true;
+    const { result } = renderHook(usePoliciesEnabled);
+    await act(async () => {});
+    expect(result.current).toBe(false);
+  });
+  test("managed document privacy disables automation for a signed-in SaaS user", async () => {
+    state.localOnly = true;
+    state.mode = "saas";
     state.authenticated = true;
     const { result } = renderHook(usePoliciesEnabled);
     await act(async () => {});

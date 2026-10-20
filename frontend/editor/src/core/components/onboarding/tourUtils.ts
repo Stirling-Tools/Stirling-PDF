@@ -41,6 +41,63 @@ const nudgeReactour = () => {
 };
 
 /**
+ * Scrolls the tool picker until a target tool button appears and is highlighted.
+ * Because tool picker sections are lazily mounted when scrolled near the viewport,
+ * offscreen tools like Crop do not exist in the DOM until scrolled towards.
+ */
+export async function revealPickerTool(
+  selector: string,
+  timeoutMs = 7000,
+): Promise<void> {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const existing = document.querySelector<HTMLElement>(selector);
+  if (existing && existing.getClientRects().length > 0) {
+    existing.scrollIntoView({ block: "center", behavior: "smooth" });
+    await waitForHighlightable(selector, timeoutMs);
+    return;
+  }
+
+  const scroller = document.querySelector<HTMLElement>(
+    ".tool-picker-scrollable",
+  );
+  if (scroller) {
+    const stepDelta = Math.max(scroller.clientHeight * 0.8, 300);
+    const maxSteps = 20;
+
+    for (let step = 0; step < maxSteps; step += 1) {
+      const found = document.querySelector<HTMLElement>(selector);
+      if (found) {
+        found.scrollIntoView({ block: "center", behavior: "smooth" });
+        await waitForHighlightable(selector, timeoutMs);
+        return;
+      }
+
+      if (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight) {
+        break;
+      }
+
+      scroller.scrollTop = Math.min(
+        scroller.scrollTop + stepDelta,
+        scroller.scrollHeight,
+      );
+      scroller.dispatchEvent(new Event("scroll"));
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  }
+
+  const finalFound = document.querySelector<HTMLElement>(selector);
+  if (finalFound) {
+    finalFound.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+
+  await waitForHighlightable(selector, timeoutMs);
+}
+
+/**
  * Waits for a CSS selector to be present AND have a non-zero bounding box,
  * then nudges Reactour to recalculate its spotlight position.
  *

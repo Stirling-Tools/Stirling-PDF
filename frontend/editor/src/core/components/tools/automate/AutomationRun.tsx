@@ -197,7 +197,10 @@ export default function AutomationRun({
         {isExecuting && (
           <div>
             <Text size="sm" mb="xs">
-              Progress: {currentStepIndex + 1}/{executionSteps.length}
+              {t("automate.run.progress", "Progress: {{current}}/{{total}}", {
+                current: currentStepIndex + 1,
+                total: executionSteps.length,
+              })}
             </Text>
             <Progress value={getProgress()} size="lg" />
           </div>

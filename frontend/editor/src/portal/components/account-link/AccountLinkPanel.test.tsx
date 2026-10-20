@@ -21,6 +21,9 @@ const state = vi.hoisted(() => ({
   email: "owner@example.com" as string | null,
   isOwner: true,
 }));
+vi.mock("@app/auth/context", () => ({
+  useAuth: () => ({ user: { orgOwner: state.isOwner } }),
+}));
 vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
   useAccountLinkOwner: () => state.isOwner,
 }));

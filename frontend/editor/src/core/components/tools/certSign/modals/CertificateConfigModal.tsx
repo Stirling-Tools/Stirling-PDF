@@ -1,21 +1,17 @@
-import {
-  Modal,
-  Stack,
-  Group,
-  Text,
-  Collapse,
-  TextInput,
-  Loader,
-} from "@mantine/core";
+import { Stack, Group, Text, Collapse, Loader } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { Modal } from "@app/ui/Modal";
+import { FormField } from "@app/ui/FormField";
+import { Input } from "@app/ui/Input";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Icon } from "@app/ui/Icon";
 import {
   CertificateSelector,
   CertificateType,
   UploadFormat,
 } from "@app/components/tools/certSign/CertificateSelector";
+import { isAxiosError } from "axios";
 import apiClient from "@app/services/apiClient";
 
 export interface CertificateSubmitData {
@@ -73,47 +69,65 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
   const [certValidation, setCertValidation] = useState<CertValidationState>({
     status: "idle",
   });
-  const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [validatedPayload, setValidatedPayload] = useState<FormData | null>(
+    null,
+  );
+  const validationPayload = useMemo(() => {
+    if (certType !== "UPLOAD") return null;
+    const form = new FormData();
+    form.append("password", password);
+    if (participantToken) form.append("participantToken", participantToken);
+    if (uploadFormat === "PEM") {
+      if (!privateKeyFile || !certFile) return null;
+      form.append("certType", "PEM");
+      form.append("privateKeyFile", privateKeyFile);
+      form.append("certFile", certFile);
+    } else {
+      const file = uploadFormat === "JKS" ? jksFile : p12File;
+      if (!file) return null;
+      form.append("certType", uploadFormat === "JKS" ? "JKS" : "P12");
+      form.append(uploadFormat === "JKS" ? "jksFile" : "p12File", file);
+    }
+    return form;
+  }, [
+    certType,
+    uploadFormat,
+    p12File,
+    jksFile,
+    privateKeyFile,
+    certFile,
+    password,
+    participantToken,
+  ]);
 
-  // Debounced certificate pre-validation: fires 600ms after cert file or password changes
   useEffect(() => {
-    // Only validate uploaded keystores (not SERVER/USER_CERT, not PEM which uses separate files)
-    const keystoreFile = uploadFormat === "JKS" ? jksFile : p12File;
-    if (certType !== "UPLOAD" || !keystoreFile || uploadFormat === "PEM") {
+    setSubmitError(null);
+    setValidatedPayload(null);
+    if (!opened || !validationPayload) {
       setCertValidation({ status: "idle" });
       return;
     }
-
-    if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
+    let active = true;
+    const abort = new AbortController();
     setCertValidation({ status: "validating" });
-
-    validationTimerRef.current = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try {
-        const formData = new FormData();
-        formData.append("certType", uploadFormat === "JKS" ? "JKS" : "P12");
-        formData.append("password", password);
-        if (uploadFormat === "JKS") {
-          formData.append("jksFile", keystoreFile);
-        } else {
-          formData.append("p12File", keystoreFile);
-        }
-
         const endpoint = participantToken
           ? "/api/v1/workflow/participant/validate-certificate"
           : "/api/v1/security/cert-sign/validate-certificate";
-
-        if (participantToken) {
-          formData.append("participantToken", participantToken);
-        }
-
         const response = await apiClient.post<{
           valid: boolean;
           subjectName: string | null;
           notAfter: string | null;
           error: string | null;
-        }>(endpoint, formData);
-
+        }>(endpoint, validationPayload, {
+          signal: abort.signal,
+          suppressErrorToast: true,
+        });
+        if (!active) return;
         if (response.data.valid) {
+          setValidatedPayload(validationPayload);
           setCertValidation({
             status: "valid",
             subjectName: response.data.subjectName,
@@ -131,45 +145,37 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           });
         }
       } catch {
-        setCertValidation({
-          status: "error",
-          message: t(
-            "certSign.collab.signRequest.certModal.certNetworkError",
-            "Could not validate certificate",
-          ),
-        });
+        if (active)
+          setCertValidation({
+            status: "error",
+            message: t(
+              "certSign.collab.signRequest.certModal.certNetworkError",
+              "Could not validate certificate",
+            ),
+          });
       }
     }, 600);
-
     return () => {
-      if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
+      active = false;
+      clearTimeout(timer);
+      abort.abort();
     };
-  }, [certType, uploadFormat, p12File, jksFile, password, participantToken]);
+  }, [opened, validationPayload, participantToken, t]);
 
-  // Advanced settings
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [reason, setReason] = useState(defaultReason);
   const [location, setLocation] = useState(defaultLocation);
 
-  const isUploadValid = () => {
-    if (certType !== "UPLOAD") return true;
-    switch (uploadFormat) {
-      case "PKCS12":
-      case "PFX":
-        return p12File !== null;
-      case "PEM":
-        return privateKeyFile !== null && certFile !== null;
-      case "JKS":
-        return jksFile !== null;
-    }
-  };
-
   const isValid =
-    certType === "USER_CERT" || certType === "SERVER" || isUploadValid();
+    certType !== "UPLOAD" ||
+    (validationPayload !== null &&
+      validatedPayload === validationPayload &&
+      certValidation.status === "valid");
 
   const handleSign = async () => {
     if (!isValid) return;
 
+    setSubmitError(null);
     setSigning(true);
     try {
       await onSign(
@@ -186,7 +192,21 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
         location,
       );
     } catch (error) {
-      console.error("Failed to sign document:", error);
+      const data: unknown = isAxiosError(error) ? error.response?.data : null;
+      const detail =
+        data && typeof data === "object" && "detail" in data
+          ? data.detail
+          : null;
+      setSubmitError(
+        typeof detail === "string"
+          ? detail
+          : typeof data === "string"
+            ? data
+            : t(
+                "signMenu.signFailed",
+                "Signing failed. Check your certificate and try again; your placed marks are preserved.",
+              ),
+      );
     } finally {
       setSigning(false);
     }
@@ -194,23 +214,59 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
 
   return (
     <Modal
-      opened={opened}
-      onClose={onClose}
+      open={opened}
+      onClose={() => {
+        if (!signing && !disabled) onClose();
+      }}
       title={t(
         "certSign.collab.signRequest.certModal.title",
-        "Configure Certificate",
+        "Choose how to sign",
       )}
-      centered
-      size="lg"
+      subtitle={t(
+        "certSign.collab.signRequest.certModal.description",
+        "Choose a certificate to complete your signature.",
+        {
+          count: signatureCount,
+        },
+      )}
+      width="md"
+      disableBackdropClose={signing || disabled}
+      disableEscapeClose={signing || disabled}
+      footer={
+        <Group
+          justify="space-between"
+          wrap="wrap"
+          className="certificate-config__footer"
+        >
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            disabled={signing || disabled}
+          >
+            {t("cancel", "Cancel")}
+          </Button>
+          <Button
+            onClick={handleSign}
+            disabled={
+              !isValid ||
+              disabled ||
+              signing ||
+              certValidation.status === "validating"
+            }
+            loading={signing}
+            leftSection={<Icon name="shield-check" size={18} />}
+          >
+            {t("certSign.collab.signRequest.certModal.sign", "Sign Document")}
+          </Button>
+        </Group>
+      }
     >
       <Stack gap="md">
-        <Text size="sm" c="dimmed">
-          {t(
-            "certSign.collab.signRequest.certModal.description",
-            "You have placed {{count}} signature(s). Choose your certificate to complete signing.",
-            { count: signatureCount },
-          )}
-        </Text>
+        {submitError && (
+          <Text role="alert" size="sm" c="var(--c-danger)">
+            {submitError}
+          </Text>
+        )}
 
         <CertificateSelector
           certType={certType}
@@ -230,9 +286,12 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           disabled={disabled || signing}
         />
 
-        {/* Certificate validation status */}
         {certValidation.status === "validating" && (
-          <Group gap="xs">
+          <Group
+            gap="xs"
+            role="status"
+            className="certificate-config__validation"
+          >
             <Loader size="xs" />
             <Text size="sm" c="dimmed">
               {t(
@@ -243,13 +302,17 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           </Group>
         )}
         {certValidation.status === "valid" && (
-          <Group gap="xs">
+          <Group
+            gap="xs"
+            role="status"
+            className="certificate-config__validation"
+          >
             <Icon
               name="circle-check"
               size={20}
-              style={{ color: "var(--mantine-color-green-6)" }}
+              style={{ color: "var(--c-success)" }}
             />
-            <Text size="sm" c="var(--color-green-dark)">
+            <Text size="sm" c="var(--c-success)">
               {t(
                 "certSign.collab.signRequest.certModal.certValidUntil",
                 "Certificate valid until {{date}}",
@@ -266,13 +329,17 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           </Group>
         )}
         {certValidation.status === "error" && (
-          <Group gap="xs">
+          <Group
+            gap="xs"
+            role="alert"
+            className="certificate-config__validation"
+          >
             <Icon
               name="circle-alert"
               size={20}
-              style={{ color: "var(--mantine-color-red-6)" }}
+              style={{ color: "var(--c-danger)" }}
             />
-            <Text size="sm" c="var(--color-red-dark)">
+            <Text size="sm" c="var(--c-danger)">
               {t(
                 "certSign.collab.signRequest.certModal.certInvalid",
                 "Certificate invalid: {{error}}",
@@ -284,70 +351,66 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           </Group>
         )}
 
-        {/* Advanced Settings - Optional */}
-        <div>
+        <div className="certificate-config__details">
           <Button
             variant="tertiary"
             size="sm"
+            accent="neutral"
+            className="certificate-config__details-toggle"
+            justify="between"
             onClick={() => setShowAdvanced(!showAdvanced)}
             disabled={disabled || signing}
-            style={{ marginBottom: "8px" }}
+            aria-expanded={showAdvanced}
+            rightSection={
+              <Icon
+                name={showAdvanced ? "chevron-up" : "chevron-down"}
+                size={16}
+              />
+            }
           >
             {t(
-              "certSign.collab.signRequest.advancedSettings",
-              "Advanced Settings",
+              "certSign.collab.signRequest.certModal.details",
+              "Signing details (optional)",
             )}
           </Button>
 
           <Collapse in={showAdvanced}>
-            <Stack gap="sm">
-              <TextInput
+            <div className="certificate-config__fields">
+              <FormField
                 label={t(
                   "certSign.collab.signRequest.reason",
                   "Reason (Optional)",
                 )}
-                placeholder={t(
-                  "certSign.collab.signRequest.reasonPlaceholder",
-                  "Why are you signing?",
-                )}
-                value={reason}
-                onChange={(e) => setReason(e.currentTarget.value)}
-                disabled={disabled || signing}
-              />
-              <TextInput
+              >
+                <Input
+                  placeholder={t(
+                    "certSign.collab.signRequest.reasonPlaceholder",
+                    "Why are you signing?",
+                  )}
+                  value={reason}
+                  onChange={(e) => setReason(e.currentTarget.value)}
+                  disabled={disabled || signing}
+                />
+              </FormField>
+              <FormField
                 label={t(
                   "certSign.collab.signRequest.location",
                   "Location (Optional)",
                 )}
-                placeholder={t(
-                  "certSign.collab.signRequest.locationPlaceholder",
-                  "Where are you signing from?",
-                )}
-                value={location}
-                onChange={(e) => setLocation(e.currentTarget.value)}
-                disabled={disabled || signing}
-              />
-            </Stack>
+              >
+                <Input
+                  placeholder={t(
+                    "certSign.collab.signRequest.locationPlaceholder",
+                    "Where are you signing from?",
+                  )}
+                  value={location}
+                  onChange={(e) => setLocation(e.currentTarget.value)}
+                  disabled={disabled || signing}
+                />
+              </FormField>
+            </div>
           </Collapse>
         </div>
-
-        <Group justify="space-between" wrap="wrap" mt="md">
-          <Button variant="secondary" onClick={onClose} disabled={signing}>
-            {t("cancel", "Cancel")}
-          </Button>
-          <Button
-            onClick={handleSign}
-            disabled={
-              !isValid ||
-              disabled ||
-              signing ||
-              certValidation.status === "validating"
-            }
-            loading={signing}
-          >
-            {t("certSign.collab.signRequest.certModal.sign", "Sign Document")}
-          </Button>
-        </Group>
       </Stack>
     </Modal>
   );

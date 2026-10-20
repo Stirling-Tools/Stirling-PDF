@@ -1,9 +1,9 @@
-import React from "react";
+import { isValidElement, type ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import PreferencesSection from "@app/components/shared/config/configSections/preferences/PreferencesSection";
-import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
-import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
+import PreferencesSection, {
+  type PreferencesSectionProps,
+} from "@app/components/shared/config/configSections/preferences/PreferencesSection";
 import AboutSection from "@app/components/shared/config/configSections/AboutSection";
 import type {
   ConfigNavItem,
@@ -24,6 +24,63 @@ export interface ConfigColors {
   headerBorder: string;
 }
 
+/** Nav key of the Preferences page every flavor shares. */
+export const PREFERENCES_ITEM_KEY = "general";
+
+/**
+ * The Preferences group. A plain builder rather than a hook so the SaaS nav,
+ * which is assembled outside a component, renders the same page.
+ */
+export function createPreferencesNavSection(
+  t: TFunction<"translation", undefined>,
+  props: PreferencesSectionProps = {},
+): ConfigNavSection {
+  return {
+    id: "preferences",
+    title: t("settings.preferences.title", "Preferences"),
+    items: [
+      {
+        key: PREFERENCES_ITEM_KEY,
+        label: t("settings.general.title", "General"),
+        description: t(
+          "settings.preferences.description",
+          "How the editor looks and behaves for you, and your account.",
+        ),
+        icon: "sliders-horizontal",
+        component: <PreferencesSection {...props} />,
+      },
+    ],
+  };
+}
+
+/**
+ * Lays `extra` over the Preferences page's props so layers compose, not clobber.
+ * `Page` swaps in a wrapper for extras that need hooks; omitted, the page is kept.
+ */
+export function extendPreferences(
+  sections: ConfigNavSection[],
+  extra: PreferencesSectionProps,
+  Page?: ComponentType<PreferencesSectionProps>,
+): ConfigNavSection[] {
+  return sections.map((section) => ({
+    ...section,
+    items: section.items.map((item) => {
+      if (item.key !== PREFERENCES_ITEM_KEY) return item;
+      const current = isValidElement<PreferencesSectionProps>(item.component)
+        ? item.component
+        : null;
+      const Component =
+        Page ??
+        (current?.type as ComponentType<PreferencesSectionProps> | undefined) ??
+        PreferencesSection;
+      return {
+        ...item,
+        component: <Component {...current?.props} {...extra} />,
+      };
+    }),
+  }));
+}
+
 export const useConfigNavSections = (
   _isAdmin: boolean = false,
   _runningEE: boolean = false,
@@ -34,22 +91,7 @@ export const useConfigNavSections = (
   const { t } = useTranslation();
 
   const sections: ConfigNavSection[] = [
-    {
-      id: "preferences",
-      title: t("settings.preferences.title", "Preferences"),
-      items: [
-        {
-          key: "general",
-          label: t("settings.general.title", "General"),
-          description: t(
-            "settings.preferences.description",
-            "How the editor looks and behaves for you, and your account.",
-          ),
-          icon: "sliders-horizontal",
-          component: <PreferencesSection />,
-        },
-      ],
-    },
+    createPreferencesNavSection(t),
     // Reference material: read once and rarely revisited, so it is one page
     // rather than four rows you have to open in turn.
     {
@@ -74,35 +116,3 @@ export const useConfigNavSections = (
 
   return sections;
 };
-
-/**
- * The editor's own preference sections, for builders that are plain functions
- * rather than hooks (the cloud navs assemble their tree outside a component)
- * and so must be handed a `t` instead of calling useTranslation themselves.
- *
- * Replaces a hardcoded-English copy of this list: the SaaS nav was its only
- * caller, which is why "Preferences", "General" and "Keyboard Shortcuts" never
- * translated there.
- */
-export const createConfigNavSections = (
-  t: TFunction<"translation", undefined>,
-): ConfigNavSection[] => [
-  {
-    id: "preferences",
-    title: t("settings.preferences.title", "Preferences"),
-    items: [
-      {
-        key: "general",
-        label: t("settings.general.title", "General"),
-        icon: "settings",
-        component: <GeneralSection hideTitle />,
-      },
-      {
-        key: "hotkeys",
-        label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
-        icon: "keyboard",
-        component: <HotkeysSection />,
-      },
-    ],
-  },
-];

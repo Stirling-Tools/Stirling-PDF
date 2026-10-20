@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { connectionModeService } from "@app/services/connectionModeService";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 
 /** The bundled backend has no notification API; wait for the mode before polling. */
 export function useNotificationsAvailable(): boolean {
+  const localOnly = useLocalProcessingOnly();
   const [available, setAvailable] = useState(false);
 
   useEffect(() => {
@@ -20,5 +22,5 @@ export function useNotificationsAvailable(): boolean {
     };
   }, []);
 
-  return available;
+  return available && !localOnly;
 }

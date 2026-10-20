@@ -1,5 +1,5 @@
 // The editor/processor shell switch unmounts every editor provider, and a reload starts from nothing:
-// this mirrors the workbench into sessionStorage and refills an empty one from that record on mount.
+// this mirrors the workbench into sessionStorage and reopens its files alongside incoming files.
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -18,6 +18,7 @@ import { isAuthRoute } from "@app/constants/routes";
 import { fileStorage } from "@app/services/fileStorage";
 import { alert } from "@app/components/toast";
 import { WORKBENCH_SESSION_RESTORE } from "@app/constants/featureFlags";
+import { launchFilesPending } from "@app/services/launchFiles";
 import {
   beginRestoredView,
   clearWorkbenchSession,
@@ -48,6 +49,23 @@ function leafByOriginalId(
     }
   }
   return map;
+}
+
+/**
+ * The current leaf for each original id. A file never versioned is its own leaf, so point reads
+ * settle the usual case; scanning every stored file - seconds on a large library - is kept for
+ * when one of them has been versioned or is gone.
+ */
+async function currentLeaves(
+  originalIds: string[],
+): Promise<Map<string, StirlingFileStub>> {
+  const direct = await Promise.all(
+    originalIds.map((id) => fileStorage.getStirlingFileStub(id as FileId)),
+  );
+  if (direct.every((stub) => stub && stub.isLeaf !== false)) {
+    return new Map(originalIds.map((id, i) => [id, direct[i]!]));
+  }
+  return leafByOriginalId(await fileStorage.getLeafStirlingFileStubs());
 }
 
 /** How long to wait for the NEXT file to hydrate before giving up on holding the view. Restarted on
@@ -146,6 +164,8 @@ export function WorkbenchSessionPersistence() {
   const restoreStarted = useRef(false);
   // Until the restore has run, this mount's empty state is not the truth to record.
   const restoreSettled = useRef(false);
+  // Failed launch intake must leave the previous recovery record available on the next reload.
+  const awaitingLaunchedFile = useRef(false);
 
   // Published so a build's restore setting is legible without reading the bundle.
   useEffect(() => {
@@ -159,6 +179,8 @@ export function WorkbenchSessionPersistence() {
     // A known identity whose fingerprint has not landed yet: wait, do not stamp it as nobody's.
     if (userId != null && owner == null) return;
     const state = store.getState();
+    if (awaitingLaunchedFile.current && state.files.ids.length === 0) return;
+    awaitingLaunchedFile.current = false;
     const toOriginal = (id: FileId): string | null => {
       const stub = state.files.byId[id];
       return stub ? originalIdOf(stub) : null;
@@ -187,6 +209,8 @@ export function WorkbenchSessionPersistence() {
     resumeWorkbenchSession();
     let timer: ReturnType<typeof setTimeout> | undefined;
     const unsubscribe = store.subscribe(() => {
+      if (store.getState().files.ids.length > 0)
+        awaitingLaunchedFile.current = false;
       clearTimeout(timer);
       timer = setTimeout(() => writeRef.current(), WRITE_DEBOUNCE_MS);
     });
@@ -212,8 +236,7 @@ export function WorkbenchSessionPersistence() {
       !WORKBENCH_SESSION_RESTORE ||
       !store ||
       !saved ||
-      saved.fileIds.length === 0 ||
-      store.getState().files.ids.length > 0;
+      saved.fileIds.length === 0;
     if (nothingToDo) {
       restoreSettled.current = true;
       return;
@@ -229,44 +252,65 @@ export function WorkbenchSessionPersistence() {
         restoreSettled.current = true;
         return;
       }
+      const pending = await launchFilesPending();
+      awaitingLaunchedFile.current =
+        pending && store.getState().files.ids.length === 0;
 
       // Held while the files land: they are added one at a time, and each landing re-runs the
       // default-view heuristic, which must not overwrite the recorded view mid-restore.
       let held: number | null = null;
       try {
         // Resolve each id to its CURRENT leaf: a policy or another tab may have versioned it since.
-        const leaves = leafByOriginalId(
-          await fileStorage.getLeafStirlingFileStubs(),
-        );
+        const leaves = await currentLeaves(saved.fileIds);
         const stubs = saved.fileIds
           .map((id) => leaves.get(id))
           .filter((stub): stub is StirlingFileStub => stub !== undefined);
+        const openOriginalIds = new Set(
+          Object.values(store.getState().files.byId).map(originalIdOf),
+        );
+        const toRestore = stubs.filter(
+          (stub) => !openOriginalIds.has(originalIdOf(stub)),
+        );
 
-        if (stubs.length > 0) {
+        if (toRestore.length > 0) {
+          const canRestorePresentation =
+            !(await launchFilesPending()) &&
+            store.getState().files.ids.length === 0;
           const view =
-            !pathOwnsView && isSeedableView(saved.workbench)
+            canRestorePresentation &&
+            !pathOwnsView &&
+            isSeedableView(saved.workbench)
               ? saved.workbench
               : null;
           if (view) held = beginRestoredView();
           // The same entry point My Files uses, so a restored file is governed by the same rules as
           // any other file entering the workbench - including whether a policy has already run on it.
-          await actions.addStirlingFileStubs(stubs);
-          const selected = saved.selectedFileIds
-            .map((id) => leaves.get(id)?.id)
-            .filter((id): id is FileId => id !== undefined);
-          if (selected.length > 0) actions.setSelectedFiles(selected);
-          // After the files land: the viewer drops an active id it cannot find.
-          const active = saved.activeFileId
-            ? leaves.get(saved.activeFileId)?.id
-            : undefined;
-          if (active) setActiveFileId(active);
-          if (view && held !== null) {
-            reopenView(store, navigationActions.restoreWorkbench, {
-              view,
-              fileCount: stubs.length,
-              token: held,
-            });
-            held = null; // reopenView owns the release from here.
+          await actions.addStirlingFileStubs(toRestore);
+          const restoredIds = new Set(toRestore.map((stub) => stub.id));
+          // File intake can begin during either storage lookup or insertion. Keep its selection
+          // and view, while still reopening the saved files alongside it.
+          if (
+            canRestorePresentation &&
+            !(await launchFilesPending()) &&
+            store.getState().files.ids.every((id) => restoredIds.has(id))
+          ) {
+            const selected = saved.selectedFileIds
+              .map((id) => leaves.get(id)?.id)
+              .filter((id): id is FileId => id !== undefined);
+            if (selected.length > 0) actions.setSelectedFiles(selected);
+            // After the files land: the viewer drops an active id it cannot find.
+            const active = saved.activeFileId
+              ? leaves.get(saved.activeFileId)?.id
+              : undefined;
+            if (active) setActiveFileId(active);
+            if (view && held !== null) {
+              reopenView(store, navigationActions.restoreWorkbench, {
+                view,
+                fileCount: toRestore.length,
+                token: held,
+              });
+              held = null; // reopenView owns the release from here.
+            }
           }
         }
 

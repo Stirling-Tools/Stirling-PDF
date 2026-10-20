@@ -75,7 +75,7 @@ export const WithProfilePicture: Story = {
     profilePictureUrl:
       "data:image/svg+xml;utf8," +
       encodeURIComponent(
-        // icon-lint-disable -- data-uri avatar fixture, not an icon
+        // icon-lint-allow: storybook-fixture -- data-uri avatar fixture, not an icon
         '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="black"/><circle cx="32" cy="24" r="12" fill="white"/><ellipse cx="32" cy="56" rx="20" ry="16" fill="white"/></svg>',
       ),
   },

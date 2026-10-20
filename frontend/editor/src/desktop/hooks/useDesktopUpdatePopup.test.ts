@@ -200,17 +200,36 @@ describe("useDesktopUpdatePopup — auto mode", () => {
     expect(invocations).toContain("restart_app");
   });
 
-  it("skips the update check entirely in SaaS connection mode", async () => {
-    // In SaaS mode the cloud owns versioning — the self-hosted update check
-    // must never run: no mode lookup, no external summary fetch, no install.
+  it("still checks and auto-installs in SaaS connection mode", async () => {
+    // The desktop binary is local even when signed in to the cloud, so it must keep updating.
     getCurrentModeMock.mockResolvedValue("saas");
+    invokeMock.mockImplementation((cmd: string) => {
+      if (cmd === "check_for_update") {
+        return Promise.resolve({
+          version: "2.0.0",
+          currentVersion: "1.0.0",
+          releaseNotes: null,
+        });
+      }
+      return Promise.resolve();
+    });
 
     await runStartup();
 
-    expect(getUpdateModeMock).not.toHaveBeenCalled();
+    expect(getUpdateModeMock).toHaveBeenCalled();
+    expect(getUpdateSummaryMock).toHaveBeenCalled();
+    const invocations = invokeMock.mock.calls.map((c) => c[0]);
+    expect(invocations).toContain("download_and_install_update");
+    expect(invocations).toContain("restart_app");
+  });
+
+  it("does nothing when the update mode is disabled", async () => {
+    getUpdateModeMock.mockResolvedValue("disabled");
+
+    await runStartup();
+
     expect(getUpdateSummaryMock).not.toHaveBeenCalled();
     const invocations = invokeMock.mock.calls.map((c) => c[0]);
     expect(invocations).not.toContain("download_and_install_update");
-    expect(invocations).not.toContain("restart_app");
   });
 });

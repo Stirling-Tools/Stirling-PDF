@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import { alert } from "@app/components/toast";
+import { titleForStatus } from "@app/services/httpErrorUtils";
 
 interface ErrorToastMapping {
   regex: RegExp;
@@ -22,13 +23,6 @@ const MAPPINGS: ErrorToastMapping[] = [
     defaultMessage: "The PDF password is incorrect or not provided.",
   },
 ];
-
-function titleForStatus(status?: number): string {
-  if (!status) return "Network error";
-  if (status >= 500) return "Server error";
-  if (status >= 400) return "Request error";
-  return "Request failed";
-}
 
 /**
  * Match a raw backend error string against known patterns and show a friendly toast.

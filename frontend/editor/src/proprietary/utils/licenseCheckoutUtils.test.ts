@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { expect, it, vi } from "vitest";
 import { pollTeamCheckout } from "@app/utils/licenseCheckoutUtils";
 import { verifyTeamCheckout } from "@app/services/serverPlanCheckout";

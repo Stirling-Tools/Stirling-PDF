@@ -3,10 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Alert, Group, Modal, Stack, TextInput } from "@mantine/core";
 import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
-import { splitFileName } from "@app/utils/fileUtils";
-
-/** Characters Windows/macOS reject in a filename, which is also what a download saves as. */
-const ILLEGAL_NAME_CHARS = /[\\/:*?"<>|]/;
+import { ILLEGAL_FILE_NAME_CHARS, splitFileName } from "@app/utils/fileUtils";
 
 interface RenameFileDialogProps {
   opened: boolean;
@@ -44,7 +41,7 @@ export function RenameFileDialog({
   const submit = async () => {
     const nextBase = value.trim();
     if (!nextBase) return;
-    if (ILLEGAL_NAME_CHARS.test(nextBase)) {
+    if (ILLEGAL_FILE_NAME_CHARS.test(nextBase)) {
       setError(
         t(
           "fileSidebar.rename.illegalCharacters",

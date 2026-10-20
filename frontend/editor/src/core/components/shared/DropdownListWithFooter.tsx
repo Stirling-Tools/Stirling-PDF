@@ -108,7 +108,9 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
       );
       return selectedItem?.name || selectedValues[0];
     } else {
-      return `${selectedValues.length} selected`;
+      return t("dropdownList.selectedCount", "{{count}} selected", {
+        count: selectedValues.length,
+      });
     }
   };
 

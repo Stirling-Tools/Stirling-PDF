@@ -632,7 +632,8 @@ export const AttachmentSidebar = ({
                 ? canPreviewMember(attachment)
                   ? t("viewer.portfolio.preview", "Preview")
                   : t("viewer.attachments.download", "Download attachment")
-                : undefined
+                : attachment.name ||
+                  t("viewer.attachments.untitled", "Untitled")
             }
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
@@ -644,7 +645,15 @@ export const AttachmentSidebar = ({
             {isPortfolio &&
               (MEMBER_ICONS[memberIconKey(attachment)] ?? MEMBER_ICONS.default)}
             <div className="attachment-item__content">
-              <Text size="sm" fw={500} className="attachment-item__title">
+              <Text
+                size="sm"
+                fw={500}
+                className="attachment-item__title"
+                title={
+                  attachment.name ||
+                  t("viewer.attachments.untitled", "Untitled")
+                }
+              >
                 {attachment.name ||
                   t("viewer.attachments.untitled", "Untitled")}
               </Text>

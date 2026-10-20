@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { Menu } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
@@ -130,6 +131,7 @@ interface RootRowProps {
 
 function RootRow({ fileCount, isActive, onSelect, onDropFiles }: RootRowProps) {
   const { t } = useTranslation();
+  const localOnly = useLocalProcessingOnly();
   const { setError } = useFolders();
   const { handlers, isOver } = useDropTarget({
     dragType: FILES_PAGE_DRAG_TYPE,
@@ -173,7 +175,9 @@ function RootRow({ fileCount, isActive, onSelect, onDropFiles }: RootRowProps) {
         <Icon name="house" size={18} />
       </span>
       <span className="files-page-tree-name">
-        {t("filesPage.allFiles", "Stirling library")}
+        {localOnly
+          ? t("desktopPrivacy.localFiles", "Local files")
+          : t("filesPage.allFiles", "Stirling library")}
       </span>
       <span className="files-page-tree-count">{fileCount}</span>
     </div>

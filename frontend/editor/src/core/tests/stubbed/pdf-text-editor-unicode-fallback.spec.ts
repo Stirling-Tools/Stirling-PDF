@@ -2,7 +2,13 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
-import { downloadBytes, saveAndDownload } from "@app/tests/stubbed/saveHelpers";
+import {
+  downloadBytes,
+  saveAndDownload,
+  stashCurrentDocument,
+  waitForReopenedPage,
+} from "@app/tests/stubbed/saveHelpers";
+import { waitForEditorReady } from "@app/tests/stubbed/editorReady";
 
 /** Client-side Unicode fallback font (Noto Sans, embedded on demand). */
 
@@ -41,6 +47,24 @@ async function gotoEditor(page: Page): Promise<Promise<unknown>> {
   return fontLoaded;
 }
 
+function runText(page: Page, rid: string): Promise<string> {
+  return page.evaluate((id: string) => {
+    const s = (window as unknown as EditorTestWindow).__editor_store;
+    return s.doc.page(0).runs.find((r) => r.id === id)?.text ?? "";
+  }, rid);
+}
+
+// Reopen saved bytes and wait for that document, not the one still on screen.
+async function reopen(page: Page, name: string, saved: Buffer) {
+  await stashCurrentDocument(page);
+  await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    name,
+    mimeType: "application/pdf",
+    buffer: saved,
+  });
+  await waitForReopenedPage(page, 0);
+}
+
 // Load SAMPLE, append `text` to the first run, blur, save, and reopen the
 // produced bytes.
 async function appendSaveReopen(
@@ -59,7 +83,7 @@ async function appendSaveReopen(
     timeout: 30_000,
   });
   await fontLoaded; // bytes cached before we edit
-  await page.waitForTimeout(400);
+  await waitForEditorReady(page);
 
   // Append the sample text to the first run and commit (blur).
   const id = await page.evaluate(() => {
@@ -84,26 +108,17 @@ async function appendSaveReopen(
     },
     { rid: id, txt: text },
   );
-  await page.waitForTimeout(200);
   await page.evaluate((rid: string) => {
     document
       .querySelector<HTMLElement>(`[data-testid="pdf-editor-run-${rid}"]`)
       ?.blur();
   }, id);
-  await page.waitForTimeout(1000);
+  await expect.poll(() => runText(page, id)).toContain(text);
 
   // Save, then reopen the produced bytes.
   const saved = await downloadBytes(await saveAndDownload(page, expectRisk));
 
-  await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-    name: "round-trip.pdf",
-    mimeType: "application/pdf",
-    buffer: saved,
-  });
-  await expect(
-    page.locator('[data-testid^="pdf-editor-run-p0-"]').first(),
-  ).toBeVisible({ timeout: 30_000 });
-  await page.waitForTimeout(500);
+  await reopen(page, "round-trip.pdf", saved);
 
   const reopened = await page.evaluate(() => {
     const s = (window as unknown as EditorTestWindow).__editor_store;
@@ -175,7 +190,7 @@ for (const { name, text } of RTL_SAMPLES) {
       timeout: 30_000,
     });
     await fontLoaded;
-    await page.waitForTimeout(400);
+    await waitForEditorReady(page);
 
     const id = await page.evaluate(() => {
       const s = (window as unknown as EditorTestWindow).__editor_store;
@@ -199,20 +214,14 @@ for (const { name, text } of RTL_SAMPLES) {
       },
       { rid: id, txt: text },
     );
-    await page.waitForTimeout(200);
     await page.evaluate((rid: string) => {
       document
         .querySelector<HTMLElement>(`[data-testid="pdf-editor-run-${rid}"]`)
         ?.blur();
     }, id);
-    await page.waitForTimeout(1000);
 
     // (a) model text carries the inserted RTL string.
-    const model = await page.evaluate((rid: string) => {
-      const s = (window as unknown as EditorTestWindow).__editor_store;
-      return s.doc.page(0).runs.find((r) => r.id === rid)?.text ?? "";
-    }, id);
-    expect(model).toContain(text);
+    await expect.poll(() => runText(page, id)).toContain(text);
 
     // (b) the edited run stays within page bounds after the edit.
     const fits = await page.evaluate((rid: string) => {
@@ -230,15 +239,7 @@ for (const { name, text } of RTL_SAMPLES) {
     // these are always dropped and the save-risk modal always gates the save.
     const saved = await downloadBytes(await saveAndDownload(page, true));
 
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "rtl-round-trip.pdf",
-      mimeType: "application/pdf",
-      buffer: saved,
-    });
-    await expect(
-      page.locator('[data-testid^="pdf-editor-run-p0-"]').first(),
-    ).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(500);
+    await reopen(page, "rtl-round-trip.pdf", saved);
 
     const reopened = await page.evaluate(() => {
       const s = (window as unknown as EditorTestWindow).__editor_store;

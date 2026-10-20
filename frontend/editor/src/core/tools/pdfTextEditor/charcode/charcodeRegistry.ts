@@ -21,6 +21,7 @@ import {
 } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { CmapResolver } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
 import { ContentStreamResolver } from "@app/tools/pdfTextEditor/charcode/ContentStreamResolver";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 /** Per-emit telemetry. */
 export interface CharcodeEvent {
@@ -132,7 +133,7 @@ export function setCharcodesOn(
   if (!ccMod.FPDFText_SetCharcodes || charcodes.length === 0) return false;
   // Allocate a uint32 buffer in the WASM heap.
   const bufSize = charcodes.length * 4;
-  const buf = m.pdfium.wasmExports.malloc(bufSize);
+  const buf = scratchPtr(m, SCRATCH.charcodes, bufSize);
   try {
     const heapU8 = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
     const view = new Uint32Array(heapU8.buffer, buf, charcodes.length);
@@ -140,8 +141,6 @@ export function setCharcodesOn(
     return !!ccMod.FPDFText_SetCharcodes(textObj, buf, charcodes.length);
   } catch {
     return false;
-  } finally {
-    m.pdfium.wasmExports.free(buf);
   }
 }
 

@@ -1,0 +1,27 @@
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+}
+
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding-left: 1.75rem;
+}
+
+.name {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.who {
+  flex: 0 1 12rem;
+  min-width: 9rem;
+}

@@ -195,7 +195,9 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({
 
         // For any other error (network, CORS, invalid JSON, etc.), show error and don't proceed
         const errorMessage =
-          err instanceof Error ? err.message : "Unknown error";
+          err instanceof Error
+            ? err.message
+            : t("setup.server.error.unknown", "Unknown error");
         console.error(
           "[ServerSelection] Configuration fetch error details:",
           errorMessage,

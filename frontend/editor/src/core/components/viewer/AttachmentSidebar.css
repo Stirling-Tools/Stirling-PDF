@@ -70,8 +70,9 @@
 
 .attachment-item__title {
   line-height: 1.35;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--c-text);
 }
 

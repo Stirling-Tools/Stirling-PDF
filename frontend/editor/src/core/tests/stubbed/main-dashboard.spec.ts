@@ -2,6 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import {
   openSettings,
   expandSettingsGroups,
+  revealInPicker,
 } from "@app/tests/helpers/ui-helpers";
 
 test.describe("2. Main Dashboard / Home Page", () => {
@@ -32,24 +33,26 @@ test.describe("2. Main Dashboard / Home Page", () => {
       ).toBeVisible();
 
       const categories = [
-        /Recommended/,
-        /Signing/,
-        /Document Security/,
-        /Verification/,
-        /Document Review/,
-        /Page Formatting/,
-        /Extraction/,
-        /Removal/,
-        /Automation/,
-        /General/,
-        /Advanced Formatting/,
-        /Developer Tools/,
+        "Recommended",
+        "Signing",
+        "Document Security",
+        "Verification",
+        "Document Review",
+        "Page Formatting",
+        "Extraction",
+        "Removal",
+        "Automation",
+        "General",
+        "Advanced Formatting",
+        "Developer Tools",
       ];
 
       for (const category of categories) {
-        await expect(page.getByText(category).first()).toBeVisible({
-          timeout: 10000,
-        });
+        const header = await revealInPicker(
+          page,
+          page.getByText(category, { exact: true }).first(),
+        );
+        await expect(header).toBeVisible({ timeout: 10000 });
       }
     });
   });

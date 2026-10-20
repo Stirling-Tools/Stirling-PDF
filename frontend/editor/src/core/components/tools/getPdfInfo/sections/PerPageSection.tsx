@@ -1,6 +1,7 @@
 import React from "react";
 import { Accordion, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import type {
   PdfPerPageInfo,
   PdfPageInfo,
@@ -19,6 +20,7 @@ interface PerPageSectionProps {
 const renderImagesList = (
   images: PdfImageInfo[] | undefined,
   emptyText: string,
+  t: TFunction,
 ) => {
   if (!images || images.length === 0)
     return (
@@ -34,8 +36,8 @@ const renderImagesList = (
           style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
         >
           <Text size="sm" c="dimmed">
-            {image.Name ? `${image.Name} ` : "Image "}({image.Width}×
-            {image.Height}px
+            {image.Name || t("getPdfInfo.perPage.unnamedImage", "Image")} (
+            {image.Width}×{image.Height}px
             {image.ColorSpace ? `, ${image.ColorSpace}` : ""})
           </Text>
         </div>
@@ -165,7 +167,7 @@ const PerPageSection: React.FC<PerPageSectionProps> = ({
                         <Text fw={600} size="sm">
                           {t("getPdfInfo.perPage.images", "Images")}
                         </Text>
-                        {renderImagesList(pageInfo?.Images, noneDetected)}
+                        {renderImagesList(pageInfo?.Images, noneDetected, t)}
                       </Stack>
                       <Stack gap={4}>
                         <Text fw={600} size="sm">

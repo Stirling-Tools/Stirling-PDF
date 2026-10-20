@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { fromLatin1, toLatin1 } from "@app/tools/pdfTextEditor/pdfdoc/bytes";
 import { RawPdf } from "@app/tools/pdfTextEditor/pdfdoc/raw";

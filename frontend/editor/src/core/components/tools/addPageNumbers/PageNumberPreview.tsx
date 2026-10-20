@@ -243,7 +243,7 @@ export default function PageNumberPreview({
           <PrivateContent>
             <img
               src={pageThumbnail}
-              alt="page preview"
+              alt={t("addPageNumbers.pagePreviewAlt", "Page preview")}
               className={styles.pageThumbnail}
               draggable={false}
             />

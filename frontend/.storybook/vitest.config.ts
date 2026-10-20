@@ -24,7 +24,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     // Pre-scan every story + the preview so Vite discovers the story set's large
-    // dep surface (embedpdf plugins, @mui icons, …) in one pass up front.
+    // dep surface (embedpdf plugins, lucide svgs, …) in one pass up front.
     entries: ["editor/src/**/*.stories.@(ts|tsx)", ".storybook/preview.tsx"],
     // `entries` alone does not catch deps reached through a transformed JSX
     // runtime import, nor the preview's own dependency graph (the test plugin

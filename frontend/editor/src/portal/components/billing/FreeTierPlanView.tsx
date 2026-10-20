@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@app/auth";
 import { qk } from "@portal/queries/keys";
@@ -92,6 +93,7 @@ export function FreeTierPlanView({
   const { t } = useTranslation();
   const { isAdmin } = useAuth();
   const { openLinkModal } = useUI();
+  const [searchParams, setSearchParams] = useSearchParams();
   const query = useQuery({
     queryKey: qk.freeTier(),
     queryFn: fetchFreeTier,
@@ -140,6 +142,14 @@ export function FreeTierPlanView({
     ? () => openLinkModal(exhausted ? "exhausted" : "link")
     : undefined;
 
+  function requestEnterpriseQuote() {
+    // The link handoff retains the URL across sign-in; Usage consumes this request once linked.
+    const next = new URLSearchParams(searchParams);
+    next.set("procurement", "start");
+    setSearchParams(next, { replace: true });
+    openLinkModal("link");
+  }
+
   return (
     <BillingScreen
       wallet={wallet}
@@ -152,6 +162,7 @@ export function FreeTierPlanView({
       pdfsProcessed={fleetStats?.pdfsProcessed ?? null}
       onAddCapacity={onLink}
       onActivateProcessor={onLink}
+      onEnterpriseQuote={isAdmin ? requestEnterpriseQuote : undefined}
       notices={
         <>
           <Banner

@@ -1,12 +1,19 @@
-/** React state around the Downloads sweep: locates the folder, runs batches, exposes
- *  progress. The sweep itself is {@link runClassificationDemoSweep}. */
+/** React access to the Downloads sweep: locates the folder, runs batches, exposes
+ *  progress. The sweep itself is {@link runClassificationDemoSweep}; its state lives in
+ *  the session store, so a remount picks up a running sweep instead of an idle one. */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFolders } from "@app/contexts/FolderContext";
 import {
+  beginSweep,
+  isSweepCurrent,
   recordSwept,
+  stopSweep,
   sweptPaths,
+  updateSweep,
+  useClassificationDemoSweep,
+  type ClassificationDemoStatus,
 } from "@app/components/onboarding/classificationDemo/classificationDemoSession";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import {
@@ -18,8 +25,6 @@ import {
   type ClassificationDemoProgress,
 } from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
 
-export type ClassificationDemoStatus = "idle" | "running" | "done" | "failed";
-
 export interface ClassificationDemoState {
   status: ClassificationDemoStatus;
   /** Null until the folder has been located; the offer is pointless without it. */
@@ -30,34 +35,14 @@ export interface ClassificationDemoState {
   cancel: () => void;
 }
 
-const IDLE_PROGRESS: ClassificationDemoProgress = {
-  phase: "reading",
-  processed: 0,
-  total: 0,
-  groups: [],
-};
-
 export function useClassificationDemo(
   active: boolean,
 ): ClassificationDemoState {
   const { t } = useTranslation();
   const { mountLocalFolder } = useFolders();
   const { addFiles } = useFileHandler();
-  const [status, setStatus] = useState<ClassificationDemoStatus>("idle");
+  const { status, progress, outcome } = useClassificationDemoSweep();
   const [directory, setDirectory] = useState<string | null>(null);
-  const [progress, setProgress] =
-    useState<ClassificationDemoProgress>(IDLE_PROGRESS);
-  const [outcome, setOutcome] = useState<ClassificationDemoOutcome | null>(
-    null,
-  );
-  const cancelled = useRef(false);
-
-  useEffect(
-    () => () => {
-      cancelled.current = true;
-    },
-    [],
-  );
 
   // From the OS, not the backend's `downloads-suggestion`: that endpoint is
   // proprietary-only, so the desktop-bundled backend 404s it every time.
@@ -75,16 +60,17 @@ export function useClassificationDemo(
   const start = useCallback(
     (limit: number = CLASSIFICATION_DEMO_BATCH_SIZE) => {
       if (!directory) return;
-      cancelled.current = false;
-      setStatus("running");
-      setProgress({ ...IDLE_PROGRESS });
+      const generation = beginSweep();
       void runClassificationDemoSweep(
         directory,
         {
           mountFolder: mountLocalFolder,
           addFiles,
-          onProgress: setProgress,
-          isCancelled: () => cancelled.current,
+          onProgress: (next) =>
+            updateSweep(generation, () => ({ progress: next })),
+          // Stopped only by an explicit Stop or dismissal: unmounting is not leaving,
+          // since the view can remount mid-sweep and must find it still running.
+          isCancelled: () => !isSweepCurrent(generation),
         },
         {
           limit,
@@ -95,26 +81,21 @@ export function useClassificationDemo(
         .then((result) => {
           // Recorded even when cancelled: those documents were still taken on.
           recordSwept(result.sweptPaths);
-          if (cancelled.current) return;
           // Folded into what is there: a follow-up continues the same pile, so the
           // chart grows instead of restarting at the last handful.
-          setOutcome((previous) =>
-            previous ? mergeOutcomes(previous, result) : result,
-          );
-          setStatus("done");
+          updateSweep(generation, ({ outcome: previous }) => ({
+            outcome: previous ? mergeOutcomes(previous, result) : result,
+            status: "done",
+          }));
         })
         .catch(() => {
-          if (cancelled.current) return;
-          setStatus("failed");
+          updateSweep(generation, () => ({ status: "failed" }));
         });
     },
     [directory, mountLocalFolder, addFiles, t],
   );
 
-  const cancel = useCallback(() => {
-    cancelled.current = true;
-    setStatus("idle");
-  }, []);
+  const cancel = useCallback(() => stopSweep(), []);
 
   return {
     status,

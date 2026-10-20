@@ -92,7 +92,7 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
   const labels = new Map(
     loadPolicyCatalog().categories.map((category) => [
       category.id,
-      category.label,
+      t(`portal.policies.categories.${category.id}.label`, category.label),
     ]),
   );
   const fileIds = affectedFileIds(blocks);

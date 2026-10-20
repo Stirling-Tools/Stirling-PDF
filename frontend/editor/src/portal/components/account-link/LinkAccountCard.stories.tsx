@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { WithOrgOwner } from "@portal/test/WithOrgOwner";
 import type { UseAccountLink } from "@portal/hooks/useAccountLink";
 import { LinkAccountCard } from "@portal/components/account-link/LinkAccountCard";
 import "@portal/views/AccountLink.css";
@@ -18,6 +19,7 @@ const base: UseAccountLink = {
 const meta: Meta<typeof LinkAccountCard> = {
   title: "Portal/AccountLink/LinkAccountCard",
   component: LinkAccountCard,
+  decorators: [WithOrgOwner],
   parameters: { layout: "padded" },
 };
 export default meta;
@@ -26,6 +28,11 @@ type Story = StoryObj<typeof LinkAccountCard>;
 /** Not linked — the "Link your Stirling account" button opens the login modal. */
 export const NotLinked: Story = {
   args: { link: base },
+};
+
+export const OtherAdministrator: Story = {
+  args: { link: base },
+  parameters: { orgOwner: false },
 };
 
 /** Linking — login completed, button shows progress while registering. */

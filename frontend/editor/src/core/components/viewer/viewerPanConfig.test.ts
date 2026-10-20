@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { PanPluginPackage } from "@embedpdf/plugin-pan";
 import { initialState as interactionManagerInitialState } from "@embedpdf/plugin-interaction-manager";

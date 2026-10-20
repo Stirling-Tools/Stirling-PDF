@@ -1,6 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
+import { readFileSync } from "node:fs";
 import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 
 // 4.3 "No standardised 'save PDF'". The editor only ever produced a download,
@@ -54,6 +55,68 @@ function activeFilesTab(page: Page) {
 }
 
 test.describe("PDF text editor - standardised save", () => {
+  test("a superseded disk open cannot join or replace the current workbench file", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.evaluate(() => {
+      const original = File.prototype.arrayBuffer;
+      const gate = window as typeof window & {
+        releaseFirstOpen?: () => void;
+        firstReadStarted?: boolean;
+        firstReadFinished?: boolean;
+      };
+      File.prototype.arrayBuffer = async function () {
+        if (this.name === "first.pdf") {
+          gate.firstReadStarted = true;
+          await new Promise<void>((resolve) => {
+            gate.releaseFirstOpen = resolve;
+          });
+          gate.firstReadFinished = true;
+        }
+        return original.call(this);
+      };
+    });
+    const input = page.getByTestId("pdf-editor-file-input");
+    const buffer = readFileSync(SAMPLE_PDF);
+    await input.setInputFiles({
+      name: "first.pdf",
+      mimeType: "application/pdf",
+      buffer,
+    });
+    await page.waitForFunction(
+      () =>
+        (window as typeof window & { firstReadStarted?: boolean })
+          .firstReadStarted,
+    );
+    await input.setInputFiles({
+      name: "second.pdf",
+      mimeType: "application/pdf",
+      buffer,
+    });
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 60_000,
+    });
+    await page.evaluate(() =>
+      (
+        window as typeof window & { releaseFirstOpen?: () => void }
+      ).releaseFirstOpen?.(),
+    );
+    await page.waitForFunction(
+      () =>
+        (window as typeof window & { firstReadFinished?: boolean })
+          .firstReadFinished,
+    );
+    await activeFilesTab(page).click();
+    const cards = page.getByTestId("file-thumbnail");
+    await expect(cards).toHaveCount(1);
+    await expect(cards.first()).toContainText("second.pdf");
+    await expect(page.getByText("first.pdf", { exact: true })).toHaveCount(0);
+  });
   test("saving replaces the workbench file instead of only downloading", async ({
     page,
   }) => {

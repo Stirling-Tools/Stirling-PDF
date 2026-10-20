@@ -79,7 +79,6 @@ test("the sidebar native picker keeps its path after reload and saves in place",
   await dismissModals(page);
   await expectLinked(page);
   await expect(page.locator(".file-sidebar-file-item")).toHaveCount(1);
-  await page.locator(".file-sidebar-file-item").click();
   await expect(page.locator('[data-page-index="0"]').first()).toBeVisible({
     timeout: 30_000,
   });
@@ -115,6 +114,67 @@ test("a Finder-open event stores the link during import", async ({ page }) => {
   }, PATH);
   await expectLinked(page);
 });
+
+for (const timing of ["reload", "running"] as const) {
+  test(`an OS-opened file joins existing files when ${timing}`, async ({
+    page,
+  }) => {
+    await page.getByTestId("files-button").click();
+    await expectLinked(page);
+    await expect(
+      page.getByRole("button", { name: "Close viewer", exact: true }),
+    ).toHaveCount(1);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            JSON.parse(
+              sessionStorage.getItem("stirling.workbench.session") ?? "{}",
+            ).fileIds?.length,
+        ),
+      )
+      .toBe(1);
+
+    const incomingPath = "C:/Docs/incoming.pdf";
+    await setDisk(page, {
+      [PATH]: { bytes: BYTES, modifiedMs: MTIME },
+      [incomingPath]: { bytes: BYTES, modifiedMs: MTIME },
+    });
+    if (timing === "reload") {
+      await page.addInitScript(
+        (path) => Reflect.set(window, "__openedPaths", [path]),
+        incomingPath,
+      );
+      await page.reload();
+      await dismissModals(page);
+    } else {
+      await page.evaluate((path) => {
+        Reflect.set(window, "__openedPaths", [path]);
+        const callbacks = Reflect.get(window, "__callbacks");
+        const listeners = Reflect.get(window, "__listeners");
+        callbacks[listeners["files-changed"]]({
+          event: "files-changed",
+          payload: null,
+        });
+      }, incomingPath);
+    }
+
+    await expect(page.locator(".file-sidebar-file-item")).toHaveCount(2);
+    await expect(page.locator(".file-sidebar-file-item.selected")).toHaveCount(
+      2,
+    );
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            JSON.parse(
+              sessionStorage.getItem("stirling.workbench.session") ?? "{}",
+            ).fileIds?.length,
+        ),
+      )
+      .toBe(2);
+  });
+}
 
 test("an HTML file drop imports the native path", async ({ page }) => {
   await page.locator(".file-sidebar").evaluate(

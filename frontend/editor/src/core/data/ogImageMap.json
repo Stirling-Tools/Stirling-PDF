@@ -1,7 +1,6 @@
 {
   "certSign": "certSign",
   "sign": "sign",
-  "sharedSign": "shared-sign",
   "addText": "add-text",
   "addPassword": "add-password",
   "removePassword": "remove-password",

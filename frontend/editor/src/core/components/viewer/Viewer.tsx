@@ -19,6 +19,7 @@ export type { ViewerProps };
 type SignatureOverlayPassThrough = Pick<
   EmbedPdfViewerProps,
   | "signaturePreviews"
+  | "readOnlySignaturePreviews"
   | "signaturePreviewsReadOnly"
   | "signaturePlacementMode"
   | "signaturePlacementData"

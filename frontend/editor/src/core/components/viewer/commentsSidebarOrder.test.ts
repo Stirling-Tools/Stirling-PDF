@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";

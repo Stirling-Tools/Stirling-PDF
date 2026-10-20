@@ -1,10 +1,19 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
+import i18n from "i18next";
 import { installFailOnConsole } from "@app/tests/failOnConsole";
 
 // jsdom is missing the same APIs WebKit is, so tests must agree with the
 // browser. Same module `src/index.tsx` installs.
 import "@app/utils/engineShims";
+
+// Modules outside React call i18n.t directly; no resources means the English defaults render.
+void i18n.init({
+  lng: "en-US",
+  resources: {},
+  initAsync: false,
+  interpolation: { escapeValue: false },
+});
 
 installFailOnConsole();
 
@@ -37,7 +46,7 @@ class LocalStorageMock implements Storage {
   }
 }
 
-Object.defineProperty(window, "localStorage", {
+Object.defineProperty(globalThis, "localStorage", {
   value: new LocalStorageMock(),
   writable: true,
 });
@@ -148,7 +157,7 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock matchMedia for responsive components
-Object.defineProperty(window, "matchMedia", {
+Object.defineProperty(globalThis, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({
     matches: false,

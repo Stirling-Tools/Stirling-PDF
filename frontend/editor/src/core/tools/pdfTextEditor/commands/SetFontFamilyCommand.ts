@@ -13,6 +13,10 @@ import {
   removeMemberPtrs,
 } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import { deviceFontEmitCount } from "@app/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  setScanOverride,
+  type ScanOverride,
+} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
 
 // Re-emit a run's text in another family: PDFium has no SetFont accessor.
 // Device fonts embed when pre-warmed, else the nearest standard face.
@@ -21,6 +25,8 @@ export class SetFontFamilyCommand implements Command {
   private readonly pageIndex: number;
   private readonly runId: string;
   private readonly nextFamily: string;
+  /** Set when the run was scanned text, re-set by redrawing it. */
+  private scanPrev: ScanOverride | null = null;
   /** Full pre-edit model snapshot for revert. */
   private prev: RunModelSnapshot | null;
   /** Original on-page member ptrs (re-inserted on revert). */
@@ -41,6 +47,14 @@ export class SetFontFamilyCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    const scanPrev = setScanOverride(doc, page, run, (o) => ({
+      ...o,
+      family: this.nextFamily,
+    }));
+    if (scanPrev) {
+      this.scanPrev = scanPrev;
+      return;
+    }
     const m = doc.module;
 
     if (this.prev === null) {
@@ -151,6 +165,14 @@ export class SetFontFamilyCommand implements Command {
   }
 
   revert(doc: EditorDocument): void {
+    if (this.scanPrev) {
+      const page = doc.page(this.pageIndex);
+      const run = page.findRun(this.runId);
+      const prev = this.scanPrev;
+      if (run) setScanOverride(doc, page, run, () => prev);
+      this.scanPrev = null;
+      return;
+    }
     if (!this.prev) return;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);

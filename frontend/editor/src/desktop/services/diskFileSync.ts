@@ -138,6 +138,9 @@ export async function syncLinkedFileFromDisk(
   if (state.availability === "unavailable") {
     return { status: "unavailable", reason: state.reason };
   }
+  // Matching disk metadata does not resolve a recorded conflict after reload.
+  if (stub.isLeaf !== false && stub.diskConflictAt)
+    return { status: "conflict" };
   if (!hasDiskChanged(stub, state)) return { status: "unchanged" };
   // Deliberately below the missing and unavailable checks: a superseded version
   // still wants its link state reported, it just must never be replaced.

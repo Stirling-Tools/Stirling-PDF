@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.service;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -26,6 +27,15 @@ import stirling.software.proprietary.security.model.api.Email;
 @RequiredArgsConstructor
 @ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
 public class EmailService {
+
+    /** Content id {@link #sendBrandedEmail} attaches the brand lockup under. */
+    public static final String BRAND_LOGO_CONTENT_ID = "stirling-logo";
+
+    // The ui/Logo.tsx lockup (logo-mark.svg + wordmark-light.svg) rasterised at 3x on white: most
+    // email clients do not render SVG, and the white ground keeps it legible if a client darkens
+    // the email.
+    private static final ClassPathResource BRAND_LOGO =
+            new ClassPathResource("email/stirling-lockup.png");
 
     private final JavaMailSender mailSender;
     private final ApplicationProperties applicationProperties;
@@ -308,5 +318,28 @@ public class EmailService {
                         .formatted(username, passwordSection, loginUrl, loginUrl);
 
         sendPlainEmail(to, subject, body, true);
+    }
+
+    /**
+     * Sends an HTML email with the Stirling lockup attached inline, so the body can show it as
+     * {@code <img src="cid:stirling-logo">} without the recipient's client fetching anything.
+     *
+     * @throws MessagingException if the recipient is blank or the message cannot be sent
+     */
+    @Async
+    public void sendBrandedEmail(String to, String subject, String html) throws MessagingException {
+        if (to == null || to.trim().isEmpty()) {
+            throw new MessagingException("Invalid recipient email address");
+        }
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper =
+                new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_RELATED, "UTF-8");
+        helper.addTo(to);
+        helper.setSubject(subject);
+        helper.setFrom(applicationProperties.getMail().getFrom());
+        // After setText: some mail readers cannot resolve a cid added before the body.
+        helper.setText(html, true);
+        helper.addInline(BRAND_LOGO_CONTENT_ID, BRAND_LOGO, "image/png");
+        mailSender.send(message);
     }
 }

@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import { Icon } from "@app/ui/Icon";
 import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
 import { Chip, type ChipAccent } from "@app/ui/Chip";
 import { Button } from "@app/ui/Button";
@@ -48,19 +49,7 @@ export interface DataTableColumn<T> {
 export type CellGlyph = "kebab";
 
 function KebabGlyph() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <circle cx="12" cy="5" r="1.6" />
-      <circle cx="12" cy="12" r="1.6" />
-      <circle cx="12" cy="19" r="1.6" />
-    </svg>
-  );
+  return <Icon name="ellipsis-vertical" size={16} filled />;
 }
 
 /** An item in a kebab action menu. */
@@ -283,7 +272,12 @@ function number<T>(
 
 function badge<T>(
   o: Common & {
-    get: (row: T) => { tone: StatusTone; label: string };
+    get: (row: T) => {
+      tone: StatusTone;
+      label: string;
+      /** Optional completion bar below the status; value is 0–1 and label describes the completed count. */
+      progress?: { value: number; label: string };
+    };
     sortBy?: (row: T) => SortValue;
   },
 ): DataTableColumn<T> {
@@ -295,10 +289,24 @@ function badge<T>(
     sortFn: "alphanumeric",
     renderCell: (r) => {
       const b = o.get(r);
-      return (
+      const status = (
         <StatusBadge tone={b.tone} size="sm">
           {b.label}
         </StatusBadge>
+      );
+      if (!b.progress) return status;
+      return (
+        <div className="sui-dtc__status-progress">
+          <div className="sui-dtc__status-progress-heading">
+            {status}
+            <span className="sui-dtc__progress-pct">{b.progress.label}</span>
+          </div>
+          <ProgressBar
+            value={b.progress.value}
+            label={b.progress.label}
+            height={4}
+          />
+        </div>
       );
     },
   });
@@ -388,6 +396,8 @@ function entity<T>(
     primary: (row: T) => string;
     /** Muted inline suffix after the name, its own node (e.g. "(you)"). */
     suffix?: (row: T) => string | null | undefined;
+    /** When present, shows an unread dot and exposes this explanation to assistive technology. */
+    unreadLabel?: (row: T) => string | null | undefined;
     /** Secondary muted line under the name. */
     note?: (row: T) => string | null | undefined;
     sortBy?: (row: T) => SortValue;
@@ -402,6 +412,7 @@ function entity<T>(
     renderCell: (r) => {
       const icon = o.icon?.(r);
       const suffix = o.suffix?.(r);
+      const unreadLabel = o.unreadLabel?.(r);
       const note = o.note?.(r);
       return (
         <div className="sui-dtc__entity">
@@ -413,6 +424,14 @@ function entity<T>(
           <div className="sui-dtc__entity-body">
             <span className="sui-dtc__entity-head">
               <span className="sui-dtc__entity-name">{o.primary(r)}</span>
+              {unreadLabel && (
+                <span
+                  className="sui-dtc__unread"
+                  role="img"
+                  aria-label={unreadLabel}
+                  title={unreadLabel}
+                />
+              )}
               {suffix && (
                 <span className="sui-dtc__entity-suffix">{suffix}</span>
               )}

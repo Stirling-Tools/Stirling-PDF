@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import {
@@ -5,6 +6,7 @@ import {
   type ParagraphLineSlot,
   TextRun,
 } from "@app/tools/pdfTextEditor/model/TextRun";
+import { readTagMarks } from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 /** Split a paragraph-grouped run back into one editable run per source line. */
 interface RepSnapshot {
@@ -90,8 +92,14 @@ export class UngroupParagraphCommand implements Command {
         fontSize: rep.fontSize,
         fill: { ...rep.fill },
         fontSubset: rep.fontSubset,
+        renderMode: rep.renderMode,
       });
       r.containerPtr = containers[i] ?? 0;
+      // Each line keeps its own object's tags: lines grouped into one paragraph
+      // can belong to different structure elements, such as list items.
+      if (!r.containerPtr) {
+        r.tagMarks = ptrs[i] ? readTagMarks(doc.module, ptrs[i]) : rep.tagMarks;
+      }
       newRuns.push(r);
     }
     this.createdRunIds = newRuns.map((r) => r.id);
@@ -152,6 +160,10 @@ export class UngroupParagraphCommand implements Command {
   }
 
   describe(): string {
-    return `Ungroup paragraph ${this.runId}`;
+    return i18n.t(
+      "pdfTextEditor.commands.ungroupParagraph",
+      "Ungroup paragraph {{run}}",
+      { run: this.runId },
+    );
   }
 }

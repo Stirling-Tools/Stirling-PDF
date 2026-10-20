@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { formatPrice } from "@app/components/shared/stripeCheckout/utils/pricingUtils";
 import { PRICE_FONT_WEIGHT } from "@app/components/shared/stripeCheckout/utils/cardStyles";
 
@@ -25,6 +26,7 @@ interface EnterprisePriceProps {
 type PriceDisplayProps = SimplePriceProps | EnterprisePriceProps;
 
 export const PriceDisplay: React.FC<PriceDisplayProps> = (props) => {
+  const { t } = useTranslation();
   if (props.mode === "simple") {
     const fontSize = props.size || "2.25rem";
     return (
@@ -51,37 +53,47 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = (props) => {
   } = props;
   const fontSize = size === "lg" ? "2rem" : size === "sm" ? "md" : "xl";
   const totalFontSize = size === "lg" ? "2rem" : "2rem";
+  const monthLabel = t("plan.period.month", "month");
+  const periodLabel =
+    period === "year" ? t("plan.period.year", "year") : monthLabel;
 
   return (
     <Stack gap="sm">
       <div>
         <Text size="sm" c="dimmed" mb="xs">
-          Base Price
+          {t("payment.priceDisplay.basePrice", "Base Price")}
         </Text>
         <Text size={fontSize} fw={PRICE_FONT_WEIGHT}>
           {formatPrice(basePrice, currency)}
           <Text component="span" size="sm" c="dimmed" fw={400}>
             {" "}
-            /{period}
+            {t("payment.priceDisplay.perPeriod", "/{{period}}", {
+              period: periodLabel,
+            })}
           </Text>
         </Text>
       </div>
       <div>
         <Text size="sm" c="dimmed" mb="xs">
-          Per Seat
+          {t("payment.priceDisplay.perSeat", "Per Seat")}
         </Text>
         <Text size={fontSize} fw={PRICE_FONT_WEIGHT}>
           {formatPrice(seatPrice, currency)}
           <Text component="span" size="sm" c="dimmed" fw={400}>
             {" "}
-            /seat/{period}
+            {t("payment.priceDisplay.perSeatPeriod", "/seat/{{period}}", {
+              period: periodLabel,
+            })}
           </Text>
         </Text>
       </div>
       {totalPrice !== undefined && seatCount && (
         <div>
           <Text size="sm" c="dimmed" mb="xs">
-            Total ({seatCount} seats)
+            {t("payment.priceDisplay.totalSeats", {
+              count: seatCount,
+              defaultValue: "Total ({{count}} seats)",
+            })}
           </Text>
           <Text
             size={totalFontSize}
@@ -91,7 +103,9 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = (props) => {
             {formatPrice(totalPrice, currency)}
             <Text component="span" size="sm" c="dimmed" fw={400}>
               {" "}
-              /{period === "year" ? "month" : period}
+              {t("payment.priceDisplay.perPeriod", "/{{period}}", {
+                period: monthLabel,
+              })}
             </Text>
           </Text>
         </div>

@@ -741,7 +741,11 @@ function VersionHistory({
           {t("update.versionHistory", "Version History")}
         </Text>
         <Text size="xs" c="dimmed">
-          {versions.length} {versions.length === 1 ? "version" : "versions"}
+          {t("update.versionCount", {
+            count: versions.length,
+            defaultValue_one: "{{count}} version",
+            defaultValue_other: "{{count}} versions",
+          })}
         </Text>
       </Group>
       <Stack gap={0}>

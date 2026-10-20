@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import "@app/ui/Banner.css";
 
@@ -27,6 +28,7 @@ export function Banner({
   className,
   children,
 }: BannerProps) {
+  const { t } = useTranslation();
   return (
     <div
       role="status"
@@ -53,7 +55,7 @@ export function Banner({
           shape="circle"
           className="sui-banner__close"
           onClick={onDismiss}
-          aria-label="Dismiss"
+          aria-label={t("common.dismiss", "Dismiss")}
         >
           <span aria-hidden>×</span>
         </ActionIcon>

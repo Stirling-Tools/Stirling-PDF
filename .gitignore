@@ -208,7 +208,6 @@ venv.bak/
 
 # Env files (secrets / local overrides). Subproject .gitignore files whitelist any committed defaults.
 .env*
-!/.env
 
 # VS Code
 /.vscode/**/*
@@ -260,8 +259,9 @@ id_ed25519.pub
 !docs/security/signing-key.pub
 *ssh
 
-# Taskfile checksum cache
-.task/
+# Task cache plus the committed default env the root Taskfile reads.
+.task/*
+!.task/.env
 
 # cache
 .cache

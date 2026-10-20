@@ -48,6 +48,7 @@ export function SelectionInspector({
 }: Props) {
   const runCount = selection.runIds.length;
   const imageCount = selection.imageIds.length;
+  const shapeCount = selection.shapeIds.length;
   const { hasRunSelection, hasImageSelection } = controller;
 
   return (
@@ -55,9 +56,12 @@ export function SelectionInspector({
       <SelectionHeader
         runCount={runCount}
         imageCount={imageCount}
+        shapeCount={shapeCount}
         fontNote={hasRunSelection ? fontNote : null}
       />
-      <GeometrySection geometry={geometry} isImage={!hasRunSelection} />
+      {runCount + imageCount > 0 && (
+        <GeometrySection geometry={geometry} isImage={!hasRunSelection} />
+      )}
       {hasRunSelection && (
         <ParagraphSection
           canGroup={canGroup}
@@ -75,18 +79,28 @@ export function SelectionInspector({
 function SelectionHeader({
   runCount,
   imageCount,
+  shapeCount,
   fontNote,
 }: {
   runCount: number;
   imageCount: number;
+  shapeCount: number;
   fontNote: string | null;
 }) {
   const { t } = useTranslation();
+  const kinds = [runCount, imageCount, shapeCount].filter((n) => n > 0).length;
   let title: string;
-  if (runCount > 0 && imageCount > 0) {
+  if (kinds > 1) {
     title = t("pdfTextEditor.inspector.mixed", "{{count}} objects", {
-      count: runCount + imageCount,
+      count: runCount + imageCount + shapeCount,
     });
+  } else if (shapeCount > 0) {
+    title =
+      shapeCount === 1
+        ? t("pdfTextEditor.inspector.oneShape", "Shape")
+        : t("pdfTextEditor.inspector.manyShapes", "{{count}} shapes", {
+            count: shapeCount,
+          });
   } else if (runCount > 0) {
     title =
       runCount === 1
@@ -255,19 +269,14 @@ function GeometrySection({
                 ? undefined
                 : t(
                     "pdfTextEditor.inspector.widthHint",
-                    "A text box's width follows its content and wrapping.",
+                    "Text re-wraps to fit the width.",
                   )
             }
           >
-            {/* Read-only for text: setting a width goes through the reflow,
-                which splits inside words on runs whose glyphs are positioned
-                individually. Until that is token-aware this must not be a
-                one-keystroke way to shred a heading. */}
             <PointsInput
               value={bounds.width}
-              onCommit={isImage ? setWidth : () => undefined}
+              onCommit={setWidth}
               min={1}
-              disabled={!isImage}
               label={t("pdfTextEditor.inspector.width", "Width")}
               testId="pdf-editor-size-w"
             />

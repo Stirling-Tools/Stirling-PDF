@@ -11,10 +11,12 @@ import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { FORMAT_GROUP_LABEL_KEYS } from "@app/constants/convertConstants";
 
 interface FormatOption {
   value: string;
   label: string;
+  labelKey?: string;
   group: string;
   enabled?: boolean;
   usesCloud?: boolean;
@@ -48,6 +50,13 @@ const GroupedFormatDropdown = ({
   const [dropdownOpened, setDropdownOpened] = useState(false);
   const theme = useMantineTheme();
 
+  const getOptionLabel = (option: FormatOption) =>
+    option.labelKey ? t(option.labelKey, option.label) : option.label;
+  const getGroupLabel = (group: string) => {
+    const key = FORMAT_GROUP_LABEL_KEYS[group];
+    return key ? t(key, group) : group;
+  };
+
   const groupedOptions = useMemo(() => {
     const groups: Record<string, FormatOption[]> = {};
 
@@ -65,9 +74,9 @@ const GroupedFormatDropdown = ({
     if (!value) return resolvedPlaceholder;
     const selected = options.find((opt) => opt.value === value);
     return selected
-      ? `${selected.group} (${selected.label})`
+      ? `${getGroupLabel(selected.group)} (${getOptionLabel(selected)})`
       : value.toUpperCase();
-  }, [value, options, resolvedPlaceholder]);
+  }, [value, options, resolvedPlaceholder, t]);
 
   const handleOptionSelect = (selectedValue: string) => {
     onChange(selectedValue);
@@ -145,7 +154,7 @@ const GroupedFormatDropdown = ({
                 mb="xs"
                 style={{ color: "var(--dropdown-group-label)" }}
               >
-                {groupName}
+                {getGroupLabel(groupName)}
               </Text>
               <Group gap="xs" style={{ flexWrap: "wrap" }}>
                 {groupOptions.map((option) => (
@@ -173,7 +182,7 @@ const GroupedFormatDropdown = ({
                       position: "relative",
                     }}
                   >
-                    {option.label}
+                    {getOptionLabel(option)}
                   </Button>
                 ))}
               </Group>

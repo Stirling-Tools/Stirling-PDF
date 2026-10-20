@@ -2,6 +2,15 @@
 
 This directory contains sample files for testing the convert tool functionality.
 
+## Encrypted annotation fixtures
+
+`encrypted-annotations.pdf` and `encrypted-links.pdf` use `annotation-test` as both the user and owner password. They preserve the comments and links from the corresponding unprotected fixtures. Regenerate them with qpdf:
+
+```sh
+qpdf --encrypt annotation-test annotation-test 256 -- annotations_out_of_order.pdf encrypted-annotations.pdf
+qpdf --encrypt annotation-test annotation-test 256 -- link-annotations-sample.pdf encrypted-links.pdf
+```
+
 ## Required Test Files
 
 To run the full test suite, please add the following test files to this directory:

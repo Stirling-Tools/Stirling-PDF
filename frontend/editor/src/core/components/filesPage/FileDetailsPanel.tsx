@@ -18,6 +18,7 @@ import { fileStorage } from "@app/services/fileStorage";
 import { readStubClassificationLabels } from "@app/services/fileClassification";
 import { useLabelName } from "@app/data/labelDisplay";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import {
   VersionTimeline,
   DetailField,
@@ -81,6 +82,11 @@ export function FileDetailsPanel({
   const labelName = useLabelName();
   const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
   const singleFileForChain = files.length === 1 ? files[0] : null;
+  const access = usePdfAccess(singleFileForChain?.id);
+  const thumbnail =
+    singleFileForChain?.processedFile?.isEncrypted && !access
+      ? undefined
+      : singleFileForChain?.thumbnailUrl;
   useEffect(() => {
     if (!singleFileForChain) {
       setVersionChain([]);
@@ -180,12 +186,10 @@ export function FileDetailsPanel({
         {single ? (
           <>
             <div
-              className={`files-page-details-thumb${
-                compactVersions ? " is-compact" : ""
-              }`}
+              className={`files-page-details-thumb${compactVersions ? " is-compact" : ""}`}
             >
-              {single.thumbnailUrl ? (
-                <img src={single.thumbnailUrl} alt="" />
+              {thumbnail ? (
+                <img src={thumbnail} alt="" />
               ) : (
                 <Icon
                   name="file-pdf"
@@ -221,9 +225,7 @@ export function FileDetailsPanel({
                 <Icon
                   name="chevron-down"
                   size={20}
-                  className={`files-page-details-collapse-chevron${
-                    fieldsOpen ? " is-open" : ""
-                  }`}
+                  className={`files-page-details-collapse-chevron${fieldsOpen ? " is-open" : ""}`}
                 />
               }
             >
@@ -276,9 +278,7 @@ export function FileDetailsPanel({
                     <Icon
                       name="chevron-down"
                       size={20}
-                      className={`files-page-details-collapse-chevron${
-                        classificationOpen ? " is-open" : ""
-                      }`}
+                      className={`files-page-details-collapse-chevron${classificationOpen ? " is-open" : ""}`}
                     />
                   }
                 >
@@ -341,9 +341,7 @@ export function FileDetailsPanel({
                       <Icon
                         name="chevron-down"
                         size={20}
-                        className={`files-page-details-collapse-chevron${
-                          versionsOpen ? " is-open" : ""
-                        }`}
+                        className={`files-page-details-collapse-chevron${versionsOpen ? " is-open" : ""}`}
                       />
                     }
                   >

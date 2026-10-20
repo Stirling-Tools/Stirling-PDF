@@ -8,12 +8,15 @@ import React, {
 import {
   WorkbenchBarAction,
   WorkbenchBarButtonConfig,
+  WorkbenchViewFileActions,
 } from "@app/types/workbenchBar";
 
 interface WorkbenchBarContextValue {
   buttons: WorkbenchBarButtonConfig[];
   actions: Record<string, WorkbenchBarAction>;
   allButtonsDisabled: boolean;
+  viewFileActions: WorkbenchViewFileActions | null;
+  setViewFileActions: (actions: WorkbenchViewFileActions | null) => void;
   registerButtons: (buttons: WorkbenchBarButtonConfig[]) => void;
   unregisterButtons: (ids: string[]) => void;
   setAction: (id: string, action?: WorkbenchBarAction) => void;
@@ -36,6 +39,8 @@ export function WorkbenchBarProvider({
   );
   const [allButtonsDisabled, setAllButtonsDisabledState] =
     useState<boolean>(false);
+  const [viewFileActions, setViewFileActions] =
+    useState<WorkbenchViewFileActions | null>(null);
 
   const registerButtons = useCallback(
     (newButtons: WorkbenchBarButtonConfig[]) => {
@@ -99,6 +104,8 @@ export function WorkbenchBarProvider({
       buttons,
       actions,
       allButtonsDisabled,
+      viewFileActions,
+      setViewFileActions,
       registerButtons,
       unregisterButtons,
       setAction,
@@ -109,6 +116,7 @@ export function WorkbenchBarProvider({
       buttons,
       actions,
       allButtonsDisabled,
+      viewFileActions,
       registerButtons,
       unregisterButtons,
       setAction,

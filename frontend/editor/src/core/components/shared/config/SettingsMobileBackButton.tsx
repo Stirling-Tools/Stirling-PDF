@@ -8,7 +8,7 @@ interface SettingsMobileBackButtonProps {
   onClick: () => void;
 }
 
-/** Returns the settings modal from a section back to the section list. */
+/** Returns the settings page from a section back to the section list. */
 export function SettingsMobileBackButton({
   show,
   onClick,

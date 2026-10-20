@@ -1,12 +1,4 @@
-/**
- * Shared commit flow for the create and modify panels: run an action producing
- * the edited PDF blob, hand it to the viewer, track committing/error state.
- */
-import { useState, useCallback } from "react";
-import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
-import { dispatchFormApply } from "@app/tools/formFill/formFillEvents";
-import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 
 /**
  * responseType "blob" means an error's ProblemDetail arrives as a Blob, so read
@@ -28,40 +20,4 @@ export async function serverMessage(err: unknown): Promise<string | null> {
   } catch {
     return null;
   }
-}
-
-export function useFormCommit(onApplied?: (blob: Blob) => void) {
-  const { t } = useTranslation();
-  const [committing, setCommitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const commit = useCallback(
-    async (
-      run: () => Promise<Blob>,
-      errorKey: string,
-      errorFallback: string,
-    ) => {
-      setCommitting(true);
-      setError(null);
-      try {
-        assertFilesNotBlocked();
-        const blob = await run();
-        assertFilesNotBlocked();
-        dispatchFormApply(blob);
-        onApplied?.(blob);
-      } catch (err) {
-        setError(
-          (await serverMessage(err)) ||
-            (err instanceof Error ? err.message : undefined) ||
-            t(errorKey, errorFallback),
-        );
-        console.error("[FormFill] commit failed:", err);
-      } finally {
-        setCommitting(false);
-      }
-    },
-    [onApplied, t],
-  );
-
-  return { committing, error, setError, commit };
 }

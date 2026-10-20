@@ -1,5 +1,6 @@
 import { MultiSelect, Popover, Select, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
@@ -24,6 +25,7 @@ export function FilesToolbarFilterMenu({
   zIndex,
 }: FilesToolbarFilterMenuProps) {
   const { t } = useTranslation();
+  const localOnly = useLocalProcessingOnly();
 
   const activeCount =
     (originFilter !== "all" ? 1 : 0) + (typeFilter.length > 0 ? 1 : 0);
@@ -85,7 +87,12 @@ export function FilesToolbarFilterMenu({
                 value: "shared-with-me",
                 label: t("filesPage.origin.shared", "Shared"),
               },
-            ]}
+            ].filter(
+              (source) =>
+                !localOnly ||
+                source.value === "all" ||
+                source.value === "local",
+            )}
             label={t("filesPage.originFilter", "Filter by source")}
             comboboxProps={{ withinPortal: false }}
           />

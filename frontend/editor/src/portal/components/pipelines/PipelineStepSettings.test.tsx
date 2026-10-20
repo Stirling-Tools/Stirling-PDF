@@ -269,52 +269,54 @@ describe("PipelineStepSettings: every tool's settings render in the portal", () 
     // Guard against the filter silently matching nothing (e.g. a registry-shape change).
     expect(editableTools.length).toBeGreaterThan(10);
 
+    // Rendered together so their lazy imports load concurrently; each keeps its own boundary, so a
+    // crash is still attributed to the tool that threw.
     const failures: { toolId: string; message: string }[] = [];
+    render(
+      <PortalTestProviders>
+        <PreferencesProvider>
+          <SidebarProvider>
+            {editableTools.map(([toolId, entry]) => {
+              const Settings = entry.automationSettings as ComponentType<
+                ToolAutomationSettingsProps<ErasedToolParams>
+              >;
+              const params = entry.operationConfig?.defaultParameters ?? {};
+              return (
+                <CaptureBoundary
+                  key={toolId}
+                  onError={(error) => {
+                    failures.push({ toolId, message: error.message });
+                  }}
+                >
+                  <Suspense fallback={null}>
+                    <Settings
+                      parameters={params}
+                      onParameterChange={() => {}}
+                      disabled={false}
+                    />
+                    <span data-testid={`rendered-${toolId}`} />
+                  </Suspense>
+                </CaptureBoundary>
+              );
+            })}
+          </SidebarProvider>
+        </PreferencesProvider>
+      </PortalTestProviders>,
+    );
 
-    for (const [toolId, entry] of editableTools) {
-      const Settings = entry.automationSettings as ComponentType<
-        ToolAutomationSettingsProps<ErasedToolParams>
-      >;
-      const params = entry.operationConfig?.defaultParameters ?? {};
-
-      const caught: { error: Error | null } = { error: null };
-      // The sentinel sibling commits only once the lazy Settings actually renders, so we wait for a
-      // real render (or a caught throw) - not just the providers' wrapper DOM.
-      const { unmount } = render(
-        <PortalTestProviders>
-          <PreferencesProvider>
-            <SidebarProvider>
-              <CaptureBoundary
-                onError={(error) => {
-                  caught.error = error;
-                }}
-              >
-                <Suspense fallback={null}>
-                  <Settings
-                    parameters={params}
-                    onParameterChange={() => {}}
-                    disabled={false}
-                  />
-                  <span data-testid={`rendered-${toolId}`} />
-                </Suspense>
-              </CaptureBoundary>
-            </SidebarProvider>
-          </PreferencesProvider>
-        </PortalTestProviders>,
-      );
-
-      await waitFor(() =>
-        expect(
-          caught.error !== null ||
-            screen.queryByTestId(`rendered-${toolId}`) !== null,
-        ).toBe(true),
-      );
-
-      if (caught.error) {
-        failures.push({ toolId, message: caught.error.message });
-      }
-      unmount();
-    }
+    // The sentinel sibling commits only once the lazy Settings actually renders, so this waits for
+    // a real render (or a caught throw) of every tool - not just the providers' wrapper DOM.
+    await waitFor(
+      () => {
+        for (const [toolId] of editableTools) {
+          expect(
+            failures.some((failure) => failure.toolId === toolId) ||
+              screen.queryByTestId(`rendered-${toolId}`) !== null,
+          ).toBe(true);
+        }
+      },
+      { timeout: 20000 },
+    );
 
     expect(failures).toEqual([]);
   }, 30000);

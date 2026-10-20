@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { type TFunction } from "i18next";
 import { Button, ToggleSwitch } from "@app/ui";
 import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/ui/Tooltip";
@@ -10,6 +11,10 @@ import {
   type CreditPromptPipeline,
 } from "@app/services/creditPromptPipelines";
 import { pipelineQueryKeys } from "@app/policies/queryKeys";
+
+const VISIBLE_PIPELINES = 5;
+
+type PipelineError = "load" | "save" | null;
 
 interface Props {
   onManagePipeline?: (id?: string) => void;
@@ -29,7 +34,7 @@ export function CreditPromptPipelines({
   const [canManage, setCanManage] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState<"load" | "save" | null>(null);
+  const [error, setError] = useState<PipelineError>(null);
   useEffect(() => {
     let active = true;
     fetchCreditPromptPipelines()
@@ -79,28 +84,6 @@ export function CreditPromptPipelines({
     }
   }
 
-  function sourceLabel(pipeline: CreditPromptPipeline) {
-    const labels = pipeline.sources.map((source) => source.name);
-    if (pipeline.editor?.allowed || pipeline.trigger.startsWith("editor-")) {
-      labels.unshift(
-        pipeline.editor?.runOn === "export" ||
-          pipeline.trigger === "editor-export"
-          ? t(
-              "portal.accountLink.pipelines.editorExport",
-              "Editor · before download",
-            )
-          : t(
-              "portal.accountLink.pipelines.editorUpload",
-              "Editor · on upload",
-            ),
-      );
-    }
-    return (
-      labels.join(", ") ||
-      t("portal.accountLink.pipelines.manual", "Manual runs")
-    );
-  }
-
   return (
     <section className="portal-connect__pipelines">
       <div className="portal-connect__pipeline-header">
@@ -115,124 +98,263 @@ export function CreditPromptPipelines({
           <span>
             {t("portal.accountLink.pipelines.title", "Active pipelines")}
           </span>
-          {!loading && error !== "load" && (
-            <span className="portal-connect__pipeline-count">
-              {" "}
-              {pipelines.filter((pipeline) => pipeline.enabled).length}
-            </span>
-          )}
+          <EnabledCount
+            loaded={!loading && error !== "load"}
+            pipelines={pipelines}
+          />
         </button>
-        {onManagePipeline && (
-          <Button
-            size="sm"
-            px="none"
-            variant="quiet"
-            accent="neutral"
-            onClick={() =>
-              onManagePipeline(
-                pipelines.length > 5 ? undefined : affectedPipelineId,
-              )
-            }
-          >
-            {pipelines.length > 5
-              ? t("portal.accountLink.pipelines.viewAll", "View all pipelines")
-              : t(
-                  "portal.accountLink.failure.manage",
-                  "Open pipeline settings",
-                )}
-          </Button>
-        )}
+        <ManagePipelinesButton
+          pipelines={pipelines}
+          affectedPipelineId={affectedPipelineId}
+          onManagePipeline={onManagePipeline}
+        />
       </div>
-      {expanded && (
-        <div id={listId} className="portal-connect__pipeline-choices">
-          {loading ? (
-            <p className="portal-connect__lede">
-              {t("portal.accountLink.pipelines.loading", "Loading pipelines…")}
-            </p>
-          ) : (
-            <>
-              {!error && pipelines.length === 0 && (
-                <p className="portal-connect__lede">
-                  {t(
-                    "portal.accountLink.pipelines.empty",
-                    "No active pipelines.",
-                  )}
-                </p>
-              )}
-              <ul className="portal-connect__pipeline-list">
-                {pipelines.slice(0, 5).map((pipeline) => (
-                  <li key={pipeline.id}>
-                    <div className="portal-connect__pipeline-details">
-                      <span className="portal-connect__row-label">
-                        {pipeline.name}
-                        {pipeline.id === affectedPipelineId && (
-                          <Tooltip
-                            content={t(
-                              "portal.accountLink.pipelines.triggered",
-                              "Triggered this prompt",
-                            )}
-                          >
-                            <button
-                              type="button"
-                              className="portal-connect__trigger-info"
-                              aria-label={t(
-                                "portal.accountLink.pipelines.triggered",
-                                "Triggered this prompt",
-                              )}
-                            >
-                              <Icon name="info" size={14} />
-                            </button>
-                          </Tooltip>
-                        )}
-                      </span>
-                      <span className="portal-connect__pipeline-source">
-                        {sourceLabel(pipeline)}
-
-                        {pipeline.required && (
-                          <span className="portal-connect__pipeline-note">
-                            {t(
-                              "portal.accountLink.pipelines.required",
-                              "Required policy · manage in pipeline settings",
-                            )}
-                          </span>
-                        )}
-                        {!pipeline.enabled && (
-                          <span className="portal-connect__pipeline-note">
-                            {t("portal.accountLink.pipelines.paused", "Paused")}
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                    <ToggleSwitch
-                      aria-label={pipeline.name}
-                      checked={pipeline.enabled}
-                      disabled={
-                        !canManage || pipeline.required || busy !== null
-                      }
-                      onChange={(enabled) =>
-                        void changeEnabled(pipeline, enabled)
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-          {error && (
-            <p role="alert" className="portal-connect__lede">
-              {error === "load"
-                ? t(
-                    "portal.accountLink.pipelines.loadFailed",
-                    "Could not load pipelines. Open pipeline settings to try again.",
-                  )
-                : t(
-                    "portal.accountLink.pipelines.saveFailed",
-                    "Could not change this pipeline. Open pipeline settings to review it.",
-                  )}
-            </p>
-          )}
-        </div>
-      )}
+      <PipelineChoices
+        expanded={expanded}
+        id={listId}
+        loading={loading}
+        error={error}
+        pipelines={pipelines}
+        affectedPipelineId={affectedPipelineId}
+        togglesDisabled={!canManage || busy !== null}
+        onChangeEnabled={changeEnabled}
+      />
     </section>
+  );
+}
+
+function EnabledCount({
+  loaded,
+  pipelines,
+}: {
+  loaded: boolean;
+  pipelines: CreditPromptPipeline[];
+}) {
+  if (!loaded) return null;
+  return (
+    <span className="portal-connect__pipeline-count">
+      {" "}
+      {pipelines.filter((pipeline) => pipeline.enabled).length}
+    </span>
+  );
+}
+
+function ManagePipelinesButton({
+  pipelines,
+  affectedPipelineId,
+  onManagePipeline,
+}: {
+  pipelines: CreditPromptPipeline[];
+  affectedPipelineId?: string;
+  onManagePipeline?: (id?: string) => void;
+}) {
+  const { t } = useTranslation();
+  if (!onManagePipeline) return null;
+  const showsAll = pipelines.length > VISIBLE_PIPELINES;
+  return (
+    <Button
+      size="sm"
+      px="none"
+      variant="quiet"
+      accent="neutral"
+      onClick={() =>
+        onManagePipeline(showsAll ? undefined : affectedPipelineId)
+      }
+    >
+      {showsAll
+        ? t("portal.accountLink.pipelines.viewAll", "View all pipelines")
+        : t("portal.accountLink.failure.manage", "Open pipeline settings")}
+    </Button>
+  );
+}
+
+interface PipelineListProps {
+  loading: boolean;
+  error: PipelineError;
+  pipelines: CreditPromptPipeline[];
+  affectedPipelineId?: string;
+  togglesDisabled: boolean;
+  onChangeEnabled: (
+    pipeline: CreditPromptPipeline,
+    enabled: boolean,
+  ) => Promise<void>;
+}
+
+interface PipelineChoicesProps extends PipelineListProps {
+  expanded: boolean;
+  id: string;
+}
+
+function PipelineChoices({ expanded, id, ...list }: PipelineChoicesProps) {
+  if (!expanded) return null;
+  return (
+    <div id={id} className="portal-connect__pipeline-choices">
+      <PipelineList {...list} />
+      <PipelineErrorMessage error={list.error} />
+    </div>
+  );
+}
+
+function PipelineList({
+  loading,
+  error,
+  pipelines,
+  affectedPipelineId,
+  togglesDisabled,
+  onChangeEnabled,
+}: PipelineListProps) {
+  const { t } = useTranslation();
+  if (loading) {
+    return (
+      <p className="portal-connect__lede">
+        {t("portal.accountLink.pipelines.loading", "Loading pipelines…")}
+      </p>
+    );
+  }
+  return (
+    <>
+      <NoPipelinesNote show={!error && pipelines.length === 0} />
+      <ul className="portal-connect__pipeline-list">
+        {pipelines.slice(0, VISIBLE_PIPELINES).map((pipeline) => (
+          <PipelineRow
+            key={pipeline.id}
+            pipeline={pipeline}
+            triggered={pipeline.id === affectedPipelineId}
+            toggleDisabled={togglesDisabled || pipeline.required}
+            onToggle={(enabled) => void onChangeEnabled(pipeline, enabled)}
+          />
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function NoPipelinesNote({ show }: { show: boolean }) {
+  const { t } = useTranslation();
+  if (!show) return null;
+  return (
+    <p className="portal-connect__lede">
+      {t("portal.accountLink.pipelines.empty", "No active pipelines.")}
+    </p>
+  );
+}
+
+interface PipelineRowProps {
+  pipeline: CreditPromptPipeline;
+  triggered: boolean;
+  toggleDisabled: boolean;
+  onToggle: (enabled: boolean) => void;
+}
+
+function PipelineRow({
+  pipeline,
+  triggered,
+  toggleDisabled,
+  onToggle,
+}: PipelineRowProps) {
+  const { t } = useTranslation();
+  return (
+    <li>
+      <div className="portal-connect__pipeline-details">
+        <span className="portal-connect__row-label">
+          {pipeline.name}
+          <TriggeredInfo triggered={triggered} />
+        </span>
+        <span className="portal-connect__pipeline-source">
+          {sourceLabel(t, pipeline)}
+          <PipelineNotes pipeline={pipeline} />
+        </span>
+      </div>
+      <ToggleSwitch
+        aria-label={pipeline.name}
+        checked={pipeline.enabled}
+        disabled={toggleDisabled}
+        onChange={onToggle}
+      />
+    </li>
+  );
+}
+
+function TriggeredInfo({ triggered }: { triggered: boolean }) {
+  const { t } = useTranslation();
+  if (!triggered) return null;
+  const label = t(
+    "portal.accountLink.pipelines.triggered",
+    "Triggered this prompt",
+  );
+  return (
+    <Tooltip content={label}>
+      <button
+        type="button"
+        className="portal-connect__trigger-info"
+        aria-label={label}
+      >
+        <Icon name="info" size={14} />
+      </button>
+    </Tooltip>
+  );
+}
+
+function PipelineNotes({ pipeline }: { pipeline: CreditPromptPipeline }) {
+  const { t } = useTranslation();
+  const notes = [
+    {
+      key: "required",
+      shown: pipeline.required,
+      text: t(
+        "portal.accountLink.pipelines.required",
+        "Required policy · manage in pipeline settings",
+      ),
+    },
+    {
+      key: "paused",
+      shown: !pipeline.enabled,
+      text: t("portal.accountLink.pipelines.paused", "Paused"),
+    },
+  ].filter((note) => note.shown);
+  return (
+    <>
+      {notes.map((note) => (
+        <span key={note.key} className="portal-connect__pipeline-note">
+          {note.text}
+        </span>
+      ))}
+    </>
+  );
+}
+
+function PipelineErrorMessage({ error }: { error: PipelineError }) {
+  const { t } = useTranslation();
+  if (!error) return null;
+  return (
+    <p role="alert" className="portal-connect__lede">
+      {error === "load"
+        ? t(
+            "portal.accountLink.pipelines.loadFailed",
+            "Could not load pipelines. Open pipeline settings to try again.",
+          )
+        : t(
+            "portal.accountLink.pipelines.saveFailed",
+            "Could not change this pipeline. Open pipeline settings to review it.",
+          )}
+    </p>
+  );
+}
+
+function sourceLabel(t: TFunction, pipeline: CreditPromptPipeline) {
+  const labels = pipeline.sources.map((source) => source.name);
+  if (pipeline.editor?.allowed || pipeline.trigger.startsWith("editor-")) {
+    labels.unshift(
+      pipeline.editor?.runOn === "export" ||
+        pipeline.trigger === "editor-export"
+        ? t(
+            "portal.accountLink.pipelines.editorExport",
+            "Editor · before download",
+          )
+        : t("portal.accountLink.pipelines.editorUpload", "Editor · on upload"),
+    );
+  }
+  return (
+    labels.join(", ") || t("portal.accountLink.pipelines.manual", "Manual runs")
   );
 }

@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, render } from "@testing-library/react";
 import AuthCallback from "@app/routes/AuthCallback";
 import { supabase } from "@app/auth/supabase";
 import {
@@ -29,11 +29,11 @@ vi.mock("@app/utils/loginLanding", () => ({
 async function arriveAtCallback(search = "") {
   window.history.replaceState({}, "", `/auth/callback${search}`);
   render(<AuthCallback />);
-  // Real timers: the redirect timeout is only scheduled once the awaited session
-  // resolves, which a fake-timer sweep races rather than observes.
-  await waitFor(() => expect(mockNavigate).toHaveBeenCalled(), {
-    timeout: 3000,
-  });
+  // The redirect timeout is only scheduled once the awaited session resolves;
+  // the async sweep yields to pending promises before each timer, so it still
+  // fires, without waiting out the real delay.
+  await act(() => vi.runAllTimersAsync());
+  expect(mockNavigate).toHaveBeenCalled();
 }
 
 function landedOn() {
@@ -42,6 +42,7 @@ function landedOn() {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers();
   localStorage.clear();
   resetPendingDestinationForTests();
   mockNavigate.mockClear();
@@ -49,6 +50,10 @@ beforeEach(() => {
     data: { session: { user: { id: "u1" } } },
     error: null,
   } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("AuthCallback destination", () => {

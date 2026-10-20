@@ -61,7 +61,7 @@ export type NavKey = (typeof VALID_NAV_KEYS)[number];
 
 // some of these are not used yet, but appear in figma designs
 
-// Nav structure of the settings modal. Lives here (not configNavSections) so
+// Nav structure of the settings page. Lives here (not configNavSections) so
 // consumers that only need the shape don't pull the whole section-component
 // tree into their build's typecheck graph.
 export interface ConfigNavItem {

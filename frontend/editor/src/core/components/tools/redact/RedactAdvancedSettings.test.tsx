@@ -154,6 +154,12 @@ describe("RedactAdvancedSettings", () => {
       expectedValue: true,
     },
     {
+      paramName: "caseSensitive" as const,
+      label: "Case Sensitive Matching",
+      initialValue: false,
+      expectedValue: true,
+    },
+    {
       paramName: "convertPDFToImage" as const,
       label: "Convert PDF to PDF-Image (Used to remove text behind the box)",
       initialValue: true,

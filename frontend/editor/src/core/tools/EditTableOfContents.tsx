@@ -92,7 +92,7 @@ const EditTableOfContents = (props: BaseToolProps) => {
     registerCustomWorkbenchView({
       id: WORKBENCH_VIEW_ID,
       workbenchId: WORKBENCH_ID,
-      label: "Outline workspace",
+      label: t("editTableOfContents.workbenchLabel", "Outline workspace"),
       icon: viewIcon,
       component: EditTableOfContentsWorkbenchView,
     });

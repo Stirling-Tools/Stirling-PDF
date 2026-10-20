@@ -286,7 +286,10 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       case "error":
         return (
           <ErrorStage
-            error={checkoutState.state.error || "An unknown error occurred"}
+            error={
+              checkoutState.state.error ||
+              t("payment.unknownError", "An unknown error occurred")
+            }
             onClose={handleClose}
           />
         );

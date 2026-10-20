@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { createFolderId, type FolderRecord } from "@app/types/folder";
 import { getFolderChain, getFolderPath } from "@app/utils/folderPath";

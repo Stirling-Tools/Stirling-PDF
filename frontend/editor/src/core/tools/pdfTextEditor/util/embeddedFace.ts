@@ -1,4 +1,5 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 // The overlay used to collapse every document font to one of three generic CSS
 // stacks, so editing text visibly changed its shape. PDFium will hand back the
@@ -93,20 +94,20 @@ function readFontData(
   fontPtr: number,
 ): Uint8Array<ArrayBuffer> | null {
   const w = m.pdfium.wasmExports;
-  const lenPtr = w.malloc(4);
+  const lenPtr = scratchPtr(m, SCRATCH.faceLen, 4);
   let size = 0;
   try {
     if (!m.FPDFFont_GetFontData(fontPtr, 0, 0, lenPtr)) return null;
     size = m.pdfium.getValue(lenPtr, "i32");
   } catch {
     return null;
-  } finally {
-    w.free(lenPtr);
   }
   if (size <= 0 || size > MAX_FACE_BYTES) return null;
 
+  // scratchPtr throws when the arena cannot grow: allocate it before the
+  // font-data buffer so a throw cannot orphan an allocation outside try.
+  const out = scratchPtr(m, SCRATCH.faceOut, 4);
   const buf = w.malloc(size);
-  const out = w.malloc(4);
   try {
     if (!m.FPDFFont_GetFontData(fontPtr, buf, size, out)) return null;
     const heap = new Uint8Array(
@@ -125,7 +126,6 @@ function readFontData(
     return null;
   } finally {
     w.free(buf);
-    w.free(out);
   }
 }
 

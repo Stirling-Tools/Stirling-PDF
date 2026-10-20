@@ -78,7 +78,9 @@ export async function fetchProcessingFolderRuns(
 ): Promise<server.ProcessingFolderRun[]> {
   if (!isLocalProcessingFolder(id)) return server.fetchProcessingFolderRuns(id);
   await requireLocalProcessingFolder(id);
-  return (await storage.files(id)).map((entry) => entry.run);
+  return (await storage.files(id))
+    .filter((entry) => !entry.restored)
+    .map((entry) => entry.run);
 }
 
 export async function fetchMountedFiles(
@@ -94,7 +96,7 @@ export async function fetchMountedFiles(
         record.input.name === file.name ||
         record.outputs.some((output) => output.name === file.name),
     );
-    const status = entry?.run.status;
+    const status = entry?.restored ? undefined : entry?.run.status;
     return {
       name: file.name,
       sizeBytes: file.sizeBytes,

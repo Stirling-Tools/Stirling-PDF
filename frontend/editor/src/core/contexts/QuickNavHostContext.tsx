@@ -17,7 +17,8 @@ import {
   type ReactNode,
 } from "react";
 
-export type QuickNavToolReasons = Partial<Record<ToolId, string>>;
+export type QuickNavEntryId = ToolId | "sharedSign";
+export type QuickNavToolReasons = Partial<Record<QuickNavEntryId, string>>;
 
 export type { QuickNavIdentity } from "@app/contexts/quickNavAccount";
 
@@ -42,6 +43,8 @@ export interface QuickNavHostActions {
   createProcessingFolder?: () => void;
   toggleNotifications?: () => void;
   goToDefaultState?: () => void;
+  /** The view the user chose to launch into, where that differs from the default state. */
+  goToStartupView?: () => void;
   requestNavigation?: (go: () => void) => void;
   openFromComputer?: () => void;
   /**
@@ -82,7 +85,9 @@ function sameReasons(
 ): boolean {
   const nextKeys = Object.keys(next);
   if (nextKeys.length !== Object.keys(prev).length) return false;
-  return nextKeys.every((key) => next[key as ToolId] === prev[key as ToolId]);
+  return nextKeys.every(
+    (key) => next[key as QuickNavEntryId] === prev[key as QuickNavEntryId],
+  );
 }
 
 const QuickNavHostContext = createContext<QuickNavHostValue | null>(null);

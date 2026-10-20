@@ -26,7 +26,6 @@ import { SigningOverlayProvider } from "@app/contexts/SigningOverlayContext";
 import { AnnotationProvider } from "@app/contexts/AnnotationContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
-import { PageEditorProvider } from "@app/contexts/PageEditorContext";
 import { BannerProvider } from "@app/contexts/BannerContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
@@ -142,26 +141,24 @@ export function AppProviders({
                             <HotkeyProvider>
                               <SidebarProvider>
                                 <ViewerProvider>
-                                  <PageEditorProvider>
-                                    <SignatureProvider>
-                                      <SigningOverlayProvider>
-                                        <RedactionProvider>
-                                          <FormFillProvider>
-                                            <AnnotationProvider>
-                                              <WorkbenchBarProvider>
-                                                <TourOrchestrationProvider>
-                                                  <AdminTourOrchestrationProvider>
-                                                    <WorkbenchSessionPersistence />
-                                                    {children}
-                                                  </AdminTourOrchestrationProvider>
-                                                </TourOrchestrationProvider>
-                                              </WorkbenchBarProvider>
-                                            </AnnotationProvider>
-                                          </FormFillProvider>
-                                        </RedactionProvider>
-                                      </SigningOverlayProvider>
-                                    </SignatureProvider>
-                                  </PageEditorProvider>
+                                  <SignatureProvider>
+                                    <SigningOverlayProvider>
+                                      <RedactionProvider>
+                                        <FormFillProvider>
+                                          <AnnotationProvider>
+                                            <WorkbenchBarProvider>
+                                              <TourOrchestrationProvider>
+                                                <AdminTourOrchestrationProvider>
+                                                  <WorkbenchSessionPersistence />
+                                                  {children}
+                                                </AdminTourOrchestrationProvider>
+                                              </TourOrchestrationProvider>
+                                            </WorkbenchBarProvider>
+                                          </AnnotationProvider>
+                                        </FormFillProvider>
+                                      </RedactionProvider>
+                                    </SigningOverlayProvider>
+                                  </SignatureProvider>
                                 </ViewerProvider>
                               </SidebarProvider>
                             </HotkeyProvider>

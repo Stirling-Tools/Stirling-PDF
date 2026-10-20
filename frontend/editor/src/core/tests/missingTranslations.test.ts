@@ -13,7 +13,7 @@ describe.each(I18N_PROJECTS)(
   "Missing translation coverage — $name",
   (project) => {
     test(
-      "fails if any en-US key used in source is missing from the locale",
+      "fails if any key used in source is missing from the English locales",
       // Scans/parses the whole source tree: generous headroom for a loaded CPU.
       { timeout: 60_000 },
       () => {
@@ -35,7 +35,7 @@ describe.each(I18N_PROJECTS)(
         // GitHub Annotations format so misses show up tagged on the code in CI.
         for (const { key, fallback, file, line, column } of annotations) {
           process.stderr.write(
-            `::error file=${file},line=${line},col=${column}::Missing en-US translation for ${key} (${fallback})\n`,
+            `::error file=${file},line=${line},col=${column}::Missing English translation for ${key} (${fallback})\n`,
           );
         }
 

@@ -199,7 +199,7 @@ export default defineConfig({
     "typescript/prefer-as-const": "error",
     "typescript/prefer-namespace-keyword": "error",
     "typescript/triple-slash-reference": "error",
-    "react/jsx-max-depth": ["error", { max: 10 }],
+    "react/jsx-max-depth": ["error", { max: 8 }],
   },
   overrides: [
     {
@@ -342,15 +342,14 @@ export default defineConfig({
     },
     {
       // Exempt from the shared-DS Mantine import ban (these layers may use
-      // Mantine directly): the shared DS itself wraps Mantine, stories/tests
-      // demo it, and prototypes are not shipped. Module-path bans still apply.
+      // Mantine directly): the shared DS itself wraps Mantine and stories/tests
+      // demo it. Module-path bans still apply.
       // The three named files are ARIA tablist/segmented controls that the
       // ESLint config exempted from the (now-dropped) raw-<button> and Mantine
       // rules. Comes after the scoped bans above so it wins for these files;
       // desktop/cloud keep theirs.
       files: [
         "editor/src/core/ui/**/*.{js,mjs,jsx,ts,tsx}",
-        "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
         "**/*.stories.{js,mjs,jsx,ts,tsx}",
         "**/*.test.{js,mjs,jsx,ts,tsx}",
         "editor/src/core/components/shared/FileSelectorPicker.tsx",
@@ -387,7 +386,11 @@ export default defineConfig({
     {
       // A provider stack nests one context per level in dependency order, so its
       // depth counts providers rather than measuring how hard the tree is to read.
-      files: ["editor/src/core/components/AppProviders.tsx"],
+      files: [
+        "editor/src/core/components/AppProviders.tsx",
+        "editor/src/portal/PortalProviders.tsx",
+        ".storybook/preview.tsx",
+      ],
       rules: {
         "react/jsx-max-depth": "off",
       },

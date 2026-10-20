@@ -25,7 +25,9 @@ export function MobileEditorSheets(props: Omit<SidebarProps, "initialTab">) {
   const controller = useToolbarController(store, state, selection);
   const sheet = state.mobileSheet;
   const hasSelection =
-    selection.runIds.length > 0 || selection.imageIds.length > 0;
+    selection.runIds.length > 0 ||
+    selection.imageIds.length > 0 ||
+    selection.shapeIds.length > 0;
 
   useEffect(() => {
     if (sheet === "style" && !controller.hasRunSelection) {

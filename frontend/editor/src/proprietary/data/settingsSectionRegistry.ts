@@ -10,10 +10,10 @@ export type { SettingsSectionEntry };
  * Self-hosted (proprietary) settings sections. Extends the core list with the
  * account tab, the developer API keys tab, and the admin area — mirroring the
  * sections added by the proprietary nav builder (`configNavSections`). Keep the
- * two in sync: a section here that the modal can't render would deep-link to a
- * dead tab, and a modal section missing here isn't searchable.
+ * two in sync: a section here that the nav can't render would deep-link to a
+ * dead tab, and a nav section missing here isn't searchable.
  *
- * Gating flags mirror the builder: `account`/`api-keys` need login; the admin
+ * Gating flags mirror the builder: `account`/`api-keys`/`users` need login; the admin
  * sections are surfaced when the user is an admin OR login mode is off.
  */
 export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
@@ -37,7 +37,7 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     groupLabelFallback: "Preferences",
   },
   // --- Workspace ---
-  // One roster in every build, listed unconditionally. Carries the words the
+  // The shared roster needs login and admin access. Carries the words the
   // retired People and Teams sections were found by.
   {
     key: "users",
@@ -57,6 +57,7 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
       "create team",
       "processor access",
     ],
+    requiresLogin: true,
     adminArea: true,
     groupLabelKey: "settings.workspace.title",
     groupLabelFallback: "Workspace",
@@ -155,15 +156,6 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     groupLabelFallback: "Server",
   },
   // --- Licensing & Analytics ---
-  {
-    key: "adminPlan",
-    labelKey: "settings.licensingAnalytics.plan",
-    labelFallback: "Plan",
-    keywords: ["plan", "license", "billing", "subscription", "enterprise"],
-    adminArea: true,
-    groupLabelKey: "settings.workspace.title",
-    groupLabelFallback: "Workspace",
-  },
   {
     key: "adminAudit",
     labelKey: "settings.licensingAnalytics.audit",

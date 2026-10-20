@@ -18,11 +18,12 @@
   gap: var(--nav-gutter);
 }
 
+/* Its minimum is the header and action rows, so a row below that grows
+   squeezes only the file list and never overlaps them. */
 .file-sidebar-inner {
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: 0;
   gap: 0.5rem;
 }
 
@@ -106,7 +107,9 @@
   flex-shrink: 0;
 }
 .file-sidebar-files-box {
-  flex: 1;
+  /* A length basis, not flex: 1's 0%, which intrinsic sizing reads as the
+     content height and would put the whole list into the column's minimum. */
+  flex: 1 1 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -115,42 +118,6 @@
 }
 /* The footer is the shared <NavFooter>: it brings its own boxes and padding,
    so this class only positions it in the column. */
-
-/* ---- Native file drag-and-drop ---- */
-.file-sidebar[data-file-drag-over] {
-  outline: 2px dashed var(--mantine-color-blue-6, var(--c-primary));
-  outline-offset: -4px;
-}
-
-.file-sidebar-drop-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px;
-  text-align: center;
-  pointer-events: none;
-  background-color: color-mix(
-    in srgb,
-    var(--mantine-color-blue-6, var(--c-primary)) 12%,
-    var(--c-bg-raised)
-  );
-}
-
-.file-sidebar-drop-overlay-icon {
-  color: var(--c-accent-text) !important;
-  font-size: 28px !important;
-}
-
-.file-sidebar-drop-overlay-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--c-accent-text);
-}
 
 /* ---- Scrollable content ---- */
 /* This is a flex column - action rows are fixed, only the file list scrolls */
