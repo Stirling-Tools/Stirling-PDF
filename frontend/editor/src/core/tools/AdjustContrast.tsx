@@ -10,6 +10,8 @@ import AdjustContrastColorSettings from "@app/components/tools/adjustContrast/Ad
 import AdjustContrastPreview from "@app/components/tools/adjustContrast/AdjustContrastPreview";
 import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
 import NavigationArrows from "@app/components/shared/filePreview/NavigationArrows";
+import ToolTimingPanel from "@app/components/tools/shared/ToolTimingPanel";
+import { onTiming, type ToolTiming } from "@app/services/toolTiming";
 
 const AdjustContrast = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -32,6 +34,12 @@ const AdjustContrast = (props: BaseToolProps) => {
     stateConditions: { hasFiles: base.hasFiles, hasResults: base.hasResults },
     afterResults: base.handleSettingsReset,
   });
+
+  const [timing, setTiming] = useState<ToolTiming | null>(null);
+  useEffect(() => onTiming("adjustColors", "typescript", setTiming), []);
+  useEffect(() => {
+    if (!base.hasResults) setTiming(null);
+  }, [base.hasResults]);
 
   // Track which selected file is being previewed. Clamp when selection changes.
   const [previewIndex, setPreviewIndex] = useState(0);
@@ -80,6 +88,12 @@ const AdjustContrast = (props: BaseToolProps) => {
             disabled={base.endpointLoading}
           />
         ),
+      },
+      {
+        title: t("toolTiming.title", "Timing"),
+        isVisible: base.hasResults && timing !== null,
+        isCollapsed: false,
+        content: timing ? <ToolTimingPanel timing={timing} /> : null,
       },
     ],
     preview: (

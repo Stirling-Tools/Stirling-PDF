@@ -11,6 +11,10 @@ ext {
 bootRun {
     enabled = false
 }
+
+apply from: rootProject.file('gradle/tools-core-native.gradle')
+toolsCoreNative('stirling-tools-proprietary')
+
 dependencies {
     implementation project(':common')
     api "com.google.guava:guava:${guavaVersion}"

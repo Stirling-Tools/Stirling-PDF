@@ -135,6 +135,11 @@
       "title": "Adjust PDF Colors and Contrast - Stirling PDF",
       "description": "Adjust colors and contrast of PDF documents"
     },
+    "adjustColorsRust": {
+      "image": "/og_images/home.png",
+      "title": "Adjust Colors/Contrast (Rust) - Stirling PDF",
+      "description": "Adjust colors and contrast with the shared Rust code, in your browser or on the server"
+    },
     "crop": {
       "image": "/og_images/cropPdf.png",
       "title": "Crop PDF - Stirling PDF",
@@ -791,6 +796,7 @@
     "/page-layout": "pageLayout",
     "/scale-pages": "scalePages",
     "/adjust-contrast": "adjustContrast",
+    "/adjust-colors-rust": "adjustColorsRust",
     "/crop": "crop",
     "/pdf-to-single-page": "pdfToSinglePage",
     "/repair": "repair",
@@ -993,6 +999,10 @@
     {
       "path": "/watermark",
       "label": "Add Watermark to PDF"
+    },
+    {
+      "path": "/adjust-colors-rust",
+      "label": "Adjust Colors/Contrast (Rust)"
     },
     {
       "path": "/adjust-contrast",

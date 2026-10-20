@@ -1,0 +1,11 @@
+[package]
+name = "stirling-pdfium"
+description = "Safe PDFium wrapper shared by the native and wasm builds of the Stirling tools"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

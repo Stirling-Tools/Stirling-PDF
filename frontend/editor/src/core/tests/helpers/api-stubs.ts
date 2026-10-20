@@ -74,6 +74,8 @@ const ALL_BACKEND_ENDPOINTS = [
   "page-layout",
   "scale-pages",
   "adjust-contrast",
+  "adjust-colors-rust",
+  "classify-rust",
   "crop",
   "pdf-to-single-page",
   "repair",

@@ -46,6 +46,7 @@ const TOOL_IDS = [
   "pageLayout",
   "scalePages",
   "adjustContrast",
+  "adjustColorsRust",
   "crop",
   "pdfToSinglePage",
   "repair",

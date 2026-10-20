@@ -4,7 +4,7 @@
  * to add proprietary-specific tool IDs.
  */
 
-export const PROPRIETARY_REGULAR_TOOL_IDS = [] as const;
+export const PROPRIETARY_REGULAR_TOOL_IDS = ["classifyRust"] as const;
 
 // "ai-workflow" is a generic marker stamped onto files produced by the agents
 // chat orchestrator (which may invoke one or more underlying tools). Lives here

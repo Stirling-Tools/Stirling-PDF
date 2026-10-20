@@ -589,6 +589,11 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/misc/adjust-colors-rust": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/misc/auto-rename": {
     accepts: ["PDF"],
     produces: "PDF",
@@ -612,6 +617,11 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SIMO",
   },
   "/api/v1/misc/batch-process-attachments": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
+  "/api/v1/misc/classify-rust": {
     accepts: ["PDF"],
     produces: "PDF",
     arity: "SISO",

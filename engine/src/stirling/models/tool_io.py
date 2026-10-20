@@ -204,6 +204,9 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ToolEndpoint.ADD_COMMENTS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.ADD_PAGE_NUMBERS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.ADD_STAMP: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
+    ToolEndpoint.ADJUST_COLORS_RUST: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
+    ),
     ToolEndpoint.AUTO_RENAME: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.AUTO_ROTATE_PDF: ToolIOSpec(
         accepts=[ToolFormat.PDF],
@@ -221,6 +224,7 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ToolEndpoint.BATCH_PROCESS_ATTACHMENTS: ToolIOSpec(
         accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
     ),
+    ToolEndpoint.CLASSIFY_RUST: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.COMPRESS_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.CREATE_PORTFOLIO: ToolIOSpec(accepts=[ToolFormat.ANY], produces=ToolFormat.PDF, arity=ToolArity.MISO),
     ToolEndpoint.DELETE_ATTACHMENT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),

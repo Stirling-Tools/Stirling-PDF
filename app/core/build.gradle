@@ -119,6 +119,9 @@ sourceSets {
 
 }
 
+apply from: rootProject.file('gradle/tools-core-native.gradle')
+toolsCoreNative('stirling-tools')
+
 
 // Disable regular jar
 jar {
@@ -214,7 +217,8 @@ def generatedFrontendPaths = [
     'samples',
     'pdfium',
     'vendor',
-    'pdfjs'
+    'pdfjs',
+    'wasm'
 ]
 
 tasks.register('npmInstall', Exec) {

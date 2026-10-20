@@ -14,6 +14,7 @@ import { createFileFromApiResponse } from "@app/utils/fileResponseUtils";
 import { getPdfiumModule, saveRawDocument } from "@app/services/pdfiumService";
 import { copyRgbaToBgraHeap } from "@app/utils/pdfiumBitmapUtils";
 import type { PDFDocumentProxy } from "pdfjs-dist";
+import { emitTiming } from "@app/services/toolTiming";
 
 async function renderPdfPageToCanvas(
   pdf: PDFDocumentProxy,
@@ -196,8 +197,26 @@ async function processPdfClientSide(
   };
 }
 
+/** Times each run for comparison with the Rust tool. */
+async function processPdfClientSideTimed(
+  params: AdjustContrastParameters,
+  files: File[],
+): Promise<CustomProcessorResult> {
+  const started = performance.now();
+  const result = await processPdfClientSide(params, files);
+  emitTiming({
+    tool: "adjustColors",
+    implementation: "typescript",
+    location: "browser",
+    files: files.length,
+    totalMs: performance.now() - started,
+    serverProcessingMs: null,
+  });
+  return result;
+}
+
 export const adjustContrastOperationConfig = defineCustomTool({
-  customProcessor: processPdfClientSide,
+  customProcessor: processPdfClientSideTimed,
   operationType: "adjustContrast",
   defaultParameters,
 });

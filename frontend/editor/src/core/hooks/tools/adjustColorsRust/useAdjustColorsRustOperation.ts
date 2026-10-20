@@ -1,0 +1,133 @@
+import { useTranslation } from "react-i18next";
+import apiClient from "@app/services/apiClient";
+import {
+  createStandardErrorHandler,
+  defineCustomTool,
+  useToolOperation,
+  CustomProcessorResult,
+} from "@app/hooks/tools/shared/useToolOperation";
+import {
+  AdjustColorsRustParameters,
+  defaultParameters,
+} from "@app/hooks/tools/adjustColorsRust/useAdjustColorsRustParameters";
+import {
+  closeDocAndFreeBuffer,
+  getPdfiumModule,
+  openRawDocumentSafe,
+  saveRawDocument,
+} from "@app/services/pdfiumService";
+import { getToolsCore, type ColorAdjustments } from "@app/services/toolsCore";
+import {
+  addServerTime,
+  emitTiming,
+  parseServerTiming,
+} from "@app/services/toolTiming";
+
+export const ADJUST_COLORS_RUST_ENDPOINT = "/api/v1/misc/adjust-colors-rust";
+
+function adjustmentsOf(params: AdjustColorsRustParameters): ColorAdjustments {
+  return {
+    contrast: params.contrast,
+    brightness: params.brightness,
+    saturation: params.saturation,
+    red: params.red,
+    green: params.green,
+    blue: params.blue,
+  };
+}
+
+function asPdf(bytes: BlobPart, source: File): File {
+  return new File([bytes], source.name, { type: "application/pdf" });
+}
+
+/** Runs the Rust code as wasm against the editor's own PDFium. */
+export async function adjustColorsInBrowser(
+  file: File,
+  adjustments: ColorAdjustments,
+): Promise<File> {
+  const [pdfium, tools] = await Promise.all([
+    getPdfiumModule(),
+    getToolsCore(),
+  ]);
+  const source = await openRawDocumentSafe(await file.arrayBuffer());
+  const target = pdfium.FPDF_CreateNewDocument();
+  try {
+    if (!target) throw new Error("PDFium could not create a document");
+    tools.adjustColors(source, target, adjustments);
+    return asPdf(await saveRawDocument(target), file);
+  } finally {
+    if (target) pdfium.FPDF_CloseDocument(target);
+    closeDocAndFreeBuffer(pdfium, source);
+  }
+}
+
+async function adjustColorsOnServer(
+  file: File,
+  adjustments: ColorAdjustments,
+): Promise<{ file: File; processingMs: number | null }> {
+  const formData = new FormData();
+  formData.append("fileInput", file);
+  for (const [key, value] of Object.entries(adjustments)) {
+    formData.append(key, String(value));
+  }
+  const response = await apiClient.post<Blob>(
+    ADJUST_COLORS_RUST_ENDPOINT,
+    formData,
+    { responseType: "blob" },
+  );
+  return {
+    file: asPdf(response.data, file),
+    processingMs: parseServerTiming(response.headers?.["server-timing"]),
+  };
+}
+
+async function processFiles(
+  params: AdjustColorsRustParameters,
+  files: File[],
+): Promise<CustomProcessorResult> {
+  const adjustments = adjustmentsOf(params);
+  const started = performance.now();
+  let serverProcessingMs: number | null = params.processOnServer ? 0 : null;
+  // One at a time: the browser path shares a single PDFium instance.
+  const processed: File[] = [];
+  for (const file of files) {
+    if (params.processOnServer) {
+      const result = await adjustColorsOnServer(file, adjustments);
+      processed.push(result.file);
+      serverProcessingMs = addServerTime(
+        serverProcessingMs,
+        result.processingMs,
+      );
+    } else {
+      processed.push(await adjustColorsInBrowser(file, adjustments));
+    }
+  }
+  emitTiming({
+    tool: "adjustColors",
+    implementation: "rust",
+    location: params.processOnServer ? "server" : "browser",
+    files: files.length,
+    totalMs: performance.now() - started,
+    serverProcessingMs,
+  });
+  return { files: processed };
+}
+
+export const adjustColorsRustOperationConfig =
+  defineCustomTool<AdjustColorsRustParameters>({
+    customProcessor: processFiles,
+    operationType: "adjustColorsRust",
+    endpoint: (params) =>
+      params.processOnServer ? ADJUST_COLORS_RUST_ENDPOINT : undefined,
+    defaultParameters,
+  });
+
+export const useAdjustColorsRustOperation = () => {
+  const { t } = useTranslation();
+  return useToolOperation<AdjustColorsRustParameters>({
+    ...adjustColorsRustOperationConfig,
+    getErrorMessage: createStandardErrorHandler(
+      t("adjustColorsRust.error.failed", "Failed to adjust colors/contrast"),
+    ),
+  });
+};

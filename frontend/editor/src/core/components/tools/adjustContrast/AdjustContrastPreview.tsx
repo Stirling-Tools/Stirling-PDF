@@ -6,12 +6,23 @@ import { Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { applyAdjustmentsToCanvas } from "@app/components/tools/adjustContrast/utils";
 
+/** Returns `source` adjusted for `parameters`, as a new canvas. */
+export type PreviewAdjustment = (
+  source: HTMLCanvasElement,
+  parameters: AdjustContrastParameters,
+) => HTMLCanvasElement | Promise<HTMLCanvasElement>;
+
 interface Props {
   file: File | null;
   parameters: AdjustContrastParameters;
+  adjust?: PreviewAdjustment;
 }
 
-export default function AdjustContrastPreview({ file, parameters }: Props) {
+export default function AdjustContrastPreview({
+  file,
+  parameters,
+  adjust = applyAdjustmentsToCanvas,
+}: Props) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -36,7 +47,8 @@ export default function AdjustContrastPreview({ file, parameters }: Props) {
   }, [file, requestThumbnail]);
 
   useEffect(() => {
-    const revoked: string | null = null;
+    // An async adjustment can finish after a newer one; only the latest draws.
+    let active = true;
     const render = async () => {
       if (!thumb || !canvasRef.current) return;
       const img = new Image();
@@ -55,8 +67,8 @@ export default function AdjustContrastPreview({ file, parameters }: Props) {
       if (!sctx) return;
       sctx.drawImage(img, 0, 0);
 
-      // Apply accurate pixel adjustments
-      const adjusted = applyAdjustmentsToCanvas(src, parameters);
+      const adjusted = await adjust(src, parameters);
+      if (!active) return;
 
       // Draw adjusted onto display canvas
       const display = canvasRef.current;
@@ -67,11 +79,13 @@ export default function AdjustContrastPreview({ file, parameters }: Props) {
       dctx.clearRect(0, 0, display.width, display.height);
       dctx.drawImage(adjusted, 0, 0);
     };
-    render();
+    render().catch((error: unknown) => {
+      console.warn("[AdjustContrastPreview] preview failed", error);
+    });
     return () => {
-      if (revoked) URL.revokeObjectURL(revoked);
+      active = false;
     };
-  }, [thumb, parameters]);
+  }, [thumb, parameters, adjust]);
 
   return (
     <div>
