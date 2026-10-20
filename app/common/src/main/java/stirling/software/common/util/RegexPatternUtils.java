@@ -1,12 +1,10 @@
 package stirling.software.common.util;
 
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,9 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 public final class RegexPatternUtils {
 
     private static final RegexPatternUtils INSTANCE = new RegexPatternUtils();
-    private static final long MAX_CACHED_PATTERNS = 512;
-    private final Cache<PatternKey, Pattern> patternCache =
-            CacheBuilder.newBuilder().maximumSize(MAX_CACHED_PATTERNS).build();
+    private static final int MAX_CACHED_PATTERNS = 512;
+    private final ConcurrentMap<PatternKey, Pattern> patternCache = new ConcurrentHashMap<>();
 
     private static final String WHITESPACE_REGEX = "\\s++";
     private static final String EXTENSION_REGEX = "\\.(?:[^.]*+)?$";
@@ -103,7 +100,7 @@ public final class RegexPatternUtils {
      * @return true if pattern is cached, false otherwise
      */
     public boolean isCached(String regex, int flags) {
-        return regex != null && patternCache.getIfPresent(new PatternKey(regex, flags)) != null;
+        return regex != null && patternCache.containsKey(new PatternKey(regex, flags));
     }
 
     /**
@@ -112,7 +109,7 @@ public final class RegexPatternUtils {
      * @return number of patterns currently cached
      */
     public int getCacheSize() {
-        return (int) patternCache.size();
+        return patternCache.size();
     }
 
     /**
@@ -120,7 +117,7 @@ public final class RegexPatternUtils {
      * useful for testing or memory cleanup in long-running applications.
      */
     public void clearCache() {
-        patternCache.invalidateAll();
+        patternCache.clear();
         log.debug("Regex pattern cache cleared");
     }
 
@@ -146,8 +143,7 @@ public final class RegexPatternUtils {
             return false;
         }
         PatternKey key = new PatternKey(regex, flags);
-        boolean removed = patternCache.getIfPresent(key) != null;
-        patternCache.invalidate(key);
+        boolean removed = patternCache.remove(key) != null;
         if (removed) {
             log.debug("Removed regex pattern from cache: {} (flags: {})", regex, flags);
         }
@@ -155,21 +151,18 @@ public final class RegexPatternUtils {
     }
 
     private Pattern getOrCompile(PatternKey key) {
-        try {
-            return patternCache.get(key, () -> compilePattern(key));
-        } catch (UncheckedExecutionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof PatternSyntaxException patternSyntaxException) {
-                throw patternSyntaxException;
-            }
-            throw e;
-        } catch (java.util.concurrent.ExecutionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof PatternSyntaxException patternSyntaxException) {
-                throw patternSyntaxException;
-            }
-            throw new IllegalStateException("Failed to compile regex pattern", cause);
+        Pattern cached = patternCache.get(key);
+        if (cached != null) {
+            return cached;
         }
+        Pattern compiled = compilePattern(key);
+        // A plain map has no eviction policy: drop the working set rather than
+        // grow without bound when callers feed user-supplied patterns.
+        if (patternCache.size() >= MAX_CACHED_PATTERNS) {
+            patternCache.clear();
+        }
+        Pattern raced = patternCache.putIfAbsent(key, compiled);
+        return raced != null ? raced : compiled;
     }
 
     /**

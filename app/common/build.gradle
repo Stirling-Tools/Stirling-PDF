@@ -7,7 +7,6 @@ dependencies {
     // Declared as api here so core + proprietary (which depend on common) get it transitively,
     // keeping it off modules that don't need it (e.g. saas).
     api 'io.github.pixee:java-security-toolkit:1.2.3'
-    api "com.google.guava:guava:${guavaVersion}"
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260924.2'
