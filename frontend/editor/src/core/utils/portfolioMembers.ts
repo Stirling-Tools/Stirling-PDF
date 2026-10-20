@@ -58,15 +58,17 @@ const asDict = (
   value?.kind === "dict" ? value.map : undefined;
 
 // Name trees are balanced into Kids once they grow, so both shapes must be
-// read. Resolved values carry no stable identity, so cycles are bounded by
-// depth alone; a well-formed tree never nests that far.
+// read. The reader caches parsed objects, so the same node keeps its identity
+// across resolutions and a visited set stops crafted cycles.
 const collectSpecs = async (
   reader: PdfFileReader,
   node: Map<string, PdfValue> | undefined,
   into: Map<string, PdfValue>,
   depth = 0,
+  seen: Set<Map<string, PdfValue>> = new Set(),
 ): Promise<void> => {
-  if (!node || depth > MAX_NAME_TREE_DEPTH) return;
+  if (!node || depth > MAX_NAME_TREE_DEPTH || seen.has(node)) return;
+  seen.add(node);
 
   const names = await reader.resolveValue(node.get(KEY_NAMES));
   if (names?.kind === "array") {
@@ -87,6 +89,7 @@ const collectSpecs = async (
         asDict(await reader.resolveValue(kid)),
         into,
         depth + 1,
+        seen,
       );
     }
   }
