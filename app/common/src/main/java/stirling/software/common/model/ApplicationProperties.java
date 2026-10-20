@@ -9,9 +9,11 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -646,6 +648,15 @@ public class ApplicationProperties {
          * (which disables the cache) or turn it off here.
          */
         private boolean enabled = true;
+
+        private Map<String, Region> regions = new LinkedHashMap<>();
+
+        @Data
+        public static class Region {
+            private Long maxEntries;
+
+            private Duration ttl;
+        }
     }
 
     /** Cluster backplane config, bound under the top-level {@code cluster.*} prefix. */

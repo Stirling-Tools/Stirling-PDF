@@ -471,6 +471,10 @@ mcp:
     requireExistingAccount: true # Reject tokens whose subject has no enabled Stirling account (recommended)
   engineCapabilityRefreshMinutes: 5 # How often to refresh the AI capabilities manifest from the engine
 
+secondLevelCache:
+  enabled: true # Keep users, teams and policies in memory between requests. Turn off when running several instances without cluster mode
+  regions: {} # Per-region size and lifetime, e.g. {users: {maxEntries: 200000, ttl: 5m}}
+
 # Multi-node Stirling PDF. Two different things are called "nodes" here: cluster.node.* is THIS
 # Stirling PDF instance, cluster.valkey.* is the shared Valkey - so 'mode: cluster' is Valkey's own.
 cluster:
