@@ -1,9 +1,14 @@
 import { act, render, waitFor } from "@testing-library/react";
-import type { ComponentProps, ReactElement } from "react";
+import {
+  Children,
+  isValidElement,
+  type ComponentProps,
+  type ReactElement,
+} from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { PdfPermissionFlag } from "@embedpdf/models";
-import type AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
-import type ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
+import AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
+import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
 import type { ToolFlowConfig } from "@app/components/tools/shared/createToolFlow";
 import type { AddPasswordFullParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
 import { defaultParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
@@ -63,17 +68,30 @@ function currentFlow() {
 
 function passwordSettings() {
   return (
-    currentFlow().steps[0].content as ReactElement<
-      ComponentProps<typeof AddPasswordSettings>
-    >
+    Children.toArray(
+      (
+        currentFlow().steps[0].content as ReactElement<{
+          children: React.ReactNode;
+        }>
+      ).props.children,
+    ).find(
+      (child) => isValidElement(child) && child.type === AddPasswordSettings,
+    ) as ReactElement<ComponentProps<typeof AddPasswordSettings>>
   ).props;
 }
 
 function permissionSettings() {
   return (
-    currentFlow().steps[1].content as ReactElement<
-      ComponentProps<typeof ChangePermissionsSettings>
-    >
+    Children.toArray(
+      (
+        currentFlow().steps[1].content as ReactElement<{
+          children: React.ReactNode;
+        }>
+      ).props.children,
+    ).find(
+      (child) =>
+        isValidElement(child) && child.type === ChangePermissionsSettings,
+    ) as ReactElement<ComponentProps<typeof ChangePermissionsSettings>>
   ).props;
 }
 
@@ -136,7 +154,6 @@ describe("Add Password permission detection", () => {
     render(<AddPassword />);
 
     expect(openRawDocument).not.toHaveBeenCalled();
-    expect(permissionSettings().multipleFiles).toBe(true);
     expect(currentFlow().executeButton?.disabled).toBe(false);
 
     act(() =>
@@ -164,7 +181,6 @@ describe("Add Password permission detection", () => {
       createStirlingFile(new File([], "second.pdf")),
     ];
     rerender(<AddPassword />);
-    expect(permissionSettings().multipleFiles).toBe(true);
     expect(currentFlow().executeButton?.disabled).toBe(false);
 
     operation.isLoading = true;

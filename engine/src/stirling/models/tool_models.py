@@ -267,6 +267,9 @@ class AutoRedactParams(ApiModel):
     This endpoint automatically redacts text from a PDF file based on specified patterns. Users can provide text patterns to redact, with options for regex and whole word matching. Input:PDF Output:PDF Type:SISO
     """
 
+    case_sensitive: bool = Field(
+        False, description="Whether matching is case-sensitive, for plain text and regex alike"
+    )
     convert_pdf_to_image: bool = Field(False, description="Convert the redacted PDF to an image")
     custom_padding: float = Field(..., description="Custom padding for redaction")
     list_of_text: str = Field("text,text2", description="List of text to redact from the PDF")

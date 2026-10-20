@@ -33,7 +33,9 @@ export function UnsavedChangesDialog({
   return (
     <Modal
       opened={opened}
-      onClose={onKeepWorking}
+      onClose={() => {
+        if (!saving) onKeepWorking();
+      }}
       centered
       size={rem(400)}
       radius="lg"
@@ -41,8 +43,8 @@ export function UnsavedChangesDialog({
       withCloseButton={false}
       overlayProps={{ blur: 4, opacity: 0.4 }}
       transitionProps={{ transition: "pop", duration: 140 }}
-      closeOnClickOutside={true}
-      closeOnEscape={true}
+      closeOnClickOutside={!saving}
+      closeOnEscape={!saving}
       zIndex={Z_INDEX_TOAST}
     >
       <Modal.Title className="sr-only">{heading}</Modal.Title>
@@ -76,7 +78,12 @@ export function UnsavedChangesDialog({
             </Button>
           )}
           {onExport && (
-            <Button fullWidth variant="primary" onClick={onExport}>
+            <Button
+              fullWidth
+              variant="primary"
+              disabled={saving}
+              onClick={onExport}
+            >
               {t("exportAndContinue", "Export & Leave")}
             </Button>
           )}
@@ -84,6 +91,7 @@ export function UnsavedChangesDialog({
             <Button
               variant="secondary"
               accent="neutral"
+              disabled={saving}
               data-autofocus
               onClick={onKeepWorking}
             >
@@ -92,6 +100,7 @@ export function UnsavedChangesDialog({
             <Button
               variant="secondary"
               accent="danger"
+              disabled={saving}
               data-testid="unsaved-discard"
               onClick={onDiscard}
             >

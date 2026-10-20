@@ -6,7 +6,10 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useOs } from "@app/hooks/useOs";
-import { DOWNLOAD_URLS } from "@app/constants/downloads";
+import {
+  DESKTOP_DOWNLOAD_OPTIONS,
+  desktopDownloadForOs,
+} from "@app/components/onboarding/desktopDownloadOptions";
 
 interface OsInfo {
   label: string;
@@ -31,29 +34,8 @@ export function useOnboardingDownload(): UseOnboardingDownloadResult {
   const osType = useOs();
   const [selectedDownloadUrl, setSelectedDownloadUrl] = useState<string>("");
 
-  const osInfo = useMemo<OsInfo>(() => {
-    switch (osType) {
-      case "windows":
-        return { label: "Windows", url: DOWNLOAD_URLS.WINDOWS };
-      case "mac":
-        return { label: "Mac", url: DOWNLOAD_URLS.MAC };
-      case "linux-x64":
-      case "linux-arm64":
-        return { label: "Linux", url: DOWNLOAD_URLS.LINUX_DOCS };
-      default:
-        return { label: "", url: "" };
-    }
-  }, [osType]);
-
-  const osOptions = useMemo<OsOption[]>(
-    () =>
-      [
-        { label: "Windows", url: DOWNLOAD_URLS.WINDOWS, value: "windows" },
-        { label: "Mac", url: DOWNLOAD_URLS.MAC, value: "mac" },
-        { label: "Linux", url: DOWNLOAD_URLS.LINUX_DOCS, value: "linux" },
-      ].filter((opt) => opt.url),
-    [],
-  );
+  const osInfo = useMemo<OsInfo>(() => desktopDownloadForOs(osType), [osType]);
+  const osOptions: OsOption[] = DESKTOP_DOWNLOAD_OPTIONS;
 
   // Initialize selected URL from detected OS
   useEffect(() => {

@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,8 +48,13 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactionS
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.TextRange;
 import stirling.software.SPDF.pdf.parser.PageColumnLayout;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.jpdfium.exception.RedactUnverifiableException;
+import stirling.software.jpdfium.redact.PdfRedactor;
+import stirling.software.jpdfium.redact.RedactOptions;
+import stirling.software.jpdfium.redact.RedactResult;
 
 /**
  * Gap-coverage tests for {@link RedactExecuteService}. Drives the full {@code execute()} pipeline
@@ -281,6 +289,62 @@ class RedactExecuteServiceMoreTest {
                 String text = extractText(out);
                 assertThat(text).doesNotContain("SECRET");
                 assertThat(text).contains("Keep this");
+            }
+        }
+
+        @Test
+        @DisplayName("a page the engine could not verify fails the request, not an overlay")
+        void unverifiedPageFailsTheRequest() throws IOException {
+            byte[] pdf = singlePageTextPdf("Hide the SECRET word");
+            factoryReturns(pdf);
+
+            RedactExecuteRequest req = requestFor(pdf);
+            req.setTextValues(List.of("SECRET"));
+
+            RedactResult unverified =
+                    new RedactResult(
+                            null,
+                            List.of(new RedactResult.PageResult(0, 1, -1)),
+                            0L,
+                            false,
+                            null,
+                            List.of(),
+                            List.of(),
+                            0,
+                            0,
+                            List.of());
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), any(RedactOptions.class)))
+                        .thenReturn(unverified);
+
+                assertThatThrownBy(() -> service.execute(req))
+                        .isInstanceOf(ToolFailedException.class)
+                        .satisfies(
+                                e ->
+                                        assertThat(((ToolFailedException) e).getErrorCode())
+                                                .isEqualTo("E077"));
+            }
+        }
+
+        @Test
+        @DisplayName("an engine that could not check its redaction fails the request, no overlay")
+        void unverifiableRedactionFailsTheRequest() throws IOException {
+            byte[] pdf = singlePageTextPdf("Hide the SECRET word");
+            factoryReturns(pdf);
+
+            RedactExecuteRequest req = requestFor(pdf);
+            req.setTextValues(List.of("SECRET"));
+
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), any(RedactOptions.class)))
+                        .thenThrow(new RedactUnverifiableException("text page unavailable"));
+
+                assertThatThrownBy(() -> service.execute(req))
+                        .isInstanceOf(ToolFailedException.class)
+                        .satisfies(
+                                e ->
+                                        assertThat(((ToolFailedException) e).getErrorCode())
+                                                .isEqualTo("E083"));
             }
         }
 
