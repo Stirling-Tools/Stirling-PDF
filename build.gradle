@@ -247,6 +247,10 @@ subprojects {
         // plain XSSF cells and never evaluates formulas.
         exclude group: 'org.apache.commons', module: 'commons-math3'
 
+        // veraPDF only uses Saxon for its HTML/XML report transformers; SPDF consumes the
+        // ValidationResult directly and never renders a veraPDF report.
+        exclude group: 'net.sf.saxon', module: 'Saxon-HE'
+
         // Security CVE fixes - hardcoded resolution strategy to ensure safe versions
         // Primary fixes via explicit dependencies in app/core/build.gradle:
         // - CVE-2022-25647: gson 2.8.9+ (explicit dependency overrides tabula 2.8.7)
