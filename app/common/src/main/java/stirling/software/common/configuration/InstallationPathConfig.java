@@ -27,6 +27,7 @@ public class InstallationPathConfig {
 
     // Custom file paths
     private static final String STATIC_PATH;
+    private static final String OPTIONAL_STATIC_PATH;
     private static final String TEMPLATES_PATH;
     private static final String SIGNATURES_PATH;
     private static final String PRIVATE_KEY_PATH;
@@ -53,9 +54,19 @@ public class InstallationPathConfig {
 
         // Initialize custom file paths
         STATIC_PATH = CUSTOM_FILES_PATH + "static" + File.separator;
+        OPTIONAL_STATIC_PATH = initializeOptionalStaticPath();
         TEMPLATES_PATH = CUSTOM_FILES_PATH + "templates" + File.separator;
         SIGNATURES_PATH = CUSTOM_FILES_PATH + "signatures" + File.separator;
         PRIVATE_KEY_PATH = CONFIG_PATH + "db" + File.separator + "keys" + File.separator;
+    }
+
+    /** Read-only locale and scanner assets installed outside the JAR; empty when unset. */
+    private static String initializeOptionalStaticPath() {
+        String path = System.getenv("STIRLING_OPTIONAL_STATIC_PATH");
+        if (path == null || path.isBlank()) {
+            return "";
+        }
+        return path.endsWith(File.separator) ? path : path + File.separator;
     }
 
     private static String initializeBasePath() {
@@ -112,6 +123,10 @@ public class InstallationPathConfig {
 
     public static String getStaticPath() {
         return STATIC_PATH;
+    }
+
+    public static String getOptionalStaticPath() {
+        return OPTIONAL_STATIC_PATH;
     }
 
     public static String getTemplatesPath() {

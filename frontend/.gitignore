@@ -17,6 +17,7 @@
 
 /editor/build
 /editor/dist
+/editor/dist-pack
 /editor/dist-desktop
 
 # misc

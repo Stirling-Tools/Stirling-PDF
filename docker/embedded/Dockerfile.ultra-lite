@@ -88,6 +88,7 @@ LABEL org.opencontainers.image.title="Stirling-PDF Ultra-Lite" \
 # NOTE: Memory flags (InitialRAMPercentage, MaxRAMPercentage, MaxMetaspaceSize)
 # are computed dynamically by init-without-ocr.sh based on container memory limits.
 ENV VERSION_TAG=$VERSION_TAG \
+    STIRLING_OPTIONAL_STATIC_PATH="/opt/stirling/optional-assets" \
     STIRLING_AOT_ENABLE="false" \
     _JVM_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
@@ -130,6 +131,10 @@ COPY --from=build --chown=1000:1000 \
      /app/app/core/build/libs/*.jar /app.jar
 COPY --from=build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
+
+# Locale packs and the scanner face are not in the JAR; the server reads them from here.
+COPY --from=build --chown=1000:1000 \
+     /app/frontend/editor/dist-pack/ /opt/stirling/optional-assets/
 
 RUN chmod +x /scripts/*.sh
 

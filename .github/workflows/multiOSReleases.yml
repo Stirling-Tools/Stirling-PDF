@@ -185,12 +185,15 @@ jobs:
           ls -la app/core/build/libs/
           mkdir -p ./jar-dist
           cp app/core/build/libs/stirling-pdf-${{ needs.determine-matrix.outputs.version }}.jar ./jar-dist/Stirling-PDF${{ matrix.variant.file_suffix }}.jar
+          if [ "${{ matrix.variant.build_frontend }}" = "true" ]; then
+            cp app/core/build/distributions/stirling-pdf-optional-assets.zip "./jar-dist/Stirling-PDF${{ matrix.variant.file_suffix }}-optional-assets.zip"
+          fi
 
       - name: Upload JAR artifacts
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: jar${{ matrix.variant.file_suffix }}
-          path: ./jar-dist/*.jar
+          path: ./jar-dist/*
           retention-days: 1
 
   build:
@@ -923,6 +926,7 @@ jobs:
           # in latest.json so the .sig files themselves are not uploaded.
           files: |
             ./artifacts/**/*.jar
+            ./artifacts/**/*-optional-assets.zip
             ./artifacts/**/*.msi
             ./artifacts/**/*-setup.exe
             ./artifacts/**/*.dmg

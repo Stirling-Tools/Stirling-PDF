@@ -150,7 +150,15 @@ bootJar {
     // costs roughly 0.3 s of CPU and lands on the request thread. The .gz copies stay out;
     // clients that cannot take brotli fall back to Spring's dynamic gzip.
     eachFile { details ->
-        if (details.path.endsWith('.gz')) {
+        String path = details.path
+        if (path.endsWith('.gz')) {
+            details.exclude()
+        }
+        // Safety net for direct builds that did not run the Vite pack splitter.
+        if (path.contains('static/locales/') && !path.contains('static/locales/en-US/')) {
+            details.exclude()
+        }
+        if (path.contains('static/vendor/jscanify/opencv.js')) {
             details.exclude()
         }
     }
@@ -290,6 +298,8 @@ tasks.register('npmBuild', Exec) {
     environment 'VITE_API_BASE_URL', '/'
     // Include the admin portal's lazy route/chunk in the editor build when requested.
     environment 'VITE_INCLUDE_PORTAL', (buildWithPortal ? 'true' : 'false')
+    // Keep non-English locales and the scanner face out of the base JAR.
+    environment 'STIRLING_OPTIONAL_ASSETS', 'pack'
 
     doFirst {
         println "Building editor frontend application for production (mode=${frontendMode}, VITE_API_BASE_URL=/, portal=${buildWithPortal})"
@@ -354,6 +364,16 @@ tasks.register('copyApiLandingPage', Copy) {
     }
 }
 
+tasks.register('optionalAssets', Zip) {
+    enabled = buildWithFrontend
+    group = 'frontend'
+    description = 'Package locales and scanner assets excluded from the base JAR'
+    dependsOn npmBuild
+    from(new File(frontendEditorDir, 'dist-pack'))
+    archiveFileName = 'stirling-pdf-optional-assets.zip'
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+}
+
 tasks.register('copyBackendOnlySamples', Copy) {
     group = 'frontend'
     description = 'Copy frontend sample files for backend-only mode'
@@ -378,6 +398,7 @@ tasks.named('cleanFrontendAssets').configure {
 if (buildWithFrontend) {
     println "Editor frontend build enabled - JAR will include React frontend (mode=${frontendMode})"
     processResources.dependsOn copyFrontendAssets
+    assemble.dependsOn optionalAssets
 } else {
     println "Frontend build disabled - JAR will be backend-only with API landing page"
     // When not building the UI, ensure any stale frontend assets are removed and use API landing page

@@ -119,6 +119,10 @@ COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --link --chown=1000:1000 scripts/ /scripts/
 
+# Locale packs and the scanner face are not in the JAR; the server reads them from here.
+COPY --link --from=app-build --chown=1000:1000 \
+     /app/frontend/editor/dist-pack/ /opt/stirling/optional-assets/
+
 # Baked-in detection model; FormDetectionModelManager seeds it into /configs on startup.
 COPY --link --from=app-build --chown=1000:1000 /preinstalled-models/ /opt/stirling/preinstalled-models/
 
@@ -146,6 +150,7 @@ RUN echo "${VERSION_TAG:-dev}" > /etc/stirling_version
 # Environment variables
 ENV VERSION_TAG=$VERSION_TAG \
     FORMDETECTION_PREINSTALLEDMODELDIR="/opt/stirling/preinstalled-models" \
+    STIRLING_OPTIONAL_STATIC_PATH="/opt/stirling/optional-assets" \
     STIRLING_AOT_ENABLE="false" \
     _JVM_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1PeriodicGCInterval=10000 -XX:G1PeriodicGCSystemLoadThreshold=0.0 -XX:+G1PeriodicGCInvokesConcurrent -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \

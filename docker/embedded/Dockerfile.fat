@@ -130,6 +130,10 @@ COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --link --chown=1000:1000 scripts/ /scripts/
 
+# Locale packs and the scanner face are not in the JAR; the server reads them from here.
+COPY --link --from=app-build --chown=1000:1000 \
+     /app/frontend/editor/dist-pack/ /opt/stirling/optional-assets/
+
 # init-without-ocr.sh starts the engine when this directory exists, so other images are unaffected.
 COPY --link --from=engine-build --chown=1000:1000 /opt/stirling-engine/python /opt/stirling-engine/python
 COPY --link --from=engine-build --chown=1000:1000 /opt/stirling-engine/.venv  /opt/stirling-engine/.venv
@@ -164,6 +168,7 @@ RUN echo "${VERSION_TAG:-dev}" > /etc/stirling_version
 # Environment variables
 ENV VERSION_TAG=$VERSION_TAG \
     FORMDETECTION_PREINSTALLEDMODELDIR="/opt/stirling/preinstalled-models" \
+    STIRLING_OPTIONAL_STATIC_PATH="/opt/stirling/optional-assets" \
     STIRLING_AOT_ENABLE="false" \
     _JVM_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \

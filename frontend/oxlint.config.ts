@@ -91,6 +91,7 @@ export default defineConfig({
     "storybook-static",
     "test-results",
     "editor/dist",
+    "editor/dist-pack",
     "editor/public",
     "editor/src-tauri",
     "editor/playwright-report",

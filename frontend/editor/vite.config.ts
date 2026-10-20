@@ -247,6 +247,48 @@ function isMarkdownPackage(pkg: string): boolean {
   );
 }
 
+async function splitOptionalAssets(distDir: string): Promise<void> {
+  const packDir = path.resolve(distDir, "..", "dist-pack");
+  await fs.rm(packDir, { recursive: true, force: true });
+
+  const localesDir = path.join(distDir, "locales");
+  const packLocales = path.join(packDir, "locales");
+  await fs.mkdir(packLocales, { recursive: true });
+  const localeEntries = await fs
+    .readdir(localesDir, { withFileTypes: true })
+    .catch(() => []);
+  for (const entry of localeEntries) {
+    if (!entry.isDirectory() || entry.name === "en-US") continue;
+    await fs.rename(
+      path.join(localesDir, entry.name),
+      path.join(packLocales, entry.name),
+    );
+  }
+
+  const opencvDir = path.join(distDir, "vendor", "jscanify");
+  const packVendor = path.join(packDir, "vendor", "jscanify");
+  await fs.mkdir(packVendor, { recursive: true });
+  for (const name of ["opencv.js", "opencv.js.br", "opencv.js.gz"]) {
+    await fs
+      .rename(path.join(opencvDir, name), path.join(packVendor, name))
+      .catch(() => undefined);
+  }
+
+  await fs.writeFile(
+    path.join(packDir, "README.txt"),
+    [
+      "Stirling-PDF optional assets",
+      "",
+      "Extract locales/ and vendor/ into customFiles/static/ under the",
+      "Stirling-PDF data directory, then restart the application.",
+      "",
+      "Without these assets the UI falls back to English for languages other",
+      "than en-US, and the mobile scanner cannot load its OpenCV runtime.",
+      "",
+    ].join("\n"),
+  );
+}
+
 function compressStaticCopyPlugin(emitGzip: boolean): PluginOption {
   return {
     name: "compress-static-copy",
@@ -296,6 +338,13 @@ function compressStaticCopyPlugin(emitGzip: boolean): PluginOption {
           )
           .map((name) => fs.rm(path.join(fontsDir, name), { force: true })),
       );
+
+      // The embedded JAR keeps English plus the core app. Other locale packs
+      // and the scanner face ship as an optional archive so the standard
+      // download does not carry assets only some deployments need.
+      if (process.env.STIRLING_OPTIONAL_ASSETS === "pack") {
+        await splitOptionalAssets(distDir);
+      }
     },
   };
 }

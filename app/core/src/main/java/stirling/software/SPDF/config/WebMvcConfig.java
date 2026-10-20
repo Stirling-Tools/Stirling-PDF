@@ -96,6 +96,41 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         // 4. Branding and stable non-fingerprinted assets (1 day + SWR)
         // Use stale-while-revalidate to improve perceived performance.
+        List<String> stableLocations =
+                new ArrayList<>(
+                        List.of(
+                                staticPath,
+                                "classpath:/static/",
+                                staticPath + "pdfjs/",
+                                "classpath:/static/pdfjs/",
+                                staticPath + "pdfium/",
+                                "classpath:/static/pdfium/",
+                                staticPath + "locales/",
+                                "classpath:/static/locales/",
+                                staticPath + "css/",
+                                "classpath:/static/css/",
+                                staticPath + "js/",
+                                "classpath:/static/js/",
+                                staticPath + "vendor/",
+                                "classpath:/static/vendor/",
+                                staticPath + "samples/",
+                                "classpath:/static/samples/",
+                                staticPath + "og_images/",
+                                "classpath:/static/og_images/",
+                                staticPath + "Login/",
+                                "classpath:/static/Login/",
+                                staticPath + "icons/",
+                                "classpath:/static/icons/",
+                                staticPath + "modern-logo/",
+                                "classpath:/static/modern-logo/"));
+        String optionalStaticPath =
+                stirling.software.common.configuration.InstallationPathConfig
+                        .getOptionalStaticPath();
+        if (!optionalStaticPath.isBlank()) {
+            logger.info("Serving optional static assets from {}", optionalStaticPath);
+            stableLocations.add("file:" + optionalStaticPath + "locales/");
+            stableLocations.add("file:" + optionalStaticPath + "vendor/");
+        }
         registry.addResourceHandler(
                         "/favicon.*",
                         "/apple-touch-icon.png",
@@ -114,31 +149,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/samples/**",
                         "/og_images/**",
                         "/Login/**")
-                .addResourceLocations(
-                        staticPath,
-                        "classpath:/static/",
-                        staticPath + "pdfjs/",
-                        "classpath:/static/pdfjs/",
-                        staticPath + "pdfium/",
-                        "classpath:/static/pdfium/",
-                        staticPath + "locales/",
-                        "classpath:/static/locales/",
-                        staticPath + "css/",
-                        "classpath:/static/css/",
-                        staticPath + "js/",
-                        "classpath:/static/js/",
-                        staticPath + "vendor/",
-                        "classpath:/static/vendor/",
-                        staticPath + "samples/",
-                        "classpath:/static/samples/",
-                        staticPath + "og_images/",
-                        "classpath:/static/og_images/",
-                        staticPath + "Login/",
-                        "classpath:/static/Login/",
-                        staticPath + "icons/",
-                        "classpath:/static/icons/",
-                        staticPath + "modern-logo/",
-                        "classpath:/static/modern-logo/")
+                .addResourceLocations(stableLocations.toArray(String[]::new))
                 .setCacheControl(STABLE_ONE_DAY)
                 .resourceChain(true)
                 .addResolver(new PreferredEncodingResourceResolver());
