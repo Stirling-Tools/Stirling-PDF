@@ -27,6 +27,8 @@ import javax.sql.DataSource;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
@@ -109,6 +111,7 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     private final ApplicationProperties.Datasource datasourceProps;
     private final DataSource dataSource;
+    private volatile Boolean h2Database;
     private final org.springframework.context.ApplicationEventPublisher events;
     private final DatabaseNotificationServiceInterface backupNotificationService;
 
@@ -297,14 +300,17 @@ public class DatabaseService implements DatabaseServiceInterface {
         if (isH2Database()) {
             String query = "SCRIPT SIMPLE COLUMNS DROP to ?;";
 
-            try (Connection conn = dataSource.getConnection();
-                    PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setString(1, insertOutputFilePath.toString());
-                stmt.execute();
+            Connection conn = null;
+            try {
+                conn = DataSourceUtils.getConnection(dataSource);
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, insertOutputFilePath.toString());
+                    stmt.execute();
+                }
                 backupNotificationService.notifyBackupsSuccess(
                         "Database backup export completed",
                         "Backup file: " + insertOutputFilePath.getFileName());
-            } catch (SQLException e) {
+            } catch (SQLException | CannotGetJdbcConnectionException e) {
                 log.error("Error during database export: {}", e.getMessage(), e);
                 backupNotificationService.notifyBackupsFailure(
                         "Database backup export failed",
@@ -320,6 +326,8 @@ public class DatabaseService implements DatabaseServiceInterface {
                                 + insertOutputFilePath.getFileName()
                                 + " not found. Message: "
                                 + e.getMessage());
+            } finally {
+                DataSourceUtils.releaseConnection(conn, dataSource);
             }
 
             log.info("Database export completed: {}", insertOutputFilePath);
@@ -439,15 +447,25 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     /** Returns {@code true} when the active runtime DataSource is genuinely H2. */
     private boolean isH2Database() {
-        try (Connection conn = dataSource.getConnection()) {
+        Boolean known = h2Database;
+        if (known != null) {
+            return known;
+        }
+        Connection conn = null;
+        try {
+            conn = DataSourceUtils.getConnection(dataSource);
             String product = conn.getMetaData().getDatabaseProductName();
-            return product != null && product.toLowerCase().contains("h2");
-        } catch (SQLException e) {
+            boolean h2 = product != null && product.toLowerCase().contains("h2");
+            h2Database = h2;
+            return h2;
+        } catch (SQLException | CannotGetJdbcConnectionException e) {
             log.warn(
                     "Could not read DatabaseMetaData to determine driver; assuming non-H2 to avoid"
                             + " issuing H2-only SQL against another database: {}",
                     e.getMessage());
             return false;
+        } finally {
+            DataSourceUtils.releaseConnection(conn, dataSource);
         }
     }
 
