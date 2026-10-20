@@ -107,6 +107,7 @@ tasks:
       - task: jlink:clean
       - cd src-tauri && cargo clean
       - rm -rf dist build
+      - rm -f src-tauri/vendor/jemalloc/libjemalloc.* src-tauri/vendor/jemalloc/.build
 
   # ============================================================
   # jemalloc — Build allocator preloaded by the backend

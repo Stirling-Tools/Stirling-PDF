@@ -8,20 +8,29 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.LoggerFactory;
 
 import stirling.software.common.configuration.RuntimePathConfig;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 /**
  * Gap-coverage tests for {@link FileMonitor}, focusing on {@code isFileReadyForProcessing} branches
@@ -157,6 +166,158 @@ class FileMonitorMoreTest {
             // Now create the directory; the next tick should attempt re-registration.
             Files.createDirectories(missing);
             assertDoesNotThrow(monitor::trackFiles);
+        }
+    }
+
+    @Nested
+    @DisplayName("missing roots")
+    class MissingRootTests {
+
+        private Logger logger;
+        private Level originalLevel;
+        private ListAppender<ILoggingEvent> appender;
+
+        private void attachLogCapture() {
+            logger = (Logger) LoggerFactory.getLogger(FileMonitor.class);
+            originalLevel = logger.getLevel();
+            appender = new ListAppender<>();
+            appender.start();
+            logger.setLevel(Level.INFO);
+            logger.addAppender(appender);
+        }
+
+        private void detachLogCapture() {
+            logger.detachAppender(appender);
+            logger.setLevel(originalLevel);
+        }
+
+        private long missingRootWarnings() {
+            return appender.list.stream()
+                    .filter(event -> event.getLevel() == Level.WARN)
+                    .filter(
+                            event ->
+                                    event.getFormattedMessage()
+                                            .contains("Not monitoring any directories"))
+                    .count();
+        }
+
+        @SuppressWarnings("unchecked")
+        private Set<Path> readyFiles(FileMonitor monitor) throws ReflectiveOperationException {
+            Field field = FileMonitor.class.getDeclaredField("readyForProcessingFiles");
+            field.setAccessible(true);
+            return (Set<Path>) field.get(monitor);
+        }
+
+        @SuppressWarnings("unchecked")
+        private Set<Path> pendingFiles(FileMonitor monitor) throws ReflectiveOperationException {
+            Field field = FileMonitor.class.getDeclaredField("newlyDiscoveredFiles");
+            field.setAccessible(true);
+            return (Set<Path>) field.get(monitor);
+        }
+
+        private void forgetRegistrations(FileMonitor monitor) throws ReflectiveOperationException {
+            Field field = FileMonitor.class.getDeclaredField("path2KeyMapping");
+            field.setAccessible(true);
+            ((Map<?, ?>) field.get(monitor)).clear();
+        }
+
+        @Test
+        @DisplayName("a root that never appears is warned about once, not on every tick")
+        void missingRootWarnsOnce() throws IOException {
+            attachLogCapture();
+            try {
+                FileMonitor monitor = monitorWatching(tempDir.resolve("missing"), p -> true);
+                for (int tick = 0; tick < 5; tick++) {
+                    monitor.trackFiles();
+                }
+                assertTrue(
+                        missingRootWarnings() <= 1,
+                        "missing root warning repeated " + missingRootWarnings() + " times");
+            } finally {
+                detachLogCapture();
+            }
+        }
+
+        @Test
+        @DisplayName("pending work with no root does not repeat the warning")
+        void pendingFilesDoNotRepeatWarning() throws Exception {
+            Path root = tempDir.resolve("watched");
+            Files.createDirectories(root);
+            Files.writeString(root.resolve("pending.pdf"), "pending");
+
+            attachLogCapture();
+            try {
+                FileMonitor monitor = monitorWatching(root, p -> true);
+                Path moved = tempDir.resolve("moved");
+                Files.move(root, moved);
+                forgetRegistrations(monitor);
+                // Simulate a file left in the pending queue after the root was
+                // lost; this is the state the warning throttle must cover.
+                pendingFiles(monitor).add(moved.resolve("pending.pdf").toAbsolutePath());
+                for (int tick = 0; tick < 5; tick++) {
+                    monitor.trackFiles();
+                }
+                assertTrue(
+                        missingRootWarnings() <= 1,
+                        "missing root warning repeated " + missingRootWarnings() + " times");
+            } finally {
+                detachLogCapture();
+            }
+        }
+
+        @Test
+        @DisplayName("no configured roots stay quiet after the constructor error")
+        void emptyRootListDoesNotWarn() throws IOException {
+            RuntimePathConfig config = mock(RuntimePathConfig.class);
+            when(config.getPipelineWatchedFoldersPaths()).thenReturn(List.of());
+            attachLogCapture();
+            try {
+                FileMonitor monitor = new FileMonitor(p -> true, config);
+                for (int tick = 0; tick < 5; tick++) {
+                    monitor.trackFiles();
+                }
+                assertTrue(
+                        missingRootWarnings() == 0,
+                        "missing root warning repeated " + missingRootWarnings() + " times");
+            } finally {
+                detachLogCapture();
+            }
+        }
+
+        @Test
+        @DisplayName("a root created after startup registers and queues its files")
+        void rootCreatedLaterQueuesFiles() throws Exception {
+            Path root = tempDir.resolve("late-root");
+            FileMonitor monitor = monitorWatching(root, p -> true);
+            monitor.trackFiles();
+
+            Files.createDirectories(root);
+            Path file = root.resolve("late.pdf");
+            Files.writeString(file, "late");
+            monitor.trackFiles();
+
+            assertTrue(
+                    readyFiles(monitor).contains(file.toAbsolutePath()),
+                    "file discovered when the root appeared was not queued");
+        }
+
+        @Test
+        @DisplayName("a root deleted and recreated registers again")
+        void rootDeletedAndRecreated() throws Exception {
+            Path root = tempDir.resolve("recreated-root");
+            Files.createDirectories(root);
+            FileMonitor monitor = monitorWatching(root, p -> true);
+            Files.delete(root);
+            monitor.trackFiles();
+
+            Files.createDirectories(root);
+            Path file = root.resolve("after-recreate.pdf");
+            Files.writeString(file, "after");
+            monitor.trackFiles();
+
+            assertTrue(
+                    readyFiles(monitor).contains(file.toAbsolutePath()),
+                    "file in the recreated root was not queued");
         }
     }
 }

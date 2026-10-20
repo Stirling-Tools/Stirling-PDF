@@ -7,6 +7,7 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -25,12 +26,14 @@ import stirling.software.common.configuration.RuntimePathConfig;
 public class FileMonitor {
 
     private final Map<Path, WatchKey> path2KeyMapping;
+    private final Map<Path, Object> rootFileKeys;
     private final Set<Path> newlyDiscoveredFiles;
     private final ConcurrentHashMap.KeySetView<Path, Boolean> readyForProcessingFiles;
     private final WatchService watchService;
     private final Predicate<Path> pathFilter;
     private final List<Path> rootDirs;
     private Set<Path> stagingFiles;
+    private boolean missingRootWarningLogged;
 
     /**
      * @param rootDirectory the root directory to monitor
@@ -43,6 +46,7 @@ public class FileMonitor {
             throws IOException {
         this.newlyDiscoveredFiles = new HashSet<>();
         this.path2KeyMapping = new HashMap<>();
+        this.rootFileKeys = new HashMap<>();
         this.stagingFiles = new HashSet<>();
         this.pathFilter = pathFilter;
         this.readyForProcessingFiles = ConcurrentHashMap.newKeySet();
@@ -74,6 +78,7 @@ public class FileMonitor {
                 if (Files.exists(rootDir)) {
                     try {
                         recursivelyRegisterEntry(rootDir);
+                        rememberRoot(rootDir);
                     } catch (IOException e) {
                         log.error("Failed to register monitoring for {}", rootDir, e);
                     }
@@ -106,6 +111,52 @@ public class FileMonitor {
         }
     }
 
+    private static Object fileKey(Path path) {
+        try {
+            return Files.readAttributes(path, BasicFileAttributes.class).fileKey();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private void rememberRoot(Path root) {
+        Object key = fileKey(root);
+        if (key != null) {
+            rootFileKeys.put(root, key);
+        }
+    }
+
+    /**
+     * A root can be deleted and recreated between ticks. The old {@link WatchKey} then points at a
+     * path that exists again but is no longer watched, so {@code key.reset()} can stay true. Drop
+     * the stale subtree and let the normal re-registration path walk it again.
+     */
+    private void forgetReplacedRoots() {
+        for (Path root : rootDirs) {
+            Object previous = rootFileKeys.get(root);
+            if (previous == null) {
+                continue;
+            }
+            boolean exists = Files.exists(root);
+            Object current = exists ? fileKey(root) : null;
+            if (exists && (current == null || current.equals(previous))) {
+                continue;
+            }
+            path2KeyMapping
+                    .entrySet()
+                    .removeIf(
+                            entry -> {
+                                if (!entry.getKey().equals(root)
+                                        && !entry.getKey().startsWith(root)) {
+                                    return false;
+                                }
+                                entry.getValue().cancel();
+                                return true;
+                            });
+            rootFileKeys.keySet().removeIf(key -> key.equals(root) || key.startsWith(root));
+        }
+    }
+
     @Scheduled(fixedRate = 5000)
     public void trackFiles() {
         /*
@@ -113,24 +164,43 @@ public class FileMonitor {
          If those files are not modified in current iteration, they will be considered as ready for processing.
         */
 
+        forgetReplacedRoots();
+
         if (path2KeyMapping.isEmpty()) {
-            // A configured root that does not exist yet can appear later, so
-            // keep checking, but do not warn on every tick while none exist.
-            if (rootDirs.stream().noneMatch(path -> Files.exists(path))
-                    && newlyDiscoveredFiles.isEmpty()
-                    && readyForProcessingFiles.isEmpty()) {
+            if (rootDirs.isEmpty()) {
                 return;
             }
-            log.warn("Not monitoring any directories; attempting to re-register root paths.");
+
+            // A configured root that does not exist yet can appear later, so
+            // keep checking every tick without repeating the warning. Pending
+            // work stays queued until a root is watchable again.
+            if (rootDirs.stream().noneMatch(Files::exists)) {
+                if (!missingRootWarningLogged) {
+                    log.warn(
+                            "Not monitoring any directories; waiting for a configured root to"
+                                    + " appear.");
+                    missingRootWarningLogged = true;
+                }
+                return;
+            }
+
+            if (!missingRootWarningLogged) {
+                log.warn("Not monitoring any directories; attempting to re-register root paths.");
+            }
+            missingRootWarningLogged = true;
             for (Path rootDir : rootDirs) {
                 if (Files.exists(
                         rootDir)) { // if the root directory exists, re-register the root directory
                     try {
                         recursivelyRegisterEntry(rootDir);
+                        rememberRoot(rootDir);
                     } catch (IOException e) {
                         log.error("unable to register monitoring for {}", rootDir, e);
                     }
                 }
+            }
+            if (!path2KeyMapping.isEmpty()) {
+                missingRootWarningLogged = false;
             }
         }
 
@@ -181,7 +251,9 @@ public class FileMonitor {
 
             boolean isKeyValid = key.reset();
             if (!isKeyValid) { // key is invalid when the directory itself is no longer exists
-                path2KeyMapping.remove((Path) key.watchable());
+                Path watched = (Path) key.watchable();
+                path2KeyMapping.remove(watched);
+                rootFileKeys.remove(watched);
             }
             key = watchService.poll();
         }
