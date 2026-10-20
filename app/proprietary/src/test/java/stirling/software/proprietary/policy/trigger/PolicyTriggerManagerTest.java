@@ -126,6 +126,22 @@ class PolicyTriggerManagerTest {
     }
 
     @Test
+    void aFailedStopStaysTrackedSoTheNextReconcileRetriesIt() {
+        when(policyStore.findBindingsByTriggerType(anyString())).thenReturn(List.of(binding));
+        PolicyTriggerManager manager = manager();
+        manager.start();
+
+        doThrow(new RuntimeException("boom")).doNothing().when(triggerA).stop();
+        when(policyStore.findBindingsByTriggerType("a")).thenReturn(List.of());
+        manager.notifyPoliciesChanged();
+        clearInvocations(triggerA);
+
+        manager.notifyPoliciesChanged();
+
+        verify(triggerA).stop();
+    }
+
+    @Test
     void storeFailureStartsTheTriggersRatherThanDisablingAutomation() {
         when(policyStore.findBindingsByTriggerType(anyString()))
                 .thenThrow(new RuntimeException("db down"));

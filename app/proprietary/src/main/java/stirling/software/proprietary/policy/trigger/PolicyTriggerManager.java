@@ -110,12 +110,14 @@ public class PolicyTriggerManager implements SmartLifecycle {
     }
 
     private void stopTrigger(PolicyTrigger trigger) {
-        if (!started.remove(trigger)) {
+        if (!started.contains(trigger)) {
             return;
         }
         try {
             trigger.stop();
+            started.remove(trigger);
         } catch (RuntimeException e) {
+            // Keep it tracked so reconciliation or shutdown can retry the failed stop.
             log.error("Failed to stop trigger '{}': {}", trigger.type(), e.getMessage(), e);
         }
     }
