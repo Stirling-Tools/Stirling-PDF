@@ -41,7 +41,12 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    api "com.stirling:jpdfium:${jpdfiumVersion}"
+    api("com.stirling:jpdfium:${jpdfiumVersion}") {
+        // The base artifact hard-depends on the Linux x64 native; the platform selection below
+        // adds exactly the requested natives. Without this exclude, every non-Linux build carries
+        // a second, unused ~13 MB native.
+        exclude group: 'com.stirling', module: 'jpdfium-natives-linux-x64'
+    }
 
     // -PjpdfiumPlatforms=auto|all|none|<csv of linux-x64,linux-arm64,linux-musl-x64,linux-musl-arm64,darwin-x64,darwin-arm64,windows-x64> (windows-arm64 natives not published yet)
     def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'auto').toString().trim()

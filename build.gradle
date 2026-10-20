@@ -243,6 +243,10 @@ subprojects {
         exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
 
+        // Only POI's formula engine (HSSF/formula evaluation) uses commons-math3; the app writes
+        // plain XSSF cells and never evaluates formulas.
+        exclude group: 'org.apache.commons', module: 'commons-math3'
+
         // Security CVE fixes - hardcoded resolution strategy to ensure safe versions
         // Primary fixes via explicit dependencies in app/core/build.gradle:
         // - CVE-2022-25647: gson 2.8.9+ (explicit dependency overrides tabula 2.8.7)
