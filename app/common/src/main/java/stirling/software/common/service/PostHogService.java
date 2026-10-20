@@ -20,13 +20,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import com.posthog.java.PostHog;
-
 import stirling.software.common.model.ApplicationProperties;
 
 @Service
 public class PostHogService {
-    private final PostHog postHog;
+    private final PostHogClient postHog;
     private final String uniqueId;
     private final String appVersion;
     private final ApplicationProperties applicationProperties;
@@ -35,7 +33,7 @@ public class PostHogService {
     private boolean configDirMounted;
 
     public PostHogService(
-            PostHog postHog,
+            PostHogClient postHog,
             @Qualifier("UUID") String uuid,
             @Qualifier("configDirMounted") boolean configDirMounted,
             @Qualifier("appVersion") String appVersion,

@@ -12,7 +12,6 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-aspectj'
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260924.2'
     api 'com.fathzer:javaluator:3.0.6'
-    api 'com.posthog.java:posthog:1.2.0'
     api "org.apache.commons:commons-lang3:${commonsLang3}"
     api 'com.drewnoakes:metadata-extractor:2.21.0' // Image metadata extractor
     api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'

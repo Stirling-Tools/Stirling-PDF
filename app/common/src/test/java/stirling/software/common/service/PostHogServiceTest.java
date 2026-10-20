@@ -18,8 +18,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.mock.env.MockEnvironment;
 
-import com.posthog.java.PostHog;
-
 import stirling.software.common.model.ApplicationProperties;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,7 +27,7 @@ class PostHogServiceTest {
     private static final String UUID = "test-uuid-1234";
     private static final String APP_VERSION = "9.9.9";
 
-    @Mock PostHog postHog;
+    @Mock PostHogClient postHog;
     @Mock UserServiceInterface userService;
 
     /** Build an ApplicationProperties with analytics/posthog toggled. */
