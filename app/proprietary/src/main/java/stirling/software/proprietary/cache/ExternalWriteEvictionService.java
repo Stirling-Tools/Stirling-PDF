@@ -15,8 +15,10 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.UserIdentity;
 import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 
 @Slf4j
@@ -42,13 +44,18 @@ public class ExternalWriteEvictionService {
 
     private static final String USER = User.class.getName();
     private static final String TEAM = Team.class.getName();
+    private static final String AUTHORITY = Authority.class.getName();
 
     private final UserRepository userRepository;
+    private final AuthorityRepository authorityRepository;
     private final CacheEvictionBroadcaster broadcaster;
 
     public ExternalWriteEvictionService(
-            UserRepository userRepository, CacheEvictionBroadcaster broadcaster) {
+            UserRepository userRepository,
+            AuthorityRepository authorityRepository,
+            CacheEvictionBroadcaster broadcaster) {
         this.userRepository = userRepository;
+        this.authorityRepository = authorityRepository;
         this.broadcaster = broadcaster;
     }
 
@@ -77,8 +84,20 @@ public class ExternalWriteEvictionService {
         for (String username : nonEmpty(request.usernames())) {
             evictions.add(CacheEviction.naturalId(USER, username));
         }
+        // A role changed in SQL keeps its row id, so the cached Authority row outlives its user.
+        List<Long> userIds =
+                evictions.stream()
+                        .filter(e -> e.kind() == CacheEviction.Kind.ENTITY_WITH_COLLECTIONS)
+                        .map(e -> Long.valueOf(e.key()))
+                        .toList();
+        if (!userIds.isEmpty()) {
+            for (Long authorityId : authorityRepository.findIdsByUserIdIn(userIds)) {
+                evictions.add(CacheEviction.entity(AUTHORITY, authorityId.toString()));
+            }
+        }
         if (unresolvedUser) {
             evictions.add(CacheEviction.entityRegion(USER));
+            evictions.add(CacheEviction.entityRegion(AUTHORITY));
         }
         for (Long teamId : nonEmpty(request.teamIds())) {
             evictions.add(CacheEviction.entityWithCollections(TEAM, teamId.toString()));

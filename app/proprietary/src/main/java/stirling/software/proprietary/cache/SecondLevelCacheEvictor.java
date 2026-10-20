@@ -4,7 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.cache.Cache;
+import javax.cache.CacheManager;
+
 import org.hibernate.Session;
+import org.hibernate.cache.jcache.internal.JCacheRegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -50,6 +54,24 @@ public class SecondLevelCacheEvictor {
 
     public void evictAll() {
         sessionFactory().getCache().evictAllRegions();
+    }
+
+    // Hibernate cannot switch its second-level cache off once built; zero-size regions hold
+    // nothing.
+    public void stopCaching() {
+        if (!(sessionFactory().getCache().getRegionFactory()
+                instanceof JCacheRegionFactory jcache)) {
+            return;
+        }
+        CacheManager cacheManager = jcache.getCacheManager();
+        for (String region : cacheManager.getCacheNames()) {
+            Cache<Object, Object> cache = cacheManager.getCache(region);
+            com.github.benmanes.caffeine.cache.Cache<?, ?> caffeine =
+                    cache.unwrap(com.github.benmanes.caffeine.cache.Cache.class);
+            caffeine.policy().eviction().ifPresent(eviction -> eviction.setMaximum(0));
+            cache.clear();
+        }
+        evictAll();
     }
 
     private void apply(
