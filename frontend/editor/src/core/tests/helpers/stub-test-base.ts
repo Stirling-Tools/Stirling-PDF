@@ -75,11 +75,6 @@ export const test = base.extend<StubFixtures>({
     { page, stubOptions, autoGoto, seedJwt, filesViewMode },
     use,
   ) => {
-    const inspectionUploads: string[] = [];
-    page.on("request", (request) => {
-      if (new URL(request.url()).pathname.endsWith("/inspect-pdf-security"))
-        inspectionUploads.push(request.url());
-    });
     suppressNativeFilePicker(page);
     await seedCookieConsent(page);
     await bypassOnboarding(page);
@@ -107,9 +102,6 @@ export const test = base.extend<StubFixtures>({
       await page.goto(autoGoto, { waitUntil: "domcontentloaded" });
     }
     await use(page);
-    expect(inspectionUploads, "PDF access must be inspected locally").toEqual(
-      [],
-    );
   },
 });
 

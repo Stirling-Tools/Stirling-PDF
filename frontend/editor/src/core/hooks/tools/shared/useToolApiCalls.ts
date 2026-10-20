@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import axios, { type CancelTokenSource } from "axios"; // Real axios for static methods (CancelToken, isCancel)
 import apiClient from "@app/services/apiClient"; // Our configured instance
 import {
@@ -47,7 +47,7 @@ export const useToolApiCalls = <TParams = void>() => {
       onProgress: (progress: ProcessingProgress) => void,
       onStatus: (status: string) => void,
       markFileError?: (fileId: FileId) => void,
-      signal?: AbortSignal,
+      inspectionSignal?: AbortSignal,
     ): Promise<{
       outputFiles: File[];
       successSourceIds: FileId[];
@@ -65,9 +65,9 @@ export const useToolApiCalls = <TParams = void>() => {
 
       const cancellation = axios.CancelToken.source();
       cancelTokenRef.current = cancellation;
-      const operationSignal = AbortSignal.any([
+      const inspectionCancellation = AbortSignal.any([
         cancellation.token.toAbortSignal(),
-        ...(signal ? [signal] : []),
+        ...(inspectionSignal ? [inspectionSignal] : []),
       ]);
 
       // Params are the same for every file, so resolve the endpoint once. A null
@@ -97,14 +97,16 @@ export const useToolApiCalls = <TParams = void>() => {
 
         try {
           cancellation.token.throwIfRequested();
+          const sourceLifetime = pdfAccessLifetime(file);
           const fileSignal = AbortSignal.any([
-            operationSignal,
-            pdfAccessLifetime(file),
+            inspectionCancellation,
+            sourceLifetime,
           ]);
           const workingFile = await prepareUnlockedFile(
             file,
             endpoint,
             fileSignal,
+            cancellation.token,
           );
           const formData = config.buildFormData(params, workingFile);
           console.debug("[processFiles] POST", { endpoint, name: file.name });
@@ -117,7 +119,6 @@ export const useToolApiCalls = <TParams = void>() => {
                     formData,
                     endpoint,
                     cancellation.token,
-                    fileSignal,
                   ),
                   status: 200,
                   headers: undefined,
@@ -125,7 +126,7 @@ export const useToolApiCalls = <TParams = void>() => {
               : await apiClient.post(endpoint, formData, {
                   responseType: "blob",
                   cancelToken: cancellation.token,
-                  signal: fileSignal,
+                  signal: sourceLifetime,
                 });
           console.debug("[processFiles] Response OK", {
             name: file.name,
@@ -191,12 +192,14 @@ export const useToolApiCalls = <TParams = void>() => {
             }
             continue;
           }
+          sourceLifetime.throwIfAborted();
           const protectedFiles = await protectUnlockedResults(
             responseFiles,
             [file],
             endpoint,
           );
           cancellation.token.throwIfRequested();
+          sourceLifetime.throwIfAborted();
           processedFiles.push(...protectedFiles);
           // record source id as successful
           successSourceIds.push(file.fileId);
@@ -213,7 +216,7 @@ export const useToolApiCalls = <TParams = void>() => {
             break;
           }
           if (
-            operationSignal.aborted ||
+            cancellation.token.reason ||
             axios.isCancel(error) ||
             (error instanceof DOMException && error.name === "AbortError")
           ) {
@@ -270,8 +273,6 @@ export const useToolApiCalls = <TParams = void>() => {
       cancelTokenRef.current = null;
     }
   }, []);
-
-  useEffect(() => cancelOperation, [cancelOperation]);
 
   return {
     processFiles,

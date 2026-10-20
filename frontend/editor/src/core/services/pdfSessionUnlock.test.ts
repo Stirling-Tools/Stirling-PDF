@@ -341,7 +341,17 @@ describe("session PDF access", () => {
     const original = createStirlingFile(new File(["encrypted"], "locked.pdf"));
     rememberPdfAccess(original, access);
     post.mockResolvedValueOnce({ data: new Blob(["decrypted"]) });
-    const working = await prepareUnlockedFile(original, rotate);
+    const navigation = new AbortController();
+    navigation.abort();
+    const cancellation = axios.CancelToken.source();
+    const working = await prepareUnlockedFile(
+      original,
+      rotate,
+      navigation.signal,
+      cancellation.token,
+    );
+    expect(post.mock.calls[0][2]?.signal?.aborted).toBe(false);
+    expect(post.mock.calls[0][2]?.cancelToken).toBe(cancellation.token);
     expect(working).not.toBe(original);
     expect(working.name).toBe(original.name);
     expect(getPdfAccess(working)).toBeUndefined();

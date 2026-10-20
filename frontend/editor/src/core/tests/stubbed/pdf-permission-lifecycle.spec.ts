@@ -1,7 +1,21 @@
 import path from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
 import { PDFDocument, PDFName } from "@cantoo/pdf-lib";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test as base, expect } from "@app/tests/helpers/stub-test-base";
+
+const test = base.extend({
+  page: async ({ page }, use) => {
+    const inspectionUploads: string[] = [];
+    page.on("request", (request) => {
+      if (new URL(request.url()).pathname.endsWith("/inspect-pdf-security"))
+        inspectionUploads.push(request.url());
+    });
+    await use(page);
+    expect(inspectionUploads, "PDF access must be inspected locally").toEqual(
+      [],
+    );
+  },
+});
 
 const links = path.join(
   import.meta.dirname,

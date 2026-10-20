@@ -6,6 +6,7 @@ import { rememberUnprotectedPdf } from "@app/tests/utils/testFileHelpers";
 import type { StirlingFile } from "@app/types/fileContext";
 import {
   inspectLocalPdfAccess,
+  clearPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
@@ -72,8 +73,8 @@ describe("processFiles failure reporting", () => {
   it.each([
     ["add-password", "cancel"],
     ["remove-password", "cancel"],
-    ["add-password", "unmount"],
-    ["remove-password", "unmount"],
+    ["add-password", "navigation"],
+    ["remove-password", "navigation"],
   ])(
     "discards %s results on %s during local result adoption",
     async (operation, stop) => {
@@ -88,6 +89,7 @@ describe("processFiles failure reporting", () => {
         },
       );
       const { result, unmount } = renderHook(() => useToolApiCalls());
+      const navigation = new AbortController();
       const markFileError = vi.fn();
       const processing = result.current.processFiles(
         undefined,
@@ -103,18 +105,69 @@ describe("processFiles failure reporting", () => {
         vi.fn(),
         vi.fn(),
         markFileError,
+        navigation.signal,
       );
       const cancelled = expect(processing).rejects.toThrow(
         "Operation was cancelled",
       );
       await vi.waitFor(() => expect(inspectLocal).toHaveBeenCalledOnce());
-      if (stop === "unmount") unmount();
-      else result.current.cancelOperation();
+      if (stop === "navigation") {
+        navigation.abort();
+        unmount();
+      } else result.current.cancelOperation();
       completeInspection();
       await cancelled;
       expect(post).toHaveBeenCalledOnce();
       expect(markFileError).not.toHaveBeenCalled();
       expect(getPdfAccess(inspectLocal.mock.calls[0][0])).toBeUndefined();
+    },
+  );
+
+  it.each(["navigation", "logout"])(
+    "handles %s during an unencrypted batch",
+    async (stop) => {
+      let completeRequest!: () => void;
+      post.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            completeRequest = () =>
+              resolve({ data: new Blob(["first output"]), status: 200 });
+          }),
+      );
+      post.mockResolvedValueOnce({
+        data: new Blob(["second output"]),
+        status: 200,
+      });
+      const { result, unmount } = renderHook(() => useToolApiCalls());
+      const navigation = new AbortController();
+      const processing = result.current.processFiles(
+        undefined,
+        [file("a.pdf", "a"), file("b.pdf", "b")],
+        {
+          endpoint: "/api/v1/misc/compress-pdf",
+          buildFormData: () => new FormData(),
+        },
+        vi.fn(),
+        vi.fn(),
+        vi.fn(),
+        navigation.signal,
+      );
+      await vi.waitFor(() => expect(post).toHaveBeenCalledOnce());
+      navigation.abort();
+      unmount();
+      expect(post.mock.calls[0][2].cancelToken.reason).toBeUndefined();
+      expect(post.mock.calls[0][2].signal.aborted).toBe(false);
+      const outcome =
+        stop === "logout"
+          ? expect(processing).rejects.toThrow("Operation was cancelled")
+          : expect(processing).resolves.toMatchObject({
+              successSourceIds: ["a", "b"],
+            });
+      if (stop === "logout") clearPdfAccess();
+      completeRequest();
+      await outcome;
+      expect(post).toHaveBeenCalledTimes(stop === "logout" ? 1 : 2);
+      expect(inspectLocal).not.toHaveBeenCalled();
     },
   );
 
@@ -171,9 +224,13 @@ describe("processFiles failure reporting", () => {
     },
   );
 
-  it.each(["add-password", "remove-password"])(
+  it.each([
+    "/api/v1/security/add-password",
+    "/api/v1/security/remove-password",
+    "/api/v1/misc/compress-pdf",
+  ])(
     "cancels %s without processing the remaining batch or marking files as failed",
-    async (operation) => {
+    async (endpoint) => {
       post.mockImplementation(
         (_endpoint: string, _form: FormData, config: AxiosRequestConfig) =>
           new Promise((_resolve, reject) => {
@@ -186,7 +243,7 @@ describe("processFiles failure reporting", () => {
         undefined,
         [file("a.pdf", "a"), file("b.pdf", "b")],
         {
-          endpoint: `/api/v1/security/${operation}`,
+          endpoint,
           buildFormData: () => {
             const form = new FormData();
             form.set("keyLength", "256");

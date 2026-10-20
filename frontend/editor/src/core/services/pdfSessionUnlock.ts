@@ -1,6 +1,7 @@
 import {
   ensureLocalPdfAccess,
   getPdfAccess,
+  pdfAccessLifetime,
   rememberPdfAccess,
   type PdfAccess,
 } from "@app/services/pdfAccessService";
@@ -144,11 +145,15 @@ export function assertPdfSessionEditable(access: PdfAccess | undefined): void {
     );
 }
 
-/** Decrypted bytes belong only to this operation. They must never enter FileContext or persistence. */
+/**
+ * Decrypted bytes belong only to this operation, never FileContext or persistence.
+ * Navigation cancels fresh permission reads; preparation stops on explicit cancellation or source closure.
+ */
 export async function prepareUnlockedFile(
   file: StirlingFile,
   endpoint: string | undefined,
-  signal?: AbortSignal,
+  inspectionSignal?: AbortSignal,
+  cancelToken?: CancelToken,
 ): Promise<File> {
   if (
     endpoint === "/api/v1/security/remove-password" ||
@@ -157,7 +162,8 @@ export async function prepareUnlockedFile(
     return file;
   if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name))
     return file;
-  const access = await ensureLocalPdfAccess(file, signal);
+  const access =
+    getPdfAccess(file) ?? (await ensureLocalPdfAccess(file, inspectionSignal));
   if (!access.encrypted) return file;
   if (!supportsSessionUnlock(endpoint))
     throw new Error(
@@ -192,8 +198,8 @@ export async function prepareUnlockedFile(
       "encryptedPdfUnlock.prepareFailed",
       "Unable to prepare this protected PDF for processing.",
     ),
-    undefined,
-    signal,
+    cancelToken,
+    pdfAccessLifetime(file),
   );
   return new File([bytes], file.name, { type: "application/pdf" });
 }
@@ -285,7 +291,6 @@ export async function changePdfSecurity(
   form: FormData,
   endpoint: string,
   cancelToken?: CancelToken,
-  signal?: AbortSignal,
 ): Promise<Blob> {
   const settingProtection = endpoint === "/api/v1/security/add-password";
   const access = getPdfAccess(file);
@@ -333,6 +338,6 @@ export async function changePdfSecurity(
       "Unable to change protection. Check the permissions password and the new security settings.",
     ),
     cancelToken,
-    signal,
+    pdfAccessLifetime(file),
   );
 }
