@@ -1,0 +1,86 @@
+name: Stirling PDF - macOS Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Rust targets
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
+
+      - name: Setup Intel Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          architecture: x64
+
+      - name: Save Intel Java location
+        shell: bash
+        run: echo "X64_JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+
+      - name: Setup Apple Silicon Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          architecture: aarch64
+
+      - name: Setup Task
+        uses: go-task/setup-task@v1
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build universal Java runtime
+        env:
+          AARCH64_JAVA_HOME: ${{ env.JAVA_HOME }}
+          JPDFIUM_PLATFORMS: darwin-arm64,darwin-x64
+        run: task desktop:jlink:universal-mac
+
+      - name: Prepare desktop backend
+        env:
+          DISABLE_ADDITIONAL_FEATURES: "true"
+          JPDFIUM_PLATFORMS: darwin-arm64,darwin-x64
+        run: task desktop:prepare
+
+      - name: Verify bundled files
+        shell: bash
+        run: |
+          ls -lh frontend/editor/src-tauri/libs/*.jar
+          test -f frontend/editor/src-tauri/runtime/jre/bin/java
+
+      - name: Configure desktop environment
+        working-directory: frontend/editor
+        run: npx tsx scripts/setup-env.mts --desktop
+
+      - name: Build universal macOS DMG
+        working-directory: frontend/editor
+        run: >
+          npx tauri build
+          --target universal-apple-darwin
+          --bundles dmg
+          --config '{"bundle":{"createUpdaterArtifacts":false}}'
+
+      - name: Upload macOS DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stirling-PDF-macOS-Universal-Test
+          path: frontend/editor/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+          retention-days: 14
