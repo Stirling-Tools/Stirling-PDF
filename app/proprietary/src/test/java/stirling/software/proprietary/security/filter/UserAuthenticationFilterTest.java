@@ -227,6 +227,42 @@ class UserAuthenticationFilterTest {
             assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         }
 
+        @Test
+        @DisplayName("refuses a disabled user's session bootstrap on /auth/me")
+        void disabledUserRefusedOnAuthMe() throws Exception {
+            request.setMethod("GET");
+            request.setRequestURI("/api/v1/auth/me");
+            User user = enabledUser("blocked");
+            setAuthentication(user, "blocked");
+            when(userService.usernameExistsIgnoreCase("blocked")).thenReturn(true);
+            when(userService.isUserDisabled("blocked")).thenReturn(true);
+            when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
+                    .thenReturn(List.of());
+
+            filter(true).doFilter(request, response, filterChain);
+
+            assertThat(response.getStatus()).isEqualTo(403);
+            assertThat(filterChain.getRequest()).isNull();
+        }
+
+        @Test
+        @DisplayName("refuses a deleted user's session bootstrap on /auth/me")
+        void deletedUserRefusedOnAuthMe() throws Exception {
+            request.setMethod("GET");
+            request.setRequestURI("/api/v1/auth/me");
+            User user = enabledUser("ghost");
+            setAuthentication(user, "ghost");
+            when(userService.usernameExistsIgnoreCase("ghost")).thenReturn(false);
+            when(userService.isUserDisabled("ghost")).thenReturn(false);
+            when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
+                    .thenReturn(List.of());
+
+            filter(true).doFilter(request, response, filterChain);
+
+            assertThat(response.getStatus()).isEqualTo(401);
+            assertThat(filterChain.getRequest()).isNull();
+        }
+
         private void setAuthentication(User principal, String name) {
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(
@@ -255,6 +291,15 @@ class UserAuthenticationFilterTest {
             request.setRequestURI("/api/v1/auth/login");
 
             assertThat(filter(true).shouldNotFilter(request)).isTrue();
+        }
+
+        @Test
+        @DisplayName("does not skip /auth/me, so account status is checked there")
+        void doesNotSkipAuthMe() {
+            request.setMethod("GET");
+            request.setRequestURI("/api/v1/auth/me");
+
+            assertThat(filter(true).shouldNotFilter(request)).isFalse();
         }
 
         @Test

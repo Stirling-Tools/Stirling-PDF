@@ -285,6 +285,41 @@ class AuthControllerMoreTest {
 
             verify(userDetailsService, never()).loadUserByUsername(any());
         }
+
+        @Test
+        @DisplayName("refuses a disabled user instead of issuing a new token")
+        void disabledUser() throws Exception {
+            User user = webUser();
+            user.setEnabled(false);
+            stubLiveToken();
+            when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
+
+            mockMvc.perform(post("/api/v1/auth/refresh"))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.error").value("Token refresh failed"));
+
+            verify(jwtService, never()).generateToken(any(String.class), any());
+        }
+
+        @Test
+        @DisplayName("returns 401, not 500, for a deleted user")
+        void deletedUser() throws Exception {
+            stubLiveToken();
+            when(userDetailsService.loadUserByUsername("user@example.com"))
+                    .thenThrow(new UsernameNotFoundException("gone"));
+
+            mockMvc.perform(post("/api/v1/auth/refresh"))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.error").value("Token refresh failed"));
+        }
+
+        private void stubLiveToken() {
+            when(jwtService.extractToken(any())).thenReturn("old");
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("sub", "user@example.com");
+            claims.put("exp", new Date(System.currentTimeMillis() + 60_000));
+            when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
+        }
     }
 
     @Nested
