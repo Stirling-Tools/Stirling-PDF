@@ -57,6 +57,7 @@ class SecondLevelCacheEvictionTest {
     @Autowired private PlatformTransactionManager transactionManager;
     @Autowired private SecondLevelCacheEvictor evictor;
     @Autowired private RecordingBroadcaster broadcaster;
+    @Autowired private ExternalWriteEvictionService externalWrites;
 
     private Statistics statistics;
     private TransactionTemplate tx;
@@ -118,6 +119,21 @@ class SecondLevelCacheEvictionTest {
         evictor.apply(List.of(CacheEviction.entityWithCollections(USER, id.toString())));
 
         assertThat(roles(id)).contains("ROLE_EXTERNAL");
+    }
+
+    @Test
+    void externalRoleUpdateStaysFixedOnEveryReadAfterTheEndpointEvicts() {
+        Long id = saveUser("evict-role-in-place");
+        warmWithAuthorities(id);
+        updateRolesBehindHibernatesBack(id, "ROLE_ADMIN");
+        assertThat(roles(id)).containsExactly("ROLE_USER");
+
+        externalWrites.evict(
+                new ExternalWriteEvictionService.Request(null, List.of(id), null, null));
+
+        for (int i = 0; i < 3; i++) {
+            assertThat(roles(id)).containsExactly("ROLE_ADMIN");
+        }
     }
 
     @Test
@@ -284,6 +300,22 @@ class SecondLevelCacheEvictionTest {
                                         }));
     }
 
+    private void updateRolesBehindHibernatesBack(Long userId, String role) {
+        entityManagerFactory
+                .createEntityManager()
+                .unwrap(org.hibernate.Session.class)
+                .doWork(
+                        connection -> {
+                            try (var statement =
+                                    connection.prepareStatement(
+                                            "update authorities set authority = ? where user_id = ?")) {
+                                statement.setString(1, role);
+                                statement.setLong(2, userId);
+                                statement.executeUpdate();
+                            }
+                        });
+    }
+
     private void deleteUserBehindHibernatesBack(Long userId) {
         EntityManager em = entityManagerFactory.createEntityManager();
         try {
@@ -333,7 +365,11 @@ class SecondLevelCacheEvictionTest {
     @AutoConfigurationPackage
     @EntityScan(basePackages = "stirling.software.proprietary")
     @EnableJpaRepositories(basePackages = "stirling.software.proprietary")
-    @Import({SecondLevelCacheEvictor.class, SecondLevelCacheEvictionListener.class})
+    @Import({
+        SecondLevelCacheEvictor.class,
+        SecondLevelCacheEvictionListener.class,
+        ExternalWriteEvictionService.class
+    })
     static class TestApp {
         @Bean
         RecordingBroadcaster recordingBroadcaster(SecondLevelCacheEvictor evictor) {
