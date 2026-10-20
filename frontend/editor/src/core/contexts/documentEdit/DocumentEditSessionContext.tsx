@@ -54,6 +54,10 @@ export function DocumentEditSessionProvider({
   );
 }
 
+/**
+ * Current document-edit session state. Callers must render inside
+ * {@link DocumentEditSessionProvider}.
+ */
 export function useDocumentEditSession(): SessionState {
   const state = useContext(SessionStateContext);
   if (!state) {
@@ -64,6 +68,10 @@ export function useDocumentEditSession(): SessionState {
   return state;
 }
 
+/**
+ * Dispatch for document-edit session actions. Callers must render inside
+ * {@link DocumentEditSessionProvider}.
+ */
 export function useDocumentEditDispatch(): Dispatch<SessionAction> {
   const dispatch = useContext(SessionDispatchContext);
   if (!dispatch) {
