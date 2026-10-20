@@ -38,6 +38,7 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { registerCommentCommitFlush } from "@app/components/viewer/commentCommitFlush";
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 
@@ -1294,6 +1295,10 @@ export function CommentsSidebar({
   }, [handleContentsChange]);
 
   useEffect(() => () => flushPendingCommits(), [flushPendingCommits]);
+  useEffect(
+    () => registerCommentCommitFlush(flushPendingCommits),
+    [flushPendingCommits],
+  );
   useEffect(() => {
     flushPendingCommits();
   }, [editingMainKey, flushPendingCommits]);

@@ -76,6 +76,7 @@ import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
+import { flushCommentCommits } from "@app/components/viewer/commentCommitFlush";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -1175,6 +1176,9 @@ const EmbedPdfViewerContent = ({
         return;
       }
 
+      // Apply pending comment drafts before EmbedPDF snapshots the document.
+      flushCommentCommits();
+
       // Step 1: Export PDF with annotations using EmbedPDF
       suppressHistoryDirtyRef.current = true;
       const exportRevision = historyRevisionRef.current;
@@ -1416,6 +1420,7 @@ const EmbedPdfViewerContent = ({
       );
 
       // Export PDF WITHOUT committing pending marks - this saves only applied redactions
+      flushCommentCommits();
       const arrayBuffer = await exportActions.saveAsCopy();
       if (!arrayBuffer) {
         throw new Error("Failed to export PDF");
