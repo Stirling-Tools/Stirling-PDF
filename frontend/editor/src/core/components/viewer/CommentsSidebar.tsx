@@ -39,6 +39,14 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
+import {
+  buildCommentsCsv,
+  commentsCsvFileName,
+  getCommentDate,
+  getCommentDisplayContent,
+  toCommentCsvThreads,
+} from "@app/utils/commentsCsv";
+import { downloadTextAsFile } from "@app/utils/downloadUtils";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 
 /** PDF subtypes that are inherently standalone comment annotations (not linked to other annotations). */
@@ -58,15 +66,11 @@ const TEXT_COMMENT_TOOL_ID = "textComment" as const;
 type StirlingAnnotationCustomData = Record<string, unknown> & {
   annotationToolId?: string;
   isComment?: boolean;
-  modifiedDate?: Date | number | string;
   toolId?: string;
 };
 
 type StirlingAnnotationMetadata = {
-  creationDate?: Date | number | string;
   customData?: StirlingAnnotationCustomData;
-  M?: Date | number | string;
-  modifiedDate?: Date | number | string;
 };
 
 type StirlingAnnotationPatch = Partial<PdfAnnotationObject> & {
@@ -81,15 +85,8 @@ function getStirlingAnnotationMetadata(
 
 /** Format annotation date for display (e.g. "Mar 11, 6:05 PM"). */
 function formatCommentDate(obj: PdfAnnotationObject): string {
-  const metadata = getStirlingAnnotationMetadata(obj);
-  const raw =
-    metadata.modifiedDate ??
-    metadata.creationDate ??
-    metadata.customData?.modifiedDate ??
-    metadata.M;
-  if (raw == null) return "";
-  const d = raw instanceof Date ? raw : new Date(raw);
-  if (Number.isNaN(d.getTime())) return "";
+  const d = getCommentDate(obj);
+  if (!d) return "";
   return d.toLocaleString(undefined, {
     month: "short",
     day: "numeric",
@@ -101,20 +98,9 @@ function formatCommentDate(obj: PdfAnnotationObject): string {
 interface CommentsSidebarProps {
   readOnly?: boolean;
   documentId: string;
+  fileName: string;
   visible: boolean;
   rightOffset: string;
-}
-
-function getCommentDisplayContent(entry: {
-  annotation: { object: Pick<PdfAnnotationObject, "contents"> };
-  replies: Array<{ object: Pick<PdfAnnotationObject, "contents"> }>;
-}): string {
-  const main = entry.annotation?.object?.contents;
-  if (main != null && String(main).trim()) return String(main).trim();
-  const firstReply = entry.replies?.[0]?.object?.contents;
-  if (firstReply != null && String(firstReply).trim())
-    return String(firstReply).trim();
-  return "";
 }
 
 /** Placeholder authors we never show; use current user's name from context instead. */
@@ -316,13 +302,17 @@ function MoreActionsMenu({ children }: { children: ReactNode }) {
 
 interface CommentsHeaderActionsProps {
   readerMode: boolean;
+  readOnly: boolean;
   onAdd: () => void;
+  onExportCsv: () => void;
   onClearAll: () => void;
 }
 
 function CommentsHeaderActions({
   readerMode,
+  readOnly,
   onAdd,
+  onExportCsv,
   onClearAll,
 }: CommentsHeaderActionsProps) {
   const { t } = useTranslation();
@@ -344,15 +334,37 @@ function CommentsHeaderActions({
           </ActionIcon>
         </Tooltip>
       )}
-      <MoreActionsMenu>
-        <Menu.Item
-          leftSection={<Icon name="trash" size={18} />}
-          color="red"
-          onClick={onClearAll}
-        >
-          {t("viewer.comments.clearAll", "Clear all comments")}
-        </Menu.Item>
-      </MoreActionsMenu>
+      {readOnly ? (
+        // Export is the only action a view-only document permits, so it is a
+        // button rather than a one-item menu.
+        <Tooltip label={t("viewer.comments.exportCsv", "Export as CSV")}>
+          <ActionIcon
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            aria-label={t("viewer.comments.exportCsv", "Export as CSV")}
+            onClick={onExportCsv}
+          >
+            <Icon name="download" size="1.25rem" />
+          </ActionIcon>
+        </Tooltip>
+      ) : (
+        <MoreActionsMenu>
+          <Menu.Item
+            leftSection={<Icon name="download" size={18} />}
+            onClick={onExportCsv}
+          >
+            {t("viewer.comments.exportCsv", "Export as CSV")}
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<Icon name="trash" size={18} />}
+            color="red"
+            onClick={onClearAll}
+          >
+            {t("viewer.comments.clearAll", "Clear all comments")}
+          </Menu.Item>
+        </MoreActionsMenu>
+      )}
     </Group>
   );
 }
@@ -1058,6 +1070,7 @@ function ClearAllCommentsModal({
 export function CommentsSidebar({
   readOnly = false,
   documentId,
+  fileName,
   visible,
   rightOffset,
 }: CommentsSidebarProps) {
@@ -1390,6 +1403,26 @@ export function CommentsSidebar({
     navActions?.setHasUnsavedChanges(true);
   }, [byPage, provides, navActions]);
 
+  const handleExportCsv = useCallback(() => {
+    const threads = toCommentCsvThreads(byPage, getCommentDate);
+    const csv = buildCommentsCsv(
+      {
+        page: t("viewer.comments.csv.page", "Page"),
+        thread: t("viewer.comments.csv.thread", "Thread"),
+        author: t("viewer.comments.csv.author", "Author"),
+        modified: t("viewer.comments.csv.modifiedUtc", "Last modified (UTC)"),
+        comment: t("viewer.comments.csv.comment", "Comment"),
+        inReplyTo: t("viewer.comments.csv.inReplyTo", "In reply to"),
+      },
+      threads,
+    );
+    downloadTextAsFile(
+      csv,
+      commentsCsvFileName(fileName),
+      "text/csv;charset=utf-8",
+    );
+  }, [byPage, fileName, t]);
+
   const handleSendMainComment = useCallback(
     (pageIndex: number, annotationId: string, value: string) => {
       const trimmed = value.trim();
@@ -1397,6 +1430,7 @@ export function CommentsSidebar({
       provides.updateAnnotation(pageIndex, annotationId, {
         contents: trimmed,
         author: displayName,
+        modified: new Date(),
       });
       navActions?.setHasUnsavedChanges(true);
       setDraftContents((prev) => ({
@@ -1425,6 +1459,7 @@ export function CommentsSidebar({
         inReplyToId: parentId,
         replyType: PdfAnnotationReplyType.Reply,
         author: displayName,
+        created: new Date(),
       };
       provides.createAnnotation(pageIndex, reply);
       navActions?.setHasUnsavedChanges(true);
@@ -1440,6 +1475,7 @@ export function CommentsSidebar({
       provides.updateAnnotation(pageIndex, replyId, {
         contents: trimmed,
         author: displayName,
+        modified: new Date(),
       });
       navActions?.setHasUnsavedChanges(true);
       setEditingReply(null);
@@ -1516,10 +1552,12 @@ export function CommentsSidebar({
         onClose={toggleCommentsSidebar}
         closeLabel={t("viewer.comments.closeSidebar", "Close comments sidebar")}
         headerActions={
-          totalCount > 0 && !readOnly ? (
+          totalCount > 0 ? (
             <CommentsHeaderActions
               readerMode={readerMode || readOnly}
+              readOnly={readOnly}
               onAdd={handleAddComment}
+              onExportCsv={handleExportCsv}
               onClearAll={() => setClearAllModalOpen(true)}
             />
           ) : null
