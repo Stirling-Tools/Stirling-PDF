@@ -6096,6 +6096,9 @@ title = "Documents"
 
 [mobile.pip]
 backToDocument = "Back to document"
+backToFiles = "Back to files"
+fileCount_one = "{{count}} file"
+fileCount_other = "{{count}} files"
 open = "Open {{name}}"
 openSettings = "Open settings"
 
@@ -6103,6 +6106,11 @@ openSettings = "Open settings"
 button = "Scan document"
 failed = "The document could not be scanned."
 fileName = "Scan {{date}}"
+
+[mobile.scope]
+allFiles = "All files ({{count}})"
+label = "Apply to"
+thisFile = "This file"
 
 [mobileScanner]
 addMore = "Add More"

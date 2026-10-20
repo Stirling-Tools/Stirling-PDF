@@ -82,8 +82,8 @@ export function PhoneLayout({
 
   const toolsInFront = view === "tools" && !filesMode;
   const homeShown = !filesMode && (homeRequested || fileIds.length === 0);
-  const documentOpen =
-    !homeShown && !filesMode && workbench === "viewer" && fileIds.length > 0;
+  const workspaceOpen = !homeShown && !filesMode && fileIds.length > 0;
+  const documentOpen = workspaceOpen && workbench === "viewer";
   // The tool panel shows the picker over a still-selected tool, so a key alone
   // does not mean a tool is open.
   const tool =
@@ -146,10 +146,22 @@ export function PhoneLayout({
         <PipPane
           front={!toolsInFront}
           // Only waits in the corner behind an open tool, never behind the list.
-          pip={documentOpen && tool !== null}
-          label={currentDocument?.name ?? ""}
-          caption={t("mobile.pip.backToDocument", "Back to document")}
-          icon={<Icon name="file-text" size="1rem" />}
+          pip={workspaceOpen && tool !== null}
+          label={
+            documentOpen
+              ? (currentDocument?.name ?? "")
+              : t("mobile.pip.fileCount", "{{count}} files", {
+                  count: fileIds.length,
+                })
+          }
+          caption={
+            documentOpen
+              ? t("mobile.pip.backToDocument", "Back to document")
+              : t("mobile.pip.backToFiles", "Back to files")
+          }
+          icon={
+            <Icon name={documentOpen ? "file-text" : "files"} size="1rem" />
+          }
           onOpen={() => onSelectView("workbench")}
           onDrag={setPipDrag}
           onDrop={setPipCorner}
