@@ -90,7 +90,11 @@ async function writeVariantIfSmaller(
 }
 
 /** Compresses one file under `distDir`; paths outside it are ignored. */
-async function compressFile(file: string, distDir: string): Promise<void> {
+async function compressFile(
+  file: string,
+  distDir: string,
+  emitGzip: boolean,
+): Promise<void> {
   const resolved = path.resolve(file);
   if (!resolved.startsWith(`${path.resolve(distDir)}${path.sep}`)) return;
 
@@ -104,11 +108,12 @@ async function compressFile(file: string, distDir: string): Promise<void> {
   // so a stale one has to be replaced rather than trusted. Each encoding is
   // checked independently: a fresh .br next to a stale .gz is not a pair.
   const source = await fs.stat(resolved);
-  const [gzFresh, brFresh] = await Promise.all([
-    isFresh(gzPath, source.mtimeMs),
-    isFresh(brPath, source.mtimeMs),
-  ]);
-  if (gzFresh && brFresh) return;
+  const brFresh = await isFresh(brPath, source.mtimeMs);
+  const gzFresh = emitGzip ? await isFresh(gzPath, source.mtimeMs) : false;
+  if (brFresh && (!emitGzip || gzFresh)) {
+    if (!emitGzip) await fs.rm(gzPath, { force: true });
+    return;
+  }
 
   // A source that shrank below the threshold must not keep serving the variants
   // left over from when it was larger.
@@ -121,30 +126,34 @@ async function compressFile(file: string, distDir: string): Promise<void> {
   }
 
   const content = await fs.readFile(resolved);
-  const [gzipped, brotlied] = await Promise.all([
-    gzipPromise(content, { level: 9 }),
-    brotliPromise(content, {
-      params: {
-        [constants.BROTLI_PARAM_QUALITY]: 11,
-      },
-    }),
-  ]);
-  await Promise.all([
-    writeVariantIfSmaller(gzPath, gzipped, content.length),
-    writeVariantIfSmaller(brPath, brotlied, content.length),
-  ]);
+  const brotlied = await brotliPromise(content, {
+    params: {
+      [constants.BROTLI_PARAM_QUALITY]: 11,
+    },
+  });
+  if (emitGzip) {
+    const gzipped = await gzipPromise(content, { level: 9 });
+    await writeVariantIfSmaller(gzPath, gzipped, content.length);
+  } else {
+    await fs.rm(gzPath, { force: true });
+  }
+  await writeVariantIfSmaller(brPath, brotlied, content.length);
 }
 
 // Batching bounds the zlib queue: 16 files with both encoders in flight is up
 // to 32 jobs against the 16-thread libuv pool set by the build entrypoints.
 const COMPRESSION_BATCH_FILES = 16;
 
-async function compressFiles(files: string[], distDir: string): Promise<void> {
+async function compressFiles(
+  files: string[],
+  distDir: string,
+  emitGzip: boolean,
+): Promise<void> {
   for (let i = 0; i < files.length; i += COMPRESSION_BATCH_FILES) {
     await Promise.all(
       files
         .slice(i, i + COMPRESSION_BATCH_FILES)
-        .map((f) => compressFile(f, distDir)),
+        .map((f) => compressFile(f, distDir, emitGzip)),
     );
   }
 }
@@ -238,7 +247,7 @@ function isMarkdownPackage(pkg: string): boolean {
   );
 }
 
-function compressStaticCopyPlugin(): PluginOption {
+function compressStaticCopyPlugin(emitGzip: boolean): PluginOption {
   return {
     name: "compress-static-copy",
     apply: "build" as const,
@@ -271,11 +280,11 @@ function compressStaticCopyPlugin(): PluginOption {
 
       await walk(distDir);
 
-      await compressFiles(files, distDir);
+      await compressFiles(files, distDir, emitGzip);
 
       // The TTFs are only ever requested through the backend, which serves the
-      // .br/.gz siblings and falls back to its own classpath copy of the raw
-      // file. Shipping the raw set in dist would duplicate ~100 MB for nothing.
+      // brotli sibling and falls back to its own classpath copy of the raw file.
+      // Shipping the raw set in dist would duplicate ~100 MB for nothing.
       // NotoSans-Regular.ttf stays: the text editor's Unicode fallback fetches
       // it directly, and static hosts have no classpath to fall back to.
       const fontsDir = path.join(distDir, "fonts");
@@ -309,8 +318,9 @@ function compressStaticCopyPlugin(): PluginOption {
 function prerenderOgPlugin(options: {
   isSaas: boolean;
   precompress: boolean;
+  emitGzip: boolean;
 }): PluginOption {
-  const { isSaas, precompress } = options;
+  const { isSaas, precompress, emitGzip } = options;
   // SaaS (stirling.com) prerenders the marketing cards from a dedicated
   // manifest; every other flavour uses the tool-registry manifest.
   const manifestFile = isSaas
@@ -436,7 +446,7 @@ function prerenderOgPlugin(options: {
       // Tauri). The siblings only serve static hosts: Jetty gzips the Spring
       // responses in memory, so it never reads them.
       if (precompress) {
-        await compressFiles(lateFiles, distDir);
+        await compressFiles(lateFiles, distDir, emitGzip);
       }
     },
   };
@@ -520,6 +530,11 @@ export default defineConfig(async ({ mode, command }) => {
         ? "core"
         : "proprietary");
 
+  // The embedded JAR serves brotli and gzips in memory when a client cannot
+  // take brotli. Only the SaaS static build keeps a gzip sibling, where the
+  // host may not compress on its own.
+  const emitGzip = effectiveMode === "saas";
+
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
   // Subpath the app is served under (base becomes "/<runSubpath>/"). Empty = root.
@@ -590,8 +605,8 @@ export default defineConfig(async ({ mode, command }) => {
       }),
       // Desktop/mobile output is embedded in the Tauri binary, which brotli-
       // compresses every asset itself and never negotiates encodings, so the
-      // .br/.gz siblings would only add their full size (tens of MB) to the
-      // bundle. Web flavours keep both encodings for the HTTP server.
+      // siblings would only add their full size to the bundle. Embedded web
+      // builds keep brotli; only the SaaS static build also emits gzip.
       ...(effectiveMode === "desktop"
         ? []
         : [
@@ -599,7 +614,7 @@ export default defineConfig(async ({ mode, command }) => {
               threshold: 1024,
               exclude: [COMPRESSION_EXCLUDE_REGEX],
               algorithms: [
-                defineAlgorithm("gzip", { level: 9 }),
+                ...(emitGzip ? [defineAlgorithm("gzip", { level: 9 })] : []),
                 defineAlgorithm("brotliCompress", {
                   params: {
                     [constants.BROTLI_PARAM_QUALITY]: 11,
@@ -661,10 +676,13 @@ export default defineConfig(async ({ mode, command }) => {
               ]),
         ],
       }),
-      ...(effectiveMode === "desktop" ? [] : [compressStaticCopyPlugin()]),
+      ...(effectiveMode === "desktop"
+        ? []
+        : [compressStaticCopyPlugin(emitGzip)]),
       prerenderOgPlugin({
         isSaas: effectiveMode === "saas",
         precompress: effectiveMode !== "desktop",
+        emitGzip,
       }),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
