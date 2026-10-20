@@ -17,6 +17,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.cache.CacheEviction;
+import stirling.software.proprietary.cache.CacheEvictionBroadcaster;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.PricingPolicyRepository;
 
@@ -51,6 +53,7 @@ public class PricingPolicyService {
     private final PricingPolicyRepository policyRepository;
     private final PaygTeamExtensionsRepository teamExtensionsRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final CacheEvictionBroadcaster cacheEvictionBroadcaster;
 
     /**
      * Cache keyed by {@code teamId}. Null teamId not supported (caller's bug). Value is the
@@ -61,11 +64,14 @@ public class PricingPolicyService {
     public PricingPolicyService(
             PricingPolicyRepository policyRepository,
             PaygTeamExtensionsRepository teamExtensionsRepository,
-            ApplicationEventPublisher eventPublisher) {
+            ApplicationEventPublisher eventPublisher,
+            CacheEvictionBroadcaster cacheEvictionBroadcaster) {
         this.policyRepository = Objects.requireNonNull(policyRepository, "policyRepository");
         this.teamExtensionsRepository =
                 Objects.requireNonNull(teamExtensionsRepository, "teamExtensionsRepository");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher");
+        this.cacheEvictionBroadcaster =
+                Objects.requireNonNull(cacheEvictionBroadcaster, "cacheEvictionBroadcaster");
         this.byTeamCache =
                 Caffeine.newBuilder()
                         .maximumSize(CACHE_MAX_SIZE)
@@ -167,6 +173,9 @@ public class PricingPolicyService {
                             .orElse(0L));
         }
         policyRepository.clearDefaultFlag();
+        // Bulk UPDATE: Hibernate evicts the region here but peers would keep the old default.
+        cacheEvictionBroadcaster.broadcastToPeersAfterCommit(
+                CacheEviction.entityRegion(PricingPolicy.class.getName()));
         target.setIsDefault(true);
         PricingPolicy saved = policyRepository.save(target);
         publishOnCommit("setDefault:" + saved.getId());
