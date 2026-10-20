@@ -32,6 +32,32 @@ describe("ProcessingCache size accounting", () => {
     expect(cache.getStats().totalSizeBytes).toBeGreaterThan(1_490_000);
   });
 
+  it("does not double-count a replacement for an existing key", () => {
+    const cache = new ProcessingCache({
+      maxFiles: 20,
+      maxSizeBytes: 2 * 1024 * 1024,
+      ttlMs: 60_000,
+    });
+
+    cache.set("a", fileWithThumbs(900_000, 1));
+    cache.set("a", fileWithThumbs(900_000, 1));
+
+    expect(cache.getStats().totalSizeBytes).toBeLessThan(1_000_000);
+  });
+
+  it("rejects an entry larger than the whole cache", () => {
+    const cache = new ProcessingCache({
+      maxFiles: 20,
+      maxSizeBytes: 1_000,
+      ttlMs: 60_000,
+    });
+
+    cache.set("huge", fileWithThumbs(2_000, 1));
+
+    expect(cache.has("huge")).toBe(false);
+    expect(cache.getStats().totalSizeBytes).toBe(0);
+  });
+
   it("evicts when real bytes exceed the cap", () => {
     const cache = new ProcessingCache({
       maxFiles: 20,
