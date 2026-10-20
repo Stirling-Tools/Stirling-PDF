@@ -53,18 +53,21 @@ public class CacheConfig {
 
     /**
      * Stands the second-level cache down when the process-local regions would be unsafe: cluster
-     * mode has more than one node behind the database, and an operator can rule the cache out
-     * explicitly for multi-instance setups that do not use cluster mode yet.
+     * mode without the Valkey backplane has no channel to carry evictions between nodes, and an
+     * operator can rule the cache out explicitly for multi-instance setups that do not use cluster
+     * mode yet.
      */
     @Bean
     HibernatePropertiesCustomizer hibernateSecondLevelCacheGate() {
         return hibernateProperties -> {
-            if (applicationProperties.getCluster().isEnabled()) {
+            ApplicationProperties.Cluster cluster = applicationProperties.getCluster();
+            if (cluster.isEnabled() && !"valkey".equalsIgnoreCase(cluster.getBackplane())) {
                 log.warn(
-                        "cluster.enabled=true: disabling the Hibernate second-level cache because"
-                                + " the Caffeine regions are process-local and cannot be invalidated"
-                                + " across nodes. Security and licensing reads fall back to the"
-                                + " database.");
+                        "cluster.enabled=true with backplane={}: disabling the Hibernate"
+                                + " second-level cache because only the Valkey backplane carries"
+                                + " cache evictions between nodes. Security and licensing reads"
+                                + " fall back to the database.",
+                        cluster.getBackplane());
                 disableSecondLevelCache(hibernateProperties);
                 return;
             }

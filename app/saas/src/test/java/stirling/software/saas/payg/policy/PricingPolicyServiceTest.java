@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -18,6 +19,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.context.ApplicationEventPublisher;
 
+import stirling.software.proprietary.cache.CacheEvictionBroadcaster;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.PricingPolicyRepository;
 
@@ -40,7 +42,9 @@ class PricingPolicyServiceTest {
         policyRepo = Mockito.mock(PricingPolicyRepository.class);
         extensionsRepo = Mockito.mock(PaygTeamExtensionsRepository.class);
         events = Mockito.mock(ApplicationEventPublisher.class);
-        service = new PricingPolicyService(policyRepo, extensionsRepo, events);
+        service =
+                new PricingPolicyService(
+                        policyRepo, extensionsRepo, events, mock(CacheEvictionBroadcaster.class));
 
         defaultPolicy = policy(1L, "v1-default", true);
         overridePolicy = policy(2L, "v1-enterprise", false);

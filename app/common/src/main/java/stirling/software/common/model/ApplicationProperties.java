@@ -614,10 +614,10 @@ public class ApplicationProperties {
     public static class SecondLevelCache {
 
         /**
-         * The JCache regions are process-local: a write on one instance cannot evict another
-         * instance's entries, so a revocation or role change reaches the other instances only when
-         * the region TTL lapses. Multi-instance deployments either set {@code cluster.enabled=true}
-         * (which disables the cache) or turn it off here.
+         * The JCache regions are process-local. With {@code cluster.enabled=true} and the Valkey
+         * backplane, writes are evicted on every node; any other multi-instance deployment must
+         * turn the cache off here, or a revocation or role change reaches the other instances only
+         * when the region TTL lapses.
          */
         private boolean enabled = true;
 
