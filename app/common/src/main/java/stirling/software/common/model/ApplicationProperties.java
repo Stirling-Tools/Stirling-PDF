@@ -649,18 +649,12 @@ public class ApplicationProperties {
          */
         private boolean enabled = true;
 
-        /**
-         * Per-region overrides of the defaults in {@code application.conf}, keyed by region name. A
-         * region not listed keeps its default.
-         */
         private Map<String, Region> regions = new LinkedHashMap<>();
 
         @Data
         public static class Region {
-            /** Upper bound on cached entries; null keeps the default. */
             private Long maxEntries;
 
-            /** Time an entry lives after it is written; null keeps the default. */
             private Duration ttl;
         }
     }

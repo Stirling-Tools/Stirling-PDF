@@ -38,7 +38,6 @@ class SecondLevelCacheRegionTunerTest {
         CachingProvider provider =
                 Caching.getCachingProvider(
                         "com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider");
-        // Own URI per test: the provider shares managers by URI, and these tests resize caches.
         manager =
                 provider.getCacheManager(
                         URI.create("SecondLevelCacheRegionTunerTest-" + System.nanoTime()),
