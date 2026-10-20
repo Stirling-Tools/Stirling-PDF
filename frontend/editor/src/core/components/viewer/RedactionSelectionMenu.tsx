@@ -8,6 +8,12 @@ import { createPortal } from "react-dom";
 import { useRef, useCallback } from "react";
 import { Icon } from "@app/ui/Icon";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useRedaction } from "@app/contexts/RedactionContext";
+import { useNavigationActions } from "@app/contexts/NavigationContext";
+import {
+  defaultParameters,
+  RedactParameters,
+} from "@app/hooks/tools/redact/useRedactParameters";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useAnchoredOverlay } from "@app/hooks/useAnchoredOverlay";
 import "@app/components/viewer/TextSelectionMenu.css";
@@ -41,6 +47,8 @@ function RedactionSelectionMenuInner({
   const { t } = useTranslation();
   const { provides } = useEmbedPdfRedaction(documentId);
   const { handleToolSelectForced, setLeftPanelView } = useToolWorkflow();
+  const { setRedactionConfig, setRedactionMode } = useRedaction();
+  const { actions: navActions } = useNavigationActions();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Merge refs - menuWrapperProps.ref is a callback ref
@@ -63,9 +71,22 @@ function RedactionSelectionMenuInner({
   // affect that mark. Applying is permanent and applies *every* pending mark, so
   // it lives in the redaction review panel where that scope is visible.
   const onReviewPanel = useCallback(() => {
+    const manualConfig: RedactParameters = {
+      ...defaultParameters,
+      mode: "manual",
+    };
+    setRedactionConfig?.(manualConfig);
+    setRedactionMode?.(true);
+    navActions?.setToolAndWorkbench("redact", "viewer");
     handleToolSelectForced("redact");
     setLeftPanelView("toolContent");
-  }, [handleToolSelectForced, setLeftPanelView]);
+  }, [
+    handleToolSelectForced,
+    navActions,
+    setLeftPanelView,
+    setRedactionConfig,
+    setRedactionMode,
+  ]);
 
   const { overlayRef, mounted } = useAnchoredOverlay({
     anchorRef: wrapperRef,

@@ -12,9 +12,20 @@ const handleToolSelectForced = vi.fn();
 const setLeftPanelView = vi.fn();
 const commitPending = vi.fn();
 const removePending = vi.fn();
+const setRedactionConfig = vi.fn();
+const setRedactionMode = vi.fn();
+const setToolAndWorkbench = vi.fn();
 
 vi.mock("@app/contexts/ToolWorkflowContext", () => ({
   useToolWorkflow: () => ({ handleToolSelectForced, setLeftPanelView }),
+}));
+
+vi.mock("@app/contexts/RedactionContext", () => ({
+  useRedaction: () => ({ setRedactionConfig, setRedactionMode }),
+}));
+
+vi.mock("@app/contexts/NavigationContext", () => ({
+  useNavigationActions: () => ({ actions: { setToolAndWorkbench } }),
 }));
 
 vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
@@ -68,6 +79,11 @@ describe("RedactionSelectionMenu", () => {
 
     expect(handleToolSelectForced).toHaveBeenCalledWith("redact");
     expect(setLeftPanelView).toHaveBeenCalledWith("toolContent");
+    expect(setRedactionConfig).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: "manual" }),
+    );
+    expect(setRedactionMode).toHaveBeenCalledWith(true);
+    expect(setToolAndWorkbench).toHaveBeenCalledWith("redact", "viewer");
     expect(commitPending).not.toHaveBeenCalled();
   });
 
