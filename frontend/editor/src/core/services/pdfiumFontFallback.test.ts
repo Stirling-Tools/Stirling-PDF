@@ -16,7 +16,7 @@ describe("pdfiumFontFallback", () => {
       "StirlingSansCJK-Regular.ttf",
     );
     expect(config.fonts[FontCharset.HANGEUL]).toBe(
-      "StirlingSansCJK-Regular.ttf",
+      "StirlingSansKR-Regular.ttf",
     );
     expect(config.fonts[FontCharset.GB2312]).toBe(
       "StirlingSansCJK-Regular.ttf",
@@ -54,7 +54,7 @@ describe("pdfiumFontFallback", () => {
         continue;
       }
       expect(String(config.fonts[FontCharset[name]])).toMatch(
-        /^(NotoSans|StirlingSansCJK)[A-Za-z-]*\.ttf$/,
+        /^(NotoSans|StirlingSans(?:CJK|KR))[A-Za-z-]*\.ttf$/,
       );
     }
   });

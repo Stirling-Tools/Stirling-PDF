@@ -26,7 +26,7 @@ export function getLocalFontFallbackConfig(): FontFallbackConfig {
       [FontCharset.HEBREW]: "NotoSansHebrew-Regular.ttf",
       [FontCharset.THAI]: "NotoSansThai-Regular.ttf",
       [FontCharset.SHIFTJIS]: "StirlingSansCJK-Regular.ttf",
-      [FontCharset.HANGEUL]: "StirlingSansCJK-Regular.ttf",
+      [FontCharset.HANGEUL]: "StirlingSansKR-Regular.ttf",
       [FontCharset.GB2312]: "StirlingSansCJK-Regular.ttf",
       [FontCharset.CHINESEBIG5]: "StirlingSansCJK-Regular.ttf",
     },

@@ -28,15 +28,17 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Resolves CJK text to an installed font before falling back to the compact bundled face.
  *
- * <p>The bundled fallback is Droid Sans Fallback: it covers the common Chinese, Japanese and Korean
- * repertoires but not Latin, every modern Hangul syllable or rare Han characters. Hosts that ship
- * Noto CJK (the Docker base image does) get the complete face from the system instead.
+ * <p>The bundled fallbacks cover the common Chinese and Japanese repertoires plus every modern
+ * Hangul syllable, but not rare Han characters. Hosts that ship Noto CJK (the Docker base image
+ * does) get the complete face from the system instead.
  */
 @Slf4j
 @Component
 public class SystemFontResolver {
 
-    private static final String FALLBACK_CLASSPATH = "static/fonts/StirlingSansCJK-Regular.ttf";
+    private static final String CJK_FALLBACK_CLASSPATH = "static/fonts/StirlingSansCJK-Regular.ttf";
+    private static final String KOREAN_FALLBACK_CLASSPATH =
+            "static/fonts/StirlingSansKR-Regular.ttf";
     private static final int SAMPLE_CHINESE = 0x4E2D; // 中
     private static final int SAMPLE_JAPANESE = 0x65E5; // 日
     private static final int SAMPLE_KOREAN = 0xAC00; // 가
@@ -99,9 +101,10 @@ public class SystemFontResolver {
 
     /**
      * Loads the best available CJK face into {@code document}. Never returns null: when no
-     * installed face can be read, the bundled Droid face is used.
+     * installed face can be read, the bundled fallback is used.
      */
     public PDFont loadCjkFont(PDDocument document, String alphabet) throws IOException {
+        String fallback = fallbackClasspath(alphabet);
         ResolvedFont font = resolve(alphabet).orElse(null);
         if (font != null) {
             try {
@@ -111,10 +114,16 @@ public class SystemFontResolver {
                         "System CJK font {} could not be used ({}); falling back to {}",
                         font.path(),
                         e.getMessage(),
-                        FALLBACK_CLASSPATH);
+                        fallback);
             }
         }
-        return loadClasspath(document, FALLBACK_CLASSPATH);
+        return loadClasspath(document, fallback);
+    }
+
+    private static String fallbackClasspath(String alphabet) {
+        return "korean".equals(normalize(alphabet))
+                ? KOREAN_FALLBACK_CLASSPATH
+                : CJK_FALLBACK_CLASSPATH;
     }
 
     private PDFont load(PDDocument document, ResolvedFont font) throws IOException {

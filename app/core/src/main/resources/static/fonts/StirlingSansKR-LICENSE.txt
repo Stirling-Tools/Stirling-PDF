@@ -1,0 +1,9 @@
+Stirling Sans KR is a static Regular instance and subset of Noto Sans KR
+(variable font, weight axis 100-900), part of the Noto CJK project.
+
+Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name
+'Source'. Copyright 2022 The Noto Project Authors.
+
+Licensed under the SIL Open Font License, Version 1.1. The face is renamed
+to Stirling Sans KR so it does not use the Source or Noto reserved names.
+The full license text is in StirlingSansKR-OFL.txt.

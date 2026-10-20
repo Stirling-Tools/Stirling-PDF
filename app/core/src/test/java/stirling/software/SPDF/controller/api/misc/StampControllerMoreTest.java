@@ -33,6 +33,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
+import stirling.software.SPDF.utils.SystemFontResolver;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
@@ -55,7 +56,8 @@ class StampControllerMoreTest {
     void setUp() {
         pdfDocumentFactory = new CustomPDFDocumentFactory(mock(PdfMetadataService.class));
         tempFileManager = new TempFileManager(new TempFileRegistry(), new ApplicationProperties());
-        stampController = new StampController(pdfDocumentFactory, tempFileManager);
+        stampController =
+                new StampController(pdfDocumentFactory, tempFileManager, new SystemFontResolver());
     }
 
     // ---- helpers ------------------------------------------------------------

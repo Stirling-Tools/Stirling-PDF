@@ -24,8 +24,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
@@ -44,6 +42,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
+import stirling.software.SPDF.utils.SystemFontResolver;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -64,6 +63,7 @@ public class StampController {
     private static final Pattern NEWLINE_PATTERN = Pattern.compile("\\r?\\n");
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final SystemFontResolver systemFontResolver;
 
     private static final int MAX_DATE_FORMAT_LENGTH = 50;
     private static final Pattern SAFE_DATE_FORMAT_PATTERN =
@@ -227,29 +227,30 @@ public class StampController {
             int currentPageNumber,
             String filename)
             throws IOException {
-        String resourceDir;
-        PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-        resourceDir =
-                switch (alphabet) {
-                    case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
-                    case "japanese" -> "static/fonts/Meiryo.ttf";
-                    case "korean" -> "static/fonts/malgun.ttf";
-                    case "chinese" -> "static/fonts/SimSun.ttf";
-                    case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
-                    case "roman" -> "static/fonts/NotoSans-Regular.ttf";
-                    default -> "static/fonts/NotoSans-Regular.ttf";
-                };
+        PDFont font;
+        if ("chinese".equals(alphabet)
+                || "japanese".equals(alphabet)
+                || "korean".equals(alphabet)) {
+            font = systemFontResolver.loadCjkFont(document, alphabet);
+        } else {
+            String resourceDir =
+                    switch (alphabet) {
+                        case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
+                        case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
+                        default -> "static/fonts/NotoSans-Regular.ttf";
+                    };
 
-        ClassPathResource classPathResource = new ClassPathResource(resourceDir);
-        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf('.'));
+            ClassPathResource classPathResource = new ClassPathResource(resourceDir);
+            String fileExtension = resourceDir.substring(resourceDir.lastIndexOf('.'));
 
-        // Use TempFile with try-with-resources for automatic cleanup
-        try (TempFile tempFileWrapper = new TempFile(tempFileManager, fileExtension)) {
-            File tempFile = tempFileWrapper.getFile();
-            try (InputStream is = classPathResource.getInputStream();
-                    FileOutputStream os = new FileOutputStream(tempFile)) {
-                IOUtils.copy(is, os);
-                font = PDType0Font.load(document, tempFile);
+            // Use TempFile with try-with-resources for automatic cleanup
+            try (TempFile tempFileWrapper = new TempFile(tempFileManager, fileExtension)) {
+                File tempFile = tempFileWrapper.getFile();
+                try (InputStream is = classPathResource.getInputStream();
+                        FileOutputStream os = new FileOutputStream(tempFile)) {
+                    IOUtils.copy(is, os);
+                    font = PDType0Font.load(document, tempFile);
+                }
             }
         }
 
