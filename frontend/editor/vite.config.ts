@@ -648,9 +648,9 @@ export default defineConfig(async ({ mode, command }) => {
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
           },
-          // The compression pass writes the .br/.gz siblings the backend JAR
-          // serves from classpath:/static/fonts/; desktop is embedded and gets
-          // them from the bundled backend instead.
+          // The compression pass writes the .br/.gz siblings static hosts serve;
+          // the embedded JAR keeps only the brotli copy of these fonts. Desktop is
+          // embedded and gets them from the bundled backend instead.
           ...(effectiveMode === "desktop"
             ? []
             : [
