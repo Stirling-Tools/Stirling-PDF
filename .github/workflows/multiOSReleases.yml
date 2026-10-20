@@ -88,8 +88,10 @@ jobs:
           WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}'
           WINDOWS_ARM64='{"platform":"windows-11-arm","args":"--target aarch64-pc-windows-msvc --bundles nsis","name":"windows-arm64","jpdfium_platforms":"none"}'
           MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
+          MACOS_ARM='{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64","jpdfium_platforms":"darwin-arm64"}'
+          MACOS_X64='{"platform":"macos-15","args":"--target x86_64-apple-darwin","name":"macos-x86_64","jpdfium_platforms":"darwin-x64"}'
           LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}'
-          ALL="$WINDOWS,$WINDOWS_ARM64,$MACOS,$LINUX"
+          ALL="$WINDOWS,$WINDOWS_ARM64,$MACOS,$MACOS_ARM,$MACOS_X64,$LINUX"
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             case "${INPUT_PLATFORM}" in
@@ -100,7 +102,7 @@ jobs:
                 echo "matrix={\"include\":[$WINDOWS_ARM64]}" >> $GITHUB_OUTPUT
                 ;;
               "macos")
-                echo "matrix={\"include\":[$MACOS]}" >> $GITHUB_OUTPUT
+                echo "matrix={\"include\":[$MACOS,$MACOS_ARM,$MACOS_X64]}" >> $GITHUB_OUTPUT
                 ;;
               "linux")
                 echo "matrix={\"include\":[$LINUX]}" >> $GITHUB_OUTPUT
@@ -245,11 +247,10 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-tauri-releases-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
 
-      # x86_64 JDK is set up first so the aarch64 step below can leave its
-      # JAVA_HOME as the active one. The macOS universal JRE build needs
-      # jmods from both arches; the x64 path is captured into the env
-      # before the second local JDK setup overwrites JAVA_HOME.
-      - name: Set up x86_64 JDK 25 (macOS universal JRE)
+      # The universal JRE build needs jmods from both arches, so the x64 JDK is
+      # set up first and captured before the arm64 setup below. The x86_64
+      # per-arch bundle keeps the x64 JAVA_HOME active and skips that setup.
+      - name: Set up x86_64 JDK 25 (macOS)
         if: matrix.platform == 'macos-15'
         uses: ./.github/actions/java
         with:
@@ -261,7 +262,7 @@ jobs:
         run: echo "X64_JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
 
       - name: Set up JDK 25
-        if: matrix.platform != 'windows-11-arm'
+        if: matrix.platform != 'windows-11-arm' && matrix.name != 'macos-x86_64'
         uses: ./.github/actions/java
         with:
           java-version: "25"
@@ -279,9 +280,10 @@ jobs:
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
 
       # Build the universal JRE before desktop:prepare so the jlink:runtime
-      # task short-circuits on its `test -d runtime/jre` status check.
+      # task short-circuits on its `test -d runtime/jre` status check. The
+      # per-arch jobs let desktop:prepare build a single-arch runtime instead.
       - name: Build universal macOS JRE
-        if: matrix.platform == 'macos-15'
+        if: matrix.name == 'macos-universal'
         env:
           AARCH64_JAVA_HOME: ${{ env.JAVA_HOME }}
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
@@ -800,8 +802,8 @@ jobs:
 
           # Tauri updater looks up {os}-{arch}-{installer} (e.g. linux-x86_64-deb)
           # before bare {os}-{arch}, so per-format Linux keys let deb/rpm/appimage
-          # each self-update from their matching file. macOS universal serves both
-          # arches from the one .app.tar.gz.
+          # each self-update from their matching file. macOS publishes a separate
+          # .app.tar.gz per architecture so neither update carries the other JRE.
           PLATFORM_MAP = [
               {
                   'bundles': ['Stirling-PDF-linux-x86_64.deb'],
@@ -824,8 +826,12 @@ jobs:
                   'targets': ['windows-aarch64-nsis', 'windows-aarch64'],
               },
               {
-                  'bundles': ['Stirling-PDF-macos-universal.app.tar.gz'],
-                  'targets': ['darwin-x86_64', 'darwin-aarch64'],
+                  'bundles': ['Stirling-PDF-macos-aarch64.app.tar.gz'],
+                  'targets': ['darwin-aarch64'],
+              },
+              {
+                  'bundles': ['Stirling-PDF-macos-x86_64.app.tar.gz'],
+                  'targets': ['darwin-x86_64'],
               },
           ]
 
