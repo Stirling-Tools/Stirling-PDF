@@ -6,7 +6,8 @@ import {
   rememberPdfAccess,
   inspectLocalPdfAccess,
 } from "@app/services/pdfAccessService";
-import { hasPdfPermissionOverride } from "@app/services/pdfPermissions";
+import { pdfAllows } from "@app/services/pdfPermissions";
+import { PdfPermissionFlag } from "@embedpdf/models";
 
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { Button } from "@app/ui/Button";
@@ -41,8 +42,7 @@ export function PermissionsPasswordButton({
     !file ||
     !access?.encrypted ||
     access.signed ||
-    access.canModify ||
-    hasPdfPermissionOverride(access)
+    pdfAllows(access, PdfPermissionFlag.ModifyContents)
   )
     return null;
 

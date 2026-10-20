@@ -29,7 +29,6 @@ const plainAccess: PdfAccess = {
   signed: false,
   ownerAuthenticated: false,
   permissions: -4,
-  canModify: true,
   pageCount: 1,
 };
 

@@ -35,11 +35,14 @@ test("link annotations render as overlays with no annotation-layer hit boxes", a
 
 test("hovering a link overlay still opens the link toolbar", async ({
   page,
+  context,
 }) => {
   test.setTimeout(120_000);
   const firstPage = await loadViewer(page);
 
-  const overlay = firstPage.locator(".pdf-link-overlay").first();
+  const overlay = firstPage
+    .locator('.pdf-link-overlay[href^="https:"]')
+    .first();
   await expect(overlay).toBeAttached({ timeout: 15_000 });
   await overlay.hover();
 
@@ -47,6 +50,14 @@ test("hovering a link overlay still opens the link toolbar", async ({
   await expect(toolbar).toBeVisible({ timeout: 5_000 });
   await expect(toolbar.locator(".pdf-link-toolbar-btn--delete")).toBeVisible();
   await expect(toolbar.locator(".pdf-link-toolbar-btn--go")).toBeVisible();
+  const href = await overlay.getAttribute("href");
+  if (!href) throw new Error("Fixture has no external link");
+  await context.route(href, (route) =>
+    route.fulfill({ body: "Link destination" }),
+  );
+  const popup = page.waitForEvent("popup");
+  await overlay.click();
+  await expect(await popup).toHaveURL(href);
 });
 
 test("annotation editing selects a link instead of navigating", async ({

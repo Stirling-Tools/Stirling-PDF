@@ -1,7 +1,5 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { PdfPermissionFlag } from "@embedpdf/models";
 import type { PdfAccess } from "@app/services/pdfAccessService";
-import { pdfAllows } from "@app/services/pdfPermissions";
 
 /** Reads the authenticated document without reopening it or changing its protection. */
 export function readPdfiumAccess(
@@ -20,12 +18,6 @@ export function readPdfiumAccess(
     (encrypted && encryptionRevision < 2)
   )
     throw new Error("Unable to verify PDF security");
-  const facts = {
-    encrypted,
-    ownerAuthenticated,
-    permissions,
-    encryptionRevision,
-  };
   return {
     password,
     encrypted,
@@ -34,7 +26,6 @@ export function readPdfiumAccess(
     encryptionRevision,
     signed: signatureCount > 0,
     pageCount: module.FPDF_GetPageCount(document),
-    canModify: pdfAllows(facts, PdfPermissionFlag.ModifyContents),
     requiresOpeningPassword: password === "" ? false : undefined,
     openingAuthenticated: encrypted && !ownerAuthenticated ? true : undefined,
   };

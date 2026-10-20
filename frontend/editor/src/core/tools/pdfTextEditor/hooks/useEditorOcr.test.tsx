@@ -84,7 +84,6 @@ function protectSource() {
     signed: false,
     ownerAuthenticated: true,
     permissions: -4,
-    canModify: true,
     pageCount: 1,
   });
   bindPdfAccess(file, "source-id" as FileId);

@@ -18,10 +18,6 @@ import {
   REMOVE_PASSWORD_ENDPOINT,
 } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
 
-// Re-export for backwards compatibility with any other imports
-export { buildRemovePasswordFormData };
-
-// Static configuration object
 export const removePasswordOperationConfig = defineSingleFileTool({
   validateParams: validateRemovePasswordParameters,
   buildFormData: buildRemovePasswordFormData,
@@ -44,10 +40,7 @@ function getRemovePasswordParametersForFile(
       access?.encrypted === false || access?.requiresOpeningPassword === false
         ? ""
         : parameters.password,
-    ownerPassword:
-      access?.encrypted === false || access?.hasOwnerPassword === false
-        ? ""
-        : parameters.ownerPassword,
+    ownerPassword: access?.encrypted === false ? "" : parameters.ownerPassword,
   };
 }
 

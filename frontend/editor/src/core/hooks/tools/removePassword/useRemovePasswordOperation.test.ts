@@ -76,22 +76,20 @@ describe("useRemovePasswordOperation", () => {
       password: opening ? "reader" : "",
       encrypted: opening || owner,
       requiresOpeningPassword: opening,
-      hasOwnerPassword: owner,
       ownerAuthenticated: false,
       signed: false,
       permissions: 0,
-      canModify: false,
       pageCount: 1,
     });
     return file;
   }
 
   test.each([
-    { opening: true, owner: false, password: "reader", ownerPassword: null },
+    { opening: false, owner: false, password: "", ownerPassword: null },
     { opening: false, owner: true, password: "", ownerPassword: "owner" },
     { opening: true, owner: true, password: "reader", ownerPassword: "owner" },
   ])(
-    "only submits passwords present on a file (opening=$opening, owner=$owner)",
+    "omits known absent roles and submits unknown roles (opening=$opening, encrypted-owner=$owner)",
     ({ opening, owner, password, ownerPassword }) => {
       renderHook(() => useRemovePasswordOperation());
       const form = getToolConfig().buildFormData(
@@ -104,7 +102,7 @@ describe("useRemovePasswordOperation", () => {
   );
 
   test.each(["opening", "owner", "both"] as const)(
-    "leaves files without the requested %s password unchanged",
+    "skips known absent %s passwords and lets the endpoint validate unknown roles",
     async (remove) => {
       const opening = protectedFile(true, false);
       const owner = protectedFile(false, true);
@@ -123,11 +121,7 @@ describe("useRemovePasswordOperation", () => {
       ]);
       expect(mockToolOperationReturn.executeOperation).toHaveBeenCalledWith(
         params,
-        remove === "opening"
-          ? [opening, both]
-          : remove === "owner"
-            ? [owner, both]
-            : [opening, owner, both],
+        remove === "opening" ? [opening, both] : [opening, owner, both],
       );
     },
   );

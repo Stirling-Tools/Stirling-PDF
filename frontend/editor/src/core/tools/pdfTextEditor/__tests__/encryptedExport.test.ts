@@ -10,22 +10,14 @@ import {
   it,
   vi,
 } from "vitest";
-import {
-  PDFArray,
-  PDFDict,
-  PDFDocument,
-  PDFHeader,
-  PDFHexString,
-  PDFName,
-  PDFString,
-  StandardFonts,
-} from "@cantoo/pdf-lib";
+import { PDFDocument, PDFHeader, StandardFonts } from "@cantoo/pdf-lib";
 import { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextCommand";
 import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
 import { PdfiumTextReader } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { exportToBlob } from "@app/tools/pdfTextEditor/util/exportPdf";
 import { readPdfiumAccess } from "@app/utils/pdfiumAccess";
+import { readEncryptionDictionary as protection } from "@app/tests/helpers/pdf-encryption";
 
 vi.mock(
   "@app/tools/pdfTextEditor/charcode/CharcodeStrategy",
@@ -49,41 +41,6 @@ async function open(bytes: Uint8Array, password: string) {
 async function savedBytes(doc: EditorDocument) {
   const { blob } = await exportToBlob(doc, "encrypted.pdf");
   return new Uint8Array(await blob.arrayBuffer());
-}
-
-async function protection(bytes: Uint8Array) {
-  const pdf = await PDFDocument.load(bytes, {
-    ignoreEncryption: true,
-    updateMetadata: false,
-  });
-  const encryption = pdf.context.lookup(
-    pdf.context.trailerInfo.Encrypt,
-    PDFDict,
-  );
-  const facts: Record<string, string | undefined> = {};
-  for (const key of [
-    "O",
-    "U",
-    "OE",
-    "UE",
-    "Perms",
-    "P",
-    "R",
-    "V",
-    "Length",
-    "EncryptMetadata",
-  ]) {
-    const value = encryption.get(PDFName.of(key));
-    facts[key] =
-      value instanceof PDFHexString || value instanceof PDFString
-        ? Buffer.from(value.asBytes()).toString("hex")
-        : value?.toString();
-  }
-  const id = pdf.context.lookup(pdf.context.trailerInfo.ID, PDFArray).get(0);
-  expect(id instanceof PDFHexString || id instanceof PDFString).toBe(true);
-  if (id instanceof PDFHexString || id instanceof PDFString)
-    facts.ID = Buffer.from(id.asBytes()).toString("hex");
-  return facts;
 }
 
 beforeAll(async () => {
@@ -147,6 +104,7 @@ describe.each([
         bytes = await pdf.save({ useObjectStreams: false });
       }
       const originalProtection = await protection(bytes);
+      expect(originalProtection.ID).toBeDefined();
       const doc = await open(bytes, credential);
       const originalAccess = readPdfiumAccess(
         doc.module,

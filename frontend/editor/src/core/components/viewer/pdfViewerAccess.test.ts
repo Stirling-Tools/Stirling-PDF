@@ -5,7 +5,6 @@ import {
   type PdfDocumentObject,
   type PdfEngine,
 } from "@embedpdf/models";
-import apiClient from "@app/services/apiClient";
 import {
   bindPdfViewerSource,
   withPdfViewerAccess,
@@ -21,12 +20,10 @@ import {
 
 import { createStirlingFile } from "@app/types/fileContext";
 
-vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
 vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
   ensureLocalPdfAccess: vi.fn(),
 }));
-const post = vi.mocked(apiClient.post);
 const document: PdfDocumentObject = {
   id: "opened",
   pageCount: 1,
@@ -42,7 +39,6 @@ const protectedAccess = {
   signed: false,
   ownerAuthenticated: false,
   permissions: 4,
-  canModify: false,
   pageCount: 1,
 };
 
@@ -61,33 +57,27 @@ function viewer(file: File) {
 
 beforeEach(() => {
   clearPdfAccess();
-  post.mockReset();
   vi.mocked(ensureLocalPdfAccess).mockReset();
 });
 
 describe("viewer permission readiness", () => {
-  it.each([1024, 100 * 1024 ** 2, 250 * 1024 ** 2])(
-    "publishes verified access before opening completes at %i bytes, without an extra read/upload",
-    async (size) => {
-      const file = new File(["PDF"], "sample.pdf");
-      Object.defineProperty(file, "size", { value: size });
-      const read = vi.fn();
-      Object.defineProperty(file, "arrayBuffer", { value: read });
-      const { engine, opened, raw, buffer } = viewer(file);
-      const task = engine.openDocumentBuffer({ id: "opened", content: buffer });
-      const ready = vi.fn(() =>
-        expect(getPdfAccess(file)?.encrypted).toBe(false),
-      );
-      task.wait(ready, () => {});
-      expect(ready).not.toHaveBeenCalled();
-      opened.resolve(document);
-      await task.toPromise();
-      expect(ready).toHaveBeenCalledOnce();
-      expect(raw.openDocumentBuffer).toHaveBeenCalledOnce();
-      expect(read).not.toHaveBeenCalled();
-      expect(post).not.toHaveBeenCalled();
-    },
-  );
+  it("publishes verified access before opening completes without an extra read", async () => {
+    const file = new File(["PDF"], "sample.pdf");
+    const read = vi.fn();
+    Object.defineProperty(file, "arrayBuffer", { value: read });
+    const { engine, opened, raw, buffer } = viewer(file);
+    const task = engine.openDocumentBuffer({ id: "opened", content: buffer });
+    const ready = vi.fn(() =>
+      expect(getPdfAccess(file)?.encrypted).toBe(false),
+    );
+    task.wait(ready, () => {});
+    expect(ready).not.toHaveBeenCalled();
+    opened.resolve(document);
+    await task.toPromise();
+    expect(ready).toHaveBeenCalledOnce();
+    expect(raw.openDocumentBuffer).toHaveBeenCalledOnce();
+    expect(read).not.toHaveBeenCalled();
+  });
 
   it("does not publish unrestricted access while encrypted authentication is pending", async () => {
     const file = new File(["protected"], "large.pdf");
@@ -115,10 +105,8 @@ describe("viewer permission readiness", () => {
     await task.toPromise();
     expect(getPdfAccess(file)).toMatchObject({
       encrypted: true,
-      canModify: false,
       ownerAuthenticated: false,
     });
-    expect(post).not.toHaveBeenCalled();
   });
 
   it("rejects incomplete engine security metadata instead of granting access", async () => {

@@ -37,11 +37,6 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
     page,
   }) => {
     await page.route("**/encode-charcodes", (route) => route.abort());
-    let inspections = 0;
-    await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
-      inspections++;
-      return route.abort();
-    });
     await page.goto("/editor");
     await page.locator('[data-testid="file-input"]').setInputFiles(ENCRYPTED);
     await page
@@ -58,7 +53,6 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
     });
     await expect(page.getByTestId("pdf-editor-password-modal")).toBeHidden();
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    expect(inspections).toBe(0);
 
     await page.evaluate(() => {
       const run = document.querySelector<HTMLElement>(
@@ -98,7 +92,6 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
     ).rejects.toThrow("PDF open failed");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden();
-    expect(inspections).toBe(0);
   });
 
   test("keeps an unlocked signed PDF out of the text editor", async ({
@@ -213,11 +206,6 @@ test.describe("PDF text editor - pre-save data-loss warning", () => {
 
   test("a normal PDF saves without any warning", async ({ page }) => {
     test.setTimeout(60_000);
-    let inspections = 0;
-    await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
-      inspections++;
-      return route.abort();
-    });
     await gotoEditor(page);
     await upload(page, SAMPLE);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -232,6 +220,5 @@ test.describe("PDF text editor - pre-save data-loss warning", () => {
     expect(await page.getByTestId("pdf-editor-save-risk-confirm").count()).toBe(
       0,
     );
-    expect(inspections).toBe(0);
   });
 });

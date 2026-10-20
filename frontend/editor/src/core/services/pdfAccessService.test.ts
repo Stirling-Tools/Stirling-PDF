@@ -47,7 +47,6 @@ const access: PdfAccess = {
   ownerAuthenticated: false,
   signed: false,
   permissions: 0,
-  canModify: false,
   pageCount: 1,
 };
 

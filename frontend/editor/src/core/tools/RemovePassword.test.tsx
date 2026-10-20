@@ -71,7 +71,6 @@ const local: PdfAccess = {
   ownerAuthenticated: false,
   requiresOpeningPassword: true,
   permissions: -4,
-  canModify: true,
   pageCount: 1,
 };
 const renderTool = () =>
@@ -145,11 +144,8 @@ describe("Remove Password protection status", () => {
     expect(post).not.toHaveBeenCalled();
   });
 
-  it("keeps a role selectable when one file is known to lack it and another is unknown", () => {
-    rememberPdfAccess(state.files[0], {
-      ...local,
-      hasOwnerPassword: false,
-    });
+  it("keeps removal selectable for a mixture of unencrypted and protected files", () => {
+    rememberPdfAccess(state.files[0], { ...local, encrypted: false });
     const other = createStirlingFile(new File(["second"], "second.pdf"));
     rememberPdfAccess(other, local);
     state.files.push(other);

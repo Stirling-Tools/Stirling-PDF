@@ -32,7 +32,6 @@ const access = {
   signed: false,
   ownerAuthenticated: true,
   permissions: -4,
-  canModify: true,
   pageCount: 1,
 };
 const id = "protected-preview" as FileId;

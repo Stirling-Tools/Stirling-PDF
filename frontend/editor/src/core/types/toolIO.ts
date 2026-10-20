@@ -746,7 +746,7 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SISO",
   },
   "/api/v1/security/add-password": {
-    accepts: ["PDF"],
+    accepts: ["PDF", "PDF_ENCRYPTED"],
     produces: "PDF_ENCRYPTED",
     arity: "SISO",
     cases: [
@@ -754,6 +754,7 @@ export const TOOL_IO: ToolIOTable = {
         when: [
           { param: "password", matches: [""], default: "" },
           { param: "ownerPassword", matches: [""], default: "" },
+          { param: "preserveExisting", matches: ["false"], default: "false" },
         ],
         produces: "PDF",
         arity: "SISO",

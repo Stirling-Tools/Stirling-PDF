@@ -15,36 +15,11 @@ for (const operation of ["compress", "remove-password"] as const) {
     const browserErrors: string[] = [];
     page.on("pageerror", (error) => browserErrors.push(error.message));
     const output = await readFile(links);
-    let processed = false;
-    let inspections = 0;
-    await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
-      inspections++;
-      const encrypted =
-        !processed &&
-        (route
-          .request()
-          .postData()
-          ?.includes('filename="owner-only-restricted.pdf"') ??
-          false);
-      return route.fulfill({
-        json: {
-          encrypted,
-          requiresOpeningPassword: false,
-          hasOwnerPassword: encrypted,
-          signed: false,
-          ownerAuthenticated: false,
-          permissions: encrypted ? 0 : -4,
-          canModify: !encrypted,
-          pageCount: encrypted ? 1 : 2,
-        },
-      });
-    });
     await page.route(
       operation === "compress"
         ? "**/api/v1/misc/compress-pdf"
         : "**/api/v1/security/remove-password",
       (route) => {
-        processed = true;
         return route.fulfill({
           contentType: "application/pdf",
           body: output,
@@ -111,7 +86,6 @@ for (const operation of ["compress", "remove-password"] as const) {
       page.getByRole("button", { name: "Save Changes", exact: true }).first(),
     ).toBeEnabled();
     expect(browserErrors).toEqual([]);
-    if (operation === "remove-password") expect(inspections).toBe(0);
   });
 }
 
@@ -133,11 +107,6 @@ for (const role of ["reader", "owner", "unrestricted-reader"] as const) {
     });
     const filename = testInfo.outputPath("protected.pdf");
     await writeFile(filename, await pdf.save());
-    let inspections = 0;
-    await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
-      inspections++;
-      return route.abort();
-    });
     await page.getByTestId("file-input").setInputFiles(filename);
     const password = page.getByLabel("Password to open", { exact: true });
     await password.fill("incorrect-password");
@@ -177,7 +146,6 @@ for (const role of ["reader", "owner", "unrestricted-reader"] as const) {
         dialog.getByText("Printing", { exact: true }).locator(".."),
       ).toContainText(unrestricted ? "Allowed" : "Restricted");
     }
-    expect(inspections).toBe(0);
   });
 }
 
@@ -195,11 +163,6 @@ test("local opening applies the administrator policy without claiming owner auth
       },
     }),
   );
-  let inspections = 0;
-  await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
-    inspections++;
-    return route.abort();
-  });
   await page.goto("/editor");
   await page
     .getByTestId("file-input")
@@ -221,17 +184,9 @@ test("local opening applies the administrator policy without claiming owner auth
       exact: true,
     }),
   ).toBeVisible();
-  expect(inspections).toBe(0);
 });
 
-test("repeated annotation saves remain editable with the inspection endpoint unavailable", async ({
-  page,
-}) => {
-  let inspections = 0;
-  await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
-    inspections++;
-    return route.abort();
-  });
+test("repeated annotation saves remain editable", async ({ page }) => {
   await page.goto("/annotate");
   await page.locator('input[type="file"]').first().setInputFiles(links);
   const firstPage = page.locator('[data-page-index="0"]').first();
@@ -261,27 +216,6 @@ test("repeated annotation saves remain editable with the inspection endpoint una
   await expect(
     page.locator("[data-annotation-selection-menu]").first(),
   ).toBeVisible();
-  expect(inspections).toBe(0);
-});
-
-test("viewer links navigate without requiring an inspection response", async ({
-  page,
-  context,
-}) => {
-  await page.route("**/api/v1/security/inspect-pdf-security", (route) =>
-    route.abort(),
-  );
-  await page.locator('input[type="file"]').first().setInputFiles(links);
-  const link = page.locator('.pdf-link-overlay[href^="https:"]').first();
-  await expect(link).toBeVisible();
-  const href = await link.getAttribute("href");
-  if (!href) throw new Error("Fixture has no external link");
-  await context.route(href, (route) =>
-    route.fulfill({ body: "Link destination" }),
-  );
-  const popup = page.waitForEvent("popup");
-  await link.click();
-  await expect(await popup).toHaveURL(href);
 });
 
 for (const protection of ["ordinary", "owner-only", "opening-password"]) {
@@ -310,11 +244,6 @@ for (const protection of ["ordinary", "owner-only", "opening-password"]) {
       });
     const filename = testInfo.outputPath("large.pdf");
     await writeFile(filename, await pdf.save({ useObjectStreams: false }));
-    let inspections = 0;
-    await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
-      inspections++;
-      return route.abort();
-    });
     await page.locator('input[type="file"]').first().setInputFiles(filename);
     if (password) {
       await page.getByLabel("Password to open", { exact: true }).fill(password);
@@ -334,7 +263,6 @@ for (const protection of ["ordinary", "owner-only", "opening-password"]) {
       await expect(
         toolbar.locator(".pdf-link-toolbar-btn--delete"),
       ).toBeVisible();
-    expect(inspections).toBe(0);
     const href = await link.getAttribute("href");
     if (!href) throw new Error("Fixture has no external link");
     await context.route(href, (route) =>

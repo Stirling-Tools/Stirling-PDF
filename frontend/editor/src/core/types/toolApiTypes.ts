@@ -81,6 +81,10 @@ export interface AddPasswordRequest {
    */
   password?: string;
   /**
+   * Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.
+   */
+  preserveExisting?: boolean;
+  /**
    * Whether document assembly is prevented
    */
   preventAssembly?: boolean;
@@ -112,6 +116,10 @@ export interface AddPasswordRequest {
    * Whether faithful printing is prevented
    */
   preventPrintingFaithful?: boolean;
+  /**
+   * Credential for authenticating an existing protected source, separate from the new passwords. Omit to retain legacy add-password behaviour.
+   */
+  sourcePassword?: string;
 }
 export interface AddStampRequest {
   /**
@@ -1264,6 +1272,10 @@ export interface RemovePasswordRequest {
    * The password of the PDF file
    */
   password?: string;
+  /**
+   * Explicitly remove all passwords and restrictions, subject to the server owner-password policy. The password or sourcePassword authenticates the source; selective removal fields do not apply.
+   */
+  removeAll?: boolean;
   /**
    * Opening password to retain when removing only the permissions password. Supplying this field enables selective removal.
    */

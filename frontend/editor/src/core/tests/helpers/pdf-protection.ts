@@ -1,14 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { init } from "@embedpdf/pdfium";
-import {
-  PDFArray,
-  PDFDict,
-  PDFDocument,
-  PDFName,
-  PDFHexString,
-  PDFString,
-} from "@cantoo/pdf-lib";
+import { readEncryptionDictionary } from "@app/tests/helpers/pdf-encryption";
 import type { Page } from "@playwright/test";
 import { liveApiHeaders } from "@app/tests/helpers/live-api";
 
@@ -44,41 +37,12 @@ export async function readPdfProtection(buffer: Buffer, password = "") {
     if (empty) module.FPDF_CloseDocument(empty);
     const allows = (flag: number) =>
       !encrypted || ownerAuthenticated || (permissions & flag) !== 0;
-    const pdf = await PDFDocument.load(buffer, {
-      ignoreEncryption: true,
-      updateMetadata: false,
-    });
-    const encryption = pdf.context.lookup(pdf.context.trailerInfo.Encrypt);
-    const credentialEntries: Record<string, string | undefined> = {};
-    if (encryption instanceof PDFDict) {
-      for (const key of [
-        "O",
-        "U",
-        "OE",
-        "UE",
-        "Perms",
-        "R",
-        "V",
-        "Length",
-        "EncryptMetadata",
-      ]) {
-        const value = encryption.get(PDFName.of(key));
-        credentialEntries[key] =
-          value instanceof PDFHexString || value instanceof PDFString
-            ? Buffer.from(value.asBytes()).toString("hex")
-            : value?.toString();
-      }
-      const ids = pdf.context.lookup(pdf.context.trailerInfo.ID);
-      const id = ids instanceof PDFArray ? ids.get(0) : undefined;
-      if (id instanceof PDFHexString || id instanceof PDFString)
-        credentialEntries.ID = Buffer.from(id.asBytes()).toString("hex");
-    }
     return {
       encrypted,
       ownerAuthenticated,
       permissions,
       encryptionRevision,
-      credentialEntries,
+      credentialEntries: await readEncryptionDictionary(buffer),
       requiresOpeningPassword,
       signed: module.FPDF_GetSignatureCount(document) > 0,
       pageCount: module.FPDF_GetPageCount(document),

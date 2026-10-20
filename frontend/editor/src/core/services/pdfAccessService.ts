@@ -12,7 +12,6 @@ export interface PdfAccess {
   password: string;
   openingPassword?: string;
   openingAuthenticated?: boolean;
-  hasOwnerPassword?: boolean;
   encrypted: boolean;
   requiresOpeningPassword?: boolean;
   signed: boolean;
@@ -21,7 +20,6 @@ export interface PdfAccess {
   honorOwnerPasswords?: boolean;
   permissions: number;
   encryptionRevision?: number;
-  canModify: boolean;
   pageCount: number;
 }
 
@@ -59,7 +57,6 @@ export function rememberUnencryptedPdf(
     signed: false,
     ownerAuthenticated: false,
     permissions: -4,
-    canModify: true,
     pageCount,
   });
 }

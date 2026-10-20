@@ -33,7 +33,6 @@ const access: PdfAccess = {
   ownerAuthenticated: false,
   permissions: -4,
   encryptionRevision: 6,
-  canModify: true,
   pageCount: 2,
 };
 const rotate = "/api/v1/general/rotate-pdf";
@@ -151,7 +150,6 @@ describe("session PDF access", () => {
       const reader = {
         ...access,
         permissions: 0,
-        canModify: false,
         honorOwnerPasswords,
       };
       rememberPdfAccess(file, reader);
@@ -320,7 +318,7 @@ describe("session PDF access", () => {
       "digital signatures",
     );
     expect(() =>
-      assertPdfSessionEditable({ encrypted: false, signed: true }),
+      assertPdfSessionEditable({ ...access, encrypted: false, signed: true }),
     ).not.toThrow();
   });
 

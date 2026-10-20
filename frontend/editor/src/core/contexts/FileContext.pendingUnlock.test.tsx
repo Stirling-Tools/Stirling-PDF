@@ -214,7 +214,6 @@ describe("protected tool replacements", () => {
           signed: false,
           ownerAuthenticated: true,
           permissions: -4,
-          canModify: true,
           pageCount: 1,
         },
       });
@@ -267,7 +266,6 @@ describe("protected tool replacements", () => {
           signed: false,
           ownerAuthenticated: true,
           permissions: -4,
-          canModify: true,
           pageCount: 1,
         },
       });
@@ -329,9 +327,7 @@ describe("encrypted bytes opened by another editor", () => {
         openingAuthenticated: true,
         ownerAuthenticated: !hasOwnerPassword,
         requiresOpeningPassword: true,
-        hasOwnerPassword,
         permissions: hasOwnerPassword ? 0 : -4,
-        canModify: !hasOwnerPassword,
         pageCount: 1,
       };
       const post = vi.mocked(apiClient.post);
@@ -420,9 +416,7 @@ describe("encrypted bytes opened by another editor", () => {
       openingAuthenticated: true,
       ownerAuthenticated: false,
       requiresOpeningPassword: true,
-      hasOwnerPassword: true,
       permissions: 0,
-      canModify: false,
       pageCount: 1,
       honorOwnerPasswords: false,
     };
@@ -480,7 +474,6 @@ describe("encrypted bytes opened by another editor", () => {
       signed: false,
       ownerAuthenticated: true,
       permissions: 0,
-      canModify: true,
       pageCount: 1,
     });
     vi.mocked(apiClient.post).mockResolvedValueOnce({
@@ -492,7 +485,6 @@ describe("encrypted bytes opened by another editor", () => {
         signed: false,
         ownerAuthenticated: false,
         permissions: -4,
-        canModify: true,
         pageCount: 1,
       },
     });
@@ -531,7 +523,6 @@ describe("encrypted bytes opened by another editor", () => {
       signed: false,
       ownerAuthenticated: false,
       permissions: 0,
-      canModify: false,
       pageCount: 1,
     });
     let pending!: Promise<boolean>;
@@ -588,7 +579,6 @@ describe("encrypted bytes opened by another editor", () => {
         signed: false,
         ownerAuthenticated: true,
         permissions: -4,
-        canModify: true,
         pageCount: 1,
       },
     });
@@ -700,7 +690,6 @@ describe("preview session credentials", () => {
     signed: false,
     ownerAuthenticated: false,
     permissions: 0,
-    canModify: false,
     pageCount: 1,
   };
   afterEach(cleanup);
@@ -762,7 +751,6 @@ it("preserves a preview credential after its bytes are admitted to FileContext",
       signed: false,
       ownerAuthenticated: true,
       permissions: -4,
-      canModify: true,
       pageCount: 1,
     },
   });

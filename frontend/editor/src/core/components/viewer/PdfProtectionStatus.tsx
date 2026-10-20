@@ -78,7 +78,7 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
         <Group gap={6} role="status">
           <Icon name="lock" size={14} />
           <Text size="xs">
-            {access.ownerAuthenticated && access.hasOwnerPassword !== false
+            {access.ownerAuthenticated
               ? t(
                   "encryptedPdfUnlock.permissionsUnlocked",
                   "Permissions unlocked for this session",

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useRemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
 import { useRemovePasswordOperation } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
@@ -15,7 +15,6 @@ const RemovePassword = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const removePasswordTips = useRemovePasswordTips();
   const { actions } = useFileContext();
-  const [removalSummary, setRemovalSummary] = useState<string | null>(null);
 
   const base = useBaseTool(
     "removePassword",
@@ -24,17 +23,16 @@ const RemovePassword = (props: BaseToolProps) => {
     props,
   );
   usePdfAccess(base.selectedFiles[0]);
-  const passwordStates = (
-    role: "requiresOpeningPassword" | "hasOwnerPassword",
-  ) =>
-    base.selectedFiles.map((file) => {
-      const access = getPdfAccess(file);
-      return access?.encrypted === false ? false : access?.[role];
-    });
-  const openingStates = passwordStates("requiresOpeningPassword");
-  const ownerStates = passwordStates("hasOwnerPassword");
+  const openingStates = base.selectedFiles.map((file) => {
+    const access = getPdfAccess(file);
+    return access?.encrypted === false
+      ? false
+      : access?.requiresOpeningPassword;
+  });
   const openingSet = openingStates.some((set) => set !== false);
-  const ownerSet = ownerStates.some((set) => set !== false);
+  const ownerSet = base.selectedFiles.some(
+    (file) => getPdfAccess(file)?.encrypted !== false,
+  );
   const passwordDescription = (states: (boolean | undefined)[]) => {
     if (!base.hasFiles) return undefined;
     if (states.some((set) => set === undefined)) return undefined;
@@ -88,35 +86,6 @@ const RemovePassword = (props: BaseToolProps) => {
         }
       }
     }
-    setRemovalSummary(
-      base.selectedFiles.length > 1 ||
-        [...openingStates, ...ownerStates].some((set) => set === undefined)
-        ? null
-        : ownerPassword
-          ? password
-            ? t(
-                "removePassword.bothRemoved",
-                "Both passwords and restrictions removed.",
-              )
-            : openingSet
-              ? t(
-                  "removePassword.ownerRemoved",
-                  "Permissions password and restrictions removed. Opening password kept.",
-                )
-              : t(
-                  "removePassword.ownerOnlyRemoved",
-                  "Permissions password and restrictions removed.",
-                )
-          : ownerSet
-            ? t(
-                "encryptedPdfUnlock.openingPasswordRemoved",
-                "Opening password removed. Restrictions retained.",
-              )
-            : t(
-                "removePassword.openingOnlyRemoved",
-                "Opening password removed.",
-              ),
-    );
     await base.handleExecute();
   };
 
@@ -161,7 +130,11 @@ const RemovePassword = (props: BaseToolProps) => {
                 "encryptedPdfUnlock.ownerPassword",
                 "Permissions password",
               )}
-              description={passwordDescription(ownerStates)}
+              description={
+                base.hasFiles && !ownerSet
+                  ? t("removePassword.notSet", "Not set")
+                  : undefined
+              }
               value={ownerSet ? (ownerPassword ?? "") : ""}
               onChange={(event) =>
                 updateParameter("ownerPassword", event.currentTarget.value)
@@ -182,7 +155,7 @@ const RemovePassword = (props: BaseToolProps) => {
       paramsValid: (openingSet && !!password) || (ownerSet && !!ownerPassword),
     },
     review: {
-      protectionSummary: removalSummary,
+      protectionSummary: null,
       isVisible: base.hasResults,
       operation: base.operation,
       title: t("removePassword.results.title", "Updated PDFs"),

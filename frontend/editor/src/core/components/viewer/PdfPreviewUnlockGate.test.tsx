@@ -54,7 +54,6 @@ const access: PdfAccess = {
   signed: false,
   ownerAuthenticated: false,
   permissions: 0,
-  canModify: false,
   pageCount: 1,
 };
 const passwordError = {

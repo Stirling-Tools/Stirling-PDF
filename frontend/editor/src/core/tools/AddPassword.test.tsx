@@ -61,7 +61,6 @@ const access: PdfAccess = {
   signed: false,
   ownerAuthenticated: false,
   permissions: PdfPermissionFlag.AllowAll,
-  canModify: true,
   pageCount: 1,
 };
 

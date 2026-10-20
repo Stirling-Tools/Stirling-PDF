@@ -28,12 +28,7 @@ for (const entry of ["opening dialog", "Remove Password tool"]) {
       permissions: { printing: false },
     });
     const outputBytes = Buffer.from(await output.save());
-    let inspections = 0;
     let removals = 0;
-    await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
-      inspections++;
-      return route.abort();
-    });
     await page.route("**/api/v1/security/remove-password", async (route) => {
       const request = new Request(route.request().url(), {
         method: "POST",
@@ -96,7 +91,6 @@ for (const entry of ["opening dialog", "Remove Password tool"]) {
       page.getByText("Protected PDF", { exact: true }).first(),
     ).toBeVisible();
     expect(removals).toBe(1);
-    expect(inspections).toBe(0);
   });
 }
 

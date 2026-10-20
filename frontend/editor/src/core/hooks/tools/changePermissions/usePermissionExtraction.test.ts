@@ -24,7 +24,6 @@ const access: PdfAccess = {
   signed: false,
   ownerAuthenticated: true,
   permissions: PdfPermissionFlag.AllowAll,
-  canModify: true,
   pageCount: 1,
 };
 

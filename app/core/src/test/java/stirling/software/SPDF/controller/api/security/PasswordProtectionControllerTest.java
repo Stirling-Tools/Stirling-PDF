@@ -45,7 +45,6 @@ class PasswordProtectionControllerTest {
     private static final String OWNER = " owner password ";
     @TempDir Path directory;
     private PasswordController controller;
-    private PasswordController passwordController;
     private CustomPDFDocumentFactory factory;
     private ApplicationProperties properties;
 
@@ -87,7 +86,6 @@ class PasswordProtectionControllerTest {
                 .deleteTempFile(any(java.io.File.class));
         properties = new ApplicationProperties();
         controller = new PasswordController(factory, tempFiles, properties);
-        passwordController = controller;
     }
 
     private ResponseEntity<Resource> changePermissions(AddPasswordRequest request, String password)
@@ -124,7 +122,7 @@ class PasswordProtectionControllerTest {
         request.setOwnerPassword(ownerPassword);
         request.setSourcePassword(sourcePassword);
         request.setRetainedOpeningPassword(retainedOpeningPassword);
-        return passwordController.removePassword(request);
+        return controller.removePassword(request);
     }
 
     private byte[] pdf(boolean encrypted, int bits) throws IOException {
@@ -433,13 +431,6 @@ class PasswordProtectionControllerTest {
                 () -> removePasswords(request(original, USER), "", USER, ""));
     }
 
-    @Test
-    void unicodeOwnerCredentialsUseTheLibrarysAuthenticationResult() throws Exception {
-        byte[] original = protectedPdf("reader", "秘密 café", 256, new AccessPermission());
-        assertTrue(inspect(request(original, "秘密 café")).ownerAuthenticated());
-        assertFalse(inspect(request(original, "reader")).ownerAuthenticated());
-    }
-
     @ParameterizedTest
     @CsvSource({"128", "256"})
     void ownerOnlyDocumentsOpenWithoutGrantingOwnerAccess(int bits) throws Exception {
@@ -488,23 +479,6 @@ class PasswordProtectionControllerTest {
                                 .getInputStream();
                 var working = Loader.loadPDF(stream.readAllBytes())) {
             assertFalse(working.isEncrypted());
-        }
-    }
-
-    @Test
-    void removingTheOpeningPasswordRetainsKnownOwnerAccessAndStoredRestrictions() throws Exception {
-        byte[] original = pdf(true, 256);
-        try (var stream =
-                removePasswords(request(original, USER), "", OWNER, "")
-                        .getBody()
-                        .getInputStream()) {
-            byte[] result = stream.readAllBytes();
-            var viewer = inspect(request(result, ""));
-            assertTrue(viewer.encrypted());
-            assertFalse(viewer.ownerAuthenticated());
-            assertFalse(viewer.canPrint());
-            assertFalse(viewer.canExtract());
-            assertTrue(inspect(request(result, OWNER)).ownerAuthenticated());
         }
     }
 

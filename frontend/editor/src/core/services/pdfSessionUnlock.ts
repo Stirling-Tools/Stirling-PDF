@@ -127,11 +127,7 @@ function operationPermission(endpoint: string | undefined): PdfPermissionFlag {
 }
 
 /** Signed protected PDFs remain view-only until their edits can preserve signatures. */
-export function assertPdfSessionEditable(
-  access:
-    | (Pick<PdfAccess, "encrypted" | "signed"> & Partial<PdfAccess>)
-    | undefined,
-): void {
+export function assertPdfSessionEditable(access: PdfAccess | undefined): void {
   if (access?.encrypted && access.signed)
     throw new Error(
       i18n.t(
@@ -139,11 +135,7 @@ export function assertPdfSessionEditable(
         "This PDF has digital signatures. Session unlocking supports viewing it, but processing signed PDFs is not supported yet.",
       ),
     );
-  if (
-    access?.encrypted &&
-    !hasPdfPermissionOverride(access) &&
-    access.canModify !== true
-  )
+  if (access?.encrypted && !pdfAllows(access, PdfPermissionFlag.ModifyContents))
     throw new Error(
       i18n.t(
         "encryptedPdfUnlock.restrictedOperation",

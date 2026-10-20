@@ -36,7 +36,6 @@ const reader: PdfAccess = {
   ownerAuthenticated: false,
   signed: false,
   permissions: 0,
-  canModify: false,
   pageCount: 1,
   honorOwnerPasswords: true,
 };
@@ -112,7 +111,6 @@ describe("editor permissions verification", () => {
       password: "owner-password",
       openingAuthenticated: false,
       ownerAuthenticated: true,
-      canModify: true,
     });
     fireEvent.change(
       screen.getByLabelText("Permissions password", { exact: true }),
@@ -153,7 +151,7 @@ describe("editor permissions verification", () => {
   it.each([
     { signed: true },
     { encrypted: false },
-    { canModify: true },
+    { permissions: -4 },
     { ownerAuthenticated: true },
     { honorOwnerPasswords: false },
   ])("does not request owner verification for %j", (access) => {

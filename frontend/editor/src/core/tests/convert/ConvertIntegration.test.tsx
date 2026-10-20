@@ -165,7 +165,6 @@ describe("Convert Tool Integration Tests", () => {
       signed: false,
       ownerAuthenticated: true,
       permissions: -4,
-      canModify: true,
       pageCount: 1,
     });
     const files = [locked, pdf];
@@ -268,7 +267,6 @@ describe("Convert Tool Integration Tests", () => {
       signed: false,
       ownerAuthenticated: true,
       permissions: -4,
-      canModify: true,
       pageCount: 1,
     });
     const files = [image, locked, pdf, svg];
@@ -348,7 +346,6 @@ describe("Convert Tool Integration Tests", () => {
       permissions: -4,
       requiresOpeningPassword: false,
       signed: false,
-      canModify: true,
       pageCount: 1,
     });
     await act(async () => {

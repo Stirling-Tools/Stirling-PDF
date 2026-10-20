@@ -14,7 +14,6 @@ import {
 import { assertPdfSessionEditable } from "@app/services/pdfSessionUnlock";
 import { readPdfiumAccess } from "@app/utils/pdfiumAccess";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { detectSaveRisks } from "@app/tools/pdfTextEditor/util/documentRisks";
 
 const EAGER_PAGE_LIMIT = 5;
 
@@ -56,14 +55,6 @@ export function useDocumentLoader(store: EditorStore) {
             honorOwnerPasswords: config?.honorOwnerPasswords,
           });
           assertPdfSessionEditable(access);
-          const risks = detectSaveRisks(doc);
-          if (risks.encrypted !== access.encrypted)
-            throw new Error("Unable to verify PDF security");
-          assertPdfSessionEditable({
-            ...access,
-            encrypted: risks.encrypted,
-            signed: risks.signatures > 0,
-          });
         } catch (error) {
           doc.dispose();
           throw error;
