@@ -13,6 +13,13 @@ declare global {
     STIRLING_PDF_API_BASE_URL?: string;
     /** Injected by the Spring controller; the frontend-only image leaves it unset. */
     STIRLING_PDF_ENABLE_LOGIN?: boolean;
+    /** Last shell input, consumed by the landing search. */
+    __spdfInputHandoff?: { id?: string; value?: string };
+    /** All shell inputs, consumed when a prerendered login form mounts. */
+    __spdfInputHandoffAll?: Record<
+      string,
+      { value?: string; selection?: [number, number] | null }
+    >;
     endpointAvailabilityService?: unknown;
     pdfjsLib?: typeof import("pdfjs-dist");
     /**

@@ -90,3 +90,24 @@ for (const path of [
     });
   }
 }
+
+test("the static login handoff survives an app boot delayed by the entry chunk", async ({
+  page,
+}) => {
+  let releaseEntry: () => void = () => {};
+  const entryGate = new Promise<void>((resolve) => {
+    releaseEntry = resolve;
+  });
+  await page.route("**/assets/index-*.js", async (route) => {
+    await entryGate;
+    await route.continue();
+  });
+
+  await page.goto("/login", { waitUntil: "domcontentloaded" });
+  await page.locator("#email").fill("admin");
+  await page.locator("#password").fill("stirling");
+  await page.locator('button[type="submit"]').click();
+  releaseEntry();
+
+  await expect(page).toHaveURL((url) => url.pathname !== "/login");
+});

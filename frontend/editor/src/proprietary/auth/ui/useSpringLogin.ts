@@ -67,8 +67,14 @@ export function useSpringLogin(
   const { ready = true } = options;
   const { t } = useTranslation();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // The static shell can hold credentials typed before React mounts; start
+  // the controlled form from that handoff so the button is enabled at once.
+  const shellHandoff =
+    typeof window === "undefined" ? undefined : window.__spdfInputHandoffAll;
+  const [email, setEmail] = useState(() => shellHandoff?.email?.value ?? "");
+  const [password, setPassword] = useState(
+    () => shellHandoff?.password?.value ?? "",
+  );
   const [mfaCode, setMfaCode] = useState("");
   const [requiresMfa, setRequiresMfa] = useState(false);
   const [error, setError] = useState<string | null>(null);

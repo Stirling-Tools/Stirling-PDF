@@ -821,27 +821,38 @@ function deferEntry(html, loginChunk) {
     'var enableSheets=function(){var links=document.querySelectorAll("link[data-href]");' +
     'for(var k=0;k<links.length;k++){var l=links[k];l.href=l.getAttribute("data-href");l.removeAttribute("data-href");l.disabled=false;}};' +
     'if(document.readyState==="loading"){addEventListener("DOMContentLoaded",enableSheets,{once:true});}else{enableSheets();}}' +
-    "var activeInputId=null;var activeInputValue=null;var activeSelection=null;var restoreTries=0;" +
-    'addEventListener("focusin",function(e){var t=e.target;' +
-    'if(t&&t.tagName==="INPUT"&&t.id&&t.closest&&t.closest("[data-shell-for]")){activeInputId=t.id;activeInputValue=t.value||"";try{activeSelection=[t.selectionStart,t.selectionEnd];}catch(err){}' +
-    "window.__spdfInputHandoff={id:activeInputId,value:activeInputValue,selection:activeSelection};}" +
-    "},true);" +
-    'addEventListener("input",function(e){var t=e.target;' +
-    'if(t&&t.tagName==="INPUT"&&t.id&&t.closest&&t.closest("[data-shell-for]")&&"value" in t){activeInputId=t.id;activeInputValue=t.value||"";try{activeSelection=[t.selectionStart,t.selectionEnd];}catch(err){}' +
-    "window.__spdfInputHandoff={id:activeInputId,value:activeInputValue,selection:activeSelection};}" +
-    "},true);" +
+    "var inputHandoff={};var activeInputId=null;var restoreTries=0;" +
+    'function remember(t){if(!t||t.tagName!=="INPUT"||!t.id||!t.closest||!t.closest("[data-shell-for]")||!("value" in t))return;' +
+    "var sel=null;try{sel=[t.selectionStart,t.selectionEnd];}catch(err){}" +
+    'inputHandoff[t.id]={value:t.value||"",selection:sel};activeInputId=t.id;window.__spdfInputHandoffAll=inputHandoff;' +
+    "window.__spdfInputHandoff={id:t.id,value:t.value||''};}" +
+    'addEventListener("focusin",function(e){remember(e.target);},true);' +
+    'addEventListener("input",function(e){remember(e.target);},true);' +
     "function restoreInput(){" +
-    'if(!activeInputId){if(document.querySelector("[data-shell-for]")&&restoreTries++<200)setTimeout(restoreInput,50);return;}' +
-    "var el=document.getElementById(activeInputId);" +
-    'if(el&&!el.closest("[data-shell-for]")){' +
-    'if(activeInputValue!=null){var d=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");' +
-    "if(d&&d.set)d.set.call(el,activeInputValue);else el.value=activeInputValue;" +
-    'if(el._valueTracker)try{el._valueTracker.setValue("");}catch(err){}' +
-    'el.dispatchEvent(new Event("input",{bubbles:true}));' +
-    'el.dispatchEvent(new Event("change",{bubbles:true}));}' +
-    "if(activeSelection){try{el.setSelectionRange(activeSelection[0],activeSelection[1]);}catch(err){}}" +
-    "el.focus();activeInputId=null;return;}" +
-    "if(restoreTries++<200)setTimeout(restoreInput,50);}" +
+    "var ids=Object.keys(inputHandoff);" +
+    'if(!ids.length){if(document.querySelector("[data-shell-for]")&&restoreTries++<200)setTimeout(restoreInput,50);return;}' +
+    "for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);" +
+    'if(!el||el.closest("[data-shell-for]")){if(restoreTries++<200)setTimeout(restoreInput,50);return;}}' +
+    // Wait one paint for the controlled inputs to mount before writing values;
+    // React can otherwise commit its empty initial state over the handoff.
+    'setTimeout(function(){var setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");' +
+    "for(var j=0;j<ids.length;j++){var input=document.getElementById(ids[j]);var entry=inputHandoff[ids[j]];" +
+    "if(!input){if(restoreTries++<200)restoreInput();return;}" +
+    "if(setter&&setter.set)setter.set.call(input,entry.value);else input.value=entry.value;" +
+    'if(input._valueTracker)try{input._valueTracker.setValue("");}catch(err){}' +
+    'input.dispatchEvent(new Event("input",{bubbles:true}));' +
+    'input.dispatchEvent(new Event("change",{bubbles:true}));}' +
+    "var last=document.getElementById(activeInputId);" +
+    "if(last){var selection=inputHandoff[activeInputId]&&inputHandoff[activeInputId].selection;" +
+    "if(selection)try{last.setSelectionRange(selection[0],selection[1]);}catch(err){}last.focus();}" +
+    "setTimeout(function(){var settled=true;" +
+    "for(var k=0;k<ids.length;k++){var check=document.getElementById(ids[k]);" +
+    "if(!check||check.value!==inputHandoff[ids[k]].value){settled=false;break;}}" +
+    "var submit=document.querySelector('button[type=\"submit\"]');" +
+    "if(submit&&submit.disabled)settled=false;" +
+    "if(settled){inputHandoff={};activeInputId=null;try{delete window.__spdfInputHandoffAll;}catch(e){}}" +
+    "else if(restoreTries++<200)restoreInput();},250);" +
+    "},150);return;}" +
     "var loginGate=false;function boot(){if(booted||loginGate)return;booted=true;restore();" +
     'var script=document.createElement("script");script.type="module";script.crossOrigin="anonymous";script.setAttribute("fetchpriority","high");script.src=src;' +
     "script.onerror=function(){booted=false;};" +
@@ -872,7 +883,7 @@ function deferEntry(html, loginChunk) {
     "document.head.appendChild(loginLink);setTimeout(bootAfterLogin,2000);" +
     "}else{setTimeout(boot,50);}" +
     "}else if(isLoginCurPath){setTimeout(boot,50);}" +
-    'if(typeof navigator!=="undefined"&&navigator.webdriver){if(document.readyState==="loading"){addEventListener("DOMContentLoaded",boot,{once:true});}else{boot();}return;}' +
+    'if(typeof navigator!=="undefined"&&navigator.webdriver){if(document.readyState==="loading"){addEventListener("DOMContentLoaded",boot,{once:true});}else{boot();}}' +
     // The shell is the first screen, so the app waits for a gesture or idle window.
     'var triggers=["pointerdown","keydown","touchstart","wheel","focusin","dragenter","paste"];' +
     "for(var i=0;i<triggers.length;i++)addEventListener(triggers[i],boot,{once:true,passive:true});" +
