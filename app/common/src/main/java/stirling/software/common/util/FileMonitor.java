@@ -117,8 +117,12 @@ public class FileMonitor {
          If those files are not modified in current iteration, they will be considered as ready for processing.
         */
 
-        if (path2KeyMapping.isEmpty()) {
+        boolean hasUnregisteredRoot =
+                rootDirs.stream().anyMatch(root -> !path2KeyMapping.containsKey(root));
+        if (hasUnregisteredRoot) {
             retryMissingRoots();
+        }
+        if (path2KeyMapping.isEmpty()) {
             return;
         }
 
@@ -193,7 +197,7 @@ public class FileMonitor {
 
         boolean registered = false;
         for (Path rootDir : rootDirs) {
-            if (!Files.exists(rootDir)) {
+            if (path2KeyMapping.containsKey(rootDir) || !Files.exists(rootDir)) {
                 continue;
             }
             try {

@@ -15,6 +15,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.LoggerFactory;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 
@@ -164,6 +166,28 @@ class FileMonitorMoreTest {
             // Now create the directory; the next tick should attempt re-registration.
             Files.createDirectories(missing);
             assertDoesNotThrow(monitor::trackFiles);
+        }
+
+        @Test
+        @DisplayName("a missing root is retried while another root is already registered")
+        void retriesMissingRootWithRegisteredRoot() throws IOException {
+            Path present = tempDir.resolve("present");
+            Path missing = tempDir.resolve("appears-later");
+            Files.createDirectories(present);
+
+            RuntimePathConfig config = mock(RuntimePathConfig.class);
+            when(config.getPipelineWatchedFoldersPaths())
+                    .thenReturn(List.of(present.toString(), missing.toString()));
+            FileMonitor monitor = new FileMonitor(p -> true, config);
+
+            Files.createDirectories(missing);
+            ReflectionTestUtils.setField(monitor, "nextRegistrationAttemptMs", 0L);
+            monitor.trackFiles();
+
+            Map<?, ?> registered =
+                    (Map<?, ?>) ReflectionTestUtils.getField(monitor, "path2KeyMapping");
+            assertNotNull(registered);
+            assertTrue(registered.containsKey(missing));
         }
 
         @Test
