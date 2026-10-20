@@ -6852,6 +6852,9 @@ unsaved = "These files have unsaved changes."
 [pageTracks.delete]
 page = "Delete page"
 
+[pageTracks.duplicate]
+page = "Duplicate page"
+
 [pageTracks.empty]
 body = "Add PDFs to expand them into editable page tracks"
 title = "No PDF files loaded"

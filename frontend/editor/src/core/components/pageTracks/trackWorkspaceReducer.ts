@@ -688,10 +688,21 @@ export function trackEditorReducer(
       const duplicated = new Set(action.pageIds);
       let seq = state.seq;
       const next = mapTracks(state.present, (pages) => {
-        if (!pages.some((p) => duplicated.has(p.id))) return pages;
-        return pages.flatMap((p) =>
-          duplicated.has(p.id) ? [p, { ...p, id: `tp-${seq++}` }] : [p],
-        );
+        const copies = pages
+          .filter((p) => duplicated.has(p.id))
+          .map((p) => ({ ...p, id: `tp-${seq++}` }));
+        if (copies.length === 0) return pages;
+
+        // A bulk duplicate keeps the selected pages in document order and
+        // inserts the whole block after the last selected page; a single page
+        // still lands immediately after its source.
+        let lastSelected = -1;
+        pages.forEach((page, index) => {
+          if (duplicated.has(page.id)) lastSelected = index;
+        });
+        const result = [...pages];
+        result.splice(lastSelected + 1, 0, ...copies);
+        return result;
       });
       if (next === state.present) return state;
       return { ...withEdit(state, next), seq };

@@ -138,6 +138,7 @@ export interface TrackRowProps {
   onInsertBlank: (fileId: FileId, beforePageId: string | null) => void;
   onRotate: (pageIds: string[], delta: number) => void;
   onDelete: (pageIds: string[]) => void;
+  onDuplicate: (pageIds: string[]) => void;
   onShiftPage: (pageId: string, by: -1 | 1) => void;
   /** Asks to close the file; the parent confirms before anything closes. */
   onClose: (fileId: FileId) => void;
@@ -168,6 +169,7 @@ function TrackRowImpl({
   onInsertBlank,
   onRotate,
   onDelete,
+  onDuplicate,
   onShiftPage,
   onClose,
 }: TrackRowProps) {
@@ -566,6 +568,7 @@ function TrackRowImpl({
                         onViewPage={handleViewPage}
                         onRotate={onRotate}
                         onDelete={onDelete}
+                        onDuplicate={onDuplicate}
                         onShift={onShiftPage}
                       />
                       <GapHandle
@@ -634,6 +637,7 @@ function TrackRowImpl({
                         onViewPage={handleViewPage}
                         onRotate={onRotate}
                         onDelete={onDelete}
+                        onDuplicate={onDuplicate}
                         onShift={onShiftPage}
                       />
                       <GapHandle
