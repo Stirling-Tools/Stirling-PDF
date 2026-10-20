@@ -136,6 +136,7 @@ async function normalizeOrder(
   reader: PdfFileReader,
   value: PdfValue | undefined,
   depth = 0,
+  path: ReadonlySet<number> = new Set(),
 ): Promise<unknown[]> {
   const resolved = await reader.resolveValue(value);
   if (resolved?.kind !== "array" || depth > MAX_ORDER_DEPTH) return [];
@@ -152,27 +153,36 @@ async function normalizeOrder(
 
   const dictNode = async (
     dict: PdfValue & { kind: "dict" },
+    nextPath: ReadonlySet<number>,
   ): Promise<unknown> => ({
     name: await stringTextOf(reader, dict.map.get("Name")),
-    order: await normalizeOrder(reader, dict.map.get("Order"), depth + 1),
+    order: await normalizeOrder(
+      reader,
+      dict.map.get("Order"),
+      depth + 1,
+      nextPath,
+    ),
   });
 
   const result: unknown[] = [];
   for (let i = start; i < resolved.items.length; i++) {
     const entry = resolved.items[i];
+    if (entry.kind === "ref" && path.has(entry.ref.num)) continue;
+    const nextPath =
+      entry.kind === "ref" ? new Set(path).add(entry.ref.num) : path;
     const target = await reader.resolveValue(entry);
     if (entry.kind === "ref") {
       if (target?.kind === "array") {
-        result.push(await normalizeOrder(reader, target, depth + 1));
+        result.push(await normalizeOrder(reader, target, depth + 1, nextPath));
       } else if (target?.kind === "dict" && target.map.has("Order")) {
-        result.push(await dictNode(target));
+        result.push(await dictNode(target, nextPath));
       } else {
         result.push(refId(entry.ref));
       }
     } else if (target?.kind === "array") {
-      result.push(await normalizeOrder(reader, target, depth + 1));
+      result.push(await normalizeOrder(reader, target, depth + 1, path));
     } else if (target?.kind === "dict") {
-      result.push(await dictNode(target));
+      result.push(await dictNode(target, path));
     }
   }
   return label === undefined ? result : [{ name: label, order: result }];

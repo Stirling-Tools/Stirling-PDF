@@ -148,12 +148,20 @@ export async function applyOCGVisibilityToPdf(
           body: rewriteDictBuffer(
             reader.bytes,
             span.start,
-            new Map([["D", replacement]]),
+            new Map<string, string | null>([["D", replacement]]),
             [],
           ),
         });
       } else {
-        throw new PdfStructureError("cannot rewrite OCProperties");
+        updates.push({
+          num: ocPropertiesEntry.ref.num,
+          gen: ocPropertiesEntry.ref.gen,
+          body: rebuildDict(
+            reader,
+            ocProperties,
+            new Map([["D", replacement]]),
+          ),
+        });
       }
     } else {
       // A direct /OCProperties dict can only be reached through the catalog.
@@ -164,22 +172,23 @@ export async function applyOCGVisibilityToPdf(
         body: rebuildDict(reader, ocProperties, new Map([["D", replacement]])),
       });
       const catalogSpan = await reader.getRawSpan(reader.root.num);
-      if (
-        !catalogSpan ||
-        catalogSpan.inStream ||
-        catalogSpan.buffer !== reader.bytes
-      ) {
-        throw new PdfStructureError("cannot rewrite the catalog");
-      }
+      const catalogEdit = new Map([
+        ["OCProperties", `${newOcProps} 0 R` as string | null],
+      ]);
       updates.push({
         num: reader.root.num,
         gen: reader.root.gen,
-        body: rewriteDictBuffer(
-          reader.bytes,
-          catalogSpan.start,
-          new Map([["OCProperties", `${newOcProps} 0 R`]]),
-          [],
-        ),
+        body:
+          catalogSpan &&
+          !catalogSpan.inStream &&
+          catalogSpan.buffer === reader.bytes
+            ? rewriteDictBuffer(
+                reader.bytes,
+                catalogSpan.start,
+                catalogEdit,
+                [],
+              )
+            : rebuildDict(reader, catalog, catalogEdit),
       });
     }
   }
@@ -191,6 +200,8 @@ export async function applyOCGVisibilityToPdf(
     root: reader.root,
     prev: reader.startxrefOffset,
     id: reader.trailerId,
+    info: reader.info,
+    encrypt: reader.encryptValue,
   });
 }
 
