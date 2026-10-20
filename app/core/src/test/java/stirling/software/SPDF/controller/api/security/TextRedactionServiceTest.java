@@ -46,7 +46,8 @@ class TextRedactionServiceTest {
     }
 
     private PDFont helvetica(PDDocument doc) throws IOException {
-        try (InputStream is = getClass().getResourceAsStream("/static/fonts/DejaVuSans.ttf")) {
+        try (InputStream is =
+                getClass().getResourceAsStream("/static/fonts/NotoSans-Regular.ttf")) {
             if (is != null) {
                 return PDType0Font.load(doc, is);
             }

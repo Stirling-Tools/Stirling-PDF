@@ -29,10 +29,10 @@ import org.apache.pdfbox.util.Matrix;
  */
 final class PdfUaTestDocuments {
 
-    private static final String FONT_RESOURCE = "/static/fonts/DejaVuSans.ttf";
+    private static final String FONT_RESOURCE = "/static/fonts/NotoSans-Regular.ttf";
     // The font ships with core's resources, which are not on this module's classpath.
     private static final String FONT_REPO_PATH =
-            "app/core/src/main/resources/static/fonts/DejaVuSans.ttf";
+            "app/core/src/main/resources/static/fonts/NotoSans-Regular.ttf";
     private static final float MARGIN = 60f;
 
     private PdfUaTestDocuments() {}

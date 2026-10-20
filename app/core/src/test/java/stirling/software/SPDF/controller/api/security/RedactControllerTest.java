@@ -99,7 +99,8 @@ class RedactControllerTest {
 
     private static PDFont helvetica(PDDocument doc) throws IOException {
         try (InputStream is =
-                RedactControllerTest.class.getResourceAsStream("/static/fonts/DejaVuSans.ttf")) {
+                RedactControllerTest.class.getResourceAsStream(
+                        "/static/fonts/NotoSans-Regular.ttf")) {
             if (is != null) {
                 return PDType0Font.load(doc, is);
             }
