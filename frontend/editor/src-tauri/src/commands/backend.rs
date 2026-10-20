@@ -22,6 +22,10 @@ const BACKEND_JVM_FLAGS: &[&str] = &[
     "-XX:+UseStringDeduplication",
     "-XX:+UseCompactObjectHeaders",
     "-XX:+ExplicitGCInvokesConcurrent",
+    // Desktop serves the SPA and has no public API consumers; keep the
+    // OpenAPI/Swagger endpoints out of the local sidecar.
+    "-Dspringdoc.api-docs.enabled=false",
+    "-Dspringdoc.swagger-ui.enabled=false",
 ];
 
 /// Aggressive page return for the native heap. Long desktop sessions keep
@@ -745,7 +749,7 @@ pub fn cleanup_backend() {
 
 #[cfg(test)]
 mod tests {
-    use super::{find_stirling_jar, jemalloc_requested_from, version_key};
+    use super::{find_stirling_jar, jemalloc_requested_from, version_key, BACKEND_JVM_FLAGS};
 
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     use super::{append_preload, bundled_jemalloc, DESKTOP_MALLOC_CONF};
@@ -753,6 +757,12 @@ mod tests {
     use std::ffi::OsStr;
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     use std::path::Path;
+
+    #[test]
+    fn desktop_flags_disable_springdoc() {
+        assert!(BACKEND_JVM_FLAGS.contains(&"-Dspringdoc.api-docs.enabled=false"));
+        assert!(BACKEND_JVM_FLAGS.contains(&"-Dspringdoc.swagger-ui.enabled=false"));
+    }
 
     #[test]
     fn version_key_orders_numerically_not_lexically() {

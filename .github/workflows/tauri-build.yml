@@ -383,6 +383,10 @@ jobs:
             frontend/editor/src-tauri/vendor/jemalloc/libjemalloc.dylib
           codesign --verify --strict frontend/editor/src-tauri/vendor/jemalloc/libjemalloc.dylib
 
+      - name: Sign bundled JRE dylibs
+        if: env.SIGN_BUNDLE == 'true' && matrix.platform == 'macos-15'
+        run: frontend/editor/scripts/strip-jre-natives.sh frontend/editor/src-tauri/runtime/jre
+
       - name: Check DMG creation dependencies (macOS only)
         if: matrix.platform == 'macos-15'
         run: |

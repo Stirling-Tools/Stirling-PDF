@@ -14,6 +14,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.RuntimePathConfig;
 
 @Component
+@ConditionalOnProperty(
+        name = "STIRLING_PDF_TAURI_MODE",
+        havingValue = "false",
+        matchIfMissing = true)
 @Slf4j
 public class FileMonitor {
 
