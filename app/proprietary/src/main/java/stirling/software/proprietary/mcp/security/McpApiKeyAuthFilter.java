@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -37,9 +38,11 @@ public class McpApiKeyAuthFilter extends OncePerRequestFilter {
                     new SimpleGrantedAuthority("SCOPE_mcp.tools.write"));
 
     private final UserService userService;
+    private final McpAuthenticationPolicy policy;
 
-    public McpApiKeyAuthFilter(UserService userService) {
+    public McpApiKeyAuthFilter(UserService userService, McpAuthenticationPolicy policy) {
         this.userService = userService;
+        this.policy = policy;
     }
 
     @Override
@@ -57,6 +60,12 @@ public class McpApiKeyAuthFilter extends OncePerRequestFilter {
             if (apiKey != null && !apiKey.isBlank()) {
                 Optional<User> user = userService.getUserByApiKey(apiKey);
                 if (user.isPresent() && user.get().isEnabled()) {
+                    try {
+                        policy.assertApiKeyAccess(user.get());
+                    } catch (AccessDeniedException denied) {
+                        McpAccessDeniedResponse.write(response, denied);
+                        return;
+                    }
                     UsernamePasswordAuthenticationToken auth =
                             new UsernamePasswordAuthenticationToken(
                                     user.get().getUsername(), null, MCP_SCOPES);

@@ -76,6 +76,7 @@ public class TeamSecurityExpressions {
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
+        if (authentication.getPrincipal() instanceof User user) return user;
         if (authentication instanceof EnhancedJwtAuthenticationToken jwt) {
             try {
                 UUID supabaseId = UUID.fromString(jwt.getSupabaseId());

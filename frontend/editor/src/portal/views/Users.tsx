@@ -67,6 +67,7 @@ export function Users() {
   const [actionBusy, setActionBusy] = useState(false);
   const { usersState, grantsState, teamsState, authState, refresh } =
     useUsersData();
+  const companyManaged = usersState.data?.companySsoRequired === true;
 
   // Who the viewer is, read off their own row in the roster the backend just
   // returned. Only an org owner or a team lead may change anything here; for
@@ -211,6 +212,7 @@ export function Users() {
   // Email invites need SMTP + mail.enableInvites on self-hosted; SaaS (no directCreate path)
   // always has email via Supabase, so it isn't gated on a self-hosted mail config.
   const canEmailInvite =
+    !companyManaged &&
     caps.emailInvite &&
     (caps.directCreate
       ? (usersState.data?.emailInvitesEnabled ?? false)
@@ -327,17 +329,23 @@ export function Users() {
     const teamScope = caps.removeScope === "team";
     setConfirm({
       title: t("users.confirm.removeTitle", "Remove member"),
-      body: teamScope
+      body: companyManaged
         ? t(
-            "users.confirm.removeTeamBody",
-            "Remove {{name}} from the team? They keep their account but lose access to this team's resources.",
-            { name: member.name },
+            "companySso.confirmRemove",
+            "Remove {{email}} from the team? Also remove their access to your identity-provider application. A fresh successful SSO login can rejoin.",
+            { email: member.email },
           )
-        : t(
-            "users.confirm.removeBody",
-            "Permanently remove {{name}} from the organization? This cannot be undone.",
-            { name: member.name },
-          ),
+        : teamScope
+          ? t(
+              "users.confirm.removeTeamBody",
+              "Remove {{name}} from the team? They keep their account but lose access to this team's resources.",
+              { name: member.name },
+            )
+          : t(
+              "users.confirm.removeBody",
+              "Permanently remove {{name}} from the organization? This cannot be undone.",
+              { name: member.name },
+            ),
       confirmLabel: teamScope
         ? t("users.action.removeTeam", "Remove from team")
         : t("users.action.remove", "Remove from org"),
@@ -378,7 +386,12 @@ export function Users() {
         <div>
           <h1 className="portal-users__title">{t("users.title", "Users")}</h1>
           <p className="portal-users__sub">
-            {t("users.subtitle2", "Your people, teams, and access levels.")}
+            {companyManaged
+              ? t(
+                  "companySso.managed",
+                  "Your company manages membership. Team leaders can remove members; members cannot leave this team themselves.",
+                )
+              : t("users.subtitle2", "Your people, teams, and access levels.")}
           </p>
         </div>
         <div className="portal-users__head-actions">
@@ -557,7 +570,7 @@ export function Users() {
       )}
 
       <InviteMemberModal
-        open={inviteOpen}
+        open={inviteOpen && canAddMembers}
         onClose={() => setInviteOpen(false)}
         onInvited={refresh}
         teams={teams}

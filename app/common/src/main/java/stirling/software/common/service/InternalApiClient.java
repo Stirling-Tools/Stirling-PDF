@@ -115,13 +115,26 @@ public class InternalApiClient {
      * @return response with the result file as a {@link TempFileResource} body
      */
     public ResponseEntity<Resource> post(String endpointPath, MultiValueMap<String, Object> body) {
+        return post(endpointPath, body, null);
+    }
+
+    /**
+     * Dispatches with a caller-validated bearer token for the local tool API. A supplied token
+     * replaces API-key authentication and is sent only to the allowlisted loopback endpoint.
+     */
+    public ResponseEntity<Resource> post(
+            String endpointPath, MultiValueMap<String, Object> body, String bearerToken) {
         validateUrl(endpointPath);
         String url = getBaseUrl() + endpointPath;
 
         HttpHeaders headers = new HttpHeaders();
-        String apiKey = getApiKeyForUser();
-        if (apiKey != null && !apiKey.isEmpty()) {
-            headers.add("X-API-KEY", apiKey);
+        if (bearerToken != null && !bearerToken.isBlank()) {
+            headers.setBearerAuth(bearerToken);
+        } else {
+            String apiKey = getApiKeyForUser();
+            if (apiKey != null && !apiKey.isEmpty()) {
+                headers.add("X-API-KEY", apiKey);
+            }
         }
         // Tag the sub-step as automation so PAYG bills it under AUTOMATION regardless of which
         // tool-level @RequiresFeature annotation the dispatched controller carries (e.g. an AI-OCR

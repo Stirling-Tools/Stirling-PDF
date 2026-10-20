@@ -77,6 +77,9 @@ public class SupabaseSecurityConfig {
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
     private final Environment environment;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private stirling.software.saas.sso.CompanySsoPolicy companySsoPolicy;
+
     @Value("${app.supabase.issuer:}")
     private String issuer;
 
@@ -116,6 +119,8 @@ public class SupabaseSecurityConfig {
                                                 "/api/v1/config/**",
                                                 OpenAiAppsChallengeController.PATH)
                                         .permitAll()
+                                        .requestMatchers("/api/v1/company-sso/**")
+                                        .permitAll()
                                         // Account-link connect handshake: an instance calls these
                                         // before it holds any credential, so there is nothing to
                                         // authenticate with yet. Neither grants anything on its
@@ -145,12 +150,13 @@ public class SupabaseSecurityConfig {
                                         .authenticated())
                 .addFilterBefore(
                         new SupabaseAuthenticationFilter(
-                                teamService,
-                                userService,
-                                supabaseUserService,
-                                saasTeamService,
-                                jwtDecoder,
-                                apiKeyAuthenticationService),
+                                        teamService,
+                                        userService,
+                                        supabaseUserService,
+                                        saasTeamService,
+                                        jwtDecoder,
+                                        apiKeyAuthenticationService)
+                                .withCompanySsoPolicy(companySsoPolicy),
                         BearerTokenAuthenticationFilter.class)
                 .exceptionHandling(
                         ex ->
@@ -506,6 +512,11 @@ public class SupabaseSecurityConfig {
                 && enhanced.getPrincipal() instanceof User existingUser) {
             user = existingUser;
         }
-        return new EnhancedJwtAuthenticationToken(jwt, authorities, email, supabaseId, user);
+        return new EnhancedJwtAuthenticationToken(
+                jwt,
+                user == null ? authorities : user.getAuthorities(),
+                user == null ? email : user.getUsername(),
+                supabaseId,
+                user);
     }
 }

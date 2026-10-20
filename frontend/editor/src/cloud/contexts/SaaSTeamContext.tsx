@@ -30,6 +30,7 @@ interface Team {
   seatsUsed: number;
   maxSeats: number | null;
   isLeader: boolean;
+  companySsoRequired?: boolean;
 }
 
 interface TeamMember {

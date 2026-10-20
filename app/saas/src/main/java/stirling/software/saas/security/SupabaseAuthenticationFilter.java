@@ -54,6 +54,8 @@ import stirling.software.saas.model.exception.AuthenticationFailureException;
 import stirling.software.saas.model.exception.UserNotFoundException;
 import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
+import stirling.software.saas.sso.CompanySsoException;
+import stirling.software.saas.sso.CompanySsoPolicy;
 import stirling.software.saas.util.LogRedactionUtils;
 
 /** Stateless JWT authentication filter for the saas profile. */
@@ -69,6 +71,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
     private final SaasTeamService saasTeamService;
     private final JwtDecoder jwtDecoder;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
+    private CompanySsoPolicy companySsoPolicy;
     private final AuthenticationEntryPoint authenticationEntryPoint =
             new BearerTokenAuthenticationEntryPoint();
 
@@ -85,6 +88,12 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         this.saasTeamService = saasTeamService;
         this.jwtDecoder = jwtDecoder;
         this.apiKeyAuthenticationService = apiKeyAuthenticationService;
+    }
+
+    /** The SaaS security configuration installs the policy before accepting requests. */
+    public SupabaseAuthenticationFilter withCompanySsoPolicy(CompanySsoPolicy policy) {
+        this.companySsoPolicy = policy;
+        return this;
     }
 
     @Override
@@ -117,6 +126,18 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
             processJwtAuthentication(request);
+        } catch (CompanySsoException e) {
+            SecurityContextHolder.clearContext();
+            response.setStatus(403);
+            response.setContentType("application/json");
+            response.getWriter()
+                    .write(
+                            "{\"code\":\"COMPANY_SSO_REQUIRED\",\"connectionId\":"
+                                    + (e.getConnectionId() == null
+                                            ? "null"
+                                            : "\"" + e.getConnectionId() + "\"")
+                                    + "}");
+            return;
         } catch (AuthenticationException e) {
             SecurityContextHolder.clearContext();
             authenticationEntryPoint.commence(request, response, e);
@@ -130,6 +151,8 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
+
+        if (uri.startsWith(contextPath + "/api/v1/company-sso/")) return true;
 
         if ("GET".equalsIgnoreCase(request.getMethod())
                 || "HEAD".equalsIgnoreCase(request.getMethod())) {
@@ -159,7 +182,11 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                 throw new InvalidBearerTokenException("Invalid JWT: missing required claims");
             }
 
-            User user = getOrCreateUser(jwt);
+            User user =
+                    companySsoPolicy == null
+                            ? getOrCreateUser(jwt)
+                            : companySsoPolicy.resolve(jwt).orElseGet(() -> getOrCreateUser(jwt));
+            if (companySsoPolicy != null) companySsoPolicy.assertAccess(user, jwt);
 
             // Full accounts carry the resolved User as principal for shared
             // instanceof-User authorization; anonymous sessions keep the raw Jwt.
@@ -406,6 +433,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             throw new InvalidBearerTokenException("Invalid API Key.");
         }
         User user = resolved.get().user();
+        if (companySsoPolicy != null) companySsoPolicy.assertAccess(user, null);
 
         userService.trackApiKeyFirstUse(user);
 

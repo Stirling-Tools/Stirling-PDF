@@ -632,9 +632,17 @@ const TeamSection: React.FC = () => {
   const handleRemove = async (memberId: number, memberEmail: string) => {
     if (
       !window.confirm(
-        t("team.confirmRemove", "Remove {{email}} from the team?", {
-          email: memberEmail,
-        }),
+        t(
+          currentTeam?.companySsoRequired
+            ? "companySso.confirmRemove"
+            : "team.confirmRemove",
+          currentTeam?.companySsoRequired
+            ? "Remove {{email}} from the team? Also remove their access to your identity-provider application. A fresh successful SSO login can rejoin."
+            : "Remove {{email}} from the team?",
+          {
+            email: memberEmail,
+          },
+        ),
       )
     )
       return;
@@ -849,7 +857,12 @@ const TeamSection: React.FC = () => {
         onClaim={handleClaimOwnership}
       />
       <TeamHeader
-        canLeave={!isPersonalTeam && !isTeamLeader && !isEditingName}
+        canLeave={
+          !currentTeam.companySsoRequired &&
+          !isPersonalTeam &&
+          !isTeamLeader &&
+          !isEditingName
+        }
         onLeave={handleLeaveTeam}
       >
         <TeamTitle
@@ -878,8 +891,16 @@ const TeamSection: React.FC = () => {
         onClose={() => setSuccess(null)}
       />
 
+      {currentTeam.companySsoRequired && (
+        <Text size="sm">
+          {t(
+            "companySso.managed",
+            "Your company manages membership. Team leaders can remove members; members cannot leave this team themselves.",
+          )}
+        </Text>
+      )}
       <InviteMemberForm
-        show={isTeamLeader}
+        show={isTeamLeader && !currentTeam.companySsoRequired}
         email={inviteEmail}
         inviting={inviting}
         onEmailChange={setInviteEmail}
