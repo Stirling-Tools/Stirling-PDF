@@ -61,7 +61,8 @@ public class PostHogClient {
         try {
             return URI.create(base + "/batch/");
         } catch (IllegalArgumentException e) {
-            log.warn("PostHog host '{}' is not a valid URI; analytics events will be dropped", host);
+            log.warn(
+                    "PostHog host '{}' is not a valid URI; analytics events will be dropped", host);
             return null;
         }
     }
