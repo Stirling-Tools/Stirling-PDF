@@ -289,6 +289,30 @@ async function splitOptionalAssets(distDir: string): Promise<void> {
   );
 }
 
+/**
+ * Desktop has no crawlers: Tauri serves index.html only. The per-route pages
+ * and social preview images exist for static hosting, so carrying them inside
+ * the app binary costs space no desktop feature can use.
+ */
+function desktopAssetsPlugin(): PluginOption {
+  return {
+    name: "desktop-assets",
+    apply: "build" as const,
+    async closeBundle() {
+      const distDir = path.resolve(__dirname, "dist");
+      for (const name of [
+        "og_images",
+        "og-metadata.json",
+        "og-metadata.saas.json",
+        "robots.txt",
+        "sitemap.xml",
+      ]) {
+        await fs.rm(path.join(distDir, name), { recursive: true, force: true });
+      }
+    },
+  };
+}
+
 function compressStaticCopyPlugin(emitGzip: boolean): PluginOption {
   return {
     name: "compress-static-copy",
@@ -726,13 +750,17 @@ export default defineConfig(async ({ mode, command }) => {
         ],
       }),
       ...(effectiveMode === "desktop"
-        ? []
+        ? [desktopAssetsPlugin()]
         : [compressStaticCopyPlugin(emitGzip)]),
-      prerenderOgPlugin({
-        isSaas: effectiveMode === "saas",
-        precompress: effectiveMode !== "desktop",
-        emitGzip,
-      }),
+      ...(effectiveMode === "desktop"
+        ? []
+        : [
+            prerenderOgPlugin({
+              isSaas: effectiveMode === "saas",
+              precompress: effectiveMode !== "desktop",
+              emitGzip,
+            }),
+          ]),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.

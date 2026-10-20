@@ -162,7 +162,7 @@ tasks:
       # JDK's jmods, so it is added on Windows only or jlink fails to resolve it elsewhere.
       - cmd: |
           JLINK="${JAVA_HOME:+$JAVA_HOME/bin/}jlink"
-          JLINK_COMPRESS="$("$JLINK" --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-6 || echo 2)"
+          JLINK_COMPRESS="$("$JLINK" --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-9 || echo 2)"
           "$JLINK" \
             --add-modules {{.JLINK_MODULES}},jdk.crypto.mscapi \
             --strip-debug \
@@ -173,7 +173,7 @@ tasks:
         platforms: [windows]
       - cmd: |
           JLINK="${JAVA_HOME:+$JAVA_HOME/bin/}jlink"
-          JLINK_COMPRESS="$("$JLINK" --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-6 || echo 2)"
+          JLINK_COMPRESS="$("$JLINK" --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-9 || echo 2)"
           "$JLINK" \
             --add-modules {{.JLINK_MODULES}} \
             --strip-debug \
