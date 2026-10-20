@@ -11,8 +11,8 @@ export const useRemovePasswordTips = (): TooltipContent => {
     tips: [
       {
         description: t(
-          "removePassword.tooltip.description",
-          "Removing password protection requires the current password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password.",
+          "removePassword.selectiveHelp",
+          "Enter the current password for each protection you want to remove. A blank field keeps that password. Removing the permissions password also removes action restrictions.",
         ),
       },
     ],

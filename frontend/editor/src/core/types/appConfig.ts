@@ -7,6 +7,7 @@ export interface AppConfig {
   languages?: string[];
   defaultLocale?: string;
   enableLogin?: boolean;
+  honorOwnerPasswords?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
   enableOAuth?: boolean;
@@ -54,6 +55,10 @@ export interface AppConfig {
   error?: string;
   isNewServer?: boolean;
   isNewUser?: boolean;
+  /** Server tool-panel default; a stored user preference takes precedence. */
+  defaultToolPanelMode?: "sidebar" | "fullscreen";
+  /** Server startup-view default; a stored user preference takes precedence. */
+  defaultStartupView?: "tools" | "read" | "automate";
   defaultHideUnavailableTools?: boolean;
   defaultHideUnavailableConversions?: boolean;
   storageEnabled?: boolean;

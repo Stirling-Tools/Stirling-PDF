@@ -39,6 +39,14 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
+import {
+  buildCommentsCsv,
+  commentsCsvFileName,
+  getCommentDate,
+  getCommentDisplayContent,
+  toCommentCsvThreads,
+} from "@app/utils/commentsCsv";
+import { downloadTextAsFile } from "@app/utils/downloadUtils";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 
 /** PDF subtypes that are inherently standalone comment annotations (not linked to other annotations). */
@@ -58,15 +66,11 @@ const TEXT_COMMENT_TOOL_ID = "textComment" as const;
 type StirlingAnnotationCustomData = Record<string, unknown> & {
   annotationToolId?: string;
   isComment?: boolean;
-  modifiedDate?: Date | number | string;
   toolId?: string;
 };
 
 type StirlingAnnotationMetadata = {
-  creationDate?: Date | number | string;
   customData?: StirlingAnnotationCustomData;
-  M?: Date | number | string;
-  modifiedDate?: Date | number | string;
 };
 
 type StirlingAnnotationPatch = Partial<PdfAnnotationObject> & {
@@ -81,15 +85,8 @@ function getStirlingAnnotationMetadata(
 
 /** Format annotation date for display (e.g. "Mar 11, 6:05 PM"). */
 function formatCommentDate(obj: PdfAnnotationObject): string {
-  const metadata = getStirlingAnnotationMetadata(obj);
-  const raw =
-    metadata.modifiedDate ??
-    metadata.creationDate ??
-    metadata.customData?.modifiedDate ??
-    metadata.M;
-  if (raw == null) return "";
-  const d = raw instanceof Date ? raw : new Date(raw);
-  if (Number.isNaN(d.getTime())) return "";
+  const d = getCommentDate(obj);
+  if (!d) return "";
   return d.toLocaleString(undefined, {
     month: "short",
     day: "numeric",
@@ -99,21 +96,11 @@ function formatCommentDate(obj: PdfAnnotationObject): string {
 }
 
 interface CommentsSidebarProps {
+  readOnly?: boolean;
   documentId: string;
+  fileName: string;
   visible: boolean;
   rightOffset: string;
-}
-
-function getCommentDisplayContent(entry: {
-  annotation: { object: Pick<PdfAnnotationObject, "contents"> };
-  replies: Array<{ object: Pick<PdfAnnotationObject, "contents"> }>;
-}): string {
-  const main = entry.annotation?.object?.contents;
-  if (main != null && String(main).trim()) return String(main).trim();
-  const firstReply = entry.replies?.[0]?.object?.contents;
-  if (firstReply != null && String(firstReply).trim())
-    return String(firstReply).trim();
-  return "";
 }
 
 /** Placeholder authors we never show; use current user's name from context instead. */
@@ -315,13 +302,17 @@ function MoreActionsMenu({ children }: { children: ReactNode }) {
 
 interface CommentsHeaderActionsProps {
   readerMode: boolean;
+  readOnly: boolean;
   onAdd: () => void;
+  onExportCsv: () => void;
   onClearAll: () => void;
 }
 
 function CommentsHeaderActions({
   readerMode,
+  readOnly,
   onAdd,
+  onExportCsv,
   onClearAll,
 }: CommentsHeaderActionsProps) {
   const { t } = useTranslation();
@@ -343,15 +334,37 @@ function CommentsHeaderActions({
           </ActionIcon>
         </Tooltip>
       )}
-      <MoreActionsMenu>
-        <Menu.Item
-          leftSection={<Icon name="trash" size={18} />}
-          color="red"
-          onClick={onClearAll}
-        >
-          {t("viewer.comments.clearAll", "Clear all comments")}
-        </Menu.Item>
-      </MoreActionsMenu>
+      {readOnly ? (
+        // Export is the only action a view-only document permits, so it is a
+        // button rather than a one-item menu.
+        <Tooltip label={t("viewer.comments.exportCsv", "Export as CSV")}>
+          <ActionIcon
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            aria-label={t("viewer.comments.exportCsv", "Export as CSV")}
+            onClick={onExportCsv}
+          >
+            <Icon name="download" size="1.25rem" />
+          </ActionIcon>
+        </Tooltip>
+      ) : (
+        <MoreActionsMenu>
+          <Menu.Item
+            leftSection={<Icon name="download" size={18} />}
+            onClick={onExportCsv}
+          >
+            {t("viewer.comments.exportCsv", "Export as CSV")}
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<Icon name="trash" size={18} />}
+            color="red"
+            onClick={onClearAll}
+          >
+            {t("viewer.comments.clearAll", "Clear all comments")}
+          </Menu.Item>
+        </MoreActionsMenu>
+      )}
     </Group>
   );
 }
@@ -462,6 +475,7 @@ function CommentPageGroup({
 }
 
 interface CommentCardHeaderProps {
+  readOnly: boolean;
   ann: PdfAnnotationObject;
   authorName: string;
   typeLabel: string;
@@ -472,6 +486,7 @@ interface CommentCardHeaderProps {
 }
 
 function CommentCardHeader({
+  readOnly,
   ann,
   authorName,
   typeLabel,
@@ -518,21 +533,23 @@ function CommentCardHeader({
             <Icon name="eye" size={16} />
           </ActionIcon>
         </Tooltip>
-        <MoreActionsMenu>
-          <Menu.Item
-            leftSection={<Icon name="pencil" size={18} />}
-            onClick={onEdit}
-          >
-            {t("annotation.editText", "Edit")}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<Icon name="trash" size={18} />}
-            color="red"
-            onClick={onDelete}
-          >
-            {t("annotation.delete", "Delete")}
-          </Menu.Item>
-        </MoreActionsMenu>
+        {!readOnly && (
+          <MoreActionsMenu>
+            <Menu.Item
+              leftSection={<Icon name="pencil" size={18} />}
+              onClick={onEdit}
+            >
+              {t("annotation.editText", "Edit")}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<Icon name="trash" size={18} />}
+              color="red"
+              onClick={onDelete}
+            >
+              {t("annotation.delete", "Delete")}
+            </Menu.Item>
+          </MoreActionsMenu>
+        )}
       </Group>
     </Group>
   );
@@ -622,6 +639,7 @@ function ReplyEditor({ value, onChange, onSave }: ReplyEditorProps) {
 }
 
 interface CommentReplyProps {
+  readOnly: boolean;
   reply: SidebarAnnotationEntry["replies"][number];
   displayName: string;
   /** The text being edited, or null when the reply is not being edited. */
@@ -632,6 +650,7 @@ interface CommentReplyProps {
 }
 
 function CommentReply({
+  readOnly,
   reply,
   displayName,
   editDraft,
@@ -643,7 +662,7 @@ function CommentReply({
   const rObj = reply.object;
   const author = getAuthorName(rObj, displayName);
   const timestamp = formatCommentDate(rObj);
-  const canEdit = isReplyAuthoredByCurrentUser(rObj, displayName);
+  const canEdit = !readOnly && isReplyAuthoredByCurrentUser(rObj, displayName);
 
   return (
     <Box
@@ -681,7 +700,7 @@ function CommentReply({
             ) : null}
           </Group>
         </Group>
-        {editDraft !== null ? (
+        {!readOnly && editDraft !== null ? (
           <ReplyEditor
             value={editDraft}
             onChange={onEditChange}
@@ -783,6 +802,7 @@ interface CommentActions {
 }
 
 interface CommentRepliesProps {
+  readOnly: boolean;
   pageIndex: number;
   parentId: string;
   replies: SidebarAnnotationEntry["replies"];
@@ -792,6 +812,7 @@ interface CommentRepliesProps {
 }
 
 function CommentReplies({
+  readOnly,
   pageIndex,
   parentId,
   replies,
@@ -806,6 +827,7 @@ function CommentReplies({
         .filter((reply) => reply?.object?.id)
         .map((reply) => (
           <CommentReply
+            readOnly={readOnly}
             key={reply.object.id}
             reply={reply}
             displayName={displayName}
@@ -833,6 +855,7 @@ function CommentReplies({
 }
 
 interface CommentThreadProps {
+  readOnly: boolean;
   pageIndex: number;
   entry: SidebarAnnotationEntry;
   content: string;
@@ -843,6 +866,7 @@ interface CommentThreadProps {
 }
 
 function CommentThread({
+  readOnly,
   pageIndex,
   entry,
   content,
@@ -858,6 +882,7 @@ function CommentThread({
         {content}
       </Text>
       <CommentReplies
+        readOnly={readOnly}
         pageIndex={pageIndex}
         parentId={ann.id}
         replies={entry.replies}
@@ -865,16 +890,21 @@ function CommentThread({
         editingReply={editingReply}
         actions={actions}
       />
-      <ReplyComposer
-        value={replyDraft}
-        onChange={(value) => actions.changeReplyDraft(pageIndex, ann.id, value)}
-        onSubmit={() => actions.sendReply(pageIndex, ann.id, ann.rect)}
-      />
+      {!readOnly && (
+        <ReplyComposer
+          value={replyDraft}
+          onChange={(value) =>
+            actions.changeReplyDraft(pageIndex, ann.id, value)
+          }
+          onSubmit={() => actions.sendReply(pageIndex, ann.id, ann.rect)}
+        />
+      )}
     </>
   );
 }
 
 interface CommentCardProps {
+  readOnly: boolean;
   pageIndex: number;
   entry: SidebarAnnotationEntry;
   selected: boolean;
@@ -889,6 +919,7 @@ interface CommentCardProps {
 }
 
 function CommentCard({
+  readOnly,
   pageIndex,
   entry,
   selected,
@@ -920,6 +951,7 @@ function CommentCard({
       }}
     >
       <CommentCardHeader
+        readOnly={readOnly}
         ann={ann}
         authorName={getAuthorName(ann, displayName)}
         typeLabel={getAnnotationTypeLabel(ann, t)}
@@ -929,7 +961,7 @@ function CommentCard({
         onDelete={() => actions.requestDelete(pageIndex, id, ann)}
       />
 
-      {!hasMainContent || isEditing ? (
+      {!readOnly && (!hasMainContent || isEditing) ? (
         <CommentComposer
           value={text}
           onChange={(value) => actions.changeDraft(pageIndex, id, value)}
@@ -937,6 +969,7 @@ function CommentCard({
         />
       ) : (
         <CommentThread
+          readOnly={readOnly}
           pageIndex={pageIndex}
           entry={entry}
           content={displayContent}
@@ -1035,7 +1068,9 @@ function ClearAllCommentsModal({
 }
 
 export function CommentsSidebar({
+  readOnly = false,
   documentId,
+  fileName,
   visible,
   rightOffset,
 }: CommentsSidebarProps) {
@@ -1368,6 +1403,26 @@ export function CommentsSidebar({
     navActions?.setHasUnsavedChanges(true);
   }, [byPage, provides, navActions]);
 
+  const handleExportCsv = useCallback(() => {
+    const threads = toCommentCsvThreads(byPage, getCommentDate);
+    const csv = buildCommentsCsv(
+      {
+        page: t("viewer.comments.csv.page", "Page"),
+        thread: t("viewer.comments.csv.thread", "Thread"),
+        author: t("viewer.comments.csv.author", "Author"),
+        modified: t("viewer.comments.csv.modifiedUtc", "Last modified (UTC)"),
+        comment: t("viewer.comments.csv.comment", "Comment"),
+        inReplyTo: t("viewer.comments.csv.inReplyTo", "In reply to"),
+      },
+      threads,
+    );
+    downloadTextAsFile(
+      csv,
+      commentsCsvFileName(fileName),
+      "text/csv;charset=utf-8",
+    );
+  }, [byPage, fileName, t]);
+
   const handleSendMainComment = useCallback(
     (pageIndex: number, annotationId: string, value: string) => {
       const trimmed = value.trim();
@@ -1375,6 +1430,7 @@ export function CommentsSidebar({
       provides.updateAnnotation(pageIndex, annotationId, {
         contents: trimmed,
         author: displayName,
+        modified: new Date(),
       });
       navActions?.setHasUnsavedChanges(true);
       setDraftContents((prev) => ({
@@ -1403,6 +1459,7 @@ export function CommentsSidebar({
         inReplyToId: parentId,
         replyType: PdfAnnotationReplyType.Reply,
         author: displayName,
+        created: new Date(),
       };
       provides.createAnnotation(pageIndex, reply);
       navActions?.setHasUnsavedChanges(true);
@@ -1418,6 +1475,7 @@ export function CommentsSidebar({
       provides.updateAnnotation(pageIndex, replyId, {
         contents: trimmed,
         author: displayName,
+        modified: new Date(),
       });
       navActions?.setHasUnsavedChanges(true);
       setEditingReply(null);
@@ -1496,8 +1554,10 @@ export function CommentsSidebar({
         headerActions={
           totalCount > 0 ? (
             <CommentsHeaderActions
-              readerMode={readerMode}
+              readerMode={readerMode || readOnly}
+              readOnly={readOnly}
               onAdd={handleAddComment}
+              onExportCsv={handleExportCsv}
               onClearAll={() => setClearAllModalOpen(true)}
             />
           ) : null
@@ -1514,7 +1574,7 @@ export function CommentsSidebar({
           <CommentsEmptyState>
             <AddCommentButton
               isPlacing={isPlacingComment}
-              readerMode={readerMode}
+              readerMode={readerMode || readOnly}
               onAdd={handleAddComment}
               onCancel={handleCancelPlacingComment}
             />
@@ -1524,7 +1584,7 @@ export function CommentsSidebar({
             <AddCommentButton
               block
               isPlacing={isPlacingComment}
-              readerMode={readerMode}
+              readerMode={readerMode || readOnly}
               onAdd={handleAddComment}
               onCancel={handleCancelPlacingComment}
             />
@@ -1552,6 +1612,7 @@ export function CommentsSidebar({
                       const cardKey = `${pageIndex}_${id}`;
                       return (
                         <CommentCard
+                          readOnly={readOnly}
                           key={cardKey}
                           pageIndex={pageIndex}
                           entry={entry}
@@ -1578,14 +1639,14 @@ export function CommentsSidebar({
       </SidebarBase>
 
       <DeleteLinkedCommentModal
-        opened={!!deleteModal}
+        opened={!readOnly && !!deleteModal}
         onClose={() => setDeleteModal(null)}
         onRemoveComment={handleRemoveFromSidebar}
         onDeleteAnnotation={handleDeleteAnnotation}
       />
 
       <ClearAllCommentsModal
-        opened={clearAllModalOpen}
+        opened={!readOnly && clearAllModalOpen}
         onClose={() => setClearAllModalOpen(false)}
         onConfirm={handleClearAllComments}
       />
