@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearPdfAccess,
+  bindPdfAccess,
+  forgetPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
@@ -9,6 +11,11 @@ import {
   ensureLocalPdfAccess,
   inspectLocalPdfAccess,
 } from "@app/services/pdfLocalAccess";
+import { preflightPdfOperation } from "@app/services/pdfSessionUnlock";
+import { createStirlingFile } from "@app/types/fileContext";
+import apiClient from "@app/services/apiClient";
+
+vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
 
 const workers = vi.hoisted(
   () =>
@@ -43,7 +50,6 @@ const access: PdfAccess = {
   permissions: 0,
   canModify: false,
   pageCount: 1,
-  localInspection: true,
 };
 
 beforeEach(() => {
@@ -68,22 +74,48 @@ describe("local inspection lifetime", () => {
     expect(workers[0].terminate).toHaveBeenCalledOnce();
   });
 
-  it.each(["abort", "logout"])(
+  it.each(["abort", "logout", "close", "replace"])(
     "discards credentials and terminates work on %s",
     async (action) => {
-      const file = new File(["PDF"], "protected.pdf");
+      const file = createStirlingFile(new File(["PDF"], "protected.pdf"));
+      bindPdfAccess(file, file.fileId);
       const controller = new AbortController();
       const result = ensureLocalPdfAccess(file, controller.signal);
       const rejected = expect(result).rejects.toMatchObject({
         name: "AbortError",
       });
       if (action === "abort") controller.abort();
+      else if (action === "close") forgetPdfAccess([file.fileId]);
+      else if (action === "replace")
+        bindPdfAccess(new File(["replacement"], file.name), file.fileId);
       else clearPdfAccess();
       await rejected;
       expect(workers[0].terminate).toHaveBeenCalledOnce();
+      workers[0].onmessage?.({ data: { access } });
       expect(getPdfAccess(file)).toBeUndefined();
     },
   );
+
+  it("preflights uncached tool inputs locally and reuses the result", async () => {
+    const file = createStirlingFile(new File(["PDF"], "protected.pdf"));
+    const ownerPrompt = vi.fn();
+    const preflight = () =>
+      preflightPdfOperation(
+        [file],
+        "/api/v1/general/rotate-pdf",
+        false,
+        ownerPrompt,
+      );
+    const pending = preflight();
+    workers[0].onmessage?.({
+      data: { access: { ...access, permissions: -4 } },
+    });
+    await expect(pending).resolves.toBe(true);
+    await expect(preflight()).resolves.toBe(true);
+    expect(workers).toHaveLength(1);
+    expect(ownerPrompt).not.toHaveBeenCalled();
+    expect(apiClient.post).not.toHaveBeenCalled();
+  });
 
   it("preserves password error classification and permits retry", async () => {
     const file = new File(["PDF"], "protected.pdf");

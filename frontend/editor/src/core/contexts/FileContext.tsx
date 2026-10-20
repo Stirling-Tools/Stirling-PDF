@@ -68,10 +68,7 @@ import { useTranslation } from "react-i18next";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { inspectLocalPdfAccess } from "@app/services/pdfLocalAccess";
 import { alert } from "@app/components/toast";
-import {
-  hasPdfPermissionOverride,
-  unlockPdfForSession,
-} from "@app/services/pdfSessionUnlock";
+import { hasPdfPermissionOverride } from "@app/services/pdfSessionUnlock";
 import {
   bindPdfAccess,
   clearPdfAccess,
@@ -375,13 +372,13 @@ function FileContextInner({
   // for the rest of the session. Its own effect, so a change of prompt does not clear and re-set.
   useEffect(() => () => setPendingUnlocks([]), []);
 
-  const protectionInspection = useRef<AbortController | null>(null);
+  const protectionOperation = useRef<AbortController | null>(null);
   useEffect(() => {
     setUnlockPassword("");
     setUnlockError(null);
     setOpeningPasswordToRemove(null);
     const cancellation = new AbortController();
-    protectionInspection.current = cancellation;
+    protectionOperation.current = cancellation;
     return () => cancellation.abort();
   }, [activeEncryptedFileId]);
 
@@ -401,7 +398,7 @@ function FileContextInner({
   );
 
   const handleUnlockSkip = useCallback(() => {
-    protectionInspection.current?.abort();
+    protectionOperation.current?.abort();
     if (activeEncryptedFileId) {
       ownerRequests.current.get(activeEncryptedFileId)?.resolve(false);
       ownerRequests.current.delete(activeEncryptedFileId);
@@ -708,7 +705,10 @@ function FileContextInner({
           ),
         );
       }
-      rememberPdfAccess(copy, copyAccess);
+      rememberPdfAccess(copy, {
+        ...copyAccess,
+        honorOwnerPasswords: config?.honorOwnerPasswords,
+      });
       const generatedMetadata = await generateProcessedFileMetadata(copy);
       const metadata = {
         ...generatedMetadata,
@@ -742,7 +742,7 @@ function FileContextInner({
       pending?.resolve(output);
       indexedDB?.bumpRevision?.();
     },
-    [t, dispatchWithUnlock, indexedDB],
+    [t, dispatchWithUnlock, indexedDB, config?.honorOwnerPasswords],
   );
 
   const runUnprotectedCopy = useCallback(
@@ -774,10 +774,9 @@ function FileContextInner({
         `${file.name.replace(/\.pdf$/i, "")}_unprotected.pdf`,
         { type: "application/pdf" },
       );
-      const copyAccess = await unlockPdfForSession(
+      const copyAccess = await inspectLocalPdfAccess(
         copy,
         "",
-        undefined,
         pdfAccessLifetime(file),
       );
       if (copyAccess.encrypted)
@@ -804,27 +803,15 @@ function FileContextInner({
     setUnlockError(null);
     const signal = AbortSignal.any([
       pdfAccessLifetime(file),
-      ...(protectionInspection.current
-        ? [protectionInspection.current.signal]
+      ...(protectionOperation.current
+        ? [protectionOperation.current.signal]
         : []),
     ]);
     try {
-      const access = await unlockPdfForSession(
-        file,
-        unlockPassword,
-        undefined,
-        signal,
-      );
+      const access = await inspectLocalPdfAccess(file, unlockPassword, signal);
       if (filesRef.current.get(fileId) !== file) return;
       if (openingPasswordToRemove === null) {
-        if (!access.requiresOpeningPassword || !access.openingAuthenticated)
-          throw new Error(
-            t(
-              "encryptedPdfUnlock.openingRequired",
-              "Enter the password used to open this PDF.",
-            ),
-          );
-        if (access.hasOwnerPassword !== false && !access.ownerAuthenticated) {
+        if (!access.ownerAuthenticated) {
           setOpeningPasswordToRemove(unlockPassword);
           setUnlockPassword("");
           return;
@@ -854,20 +841,7 @@ function FileContextInner({
         `${file.name.replace(/\.pdf$/i, "")}_password_removed.pdf`,
         { type: "application/pdf" },
       );
-      const copyAccess = await unlockPdfForSession(copy, "", undefined, signal);
-      if (
-        copyAccess.requiresOpeningPassword !== false ||
-        (access.hasOwnerPassword !== false &&
-          (!copyAccess.encrypted ||
-            !copyAccess.hasOwnerPassword ||
-            copyAccess.permissions !== access.permissions))
-      )
-        throw new Error(
-          t(
-            "encryptedPdfUnlock.securityChangeFailed",
-            "Unable to change protection. Check the permissions password and the new security settings.",
-          ),
-        );
+      const copyAccess = await inspectLocalPdfAccess(copy, "", signal);
       await admitProtectionCopy(fileId, file, copy, copyAccess);
       setActiveEncryptedFileId(null);
     } catch (error) {

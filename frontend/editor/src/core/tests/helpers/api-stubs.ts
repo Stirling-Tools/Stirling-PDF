@@ -169,18 +169,6 @@ export async function mockAppApis(
   page: Page,
   opts: MockAppApiOptions = {},
 ): Promise<void> {
-  await page.route("**/api/v1/security/inspect-pdf-security", (route) =>
-    route.fulfill({
-      json: {
-        encrypted: false,
-        signed: false,
-        ownerAuthenticated: false,
-        permissions: -4,
-        canModify: true,
-        pageCount: 1,
-      },
-    }),
-  );
   const {
     enableLogin = false,
     isAdmin = false,

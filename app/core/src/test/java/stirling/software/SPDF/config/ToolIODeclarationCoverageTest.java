@@ -73,7 +73,6 @@ class ToolIODeclarationCoverageTest {
                     "/api/v1/general/pdf-text-editor",
                     // Interactive credential helpers, hidden from pipeline discovery; restoration
                     // requires the original protected document as well as the working result.
-                    "/api/v1/security/inspect-pdf-security",
                     "/api/v1/security/restore-pdf-protection",
                     "/api/v1/security/prepare-pdf-session",
                     "/api/v1/security/remove-pdf-protection",

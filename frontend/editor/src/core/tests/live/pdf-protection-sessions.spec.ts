@@ -1,3 +1,4 @@
+import { inspectPdfProtection as inspect } from "@app/tests/helpers/pdf-protection";
 import { test, expect } from "@app/tests/helpers/test-base";
 import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
 import type { Page } from "@playwright/test";
@@ -35,21 +36,6 @@ async function protect(page: Page) {
   );
   expect(response.ok()).toBe(true);
   return response.body();
-}
-
-async function inspect(page: Page, buffer: Buffer, password: string) {
-  const response = await page.request.post(
-    "/api/v1/security/inspect-pdf-security",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: { name: "result.pdf", mimeType: "application/pdf", buffer },
-        password,
-      },
-    },
-  );
-  expect(response.ok()).toBe(true);
-  return response.json();
 }
 
 async function open(page: Page, password: string) {
@@ -143,7 +129,7 @@ test("restricted processing preserves both passwords and prompts only when enfor
     ownerAuthenticated: false,
     requiresOpeningPassword: true,
     permissions: access.permissions,
-    credentialFingerprint: access.credentialFingerprint,
+    credentialEntries: access.credentialEntries,
   });
   expect(await inspect(page, saved, owner)).toMatchObject({
     ownerAuthenticated: true,

@@ -49,7 +49,6 @@ vi.mock("@app/services/pdfLocalAccess", () => ({
   ) => ({
     ...(await localInspection(file, password, signal)).data,
     password,
-    localInspection: true,
   }),
 }));
 
@@ -336,7 +335,7 @@ describe("encrypted bytes opened by another editor", () => {
       };
       const post = vi.mocked(apiClient.post);
       post.mockReset();
-      post.mockResolvedValueOnce({ data: security });
+      localInspection.mockResolvedValueOnce({ data: security });
       if (hasOwnerPassword) {
         fireEvent.change(screen.getByLabelText("PDF password"), {
           target: { value: "reader" },
@@ -345,10 +344,10 @@ describe("encrypted bytes opened by another editor", () => {
           fireEvent.click(screen.getByText("Remove Password"));
         });
         expect(screen.getByLabelText("Permissions password")).toBeVisible();
-        expect(post).toHaveBeenCalledTimes(1);
+        expect(post).not.toHaveBeenCalled();
         expect(getPdfAccess(original)).toBeUndefined();
         expect(result.current.selectors.getAllFileIds()).toEqual([]);
-        post.mockResolvedValueOnce({
+        localInspection.mockResolvedValueOnce({
           data: {
             ...security,
             openingAuthenticated: false,
@@ -357,7 +356,7 @@ describe("encrypted bytes opened by another editor", () => {
         });
       }
       post.mockResolvedValueOnce({ data: new Blob(["password removed"]) });
-      post.mockResolvedValueOnce({
+      localInspection.mockResolvedValueOnce({
         data: {
           ...security,
           encrypted: hasOwnerPassword,
@@ -428,14 +427,14 @@ describe("encrypted bytes opened by another editor", () => {
     };
     const post = vi.mocked(apiClient.post);
     post.mockReset();
-    post.mockResolvedValueOnce({ data: security });
+    localInspection.mockResolvedValueOnce({ data: security });
     fireEvent.change(screen.getByLabelText("PDF password"), {
       target: { value: "reader" },
     });
     await act(async () => {
       fireEvent.click(screen.getByText("Remove Password"));
     });
-    post.mockResolvedValueOnce({ data: security });
+    localInspection.mockResolvedValueOnce({ data: security });
     fireEvent.change(screen.getByLabelText("Permissions password"), {
       target: { value: "reader" },
     });
@@ -445,11 +444,7 @@ describe("encrypted bytes opened by another editor", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "encryptedPdfUnlock.ownerRequired",
     );
-    expect(
-      post.mock.calls.every(
-        ([url]) => url === "/api/v1/security/inspect-pdf-security",
-      ),
-    ).toBe(true);
+    expect(post).not.toHaveBeenCalled();
     await act(async () => {
       fireEvent.click(screen.getByText("Cancel opening"));
       await loading;
@@ -487,18 +482,19 @@ describe("encrypted bytes opened by another editor", () => {
       canModify: true,
       pageCount: 1,
     });
-    vi.mocked(apiClient.post)
-      .mockResolvedValueOnce({ data: new Blob(["unprotected"]) })
-      .mockResolvedValueOnce({
-        data: {
-          encrypted: false,
-          signed: false,
-          ownerAuthenticated: false,
-          permissions: -4,
-          canModify: true,
-          pageCount: 1,
-        },
-      });
+    vi.mocked(apiClient.post).mockResolvedValueOnce({
+      data: new Blob(["unprotected"]),
+    });
+    localInspection.mockResolvedValueOnce({
+      data: {
+        encrypted: false,
+        signed: false,
+        ownerAuthenticated: false,
+        permissions: -4,
+        canModify: true,
+        pageCount: 1,
+      },
+    });
     await act(async () =>
       result.current.actions.createUnprotectedCopy(file.fileId),
     );
@@ -725,7 +721,6 @@ describe("preview session credentials", () => {
     );
     expect(getPdfAccess(preview)).toEqual({
       ...previewSecurity,
-      localInspection: true,
       password: " secret ",
       openingPassword: " secret ",
     });

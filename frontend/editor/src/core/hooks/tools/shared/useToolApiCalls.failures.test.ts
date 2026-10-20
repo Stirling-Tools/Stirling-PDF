@@ -18,7 +18,8 @@ const post = vi.fn();
 vi.mock("@app/services/apiClient", () => ({
   default: { post: (...args: unknown[]) => post(...args) },
 }));
-vi.mock("@app/services/pdfLocalAccess", () => ({
+vi.mock("@app/services/pdfLocalAccess", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfLocalAccess")>()),
   inspectLocalPdfAccess: vi.fn(),
 }));
 const inspectLocal = vi.mocked(inspectLocalPdfAccess);
@@ -30,7 +31,6 @@ const plainAccess: PdfAccess = {
   permissions: -4,
   canModify: true,
   pageCount: 1,
-  localInspection: true,
 };
 
 // Mirrors the response body, so a 0-byte answer really does produce an empty output.
@@ -130,7 +130,6 @@ describe("processFiles failure reporting", () => {
       rememberPdfAccess(input, {
         ...getPdfAccess(input)!,
         encrypted: true,
-        localInspection: true,
         password: "owner",
         openingPassword: "reader",
         ownerAuthenticated: true,
@@ -141,7 +140,6 @@ describe("processFiles failure reporting", () => {
         ...plainAccess,
         encrypted: credential !== "",
         password: credential ?? "",
-        localInspection: true,
       }));
       const { result } = renderHook(() => useToolApiCalls());
       const processed = await result.current.processFiles(
@@ -169,7 +167,6 @@ describe("processFiles failure reporting", () => {
       );
       expect(getPdfAccess(processed.outputFiles[0])).toMatchObject({
         password,
-        localInspection: true,
         honorOwnerPasswords: false,
       });
     },

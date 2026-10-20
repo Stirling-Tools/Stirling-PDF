@@ -7,11 +7,11 @@ import { Alert, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { downloadFile } from "@app/services/downloadService";
+import { assertPdfSessionEditable } from "@app/services/pdfSessionUnlock";
 import {
-  assertPdfSessionEditable,
-  verifyEditedPdfProtection,
-} from "@app/services/pdfSessionUnlock";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+  getPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfPasswordStore";
 import { useFileContext, useFileSelection } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";
@@ -85,12 +85,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const [openedFileName, setOpenedFileName] = useState<string | null>(null);
   const pendingDiskFileRef = useRef<File | null>(null);
   const mountedRef = useRef(false);
-  const inspectionCancellation = useRef<AbortController | null>(null);
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      inspectionCancellation.current?.abort();
     };
   }, []);
   // Set only when the document came from the workbench; a drag-dropped
@@ -99,7 +97,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const sourceFileIdRef = useRef<FileId | null>(null);
   const [sourceFileId, setSourceFileId] = useState<FileId | null>(null);
   const setSourceFile = useCallback((id: FileId | null) => {
-    inspectionCancellation.current?.abort();
     sourceFileIdRef.current = id;
     setSourceFileId(id);
   }, []);
@@ -180,20 +177,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         : [sourceId ?? undefined];
       assertFilesNotBlocked(policyIds);
       setApplying(true);
-      const cancellation = new AbortController();
-      inspectionCancellation.current?.abort();
-      inspectionCancellation.current = cancellation;
       try {
         if (toolId === "ocr")
           assertEditorOcrAllowed(store.document, sourceId, t);
         const sourceAccess = getPdfAccess(sourceId);
         if (toolId === "pdfTextEditor" && sourceAccess?.encrypted) {
-          await verifyEditedPdfProtection(
-            edited,
-            sourceAccess,
-            sourceId ? (selectors.getFile(sourceId) ?? undefined) : undefined,
-            cancellation.signal,
-          );
+          assertPdfSessionEditable(sourceAccess);
+          // PDFium native text exports preserve encryption and credentials; regression tests cover each supported cipher.
+          rememberPdfAccess(edited, sourceAccess);
         }
         if (sourceId && parentStub) {
           const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
@@ -226,8 +217,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         }
         return added[0] ?? null;
       } finally {
-        if (inspectionCancellation.current === cancellation)
-          inspectionCancellation.current = null;
         setApplying(false);
       }
     },

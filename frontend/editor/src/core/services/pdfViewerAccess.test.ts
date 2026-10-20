@@ -17,7 +17,6 @@ import {
   rememberPdfAccess,
   rememberPlainPdfExport,
 } from "@app/services/pdfPasswordStore";
-import { ensurePdfAccess } from "@app/services/pdfSessionUnlock";
 import { ensureLocalPdfAccess } from "@app/services/pdfLocalAccess";
 import { createStirlingFile } from "@app/types/fileContext";
 
@@ -181,66 +180,4 @@ describe("viewer permission readiness", () => {
       expect(close).toHaveBeenCalledOnce();
     },
   );
-});
-
-describe("on-demand backend inspection", () => {
-  it("cancels the upload only when its last consumer cancels", async () => {
-    const file = new File(["protected"], "sample.pdf");
-    let finish!: (value: { data: typeof protectedAccess }) => void;
-    post.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          finish = resolve;
-        }),
-    );
-    const first = new AbortController();
-    const second = new AbortController();
-    const one = ensurePdfAccess(file, first.signal);
-    const two = ensurePdfAccess(file, second.signal);
-    const rejectedOne = expect(one).rejects.toThrow("cancelled");
-    const rejectedTwo = expect(two).rejects.toThrow("cancelled");
-    const token = post.mock.calls[0][2]?.cancelToken;
-    first.abort();
-    expect(token?.reason).toBeUndefined();
-    second.abort();
-    expect(token?.reason).toBeDefined();
-    await Promise.all([rejectedOne, rejectedTwo]);
-    finish({ data: protectedAccess });
-    await vi.waitFor(() => expect(getPdfAccess(file)).toBeUndefined());
-    post.mockResolvedValueOnce({ data: protectedAccess });
-    await ensurePdfAccess(file);
-    expect(post).toHaveBeenCalledTimes(2);
-  });
-
-  it("shares in-flight work and allows a retry after failure", async () => {
-    const file = new File(["protected"], "sample.pdf");
-    post.mockRejectedValueOnce(new Error("offline"));
-    const failed = await Promise.allSettled([
-      ensurePdfAccess(file),
-      ensurePdfAccess(file),
-    ]);
-    expect(failed.every((result) => result.status === "rejected")).toBe(true);
-    expect(post).toHaveBeenCalledOnce();
-    expect(getPdfAccess(file)).toBeUndefined();
-    post.mockResolvedValueOnce({ data: protectedAccess });
-    await ensurePdfAccess(file);
-    expect(post).toHaveBeenCalledTimes(2);
-  });
-
-  it("discards pending inspection after logout", async () => {
-    const file = new File(["protected"], "sample.pdf");
-    let finish!: (value: { data: typeof protectedAccess }) => void;
-    post.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          finish = resolve;
-        }),
-    );
-    const pending = ensurePdfAccess(file);
-    const rejected = expect(pending).rejects.toThrow("Operation cancelled");
-    clearPdfAccess();
-    finish({ data: protectedAccess });
-    await rejected;
-    expect(getPdfAccess(file)).toBeUndefined();
-  });
 });

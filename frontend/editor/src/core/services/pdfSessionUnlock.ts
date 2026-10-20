@@ -1,3 +1,4 @@
+import { ensureLocalPdfAccess } from "@app/services/pdfLocalAccess";
 import apiClient from "@app/services/apiClient";
 import axios, { type CancelToken } from "axios";
 import i18n from "i18next";
@@ -5,7 +6,6 @@ import {
   getPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-  pdfAccessLifetime,
 } from "@app/services/pdfPasswordStore";
 import type { StirlingFile } from "@app/types/fileContext";
 import { PdfPermissionFlag } from "@embedpdf/models";
@@ -41,92 +41,6 @@ export function pdfAllows(
     hasPdfPermissionOverride(access) ||
     (access.permissions & flag) !== 0
   );
-}
-
-interface AccessInspection {
-  generation: object;
-  promise: Promise<PdfAccess>;
-  cancel: () => void;
-  waiters: number;
-}
-const inspections = new WeakMap<File, AccessInspection>();
-
-function waitForInspection(
-  inspection: AccessInspection,
-  signal?: AbortSignal,
-): Promise<PdfAccess> {
-  inspection.waiters++;
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    const release = () => {
-      if (settled) return false;
-      settled = true;
-      signal?.removeEventListener("abort", abort);
-      inspection.waiters--;
-      return true;
-    };
-    const abort = () => {
-      if (!release()) return;
-      if (inspection.waiters === 0) inspection.cancel();
-      reject(new axios.CanceledError("Operation cancelled"));
-    };
-    signal?.addEventListener("abort", abort, { once: true });
-    inspection.promise.then(
-      (access) => {
-        if (release()) resolve(access);
-      },
-      (error) => {
-        if (release()) reject(error);
-      },
-    );
-    if (signal?.aborted) abort();
-  });
-}
-
-/** Inspect exact bytes on demand; concurrent consumers share work until the last one cancels. */
-export async function ensurePdfAccess(
-  file: File,
-  signal?: AbortSignal,
-): Promise<PdfAccess> {
-  if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
-  const existing = getPdfAccess(file);
-  if (existing && (!existing.encrypted || !existing.localInspection))
-    return existing;
-  const generation = pdfAccessLifetime(file);
-  const pending = inspections.get(file);
-  if (pending?.generation === generation)
-    return waitForInspection(pending, signal);
-  const cancellation = axios.CancelToken.source();
-  const promise = unlockPdfForSession(
-    file,
-    existing?.password ?? "",
-    cancellation.token,
-  )
-    .then((access) => {
-      if (generation !== pdfAccessLifetime(file))
-        throw new axios.CanceledError("Session closed");
-      const current = getPdfAccess(file);
-      if (current && current.password !== (existing?.password ?? ""))
-        throw new axios.CanceledError("PDF credentials changed");
-      return rememberPdfAccess(file, {
-        ...access,
-        openingPassword: existing?.openingPassword,
-      });
-    })
-    .finally(() => {
-      if (inspections.get(file)?.promise === promise) inspections.delete(file);
-    });
-  const inspection: AccessInspection = {
-    generation,
-    promise,
-    waiters: 0,
-    cancel: () => {
-      cancellation.cancel();
-      if (inspections.get(file) === inspection) inspections.delete(file);
-    },
-  };
-  inspections.set(file, inspection);
-  return waitForInspection(inspection, signal);
 }
 
 const SUPPORTED_ENDPOINTS = new Set([
@@ -192,7 +106,7 @@ export async function preflightPdfOperation(
     // Password endpoints validate the requested change themselves; unknown roles need no preflight upload.
     const access = changesProtection
       ? getPdfAccess(file)
-      : await ensurePdfAccess(file, signal);
+      : await ensureLocalPdfAccess(file, signal);
     if (!access?.encrypted) continue;
     if (!supportsSessionUnlock(endpoint))
       throw new Error(
@@ -238,59 +152,6 @@ function operationPermission(endpoint: string | undefined): PdfPermissionFlag {
       : PdfPermissionFlag.AssembleDocument;
 }
 
-/** Authenticate without rewriting the uploaded document. The password stays outside file metadata. */
-export async function unlockPdfForSession(
-  file: File,
-  password: string,
-  cancelToken?: CancelToken,
-  signal?: AbortSignal,
-): Promise<PdfAccess> {
-  const lifetime = pdfAccessLifetime(file);
-  const requestSignal = signal ? AbortSignal.any([lifetime, signal]) : lifetime;
-  if (requestSignal.aborted)
-    throw new axios.CanceledError("Operation cancelled");
-  const form = new FormData();
-  form.append("fileInput", file);
-  form.append("password", password);
-  try {
-    const response = await apiClient.post<Omit<PdfAccess, "password">>(
-      "/api/v1/security/inspect-pdf-security",
-      form,
-      {
-        suppressErrorToast: true,
-        ...(cancelToken ? { cancelToken } : {}),
-        signal: requestSignal,
-      },
-    );
-    cancelToken?.throwIfRequested();
-    if (requestSignal.aborted)
-      throw new axios.CanceledError("Operation cancelled");
-    if (
-      typeof response.data?.encrypted !== "boolean" ||
-      typeof response.data?.ownerAuthenticated !== "boolean" ||
-      !Number.isInteger(response.data?.permissions)
-    )
-      throw new Error("Unable to verify PDF security");
-    return { ...response.data, password };
-  } catch (error) {
-    if (axios.isCancel(error))
-      throw new axios.CanceledError("Operation cancelled");
-    const sanitized = new Error(
-      error instanceof Error ? error.message : "Unable to unlock this PDF.",
-    );
-    if (axios.isAxiosError(error)) {
-      // Keep password-error classification without retaining the request or its FormData.
-      Object.assign(sanitized, {
-        isAxiosError: true,
-        response: error.response
-          ? { status: error.response.status, data: error.response.data }
-          : undefined,
-      });
-    }
-    throw sanitized;
-  }
-}
-
 /** Signed protected PDFs remain view-only until their edits can preserve signatures. */
 export function assertPdfSessionEditable(
   access:
@@ -317,52 +178,6 @@ export function assertPdfSessionEditable(
     );
 }
 
-/** Native exports must retain source protection before storage or download can receive them. */
-export async function verifyEditedPdfProtection(
-  output: File,
-  sourceAccess: PdfAccess | undefined,
-  source?: File,
-  signal?: AbortSignal,
-): Promise<void> {
-  if (!sourceAccess?.encrypted) return;
-  const inspectionSignal = source
-    ? AbortSignal.any([pdfAccessLifetime(source), ...(signal ? [signal] : [])])
-    : signal;
-  if (sourceAccess.localInspection) {
-    if (!source)
-      throw new Error("The original PDF is required to verify its protection");
-    sourceAccess = await ensurePdfAccess(source, inspectionSignal);
-  }
-  assertPdfSessionEditable(sourceAccess);
-  const access = await unlockPdfForSession(
-    output,
-    sourceAccess.password,
-    undefined,
-    inspectionSignal,
-  );
-  if (
-    !access.encrypted ||
-    access.permissions !== sourceAccess.permissions ||
-    access.ownerAuthenticated !== sourceAccess.ownerAuthenticated ||
-    sourceAccess.encryptionKeyLength === undefined ||
-    access.encryptionKeyLength !== sourceAccess.encryptionKeyLength ||
-    sourceAccess.encryptionRevision === undefined ||
-    access.encryptionRevision !== sourceAccess.encryptionRevision ||
-    !sourceAccess.credentialFingerprint ||
-    access.credentialFingerprint !== sourceAccess.credentialFingerprint
-  )
-    throw new Error(
-      i18n.t(
-        "encryptedPdfUnlock.restoreFailed",
-        "Unable to preserve PDF protection. No unprotected result was saved.",
-      ),
-    );
-  rememberPdfAccess(output, {
-    ...access,
-    openingPassword: sourceAccess.openingPassword,
-  });
-}
-
 /** Decrypted bytes belong only to this operation. They must never enter FileContext or persistence. */
 export async function prepareUnlockedFile(
   file: StirlingFile,
@@ -376,7 +191,7 @@ export async function prepareUnlockedFile(
     return file;
   if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name))
     return file;
-  const access = await ensurePdfAccess(file, signal);
+  const access = await ensureLocalPdfAccess(file, signal);
   if (!access.encrypted) return file;
   if (!supportsSessionUnlock(endpoint))
     throw new Error(

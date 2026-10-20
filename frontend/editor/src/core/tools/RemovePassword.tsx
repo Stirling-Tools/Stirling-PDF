@@ -72,8 +72,8 @@ const RemovePassword = (props: BaseToolProps) => {
       for (const file of base.selectedFiles) {
         const access = getPdfAccess(file);
         if (
-          access?.requiresOpeningPassword &&
-          access.hasOwnerPassword === true &&
+          access?.encrypted &&
+          access.requiresOpeningPassword !== false &&
           !access.ownerAuthenticated
         ) {
           const verified = await actions.requestPdfOwnerAccess(

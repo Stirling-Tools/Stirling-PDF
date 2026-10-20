@@ -1,6 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import path from "node:path";
 import fs from "node:fs";
+import { PDFDocument } from "@cantoo/pdf-lib";
 
 const fixture = path.join(
   import.meta.dirname,
@@ -10,31 +11,94 @@ const sample = fs.readFileSync(
   path.join(import.meta.dirname, "../test-fixtures/sample.pdf"),
 );
 
-test.beforeEach(async ({ page }) => {
-  await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
-    const body = route.request().postData() ?? "";
-    const password = /name="password"\r\n\r\n([^\r]*)/.exec(body)?.[1] ?? "";
-    if (password && password !== "owner-test-password")
-      return route.fulfill({
-        status: 400,
-        json: { type: "/errors/pdf-password", status: 400 },
-      });
-    return route.fulfill({
-      json: {
-        encrypted: true,
-        requiresOpeningPassword: false,
-        signed: false,
-        ownerAuthenticated: password === "owner-test-password",
-        permissions: 0,
-        encryptionKeyLength: 256,
-        encryptionRevision: 6,
-        credentialFingerprint: "fixture-credentials",
-        canModify: password !== "",
-        pageCount: 1,
-      },
+for (const entry of ["opening dialog", "Remove Password tool"]) {
+  test(`${entry} retains owner protection using local authentication`, async ({
+    page,
+  }) => {
+    const original = await PDFDocument.load(sample);
+    original.encrypt({
+      userPassword: "local-reader",
+      ownerPassword: "local-owner",
+      permissions: { printing: false },
     });
+    const output = await PDFDocument.load(sample);
+    output.encrypt({
+      userPassword: "",
+      ownerPassword: "local-owner",
+      permissions: { printing: false },
+    });
+    const outputBytes = Buffer.from(await output.save());
+    let inspections = 0;
+    let removals = 0;
+    await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
+      inspections++;
+      return route.abort();
+    });
+    await page.route("**/api/v1/security/remove-password", async (route) => {
+      const request = new Request(route.request().url(), {
+        method: "POST",
+        headers: route.request().headers(),
+        body: new Uint8Array(route.request().postDataBuffer()!),
+      });
+      const form = await request.formData();
+      expect(form.get("password")).toBe("local-reader");
+      expect(form.get("sourcePassword")).toBe("local-owner");
+      expect(form.get("ownerPassword")).toBeFalsy();
+      removals++;
+      await route.fulfill({
+        contentType: "application/pdf",
+        body: outputBytes,
+      });
+    });
+    await page.goto(
+      entry === "opening dialog" ? "/editor" : "/remove-password",
+    );
+    await page.getByTestId("file-input").setInputFiles({
+      name: "protected.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from(await original.save()),
+    });
+    const opening = page.getByRole("dialog", { name: /^Open PDF/ });
+    await opening
+      .getByLabel("Password to open", { exact: true })
+      .fill("local-reader");
+    if (entry === "opening dialog") {
+      await opening
+        .getByRole("button", { name: "Remove Password", exact: true })
+        .click();
+    } else {
+      await opening
+        .getByRole("button", { name: "Open PDF", exact: true })
+        .click();
+      await expect(opening).toBeHidden();
+      await page
+        .getByLabel("Password to open", { exact: true })
+        .fill("local-reader");
+      await page
+        .getByRole("button", { name: /^Remove Password(?: \(this file\))?$/ })
+        .click();
+    }
+    const verification = page.getByRole("dialog", {
+      name: "Enter permissions password",
+      exact: true,
+    });
+    await expect(
+      verification.getByText(/This will not remove it/),
+    ).toBeVisible();
+    await verification
+      .getByLabel("Permissions password", { exact: true })
+      .fill("local-owner");
+    await verification
+      .getByRole("button", { name: "Continue", exact: true })
+      .click();
+    await expect(verification).toBeHidden();
+    await expect(
+      page.getByText("Protected PDF", { exact: true }).first(),
+    ).toBeVisible();
+    expect(removals).toBe(1);
+    expect(inspections).toBe(0);
   });
-});
+}
 
 for (const { name, route } of [
   { name: "Remove Password", route: "/remove-password" },

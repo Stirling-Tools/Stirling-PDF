@@ -23,7 +23,6 @@ export function readPdfiumAccess(
     !encrypted || ownerAuthenticated || (permissions & flag) !== 0;
   return {
     password,
-    localInspection: true,
     encrypted,
     ownerAuthenticated,
     permissions,

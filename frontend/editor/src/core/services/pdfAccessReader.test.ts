@@ -28,8 +28,6 @@ describe("PDFium access decisions", () => {
     const access = readPdfiumAccess(moduleFor(-4), 1, "reader");
     expect(access.ownerAuthenticated).toBe(false);
     expect(access.openingAuthenticated).toBe(true);
-    expect(access.localInspection).toBe(true);
-    expect(access.credentialFingerprint).toBeUndefined();
   });
 
   it("preserves stored restrictions when the owner is authenticated", () => {

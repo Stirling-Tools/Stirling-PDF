@@ -5,7 +5,6 @@ import java.nio.file.Files;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
-import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -42,68 +41,6 @@ public class PdfSessionSecurityController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final ApplicationProperties applicationProperties;
-
-    /**
-     * Passwords are never returned; permissions describe the authenticated access to the original
-     * bytes.
-     */
-    public record SecurityInfo(
-            boolean encrypted,
-            boolean signed,
-            boolean ownerAuthenticated,
-            int permissions,
-            int encryptionKeyLength,
-            int encryptionRevision,
-            boolean canModify,
-            boolean canAssemble,
-            int pageCount,
-            boolean canExtract,
-            boolean canPrint,
-            boolean canPrintFaithful,
-            String credentialFingerprint,
-            boolean requiresOpeningPassword,
-            boolean openingAuthenticated,
-            boolean hasOwnerPassword,
-            boolean honorOwnerPasswords) {}
-
-    /** Authenticate without saving, changing metadata, or removing encryption. */
-    @Operation(hidden = true)
-    @PostMapping(value = "/inspect-pdf-security", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public SecurityInfo inspect(@ModelAttribute PDFPasswordRequest request) throws IOException {
-        String password = request.getPassword() == null ? "" : request.getPassword();
-        try (PDDocument document =
-                pdfDocumentFactory.load(request.getFileInput(), password, true)) {
-            AccessPermission permission = document.getCurrentAccessPermission();
-            return new SecurityInfo(
-                    document.isEncrypted(),
-                    !document.getSignatureDictionaries().isEmpty(),
-                    PdfSessionPermissions.isOwnerAuthenticated(document),
-                    document.isEncrypted()
-                            ? document.getEncryption().getPermissions()
-                            : permission.getPermissionBytes(),
-                    document.isEncrypted() ? document.getEncryption().getLength() : 0,
-                    document.isEncrypted() ? document.getEncryption().getRevision() : 0,
-                    permission.canModify(),
-                    permission.canAssembleDocument(),
-                    document.getNumberOfPages(),
-                    permission.canExtractContent(),
-                    permission.canPrint(),
-                    permission.canPrintFaithful(),
-                    PdfSessionPermissions.credentialFingerprint(document),
-                    document.isEncrypted() && requiresOpeningPassword(request.getFileInput()),
-                    PdfPasswordRoles.isOpeningPassword(document, password),
-                    PdfPasswordRoles.hasSeparateOwnerPassword(document, password),
-                    applicationProperties.getSecurity().isHonorOwnerPasswords());
-        }
-    }
-
-    private boolean requiresOpeningPassword(MultipartFile file) throws IOException {
-        try (PDDocument ignored = pdfDocumentFactory.load(file, "", true)) {
-            return false;
-        } catch (InvalidPasswordException e) {
-            return true;
-        }
-    }
 
     /**
      * Changes permissions without replacing the opening credential, including when it is unknown.

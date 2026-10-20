@@ -1,3 +1,4 @@
+import { inspectPdfProtection as inspect } from "@app/tests/helpers/pdf-protection";
 import { test, expect } from "@app/tests/helpers/test-base";
 import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
 import type { Page } from "@playwright/test";
@@ -44,21 +45,6 @@ async function protect(page: Page, password = "") {
   );
   expect(response.ok()).toBe(true);
   return response.body();
-}
-
-async function inspect(page: Page, buffer: Buffer, password = "") {
-  const response = await page.request.post(
-    "/api/v1/security/inspect-pdf-security",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: { name: "result.pdf", mimeType: "application/pdf", buffer },
-        password,
-      },
-    },
-  );
-  expect(response.ok()).toBe(true);
-  return response.json();
 }
 
 async function upload(page: Page, buffer: Buffer, route = "/editor") {
@@ -191,7 +177,7 @@ test("restricted rotation preserves the original protection without owner authen
     encrypted: true,
     ownerAuthenticated: false,
     permissions: originalAccess.permissions,
-    credentialFingerprint: originalAccess.credentialFingerprint,
+    credentialEntries: originalAccess.credentialEntries,
   });
   expect(await inspect(page, saved, owner)).toMatchObject({
     ownerAuthenticated: true,
@@ -309,7 +295,7 @@ test("text editing bypass retains encryption and the original credentials in the
     ownerAuthenticated: false,
     canModify: false,
     permissions: originalAccess.permissions,
-    credentialFingerprint: originalAccess.credentialFingerprint,
+    credentialEntries: originalAccess.credentialEntries,
   });
   expect(await inspect(page, saved, "owner-test-password")).toMatchObject({
     ownerAuthenticated: true,

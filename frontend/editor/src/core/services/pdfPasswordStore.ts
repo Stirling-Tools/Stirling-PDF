@@ -2,8 +2,6 @@ import type { FileId } from "@app/types/file";
 
 /** Session-only access to encrypted bytes. Never serialize this object or include it in tool parameters. */
 export interface PdfAccess {
-  /** Local reads omit credential fingerprints and independent opening-password authentication. */
-  localInspection?: boolean;
   password: string;
   openingPassword?: string;
   openingAuthenticated?: boolean;
@@ -15,10 +13,7 @@ export interface PdfAccess {
   /** Active instance policy; absent configuration defaults to enforcing restrictions. */
   honorOwnerPasswords?: boolean;
   permissions: number;
-  /** Older servers omit these; native exports must reject unverifiable protection. */
-  encryptionKeyLength?: number;
   encryptionRevision?: number;
-  credentialFingerprint?: string;
   canModify: boolean;
   pageCount: number;
 }
@@ -100,7 +95,7 @@ export function rememberPdfAccess(file: Blob, access: PdfAccess): PdfAccess {
   return storedAccess;
 }
 
-/** Refresh local facts without discarding richer verification for the same bytes and credential. */
+/** Refresh local facts while retaining policy and known opening credentials for the same bytes. */
 export function rememberLocalPdfAccess(
   file: Blob,
   access: PdfAccess,
@@ -112,7 +107,6 @@ export function rememberLocalPdfAccess(
       ? {
           ...previous,
           ...access,
-          localInspection: previous.localInspection,
           openingAuthenticated:
             previous.openingAuthenticated ?? access.openingAuthenticated,
           requiresOpeningPassword:

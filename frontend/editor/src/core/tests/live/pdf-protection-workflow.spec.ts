@@ -1,6 +1,6 @@
+import { inspectPdfProtection as inspect } from "@app/tests/helpers/pdf-protection";
 import { test, expect } from "@app/tests/helpers/test-base";
 import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
-import type { Page } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs";
 
@@ -11,21 +11,6 @@ const owner = "permissions-test-password";
 test.beforeEach(async ({ page }) => {
   await loadLiveAppConfig(page);
 });
-
-async function inspect(page: Page, buffer: Buffer, password: string) {
-  const response = await page.request.post(
-    "/api/v1/security/inspect-pdf-security",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: { name: "result.pdf", mimeType: "application/pdf", buffer },
-        password,
-      },
-    },
-  );
-  expect(response.ok()).toBe(true);
-  return response.json();
-}
 
 test("saving protection opens the result as a reader and changing permissions preserves its opening password", async ({
   page,
@@ -67,8 +52,6 @@ test("saving protection opens the result as a reader and changing permissions pr
   expect(readerAccess).toMatchObject({
     encrypted: true,
     requiresOpeningPassword: true,
-    openingAuthenticated: true,
-    hasOwnerPassword: true,
     ownerAuthenticated: false,
     canPrint: false,
   });
@@ -447,17 +430,9 @@ test("replacing the permissions password follows the owner policy and invalidate
     ownerAuthenticated: false,
     canPrint: false,
   });
-  const oldCredential = await page.request.post(
-    "/api/v1/security/inspect-pdf-security",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: { name: "updated.pdf", mimeType: "application/pdf", buffer },
-        password: "owner-test-password",
-      },
-    },
+  await expect(inspect(page, buffer, "owner-test-password")).rejects.toThrow(
+    "PDF open failed",
   );
-  expect(oldCredential.ok()).toBe(false);
 });
 
 for (const tool of ["annotate", "form-fill", "redact"]) {

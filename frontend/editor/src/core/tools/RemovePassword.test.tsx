@@ -15,13 +15,17 @@ const state = vi.hoisted(() => ({
   files: [] as StirlingFile[],
   updateParameter: vi.fn(),
   execute: vi.fn(),
+  requestOwner: vi.fn(),
+  ownerPassword: "owner",
 }));
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));
 vi.mock("@app/contexts/FileContext", () => ({
-  useFileContext: () => ({ actions: {} }),
+  useFileContext: () => ({
+    actions: { requestPdfOwnerAccess: state.requestOwner },
+  }),
 }));
 vi.mock("@app/hooks/tools/removePassword/useRemovePasswordOperation", () => ({
   useRemovePasswordOperation: vi.fn(),
@@ -37,7 +41,7 @@ vi.mock("@app/hooks/tools/shared/useBaseTool", () => ({
     operation: { isLoading: false },
     handleExecute: state.execute,
     params: {
-      parameters: { password: "reader", ownerPassword: "owner" },
+      parameters: { password: "reader", ownerPassword: state.ownerPassword },
       updateParameter: state.updateParameter,
     },
   }),
@@ -66,7 +70,6 @@ const local: PdfAccess = {
   signed: false,
   ownerAuthenticated: false,
   requiresOpeningPassword: true,
-  localInspection: true,
   permissions: -4,
   canModify: true,
   pageCount: 1,
@@ -83,11 +86,31 @@ beforeEach(() => {
   post.mockReset();
   state.updateParameter.mockReset();
   state.execute.mockReset();
+  state.requestOwner.mockReset();
+  state.ownerPassword = "owner";
   state.files = [createStirlingFile(new File(["pdf"], "protected.pdf"))];
   rememberPdfAccess(state.files[0], local);
 });
 
 describe("Remove Password protection status", () => {
+  it.each([true, false])(
+    "requests the owner locally to retain restrictions; accepted: %s",
+    async (accepted) => {
+      state.ownerPassword = "";
+      state.requestOwner.mockResolvedValue(accepted);
+      rememberPdfAccess(state.files[0], {
+        ...local,
+        requiresOpeningPassword: undefined,
+      });
+      renderTool();
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "Execute" }));
+      });
+      expect(state.requestOwner).toHaveBeenCalledOnce();
+      expect(state.execute).toHaveBeenCalledTimes(accepted ? 1 : 0);
+      expect(post).not.toHaveBeenCalled();
+    },
+  );
   it("accepts selections when local owner-password information is unknown without uploading", async () => {
     renderTool();
     expect(screen.getByLabelText("Password to open")).toBeEnabled();

@@ -341,7 +341,6 @@ describe("Convert Tool Integration Tests", () => {
     vi.mocked(inspectLocalPdfAccess).mockResolvedValueOnce({
       password: "",
       encrypted: true,
-      localInspection: true,
       ownerAuthenticated: false,
       permissions: -4,
       requiresOpeningPassword: false,
