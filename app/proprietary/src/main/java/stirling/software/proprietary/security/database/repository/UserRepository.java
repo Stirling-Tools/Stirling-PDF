@@ -10,7 +10,6 @@ import java.util.stream.Stream;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -38,6 +37,22 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
     Optional<User> findByEmail(String email);
 
     Optional<User> findBySupabaseId(UUID supabaseId);
+
+    @Query(
+            "select new stirling.software.proprietary.security.database.repository.UserIdentity("
+                    + "u.id, u.username, u.supabaseId) from User u where u.id in :ids")
+    List<UserIdentity> findIdentitiesByIdIn(@Param("ids") Collection<Long> ids);
+
+    @Query(
+            "select new stirling.software.proprietary.security.database.repository.UserIdentity("
+                    + "u.id, u.username, u.supabaseId) from User u where u.supabaseId in :supabaseIds")
+    List<UserIdentity> findIdentitiesBySupabaseIdIn(
+            @Param("supabaseIds") Collection<UUID> supabaseIds);
+
+    @Query(
+            "select new stirling.software.proprietary.security.database.repository.UserIdentity("
+                    + "u.id, u.username, u.supabaseId) from User u where u.username in :usernames")
+    List<UserIdentity> findIdentitiesByUsernameIn(@Param("usernames") Collection<String> usernames);
 
     Optional<User> findBySsoProviderAndSsoProviderId(String ssoProvider, String ssoProviderId);
 
@@ -148,9 +163,4 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
     @Query("SELECT u.id FROM User u WHERE u.username IS NULL AND u.createdAt < :cutoffDate")
     Stream<Long> findByUsernameIsNullAndCreatedAtBefore(
             @Param("cutoffDate") LocalDateTime cutoffDate);
-
-    /** Single-shot UPDATE that reassigns a user to a different team. */
-    @Modifying
-    @Query("UPDATE User u SET u.team.id = :teamId WHERE u.id = :userId")
-    int updateUserTeamId(@Param("userId") Long userId, @Param("teamId") Long teamId);
 }

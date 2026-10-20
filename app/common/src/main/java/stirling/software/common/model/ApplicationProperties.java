@@ -641,12 +641,6 @@ public class ApplicationProperties {
     @Data
     public static class SecondLevelCache {
 
-        /**
-         * The JCache regions are process-local: a write on one instance cannot evict another
-         * instance's entries, so a revocation or role change reaches the other instances only when
-         * the region TTL lapses. Multi-instance deployments either set {@code cluster.enabled=true}
-         * (which disables the cache) or turn it off here.
-         */
         private boolean enabled = true;
 
         private Map<String, Region> regions = new LinkedHashMap<>();

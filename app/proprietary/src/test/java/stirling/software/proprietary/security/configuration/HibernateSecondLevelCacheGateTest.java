@@ -9,11 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import stirling.software.common.model.ApplicationProperties;
 
-/**
- * Pins the second-level cache gate: the process-local regions cannot be invalidated across nodes,
- * so a clustered deployment must stand the cache down, and a multi-instance deployment that does
- * not use cluster mode yet must be able to rule it out explicitly.
- */
 class HibernateSecondLevelCacheGateTest {
 
     private static Map<String, Object> customize(ApplicationProperties properties) {
@@ -23,7 +18,7 @@ class HibernateSecondLevelCacheGateTest {
     }
 
     @Test
-    void disablesSecondLevelCacheWhenClusterIsEnabled() {
+    void disablesSecondLevelCacheWhenClusterRunsWithoutValkey() {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getCluster().setEnabled(true);
 
@@ -47,6 +42,26 @@ class HibernateSecondLevelCacheGateTest {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getCluster().setEnabled(true);
         properties.getSecondLevelCache().setEnabled(true);
+
+        assertThat(customize(properties))
+                .containsEntry("hibernate.cache.use_second_level_cache", false);
+    }
+
+    @Test
+    void keepsSecondLevelCacheWhenClusterEvictsThroughValkey() {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getCluster().setEnabled(true);
+        properties.getCluster().setBackplane("valkey");
+
+        assertThat(customize(properties)).isEmpty();
+    }
+
+    @Test
+    void explicitOptOutWinsOverValkeyCluster() {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getCluster().setEnabled(true);
+        properties.getCluster().setBackplane("valkey");
+        properties.getSecondLevelCache().setEnabled(false);
 
         assertThat(customize(properties))
                 .containsEntry("hibernate.cache.use_second_level_cache", false);
