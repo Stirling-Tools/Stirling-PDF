@@ -288,7 +288,9 @@ subprojects {
     }
 
     dependencies {
-        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        if (!gradle.ext.desktopBundle) {
+            implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        }
 
         //tmp for security bumps
         implementation "ch.qos.logback:logback-core:$logback"

@@ -9,8 +9,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
-
-import io.micrometer.common.util.StringUtils;
+import org.springframework.util.StringUtils;
 
 import jakarta.annotation.PostConstruct;
 
@@ -62,14 +61,14 @@ public class InitialSetup {
     public void initLegalUrls() throws IOException {
         // Initialize Terms and Conditions
         String termsUrl = applicationProperties.getLegal().getTermsAndConditions();
-        if (StringUtils.isEmpty(termsUrl)) {
+        if (!StringUtils.hasText(termsUrl)) {
             String defaultTermsUrl = "https://www.stirlingpdf.com/terms";
             GeneralUtils.saveKeyToSettings("legal.termsAndConditions", defaultTermsUrl);
             applicationProperties.getLegal().setTermsAndConditions(defaultTermsUrl);
         }
         // Initialize Privacy Policy
         String privacyUrl = applicationProperties.getLegal().getPrivacyPolicy();
-        if (StringUtils.isEmpty(privacyUrl)) {
+        if (!StringUtils.hasText(privacyUrl)) {
             String defaultPrivacyUrl = "https://www.stirlingpdf.com/privacy-policy";
             GeneralUtils.saveKeyToSettings("legal.privacyPolicy", defaultPrivacyUrl);
             applicationProperties.getLegal().setPrivacyPolicy(defaultPrivacyUrl);

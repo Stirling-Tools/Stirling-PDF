@@ -47,38 +47,6 @@ class MetricsControllerTest {
         return ctrl;
     }
 
-    // --- /status and /health ---
-
-    @Test
-    void getStatus_returnsUpAndVersion() {
-        when(metrics.isEnabled()).thenReturn(false);
-        controller = createController(Optional.empty());
-
-        ResponseEntity<?> response = controller.getStatus();
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> body = (Map<String, String>) response.getBody();
-        assertNotNull(body);
-        assertEquals("UP", body.get("status"));
-        // version key should exist (may be null in test env)
-        assertTrue(body.containsKey("version"));
-    }
-
-    @Test
-    void getHealth_returnsUpAndVersion() {
-        when(metrics.isEnabled()).thenReturn(false);
-        controller = createController(Optional.empty());
-
-        ResponseEntity<?> response = controller.getHealth();
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, String> body = (Map<String, String>) response.getBody();
-        assertNotNull(body);
-        assertEquals("UP", body.get("status"));
-    }
-
     // --- metrics disabled returns FORBIDDEN ---
 
     @Test

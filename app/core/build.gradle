@@ -22,26 +22,30 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
     implementation 'org.eclipse.jetty.http2:jetty-http2-server'
     implementation 'org.eclipse.jetty:jetty-alpn-java-server'
-    implementation ('org.telegram:telegrambots:6.9.7.1') {
-        // Grizzly server + Jersey JAX-RS stack: only used for webhook mode;
-        // Stirling-PDF uses long-polling mode so these are dead weight (~3 MB)
-        exclude group: 'org.glassfish.jersey.inject'
-        exclude group: 'org.glassfish.jersey.media'
-        exclude group: 'org.glassfish.jersey.containers'
-        exclude group: 'org.glassfish.jersey.core'
-        exclude group: 'org.glassfish.jersey.ext'
-        exclude group: 'org.glassfish.grizzly'
-        exclude group: 'org.glassfish.hk2'
-        exclude group: 'org.glassfish.hk2.external'
-        exclude group: 'org.javassist', module: 'javassist'
-        // Old javax JAX-RS Jackson bindings (not needed, project uses jakarta)
-        exclude group: 'com.fasterxml.jackson.jaxrs'
-        exclude group: 'com.fasterxml.jackson.module', module: 'jackson-module-jaxb-annotations'
+    if (!gradle.ext.desktopBundle) {
+        implementation ('org.telegram:telegrambots:6.9.7.1') {
+            // Grizzly server + Jersey JAX-RS stack: only used for webhook mode;
+            // Stirling-PDF uses long-polling mode so these are dead weight (~3 MB)
+            exclude group: 'org.glassfish.jersey.inject'
+            exclude group: 'org.glassfish.jersey.media'
+            exclude group: 'org.glassfish.jersey.containers'
+            exclude group: 'org.glassfish.jersey.core'
+            exclude group: 'org.glassfish.jersey.ext'
+            exclude group: 'org.glassfish.grizzly'
+            exclude group: 'org.glassfish.hk2'
+            exclude group: 'org.glassfish.hk2.external'
+            exclude group: 'org.javassist', module: 'javassist'
+            // Old javax JAX-RS Jackson bindings (not needed, project uses jakarta)
+            exclude group: 'com.fasterxml.jackson.jaxrs'
+            exclude group: 'com.fasterxml.jackson.module', module: 'jackson-module-jaxb-annotations'
+        }
     }
     implementation "commons-io:commons-io:$commonsIoVersion"
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
-    implementation 'io.micrometer:micrometer-core'
+    if (!gradle.ext.desktopBundle) {
+        implementation 'io.micrometer:micrometer-core'
+    }
     implementation 'com.google.zxing:core:3.5.4'
     implementation "org.commonmark:commonmark:$commonmarkVersion" // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
@@ -118,6 +122,12 @@ sourceSets {
                 exclude '**/config/SpringDocConfig.java'
                 exclude '**/config/OpenApiConfig.java'
                 exclude '**/config/GlobalErrorResponseCustomizer.java'
+                exclude '**/config/TelegramBotConfig.java'
+                exclude '**/config/MetricsConfig.java'
+                exclude '**/config/MetricsFilter.java'
+                exclude '**/controller/web/MetricsController.java'
+                exclude '**/service/telegram/**'
+                exclude '**/service/MetricsAggregatorService.java'
             }
         }
     }
@@ -128,6 +138,12 @@ sourceSets {
                 exclude '**/config/OpenApiConfigTest.java'
                 exclude '**/config/GlobalErrorResponseCustomizerTest.java'
                 exclude '**/config/ToolIOInputExtensionsTest.java'
+                exclude '**/service/telegram/*Test.java'
+                exclude '**/config/MetricsFilterTest.java'
+                exclude '**/controller/web/MetricsControllerTest.java'
+                exclude '**/controller/web/MetricsControllerMoreTest.java'
+                exclude '**/service/MetricsAggregatorServiceTest.java'
+                exclude '**/service/MetricsAggregatorServiceExtendedTest.java'
             }
         }
     }
