@@ -926,6 +926,7 @@ export class PdfFileReader {
   private security: SecurityHandler | null = null;
   root: PdfRef | null = null;
   info: PdfRef | null = null;
+  encryptValue: PdfValue | null = null;
   trailerId: Uint8Array | null = null;
   startxrefOffset = 0;
   maxObjectNum = 0;
@@ -974,20 +975,24 @@ export class PdfFileReader {
             this.trailerId = id.items[0].bytes;
           }
         }
-        if (!this.security) {
+        if (!this.encryptValue) {
           const encrypt = section.trailer.get("Encrypt");
-          if (encrypt) {
-            await this.initSecurity(encrypt, password);
-          }
+          if (encrypt) this.encryptValue = encrypt;
         }
       }
       if (section.xrefStm !== null) {
         const hybrid = await this.readXrefSection(section.xrefStm);
         for (const [num, entry] of hybrid.entries) {
           if (!this.xref.has(num)) this.xref.set(num, entry);
+          if (num > this.maxObjectNum) this.maxObjectNum = num;
         }
       }
       next = section.prev;
+    }
+    // Trailer /Encrypt may reference an object in an older xref section, so
+    // security can only be initialized after the whole chain is loaded.
+    if (this.encryptValue && !this.security) {
+      await this.initSecurity(this.encryptValue, password);
     }
   }
 
@@ -1326,7 +1331,11 @@ export class PdfFileReader {
       if (dataEnd < 0) {
         const marker = this.findBytes("endstream", dataStart);
         if (marker < 0) throw new PdfStructureError("unterminated stream");
-        dataEnd = marker;
+        let end = marker;
+        // The EOL before `endstream` is a delimiter, not stream data.
+        if (end > dataStart && this.bytes[end - 1] === 0x0a) end -= 1;
+        if (end > dataStart && this.bytes[end - 1] === 0x0d) end -= 1;
+        dataEnd = end;
       }
       value = {
         kind: "stream",
@@ -1442,7 +1451,9 @@ export class PdfFileReader {
   async streamBytes(value: PdfValue): Promise<Uint8Array> {
     if (value.kind !== "stream") throw new PdfStructureError("not a stream");
     let data = this.bytes.subarray(value.start, value.end);
-    if (this.security) {
+    // ISO 32000: cross-reference streams are never encrypted, even when the
+    // rest of the document is.
+    if (this.security && takeName(value.dict, "Type") !== "XRef") {
       data = await this.security.decryptStream(value.objNum, value.gen, data);
     }
     const filter = takeName(value.dict, "Filter");
@@ -1742,13 +1753,20 @@ export interface ObjectUpdate {
 
 /**
  * Appends an incremental update section: new object versions plus a classic
- * xref table and trailer chained through /Prev. Trailer-only keys that an
- * update inherits (/Encrypt, /Info) are deliberately left out.
+ * xref table and trailer chained through /Prev. The trailer repeats /Info and
+ * /Encrypt so readers that do not merge trailers still see them.
  */
 export function appendIncrementalUpdate(
   original: Uint8Array,
   updates: ObjectUpdate[],
-  trailer: { size: number; root: PdfRef; prev: number; id: Uint8Array | null },
+  trailer: {
+    size: number;
+    root: PdfRef;
+    prev: number;
+    id: Uint8Array | null;
+    info?: PdfRef | null;
+    encrypt?: PdfValue | null;
+  },
 ): Uint8Array {
   const chunks: Uint8Array[] = [original];
   if (original.length > 0 && original[original.length - 1] !== 0x0a) {
@@ -1792,8 +1810,14 @@ export function appendIncrementalUpdate(
     trailer.id && trailer.id.length > 0
       ? ` /ID [<${toHex(trailer.id)}> <${toHex(trailer.id)}>]`
       : "";
+  const info = trailer.info
+    ? ` /Info ${trailer.info.num} ${trailer.info.gen} R`
+    : "";
+  const encrypt = trailer.encrypt
+    ? ` /Encrypt ${serializeValue(trailer.encrypt)}`
+    : "";
   lines.push(
-    `trailer\n<< /Size ${trailer.size} /Root ${trailer.root.num} ${trailer.root.gen} R /Prev ${trailer.prev}${id} >>\nstartxref\n${xrefOffset}\n%%EOF\n`,
+    `trailer\n<< /Size ${trailer.size} /Root ${trailer.root.num} ${trailer.root.gen} R${info}${encrypt} /Prev ${trailer.prev}${id} >>\nstartxref\n${xrefOffset}\n%%EOF\n`,
   );
   chunks.push(encoder.encode(lines.join("")));
   return concatBytes(...chunks);

@@ -1,6 +1,8 @@
 import { webcrypto } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
+  PdfFileReader,
+  appendIncrementalUpdate,
   aesCbcDecrypt,
   aesCbcEncryptRaw,
   aesCbcDecryptRaw,
@@ -87,4 +89,58 @@ describe("pdfObjectReader crypto", () => {
     payload.set(reference, 16);
     expect(toHex(aesCbcDecrypt(key, payload))).toBe(toHex(plain));
   }
+});
+
+describe("pdfObjectReader streams and trailers", () => {
+  function buildPdf(objects: string[]): Uint8Array {
+    const encoder = new TextEncoder();
+    const header = "%PDF-1.4\n";
+    let body = "";
+    const offsets: number[] = [];
+    objects.forEach((object, index) => {
+      offsets.push(header.length + body.length);
+      body += `${index + 1} 0 obj\n${object}\nendobj\n`;
+    });
+    const xrefOffset = header.length + body.length;
+    const entries = offsets
+      .map((offset) => `${String(offset).padStart(10, "0")} 00000 n \n`)
+      .join("");
+    const xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n${entries}`;
+    const trailer = `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+    return encoder.encode(header + body + xref + trailer);
+  }
+
+  it("strips the EOL before endstream when /Length is indirect", async () => {
+    const reader = await PdfFileReader.open(
+      buildPdf([
+        "<< /Type /Catalog /Pages 2 0 R >>",
+        "<< /Type /Pages /Kids [] /Count 0 >>",
+        "<< /Length 4 0 R >>\nstream\nHELLO\nendstream",
+        "5",
+      ]),
+    );
+    const parsed = await reader.getParsed(3);
+
+    expect(parsed?.value.kind).toBe("stream");
+    if (parsed?.value.kind === "stream") {
+      expect(await reader.streamBytes(parsed.value)).toEqual(
+        new TextEncoder().encode("HELLO"),
+      );
+    }
+  });
+
+  it("keeps /Info and /Encrypt in an appended trailer", () => {
+    const output = appendIncrementalUpdate(new Uint8Array(0), [], {
+      size: 6,
+      root: { num: 1, gen: 0 },
+      prev: 0,
+      id: null,
+      info: { num: 4, gen: 0 },
+      encrypt: { kind: "ref", ref: { num: 5, gen: 0 } },
+    });
+    const text = new TextDecoder().decode(output);
+
+    expect(text).toContain("/Info 4 0 R");
+    expect(text).toContain("/Encrypt 5 0 R");
+  });
 });
