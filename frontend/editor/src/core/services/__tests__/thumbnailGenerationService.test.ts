@@ -72,6 +72,26 @@ describe("ThumbnailGenerationService", () => {
     expect(mocks.closeRawDocument).toHaveBeenCalledTimes(1);
   });
 
+  it("closes the loser when two misses open the same file concurrently", async () => {
+    const service = new ThumbnailGenerationService();
+    const internals = internalsOf(service);
+    const opens: Array<(value: number) => void> = [];
+    mocks.openRawDocumentSafe.mockImplementation(
+      () => new Promise<number>((resolve) => opens.push(resolve)),
+    );
+
+    const first = internals.getCachedPDFDocument(fileId("shared"), buffer);
+    const second = internals.getCachedPDFDocument(fileId("shared"), buffer);
+
+    opens[0](1);
+    await first;
+    opens[1](2);
+
+    await expect(second).resolves.toBe(1);
+    expect(mocks.closeRawDocument).toHaveBeenCalledWith(2);
+    expect(internals.pdfDocumentCache.get(fileId("shared"))?.refCount).toBe(2);
+  });
+
   it("exceeds the configured limit while a pinned document has nowhere to go", async () => {
     const service = new ThumbnailGenerationService();
     const internals = internalsOf(service);

@@ -78,6 +78,16 @@ export class ThumbnailGenerationService {
       getPdfAccess(fileId)?.password,
     );
 
+    // A concurrent miss may have opened the same file while this one awaited.
+    // Keep the surviving entry and close this duplicate document.
+    const raced = this.pdfDocumentCache.get(fileId);
+    if (raced) {
+      void closeRawDocument(docPtr);
+      raced.lastUsed = Date.now();
+      raced.refCount++;
+      return raced.docPtr;
+    }
+
     this.pdfDocumentCache.set(fileId, {
       docPtr,
       lastUsed: Date.now(),
