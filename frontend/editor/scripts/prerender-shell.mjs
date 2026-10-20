@@ -896,7 +896,8 @@ function deferEntry(html, loginChunk) {
     'var genericBtn=t.closest("button");' +
     "if(genericBtn){" +
     'var testId=genericBtn.getAttribute("data-testid");var aria=genericBtn.getAttribute("aria-label");' +
-    'if(testId)pendingButtonSelector="button[data-testid=\\""+esc(testId)+"\\"]";' +
+    'if(genericBtn.getAttribute("type")==="submit")pendingButtonSelector="button[type=submit]";' +
+    'else if(testId)pendingButtonSelector="button[data-testid=\\""+esc(testId)+"\\"]";' +
     'else if(aria)pendingButtonSelector="button[aria-label=\\""+esc(aria)+"\\"]";' +
     'else if(genericBtn.className)pendingButtonSelector="button."+genericBtn.className.split(" ").filter(Boolean).map(esc).join(".");' +
     "boot();handOff();return;}" +
