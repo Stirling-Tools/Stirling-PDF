@@ -124,7 +124,7 @@ beforeEach(() => {
       return out.buffer;
     },
   );
-  sessionStorage.clear();
+  localStorage.clear();
   vi.clearAllMocks();
   actions.addStirlingFileStubs.mockResolvedValue([]);
   mocks.getLeafStirlingFileStubs.mockResolvedValue([]);
@@ -140,7 +140,7 @@ afterEach(() => vi.useRealTimers());
 
 describe("restore", () => {
   it("refills an empty workbench with each file's current leaf, in saved order", async () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
         v: 2,
@@ -170,7 +170,7 @@ describe("restore", () => {
   });
 
   it("adds saved files alongside files that are already open", async () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
     );
@@ -187,7 +187,7 @@ describe("restore", () => {
   });
 
   it("reads unversioned files directly instead of scanning the whole library", async () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
     );
@@ -207,7 +207,7 @@ describe("restore", () => {
   });
 
   it("scans for the current leaf once a recorded file has been versioned", async () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
     );
@@ -232,7 +232,7 @@ describe("restore", () => {
   });
 
   it("restores saved files while leaving the view to launch files still loading", async () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
         v: 2,
@@ -261,7 +261,7 @@ describe("restore", () => {
   it.each(["lookup", "addition"])(
     "does not replace launch selection or view when files arrive during %s",
     async (phase) => {
-      sessionStorage.setItem(
+      localStorage.setItem(
         SESSION_KEY,
         JSON.stringify({
           v: 2,
@@ -301,7 +301,7 @@ describe("restore", () => {
   );
 
   it("does not reopen another version of a file already in the workbench", async () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
     );
@@ -320,7 +320,7 @@ describe("restore", () => {
   });
 
   it("restores what still exists and says how much is gone", async () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
         v: 2,
@@ -340,7 +340,7 @@ describe("restore", () => {
   });
 
   it("does not say 'the rest' when nothing at all could be restored", async () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
         v: 2,
@@ -366,7 +366,7 @@ describe("restore", () => {
   });
 
   it("reopens the document the user was viewing, at its current version", async () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
         v: 2,
@@ -388,7 +388,7 @@ describe("restore", () => {
   });
 
   it("leaves a path-seeded view to the return path", async () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
         v: 2,
@@ -413,7 +413,7 @@ describe("restore", () => {
 describe("whose workbench it is", () => {
   // Records hold a fingerprint of the owner, never the account id.
   const record = async (userId: string | null) =>
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
         v: 2,
@@ -436,9 +436,30 @@ describe("whose workbench it is", () => {
     expect(actions.addStirlingFileStubs).not.toHaveBeenCalled();
     // The record is theirs now - the previous person's files are gone from it, so they cannot
     // resurface later in the session.
-    const taken = JSON.parse(sessionStorage.getItem(SESSION_KEY)!);
+    const taken = JSON.parse(localStorage.getItem(SESSION_KEY)!);
     expect(taken.fileIds).toEqual([]);
     expect(taken.userId).toBe(await fingerprintOwner("user-b"));
+  });
+
+  it("does not hand the next person the pages read here, even with no files open", async () => {
+    localStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        v: 2,
+        fileIds: [],
+        selectedFileIds: [],
+        pages: { "root-a": 7 },
+        userId: await fingerprintOwner("user-a"),
+      }),
+    );
+    mocks.authUser = { id: "user-b" };
+
+    mount(makeStore());
+
+    await act(async () => {});
+    expect(
+      JSON.parse(localStorage.getItem(SESSION_KEY)!).pages,
+    ).toBeUndefined();
   });
 
   it("reopens it for the user who left it", async () => {
@@ -468,7 +489,7 @@ describe("whose workbench it is", () => {
     await act(async () => {});
     // Neither restored nor discarded - who is signed in is not known yet.
     expect(actions.addStirlingFileStubs).not.toHaveBeenCalled();
-    expect(sessionStorage.getItem(SESSION_KEY)).not.toBeNull();
+    expect(localStorage.getItem(SESSION_KEY)).not.toBeNull();
   });
 });
 
@@ -490,7 +511,7 @@ describe("a lost session that comes back", () => {
   it("survives a blip on the identity check", async () => {
     // A failed /auth/me - flaky wifi, a backend redeploy, a refreshSession() that did not land -
     // briefly reads as nobody signed in. It must not be mistaken for signing out.
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
         v: 2,
@@ -508,7 +529,7 @@ describe("a lost session that comes back", () => {
     rerenderWith(view, store);
     await act(async () => {});
 
-    expect(sessionStorage.getItem(SESSION_KEY)).not.toBeNull();
+    expect(localStorage.getItem(SESSION_KEY)).not.toBeNull();
 
     // ...and once the identity is back, the workbench is still being recorded.
     mocks.authUser = { id: "user-a" };
@@ -519,7 +540,7 @@ describe("a lost session that comes back", () => {
     store.state.files.byId = { f2: stub("f2", "root-b") };
     act(() => store.notify());
     view.unmount();
-    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
+    expect(JSON.parse(localStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
       "root-b",
     ]);
   });
@@ -528,7 +549,7 @@ describe("a lost session that comes back", () => {
 describe("on the login screen", () => {
   it("neither restores nor records - signing out must not rebuild the workbench there", async () => {
     mocks.pathname = "/login";
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
     );
@@ -546,7 +567,7 @@ describe("on the login screen", () => {
     store.state.files.byId = { f1: stub("f1", "f1") };
     act(() => store.notify());
     unmount();
-    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
+    expect(JSON.parse(localStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
       "root-a",
     ]);
   });
@@ -560,7 +581,7 @@ describe("writer", () => {
       fileIds: ["root-a"],
       selectedFileIds: [],
     });
-    sessionStorage.setItem(SESSION_KEY, saved);
+    localStorage.setItem(SESSION_KEY, saved);
     mocks.launchFilesPending = true;
     const store = makeStore();
     const { unmount } = mount(store);
@@ -570,12 +591,12 @@ describe("writer", () => {
     await act(async () => vi.advanceTimersByTimeAsync(300));
     unmount();
 
-    expect(sessionStorage.getItem(SESSION_KEY)).toBe(saved);
+    expect(localStorage.getItem(SESSION_KEY)).toBe(saved);
   });
 
   it("records launched files and an intentional close after intake succeeds", async () => {
     vi.useFakeTimers();
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
     );
@@ -588,7 +609,7 @@ describe("writer", () => {
     store.state.files.byId = { launched: stub("launched", "launched") };
     act(() => store.notify());
     await act(async () => vi.advanceTimersByTimeAsync(300));
-    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
+    expect(JSON.parse(localStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
       "launched",
     ]);
 
@@ -596,13 +617,11 @@ describe("writer", () => {
     store.state.files.byId = {};
     act(() => store.notify());
     unmount();
-    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual(
-      [],
-    );
+    expect(JSON.parse(localStorage.getItem(SESSION_KEY)!).fileIds).toEqual([]);
   });
 
   it("records a launch file closed before the debounced write as an empty session", async () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
     );
@@ -618,9 +637,7 @@ describe("writer", () => {
     store.state.files.byId = {};
     act(() => store.notify());
     unmount();
-    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual(
-      [],
-    );
+    expect(JSON.parse(localStorage.getItem(SESSION_KEY)!).fileIds).toEqual([]);
   });
 
   it("mirrors the open files and selection as original ids, debounced", async () => {
@@ -636,7 +653,7 @@ describe("writer", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(300);
     });
-    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!)).toMatchObject({
+    expect(JSON.parse(localStorage.getItem(SESSION_KEY)!)).toMatchObject({
       fileIds: ["root-a"],
       selectedFileIds: ["root-a"],
       workbench: "viewer",
@@ -653,14 +670,14 @@ describe("writer", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(300);
     });
-    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).workbench).toBe(
+    expect(JSON.parse(localStorage.getItem(SESSION_KEY)!).workbench).toBe(
       "fileEditor",
     );
   });
 
   it("writes nothing until the restore has settled", () => {
     vi.useFakeTimers();
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
     );
@@ -672,7 +689,7 @@ describe("writer", () => {
     act(() => store.notify());
     unmount();
 
-    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
+    expect(JSON.parse(localStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
       "root-a",
     ]);
   });
@@ -687,7 +704,7 @@ describe("writer", () => {
     act(() => store.notify());
     unmount();
 
-    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
+    expect(JSON.parse(localStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
       "f1",
     ]);
   });

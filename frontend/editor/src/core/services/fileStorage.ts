@@ -17,7 +17,6 @@ import {
   DATABASE_CONFIGS,
 } from "@app/services/indexedDBManager";
 import { alert } from "@app/components/toast";
-import { forgetLastViewedPages } from "@app/services/lastViewedPageStore";
 import i18n from "i18next";
 
 /**
@@ -1141,8 +1140,7 @@ class FileStorageService {
   }
 
   /**
-   * Delete StirlingFile - single operation, no sync issues. Forgets the file's
-   * last viewed page once the delete commits.
+   * Delete StirlingFile - single operation, no sync issues
    */
   async deleteStirlingFile(id: FileId): Promise<void> {
     const db = await this.getDatabase();
@@ -1153,17 +1151,13 @@ class FileStorageService {
       // soon as this resolves, and an aborted delete would put the row back.
       settleOnAbort(transaction, reject);
       transaction.onerror = () => reject(transaction.error);
-      transaction.oncomplete = () => {
-        forgetLastViewedPages([id]);
-        resolve();
-      };
+      transaction.oncomplete = () => resolve();
       transaction.objectStore(this.storeName).delete(id);
     });
   }
 
   /**
-   * Delete multiple StirlingFiles in a single transaction. Forgets their last
-   * viewed pages once the delete commits.
+   * Delete multiple StirlingFiles in a single transaction
    */
   async deleteMultipleStirlingFiles(ids: FileId[]): Promise<void> {
     if (ids.length === 0) return;
@@ -1172,10 +1166,7 @@ class FileStorageService {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
-      transaction.oncomplete = () => {
-        forgetLastViewedPages(ids);
-        resolve();
-      };
+      transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(transaction.error);
       transaction.onabort = () =>
         reject(transaction.error ?? new Error("Transaction aborted"));

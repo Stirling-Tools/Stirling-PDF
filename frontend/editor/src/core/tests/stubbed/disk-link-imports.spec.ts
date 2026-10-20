@@ -129,7 +129,7 @@ for (const timing of ["reload", "running"] as const) {
         page.evaluate(
           () =>
             JSON.parse(
-              sessionStorage.getItem("stirling.workbench.session") ?? "{}",
+              localStorage.getItem("stirling.workbench.session") ?? "{}",
             ).fileIds?.length,
         ),
       )
@@ -168,7 +168,7 @@ for (const timing of ["reload", "running"] as const) {
         page.evaluate(
           () =>
             JSON.parse(
-              sessionStorage.getItem("stirling.workbench.session") ?? "{}",
+              localStorage.getItem("stirling.workbench.session") ?? "{}",
             ).fileIds?.length,
         ),
       )

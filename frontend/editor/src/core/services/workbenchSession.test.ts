@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   originalIdOf,
+  readViewedPage,
   readWorkbenchSession,
   writeWorkbenchSession,
   saveEditorReturnPath,
@@ -9,12 +10,14 @@ import {
   clearWorkbenchSession,
   suspendWorkbenchSession,
   resumeWorkbenchSession,
+  writeViewedPage,
 } from "@app/services/workbenchSession";
 import type { StirlingFileStub } from "@app/types/fileContext";
 
 const SESSION_KEY = "stirling.workbench.session";
 
 beforeEach(() => {
+  localStorage.clear();
   sessionStorage.clear();
   resumeWorkbenchSession();
 });
@@ -33,9 +36,9 @@ describe("workbench session record", () => {
   });
 
   it("rejects a malformed record instead of throwing", () => {
-    sessionStorage.setItem(SESSION_KEY, "not json");
+    localStorage.setItem(SESSION_KEY, "not json");
     expect(readWorkbenchSession()).toBeNull();
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: "nope" }),
     );
@@ -43,7 +46,7 @@ describe("workbench session record", () => {
   });
 
   it("drops non-string ids and defaults a missing selection", () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: ["a", 7, null, "b"] }),
     );
@@ -80,7 +83,7 @@ describe("originalIdOf", () => {
 describe("record hygiene", () => {
   it("discards a record written by an older schema", () => {
     // No version stamp: a shape this build no longer understands.
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ fileIds: ["a"], selectedFileIds: [] }),
     );
@@ -88,7 +91,7 @@ describe("record hygiene", () => {
 
     // v1 recorded userId before it meant anything, so those must go too rather than
     // look like a workbench that legitimately belongs to an anonymous session.
-    sessionStorage.setItem(
+    localStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
         v: 1,
@@ -103,7 +106,7 @@ describe("record hygiene", () => {
   it("drops the previous record when a write fails, rather than leaving it stale", () => {
     writeWorkbenchSession({ fileIds: ["old"], selectedFileIds: [] });
     const setItem = vi
-      .spyOn(Object.getPrototypeOf(sessionStorage), "setItem")
+      .spyOn(Object.getPrototypeOf(localStorage), "setItem")
       .mockImplementation(() => {
         throw new Error("QuotaExceededError");
       });
@@ -137,7 +140,7 @@ describe("record hygiene", () => {
       userId: null,
     });
 
-    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
+    expect(localStorage.getItem(SESSION_KEY)).toBeNull();
   });
 
   it("keeps the owner when the identity is momentarily unknown", () => {
@@ -156,6 +159,32 @@ describe("record hygiene", () => {
     });
 
     expect(readWorkbenchSession()?.userId).toBe("user-a");
+  });
+
+  it("remembers the page per file, and forgets it on page 1", () => {
+    writeViewedPage("a", 7);
+    writeViewedPage("b", 3);
+    writeViewedPage("b", 1);
+
+    expect(readViewedPage("a")).toBe(7);
+    expect(readViewedPage("b")).toBeNull();
+  });
+
+  it("keeps the pages when the workbench is written without them", () => {
+    writeViewedPage("a", 7);
+    writeWorkbenchSession({ fileIds: ["b"], selectedFileIds: [] });
+
+    expect(readViewedPage("a")).toBe(7);
+  });
+
+  it("evicts the least recently read page once full", () => {
+    for (let i = 0; i < 200; i++) writeViewedPage(`file-${i}`, 2);
+    writeViewedPage("file-0", 5);
+    writeViewedPage("newest", 4);
+
+    expect(readViewedPage("file-1")).toBeNull();
+    expect(readViewedPage("file-0")).toBe(5);
+    expect(readViewedPage("newest")).toBe(4);
   });
 
   it("still records for a genuinely anonymous session", () => {

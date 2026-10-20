@@ -12,7 +12,6 @@ import {
   type AuthUser,
   type AuthTranslate,
 } from "@app/auth/types";
-import { suspendLastViewedPages } from "@app/services/lastViewedPageStore";
 import { suspendWorkbenchSession } from "@app/services/workbenchSession";
 
 /**
@@ -103,8 +102,6 @@ export function SpringAuthProvider({
       // workbench record here and stop recording, so the teardown that follows cannot
       // write it back for whoever signs in next.
       suspendWorkbenchSession();
-      // Same reason: the next person must not learn which documents were read here.
-      suspendLastViewedPages();
 
       const { error } = await springAuth.signOut();
 

@@ -70,7 +70,6 @@ import type { RemovePasswordParameters } from "@app/hooks/tools/removePassword/u
 import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
 import apiClient from "@app/services/apiClient";
 import { reportFilesRemoved } from "@app/services/failureReporting";
-import { clearLastViewedPages } from "@app/services/lastViewedPageStore";
 import {
   addPendingUnlocks,
   setPendingUnlocks,
@@ -717,7 +716,6 @@ function FileContextInner({
         lifecycleManager.cleanupAllFiles();
         filesRef.current.clear();
         dispatch({ type: "RESET_CONTEXT" });
-        clearLastViewedPages();
 
         // Then clear IndexedDB storage
         if (indexedDB && enablePersistence) {
