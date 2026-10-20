@@ -31,8 +31,11 @@ function computeChangedLines(
 ): ChangedLines {
   const ranges: ChangedLines = new Map();
   if (files.length === 0) return ranges;
+  const wanted = new Set(files);
   let diff: string;
   try {
+    // No pathspec: limiting the diff to `files` hides a moved file's old path,
+    // so git reports the move as an add and every test in it reads as new.
     diff = execFileSync(
       "git",
       [
@@ -43,10 +46,9 @@ function computeChangedLines(
         "diff",
         "-w",
         "--unified=0",
+        "--find-renames",
         "--diff-filter=AMR",
         `${baseSha}...HEAD`,
-        "--",
-        ...files,
       ],
       { cwd: workspace, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
     );
@@ -61,7 +63,7 @@ function computeChangedLines(
     if (rawLine.startsWith("+++ ")) {
       // "+++ b/path", or "+++ /dev/null" for a deletion (no new side).
       const path = rawLine.slice(4).replace(/^b\//, "");
-      current = path === "/dev/null" ? null : path;
+      current = wanted.has(path) ? path : null;
       if (current && !ranges.has(current)) ranges.set(current, []);
       continue;
     }
