@@ -1,5 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { ensureCookieConsent } from "@app/tests/helpers/login";
+import {
+  dismissWelcomeDialog,
+  ensureCookieConsent,
+} from "@app/tests/helpers/login";
 import { bypassOnboarding } from "@app/tests/helpers/api-stubs";
 import { openSettings } from "@app/tests/helpers/ui-helpers";
 
@@ -29,6 +32,12 @@ async function uiLogin(page: import("@playwright/test").Page) {
   // Let the post-login bootstrap (session, config, account) settle before the
   // settings modal starts its own fetches.
   await page.waitForLoadState("networkidle").catch(() => {});
+  // A welcome/onboarding overlay otherwise intercepts the config button.
+  await dismissWelcomeDialog(page);
+  const accept = page.getByRole("button", { name: "Accept", exact: true });
+  if (await accept.isVisible().catch(() => false)) {
+    await accept.click();
+  }
 }
 
 test.describe("Enterprise license — admin settings UI", () => {
