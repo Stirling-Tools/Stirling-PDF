@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -185,6 +186,18 @@ class JobQueueMoreTest {
     @Nested
     @DisplayName("processQueue")
     class ProcessQueue {
+
+        @Test
+        @DisplayName("a burst of enqueues wakes the processor once")
+        void burstEnqueuesCoalesceWakeups() {
+            jobQueue.queueJob("burst-a", 50, () -> "a", 5000);
+            jobQueue.queueJob("burst-b", 50, () -> "b", 5000);
+            jobQueue.queueJob("burst-c", 50, () -> "c", 5000);
+
+            Semaphore permits = (Semaphore) ReflectionTestUtils.getField(jobQueue, "workAvailable");
+
+            assertThat(permits.availablePermits()).isEqualTo(1);
+        }
 
         @Test
         @DisplayName("does nothing when shutting down")

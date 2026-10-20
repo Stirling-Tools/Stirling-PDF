@@ -115,6 +115,8 @@ public class JobQueue implements SmartLifecycle {
         while (!shuttingDown) {
             try {
                 workAvailable.acquire();
+                // Collapse a burst of wakeups into one pass (plus the retry timer).
+                workAvailable.drainPermits();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return;
@@ -238,6 +240,7 @@ public class JobQueue implements SmartLifecycle {
 
             // Try to add to the queue
             try {
+                boolean wasEmpty = jobQueue.isEmpty();
                 boolean added = jobQueue.offer(job, 5, TimeUnit.SECONDS);
                 if (!added) {
                     log.warn("Queue full, rejecting job {}", jobId);
@@ -254,7 +257,11 @@ public class JobQueue implements SmartLifecycle {
                         resourceWeight,
                         jobQueue.size());
 
-                workAvailable.release();
+                // Only the first job into an empty queue wakes the processor; while work
+                // remains, the retry timer owns the cadence under load.
+                if (wasEmpty) {
+                    workAvailable.release();
+                }
                 return future;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
