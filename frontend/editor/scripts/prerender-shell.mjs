@@ -885,7 +885,7 @@ function deferEntry(html, loginChunk) {
     'addEventListener("click",function(event){if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;' +
     'var t=event.target;if(!t||!t.closest||!t.closest("[data-shell-for]"))return;' +
     'var btn=t.closest("button[data-testid=\\"files-button\\"],button[data-testid=\\"pdf-library-add-files\\"],button.sui-btn--primary");' +
-    'if(btn){var sh=btn.closest("[data-shell-for]");var fi=sh&&sh.querySelector("input[type=file]");if(fi)fi.click();boot();return;}' +
+    'if(btn){var sh=btn.closest("[data-shell-for]");var fi=sh&&sh.querySelector("input[type=file]");if(fi){fi.click();boot();return;}}' +
     'var link=t.closest("a[href]");' +
     'if(link&&!link.target&&!link.hasAttribute("download")){var href=link.getAttribute("href");' +
     'if(href&&href.charAt(0)!=="#"&&!/^[a-z]+:/i.test(href)){' +
@@ -910,7 +910,8 @@ function deferEntry(html, loginChunk) {
     'addEventListener("submit",function(e){if(e.target&&e.target.closest&&e.target.closest("[data-shell-for]")){e.preventDefault();boot();}},true);' +
     "function handOff(){" +
     'if(document.querySelector("[data-shell-for]")&&tries++<200){setTimeout(handOff,50);return;}' +
-    "if(pendingButtonSelector){var b=null;try{b=document.querySelector(pendingButtonSelector);}catch(e){}if(b){b.click();pendingButtonSelector=null;}}" +
+    "if(pendingButtonSelector){var b=null;try{b=document.querySelector(pendingButtonSelector);}catch(e){}" +
+    "if(b&&!b.disabled){b.click();pendingButtonSelector=null;}else if(tries++<200){setTimeout(handOff,50);return;}}" +
     "if(!pending)return;" +
     'var input=document.querySelector("input[type=file]");' +
     "if(!input){if(tries++<200){setTimeout(handOff,50);return;}pending=null;return;}" +
@@ -1017,6 +1018,21 @@ export async function prerenderShell({
     throw new Error(
       `no language reproduced the captured text nodes (base ${wide.nodes} nodes; ` +
         `saw ${wide.dropped.slice(0, 5).join(", ") || "nothing"})`,
+    );
+  }
+  // The login form ships with its submit disabled until React validates the
+  // fields. The static shell has no validation, and a disabled button cannot
+  // start the boot/handoff path; enable it and let the app reject bad input.
+  if (login) {
+    login.markup = login.markup.replace(
+      /<button\b([^>]*)>/gi,
+      (_tag, attrs) => {
+        const enabled = attrs.replace(
+          /\s(?:disabled|aria-disabled|data-disabled)(?:="[^"]*")?/gi,
+          "",
+        );
+        return `<button${enabled}>`;
+      },
     );
   }
   const criticalCss = mergeCriticalCss(
