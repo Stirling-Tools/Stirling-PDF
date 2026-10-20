@@ -297,6 +297,9 @@ function desktopAssetsPlugin(
         "og-metadata.saas.json",
         "robots.txt",
         "sitemap.xml",
+        // The mobile scanner runs on the phone's browser, never in the Tauri
+        // webview; its OpenCV bundle is ~9 MB of dead weight in the app.
+        "vendor/jscanify",
       ]) {
         await fs.rm(path.join(distDir, name), { recursive: true, force: true });
       }
