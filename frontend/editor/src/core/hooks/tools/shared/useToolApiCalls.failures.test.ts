@@ -4,12 +4,12 @@ import type { AxiosRequestConfig } from "axios";
 import { expectConsole } from "@app/tests/failOnConsole";
 import { rememberUnprotectedPdf } from "@app/tests/utils/testFileHelpers";
 import type { StirlingFile } from "@app/types/fileContext";
-import { inspectLocalPdfAccess } from "@app/services/pdfLocalAccess";
 import {
+  inspectLocalPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 // One bad file in a batch must come back named, with its error: the caller reports each one,
 // and it cannot derive the failure kind without the error the request threw.
@@ -18,8 +18,8 @@ const post = vi.fn();
 vi.mock("@app/services/apiClient", () => ({
   default: { post: (...args: unknown[]) => post(...args) },
 }));
-vi.mock("@app/services/pdfLocalAccess", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/services/pdfLocalAccess")>()),
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
   inspectLocalPdfAccess: vi.fn(),
 }));
 const inspectLocal = vi.mocked(inspectLocalPdfAccess);
@@ -120,12 +120,12 @@ describe("processFiles failure reporting", () => {
   );
 
   it.each([
-    ["add-password", "set-pdf-protection", "reader"],
-    ["add-password", "change-pdf-permissions", "reader"],
-    ["remove-password", "remove-password", ""],
+    ["add-password", false, "reader"],
+    ["add-password", true, "reader"],
+    ["remove-password", false, ""],
   ])(
-    "adopts %s results locally with only the %s processing request",
-    async (operation, target, password) => {
+    "adopts %s results locally with preserveExisting=%s",
+    async (operation, preserveExisting, password) => {
       const input = file("source.pdf", "source");
       rememberPdfAccess(input, {
         ...getPdfAccess(input)!,
@@ -150,7 +150,7 @@ describe("processFiles failure reporting", () => {
           buildFormData: () => {
             const form = new FormData();
             form.set("password", "reader");
-            if (target === "set-pdf-protection") form.set("keyLength", "256");
+            if (!preserveExisting) form.set("keyLength", "256");
             return form;
           },
         },
@@ -159,7 +159,7 @@ describe("processFiles failure reporting", () => {
       );
       expect(processed.outputFiles).toHaveLength(1);
       expect(post).toHaveBeenCalledOnce();
-      expect(post.mock.calls[0][0]).toBe(`/api/v1/security/${target}`);
+      expect(post.mock.calls[0][0]).toBe(`/api/v1/security/${operation}`);
       expect(inspectLocal).toHaveBeenCalledWith(
         processed.outputFiles[0],
         password,

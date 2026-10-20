@@ -6,11 +6,10 @@ import {
   getPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfPasswordStore";
-import {
   ensureLocalPdfAccess,
   inspectLocalPdfAccess,
-} from "@app/services/pdfLocalAccess";
+} from "@app/services/pdfAccessService";
+
 import { preflightPdfOperation } from "@app/services/pdfSessionUnlock";
 import { createStirlingFile } from "@app/types/fileContext";
 import apiClient from "@app/services/apiClient";
@@ -58,6 +57,61 @@ beforeEach(() => {
 });
 
 describe("local inspection lifetime", () => {
+  it("shares a worker without letting one consumer cancel another", async () => {
+    const file = new File(["PDF"], "protected.pdf");
+    const first = new AbortController();
+    const cancelled = inspectLocalPdfAccess(file, "reader", first.signal);
+    const rejected = expect(cancelled).rejects.toMatchObject({
+      name: "AbortError",
+    });
+    const retained = inspectLocalPdfAccess(file, "reader");
+    expect(workers).toHaveLength(1);
+    first.abort();
+    await rejected;
+    expect(workers[0].terminate).not.toHaveBeenCalled();
+    workers[0].onmessage?.({ data: { access } });
+    await expect(retained).resolves.toEqual(access);
+    expect(workers[0].terminate).toHaveBeenCalledOnce();
+    expect(getPdfAccess(file)).toBeUndefined();
+  });
+
+  it("starts a new inspection after every consumer cancels", async () => {
+    const file = new File(["PDF"], "protected.pdf");
+    const first = new AbortController();
+    const cancelled = inspectLocalPdfAccess(file, "reader", first.signal);
+    const rejected = expect(cancelled).rejects.toMatchObject({
+      name: "AbortError",
+    });
+    first.abort();
+    const retry = inspectLocalPdfAccess(file, "reader");
+    expect(workers).toHaveLength(2);
+    workers[1].onmessage?.({ data: { access } });
+    await rejected;
+    await expect(retry).resolves.toEqual(access);
+    expect(workers[0].terminate).toHaveBeenCalledOnce();
+  });
+
+  it("keeps different credentials in separate inspections", async () => {
+    const file = new File(["PDF"], "protected.pdf");
+    const reader = inspectLocalPdfAccess(file, "reader");
+    const owner = inspectLocalPdfAccess(file, "owner");
+    expect(workers).toHaveLength(2);
+    workers[0].onmessage?.({ data: { access } });
+    workers[1].onmessage?.({
+      data: {
+        access: { ...access, password: "owner", ownerAuthenticated: true },
+      },
+    });
+    await expect(reader).resolves.toMatchObject({
+      password: "reader",
+      ownerAuthenticated: false,
+    });
+    await expect(owner).resolves.toMatchObject({
+      password: "owner",
+      ownerAuthenticated: true,
+    });
+  });
+
   it("reuses access without reading the file or creating a worker", async () => {
     const file = new File(["PDF"], "protected.pdf");
     const stored = rememberPdfAccess(file, access);

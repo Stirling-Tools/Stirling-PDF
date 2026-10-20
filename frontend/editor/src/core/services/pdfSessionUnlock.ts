@@ -1,47 +1,21 @@
-import { ensureLocalPdfAccess } from "@app/services/pdfLocalAccess";
-import apiClient from "@app/services/apiClient";
-import axios, { type CancelToken } from "axios";
-import i18n from "i18next";
 import {
+  ensureLocalPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
+import apiClient from "@app/services/apiClient";
+import axios, { type CancelToken } from "axios";
+import i18n from "i18next";
+
 import type { StirlingFile } from "@app/types/fileContext";
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { zipFileService } from "@app/services/zipFileService";
 
-/** An override grants actions without changing the document's actual authentication role. */
-export function hasPdfPermissionOverride(
-  access: Partial<PdfAccess> | undefined,
-): boolean {
-  return (
-    access?.ownerAuthenticated === true || access?.honorOwnerPasswords === false
-  );
-}
-
-/** Applies the server policy and authenticated access to the document's stored restrictions. */
-export function pdfAllows(
-  access: PdfAccess | undefined,
-  flag: PdfPermissionFlag,
-): boolean {
-  if (!access) return false;
-  if (
-    access.encryptionRevision === 2 &&
-    flag === PdfPermissionFlag.AssembleDocument
-  )
-    flag = PdfPermissionFlag.ModifyContents;
-  if (
-    access.encryptionRevision === 2 &&
-    flag === PdfPermissionFlag.PrintHighQuality
-  )
-    flag = PdfPermissionFlag.Print;
-  return (
-    !access.encrypted ||
-    hasPdfPermissionOverride(access) ||
-    (access.permissions & flag) !== 0
-  );
-}
+import {
+  hasPdfPermissionOverride,
+  pdfAllows,
+} from "@app/services/pdfPermissions";
 
 const SUPPORTED_ENDPOINTS = new Set([
   "/api/v1/security/add-password",
@@ -333,6 +307,7 @@ export async function changePdfSecurity(
       );
     form.set("sourcePassword", access?.password ?? "");
     if (!form.has("keyLength")) {
+      form.set("preserveExisting", "true");
       form.delete("password");
       if (access?.openingPassword !== undefined)
         form.set("password", access.openingPassword);
@@ -359,11 +334,7 @@ export async function changePdfSecurity(
       form.set("retainedOpeningPassword", access.openingPassword);
   }
   return requestWorkingPdf(
-    settingProtection
-      ? form.has("keyLength")
-        ? "/api/v1/security/set-pdf-protection"
-        : "/api/v1/security/change-pdf-permissions"
-      : "/api/v1/security/remove-password",
+    endpoint,
     form,
     i18n.t(
       "encryptedPdfUnlock.securityChangeFailed",

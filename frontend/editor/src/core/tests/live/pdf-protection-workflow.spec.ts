@@ -39,9 +39,7 @@ test("saving protection opens the result as a reader and changing permissions pr
     page.getByRole("button", { name: "Save protection", exact: true }),
   ).toBeDisabled();
   await ownerInput.fill(owner);
-  const protection = page.waitForResponse(
-    "**/api/v1/security/set-pdf-protection",
-  );
+  const protection = page.waitForResponse("**/api/v1/security/add-password");
   await page
     .getByRole("button", { name: "Save protection", exact: true })
     .click();
@@ -86,9 +84,7 @@ test("saving protection opens the result as a reader and changing permissions pr
   await page
     .getByRole("checkbox", { name: "Prevent printing", exact: true })
     .uncheck();
-  const changed = page.waitForResponse(
-    "**/api/v1/security/change-pdf-permissions",
-  );
+  const changed = page.waitForResponse("**/api/v1/security/add-password");
   await page
     .getByRole("button", { name: "Change Permissions", exact: true })
     .click();
@@ -167,9 +163,7 @@ for (const action of [
     const honorOwnerPasswords =
       (await inspect(page, buffer, "")).honorOwnerPasswords !== false;
     const endpoint =
-      action === "Change Permissions"
-        ? "change-pdf-permissions"
-        : "remove-pdf-protection";
+      action === "Change Permissions" ? "add-password" : "remove-password";
     const denied = await page.request.post(`/api/v1/security/${endpoint}`, {
       headers: await liveApiHeaders(page),
       multipart: {
@@ -180,6 +174,8 @@ for (const action of [
         },
         password: "",
         sourcePassword: "",
+        preserveExisting: action === "Change Permissions",
+        removeAll: action !== "Change Permissions",
       },
     });
     expect(denied.status()).toBe(honorOwnerPasswords ? 403 : 200);
@@ -324,7 +320,7 @@ test("a PDF with only an opening password opens and prints after removing its op
     .setInputFiles(path.join(fixtures, "sample.pdf"));
   await page.getByLabel("Password to open", { exact: true }).fill(reader);
   const protectedResponse = page.waitForResponse(
-    "**/api/v1/security/set-pdf-protection",
+    "**/api/v1/security/add-password",
   );
   await page
     .getByRole("button", { name: "Save protection", exact: true })
@@ -396,7 +392,7 @@ test("replacing the permissions password follows the owner policy and invalidate
     .getByRole("textbox", { name: "New permissions password", exact: true })
     .fill(owner);
   const changedResponse = page.waitForResponse(
-    "**/api/v1/security/change-pdf-permissions",
+    "**/api/v1/security/add-password",
   );
   await page
     .getByRole("button", { name: "Change Permissions", exact: true })

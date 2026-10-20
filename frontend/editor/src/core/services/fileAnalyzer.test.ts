@@ -1,14 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { ensureLocalPdfAccess } from "@app/services/pdfLocalAccess";
-import { clearPdfAccess } from "@app/services/pdfPasswordStore";
+import {
+  ensureLocalPdfAccess,
+  clearPdfAccess,
+} from "@app/services/pdfAccessService";
+
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 
 vi.mock("@app/services/pdfWorkerManager", () => ({
   pdfWorkerManager: { createDocument: vi.fn(), destroyDocument: vi.fn() },
 }));
-vi.mock("@app/services/pdfLocalAccess", () => ({
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
   ensureLocalPdfAccess: vi.fn(),
 }));
 

@@ -12,7 +12,7 @@ import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import type { StirlingFile } from "@app/types/fileContext";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
-import { hasPdfPermissionOverride } from "@app/services/pdfSessionUnlock";
+import { hasPdfPermissionOverride } from "@app/services/pdfPermissions";
 
 /** Persistent document settings; authentication is requested only when an action needs it. */
 export function PdfProtectionStatus({ file }: { file: StirlingFile }) {

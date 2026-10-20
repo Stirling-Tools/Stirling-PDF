@@ -16,7 +16,7 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import {
   bindPdfViewerSource,
   withPdfViewerAccess,
-} from "@app/services/pdfViewerAccess";
+} from "@app/components/viewer/pdfViewerAccess";
 import { useSignaturePreviewHistory } from "@app/hooks/signing/useSignaturePreviewHistory";
 
 // Import the essential plugins
@@ -109,10 +109,11 @@ import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvent
 import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
 import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
 import { isStirlingFile } from "@app/types/fileContext";
-import { pdfAllows } from "@app/services/pdfSessionUnlock";
+import { pdfAllows, canPrintPdf } from "@app/services/pdfPermissions";
+
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { canPrintPdf } from "@app/services/pdfPermissions";
+
 import {
   DocumentRestoreBridge,
   type DocumentRestoreEvent,

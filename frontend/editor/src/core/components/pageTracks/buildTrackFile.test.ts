@@ -19,7 +19,7 @@ import {
   clearPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 import { convertImageToPdf } from "@app/utils/imageToPdfUtils";
 
 const exportPDFMultiFile = vi.hoisted(() => vi.fn());

@@ -10,8 +10,8 @@ import {
   pdfAccessLifetime,
   rememberPdfAccess,
   rememberUnencryptedPdf,
-} from "@app/services/pdfPasswordStore";
-import { ensureLocalPdfAccess } from "@app/services/pdfLocalAccess";
+  ensureLocalPdfAccess,
+} from "@app/services/pdfAccessService";
 
 const sources = new WeakMap<ArrayBuffer, Blob>();
 

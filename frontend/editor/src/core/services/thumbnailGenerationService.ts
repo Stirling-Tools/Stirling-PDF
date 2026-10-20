@@ -3,7 +3,7 @@
  */
 
 import { FileId } from "@app/types/file";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 import {
   openRawDocumentSafe,
   closeRawDocument,

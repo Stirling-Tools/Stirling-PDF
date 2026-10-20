@@ -1,6 +1,6 @@
 import { init } from "@embedpdf/pdfium";
-import { readPdfiumAccess } from "@app/services/pdfAccessReader";
-import type { PdfAccess } from "@app/services/pdfPasswordStore";
+import { readPdfiumAccess } from "@app/utils/pdfiumAccess";
+import type { PdfAccess } from "@app/services/pdfAccessService";
 
 /** A worker owns one inspection; termination releases its entire WASM heap. */
 export interface PdfAccessRequest {

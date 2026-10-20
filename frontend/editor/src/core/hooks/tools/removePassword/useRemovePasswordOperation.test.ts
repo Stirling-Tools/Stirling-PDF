@@ -9,7 +9,7 @@ import { createStirlingFile } from "@app/types/fileContext";
 import {
   clearPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 vi.mock("../shared/useToolOperation", async () => {
   const actual = await vi.importActual("../shared/useToolOperation"); // Need to keep ToolType etc.

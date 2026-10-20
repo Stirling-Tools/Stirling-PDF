@@ -2,7 +2,7 @@
  * File actions - Unified file operations with single addFiles helper
  */
 
-import { bindPdfAccess, getPdfAccess } from "@app/services/pdfPasswordStore";
+import { bindPdfAccess, getPdfAccess } from "@app/services/pdfAccessService";
 import {
   StirlingFileStub,
   FileContextAction,

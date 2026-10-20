@@ -9,10 +9,10 @@ import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
 import {
   getPdfAccess,
-  rememberLocalPdfAccess,
-} from "@app/services/pdfPasswordStore";
+  rememberPdfAccess,
+} from "@app/services/pdfAccessService";
 import { assertPdfSessionEditable } from "@app/services/pdfSessionUnlock";
-import { readPdfiumAccess } from "@app/services/pdfAccessReader";
+import { readPdfiumAccess } from "@app/utils/pdfiumAccess";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { detectSaveRisks } from "@app/tools/pdfTextEditor/util/documentRisks";
 
@@ -51,7 +51,7 @@ export function useDocumentLoader(store: EditorStore) {
             doc.dispose();
             return;
           }
-          const access = rememberLocalPdfAccess(file, {
+          const access = rememberPdfAccess(file, {
             ...readPdfiumAccess(doc.module, doc.docPtr, documentPassword ?? ""),
             honorOwnerPasswords: config?.honorOwnerPasswords,
           });

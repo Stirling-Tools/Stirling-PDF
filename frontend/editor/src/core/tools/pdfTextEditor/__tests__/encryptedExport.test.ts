@@ -25,7 +25,7 @@ import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextComma
 import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
 import { PdfiumTextReader } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { exportToBlob } from "@app/tools/pdfTextEditor/util/exportPdf";
-import { readPdfiumAccess } from "@app/services/pdfAccessReader";
+import { readPdfiumAccess } from "@app/utils/pdfiumAccess";
 
 vi.mock(
   "@app/tools/pdfTextEditor/charcode/CharcodeStrategy",

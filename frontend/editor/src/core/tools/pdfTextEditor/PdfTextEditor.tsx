@@ -11,7 +11,7 @@ import { assertPdfSessionEditable } from "@app/services/pdfSessionUnlock";
 import {
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 import { useFileContext, useFileSelection } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";

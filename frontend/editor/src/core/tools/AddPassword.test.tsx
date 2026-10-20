@@ -14,7 +14,7 @@ import type { AddPasswordFullParameters } from "@app/hooks/tools/addPassword/use
 import { defaultParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
 import AddPassword from "@app/tools/AddPassword";
 import { createStirlingFile, type StirlingFile } from "@app/types/fileContext";
-import { clearPdfAccess, type PdfAccess } from "@app/services/pdfPasswordStore";
+import { clearPdfAccess, type PdfAccess } from "@app/services/pdfAccessService";
 
 const { selection, operation, flow, inspectAccess } = vi.hoisted(() => ({
   selection: { files: [] as StirlingFile[] },
@@ -50,7 +50,8 @@ vi.mock("@app/components/tooltips/useAddPasswordTips", () => ({
 vi.mock("@app/components/tooltips/useAddPasswordPermissionsTips", () => ({
   useAddPasswordPermissionsTips: () => ({}),
 }));
-vi.mock("@app/services/pdfLocalAccess", () => ({
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
   ensureLocalPdfAccess: inspectAccess,
 }));
 

@@ -227,8 +227,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   }) => {
     const sample = fs.readFileSync(path.join(FIXTURES_DIR, "sample.pdf"));
     let removals = 0;
-    await page.route("**/api/v1/security/remove-pdf-protection", (route) => {
+    await page.route("**/api/v1/security/remove-password", (route) => {
       removals++;
+      expect(route.request().postData()).toContain('name="removeAll"');
       return route.fulfill({ contentType: "application/pdf", body: sample });
     });
 

@@ -12,7 +12,7 @@ import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockMo
 import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
 import { useFileActions } from "@app/contexts/FileContext";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
 

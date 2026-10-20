@@ -1,5 +1,6 @@
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { pdfAllows } from "@app/services/pdfSessionUnlock";
+import { pdfAllows } from "@app/services/pdfPermissions";
+
 import { PdfPermissionFlag } from "@embedpdf/models";
 import React, {
   useCallback,

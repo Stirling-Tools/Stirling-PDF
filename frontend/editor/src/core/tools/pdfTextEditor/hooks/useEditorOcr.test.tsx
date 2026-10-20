@@ -8,7 +8,7 @@ import {
   bindPdfAccess,
   clearPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),

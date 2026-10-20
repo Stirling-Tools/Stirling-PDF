@@ -8,14 +8,14 @@ import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { PasswordInput, Stack, Text } from "@mantine/core";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 import { useFileContext } from "@app/contexts/FileContext";
 
 const RemovePassword = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const removePasswordTips = useRemovePasswordTips();
   const { actions } = useFileContext();
-  const [removalSummary, setRemovalSummary] = useState("");
+  const [removalSummary, setRemovalSummary] = useState<string | null>(null);
 
   const base = useBaseTool(
     "removePassword",
@@ -91,10 +91,7 @@ const RemovePassword = (props: BaseToolProps) => {
     setRemovalSummary(
       base.selectedFiles.length > 1 ||
         [...openingStates, ...ownerStates].some((set) => set === undefined)
-        ? t(
-            "removePassword.batchRemoved",
-            "Entered passwords removed where set. Blank fields kept unchanged.",
-          )
+        ? null
         : ownerPassword
           ? password
             ? t(

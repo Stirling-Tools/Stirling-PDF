@@ -40,11 +40,11 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.doc.PdfSecurity;
 import stirling.software.jpdfium.exception.JPDFiumException;
 
-class PdfSessionSecurityControllerTest {
+class PasswordProtectionControllerTest {
     private static final String USER = " reader password ";
     private static final String OWNER = " owner password ";
     @TempDir Path directory;
-    private PdfSessionSecurityController controller;
+    private PasswordController controller;
     private PasswordController passwordController;
     private CustomPDFDocumentFactory factory;
     private ApplicationProperties properties;
@@ -86,8 +86,30 @@ class PdfSessionSecurityControllerTest {
                 .when(tempFiles)
                 .deleteTempFile(any(java.io.File.class));
         properties = new ApplicationProperties();
-        controller = new PdfSessionSecurityController(factory, tempFiles, properties);
-        passwordController = new PasswordController(factory, tempFiles);
+        controller = new PasswordController(factory, tempFiles, properties);
+        passwordController = controller;
+    }
+
+    private ResponseEntity<Resource> changePermissions(AddPasswordRequest request, String password)
+            throws IOException {
+        request.setSourcePassword(password);
+        request.setPreserveExisting(true);
+        return controller.addPassword(request);
+    }
+
+    private ResponseEntity<Resource> setProtection(AddPasswordRequest request, String password)
+            throws IOException {
+        request.setSourcePassword(password);
+        request.setPreserveExisting(false);
+        return controller.addPassword(request);
+    }
+
+    private ResponseEntity<Resource> removeProtection(PDFPasswordRequest input) throws IOException {
+        var request = new RemovePasswordRequest();
+        request.setFileInput(input.getFileInput());
+        request.setPassword(input.getPassword());
+        request.setRemoveAll(true);
+        return controller.removePassword(request);
     }
 
     private ResponseEntity<Resource> removePasswords(
@@ -138,14 +160,9 @@ class PdfSessionSecurityControllerTest {
         var original = pdf(true, 256);
         assertTrue(properties.getSecurity().isHonorOwnerPasswords());
         assertThrows(
-                ResponseStatusException.class,
-                () -> controller.removeProtection(request(original, USER)));
+                ResponseStatusException.class, () -> removeProtection(request(original, USER)));
         properties.getSecurity().setHonorOwnerPasswords(false);
-        try (var stream =
-                        controller
-                                .removeProtection(request(original, USER))
-                                .getBody()
-                                .getInputStream();
+        try (var stream = removeProtection(request(original, USER)).getBody().getInputStream();
                 var output = Loader.loadPDF(stream.readAllBytes())) {
             assertFalse(output.isEncrypted());
         }
@@ -164,8 +181,8 @@ class PdfSessionSecurityControllerTest {
                         controller.prepare(
                                 request(original, "wrong"), "/api/v1/general/split-pages"));
         assertThrows(
-                InvalidPasswordException.class,
-                () -> controller.removeProtection(request(original, "")));
+                stirling.software.common.util.ExceptionUtils.PdfPasswordException.class,
+                () -> removeProtection(request(original, "")));
         try (var stream =
                         controller
                                 .prepare(request(original, USER), "/api/v1/general/split-pages")
@@ -174,11 +191,7 @@ class PdfSessionSecurityControllerTest {
                 var working = Loader.loadPDF(stream.readAllBytes())) {
             assertFalse(working.isEncrypted());
         }
-        try (var stream =
-                        controller
-                                .removeProtection(request(original, USER))
-                                .getBody()
-                                .getInputStream();
+        try (var stream = removeProtection(request(original, USER)).getBody().getInputStream();
                 var copy = Loader.loadPDF(stream.readAllBytes())) {
             assertFalse(copy.isEncrypted());
         }
@@ -193,13 +206,13 @@ class PdfSessionSecurityControllerTest {
         update.setFileInput(upload(original));
         update.setPassword(USER);
         update.setPreventModify(true);
-        try (var stream = controller.changePermissions(update, USER).getBody().getInputStream()) {
+        try (var stream = changePermissions(update, USER).getBody().getInputStream()) {
             byte[] bytes = stream.readAllBytes();
             assertFalse(inspect(request(bytes, USER)).ownerAuthenticated());
             assertTrue(inspect(request(bytes, OWNER)).ownerAuthenticated());
         }
         update.setOwnerPassword("replacement-owner");
-        try (var stream = controller.changePermissions(update, USER).getBody().getInputStream()) {
+        try (var stream = changePermissions(update, USER).getBody().getInputStream()) {
             byte[] bytes = stream.readAllBytes();
             assertFalse(inspect(request(bytes, USER)).canModify());
             assertFalse(inspect(request(bytes, USER)).ownerAuthenticated());
@@ -263,7 +276,7 @@ class PdfSessionSecurityControllerTest {
         var update = new AddPasswordRequest();
         update.setFileInput(upload(protectedPdf("", OWNER, 256, new AccessPermission())));
         update.setPreventModify(true);
-        try (var stream = controller.changePermissions(update, OWNER).getBody().getInputStream()) {
+        try (var stream = changePermissions(update, OWNER).getBody().getInputStream()) {
             var bytes = stream.readAllBytes();
             var reader = inspect(request(bytes, ""));
             assertTrue(reader.encrypted());
@@ -280,9 +293,8 @@ class PdfSessionSecurityControllerTest {
         update.setFileInput(upload(pdf(true, bits)));
         update.setPreventModify(true);
         update.setPassword("must-not-replace-the-opening-password");
-        assertThrows(
-                ResponseStatusException.class, () -> controller.changePermissions(update, USER));
-        try (var stream = controller.changePermissions(update, OWNER).getBody().getInputStream()) {
+        assertThrows(ResponseStatusException.class, () -> changePermissions(update, USER));
+        try (var stream = changePermissions(update, OWNER).getBody().getInputStream()) {
             var bytes = stream.readAllBytes();
             assertThrows(InvalidPasswordException.class, () -> Loader.loadPDF(bytes));
             try (var output = Loader.loadPDF(bytes, USER)) {
@@ -395,8 +407,7 @@ class PdfSessionSecurityControllerTest {
         update.setFileInput(upload(original));
         update.setPreventModify(true);
         for (String credential : new String[] {USER, OWNER}) {
-            try (var stream =
-                    controller.changePermissions(update, credential).getBody().getInputStream()) {
+            try (var stream = changePermissions(update, credential).getBody().getInputStream()) {
                 byte[] result = stream.readAllBytes();
                 try (var reader = Loader.loadPDF(result, USER);
                         var owner = Loader.loadPDF(result, OWNER)) {
@@ -501,13 +512,8 @@ class PdfSessionSecurityControllerTest {
     void removingAllProtectionRequiresOwnerAndLeavesTheOriginalIntact() throws Exception {
         byte[] original = pdf(true, 256);
         assertThrows(
-                ResponseStatusException.class,
-                () -> controller.removeProtection(request(original, USER)));
-        try (var stream =
-                        controller
-                                .removeProtection(request(original, OWNER))
-                                .getBody()
-                                .getInputStream();
+                ResponseStatusException.class, () -> removeProtection(request(original, USER)));
+        try (var stream = removeProtection(request(original, OWNER)).getBody().getInputStream();
                 var result = Loader.loadPDF(stream.readAllBytes())) {
             assertFalse(result.isEncrypted());
         }
@@ -521,17 +527,17 @@ class PdfSessionSecurityControllerTest {
         change.setOwnerPassword("new-owner");
         change.setPassword("new-reader");
         change.setPreventPrinting(true);
-        assertThrows(ResponseStatusException.class, () -> controller.setProtection(change, USER));
-        try (var stream = controller.setProtection(change, OWNER).getBody().getInputStream()) {
+        assertThrows(ResponseStatusException.class, () -> setProtection(change, USER));
+        try (var stream = setProtection(change, OWNER).getBody().getInputStream()) {
             byte[] result = stream.readAllBytes();
             assertFalse(inspect(request(result, "new-reader")).canPrint());
             assertTrue(inspect(request(result, "new-owner")).ownerAuthenticated());
             assertThrows(InvalidPasswordException.class, () -> Loader.loadPDF(result, USER));
         }
         change.setOwnerPassword("");
-        assertThrows(ResponseStatusException.class, () -> controller.setProtection(change, OWNER));
+        assertThrows(ResponseStatusException.class, () -> setProtection(change, OWNER));
         change.setOwnerPassword("new-reader");
-        assertThrows(ResponseStatusException.class, () -> controller.setProtection(change, OWNER));
+        assertThrows(ResponseStatusException.class, () -> setProtection(change, OWNER));
     }
 
     @Test
@@ -542,7 +548,7 @@ class PdfSessionSecurityControllerTest {
         change.setPassword("a".repeat(32) + "reader");
         change.setOwnerPassword("a".repeat(32) + "owner");
         change.setPreventPrinting(true);
-        assertThrows(ResponseStatusException.class, () -> controller.setProtection(change, ""));
+        assertThrows(ResponseStatusException.class, () -> setProtection(change, ""));
         try (var remaining = Files.list(directory)) {
             assertEquals(0, remaining.count());
         }

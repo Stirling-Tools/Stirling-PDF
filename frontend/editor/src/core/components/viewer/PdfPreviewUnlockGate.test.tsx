@@ -15,7 +15,7 @@ import {
   clearPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 vi.mock("react-i18next", () => {
   const t = (key: string, fallback?: string) => fallback ?? key;

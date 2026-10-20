@@ -2,7 +2,7 @@
  * Test utilities for creating StirlingFile objects in tests
  */
 
-import { rememberPdfAccess } from "@app/services/pdfPasswordStore";
+import { rememberPdfAccess } from "@app/services/pdfAccessService";
 import { StirlingFile, createStirlingFile } from "@app/types/fileContext";
 
 /**

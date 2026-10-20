@@ -19,30 +19,27 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function protect(page: Page, password = "") {
-  const response = await page.request.post(
-    "/api/v1/security/set-pdf-protection",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: {
-          name: "sample.pdf",
-          mimeType: "application/pdf",
-          buffer: await fs.readFile(path.join(fixtures, "sample.pdf")),
-        },
-        password,
-        ownerPassword: owner,
-        keyLength: 256,
-        preventAssembly: true,
-        preventExtractContent: true,
-        preventExtractForAccessibility: true,
-        preventFillInForm: true,
-        preventModify: true,
-        preventModifyAnnotations: true,
-        preventPrinting: true,
-        preventPrintingFaithful: true,
+  const response = await page.request.post("/api/v1/security/add-password", {
+    headers: await liveApiHeaders(page),
+    multipart: {
+      fileInput: {
+        name: "sample.pdf",
+        mimeType: "application/pdf",
+        buffer: await fs.readFile(path.join(fixtures, "sample.pdf")),
       },
+      password,
+      ownerPassword: owner,
+      keyLength: 256,
+      preventAssembly: true,
+      preventExtractContent: true,
+      preventExtractForAccessibility: true,
+      preventFillInForm: true,
+      preventModify: true,
+      preventModifyAnnotations: true,
+      preventPrinting: true,
+      preventPrintingFaithful: true,
     },
-  );
+  });
   expect(response.ok()).toBe(true);
   return response.body();
 }
@@ -136,9 +133,7 @@ test("unprotected copy needs no owner password when enforcement is disabled", as
   await page
     .getByRole("button", { name: "Create an unprotected copy", exact: true })
     .click();
-  const response = page.waitForResponse(
-    "**/api/v1/security/remove-pdf-protection",
-  );
+  const response = page.waitForResponse("**/api/v1/security/remove-password");
   await page
     .getByRole("button", { name: "Create an unprotected copy", exact: true })
     .click();
@@ -200,9 +195,7 @@ test("changing restrictions preserves the unknown owner password unless replacem
   await page
     .getByRole("checkbox", { name: "Prevent printing", exact: true })
     .uncheck();
-  const response = page.waitForResponse(
-    "**/api/v1/security/change-pdf-permissions",
-  );
+  const response = page.waitForResponse("**/api/v1/security/add-password");
   await page
     .getByRole("button", { name: /^Change Permissions(?: \(this file\))?$/ })
     .click();

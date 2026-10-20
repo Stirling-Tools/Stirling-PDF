@@ -4,7 +4,7 @@ import { StirlingFile } from "@app/types/fileContext";
 import i18n from "@app/i18n";
 import { useViewScopedFileStubs } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 
 export interface FilesToolStepProps {
   selectedFiles: StirlingFile[];

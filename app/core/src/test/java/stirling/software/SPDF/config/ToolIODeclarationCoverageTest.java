@@ -75,9 +75,6 @@ class ToolIODeclarationCoverageTest {
                     // requires the original protected document as well as the working result.
                     "/api/v1/security/restore-pdf-protection",
                     "/api/v1/security/prepare-pdf-session",
-                    "/api/v1/security/remove-pdf-protection",
-                    "/api/v1/security/set-pdf-protection",
-                    "/api/v1/security/change-pdf-permissions",
                     // Signing sessions, certificate checks and hardware token enumeration; the
                     // signing tool itself is /api/v1/security/cert-sign, which is declared.
                     "/api/v1/security/cert-sign/sessions",
@@ -285,23 +282,17 @@ class ToolIODeclarationCoverageTest {
     }
 
     @Test
-    void onlyRemovePasswordAcceptsAnEncryptedDocument() {
-        assertTrue(
-                spec("/api/v1/security/remove-password").acceptsFormat(ToolFormat.PDF_ENCRYPTED));
+    void passwordToolsAcceptEncryptedSources() {
         List<String> accepting =
                 DECLARED.entrySet().stream()
                         .filter(e -> e.getValue().acceptsFormat(ToolFormat.PDF_ENCRYPTED))
                         .map(Map.Entry::getKey)
-                        .filter(path -> !path.equals("/api/v1/security/remove-password"))
                         .filter(path -> !spec(path).accepts().contains(ToolFormat.ANY))
                         .sorted()
                         .toList();
-        assertTrue(
-                accepting.isEmpty(),
-                () ->
-                        "Only remove-password should accept an encrypted PDF. If one of these"
-                                + " genuinely handles encryption, say so in its @ToolIO:\n  "
-                                + String.join("\n  ", accepting));
+        assertEquals(
+                List.of("/api/v1/security/add-password", "/api/v1/security/remove-password"),
+                accepting);
     }
 
     private static ToolIOSpec spec(String path) {

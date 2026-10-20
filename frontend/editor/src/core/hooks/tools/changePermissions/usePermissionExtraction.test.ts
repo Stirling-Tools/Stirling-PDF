@@ -6,14 +6,15 @@ import {
   useChangePermissionsParameters,
 } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
 import { usePermissionExtraction } from "@app/hooks/tools/changePermissions/usePermissionExtraction";
-import { ensureLocalPdfAccess } from "@app/services/pdfLocalAccess";
 import {
+  ensureLocalPdfAccess,
   clearPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
-vi.mock("@app/services/pdfLocalAccess", () => ({
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
   ensureLocalPdfAccess: vi.fn(),
 }));
 const inspect = vi.mocked(ensureLocalPdfAccess);

@@ -36,7 +36,7 @@ import {
   rememberPdfAccess,
   clearPdfAccess,
   forgetPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 const workspace = {
   files: [] as StirlingFile[],

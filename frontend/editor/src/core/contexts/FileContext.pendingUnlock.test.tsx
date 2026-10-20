@@ -18,7 +18,7 @@ import {
   getPdfAccess,
   rememberPdfAccess,
   bindPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 import { fileStorage } from "@app/services/fileStorage";
 import { generateProcessedFileMetadata } from "@app/contexts/file/fileActions";
@@ -41,7 +41,8 @@ const observed = vi.hoisted(() => ({
 const id = "editor-encrypted" as FileId;
 const localInspection = vi.hoisted(() => vi.fn());
 
-vi.mock("@app/services/pdfLocalAccess", () => ({
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
   inspectLocalPdfAccess: async (
     file: File,
     password: string,

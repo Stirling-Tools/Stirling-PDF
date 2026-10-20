@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import {
+  getPdfAccess,
+  ensureLocalPdfAccess,
+} from "@app/services/pdfAccessService";
 import { PdfPermissionFlag } from "@embedpdf/models";
-import { ensureLocalPdfAccess } from "@app/services/pdfLocalAccess";
+
 import {
   defaultParameters,
   type ChangePermissionsParametersHook,

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { StirlingFile } from "@app/types/fileContext";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 import {
   useToolOperation,
   defineSingleFileTool,

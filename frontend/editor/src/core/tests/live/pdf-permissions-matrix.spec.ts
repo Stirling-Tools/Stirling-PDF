@@ -135,7 +135,7 @@ for (const restriction of restrictions) {
         .getByRole("textbox", { name: "New permissions password", exact: true })
         .fill(owner);
       const protectedResponse = page.waitForResponse(
-        "**/api/v1/security/set-pdf-protection",
+        "**/api/v1/security/add-password",
       );
       await page
         .getByRole("button", { name: "Save protection", exact: true })
@@ -219,7 +219,7 @@ for (const restriction of restrictions) {
         .uncheck();
       const savedOwner = owner;
       const changedResponse = page.waitForResponse(
-        "**/api/v1/security/change-pdf-permissions",
+        "**/api/v1/security/add-password",
       );
       await page
         .getByRole("button", {

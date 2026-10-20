@@ -263,7 +263,8 @@ class PasswordControllerTest {
             controller =
                     new PasswordController(
                             new CustomPDFDocumentFactory(mock(PdfMetadataService.class)),
-                            tempFileManager);
+                            tempFileManager,
+                            new stirling.software.common.model.ApplicationProperties());
         }
 
         @ParameterizedTest
@@ -369,7 +370,8 @@ class PasswordControllerTest {
             var controller =
                     new PasswordController(
                             new CustomPDFDocumentFactory(mock(PdfMetadataService.class)),
-                            tempFileManager);
+                            tempFileManager,
+                            new stirling.software.common.model.ApplicationProperties());
             mvc = MockMvcBuilders.standaloneSetup(controller).build();
             try (var document = Loader.loadPDF(simplePdfBytes);
                     var output = new ByteArrayOutputStream()) {
@@ -468,6 +470,97 @@ class PasswordControllerTest {
                                     .param("ownerPassword", "")
                                     .param("sourcePassword", "owner"))
                     .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void explicitRemovalClearsAllProtectionUsingSourceCredential() throws Exception {
+            byte[] output =
+                    mvc.perform(
+                                    multipart("/api/v1/security/remove-password")
+                                            .file(
+                                                    new MockMultipartFile(
+                                                            "fileInput",
+                                                            "test.pdf",
+                                                            "application/pdf",
+                                                            protectedBytes))
+                                            .param("sourcePassword", "owner")
+                                            .param("removeAll", "true"))
+                            .andExpect(status().isOk())
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsByteArray();
+            try (var result = Loader.loadPDF(output)) {
+                assertFalse(result.isEncrypted());
+            }
+        }
+
+        @Test
+        void explicitRemovalHonorsOwnerPasswordPolicy() throws Exception {
+            mvc.perform(
+                            multipart("/api/v1/security/remove-password")
+                                    .file(
+                                            new MockMultipartFile(
+                                                    "fileInput",
+                                                    "test.pdf",
+                                                    "application/pdf",
+                                                    protectedBytes))
+                                    .param("password", "reader")
+                                    .param("removeAll", "true"))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void permissionUpdateRetainsBothCredentialsThroughAddPassword() throws Exception {
+            byte[] output =
+                    mvc.perform(
+                                    multipart("/api/v1/security/add-password")
+                                            .file(
+                                                    new MockMultipartFile(
+                                                            "fileInput",
+                                                            "test.pdf",
+                                                            "application/pdf",
+                                                            protectedBytes))
+                                            .param("sourcePassword", "owner")
+                                            .param("preserveExisting", "true")
+                                            .param("preventModify", "true"))
+                            .andExpect(status().isOk())
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsByteArray();
+            try (var reader = Loader.loadPDF(output, "reader");
+                    var owner = Loader.loadPDF(output, "owner")) {
+                assertFalse(reader.getCurrentAccessPermission().canModify());
+                assertTrue(owner.getCurrentAccessPermission().isOwnerPermission());
+            }
+        }
+
+        @Test
+        void replacementAuthenticatesSourceSeparatelyFromNewPasswords() throws Exception {
+            byte[] output =
+                    mvc.perform(
+                                    multipart("/api/v1/security/add-password")
+                                            .file(
+                                                    new MockMultipartFile(
+                                                            "fileInput",
+                                                            "test.pdf",
+                                                            "application/pdf",
+                                                            protectedBytes))
+                                            .param("sourcePassword", "owner")
+                                            .param("password", "new-reader")
+                                            .param("ownerPassword", "new-owner")
+                                            .param("preventPrinting", "true"))
+                            .andExpect(status().isOk())
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsByteArray();
+            try (var reader = Loader.loadPDF(output, "new-reader");
+                    var owner = Loader.loadPDF(output, "new-owner")) {
+                assertFalse(reader.getCurrentAccessPermission().canPrint());
+                assertTrue(owner.getCurrentAccessPermission().isOwnerPermission());
+            }
+            assertThrows(
+                    org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException.class,
+                    () -> Loader.loadPDF(output, "reader"));
         }
     }
 

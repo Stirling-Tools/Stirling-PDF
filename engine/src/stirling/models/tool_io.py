@@ -261,7 +261,7 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         accepts=[ToolFormat.PDF], produces=ToolFormat.JSON, arity=ToolArity.SISO
     ),
     ToolEndpoint.ADD_PASSWORD: ToolIOSpec(
-        accepts=[ToolFormat.PDF],
+        accepts=[ToolFormat.PDF, ToolFormat.PDF_ENCRYPTED],
         produces=ToolFormat.PDF_ENCRYPTED,
         arity=ToolArity.SISO,
         cases=[
@@ -269,6 +269,7 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
                 when=[
                     ToolIOWhen(param="password", matches=[""], default=""),
                     ToolIOWhen(param="ownerPassword", matches=[""], default=""),
+                    ToolIOWhen(param="preserveExisting", matches=["false"], default="false"),
                 ],
                 produces=ToolFormat.PDF,
                 arity=ToolArity.SISO,

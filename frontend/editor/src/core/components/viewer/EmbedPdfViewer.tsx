@@ -47,7 +47,7 @@ import type {
   SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import { rememberPlainPdfExport } from "@app/services/pdfPasswordStore";
+import { rememberPlainPdfExport } from "@app/services/pdfAccessService";
 import {
   isStirlingFile,
   getFormFillFileId,

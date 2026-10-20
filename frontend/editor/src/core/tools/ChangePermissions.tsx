@@ -10,7 +10,7 @@ import { useChangePermissionsTips } from "@app/components/tooltips/useChangePerm
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 
 const ChangePermissions = (props: BaseToolProps) => {
   const { t } = useTranslation();

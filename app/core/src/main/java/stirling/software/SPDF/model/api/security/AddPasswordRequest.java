@@ -26,6 +26,18 @@ public class AddPasswordRequest extends PDFFile {
     private String password;
 
     @Schema(
+            description =
+                    "Credential for authenticating an existing protected source, separate from the new passwords. Omit to retain legacy add-password behaviour.",
+            format = "password")
+    private String sourcePassword;
+
+    @Schema(
+            description =
+                    "Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.",
+            defaultValue = "false")
+    private boolean preserveExisting;
+
+    @Schema(
             description = "The length of the encryption key",
             type = "integer",
             allowableValues = {"40", "128", "256"},

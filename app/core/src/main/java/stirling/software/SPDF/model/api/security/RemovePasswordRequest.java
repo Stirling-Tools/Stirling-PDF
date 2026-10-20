@@ -14,6 +14,12 @@ import lombok.EqualsAndHashCode;
 public class RemovePasswordRequest extends PDFPasswordRequest {
     @Schema(
             description =
+                    "Explicitly remove all passwords and restrictions, subject to the server owner-password policy. The password or sourcePassword authenticates the source; selective removal fields do not apply.",
+            defaultValue = "false")
+    private boolean removeAll;
+
+    @Schema(
+            description =
                     "Permissions password to remove. Supplying this field enables selective removal;"
                             + " leave blank to retain the permissions password.",
             format = "password")

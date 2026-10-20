@@ -7,7 +7,7 @@ import {
   clearPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 describe("FileLifecycleManager", () => {
   afterEach(clearPdfAccess);

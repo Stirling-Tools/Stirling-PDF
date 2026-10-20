@@ -9,7 +9,7 @@ import {
   bindPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 import type { DiskUnavailableReason } from "@app/services/desktopFileLink";
 
 // Re-export FileId for convenience

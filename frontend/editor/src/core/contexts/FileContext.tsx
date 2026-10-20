@@ -66,10 +66,8 @@ import ZipWarningModal from "@app/components/shared/ZipWarningModal";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
 import { useTranslation } from "react-i18next";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { inspectLocalPdfAccess } from "@app/services/pdfLocalAccess";
-import { alert } from "@app/components/toast";
-import { hasPdfPermissionOverride } from "@app/services/pdfSessionUnlock";
 import {
+  inspectLocalPdfAccess,
   bindPdfAccess,
   clearPdfAccess,
   forgetPdfAccess,
@@ -78,7 +76,10 @@ import {
   pdfAccessLifetime,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
+import { alert } from "@app/components/toast";
+import { hasPdfPermissionOverride } from "@app/services/pdfPermissions";
+
 import { reportFilesRemoved } from "@app/services/failureReporting";
 import {
   addPendingUnlocks,
@@ -763,9 +764,14 @@ function FileContextInner({
             "The selected file is no longer available.",
           ),
         );
+      const form = buildRemovePasswordFormData(
+        { password: access.password },
+        file,
+      );
+      form.set("removeAll", "true");
       const response = await apiClient.post<Blob>(
-        "/api/v1/security/remove-pdf-protection",
-        buildRemovePasswordFormData({ password: access.password }, file),
+        "/api/v1/security/remove-password",
+        form,
         { responseType: "blob", suppressErrorToast: true },
       );
       if (filesRef.current.get(fileId) !== file) return;

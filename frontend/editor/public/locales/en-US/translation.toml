@@ -11459,7 +11459,6 @@ title = "Page Selection"
 
 [removePassword]
 appliesTo = "Set on {{count}} of {{total}} PDFs"
-batchRemoved = "Entered passwords removed where set. Blank fields kept unchanged."
 bothRemoved = "Both passwords and restrictions removed."
 keepBlank = "Leave a field blank to keep that password."
 notSet = "Not set"

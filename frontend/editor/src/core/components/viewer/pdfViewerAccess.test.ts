@@ -9,19 +9,21 @@ import apiClient from "@app/services/apiClient";
 import {
   bindPdfViewerSource,
   withPdfViewerAccess,
-} from "@app/services/pdfViewerAccess";
+} from "@app/components/viewer/pdfViewerAccess";
 import {
   clearPdfAccess,
   forgetPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
   rememberPlainPdfExport,
-} from "@app/services/pdfPasswordStore";
-import { ensureLocalPdfAccess } from "@app/services/pdfLocalAccess";
+  ensureLocalPdfAccess,
+} from "@app/services/pdfAccessService";
+
 import { createStirlingFile } from "@app/types/fileContext";
 
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
-vi.mock("@app/services/pdfLocalAccess", () => ({
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
   ensureLocalPdfAccess: vi.fn(),
 }));
 const post = vi.mocked(apiClient.post);

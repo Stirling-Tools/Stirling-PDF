@@ -7,7 +7,7 @@ import {
   clearPdfAccess,
   forgetPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 const storage = vi.hoisted(() => ({
   loadFile: vi.fn(),

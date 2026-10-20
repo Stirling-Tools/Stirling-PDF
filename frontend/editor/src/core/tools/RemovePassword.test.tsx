@@ -8,7 +8,7 @@ import {
   clearPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 import { createStirlingFile, type StirlingFile } from "@app/types/fileContext";
 
 const state = vi.hoisted(() => ({

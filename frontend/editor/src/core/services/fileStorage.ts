@@ -18,7 +18,7 @@ import {
 } from "@app/services/indexedDBManager";
 import { alert } from "@app/components/toast";
 import i18n from "i18next";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 
 /**
  * Storage record - single source of truth

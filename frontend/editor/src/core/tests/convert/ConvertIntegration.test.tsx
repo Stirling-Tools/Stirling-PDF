@@ -66,11 +66,14 @@ vi.mock("../../services/apiClient", () => ({
 
 // Import the mocked apiClient
 import apiClient from "@app/services/apiClient";
-import { inspectLocalPdfAccess } from "@app/services/pdfLocalAccess";
+import {
+  inspectLocalPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfAccessService";
 import { notifyToolCompleted } from "@app/services/toolUsageTracker";
 const mockedApiClient = vi.mocked(apiClient, { deep: true });
-vi.mock("@app/services/pdfLocalAccess", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/services/pdfLocalAccess")>()),
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
   inspectLocalPdfAccess: vi.fn(),
 }));
 
@@ -1390,4 +1393,3 @@ describe("Convert Tool Integration Tests", () => {
  *    - Test graceful degradation when endpoints are disabled
  *    - Test dynamic endpoint configuration updates
  */
-import { rememberPdfAccess } from "@app/services/pdfPasswordStore";

@@ -2,9 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { rememberPdfAccess } from "@app/services/pdfPasswordStore";
-import { hasPdfPermissionOverride } from "@app/services/pdfSessionUnlock";
-import { inspectLocalPdfAccess } from "@app/services/pdfLocalAccess";
+import {
+  rememberPdfAccess,
+  inspectLocalPdfAccess,
+} from "@app/services/pdfAccessService";
+import { hasPdfPermissionOverride } from "@app/services/pdfPermissions";
+
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { Button } from "@app/ui/Button";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";

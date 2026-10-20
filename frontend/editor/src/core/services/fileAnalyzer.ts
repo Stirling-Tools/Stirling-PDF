@@ -1,7 +1,10 @@
 import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { ensureLocalPdfAccess } from "@app/services/pdfLocalAccess";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import {
+  ensureLocalPdfAccess,
+  getPdfAccess,
+} from "@app/services/pdfAccessService";
+
 import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 

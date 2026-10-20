@@ -9,17 +9,18 @@ import {
   forgetPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-  rememberLocalPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
+import {
+  hasPdfPermissionOverride,
+  pdfAllows,
+} from "@app/services/pdfPermissions";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
   assertPdfSessionEditable,
   preflightPdfOperation,
   changePdfSecurity,
-  hasPdfPermissionOverride,
-  pdfAllows,
 } from "@app/services/pdfSessionUnlock";
 import { PdfPermissionFlag } from "@embedpdf/models";
 
@@ -45,12 +46,12 @@ afterEach(clearPdfAccess);
 
 describe("session PDF access", () => {
   it.each([
-    ["add-password", "set-pdf-protection"],
-    ["add-password", "change-pdf-permissions"],
-    ["remove-password", "remove-password"],
+    ["add-password", false],
+    ["add-password", true],
+    ["remove-password", false],
   ])(
-    "lets %s validate unknown protection in the %s operation",
-    async (operation, target) => {
+    "lets %s validate unknown protection with preserveExisting=%s",
+    async (operation, preserveExisting) => {
       const file = createStirlingFile(new File(["pdf"], "unknown.pdf"));
       const endpoint = `/api/v1/security/${operation}`;
       const requestOwner = vi.fn();
@@ -61,11 +62,14 @@ describe("session PDF access", () => {
       expect(post).not.toHaveBeenCalled();
       const form = new FormData();
       form.set("password", "reader");
-      if (target === "set-pdf-protection") form.set("keyLength", "256");
+      if (!preserveExisting) form.set("keyLength", "256");
       post.mockResolvedValueOnce({ data: new Blob(["result"]) });
       await changePdfSecurity(file, form, endpoint);
       expect(post).toHaveBeenCalledOnce();
-      expect(post.mock.calls[0][0]).toBe(`/api/v1/security/${target}`);
+      expect(post.mock.calls[0][0]).toBe(endpoint);
+      expect(form.get("preserveExisting")).toBe(
+        preserveExisting ? "true" : null,
+      );
       expect(form.get("sourcePassword")).toBe(
         operation === "remove-password" ? "reader" : "",
       );
@@ -102,7 +106,7 @@ describe("session PDF access", () => {
       honorOwnerPasswords: false,
       requiresOpeningPassword: true,
     });
-    const refreshed = rememberLocalPdfAccess(file, {
+    const refreshed = rememberPdfAccess(file, {
       ...access,
       requiresOpeningPassword: undefined,
     });
@@ -295,10 +299,9 @@ describe("session PDF access", () => {
     const form = new FormData();
     form.set("preventModify", "true");
     await changePdfSecurity(file, form, "/api/v1/security/add-password");
-    expect(post.mock.calls[0][0]).toBe(
-      "/api/v1/security/change-pdf-permissions",
-    );
+    expect(post.mock.calls[0][0]).toBe("/api/v1/security/add-password");
     expect(form.get("sourcePassword")).toBe(access.password);
+    expect(form.get("preserveExisting")).toBe("true");
     expect(form.has("ownerPassword")).toBe(false);
   });
 

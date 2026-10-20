@@ -16,7 +16,7 @@ import {
   clearPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 afterEach(async () => {
   clearPdfAccess();

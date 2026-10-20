@@ -8,17 +8,19 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { inspectLocalPdfAccess } from "@app/services/pdfLocalAccess";
 import {
+  inspectLocalPdfAccess,
   clearPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
+
 import { PermissionsPasswordButton } from "@app/tools/pdfTextEditor/components/PermissionsPasswordButton";
 
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
-vi.mock("@app/services/pdfLocalAccess", () => ({
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
   inspectLocalPdfAccess: vi.fn(),
 }));
 vi.mock("react-i18next", () => ({

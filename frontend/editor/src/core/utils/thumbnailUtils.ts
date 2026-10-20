@@ -11,7 +11,7 @@ import {
 } from "@app/utils/pdfiumPageRender";
 import { jpegExifOrientation } from "@app/utils/jpegOrientation";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
 
 export interface ThumbnailWithMetadata {

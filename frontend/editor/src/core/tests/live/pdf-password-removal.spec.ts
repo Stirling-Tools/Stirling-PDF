@@ -29,24 +29,21 @@ async function protectedPdf(
   opening: boolean,
   permissions: boolean,
 ) {
-  const response = await page.request.post(
-    "/api/v1/security/set-pdf-protection",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: {
-          name: "sample.pdf",
-          mimeType: "application/pdf",
-          buffer: await fs.readFile(fixture),
-        },
-        password: opening ? reader : "",
-        ownerPassword: permissions ? owner : "",
-        keyLength: 256,
-        preventPrinting: permissions,
-        preventModify: permissions,
+  const response = await page.request.post("/api/v1/security/add-password", {
+    headers: await liveApiHeaders(page),
+    multipart: {
+      fileInput: {
+        name: "sample.pdf",
+        mimeType: "application/pdf",
+        buffer: await fs.readFile(fixture),
       },
+      password: opening ? reader : "",
+      ownerPassword: permissions ? owner : "",
+      keyLength: 256,
+      preventPrinting: permissions,
+      preventModify: permissions,
     },
-  );
+  });
   expect(response.ok()).toBe(true);
   return response.body();
 }
@@ -255,11 +252,7 @@ for (const remove of ["opening", "owner", "both"] as const) {
         "PDF open failed",
       );
     }
-    await expect(
-      page.getByText(
-        "Entered passwords removed where set. Blank fields kept unchanged.",
-      ),
-    ).toBeVisible();
+    await expect(page.getByText("Updated PDFs", { exact: true })).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Print PDF", exact: true }),
@@ -407,11 +400,7 @@ for (const remove of ["opening", "owner", "both"] as const) {
         .getByRole("button", { name: "Continue", exact: true })
         .click();
     }
-    await expect(
-      page.getByText(
-        "Entered passwords removed where set. Blank fields kept unchanged.",
-      ),
-    ).toBeVisible();
+    await expect(page.getByText("Updated PDFs", { exact: true })).toBeVisible();
     expect(responses).toHaveLength(remove === "opening" ? 2 : 3);
     expect(responses.filter((response) => !response.ok())).toHaveLength(
       remove === "opening" ? 0 : 1,

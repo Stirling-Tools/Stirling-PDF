@@ -1,4 +1,11 @@
+/** Owns session access, file lifetimes and local inspection. Credentials are never persisted. */
 import type { FileId } from "@app/types/file";
+import PdfAccessWorker from "@app/workers/pdfAccessWorker?worker";
+import type {
+  PdfAccessRequest,
+  PdfAccessResponse,
+} from "@app/workers/pdfAccessWorker";
+import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 
 /** Session-only access to encrypted bytes. Never serialize this object or include it in tool parameters. */
 export interface PdfAccess {
@@ -80,6 +87,19 @@ export function getPdfAccess(
 
 /** Retain access without changing the file; returns the identity used by preview cleanup. */
 export function rememberPdfAccess(file: Blob, access: PdfAccess): PdfAccess {
+  const previous = accessByFile.get(file);
+  if (previous?.password === access.password) {
+    access = {
+      ...previous,
+      ...access,
+      honorOwnerPasswords:
+        access.honorOwnerPasswords ?? previous.honorOwnerPasswords,
+      openingAuthenticated:
+        access.openingAuthenticated ?? previous.openingAuthenticated,
+      requiresOpeningPassword:
+        access.requiresOpeningPassword ?? previous.requiresOpeningPassword,
+    };
+  }
   const storedAccess = {
     ...access,
     openingPassword: access.encrypted
@@ -93,27 +113,6 @@ export function rememberPdfAccess(file: Blob, access: PdfAccess): PdfAccess {
     filesById.set(file.fileId, new WeakRef(file));
   publish();
   return storedAccess;
-}
-
-/** Refresh local facts while retaining policy and known opening credentials for the same bytes. */
-export function rememberLocalPdfAccess(
-  file: Blob,
-  access: PdfAccess,
-): PdfAccess {
-  const previous = getPdfAccess(file);
-  return rememberPdfAccess(
-    file,
-    previous?.password === access.password
-      ? {
-          ...previous,
-          ...access,
-          openingAuthenticated:
-            previous.openingAuthenticated ?? access.openingAuthenticated,
-          requiresOpeningPassword:
-            previous.requiresOpeningPassword ?? access.requiresOpeningPassword,
-        }
-      : access,
-  );
 }
 
 /** Bind FileContext identity without retaining closed/library-only bytes; replacements invalidate pending access. */
@@ -177,4 +176,134 @@ export function subscribePdfAccess(listener: () => void): () => void {
 /** Monotonic snapshot for useSyncExternalStore. */
 export function pdfAccessRevision(): number {
   return revision;
+}
+
+interface Inspection {
+  controller: AbortController;
+  promise: Promise<PdfAccess>;
+  consumers: number;
+}
+
+const inspections = new WeakMap<Blob, Map<string, Inspection>>();
+
+function runInspection(
+  file: Blob,
+  password: string,
+  signal: AbortSignal,
+): Promise<PdfAccess> {
+  return new Promise((resolve, reject) => {
+    const worker = new PdfAccessWorker();
+    let finished = false;
+    const finish = () => {
+      if (finished) return false;
+      finished = true;
+      worker.terminate();
+      signal.removeEventListener("abort", abort);
+      return true;
+    };
+    const abort = () => {
+      if (finish())
+        reject(new DOMException("Operation cancelled", "AbortError"));
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    worker.onmessage = ({ data }: MessageEvent<PdfAccessResponse>) => {
+      if (!finish()) return;
+      if ("access" in data) resolve(data.access);
+      else reject(Object.assign(new Error(data.error), { code: data.code }));
+    };
+    worker.onerror = () => {
+      if (finish()) reject(new Error("Unable to inspect PDF security locally"));
+    };
+    try {
+      worker.postMessage({
+        file,
+        password,
+        wasmUrl: pdfiumWasmUrl,
+      } satisfies PdfAccessRequest);
+    } catch (error) {
+      if (finish()) reject(error);
+    }
+  });
+}
+
+/** Authenticate without publishing credentials; concurrent readers share one worker per file and password. */
+export function inspectLocalPdfAccess(
+  file: Blob,
+  password = "",
+  signal?: AbortSignal,
+): Promise<PdfAccess> {
+  const lifetime = pdfAccessLifetime(file);
+  const cancellation = signal ? AbortSignal.any([signal, lifetime]) : lifetime;
+  if (cancellation.aborted)
+    return Promise.reject(
+      new DOMException("Operation cancelled", "AbortError"),
+    );
+  let pending = inspections.get(file);
+  if (!pending) {
+    pending = new Map();
+    inspections.set(file, pending);
+  }
+  let inspection = pending.get(password);
+  if (!inspection || inspection.controller.signal.aborted) {
+    const controller = new AbortController();
+    const job: Inspection = {
+      controller,
+      consumers: 0,
+      promise: runInspection(
+        file,
+        password,
+        AbortSignal.any([controller.signal, lifetime]),
+      ).finally(() => {
+        if (pending.get(password) === job) pending.delete(password);
+      }),
+    };
+    pending.set(password, job);
+    inspection = job;
+  }
+  const job = inspection;
+  job.consumers++;
+  return new Promise((resolve, reject) => {
+    let finished = false;
+    const finish = () => {
+      if (finished) return false;
+      finished = true;
+      cancellation.removeEventListener("abort", abort);
+      if (--job.consumers === 0) job.controller.abort();
+      return true;
+    };
+    const abort = () => {
+      if (finish())
+        reject(new DOMException("Operation cancelled", "AbortError"));
+    };
+    cancellation.addEventListener("abort", abort, { once: true });
+    job.promise.then(
+      (access) => {
+        if (finish()) resolve(access);
+      },
+      (error) => {
+        if (finish()) reject(error);
+      },
+    );
+  });
+}
+
+/** Reuse access for these exact bytes and credentials, or inspect locally before publishing it. */
+export async function ensureLocalPdfAccess(
+  file: Blob,
+  signal?: AbortSignal,
+  password?: string,
+): Promise<PdfAccess> {
+  if (signal?.aborted)
+    throw new DOMException("Operation cancelled", "AbortError");
+  const existing = getPdfAccess(file);
+  if (existing && (password === undefined || password === existing.password))
+    return existing;
+  const lifetime = pdfAccessLifetime(file);
+  const access = await inspectLocalPdfAccess(file, password ?? "", signal);
+  if (signal?.aborted || lifetime.aborted)
+    throw new DOMException("Session closed", "AbortError");
+  const current = getPdfAccess(file);
+  return current && current !== existing
+    ? current
+    : rememberPdfAccess(file, access);
 }

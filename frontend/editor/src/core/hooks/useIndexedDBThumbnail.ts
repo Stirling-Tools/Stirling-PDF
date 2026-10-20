@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 import { useFileManagement, useFileSelectors } from "@app/contexts/FileContext";
 
 /**

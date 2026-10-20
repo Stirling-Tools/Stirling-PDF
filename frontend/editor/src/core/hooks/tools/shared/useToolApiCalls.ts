@@ -14,12 +14,12 @@ import {
   protectUnlockedResults,
   changePdfSecurity,
 } from "@app/services/pdfSessionUnlock";
-import { inspectLocalPdfAccess } from "@app/services/pdfLocalAccess";
 import {
+  inspectLocalPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
   pdfAccessLifetime,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 /** An input that did not survive the batch, with the error it failed on. */
 export interface FailedInput {
