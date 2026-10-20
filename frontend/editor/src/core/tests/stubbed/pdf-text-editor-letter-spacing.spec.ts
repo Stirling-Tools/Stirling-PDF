@@ -3,6 +3,10 @@ import type { Page, Route } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
 
+// Opens the editor directly; skip the fixture's /editor boot so WebKit does not
+// report the replaced navigation's aborted requests as page errors.
+test.use({ autoGoto: false });
+
 // Letter-spacing (Tc) preservation through an edit. letter-spacing-sample.pdf
 // has an 18pt "SPACED HEADING" drawn with `2 Tc` plus a normal 12pt body line.
 

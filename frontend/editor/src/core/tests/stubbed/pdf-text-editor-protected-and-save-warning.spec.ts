@@ -2,6 +2,10 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
 
+// Every test navigates itself; the fixture's /editor boot would be a redundant
+// navigation whose aborted requests WebKit reports as page errors.
+test.use({ autoGoto: false });
+
 /** Coverage for two save/open safety features. */
 
 const ENCRYPTED = path.join(
