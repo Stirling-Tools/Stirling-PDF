@@ -1,0 +1,238 @@
+/* The pane behind shrinks into a card in a corner; these place the card and
+   the shrink/grow between it and the full pane. */
+.pip-stage {
+  --pip-gap: 12px;
+  /* Bottom corners lift the card above the viewer's floating page controls. */
+  --pip-card-lift: 4.25rem;
+  --pip-dx: 0px;
+  --pip-dy: 0px;
+  /* Per corner: which way the gap pushes the shrinking pane in from the edge. */
+  --pip-sx: -1;
+  --pip-sy: -1;
+  --pip-origin: bottom right;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pip-pane {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-bg);
+  transform-origin: var(--pip-origin);
+  transition: opacity 0.2s ease;
+}
+
+.pip-pane[data-state="front"] {
+  z-index: 1;
+}
+
+/* Shrinks into its card, then rests unscaled and hidden: controls that measure
+   themselves (segmented indicators) would otherwise record shrunken sizes and
+   keep them. Growing back out of the card is the matching keyframe. */
+.pip-pane[data-state="card"] {
+  z-index: 2;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  animation: pip-shrink-to-card 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.pip-pane[data-state="front"][data-entering="true"] {
+  z-index: 2;
+  animation: pip-grow-from-card 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes pip-shrink-to-card {
+  from {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    visibility: visible;
+    opacity: 0;
+    border-radius: 80px;
+    transform: translate(
+        calc(var(--pip-sx) * var(--pip-gap)),
+        calc(var(--pip-sy) * (var(--pip-gap) + var(--pip-card-lift)))
+      )
+      scale(0.2);
+  }
+}
+
+@keyframes pip-grow-from-card {
+  from {
+    opacity: 0.3;
+    border-radius: 80px;
+    transform: translate(
+        calc(var(--pip-sx) * var(--pip-gap)),
+        calc(var(--pip-sy) * (var(--pip-gap) + var(--pip-card-lift)))
+      )
+      scale(0.2);
+  }
+}
+
+/* Fades without scaling, for the same reason as the card state. */
+.pip-pane[data-state="hidden"] {
+  z-index: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    visibility 0s linear 0.25s;
+}
+
+.pip-pane-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.pip-pane-body > * {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Its own stacking context, so the workbench's raised layers stay under the
+   documents home drawn over it. */
+.pip-workbench {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  display: flex;
+}
+
+.pip-stage[data-corner="bottom-left"] {
+  --pip-sx: 1;
+  --pip-origin: bottom left;
+}
+
+.pip-stage[data-corner^="top-"] {
+  --pip-card-lift: 0px;
+}
+
+.pip-stage[data-corner="top-right"] {
+  --pip-sy: 1;
+  --pip-origin: top right;
+}
+
+.pip-stage[data-corner="top-left"] {
+  --pip-sx: 1;
+  --pip-sy: 1;
+  --pip-origin: top left;
+}
+
+.pip-target {
+  position: absolute;
+  z-index: 3;
+  right: var(--pip-gap);
+  bottom: calc(var(--pip-gap) + var(--pip-card-lift));
+  transform: translate(var(--pip-dx), var(--pip-dy));
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  touch-action: none;
+  width: 12.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 16px;
+  background: transparent;
+  animation: pip-target-in 0.35s ease 0.15s backwards;
+}
+
+.pip-stage[data-dragging="true"] .pip-target,
+.pip-target[data-gesture="true"] {
+  transition: none;
+}
+
+.pip-stage[data-corner$="-left"] .pip-target {
+  right: auto;
+  left: var(--pip-gap);
+}
+
+.pip-stage[data-corner^="top-"] .pip-target {
+  bottom: auto;
+  top: var(--pip-gap);
+}
+
+@keyframes pip-target-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.pip-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px;
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+  background: var(--c-surface);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.14);
+  text-align: left;
+}
+
+.pip-card-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 11px;
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+.pip-card-icon svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.pip-card-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.pip-card-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.pip-card-caption {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+.pip-card-action {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-right: 2px;
+  color: var(--c-text-muted);
+}
+
+/* The chat button sits in the corner the card uses. */
+body:has(.pip-target) .chat-fab-trigger {
+  display: none;
+}
