@@ -19,7 +19,8 @@ class OutputDeliveryTest {
                         new PipelineDefinition("test", List.of(), OutputSpec.inline()),
                         source,
                         document,
-                        user);
+                        user,
+                        null);
         return OutputDelivery.forRun(run, PolicyInputs.of(List.of(new FileSystemResource(path))));
     }
 

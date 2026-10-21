@@ -31,11 +31,14 @@ import org.springframework.web.method.HandlerMethod;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
+import jakarta.servlet.DispatcherType;
+
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.saas.accountlink.LinkedInstanceAuthenticationToken;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureGate;
@@ -173,6 +176,23 @@ class EntitlementGuardTest {
         assertThat(body.get("error").asText()).isEqualTo("FEATURE_DEGRADED");
         assertThat(body.get("missingGates").get(0).asText()).isEqualTo("AI_SUPPORT");
         verify(entitlementService).getSnapshot(42L);
+    }
+
+    @Test
+    void asyncDispatch_isNotGuardedAgain() throws Exception {
+        // Security filters skip ASYNC dispatches, so re-gating would 401 a response already sent.
+        HandlerMethod hm = handlerFor("plainEndpoint");
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setRequestURI("/api/v1/ai/tools/math-auditor-agent");
+        req.setDispatcherType(DispatcherType.ASYNC);
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isTrue();
+        assertThat(res.getStatus()).isEqualTo(200);
+        assertThat(res.getContentAsString()).isEmpty();
+        Mockito.verifyNoInteractions(entitlementService, userRepository);
     }
 
     @Test
@@ -445,6 +465,36 @@ class EntitlementGuardTest {
         assertThat(res.getStatus()).isEqualTo(402);
         JsonNode body = json.readTree(res.getContentAsByteArray());
         assertThat(body.get("missingGates").get(0).asText()).isEqualTo("AI_SUPPORT");
+    }
+
+    @Test
+    void linkedInstance_aiRouteDegraded_returns402() throws Exception {
+        // Its principal is an instance id, so a user lookup would fail open for an unentitled team.
+        SecurityContextHolder.getContext()
+                .setAuthentication(new LinkedInstanceAuthenticationToken(9L, 42L));
+        when(entitlementService.getSnapshot(42L)).thenReturn(degradedSnapshot());
+
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        boolean proceed = guard.preHandle(new MockHttpServletRequest(), res, handlerFor("aiOnly"));
+
+        assertThat(proceed).isFalse();
+        assertThat(res.getStatus()).isEqualTo(402);
+        JsonNode body = json.readTree(res.getContentAsByteArray());
+        assertThat(body.get("missingGates").get(0).asText()).isEqualTo("AI_SUPPORT");
+        Mockito.verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void linkedInstance_aiRouteEntitled_passesThrough() throws Exception {
+        SecurityContextHolder.getContext()
+                .setAuthentication(new LinkedInstanceAuthenticationToken(9L, 42L));
+        when(entitlementService.getSnapshot(42L)).thenReturn(fullSnapshot());
+
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        boolean proceed = guard.preHandle(new MockHttpServletRequest(), res, handlerFor("aiOnly"));
+
+        assertThat(proceed).isTrue();
+        assertThat(res.getStatus()).isEqualTo(200);
     }
 
     // ---------------------------------------------------------------------------------------

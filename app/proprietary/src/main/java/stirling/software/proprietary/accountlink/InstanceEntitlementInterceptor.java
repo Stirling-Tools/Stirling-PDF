@@ -31,6 +31,7 @@ import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.proprietary.billing.AiCallRecord;
 import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.DocumentUnitCalculator;
 import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
@@ -184,6 +185,12 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         }
         if (!(request.getAttribute(ATTR_CATEGORY) instanceof BillingCategory category)
                 || category == BillingCategory.BYPASSED) {
+            return;
+        }
+        // Bill AI only when this server's own engine ran: Stirling Cloud bills its own work, and a
+        // route that never reached an engine did none.
+        if (category == BillingCategory.AI
+                && !AiCallRecord.ranLocally(request.getAttribute(AiCallRecord.attributeName()))) {
             return;
         }
         try {

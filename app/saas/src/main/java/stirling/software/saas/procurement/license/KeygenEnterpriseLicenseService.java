@@ -197,8 +197,9 @@ public class KeygenEnterpriseLicenseService implements EnterpriseLicenseService 
     private Map<String, Object> annualMetadata(Long teamId, LicenseEntitlements ent) {
         Map<String, Object> m = baseMetadata(teamId, false);
         int seats = Math.max(0, ent.seats());
-        m.put("users", seats); // 0 = unlimited
-        m.put("seat_count", seats); // parity with the self-hosted edge's metadata
+        m.put("users", 0);
+        m.put("seat_count", 0);
+        m.put("agreed_seats", seats);
         m.put("volume", ent.volume()); // committed PDFs / year
         m.put("term_years", ent.termYears());
         if (ent.serviceLevel() != null && !ent.serviceLevel().isBlank()) {

@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -38,10 +39,12 @@ public class Type3FontLibrary {
 
     private final Map<String, Type3FontLibraryEntry> signatureIndex = new ConcurrentHashMap<>();
     private final Map<String, Type3FontLibraryEntry> aliasIndex = new ConcurrentHashMap<>();
+    private final Map<String, Type3FontLibraryPayload> payloadCache = new HashMap<>();
     private List<Type3FontLibraryEntry> entries = List.of();
 
     @jakarta.annotation.PostConstruct
     void initialise() {
+        payloadCache.clear();
         if (applicationProperties.getPdfEditor() != null
                 && applicationProperties.getPdfEditor().getType3() != null
                 && applicationProperties.getPdfEditor().getType3().getLibrary() != null) {
@@ -176,9 +179,9 @@ public class Type3FontLibrary {
                             .label(rawEntry.label != null ? rawEntry.label : rawEntry.id)
                             .signatures(normalizeList(rawEntry.signatures))
                             .aliases(normalizeList(rawEntry.aliases))
-                            .program(loadPayload(rawEntry.program))
-                            .webProgram(loadPayload(rawEntry.webProgram))
-                            .pdfProgram(loadPayload(rawEntry.pdfProgram))
+                            .program(loadPayloadCached(rawEntry.program))
+                            .webProgram(loadPayloadCached(rawEntry.webProgram))
+                            .pdfProgram(loadPayloadCached(rawEntry.pdfProgram))
                             .source(rawEntry.source);
             if (rawEntry.glyphCoverage != null && !rawEntry.glyphCoverage.isEmpty()) {
                 for (Integer codePoint : rawEntry.glyphCoverage) {
@@ -197,14 +200,38 @@ public class Type3FontLibrary {
         }
     }
 
+    private Type3FontLibraryPayload loadPayloadCached(RawPayload payload) throws IOException {
+        if (payload == null) {
+            return null;
+        }
+        if (payload.base64 != null && !payload.base64.isBlank()) {
+            return loadPayload(payload);
+        }
+        try {
+            if (payload.resource == null || payload.resource.isBlank()) {
+                return loadPayload(payload);
+            }
+            String key = payload.resource + "|" + payload.format;
+            Type3FontLibraryPayload cached = payloadCache.get(key);
+            if (cached != null) {
+                return cached;
+            }
+            Type3FontLibraryPayload loaded = loadPayload(payload);
+            if (loaded != null) {
+                payloadCache.put(key, loaded);
+            }
+            return loaded;
+        } catch (IOException ex) {
+            log.warn("[TYPE3] Failed to load Type3 payload: {}", ex.getMessage());
+            return null;
+        }
+    }
+
     private Type3FontLibraryPayload loadPayload(RawPayload payload) throws IOException {
         if (payload == null) {
             return null;
         }
-        String base64;
         if (payload.base64 != null && !payload.base64.isBlank()) {
-            // Validate the base64 string without wasteful full decode
-            // Only decode a small prefix to verify encoding is valid
             try {
                 byte[] probe =
                         Base64.getDecoder()
@@ -218,18 +245,16 @@ public class Type3FontLibrary {
                 log.warn("[TYPE3] Invalid base64 payload in Type3 library: {}", ex.getMessage());
                 return null;
             }
-            // Keep the original base64 string directly — avoids 3x memory pressure
-            base64 = payload.base64;
+            return new Type3FontLibraryPayload(payload.base64, normalizeFormat(payload.format));
         } else if (payload.resource != null && !payload.resource.isBlank()) {
-            byte[] data = loadResourceBytes(payload.resource);
-            if (data == null || data.length == 0) {
-                return null;
+            String resolved = resolveLocation(payload.resource);
+            Resource res = resourceLoader.getResource(resolved);
+            if (!res.exists()) {
+                throw new IOException("Resource not found: " + resolved);
             }
-            base64 = Base64.getEncoder().encodeToString(data);
-        } else {
-            return null;
+            return new Type3FontLibraryPayload(res, normalizeFormat(payload.format));
         }
-        return new Type3FontLibraryPayload(base64, normalizeFormat(payload.format));
+        return null;
     }
 
     private byte[] loadResourceBytes(String location) throws IOException {

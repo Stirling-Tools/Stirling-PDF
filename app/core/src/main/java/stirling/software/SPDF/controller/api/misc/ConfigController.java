@@ -220,6 +220,11 @@ public class ConfigController {
 
             // User preference defaults
             configData.put(
+                    "defaultToolPanelMode",
+                    applicationProperties.getUi().getDefaultToolPanelMode());
+            configData.put(
+                    "defaultStartupView", applicationProperties.getUi().getDefaultStartupView());
+            configData.put(
                     "defaultHideUnavailableTools",
                     applicationProperties.getUi().isDefaultHideUnavailableTools());
             configData.put(
@@ -251,6 +256,9 @@ public class ConfigController {
             boolean enableLogin =
                     applicationProperties.getSecurity().isEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
+            configData.put(
+                    "honorOwnerPasswords",
+                    applicationProperties.getSecurity().isHonorOwnerPasswords());
             configData.put(
                     "showSettingsWhenNoLogin",
                     applicationProperties.getSystem().isShowSettingsWhenNoLogin());
@@ -322,6 +330,9 @@ public class ConfigController {
             configData.put(
                     "enableAlphaFunctionality",
                     applicationProperties.getSystem().isEnableAlphaFunctionality());
+            configData.put(
+                    "stirlingOfficeConversion",
+                    applicationProperties.getSystem().isStirlingOfficeConversion());
             boolean shouldShowUpdate =
                     applicationProperties.getSystem().isShowUpdate()
                             && (showAdmin == null || showAdmin.getShowUpdateOnlyAdmins());
@@ -422,8 +433,7 @@ public class ConfigController {
                 if (applicationContext.containsBean("SSOAutoLogin")) {
                     configData.put(
                             "SSOAutoLogin",
-                            Boolean.TRUE.equals(isRunningProOrHigher())
-                                    && applicationContext.getBean("SSOAutoLogin", Boolean.class));
+                            applicationContext.getBean("SSOAutoLogin", Boolean.class));
                 }
             } catch (Exception e) {
                 // EE features not available, continue without them

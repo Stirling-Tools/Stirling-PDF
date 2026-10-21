@@ -106,8 +106,7 @@ public class ConnectController {
                             body.nonce(),
                             body.claimSecret(),
                             clientIp(http),
-                            instance.map(LinkedInstance::getTeamId).orElse(null),
-                            instance.map(LinkedInstance::getCreatedByUserId).orElse(null));
+                            instance.map(LinkedInstance::getTeamId).orElse(null));
         } else {
             result =
                     service.create(
@@ -191,9 +190,7 @@ public class ConnectController {
                             boolean reauth = v.mode() == ConnectRequest.Mode.REAUTH;
                             boolean canApprove =
                                     !caller.isError()
-                                            && (!reauth
-                                                    || v.isLinkedAccount(
-                                                            caller.teamId(), caller.userId()));
+                                            && (!reauth || v.isLinkedTeam(caller.teamId()));
                             boolean canDeny = !reauth && !caller.isError();
                             return ResponseEntity.ok(
                                     new ViewResponse(

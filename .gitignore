@@ -26,9 +26,6 @@ pipeline/
 customFiles/
 configs/
 watchedFolders/
-# The rule above targets the app's runtime watched-folders working dir, but it
-# also matches this frontend source component dir; keep the source tracked.
-!frontend/editor/src/proprietary/components/watchedFolders/
 clientWebUI/
 policy-webhook-spool/
 # Scratch dir used by local fixture-regeneration runs (see
@@ -73,7 +70,6 @@ app/core/src/main/resources/static/samples/
 app/core/src/main/resources/static/og-metadata.json
 app/core/src/main/resources/static/og-metadata.saas.json
 app/core/src/main/resources/static/sitemap.xml
-app/core/src/main/resources/static/sw-folder-retry.js
 app/core/src/main/resources/static/robots.txt
 app/core/src/main/resources/static/android-chrome-*.png
 app/core/src/main/resources/static/mstile-*.png
@@ -184,7 +180,7 @@ app/core/src/main/resources/static/images/google-drive.svg
 *.ear
 *.zip
 # Real backend archives the form-bundle reader is tested against.
-!frontend/editor/src/core/tools/formFill/__fixtures__/*.zip
+!frontend/src/editor/core/tools/formFill/__fixtures__/*.zip
 *.tar.gz
 *.rar
 *.db
@@ -195,7 +191,7 @@ app/proprietary/build
 common/build
 proprietary/build
 stirling-pdf/build
-frontend/editor/src-tauri/provisioner/target
+frontend/src-tauri/provisioner/target
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -212,7 +208,6 @@ venv.bak/
 
 # Env files (secrets / local overrides). Subproject .gitignore files whitelist any committed defaults.
 .env*
-!/.env
 
 # VS Code
 /.vscode/**/*
@@ -247,7 +242,7 @@ out/
 *.asc
 
 # Allow test fixture certificates (synthetic, no real credentials)
-!frontend/editor/src/core/tests/test-fixtures/certs/**
+!frontend/src/editor/core/tests/test-fixtures/certs/**
 
 # SSH Keys
 *.pub
@@ -264,8 +259,9 @@ id_ed25519.pub
 !docs/security/signing-key.pub
 *ssh
 
-# Taskfile checksum cache
-.task/
+# Task cache plus the committed default env the root Taskfile reads.
+.task/*
+!.task/.env
 
 # cache
 .cache
@@ -291,7 +287,7 @@ node_modules
 *compact*.json
 test_batch.json
 *.backup.*.json
-frontend/editor/public/locales/*/translation.backup*.json
+frontend/public/locales/*/translation.backup*.json
 
 # Development/build artifacts
 .gradle-cache/
@@ -321,5 +317,5 @@ docs/type3/signatures/
 *.playwright-mcp.png
 
 # Local screenshot artifacts from *-screenshots.spec.ts
-frontend/editor/screenshots/
-frontend/editor/src-tauri/libs/.variant
+frontend/screenshots/
+frontend/src-tauri/libs/.variant

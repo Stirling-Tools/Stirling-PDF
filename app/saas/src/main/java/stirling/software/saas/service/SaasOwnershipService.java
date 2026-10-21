@@ -18,6 +18,8 @@ import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.*;
 import stirling.software.proprietary.service.AuditService;
+import stirling.software.saas.accountlink.LinkedInstance;
+import stirling.software.saas.accountlink.LinkedInstanceRepository;
 
 /** Transfers an existing team's leadership without moving wallets, subscriptions or identities. */
 @Service
@@ -29,9 +31,25 @@ public class SaasOwnershipService {
     private final SaasTeamExtensionService extensions;
     private final EntityManager entityManager;
     private final AuditService audit;
+    private final LinkedInstanceRepository instances;
 
+    /**
+     * Linked teams must transfer through an authenticated instance; ownerless recovery remains
+     * available.
+     */
     @Transactional
     public void transfer(Long teamId, Long targetId, User caller) {
+        transfer(teamId, targetId, caller, null);
+    }
+
+    /** The caller must have authenticated this instance's device secret and the human owner. */
+    @Transactional
+    void transferFromInstance(Long teamId, Long targetId, User caller, LinkedInstance instance) {
+        Objects.requireNonNull(instance);
+        transfer(teamId, targetId, caller, instance);
+    }
+
+    private void transfer(Long teamId, Long targetId, User caller, LinkedInstance instance) {
         var team =
                 teams.lockById(teamId)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -55,6 +73,15 @@ public class SaasOwnershipService {
                     HttpStatus.FORBIDDEN, "Only the current leader can transfer ownership.");
         if (!unowned && caller.getId().equals(targetId))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose another member.");
+        if (instance != null) {
+            instances
+                    .findByDeviceIdAndRevokedAtIsNull(instance.getDeviceId())
+                    .filter(link -> Objects.equals(link.getTeamId(), teamId))
+                    .orElseThrow(
+                            () -> new ResponseStatusException(HttpStatus.CONFLICT, "LINK_CHANGED"));
+        } else if (!unowned && instances.countByTeamIdAndRevokedAtIsNull(teamId) > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "START_TRANSFER_FROM_INSTANCE");
+        }
         TeamMembership target =
                 rows.stream()
                         .filter(

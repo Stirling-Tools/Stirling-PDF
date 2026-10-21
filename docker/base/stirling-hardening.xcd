@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oor:data xmlns:oor="http://openoffice.org/2001/registry"
+          xmlns:xs="http://www.w3.org/2001/XMLSchema"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <dependency file="main"/>
+  <oor:component-data oor:name="Common" oor:package="org.openoffice.Office">
+    <node oor:name="Security">
+      <node oor:name="Scripting">
+        <prop oor:name="DisableMacrosExecution" oor:finalized="true">
+          <value>true</value>
+        </prop>
+        <prop oor:name="MacroSecurityLevel" oor:finalized="true">
+          <value>3</value>
+        </prop>
+        <prop oor:name="DisableActiveContent" oor:finalized="true">
+          <value>true</value>
+        </prop>
+        <prop oor:name="DisableOLEAutomation" oor:finalized="true">
+          <value>true</value>
+        </prop>
+        <prop oor:name="BlockUntrustedRefererLinks" oor:finalized="true">
+          <value>true</value>
+        </prop>
+        <prop oor:name="SecureURL" oor:finalized="true">
+          <value/>
+        </prop>
+        <node oor:name="TrustedAuthors" oor:finalized="true"/>
+      </node>
+    </node>
+  </oor:component-data>
+  <oor:component-data oor:name="Writer" oor:package="org.openoffice.Office">
+    <node oor:name="Content">
+      <node oor:name="Update">
+        <prop oor:name="Link" oor:finalized="true">
+          <value>2</value>
+        </prop>
+        <prop oor:name="Field" oor:finalized="true">
+          <value>false</value>
+        </prop>
+        <prop oor:name="Chart" oor:finalized="true">
+          <value>false</value>
+        </prop>
+      </node>
+    </node>
+  </oor:component-data>
+  <oor:component-data oor:name="Calc" oor:package="org.openoffice.Office">
+    <node oor:name="Content">
+      <node oor:name="Update">
+        <prop oor:name="Link" oor:finalized="true">
+          <value>1</value>
+        </prop>
+      </node>
+    </node>
+  </oor:component-data>
+  <oor:component-data oor:name="Inet" oor:package="org.openoffice">
+    <node oor:name="Settings">
+      <prop oor:name="ooInetProxyType" oor:finalized="true">
+        <value>2</value>
+      </prop>
+      <prop oor:name="ooInetHTTPProxyName" oor:finalized="true">
+        <value>127.0.0.1</value>
+      </prop>
+      <prop oor:name="ooInetHTTPProxyPort" oor:finalized="true">
+        <value>1</value>
+      </prop>
+      <prop oor:name="ooInetHTTPSProxyName" oor:finalized="true">
+        <value>127.0.0.1</value>
+      </prop>
+      <prop oor:name="ooInetHTTPSProxyPort" oor:finalized="true">
+        <value>1</value>
+      </prop>
+      <prop oor:name="ooInetFTPProxyName" oor:finalized="true">
+        <value>127.0.0.1</value>
+      </prop>
+      <prop oor:name="ooInetFTPProxyPort" oor:finalized="true">
+        <value>1</value>
+      </prop>
+      <prop oor:name="ooInetNoProxy" oor:finalized="true">
+        <value/>
+      </prop>
+    </node>
+  </oor:component-data>
+</oor:data>

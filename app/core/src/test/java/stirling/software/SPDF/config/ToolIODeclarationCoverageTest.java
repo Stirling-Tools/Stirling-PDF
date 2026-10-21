@@ -37,6 +37,15 @@ import stirling.software.common.service.ToolIOParameterDefaults;
  */
 class ToolIODeclarationCoverageTest {
 
+    @Test
+    void selectiveRemovalMayRetainAnOpeningPassword() {
+        var removal = spec("/api/v1/security/remove-password");
+        assertEquals(
+                ToolFormat.ANY,
+                removal.resolveOutput(Map.of("password", "", "ownerPassword", "owner")).format());
+        assertEquals(ToolFormat.PDF, removal.resolveOutput(Map.of("password", "reader")).format());
+    }
+
     /** The namespaces whose endpoints act on documents. */
     private static final List<String> TOOL_NAMESPACES =
             List.of(
@@ -62,6 +71,10 @@ class ToolIODeclarationCoverageTest {
                     "/api/v1/convert/text-editor/pdf",
                     // Charcode lookup for the v2 editor: returns glyph mappings, not a document.
                     "/api/v1/general/pdf-text-editor",
+                    // Interactive credential helpers, hidden from pipeline discovery; restoration
+                    // requires the original protected document as well as the working result.
+                    "/api/v1/security/restore-pdf-protection",
+                    "/api/v1/security/prepare-pdf-session",
                     // Signing sessions, certificate checks and hardware token enumeration; the
                     // signing tool itself is /api/v1/security/cert-sign, which is declared.
                     "/api/v1/security/cert-sign/sessions",
@@ -269,23 +282,17 @@ class ToolIODeclarationCoverageTest {
     }
 
     @Test
-    void onlyRemovePasswordAcceptsAnEncryptedDocument() {
-        assertTrue(
-                spec("/api/v1/security/remove-password").acceptsFormat(ToolFormat.PDF_ENCRYPTED));
+    void passwordToolsAcceptEncryptedSources() {
         List<String> accepting =
                 DECLARED.entrySet().stream()
                         .filter(e -> e.getValue().acceptsFormat(ToolFormat.PDF_ENCRYPTED))
                         .map(Map.Entry::getKey)
-                        .filter(path -> !path.equals("/api/v1/security/remove-password"))
                         .filter(path -> !spec(path).accepts().contains(ToolFormat.ANY))
                         .sorted()
                         .toList();
-        assertTrue(
-                accepting.isEmpty(),
-                () ->
-                        "Only remove-password should accept an encrypted PDF. If one of these"
-                                + " genuinely handles encryption, say so in its @ToolIO:\n  "
-                                + String.join("\n  ", accepting));
+        assertEquals(
+                List.of("/api/v1/security/add-password", "/api/v1/security/remove-password"),
+                accepting);
     }
 
     private static ToolIOSpec spec(String path) {

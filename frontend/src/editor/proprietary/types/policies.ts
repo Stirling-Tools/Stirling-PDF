@@ -1,0 +1,107 @@
+/**
+ * Types for Policies — a proprietary, automation-backed enforcement feature.
+ *
+ * Policies run on the backend in response to sources/events (editor save/export,
+ * device sweeps, cloud connectors). Per-policy state is cached locally in localStorage.
+ */
+
+import type { ReactNode } from "react";
+import type { ToolEndpoint } from "@app/types/toolApiTypes";
+
+/** Static definition of a policy category (the "what it does"). */
+export interface PolicyCategory {
+  id: string;
+  label: string;
+  icon: ReactNode;
+  /** Long description shown in the setup wizard. */
+  desc: string;
+  /**
+   * This category provides document classification, so it's the target of the
+   * setup wizard's "Set up Classification" action. Data-driven replacement for
+   * the hardcoded `selectPolicy("ingestion")` call site.
+   */
+  providesClassification?: boolean;
+  /**
+   * Not yet available — shown as a locked "Coming soon" row that can't be opened
+   * or configured. Only Security is live today.
+   */
+  comingSoon?: boolean;
+  /**
+   * Requires the AI engine to be enabled. Hidden from the catalog when the
+   * engine is off, so the policy only appears where it can actually run.
+   */
+  requiresAiEngine?: boolean;
+}
+
+/** Per-category runtime state held in the local cache. */
+export interface PolicyState {
+  configured: boolean;
+  /** Whether the backend policy is enabled (fires on the editor). Meaningful only
+   *  when `configured`; false otherwise. Mirrors the backend `Policy.enabled`. */
+  enabled: boolean;
+  /** Selected source ids. */
+  sources: string[];
+  /** The policy's own name. Set for builder pipelines, which have no built-in category label. */
+  name?: string;
+  /** The owner's username (email on SaaS), used to direct recovery requests. */
+  owner?: string;
+  /** Whether the policy runs in the editor as each file passes through (resolved at decode). */
+  runsOnEditor?: boolean;
+  /**
+   * A policy (blocking) rather than an ordinary pipeline: when it fails on an editor file the file
+   * is blocked (unusable), whereas a pipeline failure only warns. See the pipeline `Policy.required`.
+   */
+  required?: boolean;
+  /** When non-empty, narrows the policy to these document types. */
+  scopeTypes: string[];
+  /** Email that low-confidence enforcements are routed to. */
+  reviewerEmail: string;
+  /** Saved field values, keyed by field key (overrides the definition default). */
+  fieldValues: Record<string, boolean | string | string[]>;
+  /** How a run's output is delivered: a separate new file, or a new version of
+   *  the input file the policy ran on. Defaults to "new_version". */
+  outputMode?: "new_file" | "new_version";
+  externalOutput?: boolean;
+  /** Rename rule for the output. When empty (the default) the output keeps the
+   *  input's filename; when set, it's applied as a prefix/suffix per the policy's
+   *  name-position setting. */
+  outputName?: string;
+  /** Whether the rename rule is applied before ("prefix") or after ("suffix")
+   *  the base filename, or as an auto-incrementing number. */
+  outputNamePosition?: "prefix" | "suffix" | "auto-number";
+  /** When the policy runs: on "upload" or before "export". See `defaultRunOn`. */
+  runOn?: "upload" | "export";
+  /**
+   * Execution order among policies that share a trigger. When several policies run
+   * on the same event they fire in ascending `order`, each on the previous one's
+   * output (a cumulative chain). Defaults to the policy's position in the catalog
+   * until an admin reorders them, which persists an explicit value for every policy.
+   */
+  order?: number;
+  /**
+   * Id of this policy's record on the backend (the source of truth). Present once
+   * it has been persisted server-side; used to update/delete/run it.
+   */
+  backendId?: string;
+  /** First stored step's endpoint; absent before fetch, null for an empty or unknown first step. */
+  firstOperation?: ToolEndpoint | null;
+  /**
+   * A built-in policy (one of the shipped catalog categories) rather than a
+   * user-created one. Default policies are configurable but NOT deletable — the
+   * Delete action is hidden for them (it returns for custom policies later).
+   */
+  isDefault?: boolean;
+}
+
+export type PoliciesByKey = Record<string, PolicyState>;
+
+/** Editor trigger, output and retry settings decoded from a backend policy. */
+export interface PolicyFolderSettings {
+  /** The editor event the policy runs on: "upload" or "export". */
+  runOn: "upload" | "export";
+  outputMode: "new_file" | "new_version";
+  outputName: string;
+  outputNamePosition: "prefix" | "suffix" | "auto-number";
+  maxRetries: number;
+  retryDelayMinutes: number;
+}

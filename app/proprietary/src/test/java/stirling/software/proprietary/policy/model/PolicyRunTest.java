@@ -16,7 +16,13 @@ class PolicyRunTest {
 
     private static PolicyRun run() {
         return new PolicyRun(
-                "run-1", "p1", new PipelineDefinition("t", List.of(), List.of()), null, null, null);
+                "run-1",
+                "p1",
+                new PipelineDefinition("t", List.of(), List.of()),
+                null,
+                null,
+                null,
+                null);
     }
 
     @Test
@@ -27,6 +33,7 @@ class PolicyRunTest {
                         "policy",
                         new PipelineDefinition(
                                 "copy", List.of(), List.of(OutputSpec.folder("/out"))),
+                        null,
                         null,
                         null,
                         null);
@@ -54,6 +61,7 @@ class PolicyRunTest {
                                             new RoutedDestination(
                                                     new RoutingRule(condition, "destination"),
                                                     destination))),
+                            null,
                             null,
                             null,
                             null);

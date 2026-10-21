@@ -168,11 +168,27 @@ public enum FailureKind {
             FailureScope.SERVER,
             // E080 (MD5 unavailable) is deliberately not claimed: its one thrower has no throws
             // clause and its caller swallows it for a fallback hash, so it cannot reach a run.
-            errorCodes("E042", "E062", "E063", "E064"),
+            errorCodes("E042", "E062", "E063", "E064", "E082"),
             fallback("This server is missing software the step needs, so it could not be run."),
             // Nothing for an owner to press: their document is fine, and a retry fails the same
             // way until someone installs the binary.
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, SECONDARY),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * A source could not be listed at all: a folder unplugged, renamed or locked down. Scoped to
+     * the source, so a week-long outage is one incident. Claims no error code.
+     */
+    SOURCE_UNREADABLE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_CONFIG_FIX,
+            FailureScope.SOURCE,
+            noErrorCodes(),
+            fallback("This folder could not be read, so nothing in it was processed."),
+            // No document to view: the sweep never got as far as one. Fixing it means fixing the
+            // folder, which happens outside Stirling.
+            global(VIEW_IN_PROCESSOR, OWNER, SECONDARY),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
@@ -194,16 +210,16 @@ public enum FailureKind {
 
     /**
      * A tool the step shells out to ran and did not deliver: OCRmyPDF or qpdf exited non-zero,
-     * LibreOffice produced no PDF/A. E051 is also the bucket unrecognised Ghostscript output falls
-     * into, so it carries killed processes and full disks too; the retry offered first clears
-     * those.
+     * LibreOffice produced no PDF/A, the redaction engine could not verify its own result. E051 is
+     * also the bucket unrecognised Ghostscript output falls into, so it carries killed processes
+     * and full disks too; the retry offered first clears those.
      */
     STEP_TOOL_FAILED(
             FailureStage.INTERNAL,
             FailureSeverity.ERROR,
             FailureRemedy.NEEDS_FILE_FIX,
             FailureScope.FILE,
-            errorCodes("E044", "E051", "E052", "E060"),
+            errorCodes("E044", "E051", "E052", "E060", "E077", "E083"),
             fallback("A tool this step relies on could not process this document."),
             global(OPEN_IN_TOOL, OWNER, SECONDARY),
             global(VIEW_FILE, OWNER, SECONDARY),
@@ -265,7 +281,7 @@ public enum FailureKind {
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
             // No known fix to declare, so a plain retry leads: these are often one-offs.
-            global(OPEN_IN_TOOL, OWNER, SECONDARY),
+            resolution(OPEN_IN_TOOL, OWNER),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW));

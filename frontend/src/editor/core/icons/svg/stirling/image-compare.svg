@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+  <!-- The photo frame is Lucide geometry (ISC). Full notice and the exact paths:
+       src/core/icons/LICENSE-lucide.txt, which must stay with this file. -->
+  <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+  <path d="M12 3v18" />
+  <circle cx="7.4" cy="8" r="1.4" />
+  <path d="m3.4 17.2 2.7-2.7a1.8 1.8 0 0 1 2.5 0l2.4 2.4" />
+  <circle cx="16.6" cy="8" r="1.4" fill="currentColor" />
+  <path d="m12.5 17.4 2.7-2.7a1.8 1.8 0 0 1 2.5 0l2.9 2.9v.4a2 2 0 0 1-2 2h-6.1z" fill="currentColor" />
+</svg>

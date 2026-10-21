@@ -23,6 +23,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -35,6 +36,7 @@ import stirling.software.proprietary.security.controller.api.UserController;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.saas.accountlink.LinkedInstanceAuthenticationToken;
 import stirling.software.saas.payg.cap.AiToolRoutes;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.model.FeatureGate;
@@ -124,6 +126,11 @@ public class EntitlementGuard implements HandlerInterceptor {
     public boolean preHandle(
             HttpServletRequest request, HttpServletResponse response, Object handler) {
         if (!(handler instanceof HandlerMethod hm)) {
+            return true;
+        }
+        // The REQUEST dispatch already decided. Security filters skip ASYNC dispatches, so the
+        // empty context here would 401 a streamed response that has already started.
+        if (request.getDispatcherType() == DispatcherType.ASYNC) {
             return true;
         }
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -250,6 +257,10 @@ public class EntitlementGuard implements HandlerInterceptor {
     }
 
     private Long resolveTeamId(Authentication auth) {
+        // A linked instance has no Supabase id, so the user lookup below would fail open.
+        if (auth instanceof LinkedInstanceAuthenticationToken instance) {
+            return instance.getTeamId();
+        }
         if (auth instanceof ApiKeyAuthenticationToken
                 && auth.getPrincipal() instanceof User apiUser) {
             return apiUser.getTeam() == null ? null : apiUser.getTeam().getId();

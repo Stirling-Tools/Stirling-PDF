@@ -54,13 +54,8 @@ public class EEAppConfig {
 
     @Profile("security & !saas")
     @Bean(name = "SSOAutoLogin")
-    @DependsOn("runningProOrHigher")
     public boolean ssoAutoLogin() {
-        boolean enabled = applicationProperties.getPremium().getProFeatures().isSsoAutoLogin();
-        if (enabled) {
-            licenseKeyChecker.requireProOrEnterprise("premium.proFeatures.ssoAutoLogin=true");
-        }
-        return enabled;
+        return applicationProperties.getSecurity().isSsoAutoLogin();
     }
 
     // TODO: Remove post migration
@@ -86,11 +81,6 @@ public class EEAppConfig {
         // Copy enabled state if enterprise is enabled but premium is not
         if (!premium.isEnabled() && enterpriseEdition.isEnabled()) {
             premium.setEnabled(true);
-        }
-
-        // Copy SSO auto login setting
-        if (!premium.getProFeatures().isSsoAutoLogin() && enterpriseEdition.isSsoAutoLogin()) {
-            premium.getProFeatures().setSsoAutoLogin(true);
         }
 
         // Copy CustomMetadata settings

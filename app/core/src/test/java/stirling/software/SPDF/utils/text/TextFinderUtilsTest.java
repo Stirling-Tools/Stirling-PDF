@@ -88,6 +88,35 @@ class TextFinderUtilsTest {
     }
 
     @Test
+    void createOptimizedSearchPatterns_ignoresCaseByDefault() {
+        Pattern regex =
+                TextFinderUtils.createOptimizedSearchPatterns(Set.of("[A-Z]{2}-\\d+"), true, false)
+                        .get(0);
+        Pattern literal =
+                TextFinderUtils.createOptimizedSearchPatterns(Set.of("secret"), false, false)
+                        .get(0);
+
+        assertTrue(regex.matcher("fs-01").find());
+        assertTrue(literal.matcher("SECRET").find());
+    }
+
+    @Test
+    void createOptimizedSearchPatterns_caseSensitive_matchesCaseExactly() {
+        Pattern regex =
+                TextFinderUtils.createOptimizedSearchPatterns(
+                                Set.of("[A-Z]{2}-\\d+"), true, false, true)
+                        .get(0);
+        Pattern literal =
+                TextFinderUtils.createOptimizedSearchPatterns(Set.of("Secret"), false, false, true)
+                        .get(0);
+
+        assertTrue(regex.matcher("FS-01").find());
+        assertFalse(regex.matcher("fs-01").find());
+        assertTrue(literal.matcher("Secret").find());
+        assertFalse(literal.matcher("SECRET").find());
+    }
+
+    @Test
     void createOptimizedSearchPatterns_withWholeWord_addsWordBoundaries() {
         Set<String> terms = Set.of("cat");
         List<Pattern> patterns = TextFinderUtils.createOptimizedSearchPatterns(terms, false, true);
