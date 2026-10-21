@@ -301,7 +301,6 @@ title = "Resultados dos números de páxina"
 
 [addPassword]
 desc = "Cifra o teu documento PDF cun contrasinal."
-submit = "Cifrar"
 tags = "cifrar,contrasinal,bloquear,seguro,protexer,seguranza,cifrado,salvagardar,confidencial,privado,restrinxir o acceso"
 title = "Engadir contrasinal"
 
@@ -313,17 +312,6 @@ label = "Lonxitude da chave de cifrado"
 
 [addPassword.error]
 failed = "Produciuse un erro ao cifrar o PDF."
-
-[addPassword.passwords]
-stepTitle = "Contrasinais e cifrado"
-
-[addPassword.passwords.owner]
-label = "Contrasinal do propietario"
-placeholder = "Introduce o contrasinal do propietario"
-
-[addPassword.passwords.user]
-label = "Contrasinal do usuario"
-placeholder = "Introduce o contrasinal do usuario"
 
 [addPassword.results]
 title = "PDF cifrados"
@@ -1629,6 +1617,7 @@ title = "Reinicio necesario"
 [admin.settings.security]
 authentication = "Autenticación"
 description = "Configura a autenticación, o comportamento do inicio de sesión e as políticas de seguranza."
+pdfPermissions = "Permisos do PDF"
 title = "Seguranza"
 
 [admin.settings.security.audit]
@@ -1676,6 +1665,10 @@ label = "Desactivar a protección CSRF"
 [admin.settings.security.enableLogin]
 description = "Requirir que os usuarios inicien sesión antes de acceder á aplicación"
 label = "Activar o inicio de sesión"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Esixir o contrasinal de permisos para accións restrinxidas. Ao desactivar isto, seguiranse requirindo os contrasinais necesarios para abrir PDFs."
+label = "Respectar os permisos do PDF"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Configuración avanzada"
@@ -3173,7 +3166,6 @@ unknown = "Descoñecido"
 [changePermissions]
 desc = "Cambia as restricións e os permisos do documento."
 loading = "Cargando os permisos actuais..."
-multipleFiles = "Selecciona un único PDF para cargar automaticamente os seus permisos actuais. Esta configuración aplicarase a todos os PDF seleccionados."
 submit = "Cambiar permisos"
 tags = "permisos,restricións,dereitos,control de acceso,permitir,denegar,impresión,copia,edición,modificar permisos,configuración de seguridade,dereitos de usuario"
 title = "Cambiar permisos"
@@ -3639,6 +3631,7 @@ tooltip = "Coller cor da pantalla"
 hue = "Matiz"
 saturation = "Saturación e brillo"
 title = "Escoller cor"
+transparent = "Transparente"
 
 [common]
 actions = "Accións"
@@ -3654,6 +3647,7 @@ continue = "Continuar"
 copied = "Copiado!"
 copy = "Copiar"
 copyCode = "Copiar código"
+copyFailed = "Fallou a copia"
 dismiss = "Descartar"
 done = "Feito"
 enterValue = "Introduce un valor"
@@ -4491,16 +4485,58 @@ description = "Selecciona a ferramenta Editar índice para cargar o seu espazo d
 title = "Abre a ferramenta para comezar a editar"
 
 [encryptedPdfUnlock]
-copyCreated = "Creouse unha copia sen protección"
+actionIgnored = "Restrición de {{action}} ignorada"
+actionUnlocked = "{{action}} desbloqueada para esta sesión"
+advanced = "Avanzado"
+allowed = "Permitido"
+annotations = "Anotacións"
+authoriseAction = "Este PDF require permiso para usar {{action}}."
+changeOwnerPassword = "Cambiar o contrasinal de permisos"
+checkingPermissions = "Comprobando os permisos do PDF..."
+chooseOwnerPassword = "Escoller un contrasinal diferente"
+continue = "Continuar"
+copyFailed = "Non se puido crear a copia. O teu PDF non se modificou."
+copying = "Copiando contido"
+editing = "Editando"
+enterPassword = "Introducir contrasinal"
+ignoredByServer = "Os permisos son ignorados pola configuración deste servidor. A protección do PDF non se modificou."
 incorrectPassword = "Contrasinal incorrecto"
+inspectionFailed = "Non se puideron comprobar os permisos deste PDF. Téntao de novo."
+lowQualityPrintUnsupported = "Este PDF só permite impresión de baixa calidade, que este visor non admite."
+lowResolutionOnly = "Só baixa resolución"
+manageProtection = "Xestionar protección"
 missingFile = "O ficheiro seleccionado xa non está dispoñible."
-originalProtected = "O PDF orixinal segue protexido."
-passwordHint = "Introduce o contrasinal do PDF para continuar."
+mixedProtection = "Estes PDFs teñen configuracións de protección separadas. Procésaos individualmente."
+newOwnerPassword = "Novo contrasinal de permisos"
+notRequired = "Non obrigatorio"
+openingPassword = "Contrasinal de apertura"
+openPdf = "Abrir PDF"
+ownerPassword = "Contrasinal de permisos"
+ownerRequired = "Introduce o contrasinal de permisos para continuar."
+ownerTitle = "Introducir contrasinal de permisos"
+passwordRetained = "Mantido sen cambios"
+passwordsMustDiffer = "Os dous contrasinais deben ser diferentes."
+permissionsUnlocked = "Permisos desbloqueados para esta sesión"
 prepareFailed = "Non se puido preparar este PDF protexido para procesalo."
+printing = "Imprimindo"
+printRestricted = "A impresión está restrinxida. Verifica os permisos en Xestionar protección."
+protectedPdf = "PDF protexido"
+protectionRetained = "Protección mantida"
+protectionSaved = "Protección gardada"
 removePasswordHelp = "Abre Quitar contrasinal para crear unha copia sen protección."
+removeProtection = "Crear unha copia sen protección"
+replaceProtection = "Estas opcións substitúen a protección actual do PDF."
 required = "Introduce o contrasinal para continuar."
+requiredStatus = "Obrigatorio"
+requiredToApply = "Obrigatorio para aplicar cambios"
 restoreFailed = "Non se puido manter a protección do PDF. Non se gardou ningún resultado sen protección."
+restrictActions = "Restrinxir accións"
+restricted = "Restrinxido"
+restrictedActions = "accións restrinxidas"
 restrictedOperation = "Este PDF restrinxe esta operación. Ábreo de novo co contrasinal de propietario para continuar."
+retainOwnerVerification = "Verifica o contrasinal de permisos para mantelo sen cambios mentres se elimina o contrasinal de apertura. Isto non o eliminará."
+saveProtection = "Gardar protección"
+securityChangeFailed = "Non se puido cambiar a protección. Comproba o contrasinal de permisos e a nova configuración de seguridade."
 sessionDetails = "Desbloquear só para esta sesión. O PDF segue protexido. Quitar contrasinal crea unha copia sen protección."
 sessionDetailsLabel = "Sobre o desbloqueo para a sesión"
 sessionFailed = "Non se puido desbloquear este PDF. Téntao de novo."
@@ -4509,7 +4545,6 @@ sessionSuccessBodyWithName = "{{fileName}} desbloqueado para esta sesión. Mante
 sessionSuccessTitle = "PDF desbloqueado"
 sessionTitle = "Desbloquear PDF"
 signedReadOnly = "Este PDF ten sinaturas dixitais. O desbloqueo para a sesión permite velo, pero aínda non se admite procesar PDF asinados."
-skip = "Omitir polo de agora"
 title = "Elimina o contrasinal para continuar"
 toolUnavailable = "Esta ferramenta non admite PDF cifrados. Quita primeiro o contrasinal."
 toolUnavailableDetails = "Por que {{name}} non está dispoñible"
@@ -4518,8 +4553,12 @@ unlockAll = "Usar para todos ({{count}})"
 unlockAllPartialFail = "Contrasinal incorrecto para: {{names}}"
 unlockAllSuccess_one = "Desbloqueouse {{count}} ficheiro."
 unlockAllSuccess_other = "Desbloqueáronse {{count}} ficheiros."
+unlockedForSession = "Desbloqueado para esta sesión usando o teu contrasinal de permisos."
 unlockPrompt = "Desbloquea o PDF para continuar"
+unprotectedCopyConsequence = "A copia non terá contrasinais nin restricións. O orixinal permanece protexido."
 unsupportedTool = "Esta ferramenta aínda non admite PDF desbloqueados para a sesión. Usa Quitar contrasinal para crear unha copia sen protección."
+verifiedForSession = "Verificado para esta sesión"
+verifyPermissions = "Verificar permisos para esta sesión"
 viewerLocked = "Este PDF está protexido con contrasinal"
 viewerUnlock = "Desbloquear"
 
@@ -6814,6 +6853,9 @@ unsaved = "Estes ficheiros teñen cambios sen gardar."
 [pageTracks.delete]
 page = "Eliminar páxina"
 
+[pageTracks.duplicate]
+page = "Duplicar páxina"
+
 [pageTracks.empty]
 body = "Engade PDF para expandilos en pistas de páxinas editables"
 title = "Non hai ficheiros PDF cargados"
@@ -7102,8 +7144,6 @@ upgradeCompleteMessage = "A túa subscrición actualizouse correctamente. A túa
 upgradeSuccess = "Pagamento realizado! A túa subscrición foi actualizada. A licenza actualizouse no teu servidor. En breve recibirás un correo electrónico de confirmación."
 upgradeTitle = "Actualizar a {{planName}}"
 yearly = "Anual"
-
-[payment.addCapacity]
 
 [payment.adjustTeam]
 title = "Axustar o plan Team"
@@ -8289,8 +8329,6 @@ rateUnknown = "Amosaremos o prezo exacto no pagamento."
 [portal.billing.prepaid.consent]
 label = "Entendo que, cando a miña capacidade prepagada se esgote ou caduque despois de 12 meses, o procesamento continuará automaticamente á tarifa medida estándar de pagamento por uso (ata o meu límite de gasto) salvo que cancele, e que podo cancelar en calquera momento desde o portal de facturación."
 
-[portal.billing.prepaid.deploy]
-
 [portal.billing.prepaid.offer]
 title = "Obtén 12 meses polo prezo de 10"
 
@@ -8304,15 +8342,9 @@ payOnline = "Pagar en liña"
 poNumber = "Número de pedido (opcional)"
 poNumberPlaceholder = "p. ex. PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
-
-[portal.billing.prepaid.posture]
-
 [portal.billing.prepaid.review]
 download = "Descargar orzamento (PDF)"
 downloading = "Preparando…"
-
-[portal.billing.prepaid.size]
 
 [portal.billing.processor]
 activate = "Activar o Processor"
@@ -8408,8 +8440,6 @@ useSuggested = "Usar o suxerido · {{amount}} / mes"
 body_one = "A {{rate}}/día alcanzarás o teito en ~{{count}} día (~{{monthEnd}} a fin de mes). Límite suxerido ~{{suggested}}."
 body_other = "A {{rate}}/día alcanzarás o teito en ~{{count}} días (~{{monthEnd}} a fin de mes). Límite suxerido ~{{suggested}}."
 label = "Prevese que se supere."
-
-[portal.billing.spendLimitModal]
 
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "Auméntao agora para que o procesamento automatizado nunca se deteña."
@@ -9183,7 +9213,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "Compilacións nativas para a túa distribución."
-guideBtn = "Ver opcións de instalación para Linux"
+downloadAppImage = "AppImage"
+downloadDeb = "Descargar .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "Hai compilacións AppImage, .deb e .rpm dispoñibles para as distribucións habituais."
 tagline = "Aplicación de escritorio nativa para a túa distribución"
 title = "Linux"
@@ -11421,7 +11453,12 @@ text = "Especifica que páxinas quitar do teu PDF. Podes seleccionar páxinas in
 title = "Selección de páxinas"
 
 [removePassword]
-desc = "Quita a protección por contrasinal do teu documento PDF."
+appliesTo = "Definido en {{count}} de {{total}} PDFs"
+keepBlank = "Deixa un campo en branco para manter ese contrasinal."
+notSet = "Non definido"
+openWithReaderFirst = "Reabre este PDF usando o seu contrasinal de apertura antes de eliminar só o contrasinal de permisos."
+selectiveHelp = "Introduce o contrasinal actual de cada protección que queiras eliminar. Un campo en branco mantén ese contrasinal. Eliminar o contrasinal de permisos tamén elimina as restricións de accións."
+selectPasswords = "Contrasinais para eliminar"
 submit = "Quitar contrasinal"
 tags = "seguro,descifrar,seguridade,sen contrasinal,eliminar contrasinal"
 title = "Quitar contrasinal"
@@ -11432,13 +11469,9 @@ failed = "Produciuse un erro ao quitar o contrasinal do PDF."
 [removePassword.password]
 label = "Contrasinal actual"
 placeholder = "Introduce o contrasinal actual"
-stepTitle = "Quitar contrasinal"
 
 [removePassword.results]
 title = "PDF descifrados"
-
-[removePassword.tooltip]
-description = "Quitar a protección por contrasinal require o contrasinal que se usou para cifrar o PDF. Isto descifrará o documento e farao accesible sen contrasinal."
 
 [reorganizePages]
 submit = "Reorganizar páxinas"
@@ -11568,6 +11601,64 @@ m = "Metros (m)"
 mi = "Millas (mi)"
 mm = "Milímetros (mm)"
 yd = "Iardas (yd)"
+
+[runLocation]
+back = "Atrás"
+continue = "Continuar"
+subtitle = "Escolle onde se executa."
+title = "Onde queres executar Stirling?"
+
+[runLocation.choice.browser]
+description = "A aplicación web."
+title = "No teu navegador"
+
+[runLocation.choice.computer]
+description = "A aplicación de escritorio."
+title = "No teu ordenador"
+
+[runLocation.choice.server]
+description = "Autoaloxado, para un equipo."
+title = "No teu servidor"
+
+[runLocation.desktop]
+computerLabel = "O teu ordenador"
+download = "Descargar para {{platform}}"
+downloadAgain = "Descargar de novo"
+guide = "Abrir a guía de instalación de {{platform}}"
+startedSubtitle = "Comproba o cartafol Descargas e logo abre o instalador."
+startedTitle = "A descarga comezou"
+subtitle = "Descárgao e ábreo."
+title = "Obter a aplicación de escritorio"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (guía de instalación)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "Copiado"
+copy = "Copiar comando"
+copyCompose = "Copiar ficheiro compose"
+guide = "Guía de instalación de {{method}}"
+methodLabel = "Executalo con"
+note = "Despois abre <url/> para rematar a configuración."
+subtitle = "Executa isto no teu servidor e despois ábreo nun navegador."
+title = "Configurar o teu servidor"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "Quita elementos potencialmente prexudiciais dos ficheiros PDF."
@@ -13589,7 +13680,9 @@ validUntrusted = "Válida, asinante sen verificar"
 
 [viewer]
 cannotPreviewFile = "Non se pode previsualizar o ficheiro"
+copyRestricted = "A copia está desactivada polos permisos deste PDF."
 copyText = "Copiar"
+coverPageView = "Mostrar a portada por separado"
 disableColorFilter = "Desactivar o filtro de cor"
 documentUpdated = "Documento actualizado"
 dualPageView = "Vista de dobre páxina"
@@ -13606,6 +13699,7 @@ noPdfProvided = "Non se proporcionou ningún PDF"
 onlyPdfSupported = "Este formato de ficheiro non se admite para a vista previa."
 pageNavigation = "Navegación de páxinas"
 previousPage = "Páxina anterior"
+readAloudFromHere = "Ler en voz alta desde aquí"
 saveChangesErrorBody = "Non se puido gardar o documento. Téntao de novo."
 saveChangesErrorTitle = "Non se puideron gardar os cambios"
 singlePageView = "Vista dunha páxina"
@@ -13666,6 +13760,7 @@ closeSidebar = "Pechar a barra lateral de comentarios"
 deleteAnnotationAndComment = "Eliminar anotación e comentario"
 deleteDescription = "Esta anotación ten un comentario anexo. Podes quitar só o comentario da barra lateral mantendo a anotación, ou eliminalo todo."
 deleteTitle = "Quitar a anotación dos comentarios?"
+exportCsv = "Exportar como CSV"
 goToLink = "Ir á ligazón"
 hint = "Coloca comentarios coas ferramentas Comentario, Inserir texto ou Substituír texto. Aparecerán aquí por páxina."
 locateAnnotation = "Localizar no documento"
@@ -13684,7 +13779,16 @@ typeInsertText = "Inserir texto"
 typeReplaceText = "Substituír texto"
 viewComment = "Ver comentario"
 
+[viewer.comments.csv]
+author = "Autor"
+comment = "Comentario"
+inReplyTo = "En resposta a"
+modifiedUtc = "Última modificación (UTC)"
+page = "Páxina"
+thread = "Fío"
+
 [viewer.error]
+loadError = "Fallou a carga do PDF"
 noFileProvided = "Erro: non se proporcionou ningún ficheiro ao visor"
 
 [viewer.formBar]
