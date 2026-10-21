@@ -7,40 +7,9 @@ import {
   PdfiumOpenError,
   FPDF_ERR_PASSWORD,
 } from "@app/services/pdfiumService";
-import {
-  ensureLocalPdfAccess,
-  getPdfAccess,
-} from "@app/services/pdfAccessService";
+import { getPdfAccess } from "@app/services/pdfAccessService";
+import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
-
-// Bounded window scanned at each end of the PDF for an /Encrypt entry. The
-// trailer sits at the tail; linearized files also keep a first-page trailer at
-// the head. Sliced, so a multi-GB file is never read into memory.
-const ENCRYPT_PROBE_BYTES = 64 * 1024;
-
-function bufferHasEncryptMarker(buffer: ArrayBuffer): boolean {
-  const view = new Uint8Array(buffer);
-  // "/Encrypt" as ASCII bytes
-  const needle = [0x2f, 0x45, 0x6e, 0x63, 0x72, 0x79, 0x70, 0x74];
-  outer: for (let i = 0; i <= view.length - needle.length; i++) {
-    for (let j = 0; j < needle.length; j++) {
-      if (view[i + j] !== needle[j]) continue outer;
-    }
-    return true;
-  }
-  return false;
-}
-
-async function hasEncryptMarker(file: File): Promise<boolean> {
-  const tailStart = Math.max(0, file.size - ENCRYPT_PROBE_BYTES);
-  if (bufferHasEncryptMarker(await file.slice(tailStart).arrayBuffer())) {
-    return true;
-  }
-  if (tailStart === 0) return false;
-  return bufferHasEncryptMarker(
-    await file.slice(0, ENCRYPT_PROBE_BYTES).arrayBuffer(),
-  );
-}
 
 export class FileAnalyzer {
   private static readonly SIZE_THRESHOLDS = {
@@ -91,52 +60,11 @@ export class FileAnalyzer {
     return analysis;
   }
 
-  /** Detect encryption and admit empty-password documents without prompting.
-   * The marker is an upload optimisation, not authorisation; operations inspect original bytes.
-   */
+  /** Admission hint only: never grants access. Authentication waits until the file is opened. */
   static async isPDFEncrypted(file: File): Promise<boolean> {
     const access = getPdfAccess(file);
     if (access) return access.encrypted;
-    if (!(await hasEncryptMarker(file))) return false;
-    if (file.size >= LARGE_PDF_PARSE_LIMIT) return true;
-    if (await this.requiresOpeningPassword(file)) return true;
-    try {
-      return (await ensureLocalPdfAccess(file)).encrypted;
-    } catch {
-      return true;
-    }
-  }
-
-  /**
-   * Opens the document with an empty password to tell a user-password file
-   * (blocks open) from owner-password-only (opens fine); only the former
-   * should prompt.
-   *
-   * Runs inside the addFiles mutex, so it must always settle: an unbounded
-   * parse here stalls every later upload as well as this one.
-   */
-  private static async requiresOpeningPassword(file: File): Promise<boolean> {
-    if (!(await hasEncryptMarker(file))) return false;
-
-    // Too big to parse in full: that whole-buffer parse is the OOM the large-file
-    // path exists to avoid, so trust the marker instead of it.
-    if (file.size >= LARGE_PDF_PARSE_LIMIT) return true;
-
-    let m: Awaited<ReturnType<typeof getPdfiumModule>> | null = null;
-    let docPtr: number | null = null;
-    try {
-      m = await getPdfiumModule();
-      const arrayBuffer = await file.arrayBuffer();
-      docPtr = await openRawDocumentSafe(arrayBuffer, "");
-      return false;
-    } catch {
-      // Any open failure prompts: a spurious prompt beats a card that never stops spinning.
-      return true;
-    } finally {
-      if (m != null && docPtr != null) {
-        closeDocAndFreeBuffer(m, docPtr);
-      }
-    }
+    return looksEncryptedFromTrailer(file);
   }
 
   static async quickPDFAnalysis(file: File): Promise<{
@@ -147,7 +75,7 @@ export class FileAnalyzer {
     if (file.size >= LARGE_PDF_PARSE_LIMIT) {
       return {
         pageCount: 0,
-        isEncrypted: await hasEncryptMarker(file),
+        isEncrypted: await looksEncryptedFromTrailer(file),
         isCorrupted: false,
       };
     }
