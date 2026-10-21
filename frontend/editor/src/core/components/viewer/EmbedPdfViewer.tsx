@@ -56,6 +56,8 @@ import {
   type DocumentIdentity,
 } from "@app/types/fileContext";
 import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
+import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
+import { ReadAloudSidebar } from "@app/components/viewer/readAloud/ReadAloudSidebar";
 import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
 import {
   RulerOverlay,
@@ -135,7 +137,7 @@ const EmbedPdfViewerContent = ({
   portfolioPinned,
   onPasswordRequired,
 }: EmbedPdfViewerProps & { onPasswordRequired?: () => void }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
@@ -148,6 +150,9 @@ const EmbedPdfViewerContent = ({
     isLayerSidebarVisible,
     setHasLayers,
     isCommentsSidebarVisible,
+    isReadAloudSidebarVisible,
+    setReadAloudSidebarVisible,
+    toggleReadAloudSidebar,
     isSearchInterfaceVisible,
     searchInterfaceActions,
     zoomActions,
@@ -1778,6 +1783,9 @@ const EmbedPdfViewerContent = ({
     rulerOverlayRef,
   });
 
+  const readAloud = useViewerReadAloud(i18n.language || "en-US", currentFile);
+  const readAloudActive = readAloud.panelOpen || readAloud.isReadingAloud;
+
   // Register workbench bar buttons for the viewer
   useViewerWorkbenchBarButtons(
     isRulerActive,
@@ -1787,7 +1795,7 @@ const EmbedPdfViewerContent = ({
     isScaleCalibrationActive,
     startScaleCalibration,
     cancelScaleCalibration,
-    currentFile,
+    readAloudActive,
   );
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
@@ -1836,12 +1844,15 @@ const EmbedPdfViewerContent = ({
 
   const sidebarWidthRem = 15;
   const commentsSidebarWidthRem = 15;
-  const totalRightMargin =
+  const rightOffsetBeforeReadAloud =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
     (isAttachmentSidebarVisible ? sidebarWidthRem : 0) +
     (isLayerSidebarVisible ? sidebarWidthRem : 0) +
     (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
+  const totalRightMargin =
+    rightOffsetBeforeReadAloud +
+    (isReadAloudSidebarVisible ? sidebarWidthRem : 0);
 
   return (
     <Box
@@ -2075,6 +2086,13 @@ const EmbedPdfViewerContent = ({
         documentCacheKey={bookmarkCacheKey}
         onApplyLayers={handleLayerApply}
         onLayersDetected={setHasLayers}
+      />
+      <ReadAloudSidebar
+        visible={isReadAloudSidebarVisible}
+        rightOffset={rightOffsetBeforeReadAloud}
+        store={readAloud.store}
+        onOpen={() => setReadAloudSidebarVisible(true)}
+        onClose={toggleReadAloudSidebar}
       />
     </Box>
   );

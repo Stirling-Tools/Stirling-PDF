@@ -20,11 +20,8 @@ import {
 } from "@app/contexts/NavigationContext";
 import { stripBasePath, withBasePath } from "@app/constants/app";
 import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
-import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
-import { ReadAloudControl } from "@app/components/viewer/readAloud/ReadAloudControl";
 import { RulerScaleSettingsButton } from "@app/components/viewer/RulerScaleSettingsButton";
 import type { MeasureScale } from "@app/utils/measurementTypes";
-import type { StirlingFile } from "@app/types/fileContext";
 
 export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
@@ -34,9 +31,9 @@ export function useViewerWorkbenchBarButtons(
   isScaleCalibrationActive?: boolean,
   startScaleCalibration?: () => void,
   cancelScaleCalibration?: () => void,
-  displayedFile?: StirlingFile | File | null,
+  readAloudActive?: boolean,
 ) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const viewer = useViewer();
   const {
     isThumbnailSidebarVisible,
@@ -46,6 +43,7 @@ export function useViewerWorkbenchBarButtons(
     hasLayers,
     isCommentsSidebarVisible,
     toggleCommentsSidebar,
+    isReadAloudSidebarVisible,
     isSearchInterfaceVisible,
     registerImmediatePanUpdate,
   } = viewer;
@@ -61,8 +59,6 @@ export function useViewerWorkbenchBarButtons(
   const { requestNavigation } = useNavigationGuard();
   const { redactionsApplied, activeType: redactionActiveType } = useRedaction();
   const { pendingCount } = useRedactionMode();
-  const readAloud = useViewerReadAloud(i18n.language || "en-US", displayedFile);
-  const readAloudStore = readAloud.store;
 
   useEffect(() => {
     return registerImmediatePanUpdate((newIsPanning) => {
@@ -346,17 +342,15 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-read-aloud",
+        icon: <Icon name="volume-2" size="1rem" />,
         tooltip: readAloudLabel,
         ariaLabel: readAloudLabel,
         section: "top" as const,
         order: 57,
-        render: ({ disabled }) => (
-          <ReadAloudControl
-            store={readAloudStore}
-            disabled={disabled}
-            position={tooltipPosition}
-          />
-        ),
+        active: isReadAloudSidebarVisible || Boolean(readAloudActive),
+        onClick: () => {
+          viewer.toggleReadAloudSidebar();
+        },
       },
       {
         id: "viewer-annotations",
@@ -455,13 +449,13 @@ export function useViewerWorkbenchBarButtons(
     return buttons;
   }, [
     t,
-    i18n.language,
     viewer,
     isThumbnailSidebarVisible,
     isBookmarkSidebarVisible,
     isAttachmentSidebarVisible,
     isLayerSidebarVisible,
     hasLayers,
+    isReadAloudSidebarVisible,
     isSearchInterfaceVisible,
     isPanning,
     searchLabel,
@@ -492,7 +486,7 @@ export function useViewerWorkbenchBarButtons(
     customScale,
     isScaleCalibrationActive,
     readAloudLabel,
-    readAloudStore,
+    readAloudActive,
   ]);
 
   useWorkbenchBarButtons(viewerButtons);

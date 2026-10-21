@@ -314,7 +314,7 @@ test.describe("read aloud language walkthrough", () => {
     await shot(page, "05_english_tagged_light");
   });
 
-  test("06 mobile reader drawer", async ({ page }, testInfo) => {
+  test("06 mobile reader sidebar", async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await stubSpeech(page);
     const pdf = await makePdf(testInfo.outputPath("lease-es.pdf"), SPANISH);
@@ -330,7 +330,7 @@ test.describe("read aloud language walkthrough", () => {
     await expect(page.getByText("Detected Spanish")).toBeVisible({
       timeout: 15_000,
     });
-    await shot(page, "06_mobile_drawer_light");
+    await shot(page, "06_mobile_sidebar_light");
   });
 
   test("07 advances pages and pauses without losing the cursor", async ({
@@ -408,7 +408,7 @@ test.describe("read aloud language walkthrough", () => {
     await shot(page, "10_english_tagged_dark");
   });
 
-  test("11 mobile drawer dark", async ({ page }, testInfo) => {
+  test("11 mobile sidebar dark", async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await useDarkMode(page);
     await stubSpeech(page);
@@ -423,6 +423,6 @@ test.describe("read aloud language walkthrough", () => {
     await expect(page.getByText("Detected Spanish")).toBeVisible({
       timeout: 15_000,
     });
-    await shot(page, "11_mobile_drawer_dark");
+    await shot(page, "11_mobile_sidebar_dark");
   });
 });

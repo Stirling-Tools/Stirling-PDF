@@ -52,7 +52,6 @@ export function ReadAloudPlayer({ readAloud }: ReadAloudPlayerProps) {
     setVoice,
     setLanguage,
     setHighlightEnabled,
-    redetect,
   } = readAloud;
 
   const detected = detection?.detection.language ?? null;
@@ -136,42 +135,18 @@ export function ReadAloudPlayer({ readAloud }: ReadAloudPlayerProps) {
 
   return (
     <Stack gap="sm" className="read-aloud-player">
-      <div className="read-aloud-player__header">
-        <div className="read-aloud-player__title">
-          <Icon name="volume-2" size="1.1rem" />
-          <Text fw={600} size="sm">
-            {t("readAloud.title", "Read aloud")}
-          </Text>
-        </div>
-        <Group gap={4} wrap="nowrap">
-          <Badge
-            size="sm"
-            variant="light"
-            className="read-aloud-player__badge"
-            aria-live="polite"
-          >
-            {detectionStatus === "detecting" ? (
-              <Loader size={10} color="currentColor" />
-            ) : null}
-            {statusLabel}
-          </Badge>
-          <Tooltip
-            content={t("readAloud.detectAgain", "Detect language again")}
-            position="top"
-            delay={0}
-          >
-            <ActionIcon
-              variant="tertiary"
-              size="sm"
-              aria-label={t("readAloud.detectAgain", "Detect language again")}
-              onClick={() => void redetect()}
-              disabled={detectionStatus === "detecting"}
-            >
-              <Icon name="refresh-cw" size="0.9rem" />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
-      </div>
+      <Badge
+        size="sm"
+        variant="light"
+        className="read-aloud-player__badge"
+        title={statusLabel}
+        aria-live="polite"
+      >
+        {detectionStatus === "detecting" ? (
+          <Loader size={10} color="currentColor" />
+        ) : null}
+        {statusLabel}
+      </Badge>
 
       <div className="read-aloud-player__meta" role="status" aria-live="polite">
         <Text size="xs" c="dimmed">

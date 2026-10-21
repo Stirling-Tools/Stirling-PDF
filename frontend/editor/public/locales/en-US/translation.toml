@@ -11207,6 +11207,7 @@ tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,di
 
 [readAloud]
 title = "Read aloud"
+closeSidebar = "Close read aloud"
 detecting = "Detecting document language…"
 detectedLanguage = "Detected {{language}}"
 likelyLanguage = "Likely {{language}}"
