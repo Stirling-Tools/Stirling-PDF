@@ -1,3 +1,4 @@
+import { inspectPdfProtection as inspect } from "@app/tests/helpers/pdf-protection";
 import { test, expect } from "@app/tests/helpers/test-base";
 import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
 import type { Page } from "@playwright/test";
@@ -18,47 +19,29 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function protect(page: Page, password = "") {
-  const response = await page.request.post(
-    "/api/v1/security/set-pdf-protection",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: {
-          name: "sample.pdf",
-          mimeType: "application/pdf",
-          buffer: await fs.readFile(path.join(fixtures, "sample.pdf")),
-        },
-        password,
-        ownerPassword: owner,
-        keyLength: 256,
-        preventAssembly: true,
-        preventExtractContent: true,
-        preventExtractForAccessibility: true,
-        preventFillInForm: true,
-        preventModify: true,
-        preventModifyAnnotations: true,
-        preventPrinting: true,
-        preventPrintingFaithful: true,
+  const response = await page.request.post("/api/v1/security/add-password", {
+    headers: await liveApiHeaders(page),
+    multipart: {
+      fileInput: {
+        name: "sample.pdf",
+        mimeType: "application/pdf",
+        buffer: await fs.readFile(path.join(fixtures, "sample.pdf")),
       },
+      password,
+      ownerPassword: owner,
+      keyLength: 256,
+      preventAssembly: true,
+      preventExtractContent: true,
+      preventExtractForAccessibility: true,
+      preventFillInForm: true,
+      preventModify: true,
+      preventModifyAnnotations: true,
+      preventPrinting: true,
+      preventPrintingFaithful: true,
     },
-  );
+  });
   expect(response.ok()).toBe(true);
   return response.body();
-}
-
-async function inspect(page: Page, buffer: Buffer, password = "") {
-  const response = await page.request.post(
-    "/api/v1/security/inspect-pdf-security",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: { name: "result.pdf", mimeType: "application/pdf", buffer },
-        password,
-      },
-    },
-  );
-  expect(response.ok()).toBe(true);
-  return response.json();
 }
 
 async function upload(page: Page, buffer: Buffer, route = "/editor") {
@@ -150,9 +133,7 @@ test("unprotected copy needs no owner password when enforcement is disabled", as
   await page
     .getByRole("button", { name: "Create an unprotected copy", exact: true })
     .click();
-  const response = page.waitForResponse(
-    "**/api/v1/security/remove-pdf-protection",
-  );
+  const response = page.waitForResponse("**/api/v1/security/remove-password");
   await page
     .getByRole("button", { name: "Create an unprotected copy", exact: true })
     .click();
@@ -191,7 +172,7 @@ test("restricted rotation preserves the original protection without owner authen
     encrypted: true,
     ownerAuthenticated: false,
     permissions: originalAccess.permissions,
-    credentialFingerprint: originalAccess.credentialFingerprint,
+    credentialEntries: originalAccess.credentialEntries,
   });
   expect(await inspect(page, saved, owner)).toMatchObject({
     ownerAuthenticated: true,
@@ -214,9 +195,7 @@ test("changing restrictions preserves the unknown owner password unless replacem
   await page
     .getByRole("checkbox", { name: "Prevent printing", exact: true })
     .uncheck();
-  const response = page.waitForResponse(
-    "**/api/v1/security/change-pdf-permissions",
-  );
+  const response = page.waitForResponse("**/api/v1/security/add-password");
   await page
     .getByRole("button", { name: /^Change Permissions(?: \(this file\))?$/ })
     .click();
@@ -248,9 +227,7 @@ test("removing an opening password retains the blank owner field even when enfor
   await dialog.getByRole("button", { name: "Open PDF", exact: true }).click();
   await expect(dialog).toBeHidden();
   await page.getByLabel("Password to open", { exact: true }).fill(opening);
-  const response = page.waitForResponse(
-    "**/api/v1/security/remove-pdf-passwords",
-  );
+  const response = page.waitForResponse("**/api/v1/security/remove-password");
   await page
     .getByRole("button", {
       name: /^Remove Password(?: \(this file\))?$/,
@@ -311,7 +288,7 @@ test("text editing bypass retains encryption and the original credentials in the
     ownerAuthenticated: false,
     canModify: false,
     permissions: originalAccess.permissions,
-    credentialFingerprint: originalAccess.credentialFingerprint,
+    credentialEntries: originalAccess.credentialEntries,
   });
   expect(await inspect(page, saved, "owner-test-password")).toMatchObject({
     ownerAuthenticated: true,

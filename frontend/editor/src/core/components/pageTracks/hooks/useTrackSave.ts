@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import { useFileActions, useFileState } from "@app/contexts/FileContext";
@@ -84,6 +84,8 @@ export function useTrackSave(
   const onMaterializedRef = useRef(options.onMaterialized);
   onMaterializedRef.current = options.onMaterialized;
   const [saving, setSaving] = useState(false);
+  const inspectionCancellation = useRef<AbortController | null>(null);
+  useEffect(() => () => inspectionCancellation.current?.abort(), []);
   const [progress, setProgress] = useState<TrackSaveProgress | null>(null);
 
   const save = useCallback(
@@ -110,6 +112,8 @@ export function useTrackSave(
         selectors.getStirlingFileStub,
       );
 
+      const cancellation = new AbortController();
+      inspectionCancellation.current = cancellation;
       try {
         assertFilesNotBlocked(policyIds);
         // Build every output first: a track can hold pages belonging to another
@@ -122,6 +126,7 @@ export function useTrackSave(
           const output = await buildTrackFile(track, {
             getStub: selectors.getStirlingFileStub,
             getFile: selectors.getFile,
+            signal: cancellation.signal,
           });
           if (!output) continue;
           built.push({
@@ -213,6 +218,7 @@ export function useTrackSave(
 
         return versioned;
       } catch (error) {
+        if (cancellation.signal.aborted) return null;
         if (error instanceof PolicyBlockedError) {
           alert({
             alertType: "warning",
@@ -232,6 +238,8 @@ export function useTrackSave(
         }
         return null;
       } finally {
+        if (inspectionCancellation.current === cancellation)
+          inspectionCancellation.current = null;
         setSaving(false);
         setProgress(null);
       }

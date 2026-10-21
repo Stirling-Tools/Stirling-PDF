@@ -9,7 +9,7 @@ import {
   bindPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 import type { DiskUnavailableReason } from "@app/services/desktopFileLink";
 
 // Re-export FileId for convenience
@@ -36,6 +36,8 @@ export interface ProcessedFileMetadata {
   totalPages?: number;
   lastProcessed?: number;
   isEncrypted?: boolean;
+  /** Verified opening-password requirement; absence means it has not been checked. */
+  requiresOpeningPassword?: boolean;
   thumbnailUrl?: string;
   [key: string]: unknown;
 }

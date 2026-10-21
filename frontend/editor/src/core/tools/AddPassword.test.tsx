@@ -14,24 +14,23 @@ import type { AddPasswordFullParameters } from "@app/hooks/tools/addPassword/use
 import { defaultParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
 import AddPassword from "@app/tools/AddPassword";
 import { createStirlingFile, type StirlingFile } from "@app/types/fileContext";
+import { clearPdfAccess, type PdfAccess } from "@app/services/pdfAccessService";
 
-const { selection, operation, flow, openRawDocument, getUserPermissions } =
-  vi.hoisted(() => ({
-    selection: { files: [] as StirlingFile[] },
-    operation: {
-      files: [] as File[],
-      downloadUrl: null,
-      isLoading: false,
-      resetResults: vi.fn(),
-      executeOperation: vi.fn().mockResolvedValue(undefined),
-      undoOperation: vi.fn(),
-    },
-    flow: vi.fn<(config: ToolFlowConfig<AddPasswordFullParameters>) => null>(
-      () => null,
-    ),
-    openRawDocument: vi.fn(),
-    getUserPermissions: vi.fn(),
-  }));
+const { selection, operation, flow, inspectAccess } = vi.hoisted(() => ({
+  selection: { files: [] as StirlingFile[] },
+  operation: {
+    files: [] as File[],
+    downloadUrl: null,
+    isLoading: false,
+    resetResults: vi.fn(),
+    executeOperation: vi.fn().mockResolvedValue(undefined),
+    undoOperation: vi.fn(),
+  },
+  flow: vi.fn<(config: ToolFlowConfig<AddPasswordFullParameters>) => null>(
+    () => null,
+  ),
+  inspectAccess: vi.fn(),
+}));
 
 vi.mock("@app/components/tools/shared/createToolFlow", () => ({
   createToolFlow: flow,
@@ -51,16 +50,19 @@ vi.mock("@app/components/tooltips/useAddPasswordTips", () => ({
 vi.mock("@app/components/tooltips/useAddPasswordPermissionsTips", () => ({
   useAddPasswordPermissionsTips: () => ({}),
 }));
-vi.mock("@app/services/documentBytesCache", () => ({
-  getDocumentBytes: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+  ensureLocalPdfAccess: inspectAccess,
 }));
-vi.mock("@app/services/pdfiumService", () => ({
-  getPdfiumModule: vi
-    .fn()
-    .mockResolvedValue({ FPDF_GetDocUserPermissions: getUserPermissions }),
-  openRawDocument,
-  closeDocAndFreeBuffer: vi.fn(),
-}));
+
+const access: PdfAccess = {
+  password: "",
+  encrypted: false,
+  signed: false,
+  ownerAuthenticated: false,
+  permissions: PdfPermissionFlag.AllowAll,
+  pageCount: 1,
+};
 
 function currentFlow() {
   return flow.mock.calls.at(-1)![0];
@@ -97,8 +99,8 @@ function permissionSettings() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  openRawDocument.mockReset().mockResolvedValue(1);
-  getUserPermissions.mockReset().mockReturnValue(PdfPermissionFlag.AllowAll);
+  clearPdfAccess();
+  inspectAccess.mockReset().mockResolvedValue(access);
   selection.files = [createStirlingFile(new File([], "input.pdf"))];
   operation.files = [];
   operation.isLoading = false;
@@ -106,14 +108,11 @@ beforeEach(() => {
 
 describe("Add Password permission detection", () => {
   test("loads existing restrictions before encryption and preserves password settings", async () => {
-    let resolveDocument!: (document: number) => void;
-    const pending = new Promise<number>((resolve) => {
+    let resolveDocument!: (document: PdfAccess) => void;
+    const pending = new Promise<PdfAccess>((resolve) => {
       resolveDocument = resolve;
     });
-    openRawDocument.mockReturnValueOnce(pending);
-    getUserPermissions.mockReturnValueOnce(
-      PdfPermissionFlag.AllowAll & ~PdfPermissionFlag.Print,
-    );
+    inspectAccess.mockReturnValueOnce(pending);
     render(<AddPassword />);
 
     expect(currentFlow().executeButton?.disabled).toBe(true);
@@ -124,7 +123,12 @@ describe("Add Password permission detection", () => {
       passwordSettings().onParameterChange("keyLength", 256);
     });
 
-    await act(async () => resolveDocument(1));
+    await act(async () =>
+      resolveDocument({
+        ...access,
+        permissions: PdfPermissionFlag.AllowAll & ~PdfPermissionFlag.Print,
+      }),
+    );
     expect(permissionSettings().parameters).toEqual({
       ...defaultParameters,
       preventPrinting: true,
@@ -146,14 +150,14 @@ describe("Add Password permission detection", () => {
       },
       selection.files,
     );
-    expect(openRawDocument).toHaveBeenCalledTimes(1);
+    expect(inspectAccess).toHaveBeenCalledTimes(1);
   });
 
   test("keeps batch permissions manual", async () => {
     selection.files.push(createStirlingFile(new File([], "second.pdf")));
     render(<AddPassword />);
 
-    expect(openRawDocument).not.toHaveBeenCalled();
+    expect(inspectAccess).not.toHaveBeenCalled();
     expect(currentFlow().executeButton?.disabled).toBe(false);
 
     act(() =>
@@ -199,7 +203,7 @@ describe("Add Password permission detection", () => {
       }),
       selection.files,
     );
-    expect(openRawDocument).toHaveBeenCalledTimes(1);
+    expect(inspectAccess).toHaveBeenCalledTimes(1);
   });
 
   test("does not read encrypted outputs or reset results during processing and review", async () => {
@@ -217,12 +221,12 @@ describe("Add Password permission detection", () => {
     rerender(<AddPassword />);
 
     expect(currentFlow().review.isVisible).toBe(true);
-    expect(openRawDocument).toHaveBeenCalledTimes(1);
+    expect(inspectAccess).toHaveBeenCalledTimes(1);
     expect(operation.resetResults).not.toHaveBeenCalled();
   });
 
   test("expands the permission step to show read failures", async () => {
-    openRawDocument.mockRejectedValueOnce(new Error("Cannot read PDF"));
+    inspectAccess.mockRejectedValueOnce(new Error("Cannot read PDF"));
     render(<AddPassword />);
     expect(currentFlow().steps[1].isCollapsed).toBe(true);
 

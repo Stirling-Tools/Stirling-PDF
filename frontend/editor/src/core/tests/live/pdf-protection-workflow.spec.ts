@@ -1,6 +1,6 @@
+import { inspectPdfProtection as inspect } from "@app/tests/helpers/pdf-protection";
 import { test, expect } from "@app/tests/helpers/test-base";
 import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
-import type { Page } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs";
 
@@ -11,21 +11,6 @@ const owner = "permissions-test-password";
 test.beforeEach(async ({ page }) => {
   await loadLiveAppConfig(page);
 });
-
-async function inspect(page: Page, buffer: Buffer, password: string) {
-  const response = await page.request.post(
-    "/api/v1/security/inspect-pdf-security",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: { name: "result.pdf", mimeType: "application/pdf", buffer },
-        password,
-      },
-    },
-  );
-  expect(response.ok()).toBe(true);
-  return response.json();
-}
 
 test("saving protection opens the result as a reader and changing permissions preserves its opening password", async ({
   page,
@@ -54,9 +39,7 @@ test("saving protection opens the result as a reader and changing permissions pr
     page.getByRole("button", { name: "Save protection", exact: true }),
   ).toBeDisabled();
   await ownerInput.fill(owner);
-  const protection = page.waitForResponse(
-    "**/api/v1/security/set-pdf-protection",
-  );
+  const protection = page.waitForResponse("**/api/v1/security/add-password");
   await page
     .getByRole("button", { name: "Save protection", exact: true })
     .click();
@@ -67,8 +50,6 @@ test("saving protection opens the result as a reader and changing permissions pr
   expect(readerAccess).toMatchObject({
     encrypted: true,
     requiresOpeningPassword: true,
-    openingAuthenticated: true,
-    hasOwnerPassword: true,
     ownerAuthenticated: false,
     canPrint: false,
   });
@@ -103,9 +84,7 @@ test("saving protection opens the result as a reader and changing permissions pr
   await page
     .getByRole("checkbox", { name: "Prevent printing", exact: true })
     .uncheck();
-  const changed = page.waitForResponse(
-    "**/api/v1/security/change-pdf-permissions",
-  );
+  const changed = page.waitForResponse("**/api/v1/security/add-password");
   await page
     .getByRole("button", { name: "Change Permissions", exact: true })
     .click();
@@ -184,9 +163,7 @@ for (const action of [
     const honorOwnerPasswords =
       (await inspect(page, buffer, "")).honorOwnerPasswords !== false;
     const endpoint =
-      action === "Change Permissions"
-        ? "change-pdf-permissions"
-        : "remove-pdf-protection";
+      action === "Change Permissions" ? "add-password" : "remove-password";
     const denied = await page.request.post(`/api/v1/security/${endpoint}`, {
       headers: await liveApiHeaders(page),
       multipart: {
@@ -197,6 +174,8 @@ for (const action of [
         },
         password: "",
         sourcePassword: "",
+        preserveExisting: action === "Change Permissions",
+        removeAll: action !== "Change Permissions",
       },
     });
     expect(denied.status()).toBe(honorOwnerPasswords ? 403 : 200);
@@ -341,7 +320,7 @@ test("a PDF with only an opening password opens and prints after removing its op
     .setInputFiles(path.join(fixtures, "sample.pdf"));
   await page.getByLabel("Password to open", { exact: true }).fill(reader);
   const protectedResponse = page.waitForResponse(
-    "**/api/v1/security/set-pdf-protection",
+    "**/api/v1/security/add-password",
   );
   await page
     .getByRole("button", { name: "Save protection", exact: true })
@@ -363,13 +342,13 @@ test("a PDF with only an opening password opens and prints after removing its op
     .getByRole("button", { name: "Remove Password", exact: true })
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  const removedResponse = page.waitForResponse(
-    "**/api/v1/security/remove-pdf-passwords",
-  );
   await expect(
     page.getByLabel("Permissions password", { exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
   await page.getByLabel("Password to open", { exact: true }).fill(reader);
+  const removedResponse = page.waitForResponse(
+    "**/api/v1/security/remove-password",
+  );
   await page
     .getByRole("button", { name: "Remove Password", exact: true })
     .click();
@@ -413,7 +392,7 @@ test("replacing the permissions password follows the owner policy and invalidate
     .getByRole("textbox", { name: "New permissions password", exact: true })
     .fill(owner);
   const changedResponse = page.waitForResponse(
-    "**/api/v1/security/change-pdf-permissions",
+    "**/api/v1/security/add-password",
   );
   await page
     .getByRole("button", { name: "Change Permissions", exact: true })
@@ -447,17 +426,9 @@ test("replacing the permissions password follows the owner policy and invalidate
     ownerAuthenticated: false,
     canPrint: false,
   });
-  const oldCredential = await page.request.post(
-    "/api/v1/security/inspect-pdf-security",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: { name: "updated.pdf", mimeType: "application/pdf", buffer },
-        password: "owner-test-password",
-      },
-    },
+  await expect(inspect(page, buffer, "owner-test-password")).rejects.toThrow(
+    "PDF open failed",
   );
-  expect(oldCredential.ok()).toBe(false);
 });
 
 for (const tool of ["annotate", "form-fill", "redact"]) {

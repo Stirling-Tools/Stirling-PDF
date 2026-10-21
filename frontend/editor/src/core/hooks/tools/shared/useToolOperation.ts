@@ -122,6 +122,7 @@ export const useToolOperation = <TParams>(
   const { actions: fileActions } = useFileContext();
   const { processFiles, cancelOperation: cancelApiCalls } =
     useToolApiCalls<TParams>();
+  const inspectionCancellation = useRef<AbortController | null>(null);
   const {
     generateThumbnails,
     createDownloadInfo,
@@ -241,6 +242,9 @@ export const useToolOperation = <TParams>(
         const stub = selectors.getStirlingFileStub(file.fileId);
         return stub ? policySourceIds(stub) : [file.fileId];
       });
+      const cancellation = new AbortController();
+      inspectionCancellation.current?.abort();
+      inspectionCancellation.current = cancellation;
       try {
         assertFilesNotBlocked(policyIds);
       } catch (error) {
@@ -336,6 +340,10 @@ export const useToolOperation = <TParams>(
               file.fileId,
               t(`${config.operationType}.title`, config.operationType),
             ),
+          cancellation.signal,
+          (file) =>
+            selectors.getStirlingFileStub(file.fileId)?.processedFile
+              ?.isEncrypted === true,
         );
         if (!permitted) return;
         let processedFiles: File[];
@@ -348,7 +356,11 @@ export const useToolOperation = <TParams>(
           filesForAPI.push(
             config.toolType === ToolType.singleFile
               ? file
-              : await prepareUnlockedFile(file, runtimeEndpoint),
+              : await prepareUnlockedFile(
+                  file,
+                  runtimeEndpoint,
+                  cancellation.signal,
+                ),
           );
         }
 
@@ -793,6 +805,7 @@ export const useToolOperation = <TParams>(
           onToolRunComplete();
         }
       } catch (error) {
+        if (cancellation.signal.aborted) return;
         if (isSignupRequiredError(error)) {
           actions.setStatus("");
           return;
@@ -824,6 +837,8 @@ export const useToolOperation = <TParams>(
         actions.setError(errorMessage);
         actions.setStatus("");
       } finally {
+        if (inspectionCancellation.current === cancellation)
+          inspectionCancellation.current = null;
         window.removeEventListener(FILE_EVENTS.markError, errorListener);
         actions.setLoading(false);
         actions.setProgress(null);
@@ -854,6 +869,7 @@ export const useToolOperation = <TParams>(
   );
 
   const cancelOperation = useCallback(() => {
+    inspectionCancellation.current?.abort();
     cancelApiCalls();
     actions.setLoading(false);
     actions.setProgress(null);
@@ -870,6 +886,7 @@ export const useToolOperation = <TParams>(
   // Cleanup on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
+      inspectionCancellation.current?.abort();
       lastOperationRef.current = null;
     };
   }, []);

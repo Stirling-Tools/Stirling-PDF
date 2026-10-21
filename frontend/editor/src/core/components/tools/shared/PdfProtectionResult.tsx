@@ -1,7 +1,7 @@
 import { Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 
 /** Reports protection changes only for outputs whose security was verified. */
 export function PdfProtectionResult({
@@ -9,11 +9,12 @@ export function PdfProtectionResult({
   summary,
 }: {
   files: File[];
-  summary?: string;
+  summary?: string | null;
 }) {
   const { t } = useTranslation();
   usePdfAccess(undefined);
   if (
+    summary === null ||
     !files.length ||
     !files.every((file) => {
       const access = getPdfAccess(file);

@@ -13,6 +13,8 @@ interface EncryptedPdfUnlockModalProps {
   password: string;
   errorMessage?: string | null;
   isProcessing: boolean;
+  /** Pending access is displayed separately from a confirmed password challenge. */
+  inspection?: { error?: string; retry: () => void };
   remainingCount?: number;
   confirmLabel?: string;
   sessionUnlock?: boolean;
@@ -34,6 +36,7 @@ const EncryptedPdfUnlockModal = ({
   password,
   errorMessage,
   isProcessing,
+  inspection,
   remainingCount = 0,
   confirmLabel,
   sessionUnlock = false,
@@ -100,7 +103,24 @@ const EncryptedPdfUnlockModal = ({
       zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
       data-testid={testIdPrefix ? `${testIdPrefix}-modal` : undefined}
     >
-      <Stack gap="md">
+      {inspection && (
+        <Stack gap="md">
+          <ProtectedPdfFileCard fileName={fileName} />
+          <Text role={inspection.error ? "alert" : "status"}>
+            {inspection.error ??
+              t(
+                "encryptedPdfUnlock.checkingPermissions",
+                "Checking PDF permissions...",
+              )}
+          </Text>
+          {inspection.error && (
+            <Button onClick={inspection.retry}>
+              {t("common.retry", "Retry")}
+            </Button>
+          )}
+        </Stack>
+      )}
+      <Stack gap="md" display={inspection ? "none" : undefined}>
         <ProtectedPdfFileCard fileName={fileName} />
         {(preservationReason || actionLabel) && (
           <Text size="sm">

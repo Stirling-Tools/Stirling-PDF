@@ -18,6 +18,9 @@ export const removePasswordToApiParams = (
   parameters: RemovePasswordParameters,
 ): RemovePasswordApiParams => ({
   password: parameters.password,
+  ...(parameters.ownerPassword
+    ? { ownerPassword: parameters.ownerPassword }
+    : {}),
 });
 
 // Reconstruct the tool's UI parameters from a remove-password request body, so a
@@ -26,6 +29,9 @@ export const removePasswordFromApiParams = (
   apiParams: RemovePasswordApiParams,
 ): Partial<RemovePasswordParameters> => ({
   password: apiParams.password ?? defaultParameters.password,
+  ...(apiParams.ownerPassword !== undefined
+    ? { ownerPassword: apiParams.ownerPassword }
+    : {}),
 });
 
 /**
@@ -36,10 +42,7 @@ export const buildRemovePasswordFormData = (
   parameters: RemovePasswordParameters,
   file: File,
 ): FormData => {
-  const form = objectToFormData(removePasswordToApiParams(parameters), {
+  return objectToFormData(removePasswordToApiParams(parameters), {
     fileInput: file,
   });
-  if (parameters.ownerPassword)
-    form.set("ownerPassword", parameters.ownerPassword);
-  return form;
 };

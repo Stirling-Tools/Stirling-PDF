@@ -1,14 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { ensurePdfAccess } from "@app/services/pdfSessionUnlock";
-import { clearPdfAccess } from "@app/services/pdfPasswordStore";
+import {
+  ensureLocalPdfAccess,
+  clearPdfAccess,
+} from "@app/services/pdfAccessService";
+
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 
 vi.mock("@app/services/pdfWorkerManager", () => ({
   pdfWorkerManager: { createDocument: vi.fn(), destroyDocument: vi.fn() },
 }));
-vi.mock("@app/services/pdfSessionUnlock", () => ({ ensurePdfAccess: vi.fn() }));
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+  ensureLocalPdfAccess: vi.fn(),
+}));
 
 beforeEach(() => {
   clearPdfAccess();
@@ -40,18 +46,25 @@ describe("large PDF encryption detection", () => {
       const slices = vi.spyOn(file, "slice");
 
       expect(await FileAnalyzer.isPDFEncrypted(file)).toBe(true);
-      expect(ensurePdfAccess).not.toHaveBeenCalled();
+      expect(ensureLocalPdfAccess).not.toHaveBeenCalled();
       expect(pdfWorkerManager.createDocument).not.toHaveBeenCalled();
       expect(readAll).not.toHaveBeenCalled();
       expect(slices).toHaveBeenCalledTimes(2);
     },
   );
 
+  it("defers authentication of small marked PDFs until opening too", async () => {
+    const file = new File(["%PDF-1.7 /Encrypt 1 0 R"], "large.pdf");
+    expect(await FileAnalyzer.isPDFEncrypted(file)).toBe(true);
+    expect(ensureLocalPdfAccess).not.toHaveBeenCalled();
+    expect(pdfWorkerManager.createDocument).not.toHaveBeenCalled();
+  });
+
   it("does not classify a large unmarked PDF as encrypted", async () => {
     const file = new File(["%PDF-1.7"], "large.pdf");
     Object.defineProperty(file, "size", { value: LARGE_PDF_PARSE_LIMIT });
     expect(await FileAnalyzer.isPDFEncrypted(file)).toBe(false);
-    expect(ensurePdfAccess).not.toHaveBeenCalled();
+    expect(ensureLocalPdfAccess).not.toHaveBeenCalled();
     expect(pdfWorkerManager.createDocument).not.toHaveBeenCalled();
   });
 });

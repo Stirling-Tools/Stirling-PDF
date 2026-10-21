@@ -128,6 +128,8 @@ export const handlePasswordError = async (
   incorrectPasswordMessage: string,
   fallbackMessage: string,
 ): Promise<string> => {
+  if (error instanceof Error && "code" in error && error.code === 4)
+    return incorrectPasswordMessage;
   const axiosError = axios.isAxiosError(error) ? error : undefined;
   const status = axiosError?.response?.status;
 

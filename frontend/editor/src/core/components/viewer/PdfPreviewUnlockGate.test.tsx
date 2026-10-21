@@ -15,7 +15,7 @@ import {
   clearPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 vi.mock("react-i18next", () => {
   const t = (key: string, fallback?: string) => fallback ?? key;
@@ -23,7 +23,7 @@ vi.mock("react-i18next", () => {
 });
 
 const mock = vi.hoisted(() => ({ probe: vi.fn(), unlock: vi.fn() }));
-vi.mock("@app/utils/thumbnailUtils", () => ({
+vi.mock("@app/utils/pdfEncryptionProbe", () => ({
   looksEncryptedFromTrailer: mock.probe,
 }));
 vi.mock("@app/contexts/FileContext", () => ({
@@ -54,8 +54,6 @@ const access: PdfAccess = {
   signed: false,
   ownerAuthenticated: false,
   permissions: 0,
-  canModify: false,
-  canAssemble: false,
   pageCount: 1,
 };
 const passwordError = {

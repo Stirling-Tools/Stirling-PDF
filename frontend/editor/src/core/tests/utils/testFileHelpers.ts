@@ -2,7 +2,7 @@
  * Test utilities for creating StirlingFile objects in tests
  */
 
-import { rememberPdfAccess } from "@app/services/pdfPasswordStore";
+import { rememberPdfAccess } from "@app/services/pdfAccessService";
 import { StirlingFile, createStirlingFile } from "@app/types/fileContext";
 
 /**
@@ -38,8 +38,6 @@ export function rememberUnprotectedPdf(file: File): File {
     signed: false,
     ownerAuthenticated: false,
     permissions: -4,
-    canModify: true,
-    canAssemble: true,
     pageCount: 1,
   });
   return file;

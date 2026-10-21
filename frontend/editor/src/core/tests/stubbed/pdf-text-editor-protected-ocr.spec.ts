@@ -17,21 +17,7 @@ for (const source of ["workbench", "disk"] as const) {
       if (request.url().includes("/api/v1/misc/ocr-pdf"))
         ocrRequests.push(request.url());
     });
-    await page.route("**/api/v1/security/inspect-pdf-security", (route) =>
-      route.fulfill({
-        json: {
-          encrypted: true,
-          signed: false,
-          ownerAuthenticated: true,
-          permissions: -4,
-          encryptionKeyLength: 256,
-          encryptionRevision: 6,
-          canModify: true,
-          canAssemble: true,
-          pageCount: 1,
-        },
-      }),
-    );
+
     if (source === "workbench") {
       await page.goto("/editor");
       await page.getByTestId("file-input").setInputFiles(SCAN);

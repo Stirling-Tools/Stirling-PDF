@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { detectSaveRisks } from "@app/tools/pdfTextEditor/util/documentRisks";
 import type { FileId } from "@app/types/file";

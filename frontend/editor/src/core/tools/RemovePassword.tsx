@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useRemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
 import { useRemovePasswordOperation } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
@@ -8,16 +8,13 @@ import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { PasswordInput, Stack, Text } from "@mantine/core";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
-import { ensurePdfAccess } from "@app/services/pdfSessionUnlock";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 import { useFileContext } from "@app/contexts/FileContext";
 
 const RemovePassword = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const removePasswordTips = useRemovePasswordTips();
   const { actions } = useFileContext();
-  const [removalSummary, setRemovalSummary] = useState("");
-  const [checkingProtection, setCheckingProtection] = useState(false);
 
   const base = useBaseTool(
     "removePassword",
@@ -26,39 +23,20 @@ const RemovePassword = (props: BaseToolProps) => {
     props,
   );
   usePdfAccess(base.selectedFiles[0]);
-  useEffect(() => {
-    let cancelled = false;
-    setCheckingProtection(true);
-    void Promise.allSettled(base.selectedFiles.map(ensurePdfAccess)).then(
-      () => {
-        if (!cancelled) setCheckingProtection(false);
-      },
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [base.selectedFiles]);
-  const protectionKnown = base.selectedFiles.every(
-    (file) => !!getPdfAccess(file),
-  );
-  const openingCount = base.selectedFiles.filter(
-    (file) => getPdfAccess(file)?.requiresOpeningPassword === true,
-  ).length;
-  const ownerCount = base.selectedFiles.filter((file) => {
+  const openingStates = base.selectedFiles.map((file) => {
     const access = getPdfAccess(file);
-    return access?.encrypted && access.hasOwnerPassword !== false;
-  }).length;
-  const openingSet = protectionKnown && openingCount > 0;
-  const ownerSet = protectionKnown && ownerCount > 0;
-  const passwordDescription = (count: number) => {
+    return access?.encrypted === false
+      ? false
+      : access?.requiresOpeningPassword;
+  });
+  const openingSet = openingStates.some((set) => set !== false);
+  const ownerSet = base.selectedFiles.some(
+    (file) => getPdfAccess(file)?.encrypted !== false,
+  );
+  const passwordDescription = (states: (boolean | undefined)[]) => {
     if (!base.hasFiles) return undefined;
-    if (!protectionKnown)
-      return checkingProtection
-        ? t("removePassword.checkingProtection", "Checking protection…")
-        : t(
-            "removePassword.protectionUnavailable",
-            "Unable to check protection",
-          );
+    if (states.some((set) => set === undefined)) return undefined;
+    const count = states.filter(Boolean).length;
     if (count === 0) return t("removePassword.notSet", "Not set");
     if (count < base.selectedFiles.length)
       return t(
@@ -74,7 +52,7 @@ const RemovePassword = (props: BaseToolProps) => {
   const { password, ownerPassword } = base.params.parameters;
   const updateParameter = base.params.updateParameter;
   useEffect(() => {
-    if (base.hasResults || base.operation.isLoading || !protectionKnown) return;
+    if (base.hasResults || base.operation.isLoading) return;
     if (!openingSet && password) updateParameter("password", "");
     if (!ownerSet && ownerPassword) updateParameter("ownerPassword", "");
   }, [
@@ -85,7 +63,6 @@ const RemovePassword = (props: BaseToolProps) => {
     updateParameter,
     base.hasResults,
     base.operation.isLoading,
-    protectionKnown,
   ]);
 
   const handleExecute = async () => {
@@ -93,8 +70,8 @@ const RemovePassword = (props: BaseToolProps) => {
       for (const file of base.selectedFiles) {
         const access = getPdfAccess(file);
         if (
-          access?.requiresOpeningPassword &&
-          access.hasOwnerPassword !== false &&
+          access?.encrypted &&
+          access.requiresOpeningPassword !== false &&
           !access.ownerAuthenticated
         ) {
           const verified = await actions.requestPdfOwnerAccess(
@@ -109,37 +86,6 @@ const RemovePassword = (props: BaseToolProps) => {
         }
       }
     }
-    setRemovalSummary(
-      base.selectedFiles.length > 1
-        ? t(
-            "removePassword.batchRemoved",
-            "Entered passwords removed where set. Blank fields kept unchanged.",
-          )
-        : ownerPassword
-          ? password
-            ? t(
-                "removePassword.bothRemoved",
-                "Both passwords and restrictions removed.",
-              )
-            : openingSet
-              ? t(
-                  "removePassword.ownerRemoved",
-                  "Permissions password and restrictions removed. Opening password kept.",
-                )
-              : t(
-                  "removePassword.ownerOnlyRemoved",
-                  "Permissions password and restrictions removed.",
-                )
-          : ownerSet
-            ? t(
-                "encryptedPdfUnlock.openingPasswordRemoved",
-                "Opening password removed. Restrictions retained.",
-              )
-            : t(
-                "removePassword.openingOnlyRemoved",
-                "Opening password removed.",
-              ),
-    );
     await base.handleExecute();
   };
 
@@ -170,7 +116,7 @@ const RemovePassword = (props: BaseToolProps) => {
                 "encryptedPdfUnlock.openingPassword",
                 "Password to open",
               )}
-              description={passwordDescription(openingCount)}
+              description={passwordDescription(openingStates)}
               value={openingSet ? password : ""}
               onChange={(event) =>
                 updateParameter("password", event.currentTarget.value)
@@ -184,7 +130,11 @@ const RemovePassword = (props: BaseToolProps) => {
                 "encryptedPdfUnlock.ownerPassword",
                 "Permissions password",
               )}
-              description={passwordDescription(ownerCount)}
+              description={
+                base.hasFiles && !ownerSet
+                  ? t("removePassword.notSet", "Not set")
+                  : undefined
+              }
               value={ownerSet ? (ownerPassword ?? "") : ""}
               onChange={(event) =>
                 updateParameter("ownerPassword", event.currentTarget.value)
@@ -205,7 +155,7 @@ const RemovePassword = (props: BaseToolProps) => {
       paramsValid: (openingSet && !!password) || (ownerSet && !!ownerPassword),
     },
     review: {
-      protectionSummary: removalSummary,
+      protectionSummary: null,
       isVisible: base.hasResults,
       operation: base.operation,
       title: t("removePassword.results.title", "Updated PDFs"),
@@ -215,7 +165,6 @@ const RemovePassword = (props: BaseToolProps) => {
   });
 };
 
-// Static method to get the operation hook for automation
 RemovePassword.tool = () => useRemovePasswordOperation;
 
 export default RemovePassword as ToolComponent;

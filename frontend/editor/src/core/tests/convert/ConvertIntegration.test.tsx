@@ -66,8 +66,16 @@ vi.mock("../../services/apiClient", () => ({
 
 // Import the mocked apiClient
 import apiClient from "@app/services/apiClient";
+import {
+  inspectLocalPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfAccessService";
 import { notifyToolCompleted } from "@app/services/toolUsageTracker";
 const mockedApiClient = vi.mocked(apiClient, { deep: true });
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+  inspectLocalPdfAccess: vi.fn(),
+}));
 
 // Usage-recommendation tracking would add its own posts to the apiClient spy.
 vi.mock("../../services/toolUsageTracker", () => ({
@@ -157,8 +165,6 @@ describe("Convert Tool Integration Tests", () => {
       signed: false,
       ownerAuthenticated: true,
       permissions: -4,
-      canModify: true,
-      canAssemble: true,
       pageCount: 1,
     });
     const files = [locked, pdf];
@@ -261,8 +267,6 @@ describe("Convert Tool Integration Tests", () => {
       signed: false,
       ownerAuthenticated: true,
       permissions: -4,
-      canModify: true,
-      canAssemble: true,
       pageCount: 1,
     });
     const files = [image, locked, pdf, svg];
@@ -335,15 +339,14 @@ describe("Convert Tool Integration Tests", () => {
     mockedApiClient.post.mockResolvedValueOnce({
       data: new Blob(["protected output"], { type: "application/pdf" }),
     });
-    mockedApiClient.post.mockResolvedValueOnce({
-      data: {
-        encrypted: true,
-        ownerAuthenticated: false,
-        permissions: -4,
-        requiresOpeningPassword: false,
-        signed: false,
-        keyLength: 256,
-      },
+    vi.mocked(inspectLocalPdfAccess).mockResolvedValueOnce({
+      password: "",
+      encrypted: true,
+      ownerAuthenticated: false,
+      permissions: -4,
+      requiresOpeningPassword: false,
+      signed: false,
+      pageCount: 1,
     });
     await act(async () => {
       await result.current.unlock.executeOperation({ password: "secret" }, [
@@ -351,9 +354,10 @@ describe("Convert Tool Integration Tests", () => {
         locked,
       ]);
     });
-    expect(mockedApiClient.post).toHaveBeenCalledTimes(4);
+    expect(mockedApiClient.post).toHaveBeenCalledTimes(3);
+    expect(inspectLocalPdfAccess).toHaveBeenCalledOnce();
     expect(mockedApiClient.post.mock.calls[2][0]).toBe(
-      "/api/v1/security/remove-pdf-passwords",
+      "/api/v1/security/remove-password",
     );
     expect(
       (mockedApiClient.post.mock.calls[2][1] as FormData).get("password"),
@@ -1386,4 +1390,3 @@ describe("Convert Tool Integration Tests", () => {
  *    - Test graceful degradation when endpoints are disabled
  *    - Test dynamic endpoint configuration updates
  */
-import { rememberPdfAccess } from "@app/services/pdfPasswordStore";

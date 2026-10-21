@@ -249,6 +249,21 @@ describe("form save document completion", () => {
     await rejected;
   });
 
+  it("reports readiness after retrying a failed initial load", () => {
+    const props = { fileKey: "B", onReady: vi.fn(), onFailed: vi.fn() };
+    mocks.active = { status: "error", error: "inspection failed" };
+    const view = render(<InitialDocumentLoadBridge {...props} />);
+    expect(props.onFailed).toHaveBeenCalledOnce();
+    mocks.active = { status: "loading", error: null };
+    view.rerender(<InitialDocumentLoadBridge {...props} />);
+    expect(props.onReady).not.toHaveBeenCalled();
+    mocks.active = { status: "loaded", error: null };
+    view.rerender(<InitialDocumentLoadBridge {...props} />);
+    view.rerender(<InitialDocumentLoadBridge {...props} />);
+    expect(props.onReady).toHaveBeenCalledExactlyOnceWith("B");
+    expect(props.onFailed).toHaveBeenCalledOnce();
+  });
+
   it("rejects an initial load when only the inner viewer unmounts", async () => {
     const { result } = renderHook(useDocumentLoadWaiter);
     const saved = result.current.waitForDocument("B");

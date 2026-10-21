@@ -4,22 +4,7 @@ import path from "node:path";
 
 const fixtures = path.join(import.meta.dirname, "../test-fixtures");
 
-async function unlockFixture(page: Page, filename: string, pageCount: number) {
-  await page.route("**/api/v1/security/inspect-pdf-security", (route) =>
-    route.fulfill({
-      json: {
-        encrypted:
-          route.request().postData()?.includes(`filename="${filename}"`) ??
-          false,
-        signed: false,
-        ownerAuthenticated: true,
-        permissions: -4,
-        canModify: true,
-        canAssemble: true,
-        pageCount,
-      },
-    }),
-  );
+async function unlockFixture(page: Page, filename: string) {
   await page.goto("/annotate", { waitUntil: "domcontentloaded" });
   await page.getByTestId("files-button").click();
   await page
@@ -41,7 +26,7 @@ async function unlockFixture(page: Page, filename: string, pageCount: number) {
 test("unlocked annotations render before opening comments and remain read-only", async ({
   page,
 }) => {
-  await unlockFixture(page, "encrypted-annotations.pdf", 3);
+  await unlockFixture(page, "encrypted-annotations.pdf");
 
   const firstPage = page.locator('[data-page-index="0"]').first();
   const annotations = firstPage.locator("[data-no-interaction]");
@@ -106,7 +91,7 @@ test("unlocked annotations render before opening comments and remain read-only",
 test("unlocked links remain navigable and text selection offers reading actions only", async ({
   page,
 }) => {
-  await unlockFixture(page, "encrypted-links.pdf", 2);
+  await unlockFixture(page, "encrypted-links.pdf");
   const firstPage = page.locator('[data-page-index="0"]').first();
   const links = firstPage.locator(".pdf-link-overlay");
   await expect(links).toHaveCount(4, { timeout: 30_000 });

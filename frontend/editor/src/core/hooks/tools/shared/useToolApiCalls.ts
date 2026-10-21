@@ -9,16 +9,19 @@ import { isEmptyOutput } from "@app/services/errorUtils";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 import type { StirlingFile, FileId } from "@app/types/fileContext";
 import { isSignupRequiredError } from "@app/utils/toolErrorHandler";
+import { combineAbortSignals } from "@app/utils/combineAbortSignals";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
   changePdfSecurity,
-  unlockPdfForSession,
 } from "@app/services/pdfSessionUnlock";
 import {
+  inspectLocalPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+  pdfAccessLifetime,
+  pdfAccessSessionLifetime,
+} from "@app/services/pdfAccessService";
 
 /** An input that did not survive the batch, with the error it failed on. */
 export interface FailedInput {
@@ -63,6 +66,10 @@ export const useToolApiCalls = <TParams = void>() => {
 
       const cancellation = axios.CancelToken.source();
       cancelTokenRef.current = cancellation;
+      const operationCancellation = cancellation.token.toAbortSignal();
+      const sessionLifetime = pdfAccessSessionLifetime();
+      const sourceLifetimes = validFiles.map(pdfAccessLifetime);
+      const outputsBySource = new Map<FileId, File[]>();
 
       // Params are the same for every file, so resolve the endpoint once. A null
       // endpoint means the tool has no backend call (e.g. client-side tools) and
@@ -89,9 +96,20 @@ export const useToolApiCalls = <TParams = void>() => {
         onProgress({ current: i + 1, total, currentFileName: file.name });
         onStatus(`Processing ${file.name} (${i + 1}/${total})`);
 
+        const sourceLifetime = sourceLifetimes[i];
+        const { signal: fileSignal, dispose } = combineAbortSignals([
+          operationCancellation,
+          sourceLifetime,
+        ]);
         try {
           cancellation.token.throwIfRequested();
-          const workingFile = await prepareUnlockedFile(file, endpoint);
+          sourceLifetime.throwIfAborted();
+          const workingFile = await prepareUnlockedFile(
+            file,
+            endpoint,
+            fileSignal,
+            cancellation.token,
+          );
           const formData = config.buildFormData(params, workingFile);
           console.debug("[processFiles] POST", { endpoint, name: file.name });
           const response =
@@ -110,6 +128,7 @@ export const useToolApiCalls = <TParams = void>() => {
               : await apiClient.post(endpoint, formData, {
                   responseType: "blob",
                   cancelToken: cancellation.token,
+                  signal: sourceLifetime,
                 });
           console.debug("[processFiles] Response OK", {
             name: file.name,
@@ -141,11 +160,17 @@ export const useToolApiCalls = <TParams = void>() => {
                         getPdfAccess(file)?.password ||
                         "",
                     ));
-            for (const output of responseFiles)
-              rememberPdfAccess(
+            for (const output of responseFiles) {
+              const access = await inspectLocalPdfAccess(
                 output,
-                await unlockPdfForSession(output, password, cancellation.token),
+                password,
+                fileSignal,
               );
+              cancellation.token.throwIfRequested();
+              if (fileSignal.aborted)
+                throw new axios.CanceledError("Operation cancelled");
+              rememberPdfAccess(output, access);
+            }
           }
           // Guard: some endpoints may return an empty/0-byte file with 200
           const empty = isEmptyOutput(responseFiles);
@@ -166,13 +191,16 @@ export const useToolApiCalls = <TParams = void>() => {
             }
             continue;
           }
+          sourceLifetime.throwIfAborted();
           const protectedFiles = await protectUnlockedResults(
             responseFiles,
             [file],
             endpoint,
           );
           cancellation.token.throwIfRequested();
+          sourceLifetime.throwIfAborted();
           processedFiles.push(...protectedFiles);
+          outputsBySource.set(file.fileId, protectedFiles);
           // record source id as successful
           successSourceIds.push(file.fileId);
           console.debug("[processFiles] Success", {
@@ -180,6 +208,13 @@ export const useToolApiCalls = <TParams = void>() => {
             produced: responseFiles.length,
           });
         } catch (error) {
+          if (cancellation.token.reason || sessionLifetime.aborted) {
+            throw new Error("Operation was cancelled", { cause: error });
+          }
+          if (sourceLifetime.aborted) {
+            unprocessedSourceIds.push(file.fileId);
+            continue;
+          }
           if (isSignupRequiredError(error)) {
             if (processedFiles.length === 0) throw error;
             unprocessedSourceIds.push(
@@ -187,7 +222,10 @@ export const useToolApiCalls = <TParams = void>() => {
             );
             break;
           }
-          if (axios.isCancel(error)) {
+          if (
+            axios.isCancel(error) ||
+            (error instanceof DOMException && error.name === "AbortError")
+          ) {
             throw new Error("Operation was cancelled", { cause: error });
           }
           console.error("[processFiles] Failed", { name: file.name, error });
@@ -199,7 +237,20 @@ export const useToolApiCalls = <TParams = void>() => {
           } catch (e) {
             console.debug("markFileError", e);
           }
+        } finally {
+          dispose();
         }
+      }
+
+      // A completed source may be closed while another request is still running.
+      for (let i = 0; i < validFiles.length; i++) {
+        const id = validFiles[i].fileId;
+        if (!sourceLifetimes[i].aborted || !outputsBySource.has(id)) continue;
+        const outputs = new Set(outputsBySource.get(id));
+        for (let j = processedFiles.length - 1; j >= 0; j--)
+          if (outputs.has(processedFiles[j])) processedFiles.splice(j, 1);
+        successSourceIds.splice(successSourceIds.indexOf(id), 1);
+        unprocessedSourceIds.push(id);
       }
 
       if (failedFiles.length > 0 && processedFiles.length === 0) {

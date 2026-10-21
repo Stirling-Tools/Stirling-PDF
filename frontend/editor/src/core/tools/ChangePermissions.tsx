@@ -10,7 +10,7 @@ import { useChangePermissionsTips } from "@app/components/tooltips/useChangePerm
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 
 const ChangePermissions = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -35,10 +35,7 @@ const ChangePermissions = (props: BaseToolProps) => {
   usePdfAccess(base.selectedFiles[0]);
   const protectedInput =
     base.selectedFiles.length > 0 &&
-    base.selectedFiles.every((file) => {
-      const access = getPdfAccess(file);
-      return access?.encrypted && access.hasOwnerPassword !== false;
-    });
+    base.selectedFiles.every((file) => getPdfAccess(file)?.encrypted);
   const ownerVerified =
     protectedInput &&
     base.selectedFiles.every(
