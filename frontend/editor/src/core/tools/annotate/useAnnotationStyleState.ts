@@ -92,12 +92,12 @@ export const useAnnotationStyleState = (
   >("left");
   const [textBackgroundColor, setTextBackgroundColor] = useState<string>("");
   const [noteBackgroundColor, setNoteBackgroundColor] = useState("#ffd54f");
-  const [shapeStrokeColor, setShapeStrokeColor] = useState("#cf5b5b");
-  const [shapeFillColor, setShapeFillColor] = useState("#0000ff");
-  const [shapeOpacity, setShapeOpacity] = useState(50);
-  const [shapeStrokeOpacity, setShapeStrokeOpacity] = useState(50);
-  const [shapeFillOpacity, setShapeFillOpacity] = useState(50);
-  const [shapeThickness, setShapeThickness] = useState(2);
+  const [shapeStrokeColor, setShapeStrokeColor] = useState("#000000");
+  const [shapeFillColor, setShapeFillColor] = useState("transparent");
+  const [shapeOpacity, setShapeOpacity] = useState(100);
+  const [shapeStrokeOpacity, setShapeStrokeOpacity] = useState(100);
+  const [shapeFillOpacity, setShapeFillOpacity] = useState(100);
+  const [shapeThickness, setShapeThickness] = useState(8);
 
   const buildToolOptions = useCallback<BuildToolOptionsFn>(
     (toolId, extras) => {
