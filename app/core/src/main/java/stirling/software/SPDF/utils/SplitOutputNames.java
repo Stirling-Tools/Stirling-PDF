@@ -26,6 +26,16 @@ public final class SplitOutputNames {
 
     private static final String PDF_EXTENSION = ".pdf";
     private static final Pattern CONTROL_CHARACTERS = Pattern.compile("[\\p{Cc}\\p{Zl}\\p{Zp}]");
+
+    /**
+     * An illegal run beside whitespace is dropped (with one following space) rather than turned
+     * into "_", so "Chapter: 1" reads "Chapter 1". One-character lookarounds keep it linear on long
+     * whitespace runs. Same characters as {@code RegexPatternUtils#getSafeFilenamePattern}, and
+     * mirrored by the frontend preview in splitOutputNamePattern.ts.
+     */
+    private static final Pattern ILLEGAL_BESIDE_SPACE =
+            Pattern.compile("(?<=\\s)[/\\\\?%*:|\"<>]+\\s?|[/\\\\?%*:|\"<>]+(?=\\s)");
+
     private static final Pattern LEADING_DOTS_AND_SPACES = Pattern.compile("^[.\\s\\p{Z}]+");
     private static final Pattern WINDOWS_RESERVED_STEM =
             Pattern.compile("(?i)^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?=\\.|$)");
@@ -83,6 +93,7 @@ public final class SplitOutputNames {
      */
     static String sanitize(String line) {
         String name = CONTROL_CHARACTERS.matcher(line).replaceAll("");
+        name = ILLEGAL_BESIDE_SPACE.matcher(name).replaceAll("");
         name =
                 RegexPatternUtils.getInstance()
                         .getSafeFilenamePattern()

@@ -69,6 +69,22 @@ class SplitOutputNamesTest {
     }
 
     @Test
+    @DisplayName("An illegal character before {n} is dropped, not turned into an underscore")
+    void patternColonBeforeNumberIsDropped() {
+        assertThat(resolve(null, "Pride and Prejudice Chapter: {n}", "in", 2))
+                .containsExactly(
+                        "Pride and Prejudice Chapter 1.pdf", "Pride and Prejudice Chapter 2.pdf");
+    }
+
+    @Test
+    @DisplayName("A long run of spaces is sanitised in linear time")
+    void longWhitespaceRunIsLinear() {
+        assertThat(SplitOutputNames.sanitize("a" + " ".repeat(200_000) + "b"))
+                .startsWith("a")
+                .hasSizeLessThanOrEqualTo(SplitOutputNames.MAX_NAME_BYTES);
+    }
+
+    @Test
     @DisplayName("A pattern without {n} has the number appended")
     void patternWithoutTokenAppendsNumber() {
         assertThat(resolve(null, " Part ", "in", 2)).containsExactly("Part 1.pdf", "Part 2.pdf");
@@ -101,6 +117,10 @@ class SplitOutputNamesTest {
                 "..\\evil|_evil",
                 ".hidden|hidden",
                 "a:b*c?d|a_b_c_d",
+                "Chapter: 1|Chapter 1",
+                "Report / Summary|Report Summary",
+                "Q3/Q4 numbers|Q3_Q4 numbers",
+                "Notes :draft|Notes draft",
                 "CON|CON_",
                 "con.backup|con_.backup",
                 "LPT9|LPT9_",

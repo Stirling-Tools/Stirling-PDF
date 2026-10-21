@@ -5,8 +5,7 @@ import {
   SplitParameters,
 } from "@app/hooks/tools/split/useSplitParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
-
-const NUMBER_TOKEN = "{n}";
+import { describeNamePattern } from "@app/components/tools/split/splitOutputNamePattern";
 
 const OUTPUT_NAME_PRESETS = [
   { naming: "part", key: "split.outputNames.preset.part", pattern: "Part {n}" },
@@ -35,18 +34,6 @@ const OUTPUT_NAMINGS: readonly OutputNaming[] = [
 
 function isOutputNaming(value: string): value is OutputNaming {
   return (OUTPUT_NAMINGS as readonly string[]).includes(value);
-}
-
-/** Mirrors the server's SplitOutputNames: {n} becomes the number, else the number is appended. */
-function applyNamePattern(pattern: string, number: number): string {
-  return pattern.includes(NUMBER_TOKEN)
-    ? pattern.replaceAll(NUMBER_TOKEN, String(number))
-    : `${pattern.trim()} ${number}`;
-}
-
-/** Two examples, not three: three overflow the Select input at the default panel width. */
-function describeNamePattern(pattern: string): string {
-  return [1, 2].map((n) => applyNamePattern(pattern, n)).join(", ") + "…";
 }
 
 export interface SplitOutputNamingSettingsProps {
