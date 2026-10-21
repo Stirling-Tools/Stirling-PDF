@@ -274,7 +274,6 @@ test.describe("read aloud language walkthrough", () => {
     // Clicking the page must not take the controls away while audio is playing.
     await page.locator('[data-page-index="0"]').click();
     await expect(page.locator(".read-aloud-player")).toBeVisible();
-    await page.getByRole("button", { name: "Settings", exact: true }).click();
     await page.getByRole("textbox", { name: "Voice" }).click();
     await expect(page.getByRole("option").first()).toBeVisible();
     await page.mouse.move(0, 0);

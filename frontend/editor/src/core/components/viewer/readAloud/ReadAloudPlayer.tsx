@@ -1,7 +1,5 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Collapse,
   Group,
   Loader,
   Progress,
@@ -33,7 +31,6 @@ export function ReadAloudPlayer({
   onReadMode,
 }: ReadAloudPlayerProps) {
   const { t, i18n } = useTranslation();
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const {
     playback,
     detection,
@@ -298,6 +295,77 @@ export function ReadAloudPlayer({
         </div>
       ) : null}
 
+      <div className="read-aloud-player__selects">
+        <Select
+          label={t("readAloud.language", "Language")}
+          value={language}
+          onChange={(value) => {
+            if (value) setLanguage(value);
+          }}
+          data={languageOptions.map((option) => ({
+            value: option.value,
+            label: option.label,
+          }))}
+          placeholder={t("readAloud.chooseLanguage", "Choose a language")}
+          searchable
+          allowDeselect={false}
+          size="xs"
+          comboboxProps={{ withinPortal: true }}
+          disabled={languageOptions.length === 0}
+        />
+        <Select
+          label={t("readAloud.voice", "Voice")}
+          value={
+            voiceOptions.length > 0 && selectedVoiceURI
+              ? selectedVoiceURI
+              : null
+          }
+          onChange={(value) => {
+            if (value) setVoice(value);
+          }}
+          data={voiceOptions.map((item) => ({
+            value: item.voiceURI,
+            label: voiceDisplayName(item),
+          }))}
+          placeholder={t("readAloud.chooseVoice", "Choose a voice")}
+          searchable
+          allowDeselect={false}
+          size="xs"
+          comboboxProps={{ withinPortal: true }}
+          disabled={voiceOptions.length === 0}
+        />
+      </div>
+
+      <div className="read-aloud-player__section">
+        <div className="read-aloud-player__row">
+          <Text size="xs" fw={500}>
+            {t("readAloud.speed", "Speed")}
+          </Text>
+          <Text size="xs" c="dimmed" className="read-aloud-player__value">
+            {speechRate.toFixed(1)}×
+          </Text>
+        </div>
+        <Slider
+          value={speechRate}
+          onChange={(value) => setRate(value)}
+          onChangeEnd={(value) => setRate(value, true)}
+          min={0.5}
+          max={2}
+          step={0.1}
+          label={(value) => `${value.toFixed(1)}×`}
+          size="xs"
+          aria-label={t("readAloud.speed", "Speed")}
+        />
+      </div>
+
+      <Switch
+        size="xs"
+        label={t("readAloud.highlight", "Highlight the word being read")}
+        checked={highlightEnabled}
+        onChange={(event) => setHighlightEnabled(event.currentTarget.checked)}
+        className="read-aloud-player__switch"
+      />
+
       <Button
         variant="quiet"
         accent="neutral"
@@ -309,102 +377,6 @@ export function ReadAloudPlayer({
       >
         {t("readAloud.readMode", "Read mode")}
       </Button>
-
-      <Button
-        variant="quiet"
-        accent="neutral"
-        size="sm"
-        fullWidth
-        justify="between"
-        rightSection={
-          <Icon
-            name={settingsOpen ? "chevron-up" : "chevron-down"}
-            size="0.9rem"
-          />
-        }
-        aria-expanded={settingsOpen}
-        onClick={() => setSettingsOpen((open) => !open)}
-        className="read-aloud-player__settings"
-      >
-        {t("readAloud.settings", "Settings")}
-      </Button>
-
-      <Collapse in={settingsOpen}>
-        <Stack gap="sm" pt="xs">
-          <div className="read-aloud-player__section">
-            <div className="read-aloud-player__row">
-              <Text size="sm" fw={500}>
-                {t("readAloud.speed", "Speed")}
-              </Text>
-              <Text size="sm" c="dimmed" className="read-aloud-player__value">
-                {speechRate.toFixed(1)}×
-              </Text>
-            </div>
-            <Slider
-              value={speechRate}
-              onChange={(value) => setRate(value)}
-              onChangeEnd={(value) => setRate(value, true)}
-              min={0.5}
-              max={2}
-              step={0.1}
-              label={(value) => `${value.toFixed(1)}×`}
-              size="xs"
-              aria-label={t("readAloud.speed", "Speed")}
-            />
-          </div>
-
-          <div className="read-aloud-player__selects">
-            <Select
-              label={t("readAloud.language", "Language")}
-              value={language}
-              onChange={(value) => {
-                if (value) setLanguage(value);
-              }}
-              data={languageOptions.map((option) => ({
-                value: option.value,
-                label: option.label,
-              }))}
-              placeholder={t("readAloud.chooseLanguage", "Choose a language")}
-              searchable
-              allowDeselect={false}
-              size="xs"
-              comboboxProps={{ withinPortal: true }}
-              disabled={languageOptions.length === 0}
-            />
-            <Select
-              label={t("readAloud.voice", "Voice")}
-              value={
-                voiceOptions.length > 0 && selectedVoiceURI
-                  ? selectedVoiceURI
-                  : null
-              }
-              onChange={(value) => {
-                if (value) setVoice(value);
-              }}
-              data={voiceOptions.map((item) => ({
-                value: item.voiceURI,
-                label: voiceDisplayName(item),
-              }))}
-              placeholder={t("readAloud.chooseVoice", "Choose a voice")}
-              searchable
-              allowDeselect={false}
-              size="xs"
-              comboboxProps={{ withinPortal: true }}
-              disabled={voiceOptions.length === 0}
-            />
-          </div>
-
-          <Switch
-            size="xs"
-            label={t("readAloud.highlight", "Highlight the word being read")}
-            checked={highlightEnabled}
-            onChange={(event) =>
-              setHighlightEnabled(event.currentTarget.checked)
-            }
-            className="read-aloud-player__switch"
-          />
-        </Stack>
-      </Collapse>
     </Stack>
   );
 }
