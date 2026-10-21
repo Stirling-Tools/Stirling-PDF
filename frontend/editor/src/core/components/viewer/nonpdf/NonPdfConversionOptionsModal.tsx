@@ -114,6 +114,16 @@ export function NonPdfConversionOptionsModal({
       }
     >
       <Stack gap="md" data-testid="nonpdf-options">
+        <Text
+          size="xs"
+          fw={600}
+          tt="uppercase"
+          c="dimmed"
+          style={{ letterSpacing: "0.08em" }}
+        >
+          {t("viewer.nonPdf.optionsSection", "PDF options")}
+        </Text>
+
         {settings}
 
         <Text size="xs" c="dimmed">
