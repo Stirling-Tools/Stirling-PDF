@@ -144,6 +144,26 @@ describe("computeCutAndTileOutcome", () => {
     });
   });
 
+  test("excluding the only page in a one-page file cuts nothing", () => {
+    expect(
+      computeCutAndTileOutcome(
+        params({ mode: "grid", cutPages: "exceptFirst" }),
+        1,
+      ),
+    ).toMatchObject({
+      kind: "grid",
+      cutPages: 0,
+      outputFiles: 1,
+      outputPages: 1,
+    });
+    expect(
+      computeCutAndTileOutcome(
+        params({ mode: "grid", cutPages: "exceptFirstAndLast" }),
+        2,
+      ),
+    ).toMatchObject({ kind: "grid", cutPages: 0, outputPages: 2 });
+  });
+
   test("a very large job is flagged before it runs", () => {
     const outcome = computeCutAndTileOutcome(
       params({ mode: "grid", rows: "100", columns: "100", assemble: true }),
