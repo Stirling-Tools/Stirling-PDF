@@ -75,6 +75,17 @@ class LazyGzipResourceResolverTest {
     }
 
     @Test
+    void leavesTheBaseResourceForTheBrotliSibling() throws IOException {
+        Files.write(tempDir.resolve("app.js.br"), new byte[128]);
+
+        Resource resolved = resolve("br, gzip");
+
+        assertThat(resolved).isInstanceOf(FileSystemResource.class);
+        assertThat(((FileSystemResource) resolved).getPath()).isEqualTo(source.toString());
+        assertThat(tempDir.resolve("cache")).doesNotExist();
+    }
+
+    @Test
     void leavesIncompressibleFilesAlone() throws IOException {
         Path image = tempDir.resolve("image.png");
         Files.write(image, new byte[4096]);

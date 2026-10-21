@@ -93,7 +93,8 @@ final class LazyGzipResourceResolver implements ResourceResolver {
                 || request == null
                 || !acceptsGzip(request)
                 || !isCompressible(requestPath)
-                || isAlreadyEncoded(resource)) {
+                || isAlreadyEncoded(resource)
+                || hasBrotliSibling(resource)) {
             return resource;
         }
 
@@ -201,6 +202,23 @@ final class LazyGzipResourceResolver implements ResourceResolver {
     private static boolean isAlreadyEncoded(Resource resource) {
         return resource instanceof HttpResource httpResource
                 && httpResource.getResponseHeaders().containsHeader(HttpHeaders.CONTENT_ENCODING);
+    }
+
+    /**
+     * EncodedResourceResolver asks this resolver for the base path before it looks for the {@code
+     * .br} sibling. Wrapping the base in gzip makes that lookup fail, so a client that accepts
+     * brotli would be served gzip. Leave the base untouched whenever the sibling exists.
+     */
+    private static boolean hasBrotliSibling(Resource resource) {
+        String filename = resource.getFilename();
+        if (filename == null) {
+            return false;
+        }
+        try {
+            return resource.createRelative(filename + ".br").exists();
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     void close() {
