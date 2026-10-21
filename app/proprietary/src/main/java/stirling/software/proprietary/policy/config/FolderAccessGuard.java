@@ -21,14 +21,15 @@ import stirling.software.proprietary.policy.source.SourceStore;
  *
  * <ol>
  *   <li>denied entirely under the {@code saas} profile;
- *   <li>Stirling's own config dir always rejected, even if an allowed root were misconfigured to
- *       contain it;
+ *   <li>Stirling's own config dir and the local file-storage directory always rejected, even if an
+ *       allowed root were misconfigured to contain them: stored files are per-user and governed by
+ *       their own ownership model, never by path;
  *   <li>in the desktop bundle everything else is permitted: the local operator picking a directory
  *       on their own machine is the authorization, and an allowlist would only gate them from their
  *       own files;
- *   <li>Stirling-owned "implied" roots are always permitted (even with none configured): the local
- *       server file-storage directory when that storage provider is enabled, and the pipeline
- *       watched-folder directories, so automations use them without the admin listing them;
+ *   <li>Stirling-owned "implied" roots are always permitted (even with none configured): the
+ *       pipeline watched-folder directories, so automations use them without the admin listing
+ *       them;
  *   <li>must resolve within {@code policies.allowedFolderRoots}; none configured means all denied.
  * </ol>
  *
@@ -40,9 +41,7 @@ public class FolderAccessGuard {
 
     public static final String FOLDER_TYPE = "folder";
 
-    /** Reason keys for an implied root, surfaced to the admin UI so it can label each one. */
-    public static final String IMPLIED_SERVER_STORAGE = "serverStorage";
-
+    /** Reason key for an implied root, surfaced to the admin UI so it can label each one. */
     public static final String IMPLIED_WATCHED_FOLDER = "watchedFolder";
 
     /** A directory implicitly permitted regardless of {@code allowedFolderRoots}, and why. */
@@ -64,8 +63,8 @@ public class FolderAccessGuard {
         this.desktopOperator = isDesktopBundle();
         this.allowedRoots =
                 normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
-        this.impliedRoots = impliedRoots(applicationProperties.getStorage(), runtimePathConfig);
-        this.protectedRoots = List.of(normalize(Path.of(InstallationPathConfig.getConfigPath())));
+        this.impliedRoots = impliedRoots(runtimePathConfig);
+        this.protectedRoots = protectedRoots(applicationProperties.getStorage());
         this.sourceStore = sourceStore;
     }
 
@@ -89,14 +88,12 @@ public class FolderAccessGuard {
                     "folder sources and outputs are not available in SaaS mode");
         }
         Path normalized = normalize(dir);
-        for (Path protectedRoot : protectedRoots) {
-            if (normalized.startsWith(protectedRoot)) {
-                throw new IllegalArgumentException(
-                        "folder may not point inside a protected Stirling directory");
-            }
+        if (isProtected(normalized)) {
+            throw new IllegalArgumentException(
+                    "folder may not point inside a protected Stirling directory");
         }
         // The desktop operator's own choice is the authorization on their own machine; only the
-        // SaaS refusal and the protected config dir above outrank it.
+        // SaaS refusal and the protected directories above outrank it.
         if (desktopOperator) {
             return normalized;
         }
@@ -115,6 +112,15 @@ public class FolderAccessGuard {
                     "folder '" + normalized + "' is outside the allowed folder roots");
         }
         return normalized;
+    }
+
+    /**
+     * Whether the path sits inside a directory no folder automation may touch, whatever the mode.
+     * Recursive listings use this to prune those subtrees when walking a permitted ancestor.
+     */
+    public boolean isProtected(Path path) {
+        Path normalized = normalize(path);
+        return protectedRoots.stream().anyMatch(normalized::startsWith);
     }
 
     /** The Stirling-owned directories always permitted, with a reason key for each (read-only). */
@@ -138,28 +144,25 @@ public class FolderAccessGuard {
      * Stirling-owned directories always permitted regardless of {@code allowedFolderRoots}, so
      * folder automations work against them out of the box.
      */
-    private static List<ImpliedRoot> impliedRoots(
-            ApplicationProperties.Storage storage, RuntimePathConfig runtimePathConfig) {
+    private static List<ImpliedRoot> impliedRoots(RuntimePathConfig runtimePathConfig) {
         List<ImpliedRoot> roots = new ArrayList<>();
-        for (Path path : serverStorageRoots(storage)) {
-            roots.add(new ImpliedRoot(path, IMPLIED_SERVER_STORAGE));
-        }
         for (Path path : normalizeAll(runtimePathConfig.getPipelineWatchedFoldersPaths())) {
             roots.add(new ImpliedRoot(path, IMPLIED_WATCHED_FOLDER));
         }
         return List.copyOf(roots);
     }
 
-    /** The local server file-storage directory, when that storage provider is enabled. */
-    private static List<Path> serverStorageRoots(ApplicationProperties.Storage storage) {
-        if (!storage.isEnabled() || !"local".equalsIgnoreCase(storage.getProvider())) {
-            return List.of();
-        }
+    /** The config dir, plus the local file-storage dir, which holds every user's stored files. */
+    private static List<Path> protectedRoots(ApplicationProperties.Storage storage) {
+        List<Path> roots = new ArrayList<>();
+        roots.add(normalize(Path.of(InstallationPathConfig.getConfigPath())));
+        // Whatever the provider or enabled flag: files stored under an earlier setting remain.
         String basePath = storage.getLocal().getBasePath();
         if (basePath == null || basePath.isBlank()) {
-            return List.of();
+            basePath = InstallationPathConfig.getPath() + "storage";
         }
-        return List.of(normalize(Path.of(basePath)));
+        roots.add(normalize(Path.of(basePath)));
+        return List.copyOf(roots);
     }
 
     private static List<Path> normalizeAll(List<String> roots) {

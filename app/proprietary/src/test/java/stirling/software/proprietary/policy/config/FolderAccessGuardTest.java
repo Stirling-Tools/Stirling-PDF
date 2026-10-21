@@ -162,30 +162,50 @@ class FolderAccessGuardTest {
     }
 
     @Test
-    void permitsTheLocalServerStorageDirectoryEvenWithNoConfiguredRoots() {
+    void rejectsTheLocalStorageDirectoryEvenInsideAnAllowedRoot() {
+        // Every user's stored files live under it, keyed by user id; paths must never reach them.
+        Path storageBase = tempDir.resolve("storage");
+        FolderAccessGuard guard =
+                guardWithStorage(
+                        List.of(tempDir.toString()), true, "local", storageBase.toString());
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> guard.requirePermitted(storageBase.resolve("4")));
+        assertFalse(ex instanceof FolderAccessDeniedException);
+        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(storageBase));
+        assertTrue(guard.isProtected(storageBase.resolve("4").resolve("doc.pdf")));
+        assertFalse(guard.isProtected(tempDir));
+    }
+
+    @Test
+    void rejectsTheStorageDirectoryWhateverTheProviderOrEnabledFlag() {
+        Path storageBase = tempDir.resolve("storage");
+        for (FolderAccessGuard guard :
+                List.of(
+                        guardWithStorage(
+                                List.of(tempDir.toString()),
+                                false,
+                                "local",
+                                storageBase.toString()),
+                        guardWithStorage(
+                                List.of(tempDir.toString()), true, "s3", storageBase.toString()))) {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> guard.requirePermitted(storageBase.resolve("4")));
+        }
+    }
+
+    @Test
+    void doesNotImplyTheStorageDirectory() {
         Path storageBase = tempDir.resolve("storage");
         FolderAccessGuard guard =
                 guardWithStorage(List.of(), true, "local", storageBase.toString());
-        Path within = storageBase.resolve("inbox");
 
-        assertEquals(within.toAbsolutePath().normalize(), guard.requirePermitted(within));
-    }
-
-    @Test
-    void ignoresServerStorageWhenTheStorageFeatureIsDisabled() {
-        Path storageBase = tempDir.resolve("storage");
-        FolderAccessGuard guard =
-                guardWithStorage(List.of(), false, "local", storageBase.toString());
-
-        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(storageBase));
-    }
-
-    @Test
-    void ignoresServerStorageWhenTheProviderIsNotLocal() {
-        Path storageBase = tempDir.resolve("storage");
-        FolderAccessGuard guard = guardWithStorage(List.of(), true, "s3", storageBase.toString());
-
-        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(storageBase));
+        assertTrue(
+                guard.impliedRoots().stream()
+                        .noneMatch(root -> root.path().startsWith(storageBase)));
     }
 
     @Test
