@@ -26,7 +26,9 @@ function baseState(): FileContextState {
 }
 
 const guardErrors = (spy: ReturnType<typeof vi.spyOn>) =>
-  spy.mock.calls.filter((a) => String(a[0]).includes("[FileReducer]"));
+  spy.mock.calls.filter((a: unknown[]) =>
+    String(a[0]).includes("[FileReducer]"),
+  );
 
 afterEach(() => vi.restoreAllMocks());
 
