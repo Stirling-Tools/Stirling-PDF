@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Group, Loader, Paper, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
@@ -10,6 +10,7 @@ import { useNonPdfConversion } from "@app/hooks/useNonPdfConversion";
 import { formatFileSize } from "@app/utils/fileUtils";
 import type { NonPdfConversionPlan } from "@app/utils/nonPdfConversion";
 
+import { NonPdfConversionSettings } from "@app/components/viewer/nonpdf/NonPdfConversionSettings";
 import "@app/components/viewer/nonpdf/NonPdfConversionPanel.css";
 
 export type NonPdfConversionVariant = "compact" | "hero";
@@ -303,11 +304,24 @@ export function NonPdfConversionPanel({
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const convertRef = useRef<HTMLButtonElement>(null);
-  const { status, errorMessage, convert, cancel, dismissError } =
-    useNonPdfConversion({ file, plan, onConverted });
+  const {
+    status,
+    errorMessage,
+    parameters,
+    updateParameter,
+    convert,
+    cancel,
+    dismissError,
+  } = useNonPdfConversion({ file, plan, onConverted });
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    setSettingsOpen(false);
+  }, [file]);
 
   const converting = status === "converting";
   const failed = status === "error";
+  const hasOptions = plan.optionsKind !== "none";
   const formatName = plan.formatLabel;
 
   const handleCancel = () => {
@@ -326,6 +340,7 @@ export function NonPdfConversionPanel({
   const convertButton = (
     <Button
       ref={convertRef}
+      variant={variant === "compact" ? "secondary" : "primary"}
       size={actionSize}
       fullWidth={variant === "hero"}
       leftSection={<Icon name="file-pdf" size="1rem" />}
@@ -339,6 +354,54 @@ export function NonPdfConversionPanel({
         : t("viewer.nonPdf.convertToPdf", "Convert to PDF")}
     </Button>
   );
+
+  const settingsButton = hasOptions ? (
+    <Button
+      variant="quiet"
+      accent={variant === "compact" ? "neutral" : undefined}
+      size={isMobile ? "lg" : "md"}
+      leftSection={<Icon name="sliders-horizontal" size="1rem" />}
+      rightSection={
+        isMobile && variant === "compact" ? undefined : (
+          <Icon
+            name={settingsOpen ? "chevron-up" : "chevron-down"}
+            size="1rem"
+          />
+        )
+      }
+      onClick={() => setSettingsOpen((open) => !open)}
+      disabled={disabled || converting}
+      aria-expanded={settingsOpen}
+      aria-controls="nonpdf-inline-settings"
+      aria-label={t("viewer.nonPdf.optionsTitle", "Conversion settings")}
+      data-testid="nonpdf-convert-settings"
+    >
+      {isMobile && variant === "compact"
+        ? null
+        : variant === "compact"
+          ? t("viewer.nonPdf.optionsShort", "Settings")
+          : t("viewer.nonPdf.optionsTitle", "Conversion settings")}
+    </Button>
+  ) : null;
+
+  const settingsPanel =
+    settingsOpen && hasOptions ? (
+      <div
+        id="nonpdf-inline-settings"
+        className={
+          variant === "hero"
+            ? "nonpdf-hero__settings-panel"
+            : "nonpdf-bar-settings"
+        }
+      >
+        <NonPdfConversionSettings
+          plan={plan}
+          parameters={parameters}
+          onParameterChange={updateParameter}
+          disabled={converting}
+        />
+      </div>
+    ) : null;
 
   if (variant === "hero") {
     return (
@@ -385,7 +448,15 @@ export function NonPdfConversionPanel({
                   />
                 </Box>
               ) : (
-                <div className="nonpdf-hero__actions">{convertButton}</div>
+                <>
+                  <div className="nonpdf-hero__actions">{convertButton}</div>
+                  {hasOptions && (
+                    <div className="nonpdf-hero__settings">
+                      {settingsButton}
+                      {settingsPanel}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -395,60 +466,66 @@ export function NonPdfConversionPanel({
   }
 
   return (
-    <Paper
-      component="section"
-      radius={0}
-      p={isMobile ? "xs" : "sm"}
-      aria-label={t("viewer.nonPdf.conversionBarLabel", "Convert this file")}
-      data-testid="nonpdf-conversion-bar"
-      style={{
-        flexShrink: 0,
-        background: "var(--c-bg-raised)",
-        borderBottom: "1px solid var(--c-border)",
-      }}
-    >
-      <Group justify="space-between" align="center" gap="sm" wrap="nowrap">
-        <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
-          <FormatIcon plan={plan} />
-          <Box style={{ minWidth: 0 }}>
-            <Text size="sm" fw={600} truncate dir="auto">
-              {file.name}
-            </Text>
-            {!isMobile && (
-              <Text size="xs" c="dimmed" truncate dir="auto">
-                {formatName}
-                {file.size > 0 ? ` · ${formatFileSize(file.size)}` : ""}
+    <>
+      <Paper
+        component="section"
+        radius={0}
+        p={isMobile ? "xs" : "sm"}
+        aria-label={t("viewer.nonPdf.conversionBarLabel", "Convert this file")}
+        data-testid="nonpdf-conversion-bar"
+        style={{
+          flexShrink: 0,
+          background: "var(--c-bg-raised)",
+          borderBottom: "1px solid var(--c-border)",
+        }}
+      >
+        <Group justify="space-between" align="center" gap="sm" wrap="nowrap">
+          <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+            <FormatIcon plan={plan} />
+            <Box style={{ minWidth: 0 }}>
+              <Text size="sm" fw={600} truncate dir="auto">
+                {file.name}
               </Text>
-            )}
-          </Box>
-        </Group>
-
-        <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
-          {disabled ? (
-            <Text size="xs" c="dimmed" dir="auto">
-              {t(
-                "viewer.nonPdf.convertDisabledShort",
-                "Conversion is off on this server",
+              {!isMobile && (
+                <Text size="xs" c="dimmed" truncate dir="auto">
+                  {formatName}
+                  {file.size > 0 ? ` · ${formatFileSize(file.size)}` : ""}
+                </Text>
               )}
-            </Text>
-          ) : (
-            <>{!failed && convertButton}</>
-          )}
-        </Group>
-      </Group>
+            </Box>
+          </Group>
 
-      {converting && (
-        <ConversionProgress file={file} compact onCancel={handleCancel} />
-      )}
-      {failed && (
-        <ConversionError
-          compact
-          onRetry={() => void convert()}
-          onOpenInConvert={handleOpenInConvert}
-          onDismiss={dismissError}
-          errorMessage={errorMessage}
-        />
-      )}
-    </Paper>
+          <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+            {disabled ? (
+              <Text size="xs" c="dimmed" dir="auto">
+                {t(
+                  "viewer.nonPdf.convertDisabledShort",
+                  "Conversion is off on this server",
+                )}
+              </Text>
+            ) : (
+              <>
+                {!converting && !failed && settingsButton}
+                {!failed && convertButton}
+              </>
+            )}
+          </Group>
+        </Group>
+
+        {converting && (
+          <ConversionProgress file={file} compact onCancel={handleCancel} />
+        )}
+        {failed && (
+          <ConversionError
+            compact
+            onRetry={() => void convert()}
+            onOpenInConvert={handleOpenInConvert}
+            onDismiss={dismissError}
+            errorMessage={errorMessage}
+          />
+        )}
+      </Paper>
+      {settingsPanel}
+    </>
   );
 }

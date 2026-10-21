@@ -35,6 +35,7 @@
   display: flex;
   flex: 1;
   align-items: center;
+  align-items: safe center;
   justify-content: center;
   overflow: auto;
   padding: clamp(1.25rem, 5vh, 3.5rem) clamp(1rem, 4vw, 1.5rem);
@@ -187,5 +188,47 @@
   .nonpdf-hero__actions {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+.nonpdf-hero__settings {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.nonpdf-hero__settings-panel {
+  width: 100%;
+  max-width: 34rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.nonpdf-bar-settings {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 34rem;
+  margin-block: 0.75rem;
+  margin-inline: auto 1rem;
+  padding: 1rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 48rem) {
+  .nonpdf-hero__settings {
+    align-items: stretch;
+  }
+
+  .nonpdf-hero__settings-panel {
+    max-width: none;
+  }
+
+  .nonpdf-bar-settings {
+    max-width: none;
+    margin: 0.5rem 0.75rem;
   }
 }

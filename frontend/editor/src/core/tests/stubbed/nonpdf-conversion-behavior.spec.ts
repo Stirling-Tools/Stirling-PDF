@@ -55,6 +55,32 @@ test.describe("non-PDF conversion handoff", () => {
     await expectPdfFocus(page);
   });
 
+  test("settings expand inline and the big action uses them", async ({
+    page,
+  }) => {
+    let committedBody = "";
+    await page.route("**/api/v1/convert/ebook/pdf", async (route) => {
+      committedBody = route.request().postDataBuffer()?.toString("utf8") ?? "";
+      await fulfillPdf(route);
+    });
+
+    await openFile(page, "sample.epub");
+    const settings = page.getByTestId("nonpdf-convert-settings");
+    await settings.click();
+
+    await expect(page.getByTestId("nonpdf-settings")).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(settings).toHaveAttribute("aria-expanded", "true");
+
+    await page.getByLabel("Include table of contents").click();
+    await page.getByTestId("nonpdf-convert").click();
+
+    await expect(page.getByText(/Converted to PDF/i)).toBeVisible();
+    await expectPdfFocus(page);
+    expect(committedBody).toContain('name="includeTableOfContents"');
+    expect(committedBody).toContain("true");
+  });
+
   test("cancel returns focus to Convert to PDF", async ({ page }) => {
     let release!: () => void;
     const gate = new Promise<void>((resolve) => {

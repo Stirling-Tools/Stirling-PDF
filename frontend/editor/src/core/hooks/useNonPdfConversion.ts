@@ -31,6 +31,11 @@ interface ActiveConversion {
 export interface NonPdfConversionController {
   status: NonPdfConversionStatus;
   errorMessage: string | null;
+  parameters: ConvertParameters;
+  updateParameter: <K extends keyof ConvertParameters>(
+    key: K,
+    value: ConvertParameters[K],
+  ) => void;
   convert: () => Promise<void>;
   cancel: () => void;
   dismissError: () => void;
@@ -89,6 +94,16 @@ export function useNonPdfConversion({
     setErrorMessage(null);
     setParameters(getNonPdfConversionParameters(file.name, plan));
   }, [file, plan]);
+
+  const updateParameter = useCallback(
+    <K extends keyof ConvertParameters>(
+      key: K,
+      value: ConvertParameters[K],
+    ) => {
+      setParameters((previous) => ({ ...previous, [key]: value }));
+    },
+    [],
+  );
 
   const cancel = useCallback(() => {
     const request = requestRef.current;
@@ -211,6 +226,8 @@ export function useNonPdfConversion({
   return {
     status,
     errorMessage,
+    parameters,
+    updateParameter,
     convert,
     cancel,
     dismissError,
