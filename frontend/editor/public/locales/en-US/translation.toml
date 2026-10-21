@@ -13628,6 +13628,7 @@ validUntrusted = "Valid, signer not verified"
 
 [viewer]
 cannotPreviewFile = "Cannot Preview File"
+copyRestricted = "Copying is disabled by this PDF's permissions."
 copyText = "Copy"
 disableColorFilter = "Disable Color Filter"
 documentUpdated = "Document updated"

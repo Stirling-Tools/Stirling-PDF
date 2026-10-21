@@ -140,7 +140,7 @@ describe("TextSelectionMenu", () => {
     ]);
   });
 
-  test("does not copy when document permissions deny extraction", () => {
+  test("explains why copying is disabled when document permissions deny extraction", async () => {
     render(
       <TestWrapper>
         <TextSelectionMenu {...defaultProps} canCopy={false} />
@@ -151,6 +151,10 @@ describe("TextSelectionMenu", () => {
     fireEvent.click(copy);
     expect(mockViewerCopy).not.toHaveBeenCalled();
     expect(mockCopyToClipboard).not.toHaveBeenCalled();
+    fireEvent.mouseEnter(copy.parentElement!);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Copying is disabled by this PDF's permissions.",
+    );
   });
 
   test("confirms a copy only after the clipboard write succeeds", async () => {
