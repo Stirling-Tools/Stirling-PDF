@@ -18,6 +18,15 @@ public interface SaasTeamExtensionsRepository extends JpaRepository<SaasTeamExte
             CLOUD_SEATS
                     + " + (SELECT COALESCE(SUM(i.seat_count), 0) FROM stirling_pdf.linked_instance i WHERE i.team_id = e.team_id AND i.revoked_at IS NULL)";
 
+    String ENTERPRISE_ACCESS =
+            "EXISTS (SELECT 1 FROM stirling_pdf.procurement_deal d WHERE d.team_id = e.team_id"
+                    + " AND ((d.enterprise_period_start <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')"
+                    + " AND d.enterprise_access_until > (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')"
+                    + " AND d.accepted_quote_id IS NOT NULL)"
+                    + " OR (d.enterprise_period_start IS NULL"
+                    + " AND d.trial_started_at <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')"
+                    + " AND d.trial_ends_at > (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'))))";
+
     Optional<SaasTeamExtensions> findByTeamId(Long teamId);
 
     /**
@@ -27,9 +36,11 @@ public interface SaasTeamExtensionsRepository extends JpaRepository<SaasTeamExte
     @Query(
             value =
                     "UPDATE stirling_pdf.saas_team_extensions e SET seats_used = seats_used + 1 "
-                            + "WHERE team_id = :teamId AND "
+                            + "WHERE team_id = :teamId AND ("
                             + FLEET_SEATS
-                            + " < max_seats",
+                            + " < max_seats OR "
+                            + ENTERPRISE_ACCESS
+                            + ")",
             nativeQuery = true)
     int incrementSeatsUsed(@Param("teamId") Long teamId);
 
@@ -45,7 +56,9 @@ public interface SaasTeamExtensionsRepository extends JpaRepository<SaasTeamExte
             value =
                     "SELECT "
                             + FLEET_SEATS
-                            + " < e.max_seats FROM stirling_pdf.saas_team_extensions e WHERE e.team_id=:teamId",
+                            + " < e.max_seats OR "
+                            + ENTERPRISE_ACCESS
+                            + " FROM stirling_pdf.saas_team_extensions e WHERE e.team_id=:teamId",
             nativeQuery = true)
     Boolean fleetHasAvailableSeats(@Param("teamId") Long teamId);
 
