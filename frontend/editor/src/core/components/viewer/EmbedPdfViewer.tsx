@@ -73,7 +73,6 @@ import {
 } from "@app/tools/formFill/formFillEvents";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
 import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
-import { useIsPhone } from "@app/hooks/useIsMobile";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
@@ -143,7 +142,6 @@ const EmbedPdfViewerContent = ({
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
   const [readAloudCollapsed, setReadAloudCollapsed] = useState(false);
-  const isPhone = useIsPhone();
 
   const {
     isThumbnailSidebarVisible,
@@ -1851,7 +1849,6 @@ const EmbedPdfViewerContent = ({
 
   const sidebarWidthRem = 15;
   const commentsSidebarWidthRem = 15;
-  const readAloudSidebarWidthRem = isPhone ? 15 : 20;
   const rightOffsetBeforeReadAloud =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
@@ -1860,9 +1857,7 @@ const EmbedPdfViewerContent = ({
     (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
   const totalRightMargin =
     rightOffsetBeforeReadAloud +
-    (isReadAloudSidebarVisible && !readAloudCollapsed
-      ? readAloudSidebarWidthRem
-      : 0);
+    (isReadAloudSidebarVisible && !readAloudCollapsed ? sidebarWidthRem : 0);
 
   return (
     <Box
@@ -2101,7 +2096,6 @@ const EmbedPdfViewerContent = ({
         visible={isReadAloudSidebarVisible}
         collapsed={readAloudCollapsed}
         rightOffset={rightOffsetBeforeReadAloud}
-        width={readAloudSidebarWidthRem}
         store={readAloud.store}
         onOpen={() => setReadAloudSidebarVisible(true)}
         onClose={toggleReadAloudSidebar}

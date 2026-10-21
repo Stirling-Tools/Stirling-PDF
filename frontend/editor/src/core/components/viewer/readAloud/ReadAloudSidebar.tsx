@@ -15,8 +15,6 @@ interface ReadAloudSidebarProps {
   collapsed: boolean;
   /** Distance from the right edge, in rem, so the panel stacks beside the other sidebars. */
   rightOffset: number;
-  /** Expanded width in rem; the collapsed mini-player floats and does not reserve page space. */
-  width: number;
   store: ReadAloudStore;
   onOpen: () => void;
   onClose: () => void;
@@ -28,7 +26,6 @@ export function ReadAloudSidebar({
   visible,
   collapsed,
   rightOffset,
-  width,
   store,
   onOpen,
   onClose,
@@ -71,7 +68,6 @@ export function ReadAloudSidebar({
         rightOffset={rightOffset}
         onExpand={onExpand}
         onClose={onClose}
-        onReadMode={openReadMode}
       />
     );
   }
@@ -82,7 +78,6 @@ export function ReadAloudSidebar({
       title={t("readAloud.title", "Read aloud")}
       icon={<Icon name="volume-2" size={20} />}
       rightOffset={`${rightOffset}rem`}
-      width={`${width}rem`}
       visible
       onClose={onClose}
       closeLabel={t("readAloud.close", "Close read aloud")}
@@ -90,6 +85,7 @@ export function ReadAloudSidebar({
         <Tooltip content={collapseLabel} position="top" delay={0}>
           <ActionIcon
             variant="tertiary"
+            accent="neutral"
             size="sm"
             aria-label={collapseLabel}
             title={collapseLabel}

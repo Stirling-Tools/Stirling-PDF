@@ -4,20 +4,15 @@
   width: 100%;
 }
 
-.read-aloud-player__badge {
-  min-width: 0;
-  max-width: 100%;
-  text-transform: none;
-  letter-spacing: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.read-aloud-player__badge .mantine-Badge-label {
-  display: inline-flex;
+.read-aloud-player__status {
+  display: flex;
   align-items: center;
   gap: 0.35rem;
+  min-width: 0;
+}
+
+.read-aloud-player__status-text {
+  flex: 1;
   min-width: 0;
 }
 
@@ -35,10 +30,6 @@
 
 .read-aloud-player__transport {
   padding: 0.15rem 0;
-}
-
-.read-aloud-player__play {
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--c-text) 14%, transparent);
 }
 
 .read-aloud-player__warning {
@@ -88,17 +79,12 @@
   right: 0.75rem;
   bottom: 4.25rem;
   z-index: 999;
-  width: min(22rem, calc(100vw - 1.5rem));
-  padding: 0.6rem 0.7rem 0.5rem;
+  width: min(18rem, calc(100vw - 1.5rem));
+  padding: 0.5rem 0.6rem 0.4rem;
   border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   background: var(--c-surface-raised);
   box-shadow: var(--shadow-md);
-}
-
-.read-aloud-mini__icon {
-  flex: none;
-  color: var(--c-primary);
 }
 
 .read-aloud-mini__text {

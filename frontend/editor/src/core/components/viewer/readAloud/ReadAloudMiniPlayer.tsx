@@ -12,7 +12,6 @@ interface ReadAloudMiniPlayerProps {
   rightOffset: number;
   onExpand: () => void;
   onClose: () => void;
-  onReadMode: () => void;
 }
 
 export function ReadAloudMiniPlayer({
@@ -20,7 +19,6 @@ export function ReadAloudMiniPlayer({
   rightOffset,
   onExpand,
   onClose,
-  onReadMode,
 }: ReadAloudMiniPlayerProps) {
   const { t } = useTranslation();
   const { playback, currentPage, totalPages, chunkIndex, chunkCount } =
@@ -59,23 +57,12 @@ export function ReadAloudMiniPlayer({
       aria-label={t("readAloud.title", "Read aloud")}
     >
       <Group gap="xs" wrap="nowrap" align="center">
-        <Icon name="volume-2" size="1.1rem" className="read-aloud-mini__icon" />
         <div className="read-aloud-mini__text">
           <Text size="sm" fw={600} lineClamp={1}>
             {t("readAloud.title", "Read aloud")}
           </Text>
           <Text size="xs" c="dimmed" lineClamp={1}>
             {pageLabel}
-            {isActive && chunkCount > 0
-              ? ` · ${t(
-                  "readAloud.sentenceProgress",
-                  "Sentence {{current}} of {{total}}",
-                  {
-                    current: chunkIndex + 1,
-                    total: chunkCount,
-                  },
-                )}`
-              : null}
           </Text>
         </div>
         <Tooltip
@@ -99,20 +86,6 @@ export function ReadAloudMiniPlayer({
             onClick={() => void readAloud.togglePlayPause()}
           >
             <Icon name={isPlaying ? "pause" : "play"} size="1rem" />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip
-          content={t("readAloud.readMode", "Read mode")}
-          position="top"
-          delay={0}
-        >
-          <ActionIcon
-            variant="tertiary"
-            size="sm"
-            aria-label={t("readAloud.readMode", "Read mode")}
-            onClick={onReadMode}
-          >
-            <Icon name="book-open" size="1rem" />
           </ActionIcon>
         </Tooltip>
         <Tooltip

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Badge,
   Collapse,
   Group,
   Loader,
@@ -144,19 +143,19 @@ export function ReadAloudPlayer({
 
   return (
     <Stack gap="md" className="read-aloud-player">
-      <Group justify="space-between" gap="xs" wrap="nowrap">
-        <Badge
-          size="sm"
-          variant="light"
-          className="read-aloud-player__badge"
+      <div className="read-aloud-player__status" aria-live="polite">
+        {detectionStatus === "detecting" ? (
+          <Loader size={10} color="currentColor" />
+        ) : null}
+        <Text
+          size="xs"
+          c="dimmed"
+          className="read-aloud-player__status-text"
           title={statusLabel}
-          aria-live="polite"
+          lineClamp={1}
         >
-          {detectionStatus === "detecting" ? (
-            <Loader size={10} color="currentColor" />
-          ) : null}
           {statusLabel}
-        </Badge>
+        </Text>
         <Tooltip
           content={t("readAloud.detectAgain", "Detect language again")}
           position="top"
@@ -164,15 +163,16 @@ export function ReadAloudPlayer({
         >
           <ActionIcon
             variant="tertiary"
+            accent="neutral"
             size="sm"
             aria-label={t("readAloud.detectAgain", "Detect language again")}
             onClick={() => void redetect()}
             disabled={detectionStatus === "detecting"}
           >
-            <Icon name="refresh-cw" size="0.9rem" />
+            <Icon name="refresh-cw" size="0.85rem" />
           </ActionIcon>
         </Tooltip>
-      </Group>
+      </div>
 
       <div className="read-aloud-player__meta" role="status" aria-live="polite">
         <Text size="xs" c="dimmed">
@@ -201,7 +201,7 @@ export function ReadAloudPlayer({
         className="read-aloud-player__progress"
       />
 
-      <Group justify="center" gap="sm" className="read-aloud-player__transport">
+      <Group justify="center" gap="xs" className="read-aloud-player__transport">
         <Tooltip
           content={t("readAloud.previous", "Previous sentence")}
           position="top"
@@ -209,7 +209,8 @@ export function ReadAloudPlayer({
         >
           <ActionIcon
             variant="tertiary"
-            size="lg"
+            accent="neutral"
+            size="md"
             aria-label={t("readAloud.previous", "Previous sentence")}
             onClick={previous}
             disabled={!isActive}
@@ -230,7 +231,7 @@ export function ReadAloudPlayer({
         >
           <ActionIcon
             variant="primary"
-            size="xl"
+            size="lg"
             shape="circle"
             aria-label={
               isPlaying
@@ -253,7 +254,8 @@ export function ReadAloudPlayer({
         >
           <ActionIcon
             variant="tertiary"
-            size="lg"
+            accent="neutral"
+            size="md"
             aria-label={t("readAloud.next", "Next sentence")}
             onClick={next}
             disabled={!isActive}
@@ -265,7 +267,8 @@ export function ReadAloudPlayer({
         <Tooltip content={t("readAloud.stop", "Stop")} position="top" delay={0}>
           <ActionIcon
             variant="tertiary"
-            size="lg"
+            accent="neutral"
+            size="md"
             aria-label={t("readAloud.stop", "Stop")}
             onClick={stop}
             disabled={!isActive && !isFinished}
@@ -296,37 +299,38 @@ export function ReadAloudPlayer({
       ) : null}
 
       <Button
-        variant="secondary"
+        variant="quiet"
+        accent="neutral"
         size="sm"
         fullWidth
         justify="start"
-        leftSection={<Icon name="book-open" size="1rem" />}
+        leftSection={<Icon name="book-open" size="0.9rem" />}
         onClick={onReadMode}
-        className="read-aloud-player__read-mode"
       >
         {t("readAloud.readMode", "Read mode")}
       </Button>
 
       <Button
         variant="quiet"
+        accent="neutral"
         size="sm"
         fullWidth
-        justify="start"
-        leftSection={<Icon name="settings" size="1rem" />}
+        justify="between"
         rightSection={
           <Icon
             name={settingsOpen ? "chevron-up" : "chevron-down"}
-            size="1rem"
+            size="0.9rem"
           />
         }
         aria-expanded={settingsOpen}
         onClick={() => setSettingsOpen((open) => !open)}
+        className="read-aloud-player__settings"
       >
         {t("readAloud.settings", "Settings")}
       </Button>
 
       <Collapse in={settingsOpen}>
-        <Stack gap="md" pt="xs">
+        <Stack gap="sm" pt="xs">
           <div className="read-aloud-player__section">
             <div className="read-aloud-player__row">
               <Text size="sm" fw={500}>
@@ -344,7 +348,7 @@ export function ReadAloudPlayer({
               max={2}
               step={0.1}
               label={(value) => `${value.toFixed(1)}×`}
-              size="sm"
+              size="xs"
               aria-label={t("readAloud.speed", "Speed")}
             />
           </div>
@@ -363,7 +367,7 @@ export function ReadAloudPlayer({
               placeholder={t("readAloud.chooseLanguage", "Choose a language")}
               searchable
               allowDeselect={false}
-              size="sm"
+              size="xs"
               comboboxProps={{ withinPortal: true }}
               disabled={languageOptions.length === 0}
             />
@@ -384,14 +388,14 @@ export function ReadAloudPlayer({
               placeholder={t("readAloud.chooseVoice", "Choose a voice")}
               searchable
               allowDeselect={false}
-              size="sm"
+              size="xs"
               comboboxProps={{ withinPortal: true }}
               disabled={voiceOptions.length === 0}
             />
           </div>
 
           <Switch
-            size="sm"
+            size="xs"
             label={t("readAloud.highlight", "Highlight the word being read")}
             checked={highlightEnabled}
             onChange={(event) =>
