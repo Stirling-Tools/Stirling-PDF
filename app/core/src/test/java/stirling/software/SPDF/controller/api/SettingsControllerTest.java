@@ -37,6 +37,8 @@ import stirling.software.common.util.GeneralUtils;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SettingsControllerTest {
 
+    private static final String DESKTOP_TOKEN = "desktop-test-token";
+
     @Mock private ApplicationProperties applicationProperties;
     @Mock private EndpointConfiguration endpointConfiguration;
     @Mock private ApplicationProperties.System system;
@@ -45,7 +47,9 @@ class SettingsControllerTest {
 
     @BeforeEach
     void setUp() {
-        settingsController = new SettingsController(applicationProperties, endpointConfiguration);
+        settingsController =
+                new SettingsController(
+                        applicationProperties, endpointConfiguration, DESKTOP_TOKEN);
     }
 
     @Nested
@@ -143,6 +147,81 @@ class SettingsControllerTest {
             }
 
             verify(system, never()).setEnableAnalytics(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("updateDesktopAnalytics")
+    class UpdateDesktopAnalytics {
+
+        @Test
+        @DisplayName("allows the desktop bundle to change an existing analytics choice")
+        void updatesInDesktopMode() throws Exception {
+            System.setProperty("STIRLING_PDF_TAURI_MODE", "true");
+            when(applicationProperties.getSystem()).thenReturn(system);
+
+            try (MockedStatic<GeneralUtils> generalUtils = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        settingsController.updateDesktopAnalytics(Boolean.FALSE, DESKTOP_TOKEN);
+
+                assertEquals(HttpStatus.OK, response.getStatusCode());
+                generalUtils.verify(
+                        () ->
+                                GeneralUtils.saveKeyToSettings(
+                                        "system.enableAnalytics", Boolean.FALSE));
+                verify(system).setEnableAnalytics(Boolean.FALSE);
+            } finally {
+                System.clearProperty("STIRLING_PDF_TAURI_MODE");
+            }
+        }
+
+        @Test
+        @DisplayName("rejects desktop changes without the caller token")
+        void rejectsMissingDesktopToken() throws Exception {
+            System.setProperty("STIRLING_PDF_TAURI_MODE", "true");
+
+            try (MockedStatic<GeneralUtils> generalUtils = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        settingsController.updateDesktopAnalytics(Boolean.FALSE, null);
+
+                assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+                generalUtils.verify(() -> GeneralUtils.saveKeyToSettings(any(), any()), never());
+                verify(applicationProperties, never()).getSystem();
+            } finally {
+                System.clearProperty("STIRLING_PDF_TAURI_MODE");
+            }
+        }
+
+        @Test
+        @DisplayName("rejects desktop changes with an invalid caller token")
+        void rejectsInvalidDesktopToken() throws Exception {
+            System.setProperty("STIRLING_PDF_TAURI_MODE", "true");
+
+            try (MockedStatic<GeneralUtils> generalUtils = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        settingsController.updateDesktopAnalytics(Boolean.FALSE, "invalid");
+
+                assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+                generalUtils.verify(() -> GeneralUtils.saveKeyToSettings(any(), any()), never());
+                verify(applicationProperties, never()).getSystem();
+            } finally {
+                System.clearProperty("STIRLING_PDF_TAURI_MODE");
+            }
+        }
+
+        @Test
+        @DisplayName("rejects changes outside the desktop bundle")
+        void rejectsOutsideDesktopMode() throws Exception {
+            System.clearProperty("STIRLING_PDF_TAURI_MODE");
+
+            try (MockedStatic<GeneralUtils> generalUtils = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        settingsController.updateDesktopAnalytics(Boolean.FALSE, DESKTOP_TOKEN);
+
+                assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+                generalUtils.verify(() -> GeneralUtils.saveKeyToSettings(any(), any()), never());
+                verify(applicationProperties, never()).getSystem();
+            }
         }
     }
 
