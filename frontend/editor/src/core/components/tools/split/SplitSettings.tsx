@@ -9,7 +9,6 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import type { ReactNode } from "react";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { SPLIT_METHODS } from "@app/constants/splitConstants";
@@ -23,8 +22,6 @@ export interface SplitSettingsProps {
     value: SplitParameters[K],
   ) => void;
   disabled?: boolean;
-  /** Goal-level method switch, rendered above the inputs when the goal has more than one. */
-  variantPicker?: ReactNode;
 }
 
 const PAPER_SIZES = ["A4", "Letter", "A3", "A5", "Legal", "Tabloid"] as const;
@@ -33,7 +30,6 @@ const SplitSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
-  variantPicker,
 }: SplitSettingsProps) => {
   const { t } = useTranslation();
 
@@ -372,7 +368,6 @@ const SplitSettings = ({
 
   return (
     <Stack gap="md">
-      {variantPicker}
       {parameters.method === SPLIT_METHODS.BY_PAGES && renderByPagesForm()}
       {parameters.method === SPLIT_METHODS.BY_SECTIONS &&
         renderBySectionsForm()}

@@ -122,7 +122,7 @@ test.describe("E2E PDF Operations", () => {
       await uploadFiles(page, [fixture("sample.pdf")]);
 
       // Pick the "at pages you choose" goal, then name the cut point.
-      await page.getByTestId("split-intent-pages").click();
+      await page.getByTestId("split-choice-byPages").click();
 
       const pagesInput = page.getByTestId("split-pages-input");
       await pagesInput.waitFor({ state: "visible", timeout: 10000 });

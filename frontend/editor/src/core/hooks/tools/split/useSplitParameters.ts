@@ -31,12 +31,14 @@ export interface SplitParameters extends BaseParameters {
 export type SplitParametersHook = BaseParametersHook<SplitParameters>;
 
 export const defaultParameters: SplitParameters = {
-  method: null,
+  // The screen opens on "equal parts": two files is the least surprising
+  // starting point and leaves the run one keystroke away.
+  method: SPLIT_METHODS.BY_DOC_COUNT,
   pages: "",
   hDiv: "2",
   vDiv: "2",
   merge: false,
-  splitValue: "",
+  splitValue: "2",
   bookmarkLevel: "1",
   includeMetadata: false,
   allowDuplicates: false,

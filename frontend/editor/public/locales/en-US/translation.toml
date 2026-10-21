@@ -12854,7 +12854,7 @@ label = "Vertical Divisions"
 selectMethodFirst = "Please select a split method first"
 
 [split.steps]
-chooseMethod = "Choose Method"
+chooseMethod = "How to split"
 settings = "Settings"
 
 [split.tooltip.byChapters]
@@ -12928,45 +12928,26 @@ placeholder = "e.g. 10MB, 500KB"
 label = "Pages per File"
 placeholder = "e.g. 5, 10"
 
-[split.intent]
-groupLabel = "Choose how to split"
-
-[split.intent.boundaries]
-description = "Bookmarks or divider sheets."
-title = "At document boundaries"
-
-[split.intent.pages]
-description = "Break where you name a page."
-title = "At pages you choose"
-
-[split.intent.parts]
-description = "Same size every time."
-title = "Into equal parts"
-
-[split.intent.pieces]
-description = "Cut pages into a grid or tiles."
-title = "Into printed pieces"
-
-[split.variant]
-chapters = "Bookmarks"
-divider = "Dividers"
-docCount = "Files"
-groupLabel = "Choose a way to split"
-pageCount = "Pages"
-pages = "Pages"
-poster = "Poster"
-sections = "Grid"
-size = "Size"
-
-[split.variantDescription]
-byChapters = "One file per bookmark at the level you pick. Needs a PDF with an outline."
-byDocCount = "Choose how many files you want; pages are spread as evenly as possible."
-byPageCount = "Choose how many pages each file should hold."
-byPages = "Each number cuts after that page. A range cuts after every page in it."
-byPageDivider = "Print divider sheets, put one between each document, then scan the stack."
-byPoster = "Tiles each page across sheets of the paper size you pick, ready to print and assemble."
-bySections = "Cuts the pages you choose into a grid of separate PDFs."
-bySize = "Keeps every file under a size you set; the splitter picks where to break."
+[split.choice]
+bookmarks = "By bookmarks"
+bookmarksHint = "One file per bookmark in the outline."
+chosenPages = "At pages I choose"
+chosenPagesHint = "Break where you name a page."
+dividers = "Divider sheets"
+dividersHint = "One file per divider sheet in a scan."
+equalParts = "Equal parts"
+equalPartsHint = "Same number of pages in every file."
+grid = "Grid sections"
+gridHint = "Cut each page into rows and columns."
+less = "Fewer ways"
+groupLabel = "How to split"
+maxSize = "Maximum file size"
+maxSizeHint = "Keep each file under a size you set."
+more = "More ways to split"
+pagesPerFile = "Pages per file"
+pagesPerFileHint = "Every file gets a fixed number of pages."
+poster = "Poster tiles"
+posterHint = "Tile each page across printable sheets."
 
 [split.byPages]
 description = "Each number cuts after that page. A range cuts after every page in it."

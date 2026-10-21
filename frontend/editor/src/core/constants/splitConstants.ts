@@ -82,81 +82,80 @@ export const METHOD_OPTIONS: MethodOption[] = [
   },
 ];
 
-export type SplitIntentId = "pages" | "parts" | "boundaries" | "pieces";
-
 /**
- * One goal the user can have, with the methods that serve it. The picker shows
- * goals rather than techniques; the goal's methods become a variant switch in
- * the settings step.
+ * The choices the split screen shows. Three cover the common jobs; the rest
+ * are one disclosure away rather than competing for attention on arrival.
  */
-export interface SplitIntent {
-  id: SplitIntentId;
+export interface SplitChoice {
+  method: SplitMethod;
   icon: IconName;
-  titleKey: string;
-  /** One sentence: what the user gets. Shown under the title on the card. */
+  labelKey: string;
+  /** One line: what the user gets, not how it works. */
   descriptionKey: string;
-  /** Methods this goal can be achieved with; the first is the default. */
-  methods: SplitMethod[];
-  /** Short variant-switch label per method, kept to one word at rail width. */
-  variantLabelKeys: Partial<Record<SplitMethod, string>>;
 }
 
-export const SPLIT_INTENTS: SplitIntent[] = [
+export const PRIMARY_SPLIT_CHOICES: SplitChoice[] = [
   {
-    id: "pages",
+    method: SPLIT_METHODS.BY_DOC_COUNT,
+    icon: "columns-2",
+    labelKey: "split.choice.equalParts",
+    descriptionKey: "split.choice.equalPartsHint",
+  },
+  {
+    method: SPLIT_METHODS.BY_PAGES,
     icon: "scissors",
-    titleKey: "split.intent.pages.title",
-    descriptionKey: "split.intent.pages.description",
-    methods: [SPLIT_METHODS.BY_PAGES],
-    variantLabelKeys: {
-      [SPLIT_METHODS.BY_PAGES]: "split.variant.pages",
-    },
+    labelKey: "split.choice.chosenPages",
+    descriptionKey: "split.choice.chosenPagesHint",
   },
   {
-    id: "parts",
-    icon: "layers",
-    titleKey: "split.intent.parts.title",
-    descriptionKey: "split.intent.parts.description",
-    methods: [
-      SPLIT_METHODS.BY_PAGE_COUNT,
-      SPLIT_METHODS.BY_DOC_COUNT,
-      SPLIT_METHODS.BY_SIZE,
-    ],
-    variantLabelKeys: {
-      [SPLIT_METHODS.BY_PAGE_COUNT]: "split.variant.pageCount",
-      [SPLIT_METHODS.BY_DOC_COUNT]: "split.variant.docCount",
-      [SPLIT_METHODS.BY_SIZE]: "split.variant.size",
-    },
-  },
-  {
-    id: "boundaries",
+    method: SPLIT_METHODS.BY_CHAPTERS,
     icon: "bookmark",
-    titleKey: "split.intent.boundaries.title",
-    descriptionKey: "split.intent.boundaries.description",
-    methods: [SPLIT_METHODS.BY_CHAPTERS, SPLIT_METHODS.BY_PAGE_DIVIDER],
-    variantLabelKeys: {
-      [SPLIT_METHODS.BY_CHAPTERS]: "split.variant.chapters",
-      [SPLIT_METHODS.BY_PAGE_DIVIDER]: "split.variant.divider",
-    },
-  },
-  {
-    id: "pieces",
-    icon: "layout-grid",
-    titleKey: "split.intent.pieces.title",
-    descriptionKey: "split.intent.pieces.description",
-    methods: [SPLIT_METHODS.BY_SECTIONS, SPLIT_METHODS.BY_POSTER],
-    variantLabelKeys: {
-      [SPLIT_METHODS.BY_SECTIONS]: "split.variant.sections",
-      [SPLIT_METHODS.BY_POSTER]: "split.variant.poster",
-    },
+    labelKey: "split.choice.bookmarks",
+    descriptionKey: "split.choice.bookmarksHint",
   },
 ];
 
-export function intentForMethod(
+export const MORE_SPLIT_CHOICES: SplitChoice[] = [
+  {
+    method: SPLIT_METHODS.BY_PAGE_COUNT,
+    icon: "files",
+    labelKey: "split.choice.pagesPerFile",
+    descriptionKey: "split.choice.pagesPerFileHint",
+  },
+  {
+    method: SPLIT_METHODS.BY_SIZE,
+    icon: "gauge",
+    labelKey: "split.choice.maxSize",
+    descriptionKey: "split.choice.maxSizeHint",
+  },
+  {
+    method: SPLIT_METHODS.BY_SECTIONS,
+    icon: "layout-grid",
+    labelKey: "split.choice.grid",
+    descriptionKey: "split.choice.gridHint",
+  },
+  {
+    method: SPLIT_METHODS.BY_POSTER,
+    icon: "printer",
+    labelKey: "split.choice.poster",
+    descriptionKey: "split.choice.posterHint",
+  },
+  {
+    method: SPLIT_METHODS.BY_PAGE_DIVIDER,
+    icon: "scan-line",
+    labelKey: "split.choice.dividers",
+    descriptionKey: "split.choice.dividersHint",
+  },
+];
+
+export const ALL_SPLIT_CHOICES = [
+  ...PRIMARY_SPLIT_CHOICES,
+  ...MORE_SPLIT_CHOICES,
+];
+
+export function choiceForMethod(
   method: SplitMethod | null,
-): SplitIntent | null {
+): SplitChoice | null {
   if (!method) return null;
-  return (
-    SPLIT_INTENTS.find((intent) => intent.methods.includes(method)) ?? null
-  );
+  return ALL_SPLIT_CHOICES.find((choice) => choice.method === method) ?? null;
 }
