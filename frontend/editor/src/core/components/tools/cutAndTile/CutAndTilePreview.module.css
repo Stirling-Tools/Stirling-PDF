@@ -1,0 +1,48 @@
+.figure {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-sunken);
+}
+
+.page {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.sheet {
+  fill: var(--c-surface-raised);
+  stroke: var(--c-border-strong);
+  stroke-width: 0.8;
+}
+
+.cell {
+  fill: none;
+  stroke: var(--c-primary);
+  stroke-width: 0.6;
+  opacity: 0.55;
+}
+
+.cellLabel {
+  fill: var(--c-text-muted);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.caption {
+  color: var(--c-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .figure {
+    transition: none;
+  }
+}

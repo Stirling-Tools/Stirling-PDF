@@ -1,5 +1,5 @@
 import { Radio, Stack } from "@mantine/core";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
@@ -30,6 +30,7 @@ export function SplitMethodPicker({
   const inMore = more.some((choice) => choice.method === value);
   const [moreOpen, setMoreOpen] = useState(false);
   const showMore = moreOpen || inMore;
+  const moreId = useId();
 
   const renderChoice = (choice: SplitChoice) => (
     <ChoiceRow
@@ -52,7 +53,11 @@ export function SplitMethodPicker({
       >
         <Stack gap={2}>
           {primary.map(renderChoice)}
-          {showMore && more.map(renderChoice)}
+          {showMore && (
+            <div id={moreId} className={classes.moreGroup}>
+              {more.map(renderChoice)}
+            </div>
+          )}
         </Stack>
       </Radio.Group>
 
@@ -64,6 +69,8 @@ export function SplitMethodPicker({
           size="sm"
           className={classes.more}
           onClick={() => setMoreOpen(!showMore)}
+          aria-expanded={showMore}
+          aria-controls={showMore ? moreId : undefined}
           rightSection={
             <Icon
               name={showMore ? "chevron-up" : "chevron-down"}

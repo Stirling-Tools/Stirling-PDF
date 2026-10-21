@@ -12775,7 +12775,10 @@ x-large = "X-Large"
 
 [cutAndTile]
 resultsTitle = "Cut & tile results"
-submit = "Cut & tile"
+
+[cutAndTile.submit]
+grid = "Cut pages"
+poster = "Create poster PDF"
 
 [cutAndTile.error]
 failed = "Could not cut the pages."
@@ -12784,20 +12787,21 @@ failed = "Could not cut the pages."
 how = "How to cut"
 
 [cutAndTile.mode]
-grid = "Grid sections"
+grid = "Cut into a grid"
 gridHint = "Cut each page into rows and columns."
 groupLabel = "How to cut"
-poster = "Poster tiles"
-posterHint = "Tile each page across printable sheets."
+poster = "Create poster tiles"
+posterHint = "Print each page across several sheets."
 
 [cutAndTile.grid]
-assemble = "Reassemble into one PDF"
-assembleHint = "Cut pages become their pieces; everything else keeps its page."
+assemble = "Keep all pieces in one PDF"
+assembleHint = "The pieces and the untouched pages become pages of one file."
 columns = "Columns"
 customPages = "Page numbers"
 customPagesPlaceholder = "2, 4, 6-8"
 pages = "Pages to cut"
-pagesHint = "Other pages stay whole, one file each."
+pagesHint = "Unselected pages stay whole, each in its own PDF."
+pagesHintAssembled = "Unselected pages stay whole inside the same PDF."
 rows = "Rows"
 
 [cutAndTile.pages]
@@ -12823,19 +12827,31 @@ legal = "Legal"
 letter = "Letter"
 tabloid = "Tabloid"
 
+[cutAndTile.preview]
+gridCaption = "{{count}} pieces per page. Numbers follow the order the pieces are written: down each column, starting top left."
+posterCaption = "{{count}} tiles per page, in reading order. Each tile is scaled to {{size}} and centred, so margins can be blank."
+
 [cutAndTile.outcome]
-assembled = "One PDF"
-assembledHint = "Reassembled: each cut page becomes {{rows}} × {{columns}} pieces."
+assembledHint = "Each cut page becomes {{rows}} × {{columns}} pages; the rest stay whole."
 badPages = "Check the page numbers"
 badPagesHint = "Use pages that exist in this document, like 2, 4, 6-8."
+badSize = "Check the paper size"
+badSizeHint = "Pick one of the sizes this server accepts."
 badValues = "Check the numbers"
 badValuesHint = "Rows and columns are whole numbers, one or more."
 everyPage = "Every page → {{pieces}} pieces ({{rows}} × {{columns}})."
 files_one = "{{count}} file"
 files_other = "{{count}} files"
+largeJob = "This writes {{pages}} pages, which can take a while."
 noneCut = "No page matches, so nothing is cut."
-posterHint = "Each page → {{pieces}} tiles ({{rows}} × {{columns}}) at {{size}}."
+onePdf = "One PDF"
+pages_one = "{{count}} page"
+pages_other = "{{count}} pages"
+posterHint = "Each page → {{pieces}} tiles ({{rows}} × {{columns}}) scaled to {{size}}."
 somePages = "{{cut}} of {{total}} pages → {{pieces}} pieces each; the rest stay whole."
+unknown = "Reading the page count…"
+unknownGrid = "Each page → {{pieces}} pieces ({{rows}} × {{columns}})"
+unknownPoster = "Each page → {{pieces}} poster pages"
 
 [split]
 resultsTitle = "Split Results"

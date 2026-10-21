@@ -9,10 +9,13 @@ import {
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { SPLIT_MODE_OPTIONS } from "@app/components/tools/cutAndTile/cutAndTileConstants";
-import type { CutAndTileParameters } from "@app/hooks/tools/cutAndTile/useCutAndTileParameters";
+import {
+  MAX_GRID_DIVISIONS,
+  MAX_POSTER_DIVISIONS,
+  PAPER_SIZES,
+  type CutAndTileParameters,
+} from "@app/hooks/tools/cutAndTile/useCutAndTileParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
-
-const PAPER_SIZES = ["A4", "Letter", "A3", "A5", "Legal", "Tabloid"] as const;
 
 export interface CutAndTileSettingsProps {
   parameters: CutAndTileParameters;
@@ -63,7 +66,7 @@ const CutAndTileSettings = ({
               onParameterChange("tileColumns", toText(value))
             }
             min={1}
-            max={10}
+            max={MAX_POSTER_DIVISIONS}
             allowDecimal={false}
             clampBehavior="strict"
             disabled={disabled}
@@ -74,7 +77,7 @@ const CutAndTileSettings = ({
             value={parameters.tileRows}
             onChange={(value) => onParameterChange("tileRows", toText(value))}
             min={1}
-            max={10}
+            max={MAX_POSTER_DIVISIONS}
             allowDecimal={false}
             clampBehavior="strict"
             disabled={disabled}
@@ -105,7 +108,7 @@ const CutAndTileSettings = ({
           value={parameters.rows}
           onChange={(value) => onParameterChange("rows", toText(value))}
           min={1}
-          max={100}
+          max={MAX_GRID_DIVISIONS}
           allowDecimal={false}
           clampBehavior="strict"
           disabled={disabled}
@@ -116,7 +119,7 @@ const CutAndTileSettings = ({
           value={parameters.columns}
           onChange={(value) => onParameterChange("columns", toText(value))}
           min={1}
-          max={100}
+          max={MAX_GRID_DIVISIONS}
           allowDecimal={false}
           clampBehavior="strict"
           disabled={disabled}
@@ -126,10 +129,17 @@ const CutAndTileSettings = ({
 
       <Select
         label={t("cutAndTile.grid.pages", "Pages to cut")}
-        description={t(
-          "cutAndTile.grid.pagesHint",
-          "Other pages stay whole, one file each.",
-        )}
+        description={
+          parameters.assemble
+            ? t(
+                "cutAndTile.grid.pagesHintAssembled",
+                "Unselected pages stay whole inside the same PDF.",
+              )
+            : t(
+                "cutAndTile.grid.pagesHint",
+                "Unselected pages stay whole, each in its own PDF.",
+              )
+        }
         value={parameters.cutPages}
         onChange={(value) =>
           onParameterChange(
@@ -161,10 +171,10 @@ const CutAndTileSettings = ({
       )}
 
       <Switch
-        label={t("cutAndTile.grid.assemble", "Reassemble into one PDF")}
+        label={t("cutAndTile.grid.assemble", "Keep all pieces in one PDF")}
         description={t(
           "cutAndTile.grid.assembleHint",
-          "Cut pages become their pieces; everything else keeps its page.",
+          "The pieces and the untouched pages become pages of one file.",
         )}
         checked={parameters.assemble}
         onChange={(e) => onParameterChange("assemble", e.currentTarget.checked)}

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { ChoiceRow } from "@app/components/shared/ChoiceRow";
 import CutAndTileSettings from "@app/components/tools/cutAndTile/CutAndTileSettings";
+import { CutAndTilePreview } from "@app/components/tools/cutAndTile/CutAndTilePreview";
 import {
   CutAndTileSummary,
   cutAndTileBlocksRun,
@@ -83,13 +84,18 @@ const CutAndTile = (props: BaseToolProps) => {
               disabled={base.endpointLoading}
             />
 
+            <CutAndTilePreview parameters={parameters} />
+
             <CutAndTileSummary outcome={outcome} />
           </Stack>
         ),
       },
     ],
     executeButton: {
-      text: t("cutAndTile.submit", "Cut & tile"),
+      text:
+        parameters.mode === "grid"
+          ? t("cutAndTile.submit.grid", "Cut pages")
+          : t("cutAndTile.submit.poster", "Create poster PDF"),
       loadingText: t("loading"),
       onClick: base.handleExecute,
       isVisible: !base.hasResults,

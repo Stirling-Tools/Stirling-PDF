@@ -7,14 +7,18 @@ export type PageSelection =
  * Parses `1,3,5-9` / `all` into the 1-based pages it names. Ranges include both
  * ends. Anything else — the `2n+1` expressions the API accepts — is reported as
  * unparseable rather than guessed at.
+ *
+ * `totalPages` is null while the document's page count is still unknown: the
+ * selection is then checked for syntax only, so bounds are not invented.
  */
 export function parsePageSelection(
   input: string,
-  totalPages: number,
+  totalPages: number | null,
 ): PageSelection {
   const text = input.trim();
   if (!text) return { ok: false, reason: "empty" };
   if (/^all$/i.test(text)) {
+    if (totalPages === null) return { ok: true, pages: [] };
     return { ok: true, pages: range(1, totalPages) };
   }
 
@@ -30,7 +34,7 @@ export function parsePageSelection(
       if (from < 1 || to < from) {
         return { ok: false, reason: "token", value: token };
       }
-      if (to > totalPages) {
+      if (to > (totalPages ?? Number.POSITIVE_INFINITY)) {
         return { ok: false, reason: "out-of-range", value: token };
       }
       for (const page of range(from, to)) pages.add(page);
@@ -42,7 +46,7 @@ export function parsePageSelection(
     }
     const page = Number(token);
     if (page < 1) return { ok: false, reason: "token", value: token };
-    if (page > totalPages) {
+    if (page > (totalPages ?? Number.POSITIVE_INFINITY)) {
       return { ok: false, reason: "out-of-range", value: token };
     }
     pages.add(page);

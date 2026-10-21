@@ -4,3 +4,8 @@
   padding: 0.25rem 0.5rem;
   color: var(--c-text-muted);
 }
+
+.moreGroup {
+  display: grid;
+  gap: 2px;
+}

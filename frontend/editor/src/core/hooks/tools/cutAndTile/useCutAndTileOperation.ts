@@ -37,13 +37,18 @@ const SPLIT_MODE: Record<Exclude<CutPagesScope, "custom">, string> = {
   exceptFirstAndLast: "SPLIT_ALL_EXCEPT_FIRST_AND_LAST",
 };
 
+/**
+ * The section endpoint names its axes by the dimension it divides: `horiz` is
+ * the divisor of the page width, so horizontal divisions are columns. Feeding
+ * rows there transposes an asymmetric grid while keeping the piece count.
+ */
 export const cutAndTileToApiParams = (
   parameters: CutAndTileParameters,
 ): CutAndTileApiParams => {
   if (parameters.mode === "grid") {
     const sections: SectionsApiParams = {
-      horizontalDivisions: Number(parameters.rows) - 1,
-      verticalDivisions: Number(parameters.columns) - 1,
+      horizontalDivisions: Number(parameters.columns) - 1,
+      verticalDivisions: Number(parameters.rows) - 1,
       merge: parameters.assemble,
       splitMode: (parameters.cutPages === "custom"
         ? "CUSTOM"
@@ -64,13 +69,24 @@ export const cutAndTileToApiParams = (
   return poster;
 };
 
+/**
+ * Poster is identified by its tile factors, not by `pageSize`: a stored step
+ * can carry only the factors, and a grid step never carries either.
+ */
+const isPosterApiParams = (
+  apiParams: Partial<CutAndTileApiParams>,
+): apiParams is Partial<PosterApiParams> =>
+  "xFactor" in apiParams ||
+  "yFactor" in apiParams ||
+  "pageSize" in apiParams;
+
 export const cutAndTileFromApiParams = (
-  apiParams: CutAndTileApiParams,
+  apiParams: Partial<CutAndTileApiParams>,
 ): Partial<CutAndTileParameters> => {
-  if ("pageSize" in apiParams) {
+  if (isPosterApiParams(apiParams)) {
     return {
       mode: "poster",
-      pageSize: apiParams.pageSize,
+      pageSize: apiParams.pageSize ?? defaultParameters.pageSize,
       tileColumns:
         apiParams.xFactor !== undefined ? `${apiParams.xFactor}` : undefined,
       tileRows:
@@ -92,12 +108,12 @@ export const cutAndTileFromApiParams = (
   return {
     mode: "grid",
     rows:
-      apiParams.horizontalDivisions !== undefined
-        ? `${apiParams.horizontalDivisions + 1}`
-        : undefined,
-    columns:
       apiParams.verticalDivisions !== undefined
         ? `${apiParams.verticalDivisions + 1}`
+        : undefined,
+    columns:
+      apiParams.horizontalDivisions !== undefined
+        ? `${apiParams.horizontalDivisions + 1}`
         : undefined,
     assemble: apiParams.merge ?? false,
     cutPages: scope,
