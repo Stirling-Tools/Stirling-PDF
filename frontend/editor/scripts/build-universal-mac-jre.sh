@@ -50,7 +50,7 @@ run_jlink() {
   local out="$2"
   local compress
   if "$java_home/bin/jlink" --help 2>&1 | grep -q 'zip-\[0-9\]'; then
-    compress="zip-6"
+    compress="zip-9"
   else
     compress="2"
   fi
@@ -123,3 +123,6 @@ if [[ "$java_archs" != *arm64* || "$java_archs" != *x86_64* ]]; then
   lipo -info "$OUTPUT_DIR/bin/java" >&2
   exit 1
 fi
+
+# Match .taskfiles/desktop.yml: Tauri copies resources while preserving modes.
+chmod -R u+w "$OUTPUT_DIR"

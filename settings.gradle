@@ -85,9 +85,14 @@ if (enableSaas && disableAdditional) {
 
 // Desktop bundles a local, single-user backend: API documentation and its
 // runtime dependency tree are dead weight there.
-boolean desktopBundle =
-        asBool(lookupEnvOrProperty('STIRLING_DESKTOP_BUNDLE')) ||
-        asBool(lookupEnvOrProperty('DESKTOP_BUNDLE'))
+boolean desktopBundle = asBool(lookupEnvOrProperty('STIRLING_DESKTOP_BUNDLE'))
+
+if (desktopBundle && (!disableAdditional || enableSaas)) {
+    throw new GradleException(
+        "STIRLING_DESKTOP_BUNDLE=true is only valid for the core flavor: " +
+        "it replaces Bouncy Castle with the LTS line, which is incompatible with " +
+        "the proprietary modules and their jdk18on dependencies.")
+}
 
 gradle.ext.disableAdditional = disableAdditional
 gradle.ext.enableSaas = enableSaas

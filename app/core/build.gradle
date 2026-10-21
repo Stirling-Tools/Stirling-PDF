@@ -168,6 +168,15 @@ sourceSets {
 }
 
 
+if (gradle.ext.desktopBundle) {
+    configurations.configureEach {
+        // veraPDF's XML reporting pulls Jackson 2; the app uses Jackson 3.
+        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+        exclude group: 'org.springframework.boot', module: 'spring-boot-jarmode-tools'
+    }
+}
+
 // Disable regular jar
 jar {
     enabled = false
@@ -183,6 +192,11 @@ bootJar {
     // from {
     //     configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     // }
+
+    // Desktop bundles never run the tools jarmode; the loader jar is pure weight there.
+    if (gradle.ext.desktopBundle) {
+        exclude '**/spring-boot-jarmode-tools-*.jar'
+    }
 
     // Exclude signature files to prevent "Invalid signature file digest" errors
     exclude 'META-INF/*.SF'
@@ -200,6 +214,9 @@ bootJar {
     eachFile { details ->
         String path = details.path
         if (path.endsWith('.gz')) {
+            details.exclude()
+        }
+        if (gradle.ext.desktopBundle && path.contains('spring-boot-jarmode-tools')) {
             details.exclude()
         }
         // Safety net for direct builds that did not run the Vite pack splitter.
@@ -428,6 +445,19 @@ tasks.register('optionalAssets', Zip) {
     from(new File(frontendEditorDir, 'dist-pack'))
     archiveFileName = 'stirling-pdf-optional-assets.zip'
     destinationDirectory = layout.buildDirectory.dir('distributions')
+    doFirst {
+        def readme = new File(frontendEditorDir, 'dist-pack/README.txt')
+        if (!readme.exists()) {
+            throw new GradleException(
+                    "Missing ${readme}. The Vite build did not split optional assets; " +
+                    "run the Gradle npmBuild task instead of invoking Vite directly.")
+        }
+        def distIndex = new File(frontendEditorDistDir, 'index.html')
+        if (distIndex.exists() && readme.lastModified() < distIndex.lastModified()) {
+            throw new GradleException(
+                    "Stale ${readme}. Re-run the Gradle npmBuild task before packaging optional assets.")
+        }
+    }
 }
 
 tasks.register('copyBackendOnlySamples', Copy) {
