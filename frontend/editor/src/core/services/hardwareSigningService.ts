@@ -1,9 +1,9 @@
 import apiClient from "@app/services/apiClient";
 
-/** A signing certificate held on a hardware source (Windows store or PKCS#11 token). */
+/** A signing certificate held on a hardware source (Windows store, macOS Keychain or PKCS#11 token). */
 export interface HardwareCertificateInfo {
   alias: string;
-  source: "WINDOWS_STORE" | "PKCS11";
+  source: "WINDOWS_STORE" | "PKCS11" | "MACOS_KEYCHAIN";
   subject: string;
   issuer: string;
   subjectCommonName: string;
@@ -26,6 +26,7 @@ export interface HardwareSigningCapabilities {
   osName: string;
   windowsStoreSupported: boolean;
   pkcs11Supported: boolean;
+  macosKeychainSupported: boolean;
   detectedLibraries: Pkcs11LibraryInfo[];
 }
 
