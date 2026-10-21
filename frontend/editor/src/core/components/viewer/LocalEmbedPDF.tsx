@@ -121,6 +121,7 @@ import { useFontFallbackConfig } from "@app/hooks/useFontFallbackConfig";
 import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
 import { FormCreationInteractionLock } from "@app/tools/formFill/FormCreationInteractionLock";
+import { MeasureInteractionLock } from "@app/tools/measure/MeasureInteractionLock";
 import { FormFieldCreationOverlay } from "@app/tools/formFill/FormFieldCreationOverlay";
 import { FormFieldEditOverlay } from "@app/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
@@ -1547,6 +1548,7 @@ export function LocalEmbedPDF({
           <ScrollAPIBridge />
           <SelectionAPIBridge />
           <FormCreationInteractionLock />
+          <MeasureInteractionLock />
           <PanAPIBridge />
           <SpreadAPIBridge />
           <SearchAPIBridge />

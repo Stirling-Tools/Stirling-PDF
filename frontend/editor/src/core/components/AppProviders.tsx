@@ -33,6 +33,7 @@ import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import AppConfigLoader from "@app/components/shared/AppConfigLoader";
 import { UpdateStartupPopup } from "@app/components/shared/UpdateStartupPopup";
 import { RedactionProvider } from "@app/contexts/RedactionContext";
+import { MeasurementProvider } from "@app/contexts/MeasurementContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
 import { WorkbenchSessionPersistence } from "@app/components/session/WorkbenchSessionPersistence";
@@ -144,18 +145,20 @@ export function AppProviders({
                                   <SignatureProvider>
                                     <SigningOverlayProvider>
                                       <RedactionProvider>
-                                        <FormFillProvider>
-                                          <AnnotationProvider>
-                                            <WorkbenchBarProvider>
-                                              <TourOrchestrationProvider>
-                                                <AdminTourOrchestrationProvider>
-                                                  <WorkbenchSessionPersistence />
-                                                  {children}
-                                                </AdminTourOrchestrationProvider>
-                                              </TourOrchestrationProvider>
-                                            </WorkbenchBarProvider>
-                                          </AnnotationProvider>
-                                        </FormFillProvider>
+                                        <MeasurementProvider>
+                                          <FormFillProvider>
+                                            <AnnotationProvider>
+                                              <WorkbenchBarProvider>
+                                                <TourOrchestrationProvider>
+                                                  <AdminTourOrchestrationProvider>
+                                                    <WorkbenchSessionPersistence />
+                                                    {children}
+                                                  </AdminTourOrchestrationProvider>
+                                                </TourOrchestrationProvider>
+                                              </WorkbenchBarProvider>
+                                            </AnnotationProvider>
+                                          </FormFillProvider>
+                                        </MeasurementProvider>
                                       </RedactionProvider>
                                     </SigningOverlayProvider>
                                   </SignatureProvider>

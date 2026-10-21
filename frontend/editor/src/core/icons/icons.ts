@@ -216,6 +216,7 @@ import Pause from "lucide-static/icons/pause.svg?react";
 import PenTool from "lucide-static/icons/pen-tool.svg?react";
 import Pencil from "lucide-static/icons/pencil.svg?react";
 import PencilRuler from "lucide-static/icons/pencil-ruler.svg?react";
+import Pentagon from "lucide-static/icons/pentagon.svg?react";
 import Percent from "lucide-static/icons/percent.svg?react";
 import Phone from "lucide-static/icons/phone.svg?react";
 import PictureInPicture from "lucide-static/icons/picture-in-picture.svg?react";
@@ -644,6 +645,7 @@ export const ICONS = {
   "pen-tool": { Component: PenTool, kind: "lucide" },
   pencil: { Component: Pencil, kind: "lucide" },
   "pencil-ruler": { Component: PencilRuler, kind: "lucide" },
+  pentagon: { Component: Pentagon, kind: "lucide" },
   percent: { Component: Percent, kind: "lucide" },
   phone: { Component: Phone, kind: "lucide" },
   "picture-in-picture": { Component: PictureInPicture, kind: "lucide" },

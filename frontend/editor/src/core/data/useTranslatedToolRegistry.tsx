@@ -373,6 +373,21 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "builder",
         ],
       },
+      measure: {
+        icon: <Icon name="ruler" size="1.5rem" />,
+        name: t("home.measure.title", "Measure"),
+        component: lazy(() => import("@app/tools/measure/Measure")),
+        description: t(
+          "home.measure.desc",
+          "Measure distances, perimeters and areas on drawings, with scales and calibration",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: "viewer" as const,
+        automationSettings: null,
+        supportsAutomate: false,
+        synonyms: getSynonyms(t, "measure"),
+      },
       autoFormDetection: {
         icon: <Icon name="form-scan" size="1.5rem" />,
         name: t("home.autoFormDetection.title", "Auto Form Detection"),

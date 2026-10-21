@@ -2,9 +2,11 @@ import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   restorePosition,
   transformPosition,
@@ -13,60 +15,55 @@ import {
   type Size,
 } from "@embedpdf/models";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useMeasurements } from "@app/contexts/MeasurementContext";
+import { useViewerIsPanning } from "@app/components/viewer/useViewerIsPanning";
 import type {
+  MeasurementKind,
   MeasureScale,
-  Measurement,
-  PageMeasureScales,
   PagePoint,
 } from "@app/utils/measurementTypes";
-import { validateMeasurement } from "@app/utils/measurementUtils";
-import type { ScaleCalibrationMeasurement } from "@app/components/viewer/ScaleCalibrationDialog";
+import {
+  MEASUREMENT_COLORS,
+  formatArea,
+  formatLength,
+  formatMeasurementValue,
+  formatPaperDistance,
+  generateScaleLabel,
+  minPointsFor,
+  pathLength,
+  polygonArea,
+  segmentLength,
+} from "@app/utils/measurementUtils";
+import {
+  describeMeasurement,
+  viewAngle,
+} from "@app/utils/measurementDescription";
+import {
+  measurementEdges,
+  snapPoint,
+  type SnapGuide,
+  type SnapResult,
+} from "@app/utils/measurementSnapping";
 import {
   RulerMeasurementLayer,
-  type RulerLabelVisibilityMode,
+  type RulerDraft,
   type RulerRenderedMeasurement,
 } from "@app/components/viewer/RulerMeasurementLayer";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Point {
   x: number;
   y: number;
 }
 
-let rulerMeasurementIdCounter = 0;
-
-function createRulerMeasurementId(): string {
-  rulerMeasurementIdCounter += 1;
-  return `ruler-${Date.now().toString(36)}-${rulerMeasurementIdCounter.toString(36)}`;
-}
-
-export interface RulerOverlayHandle {
-  clearAll: (silent?: boolean) => void;
-  getMeasurements: () => Measurement[];
-  setMeasurements: (measurements: Measurement[]) => void;
-  /** Restore measurements without triggering notification */
-  restoreMeasurements: (measurements: Measurement[]) => void;
-  /** Register a callback to be notified when measurements change from user actions */
-  onMeasurementsChange: (
-    callback: (measurements: Measurement[]) => void,
-  ) => () => void;
-}
-
 interface RulerOverlayProps {
   containerRef: React.RefObject<HTMLElement | null>;
-  isActive: boolean;
-  pageMeasureScales?: PageMeasureScales | null;
-  customScale?: MeasureScale | null;
-  isCalibrationActive?: boolean;
-  onCalibrationMeasure?: (measurement: ScaleCalibrationMeasurement) => void;
 }
 
-// ─── Math ─────────────────────────────────────────────────────────────────────
-
-function dist(a: Point, b: Point): number {
-  return Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
-}
+/** Screen distance within which clicking the first corner closes an area. */
+const CLOSE_PX = 10;
+/** Pointer travel that turns a press on a handle into a drag rather than a click. */
+const DRAG_START_PX = 3;
+const CALIBRATION_COLOR = MEASUREMENT_COLORS[3];
 
 function normalizeRotation(rotation: number | null | undefined): Rotation {
   const value =
@@ -154,55 +151,6 @@ function pagePointToDisplayPoint(
   const pageSize = getPageNaturalSize(pageEl, pageRect, safeZoom, rotation);
   return transformPosition(pageSize, point, rotation, safeZoom);
 }
-
-/**
- * Given the start/end PagePoints of a measurement, find the scale from the
- * custom scale, then the viewport whose BBox contains the midpoint, then the
- * first whole-page viewport with bbox=null.
- */
-function pickScale(
-  start: PagePoint,
-  end: PagePoint,
-  pageMeasureScales: PageMeasureScales | null | undefined,
-  customScale?: MeasureScale | null,
-): MeasureScale | null {
-  // Cross-page measurements are meaningless — reject regardless of scale source
-  if (start.pageIndex !== end.pageIndex) return null;
-
-  // Priority 1: Use custom scale if provided
-  if (customScale) return customScale;
-
-  if (!pageMeasureScales) return null;
-  const info = pageMeasureScales.get(start.pageIndex);
-  if (!info?.viewports.length) return null;
-
-  // Midpoint in screen-space page coords (x left→right, y top→bottom, PDF points)
-  const mx = (start.x + end.x) / 2;
-  // Flip y: screen y=0 is page top; PDF user space y=0 is page bottom
-  const my = info.pageHeight - (start.y + end.y) / 2;
-
-  let fallbackScale: MeasureScale | null = null;
-
-  for (const { bbox, scale } of info.viewports) {
-    if (!bbox) {
-      fallbackScale ??= scale;
-      continue;
-    }
-
-    const [x0, y0, x1, y1] = bbox;
-    if (
-      mx >= Math.min(x0, x1) &&
-      mx <= Math.max(x0, x1) &&
-      my >= Math.min(y0, y1) &&
-      my <= Math.max(y0, y1)
-    ) {
-      return scale;
-    }
-  }
-  return fallbackScale;
-}
-
-// ─── DOM helpers ──────────────────────────────────────────────────────────────
 
 function findScrollEl(root: HTMLElement): HTMLElement | null {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
@@ -298,123 +246,165 @@ function nearestPageDocPt(
   };
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+/**
+ * Page point → SVG coordinate projector for one render. Caches each page's
+ * element, rect and size and the container rect, so projecting many points
+ * costs one layout read per page rather than one per point.
+ */
+function createScreenProjector(
+  container: HTMLElement | null,
+  zoom: number,
+  documentRotation: Rotation,
+): (pt: PagePoint) => Point | null {
+  if (!container) return () => null;
+  const containerRect = container.getBoundingClientRect();
+  const pages = new Map<
+    number,
+    { pageEl: HTMLElement; pageRect: DOMRect; rotation: Rotation } | null
+  >();
+  const pageFor = (pageIndex: number) => {
+    if (!pages.has(pageIndex)) {
+      const pageEl = container.querySelector(
+        `[data-page-index="${pageIndex}"]`,
+      ) as HTMLElement | null;
+      pages.set(
+        pageIndex,
+        pageEl
+          ? {
+              pageEl,
+              pageRect: pageEl.getBoundingClientRect(),
+              rotation: getEffectivePageRotation(pageEl, documentRotation),
+            }
+          : null,
+      );
+    }
+    return pages.get(pageIndex) ?? null;
+  };
+  return (pt) => {
+    const page = pageFor(pt.pageIndex);
+    if (!page) return null;
+    const display = pagePointToDisplayPoint(
+      page.pageEl,
+      page.pageRect,
+      pt,
+      zoom,
+      page.rotation,
+    );
+    return {
+      x: page.pageRect.left - containerRect.left + display.x,
+      y: page.pageRect.top - containerRect.top + display.y,
+    };
+  };
+}
 
-export const RulerOverlay = React.forwardRef<
-  RulerOverlayHandle,
-  RulerOverlayProps
->(function RulerOverlayImpl(
-  {
-    containerRef,
-    isActive,
-    pageMeasureScales,
-    customScale,
-    isCalibrationActive = false,
-    onCalibrationMeasure,
-  }: RulerOverlayProps,
-  ref,
-) {
-  const [measurements, setMeasurements] = useState<Measurement[]>([]);
-  const [firstPt, setFirstPt] = useState<PagePoint | null>(null);
-  /** Current cursor in SVG screen-space — for live crosshair and live line rendering. */
+interface SnapModifiers {
+  shiftKey: boolean;
+  ctrlKey: boolean;
+  metaKey: boolean;
+}
+
+interface VertexDrag {
+  id: string;
+  index: number;
+  kind: MeasurementKind;
+  points: PagePoint[];
+  moved: boolean;
+}
+
+/**
+ * Draws the shared measurements over the viewer's pages. While the Measure
+ * tool is open (and pan mode is off) it also creates measurements of the
+ * selected kind and lets the selected one's vertices be dragged; meanwhile
+ * MeasureInteractionLock keeps the viewer's own pointer handling paused.
+ */
+export function RulerOverlay({ containerRef }: RulerOverlayProps) {
+  const { t } = useTranslation();
+  const {
+    isToolOpen,
+    measurements,
+    mode,
+    selectedId,
+    setSelectedId,
+    settings,
+    scaleFor,
+    addMeasurement,
+    updateMeasurement,
+    deleteMeasurement,
+    submitCalibrationSample,
+    setDraftPointCount,
+    registerDrawingActions,
+    registerPageViewProvider,
+    notifyPageViewChange,
+    pageViewFor,
+    pageViewVersion,
+  } = useMeasurements();
+
+  const viewer = useViewer();
+  const { registerImmediateRotationUpdate, registerImmediateZoomUpdate } =
+    viewer;
+  const isPanning = useViewerIsPanning();
+  const isActive = isToolOpen && !isPanning;
+  const [draftPoints, setDraftPoints] = useState<PagePoint[]>([]);
+  /** Cursor in SVG screen space, for the crosshair and the live segment. */
   const [cursorS, setCursorS] = useState<Point | null>(null);
-  /** Current cursor in page-relative PDF units — for finalising off-page clicks. */
+  /** Cursor in page space after snapping/constraining: the next point. */
   const [cursorDoc, setCursorDoc] = useState<PagePoint | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [snap, setSnap] = useState<Pick<SnapResult, "vertex" | "guides">>({
+    vertex: null,
+    guides: [],
+  });
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [labelVisibilityMode, setLabelVisibilityMode] =
-    useState<RulerLabelVisibilityMode>("hideSmall");
   const [isDrawThroughActive, setIsDrawThroughActive] = useState(false);
+  const [dragPreview, setDragPreview] = useState<{
+    id: string;
+    points: PagePoint[];
+  } | null>(null);
 
-  // Callbacks for explicit measurement changes; restores stay silent.
-  const measurementsListenersRef = useRef<
-    Set<(measurements: Measurement[]) => void>
-  >(new Set());
-  const measurementsRef = useRef<Measurement[]>(measurements);
-
-  /**
-   * Incremented on scroll to trigger re-renders.
-   * We no longer store the scroll value — getBoundingClientRect handles that
-   * automatically and is always accurate regardless of scroll position.
-   */
-  const [, setScrollVersion] = useState(0);
+  /** Bumped on scroll and layout changes so positions are re-read from the DOM. */
+  const [scrollVersion, setScrollVersion] = useState(0);
 
   const scrollElRef = useRef<HTMLElement | null>(null);
   const scrollCleanupRef = useRef<(() => void) | null>(null);
   const scrollRafRef = useRef<number | null>(null);
   const rulerPageContentRef = useRef<SVGGElement | null>(null);
   const renderedScrollRef = useRef({ left: 0, top: 0 });
+  const draftRef = useRef<PagePoint[]>([]);
+  const cursorDocRef = useRef<PagePoint | null>(null);
+  const drawThroughActiveRef = useRef(false);
+  const dragRef = useRef<VertexDrag | null>(null);
+  const suppressClickRef = useRef(false);
+  const measurementsRef = useRef(measurements);
   const isActiveRef = useRef(isActive);
+
+  useEffect(() => {
+    measurementsRef.current = measurements;
+  }, [measurements]);
   useEffect(() => {
     isActiveRef.current = isActive;
   }, [isActive]);
 
-  const firstPtRef = useRef<PagePoint | null>(null);
-  useEffect(() => {
-    firstPtRef.current = firstPt;
-  }, [firstPt]);
+  const setDraft = useCallback((points: PagePoint[]) => {
+    draftRef.current = points;
+    setDraftPoints(points);
+  }, []);
 
-  const cursorDocRef = useRef<PagePoint | null>(null);
-  const wasCalibrationActiveRef = useRef(isCalibrationActive);
-  const drawThroughActiveRef = useRef(false);
+  const clearCursor = useCallback(() => {
+    cursorDocRef.current = null;
+    setCursorS(null);
+    setCursorDoc(null);
+    setSnap({ vertex: null, guides: [] });
+  }, []);
+
+  const resetDraft = useCallback(() => {
+    setDraft([]);
+    clearCursor();
+  }, [clearCursor, setDraft]);
 
   const setDrawThroughMode = useCallback((isEnabled: boolean) => {
     drawThroughActiveRef.current = isEnabled;
     setIsDrawThroughActive(isEnabled);
-
-    if (isEnabled) {
-      setHoveredId(null);
-    }
+    if (isEnabled) setHoveredId(null);
   }, []);
-
-  const cycleLabelVisibilityMode = useCallback(() => {
-    setLabelVisibilityMode((currentMode) => {
-      if (currentMode === "hideSmall") {
-        return "showAll";
-      }
-
-      if (currentMode === "showAll") {
-        return "hideAll";
-      }
-
-      return "hideSmall";
-    });
-  }, []);
-
-  const notifyMeasurementsChange = useCallback(
-    (nextMeasurements: Measurement[]) => {
-      measurementsListenersRef.current.forEach((listener) =>
-        listener(nextMeasurements),
-      );
-    },
-    [],
-  );
-
-  const replaceMeasurements = useCallback(
-    (nextMeasurements: Measurement[], notify = false) => {
-      measurementsRef.current = nextMeasurements;
-      setMeasurements(nextMeasurements);
-      if (notify) {
-        notifyMeasurementsChange(nextMeasurements);
-      }
-    },
-    [notifyMeasurementsChange],
-  );
-
-  const updateMeasurements = useCallback(
-    (
-      updater: (currentMeasurements: Measurement[]) => Measurement[],
-      notify = false,
-    ) => {
-      replaceMeasurements(updater(measurementsRef.current), notify);
-    },
-    [replaceMeasurements],
-  );
-
-  // ── Zoom ──────────────────────────────────────────────────────────────────
-  const viewer = useViewer();
-  const { registerImmediateRotationUpdate, registerImmediateZoomUpdate } =
-    viewer;
 
   const [zoom, setZoom] = useState<number>(() => {
     try {
@@ -423,7 +413,6 @@ export const RulerOverlay = React.forwardRef<
       return 1.4;
     }
   });
-
   const zoomRef = useRef(zoom);
   useEffect(() => {
     zoomRef.current = zoom;
@@ -436,7 +425,6 @@ export const RulerOverlay = React.forwardRef<
       return normalizeRotation(0);
     }
   });
-
   const rotationRef = useRef<Rotation>(rotation);
   useEffect(() => {
     rotationRef.current = rotation;
@@ -445,10 +433,10 @@ export const RulerOverlay = React.forwardRef<
   useEffect(() => {
     return registerImmediateZoomUpdate((pct) => {
       const newZoom = pct / 100;
-      zoomRef.current = newZoom; // immediate for event-listener closures
-      setZoom(newZoom); // re-render #1: zoom updated, but PDF.js DOM may not be yet
-      // re-render #2: after PDF.js has updated page element dimensions in the DOM,
-      // so getBoundingClientRect returns the correct positions for the new zoom level.
+      zoomRef.current = newZoom;
+      setZoom(newZoom);
+      // A second render once the viewer has resized its page elements, so
+      // getBoundingClientRect reflects the new zoom.
       requestAnimationFrame(() => setScrollVersion((n) => n + 1));
     });
   }, [registerImmediateZoomUpdate]);
@@ -458,38 +446,48 @@ export const RulerOverlay = React.forwardRef<
       const normalizedRotation = normalizeRotation(nextRotation);
       rotationRef.current = normalizedRotation;
       setRotation(normalizedRotation);
-      requestAnimationFrame(() => setScrollVersion((n) => n + 1));
+      requestAnimationFrame(() => {
+        setScrollVersion((n) => n + 1);
+        notifyPageViewChange();
+      });
     });
-  }, [registerImmediateRotationUpdate]);
+  }, [notifyPageViewChange, registerImmediateRotationUpdate]);
 
-  // ── Layout change tracking (menu close, sidebar toggle, etc.) ──────────────
-  // Monitor PDF container for layout changes and force re-render so measurements
-  // use updated getBoundingClientRect positions after layout reflow
+  useEffect(
+    () =>
+      registerPageViewProvider((pageIndex) => {
+        const pageEl = containerRef.current?.querySelector(
+          `[data-page-index="${pageIndex}"]`,
+        ) as HTMLElement | null;
+        if (!pageEl) return null;
+        const rotation = getEffectivePageRotation(pageEl, rotationRef.current);
+        const size = getPageNaturalSize(
+          pageEl,
+          pageEl.getBoundingClientRect(),
+          zoomRef.current,
+          rotation,
+        );
+        return { ...size, rotation };
+      }),
+    [containerRef, registerPageViewProvider],
+  );
+
+  // Sidebars and panels opening move the pages without a scroll event.
   useEffect(() => {
     if (!containerRef.current) return;
-
-    const handleLayoutChange = () => {
-      // Layout changed - force re-render to recalculate coordinates from getBoundingClientRect
-      setScrollVersion((n) => n + 1);
-    };
-
-    // Use ResizeObserver if available, otherwise fall back to window resize event
+    const handleLayoutChange = () => setScrollVersion((n) => n + 1);
     if (typeof ResizeObserver !== "undefined") {
       const resizeObserver = new ResizeObserver(handleLayoutChange);
       resizeObserver.observe(containerRef.current);
       return () => resizeObserver.disconnect();
-    } else {
-      // Fallback for environments without ResizeObserver (legacy browsers, embedded webviews)
-      window.addEventListener("resize", handleLayoutChange);
-      return () => window.removeEventListener("resize", handleLayoutChange);
     }
+    window.addEventListener("resize", handleLayoutChange);
+    return () => window.removeEventListener("resize", handleLayoutChange);
   }, [containerRef]);
 
-  // ── Scroll tracking ────────────────────────────────────────────────────────
   // Native scrolling moves the PDF pages before React re-renders this fixed
   // overlay. Translate page-anchored SVG content immediately, then let the next
   // frame render exact coordinates from getBoundingClientRect.
-
   useLayoutEffect(() => {
     const scrollEl = scrollElRef.current;
     if (scrollEl) {
@@ -508,7 +506,6 @@ export const RulerOverlay = React.forwardRef<
       if (!isActiveRef.current && measurementsRef.current.length === 0) {
         return;
       }
-
       const dx = renderedScrollRef.current.left - el.scrollLeft;
       const dy = renderedScrollRef.current.top - el.scrollTop;
       if (dx !== 0 || dy !== 0) {
@@ -517,11 +514,7 @@ export const RulerOverlay = React.forwardRef<
           `translate(${dx} ${dy})`,
         );
       }
-
-      if (scrollRafRef.current !== null) {
-        return;
-      }
-
+      if (scrollRafRef.current !== null) return;
       scrollRafRef.current = requestAnimationFrame(() => {
         scrollRafRef.current = null;
         setScrollVersion((n) => n + 1);
@@ -540,7 +533,6 @@ export const RulerOverlay = React.forwardRef<
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
     const tryAttach = () => {
       const el = findScrollEl(container);
       if (el) {
@@ -549,7 +541,6 @@ export const RulerOverlay = React.forwardRef<
       }
       return false;
     };
-
     if (!tryAttach()) {
       const timer = setTimeout(() => tryAttach(), 600);
       return () => {
@@ -560,7 +551,7 @@ export const RulerOverlay = React.forwardRef<
     return () => scrollCleanupRef.current?.();
   }, [containerRef, attachScrollEl]);
 
-  // Re-find scroll element when zoom changes (PDF.js may recreate the scroll DOM).
+  // The viewer may recreate its scroll element on zoom.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -568,92 +559,103 @@ export const RulerOverlay = React.forwardRef<
     if (el && el !== scrollElRef.current) attachScrollEl(el);
   }, [zoom, containerRef, attachScrollEl]);
 
-  // ── Imperative handle ──────────────────────────────────────────────────────
-  React.useImperativeHandle(ref, () => ({
-    clearAll: (silent = false) => {
-      firstPtRef.current = null;
-      cursorDocRef.current = null;
-      replaceMeasurements([], !silent);
-      setFirstPt(null);
-      setCursorS(null);
-      setCursorDoc(null);
-      setSelectedId(null);
-      setHoveredId(null);
-    },
-    getMeasurements: () => measurementsRef.current,
-    setMeasurements: (newMeasurements: Measurement[]) => {
-      // Validate all measurements before setting state
-      const validated = newMeasurements.filter((m) => validateMeasurement(m));
-      replaceMeasurements(validated, true);
-    },
-    restoreMeasurements: (newMeasurements: Measurement[]) => {
-      replaceMeasurements(
-        newMeasurements.filter((measurement) =>
-          validateMeasurement(measurement),
-        ),
-        false,
-      );
-    },
-    onMeasurementsChange: (callback: (measurements: Measurement[]) => void) => {
-      measurementsListenersRef.current.add(callback);
-      // Return unsubscribe function
-      return () => {
-        measurementsListenersRef.current.delete(callback);
-      };
-    },
-  }));
-
-  // ── Reset when deactivated ─────────────────────────────────────────────────
   useEffect(() => {
     if (!isActive) {
-      firstPtRef.current = null;
-      cursorDocRef.current = null;
-      setFirstPt(null);
-      setCursorS(null);
-      setCursorDoc(null);
-      setSelectedId(null);
+      resetDraft();
       setHoveredId(null);
       setDrawThroughMode(false);
     }
-  }, [isActive, setDrawThroughMode]);
+  }, [isActive, resetDraft, setDrawThroughMode]);
 
   useEffect(() => {
-    const wasCalibrationActive = wasCalibrationActiveRef.current;
-    wasCalibrationActiveRef.current = isCalibrationActive;
-
-    if (wasCalibrationActive !== isCalibrationActive) {
-      firstPtRef.current = null;
-      cursorDocRef.current = null;
-      setFirstPt(null);
-      setCursorS(null);
-      setCursorDoc(null);
-    }
-  }, [isCalibrationActive]);
+    resetDraft();
+  }, [mode, resetDraft]);
 
   useEffect(() => {
-    if (!isActive) {
-      return;
-    }
+    setDraftPointCount(draftPoints.length);
+  }, [draftPoints.length, setDraftPointCount]);
 
+  /**
+   * Snap a raw pointer position. Shift locks the angle; Ctrl or Cmd turns
+   * snapping off. `exclude` is a vertex being dragged, which must not snap to
+   * itself.
+   */
+  const resolvePoint = useCallback(
+    (
+      raw: PagePoint,
+      anchor: PagePoint | null,
+      modifiers: SnapModifiers,
+      exclude?: { id: string; index: number },
+    ): SnapResult => {
+      const vertices: PagePoint[] = [];
+      const edges: [PagePoint, PagePoint][] = [];
+      for (const m of measurementsRef.current) {
+        m.points.forEach((pt, index) => {
+          if (exclude?.id !== m.id || exclude.index !== index)
+            vertices.push(pt);
+        });
+        if (exclude?.id !== m.id) edges.push(...measurementEdges(m));
+      }
+      vertices.push(...draftRef.current);
+      const snappingOff = modifiers.ctrlKey || modifiers.metaKey;
+      return snapPoint(raw, {
+        anchor,
+        vertices,
+        edges,
+        pxToPage: 1 / (zoomRef.current || 1),
+        snapToPoints: settings.snapToPoints && !snappingOff,
+        snapToAngles: settings.snapToAngles && !snappingOff,
+        forceAngle: modifiers.shiftKey,
+      });
+    },
+    [settings.snapToAngles, settings.snapToPoints],
+  );
+
+  const startDraftAt = useCallback(
+    (point: PagePoint) => {
+      setDraft([point]);
+      setSelectedId(null);
+      setHoveredId(null);
+    },
+    [setDraft, setSelectedId],
+  );
+
+  const finishDraft = useCallback(
+    (points: PagePoint[]) => {
+      if (mode === "calibrate" || points.length < minPointsFor(mode)) {
+        return false;
+      }
+      const id = addMeasurement(mode, points);
+      setSelectedId(id);
+      resetDraft();
+      return true;
+    },
+    [addMeasurement, mode, resetDraft, setSelectedId],
+  );
+
+  useEffect(
+    () =>
+      registerDrawingActions({
+        finish: () => {
+          if (!finishDraft(draftRef.current)) resetDraft();
+        },
+        cancel: resetDraft,
+      }),
+    [finishDraft, registerDrawingActions, resetDraft],
+  );
+
+  useEffect(() => {
+    if (!isActive) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Alt" || isEditableKeyboardTarget(e.target)) {
-        return;
+      if (e.key === "Alt" && !isEditableKeyboardTarget(e.target)) {
+        e.preventDefault();
+        setDrawThroughMode(true);
       }
-
-      e.preventDefault();
-      setDrawThroughMode(true);
     };
-
     const onKeyUp = (e: KeyboardEvent) => {
-      if (e.key === "Alt") {
-        setDrawThroughMode(false);
-      }
+      if (e.key === "Alt") setDrawThroughMode(false);
     };
-
-    const onBlur = () => {
-      setDrawThroughMode(false);
-    };
-
+    const onBlur = () => setDrawThroughMode(false);
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("keyup", onKeyUp);
     window.addEventListener("blur", onBlur);
@@ -665,7 +667,44 @@ export const RulerOverlay = React.forwardRef<
     };
   }, [isActive, setDrawThroughMode]);
 
-  // ── Mouse events ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isActive) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (isEditableKeyboardTarget(e.target)) return;
+      const draft = draftRef.current;
+      if (e.key === "Escape") {
+        // Esc ends a path or area with the points placed so far; with too few
+        // for a measurement, it cancels.
+        if (draft.length > 0) {
+          if (!finishDraft(draft)) resetDraft();
+        } else {
+          setSelectedId(null);
+        }
+      } else if (e.key === "Enter" && draft.length > 0) {
+        e.preventDefault();
+        finishDraft(draft);
+      } else if (e.key === "Backspace" || e.key === "Delete") {
+        if (draft.length > 0) {
+          e.preventDefault();
+          setDraft(draft.slice(0, -1));
+        } else if (selectedId) {
+          e.preventDefault();
+          deleteMeasurement(selectedId);
+        }
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [
+    deleteMeasurement,
+    finishDraft,
+    isActive,
+    resetDraft,
+    selectedId,
+    setDraft,
+    setSelectedId,
+  ]);
+
   useEffect(() => {
     const el = containerRef.current;
     if (!isActive || !el) return;
@@ -675,257 +714,372 @@ export const RulerOverlay = React.forwardRef<
       return { x: e.clientX - r.left, y: e.clientY - r.top };
     };
 
-    /**
-     * Convert a mouse event to a page-relative PagePoint.
-     * Returns null if the cursor is not over a page.
-     */
     const toDocPagePt = (e: MouseEvent): PagePoint | null => {
       const pageEl = findPageAtClientPoint(el, e.clientX, e.clientY);
       if (!pageEl) return null;
       const pageIndex = parseInt(pageEl.dataset.pageIndex ?? "0", 10);
-      const z = zoomRef.current;
-      const effectiveRotation = getEffectivePageRotation(
-        pageEl,
-        rotationRef.current,
-      );
       const docPoint = clientPointToPagePoint(
         pageEl,
         e.clientX,
         e.clientY,
-        z,
-        effectiveRotation,
+        zoomRef.current,
+        getEffectivePageRotation(pageEl, rotationRef.current),
       );
-      return {
-        pageIndex,
-        x: docPoint.x,
-        y: docPoint.y,
-      };
+      return { pageIndex, ...docPoint };
     };
 
-    const clearCursor = () => {
-      setCursorS(null);
-      setCursorDoc(null);
-      cursorDocRef.current = null;
-    };
-
-    const onMove = (e: MouseEvent) => {
-      const screenPt = toScreenPt(e);
-      const docPt = toDocPagePt(e);
-
-      if (docPt) {
-        el.style.cursor = "crosshair";
-        setCursorS(screenPt);
-        setCursorDoc(docPt);
-        cursorDocRef.current = docPt;
-      } else if (firstPtRef.current !== null) {
-        // First point placed, cursor wandered off page — clamp to nearest edge
-        el.style.cursor = "crosshair";
-        const result = nearestPageDocPt(
-          screenPt,
+    /** The next point under the pointer, clamped to the draft's page. */
+    const pointerPoint = (e: MouseEvent): PagePoint | null => {
+      const draft = draftRef.current;
+      const onPage = toDocPagePt(e);
+      if (
+        onPage &&
+        (draft.length === 0 || onPage.pageIndex === draft[0].pageIndex)
+      ) {
+        return onPage;
+      }
+      if (draft.length === 0) return onPage;
+      return (
+        nearestPageDocPt(
+          toScreenPt(e),
           el,
           zoomRef.current,
           rotationRef.current,
-          firstPtRef.current.pageIndex,
-        );
-        if (result) {
-          setCursorS(result.screenPt);
-          setCursorDoc(result.docPt);
-          cursorDocRef.current = result.docPt;
-        }
-      } else {
+          draft[0].pageIndex,
+        )?.docPt ?? null
+      );
+    };
+
+    const pagePointToScreenNow = (pt: PagePoint): Point | null => {
+      const pageEl = el.querySelector(
+        `[data-page-index="${pt.pageIndex}"]`,
+      ) as HTMLElement | null;
+      if (!pageEl) return null;
+      const pageRect = pageEl.getBoundingClientRect();
+      const containerRect = el.getBoundingClientRect();
+      const display = pagePointToDisplayPoint(
+        pageEl,
+        pageRect,
+        pt,
+        zoomRef.current,
+        getEffectivePageRotation(pageEl, rotationRef.current),
+      );
+      return {
+        x: pageRect.left - containerRect.left + display.x,
+        y: pageRect.top - containerRect.top + display.y,
+      };
+    };
+
+    const onMove = (e: MouseEvent) => {
+      if (dragRef.current) return;
+      const raw = pointerPoint(e);
+      if (!raw) {
         el.style.cursor = "default";
         clearCursor();
+        return;
       }
+      el.style.cursor = "crosshair";
+      const draft = draftRef.current;
+      const result = resolvePoint(raw, draft[draft.length - 1] ?? null, e);
+      const moved = result.point.x !== raw.x || result.point.y !== raw.y;
+      cursorDocRef.current = result.point;
+      setCursorDoc(result.point);
+      setSnap({ vertex: result.vertex, guides: result.guides });
+      setCursorS(moved ? pagePointToScreenNow(result.point) : toScreenPt(e));
     };
 
     const onClick = (e: MouseEvent) => {
       if (e.button !== 0) return;
+      if (suppressClickRef.current) {
+        suppressClickRef.current = false;
+        return;
+      }
       const target = e.target as Element;
       if (target.closest?.("[data-ruler-control]")) return;
 
-      const hasMeasurementInProgress =
-        firstPtRef.current !== null || drawThroughActiveRef.current || e.altKey;
+      const draft = draftRef.current;
+      const raw = pointerPoint(e);
+      if (!raw) return;
+      const anchor = draft[draft.length - 1] ?? null;
+      const { point, vertex } = resolvePoint(raw, anchor, e);
+
+      // A click on a measurement selects it, unless it lands on one of its
+      // points: that starts a new measurement there.
+      const isDrawing =
+        draft.length > 0 || drawThroughActiveRef.current || e.altKey;
       if (
-        !hasMeasurementInProgress &&
+        !isDrawing &&
+        !vertex &&
         target.closest?.("[data-ruler-interactive]")
       ) {
         return;
       }
-
-      const dp = toDocPagePt(e);
-      const overPage = dp !== null;
-      if (!overPage && firstPtRef.current === null) return;
       e.preventDefault();
+      // React re-renders between this listener and its root listener, so the
+      // click would otherwise go on to select the measurement underneath.
+      e.stopPropagation();
 
-      const nextPoint = dp ?? cursorDocRef.current;
-      if (!nextPoint) return;
-
-      const prev = firstPtRef.current;
-      if (!prev) {
-        firstPtRef.current = nextPoint;
-        setFirstPt(nextPoint);
-        setSelectedId(null);
-        setHoveredId(null);
+      if (draft.length === 0) {
+        startDraftAt(point);
         return;
       }
 
-      // CRITICAL: Reject cross-page measurements
-      // Measurements must have both points on the same page
-      if (prev.pageIndex !== nextPoint.pageIndex) {
-        // Reset first point so user can start fresh on same page
-        firstPtRef.current = null;
-        cursorDocRef.current = null;
-        setFirstPt(null);
-        setCursorS(null);
-        setCursorDoc(null);
-        return;
-      }
-
-      firstPtRef.current = null;
-      setFirstPt(null);
-
-      if (isCalibrationActive) {
-        const distancePts = dist(prev, nextPoint);
-        if (distancePts > 0) {
-          onCalibrationMeasure?.({
-            start: prev,
-            end: nextPoint,
-            pdfDistancePts: distancePts,
+      if (mode === "distance" || mode === "calibrate") {
+        if (segmentLength(draft[0], point) <= 0) return;
+        if (mode === "calibrate") {
+          submitCalibrationSample({
+            start: draft[0],
+            end: point,
+            pdfDistancePts: segmentLength(draft[0], point),
           });
+          resetDraft();
+          return;
         }
+        finishDraft([draft[0], point]);
         return;
       }
 
-      const id = createRulerMeasurementId();
-      updateMeasurements(
-        (m) => [...m, { id, start: prev, end: nextPoint }],
-        true,
-      );
+      // The second click of a double-click only finishes the path (see onDoubleClick).
+      if (e.detail > 1) return;
+
+      // Clicking the first vertex again closes the area.
+      const closeTolerance = CLOSE_PX / (zoomRef.current || 1);
+      if (
+        mode === "area" &&
+        draft.length >= 3 &&
+        segmentLength(point, draft[0]) <= closeTolerance
+      ) {
+        finishDraft(draft);
+        return;
+      }
+      setDraft([...draft, point]);
+    };
+
+    const onDoubleClick = (e: MouseEvent) => {
+      if (mode !== "perimeter" && mode !== "area") return;
+      if (draftRef.current.length === 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      finishDraft(draftRef.current);
     };
 
     const onLeave = () => {
       el.style.cursor = "";
-      if (firstPtRef.current === null) clearCursor();
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        firstPtRef.current = null;
-        cursorDocRef.current = null;
-        setFirstPt(null);
-        setCursorS(null);
-        setCursorDoc(null);
-      }
+      if (draftRef.current.length === 0) clearCursor();
     };
 
     el.addEventListener("mousemove", onMove);
     el.addEventListener("click", onClick);
+    el.addEventListener("dblclick", onDoubleClick);
     el.addEventListener("mouseleave", onLeave);
-    document.addEventListener("keydown", onKey);
     return () => {
       el.removeEventListener("mousemove", onMove);
       el.removeEventListener("click", onClick);
+      el.removeEventListener("dblclick", onDoubleClick);
       el.removeEventListener("mouseleave", onLeave);
-      document.removeEventListener("keydown", onKey);
       el.style.cursor = "";
     };
   }, [
+    clearCursor,
     containerRef,
+    finishDraft,
     isActive,
-    isCalibrationActive,
-    onCalibrationMeasure,
-    updateMeasurements,
+    mode,
+    resetDraft,
+    resolvePoint,
+    setDraft,
+    startDraftAt,
+    submitCalibrationSample,
   ]);
 
-  const deleteMeasurement = useCallback(
-    (id: string) => {
-      updateMeasurements((prev) => prev.filter((m) => m.id !== id), true);
-      // Close expanded label if the deleted measurement was selected
-      if (selectedId === id) {
-        setSelectedId(null);
-      }
-      if (hoveredId === id) {
-        setHoveredId(null);
-      }
+  const handleVertexPointerDown = useCallback(
+    (id: string, index: number, event: React.PointerEvent) => {
+      const container = containerRef.current;
+      const measurement = measurementsRef.current.find((m) => m.id === id);
+      if (!container || !measurement || !isActiveRef.current) return;
+      event.stopPropagation();
+      event.preventDefault();
+
+      dragRef.current = {
+        id,
+        index,
+        kind: measurement.kind,
+        points: measurement.points,
+        moved: false,
+      };
+      const pageIndex = measurement.points[index].pageIndex;
+      const pressedAt = { x: event.clientX, y: event.clientY };
+
+      const onMove = (e: PointerEvent) => {
+        const drag = dragRef.current;
+        if (!drag) return;
+        if (
+          !drag.moved &&
+          Math.hypot(e.clientX - pressedAt.x, e.clientY - pressedAt.y) <
+            DRAG_START_PX
+        ) {
+          return;
+        }
+        const pageEl = container.querySelector(
+          `[data-page-index="${pageIndex}"]`,
+        ) as HTMLElement | null;
+        if (!pageEl) return;
+        const raw: PagePoint = {
+          pageIndex,
+          ...clientPointToPagePoint(
+            pageEl,
+            e.clientX,
+            e.clientY,
+            zoomRef.current,
+            getEffectivePageRotation(pageEl, rotationRef.current),
+          ),
+        };
+        const neighbour =
+          drag.points[drag.index - 1] ??
+          (drag.kind === "area"
+            ? drag.points[drag.points.length - 1]
+            : drag.points[drag.index + 1]) ??
+          null;
+        const result = resolvePoint(raw, neighbour, e, {
+          id,
+          index: drag.index,
+        });
+        const { point } = result;
+        setSnap({ vertex: result.vertex, guides: result.guides });
+        const points = drag.points.map((pt, i) =>
+          i === drag.index ? point : pt,
+        );
+        dragRef.current = { ...drag, points, moved: true };
+        setDragPreview({ id, points });
+      };
+
+      const onUp = () => {
+        document.removeEventListener("pointermove", onMove);
+        document.removeEventListener("pointerup", onUp);
+        const drag = dragRef.current;
+        dragRef.current = null;
+        setDragPreview(null);
+        setSnap({ vertex: null, guides: [] });
+        if (drag?.moved) {
+          updateMeasurement(drag.id, { points: drag.points });
+          suppressClickRef.current = true;
+          // The click that follows pointerup may land outside the container.
+          setTimeout(() => {
+            suppressClickRef.current = false;
+          }, 0);
+        } else if (drag) {
+          // A press without a drag starts a new measurement from this point.
+          startDraftAt(drag.points[drag.index]);
+        }
+      };
+
+      document.addEventListener("pointermove", onMove);
+      document.addEventListener("pointerup", onUp);
     },
-    [hoveredId, selectedId, updateMeasurements],
+    [containerRef, resolvePoint, startDraftAt, updateMeasurement],
   );
+
+  const renderedMeasurements = useMemo(() => {
+    const project = createScreenProjector(containerRef.current, zoom, rotation);
+    const scaleLine = (scale: MeasureScale | null) =>
+      scale
+        ? generateScaleLabel(scale.ratio, scale.unit)
+        : t("measure.unscaled", "Unscaled (paper size)");
+
+    return measurements.reduce<RulerRenderedMeasurement[]>((items, stored) => {
+      const measurement =
+        dragPreview?.id === stored.id
+          ? { ...stored, points: dragPreview.points }
+          : stored;
+      const pointsS = measurement.points.map(project);
+      if (pointsS.some((p) => p === null)) return items;
+      const scale = scaleFor(measurement);
+      const view = pageViewFor(measurement.points[0].pageIndex);
+      const value = formatMeasurementValue(measurement, scale, settings);
+      const detailLines = [
+        describeMeasurement(t, measurement, scale, settings, view),
+      ];
+      if (measurement.kind === "distance") {
+        const [a, b] = measurement.points;
+        if (scale) {
+          detailLines.push(
+            t("measure.paperLength", "Paper {{value}}", {
+              value: formatPaperDistance(segmentLength(a, b)),
+            }),
+          );
+        }
+        detailLines.push(
+          `${scaleLine(scale)}   ∠ ${viewAngle(a, b, view).toFixed(1)}°`,
+        );
+      } else {
+        detailLines.push(scaleLine(scale));
+      }
+      items.push({
+        id: measurement.id,
+        kind: measurement.kind,
+        pointsS: pointsS as Point[],
+        color: measurement.color ?? settings.defaultColor,
+        strokeWidth: measurement.strokeWidth ?? settings.defaultStrokeWidth,
+        label: measurement.label ? `${measurement.label}: ${value}` : value,
+        detailLines,
+      });
+      return items;
+    }, []);
+    // scrollVersion and pageViewVersion stand for layout the DOM reads depend on.
+  }, [
+    containerRef,
+    dragPreview,
+    measurements,
+    pageViewFor,
+    pageViewVersion,
+    rotation,
+    scaleFor,
+    scrollVersion,
+    settings,
+    t,
+    zoom,
+  ]);
 
   if (!isActive && measurements.length === 0) return null;
 
-  // ── PagePoint → SVG screen coordinates ────────────────────────────────────
-  /**
-   * Convert a page-anchored point to SVG screen coordinates.
-   *
-   * Uses getBoundingClientRect so the browser computes the exact screen position
-   * accounting for scroll, zoom, page margins, centering — everything. This is
-   * why we no longer need to track scroll offsets.
-   *
-   * Returns null if the page element isn't in the DOM (shouldn't happen with
-   * PDF.js placeholder divs, but guard anyway).
-   */
-  const pagePointToScreen = (pt: PagePoint): Point | null => {
-    const container = containerRef.current;
-    if (!container) return null;
-    const pageEl = container.querySelector(
-      `[data-page-index="${pt.pageIndex}"]`,
-    ) as HTMLElement | null;
-    if (!pageEl) return null;
-    const pageRect = pageEl.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    const effectiveRotation = getEffectivePageRotation(pageEl, rotation);
-    const displayPoint = pagePointToDisplayPoint(
-      pageEl,
-      pageRect,
-      pt,
-      zoom,
-      effectiveRotation,
-    );
-    return {
-      x: pageRect.left - containerRect.left + displayPoint.x,
-      y: pageRect.top - containerRect.top + displayPoint.y,
-    };
-  };
+  const project = createScreenProjector(containerRef.current, zoom, rotation);
 
-  const firstPtS = firstPt ? pagePointToScreen(firstPt) : null;
-  const renderedMeasurements = measurements.reduce<RulerRenderedMeasurement[]>(
-    (items, measurement) => {
-      const startS = pagePointToScreen(measurement.start);
-      const endS = pagePointToScreen(measurement.end);
-      if (!startS || !endS) {
-        return items;
+  let draft: RulerDraft | null = null;
+  if (isActive && draftPoints.length > 0) {
+    const livePoints = cursorDoc ? [...draftPoints, cursorDoc] : draftPoints;
+    const pointsS = livePoints
+      .map(project)
+      .filter((p): p is Point => p !== null);
+    const scale =
+      mode === "calibrate" ? null : scaleFor({ points: livePoints });
+    let label: string | null = null;
+    if (livePoints.length >= 2) {
+      if (mode === "calibrate") {
+        label = formatPaperDistance(pathLength(livePoints, false));
+      } else if (mode === "area" && livePoints.length >= 3) {
+        label = formatArea(polygonArea(livePoints), scale, settings);
+      } else {
+        const [a, b] = livePoints.slice(-2);
+        const angle = viewAngle(a, b, pageViewFor(a.pageIndex));
+        label = `${formatLength(pathLength(livePoints, false), scale, settings)}  ${angle.toFixed(1)}°`;
       }
+    }
+    draft = {
+      kind: mode,
+      pointsS,
+      label,
+      color: mode === "calibrate" ? CALIBRATION_COLOR : settings.defaultColor,
+    };
+  }
 
-      const measureScale = pickScale(
-        measurement.start,
-        measurement.end,
-        pageMeasureScales,
-        customScale,
-      );
-
-      items.push({
-        measurement,
-        startS,
-        endS,
-        distPts: dist(measurement.start, measurement.end),
-        measureScale,
-      });
-      return items;
-    },
-    [],
-  );
-  const isMeasurementInteractionPassthroughActive =
-    firstPt !== null || isDrawThroughActive;
-  const liveLine =
-    isActive && firstPtS && cursorS
-      ? {
-          startS: firstPtS,
-          endS: cursorS,
-          measureScale:
-            !isCalibrationActive && firstPt && cursorDoc
-              ? pickScale(firstPt, cursorDoc, pageMeasureScales, customScale)
-              : null,
-        }
-      : null;
+  const snapPointS = isActive && snap.vertex ? project(snap.vertex) : null;
+  const guidesS = isActive
+    ? snap.guides.flatMap((guide: SnapGuide) => {
+        const from = project(guide.from);
+        const to = project(guide.to);
+        return from && to ? [{ from, to, kind: guide.kind }] : [];
+      })
+    : [];
 
   return (
     // icon-lint-allow: runtime-generated-svg -- ruler geometry is computed from the page
@@ -939,12 +1093,6 @@ export const RulerOverlay = React.forwardRef<
         pointerEvents: "none",
         overflow: "visible",
         zIndex: 100,
-      }}
-      onClick={(e) => {
-        // Close expanded label if clicking on empty SVG area
-        if (e.target === e.currentTarget) {
-          setSelectedId(null);
-        }
       }}
     >
       <defs>
@@ -963,26 +1111,21 @@ export const RulerOverlay = React.forwardRef<
         zoom={zoom}
         selectedId={selectedId}
         hoveredId={hoveredId}
-        labelVisibilityMode={labelVisibilityMode}
+        labelVisibility={settings.labelVisibility}
         isInteractionPassthroughActive={
-          isMeasurementInteractionPassthroughActive
+          draftPoints.length > 0 || isDrawThroughActive
         }
-        liveLine={liveLine}
-        firstPoint={isActive ? firstPtS : null}
+        isEditable={isActive}
+        draft={draft}
         cursor={isActive ? cursorS : null}
+        snapPoint={snapPointS}
+        guides={guidesS}
         pageContentRef={rulerPageContentRef}
         onSelect={setSelectedId}
         onDelete={deleteMeasurement}
         onHoverChange={setHoveredId}
-        onClearAll={() => {
-          replaceMeasurements([], true);
-          setSelectedId(null);
-          setHoveredId(null);
-        }}
-        onCycleLabelVisibilityMode={cycleLabelVisibilityMode}
+        onVertexPointerDown={handleVertexPointerDown}
       />
     </svg>
   );
-});
-
-RulerOverlay.displayName = "RulerOverlay";
+}

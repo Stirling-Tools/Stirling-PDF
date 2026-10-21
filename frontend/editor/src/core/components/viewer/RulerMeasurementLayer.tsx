@@ -1,49 +1,65 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 
-import type { MeasureScale, Measurement } from "@app/utils/measurementTypes";
-import {
-  POINT_TO_UNIT,
-  convertUnit,
-  generateScaleLabel,
-  isImperialUnit,
-} from "@app/utils/measurementUtils";
+import type {
+  MeasurementKind,
+  MeasurementLabelVisibility,
+} from "@app/utils/measurementTypes";
+import { polygonCentroid } from "@app/utils/measurementUtils";
 
 export interface RulerPoint {
   x: number;
   y: number;
 }
 
+/** A measurement already projected to screen space, with its text resolved. */
 export interface RulerRenderedMeasurement {
-  measurement: Measurement;
-  startS: RulerPoint;
-  endS: RulerPoint;
-  distPts: number;
-  measureScale: MeasureScale | null;
+  id: string;
+  kind: MeasurementKind;
+  pointsS: RulerPoint[];
+  color: string;
+  strokeWidth: number;
+  /** Compact label: the headline value, prefixed by the user's name for it. */
+  label: string;
+  /** Lines shown in the expanded label of the selected measurement. */
+  detailLines: string[];
 }
 
-export type RulerLabelVisibilityMode = "hideSmall" | "showAll" | "hideAll";
+export interface RulerGuide {
+  from: RulerPoint;
+  to: RulerPoint;
+  /** align: lined up with another point; angle: locked to a 45-degree step. */
+  kind: "align" | "angle";
+}
+
+export interface RulerDraft {
+  kind: MeasurementKind | "calibrate";
+  pointsS: RulerPoint[];
+  label: string | null;
+  color: string;
+}
 
 interface RulerMeasurementLayerProps {
   measurements: RulerRenderedMeasurement[];
   zoom: number;
   selectedId: string | null;
   hoveredId: string | null;
-  labelVisibilityMode: RulerLabelVisibilityMode;
+  labelVisibility: MeasurementLabelVisibility;
   isInteractionPassthroughActive: boolean;
-  liveLine?: {
-    startS: RulerPoint;
-    endS: RulerPoint;
-    measureScale?: MeasureScale | null;
-  } | null;
-  firstPoint?: RulerPoint | null;
-  cursor?: RulerPoint | null;
+  /** Vertex handles are only offered while the tool is open. */
+  isEditable: boolean;
+  draft: RulerDraft | null;
+  cursor: RulerPoint | null;
+  snapPoint: RulerPoint | null;
+  guides: RulerGuide[];
   pageContentRef?: React.Ref<SVGGElement>;
   onSelect: (id: string | null) => void;
   onDelete: (id: string) => void;
   onHoverChange: (id: string | null) => void;
-  onClearAll: () => void;
-  onCycleLabelVisibilityMode: () => void;
+  onVertexPointerDown: (
+    id: string,
+    vertexIndex: number,
+    event: React.PointerEvent,
+  ) => void;
 }
 
 interface LabelBox {
@@ -53,171 +69,106 @@ interface LabelBox {
   bottom: number;
 }
 
-interface MeasurementLineLabels {
-  scaled: string;
-  physical: string;
-}
-
 export const RULER_DOT_RADIUS = 5;
 
 const TICK = 10;
-const LH = 26; // label height (normal, 1 line)
-const LH2 = 44; // label height (hovered, no scale, 2 lines)
-const LH3 = 62; // label height (hovered, with scale, 3 lines)
-const LP = 10; // label horizontal padding
+const LINE_HEIGHT = 17;
+const LABEL_PADDING_X = 10;
+const LABEL_PADDING_Y = 6;
 const DEL_R = 8;
 const IDLE_LH = 20;
 const IDLE_LP = 6;
 const IDLE_LABEL_MIN_WIDTH = 42;
-const IDLE_LABEL_MIN_LINE_LENGTH = 88;
+const IDLE_LABEL_MIN_EXTENT = 88;
 const IDLE_LABEL_COLLISION_GAP = 6;
 const LABEL_LINE_GAP = 8;
-const DELETE_LINE_GAP = 10;
 const DELETE_LABEL_GAP = 8;
 const LINE_HIT_WIDTH = 18;
-const LABEL_MODE_BUTTON_WIDTH = 124;
+const HANDLE_RADIUS = 6;
+const AREA_FILL_OPACITY = 0.14;
+const MONO = "'Roboto Mono','Consolas',monospace";
+// Theme tokens go through style, not SVG presentation attributes, which do
+// not resolve var().
+const GUIDE_COLOR = "var(--c-danger)";
+const DELETE_COLOR = "var(--c-danger)";
+const DEFAULT_CURSOR_COLOR = "var(--c-primary)";
+/** How far a guide runs past the points it joins, in screen pixels. */
+const GUIDE_OVERSHOOT = 24;
 
 function dist(a: RulerPoint, b: RulerPoint): number {
-  return Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
+  return Math.hypot(b.x - a.x, b.y - a.y);
 }
 
 function midpoint(a: RulerPoint, b: RulerPoint): RulerPoint {
   return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
 }
 
-function perpUnit(a: RulerPoint, b: RulerPoint): { nx: number; ny: number } {
+/** Unit normal of a→b, flipped to point up (or left on vertical lines). */
+function upwardNormal(
+  a: RulerPoint,
+  b: RulerPoint,
+): { nx: number; ny: number } {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
-  const len = Math.sqrt(dx * dx + dy * dy) || 1;
-  return { nx: -dy / len, ny: dx / len };
-}
-
-function angleDeg(a: RulerPoint, b: RulerPoint): number {
-  return Math.atan2(Math.abs(b.y - a.y), Math.abs(b.x - a.x)) * (180 / Math.PI);
-}
-
-function formatDist(pts: number): string {
-  const mm = (pts / 72) * 25.4;
-  if (mm < 100) return `${mm.toFixed(1)} mm`;
-  if (mm < 1000) return `${(mm / 10).toFixed(1)} cm`;
-  return `${(mm / 1000).toFixed(2)} m`;
-}
-
-function formatInches(pts: number): string {
-  const inches = pts / 72;
-  if (inches < 12) return `${inches.toFixed(2)} in`;
-  return `${(inches / 12).toFixed(2)} ft`;
-}
-
-function getDecimalPlaces(value: number): number {
-  const absVal = Math.abs(value);
-
-  const decimalRanges = [
-    { threshold: 1000000, decimals: 0 },
-    { threshold: 1000, decimals: 2 },
-    { threshold: 1, decimals: 3 },
-    { threshold: 0.1, decimals: 3 },
-    { threshold: 0.01, decimals: 4 },
-    { threshold: 0.001, decimals: 5 },
-  ];
-
-  return decimalRanges.find((r) => absVal >= r.threshold)?.decimals ?? 6;
-}
-
-function formatScaled(pts: number, scale: MeasureScale): string {
-  const val = pts * scale.factor;
-  if (val === 0) return `0 ${scale.unit}`;
-
-  const decimals = getDecimalPlaces(val);
-
-  return `${val.toFixed(decimals)} ${scale.unit}`;
-}
-
-function scaledCross(pts: number, scale: MeasureScale): string | null {
-  const unit = scale.unit.toLowerCase().trim();
-
-  if (!Object.hasOwn(POINT_TO_UNIT, unit)) return null;
-
-  const valueInUnit = pts * scale.factor;
-
-  if (isImperialUnit(scale.unit)) {
-    const meters = convertUnit(valueInUnit, scale.unit, "m");
-    if (meters === null) return null;
-    const decimals = getDecimalPlaces(meters);
-    return `${meters.toFixed(decimals)} m`;
-  } else {
-    const feet = convertUnit(valueInUnit, scale.unit, "ft");
-    if (feet === null) return null;
-    const decimals = getDecimalPlaces(feet);
-    return `${feet.toFixed(decimals)} ft`;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len;
+  const ny = dx / len;
+  if (ny > 0 || (Math.abs(ny) < 0.001 && nx < 0)) {
+    return { nx: -nx, ny: -ny };
   }
+  return { nx, ny };
 }
 
 function getZoomScale(zoom: number): number {
   return Math.max(0.6, Math.min(1.0, zoom / 1.5));
 }
 
-function getMeasurementLabel(
-  distPts: number,
-  measureScale?: MeasureScale | null,
-): string {
-  return measureScale
-    ? formatScaled(distPts, measureScale)
-    : formatDist(distPts);
+function textWidth(text: string, charWidth: number): number {
+  return text.length * charWidth;
 }
 
-function preferredPerpUnit(
-  a: RulerPoint,
-  b: RulerPoint,
-): { nx: number; ny: number } {
-  const normal = perpUnit(a, b);
-  if (normal.ny > 0 || (Math.abs(normal.ny) < 0.001 && normal.nx < 0)) {
-    return { nx: -normal.nx, ny: -normal.ny };
+function longestSegment(
+  points: RulerPoint[],
+  closed: boolean,
+): [RulerPoint, RulerPoint] {
+  let best: [RulerPoint, RulerPoint] = [points[0], points[1] ?? points[0]];
+  let bestLength = -1;
+  const count = closed ? points.length : points.length - 1;
+  for (let i = 0; i < count; i++) {
+    const a = points[i];
+    const b = points[(i + 1) % points.length];
+    const length = dist(a, b);
+    if (length > bestLength) {
+      bestLength = length;
+      best = [a, b];
+    }
   }
-  return normal;
+  return best;
 }
 
+/**
+ * Where a label of the given size sits: beside the middle of a distance line,
+ * beside the longest segment of a path, and at the centroid of an area.
+ */
 function getLabelCenter(
-  a: RulerPoint,
-  b: RulerPoint,
+  kind: MeasurementKind | "calibrate",
+  points: RulerPoint[],
   width: number,
   height: number,
 ): RulerPoint {
+  if (kind === "area" && points.length >= 3) {
+    return polygonCentroid(points);
+  }
+  const [a, b] = longestSegment(points, false);
   const mid = midpoint(a, b);
-  const { nx, ny } = preferredPerpUnit(a, b);
+  const { nx, ny } = upwardNormal(a, b);
   const projectedHalfSize =
     (Math.abs(nx) * width) / 2 + (Math.abs(ny) * height) / 2;
   const offset = projectedHalfSize + RULER_DOT_RADIUS + LABEL_LINE_GAP;
-  return {
-    x: mid.x + nx * offset,
-    y: mid.y + ny * offset,
-  };
+  return { x: mid.x + nx * offset, y: mid.y + ny * offset };
 }
 
-function getIdleLabelDimensions(label: string, zoom: number) {
-  return {
-    width: Math.max(label.length * 7 + IDLE_LP * 2, IDLE_LABEL_MIN_WIDTH),
-    height: Math.max(18, Math.round(IDLE_LH * getZoomScale(zoom))),
-  };
-}
-
-function getIdleLabelBox(
-  startS: RulerPoint,
-  endS: RulerPoint,
-  label: string,
-  zoom: number,
-): LabelBox {
-  const { width, height } = getIdleLabelDimensions(label, zoom);
-  const center = getLabelCenter(startS, endS, width, height);
-  return {
-    left: center.x - width / 2,
-    top: center.y - height / 2,
-    right: center.x + width / 2,
-    bottom: center.y + height / 2,
-  };
-}
-
-function getBoxFromCenter(
+function boxFromCenter(
   center: RulerPoint,
   width: number,
   height: number,
@@ -239,201 +190,196 @@ function boxesOverlap(a: LabelBox, b: LabelBox, gap: number): boolean {
   );
 }
 
-function circleOverlapsBox(
-  center: RulerPoint,
-  radius: number,
-  box: LabelBox,
-  gap: number,
-): boolean {
-  return (
-    center.x + radius + gap >= box.left &&
-    center.x - radius - gap <= box.right &&
-    center.y + radius + gap >= box.top &&
-    center.y - radius - gap <= box.bottom
+function idleLabelSize(label: string, zoom: number) {
+  return {
+    width: Math.max(textWidth(label, 7) + IDLE_LP * 2, IDLE_LABEL_MIN_WIDTH),
+    height: Math.max(18, Math.round(IDLE_LH * getZoomScale(zoom))),
+  };
+}
+
+function screenExtent(points: RulerPoint[]): number {
+  const xs = points.map((p) => p.x);
+  const ys = points.map((p) => p.y);
+  return Math.hypot(
+    Math.max(...xs) - Math.min(...xs),
+    Math.max(...ys) - Math.min(...ys),
   );
 }
 
-function lineUnit(a: RulerPoint, b: RulerPoint): { ux: number; uy: number } {
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const len = Math.sqrt(dx * dx + dy * dy) || 1;
-  return { ux: dx / len, uy: dy / len };
-}
-
-function getDeleteCenter(
-  startS: RulerPoint,
-  endS: RulerPoint,
-  labelCenter: RulerPoint,
-  labelWidth: number,
-  labelHeight: number,
-): RulerPoint {
-  const { nx, ny } = preferredPerpUnit(startS, endS);
-  const endpointCenter = {
-    x: endS.x + nx * (RULER_DOT_RADIUS + DEL_R + DELETE_LINE_GAP),
-    y: endS.y + ny * (RULER_DOT_RADIUS + DEL_R + DELETE_LINE_GAP),
-  };
-  const labelBox = getBoxFromCenter(labelCenter, labelWidth, labelHeight);
-
-  if (!circleOverlapsBox(endpointCenter, DEL_R, labelBox, DELETE_LABEL_GAP)) {
-    return endpointCenter;
-  }
-
-  const { ux, uy } = lineUnit(startS, endS);
-  const projectedLabelRadius =
-    (Math.abs(ux) * labelWidth) / 2 + (Math.abs(uy) * labelHeight) / 2;
-
-  return {
-    x: labelCenter.x + ux * (projectedLabelRadius + DEL_R + DELETE_LABEL_GAP),
-    y: labelCenter.y + uy * (projectedLabelRadius + DEL_R + DELETE_LABEL_GAP),
-  };
-}
-
+/** Largest-first, keep each idle label that has room and hits no kept label. */
 function getVisibleIdleLabelIds(
-  renderedMeasurements: RulerRenderedMeasurement[],
+  measurements: RulerRenderedMeasurement[],
   zoom: number,
 ): Set<string> {
   const visibleIds = new Set<string>();
-  const occupiedBoxes: LabelBox[] = [];
+  const occupied: LabelBox[] = [];
 
-  renderedMeasurements
-    .map((item, index) => ({
-      item,
-      index,
-      lineLength: dist(item.startS, item.endS),
-      label: getMeasurementLabel(item.distPts, item.measureScale),
-    }))
-    .sort((a, b) => b.lineLength - a.lineLength || a.index - b.index)
-    .forEach(({ item, lineLength, label }) => {
-      const box = getIdleLabelBox(item.startS, item.endS, label, zoom);
-      const labelWidth = box.right - box.left;
-      const hasEnoughRoom =
-        lineLength >= Math.max(IDLE_LABEL_MIN_LINE_LENGTH, labelWidth + 24);
-      const collides = occupiedBoxes.some((occupiedBox) =>
-        boxesOverlap(box, occupiedBox, IDLE_LABEL_COLLISION_GAP),
+  measurements
+    .map((item, index) => ({ item, index, extent: screenExtent(item.pointsS) }))
+    .sort((a, b) => b.extent - a.extent || a.index - b.index)
+    .forEach(({ item, extent }) => {
+      const { width, height } = idleLabelSize(item.label, zoom);
+      const box = boxFromCenter(
+        getLabelCenter(item.kind, item.pointsS, width, height),
+        width,
+        height,
       );
-
-      if (hasEnoughRoom && !collides) {
-        visibleIds.add(item.measurement.id);
-        occupiedBoxes.push(box);
+      const hasRoom = extent >= Math.max(IDLE_LABEL_MIN_EXTENT, width + 24);
+      if (
+        hasRoom &&
+        !occupied.some((o) => boxesOverlap(box, o, IDLE_LABEL_COLLISION_GAP))
+      ) {
+        visibleIds.add(item.id);
+        occupied.push(box);
       }
     });
 
   return visibleIds;
 }
 
-interface MeasurementLineProps {
-  id: string;
-  startS: RulerPoint;
-  endS: RulerPoint;
-  distPts: number;
+function pointsAttr(points: RulerPoint[]): string {
+  return points.map((p) => `${p.x},${p.y}`).join(" ");
+}
+
+function EndTicks({
+  a,
+  b,
+  color,
+  strokeWidth,
+}: {
+  a: RulerPoint;
+  b: RulerPoint;
+  color: string;
+  strokeWidth: number;
+}) {
+  const { nx, ny } = upwardNormal(a, b);
+  return (
+    <>
+      {[a, b].map((p, i) => (
+        <line
+          key={i}
+          x1={p.x + (nx * TICK) / 2}
+          y1={p.y + (ny * TICK) / 2}
+          x2={p.x - (nx * TICK) / 2}
+          y2={p.y - (ny * TICK) / 2}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+        />
+      ))}
+    </>
+  );
+}
+
+function Shape({
+  kind,
+  points,
+  color,
+  strokeWidth,
+  dashed = false,
+}: {
+  kind: MeasurementKind | "calibrate";
+  points: RulerPoint[];
+  color: string;
+  strokeWidth: number;
+  dashed?: boolean;
+}) {
+  const dash = dashed ? "7 4" : undefined;
+  if (kind === "area" && points.length >= 3) {
+    return (
+      <polygon
+        points={pointsAttr(points)}
+        fill={color}
+        fillOpacity={AREA_FILL_OPACITY}
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeDasharray={dash}
+        strokeLinejoin="round"
+      />
+    );
+  }
+  return (
+    <>
+      <polyline
+        points={pointsAttr(points)}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeDasharray={dash}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {(kind === "distance" || kind === "calibrate") && points.length === 2 && (
+        <EndTicks
+          a={points[0]}
+          b={points[1]}
+          color={color}
+          strokeWidth={strokeWidth}
+        />
+      )}
+    </>
+  );
+}
+
+interface MeasurementShapeProps {
+  item: RulerRenderedMeasurement;
+  zoom: number;
   isSelected: boolean;
   isHovered: boolean;
+  showIdleLabel: boolean;
+  isEditable: boolean;
+  isInteractionPassthroughActive: boolean;
   onSelect: (id: string | null) => void;
   onDelete: (id: string) => void;
   onHoverChange: (id: string | null) => void;
-  measureScale?: MeasureScale | null;
-  zoom: number;
-  showIdleLabel: boolean;
-  expandLabelOnHover: boolean;
-  isInteractionPassthroughActive: boolean;
-  labels: MeasurementLineLabels;
+  onVertexPointerDown: RulerMeasurementLayerProps["onVertexPointerDown"];
 }
 
-function MeasurementLine({
-  id,
-  startS,
-  endS,
-  distPts,
+function MeasurementShape({
+  item,
+  zoom,
   isSelected,
   isHovered,
+  showIdleLabel,
+  isEditable,
+  isInteractionPassthroughActive,
   onSelect,
   onDelete,
   onHoverChange,
-  measureScale,
-  zoom,
-  showIdleLabel,
-  expandLabelOnHover,
-  isInteractionPassthroughActive,
-  labels,
-}: MeasurementLineProps) {
-  const { nx, ny } = preferredPerpUnit(startS, endS);
-  const ang = angleDeg(startS, endS);
-  const angLabel = `∠ ${ang.toFixed(1)}°`;
-
-  const imperialFirst = !!measureScale && isImperialUnit(measureScale.unit);
-  const distLabel = getMeasurementLabel(distPts, measureScale);
-
-  const hoverLine1 = measureScale
-    ? (() => {
-        const primary = formatScaled(distPts, measureScale);
-        const cross = scaledCross(distPts, measureScale);
-        return cross
-          ? `${labels.scaled}: ${primary} / ${cross}`
-          : `${labels.scaled}: ${primary}`;
-      })()
-    : `${formatDist(distPts)} / ${formatInches(distPts)}`;
-
-  const hoverLine2 = measureScale
-    ? imperialFirst
-      ? `${labels.physical}: ${formatInches(distPts)} / ${formatDist(distPts)}`
-      : `${labels.physical}: ${formatDist(distPts)} / ${formatInches(distPts)}`
-    : null;
-
-  const scaleLabel = measureScale
-    ? generateScaleLabel(measureScale.ratio, measureScale.unit)
-    : null;
-  const contextLabel = scaleLabel ? `${scaleLabel}   ${angLabel}` : angLabel;
-
+  onVertexPointerDown,
+}: MeasurementShapeProps) {
+  const { id, kind, pointsS, color, label, detailLines } = item;
+  const strokeWidth = isSelected ? item.strokeWidth + 1 : item.strokeWidth;
   const zoomScale = getZoomScale(zoom);
-  const scaledLH = Math.round(LH * zoomScale);
-  const scaledLH2 = Math.round(LH2 * zoomScale);
-  const scaledLH3 = Math.round(LH3 * zoomScale);
-  const idleDimensions = getIdleLabelDimensions(distLabel, zoom);
-
-  const maxHoverLh = measureScale ? scaledLH3 : scaledLH2;
-  const isHoveredLabelExpanded = isHovered && expandLabelOnHover;
-  const isInspecting = isSelected || isHoveredLabelExpanded;
-  const isCompactIdle = !isInspecting;
+  const lines = isSelected ? [label, ...detailLines] : [label];
+  const charWidth = isSelected ? 7.4 : 7;
+  const width = isSelected
+    ? Math.max(...lines.map((l) => textWidth(l, charWidth)), 80) +
+      LABEL_PADDING_X * 2
+    : idleLabelSize(label, zoom).width;
+  const height = isSelected
+    ? Math.round((lines.length * LINE_HEIGHT + LABEL_PADDING_Y * 2) * zoomScale)
+    : idleLabelSize(label, zoom).height;
+  const labelCenter = getLabelCenter(kind, pointsS, width, height);
   const showLabel = isSelected || isHovered || showIdleLabel;
   const showDelete = isSelected || isHovered;
-  const lh = isSelected
-    ? maxHoverLh
-    : isHoveredLabelExpanded
-      ? scaledLH
-      : idleDimensions.height;
-
-  const lwNormal = Math.max(distLabel.length * 8 + LP * 2, 80);
-  const lwHover = Math.max(
-    hoverLine1.length * 8 + LP * 2,
-    (hoverLine2?.length ?? 0) * 8 + LP * 2,
-    contextLabel.length * 8 + LP * 2,
-    80,
-  );
-  const lw = isSelected
-    ? lwHover
-    : isHoveredLabelExpanded
-      ? lwNormal
-      : idleDimensions.width;
-  const sw = isSelected ? 3 : 2;
-
-  const labelCenter = getLabelCenter(startS, endS, lw, lh);
-  const deleteCenter = getDeleteCenter(startS, endS, labelCenter, lw, lh);
-  const mono = "'Roboto Mono','Consolas',monospace";
+  const deleteCenter = {
+    x: labelCenter.x + width / 2 + DEL_R + DELETE_LABEL_GAP,
+    y: labelCenter.y,
+  };
+  const lineStep = Math.round(LINE_HEIGHT * zoomScale);
+  const firstLineY = labelCenter.y - ((lines.length - 1) * lineStep) / 2;
+  const closedForHit = kind === "area" ? [...pointsS, pointsS[0]] : pointsS;
 
   return (
     <g
       data-ruler-interactive="true"
       onPointerEnter={() => {
-        if (!isInteractionPassthroughActive) {
-          onHoverChange(id);
-        }
+        if (!isInteractionPassthroughActive) onHoverChange(id);
       }}
       onPointerLeave={() => onHoverChange(null)}
       onClick={(e) => {
-        if (isInteractionPassthroughActive) {
-          return;
-        }
-
+        if (isInteractionPassthroughActive) return;
         e.stopPropagation();
         onSelect(isSelected ? null : id);
       }}
@@ -442,296 +388,221 @@ function MeasurementLine({
         cursor: isInteractionPassthroughActive ? "crosshair" : "pointer",
       }}
     >
-      <line
-        x1={startS.x}
-        y1={startS.y}
-        x2={endS.x}
-        y2={endS.y}
+      <polyline
+        points={pointsAttr(closedForHit)}
+        fill={kind === "area" ? "transparent" : "none"}
         stroke="transparent"
         strokeWidth={LINE_HIT_WIDTH}
         strokeLinecap="round"
-        pointerEvents="stroke"
+        strokeLinejoin="round"
+        pointerEvents={
+          isInteractionPassthroughActive
+            ? "none"
+            : kind === "area"
+              ? "all"
+              : "stroke"
+        }
+      />
+      <Shape
+        kind={kind}
+        points={pointsS}
+        color={color}
+        strokeWidth={strokeWidth}
       />
 
-      <line
-        x1={startS.x}
-        y1={startS.y}
-        x2={endS.x}
-        y2={endS.y}
-        stroke="#1e88e5"
-        strokeWidth={sw}
-        strokeLinecap="round"
-      />
-      <line
-        x1={startS.x + (nx * TICK) / 2}
-        y1={startS.y + (ny * TICK) / 2}
-        x2={startS.x - (nx * TICK) / 2}
-        y2={startS.y - (ny * TICK) / 2}
-        stroke="#1e88e5"
-        strokeWidth={sw}
-        strokeLinecap="round"
-      />
-      <line
-        x1={endS.x + (nx * TICK) / 2}
-        y1={endS.y + (ny * TICK) / 2}
-        x2={endS.x - (nx * TICK) / 2}
-        y2={endS.y - (ny * TICK) / 2}
-        stroke="#1e88e5"
-        strokeWidth={sw}
-        strokeLinecap="round"
-      />
-      <circle
-        cx={startS.x}
-        cy={startS.y}
-        r={RULER_DOT_RADIUS}
-        fill="#1e88e5"
-        stroke="white"
-        strokeWidth={2}
-      />
-      <circle
-        cx={endS.x}
-        cy={endS.y}
-        r={RULER_DOT_RADIUS}
-        fill="#1e88e5"
-        stroke="white"
-        strokeWidth={2}
-      />
+      {pointsS.map((p, index) =>
+        isSelected && isEditable ? (
+          <circle
+            key={index}
+            data-ruler-control="true"
+            cx={p.x}
+            cy={p.y}
+            r={HANDLE_RADIUS}
+            fill="white"
+            stroke={color}
+            strokeWidth={2}
+            style={{ cursor: "move", pointerEvents: "all" }}
+            onPointerDown={(e) => onVertexPointerDown(id, index, e)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <circle
+            key={index}
+            cx={p.x}
+            cy={p.y}
+            r={kind === "distance" ? RULER_DOT_RADIUS : RULER_DOT_RADIUS - 1.5}
+            fill={color}
+            stroke="white"
+            strokeWidth={2}
+          />
+        ),
+      )}
 
       {showLabel && (
-        <g style={{ pointerEvents: "all", cursor: "pointer" }}>
+        <g
+          style={{
+            pointerEvents: isInteractionPassthroughActive ? "none" : "all",
+            cursor: "pointer",
+          }}
+        >
           <rect
-            x={labelCenter.x - lw / 2 - 4}
-            y={labelCenter.y - lh / 2 - 4}
-            width={lw + 8}
-            height={lh + 8}
-            fill="transparent"
-            stroke="none"
-          />
-
-          <rect
-            x={labelCenter.x - lw / 2}
-            y={labelCenter.y - lh / 2}
-            width={lw}
-            height={lh}
-            rx={isCompactIdle ? 4 : 5}
-            fill={isCompactIdle ? "rgba(255,255,255,0.94)" : "white"}
-            stroke="#1e88e5"
-            strokeWidth={isCompactIdle ? 1 : 1.5}
+            x={labelCenter.x - width / 2}
+            y={labelCenter.y - height / 2}
+            width={width}
+            height={height}
+            rx={isSelected ? 5 : 4}
+            fill="white"
+            fillOpacity={isSelected ? 1 : 0.94}
+            stroke={color}
+            strokeWidth={isSelected ? 1.5 : 1}
             filter="url(#ruler-shadow)"
           />
-
-          {isSelected && measureScale ? (
-            <>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y - Math.round(17 * zoomScale)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#1e88e5"
-                fontSize={12}
-                fontFamily={mono}
-                fontWeight={600}
-                style={{ userSelect: "none" }}
-              >
-                {hoverLine1}
-              </text>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#546e7a"
-                fontSize={11}
-                fontFamily={mono}
-                fontWeight={500}
-                style={{ userSelect: "none" }}
-              >
-                {hoverLine2}
-              </text>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y + Math.round(17 * zoomScale)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#5c6bc0"
-                fontSize={10}
-                fontFamily={mono}
-                fontWeight={500}
-                style={{ userSelect: "none" }}
-              >
-                {contextLabel}
-              </text>
-            </>
-          ) : isSelected ? (
-            <>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y - Math.round(6 * zoomScale)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#1e88e5"
-                fontSize={12}
-                fontFamily={mono}
-                fontWeight={600}
-                style={{ userSelect: "none" }}
-              >
-                {hoverLine1}
-              </text>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y + Math.round(13 * zoomScale)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#5c6bc0"
-                fontSize={11}
-                fontFamily={mono}
-                fontWeight={500}
-                style={{ userSelect: "none" }}
-              >
-                {contextLabel}
-              </text>
-            </>
-          ) : (
+          {lines.map((line, index) => (
             <text
+              key={index}
               x={labelCenter.x}
-              y={labelCenter.y + 1}
+              y={firstLineY + index * lineStep + 1}
               textAnchor="middle"
               dominantBaseline="middle"
-              fill="#1e88e5"
-              fontSize={isCompactIdle ? 10 : 12}
-              fontFamily={mono}
-              fontWeight={600}
+              fill={index === 0 ? color : "black"}
+              fillOpacity={index === 0 ? 1 : 0.62}
+              fontSize={index === 0 ? (isSelected ? 12 : 10) : 11}
+              fontFamily={MONO}
+              fontWeight={index === 0 ? 600 : 500}
               style={{ userSelect: "none" }}
             >
-              {distLabel}
+              {line}
             </text>
-          )}
+          ))}
         </g>
       )}
 
       {showDelete && (
-        <>
-          <line
-            x1={endS.x}
-            y1={endS.y}
-            x2={deleteCenter.x}
-            y2={deleteCenter.y}
-            stroke="transparent"
-            strokeWidth={DEL_R * 2}
-            strokeLinecap="round"
-            pointerEvents="stroke"
+        <g
+          data-ruler-control="true"
+          style={{ cursor: "pointer", pointerEvents: "all" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(id);
+          }}
+        >
+          <circle
+            cx={deleteCenter.x}
+            cy={deleteCenter.y}
+            r={DEL_R}
+            style={{ fill: DELETE_COLOR }}
+            stroke="white"
+            strokeWidth={1.5}
           />
-          <g
-            style={{ cursor: "pointer" }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(id);
-            }}
+          <text
+            x={deleteCenter.x}
+            y={deleteCenter.y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="white"
+            fontSize={12}
+            fontWeight={700}
+            style={{ userSelect: "none" }}
           >
-            <circle
-              cx={deleteCenter.x}
-              cy={deleteCenter.y}
-              r={DEL_R}
-              fill="#ef5350"
-              stroke="white"
-              strokeWidth={1.5}
-            />
-            <text
-              x={deleteCenter.x}
-              y={deleteCenter.y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="white"
-              fontSize={12}
-              fontWeight={700}
-              style={{ userSelect: "none" }}
-            >
-              ×
-            </text>
-          </g>
+            ×
+          </text>
+        </g>
+      )}
+    </g>
+  );
+}
+
+function Guide({ guide }: { guide: RulerGuide }) {
+  const { from, to, kind } = guide;
+  const length = dist(from, to) || 1;
+  const ux = (to.x - from.x) / length;
+  const uy = (to.y - from.y) / length;
+  // Angle guides run on past the cursor; alignment guides span both points.
+  const start = kind === "align" ? GUIDE_OVERSHOOT : 0;
+  return (
+    <g>
+      <line
+        x1={from.x - ux * start}
+        y1={from.y - uy * start}
+        x2={to.x + ux * GUIDE_OVERSHOOT * (kind === "angle" ? 4 : 1)}
+        y2={to.y + uy * GUIDE_OVERSHOOT * (kind === "angle" ? 4 : 1)}
+        style={{ stroke: GUIDE_COLOR }}
+        strokeWidth={1}
+        strokeDasharray={kind === "angle" ? "6 4" : "3 3"}
+      />
+      {kind === "align" && (
+        <>
+          <circle
+            cx={from.x}
+            cy={from.y}
+            r={2.5}
+            style={{ fill: GUIDE_COLOR }}
+          />
+          <circle cx={to.x} cy={to.y} r={2.5} style={{ fill: GUIDE_COLOR }} />
         </>
       )}
     </g>
   );
 }
 
-interface LiveLineProps {
-  startS: RulerPoint;
-  endS: RulerPoint;
-  zoom: number;
-  measureScale?: MeasureScale | null;
-}
-
-function LiveLine({ startS, endS, zoom, measureScale }: LiveLineProps) {
-  const d = dist(startS, endS) / zoom;
-  const { nx, ny } = preferredPerpUnit(startS, endS);
-  const ang = angleDeg(startS, endS);
-  const distLabel = measureScale
-    ? formatScaled(d, measureScale)
-    : formatDist(d);
-  const lw = Math.max(distLabel.length * 8 + LP * 2, 80);
-  const lh = Math.round(LH2 * getZoomScale(zoom));
-  const labelCenter = getLabelCenter(startS, endS, lw, lh);
+function DraftShape({ draft, zoom }: { draft: RulerDraft; zoom: number }) {
+  const { kind, pointsS, label, color } = draft;
+  if (pointsS.length === 0) return null;
+  const width = label
+    ? Math.max(textWidth(label, 8) + LABEL_PADDING_X * 2, 80)
+    : 0;
+  const height = Math.round(26 * getZoomScale(zoom));
+  const labelCenter =
+    label && pointsS.length >= 2
+      ? getLabelCenter(kind, pointsS, width, height)
+      : null;
 
   return (
     <g>
-      <line
-        x1={startS.x}
-        y1={startS.y}
-        x2={endS.x}
-        y2={endS.y}
-        stroke="#1e88e5"
-        strokeWidth={2}
-        strokeDasharray="7 4"
-        strokeLinecap="round"
-        opacity={0.85}
-      />
-      <line
-        x1={startS.x + (nx * TICK) / 2}
-        y1={startS.y + (ny * TICK) / 2}
-        x2={startS.x - (nx * TICK) / 2}
-        y2={startS.y - (ny * TICK) / 2}
-        stroke="#1e88e5"
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-      {d > 4 && (
+      {pointsS.length >= 2 && (
+        <Shape
+          kind={kind}
+          points={pointsS}
+          color={color}
+          strokeWidth={2}
+          dashed
+        />
+      )}
+      {pointsS.slice(0, -1).map((p, index) => (
+        <circle
+          key={index}
+          cx={p.x}
+          cy={p.y}
+          r={index === 0 ? RULER_DOT_RADIUS : RULER_DOT_RADIUS - 1.5}
+          fill={color}
+          stroke="white"
+          strokeWidth={2}
+        />
+      ))}
+      {labelCenter && label && (
         <g>
           <rect
-            x={labelCenter.x - lw / 2}
-            y={labelCenter.y - lh / 2}
-            width={lw}
-            height={lh}
+            x={labelCenter.x - width / 2}
+            y={labelCenter.y - height / 2}
+            width={width}
+            height={height}
             rx={5}
-            fill="#1e88e5"
+            fill={color}
             stroke="white"
             strokeWidth={1}
           />
           <text
             x={labelCenter.x}
-            y={labelCenter.y - 6}
+            y={labelCenter.y + 1}
             textAnchor="middle"
             dominantBaseline="middle"
             fill="white"
             fontSize={12}
-            fontFamily="'Roboto Mono','Consolas',monospace"
+            fontFamily={MONO}
             fontWeight={600}
             style={{ userSelect: "none" }}
           >
-            {distLabel}
-          </text>
-          <text
-            x={labelCenter.x}
-            y={labelCenter.y + 13}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="rgba(255,255,255,0.85)"
-            fontSize={11}
-            fontFamily="'Roboto Mono','Consolas',monospace"
-            fontWeight={500}
-            style={{ userSelect: "none" }}
-          >
-            {`∠ ${ang.toFixed(1)}°`}
+            {label}
           </text>
         </g>
       )}
@@ -744,114 +615,72 @@ export function RulerMeasurementLayer({
   zoom,
   selectedId,
   hoveredId,
-  labelVisibilityMode,
+  labelVisibility,
   isInteractionPassthroughActive,
-  liveLine,
-  firstPoint,
+  isEditable,
+  draft,
   cursor,
+  snapPoint,
+  guides,
   pageContentRef,
   onSelect,
   onDelete,
   onHoverChange,
-  onClearAll,
-  onCycleLabelVisibilityMode,
+  onVertexPointerDown,
 }: RulerMeasurementLayerProps) {
-  const { t } = useTranslation();
-  const measurementLineLabels = React.useMemo(
-    () => ({
-      scaled: t("ruler.scaled", "Scaled"),
-      physical: t("ruler.physicalValues", "Physical"),
-    }),
-    [t],
-  );
   const visibleIdleLabelIds = React.useMemo(
     () => getVisibleIdleLabelIds(measurements, zoom),
     [measurements, zoom],
   );
   const orderedMeasurements = React.useMemo(() => {
-    const getRank = (item: RulerRenderedMeasurement) => {
-      if (item.measurement.id === hoveredId) {
-        return 2;
-      }
-
-      if (item.measurement.id === selectedId) {
-        return 1;
-      }
-
-      return 0;
-    };
-
-    return [...measurements].sort((a, b) => getRank(a) - getRank(b));
+    const rank = (item: RulerRenderedMeasurement) =>
+      item.id === hoveredId ? 2 : item.id === selectedId ? 1 : 0;
+    return [...measurements].sort((a, b) => rank(a) - rank(b));
   }, [hoveredId, measurements, selectedId]);
 
-  const getShouldShowIdleLabel = (measurementId: string) => {
-    if (labelVisibilityMode === "showAll") {
-      return true;
-    }
+  const shouldShowIdleLabel = (id: string) =>
+    labelVisibility === "showAll" ||
+    (labelVisibility === "hideSmall" && visibleIdleLabelIds.has(id));
 
-    if (labelVisibilityMode === "hideAll") {
-      return false;
-    }
-
-    return visibleIdleLabelIds.has(measurementId);
-  };
-
-  const labelModeButtonLabel =
-    labelVisibilityMode === "hideSmall"
-      ? t("ruler.showAllLabels", "Show all labels")
-      : labelVisibilityMode === "showAll"
-        ? t("ruler.hideAllLabels", "Hide all labels")
-        : t("ruler.hideSmallLabels", "Hide small labels");
+  const cursorColor = draft?.color ?? DEFAULT_CURSOR_COLOR;
 
   return (
     <>
       <g ref={pageContentRef}>
-        {orderedMeasurements.map((item) => {
-          const { measurement, startS, endS, distPts, measureScale } = item;
-          return (
-            <MeasurementLine
-              key={measurement.id}
-              id={measurement.id}
-              startS={startS}
-              endS={endS}
-              distPts={distPts}
-              isSelected={
-                !isInteractionPassthroughActive && selectedId === measurement.id
-              }
-              isHovered={
-                !isInteractionPassthroughActive && hoveredId === measurement.id
-              }
-              onSelect={onSelect}
-              onDelete={onDelete}
-              onHoverChange={onHoverChange}
-              measureScale={measureScale}
-              zoom={zoom}
-              showIdleLabel={getShouldShowIdleLabel(measurement.id)}
-              expandLabelOnHover={labelVisibilityMode !== "showAll"}
-              isInteractionPassthroughActive={isInteractionPassthroughActive}
-              labels={measurementLineLabels}
-            />
-          );
-        })}
-
-        {firstPoint && (
-          <circle
-            cx={firstPoint.x}
-            cy={firstPoint.y}
-            r={RULER_DOT_RADIUS}
-            fill="#1e88e5"
-            stroke="white"
-            strokeWidth={2}
+        {orderedMeasurements.map((item) => (
+          <MeasurementShape
+            key={item.id}
+            item={item}
+            zoom={zoom}
+            isSelected={
+              !isInteractionPassthroughActive && selectedId === item.id
+            }
+            isHovered={!isInteractionPassthroughActive && hoveredId === item.id}
+            showIdleLabel={shouldShowIdleLabel(item.id)}
+            isEditable={isEditable}
+            isInteractionPassthroughActive={isInteractionPassthroughActive}
+            onSelect={onSelect}
+            onDelete={onDelete}
+            onHoverChange={onHoverChange}
+            onVertexPointerDown={onVertexPointerDown}
           />
-        )}
+        ))}
       </g>
 
-      {liveLine && (
-        <LiveLine
-          startS={liveLine.startS}
-          endS={liveLine.endS}
-          zoom={zoom}
-          measureScale={liveLine.measureScale}
+      {guides.map((guide, index) => (
+        <Guide key={index} guide={guide} />
+      ))}
+
+      {draft && <DraftShape draft={draft} zoom={zoom} />}
+
+      {snapPoint && (
+        <circle
+          cx={snapPoint.x}
+          cy={snapPoint.y}
+          r={HANDLE_RADIUS + 3}
+          fill="none"
+          style={{ stroke: cursorColor }}
+          strokeWidth={2}
         />
       )}
 
@@ -862,7 +691,7 @@ export function RulerMeasurementLayer({
             y1={cursor.y}
             x2={cursor.x + 12}
             y2={cursor.y}
-            stroke="#1e88e5"
+            style={{ stroke: cursorColor }}
             strokeWidth={1.5}
           />
           <line
@@ -870,80 +699,16 @@ export function RulerMeasurementLayer({
             y1={cursor.y - 12}
             x2={cursor.x}
             y2={cursor.y + 12}
-            stroke="#1e88e5"
+            style={{ stroke: cursorColor }}
             strokeWidth={1.5}
           />
-          <circle cx={cursor.x} cy={cursor.y} r={2} fill="#1e88e5" />
+          <circle
+            cx={cursor.x}
+            cy={cursor.y}
+            r={2}
+            style={{ fill: cursorColor }}
+          />
         </g>
-      )}
-
-      {measurements.length > 0 && (
-        <>
-          <g
-            data-ruler-interactive="true"
-            data-ruler-control="true"
-            style={{ pointerEvents: "all", cursor: "pointer" }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onClearAll();
-            }}
-          >
-            <rect
-              x={8}
-              y={8}
-              width={88}
-              height={26}
-              rx={5}
-              fill="rgba(239,83,80,0.9)"
-              stroke="white"
-              strokeWidth={1}
-            />
-            <text
-              x={52}
-              y={25}
-              textAnchor="middle"
-              fill="white"
-              fontSize={12}
-              fontFamily="sans-serif"
-              fontWeight={600}
-              style={{ userSelect: "none" }}
-            >
-              {t("ruler.clearAll", "Clear all")}
-            </text>
-          </g>
-          <g
-            data-ruler-interactive="true"
-            data-ruler-control="true"
-            style={{ pointerEvents: "all", cursor: "pointer" }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onCycleLabelVisibilityMode();
-            }}
-          >
-            <rect
-              x={8}
-              y={40}
-              width={LABEL_MODE_BUTTON_WIDTH}
-              height={26}
-              rx={5}
-              fill="rgba(30,136,229,0.9)"
-              stroke="white"
-              strokeWidth={1}
-            />
-            <text
-              x={8 + LABEL_MODE_BUTTON_WIDTH / 2}
-              y={57}
-              textAnchor="middle"
-              fill="white"
-              fontSize={12}
-              fontFamily="sans-serif"
-              fontWeight={600}
-              style={{ userSelect: "none" }}
-            >
-              {labelModeButtonLabel}
-            </text>
-          </g>
-        </>
       )}
     </>
   );

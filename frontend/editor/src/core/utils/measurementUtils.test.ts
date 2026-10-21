@@ -6,8 +6,39 @@ import {
   calculateScaleFactor,
   convertUnit,
   deriveRatioFromFactor,
+  formatArea,
+  formatLength,
+  fromViewPoint,
+  normalizeFileScales,
+  normalizeMeasurement,
   parsePresetRatio,
+  pathLength,
+  polygonArea,
+  resolvePageScale,
+  resolveScale,
+  toViewPoint,
+  type PageView,
 } from "@app/utils/measurementUtils";
+import { viewAngle } from "@app/utils/measurementDescription";
+import type {
+  FileMeasureScales,
+  MeasureScale,
+  PageMeasureScales,
+  PagePoint,
+} from "@app/utils/measurementTypes";
+
+const pt = (x: number, y: number, pageIndex = 0): PagePoint => ({
+  pageIndex,
+  x,
+  y,
+});
+
+const AUTO = { displayUnit: "auto", precision: "auto" } as const;
+const ONE_TO_100_M: MeasureScale = {
+  factor: calculateScaleFactor(100, "m"),
+  ratio: 100,
+  unit: "m",
+};
 
 describe("measurementUtils", () => {
   describe("calculateScaleFactor", () => {
@@ -112,6 +143,196 @@ describe("measurementUtils", () => {
       expect(() => calculateCalibratedScale(72, 1, "px")).toThrow(
         "Unsupported unit",
       );
+    });
+  });
+
+  describe("geometry", () => {
+    test("sums open and closed path lengths", () => {
+      const square = [pt(0, 0), pt(10, 0), pt(10, 10), pt(0, 10)];
+      expect(pathLength(square, false)).toBe(30);
+      expect(pathLength(square, true)).toBe(40);
+    });
+
+    test("computes polygon area regardless of winding", () => {
+      const square = [pt(0, 0), pt(10, 0), pt(10, 10), pt(0, 10)];
+      expect(polygonArea(square)).toBe(100);
+      expect(polygonArea([...square].reverse())).toBe(100);
+      expect(polygonArea([pt(0, 0), pt(4, 0), pt(0, 3)])).toBe(6);
+      expect(polygonArea([pt(0, 0), pt(1, 1)])).toBe(0);
+    });
+  });
+
+  describe("formatting", () => {
+    test("formats a scaled length in the scale's unit by default", () => {
+      // 1 inch on paper at 1:100 is 2.54 m.
+      expect(formatLength(72, ONE_TO_100_M, AUTO)).toBe("2.540 m");
+    });
+
+    test("converts to a chosen unit and precision", () => {
+      expect(
+        formatLength(72, ONE_TO_100_M, { displayUnit: "cm", precision: 1 }),
+      ).toBe("254.0 cm");
+      expect(
+        formatLength(72, ONE_TO_100_M, { displayUnit: "ft", precision: 2 }),
+      ).toBe("8.33 ft");
+    });
+
+    test("falls back to paper size without a scale", () => {
+      expect(formatLength(72, null, AUTO)).toBe("25.4 mm");
+      expect(formatLength(72, null, { displayUnit: "in", precision: 2 })).toBe(
+        "1.00 in",
+      );
+    });
+
+    test("squares the unit conversion for areas", () => {
+      // A 1 in square at 1:100 is 2.54 m on a side.
+      expect(
+        formatArea(72 * 72, ONE_TO_100_M, { displayUnit: "m", precision: 2 }),
+      ).toBe("6.45 m²");
+      expect(
+        formatArea(72 * 72, ONE_TO_100_M, { displayUnit: "cm", precision: 0 }),
+      ).toBe("64516 cm²");
+    });
+  });
+
+  describe("normalizeMeasurement", () => {
+    test("upgrades the legacy two-point shape to a distance", () => {
+      expect(
+        normalizeMeasurement({ id: "a", start: pt(1, 2), end: pt(3, 4) }),
+      ).toEqual({ id: "a", kind: "distance", points: [pt(1, 2), pt(3, 4)] });
+    });
+
+    test("keeps valid styling and drops invalid styling", () => {
+      const parsed = normalizeMeasurement({
+        id: "b",
+        kind: "area",
+        points: [pt(0, 0), pt(1, 0), pt(1, 1)],
+        label: "Kitchen",
+        color: "red",
+        strokeWidth: 99,
+      });
+      expect(parsed).toEqual({
+        id: "b",
+        kind: "area",
+        points: [pt(0, 0), pt(1, 0), pt(1, 1)],
+        label: "Kitchen",
+      });
+    });
+
+    test("rejects too few points and cross-page measurements", () => {
+      expect(
+        normalizeMeasurement({
+          id: "c",
+          kind: "area",
+          points: [pt(0, 0), pt(1, 1)],
+        }),
+      ).toBeNull();
+      expect(
+        normalizeMeasurement({
+          id: "d",
+          kind: "perimeter",
+          points: [pt(0, 0), pt(1, 1, 1)],
+        }),
+      ).toBeNull();
+    });
+  });
+
+  describe("scales", () => {
+    test("reads the legacy whole-file scale", () => {
+      expect(normalizeFileScales(ONE_TO_100_M)).toEqual({
+        defaultScale: ONE_TO_100_M,
+        pageScales: {},
+      });
+      expect(normalizeFileScales(null)).toEqual({
+        defaultScale: null,
+        pageScales: {},
+      });
+    });
+
+    test("prefers a page scale, then the file scale, then the PDF's", () => {
+      const pageScale: MeasureScale = { ...ONE_TO_100_M, ratio: 50 };
+      const embeddedScale: MeasureScale = { ...ONE_TO_100_M, ratio: 20 };
+      const embedded: PageMeasureScales = new Map([
+        [
+          0,
+          {
+            pageHeight: 800,
+            viewports: [{ bbox: null, scale: embeddedScale }],
+          },
+        ],
+      ]);
+      const scales: FileMeasureScales = {
+        defaultScale: ONE_TO_100_M,
+        pageScales: { 1: pageScale },
+      };
+
+      expect(resolveScale(1, pt(0, 0), scales, embedded)).toBe(pageScale);
+      expect(resolveScale(0, pt(0, 0), scales, embedded)).toBe(ONE_TO_100_M);
+      expect(
+        resolveScale(
+          0,
+          pt(0, 0),
+          { defaultScale: null, pageScales: {} },
+          embedded,
+        ),
+      ).toBe(embeddedScale);
+    });
+  });
+
+  describe("view space", () => {
+    const portrait = (rotation: PageView["rotation"]): PageView => ({
+      width: 600,
+      height: 800,
+      rotation,
+    });
+
+    test("matches the viewer's 90-degree clockwise turn", () => {
+      // The page's top-left corner ends up at the top-right on screen.
+      expect(toViewPoint(pt(0, 0), portrait(1))).toEqual({ x: 800, y: 0 });
+      expect(toViewPoint(pt(600, 0), portrait(1))).toEqual({ x: 800, y: 600 });
+    });
+
+    test("round-trips at every rotation", () => {
+      for (const rotation of [0, 1, 2, 3] as const) {
+        const view = portrait(rotation);
+        const back = fromViewPoint(toViewPoint(pt(123, 456, 2), view), view, 2);
+        expect(back.x).toBeCloseTo(123);
+        expect(back.y).toBeCloseTo(456);
+        expect(back.pageIndex).toBe(2);
+      }
+    });
+
+    test("reports angles as seen on a rotated page", () => {
+      // Vertical on the unrotated page is horizontal once turned 90 degrees.
+      const a = pt(100, 100);
+      const b = pt(100, 300);
+      expect(viewAngle(a, b, null)).toBeCloseTo(-90);
+      expect(Math.abs(viewAngle(a, b, portrait(1)))).toBeCloseTo(180);
+    });
+  });
+
+  describe("resolvePageScale", () => {
+    test("counts a PDF scale that covers only part of the page", () => {
+      const regionScale: MeasureScale = { ...ONE_TO_100_M, ratio: 50 };
+      const embedded: PageMeasureScales = new Map([
+        [
+          0,
+          {
+            pageHeight: 800,
+            viewports: [{ bbox: [100, 100, 300, 300], scale: regionScale }],
+          },
+        ],
+      ]);
+      const none: FileMeasureScales = { defaultScale: null, pageScales: {} };
+      expect(resolveScale(0, pt(0, 0), none, embedded)).toBeNull();
+      expect(resolvePageScale(0, none, embedded)).toBe(regionScale);
+      expect(
+        resolvePageScale(
+          0,
+          { defaultScale: ONE_TO_100_M, pageScales: {} },
+          embedded,
+        ),
+      ).toBe(ONE_TO_100_M);
     });
   });
 });

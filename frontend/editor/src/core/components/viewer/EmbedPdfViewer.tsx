@@ -52,10 +52,7 @@ import {
 } from "@app/types/fileContext";
 import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
 import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
-import {
-  RulerOverlay,
-  type RulerOverlayHandle,
-} from "@app/components/viewer/RulerOverlay";
+import { RulerOverlay } from "@app/components/viewer/RulerOverlay";
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
@@ -65,7 +62,8 @@ import {
   type FormApplyDetail,
 } from "@app/tools/formFill/formFillEvents";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
-import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
+import { useMeasurementFileBinding } from "@app/hooks/useMeasurementFileBinding";
+import { useMeasurements } from "@app/contexts/MeasurementContext";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
@@ -1709,37 +1707,11 @@ const EmbedPdfViewerContent = ({
     };
   }, [applyChanges, setApplyChanges]);
 
-  // Ruler / measurement tool state is handled by the dedicated hook.
-  const rulerOverlayRef = useRef<RulerOverlayHandle | null>(null);
+  useMeasurementFileBinding(currentFile, effectiveFile?.file);
+  const { calibrationSample, applyCalibration, cancelCalibration, fileScales } =
+    useMeasurements();
 
-  const {
-    isRulerActive,
-    setIsRulerActive,
-    pageMeasureScales,
-    customScale,
-    handleSetCustomScale,
-    isScaleCalibrationActive,
-    scaleCalibrationMeasurement,
-    startScaleCalibration,
-    cancelScaleCalibration,
-    handleScaleCalibrationMeasurement,
-    applyScaleCalibration,
-  } = useMeasurementManager({
-    currentFile,
-    effectiveFile,
-    rulerOverlayRef,
-  });
-
-  // Register workbench bar buttons for the viewer
-  useViewerWorkbenchBarButtons(
-    isRulerActive,
-    setIsRulerActive,
-    customScale,
-    handleSetCustomScale,
-    isScaleCalibrationActive,
-    startScaleCalibration,
-    cancelScaleCalibration,
-  );
+  useViewerWorkbenchBarButtons();
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
   // In normal viewer mode, this uses PDFium WASM (frontend-only).
@@ -1937,22 +1909,14 @@ const EmbedPdfViewerContent = ({
               signatureConfig={signatureConfig}
               signatureLineZoom={signatureLineZoom}
             />
-            <RulerOverlay
-              ref={rulerOverlayRef}
-              containerRef={pdfContainerRef}
-              isActive={isRulerActive}
-              pageMeasureScales={pageMeasureScales}
-              customScale={customScale}
-              isCalibrationActive={isScaleCalibrationActive}
-              onCalibrationMeasure={handleScaleCalibrationMeasurement}
-            />
+            <RulerOverlay containerRef={pdfContainerRef} />
           </Box>
           <ScaleCalibrationDialog
-            opened={!!scaleCalibrationMeasurement}
-            measurement={scaleCalibrationMeasurement}
-            defaultUnit={customScale?.unit ?? "m"}
-            onApplyScale={applyScaleCalibration}
-            onClose={cancelScaleCalibration}
+            opened={!!calibrationSample}
+            measurement={calibrationSample}
+            defaultUnit={fileScales.defaultScale?.unit ?? "m"}
+            onApplyScale={applyCalibration}
+            onClose={cancelCalibration}
           />
         </>
       )}
