@@ -19,7 +19,15 @@ dependencies {
     }
 
     implementation project(':common')
-    implementation 'org.springframework.boot:spring-boot-starter-jetty'
+    implementation('org.springframework.boot:spring-boot-starter-jetty') {
+        // The desktop webview talks HTTP/1.1 to a loopback sidecar and never opens a WebSocket.
+        if (gradle.ext.desktopBundle) {
+            exclude group: 'org.eclipse.jetty.ee11.websocket'
+            exclude group: 'org.eclipse.jetty.websocket'
+            exclude group: 'jakarta.websocket'
+            exclude group: 'jakarta.enterprise'
+        }
+    }
     implementation 'org.eclipse.jetty.http2:jetty-http2-server'
     implementation 'org.eclipse.jetty:jetty-alpn-java-server'
     if (!gradle.ext.desktopBundle) {
@@ -41,8 +49,17 @@ dependencies {
         }
     }
     implementation "commons-io:commons-io:$commonsIoVersion"
-    implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
-    implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
+    if (gradle.ext.desktopBundle) {
+        // Desktop has no SAML/OpenSAML or SMB stack, so its signing, timestamp and
+        // certificate paths can use the LTS branch: three jars ~7.9 MB instead of
+        // ~12.4 MB. The desktop runtime must stay LTS-only (no mixed BC families).
+        implementation "org.bouncycastle:bcprov-lts8on:$bouncycastleLtsVersion"
+        implementation "org.bouncycastle:bcpkix-lts8on:$bouncycastleLtsVersion"
+    } else {
+        // The server's OpenSAML and smbj dependencies require the rolling branch.
+        implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
+        implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
+    }
     if (!gradle.ext.desktopBundle) {
         implementation 'io.micrometer:micrometer-core'
     }

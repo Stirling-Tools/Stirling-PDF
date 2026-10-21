@@ -1559,6 +1559,13 @@
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
         {
+            "moduleName": "org.bouncycastle:bcpkix-lts8on",
+            "moduleUrl": "https://www.bouncycastle.org/lts-java",
+            "moduleVersion": "2.73.13",
+            "moduleLicense": "Bouncy Castle Licence",
+            "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
+        },
+        {
             "moduleName": "org.bouncycastle:bcprov-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
             "moduleVersion": "1.85",
@@ -1566,9 +1573,23 @@
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
         {
+            "moduleName": "org.bouncycastle:bcprov-lts8on",
+            "moduleUrl": "https://www.bouncycastle.org/lts-java",
+            "moduleVersion": "2.73.13",
+            "moduleLicense": "Bouncy Castle Licence",
+            "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
+        },
+        {
             "moduleName": "org.bouncycastle:bcutil-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
             "moduleVersion": "1.85",
+            "moduleLicense": "Bouncy Castle Licence",
+            "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
+        },
+        {
+            "moduleName": "org.bouncycastle:bcutil-lts8on",
+            "moduleUrl": "https://www.bouncycastle.org/lts-java",
+            "moduleVersion": "2.73.13",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
