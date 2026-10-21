@@ -343,6 +343,9 @@ function TextSelectionMenuInner({
             <span
               style={{ display: "inline-flex" }}
               tabIndex={canCopy ? undefined : 0}
+              role={canCopy ? undefined : "button"}
+              aria-label={canCopy ? undefined : t("viewer.copyText", "Copy")}
+              aria-disabled={canCopy ? undefined : true}
             >
               <button
                 type="button"
@@ -350,6 +353,7 @@ function TextSelectionMenuInner({
                 onClick={handleCopy}
                 disabled={!canCopy}
                 aria-label={t("viewer.copyText", "Copy")}
+                aria-hidden={!canCopy || undefined}
               >
                 <Icon name="copy" size={20} />
               </button>

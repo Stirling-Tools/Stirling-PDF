@@ -342,13 +342,13 @@ test("a PDF with only an opening password opens and prints after removing its op
     .getByRole("button", { name: "Remove Password", exact: true })
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByLabel("Permissions password", { exact: true }),
+  ).toBeEnabled();
+  await page.getByLabel("Password to open", { exact: true }).fill(reader);
   const removedResponse = page.waitForResponse(
     "**/api/v1/security/remove-password",
   );
-  await expect(
-    page.getByLabel("Permissions password", { exact: true }),
-  ).toBeDisabled();
-  await page.getByLabel("Password to open", { exact: true }).fill(reader);
   await page
     .getByRole("button", { name: "Remove Password", exact: true })
     .click();

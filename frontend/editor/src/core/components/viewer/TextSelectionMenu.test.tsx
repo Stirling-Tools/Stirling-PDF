@@ -147,11 +147,12 @@ describe("TextSelectionMenu", () => {
       </TestWrapper>,
     );
     const copy = screen.getByRole("button", { name: "Copy" });
-    expect(copy).toBeDisabled();
+    expect(copy).toHaveAttribute("aria-disabled", "true");
+    expect(copy.querySelector("button")).toBeDisabled();
     fireEvent.click(copy);
     expect(mockViewerCopy).not.toHaveBeenCalled();
     expect(mockCopyToClipboard).not.toHaveBeenCalled();
-    fireEvent.mouseEnter(copy.parentElement!);
+    fireEvent.focus(copy);
     expect(await screen.findByRole("tooltip")).toHaveTextContent(
       "Copying is disabled by this PDF's permissions.",
     );

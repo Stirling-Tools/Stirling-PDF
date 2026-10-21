@@ -61,6 +61,8 @@ async function upload(page: Page, buffer: Buffer, opening = true) {
     await dialog.getByRole("button", { name: "Open PDF", exact: true }).click();
     await expect(dialog).toBeHidden();
   }
+  await expect(page.locator('[data-page-index="0"]').first()).toBeVisible();
+  await expect(page.getByRole("dialog", { name: /^Open PDF/ })).toBeHidden();
   await expect(
     page.getByText("Leave a field blank to keep that password."),
   ).toBeVisible();
@@ -252,7 +254,7 @@ for (const remove of ["opening", "owner", "both"] as const) {
         "PDF open failed",
       );
     }
-    await expect(page.getByText("Updated PDFs", { exact: true })).toBeVisible();
+    await expect(page.getByTestId("download-result-button")).toBeEnabled();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Print PDF", exact: true }),
@@ -371,6 +373,23 @@ for (const remove of ["opening", "owner", "both"] as const) {
       .locator("label")
       .filter({ hasText: /^Active Files$/ })
       .click();
+    // Opening these fixtures makes absent protection known without inspecting unopened files.
+    for (const name of ["plain.pdf", "owner-only.pdf"]) {
+      await page
+        .getByTestId("file-thumbnail")
+        .filter({ hasText: name })
+        .dblclick();
+      await expect(
+        page.getByLabel("Password to open", { exact: true }),
+      ).toBeDisabled();
+      await expect(
+        page.getByLabel("Permissions password", { exact: true }),
+      ).toBeEnabled({ enabled: name === "owner-only.pdf" });
+      await page
+        .locator("label")
+        .filter({ hasText: /^Active Files$/ })
+        .click();
+    }
     await expect(
       page.getByText("Set on 2 of 4 PDFs", { exact: true }),
     ).toHaveCount(1);
@@ -400,17 +419,15 @@ for (const remove of ["opening", "owner", "both"] as const) {
         .getByRole("button", { name: "Continue", exact: true })
         .click();
     }
-    await expect(page.getByText("Updated PDFs", { exact: true })).toBeVisible();
-    expect(responses).toHaveLength(remove === "opening" ? 2 : 3);
+    await expect(page.getByTestId("download-result-button")).toBeEnabled();
+    // Owner-only removal rejects ambiguous opening credentials before sending a request.
+    expect(responses).toHaveLength(remove === "both" ? 3 : 2);
     expect(responses.filter((response) => !response.ok())).toHaveLength(
-      remove === "opening" ? 0 : 1,
+      remove === "both" ? 1 : 0,
     );
     const protection = [];
     for (const response of responses) {
-      if (!response.ok()) {
-        expect(response.request().postData()).toContain("opening-only.pdf");
-        continue;
-      }
+      if (!response.ok()) continue;
       const buffer = await response.body();
       const result = await inspect(
         page,
@@ -460,5 +477,12 @@ for (const remove of ["opening", "owner", "both"] as const) {
         })
         .getByText("v1", { exact: true }),
     ).toBeVisible();
+    if (remove !== "opening")
+      await expect(
+        page
+          .getByTestId("file-thumbnail")
+          .filter({ hasText: "opening-only.pdf" })
+          .getByText("Error", { exact: true }),
+      ).toBeVisible();
   });
 }
