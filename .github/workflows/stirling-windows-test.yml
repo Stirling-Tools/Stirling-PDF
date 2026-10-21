@@ -1,0 +1,84 @@
+name: Stirling PDF - Windows Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Setup Task
+        uses: go-task/setup-task@v1
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Prepare desktop backend and Java runtime
+        shell: bash
+        env:
+          DISABLE_ADDITIONAL_FEATURES: "true"
+          JPDFIUM_PLATFORMS: windows-x64
+        run: task desktop:prepare
+
+      - name: Verify bundled backend and Java runtime
+        shell: pwsh
+        run: |
+          $jar = Get-ChildItem "frontend/editor/src-tauri/libs/*.jar" -ErrorAction Stop
+          if ($jar.Count -ne 1) {
+            throw "Expected exactly one backend JAR"
+          }
+
+          $java = "frontend/editor/src-tauri/runtime/jre/bin/java.exe"
+          if (!(Test-Path $java)) {
+            throw "Windows Java runtime missing: $java"
+          }
+
+          Write-Host "Backend JAR: $($jar[0].Name)"
+          & $java -version
+
+      - name: Configure desktop environment
+        working-directory: frontend/editor
+        run: npx tsx scripts/setup-env.mts --desktop
+
+      - name: Disable updater signing for test build
+        shell: pwsh
+        working-directory: frontend/editor/src-tauri
+        run: |
+          $config = Get-Content tauri.conf.json -Raw | ConvertFrom-Json
+          $config.bundle.createUpdaterArtifacts = $false
+          $config | ConvertTo-Json -Depth 100 | Set-Content tauri.conf.json
+
+      - name: Build Windows installers
+        working-directory: frontend/editor
+        run: npx tauri build --target x86_64-pc-windows-msvc --bundles nsis
+
+      - name: Upload Windows installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stirling-PDF-Windows-Test
+          path: |
+            frontend/editor/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe
+          if-no-files-found: error
+          retention-days: 14
