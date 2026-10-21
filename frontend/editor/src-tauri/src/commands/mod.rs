@@ -11,7 +11,7 @@ pub mod updater;
 pub mod watcher;
 pub mod window;
 
-pub use backend::{cleanup_backend, get_backend_port, start_backend};
+pub use backend::{get_backend_port, start_backend, stop_backend, StopReport};
 pub use files::{
     add_opened_file, clear_opened_files, file_disk_state, get_opened_files, pop_opened_files,
 };
