@@ -1,49 +1,64 @@
 package stirling.software.common.cluster.inprocess;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.ConsumptionProbe;
-import io.github.bucket4j.local.LocalBucketBuilder;
-
 import stirling.software.common.cluster.RateLimitStore;
 
-/** Bucket4j-backed token bucket implementation of {@link RateLimitStore}. */
+/** In-process greedy-refill token bucket, sized for a single local backend. */
 public class InProcessRateLimitStore implements RateLimitStore {
 
     /** Cap to bound memory; oldest accessed buckets are evicted. */
     private static final int MAX_BUCKETS = 10_000;
 
-    private final Map<String, Bucket> buckets =
-            Collections.synchronizedMap(
-                    new LinkedHashMap<String, Bucket>(256, 0.75f, true) {
-                        @Override
-                        protected boolean removeEldestEntry(Map.Entry<String, Bucket> eldest) {
-                            return size() > MAX_BUCKETS;
-                        }
-                    });
+    private final Map<String, BucketState> buckets =
+            new LinkedHashMap<>(256, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, BucketState> eldest) {
+                    return size() > MAX_BUCKETS;
+                }
+            };
 
     @Override
-    public RateLimitDecision tryConsume(String bucketKey, long capacity, Duration refillPeriod) {
+    public synchronized RateLimitDecision tryConsume(
+            String bucketKey, long capacity, Duration refillPeriod) {
+        if (capacity <= 0 || refillPeriod.isZero() || refillPeriod.isNegative()) {
+            throw new IllegalArgumentException("capacity and refillPeriod must be positive");
+        }
         String compositeKey = bucketKey + "|" + capacity + "|" + refillPeriod.toNanos();
-        Bucket bucket =
-                buckets.computeIfAbsent(compositeKey, k -> buildBucket(capacity, refillPeriod));
-        ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
-        return new RateLimitDecision(
-                probe.isConsumed(),
-                probe.getRemainingTokens(),
-                probe.isConsumed() ? 0L : probe.getNanosToWaitForRefill());
+        BucketState bucket =
+                buckets.computeIfAbsent(compositeKey, key -> new BucketState(capacity));
+        bucket.refill(capacity, refillPeriod.toNanos());
+
+        if (bucket.tokens >= 1d) {
+            bucket.tokens -= 1d;
+            return new RateLimitDecision(true, (long) Math.floor(bucket.tokens), 0L);
+        }
+        double missingTokens = 1d - bucket.tokens;
+        long waitNanos =
+                (long) Math.ceil(missingTokens * refillPeriod.toNanos() / (double) capacity);
+        return new RateLimitDecision(false, 0L, waitNanos);
     }
 
-    private static Bucket buildBucket(long capacity, Duration refillPeriod) {
-        Bandwidth limit =
-                Bandwidth.builder().capacity(capacity).refillGreedy(capacity, refillPeriod).build();
-        LocalBucketBuilder builder = Bucket.builder();
-        builder.addLimit(limit);
-        return builder.build();
+    private static final class BucketState {
+        private double tokens;
+        private long lastRefillNanos;
+
+        private BucketState(long capacity) {
+            this.tokens = capacity;
+            this.lastRefillNanos = System.nanoTime();
+        }
+
+        private void refill(long capacity, long refillPeriodNanos) {
+            long now = System.nanoTime();
+            long elapsed = now - lastRefillNanos;
+            if (elapsed <= 0) {
+                return;
+            }
+            double replenished = (double) elapsed * capacity / (double) refillPeriodNanos;
+            tokens = Math.min(capacity, tokens + replenished);
+            lastRefillNanos = now;
+        }
     }
 }

@@ -6,8 +6,8 @@ import java.time.Duration;
  * Token-bucket rate limiting backed by the cluster backplane.
  *
  * <p>In-process implementations enforce a per-JVM limit; distributed implementations enforce a
- * single global limit across every node. Both use a Bucket4j greedy-refill token bucket so the
- * semantics match across single-node and cluster deployments.
+ * single global limit across every node. Both use greedy-refill token-bucket semantics so quotas
+ * behave the same across single-node and cluster deployments.
  */
 public interface RateLimitStore {
 

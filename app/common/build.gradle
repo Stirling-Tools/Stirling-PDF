@@ -93,9 +93,6 @@ dependencies {
         runtimeOnly "com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"
     }
 
-    // Bucket4j (local in-process token bucket for RateLimitStore default impl)
-    implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
-
     // ArchUnit: enforces module dependency direction (see ArchitectureTest)
     testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
 }
