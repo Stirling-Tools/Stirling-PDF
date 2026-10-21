@@ -329,12 +329,13 @@ const PORTAL_CORE_PREFIXES = new Set([
 const PORTAL_FULL_PREFIXES = new Set([
   ...PORTAL_CORE_PREFIXES,
   "billing",
-  "error",
-  "errorFallback",
+  "connections",
   "infrastructure",
+  "integrations",
   "pipelines",
   "policies",
   "settings",
+  "sources",
   "usage",
 ]);
 
@@ -396,6 +397,23 @@ async function prunePortalLocales(
       console.warn(`[prune-portal] ${file}: ${error}`);
     }
   }
+}
+
+/**
+ * Production locales are renamed to .txt so static hosts compress them, but
+ * the dev server still serves the authored .toml. Rewrite the preload hints
+ * only for builds; index.html stays valid for both.
+ */
+function localePreloadPlugin(): PluginOption {
+  return {
+    name: "locale-preload-extension",
+    apply: "build" as const,
+    transformIndexHtml: {
+      order: "pre" as const,
+      handler: (html: string) =>
+        html.replaceAll("/translation.toml", "/translation.txt"),
+    },
+  };
 }
 
 function compressStaticCopyPlugin(
@@ -780,6 +798,7 @@ export default defineConfig(async ({ mode, command }) => {
         },
       },
       iconSvgr(),
+      localePreloadPlugin(),
       react(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
       tsconfigPaths({
@@ -843,14 +862,10 @@ export default defineConfig(async ({ mode, command }) => {
       ...(effectiveMode === "desktop"
         ? [desktopAssetsPlugin(prunePortal, portalKeep)]
         : [compressStaticCopyPlugin(prunePortal, precompress, portalKeep)]),
-      ...(effectiveMode === "desktop"
-        ? []
-        : [
-            prerenderOgPlugin({
-              isSaas: effectiveMode === "saas",
-              precompress,
-            }),
-          ]),
+      prerenderOgPlugin({
+        isSaas: effectiveMode === "saas",
+        precompress: effectiveMode !== "desktop",
+      }),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.
