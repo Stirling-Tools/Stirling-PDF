@@ -56,15 +56,14 @@ public class PdfBoxFontEncodingProbeTest {
     private static final Path PROJECT_ROOT =
             Paths.get(System.getProperty("user.dir")).getParent().getParent();
 
-    private static final Path SAMPLE =
-            PROJECT_ROOT.resolve("frontend/editor/public/samples/Sample.pdf");
+    private static final Path SAMPLE = PROJECT_ROOT.resolve("frontend/public/samples/Sample.pdf");
 
     private static final Path[] EXTRA_FIXTURES = {
-        PROJECT_ROOT.resolve("frontend/editor/src/core/tests/test-fixtures/stirling-marketing.pdf"),
-        PROJECT_ROOT.resolve("frontend/editor/src/core/tests/test-fixtures/multi-page-sample.pdf"),
-        PROJECT_ROOT.resolve("frontend/editor/src/core/tests/test-fixtures/big-sample.pdf"),
-        PROJECT_ROOT.resolve("frontend/editor/src/core/tests/test-fixtures/paragraph-sample.pdf"),
-        PROJECT_ROOT.resolve("frontend/editor/src/core/tests/test-fixtures/user-sample.pdf"),
+        PROJECT_ROOT.resolve("frontend/src/editor/core/tests/test-fixtures/stirling-marketing.pdf"),
+        PROJECT_ROOT.resolve("frontend/src/editor/core/tests/test-fixtures/multi-page-sample.pdf"),
+        PROJECT_ROOT.resolve("frontend/src/editor/core/tests/test-fixtures/big-sample.pdf"),
+        PROJECT_ROOT.resolve("frontend/src/editor/core/tests/test-fixtures/paragraph-sample.pdf"),
+        PROJECT_ROOT.resolve("frontend/src/editor/core/tests/test-fixtures/user-sample.pdf"),
     };
 
     /**
