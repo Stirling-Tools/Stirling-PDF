@@ -91,7 +91,7 @@ export function ReadAloudSidebar({
             title={collapseLabel}
             onClick={onCollapse}
           >
-            <Icon name="chevron-right" size="1rem" />
+            <Icon name="chevron-down" size="1rem" />
           </ActionIcon>
         </Tooltip>
       }

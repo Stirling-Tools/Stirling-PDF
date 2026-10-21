@@ -99,7 +99,7 @@ export function ReadAloudMiniPlayer({
             aria-label={t("readAloud.expand", "Show controls")}
             onClick={onExpand}
           >
-            <Icon name="chevron-left" size="1rem" />
+            <Icon name="chevron-up" size="1rem" />
           </ActionIcon>
         </Tooltip>
         <Tooltip
