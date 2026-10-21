@@ -140,8 +140,8 @@ describe("zipFileService.createZipFromFiles", () => {
     const zip = await JSZip.loadAsync(await zipFile.arrayBuffer());
     expect(Object.keys(zip.files)).toEqual([
       "Chapter 1.pdf",
-      "chapter 1 2.pdf",
-      "Chapter 1 3.pdf",
+      "chapter 1_2.pdf",
+      "Chapter 1_3.pdf",
       "notes",
     ]);
   });

@@ -19,7 +19,7 @@ const getData = (zipEntry: JSZipObject): CompressedObject | undefined => {
 };
 
 /**
- * `name`, or `base 2.ext`, `base 3.ext`... when an earlier entry already has it. JSZip replaces
+ * `name`, or `base_2.ext`, `base_3.ext`... when an earlier entry already has it. JSZip replaces
  * an entry added under a taken name, and extracting on a case-insensitive filesystem overwrites
  * one that differs only in case, so either way a file would be dropped silently.
  */
@@ -27,7 +27,7 @@ function uniqueEntryName(name: string, taken: Set<string>): string {
   const [base, ext] = splitFileName(name);
   let candidate = name;
   for (let index = 2; taken.has(candidate.toLowerCase()); index++) {
-    candidate = `${base} ${index}${ext}`;
+    candidate = `${base}_${index}${ext}`;
   }
   taken.add(candidate.toLowerCase());
   return candidate;
