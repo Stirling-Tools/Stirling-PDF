@@ -45,10 +45,10 @@ class PDFPasswordRequestTest {
     }
 
     @Test
-    @DisplayName("toString contains class name and value")
+    @DisplayName("toString contains class name without the password")
     void toStringContent() {
         PDFPasswordRequest a = new PDFPasswordRequest();
         a.setPassword("secret");
-        assertThat(a.toString()).contains("PDFPasswordRequest").contains("secret");
+        assertThat(a.toString()).contains("PDFPasswordRequest").doesNotContain("secret");
     }
 }

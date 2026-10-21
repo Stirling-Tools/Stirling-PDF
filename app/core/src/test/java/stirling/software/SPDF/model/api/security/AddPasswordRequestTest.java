@@ -104,11 +104,13 @@ class AddPasswordRequestTest {
         }
 
         @Test
-        @DisplayName("toString contains class name and a field value")
+        @DisplayName("toString contains options without the password")
         void toStringContent() {
             AddPasswordRequest a = new AddPasswordRequest();
             a.setPassword("secret");
-            assertThat(a.toString()).contains("AddPasswordRequest").contains("secret");
+            assertThat(a.toString())
+                    .contains("AddPasswordRequest", "keyLength=256")
+                    .doesNotContain("secret");
         }
     }
 }
