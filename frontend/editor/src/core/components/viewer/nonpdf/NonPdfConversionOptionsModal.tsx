@@ -1,7 +1,9 @@
-import { Box, Divider, Group, Paper, Stack, Text } from "@mantine/core";
+import { useState } from "react";
+import { Group, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@app/ui/Button";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import { Icon } from "@app/ui/Icon";
 import { Modal } from "@app/ui/Modal";
 import ConvertFromCbrSettings from "@app/components/tools/convert/ConvertFromCbrSettings";
@@ -20,37 +22,10 @@ interface NonPdfConversionOptionsModalProps {
   onClose: () => void;
   file: File;
   plan: NonPdfConversionPlan;
+  /** Committed parameters; the dialog edits a draft so Cancel can discard it. */
   parameters: ConvertParameters;
-  onParameterChange: <K extends keyof ConvertParameters>(
-    key: K,
-    value: ConvertParameters[K],
-  ) => void;
-  onConvert: () => void;
+  onConvert: (parameters: ConvertParameters) => void;
   converting: boolean;
-}
-
-function FormatTile({ label, pdf = false }: { label: string; pdf?: boolean }) {
-  return (
-    <Group gap="xs" wrap="nowrap">
-      <Box
-        aria-hidden
-        style={{
-          display: "grid",
-          placeItems: "center",
-          width: "2.25rem",
-          height: "2.25rem",
-          borderRadius: "0.5rem",
-          color: pdf ? "var(--c-text-on-danger)" : "var(--c-accent-fg)",
-          background: pdf ? "var(--c-danger)" : "var(--c-primary-subtle)",
-        }}
-      >
-        <Icon name={pdf ? "file-pdf" : "file-text"} size="1.15rem" />
-      </Box>
-      <Text size="sm" fw={600}>
-        {label}
-      </Text>
-    </Group>
-  );
 }
 
 export function NonPdfConversionOptionsModal({
@@ -59,16 +34,24 @@ export function NonPdfConversionOptionsModal({
   file,
   plan,
   parameters,
-  onParameterChange,
   onConvert,
   converting,
 }: NonPdfConversionOptionsModalProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
+  const [draft, setDraft] = useState(parameters);
+
+  const updateDraft = <K extends keyof ConvertParameters>(
+    key: K,
+    value: ConvertParameters[K],
+  ) => {
+    setDraft((previous) => ({ ...previous, [key]: value }));
+  };
 
   const settings = (() => {
     const shared = {
-      parameters,
-      onParameterChange,
+      parameters: draft,
+      onParameterChange: updateDraft,
       disabled: converting,
     };
 
@@ -110,15 +93,18 @@ export function NonPdfConversionOptionsModal({
       width="md"
       footer={
         <Group justify="flex-end" gap="sm">
-          <Button variant="tertiary" onClick={onClose} disabled={converting}>
+          <Button
+            variant="tertiary"
+            size={isMobile ? "lg" : "md"}
+            onClick={onClose}
+            disabled={converting}
+          >
             {t("viewer.nonPdf.cancel", "Cancel")}
           </Button>
           <Button
+            size={isMobile ? "lg" : "md"}
             leftSection={<Icon name="file-pdf" size="1rem" />}
-            onClick={() => {
-              onConvert();
-              onClose();
-            }}
+            onClick={() => onConvert(draft)}
             loading={converting}
             data-testid="nonpdf-options-convert"
           >
@@ -128,24 +114,6 @@ export function NonPdfConversionOptionsModal({
       }
     >
       <Stack gap="md" data-testid="nonpdf-options">
-        <Paper
-          p="sm"
-          radius="md"
-          style={{ background: "var(--c-surface-sunken)" }}
-        >
-          <Group justify="space-between" wrap="nowrap" gap="sm">
-            <FormatTile label={plan.formatLabel} />
-            <Icon
-              name="arrow-right"
-              size="1rem"
-              style={{ color: "var(--c-text-subtle)", flexShrink: 0 }}
-            />
-            <FormatTile label="PDF" pdf />
-          </Group>
-        </Paper>
-
-        <Divider />
-
         {settings}
 
         <Text size="xs" c="dimmed">

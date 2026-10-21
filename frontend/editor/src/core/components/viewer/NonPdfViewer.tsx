@@ -29,7 +29,7 @@ export interface NonPdfViewerProps extends ViewerProps {
 export function NonPdfViewer({ file, onConverted }: NonPdfViewerProps) {
   const fileType = useMemo(() => detectNonPdfFileType(file), [file]);
   const plan = useMemo(() => getNonPdfConversionPlan(file.name), [file.name]);
-  const { toolAvailability } = useToolWorkflow();
+  const { handleToolSelect, toolAvailability } = useToolWorkflow();
 
   // Optimistic while endpoint availability is still loading: an empty map means
   // "unknown", not "disabled". Only an explicit server-side false hides the action.
@@ -77,6 +77,7 @@ export function NonPdfViewer({ file, onConverted }: NonPdfViewerProps) {
           variant="compact"
           disabled={conversionDisabled}
           onConverted={onConverted}
+          onOpenInConvert={() => handleToolSelect("convert")}
         />
       )}
       <Box
@@ -96,6 +97,7 @@ export function NonPdfViewer({ file, onConverted }: NonPdfViewerProps) {
             variant="hero"
             disabled={conversionDisabled}
             onConverted={onConverted}
+            onOpenInConvert={() => handleToolSelect("convert")}
           />
         )}
       </Box>

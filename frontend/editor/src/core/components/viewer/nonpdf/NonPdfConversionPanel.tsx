@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Box, Center, Group, Loader, Paper, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { Icon, type IconName } from "@app/ui/Icon";
 import { useIsMobile } from "@app/hooks/useIsMobile";
@@ -21,6 +22,7 @@ interface NonPdfConversionPanelProps {
   /** Conversion is disabled by the server, not by this file's format. */
   disabled?: boolean;
   onConverted?: () => void;
+  onOpenInConvert?: () => void;
 }
 
 interface ConversionStatusProps {
@@ -28,6 +30,8 @@ interface ConversionStatusProps {
   compact: boolean;
   onCancel: () => void;
   onRetry: () => void;
+  optionsButton?: ReactNode;
+  onOpenInConvert?: () => void;
   onDismiss: () => void;
   errorMessage: string | null;
 }
@@ -147,14 +151,29 @@ function ConversionProgress({
 function ConversionError({
   compact,
   onRetry,
+  optionsButton,
+  onOpenInConvert,
   onDismiss,
   errorMessage,
 }: Pick<
   ConversionStatusProps,
-  "compact" | "onRetry" | "onDismiss" | "errorMessage"
+  | "compact"
+  | "onRetry"
+  | "optionsButton"
+  | "onOpenInConvert"
+  | "onDismiss"
+  | "errorMessage"
 >) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const retryRef = useRef<HTMLButtonElement>(null);
+  const buttonSize = isMobile ? "lg" : compact ? "sm" : "md";
+
+  // The error replaces the actions that were focused. Move focus to the first
+  // recovery action so keyboard users do not land on <body>.
+  useEffect(() => {
+    retryRef.current?.focus();
+  }, []);
 
   return (
     <Paper
@@ -196,24 +215,46 @@ function ConversionError({
               )}
           </Text>
         </Box>
+        <ActionIcon
+          variant="quiet"
+          size="sm"
+          shape="circle"
+          aria-label={t("viewer.nonPdf.dismiss", "Dismiss")}
+          onClick={onDismiss}
+        >
+          <Icon name="x" size="1rem" />
+        </ActionIcon>
       </Group>
-      <Group justify="flex-end" gap="xs" mt="xs">
+      <Group justify="flex-end" gap="xs" mt="xs" wrap="wrap">
         <Button
+          ref={retryRef}
           variant="secondary"
-          size={isMobile ? "lg" : compact ? "sm" : "md"}
+          size={buttonSize}
           onClick={onRetry}
           data-testid="nonpdf-conversion-retry"
         >
           {t("viewer.nonPdf.retry", "Try again")}
         </Button>
-        <Button
-          variant="quiet"
-          size={isMobile ? "lg" : compact ? "sm" : "md"}
-          onClick={onDismiss}
-        >
-          {t("viewer.nonPdf.dismiss", "Dismiss")}
-        </Button>
+        {optionsButton}
+        {onOpenInConvert && (
+          <Button
+            variant="quiet"
+            size={buttonSize}
+            onClick={onOpenInConvert}
+            data-testid="nonpdf-conversion-open-convert"
+          >
+            {t("viewer.nonPdf.openInConvert", "Open in Convert")}
+          </Button>
+        )}
       </Group>
+      {onOpenInConvert && (
+        <Text size="xs" c="dimmed" mt={6} dir="auto">
+          {t(
+            "viewer.nonPdf.openInConvertHint",
+            "Uses the same server conversion with more settings.",
+          )}
+        </Text>
+      )}
     </Paper>
   );
 }
@@ -224,15 +265,18 @@ export function NonPdfConversionPanel({
   variant,
   disabled = false,
   onConverted,
+  onOpenInConvert,
 }: NonPdfConversionPanelProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const convertRef = useRef<HTMLButtonElement>(null);
+  const optionsRef = useRef<HTMLButtonElement>(null);
   const {
     status,
     errorMessage,
     parameters,
-    updateParameter,
+    applyParameters,
     convert,
     cancel,
     dismissError,
@@ -240,18 +284,41 @@ export function NonPdfConversionPanel({
 
   const converting = status === "converting";
   const failed = status === "error";
+  const hasOptions = plan.optionsKind !== "none";
   const formatName = plan.formatLabel;
 
   const openOptions = () => setOptionsOpen(true);
 
+  const closeOptions = () => {
+    setOptionsOpen(false);
+    requestAnimationFrame(() => optionsRef.current?.focus());
+  };
+
+  const handleCancel = () => {
+    cancel();
+    requestAnimationFrame(() => convertRef.current?.focus());
+  };
+
+  const handleOptionsConvert = (next: typeof parameters) => {
+    applyParameters(next);
+    setOptionsOpen(false);
+    void convert(next);
+  };
+
+  const handleOpenInConvert = () => {
+    dismissError();
+    onOpenInConvert?.();
+  };
+
   const actionSize =
     variant === "hero" ? (isMobile ? "xl" : "md") : isMobile ? "lg" : "sm";
 
-  const optionsButton = (
+  const optionsButton = hasOptions ? (
     <Button
+      ref={optionsRef}
       variant="secondary"
       size={actionSize}
-      fullWidth={isMobile && variant === "hero"}
+      fullWidth={isMobile && variant === "hero" && !failed}
       leftSection={<Icon name="sliders-horizontal" size="1rem" />}
       onClick={openOptions}
       disabled={disabled || converting}
@@ -260,12 +327,15 @@ export function NonPdfConversionPanel({
     >
       {isMobile && variant === "compact"
         ? null
-        : t("viewer.nonPdf.optionsTitle", "Conversion options")}
+        : failed
+          ? t("viewer.nonPdf.adjustOptions", "Adjust options")
+          : t("viewer.nonPdf.optionsTitle", "Conversion options")}
     </Button>
-  );
+  ) : null;
 
   const convertButton = (
     <Button
+      ref={convertRef}
       size={actionSize}
       fullWidth={isMobile && variant === "hero"}
       leftSection={<Icon name="file-pdf" size="1rem" />}
@@ -275,23 +345,24 @@ export function NonPdfConversionPanel({
       data-testid="nonpdf-convert"
     >
       {isMobile && variant === "compact"
-        ? t("viewer.nonPdf.convertShort", "Convert")
+        ? t("viewer.nonPdf.convertShort", "To PDF")
         : t("viewer.nonPdf.convertToPdf", "Convert to PDF")}
     </Button>
   );
 
-  const optionsModal = (
+  // Mount only while open so draft settings start from the committed values
+  // every time, and Cancel can discard them by unmounting.
+  const optionsModal = optionsOpen ? (
     <NonPdfConversionOptionsModal
-      open={optionsOpen}
-      onClose={() => setOptionsOpen(false)}
+      open
+      onClose={closeOptions}
       file={file}
       plan={plan}
       parameters={parameters}
-      onParameterChange={updateParameter}
-      onConvert={() => void convert()}
+      onConvert={handleOptionsConvert}
       converting={converting}
     />
-  );
+  ) : null;
 
   if (variant === "hero") {
     return (
@@ -317,7 +388,17 @@ export function NonPdfConversionPanel({
           <Stack align="center" gap="lg">
             <FormatIcon plan={plan} large />
 
-            <Stack align="center" gap={6}>
+            <Stack align="center" gap={6} w="100%">
+              <Text
+                size="sm"
+                fw={600}
+                ta="center"
+                dir="auto"
+                lineClamp={2}
+                style={{ maxWidth: "100%", overflowWrap: "anywhere" }}
+              >
+                {file.name}
+              </Text>
               <Text
                 size="xs"
                 fw={700}
@@ -336,14 +417,12 @@ export function NonPdfConversionPanel({
                 dir="auto"
                 style={{ fontSize: "1.35rem", lineHeight: 1.25 }}
               >
-                {t("viewer.nonPdf.heroTitle", "Open this {{format}} as a PDF", {
-                  format: formatName,
-                })}
+                {t("viewer.nonPdf.heroTitle", "Open as PDF")}
               </Text>
               <Text size="sm" c="dimmed" ta="center" dir="auto">
                 {t(
                   "viewer.nonPdf.heroBody",
-                  "Preview, edit, sign, and organize it like any other document. Your original {{format}} file stays in your workspace.",
+                  "Convert this {{format}} to preview and edit it. Your original stays in the workspace.",
                   { format: formatName },
                 )}
               </Text>
@@ -360,12 +439,14 @@ export function NonPdfConversionPanel({
               <ConversionProgress
                 file={file}
                 compact={false}
-                onCancel={cancel}
+                onCancel={handleCancel}
               />
             ) : failed ? (
               <ConversionError
                 compact={false}
                 onRetry={() => void convert()}
+                optionsButton={optionsButton}
+                onOpenInConvert={handleOpenInConvert}
                 onDismiss={dismissError}
                 errorMessage={errorMessage}
               />
@@ -380,17 +461,6 @@ export function NonPdfConversionPanel({
                 {optionsButton}
               </Group>
             )}
-
-            <Group gap={6} justify="center">
-              <Icon
-                name="shield-check"
-                size="0.9rem"
-                style={{ color: "var(--c-text-subtle)" }}
-              />
-              <Text size="xs" c="dimmed" dir="auto">
-                {t("viewer.nonPdf.heroHint", "One click · original file kept")}
-              </Text>
-            </Group>
           </Stack>
         </Paper>
 
@@ -441,7 +511,7 @@ export function NonPdfConversionPanel({
             </Text>
           ) : (
             <>
-              {!converting && !failed && optionsButton}
+              {!converting && optionsButton}
               {!failed && convertButton}
             </>
           )}
@@ -449,12 +519,14 @@ export function NonPdfConversionPanel({
       </Group>
 
       {converting && (
-        <ConversionProgress file={file} compact onCancel={cancel} />
+        <ConversionProgress file={file} compact onCancel={handleCancel} />
       )}
       {failed && (
         <ConversionError
           compact
           onRetry={() => void convert()}
+          optionsButton={null}
+          onOpenInConvert={handleOpenInConvert}
           onDismiss={dismissError}
           errorMessage={errorMessage}
         />

@@ -1909,6 +1909,10 @@ const EmbedPdfViewerContent = ({
           {/* EmbedPDF Viewer */}
           <Box
             ref={pdfContainerRef}
+            data-pdf-focus-target
+            role="region"
+            aria-label={t("viewer.pdfDocument", "PDF document")}
+            tabIndex={-1}
             style={{
               position: "relative",
               flex: 1,
@@ -1917,6 +1921,7 @@ const EmbedPdfViewerContent = ({
               minWidth: 0,
               marginRight: `${totalRightMargin}rem`,
               transition: "margin-right 0.3s ease",
+              outline: "none",
             }}
           >
             <LocalEmbedPDF
