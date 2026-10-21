@@ -644,6 +644,7 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
 }> {
   const scale = calculateScaleFromFileSize(file.size);
   const isLarge = file.size >= LARGE_PDF_PARSE_LIMIT;
+  let parsedBytes = 0;
   try {
     // Probe inside the try: an unreadable file must still resolve, or the
     // caller leaves the card with no metadata and a spinner that never stops.
@@ -662,6 +663,7 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
     const buffer = isLarge
       ? await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer()
       : await getDocumentBytes(file);
+    parsedBytes = buffer.byteLength;
     const pair = await renderPdfThumbnailPairPdfium(
       buffer,
       scale,
@@ -684,8 +686,13 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
     };
   } catch (error) {
     reportThumbnailFailure(file, error);
-    // A prefix is expected to fail when the file is not linearized.
-    const isDamaged = !isLarge && isDamagedPdfError(error);
+    // Damage needs PDFium to have rejected the whole file: a prefix (large files) or a short read
+    // fails on bytes that are not the file. Unsupported encryption can also read as a format error.
+    const isDamaged =
+      !isLarge &&
+      parsedBytes === file.size &&
+      isDamagedPdfError(error) &&
+      !(await looksEncryptedFromTrailer(file).catch(() => true));
     return {
       unrotated: { thumbnail: "", pageCount: 0, isDamaged },
       rotated: { thumbnail: "", pageCount: 0, isDamaged },
