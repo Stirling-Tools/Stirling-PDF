@@ -72,6 +72,7 @@ export default function CropRatioPicker({
             data-testid={`crop-ratio-${id}`}
             size="xs"
             variant={value === id ? "primary" : "secondary"}
+            accent={value === id ? "default" : "neutral"}
             onClick={disabled ? undefined : () => onChange(id)}
             aria-pressed={value === id}
             tabIndex={disabled ? -1 : 0}
