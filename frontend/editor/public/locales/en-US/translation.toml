@@ -6064,6 +6064,13 @@ updatePassword = "Update password"
 useMagicLink = "Use magic link instead"
 username = "Username"
 
+[login.ssoError]
+autoCreateDisabled = "No account exists for this user and automatic account creation is disabled. Contact your administrator."
+maxUsersReached = "The maximum number of users for this license has been reached."
+registrationBlocked = "Registration of new users is blocked. Contact your administrator."
+userAlreadyExists = "An account with this username already exists and uses password sign-in."
+userDisabled = "This account has been disabled. Contact your administrator."
+
 [margin]
 large = "Large"
 medium = "Medium"

@@ -256,4 +256,42 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
             verifyNoInteractions(jwtService);
         }
     }
+
+    @Test
+    void newUserIsSentToLoginErrorWhenAutoCreateDisabled() throws Exception {
+        UserService userService = mock(UserService.class);
+        JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
+        UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);
+        ApplicationProperties properties = new ApplicationProperties();
+        ApplicationProperties.Security.OAUTH2 oauth2 = properties.getSecurity().getOauth2();
+        oauth2.setAutoCreateUser(false);
+        oauth2.setBlockRegistration(false);
+        when(userService.usernameExistsIgnoreCase("user")).thenReturn(false);
+
+        CustomOAuth2AuthenticationSuccessHandler handler =
+                new CustomOAuth2AuthenticationSuccessHandler(
+                        mock(LoginAttemptService.class),
+                        oauth2,
+                        userService,
+                        jwtService,
+                        licenseSettingsService,
+                        properties);
+        DefaultOAuth2User principal =
+                new DefaultOAuth2User(
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                        Map.of("sub", "provider-sub", "name", "user"),
+                        "name");
+        OAuth2AuthenticationToken authentication =
+                new OAuth2AuthenticationToken(principal, principal.getAuthorities(), "google");
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setContextPath("/stirling");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        assertEquals("/stirling/logout?oAuth2AutoCreateDisabled=true", response.getRedirectedUrl());
+        verify(userService, never())
+                .processSSOPostLogin(anyString(), anyString(), anyString(), anyBoolean(), any());
+        verifyNoInteractions(jwtService);
+    }
 }

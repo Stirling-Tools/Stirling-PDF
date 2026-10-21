@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,6 +13,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -325,5 +328,38 @@ class CustomLogoutSuccessHandlerTest {
         customLogoutSuccessHandler.onLogoutSuccess(request, response, authentication);
 
         verify(response).sendRedirect(url + "/login?errorOAuth=" + error);
+    }
+
+    @Test
+    void unauthenticatedErrorLogoutLandsOnLoginPage() throws IOException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter("oAuth2AutoCreateDisabled", "true");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        when(jwtService.extractToken(request)).thenReturn(null);
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
+
+        assertEquals("/login?errorOAuth=oAuth2AutoCreateDisabled", response.getRedirectedUrl());
+    }
+
+    @Test
+    void unauthenticatedErrorLogoutLandsOnSeparateFrontend() throws IOException {
+        applicationProperties
+                .getSecurity()
+                .getOauth2()
+                .setRedirectBaseUrl("https://api.example.com");
+        applicationProperties.getSystem().setFrontendUrl("https://pdf.example.com");
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter("oAuth2AutoCreateDisabled", "true");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        when(jwtService.extractToken(request)).thenReturn(null);
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
+
+        assertEquals(
+                "https://pdf.example.com/login?errorOAuth=oAuth2AutoCreateDisabled",
+                response.getRedirectedUrl());
     }
 }

@@ -114,6 +114,11 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     response.sendRedirect(contextPath + "/logout?oAuth2AdminBlockedUser=true");
                     return;
                 }
+                if (!oauth2Properties.getAutoCreateUser()
+                        && !userService.usernameExistsIgnoreCase(username)) {
+                    response.sendRedirect(contextPath + "/logout?oAuth2AutoCreateDisabled=true");
+                    return;
+                }
                 if (principal instanceof OAuth2User oAuth2User) {
                     // Extract SSO provider information from OAuth2User
                     String ssoProviderId = oAuth2User.getAttribute("sub"); // OIDC ID
