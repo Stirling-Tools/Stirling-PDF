@@ -110,6 +110,7 @@ public class ConvertMarkdownToPdf {
                     java.util.zip.ZipEntry entry;
                     while ((entry = zipIn.getNextEntry()) != null) {
                         if (!entry.isDirectory()) {
+                            // FileToPdf re-extracts and sanitizes every entry name downstream.
                             java.nio.file.Path filePath =
                                     tempDirPath.resolve(entry.getName()).normalize();
                             if (!filePath.startsWith(tempDirPath)) {
