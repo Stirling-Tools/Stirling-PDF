@@ -127,6 +127,14 @@ public class SupabaseSecurityConfig {
                                                 "/api/v1/account-link/connect/request",
                                                 "/api/v1/account-link/connect/claim")
                                         .permitAll()
+                                        // These tracking endpoints verify a license proof or a
+                                        // scoped registration secret without creating a user
+                                        // session.
+                                        .requestMatchers(
+                                                HttpMethod.POST,
+                                                "/api/v1/server-license/registrations",
+                                                "/api/v1/server-license/registrations/sync")
+                                        .permitAll()
                                         .requestMatchers(
                                                 req ->
                                                         RequestUriUtils.isStaticResource(
