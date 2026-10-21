@@ -28,12 +28,16 @@ export const certSignToApiParams = (
 ): CertSignApiParams => {
   // AUTO mode signs with the server certificate; no keystore/password is sent.
   if (parameters.signMode === "AUTO") {
-    return withSignatureAppearance({ certType: "SERVER" }, parameters);
+    return withSignatureAppearance(
+      { certType: "SERVER", addTimestamp: parameters.addTimestamp },
+      parameters,
+    );
   }
 
   const apiParams: CertSignApiParams = {
     certType: parameters.certType as CertSignApiParams["certType"],
     password: parameters.password,
+    addTimestamp: parameters.addTimestamp,
   };
 
   // Non-file identifiers depend on the chosen certificate type.
@@ -102,6 +106,7 @@ export const certSignFromApiParams = (
   const result: Partial<CertSignParameters> = {
     signMode: apiParams.certType === "SERVER" ? "AUTO" : "MANUAL",
     showSignature: apiParams.showSignature ?? defaultParameters.showSignature,
+    addTimestamp: apiParams.addTimestamp ?? defaultParameters.addTimestamp,
   };
 
   if (apiParams.certType !== "SERVER") {
