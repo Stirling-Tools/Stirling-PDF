@@ -58,7 +58,7 @@ export function PdfViewerToolbar({
   const [displayZoomPercent, setDisplayZoomPercent] = useState(
     () => zoomState.zoomPercent || 100,
   );
-  
+
   const [zoomLevel, setZoomLevel] = useState(() => zoomState.level);
   const [spreadMode, setSpreadMode] = useState(spreadState.spreadMode);
   const isDualPageActive = spreadMode !== SpreadMode.None;
