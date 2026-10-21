@@ -18,7 +18,14 @@ import {
   ProcessedFileMetadata,
 } from "@app/types/fileContext";
 import { FileId, ToolOperation } from "@app/types/file";
-import { generateThumbnailPairWithMetadata } from "@app/utils/thumbnailUtils";
+import {
+  generateThumbnailPairWithMetadata,
+  LARGE_PDF_PARSE_LIMIT,
+} from "@app/utils/thumbnailUtils";
+import {
+  beginDamageCheck,
+  settleDamageCheck,
+} from "@app/services/pendingDamageChecks";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import { buildQuickKeySet } from "@app/contexts/file/fileSelectors";
 import { StirlingFile } from "@app/types/fileContext";
@@ -148,6 +155,10 @@ export async function generateProcessedFileMetadata(
     const { unrotated: unrotatedResult, rotated: rotatedResult } =
       await generateThumbnailPairWithMetadata(file);
 
+    if (unrotatedResult.isDamaged) {
+      return { pages: [], totalPages: 0, isDamaged: true };
+    }
+
     // Large PDF whose linearized-prefix attempt failed: report "no metadata"
     // (the tolerated failure shape) rather than a bogus zero-page document.
     if (
@@ -173,6 +184,8 @@ export async function generateProcessedFileMetadata(
       unrotatedResult.isEncrypted ||
       rotatedResult.isEncrypted,
     );
+    // Explicit, so hydration's merge over the previous metadata clears it after a repair.
+    processedFile.isDamaged = false;
 
     return processedFile;
   } catch (error) {
@@ -625,7 +638,8 @@ export async function addFiles(
           }
         }
       };
-      if (!options.skipMetadataHydration) pendingHydrations.push(hydrate);
+      if (!options.skipMetadataHydration)
+        pendingHydrations.push(trackDamageCheck(fileId, file, hydrate));
 
       reportBulkAddProgress(++scannedCount, filesToProcess.length);
       const chunkWrites = flushChunk();
@@ -860,7 +874,7 @@ export function hydrateMetadataFor(
 ): void {
   if (!stirlingFile.type.startsWith("application/pdf")) return;
   const lifetime = pdfAccessLifetime(stirlingFile);
-  scheduleMetadataHydration(async () => {
+  const hydrate = async () => {
     if (lifetime.aborted) return;
     const processedFileMetadata =
       await generateProcessedFileMetadata(stirlingFile);
@@ -883,7 +897,23 @@ export function hydrateMetadataFor(
     }
 
     lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef);
-  });
+  };
+  scheduleMetadataHydration(trackDamageCheck(fileId, stirlingFile, hydrate));
+}
+
+/**
+ * Damage is detected by hydration's whole-file parse, so the check is open from scheduling until the
+ * task ends however it ends. Large files only get a prefix parse, which cannot prove damage.
+ */
+function trackDamageCheck(
+  fileId: FileId,
+  file: File,
+  task: () => Promise<void>,
+): () => Promise<void> {
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+  if (!isPdf || file.size >= LARGE_PDF_PARSE_LIMIT) return task;
+  beginDamageCheck(fileId);
+  return () => task().finally(() => settleDamageCheck(fileId));
 }
 
 /** Hand the reconciler the workbench, so it can settle a record in place

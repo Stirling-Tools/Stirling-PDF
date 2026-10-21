@@ -13,6 +13,7 @@ import { jpegExifOrientation } from "@app/utils/jpegOrientation";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { getPdfAccess } from "@app/services/pdfAccessService";
 import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
+import { isDamagedPdfError } from "@app/utils/pdfDamage";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -20,6 +21,8 @@ export interface ThumbnailWithMetadata {
   pageRotations?: number[]; // Rotation for each page (0, 90, 180, 270)
   pageDimensions?: Array<{ width: number; height: number }>;
   isEncrypted?: boolean;
+  /** PDFium could not parse the whole file; never set from a large-file prefix. */
+  isDamaged?: boolean;
 }
 
 /**
@@ -681,9 +684,11 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
     };
   } catch (error) {
     reportThumbnailFailure(file, error);
+    // A prefix is expected to fail when the file is not linearized.
+    const isDamaged = !isLarge && isDamagedPdfError(error);
     return {
-      unrotated: { thumbnail: "", pageCount: 0 },
-      rotated: { thumbnail: "", pageCount: 0 },
+      unrotated: { thumbnail: "", pageCount: 0, isDamaged },
+      rotated: { thumbnail: "", pageCount: 0, isDamaged },
     };
   }
 }

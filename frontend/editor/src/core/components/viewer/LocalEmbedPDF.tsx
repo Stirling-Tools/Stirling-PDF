@@ -109,6 +109,7 @@ import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvent
 import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
 import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
 import { isStirlingFile } from "@app/types/fileContext";
+import type { FileId } from "@app/types/file";
 import { pdfAllows, canPrintPdf } from "@app/services/pdfPermissions";
 
 import { PdfPermissionFlag } from "@embedpdf/models";
@@ -198,6 +199,8 @@ interface LocalEmbedPDFProps {
   /** Includes byte-read failures, engine errors and cancelled loads. */
   onDocumentLoadFailed?: (fileKey: string, error: unknown) => void;
   onPasswordRequired?: () => void;
+  /** Offered on the error screen when PDFium cannot parse the open file. */
+  onRepair?: (fileId: FileId) => void;
   /** True while a view restore is in flight; gates the per-page layout hook. */
   restorePending?: boolean;
   restoreRequest?: DocumentRestoreRequest | null;
@@ -923,6 +926,7 @@ export function LocalEmbedPDF({
   onDocumentReady,
   onDocumentLoadFailed,
   onPasswordRequired,
+  onRepair,
   restorePending = false,
   restoreRequest = null,
   onRestoreEvent,
@@ -1728,6 +1732,11 @@ export function LocalEmbedPDF({
             permissions={pdfAccess?.permissions ?? 0}
           />
           <DocumentReadyWrapper
+            onRepair={
+              onRepair && file && isStirlingFile(file)
+                ? () => onRepair(file.fileId)
+                : undefined
+            }
             fallback={
               <Center style={{ height: "100%", width: "100%" }}>
                 <ToolLoadingFallback />

@@ -1,0 +1,120 @@
+import path from "node:path";
+import { readFile } from "node:fs/promises";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { runToolAndWaitForReview } from "@app/tests/helpers/ui-helpers";
+
+// PDFium cannot parse this header, but the server's parser can; see generate-damaged-sample.py.
+const damaged = path.join(
+  import.meta.dirname,
+  "../test-fixtures/damaged-header.pdf",
+);
+const sample = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
+
+test("a damaged PDF is labelled and can be sent to Repair", async ({
+  page,
+}) => {
+  const repaired = await readFile(sample);
+  const uploads: number[] = [];
+  await page.route("**/api/v1/misc/repair", async (route) => {
+    uploads.push(route.request().postDataBuffer()?.length ?? 0);
+    await route.fulfill({
+      contentType: "application/pdf",
+      body: repaired,
+      headers: { "content-disposition": 'attachment; filename="repaired.pdf"' },
+    });
+  });
+
+  await page.getByTestId("file-input").setInputFiles(damaged);
+
+  const message = page.getByRole("alert").filter({ hasText: /damaged/ });
+  await expect(message).toBeVisible();
+  await expect(page.getByText("Damaged", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Repair", exact: true }).click();
+  await runToolAndWaitForReview(page);
+
+  expect(uploads, "the damaged bytes reach the server").toHaveLength(1);
+  await expect(page.getByText("Damaged", { exact: true })).toHaveCount(0);
+  await expect(message).toHaveCount(0);
+});
+
+test("the file menu offers Repair only for damaged files", async ({ page }) => {
+  await page.getByTestId("file-input").setInputFiles([damaged, sample]);
+  const row = (name: string) =>
+    page.locator(".file-sidebar-file-item").filter({ hasText: name });
+  const menuFor = async (name: string) => {
+    await row(name).hover();
+    await row(name).getByRole("button", { name: "More actions" }).click();
+    const menu = page.getByRole("menu");
+    await expect(menu.getByRole("menuitem", { name: "Rename" })).toBeVisible();
+    return menu;
+  };
+
+  await expect(
+    row("damaged-header.pdf").getByText("Damaged", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    (await menuFor("damaged-header.pdf")).getByRole("menuitem", {
+      name: "Repair",
+    }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toBeHidden();
+  await expect(
+    (await menuFor("sample.pdf")).getByRole("menuitem", { name: "Repair" }),
+  ).toHaveCount(0);
+});
+
+test.describe("when the server has Repair disabled", () => {
+  test.use({
+    stubOptions: { endpointsAvailability: { repair: { enabled: false } } },
+  });
+
+  test("the damage is still shown but no Repair action is offered", async ({
+    page,
+  }) => {
+    await page.getByTestId("file-input").setInputFiles(damaged);
+    await expect(
+      page.getByRole("alert").filter({ hasText: /damaged/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Repair", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Retry", exact: true }),
+    ).toBeVisible();
+  });
+});
+
+test("the Active Files card shows the damage and offers Repair", async ({
+  page,
+}) => {
+  const uploads: number[] = [];
+  await page.route("**/api/v1/misc/repair", async (route) => {
+    uploads.push(1);
+    await route.fulfill({
+      contentType: "application/pdf",
+      body: await readFile(sample),
+    });
+  });
+  await page.getByTestId("file-input").setInputFiles([damaged, sample]);
+  const card = page
+    .getByTestId("file-thumbnail")
+    .filter({ hasText: "damaged-header.pdf" });
+  await expect(card.getByText("Damaged", { exact: true })).toBeVisible();
+  await expect(card.getByText(/Loading thumbnail/)).toHaveCount(0);
+  const healthy = page
+    .getByTestId("file-thumbnail")
+    .filter({ hasText: "sample.pdf" });
+  await expect(healthy.getByRole("button", { name: "Repair" })).toHaveCount(0);
+
+  // Both the overlay and the hover bar offer Repair; the hover bar is the card's usual action surface.
+  await card.hover();
+  await card
+    .locator("[data-hover-action-menu]")
+    .getByRole("button", { name: "Repair", exact: true })
+    .click();
+  await runToolAndWaitForReview(page);
+  expect(uploads).toHaveLength(1);
+  await expect(page.getByText("Damaged", { exact: true })).toHaveCount(0);
+});

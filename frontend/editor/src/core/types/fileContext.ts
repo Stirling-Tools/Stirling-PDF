@@ -38,6 +38,8 @@ export interface ProcessedFileMetadata {
   isEncrypted?: boolean;
   /** Verified opening-password requirement; absence means it has not been checked. */
   requiresOpeningPassword?: boolean;
+  /** PDFium could not parse the file; Repair may recover it on the server. */
+  isDamaged?: boolean;
   thumbnailUrl?: string;
   [key: string]: unknown;
 }

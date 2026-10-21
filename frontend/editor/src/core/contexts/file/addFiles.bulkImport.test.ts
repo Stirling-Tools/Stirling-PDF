@@ -19,6 +19,7 @@ vi.mock("@app/services/fileStorage", () => ({
 vi.mock("@app/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata,
   generateThumbnailForFile: vi.fn(),
+  LARGE_PDF_PARSE_LIMIT: 100 * 1024 * 1024,
 }));
 vi.mock("@app/services/fileAnalyzer", () => ({
   FileAnalyzer: { isPDFEncrypted },

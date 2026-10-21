@@ -22,6 +22,7 @@ vi.mock("@app/services/fileStorage", () => ({
 /** The stall under test: the page parse never settles. */
 vi.mock("@app/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata,
+  LARGE_PDF_PARSE_LIMIT: 100 * 1024 * 1024,
 }));
 
 const stub = (id: string): StirlingFileStub =>

@@ -59,6 +59,7 @@ vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
 vi.mock("@app/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata: vi.fn(),
+  LARGE_PDF_PARSE_LIMIT: 100 * 1024 * 1024,
 }));
 
 vi.mock("@app/contexts/IndexedDBContext", () => ({

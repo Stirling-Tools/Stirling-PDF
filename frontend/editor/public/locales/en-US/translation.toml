@@ -4285,6 +4285,11 @@ precision = "Use coordinate inputs for precise positioning"
 resize = "Drag the corner and edge handles to resize"
 title = "How to Crop PDFs"
 
+[damagedPdf]
+description = "This PDF is damaged and can't be opened."
+label = "Damaged"
+repair = "Repair"
+
 [database]
 backupCreated = "Database backup successful"
 fileName = "File Name"

@@ -70,6 +70,7 @@ import { useFilesPage } from "@app/contexts/FilesPageContext";
 import type { FolderId, FolderRecord } from "@app/types/folder";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 import { useWorkbenchFileDrop } from "@app/components/layout/useWorkbenchFileDrop";
+import { useRepairDamagedFile } from "@app/hooks/useRepairDamagedFile";
 import "@app/components/shared/FileSidebar.css";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
@@ -510,6 +511,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     } = useGoogleDrivePicker();
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
+    const repairDamagedFile = useRepairDamagedFile();
     const { actions: navActions } = useNavigationActions();
     const { workbench: currentWorkbench } = useNavigationState();
     const policyFileBadges = usePolicyFileBadges();
@@ -1055,6 +1057,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       const fileOrigin = getFileOrigin(stub);
       const dataUnavailable =
         stub.dataUnavailable === true || lostFileIds.has(stub.id);
+      // Damage is detected while hydrating, so only workbench files carry it.
+      const isDamaged = workbenchFileId
+        ? state.files.byId[workbenchFileId]?.processedFile?.isDamaged === true
+        : false;
       // Lineage keys preserve rows across version changes; split siblings need unique leaf IDs.
       const lineageKey = stub.originalFileId ?? stub.id;
       const rowKey =
@@ -1081,6 +1087,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onClick={handleFileClick}
           onEyeClick={handleEyeClick}
           dataUnavailable={dataUnavailable}
+          isDamaged={isDamaged}
+          onRepair={repairDamagedFile}
           policies={policyFileBadges.get(stub.id) ?? NO_POLICIES}
           onDelete={handleSidebarDelete}
           onDownload={handleDownload}
