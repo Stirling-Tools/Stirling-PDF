@@ -110,7 +110,7 @@ const EncryptedPdfUnlockModal = ({
             {inspection.error ??
               t(
                 "encryptedPdfUnlock.checkingPermissions",
-                "Checking PDF permissions…",
+                "Checking PDF permissions...",
               )}
           </Text>
           {inspection.error && (
