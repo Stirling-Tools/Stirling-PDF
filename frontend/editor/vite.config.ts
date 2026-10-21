@@ -280,6 +280,29 @@ async function splitOptionalAssets(distDir: string): Promise<void> {
  * and social preview images exist for static hosting, so carrying them inside
  * the app binary costs space no desktop feature can use.
  */
+async function removeWoffFallbacks(dir: string): Promise<void> {
+  const entries = await fs
+    .readdir(dir, { withFileTypes: true })
+    .catch(() => []);
+  for (const entry of entries) {
+    const target = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      await removeWoffFallbacks(target);
+    } else if (entry.name.endsWith(".woff")) {
+      await fs.rm(target, { force: true });
+    } else if (entry.name.endsWith(".css")) {
+      const css = await fs.readFile(target, "utf8");
+      const withoutWoff = css
+        .replace(/,url\(\.\/[^)]+\.woff\)format\(["']woff["']\)/g, "")
+        .replace(
+          /,url\(data:font\/woff;base64,[^)]*\)format\(["']woff["']\)/g,
+          "",
+        );
+      if (withoutWoff !== css) await fs.writeFile(target, withoutWoff);
+    }
+  }
+}
+
 function desktopAssetsPlugin(
   prunePortal: boolean,
   portalKeep: Set<string>,
@@ -291,6 +314,9 @@ function desktopAssetsPlugin(
       const distDir = outputDir;
       if (prunePortal) await prunePortalLocales(distDir, portalKeep);
       await renameLocaleAssets(distDir);
+      // Every bundled face also ships WOFF2, which every supported webview
+      // understands; the WOFF copies would only 404 on the fallback branch.
+      await removeWoffFallbacks(distDir);
       for (const name of [
         "og_images",
         "og-metadata.json",
