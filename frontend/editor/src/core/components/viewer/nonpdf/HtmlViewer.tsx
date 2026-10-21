@@ -34,12 +34,7 @@ export function HtmlViewer({ file }: HtmlViewerProps) {
         style={{
           borderBottom: "1px solid var(--mantine-color-gray-2)",
           flexShrink: 0,
-          // Padding set here rather than via `p`, whose shorthand would reset
-          // the right inset below. NonPdfViewer floats its "Convert to PDF"
-          // button over this row, so keep the notice clear of it instead of
-          // running underneath.
           padding: "0.5rem",
-          paddingRight: "max(0.5rem, var(--nonpdf-action-inset, 0rem))",
         }}
       >
         <Group gap="xs" wrap="nowrap" align="center">

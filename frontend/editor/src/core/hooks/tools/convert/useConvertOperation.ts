@@ -278,12 +278,25 @@ const withoutCrossFileAltText = (
     : parameters;
 
 // Static processor that can be used by both the hook and automation executor
+export interface ConvertProcessorOptions {
+  /** Lets the caller cancel an in-flight request (the viewer's inline conversion does). */
+  signal?: AbortSignal;
+  /** Inline surfaces render their own error, so they suppress the global error toast. */
+  suppressErrorToast?: boolean;
+}
+
 export const convertProcessor = async (
   rawParameters: ConvertParameters,
   selectedFiles: File[],
+  options: ConvertProcessorOptions = {},
 ): Promise<CustomProcessorResult> => {
   const parameters = withoutCrossFileAltText(rawParameters, selectedFiles);
   const processedFiles: File[] = [];
+  const requestConfig = {
+    responseType: "blob" as const,
+    signal: options.signal,
+    suppressErrorToast: options.suppressErrorToast,
+  };
 
   // Map PDF/X to use PDF/A endpoint
   const actualToExtension =
@@ -306,9 +319,11 @@ export const convertProcessor = async (
     for (const file of selectedFiles) {
       try {
         const formData = buildConvertFormData(parameters, [file]);
-        const response = await apiClient.post(endpoint, formData, {
-          responseType: "blob",
-        });
+        const response = await apiClient.post(
+          endpoint,
+          formData,
+          requestConfig,
+        );
 
         const convertedFile = createFileFromResponse(
           response.data,
@@ -325,9 +340,7 @@ export const convertProcessor = async (
   } else {
     // Batch processing for simple cases (image→PDF combine)
     const formData = buildConvertFormData(parameters, selectedFiles);
-    const response = await apiClient.post(endpoint, formData, {
-      responseType: "blob",
-    });
+    const response = await apiClient.post(endpoint, formData, requestConfig);
 
     const baseFilename =
       selectedFiles.length === 1 ? selectedFiles[0].name : "converted_files";

@@ -240,6 +240,8 @@
   .toast-container--bottom-left,
   .toast-container--bottom-right,
   .toast-container--bottom-center {
-    bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+    /* Clear the bottom nav and the floating PDF pager, so an action toast
+       never hides the page controls it just made relevant. */
+    bottom: calc(7.25rem + env(safe-area-inset-bottom, 0px));
   }
 }

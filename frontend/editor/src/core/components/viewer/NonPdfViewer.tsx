@@ -1,23 +1,19 @@
 import React, { useCallback, useMemo } from "react";
 import { Box, Center, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import {
-  detectFileExtension,
-  detectNonPdfFileType,
-} from "@app/utils/fileUtils";
-import { CONVERSION_MATRIX } from "@app/constants/convertConstants";
+import { detectNonPdfFileType } from "@app/utils/fileUtils";
+import { getNonPdfConversionPlan } from "@app/utils/nonPdfConversion";
 
-import { NonPdfBanner } from "@app/components/viewer/nonpdf/NonPdfBanner";
-import { ImageViewer } from "@app/components/viewer/nonpdf/ImageViewer";
 import { CsvViewer } from "@app/components/viewer/nonpdf/CsvViewer";
-import { JsonViewer } from "@app/components/viewer/nonpdf/JsonViewer";
-import { TextViewer } from "@app/components/viewer/nonpdf/TextViewer";
 import { HtmlViewer } from "@app/components/viewer/nonpdf/HtmlViewer";
+import { ImageViewer } from "@app/components/viewer/nonpdf/ImageViewer";
+import { JsonViewer } from "@app/components/viewer/nonpdf/JsonViewer";
+import { NonPdfConversionPanel } from "@app/components/viewer/nonpdf/NonPdfConversionPanel";
+import { TextViewer } from "@app/components/viewer/nonpdf/TextViewer";
 
 export interface ViewerProps {
   onClose?: () => void;
@@ -26,25 +22,19 @@ export interface ViewerProps {
 
 export interface NonPdfViewerProps extends ViewerProps {
   file: File;
+  /** Runs after the converted PDF is active, so callers can leave preview mode. */
+  onConverted?: () => void;
 }
 
-export function NonPdfViewer({ file }: NonPdfViewerProps) {
-  const { t } = useTranslation();
+export function NonPdfViewer({ file, onConverted }: NonPdfViewerProps) {
   const fileType = useMemo(() => detectNonPdfFileType(file), [file]);
+  const plan = useMemo(() => getNonPdfConversionPlan(file.name), [file.name]);
+  const { toolAvailability } = useToolWorkflow();
 
-  const { handleToolSelect, toolAvailability } = useToolWorkflow();
-
-  const fileExtension = detectFileExtension(file.name);
-  // Only show convert when the extension has an explicit entry in the conversion matrix
-  // (skip the 'any'/'image' wildcard fallbacks that would match everything)
-  const isConvertAvailable =
-    toolAvailability["convert"]?.available === true &&
-    fileExtension !== "" &&
-    fileExtension in CONVERSION_MATRIX;
-
-  const handleConvertToPdf = useCallback(() => {
-    handleToolSelect("convert");
-  }, [handleToolSelect]);
+  // Optimistic while endpoint availability is still loading: an empty map means
+  // "unknown", not "disabled". Only an explicit server-side false hides the action.
+  const conversionDisabled = toolAvailability["convert"]?.available === false;
+  const previewable = fileType !== "unknown";
 
   const renderContent = () => {
     switch (fileType) {
@@ -66,52 +56,29 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
       case "html":
         return <HtmlViewer file={file} />;
       default:
-        return (
-          <Center style={{ flex: 1 }}>
-            <Stack align="center" gap="sm">
-              <Icon
-                name="file-text"
-                size={"3rem"}
-                style={{ color: "var(--mantine-color-gray-4)" }}
-              />
-              <Text c="dimmed" size="sm">
-                {t(
-                  "viewer.nonPdf.previewUnavailable",
-                  "Preview not available for this file type",
-                )}
-              </Text>
-              {isConvertAvailable && (
-                <Button
-                  variant="secondary"
-                  accent="warning"
-                  leftSection={<Icon name="file-pdf" />}
-                  onClick={handleConvertToPdf}
-                >
-                  {t("viewer.nonPdf.convertToPdf", "Convert to PDF")}
-                </Button>
-              )}
-            </Stack>
-          </Center>
-        );
+        return null;
     }
   };
 
   return (
     <Stack
       gap={0}
+      data-testid="nonpdf-viewer"
       style={{
         height: "100%",
         flex: 1,
         overflow: "hidden",
-        position: "relative",
-        // The Convert button floats over the content; viewers that draw their
-        // own top bar read this to keep their text clear of it.
-        "--nonpdf-action-inset": isConvertAvailable ? "11rem" : "0rem",
       }}
     >
-      <NonPdfBanner
-        onConvertToPdf={isConvertAvailable ? handleConvertToPdf : undefined}
-      />
+      {previewable && (
+        <NonPdfConversionPanel
+          file={file}
+          plan={plan}
+          variant="compact"
+          disabled={conversionDisabled}
+          onConverted={onConverted}
+        />
+      )}
       <Box
         style={{
           flex: 1,
@@ -120,21 +87,36 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
           overflow: "hidden",
         }}
       >
-        {renderContent()}
+        {previewable ? (
+          renderContent()
+        ) : (
+          <NonPdfConversionPanel
+            file={file}
+            plan={plan}
+            variant="hero"
+            disabled={conversionDisabled}
+            onConverted={onConverted}
+          />
+        )}
       </Box>
     </Stack>
   );
 }
 
-// ─── Wrapper that resolves the active file from FileContext ───────────────────
-
 export function NonPdfViewerWrapper(props: ViewerProps) {
   const { t } = useTranslation();
   const { files: activeFiles } = useAllFiles();
   const { activeFileIndex } = useViewer();
+  const { setPreviewFile } = useToolWorkflow();
 
   const file =
     props.previewFile ?? activeFiles[activeFileIndex] ?? activeFiles[0] ?? null;
+
+  const handleConverted = useCallback(() => {
+    // The preview has priority over the workspace in Viewer, so leaving it set
+    // would hide the PDF that was just made active.
+    if (props.previewFile) setPreviewFile(null);
+  }, [props.previewFile, setPreviewFile]);
 
   if (!file) {
     return (
@@ -146,7 +128,7 @@ export function NonPdfViewerWrapper(props: ViewerProps) {
     );
   }
 
-  return <NonPdfViewer {...props} file={file} />;
+  return <NonPdfViewer {...props} file={file} onConverted={handleConverted} />;
 }
 
 export default NonPdfViewerWrapper;
