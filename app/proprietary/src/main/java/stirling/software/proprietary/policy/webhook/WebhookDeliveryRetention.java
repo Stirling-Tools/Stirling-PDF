@@ -14,10 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 
 /**
- * Bounds how long a failed delivery is kept. A successful run removes its delivery itself; one that
- * only ever fails would otherwise sit in storage indefinitely. Measured from the last failure, so a
- * retry that fails again gets a fresh window, and skipped while any policy still has the document
- * in flight, so a purge never pulls the bytes out from under a run.
+ * Bounds how long a delivery is kept once no run has finished it. A successful run removes its
+ * delivery itself; this clears the rest, such as one that failed, one whose run was cut short, or
+ * one no policy picks up. Measured from the last failure, else from arrival, so a retry that fails
+ * again gets a fresh window, and skipped while any policy still has the document in flight, so a
+ * purge never pulls the bytes out from under a run.
  */
 @Slf4j
 @Service
@@ -48,8 +49,8 @@ public class WebhookDeliveryRetention {
     }
 
     @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS)
-    public void purgeExpiredFailures() {
-        List<WebhookDelivery> expired = store.failedBefore(nowMillis.get() - RETENTION.toMillis());
+    public void purgeExpired() {
+        List<WebhookDelivery> expired = store.idleBefore(nowMillis.get() - RETENTION.toMillis());
         int purged = 0;
         for (WebhookDelivery delivery : expired) {
             if (ledger.inFlightAnywhere(delivery.identity())) {
@@ -67,7 +68,9 @@ public class WebhookDeliveryRetention {
         }
         if (purged > 0) {
             log.info(
-                    "Purged {} webhook deliveries that failed more than {} ago", purged, RETENTION);
+                    "Purged {} webhook deliveries left unprocessed for more than {}",
+                    purged,
+                    RETENTION);
         }
     }
 }

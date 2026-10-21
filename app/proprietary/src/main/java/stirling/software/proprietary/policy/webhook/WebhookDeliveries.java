@@ -108,6 +108,13 @@ public class WebhookDeliveries {
         store.save(delivery.withFailedAt(nowMillis.get()));
     }
 
+    /** Discard every delivery held for a webhook; returns how many were removed. */
+    public int discardAll(String webhookId) {
+        List<WebhookDelivery> held = store.forWebhook(webhookId);
+        held.forEach(this::discard);
+        return held.size();
+    }
+
     /** Remove the bytes and the index row. Safe to call twice. */
     public void discard(WebhookDelivery delivery) {
         deleteQuietly(delivery.storageKey());

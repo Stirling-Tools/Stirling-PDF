@@ -12,11 +12,11 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.util.GeneralUtils;
 
 /**
  * The plain-file spool under the install directory that predates the storage-backed index. Nothing
- * reads it any more, so a document still in it will never be processed. It is reported, not
- * touched: what to do with a document nobody processed is the operator's call.
+ * reads it any more, so it is cleared at startup.
  */
 @Slf4j
 @Component
@@ -35,15 +35,17 @@ public class LegacyWebhookSpool {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    public void warnIfPresent() {
+    public void removeIfPresent() {
+        if (!Files.isDirectory(spoolRoot)) {
+            return;
+        }
         long files = countFiles();
-        if (files > 0) {
+        try {
+            GeneralUtils.deleteDirectory(spoolRoot);
+            log.info("Removed the retired webhook spool at {} ({} file(s))", spoolRoot, files);
+        } catch (IOException e) {
             log.warn(
-                    "{} file(s) remain in the retired webhook spool at {}. They predate"
-                            + " storage-backed deliveries and will not be processed; review and"
-                            + " remove them.",
-                    files,
-                    spoolRoot);
+                    "Could not remove the retired webhook spool {}: {}", spoolRoot, e.getMessage());
         }
     }
 

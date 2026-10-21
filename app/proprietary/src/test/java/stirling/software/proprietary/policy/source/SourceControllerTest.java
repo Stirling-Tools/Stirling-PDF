@@ -52,6 +52,7 @@ class SourceControllerTest {
     private final SourceStore sourceStore = new InProcessSourceStore();
     private final PolicyStore policyStore = new InProcessPolicyStore();
     private PolicyTriggerManager triggerManager;
+    private WebhookDeliveries webhookDeliveries;
     private SourceController controller;
     private SourceController webhookController;
     private final PolicyOutputSink vectorSink = mock(PolicyOutputSink.class);
@@ -103,7 +104,8 @@ class SourceControllerTest {
                         properties,
                         List.of(folderInput),
                         List.of(vectorSink));
-        WebhookInputSource webhookInput = new WebhookInputSource(mock(WebhookDeliveries.class));
+        webhookDeliveries = mock(WebhookDeliveries.class);
+        WebhookInputSource webhookInput = new WebhookInputSource(webhookDeliveries);
         webhookController =
                 new SourceController(
                         sourceStore,
@@ -197,6 +199,27 @@ class SourceControllerTest {
         assertTrue(sourceStore.get(source.id()).isEmpty());
         // A deletable source is referenced by no policy, so no watch registration can change.
         verify(triggerManager, never()).notifyPoliciesChanged();
+    }
+
+    @Test
+    void deletingAWebhookSourceDiscardsItsDeliveries() {
+        Source created =
+                webhookController
+                        .save(
+                                new Source(
+                                        null,
+                                        "Partner uploads",
+                                        "webhook",
+                                        Map.of(),
+                                        true,
+                                        null,
+                                        null))
+                        .getBody();
+        String webhookId = String.valueOf(created.options().get("webhookId"));
+
+        assertEquals(204, webhookController.delete(created.id()).getStatusCode().value());
+
+        verify(webhookDeliveries).discardAll(webhookId);
     }
 
     @Test

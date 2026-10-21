@@ -96,6 +96,18 @@ public class WebhookInputSource implements InputSource {
         return work;
     }
 
+    @Override
+    public void sourceDeleted(Source source) {
+        String webhookId = WebhookConfig.from(source.options()).webhookId();
+        int removed = deliveries.discardAll(webhookId);
+        if (removed > 0) {
+            log.info(
+                    "Removed {} webhook deliveries held for deleted source {}",
+                    removed,
+                    source.id());
+        }
+    }
+
     private void complete(ResolveContext ctx, WebhookDelivery delivery, boolean success) {
         ctx.settle(delivery.identity(), delivery.gate(), null, success);
         if (!success) {

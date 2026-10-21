@@ -25,10 +25,8 @@ public class InProcessWebhookDeliveryStore implements WebhookDeliveryStore {
     }
 
     @Override
-    public List<WebhookDelivery> failedBefore(long failedBeforeMillis) {
-        return rows.values().stream()
-                .filter(row -> row.failedAt() != null && row.failedAt() < failedBeforeMillis)
-                .toList();
+    public List<WebhookDelivery> idleBefore(long idleBeforeMillis) {
+        return rows.values().stream().filter(row -> row.lastActiveAt() < idleBeforeMillis).toList();
     }
 
     @Override

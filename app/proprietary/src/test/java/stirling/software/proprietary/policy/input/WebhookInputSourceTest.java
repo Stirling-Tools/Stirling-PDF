@@ -147,6 +147,26 @@ class WebhookInputSourceTest {
     }
 
     @Test
+    void deletingTheSourceDiscardsEveryDeliveryHeldForIt() throws IOException {
+        delivered("a.pdf");
+        delivered("b.pdf");
+        source.resolve(spec(), ctx).get(0).onComplete().accept(false);
+
+        source.sourceDeleted(
+                new Source(
+                        "s1",
+                        "Partner uploads",
+                        "webhook",
+                        Map.of("webhookId", WEBHOOK_ID, "signingSecret", "secret"),
+                        true,
+                        "owner",
+                        null));
+
+        assertEquals(0, storedFiles());
+        assertEquals(0, index.size());
+    }
+
+    @Test
     void nothingDeliveredIsAnEmptySourceNotAnError() throws IOException {
         List<ResolvedInput> work = source.resolve(spec(), ctx);
         assertTrue(work.isEmpty());

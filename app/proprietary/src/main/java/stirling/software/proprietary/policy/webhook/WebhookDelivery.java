@@ -3,7 +3,7 @@ package stirling.software.proprietary.policy.webhook;
 /**
  * One document a webhook delivered, held in app storage until every policy fed by that webhook has
  * processed it. {@code failedAt} is the last time a run on it ended without success, or null while
- * it has only ever succeeded or never run; retention is measured from it.
+ * it has only ever succeeded or never run.
  */
 public record WebhookDelivery(
         String id,
@@ -27,6 +27,11 @@ public record WebhookDelivery(
     /** A delivery never changes once stored, so its version gate is a constant. */
     public String gate() {
         return sizeBytes + ":" + receivedAt;
+    }
+
+    /** Retention is measured from this: the latest failure, else arrival. */
+    public long lastActiveAt() {
+        return failedAt != null ? failedAt : receivedAt;
     }
 
     public WebhookDelivery withFailedAt(long failedAtMillis) {

@@ -25,8 +25,8 @@ public class JpaWebhookDeliveryStore implements WebhookDeliveryStore {
     }
 
     @Override
-    public List<WebhookDelivery> failedBefore(long failedBeforeMillis) {
-        return repository.findByFailedAtBefore(failedBeforeMillis).stream()
+    public List<WebhookDelivery> idleBefore(long idleBeforeMillis) {
+        return repository.findIdleBefore(idleBeforeMillis).stream()
                 .map(WebhookDeliveryEntity::toDelivery)
                 .toList();
     }

@@ -63,7 +63,7 @@ class WebhookDeliveryRetentionTest {
         deliveries.recordFailure(delivery);
         clock.addAndGet(WebhookDeliveryRetention.RETENTION.toMillis() + 1);
 
-        retention.purgeExpiredFailures();
+        retention.purgeExpired();
 
         assertThat(index.size()).isZero();
         assertThat(filesUnder(tempDir)).isZero();
@@ -75,17 +75,39 @@ class WebhookDeliveryRetentionTest {
         deliveries.recordFailure(delivery);
         clock.addAndGet(WebhookDeliveryRetention.RETENTION.toMillis() - DAY);
 
-        retention.purgeExpiredFailures();
+        retention.purgeExpired();
 
         assertThat(index.size()).isEqualTo(1);
     }
 
     @Test
-    void aDeliveryThatNeverFailedIsNeverPurged() throws IOException {
+    void aRecentDeliveryThatNeverRanIsKept() throws IOException {
         delivered("pending.pdf");
-        clock.addAndGet(100 * DAY);
+        clock.addAndGet(WebhookDeliveryRetention.RETENTION.toMillis() - DAY);
 
-        retention.purgeExpiredFailures();
+        retention.purgeExpired();
+
+        assertThat(index.size()).isEqualTo(1);
+    }
+
+    @Test
+    void aDeliveryUnprocessedPastTheWindowIsPurged() throws IOException {
+        delivered("unclaimed.pdf");
+        clock.addAndGet(WebhookDeliveryRetention.RETENTION.toMillis() + 1);
+
+        retention.purgeExpired();
+
+        assertThat(index.size()).isZero();
+        assertThat(filesUnder(tempDir)).isZero();
+    }
+
+    @Test
+    void anOldDeliveryStillInFlightIsKept() throws IOException {
+        WebhookDelivery delivery = delivered("slow.pdf");
+        assertThat(ledger.claim("p1", delivery.identity(), delivery.gate(), null)).isTrue();
+        clock.addAndGet(WebhookDeliveryRetention.RETENTION.toMillis() + 1);
+
+        retention.purgeExpired();
 
         assertThat(index.size()).isEqualTo(1);
     }
@@ -98,11 +120,11 @@ class WebhookDeliveryRetentionTest {
         // A user-invoked sweep on another policy has just picked it up.
         assertThat(ledger.claim("p2", delivery.identity(), delivery.gate(), null)).isTrue();
 
-        retention.purgeExpiredFailures();
+        retention.purgeExpired();
         assertThat(index.size()).isEqualTo(1);
 
         ledger.settle("p2", delivery.identity(), delivery.gate(), null, false);
-        retention.purgeExpiredFailures();
+        retention.purgeExpired();
         assertThat(index.size()).isZero();
     }
 
@@ -114,7 +136,7 @@ class WebhookDeliveryRetentionTest {
         deliveries.recordFailure(index.forWebhook(WEBHOOK_ID).get(0));
         clock.addAndGet(2 * DAY);
 
-        retention.purgeExpiredFailures();
+        retention.purgeExpired();
 
         assertThat(index.size()).isEqualTo(1);
     }
