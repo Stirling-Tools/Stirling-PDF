@@ -1,0 +1,10 @@
+/* Follow-along marker for the word currently being spoken. Geometry is set in
+   JS because it comes from the PDF text transform; the colour stays a token so
+   it follows light/dark and the user's accent. */
+.read-aloud-highlight {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--c-warning) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-warning) 35%, transparent);
+}

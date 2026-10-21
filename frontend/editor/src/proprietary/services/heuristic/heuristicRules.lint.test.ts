@@ -8,7 +8,7 @@ import {
   PACK_LANGUAGES,
   loadCoreRules,
 } from "@app/services/heuristic/rules/index";
-import languages from "@app/services/heuristic/rules/languages.json";
+import languages from "@app/services/languageDetection/languages.json";
 
 interface RawRule {
   text?: string;

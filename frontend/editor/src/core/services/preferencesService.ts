@@ -35,6 +35,9 @@ export interface UserPreferences {
   hideUnavailableTools: boolean;
   hideUnavailableConversions: boolean;
   pdfRenderMode: PdfRenderMode;
+  readAloudRate: number;
+  readAloudVoiceURI: string;
+  readAloudHighlight: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -53,6 +56,9 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   hideUnavailableTools: false,
   hideUnavailableConversions: false,
   pdfRenderMode: "normal",
+  readAloudRate: 1,
+  readAloudVoiceURI: "",
+  readAloudHighlight: true,
 };
 
 const STORAGE_KEY = "stirlingpdf_preferences";

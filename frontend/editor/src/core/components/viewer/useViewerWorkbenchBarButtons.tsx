@@ -1,8 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { Slider, Popover, Select } from "@mantine/core";
+import { Popover } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { supportedLanguages } from "@app/i18n";
 import { useViewer } from "@app/contexts/ViewerContext";
 import {
   useWorkbenchBarButtons,
@@ -22,6 +21,7 @@ import {
 import { stripBasePath, withBasePath } from "@app/constants/app";
 import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
+import { ReadAloudControl } from "@app/components/viewer/readAloud/ReadAloudControl";
 import { RulerScaleSettingsButton } from "@app/components/viewer/RulerScaleSettingsButton";
 import type { MeasureScale } from "@app/utils/measurementTypes";
 import type { StirlingFile } from "@app/types/fileContext";
@@ -61,16 +61,8 @@ export function useViewerWorkbenchBarButtons(
   const { requestNavigation } = useNavigationGuard();
   const { redactionsApplied, activeType: redactionActiveType } = useRedaction();
   const { pendingCount } = useRedactionMode();
-  const {
-    isReadingAloud,
-    speechRate,
-    speechLanguage,
-    speechVoice,
-    supportedLanguageCodes,
-    handleReadAloud,
-    handleSpeechRateChange,
-    handleSpeechLanguageChange,
-  } = useViewerReadAloud(i18n.language || "en-US", displayedFile);
+  const readAloud = useViewerReadAloud(i18n.language || "en-US", displayedFile);
+  const readAloudStore = readAloud.store;
 
   useEffect(() => {
     return registerImmediatePanUpdate((newIsPanning) => {
@@ -126,8 +118,7 @@ export function useViewerWorkbenchBarButtons(
   const formFillLabel = t("workbenchBar.formFill", "Form Editor");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
   const rulerSettingsLabel = t("workbenchBar.rulerSettings", "Scale Settings");
-  const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
-  const readAloudSpeedLabel = t("workbenchBar.readAloudSpeed", "Speed");
+  const readAloudLabel = t("workbenchBar.readAloud", "Read aloud");
 
   const isFormFillActive = (selectedTool as string) === "formFill";
 
@@ -153,26 +144,6 @@ export function useViewerWorkbenchBarButtons(
   const handleResetRulerScale = useCallback(() => {
     setCustomScale?.(null);
   }, [setCustomScale]);
-
-  // Filter languages based on available voices
-  const filteredLanguages = useMemo(
-    () =>
-      Object.entries(supportedLanguages)
-        .filter(
-          ([code]) =>
-            supportedLanguageCodes.size === 0 ||
-            supportedLanguageCodes.has(code) ||
-            supportedLanguageCodes.has(code.split("-")[0]),
-        )
-        .map(([code, label]) => ({
-          value: code,
-          label: label,
-        })),
-    [supportedLanguageCodes],
-  );
-
-  const shouldShowLanguageSelector =
-    supportedLanguageCodes.size === 0 || filteredLanguages.length > 1;
 
   const viewerButtons = useMemo<WorkbenchBarButtonWithAction[]>(() => {
     const buttons: WorkbenchBarButtonWithAction[] = [
@@ -379,95 +350,12 @@ export function useViewerWorkbenchBarButtons(
         ariaLabel: readAloudLabel,
         section: "top" as const,
         order: 57,
-        active: isReadingAloud,
         render: ({ disabled }) => (
-          <Popover
+          <ReadAloudControl
+            store={readAloudStore}
+            disabled={disabled}
             position={tooltipPosition}
-            withArrow
-            shadow="md"
-            offset={8}
-            opened={isReadingAloud}
-            onClose={() => {}}
-            withinPortal
-          >
-            <Popover.Target>
-              <div style={{ display: "inline-flex" }}>
-                <Tooltip
-                  content={readAloudLabel}
-                  position={tooltipPosition}
-                  offset={12}
-                  arrow
-                  portalTarget={document.body}
-                >
-                  <ActionIcon
-                    variant={isReadingAloud ? "primary" : "tertiary"}
-                    className="workbench-bar-action-icon"
-                    disabled={
-                      disabled ||
-                      typeof window === "undefined" ||
-                      !window.speechSynthesis
-                    }
-                    aria-label={readAloudLabel}
-                    onClick={handleReadAloud}
-                  >
-                    {isReadingAloud ? (
-                      <Icon name="square" size={"1rem"} />
-                    ) : (
-                      <Icon name="volume-2" size={"1rem"} />
-                    )}
-                  </ActionIcon>
-                </Tooltip>
-              </div>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <div style={{ width: "16rem", padding: "0.5rem" }}>
-                <div
-                  style={{
-                    fontSize: "0.75rem",
-                    marginBottom: "0.5rem",
-                    textAlign: "center",
-                  }}
-                >
-                  {readAloudSpeedLabel}: {speechRate.toFixed(1)}x
-                </div>
-                <Slider
-                  value={speechRate}
-                  onChange={handleSpeechRateChange}
-                  min={0.5}
-                  max={2}
-                  step={0.1}
-                  marks={[
-                    { value: 0.5, label: "0.5x" },
-                    { value: 1, label: "1x" },
-                    { value: 2, label: "2x" },
-                  ]}
-                  styles={{
-                    markLabel: { fontSize: "0.6rem" },
-                  }}
-                  mb="md"
-                />
-                {shouldShowLanguageSelector && (
-                  <Select
-                    label={t("workbenchBar.readAloudLanguage", "Language")}
-                    placeholder={t(
-                      "workbenchBar.selectLanguage",
-                      "Select language",
-                    )}
-                    value={speechLanguage}
-                    onChange={(value) => {
-                      if (value) {
-                        handleSpeechLanguageChange(value);
-                      }
-                    }}
-                    data={filteredLanguages}
-                    size="xs"
-                    searchable
-                    mb="sm"
-                  />
-                )}
-              </div>
-            </Popover.Dropdown>
-          </Popover>
+          />
         ),
       },
       {
@@ -604,17 +492,7 @@ export function useViewerWorkbenchBarButtons(
     customScale,
     isScaleCalibrationActive,
     readAloudLabel,
-    readAloudSpeedLabel,
-    isReadingAloud,
-    speechRate,
-    speechLanguage,
-    speechVoice,
-    supportedLanguageCodes,
-    filteredLanguages,
-    shouldShowLanguageSelector,
-    handleReadAloud,
-    handleSpeechRateChange,
-    handleSpeechLanguageChange,
+    readAloudStore,
   ]);
 
   useWorkbenchBarButtons(viewerButtons);

@@ -1,6 +1,7 @@
 // Shared types for the client-side heuristic (non-AI) document classifier.
 
 import type { ClassificationConfidence } from "@app/types/fileContext";
+import type { LanguageCandidate } from "@app/services/languageDetection/types";
 
 /** Input document for the heuristic engine. */
 export interface HeuristicDoc {
@@ -15,18 +16,10 @@ export interface HeuristicDoc {
 // "none" = no label cleared the floor; a real runtime value, not just a type state.
 export type HeuristicConfidence = ClassificationConfidence;
 
-export interface LanguageCandidate {
-  language: string;
-  score: number;
-}
-
-export interface LanguageDetection {
-  language: string | null;
-  script: string | null;
-  candidates: LanguageCandidate[];
-  assumed: boolean;
-  lowText: boolean;
-}
+export type {
+  LanguageCandidate,
+  LanguageDetection,
+} from "@app/services/languageDetection/types";
 
 /** One scored candidate label with the rule hits that produced its score (debug only). */
 export interface LabelScoreExplanation {

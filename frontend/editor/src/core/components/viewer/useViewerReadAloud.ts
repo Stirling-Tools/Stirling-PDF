@@ -1,15 +1,43 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { computeReadAloudHighlightRect } from "@app/components/viewer/readAloudHighlight";
 import {
   READ_ALOUD_FROM_SELECTION_EVENT,
   findReadAloudStartIndex,
   type ReadAloudFromSelectionDetail,
 } from "@app/components/viewer/readAloudFromSelection";
+import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useStopReadAloudOnNavigation } from "@app/components/viewer/useStopReadAloudOnNavigation";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import {
+  detectDocumentLanguage,
+  sampleTextForDetection,
+  type DocumentLanguage,
+} from "@app/services/languageDetection/documentLanguage";
+import {
+  chunkIndexForChar,
+  chunkTextForSpeech,
+  wordIndexAtChar,
+  type SpeechChunk,
+} from "@app/services/readAloud/chunkText";
+import {
+  baseLanguage,
+  groupVoicesByLanguage,
+  isSpeechSynthesisSupported,
+  languageDisplayName,
+  resolveVoiceForLanguage,
+  voiceDisplayName,
+  voiceMatchesLanguage,
+  voicesForLanguage,
+  type ReadAloudLanguageOption,
+} from "@app/services/readAloud/voices";
 import { StirlingFile } from "@app/types/fileContext";
 import { ZINDEX } from "@app/constants/zIndex";
+import "@app/components/viewer/readAloud/readAloudHighlight.css";
+
+type PdfDocument = Awaited<ReturnType<typeof pdfWorkerManager.createDocument>>;
+type PdfPage = Awaited<ReturnType<PdfDocument["getPage"]>>;
 
 interface TextItemWithGeometry {
   str: string;
@@ -18,6 +46,73 @@ interface TextItemWithGeometry {
   height: number;
   viewportTransform: number[];
 }
+
+interface ReadAloudPage {
+  page: PdfPage;
+  text: string;
+  words: string[];
+  chunks: SpeechChunk[];
+  items: TextItemWithGeometry[];
+}
+
+export type ReadAloudPlayback = "idle" | "playing" | "paused" | "finished";
+export type ReadAloudDetectionStatus = "idle" | "detecting" | "ready" | "error";
+export type ReadAloudLanguageSource = "detected" | "manual" | "fallback";
+export type ReadAloudError =
+  | "noSpeech"
+  | "noVoice"
+  | "noText"
+  | "detectionFailed"
+  | "playbackFailed"
+  | null;
+
+export interface ReadAloudStore {
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => ViewerReadAloudState;
+}
+
+export interface ViewerReadAloudState {
+  /** Stable subscription handle so toolbar buttons do not re-register on every state change. */
+  store: ReadAloudStore;
+  isReadingAloud: boolean;
+  isPaused: boolean;
+  playback: ReadAloudPlayback;
+  panelOpen: boolean;
+  detection: DocumentLanguage | null;
+  detectionStatus: ReadAloudDetectionStatus;
+  language: string;
+  languageSource: ReadAloudLanguageSource;
+  voice: SpeechSynthesisVoice | null;
+  selectedVoiceURI: string;
+  voices: SpeechSynthesisVoice[];
+  languageOptions: ReadAloudLanguageOption[];
+  voiceOptions: SpeechSynthesisVoice[];
+  voiceLabel: string;
+  speechRate: number;
+  highlightEnabled: boolean;
+  currentPage: number;
+  totalPages: number;
+  chunkIndex: number;
+  chunkCount: number;
+  error: ReadAloudError;
+  openPanel: () => void;
+  closePanel: () => void;
+  togglePanel: () => void;
+  togglePlayPause: () => Promise<void>;
+  stop: () => void;
+  previous: () => void;
+  next: () => void;
+  setRate: (rate: number, commit?: boolean) => void;
+  setVoice: (voiceURI: string) => void;
+  setLanguage: (code: string) => void;
+  setHighlightEnabled: (enabled: boolean) => void;
+  redetect: () => Promise<void>;
+}
+
+const MIN_RATE = 0.5;
+const MAX_RATE = 2;
+const PAGE_CACHE_LIMIT = 4;
+const IDLE_DOC_CLEANUP_MS = 20_000;
 
 function isTextItem(value: unknown): value is {
   str: string;
@@ -48,232 +143,387 @@ function createHighlightElement(
   if (!highlightRect) return null;
 
   const highlight = document.createElement("div");
-  highlight.style.position = "absolute";
+  highlight.className = "read-aloud-highlight";
   highlight.style.left = `${highlightRect.left}px`;
   highlight.style.top = `${highlightRect.top}px`;
   highlight.style.width = `${highlightRect.width}px`;
   highlight.style.height = `${highlightRect.height}px`;
-  highlight.style.backgroundColor = "rgba(255, 193, 7, 0.6)";
-  highlight.style.pointerEvents = "none";
   highlight.style.zIndex = String(ZINDEX.VIEWER_HIGHLIGHT);
-  highlight.style.borderRadius = "2px";
   pageEl.appendChild(highlight);
 
   return highlight;
 }
 
-/** -1 when `charIndex` falls on the space between two words. */
-function wordIndexAtChar(words: string[], charIndex: number): number {
-  let wordStart = 0;
-  for (let i = 0; i < words.length; i++) {
-    const wordEnd = wordStart + words[i].length;
-    if (charIndex < wordEnd) return charIndex >= wordStart ? i : -1;
-    wordStart = wordEnd + 1;
-  }
-  return -1;
+function fileKey(file: StirlingFile | File): string {
+  const id = (file as StirlingFile).fileId;
+  return `${id ?? file.name}:${file.size}:${file.lastModified ?? 0}`;
+}
+
+function clampRate(rate: number): number {
+  if (!Number.isFinite(rate)) return 1;
+  return Math.min(MAX_RATE, Math.max(MIN_RATE, rate));
 }
 
 /**
- * `displayedFile` is the document the viewer is showing, preview included:
- * read-aloud and the selection menu must speak the same file the user sees.
+ * Read-aloud state and playback for the viewer.
+ *
+ * The browser's speech queue speaks a whole page badly: Chrome drops long
+ * utterances and pause/resume is broken on Android. This hook therefore owns a
+ * sentence-sized queue, a cursor into it, and a session token so a cancelled
+ * page can never speak over the one that replaced it.
+ *
+ * `displayedFile` is the file the viewer is showing, preview included, so the
+ * controls and the selection menu always speak the same document.
  */
 export function useViewerReadAloud(
   defaultLanguage?: string,
   displayedFile?: StirlingFile | File | null,
-) {
+): ViewerReadAloudState {
   const viewer = useViewer();
+  const { preferences, updatePreference } = usePreferences();
+  const fallbackLanguage = defaultLanguage || "en-US";
 
-  const [isReadingAloud, setIsReadingAloud] = useState(false);
-  const [speechRate, setSpeechRate] = useState(1);
-  const [speechLanguage, setSpeechLanguage] = useState(
-    defaultLanguage || "en-US",
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [playback, setPlayback] = useState<ReadAloudPlayback>("idle");
+  const [detection, setDetection] = useState<DocumentLanguage | null>(null);
+  const [detectionStatus, setDetectionStatus] =
+    useState<ReadAloudDetectionStatus>("idle");
+  const [language, setLanguageState] = useState(baseLanguage(fallbackLanguage));
+  const [languageSource, setLanguageSource] =
+    useState<ReadAloudLanguageSource>("fallback");
+  const [voiceURI, setVoiceURI] = useState(preferences.readAloudVoiceURI || "");
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [speechRate, setSpeechRateState] = useState(() =>
+    clampRate(preferences.readAloudRate),
   );
-  const [speechVoice, setSpeechVoice] = useState<SpeechSynthesisVoice | null>(
-    null,
+  const [highlightEnabled, setHighlightEnabledState] = useState(
+    preferences.readAloudHighlight !== false,
   );
-  const [supportedLanguageCodes, setSupportedLanguageCodes] = useState<
-    Set<string>
-  >(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [chunkIndex, setChunkIndex] = useState(0);
+  const [chunkCount, setChunkCount] = useState(0);
+  const [error, setError] = useState<ReadAloudError>(null);
 
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const highlightedElementsRef = useRef<HTMLElement[]>([]);
-  const textItemsRef = useRef<TextItemWithGeometry[]>([]);
-  const speechTextRef = useRef("");
-  const speechWordsRef = useRef<string[]>([]);
-  const speechCharIndexRef = useRef(0);
-  const currentWordIndexRef = useRef(0);
-  const currentPageNumberRef = useRef(1);
-  const restartingSpeechRef = useRef(false);
-  const restartTimeoutRef = useRef<number | null>(null);
-  const pageAdvanceTimeoutRef = useRef<number | null>(null);
-  const currentFileRef = useRef<StirlingFile | File | null>(null);
-  // Bumped whenever reading starts or stops; async work started under an
-  // older value must not speak or tear down the session that replaced it.
+  const fileRef = useRef<StirlingFile | File | null>(displayedFile ?? null);
+  const docRef = useRef<PdfDocument | null>(null);
+  const docFileKeyRef = useRef<string | null>(null);
+  const docPromiseRef = useRef<Promise<PdfDocument> | null>(null);
+  const docTokenRef = useRef(0);
+  const pageCacheRef = useRef<Map<number, ReadAloudPage>>(new Map());
+  const detectionCacheRef = useRef<Map<string, DocumentLanguage>>(new Map());
+  const detectionPromiseRef = useRef<{
+    key: string;
+    promise: Promise<DocumentLanguage | null>;
+  } | null>(null);
+  const detectionTokenRef = useRef(0);
+  const cleanupTimerRef = useRef<number | null>(null);
   const sessionRef = useRef(0);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const chunksRef = useRef<SpeechChunk[]>([]);
+  const pageWordsRef = useRef<string[]>([]);
+  const pageTextRef = useRef("");
+  const textItemsRef = useRef<TextItemWithGeometry[]>([]);
+  const highlightedElementsRef = useRef<HTMLElement[]>([]);
+  const currentPageRef = useRef(1);
   const totalPagesRef = useRef(0);
-  const speechRateRef = useRef(1); // Keep track of current rate without recreating dependent functions
-  const speechLanguageRef = useRef(defaultLanguage || "en-US");
-
-  // Cache parsed PDF document and page text items to avoid reparsing on every zoom/scroll
-  const cachedPdfDocRef = useRef<Awaited<
-    ReturnType<typeof pdfWorkerManager.createDocument>
-  > | null>(null);
-  const cachedPageNumberRef = useRef<number | null>(null);
-  const cachedTextItemsRef = useRef<TextItemWithGeometry[] | null>(null);
-
-  // Helper to find best voice for language
-  const findVoiceForLanguage = useCallback(
-    (languageCode: string): SpeechSynthesisVoice | null => {
-      if (typeof window === "undefined" || !window.speechSynthesis) return null;
-
-      const voices = window.speechSynthesis.getVoices();
-      if (!voices || voices.length === 0) return null;
-
-      // Try exact match first
-      const exactMatch = voices.find((v) => v.lang === languageCode);
-      if (exactMatch) return exactMatch;
-
-      // Try matching just the language part (e.g., 'es' from 'es-ES')
-      const baseLang = languageCode.split("-")[0];
-      const baseMatch = voices.find((v) => v.lang.startsWith(baseLang));
-      if (baseMatch) {
-        return baseMatch;
-      }
-
-      // Fallback to any English voice if requested language not found
-      const englishMatch = voices.find((v) => v.lang.startsWith("en"));
-      if (englishMatch) {
-        return englishMatch;
-      }
-
-      // Last resort: use any available voice
-      return voices[0] || null;
-    },
-    [],
-  );
-
-  // Sync speechRate state to ref so page advance callbacks always have current rate
-  useEffect(() => {
-    speechRateRef.current = speechRate;
-  }, [speechRate]);
-
-  // Sync speechLanguage state to ref
-  useEffect(() => {
-    speechLanguageRef.current = speechLanguage;
-  }, [speechLanguage]);
-
-  // Helper to get supported language codes from available voices
-  const getSupportedLanguageCodes = useCallback((): Set<string> => {
-    if (typeof window === "undefined" || !window.speechSynthesis)
-      return new Set();
-
-    const voices = window.speechSynthesis.getVoices();
-    const supportedCodes = new Set<string>();
-
-    // For each voice, add its language code and base language code
-    voices.forEach((voice) => {
-      supportedCodes.add(voice.lang);
-      const baseLang = voice.lang.split("-")[0];
-      supportedCodes.add(baseLang);
-    });
-
-    // Also add English as fallback
-    supportedCodes.add("en");
-    supportedCodes.add("en-GB");
-    supportedCodes.add("en-US");
-
-    return supportedCodes;
-  }, []);
-
-  // Wait for voices to load, then check if default language has a voice
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-
-    const handleVoicesChanged = () => {
-      const supportedCodes = getSupportedLanguageCodes();
-      setSupportedLanguageCodes(supportedCodes);
-      // Once voices are loaded, update the voice for current language
-      const voice = findVoiceForLanguage(speechLanguage);
-      setSpeechVoice(voice);
-    };
-
-    // Check if voices are already loaded
-    if (window.speechSynthesis.getVoices().length > 0) {
-      const supportedCodes = getSupportedLanguageCodes();
-      setSupportedLanguageCodes(supportedCodes);
-      const voice = findVoiceForLanguage(speechLanguage);
-      setSpeechVoice(voice);
-    } else {
-      // Voices not loaded yet, listen for voiceschanged event
-      window.speechSynthesis.addEventListener(
-        "voiceschanged",
-        handleVoicesChanged,
-      );
-      return () => {
-        window.speechSynthesis.removeEventListener(
-          "voiceschanged",
-          handleVoicesChanged,
-        );
-      };
-    }
-  }, [speechLanguage, findVoiceForLanguage, getSupportedLanguageCodes]);
+  const chunkCountRef = useRef(0);
+  const lastWordIndexRef = useRef(-1);
+  const playbackRef = useRef({ page: 1, chunk: 0, offset: 0 });
+  const playbackStateRef = useRef<ReadAloudPlayback>("idle");
+  const speechRateRef = useRef(speechRate);
+  const languageRef = useRef(language);
+  const languageSourceRef = useRef(languageSource);
+  const voiceURIRef = useRef(voiceURI);
+  const preferredVoiceURIRef = useRef(preferences.readAloudVoiceURI || "");
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  const highlightEnabledRef = useRef(highlightEnabled);
+  const previousDisplayedFileRef = useRef(displayedFile ?? null);
+  const advancePageRef = useRef<(session: number) => void>(() => {});
+  const speakChunkRef = useRef<
+    (chunk: number, offset: number, session: number) => void
+  >(() => {});
+  const listenersRef = useRef(new Set<() => void>());
+  const snapshotRef = useRef<ViewerReadAloudState | null>(null);
+  const lastStateKeyRef = useRef("");
 
   const clearHighlights = useCallback(() => {
     highlightedElementsRef.current.forEach((el) => el.remove());
     highlightedElementsRef.current = [];
   }, []);
 
-  const cleanupReadingSession = useCallback(() => {
-    // Destroy the cached PDF document to free memory
-    if (cachedPdfDocRef.current) {
-      pdfWorkerManager.destroyDocument(cachedPdfDocRef.current);
-      cachedPdfDocRef.current = null;
-      cachedPageNumberRef.current = null;
-      cachedTextItemsRef.current = null;
+  const disposeDocument = useCallback(() => {
+    docTokenRef.current++;
+    if (docRef.current) {
+      pdfWorkerManager.destroyDocument(docRef.current);
+      docRef.current = null;
     }
+    docFileKeyRef.current = null;
+    docPromiseRef.current = null;
+    pageCacheRef.current.clear();
   }, []);
 
-  const stopReadingAloud = useCallback(() => {
-    sessionRef.current++;
-    restartingSpeechRef.current = false;
-    if (restartTimeoutRef.current !== null) {
-      window.clearTimeout(restartTimeoutRef.current);
-      restartTimeoutRef.current = null;
-    }
-    if (pageAdvanceTimeoutRef.current !== null) {
-      window.clearTimeout(pageAdvanceTimeoutRef.current);
-      pageAdvanceTimeoutRef.current = null;
-    }
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    clearHighlights();
-    setIsReadingAloud(false);
-    currentFileRef.current = null;
-    currentWordIndexRef.current = 0;
-    utteranceRef.current = null;
-    cleanupReadingSession();
-  }, [clearHighlights, cleanupReadingSession]);
+  const getDocument = useCallback(
+    async (file: StirlingFile | File): Promise<PdfDocument> => {
+      const key = fileKey(file);
+      if (docRef.current && docFileKeyRef.current === key) {
+        return docRef.current;
+      }
+      if (docPromiseRef.current) return docPromiseRef.current;
 
-  // Stop reading when navigating away (workbench, file, or window change)
-  useStopReadAloudOnNavigation(isReadingAloud, stopReadingAloud);
+      disposeDocument();
+      const token = docTokenRef.current;
+      const promise = (async () => {
+        const created = await pdfWorkerManager.createDocument(
+          await file.arrayBuffer(),
+        );
+        if (token !== docTokenRef.current) {
+          pdfWorkerManager.destroyDocument(created);
+          throw new Error("Read aloud document was superseded");
+        }
+        docRef.current = created;
+        docFileKeyRef.current = key;
+        return created;
+      })();
+      docPromiseRef.current = promise;
+      try {
+        return await promise;
+      } catch (cause) {
+        docPromiseRef.current = null;
+        throw cause;
+      }
+    },
+    [disposeDocument],
+  );
 
-  // Stop reading when the displayed file itself is replaced. Navigation
-  // watches the workbench and active index, but a preview or re-upload can
-  // swap the file underneath both; without this, a pending read resolves
-  // for the old file and speaks it over the replacement.
-  const previousDisplayedFileRef = useRef(displayedFile);
-  useEffect(() => {
-    if (previousDisplayedFileRef.current === displayedFile) return;
-    previousDisplayedFileRef.current = displayedFile;
-    if (isReadingAloud) {
-      stopReadingAloud();
-    }
-  }, [displayedFile, isReadingAloud, stopReadingAloud]);
+  const extractPage = useCallback(
+    async (
+      doc: PdfDocument,
+      pageNumber: number,
+      zoom: number,
+    ): Promise<ReadAloudPage> => {
+      const cached = pageCacheRef.current.get(pageNumber);
+      if (cached) return cached;
+
+      const page = await doc.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      const viewportTransform = page.getViewport({ scale: zoom }).transform;
+
+      const textItems: TextItemWithGeometry[] = [];
+      for (const item of textContent.items) {
+        if (!isTextItem(item)) continue;
+        textItems.push({ ...item, viewportTransform });
+      }
+
+      // Sort by visual position so speech follows the reading order instead of
+      // the PDF's internal content-stream order.
+      const sortedItems = [...textItems].sort((a, b) => {
+        const yA = a.transform[5] ?? 0;
+        const yB = b.transform[5] ?? 0;
+        const xA = a.transform[4] ?? 0;
+        const xB = b.transform[4] ?? 0;
+        if (Math.abs(yA - yB) > 5) return yB - yA;
+        return xA - xB;
+      });
+
+      // Merge characters and syllables that the producer emitted as separate
+      // items; otherwise a word can be spoken as a string of letters.
+      const mergedItems: TextItemWithGeometry[] = [];
+      const CHAR_MERGE_THRESHOLD = 5;
+      for (const item of sortedItems) {
+        const itemText = item.str;
+        if (itemText.trim() === "") {
+          mergedItems.push(item);
+          continue;
+        }
+        const lastItem = mergedItems[mergedItems.length - 1];
+        if (lastItem && lastItem.str.trim()) {
+          const yDiff = Math.abs(
+            (lastItem.transform[5] ?? 0) - (item.transform[5] ?? 0),
+          );
+          const xGap =
+            (item.transform[4] ?? 0) -
+            ((lastItem.transform[4] ?? 0) + (lastItem.width ?? 0));
+          if (yDiff < 5 && xGap < CHAR_MERGE_THRESHOLD) {
+            lastItem.str += itemText;
+            lastItem.width =
+              (lastItem.width ?? 0) + Math.max(0, xGap) + (item.width ?? 0);
+            continue;
+          }
+        }
+        mergedItems.push({ ...item, str: itemText });
+      }
+
+      const text = mergedItems
+        .map((item) => item.str)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const data: ReadAloudPage = {
+        page,
+        text,
+        words: text.split(/\s+/).filter(Boolean),
+        chunks: chunkTextForSpeech(text),
+        items: mergedItems,
+      };
+
+      pageCacheRef.current.set(pageNumber, data);
+      if (pageCacheRef.current.size > PAGE_CACHE_LIMIT) {
+        for (const key of pageCacheRef.current.keys()) {
+          if (key !== pageNumber && key !== currentPageRef.current) {
+            pageCacheRef.current.delete(key);
+            break;
+          }
+        }
+      }
+      return data;
+    },
+    [],
+  );
+
+  const loadPage = useCallback(
+    async (
+      file: StirlingFile | File,
+      pageNumber: number,
+      session: number,
+    ): Promise<ReadAloudPage | null> => {
+      const doc = await getDocument(file);
+      if (session !== sessionRef.current) return null;
+      const zoom = (viewer.getZoomState().zoomPercent || 100) / 100;
+      const data = await extractPage(doc, pageNumber, zoom);
+      if (session !== sessionRef.current) return null;
+      return data;
+    },
+    [extractPage, getDocument, viewer],
+  );
+
+  const applyDetection = useCallback(
+    (result: DocumentLanguage) => {
+      setDetection(result);
+      if (languageSourceRef.current === "manual") return;
+
+      const detected = result.detection.language;
+      if (detected == null) {
+        const fallback = baseLanguage(fallbackLanguage);
+        const fallbackVoice = resolveVoiceForLanguage(
+          fallback,
+          voicesRef.current,
+          preferredVoiceURIRef.current,
+          fallbackLanguage,
+        );
+        setLanguageState(fallback);
+        languageRef.current = fallback;
+        setLanguageSource("fallback");
+        languageSourceRef.current = "fallback";
+        setVoiceURI(fallbackVoice?.voiceURI ?? "");
+        voiceURIRef.current = fallbackVoice?.voiceURI ?? "";
+        return;
+      }
+
+      const resolved = resolveVoiceForLanguage(
+        detected,
+        voicesRef.current,
+        preferredVoiceURIRef.current,
+        fallbackLanguage,
+      );
+      setLanguageState(detected);
+      languageRef.current = detected;
+      setLanguageSource("detected");
+      languageSourceRef.current = "detected";
+      setVoiceURI(resolved?.voiceURI ?? "");
+      voiceURIRef.current = resolved?.voiceURI ?? "";
+    },
+    [fallbackLanguage],
+  );
+
+  const detect = useCallback(
+    async (file: StirlingFile | File): Promise<DocumentLanguage | null> => {
+      const key = fileKey(file);
+      const cached = detectionCacheRef.current.get(key);
+      if (cached) {
+        applyDetection(cached);
+        setDetectionStatus("ready");
+        return cached;
+      }
+      if (detectionPromiseRef.current?.key === key) {
+        return detectionPromiseRef.current.promise;
+      }
+
+      const token = ++detectionTokenRef.current;
+      setDetectionStatus("detecting");
+      let failed = false;
+      const promise = (async (): Promise<DocumentLanguage | null> => {
+        try {
+          const doc = await getDocument(file);
+          if (token !== detectionTokenRef.current) return null;
+
+          let metadataTag: unknown;
+          try {
+            const metadata = await doc.getMetadata();
+            metadataTag = (metadata.info as Record<string, unknown> | undefined)
+              ?.Language;
+          } catch {
+            // Metadata is optional; text detection still works without it.
+          }
+
+          const pages: string[] = [];
+          const pageCount = Math.max(doc.numPages || 1, 1);
+          const pageNumbers = Array.from(
+            new Set([
+              1,
+              Math.min(2, pageCount),
+              Math.min(currentPageRef.current || 1, pageCount),
+            ]),
+          );
+          for (const pageNumber of pageNumbers) {
+            const zoom = (viewer.getZoomState().zoomPercent || 100) / 100;
+            const pageData = await extractPage(doc, pageNumber, zoom);
+            if (token !== detectionTokenRef.current) return null;
+            if (pageData.text.length > 0) pages.push(pageData.text);
+            if (pages.join("").length >= 5_000) break;
+          }
+
+          const result = detectDocumentLanguage(
+            sampleTextForDetection(pages),
+            metadataTag,
+          );
+          detectionCacheRef.current.set(key, result);
+          return result;
+        } catch (cause) {
+          console.error("Read aloud language detection failed", cause);
+          failed = true;
+          if (token === detectionTokenRef.current) {
+            setError("detectionFailed");
+          }
+          return null;
+        }
+      })();
+
+      detectionPromiseRef.current = { key, promise };
+      const result = await promise;
+      if (detectionPromiseRef.current?.promise === promise) {
+        detectionPromiseRef.current = null;
+      }
+      if (token !== detectionTokenRef.current) return null;
+      setDetectionStatus(failed ? "error" : "ready");
+      if (result) applyDetection(result);
+      return result;
+    },
+    [applyDetection, extractPage, getDocument, viewer],
+  );
+
+  const ensureDetection =
+    useCallback(async (): Promise<DocumentLanguage | null> => {
+      const file = fileRef.current ?? displayedFile ?? null;
+      if (!file) return null;
+      return detect(file);
+    }, [detect, displayedFile]);
 
   const highlightWord = useCallback(
     (wordIndex: number, words: string[], pageNumber: number) => {
       clearHighlights();
+      if (!highlightEnabledRef.current) return;
       if (wordIndex < 0 || wordIndex >= words.length) return;
 
       const wordToFind = words[wordIndex];
@@ -281,9 +531,8 @@ export function useViewerReadAloud(
 
       try {
         let currentWordCount = 0;
-        const currentPageIndex = pageNumber - 1;
         const pageEl = document.querySelector(
-          `[data-page-index="${currentPageIndex}"]`,
+          `[data-page-index="${pageNumber - 1}"]`,
         ) as HTMLElement | null;
         if (!pageEl) return;
 
@@ -298,437 +547,624 @@ export function useViewerReadAloud(
               subWords[i].toLowerCase() === wordToFind.toLowerCase()
             ) {
               const highlight = createHighlightElement(item, pageEl);
-              if (highlight) {
-                highlightedElementsRef.current.push(highlight);
-              }
+              if (highlight) highlightedElementsRef.current.push(highlight);
               return;
             }
             currentWordCount++;
           }
         }
       } catch {
-        // Highlighting is best-effort only.
+        // Highlighting is best-effort; speech must not fail with it.
       }
     },
     [clearHighlights],
   );
 
-  /**
-   * Parses one page's text for speaking. Null when the page has no text or
-   * when `session` was superseded mid-parse, so callers check the session
-   * before treating null as an empty page.
-   */
-  const readPage = useCallback(
-    async (
-      currentFile: StirlingFile | File,
-      pageNumber: number,
-      session: number,
-    ) => {
-      let pdfDoc: Awaited<
-        ReturnType<typeof pdfWorkerManager.createDocument>
-      > | null = null;
-
-      try {
-        const zoom = (viewer.getZoomState().zoomPercent || 100) / 100;
-
-        // If we have a cached document for the same file, reuse it instead of recreating
-        if (cachedPdfDocRef.current) {
-          pdfDoc = cachedPdfDocRef.current;
-        } else {
-          const createdDoc = await pdfWorkerManager.createDocument(
-            await currentFile.arrayBuffer(),
-          );
-          if (session !== sessionRef.current) {
-            pdfWorkerManager.destroyDocument(createdDoc);
-            return null;
-          }
-          pdfDoc = createdDoc;
-          cachedPdfDocRef.current = pdfDoc;
-        }
-
-        const page = await pdfDoc.getPage(pageNumber);
-        const textContent = await page.getTextContent();
-        if (session !== sessionRef.current) return null;
-        // The highlight is rendered inside the page element, so we keep geometry in
-        // page-local coordinates and let the viewer's own rotation transform it.
-        const viewportTransform = page.getViewport({ scale: zoom }).transform;
-
-        const textItems: TextItemWithGeometry[] = [];
-        for (const item of textContent.items) {
-          if (!isTextItem(item)) continue;
-          textItems.push({
-            ...item,
-            viewportTransform,
-          });
-        }
-
-        // Sort text items by visual position (top-to-bottom, then left-to-right)
-        // to preserve reading order instead of PDF internal order
-        const sortedItems = [...textItems].sort((a, b) => {
-          // transform array is [a, b, c, d, e, f] where e=x, f=y (translation components)
-          const yA = a.transform[5] ?? 0; // y position
-          const yB = b.transform[5] ?? 0;
-          const xA = a.transform[4] ?? 0; // x position
-          const xB = b.transform[4] ?? 0;
-
-          // Sort top-to-bottom (higher y first in PDF coordinates), then left-to-right
-          // 5px threshold for "same line" to group text on same horizontal line
-          if (Math.abs(yA - yB) > 5) {
-            return yB - yA; // Top to bottom
-          }
-          return xA - xB; // Left to right
-        });
-
-        // Merge adjacent text items on same line, using PDF spaces as word boundaries
-        // This fixes PDFs where characters/syllables are individual text items
-        const mergedItems: TextItemWithGeometry[] = [];
-        const CHAR_MERGE_THRESHOLD = 5; // px - merge adjacent chars/syllables closer than this
-
-        for (const item of sortedItems) {
-          const itemText = item.str;
-          const isSpace = itemText.trim() === "";
-
-          // Spaces mark word boundaries - always push them separately
-          if (isSpace) {
-            mergedItems.push(item);
-            continue;
-          }
-
-          const lastItem = mergedItems[mergedItems.length - 1];
-
-          // Only merge if last item exists, is not a space, and items are on same line
-          if (lastItem && lastItem.str.trim()) {
-            const yDiff = Math.abs(
-              (lastItem.transform[5] ?? 0) - (item.transform[5] ?? 0),
-            );
-            const xGap =
-              (item.transform[4] ?? 0) -
-              ((lastItem.transform[4] ?? 0) + (lastItem.width ?? 0));
-
-            // Same line and very close horizontally?
-            if (yDiff < 5 && xGap < CHAR_MERGE_THRESHOLD) {
-              lastItem.str += itemText;
-              // Update width: add the new item's width plus any gap between them
-              lastItem.width =
-                (lastItem.width ?? 0) + Math.max(0, xGap) + (item.width ?? 0);
-              continue;
-            }
-          }
-          mergedItems.push({ ...item, str: itemText });
-        }
-
-        // Use merged items for both highlighting and caching
-        // This ensures word counting in highlightWord matches the spoken text order
-        textItemsRef.current = mergedItems;
-        cachedTextItemsRef.current = mergedItems;
-        cachedPageNumberRef.current = pageNumber;
-
-        const spokenText = mergedItems
-          .map((item) => item.str)
-          .join(" ")
-          .replace(/\s+/g, " ")
-          .trim();
-
-        if (!spokenText) {
-          return null;
-        }
-
-        const words = spokenText.split(/\s+/).filter(Boolean);
-        return { spokenText, words };
-      } catch (error) {
-        // Clear cache on error to avoid stale state
-        if (pdfDoc && pdfDoc === cachedPdfDocRef.current) {
-          cachedPdfDocRef.current = null;
-        }
-        throw error;
-      }
-    },
-    [viewer],
-  );
-
-  const speakFromCharIndex = useCallback(
-    (
-      spokenText: string,
-      words: string[],
-      startCharIndex: number,
-      pageNumber: number,
-      rateOverride?: number,
-      languageOverride?: string,
-    ) => {
-      if (typeof window === "undefined" || !window.speechSynthesis) {
-        return;
-      }
-
-      const clampedStart = Math.max(
-        0,
-        Math.min(startCharIndex, spokenText.length),
-      );
-      const remainingText = spokenText.slice(clampedStart).trimStart();
-      const trimmedDelta =
-        spokenText.slice(clampedStart).length - remainingText.length;
-      const baseCharIndex = clampedStart + trimmedDelta;
-
-      if (!remainingText) {
-        clearHighlights();
-        setIsReadingAloud(false);
-        currentFileRef.current = null;
-        currentWordIndexRef.current = 0;
-        utteranceRef.current = null;
-        cleanupReadingSession();
-        return;
-      }
-
-      speechTextRef.current = spokenText;
-      speechWordsRef.current = words;
-      speechCharIndexRef.current = baseCharIndex;
-      currentPageNumberRef.current = pageNumber;
-      const startWordIndex = wordIndexAtChar(words, baseCharIndex);
-      if (startWordIndex !== -1) {
-        currentWordIndexRef.current = startWordIndex;
-        highlightWord(startWordIndex, words, pageNumber);
-      }
-
-      const session = sessionRef.current;
-      const utterance = new SpeechSynthesisUtterance(remainingText);
-      utterance.rate = rateOverride ?? speechRateRef.current;
-      const currentLang = languageOverride ?? speechLanguageRef.current;
-      utterance.lang = currentLang;
-
-      // Set specific voice if available
-      const voice = findVoiceForLanguage(currentLang);
-      if (voice) {
-        utterance.voice = voice;
-      }
-
-      utterance.onstart = () => setIsReadingAloud(true);
-      utterance.onend = () => {
-        if (session !== sessionRef.current) return;
-        utteranceRef.current = null;
-        if (restartingSpeechRef.current) {
-          return;
-        }
-        if (currentFileRef.current && pageNumber < totalPagesRef.current) {
-          clearHighlights();
-          speechCharIndexRef.current = 0;
-          currentWordIndexRef.current = 0;
-          currentPageNumberRef.current = pageNumber + 1;
-          viewer.scrollActions.scrollToPage(pageNumber + 1, "smooth");
-          if (pageAdvanceTimeoutRef.current !== null) {
-            window.clearTimeout(pageAdvanceTimeoutRef.current);
-          }
-          pageAdvanceTimeoutRef.current = window.setTimeout(async () => {
-            pageAdvanceTimeoutRef.current = null;
-            try {
-              if (!currentFileRef.current) {
-                currentFileRef.current = null;
-                setIsReadingAloud(false);
-                cleanupReadingSession();
-                return;
-              }
-              const nextPageData = await readPage(
-                currentFileRef.current,
-                pageNumber + 1,
-                session,
-              );
-              if (session !== sessionRef.current) return;
-              if (!nextPageData) {
-                currentFileRef.current = null;
-                setIsReadingAloud(false);
-                cleanupReadingSession();
-                return;
-              }
-              speakFromCharIndex(
-                nextPageData.spokenText,
-                nextPageData.words,
-                0,
-                pageNumber + 1,
-                speechRateRef.current,
-                speechLanguageRef.current,
-              );
-            } catch (error) {
-              if (session !== sessionRef.current) return;
-              console.error("Read aloud page advance failed", error);
-              currentFileRef.current = null;
-              clearHighlights();
-              setIsReadingAloud(false);
-              cleanupReadingSession();
-            }
-          }, 250);
-          return;
-        }
-        clearHighlights();
-        setIsReadingAloud(false);
-        speechCharIndexRef.current = spokenText.length;
-        currentFileRef.current = null;
-        currentWordIndexRef.current = 0;
-        cleanupReadingSession();
-      };
-      utterance.onerror = () => {
-        if (session !== sessionRef.current) return;
-        utteranceRef.current = null;
-        if (restartingSpeechRef.current) {
-          return;
-        }
-        restartingSpeechRef.current = false;
-        currentFileRef.current = null;
-        currentWordIndexRef.current = 0;
-        clearHighlights();
-        setIsReadingAloud(false);
-        cleanupReadingSession();
-      };
-      utterance.onboundary = (event: SpeechSynthesisEvent) => {
-        if (event.name !== "word") return;
-
-        const absoluteCharIndex = baseCharIndex + event.charIndex;
-        speechCharIndexRef.current = absoluteCharIndex;
-
-        const wordIndex = wordIndexAtChar(words, absoluteCharIndex);
-        if (wordIndex === -1) return;
-        currentWordIndexRef.current = wordIndex;
-        currentPageNumberRef.current = pageNumber;
-        highlightWord(wordIndex, words, pageNumber);
-      };
-
-      utteranceRef.current = utterance;
-      window.speechSynthesis.speak(utterance);
-    },
-    [
-      clearHighlights,
-      cleanupReadingSession,
-      findVoiceForLanguage,
-      highlightWord,
-      readPage,
-      viewer.scrollActions,
-    ],
-  );
-
   const refreshActiveHighlight = useCallback(() => {
     if (
-      !isReadingAloud ||
-      !currentFileRef.current ||
-      !cachedTextItemsRef.current
+      playbackStateRef.current !== "playing" &&
+      playbackStateRef.current !== "paused"
     ) {
       return;
     }
-
-    // Use cached text items to refresh highlights without reparsing the PDF document.
-    // This is critical for performance during zoom/scroll updates while audio is playing.
-    const words = speechWordsRef.current;
-    const pageNumber = currentPageNumberRef.current;
-    const wordIndex = currentWordIndexRef.current;
-
-    highlightWord(wordIndex, words, pageNumber);
-  }, [isReadingAloud, highlightWord]);
-
-  const startReading = useCallback(
-    async (
-      pageNumber: number,
-      findStartCharIndex?: (spokenText: string) => number,
-    ) => {
-      if (!displayedFile) return;
-      const session = ++sessionRef.current;
-      try {
-        currentFileRef.current = displayedFile;
-        totalPagesRef.current = viewer.getScrollState().totalPages || 0;
-
-        setIsReadingAloud(true);
-        const pageData = await readPage(displayedFile, pageNumber, session);
-        if (session !== sessionRef.current) return;
-        if (!pageData) {
-          stopReadingAloud();
-          return;
-        }
-
-        window.speechSynthesis.cancel();
-        speakFromCharIndex(
-          pageData.spokenText,
-          pageData.words,
-          findStartCharIndex?.(pageData.spokenText) ?? 0,
-          pageNumber,
-          speechRateRef.current,
-          speechLanguageRef.current,
-        );
-      } catch (error) {
-        if (session !== sessionRef.current) return;
-        console.error("Read aloud failed", error);
-        stopReadingAloud();
-      }
-    },
-    [displayedFile, readPage, speakFromCharIndex, stopReadingAloud, viewer],
-  );
-
-  const handleReadAloud = useCallback(async () => {
-    if (typeof window === "undefined" || !window.speechSynthesis) {
-      return;
+    const pageData = pageCacheRef.current.get(currentPageRef.current);
+    if (pageData) {
+      const zoom = (viewer.getZoomState().zoomPercent || 100) / 100;
+      const transform = pageData.page.getViewport({ scale: zoom }).transform;
+      for (const item of pageData.items) item.viewportTransform = transform;
+      textItemsRef.current = pageData.items;
     }
-
-    if (isReadingAloud) {
-      stopReadingAloud();
-      return;
-    }
-
-    await startReading(viewer.getScrollState().currentPage || 1);
-  }, [isReadingAloud, startReading, stopReadingAloud, viewer]);
-
-  useEffect(() => {
-    const handleReadFromSelection = (event: Event) => {
-      const { pageNumber, selectedText, approximatePosition } = (
-        event as CustomEvent<ReadAloudFromSelectionDetail>
-      ).detail;
-      stopReadingAloud();
-      void startReading(pageNumber, (spokenText) =>
-        findReadAloudStartIndex(spokenText, selectedText, approximatePosition),
-      );
-    };
-    window.addEventListener(
-      READ_ALOUD_FROM_SELECTION_EVENT,
-      handleReadFromSelection,
+    highlightWord(
+      lastWordIndexRef.current,
+      pageWordsRef.current,
+      currentPageRef.current,
     );
-    return () =>
-      window.removeEventListener(
-        READ_ALOUD_FROM_SELECTION_EVENT,
-        handleReadFromSelection,
-      );
-  }, [startReading, stopReadingAloud]);
+  }, [highlightWord, viewer]);
 
-  const handleSpeechRateChange = useCallback(
-    (nextRate: number) => {
-      setSpeechRate(nextRate);
+  const finishPlayback = useCallback(() => {
+    utteranceRef.current = null;
+    setPlayback("finished");
+    playbackStateRef.current = "finished";
+    setChunkIndex(chunkCountRef.current);
+    lastWordIndexRef.current = -1;
+    clearHighlights();
+  }, [clearHighlights]);
 
-      if (
-        !isReadingAloud ||
-        !utteranceRef.current ||
-        !speechTextRef.current ||
-        typeof window === "undefined" ||
-        !window.speechSynthesis
-      ) {
+  const speakChunk = useCallback(
+    (index: number, offset: number, session: number) => {
+      if (!isSpeechSynthesisSupported() || session !== sessionRef.current) {
+        return;
+      }
+      const chunks = chunksRef.current;
+      if (index >= chunks.length) {
+        advancePageRef.current(session);
         return;
       }
 
-      restartingSpeechRef.current = true;
-      setIsReadingAloud(true);
-      window.speechSynthesis.cancel();
-      utteranceRef.current = null;
-      if (restartTimeoutRef.current !== null) {
-        window.clearTimeout(restartTimeoutRef.current);
+      const chunk = chunks[index];
+      const clampedOffset = Math.max(0, Math.min(offset, chunk.text.length));
+      const raw = chunk.text.slice(clampedOffset);
+      const remaining = raw.trimStart();
+      const trimmedDelta = raw.length - remaining.length;
+      if (remaining.length === 0) {
+        speakChunkRef.current(index + 1, 0, session);
+        return;
       }
-      restartTimeoutRef.current = window.setTimeout(() => {
-        restartTimeoutRef.current = null;
-        if (!restartingSpeechRef.current) {
+
+      const baseChar = chunk.startChar + clampedOffset + trimmedDelta;
+      playbackRef.current = {
+        page: currentPageRef.current,
+        chunk: index,
+        offset: clampedOffset + trimmedDelta,
+      };
+      const utterance = new SpeechSynthesisUtterance(remaining);
+      utterance.rate = speechRateRef.current;
+      const selectedVoice = voiceURIRef.current
+        ? (voicesRef.current.find(
+            (voice) => voice.voiceURI === voiceURIRef.current,
+          ) ?? null)
+        : null;
+      const voice =
+        selectedVoice &&
+        voiceMatchesLanguage(selectedVoice, languageRef.current)
+          ? selectedVoice
+          : resolveVoiceForLanguage(
+              languageRef.current,
+              voicesRef.current,
+              preferredVoiceURIRef.current,
+              fallbackLanguage,
+            );
+      utterance.voice = voice;
+      utterance.lang = voice?.lang ?? languageRef.current;
+      if (voice) {
+        setVoiceURI(voice.voiceURI);
+        voiceURIRef.current = voice.voiceURI;
+      }
+
+      utterance.onstart = () => {
+        if (session !== sessionRef.current) return;
+        setPlayback("playing");
+        playbackStateRef.current = "playing";
+      };
+
+      utterance.onboundary = (event: SpeechSynthesisEvent) => {
+        if (session !== sessionRef.current) return;
+        if (event.name !== "word") return;
+        const absoluteCharIndex = baseChar + event.charIndex;
+        playbackRef.current = {
+          ...playbackRef.current,
+          offset: clampedOffset + trimmedDelta + event.charIndex,
+        };
+        const wordIndex = wordIndexAtChar(
+          pageWordsRef.current,
+          absoluteCharIndex,
+        );
+        if (wordIndex === -1) return;
+        lastWordIndexRef.current = wordIndex;
+        highlightWord(wordIndex, pageWordsRef.current, currentPageRef.current);
+      };
+
+      utterance.onend = () => {
+        if (session !== sessionRef.current) return;
+        utteranceRef.current = null;
+        playbackRef.current = {
+          ...playbackRef.current,
+          chunk: index,
+          offset: 0,
+        };
+        speakChunkRef.current(index + 1, 0, session);
+      };
+
+      utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
+        if (session !== sessionRef.current) return;
+        utteranceRef.current = null;
+        if (event.error === "interrupted" || event.error === "canceled") {
           return;
         }
-        restartingSpeechRef.current = false;
-        speakFromCharIndex(
-          speechTextRef.current,
-          speechWordsRef.current,
-          speechCharIndexRef.current,
-          currentPageNumberRef.current,
-          nextRate,
-          speechLanguageRef.current,
-        );
-      }, 80);
+        setError("playbackFailed");
+        setPlayback("idle");
+        playbackStateRef.current = "idle";
+        clearHighlights();
+      };
+
+      utteranceRef.current = utterance;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
     },
-    [isReadingAloud, speakFromCharIndex, viewer],
+    [clearHighlights, fallbackLanguage, highlightWord],
+  );
+
+  const advancePage = useCallback(
+    (session: number) => {
+      if (session !== sessionRef.current) return;
+      const page = currentPageRef.current;
+      if (page >= totalPagesRef.current) {
+        finishPlayback();
+        return;
+      }
+
+      const next = page + 1;
+      const file = fileRef.current;
+      if (!file) {
+        finishPlayback();
+        return;
+      }
+
+      currentPageRef.current = next;
+      setCurrentPage(next);
+      setChunkIndex(0);
+      setChunkCount(0);
+      viewer.scrollActions.scrollToPage(next, "smooth");
+
+      void (async () => {
+        const data = await loadPage(file, next, session);
+        if (session !== sessionRef.current) return;
+        if (!data || data.chunks.length === 0) {
+          advancePageRef.current(session);
+          return;
+        }
+        chunksRef.current = data.chunks;
+        pageWordsRef.current = data.words;
+        pageTextRef.current = data.text;
+        textItemsRef.current = data.items;
+        chunkCountRef.current = data.chunks.length;
+        setChunkCount(data.chunks.length);
+        lastWordIndexRef.current = -1;
+        playbackRef.current = { page: next, chunk: 0, offset: 0 };
+        speakChunkRef.current(0, 0, session);
+      })();
+    },
+    [finishPlayback, loadPage, viewer.scrollActions],
+  );
+
+  advancePageRef.current = advancePage;
+  speakChunkRef.current = speakChunk;
+
+  const startPlayback = useCallback(
+    async (
+      pageNumber: number,
+      options?: {
+        startChar?: number;
+        selection?: ReadAloudFromSelectionDetail;
+      },
+    ) => {
+      const file = fileRef.current ?? displayedFile ?? null;
+      if (!file) return;
+      if (!isSpeechSynthesisSupported()) {
+        setError("noSpeech");
+        return;
+      }
+
+      const resolvedVoice =
+        resolveVoiceForLanguage(
+          languageRef.current,
+          voicesRef.current,
+          preferredVoiceURIRef.current,
+          fallbackLanguage,
+        ) ??
+        (voiceURIRef.current
+          ? (voicesRef.current.find(
+              (voice) => voice.voiceURI === voiceURIRef.current,
+            ) ?? null)
+          : null);
+      if (!resolvedVoice) {
+        setError("noVoice");
+        return;
+      }
+
+      const session = ++sessionRef.current;
+      window.speechSynthesis.cancel();
+      utteranceRef.current = null;
+      setError(null);
+      setPlayback("playing");
+      playbackStateRef.current = "playing";
+
+      const data = await loadPage(file, pageNumber, session);
+      if (session !== sessionRef.current) return;
+      if (!data || data.chunks.length === 0) {
+        setPlayback("idle");
+        playbackStateRef.current = "idle";
+        setError("noText");
+        return;
+      }
+
+      const doc = docRef.current;
+      const pages = Math.max(
+        doc?.numPages ?? 0,
+        viewer.getScrollState().totalPages || 0,
+        pageNumber,
+      );
+      totalPagesRef.current = pages;
+      setTotalPages(pages);
+      currentPageRef.current = pageNumber;
+      setCurrentPage(pageNumber);
+
+      chunksRef.current = data.chunks;
+      pageWordsRef.current = data.words;
+      pageTextRef.current = data.text;
+      textItemsRef.current = data.items;
+      chunkCountRef.current = data.chunks.length;
+      setChunkCount(data.chunks.length);
+      lastWordIndexRef.current = -1;
+
+      const startChar =
+        options?.startChar ??
+        (options?.selection
+          ? findReadAloudStartIndex(
+              data.text,
+              options.selection.selectedText,
+              options.selection.approximatePosition,
+            )
+          : 0);
+      const chunk = chunkIndexForChar(data.chunks, startChar);
+      const offset = Math.max(0, startChar - data.chunks[chunk].startChar);
+      playbackRef.current = { page: pageNumber, chunk, offset };
+      setChunkIndex(chunk);
+      speakChunkRef.current(chunk, offset, session);
+    },
+    [displayedFile, fallbackLanguage, loadPage, viewer],
+  );
+
+  const stopReadingAloud = useCallback(() => {
+    sessionRef.current++;
+    if (cleanupTimerRef.current !== null) {
+      window.clearTimeout(cleanupTimerRef.current);
+      cleanupTimerRef.current = null;
+    }
+    if (isSpeechSynthesisSupported()) {
+      window.speechSynthesis.cancel();
+    }
+    utteranceRef.current = null;
+    playbackStateRef.current = "idle";
+    setPlayback("idle");
+    setChunkIndex(0);
+    setChunkCount(0);
+    chunkCountRef.current = 0;
+    chunksRef.current = [];
+    lastWordIndexRef.current = -1;
+    setError(null);
+    clearHighlights();
+    disposeDocument();
+  }, [clearHighlights, disposeDocument]);
+
+  // Stop reading when navigating away (workbench, file, or window change).
+  useStopReadAloudOnNavigation(
+    playback === "playing" || playback === "paused",
+    stopReadingAloud,
+  );
+
+  const pauseReading = useCallback(() => {
+    sessionRef.current++;
+    if (isSpeechSynthesisSupported()) {
+      window.speechSynthesis.cancel();
+    }
+    utteranceRef.current = null;
+    playbackStateRef.current = "paused";
+    setPlayback("paused");
+  }, []);
+
+  const resumeReading = useCallback(() => {
+    if (chunksRef.current.length === 0) {
+      void startPlayback(currentPageRef.current);
+      return;
+    }
+    const session = ++sessionRef.current;
+    playbackStateRef.current = "playing";
+    setPlayback("playing");
+    speakChunkRef.current(
+      playbackRef.current.chunk,
+      playbackRef.current.offset,
+      session,
+    );
+  }, [startPlayback]);
+
+  const togglePlayPause = useCallback(async () => {
+    if (playback === "playing") {
+      pauseReading();
+      return;
+    }
+    if (playback === "paused") {
+      resumeReading();
+      return;
+    }
+    await ensureDetection();
+    await startPlayback(viewer.getScrollState().currentPage || 1);
+  }, [
+    ensureDetection,
+    pauseReading,
+    playback,
+    resumeReading,
+    startPlayback,
+    viewer,
+  ]);
+
+  const restartFromCurrent = useCallback(() => {
+    if (playbackStateRef.current !== "playing") return;
+    const session = ++sessionRef.current;
+    if (isSpeechSynthesisSupported()) {
+      window.speechSynthesis.cancel();
+    }
+    utteranceRef.current = null;
+    speakChunkRef.current(
+      playbackRef.current.chunk,
+      playbackRef.current.offset,
+      session,
+    );
+  }, []);
+
+  const setRate = useCallback(
+    (rate: number, commit = false) => {
+      const next = clampRate(rate);
+      setSpeechRateState(next);
+      speechRateRef.current = next;
+      if (commit) {
+        updatePreference("readAloudRate", next);
+        restartFromCurrent();
+      }
+    },
+    [restartFromCurrent, updatePreference],
+  );
+
+  const setVoice = useCallback(
+    (nextVoiceURI: string) => {
+      const selected = voicesRef.current.find(
+        (voice) => voice.voiceURI === nextVoiceURI,
+      );
+      if (!selected) return;
+      setVoiceURI(selected.voiceURI);
+      voiceURIRef.current = selected.voiceURI;
+      preferredVoiceURIRef.current = selected.voiceURI;
+      updatePreference("readAloudVoiceURI", selected.voiceURI);
+      const nextLanguage = baseLanguage(selected.lang);
+      setLanguageState(nextLanguage);
+      languageRef.current = nextLanguage;
+      setLanguageSource("manual");
+      languageSourceRef.current = "manual";
+      restartFromCurrent();
+    },
+    [restartFromCurrent, updatePreference],
+  );
+
+  const setLanguage = useCallback(
+    (code: string) => {
+      const nextLanguage = baseLanguage(code);
+      const resolved = resolveVoiceForLanguage(
+        nextLanguage,
+        voicesRef.current,
+        undefined,
+        fallbackLanguage,
+      );
+      setLanguageState(nextLanguage);
+      languageRef.current = nextLanguage;
+      setLanguageSource("manual");
+      languageSourceRef.current = "manual";
+      setVoiceURI(resolved?.voiceURI ?? "");
+      voiceURIRef.current = resolved?.voiceURI ?? "";
+      preferredVoiceURIRef.current = resolved?.voiceURI ?? "";
+      if (resolved) {
+        updatePreference("readAloudVoiceURI", resolved.voiceURI);
+      }
+      if (!resolved && playbackStateRef.current !== "idle") {
+        pauseReading();
+        setError("noVoice");
+        return;
+      }
+      restartFromCurrent();
+    },
+    [fallbackLanguage, pauseReading, restartFromCurrent, updatePreference],
+  );
+
+  const setHighlightEnabled = useCallback(
+    (enabled: boolean) => {
+      setHighlightEnabledState(enabled);
+      highlightEnabledRef.current = enabled;
+      updatePreference("readAloudHighlight", enabled);
+      if (!enabled) clearHighlights();
+      else refreshActiveHighlight();
+    },
+    [clearHighlights, refreshActiveHighlight, updatePreference],
+  );
+
+  const redetect = useCallback(async () => {
+    const file = fileRef.current ?? displayedFile ?? null;
+    if (!file) return;
+    detectionCacheRef.current.delete(fileKey(file));
+    detectionPromiseRef.current = null;
+    detectionTokenRef.current++;
+    setDetectionStatus("idle");
+    setError(null);
+    await detect(file);
+  }, [detect, displayedFile]);
+
+  const stop = useCallback(() => {
+    stopReadingAloud();
+  }, [stopReadingAloud]);
+
+  const previous = useCallback(() => {
+    if (
+      playbackStateRef.current !== "playing" &&
+      playbackStateRef.current !== "paused"
+    ) {
+      return;
+    }
+    const chunk = playbackRef.current.chunk;
+    if (chunk > 0) {
+      const session = ++sessionRef.current;
+      window.speechSynthesis.cancel();
+      playbackRef.current = {
+        ...playbackRef.current,
+        chunk: chunk - 1,
+        offset: 0,
+      };
+      setChunkIndex(chunk - 1);
+      if (playbackStateRef.current === "playing") {
+        speakChunkRef.current(chunk - 1, 0, session);
+      }
+      return;
+    }
+    if (currentPageRef.current > 1) {
+      void startPlayback(currentPageRef.current - 1);
+    }
+  }, [startPlayback]);
+
+  const next = useCallback(() => {
+    if (
+      playbackStateRef.current !== "playing" &&
+      playbackStateRef.current !== "paused"
+    ) {
+      return;
+    }
+    const chunk = playbackRef.current.chunk;
+    if (chunk + 1 < chunksRef.current.length) {
+      const session = ++sessionRef.current;
+      window.speechSynthesis.cancel();
+      playbackRef.current = {
+        ...playbackRef.current,
+        chunk: chunk + 1,
+        offset: 0,
+      };
+      setChunkIndex(chunk + 1);
+      if (playbackStateRef.current === "playing") {
+        speakChunkRef.current(chunk + 1, 0, session);
+      }
+      return;
+    }
+    if (currentPageRef.current < totalPagesRef.current) {
+      void startPlayback(currentPageRef.current + 1);
+    }
+  }, [startPlayback]);
+
+  const openPanel = useCallback(() => {
+    setPanelOpen(true);
+    const page = viewer.getScrollState().currentPage || 1;
+    if (playbackStateRef.current === "idle") {
+      currentPageRef.current = page;
+      setCurrentPage(page);
+    }
+    setTotalPages(
+      (current) => current || viewer.getScrollState().totalPages || 0,
+    );
+    void ensureDetection();
+  }, [ensureDetection, viewer]);
+
+  const closePanel = useCallback(() => {
+    setPanelOpen(false);
+    if (
+      playbackStateRef.current === "idle" ||
+      playbackStateRef.current === "finished"
+    ) {
+      if (cleanupTimerRef.current !== null) {
+        window.clearTimeout(cleanupTimerRef.current);
+      }
+      cleanupTimerRef.current = window.setTimeout(() => {
+        cleanupTimerRef.current = null;
+        if (
+          playbackStateRef.current === "idle" ||
+          playbackStateRef.current === "finished"
+        ) {
+          disposeDocument();
+        }
+      }, IDLE_DOC_CLEANUP_MS);
+    }
+  }, [disposeDocument]);
+
+  const togglePanel = useCallback(() => {
+    if (panelOpen) closePanel();
+    else openPanel();
+  }, [closePanel, openPanel, panelOpen]);
+
+  useEffect(() => {
+    voicesRef.current = voices;
+  }, [voices]);
+
+  useEffect(() => {
+    speechRateRef.current = speechRate;
+  }, [speechRate]);
+
+  useEffect(() => {
+    languageRef.current = language;
+    languageSourceRef.current = languageSource;
+  }, [language, languageSource]);
+
+  useEffect(() => {
+    voiceURIRef.current = voiceURI;
+  }, [voiceURI]);
+
+  useEffect(() => {
+    highlightEnabledRef.current = highlightEnabled;
+  }, [highlightEnabled]);
+
+  useEffect(() => {
+    playbackStateRef.current = playback;
+  }, [playback]);
+
+  useEffect(() => {
+    if (!isSpeechSynthesisSupported()) return;
+    const synth = window.speechSynthesis;
+    const update = () => setVoices(synth.getVoices());
+    update();
+    synth.addEventListener("voiceschanged", update);
+    return () => synth.removeEventListener("voiceschanged", update);
+  }, []);
+
+  const voice = useMemo(() => {
+    const selected = voices.find((item) => item.voiceURI === voiceURI);
+    if (selected && voiceMatchesLanguage(selected, language)) return selected;
+    return resolveVoiceForLanguage(
+      language,
+      voices,
+      preferredVoiceURIRef.current,
+      fallbackLanguage,
+    );
+  }, [fallbackLanguage, language, voiceURI, voices]);
+
+  useEffect(() => {
+    if (voices.length === 0) return;
+    if (voice) return;
+    const resolved = resolveVoiceForLanguage(
+      language,
+      voices,
+      preferredVoiceURIRef.current,
+      fallbackLanguage,
+    );
+    if (resolved) setVoiceURI(resolved.voiceURI);
+  }, [fallbackLanguage, language, voice, voices]);
+
+  const languageOptions = useMemo(() => {
+    const options = groupVoicesByLanguage(voices, fallbackLanguage);
+    if (options.some((option) => option.value === language)) return options;
+    return [
+      {
+        value: language,
+        label: languageDisplayName(language, fallbackLanguage),
+        voices: [],
+      },
+      ...options,
+    ];
+  }, [fallbackLanguage, language, voices]);
+  const voiceOptions = useMemo(
+    () => voicesForLanguage(language, voices),
+    [language, voices],
   );
 
   useEffect(() => {
@@ -747,59 +1183,174 @@ export function useViewerReadAloud(
     });
   }, [refreshActiveHighlight, viewer]);
 
-  useEffect(() => stopReadingAloud, [stopReadingAloud]);
+  useEffect(() => {
+    fileRef.current = displayedFile ?? null;
+    if (previousDisplayedFileRef.current === displayedFile) return;
+    previousDisplayedFileRef.current = displayedFile ?? null;
+    detectionTokenRef.current++;
+    detectionPromiseRef.current = null;
+    stopReadingAloud();
+    setDetection(null);
+    setDetectionStatus("idle");
+    setLanguageState(baseLanguage(fallbackLanguage));
+    languageRef.current = baseLanguage(fallbackLanguage);
+    setLanguageSource("fallback");
+    languageSourceRef.current = "fallback";
+    const preferred = preferences.readAloudVoiceURI || "";
+    preferredVoiceURIRef.current = preferred;
+    const resolved = resolveVoiceForLanguage(
+      baseLanguage(fallbackLanguage),
+      voicesRef.current,
+      preferred,
+      fallbackLanguage,
+    );
+    setVoiceURI(resolved?.voiceURI ?? "");
+    voiceURIRef.current = resolved?.voiceURI ?? "";
+    setCurrentPage(1);
+    currentPageRef.current = 1;
+    setChunkIndex(0);
+    setChunkCount(0);
+    setError(null);
+    if (panelOpen) void ensureDetection();
+  }, [
+    displayedFile,
+    ensureDetection,
+    fallbackLanguage,
+    panelOpen,
+    preferences.readAloudVoiceURI,
+    stopReadingAloud,
+  ]);
 
-  const handleSpeechLanguageChange = useCallback(
-    (nextLanguage: string) => {
-      setSpeechLanguage(nextLanguage);
-      speechLanguageRef.current = nextLanguage;
-      const voice = findVoiceForLanguage(nextLanguage);
-      setSpeechVoice(voice);
+  useEffect(() => {
+    if (!panelOpen) return;
+    setTotalPages(
+      (current) => current || viewer.getScrollState().totalPages || 0,
+    );
+    void ensureDetection();
+  }, [ensureDetection, panelOpen, viewer]);
 
-      if (
-        !isReadingAloud ||
-        !utteranceRef.current ||
-        !speechTextRef.current ||
-        typeof window === "undefined" ||
-        !window.speechSynthesis
-      ) {
-        return;
+  useEffect(() => {
+    const handleReadFromSelection = (event: Event) => {
+      const detail = (event as CustomEvent<ReadAloudFromSelectionDetail>)
+        .detail;
+      setPanelOpen(true);
+      void (async () => {
+        await ensureDetection();
+        await startPlayback(detail.pageNumber, { selection: detail });
+      })();
+    };
+    window.addEventListener(
+      READ_ALOUD_FROM_SELECTION_EVENT,
+      handleReadFromSelection,
+    );
+    return () =>
+      window.removeEventListener(
+        READ_ALOUD_FROM_SELECTION_EVENT,
+        handleReadFromSelection,
+      );
+  }, [ensureDetection, startPlayback]);
+
+  useEffect(() => {
+    return () => {
+      sessionRef.current++;
+      if (cleanupTimerRef.current !== null) {
+        window.clearTimeout(cleanupTimerRef.current);
       }
-
-      restartingSpeechRef.current = true;
-      setIsReadingAloud(true);
-      window.speechSynthesis.cancel();
-      utteranceRef.current = null;
-      if (restartTimeoutRef.current !== null) {
-        window.clearTimeout(restartTimeoutRef.current);
+      if (isSpeechSynthesisSupported()) {
+        window.speechSynthesis.cancel();
       }
-      restartTimeoutRef.current = window.setTimeout(() => {
-        restartTimeoutRef.current = null;
-        if (!restartingSpeechRef.current) {
-          return;
-        }
-        restartingSpeechRef.current = false;
-        speakFromCharIndex(
-          speechTextRef.current,
-          speechWordsRef.current,
-          speechCharIndexRef.current,
-          currentPageNumberRef.current,
-          speechRateRef.current,
-          nextLanguage,
-        );
-      }, 80);
-    },
-    [isReadingAloud, speakFromCharIndex],
+      clearHighlights();
+      disposeDocument();
+    };
+  }, [clearHighlights, disposeDocument]);
+
+  const subscribe = useCallback((listener: () => void) => {
+    listenersRef.current.add(listener);
+    return () => {
+      listenersRef.current.delete(listener);
+    };
+  }, []);
+  const getSnapshot = useCallback(
+    () => snapshotRef.current as ViewerReadAloudState,
+    [],
+  );
+  const store = useMemo<ReadAloudStore>(
+    () => ({ subscribe, getSnapshot }),
+    [getSnapshot, subscribe],
   );
 
-  return {
-    isReadingAloud,
+  const state: ViewerReadAloudState = {
+    store,
+    isReadingAloud: playback === "playing" || playback === "paused",
+    isPaused: playback === "paused",
+    playback,
+    panelOpen,
+    detection,
+    detectionStatus,
+    language,
+    languageSource,
+    voice,
+    selectedVoiceURI: voice?.voiceURI ?? "",
+    voices,
+    languageOptions,
+    voiceOptions,
+    voiceLabel: voice ? voiceDisplayName(voice) : "",
     speechRate,
-    speechLanguage,
-    speechVoice,
-    supportedLanguageCodes,
-    handleReadAloud,
-    handleSpeechRateChange,
-    handleSpeechLanguageChange,
+    highlightEnabled,
+    currentPage,
+    totalPages,
+    chunkIndex,
+    chunkCount,
+    error,
+    openPanel,
+    closePanel,
+    togglePanel,
+    togglePlayPause,
+    stop,
+    previous,
+    next,
+    setRate,
+    setVoice,
+    setLanguage,
+    setHighlightEnabled,
+    redetect,
   };
+
+  // A new state object every render would re-register the toolbar button and
+  // can feed back into the workbench bar. Publish only when something the player
+  // renders actually changed, and let the button subscribe through the store.
+  const stateKey = [
+    panelOpen,
+    playback,
+    detectionStatus,
+    language,
+    languageSource,
+    voice?.voiceURI ?? "",
+    voice?.name ?? "",
+    speechRate,
+    highlightEnabled,
+    currentPage,
+    totalPages,
+    chunkIndex,
+    chunkCount,
+    error ?? "",
+    detection?.detection.language ?? "",
+    detection?.detection.assumed ? "1" : "0",
+    detection?.detection.lowText ? "1" : "0",
+    detection?.source ?? "",
+    detection?.tag ?? "",
+    voices.length,
+    languageOptions.length,
+    voiceOptions.length,
+  ].join("|");
+  if (stateKey !== lastStateKeyRef.current) {
+    lastStateKeyRef.current = stateKey;
+    snapshotRef.current = state;
+  }
+
+  useEffect(() => {
+    for (const listener of listenersRef.current) listener();
+  }, [stateKey]);
+
+  return state;
 }

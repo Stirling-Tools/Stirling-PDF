@@ -1,0 +1,114 @@
+/* Read-aloud player popover/bottom-sheet body. Layout only; every colour comes
+   from the theme tokens so light, dark and the user's accent stay consistent. */
+.read-aloud-player {
+  width: 22rem;
+  max-width: calc(100vw - 2rem);
+}
+
+.read-aloud-player__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.read-aloud-player__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  color: var(--c-text);
+}
+
+.read-aloud-player__badge {
+  max-width: 12rem;
+  text-transform: none;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.read-aloud-player__badge .mantine-Badge-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.read-aloud-player__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.read-aloud-player__progress {
+  background: var(--c-surface-sunken);
+}
+
+.read-aloud-player__transport {
+  padding: 0.15rem 0;
+}
+
+.read-aloud-player__play {
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--c-text) 14%, transparent);
+}
+
+.read-aloud-player__warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--c-warning) 35%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--c-warning-subtle);
+  color: var(--c-warning-solid);
+}
+
+.read-aloud-player__warning .mantine-Text-root {
+  color: var(--c-text);
+}
+
+.read-aloud-player__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.read-aloud-player__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.read-aloud-player__value {
+  font-variant-numeric: tabular-nums;
+}
+
+.read-aloud-player__selects {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+  gap: 0.5rem;
+}
+
+.read-aloud-player__switch {
+  margin-top: 0.1rem;
+}
+
+@media (max-width: 768px) {
+  .read-aloud-player {
+    width: 100%;
+    max-width: none;
+  }
+
+  .read-aloud-player__selects {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .read-aloud-player__badge {
+    max-width: 9rem;
+  }
+}
