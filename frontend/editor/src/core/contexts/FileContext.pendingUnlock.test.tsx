@@ -22,6 +22,7 @@ import {
 
 import { fileStorage } from "@app/services/fileStorage";
 import { generateProcessedFileMetadata } from "@app/contexts/file/fileActions";
+import { generateThumbnailPairWithMetadata } from "@app/utils/thumbnailUtils";
 import {
   createStirlingFile,
   createNewStirlingFileStub,
@@ -38,6 +39,7 @@ const observed = vi.hoisted(() => ({
   requiresOpeningPassword: true as boolean | undefined,
   heldBeforeEffects: false,
   afterDispatch: undefined as (() => Promise<void>) | undefined,
+  thumbnailUrl: undefined as string | undefined,
 }));
 const id = "editor-encrypted" as FileId;
 const localInspection = vi.hoisted(() => vi.fn());
@@ -55,6 +57,9 @@ vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
 }));
 
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@app/utils/thumbnailUtils", () => ({
+  generateThumbnailPairWithMetadata: vi.fn(),
+}));
 
 vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => null,
@@ -146,6 +151,7 @@ vi.mock("@app/contexts/file/fileActions", async (importOriginal) => {
           isLeaf: true,
           originalFileId: id,
           versionNumber: 1,
+          thumbnailUrl: observed.thumbnailUrl,
           processedFile: {
             pages: [],
             isEncrypted: observed.isEncrypted,
@@ -182,10 +188,72 @@ beforeEach(() => {
   observed.requiresOpeningPassword = true;
   observed.heldBeforeEffects = false;
   observed.afterDispatch = undefined;
+  observed.thumbnailUrl = undefined;
   setPendingUnlocks([]);
 });
 
 describe("deferred opening inspection", () => {
+  it.each([false, true])(
+    "hydrates page geometry after admission without losing its thumbnail, closed: %s",
+    async (closed) => {
+      observed.requiresOpeningPassword = undefined;
+      observed.thumbnailUrl = "data:image/png;base64,existing";
+      localInspection.mockResolvedValueOnce({
+        data: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: false,
+          permissions: 0,
+          pageCount: 1,
+          requiresOpeningPassword: false,
+        },
+      });
+      let finish!: (
+        metadata: Awaited<ReturnType<typeof generateThumbnailPairWithMetadata>>,
+      ) => void;
+      vi.mocked(generateThumbnailPairWithMetadata).mockReturnValueOnce(
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+      );
+      const { result } = renderHook(
+        () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+        { wrapper },
+      );
+      const file = new File(["encrypted"], "rotated.pdf", {
+        type: "application/pdf",
+      });
+      let loading!: ReturnType<typeof result.current.actions.addFiles>;
+      await act(async () => {
+        loading = result.current.actions.addFiles([file]);
+      });
+      await expect(loading).resolves.toEqual([file]);
+      expect(
+        result.current.selectors.getStirlingFileStub(id)?.thumbnailUrl,
+      ).toBe(observed.thumbnailUrl);
+      await waitFor(() => expect(finish).toBeDefined());
+      if (closed)
+        await act(() => result.current.actions.removeFiles([id], false));
+      const metadata = {
+        thumbnail: "data:image/png;base64,new",
+        pageCount: 1,
+        pageRotations: [90],
+        pageDimensions: [{ width: 600, height: 800 }],
+        isEncrypted: false,
+      };
+      await act(async () => finish({ unrotated: metadata, rotated: metadata }));
+      if (closed) expect(result.current.selectors.getAllFileIds()).toEqual([]);
+      else
+        expect(result.current.selectors.getStirlingFileStub(id)).toMatchObject({
+          thumbnailUrl: observed.thumbnailUrl,
+          processedFile: {
+            isEncrypted: true,
+            requiresOpeningPassword: false,
+            pages: [{ rotation: 90, width: 600, height: 800 }],
+          },
+        });
+    },
+  );
   it("cancels a pending check without admitting its late result", async () => {
     observed.requiresOpeningPassword = undefined;
     let finish!: (value: unknown) => void;
@@ -277,7 +345,10 @@ describe("deferred opening inspection", () => {
     await act(async () => {
       loading = result.current.actions.addFiles([file]);
     });
-    expect(screen.getByRole("alert")).toHaveTextContent("Inspection timed out");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "encryptedPdfUnlock.inspectionFailed",
+    );
+    expect(screen.queryByText("Inspection timed out")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("PDF password")).not.toBeInTheDocument();
     expect(getPdfAccess(file)).toBeUndefined();
     localInspection.mockRejectedValueOnce(
@@ -451,6 +522,68 @@ afterEach(() => {
 
 describe("encrypted bytes opened by another editor", () => {
   it.each([false, true])(
+    "requires owner authentication without cached access, cancelled: %s",
+    async (cancelled) => {
+      observed.isEncrypted = false;
+      const { result } = renderHook(
+        () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+        { wrapper },
+      );
+      await act(() =>
+        result.current.actions.addFiles([new File(["original"], "locked.pdf")]),
+      );
+      let permitted!: Promise<boolean>;
+      act(() => {
+        permitted = result.current.actions.requestPdfOwnerAccess(
+          id,
+          "Change permissions",
+        );
+      });
+      if (cancelled) {
+        await act(async () =>
+          fireEvent.click(screen.getByText("Cancel opening")),
+        );
+        await expect(permitted).resolves.toBe(false);
+        expect(result.current.selectors.getAllFileIds()).toEqual([id]);
+        expect(getPdfAccess(id)).toBeUndefined();
+        return;
+      }
+      localInspection.mockResolvedValueOnce({
+        data: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: false,
+          permissions: 0,
+          pageCount: 1,
+        },
+      });
+      fireEvent.change(screen.getByLabelText("Permissions password"), {
+        target: { value: "reader" },
+      });
+      await act(async () => fireEvent.click(screen.getByText("Unlock")));
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "encryptedPdfUnlock.ownerRequired",
+      );
+      expect(getPdfAccess(id)).toBeUndefined();
+      localInspection.mockResolvedValueOnce({
+        data: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: true,
+          permissions: 0,
+          pageCount: 1,
+        },
+      });
+      fireEvent.change(screen.getByLabelText("Permissions password"), {
+        target: { value: "owner" },
+      });
+      await act(async () => fireEvent.click(screen.getByText("Unlock")));
+      await expect(permitted).resolves.toBe(true);
+      expect(getPdfAccess(id)?.password).toBe("owner");
+    },
+  );
+
+  it.each([false, true])(
     "removes the opening password while retaining owner protection: %s",
     async (hasOwnerPassword) => {
       const persist = vi
@@ -510,7 +643,9 @@ describe("encrypted bytes opened by another editor", () => {
         screen.getByLabelText(
           hasOwnerPassword ? "Permissions password" : "PDF password",
         ),
-        { target: { value: hasOwnerPassword ? "owner" : "reader" } },
+        {
+          target: { value: hasOwnerPassword ? "owner" : "reader" },
+        },
       );
       await act(async () => {
         fireEvent.click(

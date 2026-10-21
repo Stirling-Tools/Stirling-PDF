@@ -44,6 +44,43 @@ beforeEach(() => {
 afterEach(clearPdfAccess);
 
 describe("session PDF access", () => {
+  it.each([false, true])(
+    "authenticates known encrypted input before changing protection, cancelled: %s",
+    async (cancelled) => {
+      const file = createStirlingFile(new File(["encrypted"], "locked.pdf"));
+      const requestOwner = vi.fn(async () => {
+        if (cancelled) return false;
+        rememberPdfAccess(file, {
+          ...access,
+          password: "source-owner",
+          ownerAuthenticated: true,
+        });
+        return true;
+      });
+      const endpoint = "/api/v1/security/add-password";
+      const permitted = await preflightPdfOperation(
+        [file],
+        endpoint,
+        false,
+        requestOwner,
+        undefined,
+        () => true,
+      );
+      expect(requestOwner).toHaveBeenCalledExactlyOnceWith(file);
+      expect(permitted).toBe(!cancelled);
+      expect(post).not.toHaveBeenCalled();
+      if (permitted) {
+        const form = new FormData();
+        form.set("keyLength", "256");
+        form.set("password", "new-reader");
+        post.mockResolvedValueOnce({ data: new Blob(["result"]) });
+        await changePdfSecurity(file, form, endpoint);
+        expect(form.get("sourcePassword")).toBe("source-owner");
+        expect(form.get("password")).toBe("new-reader");
+      }
+    },
+  );
+
   it.each([
     ["add-password", false],
     ["add-password", true],
@@ -55,7 +92,14 @@ describe("session PDF access", () => {
       const endpoint = `/api/v1/security/${operation}`;
       const requestOwner = vi.fn();
       expect(
-        await preflightPdfOperation([file], endpoint, false, requestOwner),
+        await preflightPdfOperation(
+          [file],
+          endpoint,
+          false,
+          requestOwner,
+          undefined,
+          () => operation === "remove-password",
+        ),
       ).toBe(true);
       expect(requestOwner).not.toHaveBeenCalled();
       expect(post).not.toHaveBeenCalled();

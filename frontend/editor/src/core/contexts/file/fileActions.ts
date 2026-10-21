@@ -2,7 +2,11 @@
  * File actions - Unified file operations with single addFiles helper
  */
 
-import { bindPdfAccess, getPdfAccess } from "@app/services/pdfAccessService";
+import {
+  bindPdfAccess,
+  getPdfAccess,
+  pdfAccessLifetime,
+} from "@app/services/pdfAccessService";
 import {
   StirlingFileStub,
   FileContextAction,
@@ -827,24 +831,29 @@ export async function undoConsumeFiles(
 
 /** Regenerate page metadata and thumbnails for a file whose bytes are current.
  *  Queued, because parsing several PDFs at once is what the limit bounds. */
-function hydrateMetadataFor(
+export function hydrateMetadataFor(
   fileId: FileId,
   stirlingFile: StirlingFile,
   stateRef: React.MutableRefObject<FileContextState>,
   lifecycleManager: FileLifecycleManager,
 ): void {
   if (!stirlingFile.type.startsWith("application/pdf")) return;
+  const lifetime = pdfAccessLifetime(stirlingFile);
   scheduleMetadataHydration(async () => {
+    if (lifetime.aborted) return;
     const processedFileMetadata =
       await generateProcessedFileMetadata(stirlingFile);
-    if (!processedFileMetadata) return;
+    if (!processedFileMetadata || lifetime.aborted) return;
 
+    const currentStub = stateRef.current.files.byId[fileId];
     const updates: Partial<StirlingFileStub> = {
-      processedFile: processedFileMetadata,
+      processedFile: {
+        ...currentStub?.processedFile,
+        ...processedFileMetadata,
+      },
     };
 
     // Update thumbnail only if current stub doesn't have one
-    const currentStub = stateRef.current.files.byId[fileId];
     if (!currentStub?.thumbnailUrl && processedFileMetadata.thumbnailUrl) {
       updates.thumbnailUrl = processedFileMetadata.thumbnailUrl;
       if (processedFileMetadata.thumbnailUrl.startsWith("blob:")) {

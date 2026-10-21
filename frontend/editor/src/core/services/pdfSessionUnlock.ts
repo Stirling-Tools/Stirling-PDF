@@ -63,13 +63,14 @@ export function supportsSessionUnlock(endpoint: string | undefined): boolean {
   return endpoint !== undefined && SUPPORTED_ENDPOINTS.has(endpoint);
 }
 
-/** Checks the whole selection before processing or prompting for credentials. */
+/** Checks the whole selection before processing; encryption hints request authentication but never grant access. */
 export async function preflightPdfOperation(
   files: readonly StirlingFile[],
   endpoint: string | undefined,
   combinesFiles: boolean,
   requestOwner: (file: StirlingFile) => Promise<boolean>,
   signal?: AbortSignal,
+  isKnownEncrypted: (file: StirlingFile) => boolean = () => false,
 ): Promise<boolean> {
   const protectedFiles: StirlingFile[] = [];
   const changesProtection =
@@ -82,7 +83,10 @@ export async function preflightPdfOperation(
     const access = changesProtection
       ? getPdfAccess(file)
       : await ensureLocalPdfAccess(file, signal);
-    if (!access?.encrypted) continue;
+    const encrypted =
+      access?.encrypted ??
+      (endpoint === "/api/v1/security/add-password" && isKnownEncrypted(file));
+    if (!encrypted) continue;
     if (!supportsSessionUnlock(endpoint))
       throw new Error(
         i18n.t(
@@ -90,7 +94,7 @@ export async function preflightPdfOperation(
           "This tool cannot yet preserve this PDF's protection.",
         ),
       );
-    if (access.signed)
+    if (access?.signed)
       throw new Error(
         i18n.t(
           "encryptedPdfUnlock.signedReadOnly",
@@ -109,7 +113,7 @@ export async function preflightPdfOperation(
   for (const file of protectedFiles) {
     if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
     if (endpoint === "/api/v1/security/remove-password") continue;
-    const access = getPdfAccess(file)!;
+    const access = getPdfAccess(file);
     const needsOwner = endpoint?.includes("password")
       ? !hasPdfPermissionOverride(access)
       : !pdfAllows(access, operationPermission(endpoint));

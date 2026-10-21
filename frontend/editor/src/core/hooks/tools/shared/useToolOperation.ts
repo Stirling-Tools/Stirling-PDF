@@ -341,6 +341,9 @@ export const useToolOperation = <TParams>(
               t(`${config.operationType}.title`, config.operationType),
             ),
           cancellation.signal,
+          (file) =>
+            selectors.getStirlingFileStub(file.fileId)?.processedFile
+              ?.isEncrypted === true,
         );
         if (!permitted) return;
         let processedFiles: File[];

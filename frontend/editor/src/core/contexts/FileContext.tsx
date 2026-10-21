@@ -51,6 +51,7 @@ import {
   createChildStub,
   createProcessedFile,
   generateProcessedFileMetadata,
+  hydrateMetadataFor,
 } from "@app/contexts/file/fileActions";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import {
@@ -90,6 +91,7 @@ import {
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
 import apiClient from "@app/services/apiClient";
 import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
+import { combineAbortSignals } from "@app/utils/combineAbortSignals";
 
 // Inner provider component that has access to IndexedDB
 function FileContextInner({
@@ -408,9 +410,10 @@ function FileContextInner({
   const handleUnlockSkip = useCallback(() => {
     protectionOperation.current?.abort();
     if (activeEncryptedFileId) {
-      ownerRequests.current.get(activeEncryptedFileId)?.resolve(false);
+      const ownerRequest = ownerRequests.current.get(activeEncryptedFileId);
+      ownerRequest?.resolve(false);
       ownerRequests.current.delete(activeEncryptedFileId);
-      if (getPdfAccess(activeEncryptedFileId)) {
+      if (ownerRequest || getPdfAccess(activeEncryptedFileId)) {
         setActiveEncryptedFileId(null);
         return;
       }
@@ -637,6 +640,23 @@ function FileContextInner({
     [dispatchWithUnlock, awaitAdmissions],
   );
 
+  const pendingMetadataHydrations = useRef(new Set<FileId>());
+  useEffect(() => {
+    for (const fileId of pendingMetadataHydrations.current) {
+      const file = filesRef.current.get(fileId);
+      if (!file) pendingMetadataHydrations.current.delete(fileId);
+      else if (state.files.byId[fileId]) {
+        pendingMetadataHydrations.current.delete(fileId);
+        hydrateMetadataFor(
+          fileId,
+          createStirlingFile(file, fileId),
+          stateRef,
+          lifecycleManager,
+        );
+      }
+    }
+  }, [state.files, lifecycleManager]);
+
   const runSessionUnlock = useCallback(
     async (
       fileId: FileId,
@@ -663,7 +683,10 @@ function FileContextInner({
       if (signal?.aborted || filesRef.current.get(fileId) !== file) {
         return;
       }
-      if (getPdfAccess(file)?.encrypted && !access.ownerAuthenticated) {
+      if (
+        (ownerRequests.current.has(fileId) || getPdfAccess(file)?.encrypted) &&
+        !access.ownerAuthenticated
+      ) {
         throw new Error(
           t(
             "encryptedPdfUnlock.ownerRequired",
@@ -673,7 +696,6 @@ function FileContextInner({
       }
       rememberPdfAccess(file, access);
       bindPdfAccess(file, fileId);
-      // Empty-password admission leaves thumbnails to the normal lazy path.
       const metadata =
         password === ""
           ? createProcessedFile(access.pageCount)
@@ -687,8 +709,11 @@ function FileContextInner({
           isEncrypted: access.encrypted,
           requiresOpeningPassword: access.requiresOpeningPassword,
         },
-        thumbnailUrl: metadata?.thumbnailUrl,
+        ...(metadata?.thumbnailUrl !== undefined
+          ? { thumbnailUrl: metadata.thumbnailUrl }
+          : {}),
       };
+      if (password === "") pendingMetadataHydrations.current.add(fileId);
       if (pending) {
         pending.stub = { ...parentStub, ...updates };
         if (pending.publishOnUnlock)
@@ -748,13 +773,10 @@ function FileContextInner({
           } else {
             setOpeningInspection({
               fileId,
-              error:
-                error instanceof Error || error instanceof DOMException
-                  ? error.message
-                  : t(
-                      "encryptedPdfUnlock.inspectionFailed",
-                      "Unable to check this PDF's permissions. Try again.",
-                    ),
+              error: t(
+                "encryptedPdfUnlock.inspectionFailed",
+                "Unable to check this PDF's permissions. Try again.",
+              ),
             });
           }
         });
@@ -881,7 +903,7 @@ function FileContextInner({
     if (!file) return;
     setIsUnlocking(true);
     setUnlockError(null);
-    const signal = AbortSignal.any([
+    const { signal, dispose } = combineAbortSignals([
       pdfAccessLifetime(file),
       ...(protectionOperation.current
         ? [protectionOperation.current.signal]
@@ -937,6 +959,7 @@ function FileContextInner({
         ),
       );
     } finally {
+      dispose();
       setIsUnlocking(false);
     }
   }, [
@@ -1335,7 +1358,9 @@ function FileContextInner({
           }
           ownerUnlock={
             openingPasswordToRemove !== null ||
-            (!!activeEncryptedFileId && !!getPdfAccess(activeEncryptedFileId))
+            (!!activeEncryptedFileId &&
+              (ownerRequests.current.has(activeEncryptedFileId) ||
+                !!getPdfAccess(activeEncryptedFileId)))
           }
           actionLabel={
             activeEncryptedFileId

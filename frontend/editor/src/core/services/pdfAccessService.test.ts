@@ -52,12 +52,15 @@ const access: PdfAccess = {
   pageCount: 1,
 };
 
+const nativeAny = AbortSignal.any;
 beforeEach(() => {
+  Object.defineProperty(AbortSignal, "any", { value: undefined });
   clearPdfAccess();
   workers.length = 0;
 });
 afterEach(() => {
   clearPdfAccess();
+  Object.defineProperty(AbortSignal, "any", { value: nativeAny });
   vi.useRealTimers();
 });
 

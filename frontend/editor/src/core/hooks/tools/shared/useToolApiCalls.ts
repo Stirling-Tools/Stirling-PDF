@@ -9,6 +9,7 @@ import { isEmptyOutput } from "@app/services/errorUtils";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 import type { StirlingFile, FileId } from "@app/types/fileContext";
 import { isSignupRequiredError } from "@app/utils/toolErrorHandler";
+import { combineAbortSignals } from "@app/utils/combineAbortSignals";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
@@ -65,10 +66,7 @@ export const useToolApiCalls = <TParams = void>() => {
 
       const cancellation = axios.CancelToken.source();
       cancelTokenRef.current = cancellation;
-      const inspectionCancellation = AbortSignal.any([
-        cancellation.token.toAbortSignal(),
-        ...(inspectionSignal ? [inspectionSignal] : []),
-      ]);
+      const operationCancellation = cancellation.token.toAbortSignal();
 
       // Params are the same for every file, so resolve the endpoint once. A null
       // endpoint means the tool has no backend call (e.g. client-side tools) and
@@ -95,13 +93,14 @@ export const useToolApiCalls = <TParams = void>() => {
         onProgress({ current: i + 1, total, currentFileName: file.name });
         onStatus(`Processing ${file.name} (${i + 1}/${total})`);
 
+        const sourceLifetime = pdfAccessLifetime(file);
+        const { signal: fileSignal, dispose } = combineAbortSignals([
+          operationCancellation,
+          sourceLifetime,
+          ...(inspectionSignal ? [inspectionSignal] : []),
+        ]);
         try {
           cancellation.token.throwIfRequested();
-          const sourceLifetime = pdfAccessLifetime(file);
-          const fileSignal = AbortSignal.any([
-            inspectionCancellation,
-            sourceLifetime,
-          ]);
           const workingFile = await prepareUnlockedFile(
             file,
             endpoint,
@@ -231,6 +230,8 @@ export const useToolApiCalls = <TParams = void>() => {
           } catch (e) {
             console.debug("markFileError", e);
           }
+        } finally {
+          dispose();
         }
       }
 

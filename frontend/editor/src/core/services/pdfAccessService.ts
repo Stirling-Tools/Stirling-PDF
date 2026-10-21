@@ -1,5 +1,6 @@
 /** Owns session access, file lifetimes and local inspection. Credentials are never persisted. */
 import type { FileId } from "@app/types/file";
+import { combineAbortSignals } from "@app/utils/combineAbortSignals";
 import PdfAccessWorker from "@app/workers/pdfAccessWorker?worker";
 import type {
   PdfAccessRequest,
@@ -43,7 +44,8 @@ export function pdfAccessLifetime(file: Blob): AbortSignal {
     const controller = new AbortController();
     lifetime = {
       controller,
-      signal: AbortSignal.any([controller.signal, sessionLifetime.signal]),
+      signal: combineAbortSignals([controller.signal, sessionLifetime.signal])
+        .signal,
     };
     accessLifetimes.set(file, lifetime);
   }
@@ -314,11 +316,16 @@ export function inspectLocalPdfAccess(
   signal?: AbortSignal,
 ): Promise<PdfAccess> {
   const lifetime = pdfAccessLifetime(file);
-  const cancellation = signal ? AbortSignal.any([signal, lifetime]) : lifetime;
-  if (cancellation.aborted)
+  const { signal: cancellation, dispose } = combineAbortSignals([
+    lifetime,
+    ...(signal ? [signal] : []),
+  ]);
+  if (cancellation.aborted) {
+    dispose();
     return Promise.reject(
       new DOMException("Operation cancelled", "AbortError"),
     );
+  }
   let pending = inspections.get(file);
   if (!pending) {
     pending = new Map();
@@ -327,14 +334,12 @@ export function inspectLocalPdfAccess(
   let inspection = pending.get(password);
   if (!inspection || inspection.controller.signal.aborted) {
     const controller = new AbortController();
+    const combined = combineAbortSignals([controller.signal, lifetime]);
     const job: Inspection = {
       controller,
       consumers: 0,
-      promise: runInspection(
-        file,
-        password,
-        AbortSignal.any([controller.signal, lifetime]),
-      ).finally(() => {
+      promise: runInspection(file, password, combined.signal).finally(() => {
+        combined.dispose();
         if (pending.get(password) === job) pending.delete(password);
       }),
     };
@@ -349,6 +354,7 @@ export function inspectLocalPdfAccess(
       if (finished) return false;
       finished = true;
       cancellation.removeEventListener("abort", abort);
+      dispose();
       if (--job.consumers === 0) job.controller.abort();
       return true;
     };
