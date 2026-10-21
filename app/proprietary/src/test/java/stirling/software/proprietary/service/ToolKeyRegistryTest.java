@@ -37,8 +37,8 @@ class ToolKeyRegistryTest {
      */
     private static final List<String> SOURCES =
             List.of(
-                    "frontend/editor/src/core/types/toolId.ts",
-                    "frontend/editor/src/proprietary/types/proprietaryToolId.ts");
+                    "frontend/src/editor/core/types/toolId.ts",
+                    "frontend/src/editor/proprietary/types/proprietaryToolId.ts");
 
     @Test
     @DisplayName("the registry lists exactly the tool ids the frontend can send")
