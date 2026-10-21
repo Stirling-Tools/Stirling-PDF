@@ -9,7 +9,7 @@ import {
   forgetPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 import {
   FileContextAction,
   FileContextState,

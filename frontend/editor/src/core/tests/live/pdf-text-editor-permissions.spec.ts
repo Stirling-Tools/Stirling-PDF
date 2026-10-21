@@ -1,5 +1,6 @@
+import { inspectPdfProtection as inspect } from "@app/tests/helpers/pdf-protection";
 import { test, expect } from "@app/tests/helpers/test-base";
-import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
+import { loadLiveAppConfig } from "@app/tests/helpers/live-api";
 import { skipOnboarding } from "@app/tests/helpers/login";
 import type { Page } from "@playwright/test";
 import path from "node:path";
@@ -22,25 +23,6 @@ async function openTextEditor(page: Page) {
     .first()
     .click();
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible();
-}
-
-async function inspect(page: Page, buffer: Buffer, password: string) {
-  const response = await page.request.post(
-    "/api/v1/security/inspect-pdf-security",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: {
-          name: "restricted.pdf",
-          mimeType: "application/pdf",
-          buffer,
-        },
-        password,
-      },
-    },
-  );
-  expect(response.ok()).toBe(true);
-  return response.json();
 }
 
 for (const entry of ["workbench", "editor upload"] as const) {
@@ -208,9 +190,8 @@ test("permitted text edits preserve protection and a fresh reader follows the se
     ownerAuthenticated: false,
     canModify: false,
     permissions: sourceAccess.permissions,
-    encryptionKeyLength: sourceAccess.encryptionKeyLength,
     encryptionRevision: sourceAccess.encryptionRevision,
-    credentialFingerprint: sourceAccess.credentialFingerprint,
+    credentialEntries: sourceAccess.credentialEntries,
   });
   expect(await inspect(page, saved, owner)).toMatchObject({
     ownerAuthenticated: true,

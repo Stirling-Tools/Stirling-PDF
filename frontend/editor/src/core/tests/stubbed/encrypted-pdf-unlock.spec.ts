@@ -1,6 +1,6 @@
 /**
  * Backend-free coverage for session unlocks and cached preview privacy.
- * Security inspection is stubbed; EmbedPDF renders the actual encrypted fixture.
+ * PDFium authenticates real encrypted fixtures; server processing is stubbed.
  */
 
 import { test, expect, type Page } from "@playwright/test";
@@ -14,40 +14,6 @@ import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");
-
-function mockUnlockSuccess(page: Page, pageCount = 1) {
-  return page.route("**/api/v1/security/inspect-pdf-security", (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        encrypted: true,
-        signed: false,
-        ownerAuthenticated: true,
-        permissions: -4,
-        canModify: true,
-        canAssemble: true,
-        pageCount,
-      }),
-    }),
-  );
-}
-
-function mockUnlockWrongPassword(page: Page) {
-  return page.route("**/api/v1/security/inspect-pdf-security", (route) =>
-    route.fulfill({
-      status: 400,
-      contentType: "application/problem+json",
-      body: JSON.stringify({
-        type: "/errors/pdf-password",
-        title: "PDF password incorrect",
-        status: 400,
-        detail:
-          "The PDF is passworded and requires the correct password to open.",
-      }),
-    }),
-  );
-}
 
 async function uploadEncryptedFile(page: Page, filePath: string) {
   // `files-button`'s native picker is mocked globally
@@ -85,6 +51,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     // otherwise leak the native dialog onto the host and close the page).
     suppressNativeFilePicker(page);
     await mockAppApis(page);
+
     await page.goto("/?bypassOnboarding=true");
     await page.waitForSelector('[data-testid="files-button"]', {
       timeout: 10000,
@@ -99,7 +66,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     page,
   }, testInfo) => {
     const source = path.join(FIXTURES_DIR, "encrypted-ten-pages.pdf");
-    await mockUnlockSuccess(page, 10);
+
     await uploadEncryptedFile(page, source);
     await fillPassword(page, "james");
     await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
@@ -136,7 +103,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       zip.file(`page-${index}.pdf`, splitPage);
     const splitZip = await zip.generateAsync({ type: "nodebuffer" });
     const restoredNames: string[] = [];
-    await mockUnlockSuccess(page, 10);
+
     await page.route("**/api/v1/security/prepare-pdf-session", (route) =>
       route.fulfill({ contentType: "application/pdf", body: workingPdf }),
     );
@@ -260,27 +227,12 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   }) => {
     const sample = fs.readFileSync(path.join(FIXTURES_DIR, "sample.pdf"));
     let removals = 0;
-    await page.route("**/api/v1/security/remove-pdf-protection", (route) => {
+    await page.route("**/api/v1/security/remove-password", (route) => {
       removals++;
+      expect(route.request().postData()).toContain('name="removeAll"');
       return route.fulfill({ contentType: "application/pdf", body: sample });
     });
-    await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
-      const copy = (route.request().postData() ?? "").includes(
-        "encrypted_unprotected.pdf",
-      );
-      return route.fulfill({
-        json: {
-          encrypted: !copy,
-          requiresOpeningPassword: !copy,
-          signed: false,
-          ownerAuthenticated: !copy,
-          permissions: -4,
-          canModify: true,
-          canAssemble: true,
-          pageCount: 1,
-        },
-      });
-    });
+
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     await fillPassword(page, "testpass123");
     await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
@@ -373,7 +325,6 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       )
         removalRequests.push(request.url());
     });
-    await mockUnlockSuccess(page);
 
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     await expect(
@@ -421,8 +372,6 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   test("incorrect password keeps the modal open with an inline error", async ({
     page,
   }) => {
-    await mockUnlockWrongPassword(page);
-
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     await expect(
       page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
@@ -446,7 +395,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       route.fulfill({ json: { languages: ["eng"] } }),
     );
     await page.goto("/ocr");
-    await mockUnlockSuccess(page);
+
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     await fillPassword(page, "testpass123");
     await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
@@ -561,8 +510,6 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   test("pressing Enter in the password field triggers unlock", async ({
     page,
   }) => {
-    await mockUnlockSuccess(page);
-
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     await expect(
       page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
@@ -579,8 +526,6 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   test("multi-file unlock-all closes the modal after one password entry", async ({
     page,
   }) => {
-    await mockUnlockSuccess(page);
-
     // `files-button`'s native picker is mocked globally; click it, then set
     // the files on the hidden input directly.
     await page.getByTestId("files-button").click();

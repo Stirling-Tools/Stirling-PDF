@@ -23,6 +23,8 @@ import {
 export interface TrackFileLookup {
   getStub: (id: FileId) => StirlingFileStub | undefined;
   getFile: (id: FileId) => File | undefined;
+  /** The initiating view owns cancellation; document closure also cancels inspection. */
+  signal?: AbortSignal;
 }
 
 export interface BuiltTrackFile {
@@ -102,6 +104,7 @@ export async function buildTrackFile(
         await prepareUnlockedFile(
           createStirlingFile(file, id as FileId),
           "/api/v1/general/rearrange-pages",
+          lookup.signal,
         ),
       ),
     );

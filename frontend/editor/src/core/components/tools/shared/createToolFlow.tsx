@@ -71,7 +71,7 @@ export interface ExecuteButtonConfig {
 }
 
 export interface ReviewStepConfig<TParams = unknown> {
-  protectionSummary?: string;
+  protectionSummary?: string | null;
   isVisible: boolean;
   operation: ToolOperationHook<TParams>;
   title: string;

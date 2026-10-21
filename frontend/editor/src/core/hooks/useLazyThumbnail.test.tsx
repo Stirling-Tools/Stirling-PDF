@@ -7,7 +7,7 @@ import {
   clearPdfAccess,
   forgetPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 const storage = vi.hoisted(() => ({
   loadFile: vi.fn(),
@@ -32,8 +32,6 @@ const access = {
   signed: false,
   ownerAuthenticated: true,
   permissions: -4,
-  canModify: true,
-  canAssemble: true,
   pageCount: 1,
 };
 const id = "protected-preview" as FileId;

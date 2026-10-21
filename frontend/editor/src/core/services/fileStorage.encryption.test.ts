@@ -16,7 +16,7 @@ import {
   clearPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 afterEach(async () => {
   clearPdfAccess();
@@ -36,8 +36,6 @@ describe("stored PDF protection metadata", () => {
       signed: false,
       ownerAuthenticated: true,
       permissions: -4,
-      canModify: true,
-      canAssemble: true,
       pageCount: 1,
     });
     await fileStorage.storeStirlingFile(original, stub);
@@ -51,7 +49,11 @@ describe("stored PDF protection metadata", () => {
       type: "application/pdf",
     });
     const stub = createNewStirlingFileStub(file);
-    stub.processedFile = { pages: [], isEncrypted: true };
+    stub.processedFile = {
+      pages: [],
+      isEncrypted: true,
+      requiresOpeningPassword: true,
+    };
     stub.thumbnailUrl = "data:image/png;base64,private";
     await fileStorage.storeStirlingFile(
       createStirlingFile(file, stub.id),
@@ -65,7 +67,10 @@ describe("stored PDF protection metadata", () => {
     ];
     expect(reads).toHaveLength(3);
     for (const read of reads)
-      expect(read?.processedFile?.isEncrypted).toBe(true);
+      expect(read?.processedFile).toMatchObject({
+        isEncrypted: true,
+        requiresOpeningPassword: true,
+      });
   });
 
   it("discards legacy PDF previews whose encryption status was never stored", async () => {

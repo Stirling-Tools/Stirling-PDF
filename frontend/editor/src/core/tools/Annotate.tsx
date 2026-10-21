@@ -6,7 +6,7 @@ import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useNavigation } from "@app/contexts/NavigationContext";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 import { BaseToolProps } from "@app/types/tool";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";

@@ -1,3 +1,4 @@
+import { inspectPdfProtection as inspect } from "@app/tests/helpers/pdf-protection";
 import { test, expect } from "@app/tests/helpers/test-base";
 import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
 import type { Page } from "@playwright/test";
@@ -13,43 +14,25 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function protect(page: Page) {
-  const response = await page.request.post(
-    "/api/v1/security/set-pdf-protection",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: {
-          name: "sample.pdf",
-          mimeType: "application/pdf",
-          buffer: await fs.readFile(path.join(fixtures, "sample.pdf")),
-        },
-        password: reader,
-        ownerPassword: owner,
-        keyLength: 256,
-        preventPrinting: true,
-        preventAssembly: true,
-        preventModify: true,
-        preventExtractContent: true,
+  const response = await page.request.post("/api/v1/security/add-password", {
+    headers: await liveApiHeaders(page),
+    multipart: {
+      fileInput: {
+        name: "sample.pdf",
+        mimeType: "application/pdf",
+        buffer: await fs.readFile(path.join(fixtures, "sample.pdf")),
       },
+      password: reader,
+      ownerPassword: owner,
+      keyLength: 256,
+      preventPrinting: true,
+      preventAssembly: true,
+      preventModify: true,
+      preventExtractContent: true,
     },
-  );
+  });
   expect(response.ok()).toBe(true);
   return response.body();
-}
-
-async function inspect(page: Page, buffer: Buffer, password: string) {
-  const response = await page.request.post(
-    "/api/v1/security/inspect-pdf-security",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: { name: "result.pdf", mimeType: "application/pdf", buffer },
-        password,
-      },
-    },
-  );
-  expect(response.ok()).toBe(true);
-  return response.json();
 }
 
 async function open(page: Page, password: string) {
@@ -143,7 +126,7 @@ test("restricted processing preserves both passwords and prompts only when enfor
     ownerAuthenticated: false,
     requiresOpeningPassword: true,
     permissions: access.permissions,
-    credentialFingerprint: access.credentialFingerprint,
+    credentialEntries: access.credentialEntries,
   });
   expect(await inspect(page, saved, owner)).toMatchObject({
     ownerAuthenticated: true,
@@ -162,7 +145,7 @@ test("removing all protection can be cancelled, then opening-only protection can
   const access = await inspect(page, buffer, reader);
   let removals = 0;
   page.on("request", (request) => {
-    if (request.url().endsWith("/remove-pdf-protection")) removals++;
+    if (request.url().endsWith("/remove-password")) removals++;
   });
   await page.goto("/editor");
   await page.getByTestId("file-input").setInputFiles({
@@ -191,9 +174,7 @@ test("removing all protection can be cancelled, then opening-only protection can
   await page
     .getByRole("button", { name: "Create an unprotected copy", exact: true })
     .click();
-  const response = page.waitForResponse(
-    "**/api/v1/security/remove-pdf-protection",
-  );
+  const response = page.waitForResponse("**/api/v1/security/remove-password");
   await page
     .getByRole("button", { name: "Create an unprotected copy", exact: true })
     .click();
@@ -224,9 +205,7 @@ test("removing all protection can be cancelled, then opening-only protection can
     buffer: unprotected,
   });
   await page.getByLabel("Password to open", { exact: true }).fill(reader);
-  const protection = page.waitForResponse(
-    "**/api/v1/security/set-pdf-protection",
-  );
+  const protection = page.waitForResponse("**/api/v1/security/add-password");
   await page
     .getByRole("button", { name: /^Save protection(?: \(this file\))?$/ })
     .click();

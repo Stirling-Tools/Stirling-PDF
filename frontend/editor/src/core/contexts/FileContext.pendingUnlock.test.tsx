@@ -18,10 +18,11 @@ import {
   getPdfAccess,
   rememberPdfAccess,
   bindPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 import { fileStorage } from "@app/services/fileStorage";
 import { generateProcessedFileMetadata } from "@app/contexts/file/fileActions";
+import { generateThumbnailPairWithMetadata } from "@app/utils/thumbnailUtils";
 import {
   createStirlingFile,
   createNewStirlingFileStub,
@@ -35,12 +36,30 @@ import {
 
 const observed = vi.hoisted(() => ({
   isEncrypted: true,
+  requiresOpeningPassword: true as boolean | undefined,
   heldBeforeEffects: false,
   afterDispatch: undefined as (() => Promise<void>) | undefined,
+  thumbnailUrl: undefined as string | undefined,
 }));
 const id = "editor-encrypted" as FileId;
+const localInspection = vi.hoisted(() => vi.fn());
+
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+  inspectLocalPdfAccess: async (
+    file: File,
+    password: string,
+    signal?: AbortSignal,
+  ) => ({
+    ...(await localInspection(file, password, signal)).data,
+    password,
+  }),
+}));
 
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@app/utils/thumbnailUtils", () => ({
+  generateThumbnailPairWithMetadata: vi.fn(),
+}));
 
 vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => null,
@@ -69,6 +88,7 @@ vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
     errorMessage,
     password,
     onPasswordChange,
+    inspection,
   }: {
     opened: boolean;
     onSkip: () => void;
@@ -78,20 +98,34 @@ vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
     errorMessage?: string | null;
     password: string;
     onPasswordChange: (password: string) => void;
+    inspection?: { error?: string; retry: () => void };
   }) =>
     opened ? (
       <>
         <button onClick={onSkip}>Cancel opening</button>
-        <input
-          aria-label={ownerUnlock ? "Permissions password" : "PDF password"}
-          value={password}
-          onChange={(event) => onPasswordChange(event.target.value)}
-        />
-        <button onClick={onUnlock}>Unlock</button>
-        {!ownerUnlock && onRemovePassword && (
-          <button onClick={onRemovePassword}>Remove Password</button>
+        {inspection ? (
+          <>
+            <span role={inspection.error ? "alert" : "status"}>
+              {inspection.error ?? "Checking permissions"}
+            </span>
+            {inspection.error && (
+              <button onClick={inspection.retry}>Retry inspection</button>
+            )}
+          </>
+        ) : (
+          <>
+            <input
+              aria-label={ownerUnlock ? "Permissions password" : "PDF password"}
+              value={password}
+              onChange={(event) => onPasswordChange(event.target.value)}
+            />
+            <button onClick={onUnlock}>Unlock</button>
+            {!ownerUnlock && onRemovePassword && (
+              <button onClick={onRemovePassword}>Remove Password</button>
+            )}
+            {errorMessage && <span role="alert">{errorMessage}</span>}
+          </>
         )}
-        {errorMessage && <span role="alert">{errorMessage}</span>}
       </>
     ) : null,
 }));
@@ -117,7 +151,12 @@ vi.mock("@app/contexts/file/fileActions", async (importOriginal) => {
           isLeaf: true,
           originalFileId: id,
           versionNumber: 1,
-          processedFile: { pages: [], isEncrypted: observed.isEncrypted },
+          thumbnailUrl: observed.thumbnailUrl,
+          processedFile: {
+            pages: [],
+            isEncrypted: observed.isEncrypted,
+            requiresOpeningPassword: observed.requiresOpeningPassword,
+          },
         };
         filesRef.current.set(id, file);
         dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs: [stub] } });
@@ -139,15 +178,203 @@ function wrapper({ children }: { children: ReactNode }) {
 
 beforeEach(() => {
   vi.mocked(apiClient.post).mockReset();
+  localInspection.mockReset();
   vi.mocked(generateProcessedFileMetadata).mockResolvedValue({
     pages: [],
     totalPages: 1,
     isEncrypted: false,
   });
   observed.isEncrypted = true;
+  observed.requiresOpeningPassword = true;
   observed.heldBeforeEffects = false;
   observed.afterDispatch = undefined;
+  observed.thumbnailUrl = undefined;
   setPendingUnlocks([]);
+});
+
+describe("deferred opening inspection", () => {
+  it.each([false, true])(
+    "hydrates page geometry after admission without losing its thumbnail, closed: %s",
+    async (closed) => {
+      observed.requiresOpeningPassword = undefined;
+      observed.thumbnailUrl = "data:image/png;base64,existing";
+      localInspection.mockResolvedValueOnce({
+        data: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: false,
+          permissions: 0,
+          pageCount: 1,
+          requiresOpeningPassword: false,
+        },
+      });
+      let finish!: (
+        metadata: Awaited<ReturnType<typeof generateThumbnailPairWithMetadata>>,
+      ) => void;
+      vi.mocked(generateThumbnailPairWithMetadata).mockReturnValueOnce(
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+      );
+      const { result } = renderHook(
+        () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+        { wrapper },
+      );
+      const file = new File(["encrypted"], "rotated.pdf", {
+        type: "application/pdf",
+      });
+      let loading!: ReturnType<typeof result.current.actions.addFiles>;
+      await act(async () => {
+        loading = result.current.actions.addFiles([file]);
+      });
+      await expect(loading).resolves.toEqual([file]);
+      expect(
+        result.current.selectors.getStirlingFileStub(id)?.thumbnailUrl,
+      ).toBe(observed.thumbnailUrl);
+      await waitFor(() => expect(finish).toBeDefined());
+      if (closed)
+        await act(() => result.current.actions.removeFiles([id], false));
+      const metadata = {
+        thumbnail: "data:image/png;base64,new",
+        pageCount: 1,
+        pageRotations: [90],
+        pageDimensions: [{ width: 600, height: 800 }],
+        isEncrypted: false,
+      };
+      await act(async () => finish({ unrotated: metadata, rotated: metadata }));
+      if (closed) expect(result.current.selectors.getAllFileIds()).toEqual([]);
+      else
+        expect(result.current.selectors.getStirlingFileStub(id)).toMatchObject({
+          thumbnailUrl: observed.thumbnailUrl,
+          processedFile: {
+            isEncrypted: true,
+            requiresOpeningPassword: false,
+            pages: [{ rotation: 90, width: 600, height: 800 }],
+          },
+        });
+    },
+  );
+  it("cancels a pending check without admitting its late result", async () => {
+    observed.requiresOpeningPassword = undefined;
+    let finish!: (value: unknown) => void;
+    localInspection.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const { result } = renderHook(
+      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+      { wrapper },
+    );
+    const file = new File(["encrypted"], "pending.pdf");
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([file]);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Checking permissions",
+    );
+    const signal = localInspection.mock.calls[0][2] as AbortSignal;
+    await act(async () => fireEvent.click(screen.getByText("Cancel opening")));
+    expect(signal.aborted).toBe(true);
+    await expect(loading).resolves.toEqual([]);
+    await act(async () =>
+      finish({
+        data: {
+          encrypted: true,
+          pageCount: 1,
+          ownerAuthenticated: false,
+          permissions: 0,
+          signed: false,
+        },
+      }),
+    );
+    expect(getPdfAccess(file)).toBeUndefined();
+    expect(result.current.selectors.getAllFileIds()).toEqual([]);
+  });
+  it.each([1024, 150 * 1024 * 1024])(
+    "opens a %i-byte restriction-only PDF without asking for a password",
+    async (size) => {
+      observed.requiresOpeningPassword = undefined;
+      localInspection.mockResolvedValueOnce({
+        data: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: false,
+          permissions: 0,
+          pageCount: 1,
+          requiresOpeningPassword: false,
+        },
+      });
+      const file = new File(["encrypted"], "restrictions.pdf");
+      Object.defineProperty(file, "size", { value: size });
+      const { result } = renderHook(
+        () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+        { wrapper },
+      );
+      let loading!: ReturnType<typeof result.current.actions.addFiles>;
+      await act(async () => {
+        loading = result.current.actions.addFiles([file]);
+      });
+      await expect(loading).resolves.toEqual([file]);
+      expect(localInspection).toHaveBeenCalledExactlyOnceWith(
+        file,
+        "",
+        expect.any(AbortSignal),
+      );
+      expect(getPdfAccess(file)).toMatchObject({
+        encrypted: true,
+        ownerAuthenticated: false,
+        permissions: 0,
+      });
+      expect(screen.queryByLabelText("PDF password")).not.toBeInTheDocument();
+    },
+  );
+
+  it("keeps a timed-out inspection unresolved and supports retry", async () => {
+    observed.requiresOpeningPassword = undefined;
+    localInspection.mockRejectedValueOnce(
+      new DOMException("Inspection timed out", "TimeoutError"),
+    );
+    const { result } = renderHook(
+      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+      { wrapper },
+    );
+    const file = new File(["encrypted"], "unknown.pdf");
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([file]);
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "encryptedPdfUnlock.inspectionFailed",
+    );
+    expect(screen.queryByText("Inspection timed out")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("PDF password")).not.toBeInTheDocument();
+    expect(getPdfAccess(file)).toBeUndefined();
+    localInspection.mockRejectedValueOnce(
+      Object.assign(new Error("Password required"), { code: 4 }),
+    );
+    await act(async () =>
+      fireEvent.click(screen.getByText("Retry inspection")),
+    );
+    expect(screen.getByLabelText("PDF password")).toBeVisible();
+    await act(async () => fireEvent.click(screen.getByText("Cancel opening")));
+    await expect(loading).resolves.toEqual([]);
+  });
+
+  it("prompts directly when the opening-password requirement is already known", async () => {
+    const { result } = renderHook(() => useFileActions(), { wrapper });
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([
+        new File(["encrypted"], "known.pdf"),
+      ]);
+    });
+    expect(screen.getByLabelText("PDF password")).toBeVisible();
+    expect(localInspection).not.toHaveBeenCalled();
+    await act(async () => fireEvent.click(screen.getByText("Cancel opening")));
+    await expect(loading).resolves.toEqual([]);
+  });
 });
 
 describe("protected tool replacements", () => {
@@ -173,6 +400,7 @@ describe("protected tool replacements", () => {
       const stub = createNewStirlingFileStub(output, output.fileId, undefined, {
         pages: [],
         isEncrypted: true,
+        requiresOpeningPassword: true,
       });
       let consuming!: ReturnType<typeof result.current.actions.consumeFiles>;
       await act(async () => {
@@ -194,14 +422,12 @@ describe("protected tool replacements", () => {
         await expect(consuming).resolves.toEqual([]);
         return;
       }
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
+      localInspection.mockResolvedValueOnce({
         data: {
           encrypted: true,
           signed: false,
           ownerAuthenticated: true,
           permissions: -4,
-          canModify: true,
-          canAssemble: true,
           pageCount: 1,
         },
       });
@@ -242,20 +468,19 @@ describe("protected tool replacements", () => {
         createNewStirlingFileStub(file, file.fileId, undefined, {
           pages: [],
           isEncrypted: true,
+          requiresOpeningPassword: true,
         }),
       );
       let consuming!: ReturnType<typeof result.current.actions.consumeFiles>;
       await act(async () => {
         consuming = result.current.actions.consumeFiles([id], outputs, stubs);
       });
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
+      localInspection.mockResolvedValueOnce({
         data: {
           encrypted: true,
           signed: false,
           ownerAuthenticated: true,
           permissions: -4,
-          canModify: true,
-          canAssemble: true,
           pageCount: 1,
         },
       });
@@ -297,6 +522,68 @@ afterEach(() => {
 
 describe("encrypted bytes opened by another editor", () => {
   it.each([false, true])(
+    "requires owner authentication without cached access, cancelled: %s",
+    async (cancelled) => {
+      observed.isEncrypted = false;
+      const { result } = renderHook(
+        () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+        { wrapper },
+      );
+      await act(() =>
+        result.current.actions.addFiles([new File(["original"], "locked.pdf")]),
+      );
+      let permitted!: Promise<boolean>;
+      act(() => {
+        permitted = result.current.actions.requestPdfOwnerAccess(
+          id,
+          "Change permissions",
+        );
+      });
+      if (cancelled) {
+        await act(async () =>
+          fireEvent.click(screen.getByText("Cancel opening")),
+        );
+        await expect(permitted).resolves.toBe(false);
+        expect(result.current.selectors.getAllFileIds()).toEqual([id]);
+        expect(getPdfAccess(id)).toBeUndefined();
+        return;
+      }
+      localInspection.mockResolvedValueOnce({
+        data: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: false,
+          permissions: 0,
+          pageCount: 1,
+        },
+      });
+      fireEvent.change(screen.getByLabelText("Permissions password"), {
+        target: { value: "reader" },
+      });
+      await act(async () => fireEvent.click(screen.getByText("Unlock")));
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "encryptedPdfUnlock.ownerRequired",
+      );
+      expect(getPdfAccess(id)).toBeUndefined();
+      localInspection.mockResolvedValueOnce({
+        data: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: true,
+          permissions: 0,
+          pageCount: 1,
+        },
+      });
+      fireEvent.change(screen.getByLabelText("Permissions password"), {
+        target: { value: "owner" },
+      });
+      await act(async () => fireEvent.click(screen.getByText("Unlock")));
+      await expect(permitted).resolves.toBe(true);
+      expect(getPdfAccess(id)?.password).toBe("owner");
+    },
+  );
+
+  it.each([false, true])(
     "removes the opening password while retaining owner protection: %s",
     async (hasOwnerPassword) => {
       const persist = vi
@@ -317,15 +604,12 @@ describe("encrypted bytes opened by another editor", () => {
         openingAuthenticated: true,
         ownerAuthenticated: !hasOwnerPassword,
         requiresOpeningPassword: true,
-        hasOwnerPassword,
         permissions: hasOwnerPassword ? 0 : -4,
-        canModify: !hasOwnerPassword,
-        canAssemble: !hasOwnerPassword,
         pageCount: 1,
       };
       const post = vi.mocked(apiClient.post);
       post.mockReset();
-      post.mockResolvedValueOnce({ data: security });
+      localInspection.mockResolvedValueOnce({ data: security });
       if (hasOwnerPassword) {
         fireEvent.change(screen.getByLabelText("PDF password"), {
           target: { value: "reader" },
@@ -334,10 +618,10 @@ describe("encrypted bytes opened by another editor", () => {
           fireEvent.click(screen.getByText("Remove Password"));
         });
         expect(screen.getByLabelText("Permissions password")).toBeVisible();
-        expect(post).toHaveBeenCalledTimes(1);
+        expect(post).not.toHaveBeenCalled();
         expect(getPdfAccess(original)).toBeUndefined();
         expect(result.current.selectors.getAllFileIds()).toEqual([]);
-        post.mockResolvedValueOnce({
+        localInspection.mockResolvedValueOnce({
           data: {
             ...security,
             openingAuthenticated: false,
@@ -346,7 +630,7 @@ describe("encrypted bytes opened by another editor", () => {
         });
       }
       post.mockResolvedValueOnce({ data: new Blob(["password removed"]) });
-      post.mockResolvedValueOnce({
+      localInspection.mockResolvedValueOnce({
         data: {
           ...security,
           encrypted: hasOwnerPassword,
@@ -359,7 +643,9 @@ describe("encrypted bytes opened by another editor", () => {
         screen.getByLabelText(
           hasOwnerPassword ? "Permissions password" : "PDF password",
         ),
-        { target: { value: hasOwnerPassword ? "owner" : "reader" } },
+        {
+          target: { value: hasOwnerPassword ? "owner" : "reader" },
+        },
       );
       await act(async () => {
         fireEvent.click(
@@ -376,7 +662,7 @@ describe("encrypted bytes opened by another editor", () => {
         permissions: security.permissions,
       });
       const request = post.mock.calls.find(
-        ([url]) => url === "/api/v1/security/remove-pdf-passwords",
+        ([url]) => url === "/api/v1/security/remove-password",
       )!;
       const form = request[1] as FormData;
       expect(form.get("password")).toBe("reader");
@@ -409,23 +695,20 @@ describe("encrypted bytes opened by another editor", () => {
       openingAuthenticated: true,
       ownerAuthenticated: false,
       requiresOpeningPassword: true,
-      hasOwnerPassword: true,
       permissions: 0,
-      canModify: false,
-      canAssemble: false,
       pageCount: 1,
       honorOwnerPasswords: false,
     };
     const post = vi.mocked(apiClient.post);
     post.mockReset();
-    post.mockResolvedValueOnce({ data: security });
+    localInspection.mockResolvedValueOnce({ data: security });
     fireEvent.change(screen.getByLabelText("PDF password"), {
       target: { value: "reader" },
     });
     await act(async () => {
       fireEvent.click(screen.getByText("Remove Password"));
     });
-    post.mockResolvedValueOnce({ data: security });
+    localInspection.mockResolvedValueOnce({ data: security });
     fireEvent.change(screen.getByLabelText("Permissions password"), {
       target: { value: "reader" },
     });
@@ -435,11 +718,7 @@ describe("encrypted bytes opened by another editor", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "encryptedPdfUnlock.ownerRequired",
     );
-    expect(
-      post.mock.calls.every(
-        ([url]) => url === "/api/v1/security/inspect-pdf-security",
-      ),
-    ).toBe(true);
+    expect(post).not.toHaveBeenCalled();
     await act(async () => {
       fireEvent.click(screen.getByText("Cancel opening"));
       await loading;
@@ -474,23 +753,20 @@ describe("encrypted bytes opened by another editor", () => {
       signed: false,
       ownerAuthenticated: true,
       permissions: 0,
-      canModify: true,
-      canAssemble: true,
       pageCount: 1,
     });
-    vi.mocked(apiClient.post)
-      .mockResolvedValueOnce({ data: new Blob(["unprotected"]) })
-      .mockResolvedValueOnce({
-        data: {
-          encrypted: false,
-          signed: false,
-          ownerAuthenticated: false,
-          permissions: -4,
-          canModify: true,
-          canAssemble: true,
-          pageCount: 1,
-        },
-      });
+    vi.mocked(apiClient.post).mockResolvedValueOnce({
+      data: new Blob(["unprotected"]),
+    });
+    localInspection.mockResolvedValueOnce({
+      data: {
+        encrypted: false,
+        signed: false,
+        ownerAuthenticated: false,
+        permissions: -4,
+        pageCount: 1,
+      },
+    });
     await act(async () =>
       result.current.actions.createUnprotectedCopy(file.fileId),
     );
@@ -526,8 +802,6 @@ describe("encrypted bytes opened by another editor", () => {
       signed: false,
       ownerAuthenticated: false,
       permissions: 0,
-      canModify: false,
-      canAssemble: false,
       pageCount: 1,
     });
     let pending!: Promise<boolean>;
@@ -578,14 +852,12 @@ describe("encrypted bytes opened by another editor", () => {
     expect(result.current.selectors.getAllFileIds()).toEqual([]);
   });
   it("unlocks the original in place without adding a password-removal version", async () => {
-    vi.mocked(apiClient.post).mockResolvedValueOnce({
+    localInspection.mockResolvedValueOnce({
       data: {
         encrypted: true,
         signed: false,
         ownerAuthenticated: true,
         permissions: -4,
-        canModify: true,
-        canAssemble: true,
         pageCount: 1,
       },
     });
@@ -617,9 +889,7 @@ describe("encrypted bytes opened by another editor", () => {
     });
     expect(getPdfAccess(id)?.password).toBe(" secret ");
     expect(isAwaitingUnlock(id)).toBe(false);
-    expect(vi.mocked(apiClient.post).mock.calls.at(-1)?.[0]).toBe(
-      "/api/v1/security/inspect-pdf-security",
-    );
+    expect(apiClient.post).not.toHaveBeenCalled();
     await act(() => result.current.actions.removeFiles([id]));
     expect(getPdfAccess(original)).toBeUndefined();
   });
@@ -664,7 +934,7 @@ describe("encrypted bytes opened by another editor", () => {
   });
 
   it("a rejected password leaves the file pending until cancelled", async () => {
-    vi.mocked(apiClient.post).mockRejectedValueOnce(new Error("bad password"));
+    localInspection.mockRejectedValueOnce(new Error("bad password"));
     const { result } = renderHook(
       () => ({ ...useFileActions(), selectors: useFileSelectors() }),
       { wrapper },
@@ -699,14 +969,12 @@ describe("preview session credentials", () => {
     signed: false,
     ownerAuthenticated: false,
     permissions: 0,
-    canModify: false,
-    canAssemble: false,
     pageCount: 1,
   };
   afterEach(cleanup);
 
   it("unlocks without publishing or persisting a file, then forgets access on close", async () => {
-    vi.mocked(apiClient.post).mockResolvedValueOnce({ data: previewSecurity });
+    localInspection.mockResolvedValueOnce({ data: previewSecurity });
     const { result } = renderHook(
       () => ({ ...useFileActions(), selectors: useFileSelectors() }),
       { wrapper },
@@ -733,7 +1001,7 @@ describe("preview session credentials", () => {
 
   it("does not retain a password when authentication finishes after the preview closes", async () => {
     let finish!: (response: { data: typeof previewSecurity }) => void;
-    vi.mocked(apiClient.post).mockReturnValueOnce(
+    localInspection.mockReturnValueOnce(
       new Promise((resolve) => {
         finish = resolve;
       }),
@@ -756,14 +1024,12 @@ describe("preview session credentials", () => {
 });
 
 it("preserves a preview credential after its bytes are admitted to FileContext", async () => {
-  vi.mocked(apiClient.post).mockResolvedValueOnce({
+  localInspection.mockResolvedValueOnce({
     data: {
       encrypted: true,
       signed: false,
       ownerAuthenticated: true,
       permissions: -4,
-      canModify: true,
-      canAssemble: true,
       pageCount: 1,
     },
   });

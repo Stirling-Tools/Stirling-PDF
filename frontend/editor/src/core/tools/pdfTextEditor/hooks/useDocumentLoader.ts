@@ -10,13 +10,9 @@ import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
 import {
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
-import {
-  assertPdfSessionEditable,
-  ensurePdfAccess,
-  unlockPdfForSession,
-} from "@app/services/pdfSessionUnlock";
-import { detectSaveRisks } from "@app/tools/pdfTextEditor/util/documentRisks";
+} from "@app/services/pdfAccessService";
+import { assertPdfSessionEditable } from "@app/services/pdfSessionUnlock";
+import { readPdfiumAccess } from "@app/utils/pdfiumAccess";
 
 const EAGER_PAGE_LIMIT = 5;
 
@@ -29,7 +25,6 @@ export function useDocumentLoader(store: EditorStore) {
   return useCallback(
     async (file: File, password?: string): Promise<void> => {
       const documentPassword = password ?? getPdfAccess(file)?.password;
-      // Each load claims a token.
       const token = store.beginLoad();
       store.setLoading(true);
       store.setProgress({
@@ -38,7 +33,6 @@ export function useDocumentLoader(store: EditorStore) {
         total: 0,
       });
       try {
-        assertPdfSessionEditable(getPdfAccess(file));
         await yieldToBrowser();
         const bytes = new Uint8Array(await file.arrayBuffer());
         if (!store.isCurrentLoad(token)) return;
@@ -50,24 +44,15 @@ export function useDocumentLoader(store: EditorStore) {
         await yieldToBrowser();
         const doc = await EditorDocument.open(bytes, documentPassword);
         try {
-          const access =
-            password === undefined
-              ? await ensurePdfAccess(file)
-              : await unlockPdfForSession(file, password);
           if (!store.isCurrentLoad(token)) {
             doc.dispose();
             return;
           }
+          const access = rememberPdfAccess(
+            file,
+            readPdfiumAccess(doc.module, doc.docPtr, documentPassword ?? ""),
+          );
           assertPdfSessionEditable(access);
-          const risks = detectSaveRisks(doc);
-          if (risks.encrypted !== access.encrypted)
-            throw new Error("Unable to verify PDF security");
-          assertPdfSessionEditable({
-            ...access,
-            encrypted: risks.encrypted,
-            signed: risks.signatures > 0,
-          });
-          rememberPdfAccess(file, access);
         } catch (error) {
           doc.dispose();
           throw error;

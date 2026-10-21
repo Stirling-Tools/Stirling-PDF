@@ -5,7 +5,7 @@ import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import { readDiskFile } from "@app/services/localFolderContents";
 import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 
 const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
 

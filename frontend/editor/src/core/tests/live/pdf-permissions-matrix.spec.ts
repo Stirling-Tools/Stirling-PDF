@@ -1,3 +1,4 @@
+import { inspectPdfProtection as inspect } from "@app/tests/helpers/pdf-protection";
 import { test, expect } from "@app/tests/helpers/test-base";
 import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
 import { skipOnboarding } from "@app/tests/helpers/login";
@@ -42,21 +43,6 @@ const restrictions = [
 test.beforeEach(async ({ page }) => {
   await loadLiveAppConfig(page);
 });
-
-async function inspect(page: Page, buffer: Buffer, password = "") {
-  const response = await page.request.post(
-    "/api/v1/security/inspect-pdf-security",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: { name: "result.pdf", mimeType: "application/pdf", buffer },
-        password,
-      },
-    },
-  );
-  expect(response.ok()).toBe(true);
-  return response.json();
-}
 
 async function openFresh(
   source: Page,
@@ -149,7 +135,7 @@ for (const restriction of restrictions) {
         .getByRole("textbox", { name: "New permissions password", exact: true })
         .fill(owner);
       const protectedResponse = page.waitForResponse(
-        "**/api/v1/security/set-pdf-protection",
+        "**/api/v1/security/add-password",
       );
       await page
         .getByRole("button", { name: "Save protection", exact: true })
@@ -233,7 +219,7 @@ for (const restriction of restrictions) {
         .uncheck();
       const savedOwner = owner;
       const changedResponse = page.waitForResponse(
-        "**/api/v1/security/change-pdf-permissions",
+        "**/api/v1/security/add-password",
       );
       await page
         .getByRole("button", {

@@ -79,13 +79,13 @@ test("a 10-file upload wave classifies every file into its group", async ({
   const header = (name: string, count: number) =>
     page.getByRole("button", { name: `${name} ${count}`, exact: true });
 
-  // Unclassified files stay in Other until processing finishes; only generic notes remain.
-  await expect(header("Other", 1)).toBeVisible({ timeout: 150_000 });
-
-  // The Spanish lease is also classified as Legal.
-  await expect(header("Financial", 3)).toBeVisible();
-  await expect(header("HR", 3)).toBeVisible();
-  await expect(header("Legal", 3)).toBeVisible();
+  // Progressive admission can briefly show Other 1 before the full batch arrives.
+  await expect(async () => {
+    await expect(header("Financial", 3)).toBeVisible();
+    await expect(header("HR", 3)).toBeVisible();
+    await expect(header("Legal", 3)).toBeVisible();
+    await expect(header("Other", 1)).toBeVisible();
+  }).toPass({ timeout: 150_000 });
 
   // A filename can render in Recent, its group, or the viewer; any hit proves presence.
   await expect(page.getByText("generic_notes.pdf").first()).toBeVisible();

@@ -9,7 +9,7 @@ import { createStirlingFile } from "@app/types/fileContext";
 import {
   clearPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfPasswordStore";
+} from "@app/services/pdfAccessService";
 
 vi.mock("../shared/useToolOperation", async () => {
   const actual = await vi.importActual("../shared/useToolOperation"); // Need to keep ToolType etc.
@@ -76,23 +76,20 @@ describe("useRemovePasswordOperation", () => {
       password: opening ? "reader" : "",
       encrypted: opening || owner,
       requiresOpeningPassword: opening,
-      hasOwnerPassword: owner,
       ownerAuthenticated: false,
       signed: false,
       permissions: 0,
-      canModify: false,
-      canAssemble: false,
       pageCount: 1,
     });
     return file;
   }
 
   test.each([
-    { opening: true, owner: false, password: "reader", ownerPassword: null },
+    { opening: false, owner: false, password: "", ownerPassword: null },
     { opening: false, owner: true, password: "", ownerPassword: "owner" },
     { opening: true, owner: true, password: "reader", ownerPassword: "owner" },
   ])(
-    "only submits passwords present on a file (opening=$opening, owner=$owner)",
+    "omits known absent roles and submits unknown roles (opening=$opening, encrypted-owner=$owner)",
     ({ opening, owner, password, ownerPassword }) => {
       renderHook(() => useRemovePasswordOperation());
       const form = getToolConfig().buildFormData(
@@ -105,7 +102,7 @@ describe("useRemovePasswordOperation", () => {
   );
 
   test.each(["opening", "owner", "both"] as const)(
-    "leaves files without the requested %s password unchanged",
+    "skips known absent %s passwords and lets the endpoint validate unknown roles",
     async (remove) => {
       const opening = protectedFile(true, false);
       const owner = protectedFile(false, true);
@@ -124,11 +121,7 @@ describe("useRemovePasswordOperation", () => {
       ]);
       expect(mockToolOperationReturn.executeOperation).toHaveBeenCalledWith(
         params,
-        remove === "opening"
-          ? [opening, both]
-          : remove === "owner"
-            ? [owner, both]
-            : [opening, owner, both],
+        remove === "opening" ? [opening, both] : [opening, owner, both],
       );
     },
   );
@@ -174,6 +167,21 @@ describe("useRemovePasswordOperation", () => {
       protectedFile(false, true),
     );
     expect(form.get("password")).toBe("owner");
+    expect(form.has("ownerPassword")).toBe(false);
+  });
+
+  test("retains selective owner removal through API parameter conversion", () => {
+    const parameters = { password: "", ownerPassword: "owner" };
+    const api = removePasswordOperationConfig.toApiParams!(parameters);
+    expect(removePasswordOperationConfig.fromApiParams!(api)).toEqual(
+      parameters,
+    );
+    const form = removePasswordOperationConfig.buildFormData(
+      parameters,
+      protectedFile(false, true),
+    );
+    expect(form.get("password")).toBe("");
+    expect(form.get("ownerPassword")).toBe("owner");
   });
 
   test("should use correct translation for error messages", () => {

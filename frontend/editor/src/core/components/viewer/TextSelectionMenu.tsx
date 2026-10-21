@@ -368,16 +368,38 @@ function TextSelectionMenuInner({
         onMouseDown={(e) => e.preventDefault()}
       >
         <div className="embedpdf-text-selection-menu">
-          <Tooltip label={t("viewer.copyText", "Copy")} withArrow>
-            <button
-              type="button"
-              className="embedpdf-text-selection-btn"
-              onClick={handleCopy}
-              disabled={!canCopy}
-              aria-label={t("viewer.copyText", "Copy")}
+          <Tooltip
+            label={
+              canCopy
+                ? t("viewer.copyText", "Copy")
+                : t(
+                    "viewer.copyRestricted",
+                    "Copying is disabled by this PDF's permissions.",
+                  )
+            }
+            withArrow
+            multiline
+            w={canCopy ? undefined : 260}
+            events={{ hover: true, focus: true, touch: false }}
+          >
+            <span
+              style={{ display: "inline-flex" }}
+              tabIndex={canCopy ? undefined : 0}
+              role={canCopy ? undefined : "button"}
+              aria-label={canCopy ? undefined : t("viewer.copyText", "Copy")}
+              aria-disabled={canCopy ? undefined : true}
             >
-              <Icon name="copy" size={20} />
-            </button>
+              <button
+                type="button"
+                className="embedpdf-text-selection-btn"
+                onClick={handleCopy}
+                disabled={!canCopy}
+                aria-label={t("viewer.copyText", "Copy")}
+                aria-hidden={!canCopy || undefined}
+              >
+                <Icon name="copy" size={20} />
+              </button>
+            </span>
           </Tooltip>
 
           {!readOnly && (

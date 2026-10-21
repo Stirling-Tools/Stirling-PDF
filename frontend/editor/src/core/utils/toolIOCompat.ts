@@ -16,7 +16,7 @@ import {
 } from "@app/types/toolIO";
 import { detectFileExtension, getFileFormats } from "@app/utils/fileUtils";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 import { supportsSessionUnlock } from "@app/services/pdfSessionUnlock";
 
 export type ToolDiagnosticSeverity = "ERROR" | "WARN" | "INFO";

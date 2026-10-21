@@ -1,55 +1,22 @@
+import {
+  ensureLocalPdfAccess,
+  getPdfAccess,
+  pdfAccessLifetime,
+  rememberPdfAccess,
+  type PdfAccess,
+} from "@app/services/pdfAccessService";
 import apiClient from "@app/services/apiClient";
 import axios, { type CancelToken } from "axios";
 import i18n from "i18next";
-import {
-  getPdfAccess,
-  rememberPdfAccess,
-  type PdfAccess,
-} from "@app/services/pdfPasswordStore";
+
 import type { StirlingFile } from "@app/types/fileContext";
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { zipFileService } from "@app/services/zipFileService";
 
-/** An override grants actions without changing the document's actual authentication role. */
-export function hasPdfPermissionOverride(
-  access: Partial<PdfAccess> | undefined,
-): boolean {
-  return (
-    access?.ownerAuthenticated === true || access?.honorOwnerPasswords === false
-  );
-}
-
-/** Applies the server policy and authenticated access to the document's stored restrictions. */
-export function pdfAllows(
-  access: PdfAccess | undefined,
-  flag: PdfPermissionFlag,
-): boolean {
-  if (!access) return false;
-  if (
-    access.encryptionRevision === 2 &&
-    flag === PdfPermissionFlag.AssembleDocument
-  )
-    flag = PdfPermissionFlag.ModifyContents;
-  if (
-    access.encryptionRevision === 2 &&
-    flag === PdfPermissionFlag.PrintHighQuality
-  )
-    flag = PdfPermissionFlag.Print;
-  return (
-    !access.encrypted ||
-    hasPdfPermissionOverride(access) ||
-    (access.permissions & flag) !== 0
-  );
-}
-
-/** Inspect original bytes even when an older library record missed owner-only encryption. */
-export async function ensurePdfAccess(file: File): Promise<PdfAccess> {
-  const existing = getPdfAccess(file);
-  if (existing) return existing;
-  const access = await unlockPdfForSession(file, "");
-  if (!getPdfAccess(file)) rememberPdfAccess(file, access);
-  return getPdfAccess(file)!;
-}
+import {
+  hasPdfPermissionOverride,
+  pdfAllows,
+} from "@app/services/pdfPermissions";
 
 const SUPPORTED_ENDPOINTS = new Set([
   "/api/v1/security/add-password",
@@ -72,12 +39,14 @@ async function requestWorkingPdf(
   form: FormData,
   message: string,
   cancelToken?: CancelToken,
+  signal?: AbortSignal,
 ): Promise<Blob> {
   try {
     const response = await apiClient.post<Blob>(endpoint, form, {
       responseType: "blob",
       suppressErrorToast: true,
       cancelToken,
+      signal,
     });
     return response.data;
   } catch (error) {
@@ -94,18 +63,30 @@ export function supportsSessionUnlock(endpoint: string | undefined): boolean {
   return endpoint !== undefined && SUPPORTED_ENDPOINTS.has(endpoint);
 }
 
-/** Checks the whole selection before processing or prompting for credentials. */
+/** Checks the whole selection before processing; encryption hints request authentication but never grant access. */
 export async function preflightPdfOperation(
   files: readonly StirlingFile[],
   endpoint: string | undefined,
   combinesFiles: boolean,
   requestOwner: (file: StirlingFile) => Promise<boolean>,
+  signal?: AbortSignal,
+  isKnownEncrypted: (file: StirlingFile) => boolean = () => false,
 ): Promise<boolean> {
   const protectedFiles: StirlingFile[] = [];
+  const changesProtection =
+    endpoint === "/api/v1/security/add-password" ||
+    endpoint === "/api/v1/security/remove-password";
   for (const file of files) {
+    if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
     if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) continue;
-    const access = await ensurePdfAccess(file);
-    if (!access.encrypted) continue;
+    // Password endpoints validate the requested change themselves; unknown roles need no preflight upload.
+    const access = changesProtection
+      ? getPdfAccess(file)
+      : await ensureLocalPdfAccess(file, signal);
+    const encrypted =
+      access?.encrypted ??
+      (endpoint === "/api/v1/security/add-password" && isKnownEncrypted(file));
+    if (!encrypted) continue;
     if (!supportsSessionUnlock(endpoint))
       throw new Error(
         i18n.t(
@@ -113,7 +94,7 @@ export async function preflightPdfOperation(
           "This tool cannot yet preserve this PDF's protection.",
         ),
       );
-    if (access.signed)
+    if (access?.signed)
       throw new Error(
         i18n.t(
           "encryptedPdfUnlock.signedReadOnly",
@@ -130,13 +111,15 @@ export async function preflightPdfOperation(
       ),
     );
   for (const file of protectedFiles) {
+    if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
     if (endpoint === "/api/v1/security/remove-password") continue;
-    const access = getPdfAccess(file)!;
+    const access = getPdfAccess(file);
     const needsOwner = endpoint?.includes("password")
       ? !hasPdfPermissionOverride(access)
       : !pdfAllows(access, operationPermission(endpoint));
     if (needsOwner && !(await requestOwner(file))) return false;
   }
+  if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
   return true;
 }
 
@@ -148,57 +131,8 @@ function operationPermission(endpoint: string | undefined): PdfPermissionFlag {
       : PdfPermissionFlag.AssembleDocument;
 }
 
-/** Authenticate without rewriting the uploaded document. The password stays outside file metadata. */
-export async function unlockPdfForSession(
-  file: File,
-  password: string,
-  cancelToken?: CancelToken,
-): Promise<PdfAccess> {
-  const form = new FormData();
-  form.append("fileInput", file);
-  form.append("password", password);
-  try {
-    const response = await apiClient.post<Omit<PdfAccess, "password">>(
-      "/api/v1/security/inspect-pdf-security",
-      form,
-      {
-        suppressErrorToast: true,
-        ...(cancelToken ? { cancelToken } : {}),
-      },
-    );
-    cancelToken?.throwIfRequested();
-    if (
-      typeof response.data?.encrypted !== "boolean" ||
-      typeof response.data?.ownerAuthenticated !== "boolean" ||
-      !Number.isInteger(response.data?.permissions)
-    )
-      throw new Error("Unable to verify PDF security");
-    return { ...response.data, password };
-  } catch (error) {
-    if (axios.isCancel(error))
-      throw new axios.CanceledError("Operation cancelled");
-    const sanitized = new Error(
-      error instanceof Error ? error.message : "Unable to unlock this PDF.",
-    );
-    if (axios.isAxiosError(error)) {
-      // Keep password-error classification without retaining the request or its FormData.
-      Object.assign(sanitized, {
-        isAxiosError: true,
-        response: error.response
-          ? { status: error.response.status, data: error.response.data }
-          : undefined,
-      });
-    }
-    throw sanitized;
-  }
-}
-
 /** Signed protected PDFs remain view-only until their edits can preserve signatures. */
-export function assertPdfSessionEditable(
-  access:
-    | (Pick<PdfAccess, "encrypted" | "signed"> & Partial<PdfAccess>)
-    | undefined,
-): void {
+export function assertPdfSessionEditable(access: PdfAccess | undefined): void {
   if (access?.encrypted && access.signed)
     throw new Error(
       i18n.t(
@@ -206,11 +140,7 @@ export function assertPdfSessionEditable(
         "This PDF has digital signatures. Session unlocking supports viewing it, but processing signed PDFs is not supported yet.",
       ),
     );
-  if (
-    access?.encrypted &&
-    !hasPdfPermissionOverride(access) &&
-    access.canModify !== true
-  )
+  if (access?.encrypted && !pdfAllows(access, PdfPermissionFlag.ModifyContents))
     throw new Error(
       i18n.t(
         "encryptedPdfUnlock.restrictedOperation",
@@ -219,41 +149,15 @@ export function assertPdfSessionEditable(
     );
 }
 
-/** Native exports must retain source protection before storage or download can receive them. */
-export async function verifyEditedPdfProtection(
-  output: File,
-  sourceAccess: PdfAccess | undefined,
-): Promise<void> {
-  if (!sourceAccess?.encrypted) return;
-  assertPdfSessionEditable(sourceAccess);
-  const access = await unlockPdfForSession(output, sourceAccess.password);
-  if (
-    !access.encrypted ||
-    access.permissions !== sourceAccess.permissions ||
-    access.ownerAuthenticated !== sourceAccess.ownerAuthenticated ||
-    sourceAccess.encryptionKeyLength === undefined ||
-    access.encryptionKeyLength !== sourceAccess.encryptionKeyLength ||
-    sourceAccess.encryptionRevision === undefined ||
-    access.encryptionRevision !== sourceAccess.encryptionRevision ||
-    !sourceAccess.credentialFingerprint ||
-    access.credentialFingerprint !== sourceAccess.credentialFingerprint
-  )
-    throw new Error(
-      i18n.t(
-        "encryptedPdfUnlock.restoreFailed",
-        "Unable to preserve PDF protection. No unprotected result was saved.",
-      ),
-    );
-  rememberPdfAccess(output, {
-    ...access,
-    openingPassword: sourceAccess.openingPassword,
-  });
-}
-
-/** Decrypted bytes belong only to this operation. They must never enter FileContext or persistence. */
+/**
+ * Decrypted bytes belong only to this operation, never FileContext or persistence.
+ * Navigation cancels fresh permission reads; preparation stops on explicit cancellation or source closure.
+ */
 export async function prepareUnlockedFile(
   file: StirlingFile,
   endpoint: string | undefined,
+  inspectionSignal?: AbortSignal,
+  cancelToken?: CancelToken,
 ): Promise<File> {
   if (
     endpoint === "/api/v1/security/remove-password" ||
@@ -262,7 +166,8 @@ export async function prepareUnlockedFile(
     return file;
   if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name))
     return file;
-  const access = await ensurePdfAccess(file);
+  const access =
+    getPdfAccess(file) ?? (await ensureLocalPdfAccess(file, inspectionSignal));
   if (!access.encrypted) return file;
   if (!supportsSessionUnlock(endpoint))
     throw new Error(
@@ -297,6 +202,8 @@ export async function prepareUnlockedFile(
       "encryptedPdfUnlock.prepareFailed",
       "Unable to prepare this protected PDF for processing.",
     ),
+    cancelToken,
+    pdfAccessLifetime(file),
   );
   return new File([bytes], file.name, { type: "application/pdf" });
 }
@@ -382,7 +289,7 @@ export async function protectUnlockedResults(
   return protectedFiles;
 }
 
-/** Interactive security changes use stricter contracts than the legacy public API. */
+/** Session credentials authenticate the source without selecting which passwords to remove. */
 export async function changePdfSecurity(
   file: File,
   form: FormData,
@@ -390,27 +297,27 @@ export async function changePdfSecurity(
   cancelToken?: CancelToken,
 ): Promise<Blob> {
   const settingProtection = endpoint === "/api/v1/security/add-password";
+  const access = getPdfAccess(file);
   if (settingProtection) {
-    const access = await ensurePdfAccess(file);
-    if (access.encrypted && !hasPdfPermissionOverride(access))
+    if (access?.encrypted && !hasPdfPermissionOverride(access))
       throw new Error(
         i18n.t(
           "encryptedPdfUnlock.ownerRequired",
           "Enter the permissions password to allow restricted actions.",
         ),
       );
-    form.set("sourcePassword", access.password);
+    form.set("sourcePassword", access?.password ?? "");
     if (!form.has("keyLength")) {
+      form.set("preserveExisting", "true");
       form.delete("password");
-      if (access.openingPassword !== undefined)
+      if (access?.openingPassword !== undefined)
         form.set("password", access.openingPassword);
     }
   } else {
-    const access = await ensurePdfAccess(file);
     if (
       form.get("ownerPassword") &&
       !form.get("password") &&
-      access.requiresOpeningPassword &&
+      access?.requiresOpeningPassword &&
       access.openingPassword === undefined
     ) {
       throw new Error(
@@ -420,21 +327,21 @@ export async function changePdfSecurity(
         ),
       );
     }
-    form.set("sourcePassword", access.password);
-    if (access.openingPassword !== undefined)
+    form.set(
+      "sourcePassword",
+      access?.password || String(form.get("password") ?? ""),
+    );
+    if (access?.openingPassword !== undefined)
       form.set("retainedOpeningPassword", access.openingPassword);
   }
   return requestWorkingPdf(
-    settingProtection
-      ? form.has("keyLength")
-        ? "/api/v1/security/set-pdf-protection"
-        : "/api/v1/security/change-pdf-permissions"
-      : "/api/v1/security/remove-pdf-passwords",
+    endpoint,
     form,
     i18n.t(
       "encryptedPdfUnlock.securityChangeFailed",
       "Unable to change protection. Check the permissions password and the new security settings.",
     ),
     cancelToken,
+    pdfAccessLifetime(file),
   );
 }

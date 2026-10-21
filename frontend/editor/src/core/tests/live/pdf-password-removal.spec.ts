@@ -1,8 +1,20 @@
+import { inspectPdfProtection } from "@app/tests/helpers/pdf-protection";
 import { test, expect } from "@app/tests/helpers/test-base";
 import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
 import type { Page, Response } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs/promises";
+
+async function inspect(page: Page, buffer: Buffer, password: string) {
+  const access = await inspectPdfProtection(page, buffer, password);
+  const hasOwnerPassword =
+    access.encrypted &&
+    (await inspectPdfProtection(page, buffer, owner).then(
+      (result) => result.ownerAuthenticated,
+      () => false,
+    ));
+  return { ...access, hasOwnerPassword };
+}
 
 const reader = "removal-reader";
 const owner = "removal-owner";
@@ -17,36 +29,23 @@ async function protectedPdf(
   opening: boolean,
   permissions: boolean,
 ) {
-  const response = await page.request.post(
-    "/api/v1/security/set-pdf-protection",
-    {
-      headers: await liveApiHeaders(page),
-      multipart: {
-        fileInput: {
-          name: "sample.pdf",
-          mimeType: "application/pdf",
-          buffer: await fs.readFile(fixture),
-        },
-        password: opening ? reader : "",
-        ownerPassword: permissions ? owner : "",
-        keyLength: 256,
-        preventPrinting: permissions,
-        preventModify: permissions,
-      },
-    },
-  );
-  expect(response.ok()).toBe(true);
-  return response.body();
-}
-
-async function inspect(page: Page, buffer: Buffer, password: string) {
-  return page.request.post("/api/v1/security/inspect-pdf-security", {
+  const response = await page.request.post("/api/v1/security/add-password", {
     headers: await liveApiHeaders(page),
     multipart: {
-      fileInput: { name: "result.pdf", mimeType: "application/pdf", buffer },
-      password,
+      fileInput: {
+        name: "sample.pdf",
+        mimeType: "application/pdf",
+        buffer: await fs.readFile(fixture),
+      },
+      password: opening ? reader : "",
+      ownerPassword: permissions ? owner : "",
+      keyLength: 256,
+      preventPrinting: permissions,
+      preventModify: permissions,
     },
   });
+  expect(response.ok()).toBe(true);
+  return response.body();
 }
 
 async function upload(page: Page, buffer: Buffer, opening = true) {
@@ -62,6 +61,8 @@ async function upload(page: Page, buffer: Buffer, opening = true) {
     await dialog.getByRole("button", { name: "Open PDF", exact: true }).click();
     await expect(dialog).toBeHidden();
   }
+  await expect(page.locator('[data-page-index="0"]').first()).toBeVisible();
+  await expect(page.getByRole("dialog", { name: /^Open PDF/ })).toBeHidden();
   await expect(
     page.getByText("Leave a field blank to keep that password."),
   ).toBeVisible();
@@ -107,7 +108,7 @@ for (const permissions of [false, true]) {
     await expect(dialog.getByRole("alert")).toContainText("Incorrect password");
     await dialog.getByLabel("Password to open", { exact: true }).fill(reader);
     const removalResponse = page.waitForResponse(
-      "**/api/v1/security/remove-pdf-passwords",
+      "**/api/v1/security/remove-password",
     );
     await remove.click();
     if (permissions) {
@@ -145,21 +146,17 @@ for (const permissions of [false, true]) {
       page.getByText("load-time_password_removed.pdf", { exact: true }).first(),
     ).toBeVisible();
     const result = await inspect(page, saved, "");
-    expect(result.ok()).toBe(true);
-    expect(await result.json()).toMatchObject({
+    expect(result).toMatchObject({
       encrypted: permissions,
       requiresOpeningPassword: false,
       hasOwnerPassword: permissions,
       canPrint: !permissions,
     });
     if (permissions) {
-      expect(
-        (await (await inspect(page, saved, owner)).json()).ownerAuthenticated,
-      ).toBe(true);
+      expect((await inspect(page, saved, owner)).ownerAuthenticated).toBe(true);
     }
     expect(
-      (await (await inspect(page, original, reader)).json())
-        .requiresOpeningPassword,
+      (await inspect(page, original, reader)).requiresOpeningPassword,
     ).toBe(true);
   });
 }
@@ -170,7 +167,7 @@ test("closing load-time owner verification leaves the protected source unchanged
   const original = await protectedPdf(page, true, true);
   let removals = 0;
   page.on("request", (request) => {
-    if (request.url().endsWith("/remove-pdf-passwords")) removals++;
+    if (request.url().endsWith("/remove-password")) removals++;
   });
   await page.goto("/editor");
   await page.getByTestId("file-input").setInputFiles({
@@ -190,10 +187,9 @@ test("closing load-time owner verification leaves the protected source unchanged
   await expect(dialog).toBeHidden();
   expect(removals).toBe(0);
   await expect(page.locator('[data-page-index="0"]')).toHaveCount(0);
-  expect(
-    (await (await inspect(page, original, reader)).json())
-      .requiresOpeningPassword,
-  ).toBe(true);
+  expect((await inspect(page, original, reader)).requiresOpeningPassword).toBe(
+    true,
+  );
 });
 
 for (const remove of ["opening", "owner", "both"] as const) {
@@ -202,8 +198,7 @@ for (const remove of ["opening", "owner", "both"] as const) {
   }) => {
     const original = await protectedPdf(page, true, true);
     const honor =
-      (await (await inspect(page, original, reader)).json())
-        .honorOwnerPasswords !== false;
+      (await inspect(page, original, reader)).honorOwnerPasswords !== false;
     await upload(page, original);
     const submit = page.getByRole("button", {
       name: /^Remove Password(?: \(this file\))?$/,
@@ -222,7 +217,7 @@ for (const remove of ["opening", "owner", "both"] as const) {
         .getByLabel("Permissions password", { exact: true })
         .fill(owner);
     const responsePromise = page.waitForResponse(
-      "**/api/v1/security/remove-pdf-passwords",
+      "**/api/v1/security/remove-password",
     );
     await submit.click();
     if (remove === "opening") {
@@ -245,33 +240,21 @@ for (const remove of ["opening", "owner", "both"] as const) {
     const saved = await response.body();
     const password = remove === "owner" ? reader : "";
     const result = await inspect(page, saved, password);
-    expect(result.ok()).toBe(true);
-    expect(await result.json()).toMatchObject({
+    expect(result).toMatchObject({
       encrypted: remove !== "both",
       requiresOpeningPassword: remove === "owner",
       hasOwnerPassword: remove === "opening",
       canPrint: remove !== "opening",
     });
     if (remove === "opening") {
-      expect(
-        (await (await inspect(page, saved, owner)).json()).ownerAuthenticated,
-      ).toBe(true);
-      await expect(
-        page.getByText("Opening password removed. Restrictions retained."),
-      ).toBeVisible();
+      expect((await inspect(page, saved, owner)).ownerAuthenticated).toBe(true);
     } else if (remove === "owner") {
-      expect((await inspect(page, saved, "")).ok()).toBe(false);
-      expect((await inspect(page, saved, owner)).ok()).toBe(false);
-      await expect(
-        page.getByText(
-          "Permissions password and restrictions removed. Opening password kept.",
-        ),
-      ).toBeVisible();
-    } else {
-      await expect(
-        page.getByText("Both passwords and restrictions removed."),
-      ).toBeVisible();
+      await expect(inspect(page, saved, "")).rejects.toThrow("PDF open failed");
+      await expect(inspect(page, saved, owner)).rejects.toThrow(
+        "PDF open failed",
+      );
     }
+    await expect(page.getByTestId("download-result-button")).toBeEnabled();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Print PDF", exact: true }),
@@ -285,14 +268,13 @@ for (const remove of ["opening", "owner", "both"] as const) {
       ).toHaveAttribute("src", /^blob:/);
     }
     expect(
-      (await (await inspect(page, original, reader)).json())
-        .requiresOpeningPassword,
+      (await inspect(page, original, reader)).requiresOpeningPassword,
     ).toBe(true);
   });
 }
 
 for (const only of ["opening", "owner"] as const) {
-  test(`only enables the ${only} password when that is the only password set`, async ({
+  test(`removes the ${only} password while leaving unknown roles selectable`, async ({
     page,
   }) => {
     const original = await protectedPdf(
@@ -306,23 +288,23 @@ for (const only of ["opening", "owner"] as const) {
     ).toBeEnabled({ enabled: only === "opening" });
     await expect(
       page.getByLabel("Permissions password", { exact: true }),
-    ).toBeEnabled({ enabled: only === "owner" });
+    ).toBeEnabled();
     const label =
       only === "opening" ? "Password to open" : "Permissions password";
     await page
       .getByLabel(label, { exact: true })
       .fill(only === "opening" ? reader : owner);
     const responsePromise = page.waitForResponse(
-      "**/api/v1/security/remove-pdf-passwords",
+      "**/api/v1/security/remove-password",
     );
     await page
       .getByRole("button", { name: /^Remove Password(?: \(this file\))?$/ })
       .click();
     const response = await responsePromise;
     expect(response.ok()).toBe(true);
-    expect(
-      (await (await inspect(page, await response.body(), "")).json()).encrypted,
-    ).toBe(false);
+    expect((await inspect(page, await response.body(), "")).encrypted).toBe(
+      false,
+    );
     await expect(
       page.getByRole("button", { name: "Print PDF", exact: true }),
     ).toBeEnabled();
@@ -350,7 +332,7 @@ test("wrong role credentials cannot remove protection and cancelled verification
   ).toHaveValue("");
   await page.getByLabel("Permissions password", { exact: true }).fill(reader);
   const responsePromise = page.waitForResponse(
-    "**/api/v1/security/remove-pdf-passwords",
+    "**/api/v1/security/remove-password",
   );
   await page
     .getByRole("button", { name: /^Remove Password(?: \(this file\))?$/ })
@@ -360,7 +342,7 @@ test("wrong role credentials cannot remove protection and cancelled verification
 });
 
 for (const remove of ["opening", "owner", "both"] as const) {
-  test(`mixed selections remove ${remove} passwords only where set`, async ({
+  test(`mixed selections validate unknown ${remove} roles during processing`, async ({
     page,
   }) => {
     const inputs = [
@@ -391,9 +373,26 @@ for (const remove of ["opening", "owner", "both"] as const) {
       .locator("label")
       .filter({ hasText: /^Active Files$/ })
       .click();
+    // Opening these fixtures makes absent protection known without inspecting unopened files.
+    for (const name of ["plain.pdf", "owner-only.pdf"]) {
+      await page
+        .getByTestId("file-thumbnail")
+        .filter({ hasText: name })
+        .dblclick();
+      await expect(
+        page.getByLabel("Password to open", { exact: true }),
+      ).toBeDisabled();
+      await expect(
+        page.getByLabel("Permissions password", { exact: true }),
+      ).toBeEnabled({ enabled: name === "owner-only.pdf" });
+      await page
+        .locator("label")
+        .filter({ hasText: /^Active Files$/ })
+        .click();
+    }
     await expect(
       page.getByText("Set on 2 of 4 PDFs", { exact: true }),
-    ).toHaveCount(2);
+    ).toHaveCount(1);
     const openingInput = page.getByLabel("Password to open", { exact: true });
     const ownerInput = page.getByLabel("Permissions password", { exact: true });
     await expect(openingInput).toBeEnabled();
@@ -402,8 +401,7 @@ for (const remove of ["opening", "owner", "both"] as const) {
     if (remove !== "opening") await ownerInput.fill(owner);
     const responses: Response[] = [];
     page.on("response", (response) => {
-      if (response.url().endsWith("/remove-pdf-passwords"))
-        responses.push(response);
+      if (response.url().endsWith("/remove-password")) responses.push(response);
     });
     await page.getByRole("button", { name: /^Remove Password/ }).click();
     if (remove === "opening") {
@@ -421,23 +419,21 @@ for (const remove of ["opening", "owner", "both"] as const) {
         .getByRole("button", { name: "Continue", exact: true })
         .click();
     }
-    await expect(
-      page.getByText(
-        "Entered passwords removed where set. Blank fields kept unchanged.",
-      ),
-    ).toBeVisible();
+    await expect(page.getByTestId("download-result-button")).toBeEnabled();
+    // Owner-only removal rejects ambiguous opening credentials before sending a request.
     expect(responses).toHaveLength(remove === "both" ? 3 : 2);
+    expect(responses.filter((response) => !response.ok())).toHaveLength(
+      remove === "both" ? 1 : 0,
+    );
     const protection = [];
     for (const response of responses) {
-      expect(response.ok()).toBe(true);
+      if (!response.ok()) continue;
       const buffer = await response.body();
-      const inspection = await inspect(
+      const result = await inspect(
         page,
         buffer,
         remove === "owner" ? reader : "",
       );
-      expect(inspection.ok()).toBe(true);
-      const result = await inspection.json();
       protection.push({
         encrypted: result.encrypted,
         requiresOpeningPassword: result.requiresOpeningPassword,
@@ -445,10 +441,9 @@ for (const remove of ["opening", "owner", "both"] as const) {
         canPrint: result.canPrint,
       });
       if (result.hasOwnerPassword)
-        expect(
-          (await (await inspect(page, buffer, owner)).json())
-            .ownerAuthenticated,
-        ).toBe(true);
+        expect((await inspect(page, buffer, owner)).ownerAuthenticated).toBe(
+          true,
+        );
     }
     const unprotected = {
       encrypted: false,
@@ -457,9 +452,7 @@ for (const remove of ["opening", "owner", "both"] as const) {
       canPrint: true,
     };
     expect(protection.filter((result) => !result.encrypted)).toEqual(
-      remove === "both"
-        ? [unprotected, unprotected, unprotected]
-        : [unprotected],
+      remove === "both" ? [unprotected, unprotected] : [unprotected],
     );
     if (remove !== "both")
       expect(protection.filter((result) => result.encrypted)).toEqual([
@@ -476,15 +469,20 @@ for (const remove of ["opening", "owner", "both"] as const) {
         .filter({ hasText: "plain.pdf" })
         .getByText("v1", { exact: true }),
     ).toBeVisible();
-    if (remove !== "both")
+    await expect(
+      page
+        .getByTestId("file-thumbnail")
+        .filter({
+          hasText: remove === "opening" ? "owner-only.pdf" : "opening-only.pdf",
+        })
+        .getByText("v1", { exact: true }),
+    ).toBeVisible();
+    if (remove !== "opening")
       await expect(
         page
           .getByTestId("file-thumbnail")
-          .filter({
-            hasText:
-              remove === "opening" ? "owner-only.pdf" : "opening-only.pdf",
-          })
-          .getByText("v1", { exact: true }),
+          .filter({ hasText: "opening-only.pdf" })
+          .getByText("Error", { exact: true }),
       ).toBeVisible();
   });
 }

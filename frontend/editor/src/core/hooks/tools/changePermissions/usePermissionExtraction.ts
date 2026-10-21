@@ -1,14 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { getPdfAccess } from "@app/services/pdfPasswordStore";
-import { PdfPermissionFlag } from "@embedpdf/models";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
 import {
-  closeDocAndFreeBuffer,
-  getPdfiumModule,
-  openRawDocument,
-} from "@app/services/pdfiumService";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
+  getPdfAccess,
+  ensureLocalPdfAccess,
+} from "@app/services/pdfAccessService";
+import { PdfPermissionFlag } from "@embedpdf/models";
+
 import {
   defaultParameters,
   type ChangePermissionsParametersHook,
@@ -21,7 +17,7 @@ type ExtractionStatus = "idle" | "loading" | "loaded" | "error";
  * Pass no file for a batch to preserve the current settings without inspecting PDFs.
  * Disable while processing or reviewing results to preserve the operation state.
  * Failed reads keep manual settings until another file is selected.
- * Documents at the browser parsing size limit require manual settings.
+ * Cached stored permissions include restrictions hidden by owner authentication.
  */
 export function usePermissionExtraction(
   file: File | undefined,
@@ -46,32 +42,14 @@ export function usePermissionExtraction(
 
     setParameters(defaultParameters);
     setState({ file, status: "loading" });
-    const signal = { cancelled: false };
+    const cancellation = new AbortController();
 
     const readPermissions = async () => {
       try {
-        if (file.size >= LARGE_PDF_PARSE_LIMIT) {
-          throw new Error("PDF exceeds the browser parsing size limit");
-        }
-        const permissions = await runPdfiumScan(async () => {
-          if (signal.cancelled) return;
-          const bytes = await getDocumentBytes(file);
-          if (signal.cancelled) return;
-          const module = await getPdfiumModule();
-          if (signal.cancelled) return;
-          const docPtr = await openRawDocument(
-            bytes,
-            getPdfAccess(file)?.password,
-          );
-          try {
-            if (signal.cancelled) return;
-            // Owner access must not hide the document's stored user restrictions.
-            return module.FPDF_GetDocUserPermissions(docPtr);
-          } finally {
-            closeDocAndFreeBuffer(module, docPtr);
-          }
-        });
-        if (signal.cancelled || permissions === undefined) return;
+        const { permissions } =
+          getPdfAccess(file) ??
+          (await ensureLocalPdfAccess(file, cancellation.signal));
+        if (cancellation.signal.aborted) return;
 
         const prevented = (flag: PdfPermissionFlag) =>
           (permissions & flag) === 0;
@@ -95,7 +73,7 @@ export function usePermissionExtraction(
         initializedFile.current = file;
         setState({ file, status: "loaded" });
       } catch {
-        if (!signal.cancelled) {
+        if (!cancellation.signal.aborted) {
           initializedFile.current = file;
           setState({ file, status: "error" });
         }
@@ -105,7 +83,7 @@ export function usePermissionExtraction(
     void readPermissions();
 
     return () => {
-      signal.cancelled = true;
+      cancellation.abort();
     };
   }, [file, setParameters, enabled]);
 
