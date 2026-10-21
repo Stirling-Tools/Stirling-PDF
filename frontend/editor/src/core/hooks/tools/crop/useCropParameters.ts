@@ -6,10 +6,7 @@ import {
 import { useCallback } from "react";
 import {
   Rectangle,
-  PDFBounds,
-  constrainCropAreaToPDF,
-  createDefaultCropArea,
-  createFullPDFCropArea,
+  clampRectToBox,
   roundCropArea,
   isRectangle,
 } from "@app/utils/cropCoordinates";
@@ -29,23 +26,26 @@ export const defaultParameters: CropParameters = {
   pageNumbers: "all",
 };
 
+/** Page bounds the crop must stay inside, in page user space. */
+type PageBox = Rectangle;
+
 export type CropParametersHook = BaseParametersHook<CropParameters> & {
-  /** Set crop area with PDF bounds validation */
-  setCropArea: (cropArea: Rectangle, pdfBounds?: PDFBounds) => void;
-  /** Get current crop area as CropArea object */
+  /** Set crop area, clamped to the page bounds when they are known. */
+  setCropArea: (cropArea: Rectangle, pageBox?: PageBox) => void;
+  /** Get current crop area */
   getCropArea: () => Rectangle;
-  /** Reset to default inset crop area inside PDF bounds */
-  resetToDefaultCropArea: (pdfBounds: PDFBounds) => void;
-  /** Reset to full PDF dimensions */
-  resetToFullPDF: (pdfBounds: PDFBounds) => void;
-  /** Check if current crop area is valid for the PDF */
-  isCropAreaValid: (pdfBounds?: PDFBounds) => boolean;
-  /** Check if crop area covers the entire PDF */
-  isFullPDFCrop: (pdfBounds?: PDFBounds) => boolean;
+  /** Reset to a 10% inset inside the page */
+  resetToDefaultCropArea: (pageBox: PageBox) => void;
+  /** Reset to full page dimensions */
+  resetToFullPDF: (pageBox: PageBox) => void;
+  /** Check if current crop area is valid for the page */
+  isCropAreaValid: (pageBox?: PageBox) => boolean;
+  /** Check if crop area covers the entire page */
+  isFullPDFCrop: (pageBox?: PageBox) => boolean;
   /** Update crop area with constraints applied */
   updateCropAreaConstrained: (
     cropArea: Partial<Rectangle>,
-    pdfBounds?: PDFBounds,
+    pageBox?: PageBox,
   ) => void;
 };
 
@@ -70,101 +70,98 @@ export const useCropParameters = (): CropParametersHook => {
     validateFn: validateCropParameters,
   });
 
-  // Get current crop area as CropArea object
   const getCropArea = useCallback((): Rectangle => {
     return baseHook.parameters.cropArea;
   }, [baseHook.parameters]);
 
-  // Set crop area with optional PDF bounds validation
   const setCropArea = useCallback(
-    (cropArea: Rectangle, pdfBounds?: PDFBounds) => {
-      let finalCropArea = roundCropArea(cropArea);
-
-      // Apply PDF bounds constraints if provided
-      if (pdfBounds) {
-        finalCropArea = constrainCropAreaToPDF(finalCropArea, pdfBounds);
-      }
-      baseHook.updateParameter("cropArea", finalCropArea);
+    (cropArea: Rectangle, pageBox?: PageBox) => {
+      const rounded = roundCropArea(cropArea);
+      baseHook.updateParameter(
+        "cropArea",
+        pageBox ? clampRectToBox(rounded, pageBox) : rounded,
+      );
     },
     [baseHook],
   );
 
-  // Reset to default crop area inside PDF bounds (10% inset)
   const resetToDefaultCropArea = useCallback(
-    (pdfBounds: PDFBounds) => {
-      const defaultCropArea = createDefaultCropArea(pdfBounds);
-      setCropArea(defaultCropArea);
+    (pageBox: PageBox) => {
+      const insetX = pageBox.width * 0.1;
+      const insetY = pageBox.height * 0.1;
+      setCropArea(
+        {
+          x: pageBox.x + insetX,
+          y: pageBox.y + insetY,
+          width: pageBox.width - insetX * 2,
+          height: pageBox.height - insetY * 2,
+        },
+        pageBox,
+      );
     },
     [setCropArea],
   );
 
-  // Reset to cover entire PDF
   const resetToFullPDF = useCallback(
-    (pdfBounds: PDFBounds) => {
-      const fullCropArea = createFullPDFCropArea(pdfBounds);
-      setCropArea(fullCropArea);
+    (pageBox: PageBox) => {
+      setCropArea({ ...pageBox }, pageBox);
     },
     [setCropArea],
   );
 
-  // Check if current crop area is valid (dimensions must be non-zero; out-of-bounds coordinates clamp automatically)
   const isCropAreaValid = useCallback(
-    (_pdfBounds?: PDFBounds): boolean => {
+    (pageBox?: PageBox): boolean => {
       const cropArea = getCropArea();
-      return cropArea.width > 0 && cropArea.height > 0;
-    },
-    [getCropArea],
-  );
-
-  // Check if crop area covers the entire PDF
-  const isFullPDFCrop = useCallback(
-    (pdfBounds?: PDFBounds): boolean => {
-      if (!pdfBounds) return false;
-
-      const cropArea = getCropArea();
-      const tolerance = 0.5; // Allow 0.5 point tolerance for floating point precision
-
+      if (cropArea.width <= 0 || cropArea.height <= 0) return false;
+      if (!pageBox) return true;
       return (
-        Math.abs(cropArea.x) < tolerance &&
-        Math.abs(cropArea.y) < tolerance &&
-        Math.abs(cropArea.width - pdfBounds.actualWidth) < tolerance &&
-        Math.abs(cropArea.height - pdfBounds.actualHeight) < tolerance
+        cropArea.x >= pageBox.x - 0.5 &&
+        cropArea.y >= pageBox.y - 0.5 &&
+        cropArea.x + cropArea.width <= pageBox.x + pageBox.width + 0.5 &&
+        cropArea.y + cropArea.height <= pageBox.y + pageBox.height + 0.5
       );
     },
     [getCropArea],
   );
 
-  // Update crop area with constraints applied
+  const isFullPDFCrop = useCallback(
+    (pageBox?: PageBox): boolean => {
+      if (!pageBox) return false;
+      const cropArea = getCropArea();
+      const tolerance = 0.5;
+      return (
+        Math.abs(cropArea.x - pageBox.x) < tolerance &&
+        Math.abs(cropArea.y - pageBox.y) < tolerance &&
+        Math.abs(cropArea.width - pageBox.width) < tolerance &&
+        Math.abs(cropArea.height - pageBox.height) < tolerance
+      );
+    },
+    [getCropArea],
+  );
+
   const updateCropAreaConstrained = useCallback(
-    (partialCropArea: Partial<Rectangle>, pdfBounds?: PDFBounds) => {
-      const currentCropArea = getCropArea();
-      const newCropArea = { ...currentCropArea, ...partialCropArea };
-      setCropArea(newCropArea, pdfBounds);
+    (partial: Partial<Rectangle>, pageBox?: PageBox) => {
+      setCropArea({ ...getCropArea(), ...partial }, pageBox);
     },
     [getCropArea, setCropArea],
   );
 
-  // Enhanced validation that considers PDF bounds
-  const validateParameters = useCallback(
-    (pdfBounds?: PDFBounds): boolean => {
-      return baseHook.validateParameters() && isCropAreaValid(pdfBounds);
-    },
-    [baseHook, isCropAreaValid],
-  );
-
-  // Override updateParameter to ensure positive values
+  // Overrides the base updateParameter so a rectangle can never carry a
+  // negative size or coordinate into the request.
   const updateParameter = useCallback(
     <K extends keyof CropParameters>(
       parameter: K,
       value: CropParameters[K],
     ) => {
       if (isRectangle(value)) {
-        value.x = Math.max(0.1, value.x); // Minimum 0.1 point
-        value.x = Math.max(0.1, value.y); // Minimum 0.1 point
-        value.width = Math.max(0, value.width); // Minimum 0 point
-        value.height = Math.max(0, value.height); // Minimum 0 point
+        baseHook.updateParameter(parameter, {
+          x: Math.max(0, value.x),
+          y: Math.max(0, value.y),
+          width: Math.max(0, value.width),
+          height: Math.max(0, value.height),
+        } as CropParameters[K]);
+        return;
       }
-
       baseHook.updateParameter(parameter, value);
     },
     [baseHook],
@@ -173,7 +170,6 @@ export const useCropParameters = (): CropParametersHook => {
   return {
     ...baseHook,
     updateParameter,
-    validateParameters: () => validateParameters(),
     setCropArea,
     getCropArea,
     resetToDefaultCropArea,

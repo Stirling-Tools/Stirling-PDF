@@ -1,0 +1,117 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: clamp(0px, 3vh, 32px);
+  background: var(--c-overlay);
+  backdrop-filter: blur(2px);
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  width: min(1400px, 100%);
+  min-height: 0;
+  overflow: hidden;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-surface-raised);
+}
+
+.headerText {
+  min-width: 0;
+  flex: 1;
+}
+
+.headerAction {
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: var(--mantine-font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--c-text);
+}
+
+.subtitle {
+  margin-top: 2px;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--c-text-muted);
+}
+
+.body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+}
+
+.canvasArea {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-3);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 320px;
+  flex-shrink: 0;
+  padding: var(--space-4);
+  overflow-y: auto;
+  border-inline-start: 1px solid var(--c-border-subtle);
+  background: var(--c-surface-raised);
+}
+
+@media (max-width: 560px) {
+  .subtitle {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .backdrop {
+    padding: 0;
+  }
+
+  .editor {
+    width: 100%;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .body {
+    flex-direction: column;
+  }
+
+  .canvasArea {
+    flex: 1 1 auto;
+    min-height: 40dvh;
+    padding: var(--space-2);
+  }
+
+  .panel {
+    width: 100%;
+    max-height: 46dvh;
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--c-border-subtle);
+  }
+}

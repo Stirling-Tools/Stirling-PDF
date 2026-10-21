@@ -1,0 +1,16 @@
+.canvasFrame {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-sunken);
+  max-height: min(52vh, 460px);
+}
+
+.advanced {
+  padding-top: var(--space-1);
+}
+
+.hint {
+  margin: 0;
+}

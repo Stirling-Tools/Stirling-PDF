@@ -11,17 +11,20 @@ export function useCropTooltips() {
       {
         description: t(
           "crop.tooltip.description",
-          "Select the area to crop from your PDF by dragging and resizing the blue overlay on the thumbnail.",
+          "Drag the handles to trim the page. Zoom in, or open the full-screen editor, when you need to place an edge precisely.",
         ),
         bullets: [
-          t("crop.tooltip.drag", "Drag the overlay to move the crop area"),
+          t(
+            "crop.tooltip.drag",
+            "Drag inside the selection to move the whole area",
+          ),
           t(
             "crop.tooltip.resize",
-            "Drag the corner and edge handles to resize",
+            "Drag a corner or edge handle to resize; hold Alt while using the arrow keys to resize from the keyboard",
           ),
           t(
             "crop.tooltip.precision",
-            "Use coordinate inputs for precise positioning",
+            "Type margins in millimetres, or exact PDF points, for repeatable crops",
           ),
         ],
       },

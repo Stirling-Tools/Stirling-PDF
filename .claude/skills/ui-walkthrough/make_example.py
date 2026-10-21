@@ -6,7 +6,12 @@ import json
 import pathlib
 import re
 
+import sys
+
 HERE = pathlib.Path(__file__).parent
+sys.path.insert(0, str(HERE / "scripts"))
+
+import report  # noqa: E402
 
 
 def svg(bg, fg, panel, accent, muted, label, kind):
@@ -40,7 +45,9 @@ def svg(bg, fg, panel, accent, muted, label, kind):
         parts.append(f'<text x="800" y="850" fill="{muted}" font-family="sans-serif" font-size="24" text-anchor="middle">{label}</text>')
     else:  # dialog
         parts += [
-            f'<rect width="1600" height="900" fill="{fg}" opacity="0.45"/>',
+            # The scrim stays dark in both themes, so it cannot ride on `fg`,
+            # which flips to light ink in dark mode.
+            f'<rect width="1600" height="900" fill="#0a0b0d" opacity="0.45"/>',
             f'<rect x="520" y="280" width="560" height="360" rx="18" fill="{panel}"/>',
             f'<rect x="556" y="320" width="280" height="22" rx="8" fill="{fg}"/>',
             f'<rect x="556" y="372" width="488" height="14" rx="6" fill="{muted}"/>',
@@ -58,7 +65,7 @@ def data_uri(s):
 
 
 LIGHT = dict(bg="#ffffff", fg="#111418", panel="#f1f3f6", accent="#2f6fed", muted="#c2c8d0")
-DARK = dict(bg="#16181c", fg="#000000", panel="#1f232a", accent="#5b8cff", muted="#3a414b")
+DARK = dict(bg="#16181c", fg="#e7eaef", panel="#1f232a", accent="#5b8cff", muted="#3a414b")
 
 
 def pair(kind, label):
@@ -106,11 +113,9 @@ data = {
     },
 }
 
-tpl = (HERE / "report-template.html").read_text(encoding="utf-8")
-out = re.sub(
-    r"/\*__DATA__\*/.*?/\*__END__\*/",
-    lambda _m: "/*__DATA__*/" + json.dumps(data) + "/*__END__*/",
-    tpl, count=1, flags=re.S,
+_validation, issues = report.build(
+    HERE / "report-template.html", data, HERE / "EXAMPLE.html", base=HERE,
 )
-(HERE / "EXAMPLE.html").write_text(out, encoding="utf-8")
+for issue in issues:
+    print(issue)
 print("wrote", (HERE / "EXAMPLE.html"))

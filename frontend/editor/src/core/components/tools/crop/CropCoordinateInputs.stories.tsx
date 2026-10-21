@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
-import { Rectangle, PDFBounds } from "@app/utils/cropCoordinates";
+import { Rectangle } from "@app/utils/cropCoordinates";
 
 const meta = {
   title: "Tools/Crop/CropCoordinateInputs",
@@ -15,15 +15,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const pdfBounds: PDFBounds = {
-  actualWidth: 595.28,
-  actualHeight: 841.89,
-  thumbnailWidth: 300,
-  thumbnailHeight: 424,
-  offsetX: 0,
-  offsetY: 0,
-  scale: 300 / 595.28,
-};
+const pageBox = { x: 0, y: 0, width: 595.28, height: 841.89 };
 
 function Demo({
   initialCropArea = { x: 50, y: 50, width: 300, height: 400 },
@@ -48,7 +40,7 @@ function Demo({
         }))
       }
       disabled={disabled}
-      pdfBounds={withBounds ? pdfBounds : undefined}
+      pageBox={withBounds ? pageBox : undefined}
       showAutomationInfo={showAutomationInfo}
     />
   );

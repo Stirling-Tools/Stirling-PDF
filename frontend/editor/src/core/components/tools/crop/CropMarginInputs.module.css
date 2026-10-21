@@ -1,0 +1,16 @@
+/* Margins are physical edges of the page, which is never mirrored with the UI. */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  direction: ltr;
+}
+
+.summary {
+  font-variant-numeric: tabular-nums;
+}
+
+.summary strong {
+  color: var(--c-text);
+  font-weight: var(--font-weight-semibold);
+}

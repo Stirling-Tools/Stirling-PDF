@@ -324,3 +324,6 @@ docs/type3/signatures/
 # Local screenshot artifacts from *-screenshots.spec.ts
 frontend/editor/screenshots/
 frontend/editor/src-tauri/libs/.variant
+
+# Walkthrough performance captures (perf harness output)
+frontend/editor/captures/

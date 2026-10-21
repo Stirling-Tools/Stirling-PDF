@@ -103,6 +103,14 @@
   .sev.high { background: var(--hi); } .sev.med { background: var(--med); } .sev.low { background: var(--low); }
   .finding .fix { color: var(--muted); font-size: 12.5px; }
   .finding .fix b { color: var(--text); font-weight: 600; }
+  .card .kind { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted);
+                border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; flex: none; }
+  .card .evidence { color: var(--muted); font-size: 12px; margin-top: 6px; overflow-wrap: anywhere; }
+  .card .evidence b { color: var(--text); font-weight: 600; }
+  .rollup { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; color: var(--muted);
+            font-size: 12.5px; margin-bottom: 12px; }
+  .rollup button { font: inherit; color: var(--accent); background: none; border: 0; padding: 0;
+                   cursor: pointer; text-decoration: underline; }
 
   /* Summary tab */
   .summary { padding: 20px 28px; overflow-y: auto; }
@@ -113,6 +121,33 @@
   .card .head { display: flex; gap: 8px; align-items: center; }
   .card a { color: var(--accent); text-decoration: none; cursor: pointer; }
   .hide { display: none !important; }
+  .banner { padding: 8px 28px; font-size: 13px; }
+  .banner.ok { background: #e6f4ea; color: #137333; }
+  .banner.warn { background: #fef7e0; color: #7a4a00; }
+  html[data-theme="dark"] .banner.ok { background: #0f2e1d; color: #7fd79a; }
+  html[data-theme="dark"] .banner.warn { background: #3a2c00; color: #f2c14e; }
+  .banner.bad { background: #fce8e6; color: #a50e0e; }
+  html[data-theme="dark"] .banner.bad { background: #3a1414; color: #f28b82; }
+  .banner .statusline { display: flex; gap: 8px; align-items: baseline; }
+  .banner .statusline + .statusline { margin-top: 3px; }
+  .banner .axis { flex: none; width: 72px; font-weight: 600; text-transform: uppercase;
+                  font-size: 10.5px; letter-spacing: .04em; opacity: .8; }
+  .banner .statusline.bad .detail { font-weight: 600; }
+  .chip { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; border-radius: 999px;
+          padding: 1px 7px; border: 1px solid var(--border); color: var(--muted); flex: none; }
+  .chip.ok { color: #137333; border-color: #137333; }
+  .chip.warn { color: #7a4a00; border-color: #7a4a00; }
+  .chip.bad { color: #a50e0e; border-color: #a50e0e; }
+  html[data-theme="dark"] .chip.ok { color: #7fd79a; border-color: #7fd79a; }
+  html[data-theme="dark"] .chip.warn { color: #f2c14e; border-color: #f2c14e; }
+  html[data-theme="dark"] .chip.bad { color: #f28b82; border-color: #f28b82; }
+  .matrix, .claims { display: grid; gap: 6px; }
+  .matrix .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12.5px; }
+  .matrix .row .name { font-weight: 600; min-width: 110px; }
+  .matrix .req, .claims .why { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  .claims .claim { font-size: 12.5px; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 12.5px; }
+  .kv dt { color: var(--muted); } .kv dd { margin: 0; overflow-wrap: anywhere; }
   kbd { font: 11px ui-monospace, monospace; background: var(--panel-2); border: 1px solid var(--border);
         border-radius: 4px; padding: 1px 5px; }
 </style>
@@ -126,6 +161,8 @@
   <div class="spacer"></div>
   <div class="tabs">
     <button class="tab active" data-tab="viewer">Walkthrough</button>
+    <button class="tab" data-tab="perf">Performance</button>
+    <button class="tab" data-tab="lighthouse">Lighthouse</button>
     <button class="tab" data-tab="summary">Findings</button>
   </div>
   <div class="counter" id="counter"></div>
@@ -135,6 +172,7 @@
     <span class="lbl" id="lbl-dark">Dark</span>
   </label>
 </header>
+<div class="banner warn" id="coverage-banner"></div>
 
 <main id="viewer-pane">
   <aside class="rail" id="rail"></aside>
@@ -153,6 +191,10 @@
   </section>
 </main>
 
+<section class="summary hide" id="perf-pane"></section>
+
+<section class="summary hide" id="lighthouse-pane"></section>
+
 <section class="summary hide" id="summary-pane"></section>
 
 <script id="data">
@@ -160,12 +202,17 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
 </script>
 <script>
 (function () {
-  var D = window.__WALKTHROUGH__ || { views: [], findings: { visual: [], ux: [] } };
+  var D = window.__WALKTHROUGH__ || { views: [], findings: {} };
   var views = D.views || [];
   var state = { i: 0, theme: localStorage.getItem("ui-wt-theme") || "light", tab: "viewer" };
 
   var $ = function (id) { return document.getElementById(id); };
+  function text(v) { return (v === null || v === undefined) ? "" : String(v); }
   function sevClass(s) { return s === "high" ? "high" : s === "med" || s === "medium" ? "med" : "low"; }
+  function imageSource(value) {
+    return (typeof value === "string" &&
+      /^data:image\/(png|jpeg|jpg|gif|webp);base64,/.test(value)) ? value : null;
+  }
 
   function applyChrome() {
     document.documentElement.setAttribute("data-theme", state.theme);
@@ -174,30 +221,189 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     $("lbl-dark").classList.toggle("on", state.theme === "dark");
   }
 
-  function srcFor(v) { return state.theme === "dark" ? (v.dark || v.light) : (v.light || v.dark); }
+  function srcFor(v) { return imageSource(v[state.theme]); }
+  function thumbFor(v) { return imageSource(v["thumb_" + state.theme]) || srcFor(v); }
 
-  function findingsForView(id) {
-    var all = (D.findings && D.findings.visual || []).concat(D.findings && D.findings.ux || []);
-    return all.filter(function (f) { return f.view === id; });
+  var GROUPS = [["visual", "Visual & consistency"], ["ux", "UX & ease of use"],
+    ["behavior", "Behaviour"], ["a11y", "Accessibility"], ["perf", "Performance"],
+    ["native", "Native / Tauri"]];
+
+  // Findings are indexed by view once; the rail and the summary share the index.
+  var findingsByView = {};
+  GROUPS.forEach(function (g) {
+    ((D.findings && D.findings[g[0]]) || []).forEach(function (f) {
+      if (f && f.view) { (findingsByView[f.view] = findingsByView[f.view] || []).push(f); }
+    });
+  });
+
+  function findingsForView(id) { return findingsByView[id] || []; }
+
+  // Platforms the change does not touch are named once rather than counted as
+  // gaps, so a change that only affects the web build is not nagged for shells
+  // it cannot run — and still says which surfaces it left unchecked.
+  function outOfScope(s) {
+    var rest = s.notInScope || [];
+    return rest.length ? " Not in scope for this change: " + rest.join(", ") + "." : "";
   }
 
-  function renderRail() {
+  // The completion status is always visible, so a partial report can never
+  // present itself as full coverage on initial load. Validity, evidence
+  // completeness and what the evidence showed are separate questions, so each
+  // gets its own line: one verdict would read as "the feature passed".
+  function statusLines() {
+    var e = D.evaluation || null;
+    if (!e) {
+      return [{ axis: "Status", level: "warn",
+        text: "This report carries no derived verdict; rebuild it so validity, coverage and findings are computed together." }];
+    }
+    var out = [];
+    var artifact = e.artifact || {};
+    var warnings = artifact.warnings || [];
+    out.push({
+      axis: "Artifact",
+      level: artifact.valid ? "ok" : "bad",
+      text: artifact.valid
+        ? "valid" + (warnings.length ? " (" + warnings.length + " warning(s))" : "")
+        : "invalid — " + (artifact.errors || []).length + " error(s): " + text((artifact.errors || [])[0])
+    });
+    var ev = e.evidence || {};
+    var short = [];
+    (ev.gaps || []).forEach(function (g) { short.push("no capture for " + g); });
+    (ev.missingPerformance || []).forEach(function (g) { short.push("no performance evidence for " + g); });
+    (ev.missingLighthouse || []).forEach(function (g) { short.push("no Lighthouse run for " + g); });
+    (ev.themeGaps || []).forEach(function (g) { short.push("missing theme capture " + g); });
+    (ev.unsatisfied || []).forEach(function (r) { short.push("requirement not satisfied: " + r); });
+    (ev.missingRequirements || []).forEach(function (p) { short.push("no requirement declared for " + p); });
+    (ev.undecided || []).forEach(function (p) { short.push("no reason recorded for " + p); });
+    out.push({
+      axis: "Evidence",
+      level: ev.complete ? "ok" : "warn",
+      text: ev.complete ? "complete"
+        : "incomplete — " + (short.length ? short.join("; ") : "see Findings for details")
+    });
+    var states = [];
+    if ((ev.failed || []).length) states.push("failed: " + ev.failed.join(", "));
+    if ((ev.blocked || []).length) states.push("blocked: " + ev.blocked.join(", "));
+    if ((ev.waived || []).length) states.push("waived: " + ev.waived.join(", "));
+    if ((ev.notApplicable || []).length) states.push("not applicable: " + ev.notApplicable.join(", "));
+    if (states.length) out.push({ axis: "Requirements", level: "warn", text: states.join("; ") });
+    var inters = (D.performance && D.performance.interactions) || [];
+    var runs = (D.lighthouse && D.lighthouse.runs) || [];
+    out.push({
+      axis: "Capture",
+      level: ev.complete ? "ok" : "warn",
+      text: (ev.mode ? text(ev.mode) : "unrecorded") + " mode: " + inters.length
+        + " interaction(s) and " + runs.length + " Lighthouse run(s) recorded"
+    });
+    var f = e.findings || {};
+    out.push({
+      axis: "Findings",
+      level: f.high ? "bad" : (f.med ? "warn" : "ok"),
+      text: f.total
+        ? f.total + " recorded (" + f.high + " high · " + f.med + " med · " + f.low + " low)"
+        : "No findings recorded" + (f.recorded ? "." : " — no review pass was performed, so their absence proves nothing.")
+    });
+    var scope = e.scope || {};
+    var excluded = (scope.decisions || []).map(function (d) { return d.platform + " (" + d.status + ")"; });
+    (scope.undecided || []).forEach(function (p) { excluded.push(p + " (no reason recorded)"); });
+    out.push({
+      axis: "Scope",
+      level: (scope.undecided || []).length ? "warn" : "ok",
+      text: (scope.expected || []).join(", ") + outOfScope(scope)
+        + (excluded.length ? " Excluded: " + excluded.join(", ") + "." : "")
+    });
+    return out;
+  }
+
+  // The Findings tab repeats the status in one sentence, where the banner's
+  // line-per-axis layout has no room.
+  function statusSentence() {
+    return statusLines().map(function (l) { return l.axis + ": " + l.text; }).join(" ");
+  }
+
+  function renderBanner() {
+    var el = $("coverage-banner");
+    while (el.firstChild) el.removeChild(el.firstChild);
+    statusLines().forEach(function (line) {
+      var row = document.createElement("div");
+      row.className = "statusline " + line.level;
+      var axis = document.createElement("span");
+      axis.className = "axis";
+      axis.textContent = line.axis;
+      var detail = document.createElement("span");
+      detail.className = "detail";
+      detail.textContent = line.text;
+      row.appendChild(axis);
+      row.appendChild(detail);
+      el.appendChild(row);
+    });
+    var e = D.evaluation || {};
+    var valid = (e.artifact || {}).valid;
+    var complete = (e.evidence || {}).complete;
+    el.className = "banner " + (valid === false ? "bad" : (complete ? "ok" : "warn"));
+  }
+
+  // The rail is built once; later renders only retarget images (on a theme
+  // change) and flip the active class. Findings per view come from the index.
+  var railItems = [];
+  function worstColor(fs) {
+    if (fs.some(function (f) { return sevClass(f.severity) === "high"; })) return "var(--hi)";
+    if (fs.some(function (f) { return sevClass(f.severity) === "med"; })) return "var(--med)";
+    return fs.length ? "var(--low)" : "transparent";
+  }
+  function buildRail() {
     var rail = $("rail");
-    rail.innerHTML = "";
-    if (!views.length) { rail.innerHTML = '<div class="group-label">No views captured</div>'; return; }
+    while (rail.firstChild) rail.removeChild(rail.firstChild);
+    railItems = [];
+    if (!views.length) {
+      var label = document.createElement("div");
+      label.className = "group-label";
+      label.textContent = "No views captured";
+      rail.appendChild(label);
+      return;
+    }
     views.forEach(function (v, idx) {
-      var fs = findingsForView(v.id);
-      var worst = fs.some(function (f){return sevClass(f.severity)==="high";}) ? "var(--hi)"
-                : fs.some(function (f){return sevClass(f.severity)==="med";}) ? "var(--med)"
-                : fs.length ? "var(--low)" : "transparent";
       var el = document.createElement("div");
-      el.className = "thumb" + (idx === state.i ? " active" : "");
-      el.innerHTML = '<img src="' + srcFor(v) + '" alt="" />' +
-        '<div><div class="t">' + (v.title || v.id) + '</div>' +
-        '<div class="badge">' + (v.viewport || "") + '</div></div>' +
-        '<span class="dot" style="background:' + worst + '"></span>';
+      el.className = "thumb";
+      var img = document.createElement("img");
+      img.alt = "";
+      var gap = document.createElement("span");
+      gap.className = "badge";
+      var wrap = document.createElement("div");
+      var t = document.createElement("div");
+      t.className = "t";
+      var badge = document.createElement("div");
+      badge.className = "badge";
+      wrap.appendChild(t); wrap.appendChild(badge);
+      var dot = document.createElement("span");
+      dot.className = "dot";
+      el.appendChild(img); el.appendChild(gap); el.appendChild(wrap); el.appendChild(dot);
       el.onclick = function () { state.i = idx; render(); };
       rail.appendChild(el);
+      railItems.push({ root: el, img: img, gap: gap, title: t, badge: badge, dot: dot });
+    });
+    refreshRail(true);
+  }
+  function refreshRail(withImages) {
+    views.forEach(function (v, idx) {
+      var r = railItems[idx];
+      if (!r) return;
+      r.root.classList.toggle("active", idx === state.i);
+      if (withImages) {
+        var src = thumbFor(v);
+        if (src) {
+          r.img.style.display = "";
+          r.img.src = src;
+          r.gap.style.display = "none";
+        } else {
+          r.img.style.display = "none";
+          r.gap.style.display = "";
+          r.gap.textContent = "no " + state.theme;
+        }
+        r.title.textContent = v.title || v.id;
+        r.badge.textContent = [v.viewport, v.platform].filter(Boolean).join("  ·  ");
+        r.dot.style.background = worstColor(findingsForView(v.id));
+      }
     });
   }
 
@@ -216,51 +422,442 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
       img.src = src; img.alt = v.title || v.id;
     } else {
       img.classList.add("hide"); $("missing").classList.remove("hide");
-      $("missing").textContent = "No " + state.theme + " screenshot for this view.";
+      $("missing").textContent = "No " + state.theme + " capture for this view — coverage gap, not a rendering error.";
     }
     $("counter").textContent = (state.i + 1) + " / " + views.length;
     $("view-title").textContent = v.title || v.id;
-    $("view-meta").textContent = [v.viewport, state.theme + " mode"].filter(Boolean).join("  ·  ");
-    var notes = $("view-notes"); notes.innerHTML = "";
+    $("view-meta").textContent = [v.viewport, state.theme + " mode", v.platform, v.runner]
+      .filter(Boolean).join("  ·  ");
+    var notes = $("view-notes");
+    while (notes.firstChild) notes.removeChild(notes.firstChild);
     var fs = findingsForView(v.id);
     (v.notes || []).forEach(function (n) {
-      var li = document.createElement("li"); li.textContent = "· " + n; notes.appendChild(li);
+      var li = document.createElement("li"); li.textContent = "· " + text(n); notes.appendChild(li);
     });
     fs.forEach(function (f) {
       var li = document.createElement("li"); li.className = "finding";
-      li.innerHTML = '<span class="sev ' + sevClass(f.severity) + '">' + (f.severity || "note") + '</span>' +
-        '<span><b>' + (f.title || "") + '</b> — ' + (f.detail || "") +
-        (f.fix ? ' <span class="fix"><b>Fix:</b> ' + f.fix + '</span>' : '') + '</span>';
+      var sev = document.createElement("span");
+      sev.className = "sev " + sevClass(f.severity);
+      sev.textContent = f.severity || "note";
+      var body = document.createElement("span");
+      var title = document.createElement("b");
+      title.textContent = f.title || "";
+      body.appendChild(title);
+      body.appendChild(document.createTextNode(" — " + text(f.detail)));
+      if (f.fix) {
+        var fix = document.createElement("span");
+        fix.className = "fix";
+        var fixLabel = document.createElement("b");
+        fixLabel.textContent = "Fix: ";
+        fix.appendChild(fixLabel);
+        fix.appendChild(document.createTextNode(text(f.fix)));
+        body.appendChild(document.createTextNode(" "));
+        body.appendChild(fix);
+      }
+      li.appendChild(sev); li.appendChild(body);
       notes.appendChild(li);
     });
     $("prev").disabled = state.i === 0;
     $("next").disabled = state.i === views.length - 1;
-    renderRail();
+    refreshRail(false);
+  }
+
+  function jumpButton(viewId) {
+    var b = document.createElement("button");
+    b.className = "tab";
+    b.textContent = viewId;
+    b.onclick = function () {
+      var idx = views.findIndex(function (v) { return v.id === viewId; });
+      if (idx >= 0) { state.i = idx; setTab("viewer"); }
+    };
+    return b;
+  }
+
+  function findingCard(f) {
+    var card = document.createElement("div");
+    card.className = "card";
+    var head = document.createElement("div");
+    head.className = "head";
+    var sev = document.createElement("span");
+    sev.className = "sev " + sevClass(f.severity);
+    sev.textContent = f.severity || "note";
+    var title = document.createElement("b");
+    title.textContent = f.title || "";
+    head.appendChild(sev); head.appendChild(title);
+    if (f.kind) {
+      var kind = document.createElement("span");
+      kind.className = "kind";
+      kind.textContent = f.kind;
+      head.appendChild(kind);
+    }
+    if (f.view) { head.appendChild(document.createTextNode(" ")); head.appendChild(jumpButton(f.view)); }
+    card.appendChild(head);
+    var detail = document.createElement("div");
+    detail.style.marginTop = "6px";
+    detail.textContent = text(f.detail);
+    card.appendChild(detail);
+    if (f.fix) {
+      var fixWrap = document.createElement("div");
+      fixWrap.className = "finding";
+      fixWrap.style.marginTop = "6px";
+      var fix = document.createElement("span");
+      fix.className = "fix";
+      var fixLabel = document.createElement("b");
+      fixLabel.textContent = "Fix: ";
+      fix.appendChild(fixLabel);
+      fix.appendChild(document.createTextNode(text(f.fix)));
+      fixWrap.appendChild(fix);
+      card.appendChild(fixWrap);
+    }
+    // The measurement and its limits travel with the verdict: a finding whose
+    // evidence cannot be seen is an opinion.
+    if (f.evidence || f.source || f.confidence) {
+      var evidence = document.createElement("div");
+      evidence.className = "evidence";
+      if (f.evidence) {
+        var evLabel = document.createElement("b");
+        evLabel.textContent = "Evidence: ";
+        evidence.appendChild(evLabel);
+        evidence.appendChild(document.createTextNode(text(f.evidence)));
+      }
+      if (f.source) evidence.appendChild(document.createTextNode(
+        (f.evidence ? " · " : "") + text(f.source)));
+      if (f.confidence) evidence.appendChild(document.createTextNode(
+        " · " + text(f.confidence)));
+      card.appendChild(evidence);
+    }
+    return card;
+  }
+
+  /** A button that switches tab, so a roll-up line can point at the numbers. */
+  function tabLink(label, tab) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.onclick = function () { setTab(tab); };
+    return b;
+  }
+
+  function renderRollUp(pane) {
+    var findings = D.findings || {};
+    var all = [];
+    GROUPS.forEach(function (g) { all = all.concat(findings[g[0]] || []); });
+    var counts = {};
+    var untyped = 0;
+    all.forEach(function (f) {
+      if (f.kind) { counts[f.kind] = (counts[f.kind] || 0) + 1; } else { untyped += 1; }
+    });
+    var interactions = (D.performance && D.performance.interactions) || [];
+    var runs = (D.lighthouse && D.lighthouse.runs) || [];
+    var kinds = Object.keys(counts).sort().map(function (k) {
+      return counts[k] + " " + k;
+    }).join(", ");
+    if (untyped) kinds += (kinds ? "; " : "") + untyped + " without a kind";
+    var strip = document.createElement("div");
+    strip.className = "rollup";
+    var line = document.createElement("span");
+    line.textContent = all.length + " finding(s) from " + interactions.length +
+      " measured interaction(s) and " + runs.length + " Lighthouse run(s)" +
+      (kinds ? ": " + kinds : "");
+    strip.appendChild(line);
+    if (interactions.length) strip.appendChild(tabLink("performance measurements", "perf"));
+    if (runs.length) strip.appendChild(tabLink("Lighthouse runs", "lighthouse"));
+    pane.appendChild(strip);
+  }
+
+  function chip(label, level) {
+    var c = document.createElement("span");
+    c.className = "chip" + (level ? " " + level : "");
+    c.textContent = label;
+    return c;
+  }
+
+  function decisionFor(platform) {
+    var decisions = (D.coverageSummary && D.coverageSummary.decisions) || [];
+    for (var i = 0; i < decisions.length; i += 1) {
+      if (decisions[i].platform === platform) return decisions[i];
+    }
+    return null;
+  }
+
+  // Coverage is judged per named requirement rather than per platform label: a
+  // screenshot or an interaction satisfies a requirement, and a platform row
+  // that was asked to prove something it never exercised stays visible as
+  // unsatisfied instead of reading as "covered".
+  function renderCoverage(pane) {
+    var s = D.coverageSummary || null;
+    if (!s || !s.platforms || !s.platforms.length) return;
+    var h = document.createElement("h2");
+    h.textContent = "Coverage";
+    pane.appendChild(h);
+    var wrap = document.createElement("div");
+    wrap.className = "matrix";
+    s.platforms.forEach(function (row) {
+      var line = document.createElement("div");
+      line.className = "row";
+      var name = document.createElement("span");
+      name.className = "name";
+      name.textContent = row.platform;
+      line.appendChild(name);
+      line.appendChild(chip(row.required ? "required" : "excluded", row.required ? "ok" : ""));
+      if (row.required) {
+        line.appendChild(chip(row.captured ? "captured" : "no capture", row.captured ? "ok" : "warn"));
+        line.appendChild(chip(row.performance ? "performance" : "no performance evidence", row.performance ? "ok" : "warn"));
+        line.appendChild(chip(row.lighthouse ? "Lighthouse" : "no Lighthouse run", row.lighthouse ? "ok" : "warn"));
+      } else {
+        var decision = decisionFor(row.platform);
+        line.appendChild(chip(decision ? decision.status : "no reason recorded", decision ? "warn" : "bad"));
+      }
+      var detail = document.createElement("span");
+      detail.className = "req";
+      var requirements = row.requirements || [];
+      if (requirements.length) {
+        detail.textContent = requirements.map(function (r) {
+          return r.id + " · " + r.status + (r.satisfied ? "" : " (unsatisfied)");
+        }).join("; ");
+      } else if (!row.required) {
+        var recorded = decisionFor(row.platform);
+        detail.textContent = recorded ? recorded.reason : "";
+      } else {
+        detail.textContent = "no requirement declared";
+      }
+      line.appendChild(detail);
+      wrap.appendChild(line);
+    });
+    // An exclusion is only reviewable if its reason travels with the report, so
+    // a platform that was left out is listed here with the decision recorded
+    // for it instead of being visible only in the manifest.
+    var listed = s.platforms.map(function (row) { return row.platform; });
+    (s.decisions || []).forEach(function (decision) {
+      if (listed.indexOf(decision.platform) >= 0) return;
+      var line = document.createElement("div");
+      line.className = "row";
+      var name = document.createElement("span");
+      name.className = "name";
+      name.textContent = decision.platform;
+      line.appendChild(name);
+      line.appendChild(chip("excluded", ""));
+      line.appendChild(chip(text(decision.status), decision.status === "required" ? "ok" : "warn"));
+      var detail = document.createElement("span");
+      detail.className = "req";
+      var basis = decision.basis && decision.basis.length
+        ? " (" + decision.basis.map(text).join(", ") + ")" : "";
+      detail.textContent = text(decision.reason) + basis;
+      line.appendChild(detail);
+      wrap.appendChild(line);
+    });
+    pane.appendChild(wrap);
+  }
+
+  // A claim is only worth reading next to the evidence that is supposed to
+  // support it, so an unproven claim shows what it rested on.
+  function renderClaims(pane) {
+    var claims = D.claims || [];
+    if (!claims.length) return;
+    var h = document.createElement("h2");
+    h.textContent = "Claims (" + claims.length + ")";
+    pane.appendChild(h);
+    var wrap = document.createElement("div");
+    wrap.className = "claims";
+    claims.forEach(function (claim) {
+      var row = document.createElement("div");
+      row.className = "claim";
+      row.appendChild(chip(text(claim.status), claim.status === "supported" ? "ok" : "warn"));
+      var label = document.createElement("span");
+      label.textContent = " " + text(claim.claim);
+      row.appendChild(label);
+      var why = document.createElement("div");
+      why.className = "why";
+      var refs = claim.evidence;
+      why.textContent = "Evidence: " + (refs && refs.length ? refs.join(" · ") : "none recorded")
+        + (claim.note ? " — " + text(claim.note) : "");
+      row.appendChild(why);
+      wrap.appendChild(row);
+    });
+    pane.appendChild(wrap);
   }
 
   function renderSummary() {
     var pane = $("summary-pane");
+    while (pane.firstChild) pane.removeChild(pane.firstChild);
     function block(title, arr) {
-      var h = '<h2>' + title + ' (' + arr.length + ')</h2>';
-      if (!arr.length) return h + '<div class="empty">None found.</div>';
-      return h + arr.map(function (f) {
-        return '<div class="card"><div class="head">' +
-          '<span class="sev ' + sevClass(f.severity) + '">' + (f.severity || "note") + '</span>' +
-          '<b>' + (f.title || "") + '</b>' +
-          (f.view ? ' <a data-jump="' + f.view + '">' + f.view + '</a>' : '') + '</div>' +
-          '<div style="margin-top:6px">' + (f.detail || "") + '</div>' +
-          (f.fix ? '<div class="finding" style="margin-top:6px"><span class="fix"><b>Fix:</b> ' + f.fix + '</span></div>' : '') +
-          '</div>';
-      }).join("");
+      var h = document.createElement("h2");
+      h.textContent = title + " (" + arr.length + ")";
+      pane.appendChild(h);
+      if (!arr.length) {
+        var empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "None found.";
+        pane.appendChild(empty);
+        return;
+      }
+      arr.forEach(function (f) { pane.appendChild(findingCard(f)); });
     }
-    pane.innerHTML = block("Visual & consistency", (D.findings && D.findings.visual) || []) +
-                     block("UX & ease of use", (D.findings && D.findings.ux) || []);
-    pane.querySelectorAll("[data-jump]").forEach(function (a) {
-      a.onclick = function () {
-        var id = a.getAttribute("data-jump");
-        var idx = views.findIndex(function (v) { return v.id === id; });
-        if (idx >= 0) { state.i = idx; setTab("viewer"); }
-      };
+    var e = D.evaluation || {};
+    var ev = e.evidence || {};
+    var scope = e.scope || {};
+    renderRollUp(pane);
+    if (!ev.complete || (scope.notInScope || []).length || (scope.undecided || []).length) {
+      var note = document.createElement("div");
+      note.className = "empty";
+      note.textContent = statusSentence();
+      pane.appendChild(note);
+    }
+    renderCoverage(pane);
+    renderClaims(pane);
+    GROUPS.map(function (g) {
+      block(g[1], (D.findings && D.findings[g[0]]) || []);
+    });
+  }
+
+  function metricList(parent, metrics) {
+    var dl = document.createElement("dl");
+    dl.className = "kv";
+    Object.keys(metrics || {}).sort().forEach(function (k) {
+      var v = metrics[k];
+      var dt = document.createElement("dt");
+      dt.textContent = k;
+      var dd = document.createElement("dd");
+      if (v !== null && typeof v === "object") {
+        dd.textContent = JSON.stringify(v);
+      } else {
+        dd.textContent = text(v);
+      }
+      dl.appendChild(dt); dl.appendChild(dd);
+    });
+    parent.appendChild(dl);
+  }
+
+  function evidenceImage(parent, label, ref) {
+    var src = imageSource(ref);
+    if (label) {
+      var cap = document.createElement("div");
+      cap.className = "empty";
+      cap.textContent = label;
+      parent.appendChild(cap);
+    }
+    if (src) {
+      var img = document.createElement("img");
+      img.src = src;
+      img.alt = label || "evidence";
+      img.style.maxWidth = "100%";
+      parent.appendChild(img);
+    } else if (ref) {
+      var gap = document.createElement("div");
+      gap.className = "empty";
+      gap.textContent = "Picture referenced but not embedded: " + text(ref);
+      parent.appendChild(gap);
+    }
+  }
+
+  function renderPerf() {
+    var pane = $("perf-pane");
+    while (pane.firstChild) pane.removeChild(pane.firstChild);
+    var runs = ((D.performance && D.performance.interactions) || []);
+    var h = document.createElement("h2");
+    h.textContent = "Performance (" + runs.length + ")";
+    pane.appendChild(h);
+    if (!runs.length) {
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No performance interactions recorded.";
+      pane.appendChild(empty);
+      return;
+    }
+    runs.forEach(function (run) {
+      var card = document.createElement("div");
+      card.className = "card";
+      var head = document.createElement("div");
+      head.className = "head";
+      var title = document.createElement("b");
+      title.textContent = text(run.name || run.id);
+      head.appendChild(title);
+      card.appendChild(head);
+      var meta = document.createElement("div");
+      meta.className = "empty";
+      meta.textContent = [run.platform, run.window].filter(Boolean).join("  ·  ");
+      card.appendChild(meta);
+      var prov = run.provenance || {};
+      var keys = ["instrumentation", "build", "fixture", "input", "gesture", "profile"];
+      var shown = {};
+      keys.forEach(function (k) { if (prov[k] !== undefined) shown[k] = prov[k]; });
+      if (Object.keys(shown).length) metricList(card, shown);
+      var metrics = run.metrics || {};
+      var rest = {};
+      Object.keys(metrics).forEach(function (k) { if (k !== "unavailable") rest[k] = metrics[k]; });
+      if (Object.keys(rest).length) metricList(card, rest);
+      (metrics.unavailable || []).forEach(function (name) {
+        var u = document.createElement("div");
+        u.className = "empty";
+        u.textContent = "Unavailable: " + text(name);
+        card.appendChild(u);
+      });
+      var pictures = run.pictures || {};
+      ["timeline", "breakdown", "rendering", "recovery"].forEach(function (key) {
+        if (pictures[key] !== undefined) evidenceImage(card, key, pictures[key]);
+      });
+      if (run.artifacts !== undefined) {
+        var art = document.createElement("div");
+        art.className = "empty";
+        art.textContent = "Raw artifacts: " + text(
+          Array.isArray(run.artifacts) ? run.artifacts.join(", ") : run.artifacts);
+        card.appendChild(art);
+      }
+      pane.appendChild(card);
+    });
+  }
+
+  function renderLighthouse() {
+    var pane = $("lighthouse-pane");
+    while (pane.firstChild) pane.removeChild(pane.firstChild);
+    var runs = ((D.lighthouse && D.lighthouse.runs) || []);
+    var h = document.createElement("h2");
+    h.textContent = "Lighthouse (" + runs.length + ")";
+    pane.appendChild(h);
+    if (!runs.length) {
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No Lighthouse runs recorded.";
+      pane.appendChild(empty);
+      return;
+    }
+    runs.forEach(function (run) {
+      var card = document.createElement("div");
+      card.className = "card";
+      var head = document.createElement("div");
+      head.className = "head";
+      var title = document.createElement("b");
+      title.textContent = [run.route, run.formFactor, run.mode].filter(Boolean).join(" · ");
+      head.appendChild(title);
+      card.appendChild(head);
+      var env = document.createElement("div");
+      env.className = "empty";
+      var e = run.environment || {};
+      env.textContent = [run.platform, e.lighthouse, e.chrome, e.throttling, e.network]
+        .filter(Boolean).join("  ·  ");
+      card.appendChild(env);
+      if (e.limitations) {
+        var limits = document.createElement("div");
+        limits.className = "empty";
+        limits.textContent = "Limitations: " + text(e.limitations);
+        card.appendChild(limits);
+      }
+      if (run.scores && typeof run.scores === "object") metricList(card, run.scores);
+      (run.diagnostics || []).forEach(function (d) {
+        var line = document.createElement("div");
+        line.className = "empty";
+        line.textContent = typeof d === "object" ? JSON.stringify(d) : text(d);
+        card.appendChild(line);
+      });
+      if (run.preview !== undefined) evidenceImage(card, "preview", run.preview);
+      if (run.artifacts !== undefined) {
+        var art = document.createElement("div");
+        art.className = "empty";
+        art.textContent = "Raw artifacts: " + text(
+          Array.isArray(run.artifacts) ? run.artifacts.join(", ") : run.artifacts);
+        card.appendChild(art);
+      }
+      pane.appendChild(card);
     });
   }
 
@@ -268,17 +865,24 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     state.tab = t;
     document.querySelectorAll(".tab").forEach(function (b) { b.classList.toggle("active", b.dataset.tab === t); });
     $("viewer-pane").classList.toggle("hide", t !== "viewer");
+    $("perf-pane").classList.toggle("hide", t !== "perf");
+    $("lighthouse-pane").classList.toggle("hide", t !== "lighthouse");
     $("summary-pane").classList.toggle("hide", t !== "summary");
     if (t === "viewer") $("viewer-pane").style.display = "grid";
+    if (t === "perf") renderPerf();
+    if (t === "lighthouse") renderLighthouse();
     if (t === "summary") renderSummary();
   }
 
   // wiring
+  renderBanner();
+  buildRail();
   $("feature-title").textContent = D.feature || "UI Walkthrough";
   $("feature-sub").textContent = [D.branch, D.generated].filter(Boolean).join("  ·  ");
   $("theme-switch").onchange = function () {
     state.theme = this.checked ? "dark" : "light";
     localStorage.setItem("ui-wt-theme", state.theme);
+    refreshRail(true);
     render();
   };
   $("prev").onclick = function () { if (state.i > 0) { state.i--; render(); } };

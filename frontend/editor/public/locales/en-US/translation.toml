@@ -4230,11 +4230,16 @@ title = "What it does"
 title = "About PDF Portfolios"
 
 [crop]
-autoCrop = "Auto-crop whitespace"
+autoDescription = "White edges are detected and trimmed on every selected page. Your manual crop area is ignored."
+loadingPreview = "Preparing page preview…"
 noFileSelected = "Add a PDF file to begin cropping"
+previewUnavailable = "Preview unavailable. You can still set the area manually."
 reset = "Reset to full PDF"
 submit = "Apply Crop"
 title = "Crop"
+
+[crop.advanced]
+title = "Exact coordinates"
 
 [crop.automation]
 info = "Enter crop coordinates in PDF points. Origin (0,0) is at bottom-left. These values will be applied to all PDFs processed in this automation."
@@ -4244,23 +4249,49 @@ reference = "Reference: A4 page is 595.28 × 841.89 points (210mm × 297mm). 1 i
 title = "Position and Size"
 
 [crop.coordinates.height]
-desc = "Crop height (points)"
 label = "Height"
 
 [crop.coordinates.width]
-desc = "Crop width (points)"
 label = "Width"
 
 [crop.coordinates.x]
-desc = "Left edge (points)"
 label = "X Position"
 
 [crop.coordinates.y]
-desc = "Bottom edge (points)"
 label = "Y Position"
 
 [crop.error]
 failed = "Failed to crop PDF"
+
+[crop.canvas]
+ariaLabel = "Crop area editor. Drag a handle to resize, drag inside to move, arrow keys nudge, Shift plus arrow keys resize."
+dimensions = "{{width}} × {{height}} {{unit}}"
+edit = "Edit crop area"
+fitToPage = "Fit to page"
+loading = "Loading page preview…"
+openEditor = "Open crop editor"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[crop.editor]
+done = "Done"
+open = "Expand"
+subtitle = "Drag a handle to trim. Scroll or pinch to zoom, then drag the page to pan."
+title = "Adjust crop area"
+
+[crop.margins]
+bottom = "Bottom"
+equal = "Equal margins"
+left = "Left"
+right = "Right"
+size = "Crop size"
+title = "Margins"
+top = "Top"
+
+[crop.mode]
+auto = "Auto-trim"
+label = "Crop mode"
+manual = "Manual"
 
 [crop.pageNumbers]
 description = "Crop the selected area on specific pages, or 'all' for every page."
@@ -4269,7 +4300,16 @@ label = "Pages to Crop"
 placeholder = "e.g. 1, 3, 5-8 or all"
 
 [crop.preview]
-title = "Crop Area Selection"
+title = "Crop area"
+
+[crop.ratio]
+a4 = "A4"
+free = "Free"
+letter = "Letter"
+original = "Original"
+square = "Square"
+title = "Aspect ratio"
+wide = "16:9"
 
 [crop.results]
 title = "Crop Results"
@@ -4283,6 +4323,11 @@ drag = "Drag the overlay to move the crop area"
 precision = "Use coordinate inputs for precise positioning"
 resize = "Drag the corner and edge handles to resize"
 title = "How to Crop PDFs"
+
+[crop.units]
+label = "Measurement unit"
+mm = "mm"
+pt = "pt"
 
 [database]
 backupCreated = "Database backup successful"

@@ -1,0 +1,362 @@
+/* Crop canvas: the page plane is transform-scaled for zoom, while the crop
+   chrome lives in viewport pixels so borders and handles keep a constant
+   on-screen size at every zoom level. */
+
+.viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background-color: var(--c-surface-sunken);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  outline: none;
+  contain: layout paint;
+}
+
+.viewport[data-interactive="true"] {
+  cursor: crosshair;
+}
+
+/* Read-only (phone) previews must not become a scroll dead zone. */
+.viewport[data-readonly="true"] {
+  touch-action: pan-y;
+}
+
+.viewport:focus-visible {
+  box-shadow: 0 0 0 2px var(--c-primary);
+}
+
+.stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+.pageImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+}
+
+.pagePlaceholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  pointer-events: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.shadeLayer {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.shade {
+  position: absolute;
+  background: var(--crop-shade, rgba(0, 0, 0, 0.55));
+  pointer-events: none;
+}
+
+.selection {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1.5px solid var(--c-primary);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.65),
+    0 0 0 3px rgba(0, 0, 0, 0.12);
+  cursor: move;
+  pointer-events: auto;
+}
+
+.selectionGrid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--motion-fast);
+}
+
+.viewport[data-active="true"] .selectionGrid {
+  opacity: 1;
+}
+
+.selectionGrid::before,
+.selectionGrid::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.selectionGrid::before {
+  inset: 0 33.333% 0 33.333%;
+  border-inline: 1px solid rgba(255, 255, 255, 0.45);
+  background: none;
+}
+
+.selectionGrid::after {
+  inset: 33.333% 0 33.333% 0;
+  border-block: 1px solid rgba(255, 255, 255, 0.45);
+  background: none;
+}
+
+.handle {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -50%);
+  touch-action: none;
+  z-index: 2;
+}
+
+.handle::after {
+  content: "";
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--c-primary);
+  border: 1.5px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.handle[data-handle="nw"] {
+  cursor: nwse-resize;
+}
+.handle[data-handle="ne"] {
+  cursor: nesw-resize;
+}
+.handle[data-handle="se"] {
+  cursor: nwse-resize;
+}
+.handle[data-handle="sw"] {
+  cursor: nesw-resize;
+}
+.handle[data-handle="n"],
+.handle[data-handle="s"] {
+  cursor: ns-resize;
+}
+.handle[data-handle="e"],
+.handle[data-handle="w"] {
+  cursor: ew-resize;
+}
+
+/* Edge handles only make sense when the side is long enough to hit without
+   colliding with the corner handles. */
+.selection[data-compact="true"] .handle[data-handle="n"],
+.selection[data-compact="true"] .handle[data-handle="s"],
+.selection[data-compact="true"] .handle[data-handle="e"],
+.selection[data-compact="true"] .handle[data-handle="w"] {
+  display: none;
+}
+
+.guide {
+  position: absolute;
+  background: var(--c-primary);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 3;
+}
+
+.guide[data-visible="true"] {
+  opacity: 1;
+}
+
+.guideX {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.guideY {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-surface-raised) 86%, transparent);
+  border: 1px solid var(--c-border-subtle);
+  color: var(--c-text);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  direction: ltr;
+  unicode-bidi: isolate;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-xs);
+  opacity: 0;
+  transition: opacity var(--motion-fast);
+}
+
+.viewport[data-active="true"] .badge {
+  opacity: 1;
+}
+
+.badgeDim {
+  color: var(--c-text-muted);
+}
+
+.toolbar {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-surface-raised) 86%, transparent);
+  border: 1px solid var(--c-border-subtle);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-xs);
+}
+
+.zoomLabel {
+  min-width: 42px;
+  padding: 0 2px;
+  text-align: center;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  font-family: inherit;
+}
+
+.zoomLabel:hover {
+  color: var(--c-text);
+}
+
+.loupe {
+  position: absolute;
+  z-index: 5;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 10px 28px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  background-color: #fff;
+  background-repeat: no-repeat;
+  display: none;
+}
+
+.loupe[data-visible="true"] {
+  display: block;
+}
+
+.loupe::before,
+.loupe::after {
+  content: "";
+  position: absolute;
+  background: var(--c-primary);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+.loupe::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+}
+
+.loupe::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+}
+
+.hint {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--c-surface-raised) 92%, transparent);
+  border: 1px solid var(--c-border-subtle);
+  color: var(--c-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--motion-base);
+}
+
+.viewport[data-hint="true"] .hint {
+  opacity: 1;
+}
+
+.tapTarget {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tapHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-surface-raised) 92%, transparent);
+  border: 1px solid var(--c-border-subtle);
+  box-shadow: var(--shadow-sm);
+  color: var(--c-text);
+  font-size: 12px;
+  font-weight: var(--font-weight-medium);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selectionGrid,
+  .hint {
+    transition: none;
+  }
+}
