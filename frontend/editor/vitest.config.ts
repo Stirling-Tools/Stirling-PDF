@@ -44,7 +44,7 @@ export default defineConfig({
     exclude: [
       "node_modules/",
       "src/**/*.spec.ts", // Exclude Playwright E2E tests
-      "src/tests/test-fixtures/**",
+      "src/core/tests/test-fixtures/**",
     ],
     ...TEST_DEFAULTS,
     coverage: {
@@ -55,7 +55,7 @@ export default defineConfig({
         "src/proprietary/setupTests.ts",
         "src/saas/setupTests.ts",
         "**/*.d.ts",
-        "src/tests/test-fixtures/**",
+        "src/core/tests/test-fixtures/**",
         "src/**/*.spec.ts",
       ],
     },
