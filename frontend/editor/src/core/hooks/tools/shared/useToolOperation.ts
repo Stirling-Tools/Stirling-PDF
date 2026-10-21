@@ -384,7 +384,6 @@ export const useToolOperation = <TParams>(
               actions.setProgress,
               actions.setStatus,
               fileActions.markFileError,
-              cancellation.signal,
             );
             processedFiles = result.outputFiles;
             successSourceIds = result.successSourceIds;

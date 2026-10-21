@@ -3,6 +3,7 @@ import React, {
   useContext,
   useMemo,
   useEffect,
+  useLayoutEffect,
   useCallback,
   useState,
   ReactNode,
@@ -14,6 +15,7 @@ import i18n from "i18next";
 import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 import type { AppConfig, AppConfigBootstrapMode } from "@app/types/appConfig";
 import { useJwtConfigSync } from "@app/hooks/useJwtConfigSync";
+import { setPdfAccessPolicy } from "@app/services/pdfAccessService";
 
 export interface AppConfigRetryOptions {
   maxRetries?: number;
@@ -148,6 +150,12 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
       refetch,
     ],
   );
+
+  useLayoutEffect(() => {
+    setPdfAccessPolicy(value.config?.honorOwnerPasswords !== false);
+  }, [value.config?.honorOwnerPasswords]);
+
+  useLayoutEffect(() => () => setPdfAccessPolicy(true), []);
 
   return (
     <AppConfigContext.Provider value={value}>

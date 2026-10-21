@@ -240,15 +240,11 @@ public class PasswordController {
         boolean explicitProtection =
                 request.getSourcePassword() != null || request.isPreserveExisting();
         try (PDDocument document =
-                explicitProtection
-                        ? pdfDocumentFactory.load(
-                                request.getFileInput(),
-                                request.getSourcePassword() == null
-                                        ? ""
-                                        : request.getSourcePassword(),
-                                true)
-                        : pdfDocumentFactory.load(request.getFileInput())) {
-            if (explicitProtection) {
+                pdfDocumentFactory.load(
+                        request.getFileInput(),
+                        request.getSourcePassword() == null ? "" : request.getSourcePassword(),
+                        true)) {
+            if (explicitProtection || document.isEncrypted()) {
                 PdfSessionPermissions.requireOwner(
                         document, applicationProperties.getSecurity().isHonorOwnerPasswords());
             }

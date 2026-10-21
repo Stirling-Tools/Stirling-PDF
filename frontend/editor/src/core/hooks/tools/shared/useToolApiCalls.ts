@@ -20,6 +20,7 @@ import {
   getPdfAccess,
   rememberPdfAccess,
   pdfAccessLifetime,
+  pdfAccessSessionLifetime,
 } from "@app/services/pdfAccessService";
 
 /** An input that did not survive the batch, with the error it failed on. */
@@ -48,7 +49,6 @@ export const useToolApiCalls = <TParams = void>() => {
       onProgress: (progress: ProcessingProgress) => void,
       onStatus: (status: string) => void,
       markFileError?: (fileId: FileId) => void,
-      inspectionSignal?: AbortSignal,
     ): Promise<{
       outputFiles: File[];
       successSourceIds: FileId[];
@@ -67,6 +67,9 @@ export const useToolApiCalls = <TParams = void>() => {
       const cancellation = axios.CancelToken.source();
       cancelTokenRef.current = cancellation;
       const operationCancellation = cancellation.token.toAbortSignal();
+      const sessionLifetime = pdfAccessSessionLifetime();
+      const sourceLifetimes = validFiles.map(pdfAccessLifetime);
+      const outputsBySource = new Map<FileId, File[]>();
 
       // Params are the same for every file, so resolve the endpoint once. A null
       // endpoint means the tool has no backend call (e.g. client-side tools) and
@@ -93,14 +96,14 @@ export const useToolApiCalls = <TParams = void>() => {
         onProgress({ current: i + 1, total, currentFileName: file.name });
         onStatus(`Processing ${file.name} (${i + 1}/${total})`);
 
-        const sourceLifetime = pdfAccessLifetime(file);
+        const sourceLifetime = sourceLifetimes[i];
         const { signal: fileSignal, dispose } = combineAbortSignals([
           operationCancellation,
           sourceLifetime,
-          ...(inspectionSignal ? [inspectionSignal] : []),
         ]);
         try {
           cancellation.token.throwIfRequested();
+          sourceLifetime.throwIfAborted();
           const workingFile = await prepareUnlockedFile(
             file,
             endpoint,
@@ -200,6 +203,7 @@ export const useToolApiCalls = <TParams = void>() => {
           cancellation.token.throwIfRequested();
           sourceLifetime.throwIfAborted();
           processedFiles.push(...protectedFiles);
+          outputsBySource.set(file.fileId, protectedFiles);
           // record source id as successful
           successSourceIds.push(file.fileId);
           console.debug("[processFiles] Success", {
@@ -207,6 +211,13 @@ export const useToolApiCalls = <TParams = void>() => {
             produced: responseFiles.length,
           });
         } catch (error) {
+          if (cancellation.token.reason || sessionLifetime.aborted) {
+            throw new Error("Operation was cancelled", { cause: error });
+          }
+          if (sourceLifetime.aborted) {
+            unprocessedSourceIds.push(file.fileId);
+            continue;
+          }
           if (isSignupRequiredError(error)) {
             if (processedFiles.length === 0) throw error;
             unprocessedSourceIds.push(
@@ -215,7 +226,6 @@ export const useToolApiCalls = <TParams = void>() => {
             break;
           }
           if (
-            cancellation.token.reason ||
             axios.isCancel(error) ||
             (error instanceof DOMException && error.name === "AbortError")
           ) {
@@ -233,6 +243,17 @@ export const useToolApiCalls = <TParams = void>() => {
         } finally {
           dispose();
         }
+      }
+
+      // A completed source may be closed while another request is still running.
+      for (let i = 0; i < validFiles.length; i++) {
+        const id = validFiles[i].fileId;
+        if (!sourceLifetimes[i].aborted || !outputsBySource.has(id)) continue;
+        const outputs = new Set(outputsBySource.get(id));
+        for (let j = processedFiles.length - 1; j >= 0; j--)
+          if (outputs.has(processedFiles[j])) processedFiles.splice(j, 1);
+        successSourceIds.splice(successSourceIds.indexOf(id), 1);
+        unprocessedSourceIds.push(id);
       }
 
       if (failedFiles.length > 0 && processedFiles.length === 0) {

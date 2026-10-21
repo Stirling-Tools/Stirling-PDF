@@ -29,6 +29,7 @@ export interface PdfAccess {
 }
 
 let accessByFile = new WeakMap<Blob, PdfAccess>();
+let ownerPasswordPolicy: boolean | undefined;
 let sessionLifetime = new AbortController();
 let accessLifetimes = new WeakMap<
   Blob,
@@ -37,6 +38,19 @@ let accessLifetimes = new WeakMap<
 const filesById = new Map<string, WeakRef<Blob>>();
 const listeners = new Set<() => void>();
 let revision = 0;
+/** Sets the active server policy for every access path; undefined releases the provider's policy. */
+export function setPdfAccessPolicy(
+  honorOwnerPasswords: boolean | undefined,
+): void {
+  if (ownerPasswordPolicy === honorOwnerPasswords) return;
+  ownerPasswordPolicy = honorOwnerPasswords;
+  publish();
+}
+
+/** Aborted by logout or FileContext teardown, independently of individual document closures. */
+export function pdfAccessSessionLifetime(): AbortSignal {
+  return sessionLifetime.signal;
+}
 /** Aborted by replacement, close or logout; also identifies the generation allowed to retain credentials. */
 export function pdfAccessLifetime(file: Blob): AbortSignal {
   let lifetime = accessLifetimes.get(file);
@@ -85,7 +99,17 @@ export function getPdfAccess(
 ): PdfAccess | undefined {
   if (!file) return undefined;
   const blob = typeof file === "string" ? filesById.get(file)?.deref() : file;
-  return blob ? accessByFile.get(blob) : undefined;
+  if (!blob) return undefined;
+  let access = accessByFile.get(blob);
+  if (
+    access &&
+    ownerPasswordPolicy !== undefined &&
+    access.honorOwnerPasswords !== ownerPasswordPolicy
+  ) {
+    access = { ...access, honorOwnerPasswords: ownerPasswordPolicy };
+    accessByFile.set(blob, access);
+  }
+  return access;
 }
 
 /** Retain access without changing the file; returns the identity used by preview cleanup. */
@@ -105,6 +129,7 @@ export function rememberPdfAccess(file: Blob, access: PdfAccess): PdfAccess {
   }
   const storedAccess = {
     ...access,
+    honorOwnerPasswords: ownerPasswordPolicy ?? access.honorOwnerPasswords,
     openingPassword: access.encrypted
       ? access.openingAuthenticated || !access.ownerAuthenticated
         ? access.password

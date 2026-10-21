@@ -22,6 +22,57 @@ const links = path.join(
   "../test-fixtures/link-annotations-sample.pdf",
 );
 
+test("removing a password keeps the result after switching tools", async ({
+  page,
+}) => {
+  const output = await readFile(links);
+  let finish!: () => void;
+  const responseReady = new Promise<void>((resolve) => {
+    finish = resolve;
+  });
+  let requested = false;
+  await page.route("**/api/v1/security/remove-password", async (route) => {
+    requested = true;
+    await responseReady;
+    await route.fulfill({ contentType: "application/pdf", body: output });
+  });
+  await page.goto("/remove-password");
+  await page
+    .getByTestId("file-input")
+    .setInputFiles(
+      path.join(
+        import.meta.dirname,
+        "../test-fixtures/owner-only-restricted.pdf",
+      ),
+    );
+  const firstPage = page.locator('[data-page-index="0"]').first();
+  await expect(firstPage.locator("img").first()).toBeVisible();
+  await firstPage.evaluate((node) =>
+    node.setAttribute("data-before-tool", "true"),
+  );
+  await page
+    .getByLabel("Permissions password", { exact: true })
+    .fill("owner-test-password");
+  await page
+    .getByRole("button", { name: "Remove Password", exact: true })
+    .click();
+  await expect.poll(() => requested).toBe(true);
+  try {
+    await page
+      .getByRole("button", { name: "Annotations", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/annotate$/);
+  } finally {
+    finish();
+  }
+  await expect(firstPage).not.toHaveAttribute("data-before-tool", "true");
+  await expect(firstPage.locator(".pdf-link-overlay")).toHaveCount(4);
+  await page.getByRole("button", { name: "Square", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Square", exact: true }),
+  ).toHaveAttribute("data-variant", "filled");
+});
+
 test("escaped encryption names still enforce permissions after admission", async ({
   page,
 }) => {

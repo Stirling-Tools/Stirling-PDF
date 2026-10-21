@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.security;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -584,7 +585,7 @@ class PasswordControllerTest {
             request.setPassword("user123");
             request.setKeyLength(128);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+            when(pdfDocumentFactory.load(any(MultipartFile.class), eq(""), eq(true)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
@@ -609,7 +610,7 @@ class PasswordControllerTest {
             request.setPassword("");
             request.setKeyLength(256);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+            when(pdfDocumentFactory.load(any(MultipartFile.class), eq(""), eq(true)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
@@ -635,7 +636,7 @@ class PasswordControllerTest {
             request.setPreventPrinting(true);
             request.setPreventModify(true);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+            when(pdfDocumentFactory.load(any(MultipartFile.class), eq(""), eq(true)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
@@ -658,7 +659,7 @@ class PasswordControllerTest {
             request.setPassword(null);
             request.setKeyLength(128);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+            when(pdfDocumentFactory.load(any(MultipartFile.class), eq(""), eq(true)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
@@ -689,7 +690,7 @@ class PasswordControllerTest {
             request.setPreventPrinting(true);
             request.setPreventPrintingFaithful(true);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+            when(pdfDocumentFactory.load(any(MultipartFile.class), eq(""), eq(true)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
@@ -714,7 +715,7 @@ class PasswordControllerTest {
             request.setKeyLength(128);
             // All permission flags left null
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+            when(pdfDocumentFactory.load(any(MultipartFile.class), eq(""), eq(true)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
@@ -737,7 +738,7 @@ class PasswordControllerTest {
             request.setPassword("user");
             request.setKeyLength(40);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+            when(pdfDocumentFactory.load(any(MultipartFile.class), eq(""), eq(true)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
@@ -760,7 +761,7 @@ class PasswordControllerTest {
             request.setPassword("user123");
             request.setKeyLength(128);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+            when(pdfDocumentFactory.load(any(MultipartFile.class), eq(""), eq(true)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);

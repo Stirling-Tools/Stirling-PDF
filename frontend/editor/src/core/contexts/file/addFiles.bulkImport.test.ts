@@ -2,16 +2,19 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { FileContextState } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
+import { createNewStirlingFileStub } from "@app/types/fileContext";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 // A bulk import the user is not looking at (the onboarding Downloads sweep) must not
 // parse every PDF a second time for a thumbnail, nor keep hundreds of Files in memory
 // for the rest of the session. skipMetadataHydration is the option that promises both.
 
 const storeStirlingFile = vi.hoisted(() => vi.fn());
+const getStirlingFile = vi.hoisted(() => vi.fn());
 const generateThumbnailPairWithMetadata = vi.hoisted(() => vi.fn());
 const isPDFEncrypted = vi.hoisted(() => vi.fn());
 vi.mock("@app/services/fileStorage", () => ({
-  fileStorage: { storeStirlingFile, updateThumbnail: vi.fn() },
+  fileStorage: { storeStirlingFile, getStirlingFile, updateThumbnail: vi.fn() },
 }));
 vi.mock("@app/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata,
@@ -21,7 +24,7 @@ vi.mock("@app/services/fileAnalyzer", () => ({
   FileAnalyzer: { isPDFEncrypted },
 }));
 
-import { addFiles } from "@app/contexts/file/fileActions";
+import { addFiles, addStirlingFileStubs } from "@app/contexts/file/fileActions";
 
 function harness() {
   const state = {
@@ -44,11 +47,154 @@ const pdf = (name: string) =>
 
 beforeEach(() => {
   storeStirlingFile.mockReset().mockResolvedValue(undefined);
+  getStirlingFile.mockReset();
   generateThumbnailPairWithMetadata.mockReset();
   isPDFEncrypted.mockReset().mockResolvedValue(false);
 });
 
 describe("addFiles with skipMetadataHydration", () => {
+  test.each(["import", "library"])(
+    "deduplicates against a concurrent %s before React commits",
+    async (source) => {
+      const h = harness();
+      const duplicate = pdf("duplicate.pdf");
+      let finish!: (encrypted: boolean) => void;
+      isPDFEncrypted.mockResolvedValueOnce(false).mockImplementationOnce(
+        () =>
+          new Promise<boolean>((resolve) => {
+            finish = resolve;
+          }),
+      );
+      const importFiles = (files: File[]) =>
+        addFiles(
+          { files, skipMetadataHydration: true, skipUploadTracking: true },
+          h.stateRef,
+          h.filesRef,
+          h.dispatch,
+          h.lifecycleManager as never,
+          true,
+        );
+      const importing = importFiles([pdf("first.pdf"), duplicate]);
+      await vi.waitFor(() => expect(finish).toBeTypeOf("function"));
+      try {
+        if (source === "import") await importFiles([duplicate]);
+        else {
+          const stub = createNewStirlingFileStub(
+            duplicate,
+            "library-id" as FileId,
+          );
+          stub.processedFile = { pages: [], isEncrypted: true };
+          getStirlingFile.mockResolvedValue(duplicate);
+          await addStirlingFileStubs(
+            [stub],
+            {},
+            h.stateRef,
+            h.filesRef,
+            h.dispatch,
+            h.lifecycleManager as never,
+          );
+        }
+        expect(h.stateRef.current.files.ids).toEqual([]);
+      } finally {
+        finish(false);
+        await importing;
+      }
+      expect(
+        [...h.filesRef.current.values()].filter(
+          (file) => file.name === duplicate.name,
+        ),
+      ).toHaveLength(1);
+    },
+  );
+
+  test.each([true, false])(
+    "waits for a pending library restore (success: %s) before deduplicating",
+    async (succeeds) => {
+      const h = harness();
+      const duplicate = pdf("duplicate.pdf");
+      const stub = createNewStirlingFileStub(duplicate, "library-id" as FileId);
+      stub.processedFile = { pages: [], isEncrypted: true };
+      let finish!: (file: File | undefined) => void;
+      getStirlingFile.mockImplementationOnce(
+        () =>
+          new Promise<File | undefined>((resolve) => {
+            finish = resolve;
+          }),
+      );
+      const restoring = addStirlingFileStubs(
+        [stub],
+        {},
+        h.stateRef,
+        h.filesRef,
+        h.dispatch,
+        h.lifecycleManager as never,
+      );
+      await vi.waitFor(() => expect(finish).toBeTypeOf("function"));
+      const importing = addFiles(
+        {
+          files: [duplicate],
+          skipMetadataHydration: true,
+          skipUploadTracking: true,
+        },
+        h.stateRef,
+        h.filesRef,
+        h.dispatch,
+        h.lifecycleManager as never,
+        true,
+      );
+      try {
+        await vi.waitFor(() =>
+          expect(isPDFEncrypted).toHaveBeenCalledWith(duplicate),
+        );
+        await addFiles(
+          {
+            files: [pdf("other.pdf")],
+            skipMetadataHydration: true,
+            skipUploadTracking: true,
+          },
+          h.stateRef,
+          h.filesRef,
+          h.dispatch,
+          h.lifecycleManager as never,
+          true,
+        );
+        expect(
+          [...h.filesRef.current.values()].map((file) => file.name),
+        ).toEqual(["other.pdf"]);
+      } finally {
+        if (!succeeds)
+          expectConsole.error(/No readable data for duplicate.pdf/);
+        finish(succeeds ? duplicate : undefined);
+        await restoring;
+      }
+      expect(await importing).toHaveLength(succeeds ? 0 : 1);
+      expect(
+        [...h.filesRef.current.values()].filter(
+          (file) => file.name === duplicate.name,
+        ),
+      ).toHaveLength(1);
+    },
+  );
+
+  test("still permits explicitly requested duplicates", async () => {
+    const h = harness();
+    const duplicate = pdf("duplicate.pdf");
+    await addFiles(
+      {
+        files: [duplicate, duplicate],
+        allowDuplicates: true,
+        skipMetadataHydration: true,
+        skipUploadTracking: true,
+      },
+      h.stateRef,
+      h.filesRef,
+      h.dispatch,
+      h.lifecycleManager as never,
+      true,
+    );
+    expect(h.filesRef.current.size).toBe(2);
+  });
+
   test("publishes the first rows before the last file's admission read finishes", async () => {
     let finish!: (encrypted: boolean) => void;
     isPDFEncrypted.mockImplementation((file: File) =>

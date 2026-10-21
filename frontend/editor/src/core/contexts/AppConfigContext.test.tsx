@@ -9,6 +9,11 @@ import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
 import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
+import {
+  getPdfAccess,
+  rememberPdfAccess,
+  clearPdfAccess,
+} from "@app/services/pdfAccessService";
 
 // Mock apiClient
 vi.mock("@app/services/apiClient");
@@ -32,6 +37,33 @@ describe("AppConfigContext", () => {
       <AppConfigProvider>{children}</AppConfigProvider>
     </TestQueryProvider>
   );
+
+  it("applies server owner policy to cached access and enforces restrictions after provider teardown", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: { honorOwnerPasswords: false },
+    });
+    const file = new File(["PDF"], "restricted.pdf");
+    rememberPdfAccess(file, {
+      password: "",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: false,
+      permissions: 0,
+      pageCount: 1,
+    });
+    const { result, unmount } = renderHook(() => useAppConfig(), { wrapper });
+    try {
+      await waitFor(() =>
+        expect(result.current.config?.honorOwnerPasswords).toBe(false),
+      );
+      expect(getPdfAccess(file)?.honorOwnerPasswords).toBe(false);
+      unmount();
+      expect(getPdfAccess(file)?.honorOwnerPasswords).toBe(true);
+    } finally {
+      unmount();
+      clearPdfAccess();
+    }
+  });
 
   it("should fetch and provide app config on non-auth pages", async () => {
     const mockConfig = {

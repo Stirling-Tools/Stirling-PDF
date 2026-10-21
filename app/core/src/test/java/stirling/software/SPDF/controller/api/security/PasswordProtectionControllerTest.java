@@ -154,6 +154,45 @@ class PasswordProtectionControllerTest {
     }
 
     @Test
+    void legacyAddPasswordRequiresOwnerForRestrictedSources() throws Exception {
+        var request = new AddPasswordRequest();
+        request.setFileInput(upload(pdf(true, 256, true, "", OWNER, 1)));
+        request.setPassword("replacement-reader");
+        request.setOwnerPassword("replacement-owner");
+        request.setKeyLength(256);
+
+        var denied =
+                assertThrows(ResponseStatusException.class, () -> controller.addPassword(request));
+        assertEquals(403, denied.getStatusCode().value());
+
+        request.setSourcePassword("incorrect");
+        assertThrows(InvalidPasswordException.class, () -> controller.addPassword(request));
+
+        request.setSourcePassword(OWNER);
+        try (var body = controller.addPassword(request).getBody().getInputStream();
+                var output = Loader.loadPDF(body.readAllBytes(), "replacement-reader")) {
+            assertTrue(output.isEncrypted());
+            assertTrue(output.getCurrentAccessPermission().canExtractContent());
+        }
+    }
+
+    @Test
+    void legacyAddPasswordRespectsDisabledOwnerPolicy() throws Exception {
+        properties.getSecurity().setHonorOwnerPasswords(false);
+        var request = new AddPasswordRequest();
+        request.setFileInput(upload(pdf(true, 256, true, "", OWNER, 1)));
+        request.setPassword("replacement-reader");
+        request.setOwnerPassword("replacement-owner");
+        request.setKeyLength(256);
+
+        try (var body = controller.addPassword(request).getBody().getInputStream();
+                var output = Loader.loadPDF(body.readAllBytes(), "replacement-reader")) {
+            assertTrue(output.isEncrypted());
+            assertTrue(output.getCurrentAccessPermission().canExtractContent());
+        }
+    }
+
+    @Test
     void honorsOwnerPasswordsByDefaultAndAllowsConfiguredBypass() throws Exception {
         var original = pdf(true, 256);
         assertTrue(properties.getSecurity().isHonorOwnerPasswords());

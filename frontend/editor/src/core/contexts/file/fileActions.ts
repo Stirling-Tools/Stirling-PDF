@@ -101,7 +101,10 @@ class SimpleMutex {
 
 // Global mutex for addFiles operations
 const addFilesMutex = new SimpleMutex();
-const libraryLoads = new Map<FileId, Promise<StirlingFile | undefined>>();
+const libraryLoads = new Map<
+  FileId,
+  { promise: Promise<StirlingFile | undefined>; quickKey?: string }
+>();
 
 /**
  * Helper to create ProcessedFile metadata structure
@@ -405,7 +408,7 @@ export async function addFiles(
         `📄 addFiles: After ZIP processing, ${filesToProcess.length} files to add`,
       );
 
-    let existingQuickKeys: Set<string> | undefined;
+    const importedQuickKeys = new Set<string>();
 
     // Collect hydrations to schedule after dispatch so updateStirlingFileStub finds files in state.
     const pendingHydrations: Array<() => Promise<void>> = [];
@@ -476,14 +479,32 @@ export async function addFiles(
       const isEncrypted = isPdf
         ? await FileAnalyzer.isPDFEncrypted(file).catch(() => true)
         : false;
-      // Admission reads must not hold the lock needed to publish another import.
-      await addFilesMutex.lock();
-      ownsImportLock = true;
-      existingQuickKeys ??= buildQuickKeySet(stateRef.current.files.byId);
       const quickKey = createQuickKey(file);
+      // A failed library read must not discard a valid upload of the same file.
+      // Wait outside the lock so other imports can still publish.
+      while (true) {
+        await addFilesMutex.lock();
+        ownsImportLock = true;
+        const pendingLoads = allowDuplicates
+          ? []
+          : [...libraryLoads.values()]
+              .filter((pending) => pending.quickKey === quickKey)
+              .map((pending) => pending.promise);
+        if (pendingLoads.length === 0) break;
+        addFilesMutex.unlock();
+        ownsImportLock = false;
+        await Promise.all(pendingLoads);
+      }
+      const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
+      // Pending admission and React dispatches may not have reached state yet.
+      for (const current of filesRef.current.values())
+        existingQuickKeys.add(createQuickKey(current));
 
       // Soft deduplication: Check if file already exists by metadata
-      if (!allowDuplicates && existingQuickKeys.has(quickKey)) {
+      if (
+        !allowDuplicates &&
+        (existingQuickKeys.has(quickKey) || importedQuickKeys.has(quickKey))
+      ) {
         reportBulkAddProgress(++scannedCount, filesToProcess.length);
         addFilesMutex.unlock();
         ownsImportLock = false;
@@ -525,7 +546,7 @@ export async function addFiles(
       }
 
       if (!allowDuplicates) {
-        existingQuickKeys.add(quickKey);
+        importedQuickKeys.add(quickKey);
       }
       stirlingFileStubs.push(fileStub);
 
@@ -939,7 +960,7 @@ export async function addStirlingFileStubs(
     for (const stub of stirlingFileStubs) {
       const pendingLoad = libraryLoads.get(stub.id);
       if (pendingLoad) {
-        loads.push(pendingLoad);
+        loads.push(pendingLoad.promise);
         continue;
       }
       // Dedup by stable fileId. Two distinct files in history can share
@@ -1064,9 +1085,10 @@ export async function addStirlingFileStubs(
           return undefined;
         })
         .finally(() => {
-          if (libraryLoads.get(fileId) === load) libraryLoads.delete(fileId);
+          if (libraryLoads.get(fileId)?.promise === load)
+            libraryLoads.delete(fileId);
         });
-      libraryLoads.set(fileId, load);
+      libraryLoads.set(fileId, { promise: load, quickKey: stub.quickKey });
       loads.push(load);
     }
 

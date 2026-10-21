@@ -9,6 +9,9 @@ import {
   clearPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
+  bindPdfAccess,
+  forgetPdfAccess,
+  setPdfAccessPolicy,
   type PdfAccess,
 } from "@app/services/pdfAccessService";
 
@@ -67,29 +70,140 @@ function run(files: StirlingFile[]) {
 beforeEach(() => {
   post.mockReset();
   inspectLocal.mockReset();
+  clearPdfAccess();
+  setPdfAccessPolicy(undefined);
 });
 
 describe("processFiles failure reporting", () => {
+  it.each(["active", "completed", "queued"])(
+    "closing a %s file preserves the other batch results",
+    async (closed) => {
+      const inputs = [
+        file("a.pdf", "a"),
+        file("b.pdf", "b"),
+        file("c.pdf", "c"),
+      ];
+      inputs.forEach((input) => bindPdfAccess(input, input.fileId));
+      let completeRequest!: () => void;
+      post.mockResolvedValue({ data: new Blob(["output"]), status: 200 });
+      post.mockResolvedValueOnce({
+        data: new Blob(["first output"]),
+        status: 200,
+      });
+      post.mockImplementationOnce(
+        (_endpoint, _form, config: AxiosRequestConfig) =>
+          new Promise((resolve, reject) => {
+            completeRequest = () =>
+              resolve({ data: new Blob(["second output"]), status: 200 });
+            config.signal?.addEventListener?.(
+              "abort",
+              () => reject(new DOMException("Closed", "AbortError")),
+              { once: true },
+            );
+          }),
+      );
+      const { result } = renderHook(() => useToolApiCalls());
+      const markFileError = vi.fn();
+      const processing = result.current.processFiles(
+        undefined,
+        inputs,
+        {
+          endpoint: "/api/v1/misc/compress-pdf",
+          buildFormData: () => new FormData(),
+        },
+        vi.fn(),
+        vi.fn(),
+        markFileError,
+      );
+      await vi.waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+      const closedId =
+        closed === "active" ? "b" : closed === "completed" ? "a" : "c";
+      forgetPdfAccess([closedId]);
+      completeRequest();
+      const output = await processing;
+      expect(output.successSourceIds).toEqual(
+        inputs.map((input) => input.fileId).filter((id) => id !== closedId),
+      );
+      expect(output.outputFiles).toHaveLength(2);
+      expect(output.unprocessedSourceIds).toEqual([closedId]);
+      expect(output.failedInputs).toEqual([]);
+      expect(markFileError).not.toHaveBeenCalled();
+      expect(post).toHaveBeenCalledTimes(closed === "queued" ? 2 : 3);
+    },
+  );
+
+  it("applies the server policy to protection added to a plain source", async () => {
+    const input = file("source.pdf", "source");
+    expect(getPdfAccess(input)?.honorOwnerPasswords).toBeUndefined();
+    setPdfAccessPolicy(false);
+    post.mockResolvedValue({ data: new Blob(["protected"]), status: 200 });
+    inspectLocal.mockResolvedValue({
+      ...plainAccess,
+      encrypted: true,
+      password: "reader",
+      permissions: 0,
+    });
+    const { result } = renderHook(() => useToolApiCalls());
+    try {
+      const output = await result.current.processFiles(
+        undefined,
+        [input],
+        {
+          endpoint: "/api/v1/security/add-password",
+          buildFormData: () => {
+            const form = new FormData();
+            form.set("keyLength", "256");
+            form.set("password", "reader");
+            return form;
+          },
+        },
+        vi.fn(),
+        vi.fn(),
+      );
+      expect(getPdfAccess(output.outputFiles[0])).toMatchObject({
+        encrypted: true,
+        ownerAuthenticated: false,
+        honorOwnerPasswords: false,
+      });
+      const { preflightPdfOperation } =
+        await import("@app/services/pdfSessionUnlock");
+      const requestOwner = vi.fn().mockResolvedValue(false);
+      const nextInput = Object.assign(output.outputFiles[0], {
+        fileId: "output",
+      }) as StirlingFile;
+      expect(
+        await preflightPdfOperation(
+          [nextInput],
+          "/api/v1/misc/compress-pdf",
+          false,
+          requestOwner,
+        ),
+      ).toBe(true);
+      expect(requestOwner).not.toHaveBeenCalled();
+    } finally {
+      setPdfAccessPolicy(undefined);
+    }
+  });
+
   it.each([
     ["add-password", "cancel"],
     ["remove-password", "cancel"],
     ["add-password", "navigation"],
     ["remove-password", "navigation"],
   ])(
-    "discards %s results on %s during local result adoption",
+    "handles %s results on %s during local result adoption",
     async (operation, stop) => {
-      post.mockResolvedValueOnce({ data: new Blob(["result"]), status: 200 });
+      post.mockResolvedValue({ data: new Blob(["result"]), status: 200 });
       let completeInspection!: () => void;
-      inspectLocal.mockImplementationOnce(
-        async (_output, _password, signal) => {
+      inspectLocal
+        .mockResolvedValue(plainAccess)
+        .mockImplementationOnce(async (_output, _password, signal) => {
           expect(signal).toBeDefined();
           return new Promise((resolve) => {
             completeInspection = () => resolve(plainAccess);
           });
-        },
-      );
+        });
       const { result, unmount } = renderHook(() => useToolApiCalls());
-      const navigation = new AbortController();
       const markFileError = vi.fn();
       const processing = result.current.processFiles(
         undefined,
@@ -105,21 +219,27 @@ describe("processFiles failure reporting", () => {
         vi.fn(),
         vi.fn(),
         markFileError,
-        navigation.signal,
       );
-      const cancelled = expect(processing).rejects.toThrow(
-        "Operation was cancelled",
-      );
+      const outcome =
+        stop === "cancel"
+          ? expect(processing).rejects.toThrow("Operation was cancelled")
+          : expect(processing).resolves.toMatchObject({
+              successSourceIds: ["a", "b"],
+            });
       await vi.waitFor(() => expect(inspectLocal).toHaveBeenCalledOnce());
       if (stop === "navigation") {
-        navigation.abort();
         unmount();
       } else result.current.cancelOperation();
       completeInspection();
-      await cancelled;
-      expect(post).toHaveBeenCalledOnce();
+      await outcome;
+      expect(post).toHaveBeenCalledTimes(stop === "cancel" ? 1 : 2);
       expect(markFileError).not.toHaveBeenCalled();
-      expect(getPdfAccess(inspectLocal.mock.calls[0][0])).toBeUndefined();
+      if (stop === "cancel")
+        expect(getPdfAccess(inspectLocal.mock.calls[0][0])).toBeUndefined();
+      else
+        expect(getPdfAccess(inspectLocal.mock.calls[0][0])).toMatchObject(
+          plainAccess,
+        );
     },
   );
 
@@ -139,7 +259,6 @@ describe("processFiles failure reporting", () => {
         status: 200,
       });
       const { result, unmount } = renderHook(() => useToolApiCalls());
-      const navigation = new AbortController();
       const processing = result.current.processFiles(
         undefined,
         [file("a.pdf", "a"), file("b.pdf", "b")],
@@ -150,10 +269,8 @@ describe("processFiles failure reporting", () => {
         vi.fn(),
         vi.fn(),
         vi.fn(),
-        navigation.signal,
       );
       await vi.waitFor(() => expect(post).toHaveBeenCalledOnce());
-      navigation.abort();
       unmount();
       expect(post.mock.calls[0][2].cancelToken.reason).toBeUndefined();
       expect(post.mock.calls[0][2].signal.aborted).toBe(false);

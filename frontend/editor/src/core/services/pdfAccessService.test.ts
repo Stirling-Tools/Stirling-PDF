@@ -8,6 +8,8 @@ import {
   type PdfAccess,
   ensureLocalPdfAccess,
   inspectLocalPdfAccess,
+  setPdfAccessPolicy,
+  subscribePdfAccess,
 } from "@app/services/pdfAccessService";
 
 import { preflightPdfOperation } from "@app/services/pdfSessionUnlock";
@@ -56,15 +58,43 @@ const nativeAny = AbortSignal.any;
 beforeEach(() => {
   Object.defineProperty(AbortSignal, "any", { value: undefined });
   clearPdfAccess();
+  setPdfAccessPolicy(undefined);
   workers.length = 0;
 });
 afterEach(() => {
   clearPdfAccess();
+  setPdfAccessPolicy(undefined);
   Object.defineProperty(AbortSignal, "any", { value: nativeAny });
   vi.useRealTimers();
 });
 
 describe("local inspection lifetime", () => {
+  it("applies active policy to fresh inspections and subsequent policy changes", async () => {
+    const file = new File(["PDF"], "source.pdf", { type: "application/pdf" });
+    setPdfAccessPolicy(false);
+    const pending = ensureLocalPdfAccess(file);
+    workers[0].onmessage?.({ data: { access } });
+    const inspected = await pending;
+    expect(inspected.honorOwnerPasswords).toBe(false);
+    expect(getPdfAccess(file)).toBe(inspected);
+    const changed = vi.fn();
+    const unsubscribe = subscribePdfAccess(changed);
+    try {
+      setPdfAccessPolicy(true);
+      expect(changed).toHaveBeenCalledOnce();
+      const restricted = getPdfAccess(file);
+      expect(restricted?.honorOwnerPasswords).toBe(true);
+      expect(restricted?.ownerAuthenticated).toBe(false);
+      expect(getPdfAccess(file)).toBe(restricted);
+      expect(
+        rememberPdfAccess(file, { ...access, honorOwnerPasswords: false })
+          .honorOwnerPasswords,
+      ).toBe(true);
+    } finally {
+      unsubscribe();
+    }
+  });
+
   it("passes the compiled module to the worker", async () => {
     const file = new File(["PDF"], "plain.pdf");
     const result = inspectLocalPdfAccess(file);
