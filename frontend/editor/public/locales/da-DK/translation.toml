@@ -4285,6 +4285,13 @@ precision = "Brug koordinatfelterne for præcis placering"
 resize = "Træk hjørne- og kantgrebene for at ændre størrelse"
 title = "Sådan beskærer du PDF'er"
 
+[damagedPdf]
+description = "Denne PDF er beskadiget og kan ikke åbnes."
+label = "Beskadiget"
+repair = "Reparer"
+repaired = "Repareret {{name}}"
+repairFailed = "Kunne ikke reparere {{name}}"
+
 [database]
 backupCreated = "Databasebackup lykkedes"
 fileName = "Filnavn"
@@ -14052,6 +14059,7 @@ closeAll = "Luk alle filer"
 closePdf = "Luk PDF"
 deselectAll = "Fravælg alle"
 downloadAll = "Download alle"
+exitAnnotations = "Afslut annoteringstilstand"
 exitRedaction = "Afslut maskeringstilstand"
 formFill = "Formulareditor"
 hideToolbar = "Skjul værktøjslinje"

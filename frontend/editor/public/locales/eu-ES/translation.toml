@@ -4285,6 +4285,13 @@ precision = "Erabili koordenatu-sarrerak kokapen zehatza lortzeko"
 resize = "Arrastatu izkinetako eta ertz-helmugen heldulekuak tamaina aldatzeko"
 title = "Nola moztu PDFak"
 
+[damagedPdf]
+description = "PDF hau kaltetuta dago eta ezin da ireki."
+label = "Kaltetuta"
+repair = "Konpondu"
+repaired = "{{name}} konponduta"
+repairFailed = "Ezin izan da {{name}} konpondu"
+
 [database]
 backupCreated = "Datu-basearen babeskopia ongi eginda"
 fileName = "Fitxategi-izena"
@@ -14052,6 +14059,7 @@ closeAll = "Itxi fitxategi guztiak"
 closePdf = "Itxi PDFa"
 deselectAll = "Kendu hautaketa guztia"
 downloadAll = "Deskargatu dena"
+exitAnnotations = "Irten anotazio modutik"
 exitRedaction = "Irten zentsura modutik"
 formFill = "Inprimaki-editorea"
 hideToolbar = "Ezkutatu tresna-barra"

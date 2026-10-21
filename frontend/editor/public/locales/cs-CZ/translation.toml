@@ -4285,6 +4285,13 @@ precision = "Pro přesné umístění použijte zadání souřadnic"
 resize = "Změnu velikosti proveďte tažením za rohy a hrany"
 title = "Jak ořezávat PDF"
 
+[damagedPdf]
+description = "Tento PDF soubor je poškozený a nelze jej otevřít."
+label = "Poškozený"
+repair = "Opravit"
+repaired = "Opraveno {{name}}"
+repairFailed = "Nepodařilo se opravit {{name}}"
+
 [database]
 backupCreated = "Záloha databáze byla úspěšná"
 fileName = "Název souboru"
@@ -14052,6 +14059,7 @@ closeAll = "Zavřít všechny soubory"
 closePdf = "Zavřít PDF"
 deselectAll = "Zrušit výběr všech"
 downloadAll = "Stáhnout vše"
+exitAnnotations = "Ukončit režim anotací"
 exitRedaction = "Opustit režim začernění"
 formFill = "Editor formulářů"
 hideToolbar = "Skrýt panel nástrojů"

@@ -420,6 +420,8 @@ export async function openRawDocument(
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
   const len = bytes.length;
   const ptr = m.pdfium.wasmExports.malloc(len);
+  // Copying to address 0 would hand PDFium garbage that it reports as a format error.
+  if (!ptr) throw new Error("Unable to allocate memory for this PDF");
   copyToWasmHeap(m, bytes, ptr);
 
   const docPtr = m.FPDF_LoadMemDocument(ptr, len, password ?? "");

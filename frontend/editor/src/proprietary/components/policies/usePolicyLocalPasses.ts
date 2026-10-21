@@ -5,7 +5,13 @@
  * is still needed (and the AI engine, if the policy needs it, is on).
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
@@ -22,6 +28,11 @@ import {
 import { policyRequiresAiEngine } from "@app/data/classificationPolicy";
 import { editorTriggerOf } from "@app/policies/runOn";
 import type { StirlingFileStub } from "@app/types/fileContext";
+import {
+  damageChecksVersion,
+  isDamageCheckPending,
+  subscribeToDamageChecks,
+} from "@app/services/pendingDamageChecks";
 
 /** Files processed per idle pass, so a large upload drains over several ticks instead of janking. */
 const LOCAL_PASS_BATCH = 3;
@@ -48,6 +59,12 @@ export function usePolicyLocalPasses(): void {
   const claimed = useRef<Set<string>>(new Set());
   // Bumped after each batch to drain the next one.
   const [tick, setTick] = useState(0);
+  // A settled damage check re-runs the batch; nothing else changes when a held file is released.
+  const damageVersion = useSyncExternalStore(
+    subscribeToDamageChecks,
+    damageChecksVersion,
+    damageChecksVersion,
+  );
 
   // Active editor upload policies that declare a local fast path.
   const passes = useMemo<ActivePass[]>(() => {
@@ -77,6 +94,10 @@ export function usePolicyLocalPasses(): void {
         if (batch.length >= LOCAL_PASS_BATCH) break outer;
         // Null when the classification is locked: no pass, and so no escalation.
         if (!dispatchableFileId(stub)) continue;
+        // Local passes read the bytes in the browser, so they wait for the damage check and never
+        // run on a file PDFium cannot parse. A repaired version is a new file and runs then.
+        if (isDamageCheckPending(stub.id)) continue;
+        if (stub.processedFile?.isDamaged) continue;
         if (!active.pass.eligible(stub)) continue;
         if (claimed.current.has(claimKey(active.policyKey, stub))) continue;
         batch.push({ active, stub });
@@ -142,5 +163,6 @@ export function usePolicyLocalPasses(): void {
     updateStirlingFileStub,
     bumpRevision,
     tick,
+    damageVersion,
   ]);
 }

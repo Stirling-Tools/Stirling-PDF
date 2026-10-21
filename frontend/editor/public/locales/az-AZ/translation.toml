@@ -4285,6 +4285,13 @@ precision = "Dəqiq yerləşdirmə üçün koordinat girişlərindən istifadə 
 resize = "Ölçünü dəyişmək üçün künc və kənar tutacaqlarını sürüşdürün"
 title = "PDF-ləri necə kəsmək olar"
 
+[damagedPdf]
+description = "Bu PDF zədələnib və açıla bilmir."
+label = "Zədələnmiş"
+repair = "Bərpa et"
+repaired = "{{name}} bərpa edildi"
+repairFailed = "{{name}} bərpa edilə bilmədi"
+
 [database]
 backupCreated = "Verilənlər bazasının ehtiyat nüsxəsi uğurla yaradıldı"
 fileName = "Fayl Adı"
@@ -14052,6 +14059,7 @@ closeAll = "Bütün faylları bağla"
 closePdf = "PDF-i bağla"
 deselectAll = "Hamısını seçmə"
 downloadAll = "Hamısını endir"
+exitAnnotations = "Annotasiya rejimindən çıx"
 exitRedaction = "Gizlətmə rejimindən çıx"
 formFill = "Forma Redaktoru"
 hideToolbar = "Alətlər panelini gizlət"

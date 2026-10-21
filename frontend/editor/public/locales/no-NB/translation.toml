@@ -4285,6 +4285,13 @@ precision = "Bruk koordinatinndata for presis posisjonering"
 resize = "Dra i hjørne- og kantgrep for å endre størrelse"
 title = "Slik beskjærer du PDF-er"
 
+[damagedPdf]
+description = "Denne PDF-en er skadet og kan ikke åpnes."
+label = "Skadet"
+repair = "Reparer"
+repaired = "Reparert {{name}}"
+repairFailed = "Kunne ikke reparere {{name}}"
+
 [database]
 backupCreated = "Sikkerhetskopiering opprettet"
 fileName = "Fil navn"
@@ -14052,6 +14059,7 @@ closeAll = "Lukk alle filer"
 closePdf = "Lukk PDF"
 deselectAll = "Opphev valg av alle"
 downloadAll = "Last ned alt"
+exitAnnotations = "Avslutt annoteringsmodus"
 exitRedaction = "Avslutt sladdemodus"
 formFill = "Skjemaredigerer"
 hideToolbar = "Skjul verktøylinje"

@@ -207,6 +207,11 @@
   pointer-events: none;
 }
 
+/* The overlay ignores pointer events so clicks reach the card; Repair must not. */
+.damagedRepairButton {
+  pointer-events: auto;
+}
+
 .errorPill {
   background: var(--mantine-color-red-6);
   color: var(--c-text-on-primary);

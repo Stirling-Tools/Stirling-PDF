@@ -151,6 +151,9 @@ export interface FileItemProps {
   /** The stored bytes are gone (WebKit lost the blob's backing store). The row
    *  says so instead of pretending the file can open. */
   dataUnavailable?: boolean;
+  /** The PDF could not be parsed; the row offers Repair instead. */
+  isDamaged?: boolean;
+  onRepair?: (fileId: FileId) => void;
 }
 
 /** One kebab row. `disabledReason`, when set, greys the row out and says why. */
@@ -205,6 +208,8 @@ export const FileItem = React.memo(function FileItem({
   isViewedInViewer,
   isToolSkipped = false,
   dataUnavailable,
+  isDamaged = false,
+  onRepair,
   thumbnailUrl,
   isEncrypted,
   onClick,
@@ -366,6 +371,21 @@ export const FileItem = React.memo(function FileItem({
                 </span>
               </Tooltip>
             )}
+            {isDamaged && !dataUnavailable && (
+              <Tooltip
+                label={t(
+                  "damagedPdf.description",
+                  "This PDF is damaged and can't be opened.",
+                )}
+                withArrow
+                position="top"
+              >
+                <span className="file-sidebar-datalost-badge" data-no-select>
+                  <Icon name="circle-alert" size={"0.85rem"} />
+                  {t("damagedPdf.label", "Damaged")}
+                </span>
+              </Tooltip>
+            )}
             {isUploadedToCloud && (
               <Tooltip
                 label={t(
@@ -451,6 +471,18 @@ export const FileItem = React.memo(function FileItem({
               >
                 {viewerLabel}
               </FileMenuItem>
+
+              {isDamaged && onRepair && (
+                <FileMenuItem
+                  disabledReason={blockedReason(
+                    t("damagedPdf.repair", "Repair"),
+                  )}
+                  icon={<Icon name="wrench" size={16} />}
+                  onClick={() => onRepair(fileId)}
+                >
+                  {t("damagedPdf.repair", "Repair")}
+                </FileMenuItem>
+              )}
 
               {onOpenInNewWindow && (
                 <FileMenuItem

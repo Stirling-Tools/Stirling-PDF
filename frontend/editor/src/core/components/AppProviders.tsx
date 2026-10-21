@@ -7,6 +7,7 @@ import { NavigationProvider } from "@app/contexts/NavigationContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import { FilesModalProvider } from "@app/contexts/FilesModalContext";
 import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
+import { DamagedFileRepairProvider } from "@app/contexts/DamagedFileRepairContext";
 import { HotkeyProvider } from "@app/contexts/HotkeyContext";
 import { SidebarProvider } from "@app/contexts/SidebarContext";
 import {
@@ -171,7 +172,9 @@ export function AppProviders({
                                                 <TourOrchestrationProvider>
                                                   <AdminTourOrchestrationProvider>
                                                     <WorkbenchSessionPersistence />
-                                                    {children}
+                                                    <DamagedFileRepairProvider>
+                                                      {children}
+                                                    </DamagedFileRepairProvider>
                                                   </AdminTourOrchestrationProvider>
                                                 </TourOrchestrationProvider>
                                               </WorkbenchBarProvider>

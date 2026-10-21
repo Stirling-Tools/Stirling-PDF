@@ -4285,6 +4285,13 @@ precision = "Folosiți câmpurile de coordonate pentru poziționare precisă"
 resize = "Trageți de colțuri și margini pentru redimensionare"
 title = "Cum să decupați PDF-uri"
 
+[damagedPdf]
+description = "Acest PDF este deteriorat și nu poate fi deschis."
+label = "Deteriorat"
+repair = "Repară"
+repaired = "Reparat {{name}}"
+repairFailed = "Nu s-a putut repara {{name}}"
+
 [database]
 backupCreated = "Copierea de rezervă a bazei de date a reușit"
 fileName = "Nume Fișier"
@@ -14052,6 +14059,7 @@ closeAll = "Închide toate fișierele"
 closePdf = "Închide PDF"
 deselectAll = "Deselectează tot"
 downloadAll = "Descarcă tot"
+exitAnnotations = "Ieși din modul de adnotare"
 exitRedaction = "Ieși din modul de redactare"
 formFill = "Editor de formulare"
 hideToolbar = "Ascunde bara de instrumente"

@@ -4285,6 +4285,13 @@ precision = "استخدم مدخلات الإحداثيات للتموضع ال�
 resize = "اسحب مقابض الزوايا والحواف لتغيير الحجم"
 title = "كيفية قص ملفات PDF"
 
+[damagedPdf]
+description = "ملف PDF هذا تالف ولا يمكن فتحه."
+label = "تالف"
+repair = "إصلاح"
+repaired = "تم إصلاح {{name}}"
+repairFailed = "تعذّر إصلاح {{name}}"
+
 [database]
 backupCreated = "تم إنشاء نسخة احتياطية لقاعدة البيانات بنجاح"
 fileName = "اسم الملف"
@@ -14052,6 +14059,7 @@ closeAll = "إغلاق كل الملفات"
 closePdf = "إغلاق PDF"
 deselectAll = "إلغاء تحديد الكل"
 downloadAll = "تنزيل الكل"
+exitAnnotations = "الخروج من وضع التعليقات التوضيحية"
 exitRedaction = "إنهاء وضع التنقيح"
 formFill = "محرر النماذج"
 hideToolbar = "إخفاء شريط الأدوات"

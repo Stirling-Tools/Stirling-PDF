@@ -4285,6 +4285,13 @@ precision = "Usa os campos de coordenadas para unha colocación precisa"
 resize = "Arrastra os controis das esquinas e dos bordos para redimensionar"
 title = "Como recortar PDF"
 
+[damagedPdf]
+description = "Este PDF está danado e non se pode abrir."
+label = "Danado"
+repair = "Reparar"
+repaired = "Reparouse {{name}}"
+repairFailed = "Non se puido reparar {{name}}"
+
 [database]
 backupCreated = "Copia de seguranza da base de datos feita correctamente"
 fileName = "Nome do ficheiro"
@@ -14052,6 +14059,7 @@ closeAll = "Pechar todos os ficheiros"
 closePdf = "Pechar PDF"
 deselectAll = "Deseleccionar todo"
 downloadAll = "Descargar todo"
+exitAnnotations = "Saír do modo de anotación"
 exitRedaction = "Saír do modo de censura"
 formFill = "Editor de formularios"
 hideToolbar = "Agochar a barra de ferramentas"

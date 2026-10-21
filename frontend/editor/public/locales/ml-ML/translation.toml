@@ -4285,6 +4285,13 @@ precision = "തികച്ചും കൃത്യമായ സ്ഥാന�
 resize = "കോണുകളിലെയും അരികുകളിലെയും ഹാൻഡിലുകൾ ഡ്രാഗ് ചെയ്ത് വലിപ്പം മാറ്റുക"
 title = "PDFകൾ എങ്ങനെ ക്രോപ്പ് ചെയ്യാം"
 
+[damagedPdf]
+description = "ഈ PDF കേടായതിനാൽ തുറക്കാനാവില്ല."
+label = "കേടായത്"
+repair = "നന്നാക്കുക"
+repaired = "{{name}} നന്നാക്കി"
+repairFailed = "{{name}} നന്നാക്കാനായില്ല"
+
 [database]
 backupCreated = "ഡാറ്റാബേസ് ബാക്കപ്പ് വിജയകരം"
 fileName = "ഫയലിന്റെ പേര്"
@@ -14052,6 +14059,7 @@ closeAll = "എല്ലാ ഫയലുകളും അടയ്ക്കുക
 closePdf = "PDF അടയ്ക്കുക"
 deselectAll = "എല്ലാം തിരഞ്ഞെടുക്കൽ ഒഴിവാക്കുക"
 downloadAll = "എല്ലാം ഡൗൺലോഡ് ചെയ്യുക"
+exitAnnotations = "അനോട്ടേഷൻ മോഡിൽ നിന്ന് പുറത്തുകടക്കുക"
 exitRedaction = "റെഡാക്ഷൻ മോഡിൽ നിന്ന് പുറത്തിറങ്ങുക"
 formFill = "ഫോം എഡിറ്റർ"
 hideToolbar = "toolbar മറയ്ക്കുക"
