@@ -86,7 +86,7 @@ describe("viewer permission readiness", () => {
     vi.mocked(ensureLocalPdfAccess).mockImplementation(
       () =>
         new Promise((resolve) => {
-          finish = resolve;
+          finish = (access) => resolve(rememberPdfAccess(file, access));
         }),
     );
     const { engine, opened, buffer } = viewer(file);

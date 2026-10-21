@@ -13,7 +13,6 @@ import {
 } from "@app/services/pdfAccessService";
 import { assertPdfSessionEditable } from "@app/services/pdfSessionUnlock";
 import { readPdfiumAccess } from "@app/utils/pdfiumAccess";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 const EAGER_PAGE_LIMIT = 5;
 
@@ -23,7 +22,6 @@ const yieldToBrowser = () =>
 
 /** Open a PDF in PDFium and lazily populate pages on first visibility. */
 export function useDocumentLoader(store: EditorStore) {
-  const { config } = useAppConfig();
   return useCallback(
     async (file: File, password?: string): Promise<void> => {
       const documentPassword = password ?? getPdfAccess(file)?.password;
@@ -50,10 +48,10 @@ export function useDocumentLoader(store: EditorStore) {
             doc.dispose();
             return;
           }
-          const access = rememberPdfAccess(file, {
-            ...readPdfiumAccess(doc.module, doc.docPtr, documentPassword ?? ""),
-            honorOwnerPasswords: config?.honorOwnerPasswords,
-          });
+          const access = rememberPdfAccess(
+            file,
+            readPdfiumAccess(doc.module, doc.docPtr, documentPassword ?? ""),
+          );
           assertPdfSessionEditable(access);
         } catch (error) {
           doc.dispose();
@@ -141,7 +139,7 @@ export function useDocumentLoader(store: EditorStore) {
         }
       }
     },
-    [store, config?.honorOwnerPasswords],
+    [store],
   );
 }
 

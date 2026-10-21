@@ -9,7 +9,6 @@ import {
 import { pdfAllows } from "@app/services/pdfPermissions";
 import { PdfPermissionFlag } from "@embedpdf/models";
 
-import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { Button } from "@app/ui/Button";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
 
@@ -22,7 +21,6 @@ export function PermissionsPasswordButton({
   onVerified: (file: File) => void;
 }) {
   const { t } = useTranslation();
-  const { config } = useAppConfig();
   const access = usePdfAccess(file);
   const [opened, setOpened] = useState(false);
   const [password, setPassword] = useState("");
@@ -68,10 +66,7 @@ export function PermissionsPasswordButton({
         );
         return;
       }
-      rememberPdfAccess(file, {
-        ...verified,
-        honorOwnerPasswords: config?.honorOwnerPasswords,
-      });
+      rememberPdfAccess(file, verified);
       setOpened(false);
       setPassword("");
       onVerified(file);

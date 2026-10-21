@@ -169,10 +169,7 @@ export const useToolApiCalls = <TParams = void>() => {
               cancellation.token.throwIfRequested();
               if (fileSignal.aborted)
                 throw new axios.CanceledError("Operation cancelled");
-              rememberPdfAccess(output, {
-                ...access,
-                honorOwnerPasswords: getPdfAccess(file)?.honorOwnerPasswords,
-              });
+              rememberPdfAccess(output, access);
             }
           }
           // Guard: some endpoints may return an empty/0-byte file with 200

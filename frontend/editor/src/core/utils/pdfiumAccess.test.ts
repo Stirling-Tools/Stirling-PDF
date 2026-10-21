@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { PdfPermissionFlag as Permission } from "@embedpdf/models";
 import { readPdfiumAccess } from "@app/utils/pdfiumAccess";
@@ -19,8 +19,6 @@ function moduleFor(
     FPDF_GetPageCount: () => 3,
   } as unknown as WrappedPdfiumModule;
 }
-
-vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
 
 describe("PDFium access decisions", () => {
   it("does not confuse unrestricted reader permissions with owner authentication", () => {

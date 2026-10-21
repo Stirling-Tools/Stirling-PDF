@@ -68,7 +68,6 @@ import { useZipConfirmation } from "@app/hooks/useZipConfirmation";
 import ZipWarningModal from "@app/components/shared/ZipWarningModal";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
 import { useTranslation } from "react-i18next";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
 import {
   inspectLocalPdfAccess,
   bindPdfAccess,
@@ -133,7 +132,6 @@ function FileContextInner({
   }
   const lifecycleManager = lifecycleManagerRef.current;
   const { t } = useTranslation();
-  const { config } = useAppConfig();
 
   const [encryptedQueue, setEncryptedQueue] = useState<FileId[]>([]);
   const [activeEncryptedFileId, setActiveEncryptedFileId] =
@@ -676,10 +674,7 @@ function FileContextInner({
         );
       }
 
-      const access = {
-        ...(await inspectLocalPdfAccess(file, password, signal)),
-        honorOwnerPasswords: config?.honorOwnerPasswords,
-      };
+      const access = await inspectLocalPdfAccess(file, password, signal);
       if (signal?.aborted || filesRef.current.get(fileId) !== file) {
         return;
       }
@@ -732,7 +727,7 @@ function FileContextInner({
       ownerRequests.current.get(fileId)?.resolve(true);
       ownerRequests.current.delete(fileId);
     },
-    [t, config?.honorOwnerPasswords],
+    [t],
   );
 
   const inspectOpening = useEffectEvent(
@@ -802,10 +797,7 @@ function FileContextInner({
           ),
         );
       }
-      rememberPdfAccess(copy, {
-        ...copyAccess,
-        honorOwnerPasswords: config?.honorOwnerPasswords,
-      });
+      rememberPdfAccess(copy, copyAccess);
       const generatedMetadata = await generateProcessedFileMetadata(copy);
       const metadata = {
         ...generatedMetadata,
@@ -839,7 +831,7 @@ function FileContextInner({
       pending?.resolve(output);
       indexedDB?.bumpRevision?.();
     },
-    [t, dispatchWithUnlock, indexedDB, config?.honorOwnerPasswords],
+    [t, dispatchWithUnlock, indexedDB],
   );
 
   const runUnprotectedCopy = useCallback(
@@ -1124,10 +1116,7 @@ function FileContextInner({
   const unlockPreviewPdf = useCallback<FileContextActions["unlockPreviewPdf"]>(
     async (file, password, signal) => {
       if (signal.aborted) return;
-      const access = {
-        ...(await inspectLocalPdfAccess(file, password, signal)),
-        honorOwnerPasswords: config?.honorOwnerPasswords,
-      };
+      const access = await inspectLocalPdfAccess(file, password, signal);
       if (signal.aborted) return;
       const storedAccess = rememberPdfAccess(file, access);
       signal.addEventListener(
@@ -1136,7 +1125,7 @@ function FileContextInner({
         { once: true },
       );
     },
-    [config?.honorOwnerPasswords],
+    [],
   );
 
   // Complete actions object

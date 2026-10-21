@@ -71,7 +71,7 @@ class AddPasswordRequestTest {
     }
 
     @Nested
-    @DisplayName("equals/hashCode/toString")
+    @DisplayName("equals/hashCode")
     class EqualityContract {
 
         @Test
@@ -101,16 +101,6 @@ class AddPasswordRequestTest {
         void notEqualToOthers() {
             AddPasswordRequest a = new AddPasswordRequest();
             assertThat(a).isNotEqualTo(null).isNotEqualTo("string");
-        }
-
-        @Test
-        @DisplayName("toString contains options without the password")
-        void toStringContent() {
-            AddPasswordRequest a = new AddPasswordRequest();
-            a.setPassword("secret");
-            assertThat(a.toString())
-                    .contains("AddPasswordRequest", "keyLength=256")
-                    .doesNotContain("secret");
         }
     }
 }

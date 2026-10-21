@@ -916,8 +916,6 @@ export function LocalEmbedPDF({
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
-  const ownerPolicyRef = useRef(config?.honorOwnerPasswords);
-  ownerPolicyRef.current = config?.honorOwnerPasswords;
   const [urlSource, setUrlSource] = useState<File | null>(null);
   const pdfAccess = usePdfAccess(file ?? urlSource ?? fileId);
   const permissionOverride =
@@ -1414,10 +1412,7 @@ export function LocalEmbedPDF({
     fontFallback: fontFallbackConfig,
   });
   const engine = useMemo(
-    () =>
-      workerEngine
-        ? withPdfViewerAccess(workerEngine, () => ownerPolicyRef.current)
-        : null,
+    () => (workerEngine ? withPdfViewerAccess(workerEngine) : null),
     [workerEngine],
   );
 

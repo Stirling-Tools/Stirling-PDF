@@ -295,6 +295,7 @@ describe("processFiles failure reporting", () => {
   ])(
     "adopts %s results locally with preserveExisting=%s",
     async (operation, preserveExisting, password) => {
+      setPdfAccessPolicy(false);
       const input = file("source.pdf", "source");
       rememberPdfAccess(input, {
         ...getPdfAccess(input)!,
@@ -302,7 +303,6 @@ describe("processFiles failure reporting", () => {
         password: "owner",
         openingPassword: "reader",
         ownerAuthenticated: true,
-        honorOwnerPasswords: false,
       });
       post.mockResolvedValue({ data: new Blob(["output"]), status: 200 });
       inspectLocal.mockImplementation(async (_output, credential) => ({

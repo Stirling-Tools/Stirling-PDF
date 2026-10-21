@@ -6,9 +6,7 @@ import {
   type PdfEngine,
 } from "@embedpdf/models";
 import {
-  getPdfAccess,
   pdfAccessLifetime,
-  rememberPdfAccess,
   rememberUnencryptedPdf,
   ensureLocalPdfAccess,
 } from "@app/services/pdfAccessService";
@@ -21,10 +19,7 @@ export function bindPdfViewerSource(buffer: ArrayBuffer, source: Blob): void {
 }
 
 /** Resolve access before publishing a document; encrypted sources without cached access need local inspection. */
-export function withPdfViewerAccess(
-  engine: PdfEngine<Blob>,
-  honorOwnerPasswords: () => boolean | undefined = () => undefined,
-): PdfEngine<Blob> {
+export function withPdfViewerAccess(engine: PdfEngine<Blob>): PdfEngine<Blob> {
   const open: PdfEngine<Blob>["openDocumentBuffer"] = (file, options) => {
     const source = sources.get(file.content);
     if (!source)
@@ -99,14 +94,6 @@ export function withPdfViewerAccess(
                 message: "Unable to verify PDF security.",
               });
             } else {
-              if (
-                getPdfAccess(source) !== access ||
-                access.honorOwnerPasswords !== honorOwnerPasswords()
-              )
-                rememberPdfAccess(source, {
-                  ...access,
-                  honorOwnerPasswords: honorOwnerPasswords(),
-                });
               task.resolve(document);
             }
           },
