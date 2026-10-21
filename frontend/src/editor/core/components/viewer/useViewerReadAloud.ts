@@ -7,16 +7,16 @@ import {
 } from "@app/components/viewer/readAloudFromSelection";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useStopReadAloudOnNavigation } from "@app/components/viewer/useStopReadAloudOnNavigation";
-import { StirlingFile } from "@app/types/fileContext";
-import { ZINDEX } from "@app/constants/zIndex";
 import {
   extractPageTextItemsForReadAloudFromDoc,
   openRawDocumentSafe,
   closeRawDocument,
-  ReadAloudTextItem,
+  type ReadAloudTextItem,
 } from "@app/services/pdfiumService";
 import { createReadAloudDocSession } from "@app/components/viewer/readAloudDocSession";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { StirlingFile } from "@app/types/fileContext";
+import { ZINDEX } from "@app/constants/zIndex";
 
 type TextItemWithGeometry = ReadAloudTextItem;
 
@@ -96,10 +96,11 @@ export function useViewerReadAloud(
   // older value must not speak or tear down the session that replaced it.
   const sessionRef = useRef(0);
   const totalPagesRef = useRef(0);
-  const speechRateRef = useRef(1);
+  const speechRateRef = useRef(1); // Keep track of current rate without recreating dependent functions
   const speechLanguageRef = useRef(defaultLanguage || "en-US");
 
   const cachedTextItemsRef = useRef<TextItemWithGeometry[] | null>(null);
+  const cachedPageNumberRef = useRef<number | null>(null);
   const cachedArrayBufferRef = useRef<ArrayBuffer | null>(null);
   const cachedFileRef = useRef<StirlingFile | File | null>(null);
   // One PDFium document shared by every page of the reading session, so page
@@ -222,22 +223,12 @@ export function useViewerReadAloud(
 
   const cleanupReadingSession = useCallback(() => {
     cachedTextItemsRef.current = null;
+    cachedPageNumberRef.current = null;
     cachedArrayBufferRef.current = null;
     cachedFileRef.current = null;
     docSessionRef.current?.close();
+    docSessionRef.current = null;
   }, []);
-
-  // Session document handle for readPage: opens once per file, shared across
-  // page advances, closed by cleanupReadingSession. A superseded open (file
-  // changed mid-open) is closed instead of cached.
-  const ensureReadAloudDoc = useCallback(
-    async (
-      currentFile: StirlingFile | File,
-      arrayBuffer: ArrayBuffer,
-    ): Promise<number | null> =>
-      getDocSession().ensure(currentFile, arrayBuffer),
-    [getDocSession],
-  );
 
   const stopReadingAloud = useCallback(() => {
     sessionRef.current++;
@@ -319,6 +310,18 @@ export function useViewerReadAloud(
     [clearHighlights],
   );
 
+  // Session document handle for readPage: opens once per file, shared across
+  // page advances, closed by cleanupReadingSession. A superseded open (file
+  // changed mid-open) is closed instead of cached.
+  const ensureReadAloudDoc = useCallback(
+    async (
+      currentFile: StirlingFile | File,
+      arrayBuffer: ArrayBuffer,
+    ): Promise<number | null> =>
+      getDocSession().ensure(currentFile, arrayBuffer),
+    [getDocSession],
+  );
+
   /**
    * Parses one page's text for speaking. Null when the page has no text or
    * when `session` was superseded mid-parse, so callers check the session
@@ -345,7 +348,7 @@ export function useViewerReadAloud(
       }
 
       const docPtr = await ensureReadAloudDoc(currentFile, arrayBuffer);
-      if (docPtr === null) {
+      if (docPtr === null || session !== sessionRef.current) {
         return null;
       }
 
@@ -354,9 +357,11 @@ export function useViewerReadAloud(
         pageNumber - 1,
         zoom,
       );
+      if (session !== sessionRef.current) return null;
 
       textItemsRef.current = mergedItems;
       cachedTextItemsRef.current = mergedItems;
+      cachedPageNumberRef.current = pageNumber;
 
       const spokenText = mergedItems
         .map((item) => item.str)
@@ -369,25 +374,9 @@ export function useViewerReadAloud(
       }
 
       const words = spokenText.split(/\s+/).filter(Boolean);
-
-      if (!options?.preserveSpeechState) {
-        speechTextRef.current = spokenText;
-        speechWordsRef.current = words;
-        speechCharIndexRef.current = 0;
-        currentWordIndexRef.current = 0;
-      }
-
-      const highlightIndex = Math.max(
-        0,
-        Math.min(
-          options?.highlightWordIndex ?? 0,
-          Math.max(words.length - 1, 0),
-        ),
-      );
-      highlightWord(highlightIndex, words, pageNumber);
       return { spokenText, words };
     },
-    [ensureReadAloudDoc, highlightWord, viewer],
+    [ensureReadAloudDoc, viewer],
   );
 
   const speakFromCharIndex = useCallback(
@@ -564,60 +553,46 @@ export function useViewerReadAloud(
     highlightWord(wordIndex, words, pageNumber);
   }, [isReadingAloud, highlightWord]);
 
+  const startReading = useCallback(
+    async (
+      pageNumber: number,
+      findStartCharIndex?: (spokenText: string) => number,
+    ) => {
+      if (!displayedFile) return;
+      const session = ++sessionRef.current;
+      try {
+        currentFileRef.current = displayedFile;
+        totalPagesRef.current = viewer.getScrollState().totalPages || 0;
+
+        setIsReadingAloud(true);
+        const pageData = await readPage(displayedFile, pageNumber, session);
+        if (session !== sessionRef.current) return;
+        if (!pageData) {
+          stopReadingAloud();
+          return;
+        }
+
+        window.speechSynthesis.cancel();
+        speakFromCharIndex(
+          pageData.spokenText,
+          pageData.words,
+          findStartCharIndex?.(pageData.spokenText) ?? 0,
+          pageNumber,
+          speechRateRef.current,
+          speechLanguageRef.current,
+        );
+      } catch (error) {
+        if (session !== sessionRef.current) return;
+        console.error("Read aloud failed", error);
+        stopReadingAloud();
+      }
+    },
+    [displayedFile, readPage, speakFromCharIndex, stopReadingAloud, viewer],
+  );
+
   const handleReadAloud = useCallback(async () => {
     if (typeof window === "undefined" || !window.speechSynthesis) {
       return;
-    }
-
-    if (isReadingAloud) {
-      restartingSpeechRef.current = false;
-      if (pageAdvanceTimeoutRef.current !== null) {
-        window.clearTimeout(pageAdvanceTimeoutRef.current);
-        pageAdvanceTimeoutRef.current = null;
-      }
-      window.speechSynthesis.cancel();
-      clearHighlights();
-      setIsReadingAloud(false);
-      currentFileRef.current = null;
-      utteranceRef.current = null;
-      cleanupReadingSession();
-      return;
-    }
-
-    try {
-      const selectedFiles = selectors.getSelectedFiles();
-      const currentFile =
-        selectedFiles[viewer.activeFileIndex] ?? selectedFiles[0];
-      if (!currentFile) return;
-      currentFileRef.current = currentFile;
-      totalPagesRef.current = viewer.getScrollState().totalPages || 0;
-
-      setIsReadingAloud(true);
-      const currentPage = viewer.getScrollState().currentPage || 1;
-      currentPageNumberRef.current = currentPage;
-      const pageData = await readPage(currentFile, currentPage);
-      if (!pageData) {
-        currentFileRef.current = null;
-        setIsReadingAloud(false);
-        cleanupReadingSession();
-        return;
-      }
-
-      window.speechSynthesis.cancel();
-      speakFromCharIndex(
-        pageData.spokenText,
-        pageData.words,
-        0,
-        currentPage,
-        speechRateRef.current,
-        speechLanguageRef.current,
-      );
-    } catch (error) {
-      console.error("Read aloud failed", error);
-      currentFileRef.current = null;
-      clearHighlights();
-      setIsReadingAloud(false);
-      cleanupReadingSession();
     }
 
     if (isReadingAloud) {
