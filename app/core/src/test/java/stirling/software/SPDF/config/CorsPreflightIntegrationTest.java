@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -33,6 +34,7 @@ import stirling.software.common.model.ApplicationProperties;
 class CorsPreflightIntegrationTest {
 
     private static final String ORIGIN = "https://app.example.com";
+    private static final String DESKTOP_ORIGIN = "tauri://localhost";
 
     @Autowired private MockMvc mockMvc;
 
@@ -92,5 +94,26 @@ class CorsPreflightIntegrationTest {
                                 .header("Origin", ORIGIN)
                                 .header("Access-Control-Request-Method", "GET"))
                 .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+    }
+
+    @Test
+    @DisplayName("desktop webview can fetch PDFium fallback fonts cross-origin")
+    void fontRequestFromDesktopOriginReturnsCorsHeaders() throws Exception {
+        mockMvc.perform(get("/fonts/NotoSans-Regular.ttf").header("Origin", DESKTOP_ORIGIN))
+                .andExpect(header().string("Access-Control-Allow-Origin", DESKTOP_ORIGIN));
+    }
+
+    @Test
+    @DisplayName("other static assets stay out of the cross-origin allowlist")
+    void imageRequestOmitsCorsHeaders() throws Exception {
+        mockMvc.perform(get("/images/logo.svg").header("Origin", ORIGIN))
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+    }
+
+    @Test
+    @DisplayName("error responses stay readable by cross-origin clients")
+    void errorDispatchReturnsCorsHeaders() throws Exception {
+        mockMvc.perform(get("/error").header("Origin", DESKTOP_ORIGIN))
+                .andExpect(header().string("Access-Control-Allow-Origin", DESKTOP_ORIGIN));
     }
 }

@@ -23,6 +23,13 @@ public class CorsPaths {
      * /oauth2/**}, {@code /login/oauth2/code/**}) stay excluded on purpose: that flow runs through
      * top-level browser navigation rather than {@code fetch}, so CORS headers would only widen the
      * attack surface of the credentialed mapping.
+     *
+     * <p>{@code /fonts/**}, {@code /error} and {@code /logout} are called by the desktop webview,
+     * whose {@code tauri://localhost} origin is cross-origin to the bundled backend. PDFium fetches
+     * its fallback faces from {@code /fonts}, failures raised before a controller dispatch to
+     * {@code /error} (an oversized upload is the common case), and logout POSTs to {@code /logout}
+     * so the server session is cleared. Every other static path stays excluded so its responses
+     * remain origin-agnostic and cacheable.
      */
     public static final String[] CROSS_ORIGIN_PATTERNS = {
         "/api/**",
@@ -31,6 +38,9 @@ public class CorsPaths {
         "/swagger-ui/**",
         "/swagger-ui.html",
         "/mcp/**",
-        "/.well-known/oauth-protected-resource/**"
+        "/.well-known/oauth-protected-resource/**",
+        "/fonts/**",
+        "/error",
+        "/logout"
     };
 }

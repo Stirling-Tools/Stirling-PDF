@@ -403,6 +403,22 @@ class SupabaseSecurityConfigMoreTest {
             assertThat(resolve(source(true), "/index.html", SELF_HOSTED)).isNull();
         }
 
+        @Test
+        @DisplayName("the SPA root stays cacheable even with account linking enabled")
+        void rootHasNoCorsConfig() {
+            assertThat(resolve(source(true), "/", SELF_HOSTED)).isNull();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"/fonts/NotoSans-Regular.ttf", "/error", "/logout"})
+        @DisplayName("paths the desktop webview calls keep their CORS config")
+        void desktopCalledPathsResolve(String path) {
+            CorsConfiguration cfg = resolve(source(true), path, FIRST_PARTY);
+
+            assertThat(cfg).isNotNull();
+            assertThat(cfg.checkOrigin(FIRST_PARTY)).isEqualTo(FIRST_PARTY);
+        }
+
         @ParameterizedTest
         @ValueSource(
                 strings = {

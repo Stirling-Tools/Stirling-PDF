@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class CorsPathsTest {
 
     @Test
-    @DisplayName("allowlist contains exactly the API, docs, UI, and MCP surfaces")
+    @DisplayName("allowlist contains exactly the API, docs, MCP and desktop-called surfaces")
     void allowlistMatchesExpectedSurfaces() {
         assertArrayEquals(
                 new String[] {
@@ -22,7 +22,10 @@ class CorsPathsTest {
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/mcp/**",
-                    "/.well-known/oauth-protected-resource/**"
+                    "/.well-known/oauth-protected-resource/**",
+                    "/fonts/**",
+                    "/error",
+                    "/logout"
                 },
                 CorsPaths.CROSS_ORIGIN_PATTERNS);
     }
