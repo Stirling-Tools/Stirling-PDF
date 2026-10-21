@@ -4285,6 +4285,13 @@ precision = "Használja a koordinátamezőket a pontos pozicionáláshoz"
 resize = "Húzza a sarkok és élek fogópontjait az átméretezéshez"
 title = "Hogyan vágjon PDF-et"
 
+[damagedPdf]
+description = "Ez a PDF sérült, és nem nyitható meg."
+label = "Sérült"
+repair = "Javítás"
+repaired = "Javítva: {{name}}"
+repairFailed = "Nem sikerült javítani: {{name}}"
+
 [database]
 backupCreated = "Adatbázis biztonsági mentése sikeres"
 fileName = "Fájlnév"
@@ -14052,6 +14059,7 @@ closeAll = "Összes fájl bezárása"
 closePdf = "PDF bezárása"
 deselectAll = "Összes kijelölés megszüntetése"
 downloadAll = "Összes letöltése"
+exitAnnotations = "Kilépés az annotációs módból"
 exitRedaction = "Kilépés a kitakarási módból"
 formFill = "Űrlapszerkesztő"
 hideToolbar = "Eszköztár elrejtése"

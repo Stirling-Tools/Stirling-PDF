@@ -4285,6 +4285,13 @@ precision = "Verwenden Sie Koordinateneingaben für präzise Positionierung"
 resize = "Ziehen Sie die Eck- und Kantengriffe, um die Größe zu ändern"
 title = "PDFs zuschneiden - Anleitung"
 
+[damagedPdf]
+description = "Dieses PDF ist beschädigt und kann nicht geöffnet werden."
+label = "Beschädigt"
+repair = "Reparieren"
+repaired = "{{name}} repariert"
+repairFailed = "{{name}} konnte nicht repariert werden"
+
 [database]
 backupCreated = "Datenbanksicherung erfolgreich"
 fileName = "Dateiname"
@@ -14052,6 +14059,7 @@ closeAll = "Alle Dateien schließen"
 closePdf = "PDF schließen"
 deselectAll = "Alle abwählen"
 downloadAll = "Alle herunterladen"
+exitAnnotations = "Anmerkungsmodus beenden"
 exitRedaction = "Schwärzungsmodus beenden"
 formFill = "Formular-Editor"
 hideToolbar = "Toolbar ausblenden"

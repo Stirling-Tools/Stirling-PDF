@@ -47,6 +47,7 @@ import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import { truncateCenter } from "@app/utils/textUtils";
 import { FileEditorStatusDot } from "@app/components/fileEditor/FileEditorStatusDot";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
+import { useDamagedFileRepair } from "@app/contexts/DamagedFileRepairContext";
 
 interface FileEditorThumbnailProps {
   file: StirlingFileStub;
@@ -107,6 +108,10 @@ const FileEditorThumbnail = ({
   const isZipFile = zipFileService.isZipFileStub(file);
 
   const hasError = useFileSelector((s) => s.ui.errorFileIds.includes(file.id));
+  const isDamaged = file.processedFile?.isDamaged === true;
+  const damagedRepair = useDamagedFileRepair();
+  const isRepairing = damagedRepair?.repairingFileId === file.id;
+  const repairBusy = damagedRepair?.repairingFileId != null;
   const pageCount = file.processedFile?.totalPages || 0;
   const {
     isEncrypted,
@@ -347,6 +352,20 @@ const FileEditorThumbnail = ({
         },
       },
       {
+        id: "repair",
+        icon: <Icon name="wrench" size={20} />,
+        label: t("damagedPdf.repair", "Repair"),
+        disabled: policyEnforcing || repairBusy,
+        tooltip: policyEnforcing
+          ? enforcingTooltip(t("damagedPdf.repair", "Repair"))
+          : undefined,
+        onClick: (e) => {
+          e.stopPropagation();
+          damagedRepair?.repair(file.id);
+        },
+        hidden: !isDamaged || !damagedRepair,
+      },
+      {
         id: "pin",
         icon: <Icon name="pin" size={20} filled={isPinned} />,
         label: isPinned
@@ -477,6 +496,9 @@ const FileEditorThumbnail = ({
     isCBZ,
     isCBR,
     isPinned,
+    isDamaged,
+    damagedRepair,
+    repairBusy,
     actualFile,
     terminology,
     onViewFile,
@@ -564,6 +586,40 @@ const FileEditorThumbnail = ({
                 </div>
               )}
 
+              {isDamaged && !hasError && (
+                <div className={styles.errorOverlay}>
+                  <Stack align="center" gap="xs">
+                    <Tooltip
+                      label={t(
+                        "damagedPdf.description",
+                        "This PDF is damaged and can't be opened.",
+                      )}
+                      withArrow
+                    >
+                      <span className={styles.errorPill}>
+                        {t("damagedPdf.label", "Damaged")}
+                      </span>
+                    </Tooltip>
+                    {damagedRepair && (
+                      <Button
+                        size="sm"
+                        className={styles.damagedRepairButton}
+                        loading={isRepairing}
+                        disabled={
+                          policyEnforcing || (repairBusy && !isRepairing)
+                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          damagedRepair.repair(file.id);
+                        }}
+                      >
+                        {t("damagedPdf.repair", "Repair")}
+                      </Button>
+                    )}
+                  </Stack>
+                </div>
+              )}
+
               {/* Policy enforcement overlay — shown while any policy is in-flight */}
               <PolicyEnforcingOverlay
                 enforcing={policyEnforcing && !enforcingDismissed}
@@ -580,6 +636,7 @@ const FileEditorThumbnail = ({
                 isEncrypted={isEncrypted}
                 isLoading={
                   !isEncrypted &&
+                  !isDamaged &&
                   !displayThumbnail &&
                   // No thumbnail is ever produced at/above the parse limit, so
                   // without this the spinner has no terminal state.

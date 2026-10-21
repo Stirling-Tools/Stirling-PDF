@@ -4285,6 +4285,13 @@ precision = "Gebruik coördinatenvelden voor nauwkeurige positionering"
 resize = "Sleep aan de hoek- en randgrepen om te schalen"
 title = "PDF's bijsnijden"
 
+[damagedPdf]
+description = "Deze PDF is beschadigd en kan niet worden geopend."
+label = "Beschadigd"
+repair = "Repareren"
+repaired = "Gerepareerd {{name}}"
+repairFailed = "Kan {{name}} niet repareren"
+
 [database]
 backupCreated = "Databaseback-up geslaagd"
 fileName = "Bestandsnaam"
@@ -14052,6 +14059,7 @@ closeAll = "Alle bestanden sluiten"
 closePdf = "PDF sluiten"
 deselectAll = "Alles deselecteren"
 downloadAll = "Alles downloaden"
+exitAnnotations = "Annotatiemodus verlaten"
 exitRedaction = "Zwartlakmodus afsluiten"
 formFill = "Formuliereditor"
 hideToolbar = "Toolbar verbergen"

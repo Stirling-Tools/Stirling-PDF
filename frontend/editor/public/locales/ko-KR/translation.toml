@@ -4285,6 +4285,13 @@ precision = "정확한 위치 지정을 위해 좌표 입력 사용"
 resize = "모서리 및 가장자리 핸들을 드래그하여 크기 조절"
 title = "PDF 자르는 방법"
 
+[damagedPdf]
+description = "이 PDF는 손상되어 열 수 없습니다."
+label = "손상됨"
+repair = "복구"
+repaired = "{{name}} 복구됨"
+repairFailed = "{{name}} 복구 실패"
+
 [database]
 backupCreated = "데이터베이스 백업 성공"
 fileName = "파일 이름"
@@ -14052,6 +14059,7 @@ closeAll = "모든 파일 닫기"
 closePdf = "PDF 닫기"
 deselectAll = "모두 선택 해제"
 downloadAll = "모두 다운로드"
+exitAnnotations = "주석 모드 종료"
 exitRedaction = "가리기 모드 종료"
 formFill = "양식 편집기"
 hideToolbar = "도구 모음 숨기기"

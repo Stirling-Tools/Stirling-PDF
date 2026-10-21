@@ -4285,6 +4285,13 @@ precision = "Koristite unos koordinata za precizno pozicioniranje"
 resize = "Povucite ručke na kutovima i rubovima za promjenu veličine"
 title = "Kako izrezati PDF-ove"
 
+[damagedPdf]
+description = "Ovaj PDF je oštećen i ne može se otvoriti."
+label = "Oštećen"
+repair = "Popravi"
+repaired = "Popravljeno {{name}}"
+repairFailed = "Nije moguće popraviti {{name}}"
+
 [database]
 backupCreated = "Sigurnosna kopija baze podataka uspješno stvorena"
 fileName = "Ime datoteke"
@@ -14052,6 +14059,7 @@ closeAll = "Zatvori sve datoteke"
 closePdf = "Zatvori PDF"
 deselectAll = "Poništi odabir svega"
 downloadAll = "Preuzmi sve"
+exitAnnotations = "Izađi iz načina za bilješke"
 exitRedaction = "Izađi iz načina zatamnjivanja"
 formFill = "Uređivač obrazaca"
 hideToolbar = "Sakrij alatnu traku"

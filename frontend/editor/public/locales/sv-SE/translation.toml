@@ -4285,6 +4285,13 @@ precision = "Använd koordinatfälten för exakt positionering"
 resize = "Dra i hörn- och kantgreppen för att ändra storlek"
 title = "Så beskär du PDF:er"
 
+[damagedPdf]
+description = "Den här PDF-filen är skadad och kan inte öppnas."
+label = "Skadad"
+repair = "Reparera"
+repaired = "Reparerade {{name}}"
+repairFailed = "Kunde inte reparera {{name}}"
+
 [database]
 backupCreated = "Backup av databas lyckades"
 fileName = "Filnamn"
@@ -14052,6 +14059,7 @@ closeAll = "Stäng alla filer"
 closePdf = "Stäng PDF"
 deselectAll = "Avmarkera alla"
 downloadAll = "Ladda ner alla"
+exitAnnotations = "Avsluta annoteringsläge"
 exitRedaction = "Avsluta maskeringsläge"
 formFill = "Formulärredigerare"
 hideToolbar = "Dölj verktygsfält"

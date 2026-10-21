@@ -17,6 +17,8 @@ import {
   hasPdfPermissionOverride,
   pdfAllows,
 } from "@app/services/pdfPermissions";
+import { isDamagedPdfError } from "@app/utils/pdfDamage";
+import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
 
 const SUPPORTED_ENDPOINTS = new Set([
   "/api/v1/security/add-password",
@@ -63,6 +65,24 @@ export function supportsSessionUnlock(endpoint: string | undefined): boolean {
   return endpoint !== undefined && SUPPORTED_ENDPOINTS.has(endpoint);
 }
 
+/**
+ * PDFium rejects some damaged files the server can still recover, so unparseable
+ * bytes with no encryption hint are passed through unchanged. Access is not
+ * recorded for them: nothing has proved them unencrypted.
+ */
+async function ensureAccessUnlessDamaged(
+  file: StirlingFile,
+  signal?: AbortSignal,
+): Promise<PdfAccess | undefined> {
+  try {
+    return await ensureLocalPdfAccess(file, signal);
+  } catch (error) {
+    if (isDamagedPdfError(error) && !(await looksEncryptedFromTrailer(file)))
+      return undefined;
+    throw error;
+  }
+}
+
 /** Checks the whole selection before processing; encryption hints request authentication but never grant access. */
 export async function preflightPdfOperation(
   files: readonly StirlingFile[],
@@ -82,7 +102,7 @@ export async function preflightPdfOperation(
     // Password endpoints validate the requested change themselves; unknown roles need no preflight upload.
     const access = changesProtection
       ? getPdfAccess(file)
-      : await ensureLocalPdfAccess(file, signal);
+      : await ensureAccessUnlessDamaged(file, signal);
     const encrypted =
       access?.encrypted ??
       (endpoint === "/api/v1/security/add-password" && isKnownEncrypted(file));
@@ -167,8 +187,9 @@ export async function prepareUnlockedFile(
   if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name))
     return file;
   const access =
-    getPdfAccess(file) ?? (await ensureLocalPdfAccess(file, inspectionSignal));
-  if (!access.encrypted) return file;
+    getPdfAccess(file) ??
+    (await ensureAccessUnlessDamaged(file, inspectionSignal));
+  if (!access?.encrypted) return file;
   if (!supportsSessionUnlock(endpoint))
     throw new Error(
       i18n.t(

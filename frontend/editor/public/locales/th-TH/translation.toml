@@ -4285,6 +4285,13 @@ precision = "ใช้ช่องกรอกพิกัดเพื่อค�
 resize = "ลากจุดจับที่มุมและขอบเพื่อปรับขนาด"
 title = "วิธีครอบตัด PDF"
 
+[damagedPdf]
+description = "PDF นี้เสียหายและไม่สามารถเปิดได้"
+label = "เสียหาย"
+repair = "ซ่อมแซม"
+repaired = "ซ่อมแซม {{name}} แล้ว"
+repairFailed = "ไม่สามารถซ่อมแซม {{name}} ได้"
+
 [database]
 backupCreated = "สำรองฐานข้อมูลสำเร็จ"
 fileName = "ชื่อไฟล์"
@@ -14052,6 +14059,7 @@ closeAll = "ปิดไฟล์ทั้งหมด"
 closePdf = "ปิด PDF"
 deselectAll = "ยกเลิกการเลือกทั้งหมด"
 downloadAll = "ดาวน์โหลดทั้งหมด"
+exitAnnotations = "ออกจากโหมดคำอธิบายประกอบ"
 exitRedaction = "ออกจากโหมดปกปิดข้อมูล"
 formFill = "ตัวแก้ไขฟอร์ม"
 hideToolbar = "ซ่อนแถบเครื่องมือ"
