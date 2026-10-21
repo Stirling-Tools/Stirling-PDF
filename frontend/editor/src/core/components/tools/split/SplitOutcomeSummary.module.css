@@ -1,0 +1,58 @@
+.summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-sunken);
+}
+
+.summary[data-tone="danger"] {
+  border-color: color-mix(in srgb, var(--c-danger) 40%, var(--c-border-subtle));
+  background: color-mix(in srgb, var(--c-danger) 8%, var(--c-surface));
+}
+
+.icon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--c-text-muted);
+}
+
+.summary[data-tone="danger"] .icon {
+  color: var(--c-danger);
+}
+
+.body {
+  min-width: 0;
+}
+
+.title {
+  font-size: 0.8125rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.35;
+  color: var(--c-text);
+}
+
+.summary[data-tone="danger"] .title {
+  color: var(--c-danger);
+}
+
+.detail {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--c-text-muted);
+}
+
+/* Nothing to say yet: keep the live region in the tree, out of sight. */
+.summary[data-empty] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

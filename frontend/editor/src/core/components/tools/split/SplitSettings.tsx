@@ -1,11 +1,15 @@
 import {
-  Stack,
-  TextInput,
-  Checkbox,
   Anchor,
-  Text,
+  Box,
+  Group,
+  NumberInput,
   Select,
+  Stack,
+  Switch,
+  Text,
+  TextInput,
 } from "@mantine/core";
+import type { ReactNode } from "react";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { SPLIT_METHODS } from "@app/constants/splitConstants";
@@ -19,117 +23,147 @@ export interface SplitSettingsProps {
     value: SplitParameters[K],
   ) => void;
   disabled?: boolean;
+  /** Goal-level method switch, rendered above the inputs when the goal has more than one. */
+  variantPicker?: ReactNode;
 }
+
+const PAPER_SIZES = ["A4", "Letter", "A3", "A5", "Legal", "Tabloid"] as const;
 
 const SplitSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
+  variantPicker,
 }: SplitSettingsProps) => {
   const { t } = useTranslation();
 
+  // Divisions are cut lines; people count rows and columns, so show that.
+  // An empty field stays empty so it can be retyped — validation blocks the run.
+  const rows =
+    parameters.hDiv === "" ? "" : (toPositiveInt(parameters.hDiv) ?? 2);
+  const columns =
+    parameters.vDiv === "" ? "" : (toPositiveInt(parameters.vDiv) ?? 2);
+  const setDivisions = (key: "hDiv" | "vDiv", next: string) => {
+    if (next.trim() === "") {
+      onParameterChange(key, "");
+      return;
+    }
+    const count = Number(next);
+    if (!Number.isFinite(count)) return;
+    onParameterChange(key, String(Math.max(1, Math.round(count)) - 1));
+  };
+
   const renderByPagesForm = () => (
     <TextInput
-      label={t("split.splitPages", "Pages")}
-      placeholder={t("pageSelectionPrompt", "e.g. 1,3,5-10")}
+      label={t("split.byPages.label", "Pages to break after")}
+      placeholder={t("split.byPages.placeholder", "1, 3, 7-10")}
+      description={t(
+        "split.byPages.description",
+        "Each number cuts after that page. A range cuts after every page in it.",
+      )}
       value={parameters.pages}
       onChange={(e) => onParameterChange("pages", e.target.value)}
       disabled={disabled}
+      data-testid="split-pages-input"
     />
   );
 
   const renderBySectionsForm = () => (
     <Stack gap="sm">
-      <TextInput
-        label={t("split-by-sections.horizontal.label", "Horizontal Divisions")}
-        type="number"
-        min="0"
-        max="300"
-        value={parameters.hDiv}
-        onChange={(e) => onParameterChange("hDiv", e.target.value)}
-        placeholder={t(
-          "split-by-sections.horizontal.placeholder",
-          "Enter number of horizontal divisions",
-        )}
-        disabled={disabled}
-      />
-      <TextInput
-        label={t("split-by-sections.vertical.label", "Vertical Divisions")}
-        type="number"
-        min="0"
-        max="300"
-        value={parameters.vDiv}
-        onChange={(e) => onParameterChange("vDiv", e.target.value)}
-        placeholder={t(
-          "split-by-sections.vertical.placeholder",
-          "Enter number of vertical divisions",
-        )}
-        disabled={disabled}
-      />
+      <Group grow gap="sm" align="flex-start">
+        <NumberInput
+          label={t("split.bySections.rows", "Rows")}
+          value={rows}
+          onChange={(value) => setDivisions("hDiv", String(value))}
+          min={1}
+          max={100}
+          allowDecimal={false}
+          clampBehavior="strict"
+          disabled={disabled}
+          data-testid="split-sections-rows"
+        />
+        <NumberInput
+          label={t("split.bySections.columns", "Columns")}
+          value={columns}
+          onChange={(value) => setDivisions("vDiv", String(value))}
+          min={1}
+          max={100}
+          allowDecimal={false}
+          clampBehavior="strict"
+          disabled={disabled}
+          data-testid="split-sections-columns"
+        />
+      </Group>
+
       <Select
-        label={t("split-by-sections.splitMode.label", "Split Mode")}
+        label={t("split.bySections.pagesLabel", "Pages to cut")}
+        description={t(
+          "split.bySections.pagesDescription",
+          "Pages you leave alone are kept whole, one file each.",
+        )}
         value={parameters.splitMode || "SPLIT_ALL"}
         onChange={(value) =>
           onParameterChange("splitMode", value || "SPLIT_ALL")
         }
-        description={t(
-          "split-by-sections.splitMode.description",
-          "Choose how to split the pages",
-        )}
         data={[
           {
             value: "SPLIT_ALL",
-            label: t("split-by-sections.splitMode.splitAll", "Split all pages"),
+            label: t("split.bySections.pages.all", "Every page"),
           },
           {
             value: "SPLIT_ALL_EXCEPT_FIRST",
             label: t(
-              "split-by-sections.splitMode.splitAllExceptFirst",
-              "Split all except first",
+              "split.bySections.pages.exceptFirst",
+              "All except the first",
             ),
           },
           {
             value: "SPLIT_ALL_EXCEPT_LAST",
             label: t(
-              "split-by-sections.splitMode.splitAllExceptLast",
-              "Split all except last",
+              "split.bySections.pages.exceptLast",
+              "All except the last",
             ),
           },
           {
             value: "SPLIT_ALL_EXCEPT_FIRST_AND_LAST",
             label: t(
-              "split-by-sections.splitMode.splitAllExceptFirstAndLast",
-              "Split all except first and last",
+              "split.bySections.pages.exceptFirstAndLast",
+              "All except the first and last",
             ),
           },
           {
             value: "CUSTOM",
-            label: t("split-by-sections.splitMode.custom", "Custom pages"),
+            label: t("split.bySections.pages.custom", "Only these pages"),
           },
         ]}
         disabled={disabled}
+        data-testid="split-sections-pages"
         comboboxProps={{
           withinPortal: true,
           zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
         }}
       />
+
       {parameters.splitMode === "CUSTOM" && (
         <TextInput
-          label={t(
-            "split-by-sections.customPages.label",
-            "Custom Page Numbers",
-          )}
+          label={t("split.bySections.customPages", "Page numbers")}
           placeholder={t(
-            "split-by-sections.customPages.placeholder",
-            "e.g. 2,4,6",
+            "split.bySections.customPagesPlaceholder",
+            "2, 4, 6-8",
           )}
           value={parameters.customPages || ""}
           onChange={(e) => onParameterChange("customPages", e.target.value)}
           disabled={disabled}
+          data-testid="split-sections-custom-pages"
         />
       )}
-      <Checkbox
-        label={t("split-by-sections.merge", "Merge sections into one PDF")}
+
+      <Switch
+        label={t("split.bySections.merge", "Reassemble into one PDF")}
+        description={t(
+          "split.bySections.mergeDescription",
+          "Cut pages become their sections; everything else keeps its page.",
+        )}
         checked={parameters.merge}
         onChange={(e) => onParameterChange("merge", e.currentTarget.checked)}
         disabled={disabled}
@@ -138,61 +172,83 @@ const SplitSettings = ({
   );
 
   const renderSplitValueForm = () => {
-    let label, placeholder;
-
-    switch (parameters.method) {
-      case SPLIT_METHODS.BY_SIZE:
-        label = t("split.value.fileSize.label", "File Size");
-        placeholder = t("split.value.fileSize.placeholder", "e.g. 10MB, 500KB");
-        break;
-      case SPLIT_METHODS.BY_PAGE_COUNT:
-        label = t("split.value.pageCount.label", "Pages per File");
-        placeholder = t("split.value.pageCount.placeholder", "e.g. 5, 10");
-        break;
-      case SPLIT_METHODS.BY_DOC_COUNT:
-        label = t("split.value.docCount.label", "Number of Files");
-        placeholder = t("split.value.docCount.placeholder", "e.g. 3, 5");
-        break;
-      default:
-        label = t("split-by-size-or-count.value.label", "Split Value");
-        placeholder = t(
-          "split-by-size-or-count.value.placeholder",
-          "e.g. 10MB or 5 pages",
-        );
+    if (parameters.method === SPLIT_METHODS.BY_SIZE) {
+      return (
+        <TextInput
+          label={t("split.bySize.label", "Maximum file size")}
+          placeholder={t("split.bySize.placeholder", "10 MB")}
+          description={t(
+            "split.bySize.description",
+            "Use KB, MB or GB. The splitter picks the breaks that keep each file under it.",
+          )}
+          value={parameters.splitValue}
+          onChange={(e) => onParameterChange("splitValue", e.target.value)}
+          disabled={disabled}
+          data-testid="split-size-input"
+        />
+      );
     }
 
+    const isDocCount = parameters.method === SPLIT_METHODS.BY_DOC_COUNT;
     return (
-      <TextInput
-        label={label}
-        placeholder={placeholder}
+      <NumberInput
+        label={
+          isDocCount
+            ? t("split.byDocCount.label", "Number of files")
+            : t("split.byPageCount.label", "Pages per file")
+        }
+        description={
+          isDocCount
+            ? undefined
+            : t(
+                "split.byPageCount.description",
+                "The last file may hold fewer.",
+              )
+        }
+        placeholder={isDocCount ? "3" : "5"}
         value={parameters.splitValue}
-        onChange={(e) => onParameterChange("splitValue", e.target.value)}
+        onChange={(value) => onParameterChange("splitValue", String(value))}
+        min={1}
+        max={10000}
+        allowDecimal={false}
+        clampBehavior="strict"
         disabled={disabled}
+        data-testid={
+          isDocCount ? "split-doc-count-input" : "split-page-count-input"
+        }
       />
     );
   };
 
   const renderByChaptersForm = () => (
     <Stack gap="sm">
-      <TextInput
-        label={t("splitByChapters.bookmarkLevel", "Bookmark Level")}
-        type="number"
+      <NumberInput
+        label={t("split.byChapters.level", "Bookmark level")}
+        description={t(
+          "split.byChapters.levelDescription",
+          "1 is the top of the outline; higher numbers split on nested entries.",
+        )}
         value={parameters.bookmarkLevel}
-        onChange={(e) => onParameterChange("bookmarkLevel", e.target.value)}
+        onChange={(value) => onParameterChange("bookmarkLevel", String(value))}
+        min={1}
+        max={10}
+        allowDecimal={false}
+        clampBehavior="strict"
         disabled={disabled}
+        data-testid="split-chapters-level"
       />
-      <Checkbox
-        label={t("splitByChapters.includeMetadata", "Include Metadata")}
+      <Switch
+        label={t("split.byChapters.includeMetadata", "Keep document metadata")}
         checked={parameters.includeMetadata}
         onChange={(e) =>
           onParameterChange("includeMetadata", e.currentTarget.checked)
         }
         disabled={disabled}
       />
-      <Checkbox
+      <Switch
         label={t(
-          "splitByChapters.allowDuplicates",
-          "Allow Duplicate Bookmarks",
+          "split.byChapters.allowDuplicates",
+          "Allow duplicate bookmark names",
         )}
         checked={parameters.allowDuplicates}
         onChange={(e) =>
@@ -205,23 +261,31 @@ const SplitSettings = ({
 
   const renderByPageDividerForm = () => (
     <Stack gap="sm">
+      <Text size="xs" c="dimmed" lh={1.45}>
+        {t(
+          "split.byDivider.description",
+          "Print the divider sheet, put one between each document, then scan everything in one go. Every divider starts a new file and is removed from it.",
+        )}
+      </Text>
       <Anchor
         href="https://stirlingpdf.io/files/Auto%20Splitter%20Divider%20(with%20instructions).pdf"
         target="_blank"
-        size="sm"
-        style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+        rel="noreferrer"
+        size="xs"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.375rem",
+        }}
       >
-        <Icon name="download" size="2rem" />
-        {t(
-          "autoSplitPDF.dividerDownload2",
-          "Download 'Auto Splitter Divider (with instructions).pdf'",
-        )}
+        <Icon name="download" size="0.9375rem" />
+        {t("split.byDivider.download", "Get the divider sheet")}
       </Anchor>
-
-      <Checkbox
-        label={t(
-          "autoSplitPDF.duplexMode",
-          "Duplex Mode (Front and back scanning)",
+      <Switch
+        label={t("split.byDivider.duplex", "Duplex scanning")}
+        description={t(
+          "split.byDivider.duplexDescription",
+          "Scan both sides of the divider sheets.",
         )}
         checked={parameters.duplexMode}
         onChange={(e) =>
@@ -235,84 +299,54 @@ const SplitSettings = ({
   const renderByPosterForm = () => (
     <Stack gap="sm">
       <Select
-        label={t("split.poster.pageSize.label", "Target Page Size")}
+        label={t("split.byPoster.pageSize", "Paper size")}
         description={t(
-          "split.poster.pageSize.description",
-          "Size of output pages for printing",
+          "split.byPoster.pageSizeDescription",
+          "Each tile is scaled to fit this size.",
         )}
         value={parameters.pageSize || "A4"}
         onChange={(value) => onParameterChange("pageSize", value || "A4")}
-        data={[
-          {
-            value: "A4",
-            label: t("split.poster.pageSize.options.a4", "A4 (210 × 297 mm)"),
-          },
-          {
-            value: "Letter",
-            label: t(
-              "split.poster.pageSize.options.letter",
-              "Letter (8.5 × 11 in)",
-            ),
-          },
-          {
-            value: "A3",
-            label: t("split.poster.pageSize.options.a3", "A3 (297 × 420 mm)"),
-          },
-          {
-            value: "A5",
-            label: t("split.poster.pageSize.options.a5", "A5 (148 × 210 mm)"),
-          },
-          {
-            value: "Legal",
-            label: t(
-              "split.poster.pageSize.options.legal",
-              "Legal (8.5 × 14 in)",
-            ),
-          },
-          {
-            value: "Tabloid",
-            label: t(
-              "split.poster.pageSize.options.tabloid",
-              "Tabloid (11 × 17 in)",
-            ),
-          },
-        ]}
+        data={PAPER_SIZES.map((size) => ({
+          value: size,
+          label: t(`split.byPoster.sizes.${size.toLowerCase()}`, size),
+        }))}
         disabled={disabled}
+        data-testid="split-poster-size"
         comboboxProps={{
           withinPortal: true,
           zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
         }}
       />
-      <TextInput
-        label={t("split.poster.xFactor.label", "Horizontal Divisions")}
+      <Group grow gap="sm" align="flex-start">
+        <NumberInput
+          label={t("split.byPoster.columns", "Tiles across")}
+          value={parameters.xFactor || "2"}
+          onChange={(value) => onParameterChange("xFactor", String(value))}
+          min={1}
+          max={10}
+          allowDecimal={false}
+          clampBehavior="strict"
+          disabled={disabled}
+          data-testid="split-poster-columns"
+        />
+        <NumberInput
+          label={t("split.byPoster.rows", "Tiles down")}
+          value={parameters.yFactor || "2"}
+          onChange={(value) => onParameterChange("yFactor", String(value))}
+          min={1}
+          max={10}
+          allowDecimal={false}
+          clampBehavior="strict"
+          disabled={disabled}
+          data-testid="split-poster-rows"
+        />
+      </Group>
+      <Switch
+        label={t("split.byPoster.rightToLeft", "Right-to-left order")}
         description={t(
-          "split.poster.xFactor.description",
-          "Number of columns to split each page into",
+          "split.byPoster.rightToLeftDescription",
+          "Number the tiles right to left, for RTL layouts.",
         )}
-        type="number"
-        min="1"
-        max="10"
-        value={parameters.xFactor || 2}
-        onChange={(e) => onParameterChange("xFactor", e.target.value)}
-        placeholder="2"
-        disabled={disabled}
-      />
-      <TextInput
-        label={t("split.poster.yFactor.label", "Vertical Divisions")}
-        description={t(
-          "split.poster.yFactor.description",
-          "Number of rows to split each page into",
-        )}
-        type="number"
-        min="1"
-        max="10"
-        value={parameters.yFactor || 2}
-        onChange={(e) => onParameterChange("yFactor", e.target.value)}
-        placeholder="2"
-        disabled={disabled}
-      />
-      <Checkbox
-        label={t("split.poster.rightToLeft", "Split right-to-left")}
         checked={parameters.rightToLeft || false}
         onChange={(e) =>
           onParameterChange("rightToLeft", e.currentTarget.checked)
@@ -322,23 +356,23 @@ const SplitSettings = ({
     </Stack>
   );
 
-  // Don't render anything if no method is selected
+  // Nothing to configure until a goal is picked.
   if (!parameters.method) {
     return (
-      <Stack gap="sm">
-        <Text c="dimmed" ta="center">
+      <Box py="xs">
+        <Text size="xs" c="dimmed" ta="center">
           {t(
             "split.settings.selectMethodFirst",
-            "Please select a split method first",
+            "Pick a way to split above to see its settings.",
           )}
         </Text>
-      </Stack>
+      </Box>
     );
   }
 
   return (
     <Stack gap="md">
-      {/* Method-Specific Form */}
+      {variantPicker}
       {parameters.method === SPLIT_METHODS.BY_PAGES && renderByPagesForm()}
       {parameters.method === SPLIT_METHODS.BY_SECTIONS &&
         renderBySectionsForm()}
@@ -354,5 +388,12 @@ const SplitSettings = ({
     </Stack>
   );
 };
+
+function toPositiveInt(value: string | undefined): number | null {
+  const trimmed = (value ?? "").trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const parsed = Number(trimmed);
+  return parsed > 0 ? parsed : null;
+}
 
 export default SplitSettings;

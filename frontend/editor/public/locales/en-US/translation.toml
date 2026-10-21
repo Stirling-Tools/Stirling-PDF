@@ -12817,10 +12817,10 @@ splitBy = "Split by"
 splitInto = "Split into"
 
 [split.methodSelection.tooltip]
-bullet1 = "Click on a method card to select it"
-bullet2 = "Hover over each card to see a quick description"
-bullet3 = "The settings step will appear after you select a method"
-bullet4 = "You can change methods at any time before processing"
+bullet1 = "Pick the goal that matches what you want to do"
+bullet2 = "Each goal explains what it produces, in one line"
+bullet3 = "Its settings open below, with a preview of the result"
+bullet4 = "You can change the goal or the way at any time before running"
 title = "Choose Your Split Method"
 
 [split.methodSelection.tooltip.header]
@@ -12927,6 +12927,141 @@ placeholder = "e.g. 10MB, 500KB"
 [split.value.pageCount]
 label = "Pages per File"
 placeholder = "e.g. 5, 10"
+
+[split.intent]
+groupLabel = "Choose how to split"
+
+[split.intent.boundaries]
+description = "Bookmarks or divider sheets."
+title = "At document boundaries"
+
+[split.intent.pages]
+description = "Break where you name a page."
+title = "At pages you choose"
+
+[split.intent.parts]
+description = "Same size every time."
+title = "Into equal parts"
+
+[split.intent.pieces]
+description = "Cut pages into a grid or tiles."
+title = "Into printed pieces"
+
+[split.variant]
+chapters = "Bookmarks"
+divider = "Dividers"
+docCount = "Files"
+groupLabel = "Choose a way to split"
+pageCount = "Pages"
+pages = "Pages"
+poster = "Poster"
+sections = "Grid"
+size = "Size"
+
+[split.variantDescription]
+byChapters = "One file per bookmark at the level you pick. Needs a PDF with an outline."
+byDocCount = "Choose how many files you want; pages are spread as evenly as possible."
+byPageCount = "Choose how many pages each file should hold."
+byPages = "Each number cuts after that page. A range cuts after every page in it."
+byPageDivider = "Print divider sheets, put one between each document, then scan the stack."
+byPoster = "Tiles each page across sheets of the paper size you pick, ready to print and assemble."
+bySections = "Cuts the pages you choose into a grid of separate PDFs."
+bySize = "Keeps every file under a size you set; the splitter picks where to break."
+
+[split.byPages]
+description = "Each number cuts after that page. A range cuts after every page in it."
+label = "Pages to break after"
+placeholder = "1, 3, 7-10"
+
+[split.byPageCount]
+description = "The last file may hold fewer."
+label = "Pages per file"
+
+[split.byDocCount]
+description = "Spread as evenly as possible."
+label = "Number of files"
+
+[split.bySize]
+description = "For example 500KB or 10MB."
+label = "Maximum file size"
+placeholder = "10 MB"
+
+[split.byChapters]
+allowDuplicates = "Allow duplicate bookmark names"
+includeMetadata = "Keep document metadata"
+level = "Bookmark level"
+levelDescription = "1 is the top of the outline; higher numbers split on nested entries."
+
+[split.byDivider]
+description = "Every divider starts a new file and is removed from it."
+download = "Get the divider sheet"
+duplex = "Duplex scanning"
+duplexDescription = "Scan both sides of the divider sheets."
+
+[split.bySections]
+columns = "Columns"
+columnsHint = "Pieces across"
+customPages = "Page numbers"
+customPagesPlaceholder = "2, 4, 6-8"
+merge = "Reassemble into one PDF"
+mergeDescription = "Cut pages become their sections; everything else keeps its page."
+pagesDescription = "Other pages stay whole, one file each."
+pagesLabel = "Pages to cut"
+rows = "Rows"
+rowsHint = "Pieces down the page"
+
+[split.bySections.pages]
+all = "Every page"
+custom = "Only these pages"
+exceptFirst = "All except the first"
+exceptFirstAndLast = "All except the first and last"
+exceptLast = "All except the last"
+
+[split.byPoster]
+columns = "Tiles across"
+pageSize = "Paper size"
+pageSizeDescription = "Each tile is scaled to fit this size."
+rightToLeft = "Right-to-left order"
+rightToLeftDescription = "Number the tiles right to left, for RTL layouts."
+rows = "Tiles down"
+
+[split.byPoster.sizes]
+a3 = "A3"
+a4 = "A4"
+a5 = "A5"
+legal = "Legal"
+letter = "Letter"
+tabloid = "Tabloid"
+
+[split.outcome]
+bySizeDetail = "The splitter chooses where to break so every file fits."
+bySizeTitle = "Each file stays under {{size}}"
+chaptersDetail = "Uses the document's outline; files without bookmarks come out whole."
+chaptersTitle = "One file per level-{{level}} bookmark"
+dividerDetail = "Divider pages are removed from the output."
+dividerTitle = "One file per divider sheet"
+evenDetail = "Pages per file: {{list}}."
+files_one = "{{count}} file"
+files_other = "{{count}} files"
+invalidPagesDetail = "{{token}} is not a page or a range. Try 1, 3, 7-10."
+invalidPagesTitle = "Check the page numbers"
+invalidValueDetail = "Use a whole number, or a size like 10MB."
+invalidValueTitle = "Check the value"
+outOfRangeDetail = "Page {{page}} does not exist — this file has {{total}} pages."
+outOfRangeTitle = "Page is past the end"
+pages_one = "{{count}} page"
+pages_other = "{{count}} pages"
+pagesEach_one = "{{count}} page each"
+pagesEach_other = "{{count}} pages each"
+partsDetail = "Cut points: {{breaks}}."
+partsNoBreaks = "No cut before the end, so the file stays whole."
+piecesDetail = "{{cut}} of {{total}} pages → {{pieces}} pieces each ({{rows}} × {{columns}})."
+piecesEveryPage = "Every page → {{pieces}} pieces each ({{rows}} × {{columns}})."
+piecesMergedDetail = "Each cut page becomes {{rows}} × {{columns}} pieces."
+piecesNoneCut = "No page matches the selection, so nothing is cut."
+posterDetail = "Each page → {{rows}} × {{columns}} tiles at {{size}}."
+uniformRemainder_one = "The last file holds {{count}} page."
+uniformRemainder_other = "The last file holds {{count}} pages."
 
 [split-by-sections]
 merge = "Merge Into One PDF"

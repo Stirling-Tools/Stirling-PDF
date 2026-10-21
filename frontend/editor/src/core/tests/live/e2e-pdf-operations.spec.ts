@@ -121,14 +121,10 @@ test.describe("E2E PDF Operations", () => {
       // Upload a PDF file
       await uploadFiles(page, [fixture("sample.pdf")]);
 
-      // Select "Page Numbers" split method from the CardSelector
-      await page
-        .getByText(/Page Numbers/i)
-        .first()
-        .click();
+      // Pick the "at pages you choose" goal, then name the cut point.
+      await page.getByTestId("split-intent-pages").click();
 
-      // Wait for the settings step to expand and find the page numbers input
-      const pagesInput = page.getByPlaceholder(/Custom Page Selection/i);
+      const pagesInput = page.getByTestId("split-pages-input");
       await pagesInput.waitFor({ state: "visible", timeout: 10000 });
       await pagesInput.fill("1");
 

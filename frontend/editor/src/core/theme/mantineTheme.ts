@@ -357,6 +357,26 @@ export const mantineTheme = createTheme({
       }),
     },
 
+    // NumberInput does not inherit TextInput's theme entry, so without this its
+    // labels sit darker and heavier than every neighbouring field.
+    NumberInput: {
+      styles: (_theme: MantineTheme) => ({
+        input: {
+          backgroundColor: "var(--c-surface)",
+          borderColor: "var(--c-border)",
+          color: "var(--c-text)",
+          "&:focus": {
+            borderColor: "var(--color-primary-500)",
+            boxShadow: "0 0 0 1px var(--color-primary-500)",
+          },
+        },
+        label: {
+          color: "var(--c-text-muted)",
+          fontWeight: "var(--font-weight-medium)",
+        },
+      }),
+    },
+
     Select: {
       styles: {
         input: {
