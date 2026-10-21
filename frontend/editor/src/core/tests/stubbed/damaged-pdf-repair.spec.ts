@@ -1,5 +1,6 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
+import type { Page } from "@playwright/test";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { runToolAndWaitForReview } from "@app/tests/helpers/ui-helpers";
 
@@ -38,31 +39,36 @@ test("a damaged PDF is labelled and can be sent to Repair", async ({
   await expect(message).toHaveCount(0);
 });
 
-test("the file menu offers Repair only for damaged files", async ({ page }) => {
-  await page.getByTestId("file-input").setInputFiles([damaged, sample]);
-  const row = (name: string) =>
-    page.locator(".file-sidebar-file-item").filter({ hasText: name });
-  const menuFor = async (name: string) => {
-    await row(name).hover();
-    await row(name).getByRole("button", { name: "More actions" }).click();
-    const menu = page.getByRole("menu");
-    await expect(menu.getByRole("menuitem", { name: "Rename" })).toBeVisible();
-    return menu;
-  };
+/** Hover the row (the kebab only shows on hover) and open its menu. */
+async function openRowMenu(page: Page, name: string) {
+  const row = page.locator(".file-sidebar-file-item").filter({ hasText: name });
+  await row.hover();
+  await row.locator(".file-sidebar-kebab-btn").click();
+  const menu = page.getByRole("menu");
+  await expect(menu.getByRole("menuitem", { name: "Rename" })).toBeVisible();
+  return { row, menu };
+}
 
-  await expect(
-    row("damaged-header.pdf").getByText("Damaged", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    (await menuFor("damaged-header.pdf")).getByRole("menuitem", {
-      name: "Repair",
-    }),
-  ).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("menu")).toBeHidden();
-  await expect(
-    (await menuFor("sample.pdf")).getByRole("menuitem", { name: "Repair" }),
-  ).toHaveCount(0);
+test("the file menu offers Repair for a damaged file", async ({ page }) => {
+  await page.getByTestId("file-input").setInputFiles(damaged);
+  const row = page
+    .locator(".file-sidebar-file-item")
+    .filter({ hasText: "damaged-header.pdf" });
+  // Damage is known only once hydration has parsed the file.
+  await expect(row.getByText("Damaged", { exact: true })).toBeVisible({
+    timeout: 20_000,
+  });
+  const { menu } = await openRowMenu(page, "damaged-header.pdf");
+  await expect(menu.getByRole("menuitem", { name: "Repair" })).toBeVisible();
+});
+
+test("the file menu offers no Repair for a healthy file", async ({ page }) => {
+  await page.getByTestId("file-input").setInputFiles(sample);
+  await expect(page.locator('[data-page-index="0"]').first()).toBeVisible({
+    timeout: 20_000,
+  });
+  const { menu } = await openRowMenu(page, "sample.pdf");
+  await expect(menu.getByRole("menuitem", { name: "Repair" })).toHaveCount(0);
 });
 
 test.describe("when the server has Repair disabled", () => {
