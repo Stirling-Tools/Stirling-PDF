@@ -599,6 +599,9 @@ public class EndpointConfiguration {
         /* OCRmyPDF */
         addEndpointToGroup("OCRmyPDF", "ocr-pdf");
 
+        /* In-process Tesseract (JavaCPP); OCR only, auto-rotate still shells out for OSD */
+        addEndpointToGroup("TesseractNative", "ocr-pdf");
+
         // Multi-tool endpoints - endpoints that can be handled by multiple tools
         addEndpointAlternative("repair", "qpdf");
         addEndpointAlternative("repair", "Ghostscript");
@@ -609,6 +612,7 @@ public class EndpointConfiguration {
         addEndpointAlternative("crop", "Java");
         addEndpointAlternative("ocr-pdf", "tesseract");
         addEndpointAlternative("ocr-pdf", "OCRmyPDF");
+        addEndpointAlternative("ocr-pdf", "TesseractNative");
 
         // file-to-pdf has multiple implementations
         addEndpointAlternative("file-to-pdf", "LibreOffice");
@@ -703,6 +707,7 @@ public class EndpointConfiguration {
                 || "Ghostscript".equals(group)
                 || "LibreOffice".equals(group)
                 || "tesseract".equals(group)
+                || "TesseractNative".equals(group)
                 || "CLI".equals(group)
                 || "Python".equals(group)
                 || "OpenCV".equals(group)
