@@ -22,6 +22,41 @@ const links = path.join(
   "../test-fixtures/link-annotations-sample.pdf",
 );
 
+test("escaped encryption names still enforce permissions after admission", async ({
+  page,
+}) => {
+  const original = await readFile(
+    path.join(
+      import.meta.dirname,
+      "../test-fixtures/owner-only-restricted.pdf",
+    ),
+  );
+  const bytes = Buffer.from(
+    original.toString("latin1").replace("/Encrypt", "/En#63rypt"),
+    "latin1",
+  );
+  expect(bytes.includes(Buffer.from("/Encrypt"))).toBe(false);
+  await page.getByTestId("file-input").setInputFiles({
+    name: "escaped.pdf",
+    mimeType: "application/pdf",
+    buffer: bytes,
+  });
+  await expect(page.locator('[data-page-index="0"] img').first()).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByText("Protected PDF", { exact: true }).first(),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Manage protection", exact: true })
+    .click();
+  await expect(
+    page
+      .getByRole("dialog")
+      .getByText("Printing", { exact: true })
+      .locator(".."),
+  ).toContainText("Restricted");
+});
+
 for (const operation of ["compress", "remove-password"] as const) {
   test(`drawing tools work immediately after ${operation} replaces the open PDF`, async ({
     page,

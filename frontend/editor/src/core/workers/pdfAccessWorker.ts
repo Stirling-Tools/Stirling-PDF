@@ -1,4 +1,4 @@
-import { init } from "@embedpdf/pdfium";
+import { init, type PdfiumModule } from "@embedpdf/pdfium";
 import { readPdfiumAccess } from "@app/utils/pdfiumAccess";
 import type { PdfAccess } from "@app/services/pdfAccessService";
 
@@ -7,6 +7,7 @@ export interface PdfAccessRequest {
   file: Blob;
   password: string;
   wasmUrl: string;
+  wasmModule: WebAssembly.Module | null;
 }
 
 export type PdfAccessResponse =
@@ -15,9 +16,33 @@ export type PdfAccessResponse =
 
 self.onmessage = async ({ data }: MessageEvent<PdfAccessRequest>) => {
   try {
-    const response = await fetch(data.wasmUrl);
-    if (!response.ok) throw new Error("Unable to load PDF security reader");
-    const module = await init({ wasmBinary: await response.arrayBuffer() });
+    let rejectInstantiation!: (error: unknown) => void;
+    const instantiationFailed = new Promise<never>((_, reject) => {
+      rejectInstantiation = reject;
+    });
+    const options: Partial<PdfiumModule> & {
+      wasmBinary?: ArrayBuffer;
+      instantiateWasm?: (
+        imports: WebAssembly.Imports,
+        ready: (
+          instance: WebAssembly.Instance,
+          module: WebAssembly.Module,
+        ) => void,
+      ) => void;
+    } = {};
+    const precompiled = data.wasmModule;
+    if (precompiled) {
+      options.instantiateWasm = (imports, ready) => {
+        void WebAssembly.instantiate(precompiled, imports)
+          .then((instance) => ready(instance, precompiled))
+          .catch(rejectInstantiation);
+      };
+    } else {
+      const response = await fetch(data.wasmUrl);
+      if (!response.ok) throw new Error("Unable to load PDF security reader");
+      options.wasmBinary = await response.arrayBuffer();
+    }
+    const module = await Promise.race([init(options), instantiationFailed]);
     module.PDFiumExt_Init();
     const bytes = new Uint8Array(await data.file.arrayBuffer());
     const pointer = module.pdfium.wasmExports.malloc(bytes.length);

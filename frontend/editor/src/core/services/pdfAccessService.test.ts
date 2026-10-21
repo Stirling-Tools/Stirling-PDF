@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearPdfAccess,
   bindPdfAccess,
@@ -39,6 +39,8 @@ vi.mock("@app/workers/pdfAccessWorker?worker", () => ({
 }));
 vi.mock("@app/services/wasmPrecompiler", () => ({
   pdfiumWasmUrl: "/pdfium.wasm",
+  pdfiumWasmModulePromise: Promise.resolve("precompiled-module"),
+  startEagerWasmCompilation: vi.fn(),
 }));
 
 const access: PdfAccess = {
@@ -54,8 +56,86 @@ beforeEach(() => {
   clearPdfAccess();
   workers.length = 0;
 });
+afterEach(() => {
+  clearPdfAccess();
+  vi.useRealTimers();
+});
 
 describe("local inspection lifetime", () => {
+  it("passes the compiled module to the worker", async () => {
+    const file = new File(["PDF"], "plain.pdf");
+    const result = inspectLocalPdfAccess(file);
+    await vi.waitFor(() =>
+      expect(workers[0].postMessage).toHaveBeenCalledWith({
+        file,
+        password: "",
+        wasmUrl: "/pdfium.wasm",
+        wasmModule: "precompiled-module",
+      }),
+    );
+    workers[0].onmessage?.({ data: { access } });
+    await result;
+  });
+
+  it("bounds concurrent inspections and drops a cancelled queued file", async () => {
+    const files = Array.from(
+      { length: 4 },
+      (_, i) => new File(["PDF"], `${i}.pdf`),
+    );
+    const controller = new AbortController();
+    const results = files.map((file, i) =>
+      inspectLocalPdfAccess(file, "", i === 2 ? controller.signal : undefined),
+    );
+    const cancelled = expect(results[2]).rejects.toMatchObject({
+      name: "AbortError",
+    });
+    expect(workers).toHaveLength(2);
+    controller.abort();
+    await cancelled;
+    workers[0].onmessage?.({ data: { access } });
+    expect(workers).toHaveLength(3);
+    await vi.waitFor(() =>
+      expect(workers[2].postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ file: files[3] }),
+      ),
+    );
+    workers[1].onmessage?.({ data: { access } });
+    workers[2].onmessage?.({ data: { access } });
+    await Promise.all([results[0], results[1], results[3]]);
+  });
+
+  it("still verifies files over 100 MiB, with no other inspection heap active", async () => {
+    const file = new File(["PDF"], "large.pdf");
+    Object.defineProperty(file, "size", { value: 150 * 1024 * 1024 });
+    const large = ensureLocalPdfAccess(file);
+    const small = inspectLocalPdfAccess(new File(["PDF"], "small.pdf"));
+    expect(workers).toHaveLength(1);
+    expect(getPdfAccess(file)).toBeUndefined();
+    workers[0].onmessage?.({ data: { access } });
+    await expect(large).resolves.toMatchObject({ encrypted: true });
+    expect(workers).toHaveLength(2);
+    workers[1].onmessage?.({ data: { access } });
+    await small;
+  });
+
+  it("terminates stalled inspection, releases its slot, and leaves access unknown", async () => {
+    vi.useFakeTimers();
+    const file = new File(["PDF"], "stalled.pdf");
+    Object.defineProperty(file, "size", { value: 150 * 1024 * 1024 });
+    const stalled = ensureLocalPdfAccess(file);
+    const failure = expect(stalled).rejects.toMatchObject({
+      name: "TimeoutError",
+    });
+    const next = inspectLocalPdfAccess(new File(["PDF"], "next.pdf"));
+    await vi.advanceTimersByTimeAsync(30_000);
+    await failure;
+    expect(workers[0].terminate).toHaveBeenCalledOnce();
+    workers[0].onmessage?.({ data: { access } });
+    expect(getPdfAccess(file)).toBeUndefined();
+    expect(workers).toHaveLength(2);
+    workers[1].onmessage?.({ data: { access } });
+    await next;
+  });
   it("shares a worker without letting one consumer cancel another", async () => {
     const file = new File(["PDF"], "protected.pdf");
     const first = new AbortController();

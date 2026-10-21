@@ -1,9 +1,6 @@
 import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import {
-  ensureLocalPdfAccess,
-  getPdfAccess,
-} from "@app/services/pdfAccessService";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 
 import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
 import type { PDFDocumentProxy } from "pdfjs-dist";
@@ -62,19 +59,11 @@ export class FileAnalyzer {
     return analysis;
   }
 
-  /** The bounded marker is only an admission hint. Opening and operations verify actual bytes.
-   * Library-only imports defer authentication until the file is used.
-   */
-  static async isPDFEncrypted(file: File, inspect = true): Promise<boolean> {
+  /** Admission hint only: never grants access. Authentication waits until the file is opened. */
+  static async isPDFEncrypted(file: File): Promise<boolean> {
     const access = getPdfAccess(file);
     if (access) return access.encrypted;
-    if (!(await looksEncryptedFromTrailer(file))) return false;
-    if (!inspect) return true;
-    try {
-      return (await ensureLocalPdfAccess(file)).encrypted;
-    } catch {
-      return true;
-    }
+    return looksEncryptedFromTrailer(file);
   }
 
   static async quickPDFAnalysis(file: File): Promise<{

@@ -16,6 +16,7 @@ import {
   useReducer,
   useCallback,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useRef,
   useMemo,
@@ -48,6 +49,7 @@ import {
   undoConsumeFiles,
   createFileActions,
   createChildStub,
+  createProcessedFile,
   generateProcessedFileMetadata,
 } from "@app/contexts/file/fileActions";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
@@ -60,7 +62,7 @@ import {
   IndexedDBProvider,
   useIndexedDB,
 } from "@app/contexts/IndexedDBContext";
-import { onRecordUnreadable } from "@app/services/fileStorage";
+import { fileStorage, onRecordUnreadable } from "@app/services/fileStorage";
 import { useZipConfirmation } from "@app/hooks/useZipConfirmation";
 import ZipWarningModal from "@app/components/shared/ZipWarningModal";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
@@ -136,6 +138,11 @@ function FileContextInner({
     useState<FileId | null>(null);
   const [unlockPassword, setUnlockPassword] = useState("");
   const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [openingInspection, setOpeningInspection] = useState<{
+    fileId: FileId;
+    error?: string;
+  } | null>(null);
+  const [inspectionAttempt, setInspectionAttempt] = useState(0);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [openingPasswordToRemove, setOpeningPasswordToRemove] = useState<
     string | null
@@ -631,7 +638,11 @@ function FileContextInner({
   );
 
   const runSessionUnlock = useCallback(
-    async (fileId: FileId, password: string): Promise<void> => {
+    async (
+      fileId: FileId,
+      password: string,
+      signal?: AbortSignal,
+    ): Promise<void> => {
       const file = filesRef.current.get(fileId);
       const pending = pendingAdmissions.current.get(fileId);
       const parentStub = pending?.stub ?? stateRef.current.files.byId[fileId];
@@ -646,10 +657,10 @@ function FileContextInner({
       }
 
       const access = {
-        ...(await inspectLocalPdfAccess(file, password)),
+        ...(await inspectLocalPdfAccess(file, password, signal)),
         honorOwnerPasswords: config?.honorOwnerPasswords,
       };
-      if (filesRef.current.get(fileId) !== file) {
+      if (signal?.aborted || filesRef.current.get(fileId) !== file) {
         return;
       }
       if (getPdfAccess(file)?.encrypted && !access.ownerAuthenticated) {
@@ -662,14 +673,19 @@ function FileContextInner({
       }
       rememberPdfAccess(file, access);
       bindPdfAccess(file, fileId);
-      const metadata = await generateProcessedFileMetadata(file);
-      if (filesRef.current.get(fileId) !== file) return;
+      // Empty-password admission leaves thumbnails to the normal lazy path.
+      const metadata =
+        password === ""
+          ? createProcessedFile(access.pageCount)
+          : await generateProcessedFileMetadata(file);
+      if (signal?.aborted || filesRef.current.get(fileId) !== file) return;
       const updates: Partial<StirlingFileStub> = {
         processedFile: {
           ...metadata,
           pages: metadata?.pages ?? [],
           totalPages: access.pageCount,
           isEncrypted: access.encrypted,
+          requiresOpeningPassword: access.requiresOpeningPassword,
         },
         thumbnailUrl: metadata?.thumbnailUrl,
       };
@@ -693,6 +709,64 @@ function FileContextInner({
     },
     [t, config?.honorOwnerPasswords],
   );
+
+  const inspectOpening = useEffectEvent(
+    (fileId: FileId, controller: AbortController) => {
+      if (getPdfAccess(fileId) || ownerRequests.current.has(fileId)) return;
+      const pending = pendingAdmissions.current.get(fileId);
+      const stub = pending?.stub ?? stateRef.current.files.byId[fileId];
+      if (!stub || stub.processedFile?.requiresOpeningPassword === true) return;
+      protectionOperation.current = controller;
+      setOpeningInspection({ fileId });
+      // Only the file being opened is parsed; library admission never allocates a PDF heap.
+      void runSessionUnlock(fileId, "", controller.signal)
+        .then(() => {
+          if (!controller.signal.aborted) {
+            setOpeningInspection(null);
+            setActiveEncryptedFileId(null);
+          }
+        })
+        .catch((error: unknown) => {
+          if (controller.signal.aborted) return;
+          if (error instanceof Error && "code" in error && error.code === 4) {
+            const processedFile = {
+              ...stub.processedFile,
+              pages: stub.processedFile?.pages ?? [],
+              requiresOpeningPassword: true,
+            };
+            if (pending) pending.stub = { ...pending.stub, processedFile };
+            else
+              dispatch({
+                type: "UPDATE_FILE_RECORD",
+                payload: { id: fileId, updates: { processedFile } },
+              });
+            if (enablePersistence)
+              void fileStorage
+                .updateFileMetadata(fileId, { requiresOpeningPassword: true })
+                .catch(() => {});
+            setOpeningInspection(null);
+          } else {
+            setOpeningInspection({
+              fileId,
+              error:
+                error instanceof Error || error instanceof DOMException
+                  ? error.message
+                  : t(
+                      "encryptedPdfUnlock.inspectionFailed",
+                      "Unable to check this PDF's permissions. Try again.",
+                    ),
+            });
+          }
+        });
+    },
+  );
+
+  useEffect(() => {
+    if (!activeEncryptedFileId) return;
+    const controller = new AbortController();
+    inspectOpening(activeEncryptedFileId, controller);
+    return () => controller.abort();
+  }, [activeEncryptedFileId, inspectionAttempt]);
 
   const admitProtectionCopy = useCallback(
     async (fileId: FileId, file: File, copy: File, copyAccess: PdfAccess) => {
@@ -1271,6 +1345,14 @@ function FileContextInner({
           opened={isUnlockModalOpen}
           fileName={activeEncryptedStub?.name}
           password={unlockPassword}
+          inspection={
+            openingInspection?.fileId === activeEncryptedFileId
+              ? {
+                  error: openingInspection.error,
+                  retry: () => setInspectionAttempt((attempt) => attempt + 1),
+                }
+              : undefined
+          }
           errorMessage={unlockError}
           isProcessing={isUnlocking}
           remainingCount={encryptedQueue.length}

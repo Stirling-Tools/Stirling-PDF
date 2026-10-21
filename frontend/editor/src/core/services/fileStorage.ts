@@ -34,8 +34,9 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   quickKey: string; // Matches runtime StirlingFile.quickKey exactly
   thumbnail?: string;
   thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
-  /** Whether opening these bytes requires a password; undefined for legacy records. */
+  /** Encryption hint only; does not grant session access. */
   isEncrypted?: boolean;
+  requiresOpeningPassword?: boolean;
   url?: string; // For compatibility with existing components
   // Disk path this file came from (desktop only). Persisted so the link to the
   // real file survives a reload - without it every restart drops to the stored copy.
@@ -383,6 +384,9 @@ class FileStorageService {
       isEncrypted:
         getPdfAccess(stirlingFile)?.encrypted ??
         stub.processedFile?.isEncrypted,
+      requiresOpeningPassword:
+        getPdfAccess(stirlingFile)?.requiresOpeningPassword ??
+        stub.processedFile?.requiresOpeningPassword,
       localFilePath: stub.localFilePath,
       diskSyncedSize: stub.diskSyncedSize,
       diskSyncedModifiedMs: stub.diskSyncedModifiedMs,
@@ -802,7 +806,11 @@ class FileStorageService {
           processedFile:
             record.isEncrypted === undefined
               ? undefined
-              : { pages: [], isEncrypted: record.isEncrypted },
+              : {
+                  pages: [],
+                  isEncrypted: record.isEncrypted,
+                  requiresOpeningPassword: record.requiresOpeningPassword,
+                },
           localFilePath: record.localFilePath,
           diskSyncedSize: record.diskSyncedSize,
           diskSyncedModifiedMs: record.diskSyncedModifiedMs,
@@ -882,7 +890,11 @@ class FileStorageService {
               processedFile:
                 record.isEncrypted === undefined
                   ? undefined
-                  : { pages: [], isEncrypted: record.isEncrypted },
+                  : {
+                      pages: [],
+                      isEncrypted: record.isEncrypted,
+                      requiresOpeningPassword: record.requiresOpeningPassword,
+                    },
               localFilePath: record.localFilePath,
               diskSyncedSize: record.diskSyncedSize,
               diskSyncedModifiedMs: record.diskSyncedModifiedMs,
@@ -994,7 +1006,11 @@ class FileStorageService {
               processedFile:
                 record.isEncrypted === undefined
                   ? undefined
-                  : { pages: [], isEncrypted: record.isEncrypted },
+                  : {
+                      pages: [],
+                      isEncrypted: record.isEncrypted,
+                      requiresOpeningPassword: record.requiresOpeningPassword,
+                    },
               localFilePath: record.localFilePath,
               diskSyncedSize: record.diskSyncedSize,
               diskSyncedModifiedMs: record.diskSyncedModifiedMs,

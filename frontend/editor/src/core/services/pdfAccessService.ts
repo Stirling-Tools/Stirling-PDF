@@ -5,7 +5,11 @@ import type {
   PdfAccessRequest,
   PdfAccessResponse,
 } from "@app/workers/pdfAccessWorker";
-import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
+import {
+  pdfiumWasmUrl,
+  pdfiumWasmModulePromise,
+  startEagerWasmCompilation,
+} from "@app/services/wasmPrecompiler";
 
 /** Session-only access to encrypted bytes. Never serialize this object or include it in tool parameters. */
 export interface PdfAccess {
@@ -182,6 +186,26 @@ interface Inspection {
 }
 
 const inspections = new WeakMap<Blob, Map<string, Inspection>>();
+const INSPECTION_TIMEOUT_MS = 30_000;
+const MAX_INSPECTION_WORKERS = 2;
+// Each worker holds the input buffer and a WASM copy. Larger files run alone.
+const INSPECTION_BYTE_BUDGET = 100 * 1024 * 1024;
+const inspectionQueue: { size: number; start: () => void }[] = [];
+let activeInspections = 0;
+let inspectingBytes = 0;
+
+function drainInspections(): void {
+  while (inspectionQueue.length && activeInspections < MAX_INSPECTION_WORKERS) {
+    const next = inspectionQueue[0];
+    if (
+      activeInspections &&
+      inspectingBytes + next.size > INSPECTION_BYTE_BUDGET
+    )
+      return;
+    inspectionQueue.shift();
+    next.start();
+  }
+}
 
 function runInspection(
   file: Blob,
@@ -189,36 +213,96 @@ function runInspection(
   signal: AbortSignal,
 ): Promise<PdfAccess> {
   return new Promise((resolve, reject) => {
-    const worker = new PdfAccessWorker();
+    let worker: Worker | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let started = false;
     let finished = false;
     const finish = () => {
       if (finished) return false;
       finished = true;
-      worker.terminate();
+      worker?.terminate();
+      clearTimeout(timer);
       signal.removeEventListener("abort", abort);
+      if (started) {
+        activeInspections--;
+        inspectingBytes -= file.size;
+      } else {
+        const index = inspectionQueue.indexOf(queued);
+        if (index !== -1) inspectionQueue.splice(index, 1);
+      }
+      drainInspections();
       return true;
     };
     const abort = () => {
       if (finish())
         reject(new DOMException("Operation cancelled", "AbortError"));
     };
+    const queued = {
+      size: file.size,
+      start: () => {
+        if (signal.aborted) {
+          abort();
+          return;
+        }
+        started = true;
+        activeInspections++;
+        inspectingBytes += file.size;
+        timer = setTimeout(() => {
+          if (finish())
+            reject(
+              new DOMException(
+                "PDF permission inspection timed out. Try opening the file again.",
+                "TimeoutError",
+              ),
+            );
+        }, INSPECTION_TIMEOUT_MS);
+        try {
+          worker = new PdfAccessWorker();
+          worker.onmessage = ({ data }: MessageEvent<PdfAccessResponse>) => {
+            if (!finish()) return;
+            if ("access" in data) resolve(data.access);
+            else
+              reject(Object.assign(new Error(data.error), { code: data.code }));
+          };
+          worker.onerror = () => {
+            if (finish())
+              reject(new Error("Unable to inspect PDF security locally"));
+          };
+          startEagerWasmCompilation();
+          void pdfiumWasmModulePromise
+            .then((wasmModule) => {
+              if (finished) return;
+              const request: PdfAccessRequest = {
+                file,
+                password,
+                wasmUrl: pdfiumWasmUrl,
+                wasmModule,
+              };
+              try {
+                worker!.postMessage(request);
+              } catch (error) {
+                if (
+                  !(error instanceof DOMException) ||
+                  error.name !== "DataCloneError"
+                )
+                  throw error;
+                // Some browsers cannot clone a compiled module into a worker.
+                worker!.postMessage({ ...request, wasmModule: null });
+              }
+            })
+            .catch((error: unknown) => {
+              if (finish()) reject(error);
+            });
+        } catch (error) {
+          if (finish()) reject(error);
+        }
+      },
+    };
     signal.addEventListener("abort", abort, { once: true });
-    worker.onmessage = ({ data }: MessageEvent<PdfAccessResponse>) => {
-      if (!finish()) return;
-      if ("access" in data) resolve(data.access);
-      else reject(Object.assign(new Error(data.error), { code: data.code }));
-    };
-    worker.onerror = () => {
-      if (finish()) reject(new Error("Unable to inspect PDF security locally"));
-    };
-    try {
-      worker.postMessage({
-        file,
-        password,
-        wasmUrl: pdfiumWasmUrl,
-      } satisfies PdfAccessRequest);
-    } catch (error) {
-      if (finish()) reject(error);
+    if (signal.aborted) abort();
+    else {
+      inspectionQueue.push(queued);
+      drainInspections();
     }
   });
 }

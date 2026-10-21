@@ -35,6 +35,7 @@ import {
 
 const observed = vi.hoisted(() => ({
   isEncrypted: true,
+  requiresOpeningPassword: true as boolean | undefined,
   heldBeforeEffects: false,
   afterDispatch: undefined as (() => Promise<void>) | undefined,
 }));
@@ -82,6 +83,7 @@ vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
     errorMessage,
     password,
     onPasswordChange,
+    inspection,
   }: {
     opened: boolean;
     onSkip: () => void;
@@ -91,20 +93,34 @@ vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
     errorMessage?: string | null;
     password: string;
     onPasswordChange: (password: string) => void;
+    inspection?: { error?: string; retry: () => void };
   }) =>
     opened ? (
       <>
         <button onClick={onSkip}>Cancel opening</button>
-        <input
-          aria-label={ownerUnlock ? "Permissions password" : "PDF password"}
-          value={password}
-          onChange={(event) => onPasswordChange(event.target.value)}
-        />
-        <button onClick={onUnlock}>Unlock</button>
-        {!ownerUnlock && onRemovePassword && (
-          <button onClick={onRemovePassword}>Remove Password</button>
+        {inspection ? (
+          <>
+            <span role={inspection.error ? "alert" : "status"}>
+              {inspection.error ?? "Checking permissions"}
+            </span>
+            {inspection.error && (
+              <button onClick={inspection.retry}>Retry inspection</button>
+            )}
+          </>
+        ) : (
+          <>
+            <input
+              aria-label={ownerUnlock ? "Permissions password" : "PDF password"}
+              value={password}
+              onChange={(event) => onPasswordChange(event.target.value)}
+            />
+            <button onClick={onUnlock}>Unlock</button>
+            {!ownerUnlock && onRemovePassword && (
+              <button onClick={onRemovePassword}>Remove Password</button>
+            )}
+            {errorMessage && <span role="alert">{errorMessage}</span>}
+          </>
         )}
-        {errorMessage && <span role="alert">{errorMessage}</span>}
       </>
     ) : null,
 }));
@@ -130,7 +146,11 @@ vi.mock("@app/contexts/file/fileActions", async (importOriginal) => {
           isLeaf: true,
           originalFileId: id,
           versionNumber: 1,
-          processedFile: { pages: [], isEncrypted: observed.isEncrypted },
+          processedFile: {
+            pages: [],
+            isEncrypted: observed.isEncrypted,
+            requiresOpeningPassword: observed.requiresOpeningPassword,
+          },
         };
         filesRef.current.set(id, file);
         dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs: [stub] } });
@@ -159,9 +179,131 @@ beforeEach(() => {
     isEncrypted: false,
   });
   observed.isEncrypted = true;
+  observed.requiresOpeningPassword = true;
   observed.heldBeforeEffects = false;
   observed.afterDispatch = undefined;
   setPendingUnlocks([]);
+});
+
+describe("deferred opening inspection", () => {
+  it("cancels a pending check without admitting its late result", async () => {
+    observed.requiresOpeningPassword = undefined;
+    let finish!: (value: unknown) => void;
+    localInspection.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const { result } = renderHook(
+      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+      { wrapper },
+    );
+    const file = new File(["encrypted"], "pending.pdf");
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([file]);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Checking permissions",
+    );
+    const signal = localInspection.mock.calls[0][2] as AbortSignal;
+    await act(async () => fireEvent.click(screen.getByText("Cancel opening")));
+    expect(signal.aborted).toBe(true);
+    await expect(loading).resolves.toEqual([]);
+    await act(async () =>
+      finish({
+        data: {
+          encrypted: true,
+          pageCount: 1,
+          ownerAuthenticated: false,
+          permissions: 0,
+          signed: false,
+        },
+      }),
+    );
+    expect(getPdfAccess(file)).toBeUndefined();
+    expect(result.current.selectors.getAllFileIds()).toEqual([]);
+  });
+  it.each([1024, 150 * 1024 * 1024])(
+    "opens a %i-byte restriction-only PDF without asking for a password",
+    async (size) => {
+      observed.requiresOpeningPassword = undefined;
+      localInspection.mockResolvedValueOnce({
+        data: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: false,
+          permissions: 0,
+          pageCount: 1,
+          requiresOpeningPassword: false,
+        },
+      });
+      const file = new File(["encrypted"], "restrictions.pdf");
+      Object.defineProperty(file, "size", { value: size });
+      const { result } = renderHook(
+        () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+        { wrapper },
+      );
+      let loading!: ReturnType<typeof result.current.actions.addFiles>;
+      await act(async () => {
+        loading = result.current.actions.addFiles([file]);
+      });
+      await expect(loading).resolves.toEqual([file]);
+      expect(localInspection).toHaveBeenCalledExactlyOnceWith(
+        file,
+        "",
+        expect.any(AbortSignal),
+      );
+      expect(getPdfAccess(file)).toMatchObject({
+        encrypted: true,
+        ownerAuthenticated: false,
+        permissions: 0,
+      });
+      expect(screen.queryByLabelText("PDF password")).not.toBeInTheDocument();
+    },
+  );
+
+  it("keeps a timed-out inspection unresolved and supports retry", async () => {
+    observed.requiresOpeningPassword = undefined;
+    localInspection.mockRejectedValueOnce(
+      new DOMException("Inspection timed out", "TimeoutError"),
+    );
+    const { result } = renderHook(
+      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+      { wrapper },
+    );
+    const file = new File(["encrypted"], "unknown.pdf");
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([file]);
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent("Inspection timed out");
+    expect(screen.queryByLabelText("PDF password")).not.toBeInTheDocument();
+    expect(getPdfAccess(file)).toBeUndefined();
+    localInspection.mockRejectedValueOnce(
+      Object.assign(new Error("Password required"), { code: 4 }),
+    );
+    await act(async () =>
+      fireEvent.click(screen.getByText("Retry inspection")),
+    );
+    expect(screen.getByLabelText("PDF password")).toBeVisible();
+    await act(async () => fireEvent.click(screen.getByText("Cancel opening")));
+    await expect(loading).resolves.toEqual([]);
+  });
+
+  it("prompts directly when the opening-password requirement is already known", async () => {
+    const { result } = renderHook(() => useFileActions(), { wrapper });
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([
+        new File(["encrypted"], "known.pdf"),
+      ]);
+    });
+    expect(screen.getByLabelText("PDF password")).toBeVisible();
+    expect(localInspection).not.toHaveBeenCalled();
+    await act(async () => fireEvent.click(screen.getByText("Cancel opening")));
+    await expect(loading).resolves.toEqual([]);
+  });
 });
 
 describe("protected tool replacements", () => {
@@ -187,6 +329,7 @@ describe("protected tool replacements", () => {
       const stub = createNewStirlingFileStub(output, output.fileId, undefined, {
         pages: [],
         isEncrypted: true,
+        requiresOpeningPassword: true,
       });
       let consuming!: ReturnType<typeof result.current.actions.consumeFiles>;
       await act(async () => {
@@ -254,6 +397,7 @@ describe("protected tool replacements", () => {
         createNewStirlingFileStub(file, file.fileId, undefined, {
           pages: [],
           isEncrypted: true,
+          requiresOpeningPassword: true,
         }),
       );
       let consuming!: ReturnType<typeof result.current.actions.consumeFiles>;

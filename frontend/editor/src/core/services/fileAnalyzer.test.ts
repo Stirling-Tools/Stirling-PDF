@@ -45,7 +45,7 @@ describe("large PDF encryption detection", () => {
       const readAll = vi.spyOn(file, "arrayBuffer");
       const slices = vi.spyOn(file, "slice");
 
-      expect(await FileAnalyzer.isPDFEncrypted(file, false)).toBe(true);
+      expect(await FileAnalyzer.isPDFEncrypted(file)).toBe(true);
       expect(ensureLocalPdfAccess).not.toHaveBeenCalled();
       expect(pdfWorkerManager.createDocument).not.toHaveBeenCalled();
       expect(readAll).not.toHaveBeenCalled();
@@ -53,14 +53,10 @@ describe("large PDF encryption detection", () => {
     },
   );
 
-  it("inspects a marked PDF over 100 MiB when opened, with no PDF.js parse", async () => {
+  it("defers authentication of small marked PDFs until opening too", async () => {
     const file = new File(["%PDF-1.7 /Encrypt 1 0 R"], "large.pdf");
-    Object.defineProperty(file, "size", { value: LARGE_PDF_PARSE_LIMIT * 2 });
-    vi.mocked(ensureLocalPdfAccess).mockRejectedValueOnce(
-      new Error("Password required"),
-    );
     expect(await FileAnalyzer.isPDFEncrypted(file)).toBe(true);
-    expect(ensureLocalPdfAccess).toHaveBeenCalledExactlyOnceWith(file);
+    expect(ensureLocalPdfAccess).not.toHaveBeenCalled();
     expect(pdfWorkerManager.createDocument).not.toHaveBeenCalled();
   });
 

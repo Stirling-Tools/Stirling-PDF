@@ -36,6 +36,8 @@ export interface ProcessedFileMetadata {
   totalPages?: number;
   lastProcessed?: number;
   isEncrypted?: boolean;
+  /** Verified opening-password requirement; absence means it has not been checked. */
+  requiresOpeningPassword?: boolean;
   thumbnailUrl?: string;
   [key: string]: unknown;
 }

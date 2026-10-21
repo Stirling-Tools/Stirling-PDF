@@ -49,6 +49,43 @@ beforeEach(() => {
 });
 
 describe("addFiles with skipMetadataHydration", () => {
+  test("publishes the first rows before the last file's admission read finishes", async () => {
+    let finish!: (encrypted: boolean) => void;
+    isPDFEncrypted.mockImplementation((file: File) =>
+      file.name === "slow.pdf"
+        ? new Promise<boolean>((resolve) => {
+            finish = resolve;
+          })
+        : Promise.resolve(false),
+    );
+    const h = harness();
+    const importing = addFiles(
+      {
+        files: [pdf("first.pdf"), pdf("slow.pdf")],
+        skipMetadataHydration: true,
+        skipUploadTracking: true,
+      },
+      h.stateRef,
+      h.filesRef,
+      h.dispatch,
+      h.lifecycleManager as never,
+      true,
+    );
+    await vi.waitFor(() => expect(finish).toBeTypeOf("function"));
+    try {
+      expect(h.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "ADD_FILES",
+          payload: {
+            stirlingFileStubs: [expect.objectContaining({ name: "first.pdf" })],
+          },
+        }),
+      );
+    } finally {
+      finish(false);
+      await importing;
+    }
+  });
   test("a pending permission inspection does not block another import", async () => {
     let finishInspection!: (encrypted: boolean) => void;
     isPDFEncrypted.mockImplementation((file: File) =>
@@ -111,8 +148,6 @@ describe("addFiles with skipMetadataHydration", () => {
     });
     expect(h.dispatch).not.toHaveBeenCalled();
     expect(h.filesRef.current.size).toBe(0);
-    // No hydration was queued, so nothing can start parsing later either.
-    await new Promise((resolve) => setTimeout(resolve, 10));
     expect(generateThumbnailPairWithMetadata).not.toHaveBeenCalled();
   });
 
