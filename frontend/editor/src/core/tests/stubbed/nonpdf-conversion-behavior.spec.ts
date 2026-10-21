@@ -121,8 +121,9 @@ test.describe("non-PDF conversion handoff", () => {
     await expect(
       page.getByTestId("nonpdf-conversion-open-convert"),
     ).toBeVisible();
-    await expect(page.getByTestId("nonpdf-convert-options")).toHaveCount(0);
-    await expect(page.getByTestId("nonpdf-options")).toHaveCount(0);
+    await page.getByTestId("nonpdf-convert-settings").click();
+    await expect(page.getByTestId("nonpdf-settings")).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 
   test("a cancelled request cannot clear the replacement request's guard", async ({

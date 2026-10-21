@@ -446,6 +446,12 @@ export function NonPdfConversionPanel({
                     onDismiss={dismissError}
                     errorMessage={errorMessage}
                   />
+                  {hasOptions && (
+                    <div className="nonpdf-hero__settings">
+                      {settingsButton}
+                      {settingsPanel}
+                    </div>
+                  )}
                 </Box>
               ) : (
                 <>
@@ -505,7 +511,7 @@ export function NonPdfConversionPanel({
               </Text>
             ) : (
               <>
-                {!converting && !failed && settingsButton}
+                {!converting && settingsButton}
                 {!failed && convertButton}
               </>
             )}
