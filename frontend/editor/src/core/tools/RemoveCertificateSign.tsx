@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import RemoveCertificateSignSettings from "@app/components/tools/removeCertificateSign/RemoveCertificateSignSettings";
 import { useRemoveCertificateSignParameters } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters";
 import { useRemoveCertificateSignOperation } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
@@ -20,7 +21,22 @@ const RemoveCertificateSign = (props: BaseToolProps) => {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
     },
-    steps: [],
+    steps: [
+      {
+        title: t("removeCertSign.settings", "Settings"),
+        isCollapsed: base.settingsCollapsed,
+        onCollapsedClick: base.hasResults
+          ? base.handleSettingsReset
+          : undefined,
+        content: (
+          <RemoveCertificateSignSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+          />
+        ),
+      },
+    ],
     executeButton: {
       text: t("removeCertSign.submit", "Remove Signature"),
       isVisible: !base.hasResults,
