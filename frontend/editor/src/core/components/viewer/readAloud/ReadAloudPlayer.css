@@ -5,7 +5,7 @@
 }
 
 .read-aloud-player__badge {
-  align-self: flex-start;
+  min-width: 0;
   max-width: 100%;
   text-transform: none;
   letter-spacing: 0;
@@ -81,4 +81,27 @@
 
 .read-aloud-player__switch {
   margin-top: 0.1rem;
+}
+
+.read-aloud-mini {
+  position: fixed;
+  right: 0.75rem;
+  bottom: 4.25rem;
+  z-index: 999;
+  width: min(22rem, calc(100vw - 1.5rem));
+  padding: 0.6rem 0.7rem 0.5rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-raised);
+  box-shadow: var(--shadow-md);
+}
+
+.read-aloud-mini__icon {
+  flex: none;
+  color: var(--c-primary);
+}
+
+.read-aloud-mini__text {
+  flex: 1;
+  min-width: 0;
 }

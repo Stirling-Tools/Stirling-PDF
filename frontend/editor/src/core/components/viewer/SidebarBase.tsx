@@ -14,6 +14,8 @@ export interface SidebarBaseProps {
   icon: IconName | ReactNode;
   /** Right offset position string (e.g. "15rem" or "0rem"). */
   rightOffset?: string;
+  /** Sidebar width; defaults to the shared 15rem column. */
+  width?: string;
   /** Sidebar visibility flag. */
   visible?: boolean;
   /** Additional CSS class names. */
@@ -40,6 +42,7 @@ export function SidebarBase({
   title,
   icon,
   rightOffset = "0rem",
+  width = SIDEBAR_WIDTH,
   visible = true,
   className = "",
   onClose,
@@ -73,7 +76,7 @@ export function SidebarBase({
         right: rightOffset,
         top: 0,
         bottom: 0,
-        width: SIDEBAR_WIDTH,
+        width,
         zIndex: 998,
       }}
     >

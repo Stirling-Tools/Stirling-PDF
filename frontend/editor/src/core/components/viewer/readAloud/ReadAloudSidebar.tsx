@@ -6,32 +6,44 @@ import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 import type { ReadAloudStore } from "@app/components/viewer/useViewerReadAloud";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ReadAloudPlayer } from "@app/components/viewer/readAloud/ReadAloudPlayer";
+import { ReadAloudMiniPlayer } from "@app/components/viewer/readAloud/ReadAloudMiniPlayer";
 
 interface ReadAloudSidebarProps {
   visible: boolean;
+  collapsed: boolean;
   /** Distance from the right edge, in rem, so the panel stacks beside the other sidebars. */
   rightOffset: number;
+  /** Expanded width in rem; the collapsed mini-player floats and does not reserve page space. */
+  width: number;
   store: ReadAloudStore;
   onOpen: () => void;
   onClose: () => void;
+  onCollapse: () => void;
+  onExpand: () => void;
 }
 
 export function ReadAloudSidebar({
   visible,
+  collapsed,
   rightOffset,
+  width,
   store,
   onOpen,
   onClose,
+  onCollapse,
+  onExpand,
 }: ReadAloudSidebarProps) {
   const { t } = useTranslation();
+  const { setReaderMode } = useToolWorkflow();
   const readAloud = useSyncExternalStore(
     store.subscribe,
     store.getSnapshot,
     store.getSnapshot,
   );
   const previousPanelOpenRef = useRef(readAloud.panelOpen);
-  const detectAgainLabel = t("readAloud.detectAgain", "Detect language again");
+  const collapseLabel = t("readAloud.collapse", "Collapse to mini player");
 
   useEffect(() => {
     if (visible) readAloud.openPanel();
@@ -45,31 +57,50 @@ export function ReadAloudSidebar({
     previousPanelOpenRef.current = readAloud.panelOpen;
   }, [readAloud.panelOpen, onOpen]);
 
+  if (!visible) return null;
+
+  const openReadMode = () => {
+    setReaderMode(true);
+    onCollapse();
+  };
+
+  if (collapsed) {
+    return (
+      <ReadAloudMiniPlayer
+        readAloud={readAloud}
+        rightOffset={rightOffset}
+        onExpand={onExpand}
+        onClose={onClose}
+        onReadMode={openReadMode}
+      />
+    );
+  }
+
   return (
     <SidebarBase
       className="read-aloud-sidebar"
       title={t("readAloud.title", "Read aloud")}
       icon={<Icon name="volume-2" size={20} />}
       rightOffset={`${rightOffset}rem`}
-      visible={visible}
+      width={`${width}rem`}
+      visible
       onClose={onClose}
-      closeLabel={t("readAloud.closeSidebar", "Close read aloud")}
+      closeLabel={t("readAloud.close", "Close read aloud")}
       headerActions={
-        <Tooltip content={detectAgainLabel} position="top" delay={0}>
+        <Tooltip content={collapseLabel} position="top" delay={0}>
           <ActionIcon
             variant="tertiary"
             size="sm"
-            aria-label={detectAgainLabel}
-            title={detectAgainLabel}
-            onClick={() => void readAloud.redetect()}
-            disabled={readAloud.detectionStatus === "detecting"}
+            aria-label={collapseLabel}
+            title={collapseLabel}
+            onClick={onCollapse}
           >
-            <Icon name="refresh-cw" size="0.9rem" />
+            <Icon name="chevron-right" size="1rem" />
           </ActionIcon>
         </Tooltip>
       }
     >
-      <ReadAloudPlayer readAloud={readAloud} />
+      <ReadAloudPlayer readAloud={readAloud} onReadMode={openReadMode} />
     </SidebarBase>
   );
 }

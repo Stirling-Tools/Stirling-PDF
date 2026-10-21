@@ -274,6 +274,7 @@ test.describe("read aloud language walkthrough", () => {
     // Clicking the page must not take the controls away while audio is playing.
     await page.locator('[data-page-index="0"]').click();
     await expect(page.locator(".read-aloud-player")).toBeVisible();
+    await page.getByRole("button", { name: "Settings", exact: true }).click();
     await page.getByRole("textbox", { name: "Voice" }).click();
     await expect(page.getByRole("option").first()).toBeVisible();
     await page.mouse.move(0, 0);
@@ -424,5 +425,82 @@ test.describe("read aloud language walkthrough", () => {
       timeout: 15_000,
     });
     await shot(page, "11_mobile_sidebar_dark");
+  });
+
+  test("12 collapses to mini player", async ({ page }, testInfo) => {
+    await stubSpeech(page);
+    const pdf = await makePdf(testInfo.outputPath("lease-es.pdf"), SPANISH);
+    await openViewer(page, pdf);
+    await openReadAloud(page);
+    await expect(page.getByText("Detected Spanish")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Pause", exact: true }),
+    ).toBeVisible({ timeout: 10_000 });
+    await page.getByRole("button", { name: "Collapse to mini player" }).click();
+    await expect(page.locator(".read-aloud-mini")).toBeVisible();
+    await expect(page.locator(".read-aloud-sidebar")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Pause", exact: true }),
+    ).toBeVisible();
+    await shot(page, "12_mini_player_light");
+    await page.getByRole("button", { name: "Show controls" }).click();
+    await expect(page.locator(".read-aloud-player")).toBeVisible();
+  });
+
+  test("13 read mode collapses the panel", async ({ page }, testInfo) => {
+    await stubSpeech(page);
+    const pdf = await makePdf(testInfo.outputPath("lease-es.pdf"), SPANISH);
+    await openViewer(page, pdf);
+    await openReadAloud(page);
+    await expect(page.getByText("Detected Spanish")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Pause", exact: true }),
+    ).toBeVisible({ timeout: 10_000 });
+    await page.getByRole("button", { name: "Read mode", exact: true }).click();
+    await expect(page.locator(".read-aloud-mini")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Pause", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("PDF Library")).toBeHidden({ timeout: 5_000 });
+    await shot(page, "13_read_mode_light");
+  });
+
+  test("14 mini player dark", async ({ page }, testInfo) => {
+    await useDarkMode(page);
+    await stubSpeech(page);
+    const pdf = await makePdf(testInfo.outputPath("lease-es.pdf"), SPANISH);
+    await openViewer(page, pdf);
+    await openReadAloud(page);
+    await expect(page.getByText("Detected Spanish")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Pause", exact: true }),
+    ).toBeVisible({ timeout: 10_000 });
+    await page.getByRole("button", { name: "Collapse to mini player" }).click();
+    await expect(page.locator(".read-aloud-mini")).toBeVisible();
+    await shot(page, "14_mini_player_dark");
+  });
+
+  test("15 read mode dark", async ({ page }, testInfo) => {
+    await useDarkMode(page);
+    await stubSpeech(page);
+    const pdf = await makePdf(testInfo.outputPath("lease-es.pdf"), SPANISH);
+    await openViewer(page, pdf);
+    await openReadAloud(page);
+    await expect(page.getByText("Detected Spanish")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.getByRole("button", { name: "Read mode", exact: true }).click();
+    await expect(page.locator(".read-aloud-mini")).toBeVisible();
+    await expect(page.getByText("PDF Library")).toBeHidden({ timeout: 5_000 });
+    await shot(page, "15_read_mode_dark");
   });
 });
