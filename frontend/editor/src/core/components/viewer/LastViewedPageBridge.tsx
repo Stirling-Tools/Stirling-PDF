@@ -24,7 +24,9 @@ export function LastViewedPageBridge({
   const { provides: scroll } = useScrollCapability();
   const restoreClaimed = useRef(false);
   const restorePendingRef = useRef(restorePending);
-  restorePendingRef.current = restorePending;
+  useLayoutEffect(() => {
+    restorePendingRef.current = restorePending;
+  }, [restorePending]);
 
   useLayoutEffect(() => {
     if (!scroll || !originalFileId) return;

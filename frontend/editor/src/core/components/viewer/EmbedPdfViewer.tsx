@@ -69,6 +69,7 @@ import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
+import { originalIdOf } from "@app/services/workbenchSession";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -666,7 +667,7 @@ const EmbedPdfViewerContent = ({
     }
     if (currentFile && isStirlingFile(currentFile)) {
       const stub = selectors.getStirlingFileStub(currentFile.fileId);
-      return stub?.originalFileId ?? stub?.id ?? currentFile.fileId;
+      return stub ? originalIdOf(stub) : currentFile.fileId;
     }
     return currentFileId;
   }, [previewFile, currentFile, currentFileId, selectors]);
