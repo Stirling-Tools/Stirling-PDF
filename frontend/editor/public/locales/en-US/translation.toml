@@ -4289,6 +4289,8 @@ title = "How to Crop PDFs"
 description = "This PDF is damaged and can't be opened."
 label = "Damaged"
 repair = "Repair"
+repaired = "Repaired {{name}}"
+repairFailed = "Couldn't repair {{name}}"
 
 [database]
 backupCreated = "Database backup successful"

@@ -201,6 +201,7 @@ interface LocalEmbedPDFProps {
   onPasswordRequired?: () => void;
   /** Offered on the error screen when PDFium cannot parse the open file. */
   onRepair?: (fileId: FileId) => void;
+  repairingFileId?: FileId | null;
   /** True while a view restore is in flight; gates the per-page layout hook. */
   restorePending?: boolean;
   restoreRequest?: DocumentRestoreRequest | null;
@@ -927,6 +928,7 @@ export function LocalEmbedPDF({
   onDocumentLoadFailed,
   onPasswordRequired,
   onRepair,
+  repairingFileId,
   restorePending = false,
   restoreRequest = null,
   onRestoreEvent,
@@ -1736,6 +1738,9 @@ export function LocalEmbedPDF({
               onRepair && file && isStirlingFile(file)
                 ? () => onRepair(file.fileId)
                 : undefined
+            }
+            repairing={
+              !!file && isStirlingFile(file) && repairingFileId === file.fileId
             }
             fallback={
               <Center style={{ height: "100%", width: "100%" }}>

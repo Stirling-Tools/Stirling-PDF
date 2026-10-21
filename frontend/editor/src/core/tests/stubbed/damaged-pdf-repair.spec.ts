@@ -2,7 +2,6 @@ import path from "node:path";
 import { readFile } from "node:fs/promises";
 import type { Page } from "@playwright/test";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { runToolAndWaitForReview } from "@app/tests/helpers/ui-helpers";
 
 // PDFium cannot parse this header, but the server's parser can; see generate-damaged-sample.py.
 const damaged = path.join(
@@ -11,7 +10,7 @@ const damaged = path.join(
 );
 const sample = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
 
-test("a damaged PDF is labelled and can be sent to Repair", async ({
+test("a damaged PDF is labelled and repaired from the viewer", async ({
   page,
 }) => {
   const repaired = await readFile(sample);
@@ -32,7 +31,8 @@ test("a damaged PDF is labelled and can be sent to Repair", async ({
   await expect(page.getByText("Damaged", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Repair", exact: true }).click();
-  await runToolAndWaitForReview(page);
+  // Repair runs in place: no tool panel, the repaired version replaces the file.
+  await expect(page.getByText("Repaired damaged-header.pdf")).toBeVisible();
 
   expect(uploads, "the damaged bytes reach the server").toHaveLength(1);
   await expect(page.getByText("Damaged", { exact: true })).toHaveCount(0);
@@ -92,7 +92,7 @@ test.describe("when the server has Repair disabled", () => {
   });
 });
 
-test("the Active Files card shows the damage and offers Repair", async ({
+test("the Active Files card shows the damage and repairs it", async ({
   page,
 }) => {
   const uploads: number[] = [];
@@ -120,7 +120,25 @@ test("the Active Files card shows the damage and offers Repair", async ({
     .locator("[data-hover-action-menu]")
     .getByRole("button", { name: "Repair", exact: true })
     .click();
-  await runToolAndWaitForReview(page);
+  // Repair runs in place: no tool panel, the repaired version replaces the file.
+  await expect(page.getByText("Repaired damaged-header.pdf")).toBeVisible();
   expect(uploads).toHaveLength(1);
   await expect(page.getByText("Damaged", { exact: true })).toHaveCount(0);
+});
+
+test("a failed repair says so and keeps the file marked damaged", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/misc/repair", (route) =>
+    route.fulfill({ status: 500, json: { message: "Repair failed" } }),
+  );
+  await page.getByTestId("file-input").setInputFiles(damaged);
+  await page.getByRole("button", { name: "Repair", exact: true }).click();
+  await expect(
+    page.getByText("Couldn't repair damaged-header.pdf"),
+  ).toBeVisible();
+  await expect(page.getByText("Damaged", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Repair", exact: true }),
+  ).toBeEnabled();
 });

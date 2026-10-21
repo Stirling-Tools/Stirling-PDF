@@ -70,7 +70,7 @@ import { useFilesPage } from "@app/contexts/FilesPageContext";
 import type { FolderId, FolderRecord } from "@app/types/folder";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 import { useWorkbenchFileDrop } from "@app/components/layout/useWorkbenchFileDrop";
-import { useRepairDamagedFile } from "@app/hooks/useRepairDamagedFile";
+import { useDamagedFileRepair } from "@app/contexts/DamagedFileRepairContext";
 import "@app/components/shared/FileSidebar.css";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
@@ -511,7 +511,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     } = useGoogleDrivePicker();
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
-    const repairDamagedFile = useRepairDamagedFile();
+    const damagedRepair = useDamagedFileRepair();
     const { actions: navActions } = useNavigationActions();
     const { workbench: currentWorkbench } = useNavigationState();
     const policyFileBadges = usePolicyFileBadges();
@@ -1088,7 +1088,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onEyeClick={handleEyeClick}
           dataUnavailable={dataUnavailable}
           isDamaged={isDamaged}
-          onRepair={repairDamagedFile}
+          onRepair={damagedRepair?.repair}
           policies={policyFileBadges.get(stub.id) ?? NO_POLICIES}
           onDelete={handleSidebarDelete}
           onDownload={handleDownload}

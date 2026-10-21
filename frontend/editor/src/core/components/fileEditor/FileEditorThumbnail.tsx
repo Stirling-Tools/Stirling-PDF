@@ -47,7 +47,7 @@ import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import { truncateCenter } from "@app/utils/textUtils";
 import { FileEditorStatusDot } from "@app/components/fileEditor/FileEditorStatusDot";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
-import { useRepairDamagedFile } from "@app/hooks/useRepairDamagedFile";
+import { useDamagedFileRepair } from "@app/contexts/DamagedFileRepairContext";
 
 interface FileEditorThumbnailProps {
   file: StirlingFileStub;
@@ -109,7 +109,9 @@ const FileEditorThumbnail = ({
 
   const hasError = useFileSelector((s) => s.ui.errorFileIds.includes(file.id));
   const isDamaged = file.processedFile?.isDamaged === true;
-  const repairDamagedFile = useRepairDamagedFile();
+  const damagedRepair = useDamagedFileRepair();
+  const isRepairing = damagedRepair?.repairingFileId === file.id;
+  const repairBusy = damagedRepair?.repairingFileId != null;
   const pageCount = file.processedFile?.totalPages || 0;
   const {
     isEncrypted,
@@ -353,15 +355,15 @@ const FileEditorThumbnail = ({
         id: "repair",
         icon: <Icon name="wrench" size={20} />,
         label: t("damagedPdf.repair", "Repair"),
-        disabled: policyEnforcing,
+        disabled: policyEnforcing || repairBusy,
         tooltip: policyEnforcing
           ? enforcingTooltip(t("damagedPdf.repair", "Repair"))
           : undefined,
         onClick: (e) => {
           e.stopPropagation();
-          repairDamagedFile?.(file.id);
+          damagedRepair?.repair(file.id);
         },
-        hidden: !isDamaged || !repairDamagedFile,
+        hidden: !isDamaged || !damagedRepair,
       },
       {
         id: "pin",
@@ -495,7 +497,8 @@ const FileEditorThumbnail = ({
     isCBR,
     isPinned,
     isDamaged,
-    repairDamagedFile,
+    damagedRepair,
+    repairBusy,
     actualFile,
     terminology,
     onViewFile,
@@ -597,14 +600,17 @@ const FileEditorThumbnail = ({
                         {t("damagedPdf.label", "Damaged")}
                       </span>
                     </Tooltip>
-                    {repairDamagedFile && (
+                    {damagedRepair && (
                       <Button
                         size="sm"
                         className={styles.damagedRepairButton}
-                        disabled={policyEnforcing}
+                        loading={isRepairing}
+                        disabled={
+                          policyEnforcing || (repairBusy && !isRepairing)
+                        }
                         onClick={(e) => {
                           e.stopPropagation();
-                          repairDamagedFile(file.id);
+                          damagedRepair.repair(file.id);
                         }}
                       >
                         {t("damagedPdf.repair", "Repair")}

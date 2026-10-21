@@ -13,12 +13,14 @@ interface DocumentReadyWrapperProps {
   fallback?: React.ReactNode;
   /** Offered instead of a bare retry when the file itself cannot be parsed. */
   onRepair?: () => void;
+  repairing?: boolean;
 }
 
 export function DocumentReadyWrapper({
   children,
   fallback = null,
   onRepair,
+  repairing = false,
 }: DocumentReadyWrapperProps) {
   const { activeDocumentId, activeDocument } = useActiveDocument();
   const { provides: manager } = useDocumentManagerCapability();
@@ -39,7 +41,7 @@ export function DocumentReadyWrapper({
           </Text>
           <Group>
             {damaged && onRepair && (
-              <Button onClick={onRepair}>
+              <Button onClick={onRepair} loading={repairing}>
                 {t("damagedPdf.repair", "Repair")}
               </Button>
             )}
