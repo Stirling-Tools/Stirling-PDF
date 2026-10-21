@@ -230,6 +230,7 @@ function ConversionError({
           ref={retryRef}
           variant="secondary"
           size={buttonSize}
+          fullWidth={isMobile}
           onClick={onRetry}
           data-testid="nonpdf-conversion-retry"
         >
@@ -240,6 +241,7 @@ function ConversionError({
           <Button
             variant="quiet"
             size={buttonSize}
+            fullWidth={isMobile}
             onClick={onOpenInConvert}
             data-testid="nonpdf-conversion-open-convert"
           >
@@ -318,7 +320,7 @@ export function NonPdfConversionPanel({
       ref={optionsRef}
       variant="secondary"
       size={actionSize}
-      fullWidth={isMobile && variant === "hero" && !failed}
+      fullWidth={isMobile && variant === "hero"}
       leftSection={<Icon name="sliders-horizontal" size="1rem" />}
       onClick={openOptions}
       disabled={disabled || converting}
