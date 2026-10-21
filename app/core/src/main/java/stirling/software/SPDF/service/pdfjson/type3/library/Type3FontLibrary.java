@@ -204,19 +204,27 @@ public class Type3FontLibrary {
         if (payload == null) {
             return null;
         }
-        if (payload.resource == null || payload.resource.isBlank()) {
+        if (payload.base64 != null && !payload.base64.isBlank()) {
             return loadPayload(payload);
         }
-        String key = payload.resource + "|" + payload.format;
-        Type3FontLibraryPayload cached = payloadCache.get(key);
-        if (cached != null) {
-            return cached;
+        try {
+            if (payload.resource == null || payload.resource.isBlank()) {
+                return loadPayload(payload);
+            }
+            String key = payload.resource + "|" + payload.format;
+            Type3FontLibraryPayload cached = payloadCache.get(key);
+            if (cached != null) {
+                return cached;
+            }
+            Type3FontLibraryPayload loaded = loadPayload(payload);
+            if (loaded != null) {
+                payloadCache.put(key, loaded);
+            }
+            return loaded;
+        } catch (IOException ex) {
+            log.warn("[TYPE3] Failed to load Type3 payload: {}", ex.getMessage());
+            return null;
         }
-        Type3FontLibraryPayload loaded = loadPayload(payload);
-        if (loaded != null) {
-            payloadCache.put(key, loaded);
-        }
-        return loaded;
     }
 
     private Type3FontLibraryPayload loadPayload(RawPayload payload) throws IOException {

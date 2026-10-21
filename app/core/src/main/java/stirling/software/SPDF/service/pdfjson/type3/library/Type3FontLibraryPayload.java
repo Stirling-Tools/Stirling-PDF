@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.core.io.Resource;
 
@@ -11,10 +12,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Type3FontLibraryPayload {
+    private static final long FAILURE_RETRY_DELAY_NANOS = TimeUnit.SECONDS.toNanos(1);
+
     private final String directBase64;
     private final Resource resource;
     private final String format;
     private volatile String cachedBase64;
+    private volatile long retryAfterNanos;
 
     public Type3FontLibraryPayload(String base64, String format) {
         this.directBase64 = base64;
@@ -35,16 +39,25 @@ public class Type3FontLibraryPayload {
         if (resource == null) {
             return null;
         }
+        if (System.nanoTime() < retryAfterNanos) {
+            return null;
+        }
         if (cachedBase64 == null) {
             synchronized (this) {
                 if (cachedBase64 == null) {
+                    if (System.nanoTime() < retryAfterNanos) {
+                        return null;
+                    }
                     try (InputStream is = resource.getInputStream()) {
                         byte[] bytes = is.readAllBytes();
                         if (bytes.length == 0) {
+                            retryAfterNanos = System.nanoTime() + FAILURE_RETRY_DELAY_NANOS;
                             return null;
                         }
                         cachedBase64 = Base64.getEncoder().encodeToString(bytes);
+                        retryAfterNanos = 0;
                     } catch (IOException e) {
+                        retryAfterNanos = System.nanoTime() + FAILURE_RETRY_DELAY_NANOS;
                         log.warn(
                                 "[TYPE3] Failed to read Type3 payload {}: {}",
                                 resource.getDescription(),
