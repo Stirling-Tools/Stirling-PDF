@@ -14059,6 +14059,7 @@ closeAll = "എല്ലാ ഫയലുകളും അടയ്ക്കുക
 closePdf = "PDF അടയ്ക്കുക"
 deselectAll = "എല്ലാം തിരഞ്ഞെടുക്കൽ ഒഴിവാക്കുക"
 downloadAll = "എല്ലാം ഡൗൺലോഡ് ചെയ്യുക"
+exitAnnotations = "അനോട്ടേഷൻ മോഡിൽ നിന്ന് പുറത്തുകടക്കുക"
 exitRedaction = "റെഡാക്ഷൻ മോഡിൽ നിന്ന് പുറത്തിറങ്ങുക"
 formFill = "ഫോം എഡിറ്റർ"
 hideToolbar = "toolbar മറയ്ക്കുക"
