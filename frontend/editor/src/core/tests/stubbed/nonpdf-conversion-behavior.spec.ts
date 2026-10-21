@@ -40,7 +40,7 @@ async function expectPdfFocus(page: Page): Promise<void> {
 test.describe("non-PDF conversion handoff", () => {
   test.use({ viewport: { width: 1600, height: 1000 } });
 
-  test("success moves focus onto the PDF and keeps the filename visible", async ({
+  test("the big action converts directly, without a dialog", async ({
     page,
   }) => {
     await page.route("**/api/v1/convert/ebook/pdf", fulfillPdf);
@@ -49,6 +49,7 @@ test.describe("non-PDF conversion handoff", () => {
     await expect(page.getByTestId("nonpdf-hero")).toContainText("sample.epub");
     await page.getByTestId("nonpdf-convert").click();
 
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByText(/Converted to PDF/i)).toBeVisible();
     await expect(page.locator(".pdf-viewer-toolbar-dock")).toBeVisible();
     await expectPdfFocus(page);
@@ -73,77 +74,29 @@ test.describe("non-PDF conversion handoff", () => {
     release();
   });
 
-  test("options dialog returns focus on cancel and hands it to the PDF on convert", async ({
+  test("failure focuses Try again and offers Open in Convert", async ({
     page,
   }) => {
-    await page.route("**/api/v1/convert/ebook/pdf", fulfillPdf);
-
-    await openFile(page, "sample.epub");
-    const options = page.getByTestId("nonpdf-convert-options");
-    await options.click();
-    await expect(page.getByTestId("nonpdf-options")).toBeVisible();
-    await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(page.getByTestId("nonpdf-options")).toBeHidden();
-    await expect(options).toBeFocused();
-
-    await options.click();
-    await page.getByTestId("nonpdf-options-convert").click();
-    await expect(page.getByText(/Converted to PDF/i)).toBeVisible();
-    await expectPdfFocus(page);
-  });
-
-  test("error focuses recovery, options discard on cancel, and convert commits them", async ({
-    page,
-  }) => {
-    let requests = 0;
-    let committedBody = "";
-    await page.route("**/api/v1/convert/ebook/pdf", async (route) => {
-      requests += 1;
-      if (requests === 1) {
-        await route.fulfill({
-          status: 500,
-          contentType: "application/json",
-          body: JSON.stringify({
-            message: "The EPUB is password protected.",
-          }),
-        });
-        return;
-      }
-      committedBody = route.request().postDataBuffer()?.toString("utf8") ?? "";
-      await fulfillPdf(route);
-    });
+    await page.route("**/api/v1/convert/ebook/pdf", (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({
+          message: "The EPUB is password protected.",
+        }),
+      }),
+    );
 
     await openFile(page, "sample.epub");
     await page.getByTestId("nonpdf-convert").click();
 
-    const error = page.getByTestId("nonpdf-conversion-error");
-    await expect(error).toBeVisible();
+    await expect(page.getByTestId("nonpdf-conversion-error")).toBeVisible();
     await expect(page.getByTestId("nonpdf-conversion-retry")).toBeFocused();
-
-    const options = page.getByTestId("nonpdf-convert-options");
-    await expect(options).toBeVisible();
-    await options.click();
-    await expect(page.getByTestId("nonpdf-options")).toBeVisible();
-
-    const toc = page.getByLabel("Include table of contents");
-    await expect(toc).not.toBeChecked();
-    await toc.click();
-    await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(page.getByTestId("nonpdf-options")).toBeHidden();
-    await expect(options).toBeFocused();
-
-    await options.click();
     await expect(
-      page.getByLabel("Include table of contents"),
-    ).not.toBeChecked();
-    await page.getByLabel("Include table of contents").click();
-    await page.getByTestId("nonpdf-options-convert").click();
-
-    await expect(page.getByText(/Converted to PDF/i)).toBeVisible();
-    await expectPdfFocus(page);
-    expect(requests).toBe(2);
-    expect(committedBody).toContain('name="includeTableOfContents"');
-    expect(committedBody).toContain("true");
+      page.getByTestId("nonpdf-conversion-open-convert"),
+    ).toBeVisible();
+    await expect(page.getByTestId("nonpdf-convert-options")).toHaveCount(0);
+    await expect(page.getByTestId("nonpdf-options")).toHaveCount(0);
   });
 
   test("a cancelled request cannot clear the replacement request's guard", async ({
@@ -233,11 +186,5 @@ test.describe("non-PDF conversion handoff", () => {
     await expect(
       page.locator(".file-sidebar-file-item").filter({ hasText: "converted" }),
     ).toHaveCount(0);
-  });
-
-  test("formats without settings do not offer options", async ({ page }) => {
-    await openFile(page, "sample.md");
-    await expect(page.getByTestId("nonpdf-conversion-bar")).toBeVisible();
-    await expect(page.getByTestId("nonpdf-convert-options")).toHaveCount(0);
   });
 });

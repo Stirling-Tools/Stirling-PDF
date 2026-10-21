@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { Box, Group, Loader, Paper, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
@@ -10,7 +10,6 @@ import { useNonPdfConversion } from "@app/hooks/useNonPdfConversion";
 import { formatFileSize } from "@app/utils/fileUtils";
 import type { NonPdfConversionPlan } from "@app/utils/nonPdfConversion";
 
-import { NonPdfConversionOptionsModal } from "@app/components/viewer/nonpdf/NonPdfConversionOptionsModal";
 import "@app/components/viewer/nonpdf/NonPdfConversionPanel.css";
 
 export type NonPdfConversionVariant = "compact" | "hero";
@@ -30,7 +29,6 @@ interface ConversionStatusProps {
   compact: boolean;
   onCancel: () => void;
   onRetry: () => void;
-  optionsButton?: ReactNode;
   onOpenInConvert?: () => void;
   onDismiss: () => void;
   errorMessage: string | null;
@@ -189,18 +187,12 @@ function ConversionProgress({
 function ConversionError({
   compact,
   onRetry,
-  optionsButton,
   onOpenInConvert,
   onDismiss,
   errorMessage,
 }: Pick<
   ConversionStatusProps,
-  | "compact"
-  | "onRetry"
-  | "optionsButton"
-  | "onOpenInConvert"
-  | "onDismiss"
-  | "errorMessage"
+  "compact" | "onRetry" | "onOpenInConvert" | "onDismiss" | "errorMessage"
 >) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
@@ -276,7 +268,6 @@ function ConversionError({
         >
           {t("viewer.nonPdf.retry", "Try again")}
         </Button>
-        {optionsButton}
         {onOpenInConvert && (
           <Button
             variant="quiet"
@@ -311,40 +302,17 @@ export function NonPdfConversionPanel({
 }: NonPdfConversionPanelProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
-  const [optionsOpen, setOptionsOpen] = useState(false);
   const convertRef = useRef<HTMLButtonElement>(null);
-  const optionsRef = useRef<HTMLButtonElement>(null);
-  const {
-    status,
-    errorMessage,
-    parameters,
-    applyParameters,
-    convert,
-    cancel,
-    dismissError,
-  } = useNonPdfConversion({ file, plan, onConverted });
+  const { status, errorMessage, convert, cancel, dismissError } =
+    useNonPdfConversion({ file, plan, onConverted });
 
   const converting = status === "converting";
   const failed = status === "error";
-  const hasOptions = plan.optionsKind !== "none";
   const formatName = plan.formatLabel;
-
-  const openOptions = () => setOptionsOpen(true);
-
-  const closeOptions = () => {
-    setOptionsOpen(false);
-    requestAnimationFrame(() => optionsRef.current?.focus());
-  };
 
   const handleCancel = () => {
     cancel();
     requestAnimationFrame(() => convertRef.current?.focus());
-  };
-
-  const handleOptionsConvert = (next: typeof parameters) => {
-    applyParameters(next);
-    setOptionsOpen(false);
-    void convert(next);
   };
 
   const handleOpenInConvert = () => {
@@ -355,34 +323,11 @@ export function NonPdfConversionPanel({
   const actionSize =
     variant === "hero" ? (isMobile ? "xl" : "lg") : isMobile ? "lg" : "md";
 
-  const optionsButton = hasOptions ? (
-    <Button
-      ref={optionsRef}
-      variant="secondary"
-      size={failed ? (isMobile ? "lg" : "sm") : actionSize}
-      fullWidth={isMobile && variant === "hero"}
-      leftSection={<Icon name="sliders-horizontal" size="1rem" />}
-      onClick={openOptions}
-      disabled={disabled || converting}
-      data-testid="nonpdf-convert-options"
-      aria-label={t("viewer.nonPdf.optionsTitle", "Conversion options")}
-      title={t("viewer.nonPdf.optionsTitle", "Conversion options")}
-    >
-      {isMobile && variant === "compact"
-        ? null
-        : variant === "compact"
-          ? t("viewer.nonPdf.optionsShort", "Options")
-          : failed
-            ? t("viewer.nonPdf.adjustOptions", "Adjust options")
-            : t("viewer.nonPdf.optionsTitle", "Conversion options")}
-    </Button>
-  ) : null;
-
   const convertButton = (
     <Button
       ref={convertRef}
       size={actionSize}
-      fullWidth={isMobile && variant === "hero"}
+      fullWidth={variant === "hero"}
       leftSection={<Icon name="file-pdf" size="1rem" />}
       onClick={() => void convert()}
       loading={converting}
@@ -394,20 +339,6 @@ export function NonPdfConversionPanel({
         : t("viewer.nonPdf.convertToPdf", "Convert to PDF")}
     </Button>
   );
-
-  // Mount only while open so draft settings start from the committed values
-  // every time, and Cancel can discard them by unmounting.
-  const optionsModal = optionsOpen ? (
-    <NonPdfConversionOptionsModal
-      open
-      onClose={closeOptions}
-      file={file}
-      plan={plan}
-      parameters={parameters}
-      onConvert={handleOptionsConvert}
-      converting={converting}
-    />
-  ) : null;
 
   if (variant === "hero") {
     return (
@@ -448,23 +379,17 @@ export function NonPdfConversionPanel({
                   <ConversionError
                     compact={false}
                     onRetry={() => void convert()}
-                    optionsButton={optionsButton}
                     onOpenInConvert={handleOpenInConvert}
                     onDismiss={dismissError}
                     errorMessage={errorMessage}
                   />
                 </Box>
               ) : (
-                <div className="nonpdf-hero__actions">
-                  {convertButton}
-                  {optionsButton}
-                </div>
+                <div className="nonpdf-hero__actions">{convertButton}</div>
               )}
             </div>
           </div>
         </div>
-
-        {optionsModal}
       </>
     );
   }
@@ -499,17 +424,6 @@ export function NonPdfConversionPanel({
         </Group>
 
         <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
-          {!isMobile && (
-            <Box
-              aria-hidden
-              style={{
-                width: 1,
-                height: 24,
-                marginInline: 4,
-                background: "var(--c-border)",
-              }}
-            />
-          )}
           {disabled ? (
             <Text size="xs" c="dimmed" dir="auto">
               {t(
@@ -518,10 +432,7 @@ export function NonPdfConversionPanel({
               )}
             </Text>
           ) : (
-            <>
-              {!converting && optionsButton}
-              {!failed && convertButton}
-            </>
+            <>{!failed && convertButton}</>
           )}
         </Group>
       </Group>
@@ -533,14 +444,11 @@ export function NonPdfConversionPanel({
         <ConversionError
           compact
           onRetry={() => void convert()}
-          optionsButton={null}
           onOpenInConvert={handleOpenInConvert}
           onDismiss={dismissError}
           errorMessage={errorMessage}
         />
       )}
-
-      {optionsModal}
     </Paper>
   );
 }

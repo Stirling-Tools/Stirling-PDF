@@ -155,7 +155,7 @@
   white-space: nowrap;
 }
 
-@container (max-width: 60rem) {
+@container (max-width: 50rem) {
   .nonpdf-hero__inner {
     flex-direction: column;
     align-items: stretch;

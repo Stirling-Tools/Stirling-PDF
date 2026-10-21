@@ -31,10 +31,7 @@ interface ActiveConversion {
 export interface NonPdfConversionController {
   status: NonPdfConversionStatus;
   errorMessage: string | null;
-  parameters: ConvertParameters;
-  applyParameters: (next: ConvertParameters) => void;
-  /** `overrides` lets the options dialog convert with its draft in the same tick. */
-  convert: (overrides?: ConvertParameters) => Promise<void>;
+  convert: () => Promise<void>;
   cancel: () => void;
   dismissError: () => void;
 }
@@ -93,10 +90,6 @@ export function useNonPdfConversion({
     setParameters(getNonPdfConversionParameters(file.name, plan));
   }, [file, plan]);
 
-  const applyParameters = useCallback((next: ConvertParameters) => {
-    setParameters(next);
-  }, []);
-
   const cancel = useCallback(() => {
     const request = requestRef.current;
     if (request) {
@@ -114,115 +107,110 @@ export function useNonPdfConversion({
     setErrorMessage(null);
   }, []);
 
-  const convert = useCallback(
-    async (overrides?: ConvertParameters) => {
-      if (convertingRef.current) return;
+  const convert = useCallback(async () => {
+    if (convertingRef.current) return;
 
-      const request = {
-        controller: new AbortController(),
-        cancelled: false,
-        adding: false,
-      };
-      requestRef.current = request;
-      convertingRef.current = true;
-      setStatus("converting");
-      setErrorMessage(null);
+    const request = {
+      controller: new AbortController(),
+      cancelled: false,
+      adding: false,
+    };
+    requestRef.current = request;
+    convertingRef.current = true;
+    setStatus("converting");
+    setErrorMessage(null);
 
-      try {
-        const result = await convertProcessor(overrides ?? parameters, [file], {
-          signal: request.controller.signal,
-          suppressErrorToast: true,
-        });
-        if (request.cancelled) return;
+    try {
+      const result = await convertProcessor(parameters, [file], {
+        signal: request.controller.signal,
+        suppressErrorToast: true,
+      });
+      if (request.cancelled) return;
 
-        const convertedFile = result.files[0];
-        if (!convertedFile) {
-          throw new Error(
-            t("viewer.nonPdf.convertEmpty", "The server returned no document."),
-          );
-        }
-
-        request.adding = true;
-        const added = await actions.addFiles([convertedFile], {
-          selectFiles: true,
-          derivedFromTool: true,
-        });
-        if (request.cancelled) return;
-
-        const addedFile = added[0];
-        if (!addedFile) {
-          throw new Error(
-            t(
-              "viewer.nonPdf.convertNotAdded",
-              "The converted PDF could not be added to the workspace.",
-            ),
-          );
-        }
-
-        setActiveFileId(addedFile.fileId);
-
-        alert({
-          alertType: "success",
-          title: t("viewer.nonPdf.convertSuccessTitle", "Converted to PDF"),
-          body: t(
-            "viewer.nonPdf.convertSuccessBody",
-            "{{name}} is ready. Your original {{format}} file is still in the workspace.",
-            { name: addedFile.name, format: plan.formatLabel },
-          ),
-        });
-
-        if (mountedRef.current) {
-          setStatus("idle");
-          onConverted?.();
-        }
-
-        // The panel unmounts as soon as the PDF is active (and preview mode
-        // clears here), so focus the destination after those swaps.
-        focusPdfViewerWhenReady();
-      } catch (error) {
-        if (
-          request.cancelled ||
-          request.controller.signal.aborted ||
-          axios.isCancel(error)
-        ) {
-          return;
-        }
-
-        const { body } = await extractAxiosErrorMessageAsync(error);
-        if (request.cancelled) return;
-        setErrorMessage(
-          body ||
-            t(
-              "viewer.nonPdf.convertError",
-              "The file could not be converted. Try again, or open it in the Convert tool.",
-            ),
+      const convertedFile = result.files[0];
+      if (!convertedFile) {
+        throw new Error(
+          t("viewer.nonPdf.convertEmpty", "The server returned no document."),
         );
-        setStatus("error");
-      } finally {
-        // A stale request must not clear the guard for the request that
-        // replaced it; only the active request owns that state.
-        if (requestRef.current === request) {
-          requestRef.current = null;
-          convertingRef.current = false;
-        }
       }
-    },
-    [
-      actions,
-      file,
-      onConverted,
-      parameters,
-      plan.formatLabel,
-      setActiveFileId,
-      t,
-    ],
-  );
+
+      request.adding = true;
+      const added = await actions.addFiles([convertedFile], {
+        selectFiles: true,
+        derivedFromTool: true,
+      });
+      if (request.cancelled) return;
+
+      const addedFile = added[0];
+      if (!addedFile) {
+        throw new Error(
+          t(
+            "viewer.nonPdf.convertNotAdded",
+            "The converted PDF could not be added to the workspace.",
+          ),
+        );
+      }
+
+      setActiveFileId(addedFile.fileId);
+
+      alert({
+        alertType: "success",
+        title: t("viewer.nonPdf.convertSuccessTitle", "Converted to PDF"),
+        body: t(
+          "viewer.nonPdf.convertSuccessBody",
+          "{{name}} is ready. Your original {{format}} file is still in the workspace.",
+          { name: addedFile.name, format: plan.formatLabel },
+        ),
+      });
+
+      if (mountedRef.current) {
+        setStatus("idle");
+        onConverted?.();
+      }
+
+      // The panel unmounts as soon as the PDF is active (and preview mode
+      // clears here), so focus the destination after those swaps.
+      focusPdfViewerWhenReady();
+    } catch (error) {
+      if (
+        request.cancelled ||
+        request.controller.signal.aborted ||
+        axios.isCancel(error)
+      ) {
+        return;
+      }
+
+      const { body } = await extractAxiosErrorMessageAsync(error);
+      if (request.cancelled) return;
+      setErrorMessage(
+        body ||
+          t(
+            "viewer.nonPdf.convertError",
+            "The file could not be converted. Try again, or open it in the Convert tool.",
+          ),
+      );
+      setStatus("error");
+    } finally {
+      // A stale request must not clear the guard for the request that
+      // replaced it; only the active request owns that state.
+      if (requestRef.current === request) {
+        requestRef.current = null;
+        convertingRef.current = false;
+      }
+    }
+  }, [
+    actions,
+    file,
+    onConverted,
+    parameters,
+    plan.formatLabel,
+    setActiveFileId,
+    t,
+  ]);
 
   return {
     status,
     errorMessage,
-    parameters,
-    applyParameters,
     convert,
     cancel,
     dismissError,
