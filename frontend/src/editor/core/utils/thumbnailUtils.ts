@@ -13,6 +13,8 @@ import { jpegExifOrientation } from "@app/utils/jpegOrientation";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { getPdfAccess } from "@app/services/pdfAccessService";
 import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
+import { isDamagedPdfError } from "@app/utils/pdfDamage";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/pdfParseLimit";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -20,6 +22,8 @@ export interface ThumbnailWithMetadata {
   pageRotations?: number[]; // Rotation for each page (0, 90, 180, 270)
   pageDimensions?: Array<{ width: number; height: number }>;
   isEncrypted?: boolean;
+  /** PDFium could not parse the whole file; never set from a large-file prefix. */
+  isDamaged?: boolean;
 }
 
 /**
@@ -40,8 +44,7 @@ function reportThumbnailFailure(file: File, error: unknown): void {
   console.warn(`Thumbnail generation failed for ${file.name}:`, error);
 }
 
-/** Thumbnail parsing above this limit uses a bounded prefix to avoid exhausting renderer memory. */
-export const LARGE_PDF_PARSE_LIMIT = 100 * 1024 * 1024;
+export { LARGE_PDF_PARSE_LIMIT };
 
 /** Linearized PDFs keep page 1 + hint tables in the first bytes, so a small
  * prefix is often enough to render a thumbnail without reading the file. */
@@ -641,6 +644,7 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
 }> {
   const scale = calculateScaleFromFileSize(file.size);
   const isLarge = file.size >= LARGE_PDF_PARSE_LIMIT;
+  let parsedBytes = 0;
   try {
     // Probe inside the try: an unreadable file must still resolve, or the
     // caller leaves the card with no metadata and a spinner that never stops.
@@ -659,6 +663,7 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
     const buffer = isLarge
       ? await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer()
       : await getDocumentBytes(file);
+    parsedBytes = buffer.byteLength;
     const pair = await renderPdfThumbnailPairPdfium(
       buffer,
       scale,
@@ -681,9 +686,16 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
     };
   } catch (error) {
     reportThumbnailFailure(file, error);
+    // Damage needs PDFium to have rejected the whole file: a prefix (large files) or a short read
+    // fails on bytes that are not the file. Unsupported encryption can also read as a format error.
+    const isDamaged =
+      !isLarge &&
+      parsedBytes === file.size &&
+      isDamagedPdfError(error) &&
+      !(await looksEncryptedFromTrailer(file).catch(() => true));
     return {
-      unrotated: { thumbnail: "", pageCount: 0 },
-      rotated: { thumbnail: "", pageCount: 0 },
+      unrotated: { thumbnail: "", pageCount: 0, isDamaged },
+      rotated: { thumbnail: "", pageCount: 0, isDamaged },
     };
   }
 }

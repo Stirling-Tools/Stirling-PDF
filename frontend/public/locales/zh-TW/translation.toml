@@ -55,7 +55,9 @@ keepWorking = "繼續編輯"
 loading = "載入中..."
 loginAgreementAccept = "接受"
 loginAgreementDecline = "拒絕"
+loginAgreementLoadFailed = "無法載入登入協議。"
 loginAgreementProvider = "此通知由您的系統管理員提供，非 Stirling PDF Inc."
+loginAgreementRetry = "重試"
 loginAgreementTitle = "登入協議"
 logOut = "登出"
 marginTooltip = "頁碼與頁面邊緣的距離。"
@@ -299,7 +301,6 @@ title = "頁碼結果"
 
 [addPassword]
 desc = "以密碼加密您的 PDF 檔案。"
-submit = "加密"
 tags = "加密,密碼,鎖定,安全,保護,資訊安全,機密,私人,限制存取,encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "新增密碼"
 
@@ -311,17 +312,6 @@ label = "加密金鑰長度"
 
 [addPassword.error]
 failed = "加密 PDF 時發生錯誤。"
-
-[addPassword.passwords]
-stepTitle = "密碼與加密"
-
-[addPassword.passwords.owner]
-label = "擁有者密碼"
-placeholder = "輸入擁有者密碼"
-
-[addPassword.passwords.user]
-label = "使用者密碼"
-placeholder = "輸入使用者密碼"
 
 [addPassword.results]
 title = "已加密的 PDF"
@@ -1627,6 +1617,7 @@ title = "需要重新啟動"
 [admin.settings.security]
 authentication = "驗證"
 description = "設定驗證、登入行為與安全性原則。"
+pdfPermissions = "PDF 權限"
 title = "安全性"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "停用 CSRF 保護"
 [admin.settings.security.enableLogin]
 description = "要求使用者在存取應用程式前登入"
 label = "啟用登入"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "受限制的動作需要權限密碼。關閉此選項後，仍需要開啟 PDF 所需的密碼。"
+label = "遵循 PDF 權限"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "進階設定"
@@ -1938,9 +1933,6 @@ wrapUp = "管理員導覽到此結束！您已了解讓 Stirling PDF 成為組�
 [adminUserSettings]
 admin = "管理員"
 title = "使用者控制設定"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "阿拉伯文"
@@ -3173,12 +3165,14 @@ unknown = "未知"
 
 [changePermissions]
 desc = "變更文件限制與權限。"
+loading = "正在載入目前權限..."
 submit = "變更權限"
 tags = "權限,限制,權利,存取控制,允許,拒絕,列印,複製,編輯,修改權限,安全設定,使用者權限"
 title = "變更權限"
 
 [changePermissions.error]
 failed = "變更 PDF 權限時發生錯誤。"
+readFailed = "無法讀取此 PDF 的目前權限。請在套用變更前手動設定限制。"
 
 [changePermissions.permissions.preventAssembly]
 label = "防止文件組裝"
@@ -3219,21 +3213,16 @@ text = "若要使這些權限無法被變更，請使用「新增密碼」工具
 [chat.actions]
 copy = "複製訊息"
 
-[chat.emptyState]
-text = "詢問關於文件的問題，或取得 PDF 工具的協助。"
-
-[chat.fab]
-close = "關閉聊天"
-open = "開啟 Stirling AI 助理"
+[chat.dock]
+collapse = "收合聊天"
+placeholder = "詢問 Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling 代理選項"
-assistant = "AI 助理"
 clearChat = "清除聊天"
 
 [chat.input]
 disclaimer = "AI 可能會出錯。分享前請務必確認輸出內容。"
-placeholder = "您想要做什麼？"
 send = "傳送訊息"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "將這些文件轉成 PDF"
 convertOne = "將此文件轉成 PDF"
 heading = "開始使用"
 mergeMany = "將這 {{count}} 份文件合併為 1 份"
-moreFiles = "+{{count}} 更多"
 openFromComputer = "從電腦開啟"
-removeFile = "移除 {{name}}"
 splitOne = "分割此文件"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "找不到所需資訊。"
 processing = "處理中（{{outcome}}）..."
 unsupported_capability = "不支援的能力：{{capability}}"
 usage_limit_reached = "已達使用上限。請檢視方案選項以繼續使用。"
-
-[chat.toolsUsed]
-summary_one = "已執行 1 個工具"
-summary_other = "已執行 {{count}} 個工具"
-unknownTool = "未知的工具"
 
 [classification.families]
 correspondence = "往來文件"
@@ -3649,6 +3631,7 @@ tooltip = "從畫面取色"
 hue = "色相"
 saturation = "飽和度與亮度"
 title = "選擇顏色"
+transparent = "透明"
 
 [common]
 actions = "動作"
@@ -3664,6 +3647,7 @@ continue = "繼續"
 copied = "已複製！"
 copy = "複製"
 copyCode = "複製程式碼"
+copyFailed = "複製失敗"
 dismiss = "關閉"
 done = "完成"
 enterValue = "輸入值"
@@ -3847,6 +3831,12 @@ unavailable = "此伺服器未安裝或未啟用 ImageMagick"
 filesize = "檔案大小"
 quality = "品質"
 title = "壓縮方法"
+
+[compress.noReduction]
+multiple = "壓縮已成功執行，但 {{total}} 個檔案中有 {{count}} 個無法再進一步壓縮。"
+multipleAtLevel = "此壓縮等級未讓 {{total}} 個檔案中的 {{count}} 個獲得改善。請嘗試更高的壓縮等級。"
+single = "壓縮已成功執行，但此檔案無法再進一步壓縮。"
+singleAtLevel = "此壓縮等級未讓此檔案獲得改善。請嘗試更高的壓縮等級。"
 
 [compress.settings]
 desiredSize = "期望檔案大小"
@@ -4295,6 +4285,13 @@ precision = "使用座標輸入可精準定位"
 resize = "拖曳角落與邊緣手把以調整大小"
 title = "如何裁切 PDF"
 
+[damagedPdf]
+description = "此 PDF 已損毀，無法開啟。"
+label = "已損毀"
+repair = "修復"
+repaired = "已修復 {{name}}"
+repairFailed = "無法修復 {{name}}"
+
 [database]
 backupCreated = "資料庫備份成功"
 fileName = "檔案名稱"
@@ -4363,6 +4360,10 @@ title = "已從磁碟更新"
 [desktopFileLink.tooLarge]
 body = "磁碟上的「{{name}}」已變更。由於檔案較大，重新載入需要一些時間，因此暫時保留這裡的版本。"
 title = "磁碟上的檔案已變更"
+
+[desktopPrivacy]
+blocked = "您的管理員要求文件必須保留在此裝置上。此功能無法使用。"
+localFiles = "本機檔案"
 
 [desktopUpdate]
 downloading = "正在下載更新..."
@@ -4491,22 +4492,80 @@ description = "選擇「編輯目錄」工具以載入其工作區。"
 title = "開啟工具開始編輯"
 
 [encryptedPdfUnlock]
-description = "此 PDF 已受密碼保護。請輸入密碼以繼續操作。"
-emptyResponse = "移除密碼未產生檔案。"
+actionIgnored = "已忽略 {{action}} 限制"
+actionUnlocked = "{{action}} 已在此工作階段解除鎖定"
+advanced = "進階"
+allowed = "允許"
+annotations = "註解"
+authoriseAction = "此 PDF 需要權限才能使用 {{action}}。"
+changeOwnerPassword = "變更權限密碼"
+checkingPermissions = "正在檢查 PDF 權限..."
+chooseOwnerPassword = "選擇不同的密碼"
+continue = "繼續"
+copyFailed = "無法建立副本。您的 PDF 未變更。"
+copying = "正在複製內容"
+editing = "編輯"
+enterPassword = "輸入密碼"
+ignoredByServer = "此伺服器的設定會忽略權限。PDF 的保護維持不變。"
 incorrectPassword = "密碼錯誤"
+inspectionFailed = "無法檢查此 PDF 的權限。請再試一次。"
+lowQualityPrintUnsupported = "此 PDF 僅允許低品質列印，但此檢視器不支援。"
+lowResolutionOnly = "僅低解析度"
+manageProtection = "管理保護"
 missingFile = "選取的檔案已不存在。"
+mixedProtection = "這些 PDF 有不同的保護設定。請個別處理。"
+newOwnerPassword = "新的權限密碼"
+notRequired = "不需要"
+openingPassword = "開啟密碼"
+openPdf = "開啟 PDF"
+ownerPassword = "權限密碼"
+ownerRequired = "請輸入權限密碼以繼續。"
+ownerTitle = "輸入權限密碼"
+passwordRetained = "保持不變"
+passwordsMustDiffer = "兩個密碼必須不同。"
+permissionsUnlocked = "此工作階段的權限已解除鎖定"
+prepareFailed = "無法準備此受保護的 PDF 以進行處理。"
+printing = "列印"
+printRestricted = "列印受限制。請在「管理保護」中驗證權限。"
+protectedPdf = "受保護的 PDF"
+protectionRetained = "保護已保留"
+protectionSaved = "保護已儲存"
+removePasswordHelp = "開啟移除密碼以選擇要移除的密碼。"
+removeProtection = "建立未受保護的副本"
+replaceProtection = "這些設定會取代 PDF 目前的保護。"
 required = "請輸入密碼以繼續。"
-skip = "暫時略過"
-successBody = "已成功移除密碼。"
-successBodyWithName = "已從 {{fileName}} 移除密碼"
-successTitle = "已移除密碼"
+requiredStatus = "必要"
+requiredToApply = "套用變更時需要"
+restoreFailed = "無法保留 PDF 保護。未儲存未受保護的結果。"
+restrictActions = "限制動作"
+restricted = "受限制"
+restrictedActions = "受限制的動作"
+restrictedOperation = "此動作需要權限密碼。"
+retainOwnerVerification = "請驗證權限密碼，以便在移除開啟密碼時保持其不變。這不會移除它。"
+saveProtection = "儲存保護"
+securityChangeFailed = "無法變更保護。請檢查權限密碼和新的安全性設定。"
+sessionDetails = "僅在此工作階段開啟。PDF 仍受保護。"
+sessionDetailsLabel = "關於工作階段解除鎖定"
+sessionFailed = "無法解除鎖定此 PDF。請再試一次。"
+sessionSuccessBody = "保護已保留。"
+sessionSuccessBodyWithName = "已保留 {{fileName}} 的保護。"
+sessionSuccessTitle = "PDF 已開啟"
+sessionTitle = "開啟 PDF"
+signedReadOnly = "此已簽署的 PDF 可檢視，但無法在此編輯。"
 title = "移除密碼以繼續"
+toolUnavailable = "此工具不支援加密的 PDF。請先移除密碼。"
+toolUnavailableDetails = "為什麼 {{name}} 無法使用"
 unlock = "解鎖並繼續"
 unlockAll = "用於所有（{{count}}）"
 unlockAllPartialFail = "密碼錯誤：{{names}}"
 unlockAllSuccess_one = "已解鎖 {{count}} 個檔案。"
 unlockAllSuccess_other = "已解鎖 {{count}} 個檔案。"
+unlockedForSession = "已使用您的權限密碼在此工作階段解除鎖定。"
 unlockPrompt = "解鎖 PDF 以繼續"
+unprotectedCopyConsequence = "副本不會有任何密碼或限制。原始檔仍受保護。"
+unsupportedTool = "此工具目前尚無法保留此 PDF 的保護。"
+verifiedForSession = "已針對此工作階段驗證"
+verifyPermissions = "驗證此工作階段的權限"
 viewerLocked = "此 PDF 已受密碼保護"
 viewerUnlock = "解鎖"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "在檢視器中檢視"
 closeFile = "關閉檔案"
 
 [fileEditor]
-addFiles = "新增檔案"
 closedFile = "已關閉 {{name}}"
 couldNotSave = "無法儲存 {{name}}"
-filesAdded_one = "已新增 {{count}} 個檔案"
-filesAdded_other = "已新增 {{count}} 個檔案"
 filesReordered_one = "檔案已重新排序"
 filesReordered_other = "{{count}} 個檔案已重新排序"
 loadedFromStorage_one = "已從儲存空間載入 {{count}} 個檔案"
 loadedFromStorage_other = "已從儲存空間載入 {{count}} 個檔案"
 loadFromStorageFailed = "無法從儲存空間載入部分檔案"
 pinnedFile = "已釘選 {{name}}"
-processFilesFailed = "無法處理檔案"
 savedAndClosed = "已儲存並關閉 {{name}}"
 saveFailed = "儲存失敗"
 unpinnedFile = "已取消釘選 {{name}}"
 unzipping = "正在解壓縮 {{name}}"
+
+[fileEditor.addCard]
+dropHint = "或將檔案拖放到任意位置"
+fromComputer = "從電腦上傳"
+moreOptions = "更多上傳選項"
 
 [fileEditor.unzip]
 error = "解壓縮 {{name}} 時發生錯誤"
@@ -4729,7 +4789,6 @@ dataLostBody = "此瀏覽器遺失了此檔案的內容。請重新上傳以繼�
 dataLostTitle = "檔案資料無法使用"
 downloadFailed = "下載失敗"
 dropHint = "開啟檔案以開始使用"
-dropToAdd = "拖放檔案以加入"
 duplicateFailed = "無法複製檔案"
 expand = "展開側邊欄"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "重新掃描欄位"
 rescanFormFields = "重新掃描表單欄位"
 save = "儲存"
 saveShortcut = "Ctrl+S 儲存"
+saving = "正在儲存..."
 selectOptionPlaceholder = "— 選取 —"
 skippedEdits_one = "無法套用 1 項變更："
 skippedEdits_other = "無法套用 {{count}} 項變更："
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "另有 {{count}} 項未列出。"
 unsavedChanges = "未儲存的變更"
 
 [formFill.create]
-commit = "將 {{count}} 個欄位新增至 PDF"
 empty = "尚未繪製任何欄位。"
-failed = "新增欄位失敗"
 goToField = "前往此欄位"
 hint = "選擇欄位類型，然後在頁面上繪製。"
 placing = "在頁面上繪製 {{type}} 欄位。按 Esc 停止。"
@@ -5334,7 +5392,6 @@ modify = "修改"
 commit = "儲存 {{count}} 項變更"
 delete = "刪除"
 empty = "此 PDF 尚無表單欄位。"
-failed = "儲存變更失敗"
 groupSizeHint = "使用選項大小"
 hint = "選取欄位以編輯其屬性、在頁面上拖曳它，或刪除它。"
 restore = "還原"
@@ -5732,11 +5789,6 @@ title = "覆蓋 PDF"
 desc = "將 PDF 檔案的多個頁面合併到單一頁面"
 tags = "版面,排列,組合,layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,layout pages,tile,grid layout,multi-page layout,combine on page,handout"
 title = "多頁版面配置"
-
-[home.pdfCommentAgent]
-desc = "請 AI 根據您的提示，為 PDF 加上便條式註解"
-tags = "AI,代理,評論,註解,便條紙,審閱,回饋,筆記"
-title = "新增 AI 評論"
 
 [home.pdfOrganiser]
 tags = "整理,重新排列,重新排序,organize,rearrange,reorder,organise,arrange pages,sort,move pages,delete pages,remove pages,page management,page organizer,page organiser,resequence"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "您將成為團隊成員並失去擁有者存取權。"
 deselectAll = "全不選"
 selectAll = "全部勾選"
 
-[pageEditor]
-dragPreviewAlt = "拖曳中"
-filePosition = "位置 {{position}}"
-pageLabel = "第 {{page}} 頁"
-title = "頁面編輯器"
-
-[pageEditor.actions]
-deletePage = "刪除頁面"
-insertFileAfter = "在後方插入檔案"
-moveLeft = "向左移動"
-moveRight = "向右移動"
-rotateLeft = "向左旋轉"
-rotateRight = "向右旋轉"
-splitAfter = "在後方分割"
-
-[pageEditor.commands]
-addSplitAt = "在位置 {{position}} 新增分割"
-addSplits_one = "新增 {{count}} 個分割"
-addSplits_other = "新增 {{count}} 個分割"
-deletePages_one = "刪除 {{count}} 頁"
-deletePages_other = "刪除 {{count}} 頁"
-insertFiles_one = "在第 {{page}} 頁後插入 {{count}} 個檔案"
-insertFiles_other = "在第 {{page}} 頁後插入 {{count}} 個檔案"
-insertPageBreaks_one = "插入 {{count}} 個分頁符號"
-insertPageBreaks_other = "插入 {{count}} 個分頁符號"
-insertPageBreaksAll = "在所有頁面後插入分頁符號"
-removeAllSplits = "移除所有分割"
-removeSplitAt = "移除位置 {{position}} 的分割"
-removeSplits_one = "移除 {{count}} 個分割"
-removeSplits_other = "移除 {{count}} 個分割"
-reorderPages = "重新排序頁面"
-rotatePageLeft = "向左旋轉頁面"
-rotatePageRight = "向右旋轉頁面"
-rotatePagesLeft_one = "向左旋轉 {{count}} 頁"
-rotatePagesLeft_other = "向左旋轉 {{count}} 頁"
-rotatePagesRight_one = "向右旋轉 {{count}} 頁"
-rotatePagesRight_other = "向右旋轉 {{count}} 頁"
-splitAllPages = "分割所有頁面"
-toggleSplits_one = "切換 {{count}} 個分割位置"
-toggleSplits_other = "切換 {{count}} 個分割位置"
-
-[pageEditor.emptyState]
-body = "新增檔案以開始編輯頁面"
-title = "尚未載入 PDF 檔案"
-
-[pageEditor.fileDropdown]
-addFile = "新增檔案"
-selectedCount = "已選取 {{selected}}/{{total}} 個檔案"
-untitled = "未命名"
-
-[pageEditor.toolbar]
-delete = "刪除所選"
-redo = "重做"
-rotateLeft = "向左旋轉所選"
-rotateRight = "向右旋轉所選"
-undo = "復原"
-
 [pageExtracter]
 title = "提取頁面"
 
@@ -6815,6 +6810,79 @@ title = "頁面範圍"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → 選取所有頁面"
 title = "特殊關鍵字"
+
+[pageTracks]
+blankPage = "空白頁"
+deleteSelected = "刪除選取頁面"
+downloadAsOneFile = "下載為單一檔案"
+downloadEachPage = "逐頁下載"
+downloadSelectedPages = "下載選取頁面"
+dragging_one = "{{count}} 頁"
+dragging_other = "{{count}} 頁"
+duplicateSelected = "複製選取頁面"
+edited = "已編輯"
+emptyTrack = "沒有剩餘頁面。將頁面拖曳到這裡，或儲存以關閉此檔案。"
+insertBlank = "插入空白頁"
+insertBlankAfterSelected = "在選取頁面後插入空白頁"
+moveLeft = "向左移動"
+moveRight = "向右移動"
+nextPage = "下一頁"
+page = "第 {{number}} 頁"
+pageCount_one = "{{count}} 頁"
+pageCount_other = "{{count}} 頁"
+pagePosition = "第 {{number}} / {{total}} 頁"
+prevPage = "上一頁"
+readingPages = "正在讀取頁面..."
+redo = "重做"
+rotateLeft = "向左旋轉"
+rotateRight = "向右旋轉"
+rotateSelectedLeft = "將選取頁面向左旋轉"
+rotateSelectedRight = "將選取頁面向右旋轉"
+saveAsOneFile = "儲存為單一檔案"
+saveChanges = "儲存所有檔案的變更"
+saveEachPage = "逐頁儲存"
+saveSelectedPages = "儲存選取頁面"
+saving = "正在儲存..."
+savingProgress = "正在儲存 {{done}} / {{total}}"
+selectPage = "選取第 {{number}} 頁"
+splitAfterSelected = "在選取頁面後分割"
+splitHere = "在此分割"
+undo = "復原"
+viewError = "無法呈現此頁面"
+viewPage = "檢視頁面"
+zoomIn = "放大"
+zoomOut = "縮小"
+
+[pageTracks.close]
+message = "您確定要關閉所有檔案嗎？"
+unsaved = "這些檔案有未儲存的變更。"
+
+[pageTracks.delete]
+page = "刪除頁面"
+
+[pageTracks.duplicate]
+page = "複製頁面"
+
+[pageTracks.empty]
+body = "新增 PDF 以將其展開成可編輯的頁面軌道"
+title = "未載入 PDF 檔案"
+
+[pageTracks.exportFailed]
+body = "無法準備已編輯的檔案。請再試一次。"
+title = "無法下載"
+
+[pageTracks.saveFailed]
+body = "您的編輯尚未遺失。請再次嘗試儲存。"
+title = "無法儲存變更"
+
+[pageTracks.track]
+close = "關閉檔案"
+collapse = "收合"
+expand = "展開"
+rename = "重新命名檔案"
+
+[pageTracks.wrap]
+label = "頁面自動換行"
 
 [payg.activity]
 docs = "份文件"
@@ -7144,24 +7212,6 @@ totalSeats_other = "總計（{{count}} 個席位）"
 [payment.upgradeTeam]
 title = "升級至 Team"
 
-[pdfCommentAgent]
-submit = "產生評論"
-
-[pdfCommentAgent.error]
-emptyPrompt = "請描述 AI 應該評論的內容"
-failed = "產生評論失敗"
-tooLong = "提示過長（最多 {{max}} 個字元）"
-
-[pdfCommentAgent.prompt]
-label = "AI 應該評論什麼？"
-placeholder = "例如：標示任何不明確的日期並提出釐清建議"
-
-[pdfCommentAgent.results]
-title = "已加上評論的 PDF"
-
-[pdfCommentAgent.settings]
-title = "評論指示"
-
 [pdfOrganiser]
 placeholder = "（例如 1,3,2 或 4-8,2,10-12 或 2n-1）"
 tags = "雙面,偶數,奇數,排序,移動"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "點擊頁面上的任何文字、圖片或形狀，即可
 ocrDocumentChanged = "OCR 執行期間文件已變更。請再次執行 OCR 以包含最新變更。"
 ocrInvalidResult = "OCR 未傳回 PDF。請再試一次。"
 ocrNoLanguages = "伺服器上未安裝 OCR 語言。"
+ocrProtected = "OCR 目前尚無法保留此 PDF 的保護。受保護的原始檔仍可供檢視。"
 ocrRunning = "正在辨識文字..."
 ocrUnavailable = "此伺服器無法使用 OCR。"
 oneImage = "圖片"
@@ -7389,13 +7440,8 @@ pageNumber = "第 {{page}} 頁"
 renderFailed = "無法呈現頁面"
 
 [pdfTextEditor.password]
-cancel = "取消"
 incorrect = "密碼不正確，請再試一次。"
 label = "密碼"
-open = "開啟"
-protected = "此 PDF 設有密碼保護。"
-protectedNamed = "「{{fileName}}」受密碼保護。"
-title = "需要密碼"
 
 [pdfTextEditor.rulers]
 guide = "位於 {{value}} {{unit}} 的對齊參考線 - 拖曳到尺規上即可移除"
@@ -7994,6 +8040,7 @@ before = "設定"
 title = "尚未設定 Stirling 連線"
 
 [portal.accountLink.notice]
+loadFailed = "無法載入帳戶連結對話框。"
 openFailed = "無法開啟您的瀏覽器。請在已連線伺服器上開啟「用量與帳務」以連結帳戶。"
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "每月支出上限 {{amount}}/月。達到上限時處理會暫停。"
 limitNoCap = "無支出上限。處理不會暫停。發票每月開立。"
 
 [portal.billing.chip]
-invoices = "發票"
-nav = "區段"
-payment = "付款"
 plan = "方案"
 procurement = "採購"
 usage = "用量"
@@ -8178,9 +8222,22 @@ pdfs = "已處理的 PDF"
 users = "使用者"
 
 [portal.billing.enterprise]
+active = "協議有效至 {{date}}"
 cta = "取得企業報價"
+included = "包含於 Enterprise"
+payment_pending = "付款待處理 · 可存取至 {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} 個 PDF"
+pdfsOver_one = "超出約定量 {{count}} 個 PDF"
+pdfsOver_other = "超出約定量 {{count}} 個 PDF"
+pdfsUsed_one = "已處理 {{count}} 個 PDF"
+pdfsUsed_other = "已處理 {{count}} 份 PDF"
+period = "合約期間：{{start}} – {{end}}"
 sub = "隔離網路部署、SCIM、資料駐留、運作時間 SLA，以及符合需求的合約。"
 title = "在受法規監管的環境中使用 Stirling？"
+trial = "{{days}} 天試用 · 於 {{date}} 結束"
+usersAgreed = "{{used}} / {{agreed}} 位約定使用者"
+usersOver_one = "超出約定數量 {{count}} 位使用者"
+usersOver_other = "超出約定數量 {{count}} 位使用者"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "無法開始結帳"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "適用於您發行版的原生建置。"
-guideBtn = "檢視 Linux 安裝選項"
+downloadAppImage = "AppImage"
+downloadDeb = "下載 .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "常見發行版可使用 AppImage、.deb 和 .rpm 建置。"
 tagline = "適用於您發行版的原生桌面應用程式"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "遮蔽,隱藏,塗黑,黑色,標記,已隱藏,自動遮蔽,手動遮蔽"
 title = "遮蔽"
 
 [redact.auto]
+caseSensitiveLabel = "區分大小寫比對"
 colorLabel = "方框顏色"
 convertPDFToImageLabel = "將 PDF 轉為 PDF-Image"
 customPaddingLabel = "自訂額外留白"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "在檔案管理器中選取檔案可一次塗黑多�
 manual = "手動"
 mode = "模式"
 title = "遮蔽方式"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "只比對大小寫相同的文字。啟用時，'Secret' 不會符合 'SECRET'，且 regex 中的 [A-Z] 只會符合大寫字母。"
+title = "區分大小寫比對"
 
 [redact.tooltip.advanced.color]
 text = "自訂遮蔽方框外觀。黑色為標準，但您可選擇任何顏色。留白可在找到的文字周圍增加額外空間。"
@@ -11396,7 +11460,12 @@ text = "指定要從 PDF 移除的頁面。您可以選取單一頁、範圍，�
 title = "頁面選擇"
 
 [removePassword]
-desc = "從您的 PDF 檔案中移除密碼保護。"
+appliesTo = "已設定於 {{count}} / {{total}} 份 PDF"
+keepBlank = "將欄位留空以保留該密碼。"
+notSet = "未設定"
+openWithReaderFirst = "僅移除權限密碼前，請先使用開啟密碼重新開啟此 PDF。"
+selectiveHelp = "輸入您要移除的每項保護目前使用的密碼。留空欄位會保留該密碼。移除權限密碼也會移除操作限制。"
+selectPasswords = "要移除的密碼"
 submit = "移除密碼"
 tags = "安全,解密,安全性,取消密碼,刪除密碼"
 title = "移除密碼"
@@ -11407,13 +11476,9 @@ failed = "移除 PDF 密碼時發生錯誤。"
 [removePassword.password]
 label = "目前密碼"
 placeholder = "輸入目前密碼"
-stepTitle = "移除密碼"
 
 [removePassword.results]
 title = "已解密的 PDF"
-
-[removePassword.tooltip]
-description = "移除密碼保護需要用於加密該 PDF 的密碼。這將解密文件，使其在無需密碼的情況下即可存取。"
 
 [reorganizePages]
 submit = "重新編排頁面"
@@ -11543,6 +11608,64 @@ m = "公尺 (m)"
 mi = "英里 (mi)"
 mm = "毫米 (mm)"
 yd = "碼 (yd)"
+
+[runLocation]
+back = "返回"
+continue = "繼續"
+subtitle = "選擇執行位置。"
+title = "您想在哪裡執行 Stirling？"
+
+[runLocation.choice.browser]
+description = "網頁應用程式。"
+title = "在您的瀏覽器中"
+
+[runLocation.choice.computer]
+description = "桌面應用程式。"
+title = "在您的電腦上"
+
+[runLocation.choice.server]
+description = "自行託管，適合團隊使用。"
+title = "在您的伺服器上"
+
+[runLocation.desktop]
+computerLabel = "您的電腦"
+download = "下載 {{platform}} 版"
+downloadAgain = "再次下載"
+guide = "開啟 {{platform}} 安裝指南"
+startedSubtitle = "請查看您的 Downloads 資料夾，然後開啟安裝程式。"
+startedTitle = "您的下載已開始"
+subtitle = "下載後開啟。"
+title = "取得桌面應用程式"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (安裝指南)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "已複製"
+copy = "複製命令"
+copyCompose = "複製 compose 檔案"
+guide = "{{method}} 安裝指南"
+methodLabel = "執行方式"
+note = "然後開啟 <url/> 以完成設定。"
+subtitle = "在您的伺服器上執行此項目，然後在瀏覽器中開啟。"
+title = "設定您的伺服器"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "從 PDF 檔案移除可能有害的元素。"
@@ -12054,6 +12177,7 @@ title = "工作空間"
 loginIncomplete = "無法完成登入"
 noSaasServer = "未設定 SaaS 伺服器"
 noServer = "未設定伺服器"
+policyUnavailable = "無法載入您組織的登入設定。"
 saasLoginFailed = "SaaS 登入失敗"
 saasLoginIncomplete = "無法完成 SaaS 登入"
 selfHostedLoginFailed = "自架登入失敗"
@@ -13563,7 +13687,9 @@ validUntrusted = "有效，但簽署者未驗證"
 
 [viewer]
 cannotPreviewFile = "無法預覽檔案"
+copyRestricted = "此 PDF 的權限已停用複製。"
 copyText = "複製"
+coverPageView = "分開顯示封面頁"
 disableColorFilter = "停用色彩濾鏡"
 documentUpdated = "文件已更新"
 dualPageView = "雙頁檢視"
@@ -13580,6 +13706,7 @@ noPdfProvided = "未提供 PDF"
 onlyPdfSupported = "此檔案格式不支援預覽。"
 pageNavigation = "頁面導覽"
 previousPage = "上一頁"
+readAloudFromHere = "從這裡開始朗讀"
 saveChangesErrorBody = "無法儲存此文件。請再試一次。"
 saveChangesErrorTitle = "無法儲存變更"
 singlePageView = "單頁檢視"
@@ -13640,6 +13767,7 @@ closeSidebar = "關閉註解側邊欄"
 deleteAnnotationAndComment = "刪除註解與評論"
 deleteDescription = "此註解附有評論。您可以僅從側邊欄移除評論並保留註解，或刪除全部內容。"
 deleteTitle = "要從評論中移除註解嗎？"
+exportCsv = "匯出為 CSV"
 goToLink = "前往連結"
 hint = "使用「評論」、「插入文字」或「取代文字」工具放置評論。它們會依頁面顯示於此處。"
 locateAnnotation = "在文件中定位"
@@ -13658,7 +13786,16 @@ typeInsertText = "插入文字"
 typeReplaceText = "取代文字"
 viewComment = "檢視評論"
 
+[viewer.comments.csv]
+author = "作者"
+comment = "註解"
+inReplyTo = "回覆"
+modifiedUtc = "最後修改時間 (UTC)"
+page = "頁面"
+thread = "討論串"
+
 [viewer.error]
+loadError = "無法載入 PDF"
 noFileProvided = "錯誤：未提供檔案給檢視器"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "浮水印文字"
 image = "影像"
 text = "文字"
 
+[workbench]
+dropFailedSingle = "無法新增您的檔案"
+dropFailedSome = "您的檔案中有 {{failed}} 個無法新增"
+dropOverlay = "拖放檔案以新增至工作台"
+
 [workbench.sessionRestore]
 none = "您先前的檔案已不再儲存在此裝置上。"
 partial = "已還原 {{restored}} 個檔案，共 {{total}} 個。其餘檔案已不再儲存於此裝置。"
@@ -13915,16 +14057,14 @@ annotations = "註解"
 applyRedactionsFirst = "請先套用遮蔽"
 closeAll = "關閉所有檔案"
 closePdf = "關閉 PDF"
-deleteSelected = "刪除已選頁面"
 deselectAll = "取消全選"
 downloadAll = "下載全部"
+exitAnnotations = "離開註解模式"
 exitRedaction = "離開遮蔽模式"
-exportAll = "匯出 PDF"
-exportSelected = "匯出所選頁面"
 formFill = "表單編輯器"
 hideToolbar = "隱藏工具列"
 moreActions = "更多操作"
-multiTool = "多功能工具"
+pageEditor = "頁面編輯器"
 panMode = "平移模式"
 print = "列印 PDF"
 readAloud = "朗讀"
@@ -13938,7 +14078,6 @@ rulerSettings = "比例尺設定"
 save = "儲存"
 saveAll = "全部儲存"
 saveAs = "另存新檔"
-saveChanges = "儲存變更"
 search = "搜尋 PDF"
 selectAll = "全選"
 selectByNumber = "依頁碼選取"

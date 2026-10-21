@@ -55,7 +55,9 @@ keepWorking = "Lanean jarraitu"
 loading = "Kargatzen..."
 loginAgreementAccept = "Onartu"
 loginAgreementDecline = "Ukatu"
+loginAgreementLoadFailed = "Ezin izan da saioa hasteko hitzarmena kargatu."
 loginAgreementProvider = "Ohar hau zure administratzaileak eman du, ez Stirling PDF Inc.-ek."
+loginAgreementRetry = "Saiatu berriro"
 loginAgreementTitle = "Saio-hasierako hitzarmena"
 logOut = "Saioa itxi"
 marginTooltip = "Orri-zenbakiaren eta orrialdearen ertzen arteko distantzia."
@@ -299,7 +301,6 @@ title = "Orri-zenbakien emaitzak"
 
 [addPassword]
 desc = "Zifratu zure PDF dokumentua pasahitz batekin."
-submit = "Enkriptatu"
 tags = "enkriptatu,pasahitza,blokeatu,seguru,babestu,segurtasuna,enkriptatzea,babesa,konfidentziala,pribatua,sarbidea mugatu"
 title = "Gehitu pasahitza"
 
@@ -311,17 +312,6 @@ label = "Zifratzeko gakoaren luzera"
 
 [addPassword.error]
 failed = "Errorea gertatu da PDFa zifratzean."
-
-[addPassword.passwords]
-stepTitle = "Pasahitzak eta zifratzea"
-
-[addPassword.passwords.owner]
-label = "Jabearen pasahitza"
-placeholder = "Sartu jabearen pasahitza"
-
-[addPassword.passwords.user]
-label = "Erabiltzailearen pasahitza"
-placeholder = "Sartu erabiltzailearen pasahitza"
 
 [addPassword.results]
 title = "Zifratutako PDFak"
@@ -1627,6 +1617,7 @@ title = "Berrabiarazi behar da"
 [admin.settings.security]
 authentication = "Autentifikazioa"
 description = "Konfiguratu autentifikazioa, saio-hasieraren portaera eta segurtasun-politikak."
+pdfPermissions = "PDF baimenak"
 title = "Segurtasuna"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "CSRF babesa desgaitu"
 [admin.settings.security.enableLogin]
 description = "Eskatu erabiltzaileei saioa hastea aplikaziora sartu aurretik"
 label = "Saio-hasiera gaitu"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Eskatu baimenen pasahitza ekintza murriztuetarako. Hau desaktibatuta ere, PDFak irekitzeko behar diren pasahitzak eskatuko dira."
+label = "Errespetatu PDF baimenak"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Ezarpen aurreratuak"
@@ -1938,9 +1933,6 @@ wrapUp = "Hori izan da administratzailearen ibilbidea! Stirling PDF erakundeentz
 [adminUserSettings]
 admin = "Admin"
 title = "Erabiltzailearen Ezarpenen Kontrolak"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Arabiera"
@@ -3173,12 +3165,14 @@ unknown = "Ezezaguna"
 
 [changePermissions]
 desc = "Dokumentuaren murrizketak eta baimenak aldatu."
+loading = "Uneko baimenak kargatzen..."
 submit = "Aldatu baimenak"
 tags = "baimenak,murrizketak,eskubideak,sarbide-kontrola,baimendu,ukatu,inprimatzea,kopiatzea,edizioa,baimenak aldatu,segurtasun-ezarpenak,erabiltzaile-eskubideak"
 title = "Aldatu baimenak"
 
 [changePermissions.error]
 failed = "Errorea gertatu da PDFaren baimenak aldatzean."
+readFailed = "Ezin izan dira PDF honen uneko baimenak irakurri. Ezarri murrizketak eskuz aldaketak aplikatu aurretik."
 
 [changePermissions.permissions.preventAssembly]
 label = "Galarazi dokumentuaren mihiztaketa"
@@ -3219,21 +3213,16 @@ text = "Baimen hauek aldaezinak bihurtzeko, erabili Gehitu Pasahitza tresna jabe
 [chat.actions]
 copy = "Kopiatu mezua"
 
-[chat.emptyState]
-text = "Egin galdera bat zure dokumentuei buruz edo lortu laguntza PDF tresnekin."
-
-[chat.fab]
-close = "Itxi txata"
-open = "Ireki Stirling AI laguntzailea"
+[chat.dock]
+collapse = "Tolestu txata"
+placeholder = "Galdetu Stirling Agent-i"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling agentearen aukerak"
-assistant = "AI laguntzailea"
 clearChat = "Garbitu txata"
 
 [chat.input]
 disclaimer = "AI-k akatsak egin ditzake. Ziurtatu emaitza egiaztatzen duzula partekatu aurretik."
-placeholder = "Zer egin nahi duzu?"
 send = "Bidali mezua"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Bihurtu dokumentu hauek PDFra"
 convertOne = "Bihurtu dokumentu hau PDFra"
 heading = "Hasi"
 mergeMany = "Batu {{count}} dokumentu hauek 1ean"
-moreFiles = "+{{count}} gehiago"
 openFromComputer = "Ireki ordenagailutik"
-removeFile = "Kendu {{name}}"
 splitOne = "Zatitu dokumentu hau"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Ezin izan dut eskatutako informazioa aurkitu."
 processing = "Prozesatzen ({{outcome}})..."
 unsupported_capability = "Onartzen ez den gaitasuna: {{capability}}"
 usage_limit_reached = "Zure erabilera-mugara iritsi zara. Begiratu zure plan-aukerak jarraitzeko."
-
-[chat.toolsUsed]
-summary_one = "Tresna 1 exekutatu da"
-summary_other = "{{count}} tresna exekutatu dira"
-unknownTool = "Tresna ezezaguna"
 
 [classification.families]
 correspondence = "Korrespondentzia"
@@ -3649,6 +3631,7 @@ tooltip = "Hautatu kolorea pantailatik"
 hue = "Ñabardura"
 saturation = "Saturazioa eta distira"
 title = "Aukeratu kolorea"
+transparent = "Gardena"
 
 [common]
 actions = "Ekintzak"
@@ -3664,6 +3647,7 @@ continue = "Jarraitu"
 copied = "Kopiatuta!"
 copy = "Kopiatu"
 copyCode = "Kopiatu kodea"
+copyFailed = "Kopiatzeak huts egin du"
 dismiss = "Baztertu"
 done = "Eginda"
 enterValue = "Sartu balioa"
@@ -3847,6 +3831,12 @@ unavailable = "ImageMagick ez dago instalatuta edo gaituta zerbitzari honetan"
 filesize = "Fitxategiaren tamaina"
 quality = "Kalitatea"
 title = "Konpresio-metodoa"
+
+[compress.noReduction]
+multiple = "Konpresioa behar bezala egin da, baina {{count}} / {{total}} fitxategi ezin dira gehiago konprimatu."
+multipleAtLevel = "Maila honetako konpresioak ez du hobekuntzarik ekarri {{count}} / {{total}} fitxategitan. Saiatu konpresio-maila handiago batekin."
+single = "Konpresioa behar bezala egin da, baina fitxategi hau ezin da gehiago konprimatu."
+singleAtLevel = "Maila honetako konpresioak ez du hobekuntzarik ekarri fitxategi honetan. Saiatu konpresio-maila handiago batekin."
 
 [compress.settings]
 desiredSize = "Nahi den fitxategi-tamaina"
@@ -4295,6 +4285,13 @@ precision = "Erabili koordenatu-sarrerak kokapen zehatza lortzeko"
 resize = "Arrastatu izkinetako eta ertz-helmugen heldulekuak tamaina aldatzeko"
 title = "Nola moztu PDFak"
 
+[damagedPdf]
+description = "PDF hau kaltetuta dago eta ezin da ireki."
+label = "Kaltetuta"
+repair = "Konpondu"
+repaired = "{{name}} konponduta"
+repairFailed = "Ezin izan da {{name}} konpondu"
+
 [database]
 backupCreated = "Datu-basearen babeskopia ongi eginda"
 fileName = "Fitxategi-izena"
@@ -4363,6 +4360,10 @@ title = "Diskotik eguneratua"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" diskoan aldatu da. Berriro kargatzeak denbora hartzeko bezain handia da; beraz, hemengo bertsioa bere horretan utzi da."
 title = "Fitxategia diskoan aldatu da"
+
+[desktopPrivacy]
+blocked = "Zure administratzaileak dokumentuak gailu honetan mantentzea eskatzen du. Ezaugarri hau ez dago erabilgarri."
+localFiles = "Tokiko fitxategiak"
 
 [desktopUpdate]
 downloading = "Eguneratzea deskargatzen..."
@@ -4491,22 +4492,80 @@ description = "Hautatu Aurkibidea editatu tresna lan-espazioa kargatzeko."
 title = "Ireki tresna editatzen hasteko"
 
 [encryptedPdfUnlock]
-description = "PDF hau pasahitzarekin babestuta dago. Sartu pasahitza lanean jarraitu ahal izateko."
-emptyResponse = "Pasahitza kentzeak ez du fitxategirik sortu."
+actionIgnored = "{{action}} murrizketa ezikusi da"
+actionUnlocked = "{{action}} desblokeatuta saio honetarako"
+advanced = "Aurreratua"
+allowed = "Baimenduta"
+annotations = "Oharrak"
+authoriseAction = "PDF honek {{action}} erabiltzeko baimena behar du."
+changeOwnerPassword = "Aldatu baimenen pasahitza"
+checkingPermissions = "PDF baimenak egiaztatzen..."
+chooseOwnerPassword = "Aukeratu beste pasahitz bat"
+continue = "Jarraitu"
+copyFailed = "Ezin da kopia sortu. Zure PDFa ez da aldatu."
+copying = "Edukia kopiatzen"
+editing = "Editatzen"
+enterPassword = "Sartu pasahitza"
+ignoredByServer = "Baimenak zerbitzari honen ezarpenek ezikusten dituzte. PDFaren babesa ez da aldatu."
 incorrectPassword = "Pasahitz okerra"
+inspectionFailed = "Ezin izan dira PDF honen baimenak egiaztatu. Saiatu berriro."
+lowQualityPrintUnsupported = "PDF honek kalitate baxuko inprimatzea soilik onartzen du, eta ikustaile honek ez du hori onartzen."
+lowResolutionOnly = "Bereizmen baxua soilik"
+manageProtection = "Kudeatu babesa"
 missingFile = "Hautatutako fitxategia ez dago gehiago eskuragarri."
+mixedProtection = "PDF hauek babes-ezarpen bereiziak dituzte. Prozesatu banaka."
+newOwnerPassword = "Baimenen pasahitz berria"
+notRequired = "Ez da beharrezkoa"
+openingPassword = "Irekitzeko pasahitza"
+openPdf = "Ireki PDF"
+ownerPassword = "Baimenen pasahitza"
+ownerRequired = "Sartu baimenen pasahitza jarraitzeko."
+ownerTitle = "Sartu baimenen pasahitza"
+passwordRetained = "Aldatu gabe mantenduta"
+passwordsMustDiffer = "Bi pasahitzek desberdinak izan behar dute."
+permissionsUnlocked = "Baimenak desblokeatuta saio honetarako"
+prepareFailed = "Ezin izan da babestutako PDF hau prozesatzeko prestatu."
+printing = "Inprimatzen"
+printRestricted = "Inprimatzea murriztuta dago. Egiaztatu baimenak Kudeatu babesa atalean."
+protectedPdf = "Babestutako PDF"
+protectionRetained = "Babesa mantendu da"
+protectionSaved = "Babesa gorde da"
+removePasswordHelp = "Ireki Kendu pasahitza zein pasahitz kendu aukeratzeko."
+removeProtection = "Sortu babesik gabeko kopia"
+replaceProtection = "Ezarpen hauek PDFaren uneko babesa ordezkatzen dute."
 required = "Sartu pasahitza jarraitzeko."
-skip = "Utzi oraingoz"
-successBody = "Pasahitza ondo kendu da."
-successBodyWithName = "Pasahitza {{fileName}}-tik kendu da"
-successTitle = "Pasahitza kenduta"
+requiredStatus = "Beharrezkoa"
+requiredToApply = "Beharrezkoa aldaketak aplikatzeko"
+restoreFailed = "Ezin izan da PDFaren babesa mantendu. Ez da babesik gabeko emaitzarik gorde."
+restrictActions = "Murriztu ekintzak"
+restricted = "Murriztuta"
+restrictedActions = "murriztutako ekintzak"
+restrictedOperation = "Ekintza honek baimenen pasahitza behar du."
+retainOwnerVerification = "Egiaztatu baimenen pasahitza irekitzeko pasahitza kentzean aldatu gabe mantentzeko. Horrek ez du kenduko."
+saveProtection = "Gorde babesa"
+securityChangeFailed = "Ezin izan da babesa aldatu. Egiaztatu baimenen pasahitza eta segurtasun-ezarpen berriak."
+sessionDetails = "Irekita saio honetarako. PDFak babestuta jarraitzen du."
+sessionDetailsLabel = "Saio honetako desblokeatzeari buruz"
+sessionFailed = "Ezin izan da PDF hau desblokeatu. Saiatu berriro."
+sessionSuccessBody = "Babesa mantendu da."
+sessionSuccessBodyWithName = "Babesa mantendu da {{fileName}} fitxategirako."
+sessionSuccessTitle = "PDF irekita"
+sessionTitle = "Ireki PDF"
+signedReadOnly = "Sinatutako PDF hau ikus daiteke, baina ezin da hemen editatu."
 title = "Kendu pasahitza jarraitzeko"
+toolUnavailable = "Tresna honek ez ditu enkriptatutako PDFak onartzen. Kendu pasahitza lehenik."
+toolUnavailableDetails = "Zergatik ez dago erabilgarri {{name}}"
 unlock = "Desblokeatu eta jarraitu"
 unlockAll = "Erabili guztientzat ({{count}})"
 unlockAllPartialFail = "Pasahitz okerra honentzat: {{names}}"
 unlockAllSuccess_one = "{{count}} fitxategi desblokeatu da."
 unlockAllSuccess_other = "{{count}} fitxategi desblokeatu dira."
+unlockedForSession = "Saio honetarako desblokeatuta zure baimenen pasahitza erabiliz."
 unlockPrompt = "Desblokeatu PDFa jarraitzeko"
+unprotectedCopyConsequence = "Kopiak ez du pasahitzik edo murrizketarik izango. Jatorrizkoak babestuta jarraitzen du."
+unsupportedTool = "Tresna honek oraindik ezin du PDF honen babesa mantendu."
+verifiedForSession = "Saio honetarako egiaztatuta"
+verifyPermissions = "Egiaztatu baimenak saio honetarako"
 viewerLocked = "PDF hau pasahitzarekin babestuta dago"
 viewerUnlock = "Desblokeatu"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "Ikusi Ikustailean"
 closeFile = "Itxi fitxategia"
 
 [fileEditor]
-addFiles = "Fitxategiak gehitu"
 closedFile = "{{name}} itxita"
 couldNotSave = "Ezin izan da {{name}} gorde"
-filesAdded_one = "Fitxategi {{count}} gehitu da"
-filesAdded_other = "{{count}} fitxategi gehitu dira"
 filesReordered_one = "Fitxategia berrordenatu da"
 filesReordered_other = "{{count}} fitxategi berrordenatu dira"
 loadedFromStorage_one = "Fitxategi {{count}} biltegiratzetik kargatu da"
 loadedFromStorage_other = "{{count}} fitxategi biltegiratzetik kargatu dira"
 loadFromStorageFailed = "Ezin izan dira fitxategi batzuk biltegiratzetik kargatu"
 pinnedFile = "{{name}} ainguratu da"
-processFilesFailed = "Ezin izan dira fitxategiak prozesatu"
 savedAndClosed = "{{name}} gorde eta itxi da"
 saveFailed = "Gordetzeak huts egin du"
 unpinnedFile = "{{name}} ainguratzetik kendu da"
 unzipping = "{{name}} deskonprimatzen"
+
+[fileEditor.addCard]
+dropHint = "edo jaregin fitxategiak edonon"
+fromComputer = "Kargatu ordenagailutik"
+moreOptions = "Kargatzeko aukera gehiago"
 
 [fileEditor.unzip]
 error = "Errorea {{name}} deskonprimatzean"
@@ -4729,7 +4789,6 @@ dataLostBody = "Arakatzaile honek fitxategi honen edukia galdu du. Kargatu berri
 dataLostTitle = "Fitxategiaren datuak ez daude erabilgarri"
 downloadFailed = "Deskargak huts egin du"
 dropHint = "Ireki fitxategiak hasteko"
-dropToAdd = "Jaregin fitxategiak gehitzeko"
 duplicateFailed = "Ezin izan da fitxategia bikoiztu"
 expand = "Zabaldu alboko barra"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "Eremuak berriro eskaneatu"
 rescanFormFields = "Inprimaki-eremuak berriro eskaneatu"
 save = "Gorde"
 saveShortcut = "Ctrl+S gordetzeko"
+saving = "Gordetzen..."
 selectOptionPlaceholder = "— hautatu —"
 skippedEdits_one = "Ezin izan da aldaketa bat aplikatu:"
 skippedEdits_other = "Ezin izan dira {{count}} aldaketa aplikatu:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "Beste {{count}} ez dira zerrendatu."
 unsavedChanges = "Gorde gabeko aldaketak"
 
 [formFill.create]
-commit = "Gehitu {{count}} eremu PDF fitxategira"
 empty = "Oraindik ez da eremurik marraztu."
-failed = "Ezin izan dira eremuak gehitu"
 goToField = "Joan eremu honetara"
 hint = "Hautatu eremu mota bat, eta marraztu orrian."
 placing = "Marraztu {{type}} eremu bat orrian. Sakatu Esc gelditzeko."
@@ -5334,7 +5392,6 @@ modify = "Aldatu"
 commit = "Gorde {{count}} aldaketa"
 delete = "Ezabatu"
 empty = "PDF honek ez du oraindik formulario-eremurik."
-failed = "Ezin izan dira aldaketak gorde"
 groupSizeHint = "Erabili aukeraren tamaina"
 hint = "Hautatu eremu bat bere propietateak editatzeko, arrastatu orrian edo ezabatu."
 restore = "Lehengoratu"
@@ -5732,11 +5789,6 @@ title = "Gainjarri PDFak"
 desc = "Elkartu orri bakar batean PDF dokumentu baten zenbait orrialde"
 tags = "diseinua,antolatu,konbinatu,N-up,2-up,4-up,orri bakoitzean hainbat,orriak orri bakoitzeko,antolatu orriak,mosaikoa,sare-diseinua,orri anitzeko diseinua,konbinatu orrian,eskuorria"
 title = "Zenbait orrialderen diseinua"
-
-[home.pdfCommentAgent]
-desc = "Eskatu AIri, zure eskaeraren arabera, PDF bat ohar itsaskorren iruzkinekin anotatzeko"
-tags = "AI,agente,iruzkin,anotatu,ohar itsaskorra,berrikuspena,feedback,oharrak"
-title = "Gehitu AIren iruzkinak"
 
 [home.pdfOrganiser]
 tags = "antolatu,berrantolatu,berordenatu,antolatu orriak,ordenatu,mugitu orriak,ezabatu orriak,kendu orriak,orri-kudeaketa,orri-antolatzailea,bersekuentziatu"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "Taldeko kide bihurtuko zara eta jabe-sarbidea galduko duzu."
 deselectAll = "Bat ere ez"
 selectAll = "Markatu dena"
 
-[pageEditor]
-dragPreviewAlt = "Arrastatzen"
-filePosition = "{{position}}. posizioa"
-pageLabel = "{{page}}. orria"
-title = "Orri-editorea"
-
-[pageEditor.actions]
-deletePage = "Ezabatu orria"
-insertFileAfter = "Txertatu fitxategia ondoren"
-moveLeft = "Mugitu ezkerrera"
-moveRight = "Mugitu eskuinera"
-rotateLeft = "Biratu ezkerrera"
-rotateRight = "Biratu eskuinera"
-splitAfter = "Zatitu ondoren"
-
-[pageEditor.commands]
-addSplitAt = "Gehitu zatiketa {{position}} posizioan"
-addSplits_one = "Gehitu {{count}} zatiketa"
-addSplits_other = "Gehitu {{count}} zatiketa"
-deletePages_one = "Ezabatu {{count}} orri"
-deletePages_other = "Ezabatu {{count}} orri"
-insertFiles_one = "Txertatu {{count}} fitxategi {{page}} orriaren ondoren"
-insertFiles_other = "Txertatu {{count}} fitxategi {{page}} orriaren ondoren"
-insertPageBreaks_one = "Txertatu {{count}} orri-jauzi"
-insertPageBreaks_other = "Txertatu {{count}} orri-jauzi"
-insertPageBreaksAll = "Txertatu orri-jauziak orri guztien ondoren"
-removeAllSplits = "Kendu zatiketa guztiak"
-removeSplitAt = "Kendu zatiketa {{position}} posizioan"
-removeSplits_one = "Kendu {{count}} zatiketa"
-removeSplits_other = "Kendu {{count}} zatiketa"
-reorderPages = "Berrordenatu orriak"
-rotatePageLeft = "Biratu orria ezkerrera"
-rotatePageRight = "Biratu orria eskuinera"
-rotatePagesLeft_one = "Biratu {{count}} orri ezkerrera"
-rotatePagesLeft_other = "Biratu {{count}} orri ezkerrera"
-rotatePagesRight_one = "Biratu {{count}} orri eskuinera"
-rotatePagesRight_other = "Biratu {{count}} orri eskuinera"
-splitAllPages = "Zatitu orri guztiak"
-toggleSplits_one = "Txandakatu {{count}} zatiketa-posizio"
-toggleSplits_other = "Txandakatu {{count}} zatiketa-posizio"
-
-[pageEditor.emptyState]
-body = "Gehitu fitxategiak orrialdeak editatzen hasteko"
-title = "Ez da PDF fitxategirik kargatu"
-
-[pageEditor.fileDropdown]
-addFile = "Gehitu fitxategia"
-selectedCount = "{{selected}}/{{total}} fitxategi hautatuta"
-untitled = "Izenik gabe"
-
-[pageEditor.toolbar]
-delete = "Ezabatu hautatutakoak"
-redo = "Berregin"
-rotateLeft = "Biratu hautatutakoak ezkerrera"
-rotateRight = "Biratu hautatutakoak eskuinera"
-undo = "Desegin"
-
 [pageExtracter]
 title = "Atera orriak"
 
@@ -6815,6 +6810,79 @@ title = "Orrialde barrutiak"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → orrialde guztiak hautatzen ditu"
 title = "Gako‑hitz bereziak"
+
+[pageTracks]
+blankPage = "Orri hutsa"
+deleteSelected = "Ezabatu hautatutako orriak"
+downloadAsOneFile = "Deskargatu fitxategi bakar gisa"
+downloadEachPage = "Deskargatu orri bakoitza banaka"
+downloadSelectedPages = "Deskargatu hautatutako orriak"
+dragging_one = "{{count}} orri"
+dragging_other = "{{count}} orri"
+duplicateSelected = "Bikoiztu hautatutako orriak"
+edited = "editatuta"
+emptyTrack = "Ez da orririk geratzen. Arrastatu orriak hona, edo gorde fitxategi hau ixteko."
+insertBlank = "Txertatu orri hutsa"
+insertBlankAfterSelected = "Txertatu orri hutsak hautatutako orrien ondoren"
+moveLeft = "Mugitu ezkerrera"
+moveRight = "Mugitu eskuinera"
+nextPage = "Hurrengo orria"
+page = "{{number}}. orria"
+pageCount_one = "{{count}} orri"
+pageCount_other = "{{count}} orri"
+pagePosition = "{{number}} / {{total}} orria"
+prevPage = "Aurreko orria"
+readingPages = "Orriak irakurtzen..."
+redo = "Berregin"
+rotateLeft = "Biratu ezkerrera"
+rotateRight = "Biratu eskuinera"
+rotateSelectedLeft = "Biratu hautatutako orriak ezkerrera"
+rotateSelectedRight = "Biratu hautatutako orriak eskuinera"
+saveAsOneFile = "Gorde fitxategi bakar gisa"
+saveChanges = "Gorde aldaketak fitxategi guztietan"
+saveEachPage = "Gorde orri bakoitza banaka"
+saveSelectedPages = "Gorde hautatutako orriak"
+saving = "Gordetzen..."
+savingProgress = "{{done}} / {{total}} gordetzen"
+selectPage = "Hautatu {{number}}. orria"
+splitAfterSelected = "Zatitu hautatutako orrien ondoren"
+splitHere = "Zatitu hemen"
+undo = "Desegin"
+viewError = "Ezin izan da orri hau bistaratu"
+viewPage = "Ikusi orria"
+zoomIn = "Handitu"
+zoomOut = "Txikitu"
+
+[pageTracks.close]
+message = "Ziur zaude fitxategi guztiak itxi nahi dituzula?"
+unsaved = "Fitxategi hauek gorde gabeko aldaketak dituzte."
+
+[pageTracks.delete]
+page = "Ezabatu orria"
+
+[pageTracks.duplicate]
+page = "Bikoiztu orria"
+
+[pageTracks.empty]
+body = "Gehitu PDFak orri-pista editagarrietan zabaltzeko"
+title = "Ez da PDF fitxategirik kargatu"
+
+[pageTracks.exportFailed]
+body = "Ezin izan dira editatutako fitxategiak prestatu. Saiatu berriro."
+title = "Ezin izan da deskargatu"
+
+[pageTracks.saveFailed]
+body = "Zure edizioak ez dira galdu. Saiatu berriro gordetzen."
+title = "Ezin izan dira aldaketak gorde"
+
+[pageTracks.track]
+close = "Itxi fitxategia"
+collapse = "Tolestu"
+expand = "Zabaldu"
+rename = "Aldatu fitxategiaren izena"
+
+[pageTracks.wrap]
+label = "Itzulbiratu orriak"
 
 [payg.activity]
 docs = "dokumentuak"
@@ -7144,24 +7212,6 @@ totalSeats_other = "Guztira ({{count}} eserleku)"
 [payment.upgradeTeam]
 title = "Bertsio-berritu Team-era"
 
-[pdfCommentAgent]
-submit = "Sortu iruzkinak"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Mesedez, azaldu AIk zertaz egin behar duen iruzkina"
-failed = "Ezin izan dira iruzkinak sortu"
-tooLong = "Eskaera luzeegia da (gehienez {{max}} karaktere)"
-
-[pdfCommentAgent.prompt]
-label = "Zertaz egin behar du iruzkina AIk?"
-placeholder = "adib. Markatu data anbiguo guztiak eta proposatu argibideak"
-
-[pdfCommentAgent.results]
-title = "Iruzkindutako PDFa"
-
-[pdfCommentAgent.settings]
-title = "Iruzkinen jarraibideak"
-
 [pdfOrganiser]
 placeholder = "(adib. 1,3,2 edo 4-8,2,10-12 edo 2n-1)"
 tags = "duplex,even,odd,ordenatu,mugitu"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "Egin klik orriko edozein testu, irudi edo forman hemen ed
 ocrDocumentChanged = "Dokumentua aldatu egin da OCR exekutatzen ari zen bitartean. Exekutatu OCR berriro azken aldaketak sartzeko."
 ocrInvalidResult = "OCR-k ez du PDF bat itzuli. Saiatu berriro."
 ocrNoLanguages = "Ez dago OCR hizkuntzarik instalatuta zerbitzarian."
+ocrProtected = "OCR-k oraindik ezin du PDF honen babesa mantendu. Babestutako jatorrizkoa ikusteko erabilgarri dago oraindik."
 ocrRunning = "Testua ezagutzen..."
 ocrUnavailable = "OCR ez dago erabilgarri zerbitzari honetan."
 oneImage = "Irudia"
@@ -7389,13 +7440,8 @@ pageNumber = "{{page}}. orria"
 renderFailed = "Ezin izan da orria errendatu"
 
 [pdfTextEditor.password]
-cancel = "Utzi"
 incorrect = "Pasahitz okerra - saiatu berriro."
 label = "Pasahitza"
-open = "Ireki"
-protected = "PDF hau pasahitzarekin babestuta dago."
-protectedNamed = "\"{{fileName}}\" pasahitzarekin babestuta dago."
-title = "Pasahitza behar da"
 
 [pdfTextEditor.rulers]
 guide = "Lerrokatze-gida {{value}} {{unit}} kokapenean - arrastatu erregela batera kentzeko"
@@ -7994,6 +8040,7 @@ before = "Ezarri"
 title = "Stirling konexioa ez dago konfiguratuta"
 
 [portal.accountLink.notice]
+loadFailed = "Ezin izan da kontua lotzeko elkarrizketa-koadroa kargatu."
 openFailed = "Ezin izan da zure arakatzailea ireki. Ireki Erabilera eta fakturazioa konektatutako zerbitzarian kontu bat estekatzeko."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "Hileko gastu-muga {{amount}}/hil. Prozesamendua mugan pausatuko da."
 limitNoCap = "Gastu-mugarik ez. Prozesamendua ez da pausatuko. Fakturak hilero igortzen dira."
 
 [portal.billing.chip]
-invoices = "Fakturak"
-nav = "Atalak"
-payment = "Ordainketa"
 plan = "Plana"
 procurement = "Erosketa"
 usage = "Erabilera"
@@ -8178,9 +8222,22 @@ pdfs = "Prozesatutako PDFak"
 users = "Erabiltzaileak"
 
 [portal.billing.enterprise]
+active = "Hitzarmena aktibo {{date}} arte"
 cta = "Lortu enpresa-eskaintza bat"
+included = "Enterprise barruan sartuta"
+payment_pending = "Ordainketa zain · sarbidea {{date}} arte"
+pdfsAgreed = "{{used}} / {{agreed}} PDF"
+pdfsOver_one = "{{count}} PDF hitzartutako bolumenaren gainetik"
+pdfsOver_other = "{{count}} PDF hitzartutako bolumenaren gainetik"
+pdfsUsed_one = "{{count}} PDF prozesatuta"
+pdfsUsed_other = "{{count}} PDF prozesatu dira"
+period = "Akordioaren epea: {{start}} – {{end}}"
 sub = "Air-gapped inplementazioa, SCIM, datuen egoitza, funtzionamendu-denboraren SLAak eta horri egokitutako akordioa."
 title = "Stirling ingurune arautu batean exekutatzen ari zara?"
+trial = "{{days}} eguneko proba · amaiera: {{date}}"
+usersAgreed = "{{used}} / {{agreed}} hitzartutako erabiltzaile"
+usersOver_one = "Hitzartutako kopurua baino {{count}} erabiltzaile gehiago"
+usersOver_other = "Hitzartutako kopurua baino {{count}} erabiltzaile gehiago"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Ezin izan da ordainketa-prozesua hasi"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "Zure banaketarako build natiboak."
-guideBtn = "Ikusi Linux instalazio-aukerak"
+downloadAppImage = "AppImage"
+downloadDeb = "Deskargatu .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "AppImage, .deb eta .rpm build-ak eskuragarri daude ohiko distroetarako."
 tagline = "Zure distrorako mahaigaineko aplikazio natiboa"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "Zentsuratu,Ezkutatu,beltzez estali,beltza,markatzailea,ezkutua,auto zent
 title = "Zentsuratu"
 
 [redact.auto]
+caseSensitiveLabel = "Maiuskulak eta minuskulak bereizten dituen bat-etortzea"
 colorLabel = "Koadroaren kolorea"
 convertPDFToImageLabel = "Bihurtu PDFa PDF-Irudira"
 customPaddingLabel = "Pertsonalizatutako tarte gehigarria"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "Hautatu fitxategiak fitxategi-kudeatzailean aldi ber
 manual = "Eskuzkoa"
 mode = "Modua"
 title = "Zentsura metodoa"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Maiuskula/minuskula berbereko testua bakarrik bat etorriko da. Gaituta dagoenean, 'Secret' ez da bat etorriko 'SECRET' testuarekin, eta regex bateko [A-Z] maiuskulekin bakarrik bat etorriko da."
+title = "Maiuskulak eta minuskulak bereizten dituen bat-etortzea"
 
 [redact.tooltip.advanced.color]
 text = "Pertsonalizatu zentsura-koadroen itxura. Beltza estandarra da, baina nahi duzun kolorea aukera dezakezu. Tarteak aurkitutako testuaren inguruan espazio gehigarria eransten du."
@@ -11396,7 +11460,12 @@ text = "Zehaztu zein orrialde kendu nahi dituzun PDFetik. Banakako orrialdeak, b
 title = "Orrialde hautaketa"
 
 [removePassword]
-desc = "Ezabatu pasahitza PDF dokumentutik"
+appliesTo = "{{count}} / {{total}} PDFtan ezarrita"
+keepBlank = "Utzi eremu bat hutsik pasahitz hori mantentzeko."
+notSet = "Ezarri gabe"
+openWithReaderFirst = "Ireki berriro PDF hau irekitzeko pasahitza erabiliz, baimenen pasahitza bakarrik kendu aurretik."
+selectiveHelp = "Sartu kendu nahi duzun babes bakoitzaren uneko pasahitza. Eremu huts batek pasahitz hori mantentzen du. Baimenen pasahitza kentzeak ekintza-murrizketak ere kentzen ditu."
+selectPasswords = "Kendu beharreko pasahitzak"
 submit = "Kendu pasahitza"
 tags = "segurtasuna,Deszifratu,segurtasuna,unpassword,pasahitza ezabatu"
 title = "Ezabatu pasahitza"
@@ -11407,13 +11476,9 @@ failed = "Errorea gertatu da PDFtik pasahitza kentzean."
 [removePassword.password]
 label = "Uneko pasahitza"
 placeholder = "Sartu uneko pasahitza"
-stepTitle = "Ezabatu pasahitza"
 
 [removePassword.results]
 title = "Deszifratutako PDFak"
-
-[removePassword.tooltip]
-description = "Pasahitz-babesak kentzeko, PDFa zifratzeko erabili zen pasahitza behar da. Honek dokumentua deszifratuko du, pasahitzik gabe eskuragarri eginez."
 
 [reorganizePages]
 submit = "Berrantolatu orriak"
@@ -11543,6 +11608,64 @@ m = "Metroak (m)"
 mi = "Miliak (mi)"
 mm = "Milimetroak (mm)"
 yd = "Yardak (yd)"
+
+[runLocation]
+back = "Atzera"
+continue = "Jarraitu"
+subtitle = "Aukeratu non exekutatuko den."
+title = "Non exekutatu nahi duzu Stirling?"
+
+[runLocation.choice.browser]
+description = "Web aplikazioa."
+title = "Zure nabigatzailean"
+
+[runLocation.choice.computer]
+description = "Mahaigaineko aplikazioa."
+title = "Zure ordenagailuan"
+
+[runLocation.choice.server]
+description = "Zuk ostatatua, talde baterako."
+title = "Zure zerbitzarian"
+
+[runLocation.desktop]
+computerLabel = "Zure ordenagailua"
+download = "Deskargatu {{platform}}-rako"
+downloadAgain = "Deskargatu berriro"
+guide = "Ireki {{platform}} instalazio-gida"
+startedSubtitle = "Begiratu Deskargak karpeta, eta ireki instalatzailea."
+startedTitle = "Deskarga hasi da"
+subtitle = "Deskargatu eta ireki."
+title = "Lortu mahaigaineko aplikazioa"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (instalazio-gida)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "Kopiatuta"
+copy = "Kopiatu komandoa"
+copyCompose = "Kopiatu compose fitxategia"
+guide = "{{method}} instalazio-gida"
+methodLabel = "Exekutatu honekin"
+note = "Ondoren, ireki <url/> konfigurazioa amaitzeko."
+subtitle = "Exekutatu hau zure zerbitzarian, eta ireki nabigatzaile batean."
+title = "Konfiguratu zure zerbitzaria"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "Kaltegarriak izan daitezkeen elementuak kendu PDF fitxategietatik."
@@ -12054,6 +12177,7 @@ title = "Lan-espazioa"
 loginIncomplete = "Ezin izan da saio-hasiera osatu"
 noSaasServer = "Ez dago SaaS zerbitzaririk konfiguratuta"
 noServer = "Ez dago zerbitzaririk konfiguratuta"
+policyUnavailable = "Ezin izan dira zure erakundearen saioa hasteko ezarpenak kargatu."
 saasLoginFailed = "SaaS saio-hasierak huts egin du"
 saasLoginIncomplete = "Ezin izan da SaaS saio-hasiera osatu"
 selfHostedLoginFailed = "Autoostatutako saio-hasierak huts egin du"
@@ -13563,7 +13687,9 @@ validUntrusted = "Baliozkoa, sinatzailea egiaztatu gabe"
 
 [viewer]
 cannotPreviewFile = "Ezin da fitxategia aurreikusi"
+copyRestricted = "Kopiatzea desgaituta dago PDF honen baimenengatik."
 copyText = "Kopiatu"
+coverPageView = "Erakutsi azala bereizita"
 disableColorFilter = "Desgaitu kolore-iragazkia"
 documentUpdated = "Dokumentua eguneratu da"
 dualPageView = "Orri biko ikuspegia"
@@ -13580,6 +13706,7 @@ noPdfProvided = "Ez da PDF-rik eman"
 onlyPdfSupported = "Fitxategi-formatu hau ez da onartzen aurrebistarako."
 pageNavigation = "Orrialde-nabigazioa"
 previousPage = "Aurreko orria"
+readAloudFromHere = "Irakurri ozen hemendik aurrera"
 saveChangesErrorBody = "Ezin izan da dokumentua gorde. Saiatu berriro."
 saveChangesErrorTitle = "Ezin izan dira aldaketak gorde"
 singlePageView = "Orri bakarreko ikuspegia"
@@ -13640,6 +13767,7 @@ closeSidebar = "Itxi iruzkinen alboko barra"
 deleteAnnotationAndComment = "Ezabatu anotazioa eta iruzkina"
 deleteDescription = "Anotazio honek iruzkin bat du erantsita. Alboko barratik iruzkina bakarrik ken dezakezu anotazioa mantenduz, edo dena ezabatu."
 deleteTitle = "Kendu anotazioa iruzkinenetik?"
+exportCsv = "Esportatu CSV gisa"
 goToLink = "Joan estekara"
 hint = "Jarri iruzkinak Iruzkina, Testua txertatu edo Testua ordezkatu tresnekin. Hemen agertuko dira, orrialdeka."
 locateAnnotation = "Kokatu dokumentuan"
@@ -13658,7 +13786,16 @@ typeInsertText = "Testua txertatu"
 typeReplaceText = "Testua ordezkatu"
 viewComment = "Ikusi iruzkina"
 
+[viewer.comments.csv]
+author = "Egilea"
+comment = "Iruzkina"
+inReplyTo = "Honi erantzunez"
+modifiedUtc = "Azken aldaketa (UTC)"
+page = "Orria"
+thread = "Haria"
+
 [viewer.error]
+loadError = "Ezin izan da PDF kargatu"
 noFileProvided = "Errorea: Ez da fitxategirik eman ikustaileari"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "Ur‑markaren testua"
 image = "Irudia"
 text = "Testua"
 
+[workbench]
+dropFailedSingle = "Zure fitxategia ezin izan da gehitu"
+dropFailedSome = "Zure fitxategietatik {{failed}} ezin izan dira gehitu"
+dropOverlay = "Jaregin fitxategiak lan-mahaira gehitzeko"
+
 [workbench.sessionRestore]
 none = "Zure aurreko fitxategiak ez daude jada gailu honetan gordeta."
 partial = "{{total}} fitxategitik {{restored}} leheneratu dira. Gainerakoak ez daude jada gailu honetan gordeta."
@@ -13915,16 +14057,14 @@ annotations = "Anotazioak"
 applyRedactionsFirst = "Aplikatu zentsurak lehenik"
 closeAll = "Itxi fitxategi guztiak"
 closePdf = "Itxi PDFa"
-deleteSelected = "Ezabatu hautatutako orriak"
 deselectAll = "Kendu hautaketa guztia"
 downloadAll = "Deskargatu dena"
+exitAnnotations = "Irten anotazio modutik"
 exitRedaction = "Irten zentsura modutik"
-exportAll = "Esportatu PDFa"
-exportSelected = "Esportatu hautatutako orriak"
 formFill = "Inprimaki-editorea"
 hideToolbar = "Ezkutatu tresna-barra"
 moreActions = "Ekintza gehiago"
-multiTool = "Multi-tresna"
+pageEditor = "Orrien editorea"
 panMode = "Pan modua"
 print = "Inprimatu PDFa"
 readAloud = "Ozen irakurri"
@@ -13938,7 +14078,6 @@ rulerSettings = "Eskala-ezarpenak"
 save = "Gorde"
 saveAll = "Gorde dena"
 saveAs = "Gorde honela"
-saveChanges = "Gorde aldaketak"
 search = "Bilatu PDFan"
 selectAll = "Hautatu dena"
 selectByNumber = "Hautatu orri-zenbakien arabera"

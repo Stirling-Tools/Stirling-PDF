@@ -74,6 +74,7 @@ import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
+import { useDamagedFileRepair } from "@app/contexts/DamagedFileRepairContext";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -136,6 +137,7 @@ const EmbedPdfViewerContent = ({
   onPasswordRequired,
 }: EmbedPdfViewerProps & { onPasswordRequired?: () => void }) => {
   const { t } = useTranslation();
+  const damagedRepair = useDamagedFileRepair();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
@@ -1933,6 +1935,8 @@ const EmbedPdfViewerContent = ({
               onDocumentReady={documentReady}
               onDocumentLoadFailed={documentFailed}
               onPasswordRequired={onPasswordRequired}
+              onRepair={previewFile ? undefined : damagedRepair?.repair}
+              repairingFileId={damagedRepair?.repairingFileId}
               restorePending={restorePending}
               restoreRequest={restoreRequest}
               onRestoreEvent={handleRestoreEvent}

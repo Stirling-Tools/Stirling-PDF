@@ -3,7 +3,7 @@
 // heuristic engine, the meter, the shared dispatch primitive).
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import {
   markDispatched,
   resetPolicyRuns,
@@ -15,19 +15,14 @@ interface TestStub {
   lastModified: number;
   derivedFromTool?: boolean;
   classificationLabels?: string[];
+  processedFile?: { pages: never[]; isDamaged?: boolean };
 }
 
 const aiEnabled = vi.hoisted(() => ({ value: false }));
 const runOn = vi.hoisted(() => ({ value: "upload" as "upload" | "export" }));
 
 const mocks = vi.hoisted(() => ({
-  workspace: [] as Array<{
-    id: string;
-    name: string;
-    lastModified: number;
-    derivedFromTool?: boolean;
-    classificationLabels?: string[];
-  }>,
+  workspace: [] as TestStub[],
   configLoading: false,
   updateStirlingFileStub: vi.fn(),
   bumpRevision: vi.fn(),
@@ -92,6 +87,10 @@ vi.mock("@app/services/automationMeter", () => ({
 }));
 
 import { usePolicyLocalPasses } from "@app/components/policies/usePolicyLocalPasses";
+import {
+  beginDamageCheck,
+  settleDamageCheck,
+} from "@app/services/pendingDamageChecks";
 
 // Run idle callbacks immediately so batches start without timer waits.
 vi.stubGlobal("requestIdleCallback", (cb: () => void) => {
@@ -377,5 +376,40 @@ describe("usePolicyLocalPasses delivery", () => {
     expect(mocks.updateStirlingFileStub).not.toHaveBeenCalled();
     expect(mocks.meter).not.toHaveBeenCalled();
     expect(mocks.runPolicyOnFile).not.toHaveBeenCalled();
+  });
+
+  it("never classifies a damaged file, which would only fail to read it", async () => {
+    mocks.workspace = [
+      stub("broken", { processedFile: { pages: [], isDamaged: true } }),
+      stub("fine"),
+    ];
+    mocks.classify.mockResolvedValue({ labels: ["invoice"] });
+
+    renderHook(() => usePolicyLocalPasses());
+
+    await waitFor(() =>
+      expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("fine", {
+        classificationLabels: ["invoice"],
+      }),
+    );
+    expect(mocks.classify).toHaveBeenCalledTimes(1);
+    expect(mocks.getStirlingFile).not.toHaveBeenCalledWith("broken");
+  });
+
+  it("holds a file until its damage check settles, then classifies it", async () => {
+    beginDamageCheck("checking");
+    mocks.workspace = [stub("checking")];
+    mocks.classify.mockResolvedValue({ labels: ["invoice"] });
+
+    renderHook(() => usePolicyLocalPasses());
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(mocks.classify).not.toHaveBeenCalled();
+
+    act(() => settleDamageCheck("checking"));
+    await waitFor(() =>
+      expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("checking", {
+        classificationLabels: ["invoice"],
+      }),
+    );
   });
 });

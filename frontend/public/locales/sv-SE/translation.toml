@@ -55,7 +55,9 @@ keepWorking = "Fortsätt arbeta"
 loading = "Laddar..."
 loginAgreementAccept = "Godkänn"
 loginAgreementDecline = "Avböj"
+loginAgreementLoadFailed = "Inloggningsavtalet kunde inte läsas in."
 loginAgreementProvider = "Detta meddelande tillhandahålls av din administratör, inte av Stirling PDF Inc."
+loginAgreementRetry = "Försök igen"
 loginAgreementTitle = "Inloggningsavtal"
 logOut = "Logga ut"
 marginTooltip = "Avstånd mellan sidnumret och sidans kant."
@@ -299,7 +301,6 @@ title = "Resultat för sidnumrering"
 
 [addPassword]
 desc = "Kryptera ditt PDF-dokument med ett lösenord."
-submit = "Kryptera"
 tags = "kryptera,lösenord,lås,säker,skydda,säkerhet,kryptering,skyddsåtgärd,konfidentiell,privat,begränsa åtkomst"
 title = "Lägg till lösenord"
 
@@ -311,17 +312,6 @@ label = "Längd på krypteringsnyckel"
 
 [addPassword.error]
 failed = "Ett fel uppstod vid kryptering av PDF-filen."
-
-[addPassword.passwords]
-stepTitle = "Lösenord och kryptering"
-
-[addPassword.passwords.owner]
-label = "Ägarlösenord"
-placeholder = "Ange ägarlösenord"
-
-[addPassword.passwords.user]
-label = "Användarlösenord"
-placeholder = "Ange användarlösenord"
 
 [addPassword.results]
 title = "Krypterade PDF:er"
@@ -1627,6 +1617,7 @@ title = "Omstart krävs"
 [admin.settings.security]
 authentication = "Autentisering"
 description = "Konfigurera autentisering, inloggningsbeteende och säkerhetspolicys."
+pdfPermissions = "PDF-behörigheter"
 title = "Säkerhet"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Inaktivera CSRF-skydd"
 [admin.settings.security.enableLogin]
 description = "Kräv att användare loggar in innan de får åtkomst till applikationen"
 label = "Aktivera inloggning"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Kräv lösenordet för behörigheter för begränsade åtgärder. Om detta stängs av krävs fortfarande lösenord som behövs för att öppna PDF:er."
+label = "Respektera PDF-behörigheter"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Avancerade inställningar"
@@ -1938,9 +1933,6 @@ wrapUp = "Det var administratörsturen! Du har sett enterprise-funktionerna som 
 [adminUserSettings]
 admin = "Admin"
 title = "Användarhanteringsinställningar"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Arabiska"
@@ -3173,12 +3165,14 @@ unknown = "Okänt"
 
 [changePermissions]
 desc = "Ändra dokumentets begränsningar och behörigheter."
+loading = "Läser in aktuella behörigheter..."
 submit = "Ändra behörigheter"
 tags = "behörigheter,begränsningar,rättigheter,åtkomstkontroll,tillåt,neka,utskrift,kopiering,redigering,ändra behörigheter,säkerhetsinställningar,användarrättigheter"
 title = "Ändra behörigheter"
 
 [changePermissions.error]
 failed = "Ett fel uppstod vid ändring av PDF-behörigheter."
+readFailed = "Kunde inte läsa denna PDF:s aktuella behörigheter. Ange begränsningarna manuellt innan du tillämpar ändringar."
 
 [changePermissions.permissions.preventAssembly]
 label = "Förhindra sammansättning av dokument"
@@ -3219,21 +3213,16 @@ text = "För att göra dessa behörigheter oföränderliga, använd verktyget L�
 [chat.actions]
 copy = "Kopiera meddelande"
 
-[chat.emptyState]
-text = "Ställ en fråga om dina dokument eller få hjälp med PDF-verktyg."
-
-[chat.fab]
-close = "Stäng chatten"
-open = "Öppna Stirling AI-assistent"
+[chat.dock]
+collapse = "Fäll ihop chatten"
+placeholder = "Fråga Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Alternativ för Stirling-agent"
-assistant = "AI-assistent"
 clearChat = "Rensa chatt"
 
 [chat.input]
 disclaimer = "AI kan göra misstag. Kontrollera resultatet innan du delar det."
-placeholder = "Vad vill du göra?"
 send = "Skicka meddelande"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Konvertera dessa dokument till PDF"
 convertOne = "Konvertera detta dokument till PDF"
 heading = "Kom igång"
 mergeMany = "Slå samman dessa {{count}} dokument till 1"
-moreFiles = "+{{count}} fler"
 openFromComputer = "Öppna från dator"
-removeFile = "Ta bort {{name}}"
 splitOne = "Dela upp det här dokumentet"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Jag kunde inte hitta den begärda informationen."
 processing = "Bearbetar ({{outcome}})..."
 unsupported_capability = "Funktionen stöds inte: {{capability}}"
 usage_limit_reached = "Du har nått din användningsgräns. Kontrollera dina planalternativ för att fortsätta."
-
-[chat.toolsUsed]
-summary_one = "Körde 1 verktyg"
-summary_other = "Körde {{count}} verktyg"
-unknownTool = "Okänt verktyg"
 
 [classification.families]
 correspondence = "Korrespondens"
@@ -3649,6 +3631,7 @@ tooltip = "Välj färg från skärmen"
 hue = "Nyans"
 saturation = "Mättnad och ljusstyrka"
 title = "Välj färg"
+transparent = "Transparent"
 
 [common]
 actions = "Åtgärder"
@@ -3664,6 +3647,7 @@ continue = "Fortsätt"
 copied = "Kopierat!"
 copy = "Kopiera"
 copyCode = "Kopiera kod"
+copyFailed = "Kopiering misslyckades"
 dismiss = "Avvisa"
 done = "Klar"
 enterValue = "Ange värde"
@@ -3847,6 +3831,12 @@ unavailable = "ImageMagick är inte installerat eller aktiverat på denna server
 filesize = "Filstorlek"
 quality = "Kvalitet"
 title = "Komprimeringsmetod"
+
+[compress.noReduction]
+multiple = "Komprimeringen kördes, men {{count}} av {{total}} filer kan inte komprimeras ytterligare."
+multipleAtLevel = "Komprimering på denna nivå förbättrade inte {{count}} av {{total}} filer. Prova en högre komprimeringsnivå."
+single = "Komprimeringen kördes, men denna fil kan inte komprimeras ytterligare."
+singleAtLevel = "Komprimering på denna nivå förbättrade inte denna fil. Prova en högre komprimeringsnivå."
 
 [compress.settings]
 desiredSize = "Önskad filstorlek"
@@ -4295,6 +4285,13 @@ precision = "Använd koordinatfälten för exakt positionering"
 resize = "Dra i hörn- och kantgreppen för att ändra storlek"
 title = "Så beskär du PDF:er"
 
+[damagedPdf]
+description = "Den här PDF-filen är skadad och kan inte öppnas."
+label = "Skadad"
+repair = "Reparera"
+repaired = "Reparerade {{name}}"
+repairFailed = "Kunde inte reparera {{name}}"
+
 [database]
 backupCreated = "Backup av databas lyckades"
 fileName = "Filnamn"
@@ -4363,6 +4360,10 @@ title = "Uppdaterad från disk"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" ändrades på disk. Den är tillräckligt stor för att en omladdning ska ta ett tag, så versionen här har lämnats oförändrad."
 title = "Filen ändrades på disk"
+
+[desktopPrivacy]
+blocked = "Din administratör kräver att dokument stannar på den här enheten. Den här funktionen är inte tillgänglig."
+localFiles = "Lokala filer"
 
 [desktopUpdate]
 downloading = "Laddar ner uppdatering..."
@@ -4491,22 +4492,80 @@ description = "Välj verktyget Redigera innehållsförteckning för att ladda de
 title = "Öppna verktyget för att börja redigera"
 
 [encryptedPdfUnlock]
-description = "Denna PDF är lösenordsskyddad. Ange lösenordet så att du kan fortsätta arbeta med den."
-emptyResponse = "Borttagning av lösenord gav ingen fil."
+actionIgnored = "Begränsning för {{action}} ignorerades"
+actionUnlocked = "{{action}} upplåst för denna session"
+advanced = "Avancerat"
+allowed = "Tillåtet"
+annotations = "Anteckningar"
+authoriseAction = "Denna PDF kräver behörighet för att använda {{action}}."
+changeOwnerPassword = "Ändra lösenord för behörigheter"
+checkingPermissions = "Kontrollerar PDF-behörigheter..."
+chooseOwnerPassword = "Välj ett annat lösenord"
+continue = "Fortsätt"
+copyFailed = "Det gick inte att skapa kopian. Din PDF är oförändrad."
+copying = "Kopierar innehåll"
+editing = "Redigering"
+enterPassword = "Ange lösenord"
+ignoredByServer = "Behörigheter ignoreras av den här serverns inställningar. PDF:ens skydd är oförändrat."
 incorrectPassword = "Felaktigt lösenord"
+inspectionFailed = "Det gick inte att kontrollera denna PDF:s behörigheter. Försök igen."
+lowQualityPrintUnsupported = "Denna PDF tillåter endast utskrift med låg kvalitet, vilket denna visare inte stöder."
+lowResolutionOnly = "Endast låg upplösning"
+manageProtection = "Hantera skydd"
 missingFile = "Den valda filen är inte längre tillgänglig."
+mixedProtection = "Dessa PDF:er har separata skyddsinställningar. Bearbeta dem var för sig."
+newOwnerPassword = "Nytt lösenord för behörigheter"
+notRequired = "Krävs inte"
+openingPassword = "Lösenord för att öppna"
+openPdf = "Öppna PDF"
+ownerPassword = "Lösenord för behörigheter"
+ownerRequired = "Ange lösenordet för behörigheter för att fortsätta."
+ownerTitle = "Ange lösenord för behörigheter"
+passwordRetained = "Behölls oförändrat"
+passwordsMustDiffer = "De två lösenorden måste vara olika."
+permissionsUnlocked = "Behörigheter upplåsta för denna session"
+prepareFailed = "Det gick inte att förbereda denna skyddade PDF för bearbetning."
+printing = "Utskrift"
+printRestricted = "Utskrift är begränsad. Verifiera behörigheter i Hantera skydd."
+protectedPdf = "Skyddad PDF"
+protectionRetained = "Skyddet behölls"
+protectionSaved = "Skyddet sparades"
+removePasswordHelp = "Öppna Ta bort lösenord för att välja vilka lösenord som ska tas bort."
+removeProtection = "Skapa en oskyddad kopia"
+replaceProtection = "Dessa inställningar ersätter PDF:ens nuvarande skydd."
 required = "Ange lösenordet för att fortsätta."
-skip = "Hoppa över nu"
-successBody = "Lösenordet togs bort."
-successBodyWithName = "Lösenord borttaget från {{fileName}}"
-successTitle = "Lösenord borttaget"
+requiredStatus = "Krävs"
+requiredToApply = "Krävs för att tillämpa ändringar"
+restoreFailed = "Det gick inte att bevara PDF-skyddet. Inget oskyddat resultat sparades."
+restrictActions = "Begränsa åtgärder"
+restricted = "Begränsat"
+restrictedActions = "begränsade åtgärder"
+restrictedOperation = "Denna åtgärd kräver lösenordet för behörigheter."
+retainOwnerVerification = "Verifiera lösenordet för behörigheter för att behålla det oförändrat medan lösenordet för att öppna tas bort. Detta kommer inte att ta bort det."
+saveProtection = "Spara skydd"
+securityChangeFailed = "Det gick inte att ändra skyddet. Kontrollera lösenordet för behörigheter och de nya säkerhetsinställningarna."
+sessionDetails = "Öppen för denna session. PDF:en förblir skyddad."
+sessionDetailsLabel = "Om upplåsning för sessionen"
+sessionFailed = "Det gick inte att låsa upp denna PDF. Försök igen."
+sessionSuccessBody = "Skyddet behölls."
+sessionSuccessBodyWithName = "Skyddet behölls för {{fileName}}."
+sessionSuccessTitle = "PDF öppnad"
+sessionTitle = "Öppna PDF"
+signedReadOnly = "Denna signerade PDF kan visas, men kan inte redigeras här."
 title = "Ta bort lösenord för att fortsätta"
+toolUnavailable = "Detta verktyg stöder inte krypterade PDF:er. Ta bort lösenordet först."
+toolUnavailableDetails = "Varför {{name}} inte är tillgängligt"
 unlock = "Lås upp och fortsätt"
 unlockAll = "Använd för alla ({{count}})"
 unlockAllPartialFail = "Fel lösenord för: {{names}}"
 unlockAllSuccess_one = "Låste upp {{count}} fil."
 unlockAllSuccess_other = "Låste upp {{count}} filer."
+unlockedForSession = "Upplåst för denna session med ditt lösenord för behörigheter."
 unlockPrompt = "Lås upp PDF för att fortsätta"
+unprotectedCopyConsequence = "Kopian kommer inte att ha några lösenord eller begränsningar. Originalet förblir skyddat."
+unsupportedTool = "Detta verktyg kan ännu inte bevara denna PDF:s skydd."
+verifiedForSession = "Verifierad för denna session"
+verifyPermissions = "Verifiera behörigheter för denna session"
 viewerLocked = "Denna PDF är lösenordsskyddad"
 viewerUnlock = "Lås upp"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "Visa i visaren"
 closeFile = "Stäng fil"
 
 [fileEditor]
-addFiles = "Lägg till filer"
 closedFile = "Stängde {{name}}"
 couldNotSave = "Det gick inte att spara {{name}}"
-filesAdded_one = "Lade till {{count}} fil"
-filesAdded_other = "Lade till {{count}} filer"
 filesReordered_one = "Filens ordning ändrades"
 filesReordered_other = "Ordningen för {{count}} filer ändrades"
 loadedFromStorage_one = "Läste in {{count}} fil från lagring"
 loadedFromStorage_other = "Läste in {{count}} filer från lagring"
 loadFromStorageFailed = "Det gick inte att läsa in vissa filer från lagring"
 pinnedFile = "Fäste {{name}}"
-processFilesFailed = "Det gick inte att bearbeta filer"
 savedAndClosed = "Sparade och stängde {{name}}"
 saveFailed = "Sparning misslyckades"
 unpinnedFile = "Lossade {{name}}"
 unzipping = "Packar upp {{name}}"
+
+[fileEditor.addCard]
+dropHint = "eller släpp filer var som helst"
+fromComputer = "Ladda upp från dator"
+moreOptions = "Fler uppladdningsalternativ"
 
 [fileEditor.unzip]
 error = "Fel vid uppackning av {{name}}"
@@ -4729,7 +4789,6 @@ dataLostBody = "Den här webbläsaren har förlorat innehållet i denna fil. Lad
 dataLostTitle = "Fildata är otillgängliga"
 downloadFailed = "Nedladdning misslyckades"
 dropHint = "Öppna filer för att komma igång"
-dropToAdd = "Släpp filer för att lägga till"
 duplicateFailed = "Kunde inte duplicera filen"
 expand = "Expandera sidofält"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "Skanna fält igen"
 rescanFormFields = "Skanna formulärfält igen"
 save = "Spara"
 saveShortcut = "Ctrl+S för att spara"
+saving = "Sparar..."
 selectOptionPlaceholder = "— välj —"
 skippedEdits_one = "1 ändring kunde inte tillämpas:"
 skippedEdits_other = "{{count}} ändringar kunde inte tillämpas:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "{{count}} fler visas inte."
 unsavedChanges = "Osparade ändringar"
 
 [formFill.create]
-commit = "Lägg till {{count}} fält i PDF"
 empty = "Inga fält har ritats ännu."
-failed = "Det gick inte att lägga till fält"
 goToField = "Gå till det här fältet"
 hint = "Välj en fälttyp och rita den sedan på sidan."
 placing = "Rita ett {{type}}-fält på sidan. Tryck på Esc för att stoppa."
@@ -5334,7 +5392,6 @@ modify = "Ändra"
 commit = "Spara {{count}} ändring(ar)"
 delete = "Ta bort"
 empty = "Denna PDF har inga formulärfält ännu."
-failed = "Det gick inte att spara ändringar"
 groupSizeHint = "Använd alternativstorlek"
 hint = "Välj ett fält för att redigera dess egenskaper, dra det på sidan eller ta bort det."
 restore = "Återställ"
@@ -5732,11 +5789,6 @@ title = "Överlagra PDF:er"
 desc = "Slå samman flera sidor av ett PDF-dokument till en enda sida"
 tags = "layout,ordna,kombinera,N-up,2-up,4-up,flera per sida,sidor per ark,layouta sidor,bricka,rutnätslayout,flersideslayout,kombinera på sida,handout"
 title = "Flersidig layout"
-
-[home.pdfCommentAgent]
-desc = "Be AI att kommentera en PDF med klisterlappskommentarer utifrån din prompt"
-tags = "AI,agent,kommentar,annotera,klisterlapp,granskning,feedback,anteckningar"
-title = "Lägg till AI-kommentarer"
 
 [home.pdfOrganiser]
 tags = "organisera,ordna om,ändra ordning,ordna sidor,sortera,flytta sidor,ta bort sidor,ta bort sidor,sidhantering,sidorganisatör,ändra sekvens"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "Du blir teammedlem och förlorar ägaråtkomst."
 deselectAll = "Ingen"
 selectAll = "Markera alla"
 
-[pageEditor]
-dragPreviewAlt = "Drar"
-filePosition = "Position {{position}}"
-pageLabel = "Sida {{page}}"
-title = "Sidredigerare"
-
-[pageEditor.actions]
-deletePage = "Ta bort sida"
-insertFileAfter = "Infoga fil efter"
-moveLeft = "Flytta åt vänster"
-moveRight = "Flytta åt höger"
-rotateLeft = "Rotera åt vänster"
-rotateRight = "Rotera åt höger"
-splitAfter = "Dela efter"
-
-[pageEditor.commands]
-addSplitAt = "Lägg till delning vid position {{position}}"
-addSplits_one = "Lägg till {{count}} delning"
-addSplits_other = "Lägg till {{count}} delningar"
-deletePages_one = "Ta bort {{count}} sida"
-deletePages_other = "Ta bort {{count}} sidor"
-insertFiles_one = "Infoga {{count}} fil efter sida {{page}}"
-insertFiles_other = "Infoga {{count}} filer efter sida {{page}}"
-insertPageBreaks_one = "Infoga {{count}} sidbrytning"
-insertPageBreaks_other = "Infoga {{count}} sidbrytningar"
-insertPageBreaksAll = "Infoga sidbrytningar efter alla sidor"
-removeAllSplits = "Ta bort alla delningar"
-removeSplitAt = "Ta bort delning vid position {{position}}"
-removeSplits_one = "Ta bort {{count}} delning"
-removeSplits_other = "Ta bort {{count}} delningar"
-reorderPages = "Ändra ordning på sidor"
-rotatePageLeft = "Rotera sida åt vänster"
-rotatePageRight = "Rotera sida åt höger"
-rotatePagesLeft_one = "Rotera {{count}} sida åt vänster"
-rotatePagesLeft_other = "Rotera {{count}} sidor åt vänster"
-rotatePagesRight_one = "Rotera {{count}} sida åt höger"
-rotatePagesRight_other = "Rotera {{count}} sidor åt höger"
-splitAllPages = "Dela alla sidor"
-toggleSplits_one = "Växla {{count}} delningsposition"
-toggleSplits_other = "Växla {{count}} delningspositioner"
-
-[pageEditor.emptyState]
-body = "Lägg till filer för att börja redigera sidor"
-title = "Inga PDF-filer inlästa"
-
-[pageEditor.fileDropdown]
-addFile = "Lägg till fil"
-selectedCount = "{{selected}}/{{total}} filer valda"
-untitled = "Namnlös"
-
-[pageEditor.toolbar]
-delete = "Ta bort markerade"
-redo = "Gör om"
-rotateLeft = "Rotera markerade åt vänster"
-rotateRight = "Rotera markerade åt höger"
-undo = "Ångra"
-
 [pageExtracter]
 title = "Extrahera sidor"
 
@@ -6815,6 +6810,79 @@ title = "Sidintervall"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → väljer alla sidor"
 title = "Särskilda nyckelord"
+
+[pageTracks]
+blankPage = "Tom sida"
+deleteSelected = "Ta bort markerade sidor"
+downloadAsOneFile = "Ladda ner som en fil"
+downloadEachPage = "Ladda ner varje sida separat"
+downloadSelectedPages = "Ladda ner markerade sidor"
+dragging_one = "{{count}} sida"
+dragging_other = "{{count}} sidor"
+duplicateSelected = "Duplicera markerade sidor"
+edited = "redigerad"
+emptyTrack = "Inga sidor kvar. Dra sidor hit eller spara för att stänga denna fil."
+insertBlank = "Infoga tom sida"
+insertBlankAfterSelected = "Infoga tomma sidor efter markerade sidor"
+moveLeft = "Flytta åt vänster"
+moveRight = "Flytta åt höger"
+nextPage = "Nästa sida"
+page = "Sida {{number}}"
+pageCount_one = "{{count}} sida"
+pageCount_other = "{{count}} sidor"
+pagePosition = "Sida {{number}} av {{total}}"
+prevPage = "Föregående sida"
+readingPages = "Läser sidor..."
+redo = "Gör om"
+rotateLeft = "Rotera åt vänster"
+rotateRight = "Rotera åt höger"
+rotateSelectedLeft = "Rotera markerade sidor åt vänster"
+rotateSelectedRight = "Rotera markerade sidor åt höger"
+saveAsOneFile = "Spara som en fil"
+saveChanges = "Spara ändringar i alla filer"
+saveEachPage = "Spara varje sida separat"
+saveSelectedPages = "Spara markerade sidor"
+saving = "Sparar..."
+savingProgress = "Sparar {{done}} av {{total}}"
+selectPage = "Markera sida {{number}}"
+splitAfterSelected = "Dela efter markerade sidor"
+splitHere = "Dela här"
+undo = "Ångra"
+viewError = "Kunde inte rendera denna sida"
+viewPage = "Visa sida"
+zoomIn = "Zooma in"
+zoomOut = "Zooma ut"
+
+[pageTracks.close]
+message = "Är du säker på att du vill stänga alla filer?"
+unsaved = "Dessa filer har osparade ändringar."
+
+[pageTracks.delete]
+page = "Ta bort sida"
+
+[pageTracks.duplicate]
+page = "Duplicera sida"
+
+[pageTracks.empty]
+body = "Lägg till PDF:er för att expandera dem till redigerbara sidspår"
+title = "Inga PDF-filer inlästa"
+
+[pageTracks.exportFailed]
+body = "De redigerade filerna kunde inte förberedas. Försök igen."
+title = "Kunde inte ladda ner"
+
+[pageTracks.saveFailed]
+body = "Dina redigeringar har inte gått förlorade. Försök spara igen."
+title = "Kunde inte spara ändringar"
+
+[pageTracks.track]
+close = "Stäng fil"
+collapse = "Fäll ihop"
+expand = "Fäll ut"
+rename = "Byt namn på fil"
+
+[pageTracks.wrap]
+label = "Radbryt sidor"
 
 [payg.activity]
 docs = "dokument"
@@ -7144,24 +7212,6 @@ totalSeats_other = "Totalt ({{count}} platser)"
 [payment.upgradeTeam]
 title = "Uppgradera till Team"
 
-[pdfCommentAgent]
-submit = "Generera kommentarer"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Beskriv vad AI ska kommentera"
-failed = "Misslyckades med att generera kommentarer"
-tooLong = "Prompten är för lång (högst {{max}} tecken)"
-
-[pdfCommentAgent.prompt]
-label = "Vad ska AI kommentera?"
-placeholder = "t.ex. Flagga alla otydliga datum och föreslå förtydliganden"
-
-[pdfCommentAgent.results]
-title = "Kommenterad PDF"
-
-[pdfCommentAgent.settings]
-title = "Instruktioner för kommentarer"
-
 [pdfOrganiser]
 placeholder = "(t.ex. 1,3,2 eller 4-8,2,10-12 eller 2n-1)"
 tags = "duplex,jämn,udda,sortera,flytta"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "Klicka på valfri text, bild eller form på sidan för at
 ocrDocumentChanged = "Dokumentet ändrades medan OCR kördes. Kör OCR igen för att inkludera dina senaste ändringar."
 ocrInvalidResult = "OCR returnerade inte en PDF. Försök igen."
 ocrNoLanguages = "Inga OCR-språk är installerade på servern."
+ocrProtected = "OCR kan ännu inte bevara denna PDF:s skydd. Det skyddade originalet är fortfarande tillgängligt för visning."
 ocrRunning = "Känner igen text..."
 ocrUnavailable = "OCR är inte tillgängligt på den här servern."
 oneImage = "Bild"
@@ -7389,13 +7440,8 @@ pageNumber = "Sida {{page}}"
 renderFailed = "Det gick inte att rendera sidan"
 
 [pdfTextEditor.password]
-cancel = "Avbryt"
 incorrect = "Fel lösenord – försök igen."
 label = "Lösenord"
-open = "Öppna"
-protected = "Denna PDF är lösenordsskyddad."
-protectedNamed = "\"{{fileName}}\" är lösenordsskyddad."
-title = "Lösenord krävs"
 
 [pdfTextEditor.rulers]
 guide = "Justeringsguide vid {{value}} {{unit}} – dra till en linjal för att ta bort"
@@ -7994,6 +8040,7 @@ before = "Ange"
 title = "Stirling-anslutningen är inte konfigurerad"
 
 [portal.accountLink.notice]
+loadFailed = "Dialogrutan för kontolänkning kunde inte läsas in."
 openFailed = "Kunde inte öppna din webbläsare. Öppna Användning och fakturering på din anslutna server för att länka ett konto."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "Månatlig utgiftsgräns {{amount}}/mån. Bearbetningen pausas vid grän
 limitNoCap = "Ingen utgiftsgräns. Bearbetningen pausas inte. Fakturor skickas månadsvis."
 
 [portal.billing.chip]
-invoices = "Fakturor"
-nav = "Avsnitt"
-payment = "Betalning"
 plan = "Abonnemang"
 procurement = "Inköp"
 usage = "Användning"
@@ -8178,9 +8222,22 @@ pdfs = "PDF:er bearbetade"
 users = "Användare"
 
 [portal.billing.enterprise]
+active = "Avtal aktivt till och med {{date}}"
 cta = "Få en företags offert"
+included = "Ingår i Enterprise"
+payment_pending = "Betalning väntar · åtkomst till och med {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDF:er"
+pdfsOver_one = "{{count}} PDF över avtalad volym"
+pdfsOver_other = "{{count}} PDF:er över avtalad volym"
+pdfsUsed_one = "{{count}} PDF bearbetad"
+pdfsUsed_other = "{{count}} PDF-filer bearbetade"
+period = "Avtalsperiod: {{start}} – {{end}}"
 sub = "Air-gapped distribution, SCIM, datalagringsregion, drifttids-SLA:er och ett avtal som matchar."
 title = "Kör du Stirling i en reglerad miljö?"
+trial = "{{days}} dagars testperiod · slutar {{date}}"
+usersAgreed = "{{used}} / {{agreed}} avtalade användare"
+usersOver_one = "{{count}} användare över avtalad mängd"
+usersOver_other = "{{count}} användare över avtalad mängd"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Det gick inte att starta kassan"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "Inbyggda byggen för din distribution."
-guideBtn = "Visa installationsalternativ för Linux"
+downloadAppImage = "AppImage"
+downloadDeb = "Ladda ner .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "AppImage-, .deb- och .rpm-byggen är tillgängliga för vanliga distributioner."
 tagline = "Inbyggd skrivbordsapp för din distribution"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "Maskera,Dölj,svärta,svart,markör,dold,automatisk maskering,manuell ma
 title = "Maskera"
 
 [redact.auto]
+caseSensitiveLabel = "Skiftlägeskänslig matchning"
 colorLabel = "Rutans färg"
 convertPDFToImageLabel = "Konvertera PDF till PDF-bild"
 customPaddingLabel = "Anpassad extra utfyllnad"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "Välj filer i filhanteraren för att maskera flera f
 manual = "Manuell"
 mode = "Läge"
 title = "Maskningsmetod"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Matcha endast text med samma skiftläge. 'Secret' matchar inte 'SECRET' när detta är aktiverat, och [A-Z] i en regex matchar endast versaler."
+title = "Skiftlägeskänslig matchning"
 
 [redact.tooltip.advanced.color]
 text = "Anpassa utseendet på maskningsrutorna. Svart är standard, men du kan välja valfri färg. Utfyllnad lägger till extra utrymme runt den hittade texten."
@@ -11396,7 +11460,12 @@ text = "Ange vilka sidor som ska tas bort från din PDF. Du kan välja enskilda 
 title = "Sidval"
 
 [removePassword]
-desc = "Ta bort lösenordsskydd från ditt PDF-dokument."
+appliesTo = "Angivet för {{count}} av {{total}} PDF-filer"
+keepBlank = "Lämna ett fält tomt för att behålla det lösenordet."
+notSet = "Inte angivet"
+openWithReaderFirst = "Öppna denna PDF igen med dess öppningslösenord innan du endast tar bort behörighetslösenordet."
+selectiveHelp = "Ange det aktuella lösenordet för varje skydd du vill ta bort. Ett tomt fält behåller det lösenordet. Att ta bort behörighetslösenordet tar också bort åtgärdsbegränsningar."
+selectPasswords = "Lösenord att ta bort"
 submit = "Ta bort lösenord"
 tags = "säkra,Dekryptera,säkerhet,ta bort lösenord,radera lösenord"
 title = "Ta bort lösenord"
@@ -11407,13 +11476,9 @@ failed = "Ett fel uppstod när lösenordet skulle tas bort från PDF-filen."
 [removePassword.password]
 label = "Nuvarande lösenord"
 placeholder = "Ange aktuellt lösenord"
-stepTitle = "Ta bort lösenord"
 
 [removePassword.results]
 title = "Dekrypterade PDF:er"
-
-[removePassword.tooltip]
-description = "Att ta bort lösenordsskydd kräver det lösenord som användes för att kryptera PDF-filen. Detta dekrypterar dokumentet så att det kan nås utan lösenord."
 
 [reorganizePages]
 submit = "Omorganisera sidor"
@@ -11543,6 +11608,64 @@ m = "Meter (m)"
 mi = "Miles (mi)"
 mm = "Millimeter (mm)"
 yd = "Yards (yd)"
+
+[runLocation]
+back = "Tillbaka"
+continue = "Fortsätt"
+subtitle = "Välj var det körs."
+title = "Var vill du köra Stirling?"
+
+[runLocation.choice.browser]
+description = "Webbappen."
+title = "I din webbläsare"
+
+[runLocation.choice.computer]
+description = "Skrivbordsappen."
+title = "På din dator"
+
+[runLocation.choice.server]
+description = "Egenhostad, för ett team."
+title = "På din server"
+
+[runLocation.desktop]
+computerLabel = "Din dator"
+download = "Ladda ner för {{platform}}"
+downloadAgain = "Ladda ner igen"
+guide = "Öppna installationsguiden för {{platform}}"
+startedSubtitle = "Kontrollera mappen Hämtade filer och öppna sedan installationsprogrammet."
+startedTitle = "Din nedladdning har startat"
+subtitle = "Ladda ner den och öppna den."
+title = "Hämta skrivbordsappen"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (installationsguide)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "Kopierat"
+copy = "Kopiera kommando"
+copyCompose = "Kopiera compose-fil"
+guide = "Installationsguide för {{method}}"
+methodLabel = "Kör den med"
+note = "Öppna sedan <url/> för att slutföra konfigurationen."
+subtitle = "Kör detta på din server och öppna det sedan i en webbläsare."
+title = "Konfigurera din server"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "Ta bort potentiellt skadliga element från PDF-filer."
@@ -12054,6 +12177,7 @@ title = "Arbetsyta"
 loginIncomplete = "Det gick inte att slutföra inloggningen"
 noSaasServer = "Ingen SaaS-server konfigurerad"
 noServer = "Ingen server konfigurerad"
+policyUnavailable = "Det gick inte att läsa in organisationens inloggningsinställningar."
 saasLoginFailed = "SaaS-inloggning misslyckades"
 saasLoginIncomplete = "Det gick inte att slutföra SaaS-inloggningen"
 selfHostedLoginFailed = "Självhostad inloggning misslyckades"
@@ -13563,7 +13687,9 @@ validUntrusted = "Giltig, undertecknare ej verifierad"
 
 [viewer]
 cannotPreviewFile = "Kan inte förhandsgranska filen"
+copyRestricted = "Kopiering är inaktiverad av behörigheterna för denna PDF."
 copyText = "Kopiera"
+coverPageView = "Visa omslagssida separat"
 disableColorFilter = "Inaktivera färgfilter"
 documentUpdated = "Dokumentet har uppdaterats"
 dualPageView = "Dubbelsidig vy"
@@ -13580,6 +13706,7 @@ noPdfProvided = "Ingen PDF angiven"
 onlyPdfSupported = "Detta filformat stöds inte för förhandsgranskning."
 pageNavigation = "Sidnavigering"
 previousPage = "Föregående sida"
+readAloudFromHere = "Läs upp härifrån"
 saveChangesErrorBody = "Dokumentet kunde inte sparas. Försök igen."
 saveChangesErrorTitle = "Kunde inte spara ändringar"
 singlePageView = "Ensidig vy"
@@ -13640,6 +13767,7 @@ closeSidebar = "Stäng sidopanel för kommentarer"
 deleteAnnotationAndComment = "Ta bort annotering & kommentar"
 deleteDescription = "Denna annotering har en kommentar kopplad. Du kan ta bort bara kommentaren i sidofältet och behålla annoteringen, eller ta bort allt."
 deleteTitle = "Ta bort annotering från kommentarer?"
+exportCsv = "Exportera som CSV"
 goToLink = "Gå till länk"
 hint = "Placera kommentarer med verktygen Kommentar, Infoga text eller Ersätt text. De visas här per sida."
 locateAnnotation = "Hitta i dokumentet"
@@ -13658,7 +13786,16 @@ typeInsertText = "Infoga text"
 typeReplaceText = "Ersätt text"
 viewComment = "Visa kommentar"
 
+[viewer.comments.csv]
+author = "Författare"
+comment = "Kommentar"
+inReplyTo = "Som svar på"
+modifiedUtc = "Senast ändrad (UTC)"
+page = "Sida"
+thread = "Tråd"
+
 [viewer.error]
+loadError = "Det gick inte att läsa in PDF"
 noFileProvided = "Fel: Ingen fil angavs till visaren"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "Vattenstämpeltext"
 image = "Bild"
 text = "Text"
 
+[workbench]
+dropFailedSingle = "Din fil kunde inte läggas till"
+dropFailedSome = "{{failed}} av dina filer kunde inte läggas till"
+dropOverlay = "Släpp filer för att lägga till dem i arbetsytan"
+
 [workbench.sessionRestore]
 none = "Dina tidigare filer lagras inte längre på den här enheten."
 partial = "Återställde {{restored}} av {{total}} filer. Resten lagras inte längre på den här enheten."
@@ -13915,16 +14057,14 @@ annotations = "Anteckningar"
 applyRedactionsFirst = "Tillämpa maskeringar först"
 closeAll = "Stäng alla filer"
 closePdf = "Stäng PDF"
-deleteSelected = "Ta bort valda sidor"
 deselectAll = "Avmarkera alla"
 downloadAll = "Ladda ner alla"
+exitAnnotations = "Avsluta annoteringsläge"
 exitRedaction = "Avsluta maskeringsläge"
-exportAll = "Exportera PDF"
-exportSelected = "Exportera valda sidor"
 formFill = "Formulärredigerare"
 hideToolbar = "Dölj verktygsfält"
 moreActions = "Fler åtgärder"
-multiTool = "Multiverktyg"
+pageEditor = "Sidredigerare"
 panMode = "Panoreringsläge"
 print = "Skriv ut PDF"
 readAloud = "Läs upp"
@@ -13938,7 +14078,6 @@ rulerSettings = "Skalinställningar"
 save = "Spara"
 saveAll = "Spara alla"
 saveAs = "Spara som"
-saveChanges = "Spara ändringar"
 search = "Sök i PDF"
 selectAll = "Markera alla"
 selectByNumber = "Markera efter sidnummer"

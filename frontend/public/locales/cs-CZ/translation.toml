@@ -55,7 +55,9 @@ keepWorking = "Pokračovat v práci"
 loading = "Načítání..."
 loginAgreementAccept = "Přijmout"
 loginAgreementDecline = "Odmítnout"
+loginAgreementLoadFailed = "Souhlas s přihlášením se nepodařilo načíst."
 loginAgreementProvider = "Toto upozornění poskytl váš správce, ne společnost Stirling PDF Inc."
+loginAgreementRetry = "Opakovat"
 loginAgreementTitle = "Přihlašovací ujednání"
 logOut = "Odhlásit se"
 marginTooltip = "Vzdálenost mezi číslem stránky a okrajem stránky."
@@ -299,7 +301,6 @@ title = "Výsledky číslování stránek"
 
 [addPassword]
 desc = "Zašifrujte svůj dokument PDF heslem."
-submit = "Zašifrovat"
 tags = "šifrovat,heslo,zamknout,zabezpečit,chránit,zabezpečení,šifrování,ochrana,důvěrné,soukromé,omezit přístup"
 title = "Přidat heslo"
 
@@ -311,17 +312,6 @@ label = "Délka šifrovacího klíče"
 
 [addPassword.error]
 failed = "Při šifrování PDF došlo k chybě."
-
-[addPassword.passwords]
-stepTitle = "Hesla a šifrování"
-
-[addPassword.passwords.owner]
-label = "Heslo vlastníka"
-placeholder = "Zadejte heslo vlastníka"
-
-[addPassword.passwords.user]
-label = "Uživatelské heslo"
-placeholder = "Zadejte uživatelské heslo"
 
 [addPassword.results]
 title = "Zašifrované PDF"
@@ -1627,6 +1617,7 @@ title = "Vyžadován restart"
 [admin.settings.security]
 authentication = "Autentizace"
 description = "Nakonfigurujte autentizaci, chování přihlášení a bezpečnostní zásady."
+pdfPermissions = "Oprávnění PDF"
 title = "Zabezpečení"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Zakázat ochranu CSRF"
 [admin.settings.security.enableLogin]
 description = "Vyžadovat přihlášení uživatelů před přístupem k aplikaci"
 label = "Povolit přihlášení"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Vyžadovat heslo pro oprávnění u omezených akcí. Vypnutí této možnosti stále vyžaduje hesla potřebná k otevření PDF."
+label = "Respektovat oprávnění PDF"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Pokročilá nastavení"
@@ -1938,9 +1933,6 @@ wrapUp = "To je vše z prohlídky pro správce! Viděli jste enterprise funkce, 
 [adminUserSettings]
 admin = "Správce"
 title = "Nastavení správy uživatelů"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Arabština"
@@ -3173,12 +3165,14 @@ unknown = "Neznámé"
 
 [changePermissions]
 desc = "Změnit omezení a oprávnění dokumentu."
+loading = "Načítání aktuálních oprávnění..."
 submit = "Změnit oprávnění"
 tags = "oprávnění,omezení,práva,řízení přístupu,povolit,zakázat,tisk,kopírování,úpravy,upravit oprávnění,nastavení zabezpečení,uživatelská práva"
 title = "Změnit oprávnění"
 
 [changePermissions.error]
 failed = "Při změně oprávnění PDF došlo k chybě."
+readFailed = "Nepodařilo se načíst aktuální oprávnění tohoto PDF. Před použitím změn nastavte omezení ručně."
 
 [changePermissions.permissions.preventAssembly]
 label = "Zabránit sestavení dokumentu"
@@ -3219,21 +3213,16 @@ text = "Abyste tato oprávnění učinili nezměnitelnými, použijte nástroj P
 [chat.actions]
 copy = "Kopírovat zprávu"
 
-[chat.emptyState]
-text = "Zeptejte se na své dokumenty nebo získejte pomoc s nástroji PDF."
-
-[chat.fab]
-close = "Zavřít chat"
-open = "Otevřít asistenta Stirling AI"
+[chat.dock]
+collapse = "Sbalit chat"
+placeholder = "Zeptejte se Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Možnosti agenta Stirling"
-assistant = "AI asistent"
 clearChat = "Vymazat chat"
 
 [chat.input]
 disclaimer = "AI může dělat chyby. Před sdílením si výstup ověřte."
-placeholder = "Co chcete udělat?"
 send = "Odeslat zprávu"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Převést tyto dokumenty do PDF"
 convertOne = "Převést tento dokument do PDF"
 heading = "Začít"
 mergeMany = "Sloučit těchto {{count}} dokumentů do jednoho"
-moreFiles = "+{{count}} další"
 openFromComputer = "Otevřít z počítače"
-removeFile = "Odebrat {{name}}"
 splitOne = "Rozdělit tento dokument"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Požadované informace se nepodařilo najít."
 processing = "Zpracovávám ({{outcome}})..."
 unsupported_capability = "Nepodporovaná schopnost: {{capability}}"
 usage_limit_reached = "Dosáhli jste svého limitu používání. Zkontrolujte možnosti svého plánu, abyste mohli pokračovat."
-
-[chat.toolsUsed]
-summary_one = "Spuštěn 1 nástroj"
-summary_other = "Spuštěno {{count}} nástrojů"
-unknownTool = "Neznámý nástroj"
 
 [classification.families]
 correspondence = "Korespondence"
@@ -3649,6 +3631,7 @@ tooltip = "Vybrat barvu z obrazovky"
 hue = "Odstín"
 saturation = "Sytost a jas"
 title = "Zvolte barvu"
+transparent = "Průhledné"
 
 [common]
 actions = "Akce"
@@ -3664,6 +3647,7 @@ continue = "Pokračovat"
 copied = "Zkopírováno!"
 copy = "Kopírovat"
 copyCode = "Kopírovat kód"
+copyFailed = "Kopírování selhalo"
 dismiss = "Zavřít"
 done = "Hotovo"
 enterValue = "Zadejte hodnotu"
@@ -3847,6 +3831,12 @@ unavailable = "ImageMagick není na tomto serveru nainstalován nebo povolen"
 filesize = "Velikost souboru"
 quality = "Kvalita"
 title = "Metoda komprese"
+
+[compress.noReduction]
+multiple = "Komprese proběhla úspěšně, ale {{count}} z {{total}} souborů již nelze dále komprimovat."
+multipleAtLevel = "Komprese na této úrovni nepřinesla žádné zlepšení u {{count}} z {{total}} souborů. Zkuste vyšší úroveň komprese."
+single = "Komprese proběhla úspěšně, ale tento soubor již nelze dále komprimovat."
+singleAtLevel = "Komprese na této úrovni nepřinesla u tohoto souboru žádné zlepšení. Zkuste vyšší úroveň komprese."
 
 [compress.settings]
 desiredSize = "Požadovaná velikost souboru"
@@ -4295,6 +4285,13 @@ precision = "Pro přesné umístění použijte zadání souřadnic"
 resize = "Změnu velikosti proveďte tažením za rohy a hrany"
 title = "Jak ořezávat PDF"
 
+[damagedPdf]
+description = "Tento PDF soubor je poškozený a nelze jej otevřít."
+label = "Poškozený"
+repair = "Opravit"
+repaired = "Opraveno {{name}}"
+repairFailed = "Nepodařilo se opravit {{name}}"
+
 [database]
 backupCreated = "Záloha databáze byla úspěšná"
 fileName = "Název souboru"
@@ -4363,6 +4360,10 @@ title = "Aktualizováno z disku"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" se na disku změnil. Je dost velký na to, aby jeho opětovné načtení chvíli trvalo, takže zdejší verze zůstala beze změny."
 title = "Soubor se na disku změnil"
+
+[desktopPrivacy]
+blocked = "Váš administrátor vyžaduje, aby dokumenty zůstaly na tomto zařízení. Tato funkce není dostupná."
+localFiles = "Místní soubory"
 
 [desktopUpdate]
 downloading = "Stahování aktualizace..."
@@ -4491,22 +4492,80 @@ description = "Vyberte nástroj Upravit obsah pro načtení pracovního prostoru
 title = "Otevřete nástroj a začněte upravovat"
 
 [encryptedPdfUnlock]
-description = "Toto PDF je chráněno heslem. Zadejte heslo, abyste mohli pokračovat v práci."
-emptyResponse = "Odstranění hesla nevytvořilo soubor."
+actionIgnored = "Omezení {{action}} ignorováno"
+actionUnlocked = "{{action}} odemčeno pro tuto relaci"
+advanced = "Pokročilé"
+allowed = "Povoleno"
+annotations = "Anotace"
+authoriseAction = "Toto PDF vyžaduje oprávnění k použití {{action}}."
+changeOwnerPassword = "Změnit heslo pro oprávnění"
+checkingPermissions = "Kontrola oprávnění PDF..."
+chooseOwnerPassword = "Zvolte jiné heslo"
+continue = "Pokračovat"
+copyFailed = "Kopii se nepodařilo vytvořit. Vaše PDF zůstalo beze změny."
+copying = "Kopírování obsahu"
+editing = "Úpravy"
+enterPassword = "Zadejte heslo"
+ignoredByServer = "Oprávnění jsou ignorována nastavením tohoto serveru. Ochrana PDF zůstává beze změny."
 incorrectPassword = "Nesprávné heslo"
+inspectionFailed = "Nepodařilo se zkontrolovat oprávnění tohoto PDF. Zkuste to znovu."
+lowQualityPrintUnsupported = "Toto PDF povoluje pouze tisk v nízké kvalitě, což tento prohlížeč nepodporuje."
+lowResolutionOnly = "Pouze nízké rozlišení"
+manageProtection = "Spravovat ochranu"
 missingFile = "Vybraný soubor již není k dispozici."
+mixedProtection = "Tato PDF mají samostatná nastavení ochrany. Zpracujte je jednotlivě."
+newOwnerPassword = "Nové heslo pro oprávnění"
+notRequired = "Nevyžadováno"
+openingPassword = "Heslo pro otevření"
+openPdf = "Otevřít PDF"
+ownerPassword = "Heslo pro oprávnění"
+ownerRequired = "Pro pokračování zadejte heslo pro oprávnění."
+ownerTitle = "Zadejte heslo pro oprávnění"
+passwordRetained = "Ponecháno beze změny"
+passwordsMustDiffer = "Tato dvě hesla se musí lišit."
+permissionsUnlocked = "Oprávnění odemčena pro tuto relaci"
+prepareFailed = "Toto chráněné PDF se nepodařilo připravit ke zpracování."
+printing = "Tisk"
+printRestricted = "Tisk je omezen. Ověřte oprávnění ve Spravovat ochranu."
+protectedPdf = "Chráněné PDF"
+protectionRetained = "Ochrana zachována"
+protectionSaved = "Ochrana uložena"
+removePasswordHelp = "Otevřete Odstranit heslo a vyberte, která hesla chcete odstranit."
+removeProtection = "Vytvořit nechráněnou kopii"
+replaceProtection = "Tato nastavení nahradí aktuální ochranu PDF."
 required = "Zadejte heslo pro pokračování."
-skip = "Zatím přeskočit"
-successBody = "Heslo bylo úspěšně odstraněno."
-successBodyWithName = "Heslo odstraněno ze souboru {{fileName}}"
-successTitle = "Heslo odstraněno"
+requiredStatus = "Vyžadováno"
+requiredToApply = "Vyžadováno pro použití změn"
+restoreFailed = "Nepodařilo se zachovat ochranu PDF. Nebyl uložen žádný nechráněný výsledek."
+restrictActions = "Omezit akce"
+restricted = "Omezeno"
+restrictedActions = "omezené akce"
+restrictedOperation = "Tato akce vyžaduje heslo pro oprávnění."
+retainOwnerVerification = "Ověřte heslo pro oprávnění, aby zůstalo beze změny při odstraňování hesla pro otevření. Tím se neodstraní."
+saveProtection = "Uložit ochranu"
+securityChangeFailed = "Ochranu se nepodařilo změnit. Zkontrolujte heslo pro oprávnění a nová nastavení zabezpečení."
+sessionDetails = "Otevřeno pro tuto relaci. PDF zůstává chráněné."
+sessionDetailsLabel = "O odemknutí relace"
+sessionFailed = "Toto PDF se nepodařilo odemknout. Zkuste to prosím znovu."
+sessionSuccessBody = "Ochrana zachována."
+sessionSuccessBodyWithName = "Ochrana zachována pro {{fileName}}."
+sessionSuccessTitle = "PDF otevřeno"
+sessionTitle = "Otevřít PDF"
+signedReadOnly = "Toto podepsané PDF lze zobrazit, ale zde ho nelze upravovat."
 title = "Odstraňte heslo pro pokračování"
+toolUnavailable = "Tento nástroj nepodporuje šifrovaná PDF. Nejprve odstraňte heslo."
+toolUnavailableDetails = "Proč {{name}} není dostupné"
 unlock = "Odemknout a pokračovat"
 unlockAll = "Použít pro všechny ({{count}})"
 unlockAllPartialFail = "Nesprávné heslo pro: {{names}}"
 unlockAllSuccess_one = "Odemčen {{count}} soubor."
 unlockAllSuccess_other = "Odemčeno {{count}} souborů."
+unlockedForSession = "Odemčeno pro tuto relaci pomocí vašeho hesla pro oprávnění."
 unlockPrompt = "Odemkněte PDF pro pokračování"
+unprotectedCopyConsequence = "Kopie nebude mít žádná hesla ani omezení. Originál zůstane chráněný."
+unsupportedTool = "Tento nástroj zatím nedokáže zachovat ochranu tohoto PDF."
+verifiedForSession = "Ověřeno pro tuto relaci"
+verifyPermissions = "Ověřit oprávnění pro tuto relaci"
 viewerLocked = "Toto PDF je chráněno heslem"
 viewerUnlock = "Odemknout"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "Zobrazit v prohlížeči"
 closeFile = "Zavřít soubor"
 
 [fileEditor]
-addFiles = "Přidat soubory"
 closedFile = "Soubor {{name}} zavřen"
 couldNotSave = "Nepodařilo se uložit {{name}}"
-filesAdded_one = "Přidán {{count}} soubor"
-filesAdded_other = "Přidáno {{count}} souborů"
 filesReordered_one = "Soubor přeřazen"
 filesReordered_other = "Přeřazeno {{count}} souborů"
 loadedFromStorage_one = "Načten {{count}} soubor z úložiště"
 loadedFromStorage_other = "Načteno {{count}} souborů z úložiště"
 loadFromStorageFailed = "Nepodařilo se načíst některé soubory z úložiště"
 pinnedFile = "Soubor {{name}} připnut"
-processFilesFailed = "Nepodařilo se zpracovat soubory"
 savedAndClosed = "Uloženo a zavřeno {{name}}"
 saveFailed = "Uložení selhalo"
 unpinnedFile = "Soubor {{name}} odepnut"
 unzipping = "Rozbaluje se {{name}}"
+
+[fileEditor.addCard]
+dropHint = "nebo přetáhněte soubory kamkoli"
+fromComputer = "Nahrát z počítače"
+moreOptions = "Další možnosti nahrávání"
 
 [fileEditor.unzip]
 error = "Chyba při rozbalování {{name}}"
@@ -4729,7 +4789,6 @@ dataLostBody = "Tento prohlížeč ztratil obsah tohoto souboru. Nahrajte jej zn
 dataLostTitle = "Data souboru nejsou dostupná"
 downloadFailed = "Stažení selhalo"
 dropHint = "Otevřete soubory a začněte"
-dropToAdd = "Přetažením přidáte soubory"
 duplicateFailed = "Soubor se nepodařilo duplikovat"
 expand = "Rozbalit postranní panel"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "Znovu detekovat pole"
 rescanFormFields = "Znovu detekovat pole formuláře"
 save = "Uložit"
 saveShortcut = "Ctrl+S pro uložení"
+saving = "Ukládání..."
 selectOptionPlaceholder = "— vyberte —"
 skippedEdits_one = "1 změnu se nepodařilo použít:"
 skippedEdits_other = "{{count}} změn se nepodařilo použít:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "{{count}} dalších není uvedeno."
 unsavedChanges = "Neuložené změny"
 
 [formFill.create]
-commit = "Přidat {{count}} polí do PDF"
 empty = "Zatím nejsou nakreslena žádná pole."
-failed = "Pole se nepodařilo přidat"
 goToField = "Přejít na toto pole"
 hint = "Vyberte typ pole a poté ho nakreslete na stránku."
 placing = "Nakreslete pole {{type}} na stránku. Stisknutím Esc skončíte."
@@ -5334,7 +5392,6 @@ modify = "Upravit"
 commit = "Uložit {{count}} změn"
 delete = "Smazat"
 empty = "Toto PDF zatím nemá žádná formulářová pole."
-failed = "Změny se nepodařilo uložit"
 groupSizeHint = "Použít velikost možnosti"
 hint = "Vyberte pole pro úpravu jeho vlastností, přetáhněte ho na stránce nebo ho smažte."
 restore = "Obnovit"
@@ -5732,11 +5789,6 @@ title = "Překrýt PDF"
 desc = "Sloučit více stránek PDF dokumentu do jedné stránky"
 tags = "rozvržení,uspořádat,kombinovat,N-up,2-up,4-up,více na stránku,stránek na list,rozvržení stránek,dlaždice,mřížkové rozvržení,vícestránkové rozvržení,kombinovat na stránce,handout"
 title = "Rozvržení více stránek"
-
-[home.pdfCommentAgent]
-desc = "Požádejte AI, aby PDF označkovala lepicími poznámkami podle vašeho zadání"
-tags = "AI,agent,komentář,anotace,lepicí poznámka,revize,zpětná vazba,poznámky"
-title = "Přidat komentáře AI"
 
 [home.pdfOrganiser]
 tags = "organizovat,přeuspořádat,změnit pořadí,uspořádat stránky,seřadit,přesunout stránky,odstranit stránky,odebrat stránky,správa stránek,organizér stránek,přečíslovat pořadí"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "Stanete se členem týmu a ztratíte přístup vlastníka."
 deselectAll = "Žádné"
 selectAll = "Zaškrtnout vše"
 
-[pageEditor]
-dragPreviewAlt = "Přetahování"
-filePosition = "Pozice {{position}}"
-pageLabel = "Stránka {{page}}"
-title = "Editor stránek"
-
-[pageEditor.actions]
-deletePage = "Odstranit stránku"
-insertFileAfter = "Vložit soubor za"
-moveLeft = "Přesunout doleva"
-moveRight = "Přesunout doprava"
-rotateLeft = "Otočit doleva"
-rotateRight = "Otočit doprava"
-splitAfter = "Rozdělit za"
-
-[pageEditor.commands]
-addSplitAt = "Přidat rozdělení na pozici {{position}}"
-addSplits_one = "Přidat {{count}} rozdělení"
-addSplits_other = "Přidat {{count}} rozdělení"
-deletePages_one = "Odstranit {{count}} stránku"
-deletePages_other = "Odstranit {{count}} stránek"
-insertFiles_one = "Vložit {{count}} soubor za stránku {{page}}"
-insertFiles_other = "Vložit {{count}} souborů za stránku {{page}}"
-insertPageBreaks_one = "Vložit {{count}} zalomení stránky"
-insertPageBreaks_other = "Vložit {{count}} zalomení stránek"
-insertPageBreaksAll = "Vložit zalomení stránky za všechny stránky"
-removeAllSplits = "Odebrat všechna rozdělení"
-removeSplitAt = "Odebrat rozdělení na pozici {{position}}"
-removeSplits_one = "Odebrat {{count}} rozdělení"
-removeSplits_other = "Odebrat {{count}} rozdělení"
-reorderPages = "Změnit pořadí stránek"
-rotatePageLeft = "Otočit stránku doleva"
-rotatePageRight = "Otočit stránku doprava"
-rotatePagesLeft_one = "Otočit {{count}} stránku doleva"
-rotatePagesLeft_other = "Otočit {{count}} stránek doleva"
-rotatePagesRight_one = "Otočit {{count}} stránku doprava"
-rotatePagesRight_other = "Otočit {{count}} stránek doprava"
-splitAllPages = "Rozdělit všechny stránky"
-toggleSplits_one = "Přepnout {{count}} pozici rozdělení"
-toggleSplits_other = "Přepnout {{count}} pozic rozdělení"
-
-[pageEditor.emptyState]
-body = "Přidejte soubory pro úpravu stránek"
-title = "Nejsou načteny žádné PDF soubory"
-
-[pageEditor.fileDropdown]
-addFile = "Přidat soubor"
-selectedCount = "Vybráno {{selected}}/{{total}} souborů"
-untitled = "Bez názvu"
-
-[pageEditor.toolbar]
-delete = "Smazat vybrané"
-redo = "Znovu"
-rotateLeft = "Otočit vybrané vlevo"
-rotateRight = "Otočit vybrané vpravo"
-undo = "Zpět"
-
 [pageExtracter]
 title = "Extrahovat stránky"
 
@@ -6815,6 +6810,79 @@ title = "Rozsahy stránek"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → vybere všechny stránky"
 title = "Speciální klíčová slova"
+
+[pageTracks]
+blankPage = "Prázdná stránka"
+deleteSelected = "Odstranit vybrané stránky"
+downloadAsOneFile = "Stáhnout jako jeden soubor"
+downloadEachPage = "Stáhnout každou stránku jednotlivě"
+downloadSelectedPages = "Stáhnout vybrané stránky"
+dragging_one = "{{count}} stránka"
+dragging_other = "{{count}} stránek"
+duplicateSelected = "Duplikovat vybrané stránky"
+edited = "upraveno"
+emptyTrack = "Nezbyly žádné stránky. Přetáhněte sem stránky nebo uložte a zavřete tento soubor."
+insertBlank = "Vložit prázdnou stránku"
+insertBlankAfterSelected = "Vložit prázdné stránky za vybrané stránky"
+moveLeft = "Přesunout doleva"
+moveRight = "Přesunout doprava"
+nextPage = "Další stránka"
+page = "Stránka {{number}}"
+pageCount_one = "{{count}} stránka"
+pageCount_other = "{{count}} stránek"
+pagePosition = "Stránka {{number}} z {{total}}"
+prevPage = "Předchozí stránka"
+readingPages = "Načítání stránek..."
+redo = "Znovu"
+rotateLeft = "Otočit doleva"
+rotateRight = "Otočit doprava"
+rotateSelectedLeft = "Otočit vybrané stránky doleva"
+rotateSelectedRight = "Otočit vybrané stránky doprava"
+saveAsOneFile = "Uložit jako jeden soubor"
+saveChanges = "Uložit změny ve všech souborech"
+saveEachPage = "Uložit každou stránku jednotlivě"
+saveSelectedPages = "Uložit vybrané stránky"
+saving = "Ukládání..."
+savingProgress = "Ukládání {{done}} z {{total}}"
+selectPage = "Vybrat stránku {{number}}"
+splitAfterSelected = "Rozdělit za vybranými stránkami"
+splitHere = "Rozdělit zde"
+undo = "Zpět"
+viewError = "Tuto stránku se nepodařilo vykreslit"
+viewPage = "Zobrazit stránku"
+zoomIn = "Přiblížit"
+zoomOut = "Oddálit"
+
+[pageTracks.close]
+message = "Opravdu chcete zavřít všechny soubory?"
+unsaved = "Tyto soubory mají neuložené změny."
+
+[pageTracks.delete]
+page = "Odstranit stránku"
+
+[pageTracks.duplicate]
+page = "Duplikovat stránku"
+
+[pageTracks.empty]
+body = "Přidejte PDF a rozbalte je do upravitelných stop stránek"
+title = "Nejsou načteny žádné soubory PDF"
+
+[pageTracks.exportFailed]
+body = "Upravené soubory se nepodařilo připravit. Zkuste to znovu."
+title = "Stažení se nezdařilo"
+
+[pageTracks.saveFailed]
+body = "Vaše úpravy se neztratily. Zkuste uložit znovu."
+title = "Změny se nepodařilo uložit"
+
+[pageTracks.track]
+close = "Zavřít soubor"
+collapse = "Sbalit"
+expand = "Rozbalit"
+rename = "Přejmenovat soubor"
+
+[pageTracks.wrap]
+label = "Zalamovat stránky"
 
 [payg.activity]
 docs = "dokumenty"
@@ -7144,24 +7212,6 @@ totalSeats_other = "Celkem ({{count}} míst)"
 [payment.upgradeTeam]
 title = "Upgradovat na Team"
 
-[pdfCommentAgent]
-submit = "Vygenerovat komentáře"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Popište, k čemu se má AI vyjádřit"
-failed = "Nepodařilo se vygenerovat komentáře"
-tooLong = "Zadání je příliš dlouhé (maximálně {{max}} znaků)"
-
-[pdfCommentAgent.prompt]
-label = "K čemu se má AI vyjadřovat?"
-placeholder = "např. Označte všechna nejednoznačná data a navrhněte upřesnění"
-
-[pdfCommentAgent.results]
-title = "Okomentované PDF"
-
-[pdfCommentAgent.settings]
-title = "Pokyny ke komentářům"
-
 [pdfOrganiser]
 placeholder = "(např. 1,3,2 nebo 4-8,2,10-12 nebo 2n-1)"
 tags = "duplex,sudý,lichý,seřadit,přesunout"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "Klikněte na libovolný text, obrázek nebo tvar na strá
 ocrDocumentChanged = "Dokument se během běhu OCR změnil. Spusťte OCR znovu, aby zahrnovalo nejnovější změny."
 ocrInvalidResult = "OCR nevrátilo PDF. Zkuste to prosím znovu."
 ocrNoLanguages = "Na serveru nejsou nainstalovány žádné jazyky OCR."
+ocrProtected = "OCR zatím nedokáže zachovat ochranu tohoto PDF. Chráněný originál zůstává dostupný k zobrazení."
 ocrRunning = "Rozpoznávání textu..."
 ocrUnavailable = "OCR není na tomto serveru dostupné."
 oneImage = "Obrázek"
@@ -7389,13 +7440,8 @@ pageNumber = "Stránka {{page}}"
 renderFailed = "Nepodařilo se vykreslit stránku"
 
 [pdfTextEditor.password]
-cancel = "Zrušit"
 incorrect = "Nesprávné heslo – zkuste to znovu."
 label = "Heslo"
-open = "Otevřít"
-protected = "Tento PDF je chráněn heslem."
-protectedNamed = "„{{fileName}}“ je chráněn heslem."
-title = "Vyžadováno heslo"
 
 [pdfTextEditor.rulers]
 guide = "Vodítko zarovnání na {{value}} {{unit}} – přetažením na pravítko ho odstraníte"
@@ -7994,6 +8040,7 @@ before = "Nastavte"
 title = "Připojení Stirling není nakonfigurováno"
 
 [portal.accountLink.notice]
+loadFailed = "Dialog pro propojení účtu se nepodařilo načíst."
 openFailed = "Nepodařilo se otevřít prohlížeč. Chcete-li propojit účet, otevřete Využití a fakturace na připojeném serveru."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "Měsíční limit výdajů {{amount}}/měs. Zpracování se na limitu p
 limitNoCap = "Bez limitu výdajů. Zpracování se nepozastaví. Faktury se vystavují měsíčně."
 
 [portal.billing.chip]
-invoices = "Faktury"
-nav = "Sekce"
-payment = "Platba"
 plan = "Plán"
 procurement = "Nákup"
 usage = "Využití"
@@ -8178,9 +8222,22 @@ pdfs = "Zpracované PDF"
 users = "Uživatelé"
 
 [portal.billing.enterprise]
+active = "Smlouva aktivní do {{date}}"
 cta = "Získat nabídku Enterprise"
+included = "Zahrnuto v Enterprise"
+payment_pending = "Čeká na platbu · přístup do {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDF"
+pdfsOver_one = "{{count}} PDF nad dohodnutý objem"
+pdfsOver_other = "{{count}} PDF nad dohodnutý objem"
+pdfsUsed_one = "Zpracováno {{count}} PDF"
+pdfsUsed_other = "{{count}} zpracovaných PDF"
+period = "Období smlouvy: {{start}} – {{end}}"
 sub = "Nasazení bez připojení k síti, SCIM, rezidence dat, SLA dostupnosti a odpovídající smlouva."
 title = "Provozujete Stirling v regulovaném prostředí?"
+trial = "{{days}}denní zkušební verze · končí {{date}}"
+usersAgreed = "{{used}} / {{agreed}} sjednaných uživatelů"
+usersOver_one = "{{count}} uživatel nad sjednané množství"
+usersOver_other = "{{count}} uživatelů nad sjednané množství"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Nepodařilo se spustit checkout"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "Nativní sestavení pro vaši distribuci."
-guideBtn = "Zobrazit možnosti instalace pro Linux"
+downloadAppImage = "AppImage"
+downloadDeb = "Stáhnout .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "Pro běžné distribuce jsou k dispozici sestavení AppImage, .deb a .rpm."
 tagline = "Nativní desktopová aplikace pro vaši distribuci"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "Redact,Skrýt,začernit,černá,marker,skryté,automatická redakce,ruč
 title = "Redigovat"
 
 [redact.auto]
+caseSensitiveLabel = "Rozlišovat velikost písmen"
 colorLabel = "Barva rámečku"
 convertPDFToImageLabel = "Převést PDF na PDF-Image"
 customPaddingLabel = "Vlastní dodatečné odsazení"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "Vyberte soubory ve správci souborů, abyste začern
 manual = "Manuální"
 mode = "Režim"
 title = "Metoda začernění"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Porovnávat pouze text se stejnou velikostí písmen. Když je tato možnost povolena, „Secret“ se neshoduje s „SECRET“ a [A-Z] v regex odpovídá pouze velkým písmenům."
+title = "Rozlišovat velikost písmen"
 
 [redact.tooltip.advanced.color]
 text = "Přizpůsobte vzhled rámečků začernění. Standardem je černá, ale můžete zvolit libovolnou barvu. Odsazení přidá prostor kolem nalezeného textu."
@@ -11396,7 +11460,12 @@ text = "Určete, které stránky chcete z PDF odstranit. Můžete vybrat jednotl
 title = "Výběr stránek"
 
 [removePassword]
-desc = "Odstranit ochranu heslem z vašeho PDF dokumentu."
+appliesTo = "Nastaveno u {{count}} z {{total}} PDF"
+keepBlank = "Ponechte pole prázdné, chcete-li toto heslo zachovat."
+notSet = "Nenastaveno"
+openWithReaderFirst = "Před odebráním pouze hesla oprávnění znovu otevřete toto PDF pomocí jeho hesla pro otevření."
+selectiveHelp = "Zadejte aktuální heslo pro každou ochranu, kterou chcete odebrat. Prázdné pole toto heslo zachová. Odebrání hesla oprávnění také odstraní omezení akcí."
+selectPasswords = "Hesla k odebrání"
 submit = "Odstranit heslo"
 tags = "zabezpečit,dešifrovat,bezpečnost,odstranit heslo,smazat heslo"
 title = "Odstranit heslo"
@@ -11407,13 +11476,9 @@ failed = "Při odebírání hesla z PDF došlo k chybě."
 [removePassword.password]
 label = "Současné heslo"
 placeholder = "Zadejte aktuální heslo"
-stepTitle = "Odstranit heslo"
 
 [removePassword.results]
 title = "Dešifrovaná PDF"
-
-[removePassword.tooltip]
-description = "K odstranění ochrany heslem je vyžadováno heslo, kterým bylo PDF zašifrováno. Dokument se dešifruje a bude přístupný bez hesla."
 
 [reorganizePages]
 submit = "Přeuspořádat stránky"
@@ -11543,6 +11608,64 @@ m = "Metry (m)"
 mi = "Míle (mi)"
 mm = "Milimetry (mm)"
 yd = "Yardy (yd)"
+
+[runLocation]
+back = "Zpět"
+continue = "Pokračovat"
+subtitle = "Vyberte, kde se má spustit."
+title = "Kde chcete Stirling spustit?"
+
+[runLocation.choice.browser]
+description = "Webová aplikace."
+title = "Ve vašem prohlížeči"
+
+[runLocation.choice.computer]
+description = "Desktopová aplikace."
+title = "Na vašem počítači"
+
+[runLocation.choice.server]
+description = "Self-hosted, pro tým."
+title = "Na vašem serveru"
+
+[runLocation.desktop]
+computerLabel = "Váš počítač"
+download = "Stáhnout pro {{platform}}"
+downloadAgain = "Stáhnout znovu"
+guide = "Otevřít instalační příručku pro {{platform}}"
+startedSubtitle = "Zkontrolujte složku Stažené soubory a poté otevřete instalátor."
+startedTitle = "Stahování začalo"
+subtitle = "Stáhněte ji a otevřete."
+title = "Získat desktopovou aplikaci"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (instalační příručka)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "Zkopírováno"
+copy = "Kopírovat příkaz"
+copyCompose = "Kopírovat soubor Compose"
+guide = "Instalační příručka pro {{method}}"
+methodLabel = "Spustit pomocí"
+note = "Poté otevřete <url/> a dokončete nastavení."
+subtitle = "Spusťte to na svém serveru a poté to otevřete v prohlížeči."
+title = "Nastavit váš server"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "Odstraňte potenciálně škodlivé prvky ze souborů PDF."
@@ -12054,6 +12177,7 @@ title = "Pracovní prostor"
 loginIncomplete = "Nepodařilo se dokončit přihlášení"
 noSaasServer = "Není nakonfigurován žádný SaaS server"
 noServer = "Není nakonfigurován žádný server"
+policyUnavailable = "Nelze načíst nastavení přihlášení vaší organizace."
 saasLoginFailed = "Přihlášení k SaaS selhalo"
 saasLoginIncomplete = "Nepodařilo se dokončit přihlášení k SaaS"
 selfHostedLoginFailed = "Přihlášení k self-hosted serveru selhalo"
@@ -13563,7 +13687,9 @@ validUntrusted = "Platný, podepisující není ověřen"
 
 [viewer]
 cannotPreviewFile = "Nelze zobrazit náhled souboru"
+copyRestricted = "Kopírování je zakázáno oprávněními tohoto PDF."
 copyText = "Kopírovat"
+coverPageView = "Zobrazit titulní stránku samostatně"
 disableColorFilter = "Vypnout barevný filtr"
 documentUpdated = "Dokument aktualizován"
 dualPageView = "Zobrazení dvou stránek"
@@ -13580,6 +13706,7 @@ noPdfProvided = "Nebylo poskytnuto žádné PDF"
 onlyPdfSupported = "Tento formát souboru není pro náhled podporován."
 pageNavigation = "Navigace stránek"
 previousPage = "Předchozí stránka"
+readAloudFromHere = "Přečíst nahlas odtud"
 saveChangesErrorBody = "Dokument se nepodařilo uložit. Zkuste to znovu."
 saveChangesErrorTitle = "Změny se nepodařilo uložit"
 singlePageView = "Zobrazení jedné stránky"
@@ -13640,6 +13767,7 @@ closeSidebar = "Zavřít postranní panel komentářů"
 deleteAnnotationAndComment = "Smazat anotaci i komentář"
 deleteDescription = "Tato anotace má připojený komentář. Můžete odebrat pouze komentář z postranního panelu a ponechat anotaci, nebo vše smazat."
 deleteTitle = "Odebrat anotaci z komentářů?"
+exportCsv = "Exportovat jako CSV"
 goToLink = "Přejít na odkaz"
 hint = "Vkládejte komentáře nástroji Komentář, Vložit text nebo Nahradit text. Zobrazí se zde podle stránek."
 locateAnnotation = "Najít v dokumentu"
@@ -13658,7 +13786,16 @@ typeInsertText = "Vložit text"
 typeReplaceText = "Nahradit text"
 viewComment = "Zobrazit komentář"
 
+[viewer.comments.csv]
+author = "Autor"
+comment = "Komentář"
+inReplyTo = "V odpovědi na"
+modifiedUtc = "Naposledy upraveno (UTC)"
+page = "Stránka"
+thread = "Vlákno"
+
 [viewer.error]
+loadError = "PDF se nepodařilo načíst"
 noFileProvided = "Chyba: Prohlížeči nebyl předán žádný soubor"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "Text vodoznaku"
 image = "Obrázek"
 text = "Text"
 
+[workbench]
+dropFailedSingle = "Váš soubor se nepodařilo přidat"
+dropFailedSome = "{{failed}} vašich souborů se nepodařilo přidat"
+dropOverlay = "Pusťte soubory sem a přidejte je na pracovní plochu"
+
 [workbench.sessionRestore]
 none = "Vaše předchozí soubory už nejsou na tomto zařízení uloženy."
 partial = "Obnoveno {{restored}} z {{total}} souborů. Zbytek už není na tomto zařízení uložen."
@@ -13915,16 +14057,14 @@ annotations = "Anotace"
 applyRedactionsFirst = "Nejprve použít začernění"
 closeAll = "Zavřít všechny soubory"
 closePdf = "Zavřít PDF"
-deleteSelected = "Smazat vybrané stránky"
 deselectAll = "Zrušit výběr všech"
 downloadAll = "Stáhnout vše"
+exitAnnotations = "Ukončit režim anotací"
 exitRedaction = "Opustit režim začernění"
-exportAll = "Exportovat PDF"
-exportSelected = "Exportovat vybrané stránky"
 formFill = "Editor formulářů"
 hideToolbar = "Skrýt panel nástrojů"
 moreActions = "Další akce"
-multiTool = "Multinástroj"
+pageEditor = "Editor stránek"
 panMode = "Režim posunu"
 print = "Tisk PDF"
 readAloud = "Číst nahlas"
@@ -13938,7 +14078,6 @@ rulerSettings = "Nastavení měřítka"
 save = "Uložit"
 saveAll = "Uložit vše"
 saveAs = "Uložit jako"
-saveChanges = "Uložit změny"
 search = "Hledat v PDF"
 selectAll = "Vybrat vše"
 selectByNumber = "Vybrat podle čísel stránek"
