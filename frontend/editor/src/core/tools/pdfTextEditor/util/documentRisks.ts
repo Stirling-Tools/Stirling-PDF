@@ -66,7 +66,7 @@ export function describeSaveRisks(r: SaveRisks): string[] {
   if (r.xfaForm) out.push("Interactive XFA form data may be lost.");
   if (r.encrypted) {
     out.push(
-      "This PDF is encrypted; the saved copy will NOT be encrypted (password and access restrictions are removed).",
+      "Saving this PDF may change its encryption or access restrictions.",
     );
   }
   if (r.droppedChars.length > 0) {

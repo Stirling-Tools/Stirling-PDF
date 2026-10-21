@@ -12,7 +12,7 @@ export const useAddPasswordPermissionsTips = (): TooltipContent => {
       {
         description: t(
           "addPassword.tooltip.permissions.text",
-          "These permissions control what users can do with the PDF. Most effective when combined with an owner password.",
+          "Choose which actions to restrict. A separate permissions password is required to change these restrictions.",
         ),
       },
     ],

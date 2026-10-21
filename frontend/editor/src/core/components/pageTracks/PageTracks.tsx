@@ -426,13 +426,14 @@ export default function PageTracks() {
     [dispatch, selection.selectedIds],
   );
 
+  const duplicatePages = useCallback(
+    (pageIds: string[]) => dispatch({ type: "duplicate", pageIds }),
+    [dispatch],
+  );
+
   const duplicateSelection = useCallback(
-    () =>
-      dispatch({
-        type: "duplicate",
-        pageIds: Array.from(selection.selectedIds),
-      }),
-    [dispatch, selection.selectedIds],
+    () => duplicatePages(Array.from(selection.selectedIds)),
+    [duplicatePages, selection.selectedIds],
   );
 
   const splitAfterSelection = useCallback(
@@ -1064,6 +1065,7 @@ export default function PageTracks() {
         onInsertBlank={insertBlank}
         onRotate={rotatePages}
         onDelete={deletePages}
+        onDuplicate={duplicatePages}
         onShiftPage={shiftPage}
         onClose={setCloseRequest}
       />

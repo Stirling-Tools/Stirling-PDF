@@ -45,6 +45,14 @@ export function usePageTracksShortcuts(params: PageTracksShortcutsParams) {
         dispatch({ type: "redo" });
         return;
       }
+      if (command && key === "d") {
+        // Without a selection there is nothing to duplicate, so the browser
+        // keeps its own Ctrl+D.
+        if (selectedIds.size === 0) return;
+        event.preventDefault();
+        dispatch({ type: "duplicate", pageIds: [...selectedIds] });
+        return;
+      }
       if (!command && (event.key === "Delete" || event.key === "Backspace")) {
         if (selectedIds.size === 0) return;
         event.preventDefault();

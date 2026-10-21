@@ -178,12 +178,12 @@ export function registerAnnotationTools(
       annotation.type === PdfAnnotationSubtype.SQUARE ? 10 : 0,
     defaults: {
       type: PdfAnnotationSubtype.SQUARE,
-      color: "#0000ff", // fill color (blue)
-      strokeColor: "#cf5b5b", // border color (reddish pink)
-      opacity: 0.5,
-      borderWidth: 1,
-      strokeWidth: 1,
-      lineWidth: 1,
+      color: "transparent", // fill color
+      strokeColor: "#000000", // border color
+      opacity: 1,
+      borderWidth: 8,
+      strokeWidth: 8,
+      lineWidth: 8,
     },
     clickBehavior: {
       enabled: true,
@@ -203,12 +203,12 @@ export function registerAnnotationTools(
       annotation.type === PdfAnnotationSubtype.CIRCLE ? 10 : 0,
     defaults: {
       type: PdfAnnotationSubtype.CIRCLE,
-      color: "#0000ff", // fill color (blue)
-      strokeColor: "#cf5b5b", // border color (reddish pink)
-      opacity: 0.5,
-      borderWidth: 1,
-      strokeWidth: 1,
-      lineWidth: 1,
+      color: "transparent", // fill color
+      strokeColor: "#000000", // border color
+      opacity: 1,
+      borderWidth: 8,
+      strokeWidth: 8,
+      lineWidth: 8,
     },
     clickBehavior: {
       enabled: true,
@@ -311,10 +311,10 @@ export function registerAnnotationTools(
       annotation.type === PdfAnnotationSubtype.POLYGON ? 10 : 0,
     defaults: {
       type: PdfAnnotationSubtype.POLYGON,
-      color: "#0000ff", // fill color (blue)
-      strokeColor: "#cf5b5b", // border color (reddish pink)
-      opacity: 0.5,
-      borderWidth: 1,
+      color: "transparent", // fill color
+      strokeColor: "#000000", // border color
+      opacity: 1,
+      borderWidth: 8,
     },
     clickBehavior: {
       enabled: true,

@@ -47,6 +47,117 @@ function TourContent({ forceOpen = false }: { forceOpen?: boolean }) {
   return null;
 }
 
+// How long a target must hold still before the popover appears, and the
+// longest a missing or ever-moving target can hold the popover back.
+const SETTLE_MS = 150;
+const MAX_SETTLE_MS = 1500;
+
+function measureStep(step: StepType): DOMRect | null {
+  const selectors = step.highlightedSelectors?.length
+    ? step.highlightedSelectors
+    : typeof step.selector === "string"
+      ? [step.selector]
+      : [];
+  let union: DOMRect | null = null;
+  for (const selector of selectors) {
+    const rect = document.querySelector(selector)?.getBoundingClientRect();
+    if (!rect || (rect.width === 0 && rect.height === 0)) continue;
+    union = union
+      ? new DOMRect(
+          Math.min(union.left, rect.left),
+          Math.min(union.top, rect.top),
+          Math.max(union.right, rect.right) - Math.min(union.left, rect.left),
+          Math.max(union.bottom, rect.bottom) - Math.min(union.top, rect.top),
+        )
+      : rect;
+  }
+  return union;
+}
+
+type TargetState = "settling" | "shown" | "missing";
+
+const rectKey = (rect: DOMRect | null) =>
+  rect
+    ? `${Math.round(rect.left)},${Math.round(rect.top)},${Math.round(rect.width)},${Math.round(rect.height)}`
+    : "";
+
+/**
+ * Keeps the highlight on the step's target while it moves. Reactour measures
+ * once per step and again only on window resize, so a modal still sliding in,
+ * a lazily mounted tool section or a target that renders a beat late leaves the
+ * highlight on a stale rect, over a neighbouring control. This re-measures every frame and,
+ * when the target moves, re-renders the tour (which re-queries the selector)
+ * and fires a resize (which re-reads the rect of an element it already has).
+ */
+function TargetTracker({
+  onStateChange,
+}: {
+  onStateChange: (state: TargetState) => void;
+}) {
+  const { currentStep, steps, setMeta } = useTour();
+  const step = steps[currentStep];
+
+  // Layout effect: the popover must be hidden before the new step's first paint.
+  React.useLayoutEffect(() => {
+    if (!step) return;
+    let reported: TargetState = "settling";
+    onStateChange(reported);
+    const startedAt = performance.now();
+    let lastKey: string | null = null;
+    let stableSince = startedAt;
+    let resizePending = false;
+    let scrolled = false;
+    let settled = false;
+    let frame = 0;
+
+    const tick = (now: number) => {
+      if (resizePending) {
+        resizePending = false;
+        window.dispatchEvent(new Event("resize"));
+      }
+      const rect = measureStep(step);
+      if (rect && !scrolled) {
+        scrolled = true;
+        const offscreen = rect.top < 0 || rect.bottom > window.innerHeight;
+        if (offscreen && rect.height < window.innerHeight) {
+          const first = step.highlightedSelectors?.[0] ?? step.selector;
+          const target =
+            typeof first === "string" ? document.querySelector(first) : first;
+          target?.scrollIntoView({ block: "nearest", behavior: "instant" });
+        }
+      }
+      const key = rectKey(rect);
+      if (key !== lastKey) {
+        lastKey = key;
+        stableSince = now;
+        setMeta?.(`${currentStep}:${key}`);
+        resizePending = true;
+      }
+      if (
+        !settled &&
+        ((key && now - stableSince >= SETTLE_MS) ||
+          now - startedAt >= MAX_SETTLE_MS)
+      ) {
+        settled = true;
+      }
+      const state: TargetState = !settled
+        ? "settling"
+        : key
+          ? "shown"
+          : "missing";
+      if (state !== reported) {
+        reported = state;
+        onStateChange(state);
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [step, currentStep, setMeta, onStateChange]);
+
+  return null;
+}
+
 interface AdvanceArgs {
   setCurrentStep: (value: number | ((prev: number) => number)) => void;
   currentStep: number;
@@ -80,7 +191,14 @@ export default function OnboardingTour({
   onClose,
   dimBackground = true,
 }: OnboardingTourProps) {
+  const [targetState, setTargetState] = React.useState<TargetState>("settling");
+
   if (!isOpen) return null;
+
+  // The highlight glides between steps; the popover fades in place once its
+  // target holds still, rather than sliding across the screen from the last step.
+  const highlightTransition =
+    "x 0.25s ease, y 0.25s ease, width 0.25s ease, height 0.25s ease";
 
   return (
     <TourProvider
@@ -112,6 +230,16 @@ export default function OnboardingTour({
           padding: "20px",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
           maxWidth: "400px",
+          opacity: targetState === "settling" ? 0 : 1,
+          transition:
+            targetState === "settling" ? "none" : "opacity 0.18s ease",
+          // A step whose target never rendered (a section this server does not
+          // offer) would otherwise be placed against a zero rect at the corner.
+          ...(targetState === "missing" && {
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+          }),
         }),
         maskWrapper: (base) => ({
           ...base,
@@ -121,6 +249,15 @@ export default function OnboardingTour({
         maskArea: (base) => ({
           ...base,
           rx: 8,
+          transition: highlightTransition,
+          ...(targetState === "missing" && { display: "none" }),
+        }),
+        // Replaces reactour's own highlightedArea style, which is what shows the
+        // rect when interaction is disabled; this tour always disables it.
+        highlightedArea: (base) => ({
+          ...base,
+          display: targetState === "missing" ? "none" : "block",
+          transition: highlightTransition,
         }),
         badge: (base) => ({
           ...base,
@@ -191,6 +328,7 @@ export default function OnboardingTour({
       }}
     >
       <TourContent forceOpen={true} />
+      <TargetTracker onStateChange={setTargetState} />
     </TourProvider>
   );
 }

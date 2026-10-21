@@ -73,6 +73,7 @@ export const createStampTool = (config: StampToolConfig) => {
       applySignaturesRef,
       signatureApiRef,
       getImageData,
+      signaturesApplied,
       setSignaturesApplied,
       placedSignatures,
       setApplyingSignatures,
@@ -153,8 +154,11 @@ export const createStampTool = (config: StampToolConfig) => {
     }, [base.params.parameters, setSignatureConfig]);
 
     useEffect(() => {
-      if (placedSignatures.length > 0) setHasUnsavedChanges(true);
-    }, [placedSignatures, setHasUnsavedChanges]);
+      // Permission checks can reconnect the old stamp list while the saved PDF opens.
+      if (placedSignatures.length > 0 && !signaturesApplied) {
+        setHasUnsavedChanges(true);
+      }
+    }, [placedSignatures, signaturesApplied, setHasUnsavedChanges]);
 
     const handleSaveToSystem = useCallback(async () => {
       if (applyInFlightRef.current) return false;

@@ -59,6 +59,7 @@ public class CustomHtmlSanitizer {
                     .and(Sanitizers.LINKS)
                     .and(Sanitizers.TABLES)
                     .and(SSRF_SAFE_IMAGES_POLICY)
+                    .and(new HtmlPolicyBuilder().allowElements("pre").toFactory())
                     .and(new HtmlPolicyBuilder().disallowElements("noscript").toFactory());
 
     public String sanitize(String html) {

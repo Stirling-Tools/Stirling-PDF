@@ -22,8 +22,11 @@ import {
 import { stripBasePath, withBasePath } from "@app/constants/app";
 import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
+import type { StirlingFile } from "@app/types/fileContext";
 
-export function useViewerWorkbenchBarButtons() {
+export function useViewerWorkbenchBarButtons(
+  displayedFile?: StirlingFile | File | null,
+) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
   const {
@@ -58,7 +61,7 @@ export function useViewerWorkbenchBarButtons() {
     handleReadAloud,
     handleSpeechRateChange,
     handleSpeechLanguageChange,
-  } = useViewerReadAloud(i18n.language || "en-US");
+  } = useViewerReadAloud(i18n.language || "en-US", displayedFile);
 
   useEffect(() => {
     return registerImmediatePanUpdate((newIsPanning) => {

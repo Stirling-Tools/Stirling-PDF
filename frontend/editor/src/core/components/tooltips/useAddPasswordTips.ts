@@ -16,16 +16,16 @@ export const useAddPasswordTips = (): TooltipContent => {
         title: t("addPassword.tooltip.passwords.title", "Password Types"),
         description: t(
           "addPassword.tooltip.passwords.text",
-          "User passwords restrict opening the document, while owner passwords control what can be done with the document once opened. You can set both or just one.",
+          "Set either password or both. Opening the PDF does not verify the permissions password.",
         ),
         bullets: [
           t(
             "addPassword.tooltip.passwords.bullet1",
-            "User Password: Required to open the PDF",
+            "Password to open: Required to view the PDF",
           ),
           t(
             "addPassword.tooltip.passwords.bullet2",
-            "Owner Password: Controls document permissions (not supported by all PDF viewers)",
+            "Permissions password: Protects restrictions on printing, copying and editing. Some apps or viewers may ignore these restrictions.",
           ),
         ],
       },

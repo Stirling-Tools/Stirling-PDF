@@ -92,6 +92,10 @@ export interface ImageObjectSnapshot {
   matrix: Affine;
   /** Editor-only: see TextRunSnapshot.locked. */
   locked?: boolean;
+  /** The marked-content ID that ties the image into the structure tree. */
+  mcid?: number;
+  /** Marked as an artifact: decoration that assistive technology skips. */
+  artifact?: boolean;
 }
 
 // One ruling line the page draws, with the ink needed to reproduce it: a table

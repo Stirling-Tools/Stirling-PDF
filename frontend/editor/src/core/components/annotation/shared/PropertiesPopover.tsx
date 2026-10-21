@@ -81,7 +81,7 @@ export function PropertiesPopover({
         <Slider
           value={Math.round((obj?.opacity ?? 1) * 100)}
           onChange={(val) => onUpdate({ opacity: val / 100 })}
-          min={10}
+          min={0}
           max={100}
           label={(val) => `${val}%`}
         />
@@ -139,7 +139,7 @@ export function PropertiesPopover({
               fillOpacity: newOpacity,
             });
           }}
-          min={10}
+          min={0}
           max={100}
           label={(val) => `${val}%`}
         />

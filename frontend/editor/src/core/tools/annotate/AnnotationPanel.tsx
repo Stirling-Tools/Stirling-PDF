@@ -592,7 +592,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   {t("annotation.opacity", "Opacity")}
                 </Text>
                 <Slider
-                  min={10}
+                  min={0}
                   max={100}
                   value={highlightOpacity}
                   onChange={setHighlightOpacity}
@@ -606,7 +606,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   {t("annotation.opacity", "Opacity")}
                 </Text>
                 <Slider
-                  min={10}
+                  min={0}
                   max={100}
                   value={underlineOpacity}
                   onChange={setUnderlineOpacity}
@@ -778,7 +778,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     {t("annotation.opacity", "Opacity")}
                   </Text>
                   <Slider
-                    min={10}
+                    min={0}
                     max={100}
                     value={shapeOpacity}
                     onChange={(value) => {

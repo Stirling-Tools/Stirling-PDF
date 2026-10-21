@@ -1,9 +1,9 @@
-import { Suspense, lazy, type ReactNode } from "react";
+import { Suspense, lazy } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@app/utils/pathUtils";
 import { AppProviders } from "@app/components/AppProviders";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { ThemeProvider } from "@app/components/shared/ThemeProvider";
+import { PublicRouteProviders } from "@app/components/PublicRouteProviders";
+import { RunLocationGate } from "@app/components/runLocation/RunLocationGate";
 import { setBaseUrl } from "@app/constants/app";
 import type { AppConfig } from "@app/contexts/AppConfigContext";
 import { AppLayout } from "@app/components/AppLayout";
@@ -40,17 +40,6 @@ import "@app/utils/fileIdSafety";
 
 function handleConfigLoaded(config: AppConfig) {
   if (config.baseUrl) setBaseUrl(config.baseUrl);
-}
-
-// Minimal providers for the public, no-auth mobile-scanner page. Just theme +
-// preferences, no AppProviders, so no auth and no backend bootstrap - it
-// renders without a logged-in session.
-function PublicRouteProviders({ children }: { children: ReactNode }) {
-  return (
-    <PreferencesProvider>
-      <ThemeProvider>{children}</ThemeProvider>
-    </PreferencesProvider>
-  );
 }
 
 /**
@@ -143,11 +132,14 @@ export default function App() {
           }
         />
 
-        {/* Both apps, under a shared frame so the rail renders once outside them. */}
-        <Route element={<AppFrame />}>
-          {/* The portal: its own top-level shell, before the catch-all. */}
-          {getAdminRouteExtensions()}
-          <Route path="*" element={<MainApp />} />
+        {/* Before the frame and auth, so a first visit sees the chooser alone. */}
+        <Route element={<RunLocationGate />}>
+          {/* Both apps, under a shared frame so the rail renders once outside them. */}
+          <Route element={<AppFrame />}>
+            {/* The portal: its own top-level shell, before the catch-all. */}
+            {getAdminRouteExtensions()}
+            <Route path="*" element={<MainApp />} />
+          </Route>
         </Route>
       </Routes>
     </Suspense>
