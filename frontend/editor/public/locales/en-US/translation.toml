@@ -4270,6 +4270,7 @@ edit = "Edit crop area"
 fitToPage = "Fit to page"
 loading = "Loading page preview…"
 openEditor = "Open crop editor"
+previewLabel = "Crop area preview. Activate Edit crop area to adjust it."
 zoomIn = "Zoom in"
 zoomOut = "Zoom out"
 

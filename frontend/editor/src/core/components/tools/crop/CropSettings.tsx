@@ -279,10 +279,17 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
               readOnly={isTouch}
               onRequestExpand={isTouch ? () => setEditorOpen(true) : undefined}
               unit={unit}
-              ariaLabel={t(
-                "crop.canvas.ariaLabel",
-                "Crop area editor. Drag a handle to resize, drag inside to move, arrow keys nudge, Shift plus arrow keys resize.",
-              )}
+              ariaLabel={
+                isTouch
+                  ? t(
+                      "crop.canvas.previewLabel",
+                      "Crop area preview. Activate Edit crop area to adjust it.",
+                    )
+                  : t(
+                      "crop.canvas.ariaLabel",
+                      "Crop area editor. Drag a handle to resize, drag inside to move, arrow keys nudge, Shift plus arrow keys resize.",
+                    )
+              }
             />
           </Box>
 

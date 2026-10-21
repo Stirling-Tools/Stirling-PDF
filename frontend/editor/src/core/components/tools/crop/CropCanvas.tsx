@@ -928,7 +928,7 @@ export default function CropCanvas({
       data-readonly={readOnly ? "true" : "false"}
       data-hint={!imageUrl && !readOnly ? "true" : "false"}
       style={{ cursor: zoom > 1 && !interacting ? "grab" : undefined }}
-      tabIndex={disabled ? -1 : 0}
+      tabIndex={disabled || readOnly ? -1 : 0}
       role="group"
       aria-label={ariaLabel}
       onPointerDown={handlePointerDown}
