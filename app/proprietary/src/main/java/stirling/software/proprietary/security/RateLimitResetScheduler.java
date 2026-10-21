@@ -26,8 +26,8 @@ public class RateLimitResetScheduler {
     }
 
     /** Registers the reset on the first request the IP filter processes. */
-    public void ensureScheduled() {
-        rateLimitReset.ensureCron(resetSchedule);
+    public boolean ensureScheduled() {
+        return rateLimitReset.ensureCron(resetSchedule);
     }
 
     public void resetRateLimit() {

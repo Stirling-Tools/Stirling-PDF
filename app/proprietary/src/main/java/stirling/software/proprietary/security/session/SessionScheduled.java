@@ -25,8 +25,8 @@ public class SessionScheduled {
     }
 
     /** Registers the expiry sweep on the first session write. */
-    public void ensureScheduled() {
-        expiryTask.ensureCron(EXPIRY_CRON);
+    public boolean ensureScheduled() {
+        return expiryTask.ensureCron(EXPIRY_CRON);
     }
 
     /** Flags timed-out sessions, then purges long-dead ones. */

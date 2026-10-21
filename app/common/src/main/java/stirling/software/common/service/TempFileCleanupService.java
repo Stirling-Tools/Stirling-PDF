@@ -126,6 +126,14 @@ public class TempFileCleanupService {
         if (applicationProperties.getSystem().getTempFileManagement().isStartupCleanup()) {
             runStartupCleanup();
         }
+        // Startup removed today's stale files, but external producers can create
+        // more without touching the registry; keep the periodic sweep armed.
+        ensureScheduled(
+                Duration.ofMinutes(
+                        applicationProperties
+                                .getSystem()
+                                .getTempFileManagement()
+                                .getCleanupIntervalMinutes()));
     }
 
     /** Ensure that all required temp directories exist */
@@ -159,13 +167,18 @@ public class TempFileCleanupService {
     }
 
     /** Registers the periodic sweep on the first temp-file use. */
-    public void ensureScheduled() {
+    public boolean ensureScheduled() {
+        return ensureScheduled(Duration.ZERO);
+    }
+
+    private boolean ensureScheduled(Duration initialDelay) {
         long minutes =
                 applicationProperties
                         .getSystem()
                         .getTempFileManagement()
                         .getCleanupIntervalMinutes();
-        cleanupSweep.ensureFixedDelay(Duration.ofMinutes(minutes));
+        Duration interval = Duration.ofMinutes(minutes);
+        return cleanupSweep.ensureFixedDelay(initialDelay, interval);
     }
 
     /** Periodic sweep, armed by {@link #ensureScheduled()}. */

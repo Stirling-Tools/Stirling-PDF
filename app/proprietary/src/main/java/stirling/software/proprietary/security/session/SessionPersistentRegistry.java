@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -118,6 +120,14 @@ public class SessionPersistentRegistry implements SessionRegistry {
             sessionEntity.setLastRequest(Instant.now()); // Set lastRequest to the current date
             sessionEntity.setExpired(false);
             sessionRepository.save(sessionEntity);
+            signalFirstUse();
+        }
+    }
+
+    /** Sessions restored from the database still need the expiry sweep. */
+    @EventListener(ApplicationReadyEvent.class)
+    public void armIfSessionsExist() {
+        if (sessionRepository.count() > 0) {
             signalFirstUse();
         }
     }

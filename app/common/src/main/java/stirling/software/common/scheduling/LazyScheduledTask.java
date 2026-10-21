@@ -30,41 +30,43 @@ public final class LazyScheduledTask {
     }
 
     /** Runs immediately, then again {@code delay} after each run completes. */
-    public void ensureFixedDelay(Duration delay) {
-        submit(() -> scheduler.scheduleWithFixedDelay(task, Instant.now(), delay));
+    public boolean ensureFixedDelay(Duration delay) {
+        return submit(() -> scheduler.scheduleWithFixedDelay(task, Instant.now(), delay));
     }
 
     /** Runs {@code initialDelay} from now, then again {@code delay} after each run completes. */
-    public void ensureFixedDelay(Duration initialDelay, Duration delay) {
-        submit(
+    public boolean ensureFixedDelay(Duration initialDelay, Duration delay) {
+        return submit(
                 () ->
                         scheduler.scheduleWithFixedDelay(
                                 task, Instant.now().plus(initialDelay), delay));
     }
 
     /** Runs immediately, then every {@code rate}. */
-    public void ensureFixedRate(Duration rate) {
-        submit(() -> scheduler.scheduleAtFixedRate(task, Instant.now(), rate));
+    public boolean ensureFixedRate(Duration rate) {
+        return submit(() -> scheduler.scheduleAtFixedRate(task, Instant.now(), rate));
     }
 
     /** Runs {@code initialDelay} from now, then every {@code rate}. */
-    public void ensureFixedRate(Duration initialDelay, Duration rate) {
-        submit(() -> scheduler.scheduleAtFixedRate(task, Instant.now().plus(initialDelay), rate));
+    public boolean ensureFixedRate(Duration initialDelay, Duration rate) {
+        return submit(
+                () -> scheduler.scheduleAtFixedRate(task, Instant.now().plus(initialDelay), rate));
     }
 
     /** Runs on the given cron schedule. */
-    public void ensureCron(String cronExpression) {
-        submit(() -> scheduler.schedule(task, new CronTrigger(cronExpression)));
+    public boolean ensureCron(String cronExpression) {
+        return submit(() -> scheduler.schedule(task, new CronTrigger(cronExpression)));
     }
 
-    private void submit(Runnable register) {
-        if (scheduled.compareAndSet(false, true)) {
-            try {
-                register.run();
-            } catch (RuntimeException e) {
-                scheduled.set(false);
-                log.warn("Failed to register scheduled task; a later call will retry", e);
-            }
+    private boolean submit(Runnable register) {
+        if (!scheduled.compareAndSet(false, true)) return true;
+        try {
+            register.run();
+            return true;
+        } catch (RuntimeException e) {
+            scheduled.set(false);
+            log.warn("Failed to register scheduled task; a later call will retry", e);
+            return false;
         }
     }
 }

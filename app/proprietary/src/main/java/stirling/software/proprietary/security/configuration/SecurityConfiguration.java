@@ -481,9 +481,13 @@ public class SecurityConfiguration {
         return new IPRateLimitingFilter(
                 maxRequestsPerIp,
                 maxRequestsPerIp,
-                () ->
-                        rateLimitResetScheduler.ifAvailable(
-                                RateLimitResetScheduler::ensureScheduled));
+                () -> {
+                    RateLimitResetScheduler reset = rateLimitResetScheduler.getIfAvailable();
+                    if (reset == null || !reset.ensureScheduled()) {
+                        throw new IllegalStateException(
+                                "rate-limit reset scheduler is not available");
+                    }
+                });
     }
 
     @Bean

@@ -6,6 +6,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.TaskScheduler;
@@ -53,8 +55,16 @@ public class AuditCleanupService {
      * Registers the daily retention sweep on the first recorded audit event. The first run happens
      * immediately so a restart cannot postpone cleanup past the retention window.
      */
-    public void ensureScheduled() {
-        dailyCleanup.ensureFixedDelay(Duration.ofDays(1));
+    public boolean ensureScheduled() {
+        return dailyCleanup.ensureFixedDelay(Duration.ofDays(1));
+    }
+
+    /** Persisted rows from before the restart still need a retention schedule. */
+    @EventListener(ApplicationReadyEvent.class)
+    public void armIfRowsExist() {
+        if (auditConfig.isEnabled() && auditRepository.count() > 0) {
+            ensureScheduled();
+        }
     }
 
     /** Deletes audit events past the retention period configured in settings.yml. */
