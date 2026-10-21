@@ -19,6 +19,8 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -233,6 +235,31 @@ class CertSignControllerTest {
         assertTrue(exception.getMessage().contains("PKCS12 keystore"));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"PKCS12", "JKS"})
+    void wrongKeystorePasswordIsAnInputError(String certType) {
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes));
+        request.setCertType(certType);
+        if ("JKS".equals(certType)) {
+            request.setJksFile(
+                    new MockMultipartFile("jksFile", "c.jks", "application/x", jksBytes));
+        } else {
+            request.setP12File(
+                    new MockMultipartFile("p12File", "c.p12", "application/x", p12Bytes));
+        }
+        request.setPassword("not-the-password");
+
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> certSignController.signPDFWithCert(request, httpRequest));
+
+        assertTrue(exception.getMessage().contains("password is incorrect"));
+    }
+
     @Test
     void testSignPdfWithJks() throws Exception {
         MockMultipartFile pdfFile =
@@ -387,5 +414,84 @@ class CertSignControllerTest {
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
+    }
+
+    /** An openssl-style unencrypted PKCS#8 key and a self-signed certificate, as PEM text. */
+    private static byte[][] unencryptedPemPair() throws Exception {
+        java.security.KeyPairGenerator generator =
+                java.security.KeyPairGenerator.getInstance("RSA");
+        generator.initialize(2048);
+        java.security.KeyPair pair = generator.generateKeyPair();
+        org.bouncycastle.asn1.x500.X500Name subject =
+                new org.bouncycastle.asn1.x500.X500Name("CN=Chat Tester");
+        java.util.Date now = new java.util.Date();
+        java.security.cert.X509Certificate cert =
+                new org.bouncycastle.cert.jcajce.JcaX509CertificateConverter()
+                        .getCertificate(
+                                new org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder(
+                                                subject,
+                                                java.math.BigInteger.ONE,
+                                                now,
+                                                new java.util.Date(now.getTime() + 86_400_000L),
+                                                subject,
+                                                pair.getPublic())
+                                        .build(
+                                                new org.bouncycastle.operator.jcajce
+                                                                .JcaContentSignerBuilder(
+                                                                "SHA256withRSA")
+                                                        .build(pair.getPrivate())));
+        return new byte[][] {
+            pem("PRIVATE KEY", pair.getPrivate().getEncoded()),
+            pem("CERTIFICATE", cert.getEncoded())
+        };
+    }
+
+    private static byte[] pem(String type, byte[] der) throws Exception {
+        java.io.StringWriter text = new java.io.StringWriter();
+        try (org.bouncycastle.util.io.pem.PemWriter writer =
+                new org.bouncycastle.util.io.pem.PemWriter(text)) {
+            writer.writeObject(new org.bouncycastle.util.io.pem.PemObject(type, der));
+        }
+        return text.toString().getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+    }
+
+    private SignPDFWithCertRequest unencryptedPemRequest() throws Exception {
+        byte[][] pemPair = unencryptedPemPair();
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes));
+        request.setCertType("PEM");
+        request.setPrivateKeyFile(
+                new MockMultipartFile("privateKeyFile", "key.pem", "text/plain", pemPair[0]));
+        request.setCertFile(
+                new MockMultipartFile("certFile", "cert.pem", "text/plain", pemPair[1]));
+        request.setShowLogo(false);
+        return request;
+    }
+
+    @Test
+    void unencryptedPkcs8KeyWithNoPasswordSignsWithAVisibleBoxAndNoReason() throws Exception {
+        SignPDFWithCertRequest request = unencryptedPemRequest();
+        request.setShowSignature(true);
+        request.setPageNumber(1);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void visibleSignatureOnAPageThatDoesNotExistIsAClearError() throws Exception {
+        SignPDFWithCertRequest request = unencryptedPemRequest();
+        request.setShowSignature(true);
+        request.setPageNumber(5);
+
+        IllegalArgumentException error =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> certSignController.signPDFWithCert(request, httpRequest));
+        assertTrue(error.getMessage().contains("pageNumber 5"), error.getMessage());
     }
 }

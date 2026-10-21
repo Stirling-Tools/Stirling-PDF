@@ -17,14 +17,14 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
             allowableValues = {"small", "medium", "large", "x-large"},
             defaultValue = "medium",
             requiredMode = RequiredMode.NOT_REQUIRED)
-    private String customMargin;
+    private String customMargin = "medium";
 
     @Schema(
             description = "Font size for page numbers",
             minimum = "1",
             defaultValue = "12",
-            requiredMode = RequiredMode.REQUIRED)
-    private float fontSize;
+            requiredMode = RequiredMode.NOT_REQUIRED)
+    private float fontSize = 12;
 
     @Schema(
             description = "Font type for page numbers",
@@ -37,7 +37,7 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
             example = "#000000",
             defaultValue = "#000000",
             requiredMode = RequiredMode.NOT_REQUIRED)
-    private String fontColor;
+    private String fontColor = "#000000";
 
     @Schema(
             description =
@@ -61,14 +61,14 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
             description = "Starting number for page numbering",
             minimum = "1",
             defaultValue = "1",
-            requiredMode = RequiredMode.REQUIRED)
-    private int startingNumber;
+            requiredMode = RequiredMode.NOT_REQUIRED)
+    private int startingNumber = 1;
 
     @Schema(
             description = "Which pages to number (e.g. '1,3-5,7' or 'all')",
             defaultValue = "all",
             requiredMode = RequiredMode.NOT_REQUIRED)
-    private String pagesToNumber;
+    private String pagesToNumber = "all";
 
     @Schema(
             description =
@@ -77,5 +77,5 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
             example = "Page {n} of {total}",
             defaultValue = "{n}",
             requiredMode = RequiredMode.NOT_REQUIRED)
-    private String customText;
+    private String customText = "{n}";
 }

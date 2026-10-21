@@ -736,6 +736,7 @@ public class PolicyController {
             // Steps get the same treatment as the output, and for the same reason: an integration
             // step dereferences its connection by id on a principal-less worker thread, so this
             // request thread is the only place that reference can be checked against the caller.
+            policyValidator.validateRunnableSteps(definition.steps());
             policyValidator.validateSteps(definition.steps());
             // Every destination is checked; an ad-hoc run with no destinations validates nothing.
             for (OutputSpec output : definition.outputs()) {

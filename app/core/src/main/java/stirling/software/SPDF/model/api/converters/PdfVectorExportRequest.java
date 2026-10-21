@@ -25,5 +25,5 @@ public class PdfVectorExportRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"true", "false"},
             defaultValue = "false")
-    private Boolean prepress;
+    private Boolean prepress = false;
 }

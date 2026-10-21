@@ -15,35 +15,38 @@ public class SignPDFWithCertRequest extends PDFFile {
 
     @Schema(
             description =
-                    "The type of the digital certificate. WINDOWS_STORE and PKCS11 are"
-                            + " hardware-backed and only available in the desktop app.",
-            allowableValues = {"PEM", "PKCS12", "PFX", "JKS", "SERVER", "WINDOWS_STORE", "PKCS11"},
+                    "SERVER: this server's own certificate, no file or password. Signer shown is"
+                            + " the server's organisation, not the user; self-signed by default, so"
+                            + " other PDF readers may show it unverified. PEM needs"
+                            + " certFile+privateKeyFile, PKCS12/PFX p12File, JKS jksFile."
+                            + " WINDOWS_STORE/PKCS11: desktop app only.",
+            allowableValues = {"SERVER", "PEM", "PKCS12", "PFX", "JKS", "WINDOWS_STORE", "PKCS11"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String certType;
 
     @Schema(
             description =
-                    "The private key for the digital certificate (required for PEM type"
-                            + " certificates, supports .pem, .der, or .key files)")
+                    "Private key for certType PEM, used with certFile: a PEM text file (.pem or"
+                            + " .key), unencrypted or password-protected.")
     private MultipartFile privateKeyFile;
 
     @Schema(
             description =
-                    "The digital certificate (required for PEM type certificates, supports"
-                            + " .pem, .der, .crt, or .cer files)")
+                    "Certificate for certType PEM, used with privateKeyFile (.pem, .crt, .cer or"
+                            + " .der).")
     private MultipartFile certFile;
 
-    @Schema(
-            description =
-                    "The PKCS12/PFX keystore file (required for PKCS12 or PFX type certificates)")
+    @Schema(description = "PKCS#12 keystore for certType PKCS12 or PFX (.p12 or .pfx).")
     private MultipartFile p12File;
 
-    @Schema(description = "The JKS keystore file (Java Key Store)")
+    @Schema(description = "Java KeyStore for certType JKS (.jks).")
     private MultipartFile jksFile;
 
     @Schema(
             description =
-                    "The password for the keystore / private key, or the token PIN for PKCS11",
+                    "Password for the PKCS12/PFX or JKS keystore or an encrypted PEM key, or the"
+                            + " PKCS11 token PIN. Leave empty if the key has none. Not needed for"
+                            + " SERVER or WINDOWS_STORE.",
             format = "password")
     private String password;
 
@@ -67,30 +70,41 @@ public class SignPDFWithCertRequest extends PDFFile {
     private Integer pkcs11Slot;
 
     @Schema(
-            description = "Whether to visually show the signature in the PDF file",
+            description =
+                    "Add a visible signature box on pageNumber showing the certificate's name, the"
+                            + " date and the reason (if set).",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean showSignature;
+    private Boolean showSignature = false;
 
-    @Schema(description = "The reason for signing the PDF", defaultValue = "Signed by SPDF")
+    @Schema(
+            description = "The reason for signing the PDF. Omitted from the signature when not set",
+            example = "Signed by SPDF")
     private String reason;
 
-    @Schema(description = "The location where the PDF is signed", defaultValue = "SPDF")
+    @Schema(
+            description =
+                    "The location where the PDF is signed. Omitted from the signature when not set",
+            example = "SPDF")
     private String location;
 
-    @Schema(description = "The name of the signer", defaultValue = "SPDF")
+    @Schema(
+            description =
+                    "Signer name stored in the signature properties; the visible box shows the"
+                            + " certificate's name instead. Omitted when not set.",
+            example = "SPDF")
     private String name;
 
     @Schema(
             description =
-                    "The page number where the signature should be visible. This is required if"
-                            + " showSignature is set to true",
+                    "Page (1-based) for the visible signature. Only used when showSignature is"
+                            + " true.",
             defaultValue = "1")
-    private Integer pageNumber;
+    private Integer pageNumber = 1;
 
     @Schema(
             description = "Whether to visually show a signature logo along with the signature",
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean showLogo;
+    private Boolean showLogo = true;
 }

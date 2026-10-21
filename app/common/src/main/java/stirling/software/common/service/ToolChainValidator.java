@@ -19,7 +19,8 @@ import stirling.software.common.model.tool.ToolIOSpec;
  *
  * <p>The frontend and the AI engine implement the same rules against their generated copies, so a
  * chain can be checked without a round trip. {@code testing/tool-io-cases.json} pins all three to
- * the same answers.
+ * the same answers. Only this copy can tell an unknown operation from an undeclared one, since only
+ * the server knows every endpoint the pipeline runner can dispatch to.
  */
 @Service
 @RequiredArgsConstructor
@@ -43,14 +44,31 @@ public class ToolChainValidator {
 
         for (int i = 0; i < steps.size(); i++) {
             Step step = steps.get(i);
-            Optional<ToolIOSpec> found = toolIO.find(step.operation());
+            String operation = step.operation();
+            if (operation == null || operation.isBlank()) {
+                diagnostics.add(
+                        ToolDiagnostic.error(
+                                i, ToolDiagnostic.UNKNOWN_OPERATION, "The step has no operation."));
+                carried = null;
+                continue;
+            }
+            if (!toolIO.isKnown(operation)) {
+                diagnostics.add(
+                        ToolDiagnostic.error(
+                                i,
+                                ToolDiagnostic.UNKNOWN_OPERATION,
+                                "Unknown operation " + operation + ": no tool runs at that path."));
+                carried = null;
+                continue;
+            }
+            Optional<ToolIOSpec> found = toolIO.find(operation);
             if (found.isEmpty()) {
                 diagnostics.add(
                         ToolDiagnostic.warn(
                                 i,
                                 ToolDiagnostic.UNDECLARED,
                                 "Step "
-                                        + step.operation()
+                                        + operation
                                         + " does not declare what it accepts or produces, so the"
                                         + " rest of the chain cannot be checked."));
                 // Nothing is known past an undeclared step.

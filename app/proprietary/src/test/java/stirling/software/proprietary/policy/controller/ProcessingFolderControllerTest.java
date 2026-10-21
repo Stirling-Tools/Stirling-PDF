@@ -196,7 +196,8 @@ class ProcessingFolderControllerTest {
                         List.of(),
                         sourceStore,
                         assetStore,
-                        toolChainValidator);
+                        toolChainValidator,
+                        properties);
         controller =
                 new ProcessingFolderController(
                         policyStore,

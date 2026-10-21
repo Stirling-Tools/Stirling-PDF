@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -113,6 +114,55 @@ class RearrangePagesPDFControllerTest {
     }
 
     @Test
+    void deletePages_outOfRangePageIsAnError() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        PDFWithPageNums request = new PDFWithPageNums();
+        request.setFileInput(file);
+        request.setPageNumbers("99");
+
+        PDDocument mockDoc = mock(PDDocument.class);
+        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
+        when(mockDoc.getNumberOfPages()).thenReturn(3);
+
+        IllegalArgumentException e =
+                assertThrows(IllegalArgumentException.class, () -> controller.deletePages(request));
+        assertTrue(e.getMessage().contains("99"));
+        verify(mockDoc, never()).removePage(anyInt());
+    }
+
+    @Test
+    void pageSelection_acceptsRealPagesAndRejectsTheRest() {
+        assertDoesNotThrow(
+                () ->
+                        stirling.software.common.util.GeneralUtils.requireValidPageSelection(
+                                "1,2-3,all,2n+1,2-, 1 - 3 ,1,5", 3));
+        // 5 alone matches nothing; "1,5" above is fine because page 1 exists.
+        for (String bad : List.of("0", "-1", "not-a-page", "99", "5-9", "0,1", "3-2", "5")) {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            stirling.software.common.util.GeneralUtils.requireValidPageSelection(
+                                    bad, 3),
+                    bad);
+        }
+    }
+
+    @Test
+    void deletePages_refusesToRemoveEveryPage() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        PDFWithPageNums request = new PDFWithPageNums();
+        request.setFileInput(file);
+        // pageNumbers omitted: the shared default is "all".
+
+        PDDocument mockDoc = mock(PDDocument.class);
+        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
+        when(mockDoc.getNumberOfPages()).thenReturn(3);
+
+        assertThrows(IllegalArgumentException.class, () -> controller.deletePages(request));
+        verify(mockDoc, never()).removePage(anyInt());
+    }
+
+    @Test
     void testRearrangePages_ReverseOrder() throws IOException {
         MockMultipartFile file = createMockPdf();
         RearrangePagesRequest request = new RearrangePagesRequest();
@@ -136,6 +186,25 @@ class RearrangePagesPDFControllerTest {
             assertSame(originals.get(2), mutatedSource.get(0));
             assertSame(originals.get(1), mutatedSource.get(1));
             assertSame(originals.get(0), mutatedSource.get(2));
+        }
+    }
+
+    @Test
+    void unknownCustomModeIsAClearErrorNamingTheModes() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("SHUFFLE");
+
+        try (PDDocument realDoc = buildRealPdf(3)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            IllegalArgumentException error =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> controller.rearrangePages(request));
+            assertTrue(error.getMessage().contains("REVERSE_ORDER"), error.getMessage());
         }
     }
 

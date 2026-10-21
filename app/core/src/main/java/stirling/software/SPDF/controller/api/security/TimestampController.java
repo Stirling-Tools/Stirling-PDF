@@ -88,11 +88,15 @@ public class TimestampController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Add RFC 3161 document timestamp to a PDF",
+            summary =
+                    "Add an RFC 3161 document timestamp to a PDF. Run last: any later edit"
+                            + " invalidates it",
             description =
                     "Contacts a trusted Time Stamp Authority (TSA) server and embeds an RFC 3161"
                             + " document timestamp into the PDF. Only a SHA-256 hash of the document is sent"
-                            + " to the TSA - the PDF itself never leaves the server.")
+                            + " to the TSA - the PDF itself never leaves the server. Make the"
+                            + " timestamp the last change to the file: any later edit invalidates"
+                            + " it.")
     public ResponseEntity<Resource> timestampPdf(@ModelAttribute TimestampPdfRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();

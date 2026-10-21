@@ -25,5 +25,5 @@ public class SvgToPdfRequest {
                             + "or create separate PDF files for each SVG.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
-    private Boolean combineIntoSinglePdf;
+    private Boolean combineIntoSinglePdf = false;
 }

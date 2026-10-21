@@ -175,6 +175,7 @@ public class EditTextController {
         if (pageNumbers == null || pageNumbers.isBlank() || "all".equalsIgnoreCase(pageNumbers)) {
             return null;
         }
+        GeneralUtils.requireValidPageSelection(pageNumbers, totalPages);
         List<Integer> pages = GeneralUtils.parsePageList(pageNumbers, totalPages, true);
         return new HashSet<>(pages);
     }

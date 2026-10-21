@@ -47,23 +47,21 @@ public class ScalePagesController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    private static PDRectangle getTargetSize(
-            String targetPDRectangle, String orientation, PDDocument sourceDocument) {
-        if ("KEEP".equals(targetPDRectangle)) {
-            if (sourceDocument.getNumberOfPages() == 0) {
-                throw ExceptionUtils.createPdfNoPages();
-            }
+    private static boolean keepsPageSize(String targetPDRectangle) {
+        return targetPDRectangle == null
+                || targetPDRectangle.isBlank()
+                || "KEEP".equals(targetPDRectangle);
+    }
 
-            PDPage sourcePage = sourceDocument.getPage(0);
-            PDRectangle sourceSize = sourcePage.getMediaBox();
-
-            if (sourceSize == null) {
-                throw ExceptionUtils.createInvalidPageSizeException("KEEP");
-            }
-
-            return sourceSize;
+    /** The page's own size, at the origin like the named sizes so the content lands centred. */
+    private static PDRectangle ownSize(PDRectangle mediaBox) {
+        if (mediaBox == null) {
+            throw ExceptionUtils.createInvalidPageSizeException("KEEP");
         }
+        return new PDRectangle(mediaBox.getWidth(), mediaBox.getHeight());
+    }
 
+    private static PDRectangle getTargetSize(String targetPDRectangle, String orientation) {
         Map<String, PDRectangle> sizeMap = getSizeMap();
         PDRectangle base = sizeMap.get(targetPDRectangle);
         if (base == null) {
@@ -111,7 +109,11 @@ public class ScalePagesController {
                 PDDocument outputDocument =
                         pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
 
-            PDRectangle targetSize = getTargetSize(targetPDRectangle, orientation, sourceDocument);
+            boolean keepSize = keepsPageSize(targetPDRectangle);
+            if (keepSize && sourceDocument.getNumberOfPages() == 0) {
+                throw ExceptionUtils.createPdfNoPages();
+            }
+            PDRectangle fixedSize = keepSize ? null : getTargetSize(targetPDRectangle, orientation);
 
             // Create LayerUtility once outside the loop for better performance
             LayerUtility layerUtility = new LayerUtility(outputDocument);
@@ -121,6 +123,8 @@ public class ScalePagesController {
                 PDPage sourcePage = sourceDocument.getPage(i);
                 flattenStampAppearances(sourceDocument, sourcePage);
                 PDRectangle sourceSize = sourcePage.getMediaBox();
+                // Per page, so a mixed-size document stays mixed.
+                PDRectangle targetSize = keepSize ? ownSize(sourceSize) : fixedSize;
 
                 float scaleWidth = targetSize.getWidth() / sourceSize.getWidth();
                 float scaleHeight = targetSize.getHeight() / sourceSize.getHeight();

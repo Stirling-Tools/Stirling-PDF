@@ -327,6 +327,100 @@ class OCRControllerMoreTest {
         }
 
         @Test
+        @DisplayName("exit code 6 (prior OCR found) becomes a 400 naming ocrType")
+        void ocrMyPdfPriorOcrFoundIsClientError() throws Exception {
+            availLanguages("eng");
+            when(endpointConfiguration.isGroupEnabled("OCRmyPDF")).thenReturn(true);
+            ProcessPdfWithOcrRequest request = baseRequest("in.pdf");
+
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                ProcessExecutor executor = mock(ProcessExecutor.class);
+                when(executor.runCommandWithOutputHandling(anyList()))
+                        .thenThrow(
+                                new IOException(
+                                        "Command process failed with exit code 6. Error message:"
+                                                + " PriorOcrFoundError: page already has text!"));
+                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF))
+                        .thenReturn(executor);
+
+                assertThatThrownBy(() -> ocrController.processPdfWithOCR(request))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("ocrType")
+                        .hasMessageContaining("skip-text")
+                        .hasMessageContaining("force-ocr")
+                        .hasMessageNotContaining("PriorOcrFoundError");
+            }
+        }
+
+        @Test
+        @DisplayName("exit code 6 reported as a result is also a 400")
+        void ocrMyPdfPriorOcrFoundResultIsClientError() throws Exception {
+            availLanguages("eng");
+            when(endpointConfiguration.isGroupEnabled("OCRmyPDF")).thenReturn(true);
+            ProcessPdfWithOcrRequest request = baseRequest("in.pdf");
+
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                ProcessExecutor executor = executorReturning(6, "PriorOcrFoundError");
+                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF))
+                        .thenReturn(executor);
+
+                assertThatThrownBy(() -> ocrController.processPdfWithOCR(request))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("ocrType");
+            }
+        }
+
+        @Test
+        @DisplayName("other ocrmypdf exit codes still propagate as IOException")
+        void ocrMyPdfOtherExitCodePropagates() throws Exception {
+            availLanguages("eng");
+            when(endpointConfiguration.isGroupEnabled("OCRmyPDF")).thenReturn(true);
+            ProcessPdfWithOcrRequest request = baseRequest("in.pdf");
+
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                ProcessExecutor executor = mock(ProcessExecutor.class);
+                when(executor.runCommandWithOutputHandling(anyList()))
+                        .thenThrow(new IOException("Command process failed with exit code 66."));
+                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF))
+                        .thenReturn(executor);
+
+                assertThatThrownBy(() -> ocrController.processPdfWithOCR(request))
+                        .isInstanceOf(IOException.class)
+                        .hasMessageContaining("exit code 66");
+            }
+        }
+
+        @Test
+        @DisplayName("omitted ocrType and languages default to skip-text and eng")
+        void omittedOcrTypeDefaultsToSkipText() throws Exception {
+            availLanguages("eng");
+            when(endpointConfiguration.isGroupEnabled("OCRmyPDF")).thenReturn(true);
+            ProcessPdfWithOcrRequest request = new ProcessPdfWithOcrRequest();
+            request.setFileInput(pdfMultipartFile("in.pdf"));
+
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
+                    MockedStatic<WebResponseUtils> wr =
+                            Mockito.mockStatic(WebResponseUtils.class)) {
+                ProcessExecutor executor = mock(ProcessExecutor.class);
+                ProcessExecutorResult result = mock(ProcessExecutorResult.class);
+                when(result.getRc()).thenReturn(0);
+
+                @SuppressWarnings("unchecked")
+                ArgumentCaptor<List<String>> cmd = ArgumentCaptor.forClass(List.class);
+                when(executor.runCommandWithOutputHandling(cmd.capture())).thenReturn(result);
+                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF))
+                        .thenReturn(executor);
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(), anyString()))
+                        .thenReturn(cannedResponse());
+
+                ocrController.processPdfWithOCR(request);
+
+                assertThat(cmd.getValue()).contains("--skip-text");
+                assertThat(cmd.getValue()).contains("--language", "eng");
+            }
+        }
+
+        @Test
         @DisplayName("propagates a process timeout as IOException")
         void ocrMyPdfTimeoutPropagates() throws Exception {
             availLanguages("eng");

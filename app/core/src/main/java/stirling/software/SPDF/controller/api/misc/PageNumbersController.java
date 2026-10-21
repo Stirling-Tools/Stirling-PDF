@@ -98,6 +98,7 @@ public class PageNumbersController {
                 customText = "{n}";
             }
 
+            GeneralUtils.requireValidPageSelection(pagesToNumber, document.getNumberOfPages());
             List<Integer> pagesToNumberList =
                     GeneralUtils.parsePageList(
                             pagesToNumber.split(","), document.getNumberOfPages());

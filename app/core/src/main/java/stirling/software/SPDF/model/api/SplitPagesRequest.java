@@ -28,11 +28,12 @@ public class SplitPagesRequest extends PDFFile {
                             + " `\"2n+1\"`, `\"3n\"`, `\"6n-5\"`.",
             defaultValue = "all",
             requiredMode = RequiredMode.REQUIRED)
-    private String pageNumbers;
+    private String pageNumbers = "all";
 
     @Hidden
     public List<Integer> getPageNumbersList(PDDocument doc, boolean oneBased) {
         int pageCount = doc.getNumberOfPages();
+        GeneralUtils.requireValidPageSelection(pageNumbers, pageCount);
         return GeneralUtils.parsePageList(pageNumbers, pageCount, oneBased);
     }
 }

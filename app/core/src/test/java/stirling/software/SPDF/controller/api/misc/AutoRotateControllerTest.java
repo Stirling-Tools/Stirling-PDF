@@ -105,6 +105,16 @@ class AutoRotateControllerTest {
         return request;
     }
 
+    @Test
+    void rejectsNullExplicitRotationBeforeDereferencingIt() throws Exception {
+        PDDocument document = docWithUprightText(0);
+        AutoRotatePdfRequest request = request(document);
+        request.setPageRotations(java.util.Collections.singletonList(null));
+        assertThatThrownBy(() -> controller.autoRotatePdf(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("pageRotations");
+    }
+
     private static PDDocument reload(ResponseEntity<?> response) throws IOException {
         Resource resource = (Resource) response.getBody();
         return Loader.loadPDF(resource.getContentAsByteArray());

@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -63,6 +65,11 @@ public class OCRController {
 
     // Tesseract's recommended minimum; more pixels cost time without improving recognition
     private static final int OCR_RENDER_DPI = 300;
+
+    // OCRmyPDF's PriorOcrFoundError: a page has text and neither skip nor force was requested
+    private static final int OCRMYPDF_PRIOR_OCR_FOUND = 6;
+    private static final Pattern PROCESS_EXIT_CODE_PATTERN =
+            Pattern.compile("failed with exit code (\\d+)");
 
     private final ApplicationProperties applicationProperties;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -303,18 +310,14 @@ public class OCRController {
                         tempOutputFile.toString()));
 
         // Run CLI command
-        ProcessExecutorResult result =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
-                        .runCommandWithOutputHandling(command);
+        ProcessExecutorResult result = runOcrMyPdf(command);
 
         if (result.getRc() != 0
                 && result.getMessages().contains("multiprocessing/synchronize.py")
                 && result.getMessages().contains("OSError: [Errno 38] Function not implemented")) {
             command.add("--jobs");
             command.add("1");
-            result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
-                            .runCommandWithOutputHandling(command);
+            result = runOcrMyPdf(command);
         }
 
         if (result.getRc() != 0) {
@@ -343,6 +346,40 @@ public class OCRController {
                         java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
         }
+    }
+
+    // Turns OCRmyPDF's "page already has text" exit into a 400 naming the fix. The executor
+    // reports a non-zero exit either as a result or as an IOException, so both are checked.
+    private ProcessExecutorResult runOcrMyPdf(List<String> command)
+            throws IOException, InterruptedException {
+        ProcessExecutorResult result;
+        try {
+            result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
+                            .runCommandWithOutputHandling(command);
+        } catch (IOException e) {
+            if (exitCodeOf(e) == OCRMYPDF_PRIOR_OCR_FOUND) {
+                throw priorTextFoundException();
+            }
+            throw e;
+        }
+        if (result.getRc() == OCRMYPDF_PRIOR_OCR_FOUND) {
+            throw priorTextFoundException();
+        }
+        return result;
+    }
+
+    private static int exitCodeOf(IOException e) {
+        Matcher matcher =
+                PROCESS_EXIT_CODE_PATTERN.matcher(e.getMessage() == null ? "" : e.getMessage());
+        return matcher.find() ? Integer.parseInt(matcher.group(1)) : -1;
+    }
+
+    private static IllegalArgumentException priorTextFoundException() {
+        return ExceptionUtils.createInvalidArgumentException(
+                "ocrType",
+                "the PDF already contains text. Use ocrType 'skip-text' to OCR only pages"
+                        + " without text, or 'force-ocr' to redo OCR on every page.");
     }
 
     private void processWithTesseract(

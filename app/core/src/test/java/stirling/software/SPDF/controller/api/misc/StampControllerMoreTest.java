@@ -373,11 +373,58 @@ class StampControllerMoreTest {
         }
 
         @Test
-        @DisplayName("unknown stamp type is a no-op that still returns the PDF")
-        void unknownStampTypeIsNoOp() throws Exception {
+        @DisplayName("unknown stamp type is rejected with a message naming the field")
+        void rejectsUnknownStampType() throws Exception {
             AddStampRequest req = baseRequest(pdfFile(2));
             req.setStampType("neither");
-            assertValidPdf(stampController.addStamp(req), 2);
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("stampType");
+        }
+
+        @Test
+        @DisplayName("text stamp type without text is rejected")
+        void rejectsMissingText() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampText(" ");
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Stamp text");
+        }
+    }
+
+    @Nested
+    @DisplayName("Omitted optional fields fall back to the UI defaults")
+    class OmittedOptionalFields {
+
+        @Test
+        @DisplayName("only stampType and stampText stamps the PDF")
+        void textStampWithOnlyRequiredFields() throws Exception {
+            AddStampRequest req = new AddStampRequest();
+            req.setFileInput(pdfFile(1));
+            req.setStampType("text");
+            req.setStampText("QA TEST");
+            assertValidPdf(stampController.addStamp(req), 1);
+        }
+
+        @Test
+        @DisplayName("customMargin given but customColor omitted still stamps")
+        void textStampWithoutColour() throws Exception {
+            AddStampRequest req = new AddStampRequest();
+            req.setFileInput(pdfFile(1));
+            req.setStampType("text");
+            req.setStampText("QA TEST");
+            req.setCustomMargin("10");
+            assertValidPdf(stampController.addStamp(req), 1);
+        }
+
+        @Test
+        @DisplayName("omitted stampType is inferred from the supplied image")
+        void stampTypeInferredFromImage() throws Exception {
+            AddStampRequest req = new AddStampRequest();
+            req.setFileInput(pdfFile(1));
+            req.setStampImage(pngImage("stamp.png"));
+            assertValidPdf(stampController.addStamp(req), 1);
         }
     }
 }

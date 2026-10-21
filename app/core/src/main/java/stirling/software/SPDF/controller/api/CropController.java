@@ -132,11 +132,31 @@ public class CropController {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
+    /** A zero or negative crop box would blank every page while reporting success. */
+    private static void requirePositiveSize(CropPdfForm request) {
+        Float width = request.getWidth();
+        Float height = request.getHeight();
+        if (width == null || height == null) {
+            return; // Reported by the existing "coordinates are required" check.
+        }
+        if (width <= 0 || height <= 0) {
+            throw new IllegalArgumentException(
+                    "Invalid crop size: width and height must be greater than 0 (got width="
+                            + width
+                            + ", height="
+                            + height
+                            + ").");
+        }
+    }
+
     private static BitSet pageSelection(CropPdfForm request, PDDocument document) {
         BitSet selected = new BitSet(document.getNumberOfPages());
         request.getPageNumbersList(document, false).forEach(selected::set);
         String pageNumbers = request.getPageNumbers();
-        if (selected.isEmpty() && pageNumbers != null && !pageNumbers.isBlank()) {
+        if (selected.isEmpty()
+                && pageNumbers != null
+                && !pageNumbers.isBlank()
+                && !"all".equalsIgnoreCase(pageNumbers.trim())) {
             throw new IllegalArgumentException(
                     "pageNumbers '" + pageNumbers + "' does not select any page");
         }
@@ -158,6 +178,7 @@ public class CropController {
         if (request.isAutoCrop()) {
             return cropWithAutomaticDetection(request);
         }
+        requirePositiveSize(request);
 
         if (request.getX() == null
                 || request.getY() == null

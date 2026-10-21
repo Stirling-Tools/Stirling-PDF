@@ -21,23 +21,23 @@ class MergeMultiplePagesRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("pagesPerSheet defaults to 2 and other fields null/zero")
+        @DisplayName("fields default to their documented values")
         void defaultValues() {
             MergeMultiplePagesRequest req = new MergeMultiplePagesRequest();
 
             assertThat(req.getPagesPerSheet()).isEqualTo(2);
-            assertThat(req.getMode()).isNull();
-            assertThat(req.getArrangement()).isNull();
-            assertThat(req.getReadingDirection()).isNull();
-            assertThat(req.getRows()).isZero();
-            assertThat(req.getCols()).isZero();
-            assertThat(req.getOrientation()).isNull();
+            assertThat(req.getMode()).isEqualTo("DEFAULT");
+            assertThat(req.getArrangement()).isEqualTo("BY_ROWS");
+            assertThat(req.getReadingDirection()).isEqualTo("LTR");
+            assertThat(req.getRows()).isEqualTo(1);
+            assertThat(req.getCols()).isEqualTo(2);
+            assertThat(req.getOrientation()).isEqualTo("PORTRAIT");
             assertThat(req.getInnerMargin()).isZero();
             assertThat(req.getTopMargin()).isZero();
             assertThat(req.getBottomMargin()).isZero();
             assertThat(req.getLeftMargin()).isZero();
             assertThat(req.getRightMargin()).isZero();
-            assertThat(req.getBorderWidth()).isZero();
+            assertThat(req.getBorderWidth()).isEqualTo(1);
             assertThat(req.getAddBorder()).isNull();
         }
     }

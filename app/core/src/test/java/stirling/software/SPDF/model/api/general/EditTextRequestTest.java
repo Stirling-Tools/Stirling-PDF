@@ -25,13 +25,13 @@ class EditTextRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("edits and wholeWordSearch are null on a fresh instance")
+        @DisplayName("edits is null and wholeWordSearch is false on a fresh instance")
         void defaultValues() {
             EditTextRequest req = new EditTextRequest();
 
             assertThat(req.getEdits()).isNull();
-            assertThat(req.getWholeWordSearch()).isNull();
-            assertThat(req.getPageNumbers()).isNull();
+            assertThat(req.getWholeWordSearch()).isFalse();
+            assertThat(req.getPageNumbers()).isEqualTo("all");
         }
     }
 

@@ -21,15 +21,15 @@ class ConvertEbookToPdfRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("boolean wrappers and file start null on a fresh instance")
+        @DisplayName("boolean wrappers start false and file null on a fresh instance")
         void defaultValues() {
             ConvertEbookToPdfRequest req = new ConvertEbookToPdfRequest();
 
             assertThat(req.getFileInput()).isNull();
-            assertThat(req.getEmbedAllFonts()).isNull();
-            assertThat(req.getIncludeTableOfContents()).isNull();
-            assertThat(req.getIncludePageNumbers()).isNull();
-            assertThat(req.getOptimizeForEbook()).isNull();
+            assertThat(req.getEmbedAllFonts()).isFalse();
+            assertThat(req.getIncludeTableOfContents()).isFalse();
+            assertThat(req.getIncludePageNumbers()).isFalse();
+            assertThat(req.getOptimizeForEbook()).isFalse();
         }
     }
 

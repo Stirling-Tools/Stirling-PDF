@@ -23,7 +23,7 @@ public class ReplaceAndInvertColorRequest extends PDFFile {
                 "FULL_INVERSION",
                 "COLOR_SPACE_CONVERSION"
             })
-    private ReplaceAndInvert replaceAndInvertOption;
+    private ReplaceAndInvert replaceAndInvertOption = ReplaceAndInvert.HIGH_CONTRAST_COLOR;
 
     @Schema(
             description =
@@ -36,7 +36,8 @@ public class ReplaceAndInvertColorRequest extends PDFFile {
                 "YELLOW_TEXT_ON_BLACK",
                 "GREEN_TEXT_ON_BLACK"
             })
-    private HighContrastColorCombination highContrastColorCombination;
+    private HighContrastColorCombination highContrastColorCombination =
+            HighContrastColorCombination.WHITE_TEXT_ON_BLACK;
 
     @Schema(
             description =

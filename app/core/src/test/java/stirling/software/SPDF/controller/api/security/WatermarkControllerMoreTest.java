@@ -189,15 +189,82 @@ class WatermarkControllerMoreTest {
     }
 
     @Test
-    @DisplayName("unknown watermark type leaves the document otherwise unmodified")
-    void unknownTypeNoOp() throws Exception {
+    @DisplayName("unknown watermark type is rejected with a message naming the field")
+    void unknownTypeRejected() {
         AddWatermarkRequest request = baseRequest();
         request.setWatermarkType("nonsense");
         request.setWatermarkText("ignored");
 
-        ResponseEntity<Resource> response = controller.addWatermark(request);
+        IllegalArgumentException e =
+                assertThrows(
+                        IllegalArgumentException.class, () -> controller.addWatermark(request));
+        assertTrue(e.getMessage().contains("watermarkType"));
+    }
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+    @Nested
+    @DisplayName("omitted optional fields fall back to the UI defaults")
+    class OmittedOptionalFields {
+
+        private AddWatermarkRequest minimalRequest() {
+            AddWatermarkRequest request = new AddWatermarkRequest();
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput",
+                            "in.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            simplePdfBytes));
+            return request;
+        }
+
+        @Test
+        @DisplayName("text, fontSize and opacity alone watermark the PDF")
+        void textWatermarkWithoutAlphabetOrColour() throws Exception {
+            AddWatermarkRequest request = minimalRequest();
+            request.setWatermarkType("text");
+            request.setWatermarkText("TEST");
+            request.setFontSize(24);
+            request.setOpacity(0.5f);
+
+            ResponseEntity<Resource> response = controller.addWatermark(request);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertTrue(response.getBody().contentLength() > 0);
+        }
+
+        @Test
+        @DisplayName("watermarkText alone defaults the type to text")
+        void textOnlyDefaultsTypeToText() throws Exception {
+            AddWatermarkRequest request = minimalRequest();
+            request.setWatermarkText("TEST");
+
+            ResponseEntity<Resource> response = controller.addWatermark(request);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+        }
+
+        @Test
+        @DisplayName("text type without text is rejected with a message naming the field")
+        void textTypeWithoutTextRejected() {
+            AddWatermarkRequest request = minimalRequest();
+            request.setWatermarkType("text");
+
+            IllegalArgumentException e =
+                    assertThrows(
+                            IllegalArgumentException.class, () -> controller.addWatermark(request));
+            assertTrue(e.getMessage().contains("watermarkText"));
+        }
+
+        @Test
+        @DisplayName("image type without an image is rejected with a message naming the field")
+        void imageTypeWithoutImageRejected() {
+            AddWatermarkRequest request = minimalRequest();
+            request.setWatermarkType("image");
+
+            IllegalArgumentException e =
+                    assertThrows(
+                            IllegalArgumentException.class, () -> controller.addWatermark(request));
+            assertTrue(e.getMessage().contains("watermarkImage"));
+        }
     }
 
     @Test

@@ -290,6 +290,86 @@ class ScalePagesControllerTest {
     }
 
     @Test
+    void testScalePages_OmittedPageSizeKeepsPageSize() throws Exception {
+        byte[] pdfBytes = createRealPdf(PDRectangle.LETTER, 2);
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+
+        ScalePagesRequest request = new ScalePagesRequest();
+        request.setFileInput(file);
+        request.setScaleFactor(0.8f);
+
+        setupFactory();
+
+        ResponseEntity<Resource> response = controller.scalePages(request);
+
+        assertEquals(200, response.getStatusCode().value());
+        try (PDDocument out = org.apache.pdfbox.Loader.loadPDF(drainBody(response))) {
+            assertEquals(2, out.getNumberOfPages());
+            PDRectangle box = out.getPage(0).getMediaBox();
+            assertEquals(PDRectangle.LETTER.getWidth(), box.getWidth(), 0.01f);
+            assertEquals(PDRectangle.LETTER.getHeight(), box.getHeight(), 0.01f);
+        }
+    }
+
+    @Test
+    void testScalePages_KeepKeepsEachPagesOwnSize() throws Exception {
+        byte[] pdfBytes;
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(PDRectangle.A4));
+            doc.addPage(new PDPage(PDRectangle.LETTER));
+            Path pdfPath = tempDir.resolve("mixed.pdf");
+            doc.save(pdfPath.toFile());
+            pdfBytes = Files.readAllBytes(pdfPath);
+        }
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "mixed.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+
+        ScalePagesRequest request = new ScalePagesRequest();
+        request.setFileInput(file);
+        request.setPageSize("KEEP");
+        request.setScaleFactor(0.5f);
+
+        setupFactory();
+
+        ResponseEntity<Resource> response = controller.scalePages(request);
+
+        assertEquals(200, response.getStatusCode().value());
+        try (PDDocument out = org.apache.pdfbox.Loader.loadPDF(drainBody(response))) {
+            assertEquals(2, out.getNumberOfPages());
+            PDRectangle first = out.getPage(0).getMediaBox();
+            assertEquals(PDRectangle.A4.getWidth(), first.getWidth(), 0.01f);
+            assertEquals(PDRectangle.A4.getHeight(), first.getHeight(), 0.01f);
+            PDRectangle second = out.getPage(1).getMediaBox();
+            assertEquals(PDRectangle.LETTER.getWidth(), second.getWidth(), 0.01f);
+            assertEquals(PDRectangle.LETTER.getHeight(), second.getHeight(), 0.01f);
+        }
+    }
+
+    @Test
+    void testScalePages_BlankPageSizeKeepsPageSize() throws Exception {
+        byte[] pdfBytes = createRealPdf(PDRectangle.A5, 1);
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+
+        ScalePagesRequest request = new ScalePagesRequest();
+        request.setFileInput(file);
+        request.setPageSize("");
+
+        setupFactory();
+
+        ResponseEntity<Resource> response = controller.scalePages(request);
+
+        assertEquals(200, response.getStatusCode().value());
+        try (PDDocument out = org.apache.pdfbox.Loader.loadPDF(drainBody(response))) {
+            assertEquals(PDRectangle.A5.getWidth(), out.getPage(0).getMediaBox().getWidth(), 0.01f);
+        }
+    }
+
+    @Test
     void testScalePages_A0Size() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
         MockMultipartFile file =

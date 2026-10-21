@@ -20,12 +20,12 @@ class ProcessPdfWithOcrRequestTest {
         void documentedDefaults() {
             ProcessPdfWithOcrRequest req = new ProcessPdfWithOcrRequest();
             assertThat(req.getOcrRenderType()).isEqualTo("hocr");
-            assertThat(req.getLanguages()).isNull();
+            assertThat(req.getLanguages()).containsExactly("eng");
             assertThat(req.isSidecar()).isFalse();
             assertThat(req.isDeskew()).isFalse();
             assertThat(req.isClean()).isFalse();
             assertThat(req.isCleanFinal()).isFalse();
-            assertThat(req.getOcrType()).isNull();
+            assertThat(req.getOcrType()).isEqualTo("skip-text");
             assertThat(req.isRemoveImagesAfter()).isFalse();
         }
     }

@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -179,6 +180,39 @@ class SplitPdfByChaptersControllerMoreTest {
             assertThat(outputs.size()).isGreaterThanOrEqualTo(topLevelCount);
             assertThat(totalPages(outputs)).isEqualTo(8);
         }
+
+        @Test
+        @DisplayName("omitted options default to level 1, matching the web UI")
+        void omittedOptionsUseUiDefaults() throws Exception {
+            SplitPdfByChaptersRequest req = new SplitPdfByChaptersRequest();
+            req.setFileInput(asFile(nestedDoc()));
+
+            ResponseEntity<Resource> response = controller.splitPdf(req);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            List<byte[]> outputs = unzip(response.getBody());
+            // Level 1 splits on both chapters and their one child section each.
+            assertThat(outputs).hasSize(4);
+            assertThat(totalPages(outputs)).isEqualTo(8);
+        }
+    }
+
+    @Test
+    @DisplayName("a PDF without bookmarks is rejected with a clear client error")
+    void noBookmarksIsClientError() throws Exception {
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(PDRectangle.A4));
+            Path p = tempDir.resolve("plain.pdf");
+            doc.save(p.toFile());
+            bytes = Files.readAllBytes(p);
+        }
+        SplitPdfByChaptersRequest req = new SplitPdfByChaptersRequest();
+        req.setFileInput(asFile(bytes));
+
+        assertThatThrownBy(() -> controller.splitPdf(req))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("No PDF bookmarks");
     }
 
     @Nested
