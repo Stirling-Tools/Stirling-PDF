@@ -4,6 +4,7 @@ import { Title, Stack, Divider } from "@mantine/core";
 import AutomationEntry from "@app/components/tools/automate/AutomationEntry";
 import AutomationImportModal from "@app/components/tools/automate/AutomationImportModal";
 import { useSuggestedAutomations } from "@app/hooks/tools/automate/useSuggestedAutomations";
+import { useServerAutomations } from "@app/hooks/tools/automate/useServerAutomations";
 import { AutomationConfig, SuggestedAutomation } from "@app/types/automation";
 import { iconMap } from "@app/components/tools/automate/iconMap";
 import { iconKeyForSuggestedAutomation } from "@app/components/tools/automate/suggestedAutomationIcon";
@@ -42,7 +43,9 @@ export default function AutomationSelection({
   toolRegistry,
 }: AutomationSelectionProps) {
   const { t } = useTranslation();
-  const suggestedAutomations = useSuggestedAutomations();
+  const builtInAutomations = useSuggestedAutomations();
+  const serverAutomations = useServerAutomations(toolRegistry);
+  const suggestedAutomations = [...serverAutomations, ...builtInAutomations];
 
   const [importModalOpen, setImportModalOpen] = useState(false);
 
