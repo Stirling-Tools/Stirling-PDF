@@ -97,6 +97,17 @@ export interface ThumbnailAPIWrapper {
   ) => {
     toPromise: () => Promise<Blob>;
   };
+  /**
+   * Render one page as a PNG `targetWidth` CSS pixels wide, for UI that shows a
+   * larger raster than the 120px sidebar thumbnail. Absent until the document
+   * and the render capability are both ready.
+   */
+  renderPreview?: (
+    pageIndex: number,
+    targetWidth: number,
+  ) => {
+    toPromise: () => Promise<Blob>;
+  };
 }
 
 export interface ExportAPIWrapper {

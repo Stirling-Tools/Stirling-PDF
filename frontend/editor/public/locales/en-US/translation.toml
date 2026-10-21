@@ -12828,8 +12828,8 @@ letter = "Letter"
 tabloid = "Tabloid"
 
 [cutAndTile.preview]
-gridCaption = "{{count}} pieces per page. Numbers follow the order the pieces are written: down each column, starting top left."
-posterCaption = "{{count}} tiles per page, in reading order. Each tile is scaled to {{size}} and centred, so margins can be blank."
+gridCaption = "Pieces are numbered down each column, starting top left."
+posterCaption = "Tiles run left to right; each is scaled to fit {{size}}, so margins can be blank."
 
 [cutAndTile.outcome]
 assembledHint = "Each cut page becomes {{rows}} × {{columns}} pages; the rest stay whole."

@@ -84,9 +84,12 @@ const CutAndTile = (props: BaseToolProps) => {
               disabled={base.endpointLoading}
             />
 
-            <CutAndTilePreview parameters={parameters} />
-
             <CutAndTileSummary outcome={outcome} />
+
+            <CutAndTilePreview
+              parameters={parameters}
+              thumbnailUrl={record?.thumbnailUrl ?? null}
+            />
           </Stack>
         ),
       },
