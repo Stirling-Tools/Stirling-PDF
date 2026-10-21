@@ -4285,6 +4285,13 @@ precision = "Dùng các ô tọa độ để định vị chính xác"
 resize = "Kéo các chốt ở góc và cạnh để thay đổi kích thước"
 title = "Cách cắt PDF"
 
+[damagedPdf]
+description = "PDF này bị hỏng và không thể mở được."
+label = "Bị hỏng"
+repair = "Sửa chữa"
+repaired = "Đã sửa chữa {{name}}"
+repairFailed = "Không thể sửa chữa {{name}}"
+
 [database]
 backupCreated = "Sao lưu cơ sở dữ liệu thành công"
 fileName = "Tên tệp"

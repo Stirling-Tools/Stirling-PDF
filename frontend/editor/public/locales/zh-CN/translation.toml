@@ -4285,6 +4285,13 @@ precision = "使用坐标输入以获得精确位置"
 resize = "拖动角与边的手柄来调整大小"
 title = "如何裁剪 PDF"
 
+[damagedPdf]
+description = "此 PDF 已损坏，无法打开。"
+label = "已损坏"
+repair = "修复"
+repaired = "已修复 {{name}}"
+repairFailed = "无法修复 {{name}}"
+
 [database]
 backupCreated = "数据库备份成功"
 fileName = "文件名"

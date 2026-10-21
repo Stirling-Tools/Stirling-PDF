@@ -4285,6 +4285,13 @@ precision = "Hassas konumlandırma için koordinat girişlerini kullanın"
 resize = "Yeniden boyutlandırmak için köşe ve kenar tutamaçlarını sürükleyin"
 title = "PDF'ler Nasıl Kırpılır"
 
+[damagedPdf]
+description = "Bu PDF hasarlı ve açılamıyor."
+label = "Hasarlı"
+repair = "Onar"
+repaired = "{{name}} onarıldı"
+repairFailed = "{{name}} onarılamadı"
+
 [database]
 backupCreated = "Veritabanı yedeklemesi başarılı"
 fileName = "Dosya Adı"

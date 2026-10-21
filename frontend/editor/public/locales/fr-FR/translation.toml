@@ -4285,6 +4285,13 @@ precision = "Utilisez les champs de coordonnées pour un positionnement précis"
 resize = "Faites glisser les poignées d’angle et de bord pour redimensionner"
 title = "Comment recadrer des PDF"
 
+[damagedPdf]
+description = "Ce PDF est endommagé et ne peut pas être ouvert."
+label = "Endommagé"
+repair = "Réparer"
+repaired = "{{name}} réparé"
+repairFailed = "Impossible de réparer {{name}}"
+
 [database]
 backupCreated = "Sauvegarde de la base de donnée réussie"
 fileName = "Nom du Fichier"

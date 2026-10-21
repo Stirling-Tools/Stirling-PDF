@@ -4285,6 +4285,13 @@ precision = "座標入力で正確に位置指定"
 resize = "角と辺のハンドルをドラッグしてサイズ変更"
 title = "PDF を切り抜く方法"
 
+[damagedPdf]
+description = "この PDF は破損しているため、開けません。"
+label = "破損"
+repair = "修復"
+repaired = "{{name}} を修復しました"
+repairFailed = "{{name}} を修復できませんでした"
+
 [database]
 backupCreated = "データベースのバックアップに成功しました"
 fileName = "ファイル名"

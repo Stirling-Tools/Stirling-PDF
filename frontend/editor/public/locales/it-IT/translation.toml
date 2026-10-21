@@ -4285,6 +4285,13 @@ precision = "Usa gli input delle coordinate per un posizionamento preciso"
 resize = "Trascina i bordi e gli angoli per ridimensionare"
 title = "Come ritagliare i PDF"
 
+[damagedPdf]
+description = "Questo PDF è danneggiato e non può essere aperto."
+label = "Danneggiato"
+repair = "Ripara"
+repaired = "Riparato {{name}}"
+repairFailed = "Impossibile riparare {{name}}"
+
 [database]
 backupCreated = "Backup del database riuscito"
 fileName = "Nome file"

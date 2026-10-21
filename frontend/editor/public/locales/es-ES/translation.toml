@@ -4285,6 +4285,13 @@ precision = "Usa entradas de coordenadas para un posicionamiento preciso"
 resize = "Arrastre las esquinas y bordes para redimensionar"
 title = "Cómo Recortar PDFs"
 
+[damagedPdf]
+description = "Este PDF está dañado y no se puede abrir."
+label = "Dañado"
+repair = "Reparar"
+repaired = "{{name}} reparado"
+repairFailed = "No se pudo reparar {{name}}"
+
 [database]
 backupCreated = "Respaldo de la Base de Datos exitoso"
 fileName = "Nombre de Archivo"

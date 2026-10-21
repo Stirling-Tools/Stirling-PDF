@@ -4285,6 +4285,13 @@ precision = "Koristite unos koordinata za precizno pozicioniranje"
 resize = "Prevucite hvatišta na uglovima i ivicama da biste promenili veličinu"
 title = "Kako iseći PDF-ove"
 
+[damagedPdf]
+description = "Ovaj PDF je oštećen i ne može da se otvori."
+label = "Oštećen"
+repair = "Popravi"
+repaired = "Popravljen {{name}}"
+repairFailed = "Nije moguće popraviti {{name}}"
+
 [database]
 backupCreated = "Rezervna kopija baze podataka je uspešna napravljena"
 fileName = "Ime datoteke"

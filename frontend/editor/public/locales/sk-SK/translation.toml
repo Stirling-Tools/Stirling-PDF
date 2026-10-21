@@ -4285,6 +4285,13 @@ precision = "Použite zadávanie súradníc pre presné umiestnenie"
 resize = "Potiahnite rohové a bočné úchyty na zmenu veľkosti"
 title = "Ako orezať PDF"
 
+[damagedPdf]
+description = "Tento PDF je poškodený a nedá sa otvoriť."
+label = "Poškodený"
+repair = "Opraviť"
+repaired = "Opravené {{name}}"
+repairFailed = "Nepodarilo sa opraviť {{name}}"
+
 [database]
 backupCreated = "Záloha databázy úspešná"
 fileName = "Názov súboru"

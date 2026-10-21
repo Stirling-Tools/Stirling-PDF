@@ -4285,6 +4285,13 @@ precision = "Utilitzeu les entrades de coordenades per a un posicionament precí
 resize = "Arrossegueu les nanses de les cantonades i vores per redimensionar"
 title = "Com retallar PDFs"
 
+[damagedPdf]
+description = "Aquest PDF està danyat i no es pot obrir."
+label = "Danyat"
+repair = "Reparar"
+repaired = "S'ha reparat {{name}}"
+repairFailed = "No s'ha pogut reparar {{name}}"
+
 [database]
 backupCreated = "Còpia de seguretat de la base de dades creada correctament"
 fileName = "Nom del Fitxer"

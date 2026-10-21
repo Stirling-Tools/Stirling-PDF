@@ -4285,6 +4285,13 @@ precision = "Użyj pól współrzędnych dla precyzyjnego pozycjonowania"
 resize = "Przeciągnij uchwyty w rogach i na krawędziach, aby zmienić rozmiar"
 title = "Jak przycinać PDF-y"
 
+[damagedPdf]
+description = "Ten PDF jest uszkodzony i nie można go otworzyć."
+label = "Uszkodzony"
+repair = "Napraw"
+repaired = "Naprawiono {{name}}"
+repairFailed = "Nie udało się naprawić {{name}}"
+
 [database]
 backupCreated = "Kopia zapasowa bazy danych została utworzona pomyślnie"
 fileName = "Nazwa pliku"

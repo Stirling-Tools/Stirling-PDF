@@ -4285,6 +4285,13 @@ precision = "Úsáid ionchuir chomhordanáidí chun suíomh cruinn a shocrú"
 resize = "Tarraing na hanlaí cúinne agus imeall chun méid a athrú"
 title = "Conas PDFanna a Bhearradh"
 
+[damagedPdf]
+description = "Tá an PDF seo millte agus ní féidir é a oscailt."
+label = "Millte"
+repair = "Deisigh"
+repaired = "Deisíodh {{name}}"
+repairFailed = "Níorbh fhéidir {{name}} a dheisiú"
+
 [database]
 backupCreated = "D'éirigh le cúltaca bunachar sonraí"
 fileName = "Ainm comhaid"

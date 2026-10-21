@@ -4285,6 +4285,13 @@ precision = "Gunakan input koordinat untuk penempatan yang presisi"
 resize = "Seret gagang sudut dan tepi untuk mengubah ukuran"
 title = "Cara Memangkas PDF"
 
+[damagedPdf]
+description = "PDF ini rusak dan tidak dapat dibuka."
+label = "Rusak"
+repair = "Perbaiki"
+repaired = "{{name}} telah diperbaiki"
+repairFailed = "Tidak dapat memperbaiki {{name}}"
+
 [database]
 backupCreated = "Cadangan database berhasil"
 fileName = "Nama Berkas"

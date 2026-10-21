@@ -4285,6 +4285,13 @@ precision = "सटीक पोजिशनिंग के लिए निर
 resize = "आकार बदलने के लिए कोनों और किनारों के हैंडल खींचें"
 title = "PDF कैसे क्रॉप करें"
 
+[damagedPdf]
+description = "यह PDF क्षतिग्रस्त है और खोली नहीं जा सकती।"
+label = "क्षतिग्रस्त"
+repair = "मरम्मत करें"
+repaired = "{{name}} की मरम्मत हो गई"
+repairFailed = "{{name}} की मरम्मत नहीं की जा सकी"
+
 [database]
 backupCreated = "डेटाबेस बैकअप सफल"
 fileName = "फ़ाइल नाम"
