@@ -1404,10 +1404,15 @@ public class CompressController {
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
                                 .runCommandWithOutputHandling(command, null);
 
-                // Update current file to the QPDF output
+                long postQpdfSize = Files.size(qpdfOutputPath);
+                if (postQpdfSize >= preQpdfSize) {
+                    log.info(
+                            "QPDF output ({}) is not smaller than its input, keeping the input",
+                            GeneralUtils.formatBytes(postQpdfSize));
+                    return;
+                }
                 Files.copy(qpdfOutputPath, currentFile, StandardCopyOption.REPLACE_EXISTING);
 
-                long postQpdfSize = Files.size(currentFile);
                 double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
                 log.info(
                         "Post-QPDF file size: {} (reduced by {}%)",
