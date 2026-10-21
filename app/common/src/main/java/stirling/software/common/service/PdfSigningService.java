@@ -32,6 +32,10 @@ public interface PdfSigningService {
             String name,
             String location,
             String reason,
-            boolean showLogo)
+            boolean showLogo,
+            Double signatureRectX,
+            Double signatureRectY,
+            Double signatureRectWidth,
+            Double signatureRectHeight)
             throws Exception;
 }

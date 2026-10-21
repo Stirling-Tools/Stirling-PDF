@@ -66,8 +66,19 @@ const withSignatureAppearance = (
     apiParams.reason = parameters.reason;
     apiParams.location = parameters.location;
     apiParams.name = parameters.name;
-    apiParams.pageNumber = parameters.pageNumber;
     apiParams.showLogo = parameters.showLogo;
+    // A placed rectangle carries its own page; without one the page field alone
+    // drives the legacy default corner placement.
+    const rect = parameters.certAppearanceRect;
+    if (rect) {
+      apiParams.pageNumber = rect.pageIndex + 1;
+      apiParams.signatureRectX = rect.x;
+      apiParams.signatureRectY = rect.y;
+      apiParams.signatureRectWidth = rect.width;
+      apiParams.signatureRectHeight = rect.height;
+    } else {
+      apiParams.pageNumber = parameters.pageNumber;
+    }
   }
   return apiParams;
 };

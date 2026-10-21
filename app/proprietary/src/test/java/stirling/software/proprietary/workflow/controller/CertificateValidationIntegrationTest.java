@@ -96,7 +96,11 @@ class CertificateValidationIntegrationTest {
                                 anyString(),
                                 isNull(),
                                 isNull(),
-                                anyBoolean()))
+                                anyBoolean(),
+                                isNull(),
+                                isNull(),
+                                isNull(),
+                                isNull()))
                 .thenReturn(new byte[0]);
     }
 
