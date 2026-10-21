@@ -9,11 +9,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import stirling.software.SPDF.model.SplitTypes;
-import stirling.software.common.model.api.PDFFile;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class SplitPdfBySectionsRequest extends PDFFile {
+public class SplitPdfBySectionsRequest extends SplitOutputNamingRequest {
     @Schema(
             description = "Pages to be split by section",
             defaultValue = "SPLIT_ALL",

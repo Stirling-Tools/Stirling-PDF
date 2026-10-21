@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api;
+package stirling.software.SPDF.utils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -7,18 +7,19 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import stirling.software.SPDF.model.api.SplitOutputNamingRequest;
 import stirling.software.common.util.RegexPatternUtils;
 
 /**
  * Zip entry names for the documents a split produces, from an optional naming pattern and an
- * optional list of user-supplied names. Every name is safe to extract on Windows, macOS and Linux,
- * and the names are unique ignoring case so a case-insensitive filesystem cannot overwrite one
- * document with another.
+ * optional list of user-supplied names, handed out one document at a time. Every name is safe to
+ * extract on Windows, macOS and Linux, and the names are unique ignoring case so a case-insensitive
+ * filesystem cannot overwrite one document with another.
  */
-final class SplitOutputNames {
+public final class SplitOutputNames {
 
     /** Replaced by the 1-based document number in a naming pattern. */
-    static final String NUMBER_TOKEN = "{n}";
+    public static final String NUMBER_TOKEN = "{n}";
 
     /** Leaves room for a de-duplication suffix and ".pdf" under the common 255-byte limit. */
     static final int MAX_NAME_BYTES = 200;
@@ -29,43 +30,51 @@ final class SplitOutputNames {
     private static final Pattern WINDOWS_RESERVED_STEM =
             Pattern.compile("(?i)^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?=\\.|$)");
 
-    private SplitOutputNames() {}
+    private final List<String> customNames;
+    private final String namePattern;
+    private final Set<String> claimedByUser = new HashSet<>();
+    private final Set<String> used = new HashSet<>();
+    private int position;
 
-    /**
-     * One entry name ending in ".pdf" per document. Line {@code N} of {@code outputNames} names
-     * document {@code N}; a blank line, a line with nothing usable after sanitising, or a document
-     * past the end of the list gets the default name: {@code namePattern} with {@link
-     * #NUMBER_TOKEN} replaced by {@code N} (or {@code N} appended when the token is absent), else
-     * {@code baseFilename_N}. A user's name keeps its exact form, so when a default or a repeated
-     * name collides with it, the other one takes the {@code _2}, {@code _3}... suffix.
-     */
-    static List<String> resolve(
-            String outputNames, String namePattern, String baseFilename, int count) {
-        List<String> customNames = parseLines(outputNames);
-        Set<String> claimedByUser = new HashSet<>();
+    /** Names for the {@code count} documents a split of {@code request} produces. */
+    public static SplitOutputNames forRequest(SplitOutputNamingRequest request, int count) {
+        return new SplitOutputNames(
+                request.getOutputNames(), request.getOutputNamePattern(), count);
+    }
+
+    SplitOutputNames(String outputNames, String namePattern, int count) {
+        this.customNames = parseLines(outputNames);
+        this.namePattern = namePattern;
         for (String name : customNames.subList(0, Math.min(count, customNames.size()))) {
             if (!name.isEmpty()) {
                 claimedByUser.add(key(name));
             }
         }
+    }
 
-        Set<String> used = new HashSet<>();
-        List<String> entryNames = new ArrayList<>(count);
-        for (int i = 0; i < count; i++) {
-            String custom = i < customNames.size() ? customNames.get(i) : "";
-            boolean isCustom = !custom.isEmpty();
-            String name = isCustom ? custom : defaultName(namePattern, baseFilename, i + 1);
-            String unique = name;
-            if (used.contains(key(name)) || (!isCustom && claimedByUser.contains(key(name)))) {
-                int suffix = 2;
-                do {
-                    unique = name + "_" + suffix++;
-                } while (used.contains(key(unique)) || claimedByUser.contains(key(unique)));
-            }
-            used.add(key(unique));
-            entryNames.add(unique + PDF_EXTENSION);
+    /**
+     * Entry name ending in ".pdf" for the next document; call once per document, in output order.
+     * Line {@code N} of {@code outputNames} names document {@code N}. A blank line, a line with
+     * nothing usable after sanitising, or a document past the end of the list gets {@code
+     * namePattern} with {@link #NUMBER_TOKEN} replaced by {@code N} (or {@code N} appended when the
+     * token is absent), else {@code defaultStem} as given. A user's name keeps its exact form, so
+     * when another name collides with it, the other one takes the {@code _2}, {@code _3}... suffix.
+     * Not thread-safe.
+     */
+    public String next(String defaultStem) {
+        int index = position++;
+        String custom = index < customNames.size() ? customNames.get(index) : "";
+        boolean isCustom = !custom.isEmpty();
+        String name = isCustom ? custom : defaultName(defaultStem, index + 1);
+        String unique = name;
+        if (used.contains(key(name)) || (!isCustom && claimedByUser.contains(key(name)))) {
+            int suffix = 2;
+            do {
+                unique = name + "_" + suffix++;
+            } while (used.contains(key(unique)) || claimedByUser.contains(key(unique)));
         }
-        return entryNames;
+        used.add(key(unique));
+        return unique + PDF_EXTENSION;
     }
 
     /**
@@ -123,7 +132,7 @@ final class SplitOutputNames {
         return stripped;
     }
 
-    private static String defaultName(String namePattern, String baseFilename, int number) {
+    private String defaultName(String defaultStem, int number) {
         if (namePattern != null && !namePattern.isBlank()) {
             String numbered =
                     namePattern.contains(NUMBER_TOKEN)
@@ -134,7 +143,7 @@ final class SplitOutputNames {
                 return name;
             }
         }
-        return baseFilename + "_" + number;
+        return defaultStem;
     }
 
     private static List<String> parseLines(String outputNames) {

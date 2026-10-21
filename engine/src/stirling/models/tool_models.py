@@ -308,6 +308,15 @@ class AutoSplitPdfParams(ApiModel):
         False,
         description="Flag indicating if the duplex mode is active, where the page after the divider also gets removed.",
     )
+    output_name_pattern: str | None = Field(
+        None,
+        description="Name for every split document, where {n} is the document number (1, 2, 3...); without {n} the number is appended. A name from outputNames takes precedence for its document.",
+        examples=["Chapter {n}"],
+    )
+    output_names: str | None = Field(
+        None,
+        description="Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.",
+    )
 
 
 class BatchProcessAttachmentsParams(ApiModel):
@@ -1591,6 +1600,15 @@ class SplitForPosterPrintParams(ApiModel):
     This endpoint splits large or oddly-sized PDF pages into smaller chunks suitable for printing on standard paper sizes (e.g., A4, Letter). Divides each page into a grid of smaller pages using Apache PDFBox. Input:PDF Output:PDF Type:SIMO
     """
 
+    output_name_pattern: str | None = Field(
+        None,
+        description="Name for every split document, where {n} is the document number (1, 2, 3...); without {n} the number is appended. A name from outputNames takes precedence for its document.",
+        examples=["Chapter {n}"],
+    )
+    output_names: str | None = Field(
+        None,
+        description="Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.",
+    )
     page_size: PageSize1 = Field(..., description="Target page size for output chunks (e.g., 'A4', 'Letter', 'A3')")
     right_to_left: bool = Field(False, description="Split right-to-left instead of left-to-right")
     x_factor: int = Field(2, description="Horizontal decimation factor (how many columns to split into)", ge=1, le=10)
@@ -1602,6 +1620,15 @@ class SplitPagesParams(ApiModel):
     This endpoint splits a given PDF file into separate documents based on the specified page numbers or ranges. Users can specify pages using individual numbers, ranges, or 'all' for every page. Input:PDF Output:PDF Type:SIMO
     """
 
+    output_name_pattern: str | None = Field(
+        None,
+        description="Name for every split document, where {n} is the document number (1, 2, 3...); without {n} the number is appended. A name from outputNames takes precedence for its document.",
+        examples=["Chapter {n}"],
+    )
+    output_names: str | None = Field(
+        None,
+        description="Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.",
+    )
     page_numbers: str = Field(
         "all",
         description='Split points - page numbers after which the PDF will be cut. For example, `"2"` produces two documents (pages 1-2 and pages 3+); `"2,5"` produces three (pages 1-2, 3-5, 6+). Supports ranges (e.g. `"1,3,5-9"` splits after pages 1, 3, 5, 6, 7, 8, 9, yielding 8 documents), `"all"` (split after every page), or functions like `"2n+1"`, `"3n"`, `"6n-5"`.',
@@ -1616,6 +1643,15 @@ class SplitPdfByChaptersParams(ApiModel):
     allow_duplicates: bool = Field(False, description="Whether to allow duplicates or not")
     bookmark_level: int = Field(0, description="Maximum bookmark level required", ge=0)
     include_metadata: bool = Field(False, description="Whether to include Metadata or not")
+    output_name_pattern: str | None = Field(
+        None,
+        description="Name for every split document, where {n} is the document number (1, 2, 3...); without {n} the number is appended. A name from outputNames takes precedence for its document.",
+        examples=["Chapter {n}"],
+    )
+    output_names: str | None = Field(
+        None,
+        description="Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.",
+    )
 
 
 class SplitMode(StrEnum):
@@ -1643,6 +1679,15 @@ class SplitPdfBySectionsParams(ApiModel):
 
     horizontal_divisions: int = Field(0, description="Number of horizontal divisions for each PDF page", ge=0, le=50)
     merge: bool = Field(False, description="Merge the split documents into a single PDF")
+    output_name_pattern: str | None = Field(
+        None,
+        description="Name for every split document, where {n} is the document number (1, 2, 3...); without {n} the number is appended. A name from outputNames takes precedence for its document.",
+        examples=["Chapter {n}"],
+    )
+    output_names: str | None = Field(
+        None,
+        description="Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.",
+    )
     page_numbers: str = Field("SPLIT_ALL", description="Pages to be split by section")
     split_mode: SplitMode | None = Field(
         None,

@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.general.PosterPdfRequest;
+import stirling.software.SPDF.utils.SplitOutputNames;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -233,7 +234,10 @@ public class PosterPdfController {
                 // Create ZIP from the PDF TempFile, streaming directly to zip TempFile
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
-                    zipOut.putNextEntry(new ZipEntry(filename + "_poster.pdf"));
+                    zipOut.putNextEntry(
+                            new ZipEntry(
+                                    SplitOutputNames.forRequest(request, 1)
+                                            .next(filename + "_poster")));
                     Files.copy(pdfTempFile.getPath(), zipOut);
                     zipOut.closeEntry();
                 }

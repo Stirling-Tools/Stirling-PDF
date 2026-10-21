@@ -8,10 +8,15 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -27,6 +32,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -85,6 +92,75 @@ class SplitPdfBySectionsControllerTest {
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
                 .thenAnswer(inv -> new PDDocument());
         when(pdfDocumentFactory.createNewDocument()).thenAnswer(inv -> new PDDocument());
+    }
+
+    private SplitPdfBySectionsRequest quartersRequest(int numPages, boolean merge)
+            throws IOException {
+        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput",
+                        "input.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        createPdf(numPages)));
+        request.setHorizontalDivisions(1);
+        request.setVerticalDivisions(1);
+        request.setMerge(merge);
+        request.setPageNumbers("all");
+        return request;
+    }
+
+    private List<String> entryNamesOf(Resource zipResource) throws IOException {
+        List<String> names = new ArrayList<>();
+        try (ZipInputStream zis =
+                new ZipInputStream(new ByteArrayInputStream(zipResource.getContentAsByteArray()))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                names.add(entry.getName());
+            }
+        }
+        return names;
+    }
+
+    @Test
+    @DisplayName("Should name every section from the pattern")
+    void shouldApplyOutputNamingToSections() throws Exception {
+        SplitPdfBySectionsRequest request = quartersRequest(1, false);
+        request.setOutputNamePattern("Tile {n}");
+        setupFactory();
+
+        var response = controller.splitPdf(request);
+
+        assertThat(entryNamesOf(response.getBody()))
+                .containsExactly("Tile 1.pdf", "Tile 2.pdf", "Tile 3.pdf", "Tile 4.pdf");
+    }
+
+    @Test
+    @DisplayName("Should keep page and section numbers in default names")
+    void shouldKeepDefaultSectionNames() throws Exception {
+        setupFactory();
+
+        var response = controller.splitPdf(quartersRequest(1, false));
+
+        assertThat(entryNamesOf(response.getBody()))
+                .containsExactly(
+                        "input_split_1_1.pdf",
+                        "input_split_1_2.pdf",
+                        "input_split_1_3.pdf",
+                        "input_split_1_4.pdf");
+    }
+
+    @Test
+    @DisplayName("Should name the merged document from the first listed name")
+    void shouldApplyOutputNamingToMergedSections() throws Exception {
+        SplitPdfBySectionsRequest request = quartersRequest(1, true);
+        request.setOutputNames("Poster");
+        setupFactory();
+
+        var response = controller.splitPdf(request);
+
+        assertThat(response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION))
+                .contains("Poster.pdf");
     }
 
     @Test

@@ -7,11 +7,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import stirling.software.common.model.api.PDFFile;
+import stirling.software.SPDF.model.api.SplitOutputNamingRequest;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class PosterPdfRequest extends PDFFile {
+public class PosterPdfRequest extends SplitOutputNamingRequest {
 
     @Schema(
             description = "Target page size for output chunks (e.g., 'A4', 'Letter', 'A3')",

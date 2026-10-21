@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import CardSelector from "@app/components/shared/CardSelector";
 import SplitSettings from "@app/components/tools/split/SplitSettings";
+import SplitOutputNamingSettings from "@app/components/tools/split/SplitOutputNamingSettings";
 import { useSplitParameters } from "@app/hooks/tools/split/useSplitParameters";
 import { useSplitOperation } from "@app/hooks/tools/split/useSplitOperation";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
@@ -40,6 +41,8 @@ const Split = (props: BaseToolProps) => {
       return endpointStatus[endpoint] !== false;
     });
   }, [endpointStatus]);
+
+  const [advancedOpened, setAdvancedOpened] = useState(false);
 
   const methodTips = useSplitMethodTips();
   const settingsTips = useSplitSettingsTips(base.params.parameters.method);
@@ -87,6 +90,23 @@ const Split = (props: BaseToolProps) => {
         tooltip: settingsTips || undefined,
         content: (
           <SplitSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+          />
+        ),
+      },
+      {
+        title: t("split.steps.advanced", "Advanced Settings"),
+        isVisible: !!base.params.parameters.method,
+        isCollapsed:
+          base.hasResults ||
+          !(advancedOpened || base.params.parameters.outputNaming),
+        onCollapsedClick: base.hasResults
+          ? base.handleSettingsReset
+          : () => setAdvancedOpened(true),
+        content: (
+          <SplitOutputNamingSettings
             parameters={base.params.parameters}
             onParameterChange={base.params.updateParameter}
             disabled={base.endpointLoading}

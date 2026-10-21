@@ -59,10 +59,14 @@ const outputNamingToApiParams = ({
 // Convert the tool's UI parameters into the request body for the routed endpoint.
 export const splitToApiParams = (
   parameters: SplitParameters,
-): SplitApiParams => {
+): SplitApiParams => ({
+  ...methodToApiParams(parameters),
+  ...outputNamingToApiParams(parameters),
+});
+
+const methodToApiParams = (parameters: SplitParameters): SplitApiParams => {
   // Use BY_PAGES as default if no method is selected
   const method = parameters.method || SPLIT_METHODS.BY_PAGES;
-  const outputNaming = outputNamingToApiParams(parameters);
 
   switch (method) {
     case SPLIT_METHODS.BY_PAGES:
@@ -81,23 +85,11 @@ export const splitToApiParams = (
       return sections;
     }
     case SPLIT_METHODS.BY_SIZE:
-      return {
-        splitType: 0,
-        splitValue: parameters.splitValue,
-        ...outputNaming,
-      };
+      return { splitType: 0, splitValue: parameters.splitValue };
     case SPLIT_METHODS.BY_PAGE_COUNT:
-      return {
-        splitType: 1,
-        splitValue: parameters.splitValue,
-        ...outputNaming,
-      };
+      return { splitType: 1, splitValue: parameters.splitValue };
     case SPLIT_METHODS.BY_DOC_COUNT:
-      return {
-        splitType: 2,
-        splitValue: parameters.splitValue,
-        ...outputNaming,
-      };
+      return { splitType: 2, splitValue: parameters.splitValue };
     case SPLIT_METHODS.BY_CHAPTERS:
       return {
         bookmarkLevel: Number(parameters.bookmarkLevel || "1"),
@@ -121,6 +113,13 @@ export const splitToApiParams = (
 // Reconstruct the tool's UI parameters from a stored request body. The step
 // carries no explicit method, so it is inferred from the fields present.
 export const splitFromApiParams = (
+  apiParams: SplitApiParams,
+): Partial<SplitParameters> => ({
+  ...methodFromApiParams(apiParams),
+  ...outputNamingFromApiParams(apiParams),
+});
+
+const methodFromApiParams = (
   apiParams: SplitApiParams,
 ): Partial<SplitParameters> => {
   if ("pageSize" in apiParams) {
@@ -173,7 +172,6 @@ export const splitFromApiParams = (
     return {
       method: methodBySplitType[apiParams.splitType as 0 | 1 | 2],
       splitValue: apiParams.splitValue ?? "",
-      ...outputNamingFromApiParams(apiParams),
     };
   }
   if ("duplexMode" in apiParams) {

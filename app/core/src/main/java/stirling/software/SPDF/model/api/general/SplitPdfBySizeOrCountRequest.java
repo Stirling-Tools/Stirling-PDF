@@ -5,11 +5,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import stirling.software.common.model.api.PDFFile;
+import stirling.software.SPDF.model.api.SplitOutputNamingRequest;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class SplitPdfBySizeOrCountRequest extends PDFFile {
+public class SplitPdfBySizeOrCountRequest extends SplitOutputNamingRequest {
 
     @Schema(
             description =
@@ -24,20 +24,4 @@ public class SplitPdfBySizeOrCountRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "10MB")
     private String splitValue;
-
-    @Schema(
-            description =
-                    "Output file names, one per line, applied in order to the split documents."
-                            + " Documents beyond the list keep the default name.",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    private String outputNames;
-
-    @Schema(
-            description =
-                    "Name for every split document, where {n} is the document number (1, 2, 3...);"
-                            + " without {n} the number is appended. A name from outputNames takes"
-                            + " precedence for its document.",
-            example = "Chapter {n}",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    private String outputNamePattern;
 }

@@ -250,6 +250,14 @@ export interface AutoSplitPdfRequest {
    * Flag indicating if the duplex mode is active, where the page after the divider also gets removed.
    */
   duplexMode?: boolean;
+  /**
+   * Name for every split document, where {n} is the document number (1, 2, 3...); without {n} the number is appended. A name from outputNames takes precedence for its document.
+   */
+  outputNamePattern?: string;
+  /**
+   * Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.
+   */
+  outputNames?: string;
 }
 export interface BatchAttachmentRequest {
   attachments?: File[];
@@ -1054,6 +1062,14 @@ export interface Pkcs11CertificatesRequest {
 }
 export interface PosterPdfRequest {
   /**
+   * Name for every split document, where {n} is the document number (1, 2, 3...); without {n} the number is appended. A name from outputNames takes precedence for its document.
+   */
+  outputNamePattern?: string;
+  /**
+   * Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.
+   */
+  outputNames?: string;
+  /**
    * Target page size for output chunks (e.g., 'A4', 'Letter', 'A3')
    */
   pageSize: "A4" | "Letter" | "A3" | "A5" | "Legal" | "Tabloid";
@@ -1494,6 +1510,14 @@ export interface SignatureValidationRequest {
 }
 export interface SplitPagesRequest {
   /**
+   * Name for every split document, where {n} is the document number (1, 2, 3...); without {n} the number is appended. A name from outputNames takes precedence for its document.
+   */
+  outputNamePattern?: string;
+  /**
+   * Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.
+   */
+  outputNames?: string;
+  /**
    * Split points - page numbers after which the PDF will be cut. For example, `"2"` produces two documents (pages 1-2 and pages 3+); `"2,5"` produces three (pages 1-2, 3-5, 6+). Supports ranges (e.g. `"1,3,5-9"` splits after pages 1, 3, 5, 6, 7, 8, 9, yielding 8 documents), `"all"` (split after every page), or functions like `"2n+1"`, `"3n"`, `"6n-5"`.
    */
   pageNumbers?: string;
@@ -1511,6 +1535,14 @@ export interface SplitPdfByChaptersRequest {
    * Whether to include Metadata or not
    */
   includeMetadata?: boolean;
+  /**
+   * Name for every split document, where {n} is the document number (1, 2, 3...); without {n} the number is appended. A name from outputNames takes precedence for its document.
+   */
+  outputNamePattern?: string;
+  /**
+   * Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.
+   */
+  outputNames?: string;
 }
 export interface SplitPdfBySectionsRequest {
   /**
@@ -1521,6 +1553,14 @@ export interface SplitPdfBySectionsRequest {
    * Merge the split documents into a single PDF
    */
   merge?: boolean;
+  /**
+   * Name for every split document, where {n} is the document number (1, 2, 3...); without {n} the number is appended. A name from outputNames takes precedence for its document.
+   */
+  outputNamePattern?: string;
+  /**
+   * Output file names, one per line, applied in order to the split documents. Documents beyond the list keep the default name.
+   */
+  outputNames?: string;
   /**
    * Pages to be split by section
    */

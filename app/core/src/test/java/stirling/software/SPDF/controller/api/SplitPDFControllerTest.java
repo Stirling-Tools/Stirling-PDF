@@ -130,6 +130,18 @@ class SplitPDFControllerTest {
         }
     }
 
+    private List<String> entryNamesOf(Resource zipResource) throws IOException {
+        List<String> names = new ArrayList<>();
+        try (ZipInputStream zis =
+                new ZipInputStream(new ByteArrayInputStream(zipResource.getContentAsByteArray()))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                names.add(entry.getName());
+            }
+        }
+        return names;
+    }
+
     private List<byte[]> unzip(Resource zipResource) throws IOException {
         List<byte[]> entries = new ArrayList<>();
         try (ZipInputStream zis =
@@ -151,6 +163,37 @@ class SplitPDFControllerTest {
             }
         }
         return counts;
+    }
+
+    @Test
+    @DisplayName("Should name outputs from the pattern, with listed names taking precedence")
+    void shouldApplyOutputNaming() throws Exception {
+        SplitPagesRequest request = new SplitPagesRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, createPdf(6)));
+        request.setPageNumbers("2,4");
+        request.setOutputNamePattern("Part {n}");
+        request.setOutputNames("Cover");
+
+        ResponseEntity<Resource> response = controller.splitPdf(request);
+
+        assertThat(entryNamesOf(response.getBody()))
+                .containsExactly("Cover.pdf", "Part 2.pdf", "Part 3.pdf");
+    }
+
+    @Test
+    @DisplayName("Should keep the numbered default names when no naming is given")
+    void shouldKeepDefaultNames() throws Exception {
+        SplitPagesRequest request = new SplitPagesRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, createPdf(4)));
+        request.setPageNumbers("2");
+
+        ResponseEntity<Resource> response = controller.splitPdf(request);
+
+        assertThat(entryNamesOf(response.getBody())).containsExactly("input_1.pdf", "input_2.pdf");
     }
 
     @Test

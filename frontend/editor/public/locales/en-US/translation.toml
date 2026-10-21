@@ -12740,6 +12740,7 @@ label = "Vertical Divisions"
 selectMethodFirst = "Please select a split method first"
 
 [split.steps]
+advanced = "Advanced Settings"
 chooseMethod = "Choose Method"
 settings = "Settings"
 

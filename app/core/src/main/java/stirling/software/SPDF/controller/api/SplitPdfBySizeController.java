@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.general.SplitPdfBySizeOrCountRequest;
+import stirling.software.SPDF.utils.SplitOutputNames;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -86,14 +87,11 @@ public class SplitPdfBySizeController {
 
                 try (PdfDocument sourceDocument = PdfDocument.open(sourceTempFile.getPath())) {
                     List<int[]> ranges = computeRanges(request, sourceDocument);
-                    List<String> entryNames =
-                            SplitOutputNames.resolve(
-                                    request.getOutputNames(),
-                                    request.getOutputNamePattern(),
-                                    filename,
-                                    ranges.size());
+                    int documentCount =
+                            (int) ranges.stream().filter(range -> range.length > 0).count();
+                    SplitOutputNames names = SplitOutputNames.forRequest(request, documentCount);
 
-                    int fileIndex = 0;
+                    int fileIndex = 1;
                     for (int[] range : ranges) {
                         if (range.length == 0) {
                             continue;
@@ -103,7 +101,7 @@ public class SplitPdfBySizeController {
                                 sourceTempFile.getFile(),
                                 range,
                                 zipOut,
-                                entryNames.get(fileIndex++),
+                                names.next(filename + "_" + fileIndex++),
                                 hasForm);
                     }
                 }

@@ -128,6 +128,29 @@ describe("splitToApiParams", () => {
     ).toEqual({ splitType: 0, splitValue: "10MB" });
   });
 
+  test.each([
+    { method: SPLIT_METHODS.BY_PAGES, pages: "2" },
+    { method: SPLIT_METHODS.BY_SECTIONS },
+    { method: SPLIT_METHODS.BY_CHAPTERS },
+    { method: SPLIT_METHODS.BY_PAGE_DIVIDER },
+    { method: SPLIT_METHODS.BY_POSTER },
+  ])("$method sends the naming fields", (overrides) => {
+    expect(
+      splitToApiParams(
+        params({
+          ...overrides,
+          outputNaming: "section",
+          outputNamePattern: "Section {n}",
+        }),
+      ),
+    ).toMatchObject({ outputNamePattern: "Section {n}" });
+    expect(
+      splitToApiParams(
+        params({ ...overrides, outputNaming: "list", outputNames: "Cover" }),
+      ),
+    ).toMatchObject({ outputNames: "Cover" });
+  });
+
   test("no naming sends neither field", () => {
     expect(
       splitToApiParams(
@@ -240,6 +263,17 @@ describe("split round-trip", () => {
       method: SPLIT_METHODS.BY_CHAPTERS,
       bookmarkLevel: "2",
       includeMetadata: true,
+    },
+    {
+      method: SPLIT_METHODS.BY_CHAPTERS,
+      bookmarkLevel: "1",
+      outputNaming: "custom",
+      outputNamePattern: "{n} - Report",
+    },
+    {
+      method: SPLIT_METHODS.BY_PAGE_DIVIDER,
+      outputNaming: "list",
+      outputNames: "Invoice A\n\nInvoice C",
     },
     { method: SPLIT_METHODS.BY_PAGE_DIVIDER, duplexMode: true },
     {

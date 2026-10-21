@@ -98,6 +98,18 @@ class SplitPdfByChaptersControllerTest {
         }
     }
 
+    private List<String> entryNamesOf(Resource zipResource) throws IOException {
+        List<String> names = new ArrayList<>();
+        try (ZipInputStream zis =
+                new ZipInputStream(new ByteArrayInputStream(zipResource.getContentAsByteArray()))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                names.add(entry.getName());
+            }
+        }
+        return names;
+    }
+
     private List<byte[]> unzip(Resource zipResource) throws IOException {
         List<byte[]> entries = new ArrayList<>();
         try (ZipInputStream zis =
@@ -119,6 +131,44 @@ class SplitPdfByChaptersControllerTest {
             }
         }
         return total;
+    }
+
+    @Test
+    @DisplayName("Should name chapters after their bookmarks by default")
+    void shouldNameChaptersAfterBookmarks() throws Exception {
+        SplitPdfByChaptersRequest request = chaptersRequest();
+
+        ResponseEntity<Resource> response = controller.splitPdf(request);
+
+        assertThat(entryNamesOf(response.getBody()))
+                .containsExactly("0 Intro.pdf", "1 Body.pdf", "2 End.pdf");
+    }
+
+    @Test
+    @DisplayName("Should name chapters from the pattern, with listed names taking precedence")
+    void shouldApplyOutputNamingToChapters() throws Exception {
+        SplitPdfByChaptersRequest request = chaptersRequest();
+        request.setOutputNamePattern("Section {n}");
+        request.setOutputNames("Preface");
+
+        ResponseEntity<Resource> response = controller.splitPdf(request);
+
+        assertThat(entryNamesOf(response.getBody()))
+                .containsExactly("Preface.pdf", "Section 2.pdf", "Section 3.pdf");
+    }
+
+    private SplitPdfByChaptersRequest chaptersRequest() throws IOException {
+        SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput",
+                        "input.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        createPdfWithBookmarks(6, "Intro", "Body", "End")));
+        request.setBookmarkLevel(0);
+        request.setIncludeMetadata(false);
+        request.setAllowDuplicates(false);
+        return request;
     }
 
     @Test

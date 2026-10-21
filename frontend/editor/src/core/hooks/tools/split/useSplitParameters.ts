@@ -9,7 +9,7 @@ import {
   BaseParametersHook,
 } from "@app/hooks/tools/shared/useBaseParameters";
 
-/** How split-by-size/count names its outputs; "" keeps the server's default naming. */
+/** How a split names its outputs; "" keeps each method's default naming. */
 export type OutputNaming =
   | ""
   | "part"
