@@ -18,10 +18,8 @@ import {
   ProcessedFileMetadata,
 } from "@app/types/fileContext";
 import { FileId, ToolOperation } from "@app/types/file";
-import {
-  generateThumbnailPairWithMetadata,
-  LARGE_PDF_PARSE_LIMIT,
-} from "@app/utils/thumbnailUtils";
+import { generateThumbnailPairWithMetadata } from "@app/utils/thumbnailUtils";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/pdfParseLimit";
 import {
   beginDamageCheck,
   settleDamageCheck,

@@ -14,6 +14,7 @@ import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { getPdfAccess } from "@app/services/pdfAccessService";
 import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
 import { isDamagedPdfError } from "@app/utils/pdfDamage";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/pdfParseLimit";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -43,8 +44,7 @@ function reportThumbnailFailure(file: File, error: unknown): void {
   console.warn(`Thumbnail generation failed for ${file.name}:`, error);
 }
 
-/** Thumbnail parsing above this limit uses a bounded prefix to avoid exhausting renderer memory. */
-export const LARGE_PDF_PARSE_LIMIT = 100 * 1024 * 1024;
+export { LARGE_PDF_PARSE_LIMIT };
 
 /** Linearized PDFs keep page 1 + hint tables in the first bytes, so a small
  * prefix is often enough to render a thumbnail without reading the file. */
