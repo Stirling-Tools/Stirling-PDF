@@ -464,7 +464,7 @@ function fakeGitHub(
       pulls: {
         get: async () => {
           reads.mergeable += 1;
-          return { data: { mergeable, mergeable_state: mergeableState, labels: [], head: { ref: "feature", repo: null } } };
+          return { data: { mergeable, mergeable_state: mergeableState } };
         },
         update: async ({ pull_number }) => write(`close #${pull_number}`),
         listFiles: async ({ page }) => ({ data: page === 1 ? files : [] }),
@@ -594,7 +594,7 @@ describe("triage run", () => {
   describe("waiting-on-author from a review", () => {
     const changesRequested: TurnItem = {
       __typename: "PullRequestReview",
-      submittedAt: daysAgo(1),
+      submittedAt: daysAgo(10),
       state: "CHANGES_REQUESTED",
       authorCanPushToRepository: true,
       author: PERSON,

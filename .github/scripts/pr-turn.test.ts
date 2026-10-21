@@ -192,6 +192,12 @@ describe("sync turn label", () => {
     assert.ok(reads.pages > 2);
   });
 
+  it("reads no timeline for an unlabelled PR no review hands to the author", async () => {
+    const { github, reads } = fakeGitHub([review("APPROVED", "maintainer", true, 2), comment(AUTHOR, 1)]);
+    assert.equal(await syncTurnLabel(github, issue, false, true), false);
+    assert.equal(reads.pages, 1);
+  });
+
   it("changes nothing in a dry run", async () => {
     assert.deepEqual(await sync([review("CHANGES_REQUESTED", "maintainer", true, 1)], { live: false }), { waiting: true, calls: [] });
     assert.deepEqual(await sync([], { labelled: true, live: false }), { waiting: false, calls: [] });

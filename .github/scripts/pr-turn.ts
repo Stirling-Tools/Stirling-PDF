@@ -156,14 +156,17 @@ async function latestTimelineMove(github: GitHubClient, repo: Repo, number: numb
  * Whether the PR is waiting on its author. Read from the PR's history rather than the
  * event at hand, so runs that overlap, arrive late or are re-run all agree.
  */
-export async function authorHasTurn(github: GitHubClient, { owner, repo }: Repo, number: number): Promise<boolean> {
+async function authorHasTurn(github: GitHubClient, { owner, repo }: Repo, number: number, labelled: boolean): Promise<boolean> {
   const page = await github.graphql<ReviewsPage>(REVIEWS_QUERY, { owner, repo, number });
   const pr = page.repository.pullRequest;
   if (pr === null) return false;
   const author = pr.author?.login;
-  const fromReviews = pr.reviews.nodes.flatMap((review) => move(review.submittedAt, reviewTurn(review, author, pr.headRefOid)));
+  const fromReviews = latestMove(pr.reviews.nodes.flatMap((review) => move(review.submittedAt, reviewTurn(review, author, pr.headRefOid))));
+  // Without the label, each time it went on it came off again later, so only a review
+  // can have given the author the turn.
+  if (!labelled && fromReviews?.turn !== "author") return false;
   const fromTimeline = await latestTimelineMove(github, { owner, repo }, number, author);
-  return latestMove(fromTimeline === null ? fromReviews : [...fromReviews, fromTimeline])?.turn === "author";
+  return latestMove([fromReviews, fromTimeline].filter((latest) => latest !== null))?.turn === "author";
 }
 
 /** The PR whose author the triggering event shows responding, or null. */
@@ -198,7 +201,7 @@ export async function updateTurnLabel({
  * `live`.
  */
 export async function syncTurnLabel(github: GitHubClient, issue: IssueRef, labelled: boolean, live: boolean) {
-  const waiting = await authorHasTurn(github, issue, issue.issue_number);
+  const waiting = await authorHasTurn(github, issue, issue.issue_number, labelled);
   if (live && waiting && !labelled) await github.rest.issues.addLabels({ ...issue, labels: [LABELS.waitingOnAuthor] });
   if (live && !waiting && labelled) await removeLabel(github, issue, LABELS.waitingOnAuthor);
   return waiting;

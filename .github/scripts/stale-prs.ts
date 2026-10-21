@@ -655,9 +655,9 @@ export default async function triageStalePullRequests({
       let pr = await fetchPullRequest(github, repo, number);
       if (pr === null) continue;
       if (!pr.isDraft) {
-        const labelled = hasLabel(pr, LABELS.waitingOnAuthor);
-        const waiting = await syncTurnLabel(github, issue, labelled, live);
-        if (waiting !== labelled) {
+        const turnLabelled = hasLabel(pr, LABELS.waitingOnAuthor);
+        const waiting = await syncTurnLabel(github, issue, turnLabelled, live);
+        if (waiting !== turnLabelled) {
           core.info(`#${number}: ${waiting ? "+" : "-"}${LABELS.waitingOnAuthor}`);
           pr = withLabel(pr, LABELS.waitingOnAuthor, waiting, now);
         }
