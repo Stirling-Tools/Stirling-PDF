@@ -20,6 +20,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   "watermark",
   "sanitize",
   "split",
+  "cutAndTile",
   "merge",
   "convert",
   "ocr",

@@ -21,6 +21,7 @@ import { getSynonyms } from "@app/utils/toolSynonyms";
 import { useProprietaryToolRegistry } from "@app/data/useProprietaryToolRegistry";
 import { classifyOperationConfig } from "@app/hooks/tools/classify/useClassifyOperation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
+import { cutAndTileOperationConfig } from "@app/hooks/tools/cutAndTile/useCutAndTileOperation";
 import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
 import { removePasswordOperationConfig } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
@@ -581,6 +582,20 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           () => import("@app/components/tools/split/SplitAutomationSettings"),
         ),
         synonyms: getSynonyms(t, "split"),
+      },
+      cutAndTile: {
+        icon: <Icon name="layout-grid" size="1.5rem" />,
+        name: t("home.cutAndTile.title", "Cut & Tile"),
+        component: lazy(() => import("@app/tools/CutAndTile")),
+        description: t(
+          "home.cutAndTile.desc",
+          "Cut pages into a grid, or tile them across printable sheets.",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        endpoints: ["split-pdf-by-sections", "split-for-poster-print"],
+        operationConfig: asRegistryConfig(cutAndTileOperationConfig),
+        synonyms: getSynonyms(t, "cutAndTile"),
       },
       reorganizePages: {
         icon: <Icon name="move-item-down" size="1.5rem" />,

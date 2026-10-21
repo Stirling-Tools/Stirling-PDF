@@ -1,10 +1,11 @@
-import { Box, Group, Radio, Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Radio, Stack } from "@mantine/core";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
-import type { SplitChoice, SplitMethod } from "@app/constants/splitConstants";
+import { Button } from "@app/ui/Button";
+import { ChoiceRow } from "@app/components/shared/ChoiceRow";
 import classes from "@app/components/tools/split/SplitMethodPicker.module.css";
+import type { SplitChoice, SplitMethod } from "@app/constants/splitConstants";
 
 interface SplitMethodPickerProps {
   primary: SplitChoice[];
@@ -31,25 +32,15 @@ export function SplitMethodPicker({
   const showMore = moreOpen || inMore;
 
   const renderChoice = (choice: SplitChoice) => (
-    <Radio.Card
+    <ChoiceRow
       key={choice.method}
       value={choice.method}
-      className={classes.row}
+      icon={choice.icon}
+      label={t(choice.labelKey)}
+      description={t(choice.descriptionKey)}
       disabled={disabled}
-      data-testid={`split-choice-${choice.method}`}
-    >
-      <Group gap="sm" wrap="nowrap" align="flex-start">
-        <Box className={classes.icon}>
-          <Icon name={choice.icon} size="0.9375rem" />
-        </Box>
-        <Box className={classes.text}>
-          <Text className={classes.title}>{t(choice.labelKey)}</Text>
-          <Text className={classes.description}>
-            {t(choice.descriptionKey)}
-          </Text>
-        </Box>
-      </Group>
-    </Radio.Card>
+      testId={`split-choice-${choice.method}`}
+    />
   );
 
   return (

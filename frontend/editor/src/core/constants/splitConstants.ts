@@ -129,18 +129,6 @@ export const MORE_SPLIT_CHOICES: SplitChoice[] = [
     descriptionKey: "split.choice.maxSizeHint",
   },
   {
-    method: SPLIT_METHODS.BY_SECTIONS,
-    icon: "layout-grid",
-    labelKey: "split.choice.grid",
-    descriptionKey: "split.choice.gridHint",
-  },
-  {
-    method: SPLIT_METHODS.BY_POSTER,
-    icon: "printer",
-    labelKey: "split.choice.poster",
-    descriptionKey: "split.choice.posterHint",
-  },
-  {
     method: SPLIT_METHODS.BY_PAGE_DIVIDER,
     icon: "scan-line",
     labelKey: "split.choice.dividers",

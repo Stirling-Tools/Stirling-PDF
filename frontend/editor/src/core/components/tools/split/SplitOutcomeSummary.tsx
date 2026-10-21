@@ -1,8 +1,6 @@
-import { Box, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { OutcomePanel } from "@app/components/shared/OutcomePanel";
 import type { SplitOutcome } from "@app/components/tools/split/splitOutcome";
-import classes from "@app/components/tools/split/SplitOutcomeSummary.module.css";
 
 interface SplitOutcomeSummaryProps {
   outcome: SplitOutcome;
@@ -34,39 +32,13 @@ export function SplitOutcomeSummary({ outcome }: SplitOutcomeSummaryProps) {
   const { t } = useTranslation();
   const summary = describe(outcome, t);
 
-  // The live region stays mounted even with nothing to say: a live region added
-  // at the same moment as its text is not announced.
   return (
-    <Box
-      className={classes.summary}
-      data-tone={summary?.tone ?? "info"}
-      data-empty={summary ? undefined : true}
-      data-testid="split-outcome"
-    >
-      <Box className={classes.icon}>
-        {summary && (
-          <Icon
-            name={summary.tone === "danger" ? "circle-alert" : "info"}
-            size="0.9375rem"
-          />
-        )}
-      </Box>
-      <Box
-        className={classes.body}
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        {summary && (
-          <>
-            <Text className={classes.title}>{summary.title}</Text>
-            {summary.detail && (
-              <Text className={classes.detail}>{summary.detail}</Text>
-            )}
-          </>
-        )}
-      </Box>
-    </Box>
+    <OutcomePanel
+      tone={summary?.tone ?? "info"}
+      title={summary?.title}
+      detail={summary?.detail}
+      testId="split-outcome"
+    />
   );
 }
 

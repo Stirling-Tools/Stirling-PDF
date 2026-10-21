@@ -5885,6 +5885,11 @@ desc = "Adds signature to PDF by drawing, text or image"
 tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Sign"
 
+[home.cutAndTile]
+desc = "Cut pages into a grid, or tile them across printable sheets."
+tags = "grid,poster,tile,cut,sections,print,enlarge,slice,split pages,cut pages"
+title = "Cut & Tile"
+
 [home.split]
 desc = "Split PDFs into multiple documents"
 tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
@@ -12767,6 +12772,70 @@ large = "Large"
 medium = "Medium"
 small = "Small"
 x-large = "X-Large"
+
+[cutAndTile]
+resultsTitle = "Cut & tile results"
+submit = "Cut & tile"
+
+[cutAndTile.error]
+failed = "Could not cut the pages."
+
+[cutAndTile.steps]
+how = "How to cut"
+
+[cutAndTile.mode]
+grid = "Grid sections"
+gridHint = "Cut each page into rows and columns."
+groupLabel = "How to cut"
+poster = "Poster tiles"
+posterHint = "Tile each page across printable sheets."
+
+[cutAndTile.grid]
+assemble = "Reassemble into one PDF"
+assembleHint = "Cut pages become their pieces; everything else keeps its page."
+columns = "Columns"
+customPages = "Page numbers"
+customPagesPlaceholder = "2, 4, 6-8"
+pages = "Pages to cut"
+pagesHint = "Other pages stay whole, one file each."
+rows = "Rows"
+
+[cutAndTile.pages]
+all = "Every page"
+custom = "Only these pages"
+exceptFirst = "All except the first"
+exceptFirstAndLast = "All except the first and last"
+exceptLast = "All except the last"
+
+[cutAndTile.poster]
+columns = "Tiles across"
+pageSize = "Paper size"
+pageSizeHint = "Each tile is scaled to fit this size."
+rightToLeft = "Right-to-left order"
+rightToLeftHint = "Number the tiles right to left, for RTL layouts."
+rows = "Tiles down"
+
+[cutAndTile.poster.sizes]
+a3 = "A3"
+a4 = "A4"
+a5 = "A5"
+legal = "Legal"
+letter = "Letter"
+tabloid = "Tabloid"
+
+[cutAndTile.outcome]
+assembled = "One PDF"
+assembledHint = "Reassembled: each cut page becomes {{rows}} × {{columns}} pieces."
+badPages = "Check the page numbers"
+badPagesHint = "Use pages that exist in this document, like 2, 4, 6-8."
+badValues = "Check the numbers"
+badValuesHint = "Rows and columns are whole numbers, one or more."
+everyPage = "Every page → {{pieces}} pieces ({{rows}} × {{columns}})."
+files_one = "{{count}} file"
+files_other = "{{count}} files"
+noneCut = "No page matches, so nothing is cut."
+posterHint = "Each page → {{pieces}} tiles ({{rows}} × {{columns}}) at {{size}}."
+somePages = "{{cut}} of {{total}} pages → {{pieces}} pieces each; the rest stay whole."
 
 [split]
 resultsTitle = "Split Results"

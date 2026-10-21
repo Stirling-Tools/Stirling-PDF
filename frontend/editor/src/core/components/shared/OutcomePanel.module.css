@@ -1,4 +1,4 @@
-.summary {
+.panel {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
@@ -8,7 +8,7 @@
   background: var(--c-surface-sunken);
 }
 
-.summary[data-tone="danger"] {
+.panel[data-tone="danger"] {
   border-color: color-mix(in srgb, var(--c-danger) 40%, var(--c-border-subtle));
   background: color-mix(in srgb, var(--c-danger) 8%, var(--c-surface));
 }
@@ -19,7 +19,7 @@
   color: var(--c-text-muted);
 }
 
-.summary[data-tone="danger"] .icon {
+.panel[data-tone="danger"] .icon {
   color: var(--c-danger);
 }
 
@@ -34,7 +34,7 @@
   color: var(--c-text);
 }
 
-.summary[data-tone="danger"] .title {
+.panel[data-tone="danger"] .title {
   color: var(--c-danger);
 }
 
@@ -46,7 +46,7 @@
 }
 
 /* Nothing to say yet: keep the live region in the tree, out of sight. */
-.summary[data-empty] {
+.panel[data-empty] {
   position: absolute;
   width: 1px;
   height: 1px;

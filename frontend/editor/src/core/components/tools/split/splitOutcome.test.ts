@@ -2,8 +2,8 @@ import { describe, expect, test } from "vitest";
 import {
   computeSplitOutcome,
   pagesCutBySections,
-  parsePageSelection,
 } from "@app/components/tools/split/splitOutcome";
+import { parsePageSelection } from "@app/utils/parsePageSelection";
 import {
   defaultParameters,
   type SplitParameters,
