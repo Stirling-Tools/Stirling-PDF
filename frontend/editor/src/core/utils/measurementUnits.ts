@@ -33,12 +33,11 @@ export function formatMeasurement(
   value: number,
   unit: LengthUnit,
   kind: "length" | "area",
-  decimals = 2,
 ): string {
   const suffix = kind === "area" ? `${unit}²` : unit;
 
   return `${new Intl.NumberFormat("nb-NO", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: decimals,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(value)} ${suffix}`;
 }

@@ -1,7 +1,8 @@
 import { createPortal } from "react-dom";
-import type { Measurement } from "@app/utils/measurementTypes";
-import { MeasurementPanel } from "@app/components/viewer/MeasurementPanel";
-import type { LengthUnit } from "@app/utils/measurementUnits";
+import type { Measurement } from "../../../features/measurement/utils/measurementTypes";
+import { embedMeasurementsInPdf } from "../../../features/measurement/utils/measurementPdfStorage";
+import { setActiveMeasurementExport, clearActiveMeasurementExport } from "../../../features/measurement/utils/measurementExportBridge";
+import { MeasurementPanel, useMeasurementGroups, useMeasurementBackup, useMeasurementControls, useMeasurementPanelVisibility } from "../../../features/measurement";
 import React, {
   useCallback,
   useEffect,
@@ -63,7 +64,7 @@ import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOver
 import {
   RulerOverlay,
   type RulerOverlayHandle,
-} from "@app/components/viewer/RulerOverlay";
+} from "../../../features/measurement";
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
@@ -777,6 +778,7 @@ const EmbedPdfViewerContent = ({
   const policyEnforcingRef = useRef(false);
   policyEnforcingRef.current = policyEnforcing;
 
+  const measurementHistoryEnabledRef = useRef(false);
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -870,16 +872,16 @@ const EmbedPdfViewerContent = ({
             // Ctrl+Z: Undo; Ctrl+Shift+Z: Redo
             event.preventDefault();
             if (event.shiftKey) {
-              historyApiRef.current?.redo?.();
+              if (!measurementHistoryEnabledRef.current || !rulerOverlayRef.current?.redoMeasurement()) historyApiRef.current?.redo?.();
             } else {
-              historyApiRef.current?.undo?.();
+              if (!measurementHistoryEnabledRef.current || !rulerOverlayRef.current?.undoMeasurement()) historyApiRef.current?.undo?.();
             }
             return;
           case "y":
           case "Y":
             // Ctrl+Y: Redo
             event.preventDefault();
-            historyApiRef.current?.redo?.();
+            if (!measurementHistoryEnabledRef.current || !rulerOverlayRef.current?.redoMeasurement()) historyApiRef.current?.redo?.();
             return;
         }
         return;
@@ -1065,7 +1067,16 @@ const EmbedPdfViewerContent = ({
     redactionsApplied,
   ]);
 
+  // Editable measurement data follows Stirling's existing PDF save action.
+  const measurementPdfSnapshotRef = useRef({
+    measurements: [] as Measurement[],
+    groups: [] as typeof measurementGroups,
+    pageScales: [] as Array<[number, import("../../../features/measurement/utils/measurementTypes").PageScaleInfo]>,
+  });
+
   // Save changes - save annotations and redactions to file (overwrites active file)
+  const measurementSnapshotRef = useRef<Measurement[]>([]);
+
   const applyChanges = useCallback(async () => {
     if (applyChangesInFlightRef.current) {
       return applyChangesInFlightRef.current;
@@ -1106,10 +1117,14 @@ const EmbedPdfViewerContent = ({
       // Step 1: Export PDF with annotations using EmbedPDF
       suppressHistoryDirtyRef.current = true;
       const exportRevision = historyRevisionRef.current;
-      const arrayBuffer = await exportActions.saveAsCopy();
+      let arrayBuffer = await exportActions.saveAsCopy();
       if (!arrayBuffer) {
         throw new Error("Failed to export PDF");
       }
+
+      // Store editable measurement geometry in the PDF catalog.
+      // No measurements: preserve the exported bytes unchanged.
+      arrayBuffer = await embedMeasurementsInPdf(arrayBuffer, measurementPdfSnapshotRef.current);
 
       // Step 2: Convert ArrayBuffer to File
       const blob = new Blob([arrayBuffer], { type: "application/pdf" });
@@ -1344,7 +1359,10 @@ const EmbedPdfViewerContent = ({
       );
 
       // Export PDF WITHOUT committing pending marks - this saves only applied redactions
-      const arrayBuffer = await exportActions.saveAsCopy();
+      const exportedPdfBytes = await exportActions.saveAsCopy();
+      const arrayBuffer = exportedPdfBytes
+        ? await embedMeasurementsInPdf(exportedPdfBytes, measurementPdfSnapshotRef.current)
+        : exportedPdfBytes;
       if (!arrayBuffer) {
         throw new Error("Failed to export PDF");
       }
@@ -1757,6 +1775,7 @@ const EmbedPdfViewerContent = ({
     isRulerActive,
     setIsRulerActive,
     pageMeasureScales,
+    restoreEmbeddedPageScales,
     customScale,
     handleSetCustomScale,
     isScaleCalibrationActive,
@@ -1771,113 +1790,58 @@ const EmbedPdfViewerContent = ({
     rulerOverlayRef,
   });
 
-  const [measurementPanelVisible, setMeasurementPanelVisible] = useState(false);
-  const toggleMeasurementPanel = useCallback(() => {
-    setMeasurementPanelVisible(v => !v);
-  }, []);
-  const [panelMeasurements, setPanelMeasurements] = useState<Measurement[]>([]);
-  const [measurementUnit, setMeasurementUnit] = useState<LengthUnit>("m");
-  const [measurementGroups, setMeasurementGroups] = useState<{id: string; name: string; color: string; lineWidth?: number}[]>([{id:"default",name:"Generelt",color:"#299bff",lineWidth:2}]);
-  const [activeMeasurementGroup, setActiveMeasurementGroup] = useState("default");
-  const [measurementTool, setMeasurementTool] =
-    useState<"length" | "rectangle" | "polygon">("length");
+  measurementHistoryEnabledRef.current = isRulerActive;
 
-  // Persist group definitions and measurement membership per PDF. The PDF
-  // measurement manager restores geometry independently, so membership must
-  // be reapplied after that restoration rather than relying on mount order.
-  const measurementGroupStorageKey = `stirling-measurement-groups-v3:${currentFile?.name ?? currentFileStableId ?? "unknown"}`;
-  const [savedGroupMembership, setSavedGroupMembership] = useState<Record<string, string>>({});
-  const measurementBackupKey = `stirling-measurement-backup-v1:${currentFile?.name ?? currentFileStableId ?? "unknown"}`;
-  const backupKeyRef = useRef(measurementBackupKey);
-  useEffect(() => { backupKeyRef.current = measurementBackupKey; }, [measurementBackupKey]);
-  const saveMeasurementBackup = useCallback((next: Measurement[]) => {
-    try {
-      // Never overwrite a non-empty backup with an accidental empty restoration.
-      if (next.length) localStorage.setItem(backupKeyRef.current, JSON.stringify(next));
-    } catch (error) { console.warn("Kunne ikke sikkerhetslagre målinger", error); }
-  }, []);
+  const { measurementPanelVisible, setMeasurementPanelVisible, toggleMeasurementPanel } =
+    useMeasurementPanelVisibility(isRulerActive);
+  const { panelMeasurements, subscribeToMeasurements, embeddedGroups, embeddedPageScales } = useMeasurementBackup({
+    documentName: currentFile?.name,
+    stableId: currentFileStableId,
+    overlayRef: rulerOverlayRef,
+    sourceFile: effectiveFile?.file instanceof File ? effectiveFile.file : null,
+  });
+  useEffect(() => { measurementSnapshotRef.current = panelMeasurements; }, [panelMeasurements]);
+  const { measurementUnit, setMeasurementUnit, measurementTool, setMeasurementTool } = useMeasurementControls();
+  const {
+    measurementGroups,
+    setMeasurementGroups,
+    activeMeasurementGroup,
+    setActiveMeasurementGroup,
+    setSavedGroupMembership,
+    changeMeasurementGroup,
+  } = useMeasurementGroups({
+    documentName: currentFile?.name,
+    stableId: currentFileStableId,
+    legacyFileId: currentFileId,
+    measurements: panelMeasurements,
+    overlayRef: rulerOverlayRef,
+  });
 
-  const [restoredGroupKey, setRestoredGroupKey] = useState<string | null>(null);
-
+  // Restore page-specific calibration stored in the PDF, not only its measurement geometry.
   useEffect(() => {
-    setRestoredGroupKey(null);
-    let saved: { groups?: typeof measurementGroups; activeGroup?: string; membership?: Record<string, string> } = {};
-    try {
-      const raw = localStorage.getItem(measurementGroupStorageKey) ?? localStorage.getItem(`stirling-measurement-groups-v2:${currentFileId ?? "unknown"}`);
-      if (raw) saved = JSON.parse(raw);
-    } catch { /* Ignore corrupt or blocked local storage. */ }
-    const validGroups = Array.isArray(saved.groups)
-      ? saved.groups.filter(g => g && typeof g.id === "string" && typeof g.name === "string" && /^#[0-9a-fA-F]{6}$/.test(g.color))
-      : [];
-    setMeasurementGroups(validGroups.length ? validGroups : [{id:"default",name:"Generelt",color:"#299bff",lineWidth:2}]);
-    setActiveMeasurementGroup(saved.activeGroup && validGroups.some(g => g.id === saved.activeGroup) ? saved.activeGroup : "default");
-    setSavedGroupMembership(saved.membership && typeof saved.membership === "object" ? saved.membership : {});
-    setRestoredGroupKey(measurementGroupStorageKey);
-  }, [measurementGroupStorageKey]);
+    restoreEmbeddedPageScales(embeddedPageScales);
+  }, [embeddedPageScales, restoreEmbeddedPageScales]);
 
+  // PDF-embedded groups override stale localStorage groups when a PDF is opened.
   useEffect(() => {
-    if (restoredGroupKey !== measurementGroupStorageKey) return;
-    try {
-      localStorage.setItem(measurementGroupStorageKey, JSON.stringify({
-        groups: measurementGroups,
-        activeGroup: activeMeasurementGroup,
-        membership: savedGroupMembership,
-      }));
-    } catch { /* Storage may be unavailable. */ }
-  }, [measurementGroupStorageKey, restoredGroupKey, measurementGroups, activeMeasurementGroup, savedGroupMembership]);
+    if (embeddedGroups?.length) setMeasurementGroups(embeddedGroups);
+  }, [embeddedGroups, setMeasurementGroups]);
 
-  const changeMeasurementGroup = (id: string, groupId: string) => {
-    if (!measurementGroups.some(g => g.id === groupId)) return;
-    setSavedGroupMembership(previous => ({...previous, [id]: groupId}));
-    const updated = rulerOverlayRef.current?.getMeasurements().map(m => m.id === id ? {...m, groupId} : m);
-    if (updated) rulerOverlayRef.current?.setMeasurements(updated);
+  measurementPdfSnapshotRef.current = {
+    measurements: panelMeasurements,
+    groups: measurementGroups,
+    pageScales: pageMeasureScales ? Array.from(pageMeasureScales.entries()) : [],
   };
 
+  // Exports go through Stirling's policy/download pipeline; keep its PDF snapshot current.
   useEffect(() => {
-    if (restoredGroupKey !== measurementGroupStorageKey || !panelMeasurements.length) return;
-    const restored = panelMeasurements.map(m => {
-      const groupId = savedGroupMembership[m.id];
-      return groupId && measurementGroups.some(g => g.id === groupId) && m.groupId !== groupId
-        ? {...m, groupId} : m;
-    });
-    if (restored.some((m, i) => m !== panelMeasurements[i])) {
-      rulerOverlayRef.current?.setMeasurements(restored);
-    }
-  }, [panelMeasurements, savedGroupMembership, measurementGroups, restoredGroupKey, measurementGroupStorageKey]);
+    if (previewFile || !currentFile) return;
+    setActiveMeasurementExport(currentFileStableId, currentFile.name, measurementPdfSnapshotRef.current);
+    return () => clearActiveMeasurementExport(currentFileStableId);
+  }, [previewFile, currentFile, currentFileStableId, panelMeasurements, measurementGroups, pageMeasureScales]);
 
+  useEffect(() => subscribeToMeasurements(setSavedGroupMembership), [subscribeToMeasurements, setSavedGroupMembership]);
 
-  useEffect(() => {
-    const overlay = rulerOverlayRef.current;
-    if (!overlay) return;
-
-    const existing = overlay.getMeasurements();
-    if (!existing.length) {
-      try {
-        const raw = localStorage.getItem(measurementBackupKey);
-        if (raw) {
-          const recovered = JSON.parse(raw) as Measurement[];
-          if (Array.isArray(recovered) && recovered.length) overlay.restoreMeasurements(recovered);
-        }
-      } catch (error) { console.warn("Kunne ikke hente målesikkerhetskopi", error); }
-    }
-    setPanelMeasurements(overlay.getMeasurements());
-    return overlay.onMeasurementsChange((next) => {
-      saveMeasurementBackup(next);
-      setPanelMeasurements(next);
-      setSavedGroupMembership(previous => {
-        let changed = false;
-        const merged = {...previous};
-        next.forEach(m => {
-          if (m.groupId && merged[m.id] !== m.groupId) { merged[m.id] = m.groupId; changed = true; }
-        });
-        return changed ? merged : previous;
-      });
-    });
-  }, [measurementBackupKey, saveMeasurementBackup]);
-
-  useEffect(() => {
-    if (isRulerActive) setMeasurementPanelVisible(true);
-  }, [isRulerActive]);
 
   useEffect(() => {
     const escapeToNavigation = (event: KeyboardEvent) => {

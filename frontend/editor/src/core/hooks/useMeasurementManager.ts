@@ -9,6 +9,7 @@ import type {
   Measurement,
   MeasureScale,
   PageMeasureScales,
+  PageScaleInfo,
 } from "@app/utils/measurementTypes";
 import type { RulerOverlayHandle } from "@app/components/viewer/RulerOverlay";
 import {
@@ -41,6 +42,7 @@ interface UseMeasurementManagerReturn {
   isRulerActive: boolean;
   setIsRulerActive: (v: boolean) => void;
   pageMeasureScales: PageMeasureScales | null;
+  restoreEmbeddedPageScales: (scales: Array<[number, PageScaleInfo]> | null) => void;
   customScale: MeasureScale | null;
   handleSetCustomScale: (scale: MeasureScale | null) => void;
   isScaleCalibrationActive: boolean;
@@ -61,6 +63,12 @@ export function useMeasurementManager({
   const [isRulerActive, setIsRulerActive] = useState(false);
   const [pageMeasureScales, setPageMeasureScales] =
     useState<PageMeasureScales | null>(null);
+  const embeddedScalesRef = useRef<PageMeasureScales | null>(null);
+  const restoreEmbeddedPageScales = useCallback((entries: Array<[number, PageScaleInfo]> | null) => {
+    const valid = (entries ?? []).filter(([index, info]) => Number.isInteger(index) && index >= 0 && info && Array.isArray(info.viewports));
+    embeddedScalesRef.current = valid.length ? new Map(valid) : null;
+    if (valid.length) setPageMeasureScales(new Map(valid));
+  }, []);
   const [customScale, setCustomScale] = useState<MeasureScale | null>(null);
   const [isScaleCalibrationActive, setIsScaleCalibrationActive] =
     useState(false);
@@ -204,6 +212,7 @@ export function useMeasurementManager({
 
   useEffect(() => {
     if (!currentFileKey) {
+      embeddedScalesRef.current = null;
       setPageMeasureScales(null);
       setCustomScale(null);
       setScaleCalibrationMeasurement(null);
@@ -218,6 +227,7 @@ export function useMeasurementManager({
       return;
     }
     restoredFileKeyRef.current = currentFileKey;
+    embeddedScalesRef.current = null;
     setScaleCalibrationMeasurement(null);
     setIsScaleCalibrationActive(false);
 
@@ -255,23 +265,23 @@ export function useMeasurementManager({
   useEffect(() => {
     const fileBlob = effectiveFile?.file;
     if (!fileBlob || !currentFileKey || !isRulerActive) {
-      setPageMeasureScales(null);
+      if (!embeddedScalesRef.current) setPageMeasureScales(null);
       return;
     }
 
-    setPageMeasureScales(null);
+    if (!embeddedScalesRef.current) setPageMeasureScales(null);
 
     let cancelled = false;
     extractPageMeasureScales(fileBlob)
       .then((scales) => {
         if (!cancelled) {
-          setPageMeasureScales(scales);
+          if (!embeddedScalesRef.current) setPageMeasureScales(scales);
         }
       })
       .catch((error) => {
         if (!cancelled) {
           console.warn("[Measurement] Failed to load PDF scales", error);
-          setPageMeasureScales(null);
+          if (!embeddedScalesRef.current) setPageMeasureScales(null);
         }
       });
 
@@ -307,6 +317,7 @@ export function useMeasurementManager({
     isRulerActive,
     setIsRulerActive: handleSetRulerActive,
     pageMeasureScales,
+    restoreEmbeddedPageScales,
     customScale,
     handleSetCustomScale,
     isScaleCalibrationActive,
