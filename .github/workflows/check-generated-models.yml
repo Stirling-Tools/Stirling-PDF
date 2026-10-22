@@ -75,7 +75,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Task
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        uses: ./.github/actions/setup-task
 
       - name: Verify generated models are up to date
         id: models-check

@@ -148,7 +148,7 @@ jobs:
               per_page: 100
             });
 
-            const v2Comments = comments.filter(comment => 
+            const v2Comments = comments.filter(comment =>
               comment.body.includes('🚀 **Auto-deploying V2 version**') ||
               comment.body.includes('## 🚀 V2 Auto-Deployment Complete!') ||
               comment.body.includes('❌ **V2 Auto-deployment failed**')
@@ -393,7 +393,8 @@ jobs:
 
       - name: Install Task for Storybook
         if: steps.sb-changes.outputs.storybook == 'true'
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        # uses: Stirling-Tools/Stirling-PDF/.github/actions/setup-task@main
+        uses: ./.github/actions/setup-task
 
       - name: Build and deploy Storybook
         id: storybook
