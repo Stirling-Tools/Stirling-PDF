@@ -3,14 +3,14 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
-import { AccountLinkNotice } from "@app/components/AccountLinkNotice";
-import { handleHttpError } from "@app/services/httpErrorHandler";
-import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
-import type { ConnectionConfig } from "@app/services/connectionModeService";
+import { AccountLinkNotice } from "@editor/components/AccountLinkNotice";
+import { handleHttpError } from "@editor/services/httpErrorHandler";
+import { clearAccountLinkBlock } from "@editor/services/accountLinkBlock";
+import type { ConnectionConfig } from "@editor/services/connectionModeService";
 
 // The notice renders the linking modal through React.lazy; warming it here
 // keeps the first assertion from racing the chunk import.
-await import("@app/components/account-link/EditorLinkModal");
+await import("@editor/components/account-link/EditorLinkModal");
 
 const {
   auth,
@@ -30,11 +30,11 @@ const {
   listeners: new Set<(config: ConnectionConfig) => void>(),
 }));
 
-vi.mock("@app/auth", () => ({ useAuth: () => auth }));
-vi.mock("@app/components/toast", () => ({ alert, dismissToast }));
-vi.mock("@app/platform/openExternal", () => ({ openExternal }));
-vi.mock("@app/services/apiClient", () => ({ default: { get } }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/auth", () => ({ useAuth: () => auth }));
+vi.mock("@editor/components/toast", () => ({ alert, dismissToast }));
+vi.mock("@editor/platform/openExternal", () => ({ openExternal }));
+vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentConfig,
     subscribeToModeChanges: (listener: (config: ConnectionConfig) => void) => {
@@ -43,7 +43,7 @@ vi.mock("@app/services/connectionModeService", () => ({
     },
   },
 }));
-vi.mock("@app/services/specialErrorToasts", () => ({
+vi.mock("@editor/services/specialErrorToasts", () => ({
   showSpecialErrorToast: vi.fn().mockReturnValue(false),
 }));
 vi.mock("react-i18next", async (importOriginal) => ({
@@ -52,10 +52,10 @@ vi.mock("react-i18next", async (importOriginal) => ({
     t: (key: string, fallback?: string) => fallback ?? key,
   }),
 }));
-vi.mock("@app/ui", async () => ({
-  ...(await import("@app/ui/Button")),
-  ...(await import("@app/ui/Modal")),
-  ...(await import("@app/ui/Banner")),
+vi.mock("@editor/ui", async () => ({
+  ...(await import("@editor/ui/Button")),
+  ...(await import("@editor/ui/Modal")),
+  ...(await import("@editor/ui/Banner")),
 }));
 
 function config(

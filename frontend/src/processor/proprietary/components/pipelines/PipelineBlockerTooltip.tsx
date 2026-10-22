@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Tooltip } from "@mantine/core";
-import "@portal/components/pipelines/PipelineBlockerTooltip.css";
+import "@processor/components/pipelines/PipelineBlockerTooltip.css";
 
 export interface PipelineBlockerTooltipProps {
   /** Short line above the list, e.g. "To create this pipeline:" / "To save your changes:". */

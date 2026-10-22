@@ -14,13 +14,13 @@ import {
   renderCellActions,
   type TabItem,
   Tabs,
-} from "@app/ui";
-import { Icon } from "@app/ui/Icon";
-import { type Member, type RoleId } from "@portal/api/users";
-import type { Team } from "@portal/api/teams";
-import type { UsersCapabilities } from "@portal/api/usersCapabilities";
-import { avatarToneForMember } from "@portal/components/users/format";
-import { useTeamAvatarUrls } from "@app/hooks/useTeamAvatarUrls";
+} from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
+import { type Member, type RoleId } from "@processor/api/users";
+import type { Team } from "@processor/api/teams";
+import type { UsersCapabilities } from "@processor/api/usersCapabilities";
+import { avatarToneForMember } from "@processor/components/users/format";
+import { useTeamAvatarUrls } from "@editor/hooks/useTeamAvatarUrls";
 
 /** Tab key standing for "no team filter". */
 const ALL_TEAMS = "__all__";

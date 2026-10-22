@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   usePlanFeatures,
   usePlanHighlights,
-} from "@app/constants/planConstants";
+} from "@editor/constants/planConstants";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),

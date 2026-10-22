@@ -2,20 +2,20 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Button } from "@app/ui";
+import { Button } from "@editor/ui";
 import {
   fetchLegalDocument,
   recordLegalConsent,
   type ProcurementSnapshot,
   type TrialSetupDetails,
-} from "@portal/api/procurement";
-import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
-import { CalendlyInline } from "@portal/components/procurement/CalendlyInline";
-import { LicensePanel } from "@portal/components/procurement/ProcurementStages";
-import { FlowModal } from "@portal/components/shared/FlowModal";
-import { useAsync } from "@portal/hooks/useAsync";
-import { openApiUrl } from "@portal/api/externalUrl";
-import "@portal/views/Procurement.css";
+} from "@processor/api/procurement";
+import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
+import { CalendlyInline } from "@processor/components/procurement/CalendlyInline";
+import { LicensePanel } from "@processor/components/procurement/ProcurementStages";
+import { FlowModal } from "@processor/components/shared/FlowModal";
+import { useAsync } from "@processor/hooks/useAsync";
+import { openApiUrl } from "@processor/api/externalUrl";
+import "@processor/views/Procurement.css";
 
 /**
  * Small centred dialogs that hang off the deal-status hero's quick actions — the licence key,

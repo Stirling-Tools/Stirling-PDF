@@ -1,7 +1,7 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
-import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 
 // Editing OBJECT-rotated text must keep the rotation, not force the re-emitted
 // glyphs upright.

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ImageViewer } from "@app/components/viewer/nonpdf/ImageViewer";
+import { ImageViewer } from "@editor/components/viewer/nonpdf/ImageViewer";
 
 // 2x2 red PNG, used so the component's URL.createObjectURL(file) has real image bytes to render.
 const PNG_BASE64 =

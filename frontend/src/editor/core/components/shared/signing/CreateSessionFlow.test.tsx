@@ -5,12 +5,12 @@ import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, expect, it, vi } from "vitest";
-import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionFlow";
-import UserSelector from "@app/components/shared/UserSelector";
-import { qk } from "@app/query/keys";
+import { CreateSessionFlow } from "@editor/components/shared/signing/CreateSessionFlow";
+import UserSelector from "@editor/components/shared/UserSelector";
+import { qk } from "@editor/query/keys";
 
 const viewport = vi.hoisted(() => ({ mobile: false }));
-vi.mock("@app/hooks/useIsMobile", () => ({
+vi.mock("@editor/hooks/useIsMobile", () => ({
   useIsMobile: () => viewport.mobile,
 }));
 beforeEach(() => {
@@ -26,11 +26,11 @@ vi.mock("react-i18next", () => ({
       ),
   }),
 }));
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ user: { id: "1" } }),
 }));
-vi.mock("@app/api/users", () => ({ fetchUsers: vi.fn() }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/api/users", () => ({ fetchUsers: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 
 const users = [
   {

@@ -1,5 +1,8 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 const MCID = "MCID";
 export const ARTIFACT_TAG = "Artifact";

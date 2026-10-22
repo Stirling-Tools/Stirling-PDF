@@ -12,13 +12,13 @@ import {
   pageGuides,
   rulerTicks,
   snapToGuides,
-} from "@app/tools/pdfTextEditor/util/guides";
+} from "@editor/tools/pdfTextEditor/util/guides";
 import type {
   Guide,
   GuideAxis,
   GuideOrientation,
   GuideTransform,
-} from "@app/tools/pdfTextEditor/util/guides";
+} from "@editor/tools/pdfTextEditor/util/guides";
 
 const RULER_SIZE = 20;
 const MINOR_TICK = 4;

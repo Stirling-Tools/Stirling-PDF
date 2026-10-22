@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ToolList from "@app/components/tools/automate/ToolList";
-import type { AutomationTool } from "@app/types/automation";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+import ToolList from "@editor/components/tools/automate/ToolList";
+import type { AutomationTool } from "@editor/types/automation";
+import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
 
 // Kept empty: ToolSelector resolves `tool.operation` against this registry, and an
 // unmatched operation falls back to the search-input display rather than ToolButton

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSignature } from "@app/contexts/SignatureContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import { useSignature } from "@editor/contexts/SignatureContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
 import {
   FILE_SWITCH_ACTIVATION_DELAY,
   PLACEMENT_ACTIVATION_DELAY,
-} from "@app/constants/signConstants";
-import type { WalletEntry } from "@app/components/tools/sign/wallet/walletEntry";
+} from "@editor/constants/signConstants";
+import type { WalletEntry } from "@editor/components/tools/sign/wallet/walletEntry";
 
 const ARM_RETRY_DELAYS = [PLACEMENT_ACTIVATION_DELAY, 600, 1500];
 

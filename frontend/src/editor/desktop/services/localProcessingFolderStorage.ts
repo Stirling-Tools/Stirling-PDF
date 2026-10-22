@@ -1,9 +1,9 @@
-import { indexedDBManager } from "@app/services/indexedDBManager";
+import { indexedDBManager } from "@editor/services/indexedDBManager";
 import type {
   ProcessingFolder,
   ProcessingFolderRun,
-} from "@app/services/processingFolderApi";
-import type { DiskFileEntry } from "@app/services/localFolderContents";
+} from "@editor/services/processingFolderApi";
+import type { DiskFileEntry } from "@editor/services/localFolderContents";
 
 export interface LocalProcessingFolder extends ProcessingFolder {
   directory: string;

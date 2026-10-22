@@ -2,9 +2,12 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
   type AnnotationBox,
   annotationKindFor,
-} from "@app/tools/pdfTextEditor/model/AnnotationBox";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/model/AnnotationBox";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 // The canvas renders with FPDF_ANNOT, but the editor model walks page objects
 // only - so FreeText/widget/stamp text is visible and completely uneditable.

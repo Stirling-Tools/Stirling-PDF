@@ -3,7 +3,7 @@ import {
   bypassOnboarding,
   mockAppApis,
   seedCookieConsent,
-} from "@app/tests/helpers/api-stubs";
+} from "@editor/tests/helpers/api-stubs";
 
 /**
  * Stubbed premium-feature gating. Several tools and admin surfaces only

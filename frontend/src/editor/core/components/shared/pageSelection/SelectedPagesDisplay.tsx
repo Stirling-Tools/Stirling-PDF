@@ -1,6 +1,6 @@
 import { Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import classes from "@app/components/shared/pageSelection/BulkSelectionPanel.module.css";
+import classes from "@editor/components/shared/pageSelection/BulkSelectionPanel.module.css";
 
 interface SelectedPagesDisplayProps {
   selectedPageIds: string[];

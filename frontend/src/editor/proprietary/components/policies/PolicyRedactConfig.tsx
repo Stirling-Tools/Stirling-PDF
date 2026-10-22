@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { PolicyPiiField } from "@app/components/policies/PolicyPiiField";
-import type { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
+import { PolicyPiiField } from "@editor/components/policies/PolicyPiiField";
+import type { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
 
 interface PolicyRedactConfigProps {
   parameters: RedactParameters;

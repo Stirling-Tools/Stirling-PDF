@@ -1,26 +1,26 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
+import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
 
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
 
-import WatermarkTypeSettings from "@app/components/tools/addWatermark/WatermarkTypeSettings";
-import WatermarkWording from "@app/components/tools/addWatermark/WatermarkWording";
-import WatermarkTextStyle from "@app/components/tools/addWatermark/WatermarkTextStyle";
-import WatermarkImageFile from "@app/components/tools/addWatermark/WatermarkImageFile";
-import WatermarkFormatting from "@app/components/tools/addWatermark/WatermarkFormatting";
+import WatermarkTypeSettings from "@editor/components/tools/addWatermark/WatermarkTypeSettings";
+import WatermarkWording from "@editor/components/tools/addWatermark/WatermarkWording";
+import WatermarkTextStyle from "@editor/components/tools/addWatermark/WatermarkTextStyle";
+import WatermarkImageFile from "@editor/components/tools/addWatermark/WatermarkImageFile";
+import WatermarkFormatting from "@editor/components/tools/addWatermark/WatermarkFormatting";
 
-import { useAddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
-import { useAddWatermarkOperation } from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
+import { useAddWatermarkParameters } from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
+import { useAddWatermarkOperation } from "@editor/hooks/tools/addWatermark/useAddWatermarkOperation";
 import {
   useWatermarkTypeTips,
   useWatermarkWordingTips,
   useWatermarkTextStyleTips,
   useWatermarkFileTips,
   useWatermarkFormattingTips,
-} from "@app/components/tooltips/useWatermarkTips";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+} from "@editor/components/tooltips/useWatermarkTips";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 
 const AddWatermark = ({
   onPreviewFile,

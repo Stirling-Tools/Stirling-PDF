@@ -1,12 +1,12 @@
 import {
   retryWithPassword,
   unlockLocalDocument,
-} from "@app/services/notificationRetry";
-import type { FileId } from "@app/types/file";
+} from "@editor/services/notificationRetry";
+import type { FileId } from "@editor/types/file";
 import {
   asFiles,
   type Resolution,
-} from "@app/components/notifications/resolutions/resolution";
+} from "@editor/components/notifications/resolutions/resolution";
 
 export const unlock: Resolution = {
   actionId: "DECRYPT",

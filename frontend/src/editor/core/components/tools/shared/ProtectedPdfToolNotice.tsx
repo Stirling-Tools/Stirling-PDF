@@ -1,11 +1,11 @@
 import { Group, Stack, Text } from "@mantine/core";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { useToolWorkflowActions } from "@editor/contexts/ToolWorkflowContext";
 
 function RemovePasswordAction() {
   const { t } = useTranslation();

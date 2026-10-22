@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { expect, it, vi } from "vitest";
-import { SignaturePreviewLayer } from "@app/components/viewer/SignaturePreviewLayer";
-import type { SignaturePreview } from "@app/components/viewer/viewerTypes";
+import { SignaturePreviewLayer } from "@editor/components/viewer/SignaturePreviewLayer";
+import type { SignaturePreview } from "@editor/components/viewer/viewerTypes";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

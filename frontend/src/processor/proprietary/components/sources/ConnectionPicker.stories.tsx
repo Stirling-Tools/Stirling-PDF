@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
-import { ConnectionPicker } from "@portal/components/sources/ConnectionPicker";
+import { ConnectionPicker } from "@processor/components/sources/ConnectionPicker";
 
 const meta: Meta<typeof ConnectionPicker> = {
   title: "Portal/Sources/ConnectionPicker",

@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   fromBackendPolicy,
   type BackendPolicy,
-} from "@app/services/policyPipeline";
+} from "@editor/services/policyPipeline";
 
 const backendPolicy: BackendPolicy = {
   id: "p1",

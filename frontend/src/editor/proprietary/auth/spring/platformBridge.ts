@@ -4,7 +4,7 @@
  * The client itself is platform-agnostic: it never inspects the JWT directly
  * or touches Tauri/desktop storage. Each host wires its own behaviour through
  * this bridge. The web default (used by the portal and the editor's web builds)
- * is a no-op set that mirrors the editor's previous `@app/extensions/*`
+ * is a no-op set that mirrors the editor's previous `@editor/extensions/*`
  * defaults exactly; the editor's desktop build injects a Tauri-backed bridge.
  */
 

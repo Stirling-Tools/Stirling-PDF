@@ -1,5 +1,5 @@
 import { type InputHTMLAttributes, type ReactNode } from "react";
-import "@app/ui/Radio.css";
+import "@editor/ui/Radio.css";
 
 export interface RadioOption<V extends string = string> {
   value: V;

@@ -4,14 +4,14 @@ import { Blob as NodeBlob } from "node:buffer";
 import {
   FREE_LIMIT_MODAL_EVENT,
   SPEND_CAP_MODAL_EVENT,
-} from "@app/components/usageLimitModals";
+} from "@editor/components/usageLimitModals";
 import {
   classifyPaygError,
   extractSignupCategory,
   extractSubscribed,
   handlePaygError,
   normalizePaygError,
-} from "@app/services/paygErrorInterceptor";
+} from "@editor/services/paygErrorInterceptor";
 
 describe("download entitlement errors", () => {
   afterEach(() => vi.unstubAllGlobals());

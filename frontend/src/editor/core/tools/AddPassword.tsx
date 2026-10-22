@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
+import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
 
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
 
-import AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
-import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
+import AddPasswordSettings from "@editor/components/tools/addPassword/AddPasswordSettings";
+import ChangePermissionsSettings from "@editor/components/tools/changePermissions/ChangePermissionsSettings";
 
 import {
   useAddPasswordParameters,
   validateAddPasswordParameters,
-} from "@app/hooks/tools/addPassword/useAddPasswordParameters";
-import { useAddPasswordOperation } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
-import { usePermissionExtraction } from "@app/hooks/tools/changePermissions/usePermissionExtraction";
-import { useAddPasswordTips } from "@app/components/tooltips/useAddPasswordTips";
-import { useAddPasswordPermissionsTips } from "@app/components/tooltips/useAddPasswordPermissionsTips";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+} from "@editor/hooks/tools/addPassword/useAddPasswordParameters";
+import { useAddPasswordOperation } from "@editor/hooks/tools/addPassword/useAddPasswordOperation";
+import { usePermissionExtraction } from "@editor/hooks/tools/changePermissions/usePermissionExtraction";
+import { useAddPasswordTips } from "@editor/components/tooltips/useAddPasswordTips";
+import { useAddPasswordPermissionsTips } from "@editor/components/tooltips/useAddPasswordPermissionsTips";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 import { Stack, PasswordInput, Text } from "@mantine/core";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 
 const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

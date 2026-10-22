@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { DiskFileState } from "@app/components/filesPage/FileGrid";
+import type { DiskFileState } from "@editor/components/filesPage/FileGrid";
 import {
   useProcessingFolders,
   type MountedFileState,
-} from "@app/hooks/useProcessingFolders";
-import { qk } from "@app/query/keys";
+} from "@editor/hooks/useProcessingFolders";
+import { qk } from "@editor/query/keys";
 
 const PROCESSING_FILES_POLL_MS = 3000;
 const PROCESSING_FILES_FAILURE_LIMIT = 3;

@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { ToolOperation } from "@app/types/file";
+import type { ToolOperation } from "@editor/types/file";
 
 /**
  * What produced a version, for the history surfaces. A policy run carries its own label (the

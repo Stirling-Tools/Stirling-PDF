@@ -1,8 +1,8 @@
-import { BaseParameters } from "@app/types/parameters";
+import { BaseParameters } from "@editor/types/parameters";
 import {
   useBaseParameters,
   type BaseParametersHook,
-} from "@app/hooks/tools/shared/useBaseParameters";
+} from "@editor/hooks/tools/shared/useBaseParameters";
 
 export interface AddStampParameters extends BaseParameters {
   stampType?: "text" | "image";

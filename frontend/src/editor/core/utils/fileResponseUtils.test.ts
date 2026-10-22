@@ -6,7 +6,7 @@ import { describe, test, expect } from "vitest";
 import {
   getFilenameFromHeaders,
   createFileFromApiResponse,
-} from "@app/utils/fileResponseUtils";
+} from "@editor/utils/fileResponseUtils";
 
 describe("fileResponseUtils", () => {
   describe("getFilenameFromHeaders", () => {

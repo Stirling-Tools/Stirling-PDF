@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchFooterInfo, type FooterInfo } from "@app/api/config";
-import { qk } from "@app/query/keys";
-import { CONFIG_STALE_TIME } from "@app/query/staleTime";
+import { fetchFooterInfo, type FooterInfo } from "@editor/api/config";
+import { qk } from "@editor/query/keys";
+import { CONFIG_STALE_TIME } from "@editor/query/staleTime";
 
 export type { FooterInfo };
 
