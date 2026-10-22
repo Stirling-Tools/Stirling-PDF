@@ -9,25 +9,29 @@ import {
   defaultParameters,
 } from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
 import { applyAdjustmentsToCanvas } from "@app/components/tools/adjustContrast/utils";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { createFileFromApiResponse } from "@app/utils/fileResponseUtils";
-import { getPdfiumModule, saveRawDocument } from "@app/services/pdfiumService";
+import {
+  closeDocAndFreeBuffer,
+  getPdfiumModule,
+  getRawPageCount,
+  openRawDocumentSafe,
+  renderPageBitmapFromDoc,
+  saveRawDocument,
+} from "@app/services/pdfiumService";
 import { copyRgbaToBgraHeap } from "@app/utils/pdfiumBitmapUtils";
-import type { PDFDocumentProxy } from "pdfjs-dist";
 
 async function renderPdfPageToCanvas(
-  pdf: PDFDocumentProxy,
-  pageNumber: number,
+  docPtr: number,
+  pageIndex: number,
   scale: number,
 ): Promise<HTMLCanvasElement> {
-  const page = await pdf.getPage(pageNumber);
-  const viewport = page.getViewport({ scale });
+  const bitmap = await renderPageBitmapFromDoc(docPtr, pageIndex, scale);
   const canvas = document.createElement("canvas");
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D context unavailable");
-  await page.render({ canvasContext: ctx, canvas, viewport }).promise;
+  ctx.putImageData(bitmap, 0, 0);
   return canvas;
 }
 
@@ -38,15 +42,18 @@ async function buildAdjustedPdfForFile(
 ): Promise<File> {
   const m = await getPdfiumModule();
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {});
-  const pageCount = pdf.numPages;
+  const srcPtr = await openRawDocumentSafe(arrayBuffer, "");
+  const pageCount = await getRawPageCount(srcPtr);
 
   const docPtr = m.FPDF_CreateNewDocument();
-  if (!docPtr) throw new Error("PDFium: failed to create document");
+  if (!docPtr) {
+    closeDocAndFreeBuffer(m, srcPtr);
+    throw new Error("PDFium: failed to create document");
+  }
 
   try {
     for (let p = 1; p <= pageCount; p++) {
-      const srcCanvas = await renderPdfPageToCanvas(pdf, p, 2);
+      const srcCanvas = await renderPdfPageToCanvas(srcPtr, p - 1, 2);
       const adjusted = applyAdjustmentsToCanvas(srcCanvas, params);
       const ctx = adjusted.getContext("2d");
       if (!ctx) {
@@ -141,9 +148,9 @@ async function buildAdjustedPdfForFile(
       { "content-type": "application/pdf" },
       file.name,
     );
-    pdfWorkerManager.destroyDocument(pdf);
     return out;
   } finally {
+    closeDocAndFreeBuffer(m, srcPtr);
     m.FPDF_CloseDocument(docPtr);
   }
 }

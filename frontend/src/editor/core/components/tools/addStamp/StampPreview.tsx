@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { getPdfPageInfo } from "@app/services/pdfiumService";
 import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
 import {
   A4_ASPECT_RATIO,
@@ -93,17 +93,15 @@ export default function StampPreview({
       }
       try {
         const buffer = await file.arrayBuffer();
-        const pdf = await pdfWorkerManager.createDocument(buffer, {
-          disableAutoFetch: true,
-          disableStream: true,
-        });
-        const page = await pdf.getPage(1);
-        // Unrotated viewport keeps points to pixels aligned and avoids width and height swaps
-        const viewport = page.getViewport({ scale: 1, rotation: 0 });
+        const page = await getPdfPageInfo(buffer);
+        // Unrotated points keep the preview aligned and avoid width/height swaps.
+        const unrotated = page.rotation % 2 === 1;
         if (!cancelled) {
-          setPageSize({ widthPts: viewport.width, heightPts: viewport.height });
+          setPageSize({
+            widthPts: unrotated ? page.height : page.width,
+            heightPts: unrotated ? page.width : page.height,
+          });
         }
-        pdfWorkerManager.destroyDocument(pdf);
       } catch {
         // Fallback to A4 if we cannot read page
         if (!cancelled) setPageSize(null);

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AddPageNumbersParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { getPdfPageInfo } from "@app/services/pdfiumService";
 import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
 import styles from "@app/components/tools/addPageNumbers/PageNumberPreview.module.css";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
@@ -153,16 +153,10 @@ export default function PageNumberPreview({
       }
       try {
         const buffer = await file.arrayBuffer();
-        const pdf = await pdfWorkerManager.createDocument(buffer, {
-          disableAutoFetch: true,
-          disableStream: true,
-        });
-        const page = await pdf.getPage(1);
-        const viewport = page.getViewport({ scale: 1 });
+        const page = await getPdfPageInfo(buffer);
         if (!cancelled) {
-          setPageSize({ widthPts: viewport.width, heightPts: viewport.height });
+          setPageSize({ widthPts: page.width, heightPts: page.height });
         }
-        pdfWorkerManager.destroyDocument(pdf);
       } catch {
         if (!cancelled) setPageSize(null);
       }

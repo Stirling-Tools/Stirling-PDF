@@ -18,7 +18,7 @@ import {
   PDFBounds,
   Rectangle,
 } from "@app/utils/cropCoordinates";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { getPdfPageInfo } from "@app/services/pdfiumService";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 
 interface CropSettingsProps {
@@ -48,18 +48,9 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
         // Get PDF dimensions from the actual file
         const arrayBuffer = await selectedFile.arrayBuffer();
 
-        // Load PDF to get actual dimensions
-        const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
-          disableAutoFetch: true,
-          disableStream: true,
-          stopAtErrors: false,
-        });
-
-        const firstPage = await pdf.getPage(1);
-        const viewport = firstPage.getViewport({ scale: 1 });
-
-        const pdfWidth = viewport.width;
-        const pdfHeight = viewport.height;
+        const pageInfo = await getPdfPageInfo(arrayBuffer);
+        const pdfWidth = pageInfo.width;
+        const pdfHeight = pageInfo.height;
 
         const bounds = calculatePDFBounds(
           pdfWidth,
@@ -73,9 +64,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
         if (parameters.parameters.cropArea === DEFAULT_CROP_AREA) {
           parameters.resetToFullPDF(bounds);
         }
-
-        // Cleanup PDF
-        pdfWorkerManager.destroyDocument(pdf);
       } catch (error) {
         console.error("Failed to load PDF dimensions:", error);
         // Fallback to A4 dimensions if PDF loading fails

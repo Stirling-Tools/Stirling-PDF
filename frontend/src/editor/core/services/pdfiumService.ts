@@ -1155,6 +1155,44 @@ export async function extractSignatures(
   }
 }
 
+/** Page count for callers that only need metadata, not a document handle. */
+export async function getPdfPageCount(
+  data: ArrayBuffer | Uint8Array,
+  password?: string,
+): Promise<number> {
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(data, password);
+  try {
+    return await getRawPageCount(docPtr);
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr);
+  }
+}
+
+/** First-page (or indexed page) size in points, including /Rotate, plus the
+ * quarter-turn count so callers can recover the unrotated box. */
+export async function getPdfPageInfo(
+  data: ArrayBuffer | Uint8Array,
+  pageIndex: number = 0,
+  password?: string,
+): Promise<{ width: number; height: number; rotation: number }> {
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(data, password);
+  let pagePtr: number | null = null;
+  try {
+    pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
+    if (!pagePtr) throw new Error(`PDFium: failed to load page ${pageIndex}`);
+    return {
+      width: m.FPDF_GetPageWidthF(pagePtr),
+      height: m.FPDF_GetPageHeightF(pagePtr),
+      rotation: (m.FPDFPage_GetRotation(pagePtr) | 0) & 3,
+    };
+  } finally {
+    if (pagePtr !== null) m.FPDF_ClosePage(pagePtr);
+    closeDocAndFreeBuffer(m, docPtr);
+  }
+}
+
 /**
  * Render a single page to an ImageData-like bitmap.
  */
@@ -1168,6 +1206,20 @@ export async function renderPageToBitmap(
   const docPtr = await openRawDocumentSafe(data, password);
 
   try {
+    return await renderPageBitmapFromDoc(docPtr, pageIndex, scale);
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr);
+  }
+}
+
+/** Render against an already-open handle so multi-page jobs do not re-parse. */
+export async function renderPageBitmapFromDoc(
+  docPtr: number,
+  pageIndex: number,
+  scale: number = 1,
+): Promise<ImageData> {
+  const m = await getPdfiumModule();
+  {
     const pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
     if (!pagePtr) throw new Error(`PDFium: failed to load page ${pageIndex}`);
 
@@ -1209,8 +1261,6 @@ export async function renderPageToBitmap(
     m.FPDF_ClosePage(pagePtr);
 
     return new ImageData(pixelData, w, h);
-  } finally {
-    closeDocAndFreeBuffer(m, docPtr);
   }
 }
 

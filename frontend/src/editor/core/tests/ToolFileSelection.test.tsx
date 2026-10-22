@@ -133,6 +133,11 @@ vi.mock("@app/hooks/useBackendHealth", () => ({
 vi.mock("@app/services/pdfWorkerManager", () => ({
   pdfWorkerManager: pdfWorker,
 }));
+vi.mock("@app/services/pdfiumService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfiumService")>()),
+  extractSignatures: vi.fn().mockResolvedValue([]),
+  extractSignatureFieldRects: vi.fn().mockResolvedValue([]),
+}));
 vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: vi.fn() },
   useTranslation: () => ({
@@ -295,14 +300,18 @@ describe("tool file selection", () => {
     const view = render(renderConvert());
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "pdf to pdfua" }));
-    await waitFor(() => expect(pdfWorker.destroyDocument).toHaveBeenCalled());
+    const { extractSignatures, extractSignatureFieldRects } =
+      await import("@app/services/pdfiumService");
+    await waitFor(() => expect(extractSignatures).toHaveBeenCalled());
+    await waitFor(() => expect(extractSignatureFieldRects).toHaveBeenCalled());
     const previewRenders = onPreviewRender.mock.calls.length;
 
     await user.type(
       screen.getByRole("textbox", { name: "Document title" }),
       "Updated title",
     );
-    expect(pdfWorker.createDocument).toHaveBeenCalledTimes(1);
+    expect(extractSignatures).toHaveBeenCalledTimes(1);
+    expect(extractSignatureFieldRects).toHaveBeenCalledTimes(1);
     expect(onPreviewRender).toHaveBeenCalledTimes(previewRenders);
 
     const original = workspace.files[0];
@@ -316,9 +325,7 @@ describe("tool file selection", () => {
       ];
     });
     view.rerender(renderConvert());
-    await waitFor(() =>
-      expect(pdfWorker.destroyDocument).toHaveBeenCalledTimes(2),
-    );
+    await waitFor(() => expect(extractSignatures).toHaveBeenCalledTimes(2));
   });
 
   test("Merge counts an image as an eligible input", async () => {

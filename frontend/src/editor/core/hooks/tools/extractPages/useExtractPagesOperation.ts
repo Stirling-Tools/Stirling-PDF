@@ -11,7 +11,7 @@ import {
   ExtractPagesParameters,
   defaultParameters,
 } from "@app/hooks/tools/extractPages/useExtractPagesParameters";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { getPdfPageCount } from "@app/services/pdfiumService";
 import { parseSelection } from "@app/utils/bulkselection/parseSelection";
 
 // Convert advanced page selection expression into CSV of explicit one-based page numbers
@@ -19,19 +19,10 @@ async function resolveSelectionToCsv(
   expression: string,
   file: File,
 ): Promise<string> {
-  // Load PDF to determine max pages
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
-    disableAutoFetch: true,
-    disableStream: true,
-  });
-  try {
-    const maxPages = pdf.numPages;
-    const pages = parseSelection(expression || "", maxPages);
-    return pages.join(",");
-  } finally {
-    pdfWorkerManager.destroyDocument(pdf);
-  }
+  const maxPages = await getPdfPageCount(arrayBuffer);
+  const pages = parseSelection(expression || "", maxPages);
+  return pages.join(",");
 }
 
 export const extractPagesOperationConfig = defineCustomTool({
