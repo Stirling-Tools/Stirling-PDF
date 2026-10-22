@@ -105,12 +105,12 @@ const TOO_LARGE = [{ name: "too-large" }];
 
 describe("counted lines", () => {
   it("counts additions and deletions", () => {
-    assert.equal(countedLines([file("app/core/A.java", 30, 20), file("frontend/editor/src/b.ts", 5)]), 55);
+    assert.equal(countedLines([file("app/core/A.java", 30, 20), file("frontend/src/b.ts", 5)]), 55);
   });
 
   it("leaves out translations and lockfiles", () => {
     const files = [
-      file("frontend/editor/public/locales/fr-FR/translation.toml", 900),
+      file("frontend/public/locales/fr-FR/translation.toml", 900),
       file("app/core/src/main/resources/messages_fr_FR.properties", 900),
       file("frontend/package-lock.json", 900),
       file("engine/uv.lock", 900),
@@ -193,7 +193,7 @@ describe("check PR size", () => {
   });
 
   it("passes a PR over the limit only because of translations", async () => {
-    const files = [file("frontend/editor/public/locales/de-DE/translation.toml", 5000), file("app/core/A.java", 40)];
+    const files = [file("frontend/public/locales/de-DE/translation.toml", 5000), file("app/core/A.java", 40)];
     assert.deepEqual((await check(oversized(5040), files)).failures, []);
   });
 
