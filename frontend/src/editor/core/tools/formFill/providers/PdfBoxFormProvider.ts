@@ -14,12 +14,33 @@ import {
   fetchFormFieldsWithCoordinates,
   fillFormFields,
 } from "@app/tools/formFill/formApi";
+import {
+  resolveCanonicalFormValues,
+  resolveRadioWidgetIndex,
+} from "@app/tools/formFill/fieldValues";
 
 export class PdfBoxFormProvider implements IFormDataProvider {
   readonly name = "pdfbox";
+  private fields: FormField[] = [];
+
+  setFields(fields: FormField[]): void {
+    this.fields = fields;
+  }
 
   async fetchFields(file: File | Blob): Promise<FormField[]> {
-    return fetchFormFieldsWithCoordinates(file);
+    const fields = await fetchFormFieldsWithCoordinates(file);
+    for (const field of fields) {
+      if (
+        field.type === "radio" &&
+        field.value &&
+        field.widgets &&
+        field.widgets.length > 0
+      ) {
+        field.value = resolveRadioWidgetIndex(field, field.value);
+      }
+    }
+    this.fields = fields;
+    return fields;
   }
 
   async fillForm(
@@ -27,6 +48,7 @@ export class PdfBoxFormProvider implements IFormDataProvider {
     values: Record<string, string>,
     flatten: boolean,
   ): Promise<Blob> {
-    return fillFormFields(file, values, flatten);
+    const canonicalValues = resolveCanonicalFormValues(this.fields, values);
+    return fillFormFields(file, canonicalValues, flatten);
   }
 }

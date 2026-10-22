@@ -49,6 +49,10 @@ import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProv
 import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService";
 import { applyFieldEdits } from "@app/tools/formFill/formApi";
 import { mergeSignatureAppearances } from "@app/tools/formFill/formFieldMerge";
+import {
+  resolveCanonicalFormValues,
+  resolveRadioWidgetIndex,
+} from "@app/tools/formFill/fieldValues";
 
 /** Marks a skip report as belonging to whichever document the commit just produced. */
 const PENDING_SKIP_REPORT = "__pending__";
@@ -609,12 +613,41 @@ export function FormFillProvider({
           }
         }
 
+        if (
+          usable &&
+          "setFields" in providerRef.current &&
+          typeof (
+            providerRef.current as { setFields?: (f: FormField[]) => void }
+          ).setFields === "function"
+        ) {
+          (
+            providerRef.current as { setFields: (f: FormField[]) => void }
+          ).setFields(fields);
+        }
+
         // Initialise values in the external store
         const values: Record<string, string> = {};
         let edited = false;
         for (const field of fields) {
+          if (
+            field.type === "radio" &&
+            field.value &&
+            field.widgets &&
+            field.widgets.length > 0
+          ) {
+            field.value = resolveRadioWidgetIndex(field, field.value);
+          }
           const stored = field.value ?? "";
-          values[field.name] = carried[field.name] ?? stored;
+          let carriedVal = carried[field.name];
+          if (
+            carriedVal &&
+            field.type === "radio" &&
+            field.widgets &&
+            field.widgets.length > 0
+          ) {
+            carriedVal = resolveRadioWidgetIndex(field, carriedVal);
+          }
+          values[field.name] = carriedVal ?? stored;
           edited = edited || values[field.name] !== stored;
         }
         valuesStore.reset(values);
@@ -687,9 +720,13 @@ export function FormFillProvider({
 
   const submitForm = useCallback(
     async (file: File | Blob, flatten = false) => {
+      const canonicalValues = resolveCanonicalFormValues(
+        fieldsRef.current,
+        valuesStore.values,
+      );
       const blob = await providerRef.current.fillForm(
         file,
-        valuesStore.values,
+        canonicalValues,
         flatten,
       );
       return blob;
