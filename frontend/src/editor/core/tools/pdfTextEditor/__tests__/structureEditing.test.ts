@@ -26,6 +26,7 @@ import {
   HistoryStepError,
 } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
+import { imageAccessibility } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 import {
   buildClassicPdf,
   streamBody,
@@ -39,12 +40,19 @@ const FIGURE_MCID = 2;
 const FIGURE_ALT = "Bar chart of revenue by region";
 
 // A described figure (MCID 0) and a decorative rule drawn as an artifact image.
-function imagesPdf(): Uint8Array {
+// `ownerType` retypes the element owning MCID 0; `tagged: false` drops the
+// catalog's tree, leaving the content's marks behind.
+function imagesPdf({
+  ownerType = "Figure",
+  tagged = true,
+}: { ownerType?: string; tagged?: boolean } = {}): Uint8Array {
   return buildClassicPdf(
     [
       {
         num: 1,
-        body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>",
+        body: tagged
+          ? "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>"
+          : "<< /Type /Catalog /Pages 2 0 R >>",
       },
       { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
       {
@@ -78,7 +86,7 @@ function imagesPdf(): Uint8Array {
       },
       {
         num: 8,
-        body: "<< /Type /StructElem /S /Figure /P 7 0 R /Pg 3 0 R /K 0 /Alt (A grey square) >>",
+        body: `<< /Type /StructElem /S /${ownerType} /P 7 0 R /Pg 3 0 R /K 0 /Alt (A grey square) >>`,
       },
       { num: 9, body: "<< /Nums [0 [8 0 R]] >>" },
     ],
@@ -248,7 +256,59 @@ describe("reading tags from the file's ParentTree", () => {
 
   test("refuses an MCID only another page's content carries", async () => {
     const doc = await open(spanningPdf("null"));
-    expect(doc.structure(0).cannotDescribe(0)).toMatch(/no structure element/);
+    expect(doc.structure(0).cannotDescribe(0)).toBe("untagged");
+  });
+});
+
+describe("imageAccessibility", () => {
+  async function images(doc: EditorDocument) {
+    const page = doc.page(0);
+    PdfiumTextReader.populate(doc, page);
+    return page.images.map((img) => img.snapshot());
+  }
+
+  test("offers the figure's description and follows edits to it", async () => {
+    const doc = await open(imagesPdf());
+    const [figure] = await images(doc);
+    expect(imageAccessibility(doc, figure)).toEqual({
+      kind: "describable",
+      pageIndex: 0,
+      mcid: 0,
+      description: "A grey square",
+    });
+    new HistoryStack().execute(
+      new SetAltTextCommand({ pageIndex: 0, mcid: 0, alt: "A dark square" }),
+      doc,
+    );
+    expect(imageAccessibility(doc, figure)).toMatchObject({
+      description: "A dark square",
+    });
+  });
+
+  test("reads an artifact image as decorative", async () => {
+    const doc = await open(imagesPdf());
+    const [, rule] = await images(doc);
+    expect(imageAccessibility(doc, rule)).toEqual({ kind: "decorative" });
+  });
+
+  test("blocks an image tagged as part of a paragraph", async () => {
+    const doc = await open(imagesPdf({ ownerType: "P" }));
+    const [image] = await images(doc);
+    expect(imageAccessibility(doc, image)).toEqual({
+      kind: "blocked",
+      blocker: "not-figure",
+      documentTagged: true,
+    });
+  });
+
+  test("blocks every image in an untagged document", async () => {
+    const doc = await open(imagesPdf({ tagged: false }));
+    const [image] = await images(doc);
+    expect(imageAccessibility(doc, image)).toEqual({
+      kind: "blocked",
+      blocker: "untagged",
+      documentTagged: false,
+    });
   });
 });
 
@@ -291,14 +351,14 @@ describe("PageStructure", () => {
     ]);
     expect(s.cannotDescribe(3)).toBeNull();
     expect(s.cannotDescribe(5)).toBeNull();
-    expect(s.cannotDescribe(6)).toMatch(/P element/);
-    expect(s.cannotDescribe(9)).toMatch(/no structure element/);
+    expect(s.cannotDescribe(6)).toBe("not-figure");
+    expect(s.cannotDescribe(9)).toBe("untagged");
   });
 
   test("refuses every description when the save cannot write them", () => {
-    expect(
-      new PageStructure([figure], "the file is encrypted").cannotDescribe(3),
-    ).toBe("the file is encrypted");
+    expect(new PageStructure([figure], "encrypted").cannotDescribe(3)).toBe(
+      "encrypted",
+    );
   });
 });
 

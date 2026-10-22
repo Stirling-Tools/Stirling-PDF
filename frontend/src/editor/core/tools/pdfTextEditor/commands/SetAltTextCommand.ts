@@ -30,7 +30,7 @@ export class SetAltTextCommand implements Command {
     const refusal = structure.cannotDescribe(this.mcid);
     if (refusal) {
       throw new RolledBackError(
-        new Error(`MCID ${this.mcid} cannot take a description: ${refusal}`),
+        new Error(`MCID ${this.mcid} cannot take a description (${refusal})`),
       );
     }
     if (this.previous === undefined) {

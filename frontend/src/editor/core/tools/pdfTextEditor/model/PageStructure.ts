@@ -24,6 +24,12 @@ export interface StructureElementEdit {
  */
 const DESCRIBABLE_TYPES = new Set(["Figure", "Formula"]);
 
+/** Why the save cannot write descriptions for a page. */
+export type ReadOnlyReason = "encrypted" | "unreadable";
+
+/** Why content cannot take a description. */
+export type DescriptionBlocker = "untagged" | "not-figure" | ReadOnlyReason;
+
 /**
  * The structure elements of one page plus the session's unsaved edits to
  * them. Edits are keyed by element rather than MCID, so an element that owns
@@ -35,11 +41,11 @@ export class PageStructure {
   private readonly edits = new Map<StructureElement, StructureElementEdit>();
 
   /** Why the save cannot write descriptions for this page, or null when it can. */
-  readonly readOnly: string | null;
+  readonly readOnly: ReadOnlyReason | null;
 
   constructor(
     elements: readonly StructureElement[],
-    readOnly: string | null = null,
+    readOnly: ReadOnlyReason | null = null,
   ) {
     this.elements = elements;
     this.readOnly = readOnly;
@@ -57,13 +63,11 @@ export class PageStructure {
   }
 
   /** Why the content `mcid` marks cannot take a description, or null when it can. */
-  cannotDescribe(mcid: number): string | null {
+  cannotDescribe(mcid: number): DescriptionBlocker | null {
     const el = this.element(mcid);
-    if (!el) return "no structure element owns it";
+    if (!el) return "untagged";
     if (this.readOnly) return this.readOnly;
-    if (!DESCRIBABLE_TYPES.has(el.type)) {
-      return `it belongs to a ${el.type || "untyped"} element, whose description would replace its text`;
-    }
+    if (!DESCRIBABLE_TYPES.has(el.type)) return "not-figure";
     return null;
   }
 

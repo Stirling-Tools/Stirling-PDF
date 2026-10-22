@@ -164,12 +164,19 @@ export class EditorDocument {
       ? new PageStructure(this.fileStructure.get(pageIndex) ?? [])
       : new PageStructure(
           readPageStructure(this.module, this.page(pageIndex).pagePtr),
-          this.encrypted()
-            ? "the file is encrypted"
-            : "the file's tags could not be read for editing",
+          this.encrypted() ? "encrypted" : "unreadable",
         );
     this.structureCache.set(pageIndex, structure);
     return structure;
+  }
+
+  /** True when the catalog marks the file as tagged (ISO 32000-1 14.7.1). */
+  isTagged(): boolean {
+    try {
+      return this.module.FPDFCatalog_IsTagged(this.docPtr);
+    } catch {
+      return false;
+    }
   }
 
   private encrypted(): boolean {

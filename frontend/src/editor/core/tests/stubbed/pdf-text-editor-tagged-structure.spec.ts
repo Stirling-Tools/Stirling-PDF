@@ -141,22 +141,29 @@ async function saveAndReopen(page: import("@playwright/test").Page) {
   );
 }
 
+async function openFixture(page: import("@playwright/test").Page) {
+  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+    timeout: 15_000,
+  });
+  await page
+    .locator('[data-testid="pdf-editor-file-input"]')
+    .setInputFiles(FIXTURE);
+  await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect
+    .poll(() => page.evaluate(RUN_ID, "product line"), { timeout: 30_000 })
+    .not.toBeNull();
+}
+
+// `[data-testid^="pdf-editor-image-"]` also matches the hidden file input.
+const IMAGE = '[data-testid^="pdf-editor-image-p"]';
+
 test.describe("PDF text editor - tagged documents", () => {
   test("edited text stays in the structure tree", async ({ page }) => {
     test.setTimeout(120_000);
-    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-      timeout: 15_000,
-    });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(FIXTURE);
-    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect
-      .poll(() => page.evaluate(RUN_ID, "product line"), { timeout: 30_000 })
-      .not.toBeNull();
+    await openFixture(page);
 
     expect(await page.evaluate(AUDIT)).toEqual({
       untaggedText: 0,
@@ -185,5 +192,24 @@ test.describe("PDF text editor - tagged documents", () => {
     expect(saved.untaggedText).toBe(0);
     expect(saved.contentMcids).toEqual(saved.treeMcids);
     expect(saved.contentMcids).toEqual(expect.arrayContaining([0, 1, 2]));
+  });
+
+  test("an image's description is edited in the inspector and saved", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+
+    await page.locator(IMAGE).first().click();
+    const field = page.getByTestId("pdf-editor-image-description");
+    await expect(field).toHaveValue("Bar chart of revenue by region");
+
+    await field.fill("Revenue by region, third quarter");
+    await saveAndReopen(page);
+
+    await page.locator(IMAGE).first().click();
+    await expect(page.getByTestId("pdf-editor-image-description")).toHaveValue(
+      "Revenue by region, third quarter",
+    );
   });
 });
