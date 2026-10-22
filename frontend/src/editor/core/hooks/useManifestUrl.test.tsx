@@ -8,12 +8,9 @@ import {
   type MockInstance,
 } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import {
-  PreferencesProvider,
-  usePreferences,
-} from "@app/contexts/PreferencesContext";
+import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import { allowConsole } from "@app/tests/failOnConsole";
 import {
@@ -42,19 +39,6 @@ const MODERN_MANIFEST: StaticManifest = {
   display: "standalone",
   theme_color: "#000000",
   background_color: "#ffffff",
-};
-
-const CLASSIC_MANIFEST: StaticManifest = {
-  ...MODERN_MANIFEST,
-  icons: [
-    {
-      src: "classic-logo/favicon.ico",
-      sizes: "64x64 32x32 24x24 16x16",
-      type: "image/x-icon",
-    },
-    { src: "classic-logo/logo192.png", type: "image/png", sizes: "192x192" },
-    { src: "classic-logo/logo512.png", type: "image/png", sizes: "512x512" },
-  ],
 };
 
 /** Test double so each scenario can set its own appName. */
@@ -127,12 +111,12 @@ describe("resolveAppName", () => {
 });
 
 describe("truncateShortName", () => {
-  test("keeps the full name when at most 12 code points (T4)", () => {
+  test("keeps the full name when at most 12 code points", () => {
     expect(truncateShortName("Acme Docs")).toBe("Acme Docs");
     expect(truncateShortName("123456789012")).toBe("123456789012");
   });
 
-  test("truncates to 11 code points plus ellipsis when longer (T3)", () => {
+  test("truncates to 11 code points plus ellipsis when longer", () => {
     const long = "A Very Long Product Name That Exceeds Twelve";
     const truncated = truncateShortName(long);
     expect(truncated).toBe("A Very Long\u2026");
@@ -140,7 +124,7 @@ describe("truncateShortName", () => {
     expect(truncated.endsWith("\u2026")).toBe(true);
   });
 
-  test("is surrogate-pair-safe for emoji / non-Latin names (T4b)", () => {
+  test("is surrogate-pair-safe for emoji / non-Latin names", () => {
     // 12 emoji: each is a surrogate pair; slicing code units would mojibake.
     const twelveEmoji =
       "\u{1F600}\u{1F601}\u{1F602}\u{1F603}\u{1F604}\u{1F605}\u{1F606}\u{1F607}\u{1F608}\u{1F609}\u{1F60A}\u{1F60B}";
@@ -161,11 +145,11 @@ describe("truncateShortName", () => {
 });
 
 describe("mergeManifestName", () => {
-  test("returns the static manifest unchanged when appName is unset (R2)", () => {
+  test("returns the static manifest unchanged when appName is unset", () => {
     expect(mergeManifestName(MODERN_MANIFEST, null)).toBe(MODERN_MANIFEST);
   });
 
-  test("merges name and truncated short_name when appName is set (R1/R5)", () => {
+  test("merges name and truncated short_name when appName is set", () => {
     const merged = mergeManifestName(
       MODERN_MANIFEST,
       "A Very Long Product Name That Exceeds Twelve",
@@ -179,7 +163,7 @@ describe("mergeManifestName", () => {
 describe("absolutizeManifestUrls", () => {
   const ORIGIN = "https://pdf.example.com/";
 
-  test("rewrites start_url and every icon src to origin-absolute URLs (T6b)", () => {
+  test("rewrites start_url and every icon src to origin-absolute URLs", () => {
     const resolved = absolutizeManifestUrls(MODERN_MANIFEST, ORIGIN);
     expect(resolved.start_url).toBe("https://pdf.example.com/");
     for (const icon of resolved.icons ?? []) {
@@ -236,7 +220,7 @@ describe("useManifestUrl", () => {
     return wrapper;
   };
 
-  test("T6b: URL members are rewritten against the manifest URL, not the page URL (deep-link safe)", async () => {
+  test("URL members are rewritten against the manifest URL, not the page URL (deep-link safe)", async () => {
     // Page is on a deep route; the manifest lives at the app root. Members
     // must resolve against the manifest's directory, not the deep link.
     Object.defineProperty(window, "location", {
@@ -264,7 +248,7 @@ describe("useManifestUrl", () => {
     }
   });
 
-  test("T1: returns a blob URL and the blob manifest uses appName", async () => {
+  test("returns a blob URL and the blob manifest uses appName", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(new Response(JSON.stringify(MODERN_MANIFEST)));
@@ -280,7 +264,7 @@ describe("useManifestUrl", () => {
     const manifest = await readBlobManifest(createObjectURLSpy);
     expect(manifest.name).toBe("Acme Docs");
     expect(manifest.short_name).toBe("Acme Docs");
-    // URL members must be origin-absolute in the produced blob (T6b).
+    // URL members must be origin-absolute in the produced blob.
     expect(manifest.start_url).toMatch(/^https?:\/\//);
     for (const icon of manifest.icons ?? []) {
       expect(icon.src).toMatch(/^https?:\/\//);
@@ -291,7 +275,7 @@ describe("useManifestUrl", () => {
     });
   });
 
-  test("T2: static manifestHref returned unchanged when appName is unset", async () => {
+  test("static manifestHref returned unchanged when appName is unset", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(new Response(JSON.stringify(MODERN_MANIFEST)));
@@ -308,7 +292,7 @@ describe("useManifestUrl", () => {
     expect(createObjectURLSpy).not.toHaveBeenCalled();
   });
 
-  test("T3: short_name is first 11 code points + ellipsis when appName > 12", async () => {
+  test("short_name is first 11 code points + ellipsis when appName > 12", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify(MODERN_MANIFEST)),
     );
@@ -326,7 +310,7 @@ describe("useManifestUrl", () => {
     );
   });
 
-  test("T4: short_name is the full appName when at most 12 code points", async () => {
+  test("short_name is the full appName when at most 12 code points", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify(MODERN_MANIFEST)),
     );
@@ -340,7 +324,7 @@ describe("useManifestUrl", () => {
     expect(manifest.short_name).toBe("Acme Docs");
   });
 
-  test("T4b: surrogate-pair-safe truncation end-to-end", async () => {
+  test("surrogate-pair-safe truncation end-to-end", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify(MODERN_MANIFEST)),
     );
@@ -357,7 +341,7 @@ describe("useManifestUrl", () => {
     expect(manifest.short_name!.endsWith("\u2026")).toBe(true);
   });
 
-  test("T5: changing appName revokes the previous blob URL", async () => {
+  test("changing appName revokes the previous blob URL", async () => {
     // A Response body can only be read once; the hook re-fetches when appName
     // changes, so each call must get a FRESH Response.
     vi.spyOn(globalThis, "fetch").mockImplementation(() =>
@@ -393,7 +377,7 @@ describe("useManifestUrl", () => {
     expect(revocations).not.toContain(result.current.manifestHref);
   });
 
-  test("T5b: unmount revokes the blob URL (no leaks)", async () => {
+  test("unmount revokes the blob URL (no leaks)", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify(MODERN_MANIFEST)),
     );
@@ -408,7 +392,7 @@ describe("useManifestUrl", () => {
     expect(revokeObjectURLSpy).toHaveBeenCalledWith(url);
   });
 
-  test("T6: fetch failure falls back to the static manifestHref", async () => {
+  test("fetch failure falls back to the static manifestHref", async () => {
     allowConsole.error(/\[useManifestUrl\] Failed to build runtime manifest/);
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("network down"));
 
@@ -424,7 +408,7 @@ describe("useManifestUrl", () => {
     expect(revokeObjectURLSpy).not.toHaveBeenCalled();
   });
 
-  test("T9b: keeps the static manifestHref until the hook resolves", async () => {
+  test("keeps the static manifestHref until the hook resolves", async () => {
     let resolveFetch: (value: Response) => void = () => {};
     vi.spyOn(globalThis, "fetch").mockReturnValue(
       new Promise<Response>((resolve) => {
@@ -443,42 +427,5 @@ describe("useManifestUrl", () => {
       resolveFetch(new Response(JSON.stringify(MODERN_MANIFEST)));
     });
     await waitFor(() => expect(result.current.manifestHref).toMatch(/^blob:/));
-  });
-
-  test("picks manifest-classic.json for the classic logo variant", async () => {
-    // Set the preference through the provider seam (a mount effect) rather
-    // than writing the raw storage key directly, matching production usage.
-    const ClassicWrapper = ({ children }: { children: ReactNode }) => {
-      const { updatePreference } = usePreferences();
-      useEffect(() => {
-        updatePreference("logoVariant", "classic");
-      }, [updatePreference]);
-      return <>{children}</>;
-    };
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockImplementation(() =>
-        Promise.resolve(new Response(JSON.stringify(CLASSIC_MANIFEST))),
-      );
-
-    const { result } = renderUseManifestUrl({
-      // ClassicWrapper sits INSIDE ConfigHarness so usePreferences is
-      // available; its mount effect flips the variant before the hook reads it.
-      wrapper: (props) => (
-        <ConfigHarness appName="Acme Docs">
-          <ClassicWrapper>{props.children}</ClassicWrapper>
-        </ConfigHarness>
-      ),
-    });
-
-    await waitFor(() => expect(result.current.manifestHref).toMatch(/^blob:/));
-    expect(fetchMock).toHaveBeenCalledWith("/manifest-classic.json", {
-      signal: expect.any(AbortSignal),
-    });
-
-    const manifest = await readBlobManifest(createObjectURLSpy);
-    expect(
-      manifest.icons?.some((icon) => icon.src?.includes("classic-logo")),
-    ).toBe(true);
   });
 });

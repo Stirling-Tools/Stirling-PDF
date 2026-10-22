@@ -3,14 +3,14 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 
 /**
- * The served PWA manifest is a static JSON file (manifest.json /
- * manifest-classic.json) that hardcodes "Stirling PDF". The installed PWA name
- * must reflect the configured `ui.appNameNavbar` instead (issue #5492). The
- * static files cannot interpolate runtime config, so the manifest is rebuilt at
- * runtime: fetch the static file, merge `name`/`short_name` from the config,
- * and inject the result as a blob URL into the existing <link rel="manifest">.
+ * The served PWA manifest is a static JSON file (manifest.json) that hardcodes
+ * "Stirling PDF". The installed PWA name must reflect the configured
+ * `ui.appNameNavbar` instead (issue #5492). The static file cannot interpolate
+ * runtime config, so the manifest is rebuilt at runtime: fetch the static file,
+ * merge `name`/`short_name` from the config, and inject the result as a blob
+ * URL into the existing <link rel="manifest">.
  *
- * URL-member rewriting is mandatory (KTD1): the static manifests use relative
+ * URL-member rewriting is required: the static manifest uses relative
  * members (`"start_url": "."`, `"src": "modern-logo/logo192.png"`). The manifest
  * spec resolves every URL member against the manifest URL; a blob URL has an
  * opaque path, so relative references against it fail WHATWG URL parsing and the
@@ -19,7 +19,7 @@ import { useLogoAssets } from "@app/hooks/useLogoAssets";
  * `scope`/`id` to origin-absolute URLs resolved against `window.location`.
  */
 
-/** PWA short names must stay within 12 code points (ellipsis included) per KTD3. */
+/** PWA short names must stay within 12 code points (ellipsis included) */
 export const MAX_SHORT_NAME_CODE_POINTS = 12;
 
 export interface ManifestIcon {
@@ -41,7 +41,7 @@ export interface StaticManifest {
 }
 
 /**
- * Treat undefined / null / empty / whitespace-only as unset (KTD1/R2). Returns
+ * Treat undefined / null / empty / whitespace-only as unset. Returns
  * the trimmed name, or null when there is no usable configured name.
  */
 export function resolveAppName(
@@ -56,7 +56,7 @@ export function resolveAppName(
 
 /**
  * Truncate a PWA short name to at most 12 code points, including the trailing
- * ellipsis (KTD3): the first 11 code points + "…" when the name is longer.
+ * ellipsis: the first 11 code points + "…" when the name is longer.
  * Surrogate-pair-safe: uses Array.from so astral characters (emoji, non-Latin)
  * are never split.
  */
@@ -70,7 +70,7 @@ export function truncateShortName(name: string): string {
     .join("")}\u2026`;
 }
 
-/** Resolve a manifest URL member against a base URL (KTD1). */
+/** Resolve a manifest URL member against a base URL. */
 export function resolveManifestUrl(
   value: string | undefined,
   base: string,
@@ -81,7 +81,7 @@ export function resolveManifestUrl(
   return new URL(value, base).toString();
 }
 
-/** Merge the configured appName into the static manifest (KTD1/R2). */
+/** Merge the configured appName into the static manifest. */
 export function mergeManifestName(
   manifest: StaticManifest,
   appName: string | null,
@@ -96,7 +96,7 @@ export function mergeManifestName(
   };
 }
 
-/** Rewrite all URL members to origin-absolute URLs (KTD1). */
+/** Rewrite all URL members to origin-absolute URLs. */
 export function absolutizeManifestUrls(
   manifest: StaticManifest,
   origin: string,
@@ -126,16 +126,13 @@ export interface UseManifestUrlResult {
 /**
  * Produces the runtime manifest URL reflecting the configured appName.
  *
- * - Reads the logo variant via `useLogoAssets().manifestHref` to pick
- *   manifest.json vs manifest-classic.json.
+ * - Reads the static manifest URL from `useLogoAssets().manifestHref`.
  * - Fetches the static manifest, merges `name`/`short_name` from
  *   `AppConfig.appNameNavbar` (unset values fall back to the static ones), and
  *   rewrites URL members to origin-absolute URLs.
- * - Returns a blob URL. The previous blob URL is revoked only once its
- *   successor exists (no transient broken manifest link) and on unmount (no
- *   object-URL leaks).
- * - Returns the static manifestHref unchanged on fetch failure (R7) and while
- *   the fetch is in flight (T9b).
+ * - Returns a blob URL. The previous blob URL is revoked when superseded and on unmount, so object URLs do not leak.
+ * - Returns the static manifestHref unchanged on fetch failure and while
+ *   the fetch is in flight.
  */
 export function useManifestUrl(): UseManifestUrlResult {
   const { config } = useAppConfig();
@@ -147,7 +144,7 @@ export function useManifestUrl(): UseManifestUrlResult {
 
   useEffect(() => {
     if (appName == null) {
-      // No custom name: the static manifest is already correct (R2). Point back
+      // No custom name: the static manifest is already correct. Point back
       // at the static href and release any runtime blob from a previous value.
       if (createdUrlRef.current) {
         URL.revokeObjectURL(createdUrlRef.current);
@@ -191,8 +188,7 @@ export function useManifestUrl(): UseManifestUrlResult {
           return;
         }
 
-        // Swap: release the previous runtime blob only once its successor
-        // exists, so the manifest link never points at a revoked URL.
+        // Swap: the new blob replaces the previous one, which is released here.
         if (createdUrlRef.current) {
           URL.revokeObjectURL(createdUrlRef.current);
         }
@@ -204,7 +200,7 @@ export function useManifestUrl(): UseManifestUrlResult {
           // unmount): a normal transition, not a failure worth logging.
           return;
         }
-        // Graceful degradation: keep serving the static manifest (R7), and
+        // Graceful degradation: keep serving the static manifest, and
         // release the runtime blob it is replacing so none is orphaned.
         if (createdUrlRef.current) {
           URL.revokeObjectURL(createdUrlRef.current);
