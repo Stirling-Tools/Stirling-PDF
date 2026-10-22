@@ -2,7 +2,10 @@ import React from "react";
 import { MantineProvider } from "@mantine/core";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { CsvViewer } from "@app/components/viewer/nonpdf/CsvViewer";
+import {
+  compareCsvValues,
+  CsvViewer,
+} from "@app/components/viewer/nonpdf/CsvViewer";
 
 const renderViewer = (ui: React.ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);
@@ -19,6 +22,19 @@ const csvFile = (content: string) =>
     size: content.length,
     text: async () => content,
   }) as File;
+
+describe("compareCsvValues", () => {
+  it("orders decimals and negatives by numeric value", () => {
+    expect(compareCsvValues("1.25", "1.5")).toBeLessThan(0);
+    expect(compareCsvValues("-10", "-5")).toBeLessThan(0);
+    expect(compareCsvValues("1,000", "999")).toBeGreaterThan(0);
+  });
+
+  it("keeps numeric cells before text and sorts text naturally", () => {
+    expect(compareCsvValues("12", "item-2")).toBeLessThan(0);
+    expect(compareCsvValues("item-2", "item-10")).toBeLessThan(0);
+  });
+});
 
 describe("CsvViewer", () => {
   it("shows the empty-file message for an empty CSV", async () => {

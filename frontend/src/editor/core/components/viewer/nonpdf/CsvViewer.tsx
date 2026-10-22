@@ -8,6 +8,7 @@ import React, {
 import { Badge, Center, Group, Paper, Stack, Text } from "@mantine/core";
 import {
   type ColumnDef,
+  constructSortFn,
   createColumnHelper,
   createSortedRowModel,
   flexRender,
@@ -80,12 +81,33 @@ function parseCsv(text: string, delimiter: string): string[][] {
   return rows;
 }
 
-// ─── CSV Table Features ───────────────────────────────────────────────────────
+/** Numeric-aware comparison: unlike alphanumeric chunking, this orders
+ * decimals and negatives by value and falls back to natural text order. */
+export function compareCsvValues(a: string, b: string): number {
+  const numberA = Number(a);
+  const numberB = Number(b);
+  const numericA = a !== "" && !Number.isNaN(numberA);
+  const numericB = b !== "" && !Number.isNaN(numberB);
+
+  if (numericA && numericB) return numberA - numberB;
+  if (numericA) return -1;
+  if (numericB) return 1;
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+}
+
+const sortFn_csvValue = constructSortFn({
+  resolveDataValue: (value) => String(value ?? "").trim(),
+  sort: compareCsvValues,
+});
 
 const CSV_TABLE_FEATURES = tableFeatures({
   rowSortingFeature,
   sortedRowModel: createSortedRowModel(),
-  sortFns: { alphanumeric: sortFn_alphanumeric, basic: sortFn_basic },
+  sortFns: {
+    alphanumeric: sortFn_alphanumeric,
+    basic: sortFn_basic,
+    csvValue: sortFn_csvValue,
+  },
 });
 
 type CsvRowData = {
@@ -155,7 +177,7 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
             h || t("viewer.nonPdf.columnDefault", { index: colIdx + 1 }),
           cell: (info) => String(info.getValue() ?? ""),
           enableSorting: true,
-          sortFn: "alphanumeric",
+          sortFn: "csvValue",
         }),
       );
     });
@@ -418,6 +440,7 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
                 >
                   {row.getAllCells().map((cell) => {
                     const isIndex = cell.column.id === "__index";
+                    const cellValue = String(cell.getValue() ?? "");
                     return (
                       <td
                         key={cell.id}
@@ -438,10 +461,9 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
                           truncate
                           title={String(cell.getValue() ?? "")}
                         >
-                          {highlightMatches(
-                            String(cell.getValue() ?? ""),
-                            deferredQuery,
-                          )}
+                          {isIndex
+                            ? cellValue
+                            : highlightMatches(cellValue, deferredQuery)}
                         </Text>
                       </td>
                     );

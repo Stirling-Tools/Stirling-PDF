@@ -34,7 +34,7 @@ function CopyButton({ text }: { text: string }) {
         cursor: "pointer",
         fontSize: "0.7em",
         padding: "2px 8px",
-        color: copied ? "#2f9e44" : SHEET_MUTED,
+        color: copied ? "#1b5e20" : SHEET_MUTED,
       }}
     >
       {copied
