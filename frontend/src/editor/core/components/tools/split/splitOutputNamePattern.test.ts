@@ -15,6 +15,14 @@ describe("applyNamePattern", () => {
   ])("%s → %s", (pattern, number, expected) => {
     expect(applyNamePattern(pattern, number)).toBe(expected);
   });
+
+  test("a long run of illegal characters is handled in linear time", () => {
+    const quotes = '"'.repeat(200_000);
+    expect(applyNamePattern(`a${quotes} {n}`, 1)).toBe("a 1");
+    expect(applyNamePattern(`a${quotes}b`, 1)).toBe(
+      `a${"_".repeat(200_000)}b 1`,
+    );
+  }, 5_000);
 });
 
 describe("describeNamePattern", () => {

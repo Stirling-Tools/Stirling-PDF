@@ -1,8 +1,10 @@
 package stirling.software.SPDF.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,6 +84,19 @@ class SplitOutputNamesTest {
         assertThat(SplitOutputNames.sanitize("a" + " ".repeat(200_000) + "b"))
                 .startsWith("a")
                 .hasSizeLessThanOrEqualTo(SplitOutputNames.MAX_NAME_BYTES);
+    }
+
+    @Test
+    @DisplayName("A long run of illegal characters is sanitised in linear time")
+    void longIllegalRunIsLinear() {
+        String quotes = "\"".repeat(200_000);
+        assertTimeoutPreemptively(
+                Duration.ofSeconds(5),
+                () -> {
+                    assertThat(SplitOutputNames.sanitize("a" + quotes + "b"))
+                            .hasSizeLessThanOrEqualTo(SplitOutputNames.MAX_NAME_BYTES);
+                    assertThat(SplitOutputNames.sanitize(quotes + " b")).isEqualTo("b");
+                });
     }
 
     @Test

@@ -27,14 +27,27 @@ public final class SplitOutputNames {
     private static final String PDF_EXTENSION = ".pdf";
     private static final Pattern CONTROL_CHARACTERS = Pattern.compile("[\\p{Cc}\\p{Zl}\\p{Zp}]");
 
+    /** Same characters as {@code RegexPatternUtils#getSafeFilenamePattern}. */
+    private static final String ILLEGAL_CHAR = "[/\\\\?%*:|\"<>]";
+
+    /** "Report / Summary": the run and one space after it go, leaving "Report Summary". */
+    private static final String ILLEGAL_RUN_AFTER_SPACE = "(?<=\\s)" + ILLEGAL_CHAR + "+\\s?";
+
     /**
-     * An illegal run beside whitespace is dropped (with one following space) rather than turned
-     * into "_", so "Chapter: 1" reads "Chapter 1". One-character lookarounds keep it linear on long
-     * whitespace runs. Same characters as {@code RegexPatternUtils#getSafeFilenamePattern}, and
-     * mirrored by the frontend preview in splitOutputNamePattern.ts.
+     * "Chapter: 1": the run goes, leaving "Chapter 1". The {@code (?<!...)} guard lets a match
+     * start only on a run's first character. Without it the engine retries from every character of
+     * a run with no space after it, which is quadratic on long user input.
      */
-    private static final Pattern ILLEGAL_BESIDE_SPACE =
-            Pattern.compile("(?<=\\s)[/\\\\?%*:|\"<>]+\\s?|[/\\\\?%*:|\"<>]+(?=\\s)");
+    private static final String ILLEGAL_RUN_BEFORE_SPACE =
+            "(?<!" + ILLEGAL_CHAR + ")" + ILLEGAL_CHAR + "+(?=\\s)";
+
+    /**
+     * A run of illegal characters touching whitespace is dropped rather than turned into "_", so
+     * the name reads as typed. Must stay in sync with splitOutputNamePattern.ts, which previews
+     * these names in the browser.
+     */
+    private static final Pattern ILLEGAL_RUN_TOUCHING_SPACE =
+            Pattern.compile(ILLEGAL_RUN_AFTER_SPACE + "|" + ILLEGAL_RUN_BEFORE_SPACE);
 
     private static final Pattern LEADING_DOTS_AND_SPACES = Pattern.compile("^[.\\s\\p{Z}]+");
     private static final Pattern WINDOWS_RESERVED_STEM =
@@ -93,7 +106,7 @@ public final class SplitOutputNames {
      */
     static String sanitize(String line) {
         String name = CONTROL_CHARACTERS.matcher(line).replaceAll("");
-        name = ILLEGAL_BESIDE_SPACE.matcher(name).replaceAll("");
+        name = ILLEGAL_RUN_TOUCHING_SPACE.matcher(name).replaceAll("");
         name =
                 RegexPatternUtils.getInstance()
                         .getSafeFilenamePattern()
