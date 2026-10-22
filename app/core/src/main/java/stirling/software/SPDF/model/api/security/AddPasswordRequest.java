@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import stirling.software.common.model.api.PDFFile;
 
@@ -16,6 +17,7 @@ public class AddPasswordRequest extends PDFFile {
                     "The owner password to be added to the PDF file (Restricts what can be done"
                             + " with the document once it is opened)",
             format = "password")
+    @ToString.Exclude
     private String ownerPassword;
 
     @Schema(
@@ -23,7 +25,21 @@ public class AddPasswordRequest extends PDFFile {
                     "The password to be added to the PDF file (Restricts the opening of the"
                             + " document itself.)",
             format = "password")
+    @ToString.Exclude
     private String password;
+
+    @Schema(
+            description =
+                    "Credential for authenticating an existing protected source, separate from the new passwords. Omit to retain legacy add-password behaviour.",
+            format = "password")
+    @ToString.Exclude
+    private String sourcePassword;
+
+    @Schema(
+            description =
+                    "Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.",
+            defaultValue = "false")
+    private boolean preserveExisting;
 
     @Schema(
             description = "The length of the encryption key",
