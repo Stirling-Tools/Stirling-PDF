@@ -21,6 +21,8 @@ type Edge = "top" | "right" | "bottom" | "left";
 
 interface CropMarginInputsProps {
   cropArea: Rectangle;
+  /** Real page bitmap, so the centre is a preview rather than a diagram. */
+  imageUrl?: string | null;
   geometry: CropPageGeometry;
   onChange: (area: Rectangle) => void;
   unit: CropUnit;
@@ -41,6 +43,7 @@ const fromUnit = (value: number, unit: CropUnit): number =>
  */
 export default function CropMarginInputs({
   cropArea,
+  imageUrl,
   geometry,
   onChange,
   unit,
@@ -180,18 +183,13 @@ export default function CropMarginInputs({
             onCommit={(value) => setEdge("left", value)}
           />
         </div>
-        <div className={classes.cellCenter} aria-hidden="true">
-          <div className={classes.miniPage}>
-            <div
-              className={classes.miniCrop}
-              style={{
-                left: `${(margins.left / displaySize.width) * 100}%`,
-                top: `${(margins.top / displaySize.height) * 100}%`,
-                right: `${(margins.right / displaySize.width) * 100}%`,
-                bottom: `${(margins.bottom / displaySize.height) * 100}%`,
-              }}
-            />
-          </div>
+        <div className={classes.cellCenter}>
+          <MarginPreview
+            imageUrl={imageUrl}
+            displaySize={displaySize}
+            display={display}
+            margins={margins}
+          />
         </div>
         <div className={classes.cellRight}>
           <MarginField
@@ -217,6 +215,56 @@ export default function CropMarginInputs({
         </div>
       </div>
     </Stack>
+  );
+}
+
+interface MarginPreviewProps {
+  imageUrl?: string | null;
+  displaySize: { width: number; height: number };
+  display: Rectangle;
+  margins: Record<Edge, number>;
+}
+
+/** The actual page at keypad scale, with the crop rectangle at its real position. */
+function MarginPreview({
+  imageUrl,
+  displaySize,
+  display,
+  margins,
+}: MarginPreviewProps) {
+  const box = 64;
+  const aspect = displaySize.width / Math.max(displaySize.height, 0.001);
+  const width = aspect >= 1 ? box : box * aspect;
+  const height = aspect >= 1 ? box / aspect : box;
+  const widthValue = display.width * MM_PER_POINT;
+  const heightValue = display.height * MM_PER_POINT;
+  const title = `L ${margins.left.toFixed(1)} · T ${margins.top.toFixed(
+    1,
+  )} · R ${margins.right.toFixed(1)} · B ${margins.bottom.toFixed(
+    1,
+  )} mm — ${widthValue.toFixed(1)} × ${heightValue.toFixed(1)} mm`;
+
+  return (
+    <div className={classes.miniFrame} title={title} aria-hidden="true">
+      <div
+        className={classes.miniPage}
+        style={{
+          width: `${width}px`,
+          height: `${height}px`,
+          backgroundImage: imageUrl ? `url("${imageUrl}")` : undefined,
+        }}
+      >
+        <div
+          className={classes.miniCrop}
+          style={{
+            left: `${(display.x / displaySize.width) * 100}%`,
+            top: `${(display.y / displaySize.height) * 100}%`,
+            width: `${(display.width / displaySize.width) * 100}%`,
+            height: `${(display.height / displaySize.height) * 100}%`,
+          }}
+        />
+      </div>
+    </div>
   );
 }
 

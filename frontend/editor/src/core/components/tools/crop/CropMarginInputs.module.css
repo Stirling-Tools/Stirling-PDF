@@ -22,7 +22,6 @@
   grid-row: 2;
   display: grid;
   place-items: center;
-  padding-bottom: 2px;
 }
 
 .cellRight {
@@ -35,20 +34,27 @@
   grid-row: 3;
 }
 
+.miniFrame {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+}
+
 .miniPage {
   position: relative;
-  width: 38px;
-  height: 48px;
-  border-radius: 3px;
+  overflow: hidden;
+  border-radius: 2px;
   border: 1px solid var(--c-border-strong);
-  background: var(--c-surface-raised);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  background-color: #fff;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
 }
 
 .miniCrop {
   position: absolute;
-  border: 1.5px solid var(--c-primary);
-  border-radius: 1px;
-  background: var(--c-primary-subtle);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--c-primary);
+  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.42);
+  pointer-events: none;
 }

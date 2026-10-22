@@ -313,6 +313,7 @@ export default function CropEditorOverlay({
               />
               <CropMarginInputs
                 cropArea={cropArea}
+                imageUrl={imageUrl}
                 geometry={geometry}
                 onChange={onCropAreaChange}
                 unit={unit}
