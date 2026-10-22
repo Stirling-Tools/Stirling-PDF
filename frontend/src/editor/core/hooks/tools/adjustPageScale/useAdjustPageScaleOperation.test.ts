@@ -65,6 +65,8 @@ describe("buildAdjustPageScaleFormData", () => {
 
     const preset = buildAdjustPageScaleFormData(defaultParameters, stubFile());
     expect(preset.has("customWidth")).toBe(false);
+    expect(preset.has("customHeight")).toBe(false);
+    expect(preset.has("customUnit")).toBe(false);
   });
 
   it("attaches the uploaded file under fileInput", () => {

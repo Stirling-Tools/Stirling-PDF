@@ -352,6 +352,20 @@ class ScalePagesControllerTest {
         assertThrows(IllegalArgumentException.class, () -> controller.scalePages(request));
     }
 
+    @Test
+    void testScalePages_PresetSizeIgnoresCustomFields() throws Exception {
+        setupFactory();
+        ScalePagesRequest request = customSizeRequest("ft", -5f, null);
+        request.setPageSize("LETTER");
+
+        try (PDDocument output =
+                org.apache.pdfbox.Loader.loadPDF(drainBody(controller.scalePages(request)))) {
+            PDRectangle mediaBox = output.getPage(0).getMediaBox();
+            assertEquals(PDRectangle.LETTER.getWidth(), mediaBox.getWidth(), 0.01);
+            assertEquals(PDRectangle.LETTER.getHeight(), mediaBox.getHeight(), 0.01);
+        }
+    }
+
     private ScalePagesRequest customSizeRequest(String unit, Float width, Float height)
             throws IOException {
         ScalePagesRequest request = new ScalePagesRequest();
