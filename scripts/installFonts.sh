@@ -44,7 +44,7 @@ declare -A language_fonts=(
 language_fonts["sr_LATN_RS"]="${language_fonts["sr_Latn_RS"]}"
 
 # Install fonts for other languages which generally do not need special packages beyond 'font-noto'
-other_langs=("en_GB" "en_US" "de_DE" "fr_FR" "es_ES" "ca_CA" "it_IT" "pt_BR" "nl_NL" "sv_SE" "pl_PL" "ro_RO" "hu_HU" "tr_TR" "id_ID" "eu_ES")
+other_langs=("en_GB" "en_US" "de_DE" "fr_FR" "es_ES" "ca_CA" "it_IT" "pt_BR" "nl_NL" "sv_SE" "pl_PL" "ro_RO" "hu_HU" "tr_TR" "id_ID" "eu_ES" "gl_ES")
 if [[ $LANGS == "ALL" ]]; then
     # Install all fonts from the language_fonts map
     for fonts in "${language_fonts[@]}"; do
