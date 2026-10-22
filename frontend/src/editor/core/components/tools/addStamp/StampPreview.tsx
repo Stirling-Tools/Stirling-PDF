@@ -460,7 +460,7 @@ export default function StampPreview({
               className={styles.qrOverLimitNotice}
               data-qr-over-limit-notice=""
             >
-              <Text c="red" size="sm" ta="center">
+              <Text c="var(--c-danger)" size="sm" ta="center">
                 {t(
                   "AddStampRequest.qrContentTooLong",
                   "Too long to fit in a QR code. Shorten the content.",
