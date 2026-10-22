@@ -128,6 +128,15 @@ async function dragSelectionHandle(
   await settle(page);
 }
 
+async function openEditor(page: Page): Promise<void> {
+  await page
+    .getByRole("button", { name: /^Edit$/i })
+    .first()
+    .click();
+  await expect(page.getByTestId("crop-editor")).toBeVisible();
+  await settle(page);
+}
+
 async function capturePanel(page: Page, name: string): Promise<void> {
   await settle(page);
   await panel(page).screenshot({ path: shot(name) });
@@ -160,8 +169,8 @@ test.describe("crop ui walkthrough", () => {
         await openCrop(page);
         await upload(page);
         await dragSelectionHandle(page, "se", -70, -90);
-        await expect(page.getByTestId("crop-margin-right")).not.toHaveValue(
-          "0",
+        await expect(page.getByTestId("crop-size-summary")).not.toHaveText(
+          "216 × 279 mm",
         );
         await capturePanel(page, `03_inset_${theme}`);
       });
@@ -171,16 +180,17 @@ test.describe("crop ui walkthrough", () => {
         await openCrop(page);
         await upload(page);
         await dragSelectionHandle(page, "se", -80, -60);
+        await openEditor(page);
         await page.getByTestId("crop-ratio-a4").click();
         await settle(page);
-        await capturePanel(page, `04_ratio_${theme}`);
+        await page.screenshot({ path: shot(`04_ratio_${theme}`) });
       });
 
       test(`05_advanced_${theme}`, async ({ page }) => {
         await applyTheme(page, theme);
         await openCrop(page);
         await upload(page);
-        await dragSelectionHandle(page, "nw", 50, 60);
+        await openEditor(page);
         await page.getByText(/Exact coordinates/i).click();
         await page.waitForFunction(() => {
           const body = document.querySelector<HTMLElement>(
@@ -193,8 +203,7 @@ test.describe("crop ui walkthrough", () => {
           state.__collapseHeight = height;
           return settled;
         });
-        await page.getByLabel(/Height/i).scrollIntoViewIfNeeded();
-        await capturePanel(page, `05_advanced_${theme}`);
+        await page.screenshot({ path: shot(`05_advanced_${theme}`) });
       });
 
       test(`06_auto_${theme}`, async ({ page }) => {
@@ -211,9 +220,7 @@ test.describe("crop ui walkthrough", () => {
         await openCrop(page);
         await upload(page);
         await dragSelectionHandle(page, "se", -70, -90);
-        await page.getByRole("button", { name: /Expand/i }).click();
-        await expect(page.getByTestId("crop-editor")).toBeVisible();
-        await settle(page);
+        await openEditor(page);
         await page.screenshot({ path: shot(`07_editor_${theme}`) });
       });
 
@@ -222,8 +229,7 @@ test.describe("crop ui walkthrough", () => {
         await openCrop(page);
         await upload(page);
         await dragSelectionHandle(page, "se", -70, -90);
-        await page.getByRole("button", { name: /Expand/i }).click();
-        await expect(page.getByTestId("crop-editor")).toBeVisible();
+        await openEditor(page);
         const editor = page.getByTestId("crop-editor");
         const zoomIn = editor.getByRole("button", { name: /Zoom in/i });
         await zoomIn.click();
@@ -237,8 +243,7 @@ test.describe("crop ui walkthrough", () => {
         await openCrop(page);
         await upload(page);
         await dragSelectionHandle(page, "se", -90, -120);
-        await page.getByRole("button", { name: /Expand/i }).click();
-        await expect(page.getByTestId("crop-editor")).toBeVisible();
+        await openEditor(page);
         const editor = page.getByTestId("crop-editor");
         const handle = editor
           .getByTestId("crop-canvas")
@@ -277,16 +282,19 @@ test.describe("crop ui walkthrough", () => {
         await applyTheme(page, theme);
         await openCrop(page);
         await upload(page);
-        const size = page.getByTestId("crop-result-size");
+        await openEditor(page);
+        const size = page.getByTestId("crop-editor-size");
         await expect(size).toContainText("216 × 279 mm");
-        await dragSelectionHandle(page, "se", -70, -90);
+        const editor = page.getByTestId("crop-editor");
+        await dragSelectionHandle(page, "se", -70, -90, editor);
         await expect(size).not.toContainText("216 × 279 mm");
-        await page
-          .getByRole("button", { name: /Undo crop change/i })
+        await editor
+          .getByRole("button", { name: /^Undo$/i })
           .first()
           .click();
         await expect(size).toContainText("216 × 279 mm");
-        await capturePanel(page, `09c_undo_${theme}`);
+        await settle(page);
+        await page.screenshot({ path: shot(`09c_undo_${theme}`) });
       });
 
       test(`09_rotated_${theme}`, async ({ page }) => {
@@ -315,9 +323,7 @@ test.describe("crop ui walkthrough", () => {
         await enableRtl(page);
         await openCrop(page);
         await upload(page);
-        await page.getByRole("button", { name: /Expand/i }).click();
-        await expect(page.getByTestId("crop-editor")).toBeVisible();
-        await settle(page);
+        await openEditor(page);
         await page.screenshot({ path: shot(`11_rtl_editor_${theme}`) });
       });
     }

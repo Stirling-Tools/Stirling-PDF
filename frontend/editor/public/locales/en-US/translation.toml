@@ -4234,17 +4234,14 @@ autoDescription = "White edges are detected and trimmed on every selected page. 
 loadingPreview = "Preparing page preview…"
 noFileSelected = "Add a PDF file to begin cropping"
 previewUnavailable = "Preview unavailable. You can still set the area manually."
-history = "History"
-page = "Page {{page}} of {{total}}"
 previousPage = "Previous page"
 nextPage = "Next page"
 redo = "Redo"
-redoAria = "Redo crop change"
+edit = "Edit"
 reset = "Reset to full PDF"
 submit = "Apply Crop"
 title = "Crop"
 undo = "Undo"
-undoAria = "Undo crop change"
 
 [crop.advanced]
 title = "Exact coordinates"
@@ -4286,7 +4283,6 @@ zoomOut = "Zoom out"
 
 [crop.editor]
 done = "Done"
-open = "Expand"
 subtitle = "Drag a handle to trim. Scroll or pinch to zoom, then drag the page to pan."
 title = "Adjust crop area"
 
@@ -4309,9 +4305,6 @@ error = "Invalid page selection. Use e.g. 1, 3, 5-8 or all."
 label = "Pages to Crop"
 placeholder = "e.g. 1, 3, 5-8 or all"
 
-[crop.preview]
-title = "Crop area"
-
 [crop.ratio]
 a4 = "A4"
 free = "Free"
@@ -4322,7 +4315,6 @@ title = "Aspect ratio"
 wide = "16:9"
 
 [crop.result]
-title = "Result"
 ofPage = "{{percent}}% of page"
 
 [crop.results]

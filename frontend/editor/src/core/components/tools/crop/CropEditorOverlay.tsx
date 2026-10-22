@@ -1,21 +1,29 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { FocusTrap, Group, Stack, Text } from "@mantine/core";
+import { Divider, FocusTrap, Group, Text } from "@mantine/core";
+import { Collapsible } from "@app/ui/Collapsible";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
 import type { Rectangle } from "@app/utils/cropCoordinates";
-import type { CropPageGeometry } from "@app/utils/cropPageGeometry";
+import {
+  MM_PER_POINT,
+  getDisplaySize,
+  getPageBox,
+  pageRectToDisplay,
+  type CropPageGeometry,
+} from "@app/utils/cropPageGeometry";
 import CropCanvas, {
   type CropCanvasHandle,
   type CropUnit,
 } from "@app/components/tools/crop/CropCanvas";
+import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
 import CropMarginInputs from "@app/components/tools/crop/CropMarginInputs";
 import CropRatioPicker, {
+  ratioForPage,
   type CropRatioId,
 } from "@app/components/tools/crop/CropRatioPicker";
-import CropResultPreview from "@app/components/tools/crop/CropResultPreview";
 import classes from "@app/components/tools/crop/CropEditorOverlay.module.css";
 
 interface CropEditorOverlayProps {
@@ -25,20 +33,13 @@ interface CropEditorOverlayProps {
   geometry: CropPageGeometry;
   cropArea: Rectangle;
   onCropAreaChange: (area: Rectangle) => void;
-  aspectRatio: number | null;
   ratioId: CropRatioId;
   onRatioChange: (id: CropRatioId) => void;
-  unit: CropUnit;
-  onUnitChange: (unit: CropUnit) => void;
   onReset: () => void;
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
-  gridEnabled: boolean;
-  snapEnabled: boolean;
-  onToggleGrid: () => void;
-  onToggleSnap: () => void;
   pageNumber: number;
   pageCount: number;
   onPageChange: (page: number) => void;
@@ -56,20 +57,13 @@ export default function CropEditorOverlay({
   geometry,
   cropArea,
   onCropAreaChange,
-  aspectRatio,
   ratioId,
   onRatioChange,
-  unit,
-  onUnitChange,
   onReset,
   onUndo,
   onRedo,
   canUndo,
   canRedo,
-  gridEnabled,
-  snapEnabled,
-  onToggleGrid,
-  onToggleSnap,
   pageNumber,
   pageCount,
   onPageChange,
@@ -79,6 +73,10 @@ export default function CropEditorOverlay({
   const titleId = useId();
   const canvasRef = useRef<CropCanvasHandle>(null);
   const [zoom, setZoom] = useState(1);
+  const [unit, setUnit] = useState<CropUnit>("mm");
+  const [gridEnabled, setGridEnabled] = useState(true);
+  const [snapEnabled, setSnapEnabled] = useState(true);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -96,6 +94,23 @@ export default function CropEditorOverlay({
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open, onClose]);
+
+  const displaySize = useMemo(() => getDisplaySize(geometry), [geometry]);
+  const display = useMemo(
+    () => pageRectToDisplay(cropArea, geometry),
+    [cropArea, geometry],
+  );
+  const widthMm = display.width * MM_PER_POINT;
+  const heightMm = display.height * MM_PER_POINT;
+  const percent =
+    displaySize.width > 0 && displaySize.height > 0
+      ? Math.round(
+          (display.width / displaySize.width) *
+            (display.height / displaySize.height) *
+            100,
+        )
+      : 0;
+  const aspectRatio = ratioForPage(ratioId, displaySize);
 
   if (!open) return null;
 
@@ -171,7 +186,7 @@ export default function CropEditorOverlay({
                 aria-label={t("crop.canvas.toggleGrid", "Toggle grid")}
                 aria-pressed={gridEnabled}
                 title={t("crop.canvas.toggleGrid", "Toggle grid")}
-                onClick={onToggleGrid}
+                onClick={() => setGridEnabled((previous) => !previous)}
               >
                 <Icon name="layout-grid" size="0.875rem" />
               </ActionIcon>
@@ -182,7 +197,7 @@ export default function CropEditorOverlay({
                 aria-label={t("crop.canvas.toggleSnap", "Toggle snapping")}
                 aria-pressed={snapEnabled}
                 title={t("crop.canvas.toggleSnap", "Toggle snapping")}
-                onClick={onToggleSnap}
+                onClick={() => setSnapEnabled((previous) => !previous)}
               >
                 <Icon name="magnet" size="0.875rem" />
               </ActionIcon>
@@ -232,8 +247,6 @@ export default function CropEditorOverlay({
                 disabled={disabled}
                 gridEnabled={gridEnabled}
                 snapEnabled={snapEnabled}
-                onToggleGrid={onToggleGrid}
-                onToggleSnap={onToggleSnap}
                 unit={unit}
                 ariaLabel={t(
                   "crop.canvas.ariaLabel",
@@ -243,6 +256,25 @@ export default function CropEditorOverlay({
             </div>
 
             <aside className={classes.panel}>
+              <div className={classes.summary}>
+                <Text
+                  size="lg"
+                  fw={600}
+                  className={classes.summarySize}
+                  data-testid="crop-editor-size"
+                >
+                  {widthMm.toFixed(widthMm >= 10 ? 0 : 1)} ×{" "}
+                  {heightMm.toFixed(heightMm >= 10 ? 0 : 1)} mm
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {t("crop.result.ofPage", "{{percent}}% of page", {
+                    percent,
+                  })}
+                </Text>
+              </div>
+
+              <Divider />
+
               <CropRatioPicker
                 value={ratioId}
                 onChange={onRatioChange}
@@ -253,47 +285,64 @@ export default function CropEditorOverlay({
                 geometry={geometry}
                 onChange={onCropAreaChange}
                 unit={unit}
-                onUnitChange={onUnitChange}
+                onUnitChange={setUnit}
                 disabled={disabled}
               />
-              <CropResultPreview
-                imageUrl={imageUrl}
-                geometry={geometry}
-                cropArea={cropArea}
-                unit={unit}
-              />
 
-              <Stack gap={6}>
-                <Group grow gap="xs">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    leftSection={<Icon name="undo-2" size={14} />}
-                    onClick={onUndo}
-                    disabled={disabled || !canUndo}
-                  >
-                    {t("crop.undo", "Undo")}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    leftSection={<Icon name="redo-2" size={14} />}
-                    onClick={onRedo}
-                    disabled={disabled || !canRedo}
-                  >
-                    {t("crop.redo", "Redo")}
-                  </Button>
-                </Group>
+              <Collapsible
+                open={advancedOpen}
+                onToggle={() => setAdvancedOpen((previous) => !previous)}
+                header={
+                  <Text size="xs" fw={600} c="dimmed">
+                    {t("crop.advanced.title", "Exact coordinates")}
+                  </Text>
+                }
+              >
+                <CropCoordinateInputs
+                  cropArea={cropArea}
+                  onCoordinateChange={(field, value) => {
+                    const numeric =
+                      typeof value === "string"
+                        ? Number.parseFloat(value)
+                        : value;
+                    if (!Number.isFinite(numeric)) return;
+                    onCropAreaChange({ ...cropArea, [field]: numeric });
+                  }}
+                  disabled={disabled}
+                  pageBox={getPageBox(geometry)}
+                  showAutomationInfo={false}
+                />
+              </Collapsible>
+
+              <Group grow gap="xs">
                 <Button
                   variant="secondary"
                   size="sm"
-                  fullWidth
-                  leftSection={<Icon name="rotate-ccw" size={14} />}
-                  onClick={onReset}
+                  leftSection={<Icon name="undo-2" size={14} />}
+                  onClick={onUndo}
+                  disabled={disabled || !canUndo}
                 >
-                  {t("crop.reset", "Reset to full page")}
+                  {t("crop.undo", "Undo")}
                 </Button>
-              </Stack>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leftSection={<Icon name="redo-2" size={14} />}
+                  onClick={onRedo}
+                  disabled={disabled || !canRedo}
+                >
+                  {t("crop.redo", "Redo")}
+                </Button>
+              </Group>
+              <Button
+                variant="tertiary"
+                accent="neutral"
+                size="sm"
+                leftSection={<Icon name="rotate-ccw" size={14} />}
+                onClick={onReset}
+              >
+                {t("crop.reset", "Reset to full page")}
+              </Button>
             </aside>
           </div>
         </div>

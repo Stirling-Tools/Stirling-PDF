@@ -158,3 +158,13 @@
     border-block-start: 1px solid var(--c-border-subtle);
   }
 }
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.summarySize {
+  font-variant-numeric: tabular-nums;
+}
