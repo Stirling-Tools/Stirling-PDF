@@ -474,7 +474,10 @@ export class EditorStore {
       ? this.doc.page(editTarget.pageIndex).findRun(editTarget.runId)
       : undefined;
     const editBounds = editRun ? { ...editRun.bounds } : null;
-    const editLength = editRun?.text.length ?? 0;
+    const editText = editRun?.text ?? "";
+    const editLength = editText.length;
+    const editSlots = editRun?.paragraphLineSlots.length ?? 0;
+    const editMembers = editRun?.paragraphMemberPtrs.length ?? 0;
     if (!(cmd instanceof EditTextCommand)) {
       // Any non-text change (font, colour, z-order, ...) can affect pixels
       // outside a prior text region; repaint the whole page.
@@ -491,7 +494,26 @@ export class EditorStore {
       // A large rewrite can leave ink far outside the new bounds; repaint the
       // page rather than chase it. Ordinary typing stays inside a small union
       // of the old and new boxes.
-      if (Math.abs(editRun.text.length - editLength) > 16) {
+      const lineCount = editRun.text.split(/\r?\n/).length;
+      const oldLineCount = editText.split(/\r?\n/).length;
+      const structureChanged =
+        editRun.paragraphLineSlots.length !== editSlots ||
+        editRun.paragraphMemberPtrs.length !== editMembers;
+      // The partial pass is proven for upright PDF text. Synthesised base-14
+      // boxes, invisible OCR runs and rotated runs have their own emit paths;
+      // they keep the full page until each path is measured.
+      const simpleText =
+        !editRun.fontId.startsWith("base14:") &&
+        !editRun.fontId.startsWith("device:") &&
+        editRun.renderMode !== 3 &&
+        editRun.matrix.b === 0 &&
+        editRun.matrix.c === 0;
+      if (
+        !simpleText ||
+        Math.abs(editRun.text.length - editLength) > 16 ||
+        lineCount !== oldLineCount ||
+        structureChanged
+      ) {
         page.rasterDirty = null;
       } else {
         if (editBounds) page.markRasterDirty(editBounds);

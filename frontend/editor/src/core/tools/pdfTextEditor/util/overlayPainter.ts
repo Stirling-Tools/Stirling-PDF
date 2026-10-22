@@ -85,32 +85,6 @@ function applyFit(
     fit.marginRightPx !== 0 ? `${fit.marginRightPx}px` : "";
 }
 
-/**
- * Re-apply exact token advances without rebuilding the line blocks. The DOM
- * already carries the typed characters; this updates the fit data so the
- * caret lands on the engine's pen even when the line skeleton is unchanged.
- */
-export function applyExactAdvances(
-  el: HTMLElement,
-  lines: PaintLine[],
-  opts: PaintOptions,
-): void {
-  const blocks = el.querySelectorAll<HTMLElement>(`[${LINE_ATTR}]`);
-  lines.forEach((line, lineIndex) => {
-    const block = blocks[lineIndex];
-    if (!block) return;
-    const spans = block.querySelectorAll<HTMLSpanElement>(`[${TOKEN_ATTR}]`);
-    line.tokens.forEach((token, tokenIndex) => {
-      const span = spans[tokenIndex];
-      if (!span) return;
-      span.dataset.adv = String(token.advancePx);
-      span.dataset.src = token.text;
-      delete span.dataset.est;
-      applyFit(span, token, opts);
-    });
-  });
-}
-
 export function refitTokens(el: HTMLElement, opts: PaintOptions): void {
   refit(el, opts, false);
 }

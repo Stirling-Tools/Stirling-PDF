@@ -30,7 +30,6 @@ import {
 import { buildExactLines } from "@app/tools/pdfTextEditor/util/exactLayout";
 import { stackLineBoxes } from "@app/tools/pdfTextEditor/util/lineLayout";
 import {
-  applyExactAdvances,
   isLinePainted,
   normalizeContainerCaret,
   type PaintLine,
@@ -419,15 +418,6 @@ function TextRunOverlayImpl({
   // raster has painted that revision, so blur cannot reveal stale page ink.
   const editedAtRevisionRef = useRef(-1);
   const paintedSignatureRef = useRef<string | null>(null);
-  // Token/line skeleton of the last full paint. Typing a letter changes a
-  // token's text but not the skeleton; keep the DOM and refit it instead of
-  // rebuilding every span in the paragraph on every keystroke.
-  const paintedShapeRef = useRef<{
-    lines: number;
-    tokens: number[];
-    lefts: number[];
-    tops: number[];
-  } | null>(null);
   const pointerFocusRef = useRef(false);
   // The mask has to be the page's own colour, not a guess from the text: a
   // run on a coloured page got a grey band. Sampled from the rendered bitmap
@@ -636,36 +626,10 @@ function TextRunOverlayImpl({
     // whatever node the caret sits in, and a caret this run holds without being
     // document.activeElement is still a caret the next insert needs.
     const caret = ownsFocus ? plainCaretOffset(el) : null;
-    const shape = freshExact
-      ? {
-          lines: freshExact.lines.length,
-          tokens: freshExact.lines.map((l) => l.tokens.length),
-          lefts: freshExact.lines.map((l) => l.marginLeftPx),
-          tops: freshExact.lines.map((l) => l.marginTopPx),
-        }
-      : null;
-    const previous = paintedShapeRef.current;
-    const sameShape =
-      !!shape &&
-      !!previous &&
-      shape.lines === previous.lines &&
-      shape.tokens.every((n, i) => n === previous.tokens[i]) &&
-      shape.lefts.every((n, i) => n === previous.lefts[i]) &&
-      shape.tops.every((n, i) => n === previous.tops[i]);
     if (freshExact) {
-      if (painted && sameShape) {
-        // The native edit already put the character in the span; re-apply the
-        // engine's exact advances without rebuilding the line blocks. The fit
-        // data must move too, or the native caret lands on the old width. A
-        // blurred overlay has nothing to refit: its text is transparent.
-        if (showsGlyphs) applyExactAdvances(el, freshExact.lines, paintOpts);
-      } else {
-        paintLines(el, freshExact.lines, paintOpts);
-        paintedShapeRef.current = shape;
-      }
+      paintLines(el, freshExact.lines, paintOpts);
     } else {
       paintPlainText(el, run.text);
-      paintedShapeRef.current = null;
     }
     paintedSignatureRef.current = wantSignature;
     // Only while the run still holds focus. A selection outlives the blur that
