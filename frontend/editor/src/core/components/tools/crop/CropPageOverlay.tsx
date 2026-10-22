@@ -57,6 +57,15 @@ interface DragState {
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
+const SNAP_THRESHOLD = 0.01;
+
+function snapCoordinate(value: number): number {
+  for (const candidate of [0, 0.5, 1]) {
+    if (Math.abs(value - candidate) < SNAP_THRESHOLD) return candidate;
+  }
+  return value;
+}
+
 function findScrollEl(root: HTMLElement): HTMLElement | null {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
   let node: Node | null;
@@ -185,6 +194,7 @@ export default function CropPageOverlay({
   const frameRef = useRef<number | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const scrollElRef = useRef<HTMLElement | null>(null);
+  const wheelZoomAccumulatorRef = useRef(0);
   const gestureFrameRef = useRef<number | null>(null);
   const revealFrameRef = useRef<number | null>(null);
   const pendingCommitRef = useRef<{
@@ -253,8 +263,12 @@ export default function CropPageOverlay({
     const onWheel = (event: WheelEvent) => {
       if (event.ctrlKey || event.metaKey) {
         event.preventDefault();
-        if (event.deltaY < 0) zoomActions.zoomIn();
-        else zoomActions.zoomOut();
+        wheelZoomAccumulatorRef.current += event.deltaY;
+        if (Math.abs(wheelZoomAccumulatorRef.current) >= 10) {
+          if (wheelZoomAccumulatorRef.current < 0) zoomActions.zoomIn();
+          else zoomActions.zoomOut();
+          wheelZoomAccumulatorRef.current = 0;
+        }
         return;
       }
       const scroller = scrollElRef.current;
@@ -293,7 +307,7 @@ export default function CropPageOverlay({
       scheduleMeasure();
     });
     const onScroll = () => scheduleMeasure();
-    container.addEventListener("scroll", onScroll, true);
+    document.addEventListener("scroll", onScroll, true);
 
     const observer =
       typeof ResizeObserver !== "undefined"
@@ -314,7 +328,7 @@ export default function CropPageOverlay({
     return () => {
       unregisterZoom?.();
       unregisterRotation?.();
-      container.removeEventListener("scroll", onScroll, true);
+      document.removeEventListener("scroll", onScroll, true);
       observer?.disconnect();
       intersection?.disconnect();
       window.removeEventListener("resize", scheduleMeasure);
@@ -430,10 +444,7 @@ export default function CropPageOverlay({
       };
       const target =
         current.snapEnabled && !ratio
-          ? {
-              x: Math.abs(point.x - 0.5) < 0.01 ? 0.5 : point.x,
-              y: Math.abs(point.y - 0.5) < 0.01 ? 0.5 : point.y,
-            }
+          ? { x: snapCoordinate(point.x), y: snapCoordinate(point.y) }
           : point;
 
       let rect: NormalizedRect;
