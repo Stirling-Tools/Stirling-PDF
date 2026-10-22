@@ -1,0 +1,147 @@
+import { Suspense, lazy } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { isAuthRoute } from "@app/utils/pathUtils";
+import { AppProviders } from "@app/components/AppProviders";
+import { PublicRouteProviders } from "@app/components/PublicRouteProviders";
+import { RunLocationGate } from "@app/components/runLocation/RunLocationGate";
+import { setBaseUrl } from "@app/constants/app";
+import type { AppConfig } from "@app/contexts/AppConfigContext";
+import { AppLayout } from "@app/components/AppLayout";
+import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import OnboardingTour from "@app/components/onboarding/OnboardingTour";
+import Landing from "@app/routes/Landing";
+import Login from "@app/routes/Login";
+import { ResumePendingConnect } from "@app/routes/ResumePendingConnect";
+import Signup from "@app/routes/Signup";
+import AuthCallback from "@app/routes/AuthCallback";
+import ResetPassword from "@app/routes/ResetPassword";
+import OAuthConsent from "@app/routes/OAuthConsent";
+import ConnectApprove from "@app/routes/ConnectApprove";
+import ShareLinkPage from "@app/routes/ShareLinkPage";
+import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
+import { AppFrame } from "@app/components/layout/AppFrame";
+import { NoAppChrome } from "@app/components/layout/NoAppChrome";
+import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
+import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
+import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
+import { RootGate } from "@app/routes/RootGate";
+
+const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
+const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
+
+// Import global styles
+import "@app/styles/tailwind.css";
+import "@app/auth/ui/auth-theme.css";
+import "@app/styles/cookieconsent.css";
+import "@app/styles/index.css";
+
+// Import file ID debugging helpers (development only)
+import "@app/utils/fileIdSafety";
+
+function handleConfigLoaded(config: AppConfig) {
+  if (config.baseUrl) setBaseUrl(config.baseUrl);
+}
+
+/**
+ * Onboarding / sign-up modals must never cover auth-flow pages (login, signup,
+ * OAuth consent): they steal focus from the task the user was sent there to
+ * complete.
+ */
+function NonAuthBootstraps() {
+  const location = useLocation();
+  if (isAuthRoute(location.pathname)) {
+    return null;
+  }
+  return (
+    <>
+      <OnboardingBootstrap />
+      <SignupRequiredBootstrap />
+      <UsageLimitModalHost />
+    </>
+  );
+}
+
+function MainRoutes() {
+  return (
+    <Routes>
+      {/* Not the app: no rail over any of these, ever. */}
+      <Route element={<NoAppChrome />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/auth/reset" element={<ResetPassword />} />
+        <Route path="/oauth/consent" element={<OAuthConsent />} />
+        {/* Human half of the self-hosted account-link handshake. It lives on
+            this origin because a customer hostname can never be in the
+            provider's redirect allow-list. Grouped with the pages above: it is
+            an approval step, not the app. */}
+        <Route path="/link" element={<ConnectApprove />} />
+        {/* Shared-file links. Team invites are NOT routed here: on SaaS they
+            are accepted in-app via the Supabase team invitation banner, not the
+            Spring password-based /invite/:token page used by the self-hosted
+            build. */}
+        <Route path="/share/:token" element={<ShareLinkPage />} />
+      </Route>
+      <Route path="/*" element={<Landing />} />
+    </Routes>
+  );
+}
+
+// Everything else needs the auth/backend providers. RootGate routes "/" by role
+// before any of it mounts.
+function MainApp() {
+  return (
+    <RootGate>
+      <AppProviders
+        appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
+      >
+        <AppLayout>
+          <NonAuthBootstraps />
+          <ResumePendingConnect />
+          <MainRoutes />
+          <OnboardingTour />
+        </AppLayout>
+      </AppProviders>
+    </RootGate>
+  );
+}
+
+export default function App() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
+        {/* Mobile scanner - public, no auth. Opened on a phone via the QR code,
+            so it must render without a logged-in session. Kept outside
+            AppProviders or it falls through to the auth-gated catch-all. */}
+        <Route
+          path="/mobile-scanner"
+          element={
+            <PublicRouteProviders>
+              <MobileScannerPage />
+            </PublicRouteProviders>
+          }
+        />
+
+        {/* Mobile signature drawing - reached from the Sign tool QR code */}
+        <Route
+          path="/mobile-sign"
+          element={
+            <PublicRouteProviders>
+              <MobileSignPage />
+            </PublicRouteProviders>
+          }
+        />
+
+        {/* Before the frame and auth, so a first visit sees the chooser alone. */}
+        <Route element={<RunLocationGate />}>
+          {/* Both apps, under a shared frame so the rail renders once outside them. */}
+          <Route element={<AppFrame />}>
+            {/* The portal: its own top-level shell, before the catch-all. */}
+            {getAdminRouteExtensions()}
+            <Route path="*" element={<MainApp />} />
+          </Route>
+        </Route>
+      </Routes>
+    </Suspense>
+  );
+}

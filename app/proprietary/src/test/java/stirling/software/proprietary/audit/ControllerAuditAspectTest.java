@@ -26,6 +26,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -35,7 +37,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
+import stirling.software.proprietary.config.CustomAuditEventRepository;
+import stirling.software.proprietary.model.security.PersistentAuditEvent;
+import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.service.AuditService;
+
+import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
 class ControllerAuditAspectTest {
@@ -66,6 +73,52 @@ class ControllerAuditAspectTest {
         lenient().when(jp.getTarget()).thenReturn(new SampleController());
         lenient().when(jp.getArgs()).thenReturn(new Object[0]);
         return jp;
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void verboseAuditPersistsOutcomesWithoutPasswordArguments(boolean fail) throws Throwable {
+        var properties = new ApplicationProperties();
+        properties.getPremium().getEnterpriseFeatures().getAudit().setEnabled(true);
+        properties.getPremium().getEnterpriseFeatures().getAudit().setLevel(3);
+        var config = new AuditConfigurationProperties(properties);
+        var persisted = mock(PersistentAuditEventRepository.class);
+        var writer = new CustomAuditEventRepository(persisted, JsonMapper.builder().build());
+        var service = new AuditService(writer, config, true, null, null);
+        var realAspect = new ControllerAuditAspect(service, config);
+        var jp = mock(ProceedingJoinPoint.class);
+        var sig = mock(MethodSignature.class);
+        when(jp.getSignature()).thenReturn(sig);
+        when(sig.getMethod())
+                .thenReturn(
+                        SampleController.class.getMethod(
+                                "passwordEndpoint", String.class, Map.class));
+        when(sig.getParameterNames()).thenReturn(new String[] {"password", "request"});
+        when(jp.getTarget()).thenReturn(new SampleController());
+        var request =
+                Map.of(
+                        "ownerPassword",
+                        "owner-secret",
+                        "keyLength",
+                        256,
+                        "nested",
+                        Map.of("sourcePassword", "source-secret"));
+        when(jp.getArgs()).thenReturn(new Object[] {"restore-secret", request});
+        if (fail) {
+            when(jp.proceed()).thenThrow(new IllegalArgumentException("Invalid PDF"));
+            assertThatThrownBy(() -> realAspect.auditPostMethod(jp))
+                    .isInstanceOf(IllegalArgumentException.class);
+        } else {
+            when(jp.proceed()).thenReturn("done");
+            assertThat(realAspect.auditPostMethod(jp)).isEqualTo("done");
+        }
+
+        var captor = ArgumentCaptor.forClass(PersistentAuditEvent.class);
+        verify(persisted).save(captor.capture());
+        assertThat(captor.getValue().getData())
+                .contains(fail ? "failure" : "success", "keyLength=256")
+                .doesNotContain("restore-secret", "owner-secret", "source-secret");
+        assertThat(request.get("ownerPassword")).isEqualTo("owner-secret");
     }
 
     @Nested
@@ -302,6 +355,11 @@ class ControllerAuditAspectTest {
 
     /** Sample controller whose methods carry the web-mapping annotations the aspect inspects. */
     public static class SampleController {
+
+        @PostMapping("/api/v1/security/restore-pdf-protection")
+        public String passwordEndpoint(String password, Map<String, Object> request) {
+            return "done";
+        }
 
         @GetMapping("/api/v1/sample")
         public String getEndpoint() {
