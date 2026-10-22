@@ -88,6 +88,21 @@
   display: none;
 }
 
+/* Selection mode: every row shows its checkbox, not only the hovered one, and
+   the row actions step aside so a click always toggles. */
+.file-sidebar-file-item.selection-mode .file-sidebar-file-icon-hover-hide {
+  display: none;
+}
+
+.file-sidebar-file-item.selection-mode:not(.selected)
+  .file-sidebar-file-checkbox-hover {
+  display: block;
+}
+
+.file-sidebar-file-item.selection-mode .file-sidebar-file-actions {
+  display: none;
+}
+
 /* Centred rather than pinned to the corner: the 24px frame is wider than the
    wrapper, and the page inside it is what has to line up. */
 .file-sidebar-file-icon {
