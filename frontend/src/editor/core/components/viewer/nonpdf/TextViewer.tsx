@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Box,
   Center,
@@ -13,6 +19,8 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { formatFileSize } from "@app/utils/fileUtils";
 import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
+import { NonPdfSearchBar } from "@app/components/viewer/nonpdf/NonPdfSearchBar";
+import { highlightMatches } from "@app/components/viewer/nonpdf/viewerSearch";
 
 interface TextViewerProps {
   file: File;
@@ -26,11 +34,23 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
   const [content, setContent] = useState<string | null>(null);
   const [showLineNumbers, setShowLineNumbers] = useState(!isMarkdown);
   const [renderMd, setRenderMd] = useState(isMarkdown);
+  const [query, setQuery] = useState("");
+  const [activeMatch, setActiveMatch] = useState(0);
   const parentRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    setContent(null);
     file.text().then(setContent);
   }, [file]);
+
+  useEffect(() => {
+    setShowLineNumbers(!isMarkdown);
+    setRenderMd(isMarkdown);
+    setQuery("");
+    setActiveMatch(0);
+    if (parentRef.current) parentRef.current.scrollTop = 0;
+  }, [file, isMarkdown]);
 
   const lines = useMemo(() => content?.split("\n") ?? [], [content]);
 
@@ -48,6 +68,61 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
     estimateSize: () => LINE_HEIGHT_PX,
     overscan: 30,
   });
+
+  const deferredQuery = useDeferredValue(query);
+  const matchLines = useMemo(() => {
+    const needle = deferredQuery.trim().toLowerCase();
+    if (!needle) return [];
+    return lines.reduce<number[]>((matches, line, index) => {
+      if (line.toLowerCase().includes(needle)) matches.push(index);
+      return matches;
+    }, []);
+  }, [lines, deferredQuery]);
+  const scrolledMatchRef = useRef("");
+
+  useEffect(() => {
+    setActiveMatch(0);
+  }, [deferredQuery]);
+
+  useEffect(() => {
+    const key = `${deferredQuery}:${activeMatch}`;
+    if (scrolledMatchRef.current === key) return;
+    scrolledMatchRef.current = key;
+    const lineIndex = matchLines[activeMatch];
+    if (lineIndex !== undefined) {
+      rowVirtualizer.scrollToIndex(lineIndex, { align: "center" });
+    }
+  }, [activeMatch, deferredQuery, matchLines, rowVirtualizer]);
+
+  useEffect(() => {
+    if (renderedMarkdown !== null) return;
+    const focusSearch = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", focusSearch);
+    return () => window.removeEventListener("keydown", focusSearch);
+  }, [renderedMarkdown]);
+
+  const stepMatch = (delta: number) => {
+    if (matchLines.length === 0) return;
+    setActiveMatch(
+      (activeMatch + delta + matchLines.length) % matchLines.length,
+    );
+  };
+
+  if (content === "") {
+    return (
+      <Center style={{ flex: 1 }}>
+        <Text c="dimmed" size="sm">
+          {t("viewer.nonPdf.emptyFile")}
+        </Text>
+      </Center>
+    );
+  }
 
   return (
     <Stack gap={0} style={{ height: "100%", flex: 1, minHeight: 0 }}>
@@ -85,6 +160,17 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
               checked={renderMd}
               onChange={(e) => setRenderMd(e.currentTarget.checked)}
               size="xs"
+            />
+          )}
+          {renderedMarkdown === null && (
+            <NonPdfSearchBar
+              query={query}
+              onQueryChange={setQuery}
+              totalMatches={matchLines.length}
+              activeMatch={activeMatch}
+              onNext={() => stepMatch(1)}
+              onPrevious={() => stepMatch(-1)}
+              inputRef={searchInputRef}
             />
           )}
         </Group>
@@ -177,7 +263,7 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
                       color: "var(--c-text)",
                     }}
                   >
-                    {line || " "}
+                    {line ? highlightMatches(line, deferredQuery) : " "}
                   </span>
                 </div>
               );

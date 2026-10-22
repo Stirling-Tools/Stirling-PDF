@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Badge, Center, Group, Paper, Stack, Text } from "@mantine/core";
 import {
   type ColumnDef,
@@ -16,6 +22,11 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { formatFileSize } from "@app/utils/fileUtils";
+import { NonPdfSearchBar } from "@app/components/viewer/nonpdf/NonPdfSearchBar";
+import {
+  findCsvMatches,
+  highlightMatches,
+} from "@app/components/viewer/nonpdf/viewerSearch";
 
 // ─── CSV parser ───────────────────────────────────────────────────────────────
 
@@ -96,11 +107,17 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
   const [rows, setRows] = useState<string[][]>([]);
   const [loading, setLoading] = useState(true);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [query, setQuery] = useState("");
+  const [activeMatch, setActiveMatch] = useState(0);
   const parentRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setLoading(true);
     setSorting([]);
+    setQuery("");
+    setActiveMatch(0);
+    if (parentRef.current) parentRef.current.scrollTop = 0;
     file.text().then((text) => {
       const delimiter = isTsv ? "\t" : ",";
       setRows(parseCsv(text, delimiter));
@@ -156,7 +173,6 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
   });
 
   const sortedRows = table.getRowModel().rows;
-
   const rowVirtualizer = useVirtualizer({
     count: sortedRows.length,
     getScrollElement: () => parentRef.current,
@@ -164,10 +180,52 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
     overscan: 20,
   });
 
+  const deferredQuery = useDeferredValue(query);
+  const matchRows = useMemo(
+    () =>
+      findCsvMatches(
+        sortedRows.map((row) => row.original.cells),
+        deferredQuery,
+      ),
+    [sortedRows, deferredQuery],
+  );
+  const scrolledMatchRef = useRef("");
+
+  useEffect(() => {
+    setActiveMatch(0);
+  }, [deferredQuery]);
+
+  useEffect(() => {
+    const key = `${deferredQuery}:${activeMatch}`;
+    if (scrolledMatchRef.current === key) return;
+    scrolledMatchRef.current = key;
+    const rowIndex = matchRows[activeMatch];
+    if (rowIndex !== undefined) {
+      rowVirtualizer.scrollToIndex(rowIndex, { align: "center" });
+    }
+  }, [activeMatch, deferredQuery, matchRows, rowVirtualizer]);
+
+  useEffect(() => {
+    const focusSearch = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", focusSearch);
+    return () => window.removeEventListener("keydown", focusSearch);
+  }, []);
+
   const sortedColumn = sorting[0];
   const sortedColumnIndex = sortedColumn
     ? parseInt(sortedColumn.id.replace("col_", ""), 10)
     : null;
+
+  const stepMatch = (delta: number) => {
+    if (matchRows.length === 0) return;
+    setActiveMatch((activeMatch + delta + matchRows.length) % matchRows.length);
+  };
 
   if (loading) {
     return (
@@ -227,6 +285,15 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
               {sortedColumn?.desc ? "\u2193" : "\u2191"} \u2715
             </Badge>
           )}
+          <NonPdfSearchBar
+            query={query}
+            onQueryChange={setQuery}
+            totalMatches={matchRows.length}
+            activeMatch={activeMatch}
+            onNext={() => stepMatch(1)}
+            onPrevious={() => stepMatch(-1)}
+            inputRef={searchInputRef}
+          />
         </Group>
       </Paper>
 
@@ -371,9 +438,9 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
                           truncate
                           title={String(cell.getValue() ?? "")}
                         >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
+                          {highlightMatches(
+                            String(cell.getValue() ?? ""),
+                            deferredQuery,
                           )}
                         </Text>
                       </td>
