@@ -1,12 +1,7 @@
 package stirling.software.SPDF.service;
 
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
 
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.SecurityHandler;
 import org.apache.pdfbox.pdmodel.encryption.StandardSecurityHandler;
@@ -16,29 +11,6 @@ import org.springframework.web.server.ResponseStatusException;
 /** Permission decisions for original documents loaded read-only by the interactive workflow. */
 public final class PdfSessionPermissions {
     private PdfSessionPermissions() {}
-
-    /** Identifies the stored credential entries without returning them or either password. */
-    public static String credentialFingerprint(PDDocument document) throws IOException {
-        if (!document.isEncrypted()) return "";
-        try {
-            var digest = MessageDigest.getInstance("SHA-256");
-            var encryption = document.getEncryption().getCOSObject();
-            for (var key : new COSName[] {COSName.O, COSName.U, COSName.OE, COSName.UE}) {
-                if (encryption.getDictionaryObject(key) instanceof COSString value) {
-                    byte[] bytes = value.getBytes();
-                    digest.update((byte) bytes.length);
-                    digest.update(bytes);
-                } else digest.update((byte) 0);
-            }
-            var ids = document.getDocument().getDocumentID();
-            if (ids != null && ids.size() > 0 && ids.getObject(0) instanceof COSString id) {
-                digest.update(id.getBytes());
-            }
-            return HexFormat.of().formatHex(digest.digest());
-        } catch (NoSuchAlgorithmException e) {
-            throw new IOException("PDF credential verification is unavailable", e);
-        }
-    }
 
     /** Requires a freshly loaded document whose access permission has not been mutated. */
     public static boolean isOwnerAuthenticated(PDDocument document) throws IOException {
