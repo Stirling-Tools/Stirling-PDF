@@ -173,7 +173,7 @@ const AdjustPageScaleSettings = ({
       )}
 
       <SegmentedControl
-        aria-label={t("adjustPageScale.orientation.label", "Page orientation")}
+        ariaLabel={t("adjustPageScale.orientation.label", "Page orientation")}
         value={parameters.orientation}
         onChange={(value) => onParameterChange("orientation", value)}
         options={orientationOptions}

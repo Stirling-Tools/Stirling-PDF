@@ -541,7 +541,7 @@ title = "Description"
 title = "Page Scale Settings Overview"
 
 [adjustPageScale.tooltip.pageSize]
-text = "Sets the dimensions of the output PDF pages. 'Keep Original Size' maintains current dimensions, while other options resize to standard paper sizes."
+text = "Sets the dimensions of the output PDF pages. 'Keep Original Size' maintains current dimensions, 'Custom' uses the width and height you enter, and the other options resize to standard paper sizes."
 title = "Target Page Size"
 
 [adjustPageScale.tooltip.scaleFactor]

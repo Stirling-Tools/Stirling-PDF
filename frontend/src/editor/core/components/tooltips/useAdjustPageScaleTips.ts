@@ -44,7 +44,7 @@ export const useAdjustPageScaleTips = (): TooltipContent => {
         title: t("adjustPageScale.tooltip.pageSize.title", "Target Page Size"),
         description: t(
           "adjustPageScale.tooltip.pageSize.text",
-          "Sets the dimensions of the output PDF pages. 'Keep Original Size' maintains current dimensions, while other options resize to standard paper sizes.",
+          "Sets the dimensions of the output PDF pages. 'Keep Original Size' maintains current dimensions, 'Custom' uses the width and height you enter, and the other options resize to standard paper sizes.",
         ),
       },
     ],
