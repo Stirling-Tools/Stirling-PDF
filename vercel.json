@@ -1,0 +1,43 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "frontend": {
+      "root": "frontend",
+      "framework": "vite",
+      "buildCommand": "UV_THREADPOOL_SIZE=16 VITE_BUILD_FOR_PREVIEW=1 VITE_INCLUDE_PORTAL=true vite build --mode proprietary",
+      "cleanUrls": true,
+      "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+    },
+    "backend": {
+      "root": ".",
+      "runtime": "container",
+      "entrypoint": "Dockerfile.vercel",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "engine",
+          "format": "url",
+          "env": "AIENGINE_URL"
+        }
+      ]
+    },
+    "engine": {
+      "root": "engine",
+      "framework": "fastapi",
+      "entrypoint": "asgi:app",
+      "installCommand": "uv sync --locked --no-install-project --group engine"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": { "service": "backend" } },
+    { "source": "/oauth2/(.*)", "destination": { "service": "backend" } },
+    { "source": "/saml2/(.*)", "destination": { "service": "backend" } },
+    { "source": "/login/oauth2/(.*)", "destination": { "service": "backend" } },
+    { "source": "/login/saml2/(.*)", "destination": { "service": "backend" } },
+    { "source": "/swagger-ui(.*)", "destination": { "service": "backend" } },
+    { "source": "/v1/api-docs(.*)", "destination": { "service": "backend" } },
+    { "source": "/v3/api-docs(.*)", "destination": { "service": "backend" } },
+    { "source": "/fonts/(.*)", "destination": { "service": "backend" } },
+    { "source": "/(.*)", "destination": { "service": "frontend" } }
+  ]
+}

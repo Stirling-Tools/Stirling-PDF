@@ -1,6 +1,7 @@
 # Checks pinned versions used by the Docker build and opens one pull request
 # per tool. All occurrences of a shared tool version are updated together,
-# including the common base image and the embedded/engine Dockerfiles.
+# including the common base image, the embedded/engine Dockerfiles and the
+# root Dockerfile.vercel.
 #
 # The workflow covers externally released tools and images with stable release
 # APIs. Distribution packages installed through Ubuntu/APT are intentionally
@@ -137,7 +138,7 @@ jobs:
         run: |
           set -euo pipefail
           mapfile -t files < <(
-            find docker engine -type f -name 'Dockerfile*' \
+            find docker engine Dockerfile.vercel -type f -name 'Dockerfile*' \
               -exec grep -l "^ARG ${VARIABLE}=" {} +
           )
 
