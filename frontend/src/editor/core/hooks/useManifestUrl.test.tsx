@@ -161,10 +161,10 @@ describe("mergeManifestName", () => {
 });
 
 describe("absolutizeManifestUrls", () => {
-  const ORIGIN = "https://pdf.example.com/";
+  const BASE = "https://pdf.example.com/";
 
   test("rewrites start_url and every icon src to origin-absolute URLs", () => {
-    const resolved = absolutizeManifestUrls(MODERN_MANIFEST, ORIGIN);
+    const resolved = absolutizeManifestUrls(MODERN_MANIFEST, BASE);
     expect(resolved.start_url).toBe("https://pdf.example.com/");
     for (const icon of resolved.icons ?? []) {
       expect(icon.src).toMatch(/^https:\/\/pdf\.example\.com\//);
@@ -178,7 +178,7 @@ describe("absolutizeManifestUrls", () => {
       scope: ".",
       id: "./",
     };
-    const resolved = absolutizeManifestUrls(withScopeAndId, ORIGIN);
+    const resolved = absolutizeManifestUrls(withScopeAndId, BASE);
     expect(resolved.scope).toBe("https://pdf.example.com/");
     expect(resolved.id).toBe("https://pdf.example.com/");
   });
@@ -189,7 +189,7 @@ describe("absolutizeManifestUrls", () => {
       start_url: "https://cdn.example.com/app",
       icons: [{ src: "https://cdn.example.com/icon.png" }],
     };
-    const resolved = absolutizeManifestUrls(withAbsoluteIcons, ORIGIN);
+    const resolved = absolutizeManifestUrls(withAbsoluteIcons, BASE);
     expect(resolved.start_url).toBe("https://cdn.example.com/app");
     expect(resolved.icons?.[0]?.src).toBe("https://cdn.example.com/icon.png");
   });
@@ -198,7 +198,9 @@ describe("absolutizeManifestUrls", () => {
 describe("useManifestUrl", () => {
   let createObjectURLSpy: MockInstance<typeof URL.createObjectURL>;
   let revokeObjectURLSpy: MockInstance<typeof URL.revokeObjectURL>;
+  let originalLocation: Location;
   beforeEach(() => {
+    originalLocation = window.location;
     createObjectURLSpy = vi
       .spyOn(URL, "createObjectURL")
       .mockImplementation(
@@ -211,6 +213,12 @@ describe("useManifestUrl", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    if (window.location !== originalLocation) {
+      Object.defineProperty(window, "location", {
+        value: originalLocation,
+        writable: true,
+      });
+    }
   });
 
   const wrapperFor = (appName: string | null | undefined) => {
@@ -406,6 +414,48 @@ describe("useManifestUrl", () => {
     // No blob URL was ever created.
     expect(createObjectURLSpy).not.toHaveBeenCalled();
     expect(revokeObjectURLSpy).not.toHaveBeenCalled();
+  });
+
+  test("non-OK manifest response falls back to the static manifestHref", async () => {
+    allowConsole.error(/\[useManifestUrl\] Failed to build runtime manifest/);
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response("Not found", { status: 404 }));
+
+    const { result } = renderUseManifestUrl({
+      wrapper: wrapperFor("Acme Docs"),
+    });
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    await act(async () => {});
+    expect(result.current.manifestHref).toBe("/manifest.json");
+    expect(createObjectURLSpy).not.toHaveBeenCalled();
+  });
+
+  test("clearing appName revokes the blob and restores the static manifestHref", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify(MODERN_MANIFEST))),
+    );
+
+    let setAppName: (value: string) => void = () => {};
+    const Driver = ({ children }: { children: ReactNode }) => {
+      const [appName, setter] = useState("First Name");
+      setAppName = setter;
+      return <ConfigHarness appName={appName}>{children}</ConfigHarness>;
+    };
+
+    const { result } = renderUseManifestUrl({ wrapper: Driver });
+    await waitFor(() => expect(result.current.manifestHref).toMatch(/^blob:/));
+    const blobUrl = result.current.manifestHref;
+
+    act(() => {
+      setAppName("");
+    });
+
+    await waitFor(() => {
+      expect(result.current.manifestHref).toBe("/manifest.json");
+    });
+    expect(revokeObjectURLSpy).toHaveBeenCalledWith(blobUrl);
   });
 
   test("keeps the static manifestHref until the hook resolves", async () => {

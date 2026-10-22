@@ -16,7 +16,7 @@ import { useLogoAssets } from "@app/hooks/useLogoAssets";
  * opaque path, so relative references against it fail WHATWG URL parsing and the
  * icons are dropped — which fails Chrome's installability check. Before creating
  * the blob, rewrite `start_url`, every `icons[].src`, and (when present)
- * `scope`/`id` to origin-absolute URLs resolved against `window.location`.
+ * `scope`/`id` to absolute URLs resolved against the manifest's own URL, not the page URL.
  */
 
 /** PWA short names must stay within 12 code points (ellipsis included) */
@@ -96,21 +96,21 @@ export function mergeManifestName(
   };
 }
 
-/** Rewrite all URL members to origin-absolute URLs. */
+/** Rewrite all URL members to absolute URLs resolved against `base`. */
 export function absolutizeManifestUrls(
   manifest: StaticManifest,
-  origin: string,
+  base: string,
 ): StaticManifest {
   const next: StaticManifest = { ...manifest };
   for (const key of ["start_url", "scope", "id"] as const) {
-    const resolved = resolveManifestUrl(next[key], origin);
+    const resolved = resolveManifestUrl(next[key], base);
     if (resolved !== undefined) {
       next[key] = resolved;
     }
   }
   if (Array.isArray(next.icons)) {
     next.icons = next.icons.map((icon) => {
-      const resolved = resolveManifestUrl(icon.src, origin);
+      const resolved = resolveManifestUrl(icon.src, base);
       return resolved !== undefined ? { ...icon, src: resolved } : icon;
     });
   }
@@ -129,10 +129,12 @@ export interface UseManifestUrlResult {
  * - Reads the static manifest URL from `useLogoAssets().manifestHref`.
  * - Fetches the static manifest, merges `name`/`short_name` from
  *   `AppConfig.appNameNavbar` (unset values fall back to the static ones), and
- *   rewrites URL members to origin-absolute URLs.
- * - Returns a blob URL. The previous blob URL is revoked when superseded and on unmount, so object URLs do not leak.
- * - Returns the static manifestHref unchanged on fetch failure and while
- *   the fetch is in flight.
+ *   rewrites URL members to absolute URLs.
+ * - Returns a blob URL once the first manifest is ready. A later name change
+ *   keeps the previous blob live until its replacement exists, then revokes it.
+ *   Unmount also revokes the live blob, so object URLs do not leak.
+ * - Returns the static manifestHref until a blob is ready, and again when the
+ *   name is unset or the fetch fails.
  */
 export function useManifestUrl(): UseManifestUrlResult {
   const { config } = useAppConfig();
