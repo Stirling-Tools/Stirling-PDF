@@ -1149,13 +1149,13 @@ function TextRunOverlayImpl({
           ? (maskColor ?? contrastingMaskFor(run.fill))
           : "transparent",
         // Tint through an inset shadow rather than background-color: the
-        // opaque edit mask has to stay the page's colour, while the blue
-        // selection wash must survive the first keystroke instead of snapping
-        // to white. A 5% wash keeps the run visibly selected while editing.
+        // opaque edit mask has to stay the page's colour, while the selection
+        // wash stays identical before and during editing instead of snapping
+        // to white on the first keystroke.
         boxShadow: highlighted
           ? "inset 0 0 0 9999px rgba(255,217,0,0.45)"
           : selected
-            ? `inset 0 0 0 9999px rgba(44,123,229,${showsGlyphs ? "0.05" : "0.10"})`
+            ? "inset 0 0 0 9999px rgba(44,123,229,0.10)"
             : hovered
               ? "inset 0 0 0 9999px rgba(44,123,229,0.04)"
               : "none",
