@@ -4280,6 +4280,7 @@ label = "Y Position"
 
 [crop.editor]
 done = "Done"
+open = "Precision editor"
 subtitle = "Drag a handle to trim. Scroll or pinch to zoom, then drag the page to pan."
 title = "Adjust crop area"
 

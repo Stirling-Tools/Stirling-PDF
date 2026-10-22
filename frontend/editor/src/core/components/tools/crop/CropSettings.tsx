@@ -483,6 +483,15 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
                 onChange={setRatioId}
                 disabled={disabled}
               />
+              <Button
+                variant="secondary"
+                size="sm"
+                leftSection={<Icon name="fullscreen" size={14} />}
+                onClick={() => setEditorOpen(true)}
+                disabled={disabled}
+              >
+                {t("crop.editor.open", "Precision editor")}
+              </Button>
               <Collapsible
                 open={marginsOpen}
                 onToggle={() => setMarginsOpen((previous) => !previous)}
@@ -558,8 +567,8 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           canUndo={history.canUndo}
           canRedo={history.canRedo}
           pageNumber={pageNumber}
-          pageCount={preview.pageCount}
-          onPageChange={changePage}
+          pageCount={viewerSurface ? 1 : preview.pageCount}
+          onPageChange={viewerSurface ? () => undefined : changePage}
           disabled={disabled}
         />
       )}

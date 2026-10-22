@@ -222,4 +222,29 @@ test.describe("crop on the viewer", () => {
     await drawSelection(page);
     await page.screenshot({ path: shot("41_viewer_narrow_dark") });
   });
+
+  test("42_viewer_precision_light", async ({ page }) => {
+    await openCrop(page);
+    await upload(page);
+    await page.getByRole("button", { name: "Precision editor" }).click();
+    await expect(page.getByTestId("crop-editor")).toBeVisible({
+      timeout: 10_000,
+    });
+    await settle(page);
+    await page.screenshot({ path: shot("42_viewer_precision_light") });
+    await page.getByRole("button", { name: "Done" }).click();
+    await expect(page.getByTestId("crop-editor")).toBeHidden();
+  });
+
+  test("43_viewer_precision_dark", async ({ page }) => {
+    await enableDark(page);
+    await openCrop(page);
+    await upload(page);
+    await page.getByRole("button", { name: "Precision editor" }).click();
+    await expect(page.getByTestId("crop-editor")).toBeVisible({
+      timeout: 10_000,
+    });
+    await settle(page);
+    await page.screenshot({ path: shot("43_viewer_precision_dark") });
+  });
 });
