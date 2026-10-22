@@ -205,15 +205,10 @@ test.describe("PDF text editor - Enter keeps the caret on the new line", () => {
   });
 });
 
-// Guards caret drift during a typing burst. The bitmap is never the culprit:
-// PDFium re-rasterises in milliseconds. The engine's pen positions are, and a
-// debounce that clears its timer on every dispatch never refreshes them, so
-// the overlay falls back to browser advances - a percent wider - and the caret
-// walks off the glyphs by the difference.
-//
-// Masking the page and letting the overlay paint its own glyphs also hides
-// this, and is the wrong trade: it changes the typeface mid-word. See
-// pdf-text-editor-edit-mask.spec.ts.
+// Guards caret drift during a typing burst. The overlay owns the run's glyphs
+// from the first keystroke and paints them on the engine's own pen positions,
+// so the caret must stay welded to the text it is typing - not one frame
+// ahead on a browser-advance guess while the page raster catches up.
 test.describe("PDF text editor - the caret stays on the text while typing", () => {
   test("a long typing burst never separates the caret from the glyphs", async ({
     page,
@@ -230,8 +225,18 @@ test.describe("PDF text editor - the caret stays on the text while typing", () =
     const testId = (await run.getAttribute("data-testid")) ?? "";
     await run.click();
     await page.waitForTimeout(300);
-    await page.keyboard.press("End");
-    await page.waitForTimeout(400);
+    // End is a no-op in this host's Chromium, so seat the caret at the model
+    // end explicitly - otherwise the burst is measured mid-word against the
+    // line's rightmost ink and the gap is meaningless.
+    const before = await modelTextOf(page, testId);
+    const lines = before.split("\n");
+    await caretInLine(
+      page,
+      testId,
+      lines.length - 1,
+      lines[lines.length - 1].length,
+    );
+    await page.waitForTimeout(200);
 
     // Sampled DURING the burst, never after it: the point is that the caret
     // tracks the page's own glyphs while the user is still typing. Each
@@ -260,13 +265,13 @@ test.describe("PDF text editor - the caret stays on the text while typing", () =
       expect(
         gap,
         `caret sat ${gap.toFixed(1)}px off the text (gaps: ${gaps.map((g) => g.toFixed(1)).join(", ")})`,
-      ).toBeLessThan(4);
+      ).toBeLessThan(0.5);
     }
 
     // And it must not have been quietly accumulating: after the burst the caret
     // is no further off than it was during it.
     await page.waitForTimeout(2500);
     const after = await caretVersusGlyphs(page, testId);
-    expect(Math.abs(after!.gap)).toBeLessThan(4);
+    expect(Math.abs(after!.gap)).toBeLessThan(0.5);
   });
 });

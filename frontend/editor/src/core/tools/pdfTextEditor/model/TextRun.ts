@@ -62,6 +62,8 @@ export class TextRun {
   charStartsX: number[] | null;
   charEndsX: number[] | null;
   charPositionsKey: string | null;
+  /** ASCII advance-per-em table; see TextRunSnapshot.charAdvanceEm. */
+  charAdvanceEm: Float32Array | null;
   /** Effective extra advance per glyph in PDF points. */
   charSpacingPt: number;
   /** True when the run has uncommitted mutation. */
@@ -143,6 +145,7 @@ export class TextRun {
     this.charStartsX = null;
     this.charEndsX = null;
     this.charPositionsKey = null;
+    this.charAdvanceEm = null;
     this.charSpacingPt = 0;
     this.dirty = false;
     this.mergedFromPtrs = [];
@@ -196,6 +199,9 @@ export class TextRun {
         : undefined,
       charEndsX: this.positionsCurrent()
         ? (this.charEndsX ?? undefined)
+        : undefined,
+      charAdvanceEm: this.positionsCurrent()
+        ? (this.charAdvanceEm ?? undefined)
         : undefined,
       charSpacingPt: this.charSpacingPt || undefined,
       paragraphLineHeight: this.paragraphLineHeight,

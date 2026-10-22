@@ -12,6 +12,8 @@ export interface ExactToken {
 export interface ExactLine {
   /** Pen X of the line's first character, in PDF points. */
   left: number;
+  /** False when the engine returned no usable origin for this line. */
+  leftMeasured: boolean;
   tokens: ExactToken[];
 }
 
@@ -60,7 +62,11 @@ function buildLine(
   let end = to;
   while (end > from && SPACE.has(text[end - 1])) end -= 1;
   if (end === from)
-    return { left: firstFinite(positions.starts, from, to) ?? 0, tokens: [] };
+    return {
+      left: firstFinite(positions.starts, from, to) ?? 0,
+      leftMeasured: false,
+      tokens: [],
+    };
 
   const left = positions.starts[from];
   if (!Number.isFinite(left)) return null;
@@ -91,7 +97,7 @@ function buildLine(
   }
   if (to > end)
     tokens.push({ text: text.slice(end, to), width: 0, space: true });
-  return { left, tokens };
+  return { left, leftMeasured: true, tokens };
 }
 
 function spaceGap(

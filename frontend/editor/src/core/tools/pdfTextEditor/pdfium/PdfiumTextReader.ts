@@ -106,7 +106,14 @@ export class PdfiumTextReader {
 
   // Returns the runs whose captured positions actually moved, so the caller
   // can re-snapshot just those instead of re-rendering every overlay per tick.
-  static recapturePositions(doc: EditorDocument, page: Page): Set<TextRun> {
+  // `onlyRuns` keeps the hot typing path scoped to the run a command edited:
+  // every other character on the page is skipped before it reaches the three
+  // per-glyph WASM reads.
+  static recapturePositions(
+    doc: EditorDocument,
+    page: Page,
+    onlyRuns?: TextRun[],
+  ): Set<TextRun> {
     const m = doc.module;
     if (!page.loaded || page.runs.length === 0) return new Set();
     // No flush: like FPDF_RenderPageBitmap, FPDFText_LoadPage walks the live
@@ -115,7 +122,13 @@ export class PdfiumTextReader {
     const textPagePtr = m.FPDFText_LoadPage(page.pagePtr);
     if (!textPagePtr) return new Set();
     try {
-      const geometry = collectCharGeometry(m, page, textPagePtr);
+      let geometry = collectCharGeometry(m, page, textPagePtr, onlyRuns);
+      // The target object is not visible to the text page (newly emitted or
+      // inside a form): fall back to the full walk rather than leave stale
+      // positions.
+      if (!geometry && onlyRuns && onlyRuns.length > 0) {
+        geometry = collectCharGeometry(m, page, textPagePtr);
+      }
       return geometry ? captureCharPositions(geometry) : new Set();
     } finally {
       m.FPDFText_ClosePage(textPagePtr);
@@ -152,11 +165,17 @@ interface CharGeometry {
 }
 
 // Read every character's geometry once. Both consumers below need the same
-// characters, so doing this twice was pure duplicated WASM traffic.
+// characters, so doing this twice was pure duplicated WASM traffic. With
+// `onlyRuns` the object scan still walks the page (FPDFText_GetTextObject is
+// the only way to key a character to an object), but the Unicode, loose-box
+// and origin reads - the expensive half of the JS-WASM round trip - are spent
+// only on the edited runs' characters. Returns null when a non-empty target
+// has no characters in the page, so the caller can redo the full walk.
 function collectCharGeometry(
   m: WrappedPdfiumModule,
   page: Page,
   textPagePtr: number,
+  onlyRuns?: TextRun[],
 ): CharGeometry[] | null {
   if (page.runs.length === 0) return null;
   const probe = m as unknown as {
@@ -172,23 +191,21 @@ function collectCharGeometry(
   const charCount = m.FPDFText_CountChars(textPagePtr);
   if (charCount <= 1) return null;
 
-  const ptrToRun = indexRunsByObjectPtr(page.runs);
+  const ptrToRun = indexRunsByObjectPtr(onlyRuns ?? page.runs);
   const rectBuf = scratchPtr(m, SCRATCH.readerCharRect, 16);
   const xPtr = scratchPtr(m, SCRATCH.readerCharX, 8);
   const yPtr = scratchPtr(m, SCRATCH.readerCharY, 8);
+  const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
   const out: CharGeometry[] = [];
-  for (let i = 0; i < charCount; i += 1) {
+  const read = (i: number, run: TextRun | null): CharGeometry => {
     const cp = m.FPDFText_GetUnicode(textPagePtr, i);
-    const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
-    const run = objPtr ? (ptrToRun.get(objPtr) ?? null) : null;
-    const boxed = probe.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf);
-    const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
+    const boxed = probe.FPDFText_GetLooseCharBox!(textPagePtr, i, rectBuf);
     const f = new Float32Array(heap.buffer, rectBuf, 4);
     let originX = Number.NaN;
     if (probe.FPDFText_GetCharOrigin?.(textPagePtr, i, xPtr, yPtr)) {
       originX = m.pdfium.getValue(xPtr, "double");
     }
-    out.push({
+    return {
       cp,
       run,
       ok: boxed,
@@ -196,7 +213,39 @@ function collectCharGeometry(
       right: boxed ? f[2] : Number.NaN,
       bottom: boxed ? f[3] : Number.NaN,
       originX,
-    });
+    };
+  };
+
+  if (onlyRuns && onlyRuns.length > 0) {
+    const targets = new Set<number>();
+    for (const run of onlyRuns) {
+      const ptrs =
+        run.paragraphLeafPtrs.length > 0
+          ? run.paragraphLeafPtrs
+          : run.mergedFromPtrs.length > 0
+            ? run.mergedFromPtrs
+            : [run.pdfiumObjPtr];
+      for (const ptr of ptrs) if (ptr) targets.add(ptr);
+    }
+    if (targets.size === 0) return null;
+    const matched = new Set<TextRun>();
+    for (let i = 0; i < charCount; i += 1) {
+      const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
+      if (!objPtr || !targets.has(objPtr)) continue;
+      const run = ptrToRun.get(objPtr);
+      if (!run) continue;
+      matched.add(run);
+      out.push(read(i, run));
+    }
+    for (const run of onlyRuns) {
+      if (run.text.length > 0 && !matched.has(run)) return null;
+    }
+    return out;
+  }
+
+  for (let i = 0; i < charCount; i += 1) {
+    const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
+    out.push(read(i, objPtr ? (ptrToRun.get(objPtr) ?? null) : null));
   }
   return out;
 }
@@ -316,10 +365,35 @@ function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
     }
     run.charStartsX = aligned.starts;
     run.charEndsX = aligned.ends;
+    fillAdvanceEm(run, aligned.starts, aligned.ends);
     run.charPositionsKey = run.positionsKey();
     changed.add(run);
   }
   return changed;
+}
+
+// One ASCII-indexed advance table per run, refilled in place. The overlay reads
+// a typed character's advance with `table[code]` instead of rebuilding a Map
+// over the whole run on every keystroke.
+function fillAdvanceEm(run: TextRun, starts: number[], ends: number[]): void {
+  const fontSize = run.fontSize;
+  const table = run.charAdvanceEm ?? new Float32Array(128);
+  table.fill(Number.NaN);
+  if (!(fontSize > 0)) {
+    run.charAdvanceEm = table;
+    return;
+  }
+  const text = run.text;
+  for (let i = 0; i < text.length; i += 1) {
+    const code = text.charCodeAt(i);
+    if (code >= 128) continue;
+    const start = starts[i];
+    const end = ends[i];
+    if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+      table[code] = (end - start) / fontSize;
+    }
+  }
+  run.charAdvanceEm = table;
 }
 
 // Line up the engine's glyph list with the run's text - they are not

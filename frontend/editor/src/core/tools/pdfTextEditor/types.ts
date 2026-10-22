@@ -68,6 +68,12 @@ export interface TextRunSnapshot {
   /** Engine pen origins/ends per code unit; present only while still current. */
   charStartsX?: number[];
   charEndsX?: number[];
+  /**
+   * Advance per em indexed by ASCII code unit, filled from the captured
+   * positions. The hot typing path prices a typed character with one array
+   * read instead of rebuilding a per-run Map every keystroke.
+   */
+  charAdvanceEm?: Float32Array;
   /** Inferred letter-spacing (Tc footprint) in PDF points; 0/absent = none. */
   charSpacingPt?: number;
   /** > 0 when this run represents a multi-line paragraph. */

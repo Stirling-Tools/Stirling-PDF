@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import type {
   TextRunSnapshot,
@@ -46,21 +53,12 @@ import "@app/tools/pdfTextEditor/components/TextRunOverlay.css";
 
 const RENDER_MODE_INVISIBLE = 3;
 
-const SETTLE_MS = 400;
-
-const STALL_MS = 250;
-
 // Idle time before a wrap-mode run re-wraps. This has to be longer than the gap
 // between keystrokes: a reflow physically moves the glyph objects, so one that
 // lands mid-burst drags the text - and the caret - out from under the user.
 // Measured at 180ms it fired 10 times across 70 typed characters and produced
 // 13 backward caret jumps. It only needs to beat the user clicking away.
 const LIVE_WRAP_MS = 700;
-
-// Un-measured keystrokes a run absorbs before the overlay takes over the
-// glyphs. One or two are re-rendered fast enough to leave the page's own ink
-// alone; a burst is not.
-const GUESSED_EDITS_BEFORE_MASK = 2;
 
 // Map a font id like "base14:Helvetica-Bold" or "pdf:1234:Arial" to a CSS
 // font-family stack that visually approximates the PDFium-rendered glyphs.
@@ -166,6 +164,26 @@ interface ExactLayout {
   signature: string;
 }
 
+/** Text widths already carried by the exact layout, no canvas reads needed. */
+function exactTextMetrics(lines: PaintLine[]): {
+  widestLine: number;
+  longestToken: number;
+} {
+  let widestLine = 0;
+  let longestToken = 0;
+  for (const line of lines) {
+    let lineWidth = 0;
+    for (const token of line.tokens) {
+      lineWidth += token.advancePx;
+      if (/\S/.test(token.text) && token.advancePx > longestToken) {
+        longestToken = token.advancePx;
+      }
+    }
+    if (lineWidth > widestLine) widestLine = lineWidth;
+  }
+  return { widestLine, longestToken };
+}
+
 function computeExactLayout(args: {
   run: TextRunSnapshot;
   transform: DisplayTransform;
@@ -193,6 +211,10 @@ function computeExactLayout(args: {
       ? run.paragraphLineLefts
       : undefined;
   const lineLefts = exact.map((line, i) => {
+    // The engine's own first-glyph origin is the pen the page used. The slot
+    // left is a fallback for a line whose characters carry no position (an
+    // all-space line), where there is no ink to disagree with anyway.
+    if (line.leftMeasured) return line.left;
     const fromSlot = slotLefts?.[i];
     if (fromSlot !== undefined && Number.isFinite(fromSlot)) return fromSlot;
     if (Number.isFinite(line.left)) return line.left;
@@ -258,7 +280,11 @@ function computeExactLayout(args: {
 
 // PDF advance per em for every character the run already carries. Scale-free,
 // so it stays valid as the user zooms.
-function charAdvancesEm(run: TextRunSnapshot): Map<string, number> | null {
+function charAdvancesEm(
+  run: TextRunSnapshot,
+): Float32Array | Map<string, number> | null {
+  // The engine-captured ASCII table is ready to use: no Map, no loop.
+  if (run.charAdvanceEm) return run.charAdvanceEm;
   const starts = run.charStartsX;
   const ends = run.charEndsX;
   if (!starts || !ends || starts.length !== run.text.length) return null;
@@ -291,6 +317,22 @@ function baselinesFor(
   return out;
 }
 
+/**
+ * Page-level callbacks the overlay dispatches through. One stable object per
+ * page keeps memoized overlays from re-rendering for new closures whenever the
+ * page snapshot changes.
+ */
+export interface TextRunActions {
+  select(runId: string, shiftKey: boolean): void;
+  edit(runId: string, nextText: string): void;
+  /** Ctrl+drag committed; dx/dy in PDF points. */
+  move?(runId: string, dx: number, dy: number): void;
+  /** Wrap-mode reflow request; maxWidthPt in PDF points. */
+  wrap?(runId: string, maxWidthPt: number): void;
+  /** Right-edge drag to a new box width; widthPt in PDF points. */
+  resize?(runId: string, widthPt: number): void;
+}
+
 interface TextRunOverlayProps {
   run: TextRunSnapshot;
   pageHeight: number;
@@ -304,16 +346,9 @@ interface TextRunOverlayProps {
   selected: boolean;
   /** True when this run is the active find-match (yellow highlight). */
   highlighted?: boolean;
+  /** Revision of the page bitmap currently on screen. */
   pageRevision?: number;
-  onSelect: (shiftKey: boolean) => void;
-  onEdit: (nextText: string) => void;
-  /** Fires when the user Ctrl+drags the run to a new position. dx/dy are PDF points. */
-  onMove?: (dx: number, dy: number) => void;
-  // Fires on blur in Wrap mode when the edited content overflows the locked box
-  // width.
-  onWrap?: (maxWidthPt: number) => void;
-  /** Fires when the user drags the right edge to a new width, in PDF points. */
-  onResize?: (widthPt: number) => void;
+  actions: TextRunActions;
 }
 
 /**
@@ -350,7 +385,7 @@ function edgeZoneAt(
 }
 
 /** One editable HTML element per PDF text run. */
-export function TextRunOverlay({
+function TextRunOverlayImpl({
   run,
   pageHeight,
   pageWidth,
@@ -360,11 +395,7 @@ export function TextRunOverlay({
   selected,
   highlighted,
   pageRevision,
-  onSelect,
-  onEdit,
-  onMove,
-  onWrap,
-  onResize,
+  actions,
 }: TextRunOverlayProps) {
   const { t } = useTranslation();
   // Subscribed, so toggling the preference re-renders every overlay.
@@ -372,8 +403,9 @@ export function TextRunOverlay({
   const ref = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
-  // Masking a run the user has only clicked into swaps real PDF ink for a
-  // CSS approximation, so hold the pristine bitmap until an actual edit.
+  // Masking a run the user has only clicked into would swap real PDF ink for
+  // the overlay's approximation, so hold the pristine bitmap until the first
+  // actual edit. Once editing starts the overlay owns the glyphs.
   const [touched, setTouchedState] = useState(false);
   // Live copy for effects: a commit's effect can run after a newer keystroke.
   const touchedRef = useRef(false);
@@ -382,12 +414,9 @@ export function TextRunOverlay({
     setTouchedState(next);
   };
   const [editTick, setEditTick] = useState(0);
-  const [stalled, setStalled] = useState(false);
+  // Bitmap revision at the last edit. The overlay keeps its glyphs until the
+  // raster has painted that revision, so blur cannot reveal stale page ink.
   const editedAtRevisionRef = useRef(-1);
-  // Keystrokes taken since the engine last measured this run, and when the
-  // overlay's glyphs first came due because of them.
-  const guessedEditsRef = useRef(0);
-  const maskDueSinceRef = useRef(0);
   const paintedSignatureRef = useRef<string | null>(null);
   const pointerFocusRef = useRef(false);
   // The mask has to be the page's own colour, not a guess from the text: a
@@ -495,7 +524,9 @@ export function TextRunOverlay({
   const advanceEm = useMemo(() => charAdvancesEm(run), [run]);
   // Kept across the edit: the engine drops the pen positions the moment the
   // text changes, and a token typed into needs them most right then.
-  const heldAdvanceEmRef = useRef<Map<string, number> | null>(null);
+  const heldAdvanceEmRef = useRef<Float32Array | Map<string, number> | null>(
+    null,
+  );
   if (advanceEm) heldAdvanceEmRef.current = advanceEm;
 
   useEffect(() => {
@@ -534,56 +565,11 @@ export function TextRunOverlay({
     return () => el.removeEventListener("beforeinput", onBeforeInput);
   }, []);
 
-  useEffect(() => {
-    if (!touched) return;
-    if (pageRevision === undefined) return;
-    if (pageRevision <= editedAtRevisionRef.current) return;
-    const timer = window.setTimeout(() => setTouched(false), SETTLE_MS);
-    return () => window.clearTimeout(timer);
-  }, [pageRevision, touched, editTick]);
-
-  // No exact layout for the text now in the box: the engine only re-measures
-  // pen positions once typing pauses, so until it does the overlay is placing
-  // glyphs on the browser's advances rather than the PDF's.
-  const layoutIsGuessed = touched && !freshExact;
-
   const paintOpts = {
     font,
     fontSizePx,
     advanceEm: heldAdvanceEmRef.current,
   };
-
-  useEffect(() => {
-    if (!layoutIsGuessed) {
-      guessedEditsRef.current = 0;
-      maskDueSinceRef.current = 0;
-      setStalled(false);
-      return;
-    }
-    guessedEditsRef.current += 1;
-    // The mask replaces the page's own ink with a CSS approximation of it, so
-    // arming it mid-word visibly changes the typeface of text the user is
-    // typing into - and changes it back when the engine catches up. That is a
-    // worse artefact than the caret leading the page render, which is all it
-    // buys: the raster is simply slower than a fast burst, and it self-corrects
-    // the moment typing pauses. So it stays reserved for a run that has fallen
-    // BEHIND ITS OWN PAGE RENDER - not for one whose page is merely mid-flight.
-    if (
-      pageRevision !== undefined &&
-      pageRevision > editedAtRevisionRef.current
-    ) {
-      setStalled(false);
-      return;
-    }
-    if (guessedEditsRef.current < GUESSED_EDITS_BEFORE_MASK) return;
-    // The deadline is anchored where the mask first came due, so typing on does
-    // not keep pushing it out of reach.
-    const now = Date.now();
-    if (maskDueSinceRef.current === 0) maskDueSinceRef.current = now;
-    const wait = Math.max(0, STALL_MS - (now - maskDueSinceRef.current));
-    const timer = window.setTimeout(() => setStalled(true), wait);
-    return () => window.clearTimeout(timer);
-  }, [layoutIsGuessed, pageRevision, editTick]);
 
   useEffect(() => {
     const el = ref.current;
@@ -592,7 +578,12 @@ export function TextRunOverlay({
     refitTokens(el, paintOpts);
   }, [font, fontSizePx]);
 
-  useEffect(() => {
+  // Layout effect: the engine has already measured this keystroke's pen
+  // positions synchronously (EditorStore.dispatch), so the repaint must land
+  // before the browser paints. A passive effect would let the browser paint
+  // the browser-advance guess first and snap the caret on the next frame -
+  // the one-frame lead the user sees as the caret running ahead of the text.
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const active = document.activeElement === el;
@@ -600,6 +591,18 @@ export function TextRunOverlay({
     // and is entitled to re-seat it. A blurred run is not.
     const ownsFocus = el.contains(document.activeElement);
     if (active && composingRef.current) return;
+    const wantSignature = freshExact ? freshExact.signature : "";
+    const painted = isLinePainted(el);
+    // Cheapest exit first: a blurred overlay already carrying this exact
+    // layout needs neither a DOM text read nor caret math. On zoom/scroll that
+    // is every overlay except the focused one.
+    if (
+      !ownsFocus &&
+      painted === !!freshExact &&
+      paintedSignatureRef.current === wantSignature
+    ) {
+      return;
+    }
     const domText = readOverlayText(el);
     // Mid-edit, the only layout allowed to repaint is one the engine has
     // already measured for exactly this text. It re-seats the typed glyphs on
@@ -611,19 +614,18 @@ export function TextRunOverlay({
     // `touched` and would paint the pre-edit text over the new character.
     if (active && touchedRef.current && !(freshExact && domText === run.text))
       return;
-    const wantSignature = freshExact ? freshExact.signature : "";
-    if (!freshExact && isLinePainted(el) && domText === run.text) return;
+    if (!freshExact && painted && domText === run.text) return;
     if (
       domText === run.text &&
       paintedSignatureRef.current === wantSignature &&
-      isLinePainted(el) === !!freshExact
+      painted === !!freshExact
     ) {
       return;
     }
     // Keyed off the selection, not the focus: replaceChildren below detaches
     // whatever node the caret sits in, and a caret this run holds without being
     // document.activeElement is still a caret the next insert needs.
-    const caret = plainCaretOffset(el);
+    const caret = ownsFocus ? plainCaretOffset(el) : null;
     if (freshExact) {
       paintLines(el, freshExact.lines, paintOpts);
     } else {
@@ -641,7 +643,18 @@ export function TextRunOverlay({
   const flowLeft = anchor.x * scale;
 
   const invisible = run.renderMode === RENDER_MODE_INVISIBLE;
-  const showsGlyphs = (dragging || stalled) && !invisible;
+  // The run owns its glyphs from the first keystroke. After blur it keeps them
+  // until the bitmap has painted the edit, so a deferred raster cannot flash
+  // the page's older ink under a caret that has already moved on.
+  const hasEdit = editedAtRevisionRef.current >= 0;
+  const pageCaughtUp =
+    pageRevision === undefined || pageRevision > editedAtRevisionRef.current;
+  const showsGlyphs = (touched || (hasEdit && !pageCaughtUp)) && !invisible;
+
+  const exactMetrics = useMemo(
+    () => (exact ? exactTextMetrics(exact.lines) : null),
+    [exact],
+  );
 
   const singleLine = (run.paragraphLineCount ?? 1) <= 1;
   const fit =
@@ -667,8 +680,12 @@ export function TextRunOverlay({
 
   const pdfWidth = run.bounds.width * scale;
   // Widen the overlay so every source line still fits in CSS metrics, and so
-  // typed text wider than the original bounds isn't clipped.
-  const measuredWidth = measureMaxLineWidth(run.text, font);
+  // typed text wider than the original bounds isn't clipped. The exact layout
+  // already carries every token's advance; measuring the whole string through
+  // the canvas again would be duplicated work on the hot path.
+  const measuredWidth = exactMetrics
+    ? exactMetrics.widestLine
+    : measureMaxLineWidth(run.text, font);
   // Width behaviour is user-controlled: - "grow": box widens to the right to
   // fit the content.
   const wrapMode = widthMode === "wrap";
@@ -696,7 +713,9 @@ export function TextRunOverlay({
   // text that can wrap, because the overflow has somewhere else to go; a word
   // with no break in it has nowhere, so the cap stops protecting the page
   // margin and just hides what the user is typing.
-  const longestTokenWidth = measureLongestTokenWidth(run.text, font);
+  const longestTokenWidth = exactMetrics
+    ? exactMetrics.longestToken
+    : measureLongestTokenWidth(run.text, font);
   const wrapWidth = Math.max(
     Math.min(wrapLockWidth, pageCap),
     longestTokenWidth + fontSizePx,
@@ -747,23 +766,35 @@ export function TextRunOverlay({
   // window, so running it mid-burst does not fragment undo.
   const wrapTarget = wrapWidth;
   useEffect(() => {
-    if (!wantWrap || !onWrap || !focused) return;
+    if (!wantWrap || !actions.wrap || !focused) return;
     const el = ref.current;
     if (!el || composingRef.current) return;
-    const widest = measureMaxLineWidth(readOverlayText(el), font);
+    const widest = exactMetrics
+      ? exactMetrics.widestLine
+      : measureMaxLineWidth(readOverlayText(el), font);
     if (widest <= wrapTarget + 1) return;
     const timer = window.setTimeout(
-      () => onWrap(wrapTarget / scale),
+      () => actions.wrap?.(run.id, wrapTarget / scale),
       LIVE_WRAP_MS,
     );
     return () => window.clearTimeout(timer);
-  }, [wantWrap, onWrap, focused, editTick, wrapTarget, font, scale]);
+  }, [
+    wantWrap,
+    actions,
+    run.id,
+    focused,
+    editTick,
+    wrapTarget,
+    exactMetrics,
+    font,
+    scale,
+  ]);
 
   // Which dictionary the browser should load. "auto" falls back to the
   // page's own language, which is what the element would inherit anyway.
   // The reflow lays text out along the page axis, so a turned run has no
   // meaningful width to drag.
-  const canResize = !!onResize && !runRotation;
+  const canResize = !!actions.resize && !runRotation;
   const minResizePx = fontSizePx * MIN_WRAP_WIDTH_EM;
 
   function startResize(
@@ -793,7 +824,7 @@ export function TextRunOverlay({
       if (ev.pointerId !== pointerId) return;
       endResize();
       if (Math.abs(ev.clientX - originX) < 1) {
-        onSelect(false);
+        actions.select(run.id, false);
         return;
       }
       commit(widthAt(ev.clientX) / scale);
@@ -857,16 +888,18 @@ export function TextRunOverlay({
           e.clientY,
           canResize,
         );
-        if (zone === "resize" && onResize) {
+        if (zone === "resize" && actions.resize) {
           e.preventDefault();
           e.currentTarget.blur();
-          startResize(e.clientX, e.pointerId, onResize);
+          startResize(e.clientX, e.pointerId, (widthPt) =>
+            actions.resize?.(run.id, widthPt),
+          );
           return;
         }
 
         // Ctrl+drag still moves from anywhere inside, so existing muscle
         // memory keeps working; grabbing the frame is the discoverable path.
-        if ((e.ctrlKey || e.metaKey || zone === "move") && onMove) {
+        if ((e.ctrlKey || e.metaKey || zone === "move") && actions.move) {
           const viaFrame = zone === "move" && !(e.ctrlKey || e.metaKey);
           if (viaFrame) e.preventDefault();
           dragOriginRef.current = { x: e.clientX, y: e.clientY };
@@ -902,10 +935,10 @@ export function TextRunOverlay({
             // a plain click (select); with Ctrl held it is the multi-select
             // gesture it looks like.
             if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
-              onSelect(!viaFrame);
+              actions.select(run.id, !viaFrame);
               return;
             }
-            onMove(dx, dy);
+            actions.move?.(run.id, dx, dy);
           };
           window.addEventListener("pointermove", onPointerMove);
           window.addEventListener("pointerup", onPointerUp);
@@ -914,12 +947,12 @@ export function TextRunOverlay({
         // Shift-click EXTENDS the multi-object selection.
         if (e.shiftKey) {
           e.preventDefault();
-          onSelect(true);
+          actions.select(run.id, true);
           return;
         }
         pointerFocusRef.current = true;
         e.currentTarget.focus({ preventScroll: true });
-        onSelect(false);
+        actions.select(run.id, false);
       }}
       onFocus={(e) => {
         setFocused(true);
@@ -958,7 +991,6 @@ export function TextRunOverlay({
       }}
       onBlur={(e) => {
         setTouched(false);
-        setMaskColor(null);
         setFocused(false);
         // WebKit routes keystrokes to the SELECTION even when the element has
         // lost focus, so typing after a click-away landed in the run just
@@ -978,7 +1010,7 @@ export function TextRunOverlay({
         }
         // Wrap mode: when the just-edited content overflows the locked box
         // width.
-        if (!wantWrap || !onWrap) return;
+        if (!wantWrap || !actions.wrap) return;
         const el = e.currentTarget;
         const domText = readOverlayText(el);
         if (domText === focusTextRef.current) return; // not edited
@@ -1000,7 +1032,7 @@ export function TextRunOverlay({
         // still move words between lines the moment the box lost focus. The
         // base branch never reflowed here at all.
         if (widest <= target + 1) return;
-        onWrap(target / scale);
+        actions.wrap?.(run.id, target / scale);
       }}
       onCompositionStart={() => {
         composingRef.current = true;
@@ -1008,13 +1040,17 @@ export function TextRunOverlay({
       onCompositionEnd={(e) => {
         composingRef.current = false;
         // Commit the composed string once, like onInput's non-IME path.
+        setTouched(true);
+        setEditTick((n) => n + 1);
         const el = e.currentTarget;
-        onEdit(readOverlayText(el).replace(/\u00A0/g, " "));
+        const text = readOverlayText(el).replace(/\u00A0/g, " ");
+        if (text === run.text) return;
+        editedAtRevisionRef.current = pageRevision ?? -1;
+        actions.edit(run.id, text);
       }}
       onInput={(e) => {
         setTouched(true);
         setEditTick((n) => n + 1);
-        editedAtRevisionRef.current = pageRevision ?? -1;
         // Skip intermediate IME steps; compositionend commits the result.
         if (composingRef.current || e.nativeEvent.isComposing) return;
         const el = e.currentTarget;
@@ -1027,7 +1063,12 @@ export function TextRunOverlay({
         // soft-wraps.
         const raw = readOverlayText(el);
         const text = raw.replace(/\u00A0/g, " ");
-        onEdit(text);
+        // A second input event for the same text must not arm the
+        // keep-glyphs-until-painted latch: no command runs, so no page
+        // revision will ever catch it and the mask would stay up after blur.
+        if (text === run.text) return;
+        editedAtRevisionRef.current = pageRevision ?? -1;
+        actions.edit(run.id, text);
         // No per-keystroke reflow: while focused, the box is CAPPED to the page
         // and wraps via CSS, so the editing view is always on-page.
       }}
@@ -1139,3 +1180,97 @@ export function TextRunOverlay({
     />
   );
 }
+
+// A store patch re-renders the page list, but only the run whose visible data
+// changed needs to repaint. Snapshots are fresh objects per patch, so compare
+// the fields the overlay actually reads rather than object identity - this is
+// also safe for session-only changes such as lock, which bump the page
+// revision without marking the run dirty.
+function sameNumbers(
+  a: readonly number[] | undefined,
+  b: readonly number[] | undefined,
+): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) {
+    if (!Object.is(a[i], b[i])) return false;
+  }
+  return true;
+}
+
+function sameRun(a: TextRunSnapshot, b: TextRunSnapshot): boolean {
+  if (a === b) return true;
+  if (
+    a.id !== b.id ||
+    a.pageIndex !== b.pageIndex ||
+    a.text !== b.text ||
+    a.fontId !== b.fontId ||
+    a.fontSize !== b.fontSize ||
+    a.fontSubset !== b.fontSubset ||
+    a.renderMode !== b.renderMode ||
+    a.strokeWidth !== b.strokeWidth ||
+    (a.charSpacingPt ?? 0) !== (b.charSpacingPt ?? 0) ||
+    (a.paragraphLineHeight ?? 0) !== (b.paragraphLineHeight ?? 0) ||
+    (a.paragraphLineCount ?? 1) !== (b.paragraphLineCount ?? 1) ||
+    (a.paragraphSlotCount ?? 0) !== (b.paragraphSlotCount ?? 0) ||
+    !!a.locked !== !!b.locked ||
+    (a.wrapWidthPt ?? null) !== (b.wrapWidthPt ?? null)
+  ) {
+    return false;
+  }
+  if (
+    a.bounds.x !== b.bounds.x ||
+    a.bounds.y !== b.bounds.y ||
+    a.bounds.width !== b.bounds.width ||
+    a.bounds.height !== b.bounds.height ||
+    a.matrix.a !== b.matrix.a ||
+    a.matrix.b !== b.matrix.b ||
+    a.matrix.c !== b.matrix.c ||
+    a.matrix.d !== b.matrix.d ||
+    a.matrix.e !== b.matrix.e ||
+    a.matrix.f !== b.matrix.f ||
+    a.fill.r !== b.fill.r ||
+    a.fill.g !== b.fill.g ||
+    a.fill.b !== b.fill.b ||
+    a.fill.a !== b.fill.a
+  ) {
+    return false;
+  }
+  const as = a.stroke;
+  const bs = b.stroke;
+  if (!!as !== !!bs) return false;
+  if (
+    as &&
+    bs &&
+    (as.r !== bs.r || as.g !== bs.g || as.b !== bs.b || as.a !== bs.a)
+  ) {
+    return false;
+  }
+  return (
+    sameNumbers(a.charStartsX, b.charStartsX) &&
+    sameNumbers(a.charEndsX, b.charEndsX) &&
+    a.charAdvanceEm === b.charAdvanceEm &&
+    sameNumbers(a.paragraphBaselines, b.paragraphBaselines) &&
+    sameNumbers(a.paragraphLineLefts, b.paragraphLineLefts)
+  );
+}
+
+function propsEqual(
+  prev: TextRunOverlayProps,
+  next: TextRunOverlayProps,
+): boolean {
+  return (
+    prev.pageHeight === next.pageHeight &&
+    prev.pageWidth === next.pageWidth &&
+    prev.transform === next.transform &&
+    prev.scale === next.scale &&
+    prev.widthMode === next.widthMode &&
+    prev.selected === next.selected &&
+    prev.highlighted === next.highlighted &&
+    prev.pageRevision === next.pageRevision &&
+    prev.actions === next.actions &&
+    sameRun(prev.run, next.run)
+  );
+}
+
+export const TextRunOverlay = memo(TextRunOverlayImpl, propsEqual);

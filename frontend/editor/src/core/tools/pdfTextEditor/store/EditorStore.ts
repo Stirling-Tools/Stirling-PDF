@@ -31,6 +31,7 @@ import type {
   GroupingMode,
   PageSnapshot,
   TableSnapshot,
+  TextRunSnapshot,
   WidthMode,
 } from "@app/tools/pdfTextEditor/types";
 import { resetEmbeddedFaces } from "@app/tools/pdfTextEditor/util/embeddedFace";
@@ -51,6 +52,62 @@ function resetCharcodeCaches(): void {
 }
 
 export type InteractionMode = "select" | "addText" | "addTable";
+
+/**
+ * True when a live run would serialise to the same snapshot as `prev`. Lets a
+ * store patch keep every untouched run's snapshot identity, so React can skip
+ * its overlay and the hot typing path allocates only for the edited run.
+ */
+function sameRunSnapshot(prev: TextRunSnapshot, run: TextRun): boolean {
+  if (
+    prev.text !== run.text ||
+    prev.fontId !== run.fontId ||
+    prev.fontSize !== run.fontSize ||
+    prev.fontSubset !== run.fontSubset ||
+    prev.renderMode !== (run.renderMode || undefined) ||
+    prev.strokeWidth !== (run.strokeWidth || undefined) ||
+    (prev.charSpacingPt ?? 0) !== (run.charSpacingPt || 0) ||
+    (prev.paragraphLineHeight ?? 0) !== (run.paragraphLineHeight || 0) ||
+    (prev.paragraphLineCount ?? 1) !== (run.paragraphMemberPtrs.length || 1) ||
+    (prev.paragraphSlotCount ?? 0) !== (run.paragraphLineSlots.length || 0) ||
+    !!prev.locked !== !!run.locked ||
+    (prev.wrapWidthPt ?? null) !== (run.wrapWidthPt ?? null)
+  ) {
+    return false;
+  }
+  if (
+    prev.bounds.x !== run.bounds.x ||
+    prev.bounds.y !== run.bounds.y ||
+    prev.bounds.width !== run.bounds.width ||
+    prev.bounds.height !== run.bounds.height ||
+    prev.matrix.a !== run.matrix.a ||
+    prev.matrix.b !== run.matrix.b ||
+    prev.matrix.c !== run.matrix.c ||
+    prev.matrix.d !== run.matrix.d ||
+    prev.matrix.e !== run.matrix.e ||
+    prev.matrix.f !== run.matrix.f ||
+    prev.fill.r !== run.fill.r ||
+    prev.fill.g !== run.fill.g ||
+    prev.fill.b !== run.fill.b ||
+    prev.fill.a !== run.fill.a
+  ) {
+    return false;
+  }
+  if (prev.charStartsX !== (run.charStartsX ?? undefined)) return false;
+  if (prev.charEndsX !== (run.charEndsX ?? undefined)) return false;
+  if (prev.charAdvanceEm !== (run.charAdvanceEm ?? undefined)) return false;
+  const ps = prev.stroke;
+  const rs = run.stroke;
+  if (!!ps !== !!rs) return false;
+  if (
+    ps &&
+    rs &&
+    (ps.r !== rs.r || ps.g !== rs.g || ps.b !== rs.b || ps.a !== rs.a)
+  ) {
+    return false;
+  }
+  return true;
+}
 
 export interface LoadProgress {
   /** Stage description shown in the loader: "Reading file", "Parsing PDF", "Loading page 3/60", etc. */
@@ -397,18 +454,55 @@ export class EditorStore {
     this.resnapshot();
   }
 
+  /** Revisions of every loaded page, so a command's effect can be scoped. */
+  private captureRevisions(): Map<number, number> {
+    const revisions = new Map<number, number>();
+    if (!this.doc) return revisions;
+    for (const page of this.doc.loadedPages()) {
+      revisions.set(page.index, page.revision);
+    }
+    return revisions;
+  }
+
   /** Apply a command via the history stack, re-snapshot, and notify. */
   dispatch(cmd: Command): void {
     if (!this.doc) return;
+    const revisions = this.captureRevisions();
     try {
       this.history.execute(cmd, this.doc);
     } catch (err) {
       this.recoverFromBrokenStep(err);
       return;
     }
+    // Measure the edited pages before snapshotting. The overlay is the live
+    // editing surface, so its glyphs and the caret must land on the engine's
+    // pen positions in the same frame as the keystroke. Deferring this to the
+    // debounced tick left one frame laid out on browser advances - the caret
+    // visibly leads the text, then snaps back.
+    this.recaptureEditedRunPositions(revisions);
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
     this.schedulePositionRefresh();
+  }
+
+  /** Recapture pen positions for every page this command actually changed. */
+  private recaptureEditedRunPositions(revisions: Map<number, number>): void {
+    const doc = this.doc;
+    if (!doc) return;
+    for (const page of doc.loadedPages()) {
+      if (page.revision === revisions.get(page.index)) continue;
+      // Lock, z-order and group/ungroup bump the page revision without
+      // changing any glyph's pen. Only measured runs need the shared text
+      // page opened at all.
+      const dirty = page.runs.filter((run) => run.dirty && run.text.length > 0);
+      if (dirty.length === 0) continue;
+      try {
+        PdfiumTextReader.recapturePositions(doc, page, dirty);
+      } catch {
+        // A page that cannot be re-read keeps its previous positions; the
+        // debounced refresh below will try again.
+      }
+    }
   }
 
   private schedulePositionRefresh(): void {
@@ -493,26 +587,35 @@ export class EditorStore {
 
   undo(): void {
     if (!this.doc) return;
+    const revisions = this.captureRevisions();
     try {
       this.history.undo(this.doc);
     } catch (err) {
       this.recoverFromBrokenStep(err);
       return;
     }
+    // Undo re-emits objects, so the previous run's pen positions describe the
+    // text it had before the undo. Re-measure before publishing the snapshot,
+    // or the overlay keeps the undone text's advances for one frame.
+    this.recaptureEditedRunPositions(revisions);
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
+    this.schedulePositionRefresh();
   }
 
   redo(): void {
     if (!this.doc) return;
+    const revisions = this.captureRevisions();
     try {
       this.history.redo(this.doc);
     } catch (err) {
       this.recoverFromBrokenStep(err);
       return;
     }
+    this.recaptureEditedRunPositions(revisions);
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
+    this.schedulePositionRefresh();
   }
 
   // A half-applied command leaves the run model describing objects that no
@@ -570,11 +673,16 @@ export class EditorStore {
       const live = doc.page(p.pageIndex);
       if (live.revision === p.revision) return p;
       changed = true;
+      const prevById = new Map(p.runs.map((run) => [run.id, run]));
       return {
         ...p,
         dirty: live.dirty,
         revision: live.revision,
-        runs: live.runs.map((r) => r.snapshot()),
+        runs: live.runs.map((run) => {
+          const prev = prevById.get(run.id);
+          if (prev && !run.dirty && sameRunSnapshot(prev, run)) return prev;
+          return run.snapshot();
+        }),
         images: live.images.map((img) => img.snapshot()),
         tables: live.tables
           .filter((tbl) => tbl.editing)

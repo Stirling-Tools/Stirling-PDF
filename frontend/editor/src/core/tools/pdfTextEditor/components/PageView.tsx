@@ -1,11 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { PdfiumPageRenderer } from "@app/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
-import { TextRunOverlay } from "@app/tools/pdfTextEditor/components/TextRunOverlay";
+import {
+  TextRunOverlay,
+  type TextRunActions,
+} from "@app/tools/pdfTextEditor/components/TextRunOverlay";
 import { TableOverlay } from "@app/tools/pdfTextEditor/components/TableOverlay";
 import { ImageHandle } from "@app/tools/pdfTextEditor/components/ImageHandle";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
@@ -14,6 +17,11 @@ import { AnnotationOutline } from "@app/tools/pdfTextEditor/components/Annotatio
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import { PageGuides } from "@app/tools/pdfTextEditor/components/PageRulers";
 import { useDevicePixelRatio } from "@app/tools/pdfTextEditor/hooks/useDevicePixelRatio";
+
+// While a text run is focused the overlay owns its glyphs, so the page raster
+// can wait for a typing pause. Re-rasterising a full page per keystroke is
+// work the user cannot even see.
+const TEXT_EDIT_RASTER_MS = 120;
 
 interface PageViewProps {
   document: EditorDocument;
@@ -123,11 +131,69 @@ export function PageView({
   );
   // Raw-PDF -> display (CropBox/rotation) transform for this page. Identity for
   // normal pages, so every overlay/click computation below is unchanged there.
-  const transform = DisplayTransform.fromData(page.display);
+  // Memoized on the serializable display data so a page snapshot patch does
+  // not hand every memoized run overlay a fresh transform object.
+  const transform = useMemo(
+    () => DisplayTransform.fromData(page.display),
+    [page.display],
+  );
+  const handlersRef = useRef({
+    onSelectRun,
+    onEditRun,
+    onMoveRun,
+    onWrapRun,
+    onResizeRun,
+    pageIndex: page.pageIndex,
+  });
+  handlersRef.current = {
+    onSelectRun,
+    onEditRun,
+    onMoveRun,
+    onWrapRun,
+    onResizeRun,
+    pageIndex: page.pageIndex,
+  };
+  // One stable actions object per page: the overlay is memoized, so a fresh
+  // closure per run per render would defeat it and re-measure every run.
+  const actions = useMemo<TextRunActions>(
+    () => ({
+      select: (runId, shiftKey) =>
+        handlersRef.current.onSelectRun(runId, shiftKey),
+      edit: (runId, nextText) =>
+        handlersRef.current.onEditRun(
+          handlersRef.current.pageIndex,
+          runId,
+          nextText,
+        ),
+      move: (runId, dx, dy) =>
+        handlersRef.current.onMoveRun?.(
+          handlersRef.current.pageIndex,
+          runId,
+          dx,
+          dy,
+        ),
+      wrap: (runId, maxWidthPt) =>
+        handlersRef.current.onWrapRun?.(
+          handlersRef.current.pageIndex,
+          runId,
+          maxWidthPt,
+        ),
+      resize: (runId, widthPt) =>
+        handlersRef.current.onResizeRun?.(
+          handlersRef.current.pageIndex,
+          runId,
+          widthPt,
+        ),
+    }),
+    [],
+  );
   // Per document: a newly opened file reuses this view for its page of the same index.
   const visibleDocRef = useRef<typeof document | null>(null);
   const firstRenderedDocRef = useRef<typeof document | null>(null);
   const [rendering, setRendering] = useState(false);
+  // Revision of the bitmap currently on the canvas. The text overlay keeps its
+  // own glyphs up until this catches the edit, so a slow raster can never
+  // reveal stale page ink under the caret.
   const [paintedRevision, setPaintedRevision] = useState(-1);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
@@ -184,42 +250,61 @@ export function PageView({
     }
     let cancelled = false;
     if (!canvas) return;
-    setRendering(true);
-    setRenderError(null);
-    PdfiumPageRenderer.render(
-      document,
-      document.page(page.pageIndex),
-      deviceScale,
-    )
-      .then((image) => {
-        if (cancelled || !canvasRef.current) return;
-        canvas.width = image.width;
-        canvas.height = image.height;
-        const ctx = canvas.getContext("2d");
-        if (ctx) ctx.putImageData(image, 0, 0);
-        setRendering(false);
-        setPaintedRevision(page.revision);
-        if (firstRenderedDocRef.current !== document) {
-          firstRenderedDocRef.current = document;
-          onFirstRendered?.(page.pageIndex);
-        }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        const msg =
-          err instanceof Error ? `${err.name}: ${err.message}` : String(err);
-        console.warn(`[pdf-editor] page ${page.pageIndex} render failed`, err);
-        setRendering(false);
-        setRenderError(msg);
-        // Flip the first-rendered flag on error too, so the loading
-        // overlay dismisses instead of leaving the user on a spinner.
-        if (firstRenderedDocRef.current !== document) {
-          firstRenderedDocRef.current = document;
-          onFirstRendered?.(page.pageIndex);
-        }
-      });
+    const renderPage = () => {
+      setRendering(true);
+      setRenderError(null);
+      PdfiumPageRenderer.render(
+        document,
+        document.page(page.pageIndex),
+        deviceScale,
+      )
+        .then((image) => {
+          if (cancelled || !canvasRef.current) return;
+          canvas.width = image.width;
+          canvas.height = image.height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) ctx.putImageData(image, 0, 0);
+          setRendering(false);
+          setPaintedRevision(page.revision);
+          if (firstRenderedDocRef.current !== document) {
+            firstRenderedDocRef.current = document;
+            onFirstRendered?.(page.pageIndex);
+          }
+        })
+        .catch((err: unknown) => {
+          if (cancelled) return;
+          const msg =
+            err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+          console.warn(
+            `[pdf-editor] page ${page.pageIndex} render failed`,
+            err,
+          );
+          setRendering(false);
+          setRenderError(msg);
+          // Flip the first-rendered flag on error too, so the loading
+          // overlay dismisses instead of leaving the user on a spinner.
+          if (firstRenderedDocRef.current !== document) {
+            firstRenderedDocRef.current = document;
+            onFirstRendered?.(page.pageIndex);
+          }
+        });
+    };
+    // Typing owns the overlay's glyphs; let the raster wait for a pause. The
+    // overlay stays up until `paintedRevision` catches the edit (see the run
+    // overlay), so a deferred bitmap can never show through.
+    const editing = Boolean(
+      window.document.activeElement?.closest?.(
+        '[data-testid^="pdf-editor-run-"]',
+      ),
+    );
+    const timer =
+      editing && page.revision > 0
+        ? window.setTimeout(renderPage, TEXT_EDIT_RASTER_MS)
+        : null;
+    if (timer === null) renderPage();
     return () => {
       cancelled = true;
+      if (timer !== null) window.clearTimeout(timer);
     };
   }, [
     nearViewport,
@@ -401,17 +486,7 @@ export function PageView({
             pageRevision={paintedRevision}
             selected={selectedRunIds.includes(run.id)}
             highlighted={highlightedRunId === run.id}
-            onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
-            onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
-            onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
-            onWrap={(maxWidthPt) =>
-              onWrapRun?.(page.pageIndex, run.id, maxWidthPt)
-            }
-            onResize={
-              onResizeRun
-                ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
-                : undefined
-            }
+            actions={actions}
           />
         ))}
         {showRulers && (

@@ -3192,7 +3192,7 @@ function alphaOf(cssColor: string): number {
 }
 
 test.describe("PDF text editor - typing fidelity", () => {
-  test("a clicked run keeps its original ink until it is actually edited", async ({
+  test("a clicked run keeps page ink until the first edit takes over", async ({
     page,
   }) => {
     await gotoEditor(page);
@@ -3221,8 +3221,11 @@ test.describe("PDF text editor - typing fidelity", () => {
     await page.keyboard.type("X");
     await page.waitForTimeout(400);
     const typed = await read();
-    expect(typed.color).toBe("rgba(0, 0, 0, 0)");
-    expect(alphaOf(typed.background)).toBeLessThan(0.5);
+    // The page bitmap re-rasterises asynchronously; the overlay owns the run
+    // from the first keystroke so the caret and the visible glyphs never wait
+    // for that raster.
+    expect(typed.color).not.toBe("rgba(0, 0, 0, 0)");
+    expect(alphaOf(typed.background)).toBe(1);
     await expect(target).toContainText("X");
   });
 });

@@ -34,16 +34,18 @@ describe("fitTokenAdvance", () => {
     expect(renderedAdvance(10, 70, fit)).toBeCloseTo(76.7, 6);
   });
 
-  it("spreads the correction between glyphs, not after the last one", () => {
+  it("spreads the correction across every glyph advance", () => {
     const fit = fitTokenAdvance(3, 30, 24, 20);
-    expect(fit.letterSpacingPx).toBeCloseTo(-3, 6);
-    expect(fit.marginRightPx).toBeCloseTo(3, 6);
+    expect(fit.letterSpacingPx).toBeCloseTo(-2, 6);
+    expect(fit.marginRightPx).toBeCloseTo(0, 6);
+    // The caret parked at the text node's end sees the last advance too.
+    expect(30 + 3 * fit.letterSpacingPx).toBeCloseTo(24, 6);
   });
 
-  it("puts the whole correction in the margin for a single glyph", () => {
+  it("puts the whole correction after a single glyph", () => {
     const fit = fitTokenAdvance(1, 10, 14, 16);
-    expect(fit.letterSpacingPx).toBe(0);
-    expect(fit.marginRightPx).toBeCloseTo(4, 6);
+    expect(fit.letterSpacingPx).toBeCloseTo(4, 6);
+    expect(fit.marginRightPx).toBeCloseTo(0, 6);
     expect(renderedAdvance(1, 10, fit)).toBeCloseTo(14, 6);
   });
 

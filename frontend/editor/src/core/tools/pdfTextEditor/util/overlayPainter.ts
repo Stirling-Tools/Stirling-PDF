@@ -20,11 +20,12 @@ export interface PaintOptions {
   font: string;
   fontSizePx: number;
   /**
-   * PDF advance per em for characters the run already contains, keyed by
-   * character. The only measurement of the document's own face available while
-   * the user is typing, so it is what newly typed glyphs are sized against.
+   * PDF advance per em for characters the run already contains. ASCII comes
+   * from the captured advance table; other scripts fall back to a per-run Map.
+   * The only measurement of the document's own face available while the user
+   * is typing, so it is what newly typed glyphs are sized against.
    */
-  advanceEm?: Map<string, number> | null;
+  advanceEm?: Map<string, number> | Float32Array | null;
 }
 
 const LINE_ATTR = "data-pdf-editor-line";
@@ -142,13 +143,26 @@ function predictedAdvance(
   if (!(sourceNatural > 0) || !(sourceAdvancePx > 0)) return null;
   const ratio = sourceAdvancePx / sourceNatural;
   const table = opts.advanceEm;
-  if (!table || table.size === 0) {
+  if (!table) {
+    const natural = measureAdvancePx(text, opts.font);
+    return natural > 0 ? natural * ratio : null;
+  }
+  const isArray = table instanceof Float32Array;
+  if (!isArray && table.size === 0) {
     const natural = measureAdvancePx(text, opts.font);
     return natural > 0 ? natural * ratio : null;
   }
   let total = 0;
   for (const ch of text) {
-    const em = table.get(ch);
+    let em: number | undefined;
+    if (isArray) {
+      const code = ch.charCodeAt(0);
+      if (ch.length === 1 && code < 128 && Number.isFinite(table[code])) {
+        em = table[code];
+      }
+    } else {
+      em = table.get(ch);
+    }
     total +=
       em === undefined
         ? measureAdvancePx(ch, opts.font) * ratio
@@ -208,6 +222,21 @@ function blockLines(element: HTMLElement): string[] {
  * many lines the DOM holds, the run is re-emitted at the wrong baselines.
  */
 export function readOverlayText(element: HTMLElement): string {
+  // One painted line block (the overwhelmingly common case while typing) is
+  // its own text: no line walk, no array of child nodes, no join.
+  if (element.childNodes.length === 1) {
+    const only = element.firstChild;
+    if (only?.nodeType === Node.TEXT_NODE) {
+      return (only.textContent ?? "").replace(/\u00A0/g, " ");
+    }
+    if (
+      only instanceof HTMLElement &&
+      only.hasAttribute(LINE_ATTR) &&
+      only.querySelector("br") === null
+    ) {
+      return (only.textContent ?? "").replace(/\u00A0/g, " ");
+    }
+  }
   const children = Array.from(element.childNodes);
   if (children.length === 0) return "";
   // Seeded with the line a leading <br> would terminate; without it a model
@@ -271,6 +300,15 @@ export function plainCaretOffset(el: HTMLElement): number | null {
     range.setEnd(focusNode, focusOffset);
   } catch {
     return null;
+  }
+  // One line block with no manual <br>: the range's own string is the model
+  // prefix. Avoid cloning the truncated DOM just to count its characters.
+  if (
+    focusNode !== el &&
+    el.childNodes.length === 1 &&
+    el.querySelector("br") === null
+  ) {
+    return range.toString().replace(/\u00A0/g, " ").length;
   }
   const host = document.createElement("div");
   host.appendChild(range.cloneContents());
