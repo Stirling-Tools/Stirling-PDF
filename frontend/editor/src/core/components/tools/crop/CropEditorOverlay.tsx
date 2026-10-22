@@ -72,7 +72,7 @@ export default function CropEditorOverlay({
   const { t } = useTranslation();
   const titleId = useId();
   const canvasRef = useRef<CropCanvasHandle>(null);
-  const [zoom, setZoom] = useState(1);
+  const zoomLabelRef = useRef<HTMLButtonElement>(null);
   const [unit, setUnit] = useState<CropUnit>("mm");
   const [gridEnabled, setGridEnabled] = useState(true);
   const [snapEnabled, setSnapEnabled] = useState(true);
@@ -212,13 +212,14 @@ export default function CropEditorOverlay({
                 <Icon name="zoom-out" size="0.875rem" />
               </ActionIcon>
               <button
+                ref={zoomLabelRef}
                 type="button"
                 className={classes.zoomLabel}
                 onClick={() => canvasRef.current?.fit()}
                 aria-label={t("crop.canvas.fitToPage", "Fit to page")}
                 title={t("crop.canvas.fitToPage", "Fit to page")}
               >
-                {Math.round(zoom * 100)}%
+                100%
               </button>
               <ActionIcon
                 variant="quiet"
@@ -238,7 +239,11 @@ export default function CropEditorOverlay({
                 ref={canvasRef}
                 expanded
                 showToolbar={false}
-                onZoomChange={setZoom}
+                onZoomChange={(value) => {
+                  if (zoomLabelRef.current) {
+                    zoomLabelRef.current.textContent = `${Math.round(value * 100)}%`;
+                  }
+                }}
                 imageUrl={imageUrl}
                 geometry={geometry}
                 cropArea={cropArea}

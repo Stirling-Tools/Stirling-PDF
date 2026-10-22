@@ -108,7 +108,7 @@ export const cropAreaCycle: Scenario = {
       await tapTarget.first().click({ timeout: 10_000 });
     } else {
       await page
-        .getByRole("button", { name: /Expand/i })
+        .getByRole("button", { name: /^Edit$/i })
         .first()
         .click({ timeout: 10_000 });
     }
@@ -118,6 +118,13 @@ export const cropAreaCycle: Scenario = {
     });
 
     const editor = page.getByTestId("crop-editor");
+    // Wheel zoom is the path the interaction optimisations target.
+    for (let step = 0; step < 4; step += 1) {
+      await page.mouse.wheel(0, -120);
+    }
+    for (let step = 0; step < 4; step += 1) {
+      await page.mouse.wheel(0, 120);
+    }
     await editor
       .getByRole("button", { name: /Zoom in/i })
       .first()

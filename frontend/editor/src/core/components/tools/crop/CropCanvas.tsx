@@ -301,6 +301,27 @@ const CropCanvas = forwardRef<CropCanvasHandle, CropCanvasProps>(
       setPan({ x: 0, y: 0 });
     }, []);
 
+    // Writes zoom/pan straight to the stage, so panning never goes through React.
+    const writeStage = useCallback((zoomValue: number, panValue: Point) => {
+      const state = stateRef.current;
+      const pageWidthValue = state.fit.width * zoomValue;
+      const pageHeightValue = state.fit.height * zoomValue;
+      const left = (state.viewport.width - pageWidthValue) / 2 + panValue.x;
+      const top = (state.viewport.height - pageHeightValue) / 2 + panValue.y;
+      const stage = stageRef.current;
+      if (stage) {
+        stage.style.width = `${state.fit.width}px`;
+        stage.style.height = `${state.fit.height}px`;
+        stage.style.transform = `translate(${left}px, ${top}px) scale(${zoomValue})`;
+      }
+      state.zoom = zoomValue;
+      state.pan = panValue;
+      state.pageWidth = pageWidthValue;
+      state.pageHeight = pageHeightValue;
+      state.pageLeft = left;
+      state.pageTop = top;
+    }, []);
+
     useEffect(() => {
       onZoomChange?.(zoom);
     }, [zoom, onZoomChange]);
@@ -518,12 +539,18 @@ const CropCanvas = forwardRef<CropCanvasHandle, CropCanvasProps>(
     }, [normalized, writeSelection, viewport, zoom, pan]);
 
     useLayoutEffect(() => {
-      const stage = stageRef.current;
-      if (!stage) return;
-      stage.style.width = `${fit.width}px`;
-      stage.style.height = `${fit.height}px`;
-      stage.style.transform = `translate(${pageLeft}px, ${pageTop}px) scale(${zoom})`;
-    }, [fit.width, fit.height, pageLeft, pageTop, zoom]);
+      writeStage(zoom, pan);
+      writeSelection(normalized);
+    }, [
+      writeStage,
+      writeSelection,
+      normalized,
+      zoom,
+      pan,
+      fit.width,
+      fit.height,
+      viewport,
+    ]);
 
     const commit = useCallback(
       (rect: NormalizedRect) => {
@@ -653,7 +680,7 @@ const CropCanvas = forwardRef<CropCanvasHandle, CropCanvasProps>(
               (state.fit.height * gesture.startZoom - state.viewport.height) /
                 2,
             );
-            setPan({
+            writeStage(state.zoom, {
               x: clamp(
                 gesture.startPan.x + (point.x - gesture.anchor.x),
                 -maxPanX,
@@ -665,6 +692,7 @@ const CropCanvas = forwardRef<CropCanvasHandle, CropCanvasProps>(
                 maxPanY,
               ),
             });
+            writeSelection(state.normalized);
             break;
           }
           case "pinch":
@@ -677,6 +705,7 @@ const CropCanvas = forwardRef<CropCanvasHandle, CropCanvasProps>(
         showGuide,
         snapCoordinate,
         writeSelection,
+        writeStage,
       ],
     );
 
@@ -706,6 +735,9 @@ const CropCanvas = forwardRef<CropCanvasHandle, CropCanvasProps>(
       setInteracting(false);
       const viewportElement = viewportRef.current;
       if (viewportElement) delete viewportElement.dataset.active;
+      if (gesture?.kind === "pan") {
+        setPan({ ...stateRef.current.pan });
+      }
       if (
         gesture &&
         (gesture.kind === "draw" ||
@@ -838,17 +870,19 @@ const CropCanvas = forwardRef<CropCanvasHandle, CropCanvasProps>(
             0,
             (state.fit.height * nextZoom - state.viewport.height) / 2,
           );
-          setZoom(nextZoom);
-          setPan({
+          const nextPan = {
             x: clamp(nextLeft - baseLeft, -maxPanX, maxPanX),
             y: clamp(nextTop - baseTop, -maxPanY, maxPanY),
-          });
+          };
+          writeStage(nextZoom, nextPan);
+          writeSelection(state.normalized);
+          onZoomChange?.(nextZoom);
           return;
         }
 
         scheduleFrame(point);
       },
-      [localPoint, scheduleFrame],
+      [localPoint, onZoomChange, scheduleFrame, writeSelection, writeStage],
     );
 
     const handlePointerUp = useCallback(
@@ -861,6 +895,8 @@ const CropCanvas = forwardRef<CropCanvasHandle, CropCanvasProps>(
           if (gesture?.kind === "pinch") {
             gestureRef.current = null;
             setInteracting(false);
+            setZoom(stateRef.current.zoom);
+            setPan({ ...stateRef.current.pan });
             const remaining = [...pointersRef.current.values()][0];
             if (remaining) {
               // Continue as a pan from the surviving finger.
@@ -966,19 +1002,34 @@ const CropCanvas = forwardRef<CropCanvasHandle, CropCanvasProps>(
     useEffect(() => {
       const element = viewportRef.current;
       if (!element || !zoomable) return;
+      let frame: number | null = null;
+      let pending: { factor: number; anchor: Point } | null = null;
       const onWheel = (event: WheelEvent) => {
         const modifier = event.ctrlKey || event.metaKey || event.altKey;
         if (!expanded && !modifier) return;
         event.preventDefault();
         const rect = element.getBoundingClientRect();
-        const factor = Math.exp(-event.deltaY * 0.0015);
-        safeZoom(stateRef.current.zoom * factor, {
+        const anchor = {
           x: event.clientX - rect.left,
           y: event.clientY - rect.top,
+        };
+        const factor = Math.exp(-event.deltaY * 0.0015);
+        pending = pending
+          ? { factor: pending.factor * factor, anchor }
+          : { factor, anchor };
+        if (frame !== null) return;
+        frame = requestAnimationFrame(() => {
+          frame = null;
+          const next = pending;
+          pending = null;
+          if (next) safeZoom(stateRef.current.zoom * next.factor, next.anchor);
         });
       };
       element.addEventListener("wheel", onWheel, { passive: false });
-      return () => element.removeEventListener("wheel", onWheel);
+      return () => {
+        element.removeEventListener("wheel", onWheel);
+        if (frame !== null) cancelAnimationFrame(frame);
+      };
     }, [expanded, safeZoom, zoomable]);
 
     const beginMove = useCallback(

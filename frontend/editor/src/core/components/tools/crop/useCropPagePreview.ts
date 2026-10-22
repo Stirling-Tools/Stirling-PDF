@@ -30,8 +30,8 @@ interface CachedPage {
   geometry: CropPageGeometry;
 }
 
-const CACHE_LIMIT = 4;
-const MAX_RENDER_EDGE = 1800;
+const CACHE_LIMIT = 2;
+const MAX_RENDER_EDGE = 1600;
 
 /**
  * Renders the requested page once at a resolution that survives zooming and

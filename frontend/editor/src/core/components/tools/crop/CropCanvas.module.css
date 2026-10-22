@@ -30,6 +30,10 @@
   box-shadow: 0 0 0 2px var(--c-primary);
 }
 
+.viewport[data-active="true"] .stage {
+  will-change: transform;
+}
+
 .stage {
   position: absolute;
   top: 0;
