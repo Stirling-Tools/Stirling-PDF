@@ -8,17 +8,8 @@ import type { Plugin } from "vite";
 // binary on install, which every `npm ci` would pay for one upload job.
 const POSTHOG_CLI = "@posthog/cli@0.18.12";
 
-const CHUNK_ID_COMMENT = "\n//# chunkId=";
-
-/**
- * True when the build environment holds the credentials posthog-cli reads
- * (`POSTHOG_CLI_API_KEY`, `POSTHOG_CLI_PROJECT_ID`, and optionally
- * `POSTHOG_CLI_HOST`, which defaults to US cloud).
- */
-export function posthogSourcemapUploadConfigured(): boolean {
-  return Boolean(
-    process.env.POSTHOG_CLI_API_KEY && process.env.POSTHOG_CLI_PROJECT_ID,
-  );
+function isJsChunk(fileName: string): boolean {
+  return fileName.endsWith(".js");
 }
 
 // Derived from the code so an unchanged chunk keeps its content hash, and with
@@ -67,54 +58,56 @@ function uploadChunks(chunkPaths: string[]): Promise<void> {
  * Emits hidden source maps, uploads them to PostHog error tracking, then deletes
  * every `.map` from the output so no map is ever served.
  *
- * Only add this plugin when {@link posthogSourcemapUploadConfigured} is true. A
- * failed upload warns instead of failing the build: symbolication is diagnostic
- * and must not block a release. Worker bundles get no chunk id, so their frames
- * stay minified; their maps are deleted with the rest.
+ * Inactive unless the build environment holds the credentials posthog-cli reads:
+ * `POSTHOG_CLI_API_KEY`, `POSTHOG_CLI_PROJECT_ID`, and optionally
+ * `POSTHOG_CLI_HOST`, which defaults to US cloud. A failed upload warns instead
+ * of failing the build: symbolication is diagnostic and must not block a
+ * release. Worker bundles get no chunk id, so their frames stay minified; their
+ * maps are deleted with the rest.
  */
 export function posthogSourcemapPlugin(): Plugin {
   return {
     name: "posthog-sourcemaps",
-    apply: "build",
+    apply: (_config, { command }) =>
+      command === "build" &&
+      Boolean(
+        process.env.POSTHOG_CLI_API_KEY && process.env.POSTHOG_CLI_PROJECT_ID,
+      ),
     config: () => ({ build: { sourcemap: "hidden" } }),
     renderChunk: {
       order: "post",
       handler(code, chunk) {
-        if (!chunk.fileName.endsWith(".js")) return null;
+        if (!isJsChunk(chunk.fileName)) return null;
         const chunkId = stableChunkId(code);
         // Appended, not prepended: nothing before it moves, so the chunk's
         // existing map stays valid (map: null keeps it).
         return {
-          code: `${code}\n${chunkIdSnippet(chunkId)}${CHUNK_ID_COMMENT}${chunkId}`,
+          code: `${code}\n${chunkIdSnippet(chunkId)}\n//# chunkId=${chunkId}`,
           map: null,
         };
       },
     },
-    writeBundle: {
-      sequential: true,
-      async handler(options, bundle) {
-        const outDir = options.dir ?? path.dirname(options.file ?? "");
-        const chunkPaths = Object.values(bundle)
-          .filter(
-            (output) =>
-              output.type === "chunk" && output.code.includes(CHUNK_ID_COMMENT),
-          )
-          .map((output) => path.resolve(outDir, output.fileName));
+    async writeBundle(options, bundle) {
+      const outDir = options.dir ?? path.dirname(options.file ?? "");
+      const chunkPaths = Object.values(bundle)
+        .filter(
+          (output) => output.type === "chunk" && isJsChunk(output.fileName),
+        )
+        .map((output) => path.resolve(outDir, output.fileName));
 
-        try {
-          await uploadChunks(chunkPaths);
-        } catch (error) {
-          this.warn(`PostHog source map upload failed: ${String(error)}`);
-        }
+      try {
+        await uploadChunks(chunkPaths);
+      } catch (error) {
+        this.warn(`PostHog source map upload failed: ${String(error)}`);
+      }
 
-        await Promise.all(
-          Object.keys(bundle)
-            .filter((fileName) => fileName.endsWith(".map"))
-            .map((fileName) =>
-              fs.rm(path.resolve(outDir, fileName), { force: true }),
-            ),
-        );
-      },
+      await Promise.all(
+        Object.keys(bundle)
+          .filter((fileName) => fileName.endsWith(".map"))
+          .map((fileName) =>
+            fs.rm(path.resolve(outDir, fileName), { force: true }),
+          ),
+      );
     },
   };
 }
