@@ -12,6 +12,18 @@
   white-space: nowrap;
 }
 
+.viewerHint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
+}
+
 .pageLabel {
   min-width: 48px;
   text-align: center;

@@ -1,0 +1,157 @@
+.overlay {
+  position: absolute;
+  z-index: 30;
+  cursor: crosshair;
+  touch-action: none;
+  outline: none;
+}
+
+.overlay:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--c-primary);
+}
+
+.overlay[data-dragging="true"] {
+  cursor: grabbing;
+}
+
+.shade {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.selectionGrid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--c-primary) 14%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--c-primary) 14%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 10% 10%;
+}
+
+.hole {
+  position: absolute;
+  box-shadow: 0 0 0 100vmax
+    color-mix(in srgb, var(--c-overlay) 78%, transparent);
+}
+
+.selection {
+  position: absolute;
+  border: 2px solid var(--c-primary);
+  pointer-events: none;
+}
+
+.sizeChip {
+  position: absolute;
+  top: -24px;
+  left: 0;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--c-surface-raised) 92%, transparent);
+  border: 1px solid var(--c-border-subtle);
+  color: var(--c-text);
+  font-size: var(--mantine-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.handle {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  pointer-events: auto;
+}
+
+.handle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--c-primary);
+  border-radius: 3px;
+  background: var(--c-surface);
+}
+
+.handle[data-handle="nw"] {
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  cursor: nwse-resize;
+}
+
+.handle[data-handle="ne"] {
+  left: 100%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  cursor: nesw-resize;
+}
+
+.handle[data-handle="sw"] {
+  left: 0;
+  top: 100%;
+  transform: translate(-50%, -50%);
+  cursor: nesw-resize;
+}
+
+.handle[data-handle="se"] {
+  left: 100%;
+  top: 100%;
+  transform: translate(-50%, -50%);
+  cursor: nwse-resize;
+}
+
+.handle[data-handle="n"] {
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  cursor: ns-resize;
+}
+
+.handle[data-handle="s"] {
+  left: 50%;
+  top: 100%;
+  transform: translate(-50%, -50%);
+  cursor: ns-resize;
+}
+
+.handle[data-handle="w"] {
+  left: 0;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: ew-resize;
+}
+
+.handle[data-handle="e"] {
+  left: 100%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: ew-resize;
+}
+
+.handle[data-handle="n"]::after,
+.handle[data-handle="s"]::after {
+  width: 22px;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.handle[data-handle="e"]::after,
+.handle[data-handle="w"]::after {
+  width: 6px;
+  height: 22px;
+  border-radius: 3px;
+}

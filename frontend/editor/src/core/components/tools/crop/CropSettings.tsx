@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Box, Center, Group, Loader, Stack, Text } from "@mantine/core";
+import {
+  Alert,
+  Box,
+  Center,
+  Divider,
+  Group,
+  Loader,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
+import { Collapsible } from "@app/ui/Collapsible";
 import { Icon } from "@app/ui/Icon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { CropParametersHook } from "@app/hooks/tools/crop/useCropParameters";
@@ -15,6 +25,7 @@ import CropCanvas, {
 } from "@app/components/tools/crop/CropCanvas";
 import CropPageSelection from "@app/components/tools/crop/CropPageSelection";
 import CropEditorOverlay from "@app/components/tools/crop/CropEditorOverlay";
+import CropViewerSessionPublisher from "@app/components/tools/crop/CropViewerSessionPublisher";
 import CropResultView from "@app/components/tools/crop/CropResultView";
 import { useCropPagePreview } from "@app/components/tools/crop/useCropPagePreview";
 import { useCropHistory } from "@app/components/tools/crop/useCropHistory";
@@ -28,6 +39,13 @@ import {
   type CropPageGeometry,
 } from "@app/utils/cropPageGeometry";
 import type { CropRatioId } from "@app/components/tools/crop/CropRatioPicker";
+import CropRatioPicker, {
+  ratioForPage,
+} from "@app/components/tools/crop/CropRatioPicker";
+import CropMarginInputs from "@app/components/tools/crop/CropMarginInputs";
+import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
+import { useCropSurfaceMode } from "@app/components/tools/crop/cropViewerSession";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import { Rectangle } from "@app/utils/cropCoordinates";
 import { useIsTouch } from "@app/hooks/useIsMobile";
 import classes from "@app/components/tools/crop/CropSettings.module.css";
@@ -47,6 +65,7 @@ type PageScope = "all" | "this" | "range";
 const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const { t } = useTranslation();
   const isTouch = useIsTouch();
+  const isMobile = useIsMobile();
 
   const [selectedStub = null] = useViewScopedFileStubs();
   const [selectedFile = null] = useViewScopedFiles();
@@ -54,10 +73,22 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const preview = useCropPagePreview(selectedFile ?? null, pageNumber);
   const geometry = preview.geometry;
 
-  const [unit] = useState<CropUnit>("mm");
+  const [unit, setUnit] = useState<CropUnit>("mm");
   const [ratioId, setRatioId] = useState<CropRatioId>("free");
   const [editorOpen, setEditorOpen] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [gridEnabled, setGridEnabled] = useState(false);
+  const [snapEnabled, setSnapEnabled] = useState(true);
+  const surfaceMode = useCropSurfaceMode();
+
+  const lastGeometryRef = useRef<CropPageGeometry | null>(null);
+  const geometryPageRef = useRef(1);
+  if (geometry) {
+    lastGeometryRef.current = geometry;
+    geometryPageRef.current = preview.pageNumber;
+  }
+  const sessionGeometry = geometry ?? lastGeometryRef.current;
 
   const parametersRef = useRef(parameters);
   parametersRef.current = parameters;
@@ -78,14 +109,24 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
     [geometry],
   );
 
-  const applyArea = useCallback((area: Rectangle) => {
-    const currentGeometry = geometryRef.current;
-    if (!currentGeometry) return;
-    parametersRef.current.setCropArea(
-      clampPageRect(area, currentGeometry),
-      getPageBox(currentGeometry),
-    );
-  }, []);
+  const applyAreaTo = useCallback(
+    (area: Rectangle, targetGeometry: CropPageGeometry) => {
+      parametersRef.current.setCropArea(
+        clampPageRect(area, targetGeometry),
+        getPageBox(targetGeometry),
+      );
+    },
+    [],
+  );
+
+  const applyArea = useCallback(
+    (area: Rectangle) => {
+      const currentGeometry = geometryRef.current;
+      if (!currentGeometry) return;
+      applyAreaTo(area, currentGeometry);
+    },
+    [applyAreaTo],
+  );
 
   const history = useCropHistory(cropArea, applyArea);
   const clearHistoryRef = useRef(history.clear);
@@ -188,9 +229,123 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const sizeLabel = `${widthMm.toFixed(widthMm >= 10 ? 0 : 1)} × ${heightMm.toFixed(
     heightMm >= 10 ? 0 : 1,
   )} mm`;
+  const viewerSurface = surfaceMode === "viewer" && !disabled && !isMobile;
+  const aspectRatio = ratioForPage(ratioId, displaySize);
+  const sizeControls = (
+    <Group justify="space-between" align="center" wrap="nowrap">
+      <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
+        <Text
+          size="sm"
+          fw={600}
+          className={classes.sizeLabel}
+          data-testid="crop-size-summary"
+        >
+          {sizeLabel}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {percent}%
+        </Text>
+      </Group>
+      <Group gap={4} wrap="nowrap">
+        {viewerSurface ? (
+          <>
+            <ActionIcon
+              variant="quiet"
+              accent="neutral"
+              size="sm"
+              aria-label={t("crop.undo", "Undo")}
+              title={t("crop.undo", "Undo")}
+              onClick={history.undo}
+              disabled={disabled || !history.canUndo}
+            >
+              <Icon name="undo-2" size="0.875rem" />
+            </ActionIcon>
+            <ActionIcon
+              variant="quiet"
+              accent="neutral"
+              size="sm"
+              aria-label={t("crop.redo", "Redo")}
+              title={t("crop.redo", "Redo")}
+              onClick={history.redo}
+              disabled={disabled || !history.canRedo}
+            >
+              <Icon name="redo-2" size="0.875rem" />
+            </ActionIcon>
+          </>
+        ) : (
+          <>
+            <ActionIcon
+              variant={showResult ? "secondary" : "quiet"}
+              accent="neutral"
+              size="sm"
+              aria-label={t("crop.preview.toggle", "Preview result")}
+              aria-pressed={showResult}
+              title={t("crop.preview.toggle", "Preview result")}
+              onClick={() => setShowResult((previous) => !previous)}
+              disabled={disabled}
+            >
+              <Icon name="eye" size="0.875rem" />
+            </ActionIcon>
+            <Button
+              variant="secondary"
+              size="sm"
+              leftSection={<Icon name="fullscreen" size={14} />}
+              onClick={() => setEditorOpen(true)}
+              disabled={disabled}
+            >
+              {t("crop.edit", "Edit")}
+            </Button>
+          </>
+        )}
+      </Group>
+    </Group>
+  );
+  const scopeControls = (
+    <>
+      <SegmentedControl
+        fullWidth
+        size="xs"
+        value={pageScope}
+        onChange={(value) => changeScope(value)}
+        ariaLabel={t("crop.scope.title", "Apply to")}
+        disabled={disabled}
+        options={[
+          { value: "all", label: t("crop.scope.all", "All pages") },
+          { value: "this", label: t("crop.scope.this", "This page") },
+          { value: "range", label: t("crop.scope.range", "Range") },
+        ]}
+      />
+      {pageScope === "range" && (
+        <CropPageSelection
+          value={parameters.parameters.pageNumbers}
+          onChange={(value) => parameters.updateParameter("pageNumbers", value)}
+          disabled={disabled}
+        />
+      )}
+    </>
+  );
 
   return (
-    <Stack gap="sm" data-tour="crop-settings">
+    <Stack
+      gap="sm"
+      data-tour="crop-settings"
+      style={viewerSurface ? { paddingBottom: 56 } : undefined}
+    >
+      {sessionGeometry && (
+        <CropViewerSessionPublisher
+          enabled={viewerSurface && mode === "manual"}
+          geometry={sessionGeometry}
+          geometryPageNumber={geometryPageRef.current}
+          cropArea={cropArea}
+          pageNumber={pageNumber}
+          pageCount={preview.pageCount}
+          aspectRatio={aspectRatio}
+          gridEnabled={gridEnabled}
+          snapEnabled={snapEnabled}
+          onApplyArea={applyAreaTo}
+          onPageChange={changePage}
+        />
+      )}
       <SegmentedControl
         fullWidth
         size="sm"
@@ -235,7 +390,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
         </Center>
       ) : (
         <>
-          {preview.pageCount > 1 && (
+          {!viewerSurface && preview.pageCount > 1 && (
             <Group justify="center" gap={2} wrap="nowrap">
               <ActionIcon
                 variant="quiet"
@@ -263,107 +418,147 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
             </Group>
           )}
 
-          <Box
-            className={classes.canvasFrame}
-            style={{
-              aspectRatio: showResult
-                ? `${display.width} / ${display.height}`
-                : `${displaySize.width} / ${displaySize.height}`,
-            }}
-          >
-            {showResult ? (
-              <CropResultView
-                imageUrl={preview.imageUrl}
-                geometry={geometry}
-                cropArea={cropArea}
-              />
-            ) : (
-              <CropCanvas
-                imageUrl={preview.imageUrl}
-                geometry={geometry}
-                cropArea={cropArea}
-                onCropAreaChange={applyArea}
-                aspectRatio={null}
-                disabled={disabled}
-                readOnly={isTouch}
-                onRequestExpand={() => setEditorOpen(true)}
-                unit={unit}
-                ariaLabel={
-                  isTouch
-                    ? t(
-                        "crop.canvas.previewLabel",
-                        "Crop area preview. Activate Edit crop area to adjust it.",
-                      )
-                    : t(
-                        "crop.canvas.ariaLabel",
-                        "Crop area editor. Drag a handle to resize, drag inside to move, arrow keys nudge, Shift plus arrow keys resize.",
-                      )
-                }
-              />
-            )}
-          </Box>
+          {isMobile && !viewerSurface && sizeControls}
 
-          <Group justify="space-between" align="center" wrap="nowrap">
-            <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
-              <Text
-                size="sm"
-                fw={600}
-                className={classes.sizeLabel}
-                data-testid="crop-size-summary"
+          {viewerSurface ? (
+            <Box className={classes.viewerHint} data-testid="crop-viewer-hint">
+              <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+                <Icon name="move" size={16} />
+                <Text size="xs">
+                  {t(
+                    "crop.viewer.hint",
+                    "Drag on the page to set the crop area.",
+                  )}
+                </Text>
+              </Group>
+              <Group gap={2} wrap="nowrap">
+                <ActionIcon
+                  variant={gridEnabled ? "secondary" : "quiet"}
+                  accent="neutral"
+                  size="sm"
+                  aria-label={t("crop.canvas.toggleGrid", "Toggle grid")}
+                  aria-pressed={gridEnabled}
+                  title={t("crop.canvas.toggleGrid", "Toggle grid")}
+                  onClick={() => setGridEnabled((previous) => !previous)}
+                  disabled={disabled}
+                >
+                  <Icon name="layout-grid" size="0.875rem" />
+                </ActionIcon>
+                <ActionIcon
+                  variant={snapEnabled ? "secondary" : "quiet"}
+                  accent="neutral"
+                  size="sm"
+                  aria-label={t("crop.canvas.toggleSnap", "Toggle snapping")}
+                  aria-pressed={snapEnabled}
+                  title={t("crop.canvas.toggleSnap", "Toggle snapping")}
+                  onClick={() => setSnapEnabled((previous) => !previous)}
+                  disabled={disabled}
+                >
+                  <Icon name="magnet" size="0.875rem" />
+                </ActionIcon>
+              </Group>
+            </Box>
+          ) : (
+            <Box
+              className={classes.canvasFrame}
+              style={{
+                aspectRatio: showResult
+                  ? `${display.width} / ${display.height}`
+                  : `${displaySize.width} / ${displaySize.height}`,
+              }}
+            >
+              {showResult ? (
+                <CropResultView
+                  imageUrl={preview.imageUrl}
+                  geometry={geometry}
+                  cropArea={cropArea}
+                />
+              ) : (
+                <CropCanvas
+                  imageUrl={preview.imageUrl}
+                  geometry={geometry}
+                  cropArea={cropArea}
+                  onCropAreaChange={applyArea}
+                  aspectRatio={null}
+                  disabled={disabled}
+                  readOnly={isTouch}
+                  onRequestExpand={() => setEditorOpen(true)}
+                  unit={unit}
+                  ariaLabel={
+                    isTouch
+                      ? t(
+                          "crop.canvas.previewLabel",
+                          "Crop area preview. Activate Edit crop area to adjust it.",
+                        )
+                      : t(
+                          "crop.canvas.ariaLabel",
+                          "Crop area editor. Drag a handle to resize, drag inside to move, arrow keys nudge, Shift plus arrow keys resize.",
+                        )
+                  }
+                />
+              )}
+            </Box>
+          )}
+
+          {(!isMobile || viewerSurface) && sizeControls}
+
+          {viewerSurface && (
+            <>
+              {scopeControls}
+              <Divider />
+              <CropRatioPicker
+                value={ratioId}
+                onChange={setRatioId}
+                disabled={disabled}
+              />
+              <CropMarginInputs
+                cropArea={cropArea}
+                imageUrl={preview.imageUrl}
+                geometry={geometry}
+                onChange={applyArea}
+                unit={unit}
+                onUnitChange={setUnit}
+                disabled={disabled}
+              />
+              <Collapsible
+                open={advancedOpen}
+                onToggle={() => setAdvancedOpen((previous) => !previous)}
+                header={
+                  <Text size="xs" fw={600} c="dimmed">
+                    {t("crop.advanced.title", "Exact coordinates")}
+                  </Text>
+                }
               >
-                {sizeLabel}
-              </Text>
-              <Text size="xs" c="dimmed">
-                {percent}%
-              </Text>
-            </Group>
-            <Group gap={4} wrap="nowrap">
-              <ActionIcon
-                variant={showResult ? "secondary" : "quiet"}
+                <CropCoordinateInputs
+                  cropArea={cropArea}
+                  onCoordinateChange={(field, value) => {
+                    const numeric =
+                      typeof value === "string"
+                        ? Number.parseFloat(value)
+                        : value;
+                    if (!Number.isFinite(numeric)) return;
+                    applyArea({ ...cropArea, [field]: numeric });
+                  }}
+                  disabled={disabled}
+                  pageBox={getPageBox(geometry)}
+                  showAutomationInfo={false}
+                />
+              </Collapsible>
+              <Button
+                variant="tertiary"
                 accent="neutral"
                 size="sm"
-                aria-label={t("crop.preview.toggle", "Preview result")}
-                aria-pressed={showResult}
-                title={t("crop.preview.toggle", "Preview result")}
-                onClick={() => setShowResult((previous) => !previous)}
-                disabled={disabled}
+                leftSection={<Icon name="rotate-ccw" size={14} />}
+                onClick={handleReset}
               >
-                <Icon name="eye" size="0.875rem" />
-              </ActionIcon>
-              <Button
-                variant="secondary"
-                size="sm"
-                leftSection={<Icon name="fullscreen" size={14} />}
-                onClick={() => setEditorOpen(true)}
-                disabled={disabled}
-              >
-                {t("crop.edit", "Edit")}
+                {t("crop.reset", "Reset to full page")}
               </Button>
-            </Group>
-          </Group>
+            </>
+          )}
         </>
       )}
 
-      <SegmentedControl
-        fullWidth
-        size="xs"
-        value={pageScope}
-        onChange={(value) => changeScope(value)}
-        ariaLabel={t("crop.scope.title", "Apply to")}
-        disabled={disabled}
-        options={[
-          { value: "all", label: t("crop.scope.all", "All pages") },
-          { value: "this", label: t("crop.scope.this", "This page") },
-          { value: "range", label: t("crop.scope.range", "Range") },
-        ]}
-      />
-      {pageScope === "range" && (
-        <CropPageSelection
-          value={parameters.parameters.pageNumbers}
-          onChange={(value) => parameters.updateParameter("pageNumbers", value)}
-          disabled={disabled}
-        />
-      )}
+      {(!viewerSurface || mode === "auto") && scopeControls}
 
       {geometry && (
         <CropEditorOverlay
