@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import {
@@ -13,6 +13,7 @@ import type {
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useAnnotationMenuHandlers } from "@app/components/viewer/useAnnotationMenuHandlers";
+import { useAnchoredOverlay } from "@app/hooks/useAnchoredOverlay";
 import { AnnotationTypeButtons } from "@app/components/viewer/AnnotationTypeButtons";
 import "@app/components/viewer/TextSelectionMenu.css";
 
@@ -56,10 +57,6 @@ function AnnotationSelectionMenuInner({
   const { state, provides } = useAnnotation(documentId);
   const { scrollActions, requestCommentFocus } = useViewer();
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [menuPosition, setMenuPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
 
   const handlers = useAnnotationMenuHandlers({
     annotation,
@@ -75,12 +72,14 @@ function AnnotationSelectionMenuInner({
   // stale after updateAnnotation() is called while the annotation is selected.
   // Also checks non-empty contents: customData.isComment is not persisted to PDF, but
   // contents is a standard PDF field and survives save/reload.
+  const annotationId = (annotation?.object as AnnotationObject | undefined)?.id;
+
   const isInSidebar = useMemo(() => {
-    const annId = (annotation?.object as AnnotationObject | undefined)?.id;
-    if (!annId) return false;
+    // Scans every annotation, so skip it entirely while no menu is open.
+    if (!selected || !annotationId) return false;
     for (const tracked of Object.values(state.byUid)) {
       const obj = tracked.object;
-      if (obj.id !== annId) continue;
+      if (obj.id !== annotationId) continue;
       const { type } = obj;
       // TEXT and CARET are standalone comment annotations — they use CommentButton,
       // not AttachCommentButton, so isInSidebar is irrelevant for them.
@@ -103,7 +102,7 @@ function AnnotationSelectionMenuInner({
       return isExplicit || hasContents;
     }
     return false;
-  }, [state, annotation?.object]);
+  }, [selected, state, annotationId]);
 
   // Auto-open the comments sidebar when a comment annotation is selected
   useEffect(() => {
@@ -170,56 +169,40 @@ function AnnotationSelectionMenuInner({
     [annotation, onAnchor, pageIndex],
   );
 
-  // Track menu position via MutationObserver (handles drag repositioning)
+  const { overlayRef, mounted, measure } = useAnchoredOverlay({
+    anchorRef: wrapperRef,
+    enabled: Boolean(selected && annotation),
+    onPosition: updateAnchor,
+  });
+
+  // Dragging an annotation moves its wrapper without any scroll or resize, so a
+  // MutationObserver on its style attribute is the only signal; positioning itself
+  // is shared with the other viewer menus.
   useEffect(() => {
-    if (!selected || !annotation || !wrapperRef.current) {
-      setMenuPosition(null);
+    if (!selected || !annotationId || !wrapperRef.current) {
       onAnchor?.(null);
       return;
     }
-
-    const updatePosition = () => {
-      const wrapper = wrapperRef.current;
-      if (!wrapper) {
-        setMenuPosition(null);
-        return;
-      }
-      const rect = wrapper.getBoundingClientRect();
-      const position = {
-        top: rect.bottom + 8,
-        left: rect.left + rect.width / 2,
-      };
-      setMenuPosition(position);
-      updateAnchor(position);
-    };
-
-    updatePosition();
-
-    const observer = new MutationObserver(updatePosition);
+    // Keyed on the annotation id so a store-driven identity change while the menu
+    // is open does not tear down and rebuild the observer.
+    const observer = new MutationObserver(() => measure());
     observer.observe(wrapperRef.current, {
       attributes: true,
       attributeFilter: ["style"],
     });
-    window.addEventListener("scroll", updatePosition, true);
-    window.addEventListener("resize", updatePosition);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("scroll", updatePosition, true);
-      window.removeEventListener("resize", updatePosition);
-    };
-  }, [selected, updateAnchor]);
+    return () => observer.disconnect();
+  }, [selected, annotationId, onAnchor, measure]);
 
   if (!selected || !annotation) return null;
 
-  const menuContent = menuPosition ? (
+  const menuContent = mounted ? (
     <div
+      ref={overlayRef}
       data-annotation-selection-menu
       className="embedpdf-floating-menu"
       style={{
         position: "fixed",
-        top: `${menuPosition.top}px`,
-        left: `${menuPosition.left}px`,
+        // top/left are owned by useAnchoredOverlay; see the note there.
         transform: "translateX(-50%)",
         pointerEvents: "auto",
         zIndex: 10000,

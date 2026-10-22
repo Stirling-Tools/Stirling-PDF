@@ -38,6 +38,7 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { registerCommentCommitFlush } from "@app/components/viewer/commentCommitFlush";
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
 import {
   buildCommentsCsv,
@@ -1289,15 +1290,50 @@ export function CommentsSidebar({
     [provides],
   );
 
+  const pendingCommitsRef = useRef<
+    Map<string, { pageIndex: number; annotationId: string; value: string }>
+  >(new Map());
+  const commitTimerRef = useRef<number | null>(null);
+
+  const flushPendingCommits = useCallback(() => {
+    if (commitTimerRef.current !== null) {
+      window.clearTimeout(commitTimerRef.current);
+      commitTimerRef.current = null;
+    }
+    const pending = pendingCommitsRef.current;
+    pendingCommitsRef.current = new Map();
+    for (const { pageIndex, annotationId, value } of pending.values()) {
+      handleContentsChange(pageIndex, annotationId, value);
+    }
+  }, [handleContentsChange]);
+
+  useEffect(() => () => flushPendingCommits(), [flushPendingCommits]);
+  useEffect(
+    () => registerCommentCommitFlush(flushPendingCommits),
+    [flushPendingCommits],
+  );
+  useEffect(() => {
+    flushPendingCommits();
+  }, [editingMainKey, flushPendingCommits]);
+
   const handleDraftChange = useCallback(
     (pageIndex: number, annotationId: string, value: string) => {
       const key = `${pageIndex}_${annotationId}`;
       setDraftContents((prev) => ({ ...prev, [key]: value }));
-      if (editingMainKey === key) {
-        handleContentsChange(pageIndex, annotationId, value);
+      if (editingMainKey !== key) return;
+      // Committing per keystroke recomputes the annotation everywhere it is
+      // drawn; the draft stays immediate and the document update trails a
+      // pause, then flushes when the editor closes.
+      pendingCommitsRef.current.set(key, { pageIndex, annotationId, value });
+      if (commitTimerRef.current !== null) {
+        window.clearTimeout(commitTimerRef.current);
       }
+      commitTimerRef.current = window.setTimeout(() => {
+        commitTimerRef.current = null;
+        flushPendingCommits();
+      }, 350);
     },
-    [editingMainKey, handleContentsChange],
+    [editingMainKey, flushPendingCommits],
   );
 
   const [deleteModal, setDeleteModal] = useState<{
@@ -1521,6 +1557,7 @@ export function CommentsSidebar({
       setEditingMainKey(`${pageIndex}_${annotationId}`),
     changeDraft: handleDraftChange,
     submit: (pageIndex, annotationId, value) => {
+      flushPendingCommits();
       handleSendMainComment(pageIndex, annotationId, value);
       setEditingMainKey(null);
     },

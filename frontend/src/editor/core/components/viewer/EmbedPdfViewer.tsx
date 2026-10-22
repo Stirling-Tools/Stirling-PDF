@@ -40,6 +40,9 @@ import {
   useNavigationState,
 } from "@app/contexts/NavigationContext";
 import { useSignature } from "@app/contexts/SignatureContext";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useEventCallback } from "@app/hooks/useEventCallback";
+import { AnnotationDirtyWatcher } from "@app/components/viewer/AnnotationDirtyWatcher";
 import { useRedaction } from "@app/contexts/RedactionContext";
 import type { RedactionPendingTrackerAPI } from "@app/components/viewer/RedactionPendingTracker";
 import type {
@@ -74,6 +77,7 @@ import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
+import { flushCommentCommits } from "@app/components/viewer/commentCommitFlush";
 import { useDamagedFileRepair } from "@app/contexts/DamagedFileRepairContext";
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -485,12 +489,25 @@ const EmbedPdfViewerContent = ({
     }
     if (!applyScrollNow()) return false;
     pendingScrollSwappedRef.current = true;
+    // The hide only has to survive until the carried scroll lands; the settle
+    // chains can lag behind it, and the fallback cap would leave the page
+    // unclickable - selection, links - for the whole window.
+    if (hiddenScrollerRef.current) {
+      requestAnimationFrame(() => {
+        revealSwappedDocument();
+        if (zoomRestorePendingRef.current) {
+          settleZoomRestore();
+        }
+      });
+    }
     return true;
   }, [
     applyScrollNow,
     hideSwappedDocument,
     attachScrollIntentListeners,
     resolvePendingScrollPage,
+    revealSwappedDocument,
+    settleZoomRestore,
   ]);
 
   const formApplyInProgressRef = useRef(false);
@@ -504,7 +521,15 @@ const EmbedPdfViewerContent = ({
     setRedactionsApplied,
     deactivateRedact,
     setRedactionMode,
+    isRedactionMode,
   } = useRedaction();
+
+  const {
+    handleToolSelectForced,
+    leftPanelView,
+    readerMode,
+    setLeftPanelView,
+  } = useToolWorkflow();
 
   // Resubscribing to history emits its current state as though an edit occurred.
   const redactionsAppliedRef = useRef(redactionsApplied);
@@ -549,6 +574,10 @@ const EmbedPdfViewerContent = ({
     selectedTool === "addText" ||
     selectedTool === "addImage" ||
     selectedTool === "annotate";
+  // These create annotations without the Annotate tool; a panel moving under
+  // them would interrupt the placement they are midway through.
+  const isPlacementTool =
+    selectedTool === "addText" || selectedTool === "addImage";
   const isManualRedactMode = selectedTool === "redact";
 
   // Live layer visibility is controlled via showBakedAnnotations CSS; unmounting
@@ -1033,6 +1062,54 @@ const EmbedPdfViewerContent = ({
     };
   }, [historyApiRef.current, setHasUnsavedChanges, redactionTrackerRef]);
 
+  // A dirty annotation surfaces the Annotate panel, which carries the save
+  // action. Keyed on the edit revision rather than the dirty flag: the flag stays
+  // set after a cancel, so it would only ever fire for the first edit. The latch
+  // stops the tool being re-selected while the panel is already open, and clears
+  // once the user leaves it, so a later edit surfaces it again.
+  const annotationUiOpenedRef = useRef(false);
+  useEffect(() => {
+    if (selectedTool !== "annotate" || leftPanelView === "toolPicker") {
+      annotationUiOpenedRef.current = false;
+    }
+  }, [selectedTool, leftPanelView]);
+  // A later document starts clean, so its edits must be able to surface the
+  // panel again.
+  useEffect(() => {
+    annotationUiOpenedRef.current = false;
+  }, [activeFileId]);
+
+  const openAnnotationUi = useEventCallback(() => {
+    if (
+      annotationUiOpenedRef.current ||
+      previewFile ||
+      isManualRedactMode ||
+      isRedactionMode
+    ) {
+      return;
+    }
+    // Reading stays reading: a comment edited from the sidebar keeps the reader
+    // layout, and the unsaved-changes guard surfaces on the way out. Forcing
+    // the Annotate tool here would trade the reader's place for the save UI.
+    if (readerMode) {
+      return;
+    }
+    // Placement tools own their flow; moving the panel mid-task would
+    // interrupt the edit that committed.
+    if (isPlacementTool) {
+      return;
+    }
+    annotationUiOpenedRef.current = true;
+    // Already annotating: only the panel needs to come back on screen
+    // (collapsed rail on phones), so an edit while selected still shows the
+    // save UI.
+    if (isInAnnotationTool) {
+      setLeftPanelView("toolContent");
+      return;
+    }
+    handleToolSelectForced("annotate");
+  });
+
   // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {
     if (previewFile || isFormFillToolActive) {
@@ -1107,6 +1184,9 @@ const EmbedPdfViewerContent = ({
         setRedactionsApplied(false);
         return;
       }
+
+      // Apply pending comment drafts before EmbedPDF snapshots the document.
+      flushCommentCommits();
 
       // Step 1: Export PDF with annotations using EmbedPDF
       suppressHistoryDirtyRef.current = true;
@@ -1352,6 +1432,7 @@ const EmbedPdfViewerContent = ({
       );
 
       // Export PDF WITHOUT committing pending marks - this saves only applied redactions
+      flushCommentCommits();
       const arrayBuffer = await exportActions.saveAsCopy();
       if (!arrayBuffer) {
         throw new Error("Failed to export PDF");
@@ -1860,6 +1941,7 @@ const EmbedPdfViewerContent = ({
         pointerEvents: isApplyingSignatures ? "none" : undefined,
       }}
     >
+      <AnnotationDirtyWatcher onDirty={openAnnotationUi} />
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
         <ActionIcon

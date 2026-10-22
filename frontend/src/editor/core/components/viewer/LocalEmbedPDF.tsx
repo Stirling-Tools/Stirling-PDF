@@ -103,8 +103,8 @@ import { isPdfFile } from "@app/utils/fileUtils";
 import { useTranslation } from "react-i18next";
 import { LinkLayer } from "@app/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
-import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
+import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvents";
 import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
 import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
@@ -940,8 +940,18 @@ export function LocalEmbedPDF({
   const permissionOverride =
     pdfAccess?.ownerAuthenticated === true ||
     (pdfAccess?.honorOwnerPasswords ?? config?.honorOwnerPasswords) === false;
+  // Unknown access must not read as restricted: the permission inspection is
+  // async, and treating its pending state as locked would kill annotation
+  // editing, links and the selection menu for the whole inspection. A positive
+  // encrypted verdict still locks once it resolves.
   const annotationsReadOnly =
-    !pdfAccess || pdfAccess.encrypted || !enableAnnotations;
+    !enableAnnotations || Boolean(pdfAccess?.encrypted);
+  // The edit scope keeps the stricter reading: an unknown access still locks,
+  // because the save/replace flow settles against that lock.
+  const annotationsLocked = !pdfAccess || pdfAccess.encrypted;
+  // The layers keep the stricter reading too: flapping them off while access is
+  // unknown unmounts the viewer's engine document and reloads it.
+  const showAnnotations = enableAnnotations || annotationsLocked;
   const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
     Array<{ id: string; pageIndex: number; rect: Rect }>
@@ -1752,14 +1762,14 @@ export function LocalEmbedPDF({
               <>
                 <AnnotationInteractionLock
                   documentId={documentId}
-                  readOnly={annotationsReadOnly}
+                  readOnly={annotationsLocked}
                 />
                 <DocumentViewport
                   documentId={documentId}
                   pageOptions={pageOptions}
                 />
                 <DocumentComments
-                  enabled
+                  enabled={showAnnotations}
                   readOnly={annotationsReadOnly}
                   documentId={documentId}
                   fileName={exportFileName}
