@@ -97,9 +97,12 @@ export function patchEmbedpdfFontFallback(
   code: string,
   file: string,
 ): string | null {
-  const anchorAt = code.indexOf(MATCH_ANCHOR);
-  if (!ENGINES_DIST.test(file) || anchorAt === -1) return null;
+  if (!ENGINES_DIST.test(file)) return null;
+  // Before the anchor search: an engine that renamed the method would
+  // otherwise skip the patch silently.
   assertPinnedVersion(file);
+  const anchorAt = code.indexOf(MATCH_ANCHOR);
+  if (anchorAt === -1) return null;
   // The worker engine embeds its source as a string literal with `\n` escapes.
   const escaped = code.startsWith("\\n", anchorAt + MATCH_ANCHOR.length);
   let out = code;
