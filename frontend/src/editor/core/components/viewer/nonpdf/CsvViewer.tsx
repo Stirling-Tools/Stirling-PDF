@@ -218,7 +218,7 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
   }, [deferredQuery]);
 
   useEffect(() => {
-    const key = `${deferredQuery}:${activeMatch}`;
+    const key = `${deferredQuery}:${activeMatch}:${matchRows[activeMatch] ?? ""}`;
     if (scrolledMatchRef.current === key) return;
     scrolledMatchRef.current = key;
     const rowIndex = matchRows[activeMatch];
@@ -440,7 +440,9 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
                 >
                   {row.getAllCells().map((cell) => {
                     const isIndex = cell.column.id === "__index";
-                    const cellValue = String(cell.getValue() ?? "");
+                    const cellValue = isIndex
+                      ? String(cell.row.original.__index)
+                      : String(cell.getValue() ?? "");
                     return (
                       <td
                         key={cell.id}
@@ -456,11 +458,7 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
                           textOverflow: "ellipsis",
                         }}
                       >
-                        <Text
-                          size="xs"
-                          truncate
-                          title={String(cell.getValue() ?? "")}
-                        >
+                        <Text size="xs" truncate title={cellValue}>
                           {isIndex
                             ? cellValue
                             : highlightMatches(cellValue, deferredQuery)}
