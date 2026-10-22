@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   embeddedFaceFamily,
   isEmbeddedFaceReady,
+  isOverlayFaceReady,
   onEmbeddedFaceLoaded,
   registerEmbeddedFace,
   resetEmbeddedFaces,
@@ -292,6 +293,29 @@ describe("resetEmbeddedFaces vs an in-flight load", () => {
     await flush();
     expect(isEmbeddedFaceReady(131)).toBe(true);
     expect(addedFamilies).toEqual([embeddedFaceFamily(131)]);
+  });
+});
+
+describe("overlay face readiness", () => {
+  it("trusts fonts the browser already resolves", () => {
+    expect(isOverlayFaceReady("base14:Helvetica")).toBe(true);
+    expect(isOverlayFaceReady("local:Arial")).toBe(true);
+  });
+
+  it("waits for the PDF face's own FontFace to load", async () => {
+    const m = makeModule(new Map([[171, fontBytes(TRUETYPE)]]));
+    const fontId = `pdf:171:ABCDEF+Test`;
+    registerEmbeddedFace(m, 171);
+    expect(isOverlayFaceReady(fontId)).toBe(false);
+
+    faceFor(embeddedFaceFamily(171))?.resolve();
+    await flush();
+    expect(isOverlayFaceReady(fontId)).toBe(true);
+  });
+
+  it("does not treat an unparseable PDF id as ready", () => {
+    expect(isOverlayFaceReady("pdf:")).toBe(false);
+    expect(isOverlayFaceReady("pdf:not-a-pointer:x")).toBe(false);
   });
 });
 

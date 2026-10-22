@@ -19,6 +19,7 @@ import {
 } from "@app/tools/pdfTextEditor/util/spellcheck";
 import {
   embeddedFaceFamily,
+  isOverlayFaceReady,
   onEmbeddedFaceLoaded,
 } from "@app/tools/pdfTextEditor/util/embeddedFace";
 import { nearestStandardFont } from "@app/tools/pdfTextEditor/util/fontFamily";
@@ -649,7 +650,13 @@ function TextRunOverlayImpl({
   const hasEdit = editedAtRevisionRef.current >= 0;
   const pageCaughtUp =
     pageRevision === undefined || pageRevision > editedAtRevisionRef.current;
-  const showsGlyphs = (touched || (hasEdit && !pageCaughtUp)) && !invisible;
+  const overlayFaceReady = useMemo(
+    () => isOverlayFaceReady(run.fontId),
+    // faceEpoch changes when a late FontFace finishes loading.
+    [run.fontId, faceEpoch],
+  );
+  const showsGlyphs =
+    (touched || (hasEdit && !pageCaughtUp)) && !invisible && overlayFaceReady;
 
   const exactMetrics = useMemo(
     () => (freshExact ? exactTextMetrics(freshExact.lines) : null),

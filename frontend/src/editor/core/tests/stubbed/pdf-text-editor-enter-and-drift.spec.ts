@@ -17,9 +17,9 @@ const PARAGRAPH_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/paragraph-sample.pdf",
 );
-const MUSHROOM_PDF = path.join(
+const SAMPLE_PDF = path.join(
   import.meta.dirname,
-  "../test-fixtures/mushroom-life.pdf",
+  "../test-fixtures/Sample.pdf",
 );
 
 async function openEditor(page: import("@playwright/test").Page, file: string) {
@@ -213,15 +213,9 @@ test.describe("PDF text editor - the caret stays on the text while typing", () =
   test("a long typing burst never separates the caret from the glyphs", async ({
     page,
   }) => {
-    await openEditor(page, MUSHROOM_PDF);
-    const run = page
-      .locator('[data-testid^="pdf-editor-run-p0-"]')
-      .filter({ hasText: /^Spore Stage$/ })
-      .first();
-    if ((await run.count()) === 0) {
-      test.skip(true, "fixture is missing the Spore Stage heading");
-      return;
-    }
+    await openEditor(page, SAMPLE_PDF);
+    const run = page.locator('[data-testid^="pdf-editor-run-p0-"]').first();
+    expect(await run.count(), "fixture should have a first run").toBe(1);
     const testId = (await run.getAttribute("data-testid")) ?? "";
     await run.click();
     await page.waitForTimeout(300);

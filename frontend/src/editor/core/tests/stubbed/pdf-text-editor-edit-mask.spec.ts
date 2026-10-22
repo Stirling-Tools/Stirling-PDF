@@ -107,7 +107,7 @@ test.describe("PDF text editor - editing surface", () => {
   test("the mask matches the page colour, not a default band", async ({
     page,
   }) => {
-    const run = await openAndEdit(page, "stirling-marketing");
+    const run = await openAndEdit(page, "sample");
     const style = await run.evaluate((el) => {
       const s = getComputedStyle(el);
       return { color: s.color, background: s.backgroundColor };

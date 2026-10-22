@@ -6,10 +6,10 @@ import path from "path";
 // browser-advance guess. The model carries fresh char positions in the same
 // input event, and the overlay's visible glyph edge agrees with the caret
 // before the browser paints the next frame.
-const MUSHROOM = path.join(
-  import.meta.dirname,
-  "../test-fixtures/mushroom-life.pdf",
-);
+// Sample.pdf carries an embedded TrueType face, so the overlay can render the
+// same font as the bitmap. A Type 1 subset cannot become a FontFace; that case
+// belongs to the page bitmap and is covered by the font-continuity spec.
+const FIXTURE = path.join(import.meta.dirname, "../test-fixtures/Sample.pdf");
 
 async function openRun(page: Page) {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
@@ -18,7 +18,7 @@ async function openRun(page: Page) {
   });
   await page
     .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(MUSHROOM);
+    .setInputFiles(FIXTURE);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -36,10 +36,7 @@ async function openRun(page: Page) {
       { timeout: 60_000 },
     )
     .toBe(true);
-  const run = page
-    .locator('[data-testid^="pdf-editor-run-p0-"]')
-    .filter({ hasText: /^Spore Stage$/ })
-    .first();
+  const run = page.locator('[data-testid^="pdf-editor-run-p0-"]').first();
   expect(await run.count(), "fixture should contain the heading").toBe(1);
   const testId = (await run.getAttribute("data-testid")) ?? "";
   await run.click();
@@ -51,7 +48,7 @@ async function openRun(page: Page) {
       ),
     )
     .toBe(true);
-  return testId;
+  return { testId, text: (await run.textContent()) ?? "" };
 }
 
 async function caretAt(page: Page, testId: string, offset: number) {
@@ -222,8 +219,8 @@ test.describe("PDF text editor - caret tracks the engine pen", () => {
     page,
   }) => {
     test.setTimeout(140_000);
-    const testId = await openRun(page);
-    await caretAt(page, testId, "Spore Stage".length);
+    const { testId, text } = await openRun(page);
+    await caretAt(page, testId, text.length);
     const samples = await typeAndSample(page, testId, "abcdefghijkl");
 
     samples.forEach((sample, i) => {
@@ -258,7 +255,7 @@ test.describe("PDF text editor - caret tracks the engine pen", () => {
     page,
   }) => {
     test.setTimeout(140_000);
-    const testId = await openRun(page);
+    const { testId, text } = await openRun(page);
     await caretAt(page, testId, 5);
     const samples = await typeAndSample(page, testId, "QQ");
 
@@ -271,6 +268,8 @@ test.describe("PDF text editor - caret tracks the engine pen", () => {
       ).toBeLessThan(1);
       expect(sample.drift).toBeLessThan(0.5);
     }
-    expect(samples[samples.length - 1].text).toBe("SporeQQ Stage");
+    expect(samples[samples.length - 1].text).toBe(
+      `${text.slice(0, 5)}QQ${text.slice(5)}`,
+    );
   });
 });
