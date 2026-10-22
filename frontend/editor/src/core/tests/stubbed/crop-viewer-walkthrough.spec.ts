@@ -189,4 +189,37 @@ test.describe("crop on the viewer", () => {
     await settle(page);
     await page.screenshot({ path: shot("38_viewer_mobile_dark") });
   });
+
+  test("39_viewer_multi_page_dark", async ({ page }) => {
+    await enableDark(page);
+    await openCrop(page);
+    await upload(page, MULTI_PAGE_PDF);
+    await page
+      .getByTestId("viewer-root")
+      .getByRole("button", { name: "Next Page" })
+      .click();
+    await expect(page.getByTestId("crop-viewer-overlay")).toHaveAttribute(
+      "data-page-number",
+      "2",
+      { timeout: 10_000 },
+    );
+    await drawSelection(page, { x: 0.12, y: 0.18 }, { x: 0.72, y: 0.62 });
+    await page.screenshot({ path: shot("39_viewer_multi_page_dark") });
+  });
+
+  test("40_viewer_rotated_dark", async ({ page }) => {
+    await enableDark(page);
+    await openCrop(page);
+    await upload(page, ROTATED_PDF);
+    await drawSelection(page, { x: 0.25, y: 0.3 }, { x: 0.75, y: 0.7 });
+    await page.screenshot({ path: shot("40_viewer_rotated_dark") });
+  });
+
+  test("41_viewer_narrow_dark", async ({ page }) => {
+    await enableDark(page);
+    await openCrop(page, 1100, 800);
+    await upload(page);
+    await drawSelection(page);
+    await page.screenshot({ path: shot("41_viewer_narrow_dark") });
+  });
 });
