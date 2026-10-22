@@ -14,6 +14,7 @@ const SHOT_DIR =
 
 const FIXTURES = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES, "sample.pdf");
+const MULTI_PAGE_PDF = path.join(FIXTURES, "multi-page-sample.pdf");
 const ROTATED_PDF = path.join(FIXTURES, "cropbox-rotate90.pdf");
 
 type Theme = "light" | "dark";
@@ -251,6 +252,41 @@ test.describe("crop ui walkthrough", () => {
         await settle(page);
         await page.screenshot({ path: shot(`08b_loupe_${theme}`) });
         await page.mouse.up();
+      });
+
+      test(`09b_multipage_${theme}`, async ({ page }) => {
+        await applyTheme(page, theme);
+        await openCrop(page);
+        await upload(page, MULTI_PAGE_PDF);
+        await expect(panel(page).getByText("1 / 3").first()).toBeVisible();
+        await panel(page)
+          .getByRole("button", { name: /Next page/i })
+          .first()
+          .click();
+        await expect(panel(page).getByText("2 / 3").first()).toBeVisible();
+        await page
+          .getByText(/^This page$/i)
+          .first()
+          .click();
+        await page.getByText("Crop area").first().scrollIntoViewIfNeeded();
+        await settle(page);
+        await capturePanel(page, `09b_multipage_${theme}`);
+      });
+
+      test(`09c_undo_${theme}`, async ({ page }) => {
+        await applyTheme(page, theme);
+        await openCrop(page);
+        await upload(page);
+        const size = page.getByTestId("crop-result-size");
+        await expect(size).toContainText("216 × 279 mm");
+        await dragSelectionHandle(page, "se", -70, -90);
+        await expect(size).not.toContainText("216 × 279 mm");
+        await page
+          .getByRole("button", { name: /Undo crop change/i })
+          .first()
+          .click();
+        await expect(size).toContainText("216 × 279 mm");
+        await capturePanel(page, `09c_undo_${theme}`);
       });
 
       test(`09_rotated_${theme}`, async ({ page }) => {

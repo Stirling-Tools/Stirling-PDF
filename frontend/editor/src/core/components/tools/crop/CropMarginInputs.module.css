@@ -1,16 +1,54 @@
 /* Margins are physical edges of the page, which is never mirrored with the UI. */
-.grid {
+.keypad {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-2);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto auto;
+  gap: var(--space-1) var(--space-2);
   direction: ltr;
 }
 
-.summary {
-  font-variant-numeric: tabular-nums;
+.cellTop {
+  grid-column: 2;
+  grid-row: 1;
 }
 
-.summary strong {
-  color: var(--c-text);
-  font-weight: var(--font-weight-semibold);
+.cellLeft {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.cellCenter {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  place-items: center;
+  padding-bottom: 2px;
+}
+
+.cellRight {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.cellBottom {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.miniPage {
+  position: relative;
+  width: 38px;
+  height: 48px;
+  border-radius: 3px;
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-surface-raised);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.miniCrop {
+  position: absolute;
+  border: 1.5px solid var(--c-primary);
+  border-radius: 1px;
+  background: var(--c-primary-subtle);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
 }

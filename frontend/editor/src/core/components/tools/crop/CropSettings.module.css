@@ -14,3 +14,13 @@
 .hint {
   margin: 0;
 }
+
+.pageBar {
+  margin-top: calc(-1 * var(--space-1));
+}
+
+.pageLabel {
+  min-width: 52px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

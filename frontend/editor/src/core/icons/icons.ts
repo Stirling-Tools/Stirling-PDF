@@ -186,6 +186,7 @@ import Luggage from "lucide-static/icons/luggage.svg?react";
 import Mail from "lucide-static/icons/mail.svg?react";
 import Map from "lucide-static/icons/map.svg?react";
 import MapPin from "lucide-static/icons/map-pin.svg?react";
+import Magnet from "lucide-static/icons/magnet.svg?react";
 import Maximize2 from "lucide-static/icons/maximize-2.svg?react";
 import Megaphone from "lucide-static/icons/megaphone.svg?react";
 import Menu from "lucide-static/icons/menu.svg?react";
@@ -614,6 +615,7 @@ export const ICONS = {
   mail: { Component: Mail, kind: "lucide" },
   map: { Component: Map, kind: "lucide" },
   "map-pin": { Component: MapPin, kind: "lucide" },
+  magnet: { Component: Magnet, kind: "lucide" },
   "maximize-2": { Component: Maximize2, kind: "lucide" },
   megaphone: { Component: Megaphone, kind: "lucide" },
   menu: { Component: Menu, kind: "lucide" },

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import type { StirlingFile } from "@app/types/fileContext";
 import {
@@ -9,6 +10,8 @@ import {
 export interface CropPagePreview {
   imageUrl: string | null;
   geometry: CropPageGeometry | null;
+  pageNumber: number;
+  pageCount: number;
   loading: boolean;
   error: boolean;
 }
@@ -16,18 +19,34 @@ export interface CropPagePreview {
 const EMPTY: CropPagePreview = {
   imageUrl: null,
   geometry: null,
+  pageNumber: 1,
+  pageCount: 0,
   loading: false,
   error: false,
 };
 
+interface CachedPage {
+  imageUrl: string;
+  geometry: CropPageGeometry;
+}
+
+const CACHE_LIMIT = 4;
+const MAX_RENDER_EDGE = 1800;
+
 /**
- * Renders the first page once at a resolution that survives zooming, and
- * reports the page geometry the crop request needs. One render per document:
- * the crop surface itself never asks PDF.js for pixels.
+ * Renders the requested page once at a resolution that survives zooming and
+ * caches it for the document's lifetime, so paging back and forth does not
+ * re-rasterise. The crop surface itself never talks to PDF.js.
  */
-export function useCropPagePreview(file: StirlingFile | null): CropPagePreview {
+export function useCropPagePreview(
+  file: StirlingFile | null,
+  pageNumber: number,
+): CropPagePreview {
   const [preview, setPreview] = useState<CropPagePreview>(EMPTY);
+  const cacheRef = useRef<Map<number, CachedPage>>(new Map());
+  const documentRef = useRef<PDFDocumentProxy | null>(null);
   const fileKey = file ? `${file.fileId}:${file.quickKey}` : null;
+  const pageCountRef = useRef(0);
 
   useEffect(() => {
     if (!file || !fileKey) {
@@ -36,38 +55,57 @@ export function useCropPagePreview(file: StirlingFile | null): CropPagePreview {
     }
 
     let cancelled = false;
-    let objectUrl: string | null = null;
-    let documentProxy: Awaited<
-      ReturnType<typeof pdfWorkerManager.createDocument>
-    > | null = null;
+    const cache = cacheRef.current;
+    const page = Math.max(1, pageNumber);
 
-    const run = async () => {
+    const cached = cache.get(page);
+    if (cached) {
       setPreview({
-        imageUrl: null,
-        geometry: null,
-        loading: true,
+        imageUrl: cached.imageUrl,
+        geometry: cached.geometry,
+        pageNumber: page,
+        pageCount: pageCountRef.current,
+        loading: false,
         error: false,
       });
+      return;
+    }
+
+    const run = async () => {
+      setPreview((previous) => ({
+        ...previous,
+        imageUrl: null,
+        geometry: null,
+        pageNumber: page,
+        loading: true,
+        error: false,
+      }));
+
       try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
-          disableAutoFetch: true,
-          disableStream: true,
-          stopAtErrors: false,
-        });
-        documentProxy = pdf;
-        const page = await pdf.getPage(1);
-        const base = page.getViewport({ scale: 1 });
-        const rotation = normalizeRotation(page.rotate);
+        if (!documentRef.current) {
+          const arrayBuffer = await file.arrayBuffer();
+          documentRef.current = await pdfWorkerManager.createDocument(
+            arrayBuffer,
+            {
+              disableAutoFetch: true,
+              disableStream: true,
+              stopAtErrors: false,
+            },
+          );
+        }
+        const pdf = documentRef.current;
+        const pageCount = pdf.numPages;
+        pageCountRef.current = pageCount;
+        const target = await pdf.getPage(Math.min(page, pageCount));
+        const base = target.getViewport({ scale: 1 });
+        const rotation = normalizeRotation(target.rotate);
         const viewBox = base.viewBox as [number, number, number, number];
 
-        // 1800px on the long edge keeps 4x zoom legible without a decode cost
-        // large enough to stall a phone.
         const renderScale = Math.min(
           3,
-          Math.max(1, 1800 / Math.max(base.width, base.height)),
+          Math.max(1, MAX_RENDER_EDGE / Math.max(base.width, base.height)),
         );
-        const viewport = page.getViewport({ scale: renderScale });
+        const viewport = target.getViewport({ scale: renderScale });
         const canvas = window.document.createElement("canvas");
         canvas.width = Math.round(viewport.width);
         canvas.height = Math.round(viewport.height);
@@ -76,12 +114,12 @@ export function useCropPagePreview(file: StirlingFile | null): CropPagePreview {
 
         context.fillStyle = "#ffffff";
         context.fillRect(0, 0, canvas.width, canvas.height);
-        await page.render({
+        await target.render({
           canvasContext: context,
           viewport,
           canvas,
         }).promise;
-        page.cleanup();
+        target.cleanup();
 
         const blob = await new Promise<Blob | null>((resolve) => {
           canvas.toBlob(resolve, "image/webp", 0.95);
@@ -91,10 +129,24 @@ export function useCropPagePreview(file: StirlingFile | null): CropPagePreview {
 
         if (cancelled) return;
         if (!blob) throw new Error("Page render produced no image");
-        objectUrl = URL.createObjectURL(blob);
-        setPreview({
-          imageUrl: objectUrl,
+        const imageUrl = URL.createObjectURL(blob);
+        cache.set(page, {
+          imageUrl,
           geometry: { viewBox, rotation },
+        });
+        while (cache.size > CACHE_LIMIT) {
+          const oldest = cache.keys().next().value;
+          if (oldest === undefined) break;
+          const entry = cache.get(oldest);
+          cache.delete(oldest);
+          if (entry) URL.revokeObjectURL(entry.imageUrl);
+        }
+
+        setPreview({
+          imageUrl,
+          geometry: { viewBox, rotation },
+          pageNumber: page,
+          pageCount,
           loading: false,
           error: false,
         });
@@ -103,12 +155,12 @@ export function useCropPagePreview(file: StirlingFile | null): CropPagePreview {
           setPreview({
             imageUrl: null,
             geometry: null,
+            pageNumber: page,
+            pageCount: documentRef.current?.numPages ?? 0,
             loading: false,
             error: true,
           });
         }
-      } finally {
-        if (documentProxy) pdfWorkerManager.destroyDocument(documentProxy);
       }
     };
 
@@ -116,9 +168,21 @@ export function useCropPagePreview(file: StirlingFile | null): CropPagePreview {
 
     return () => {
       cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [file, fileKey]);
+  }, [file, fileKey, pageNumber]);
+
+  // A different document invalidates both the open proxy and every bitmap.
+  useEffect(() => {
+    return () => {
+      const pdf = documentRef.current;
+      documentRef.current = null;
+      if (pdf) pdfWorkerManager.destroyDocument(pdf);
+      for (const entry of cacheRef.current.values()) {
+        URL.revokeObjectURL(entry.imageUrl);
+      }
+      cacheRef.current.clear();
+    };
+  }, [fileKey]);
 
   return preview;
 }

@@ -39,6 +39,7 @@
 
 .pageImage {
   display: block;
+  outline: 1px solid rgba(0, 0, 0, 0.08);
   width: 100%;
   height: 100%;
   background: #fff;
@@ -94,7 +95,7 @@
   transition: opacity var(--motion-fast);
 }
 
-.viewport[data-active="true"] .selectionGrid {
+.viewport[data-active="true"][data-grid-enabled="true"] .selectionGrid {
   opacity: 1;
 }
 
@@ -140,6 +141,25 @@
   background: var(--c-primary);
   border: 1.5px solid #fff;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+  transition: transform var(--motion-fast);
+}
+
+.handle:hover::after {
+  transform: scale(1.18);
+}
+
+.handle[data-handle="n"]::after,
+.handle[data-handle="s"]::after {
+  width: 22px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+}
+
+.handle[data-handle="e"]::after,
+.handle[data-handle="w"]::after {
+  width: 5px;
+  height: 22px;
+  border-radius: var(--radius-pill);
 }
 
 .handle[data-handle="nw"] {
@@ -170,6 +190,31 @@
 .selection[data-compact="true"] .handle[data-handle="e"],
 .selection[data-compact="true"] .handle[data-handle="w"] {
   display: none;
+}
+
+.dimChip {
+  position: absolute;
+  z-index: 4;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+  font-size: 10px;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity var(--motion-fast);
+}
+
+.dimChip[data-visible="true"] {
+  opacity: 1;
+}
+
+.dimChip[data-inside="true"] {
+  background: color-mix(in srgb, var(--c-primary) 88%, transparent);
 }
 
 .guide {
@@ -358,5 +403,30 @@
   .selectionGrid,
   .hint {
     transition: none;
+  }
+}
+
+/* Touch needs a larger invisible hit target than the 11px visible grip. */
+@media (pointer: coarse) {
+  .handle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .handle::after {
+    width: 14px;
+    height: 14px;
+  }
+
+  .handle[data-handle="n"]::after,
+  .handle[data-handle="s"]::after {
+    width: 26px;
+    height: 6px;
+  }
+
+  .handle[data-handle="e"]::after,
+  .handle[data-handle="w"]::after {
+    width: 6px;
+    height: 26px;
   }
 }

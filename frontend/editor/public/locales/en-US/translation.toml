@@ -4234,9 +4234,17 @@ autoDescription = "White edges are detected and trimmed on every selected page. 
 loadingPreview = "Preparing page preview…"
 noFileSelected = "Add a PDF file to begin cropping"
 previewUnavailable = "Preview unavailable. You can still set the area manually."
+history = "History"
+page = "Page {{page}} of {{total}}"
+previousPage = "Previous page"
+nextPage = "Next page"
+redo = "Redo"
+redoAria = "Redo crop change"
 reset = "Reset to full PDF"
 submit = "Apply Crop"
 title = "Crop"
+undo = "Undo"
+undoAria = "Undo crop change"
 
 [crop.advanced]
 title = "Exact coordinates"
@@ -4270,6 +4278,8 @@ edit = "Edit crop area"
 fitToPage = "Fit to page"
 loading = "Loading page preview…"
 openEditor = "Open crop editor"
+toggleGrid = "Toggle grid"
+toggleSnap = "Toggle snapping"
 previewLabel = "Crop area preview. Activate Edit crop area to adjust it."
 zoomIn = "Zoom in"
 zoomOut = "Zoom out"
@@ -4285,7 +4295,6 @@ bottom = "Bottom"
 equal = "Equal margins"
 left = "Left"
 right = "Right"
-size = "Crop size"
 title = "Margins"
 top = "Top"
 
@@ -4312,17 +4321,27 @@ square = "Square"
 title = "Aspect ratio"
 wide = "16:9"
 
+[crop.result]
+title = "Result"
+ofPage = "{{percent}}% of page"
+
 [crop.results]
 title = "Crop Results"
+
+[crop.scope]
+title = "Apply to"
+all = "All pages"
+this = "This page"
+range = "Range"
 
 [crop.steps]
 selectArea = "Select Crop Area"
 
 [crop.tooltip]
-description = "Select the area to crop from your PDF by dragging and resizing the blue overlay on the thumbnail."
-drag = "Drag the overlay to move the crop area"
-precision = "Use coordinate inputs for precise positioning"
-resize = "Drag the corner and edge handles to resize"
+description = "Drag the handles to trim the page. Zoom in, or open the full-screen editor, when you need to place an edge precisely."
+drag = "Drag inside the selection to move the whole area"
+precision = "Type margins in millimetres, or exact PDF points, for repeatable crops"
+resize = "Drag a corner or edge handle to resize; hold Alt while using the arrow keys to resize from the keyboard"
 title = "How to Crop PDFs"
 
 [crop.units]

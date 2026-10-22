@@ -21,8 +21,10 @@ import CropRatioPicker, {
   ratioForPage,
   type CropRatioId,
 } from "@app/components/tools/crop/CropRatioPicker";
+import CropResultPreview from "@app/components/tools/crop/CropResultPreview";
 import CropEditorOverlay from "@app/components/tools/crop/CropEditorOverlay";
 import { useCropPagePreview } from "@app/components/tools/crop/useCropPagePreview";
+import { useCropHistory } from "@app/components/tools/crop/useCropHistory";
 import { fitRatio } from "@app/components/tools/crop/cropInteractionMath";
 import { DEFAULT_CROP_AREA } from "@app/constants/cropConstants";
 import {
@@ -43,19 +45,24 @@ interface CropSettingsProps {
   disabled?: boolean;
 }
 
+type PageScope = "all" | "this" | "range";
+
 const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const { t } = useTranslation();
   const isTouch = useIsTouch();
 
   const [selectedStub = null] = useViewScopedFileStubs();
   const [selectedFile = null] = useViewScopedFiles();
-  const preview = useCropPagePreview(selectedFile ?? null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const preview = useCropPagePreview(selectedFile ?? null, pageNumber);
   const geometry = preview.geometry;
 
   const [unit, setUnit] = useState<CropUnit>("mm");
   const [ratioId, setRatioId] = useState<CropRatioId>("free");
   const [editorOpen, setEditorOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [gridEnabled, setGridEnabled] = useState(true);
+  const [snapEnabled, setSnapEnabled] = useState(true);
 
   const parametersRef = useRef(parameters);
   parametersRef.current = parameters;
@@ -65,6 +72,32 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const fileKey = selectedFile
     ? `${selectedFile.fileId}:${selectedFile.quickKey}`
     : null;
+
+  useEffect(() => {
+    setPageNumber(1);
+  }, [fileKey]);
+
+  const cropArea = parameters.getCropArea();
+  const displaySize = useMemo(
+    () => (geometry ? getDisplaySize(geometry) : { width: 1, height: 1 }),
+    [geometry],
+  );
+  const aspectRatio = geometry ? ratioForPage(ratioId, displaySize) : null;
+  const pageBox = geometry ? getPageBox(geometry) : null;
+  const isFullCrop = geometry ? isFullPageRect(cropArea, geometry) : false;
+
+  const applyArea = useCallback((area: Rectangle) => {
+    const currentGeometry = geometryRef.current;
+    if (!currentGeometry) return;
+    parametersRef.current.setCropArea(
+      clampPageRect(area, currentGeometry),
+      getPageBox(currentGeometry),
+    );
+  }, []);
+
+  const history = useCropHistory(cropArea, applyArea);
+  const clearHistoryRef = useRef(history.clear);
+  clearHistoryRef.current = history.clear;
 
   // A new document keeps the previous crop only when the user has actually
   // moved it; an untouched A4 placeholder should not leave a full-page Letter
@@ -85,31 +118,14 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
 
     if (untouched) {
       parametersRef.current.resetToFullPDF(getPageBox(geometry));
-      return;
+    } else {
+      parametersRef.current.setCropArea(
+        clampPageRect(current, geometry),
+        getPageBox(geometry),
+      );
     }
-    parametersRef.current.setCropArea(
-      clampPageRect(current, geometry),
-      getPageBox(geometry),
-    );
+    clearHistoryRef.current();
   }, [fileKey, geometry]);
-
-  const cropArea = parameters.getCropArea();
-  const displaySize = useMemo(
-    () => (geometry ? getDisplaySize(geometry) : { width: 1, height: 1 }),
-    [geometry],
-  );
-  const aspectRatio = geometry ? ratioForPage(ratioId, displaySize) : null;
-  const pageBox = geometry ? getPageBox(geometry) : null;
-  const isFullCrop = geometry ? isFullPageRect(cropArea, geometry) : false;
-
-  const applyArea = useCallback((area: Rectangle) => {
-    const currentGeometry = geometryRef.current;
-    if (!currentGeometry) return;
-    parametersRef.current.setCropArea(
-      clampPageRect(area, currentGeometry),
-      getPageBox(currentGeometry),
-    );
-  }, []);
 
   const handleReset = useCallback(() => {
     const currentGeometry = geometryRef.current;
@@ -171,6 +187,27 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
       window.removeEventListener("tour:setCropArea", handleSetCropArea);
   }, [applyArea]);
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey) return;
+      if (event.key.toLowerCase() !== "z") return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      if (event.shiftKey) history.redo();
+      else history.undo();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [history.undo, history.redo]);
+
   if (!selectedStub) {
     return (
       <Center style={{ height: 160 }}>
@@ -182,6 +219,42 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   }
 
   const mode = parameters.parameters.autoCrop ? "auto" : "manual";
+  const pageNumbers = (parameters.parameters.pageNumbers ?? "all").trim();
+  const pageScope: PageScope =
+    pageNumbers === "all" || pageNumbers === ""
+      ? "all"
+      : pageNumbers === String(pageNumber)
+        ? "this"
+        : "range";
+
+  const changePage = (next: number) => {
+    const clamped = Math.min(Math.max(next, 1), Math.max(preview.pageCount, 1));
+    setPageNumber(clamped);
+    if (pageScope === "this") {
+      parameters.updateParameter("pageNumbers", String(clamped));
+    }
+  };
+
+  const changeScope = (scope: PageScope) => {
+    if (scope === "all") {
+      parameters.updateParameter("pageNumbers", "all");
+      return;
+    }
+    if (scope === "this") {
+      parameters.updateParameter("pageNumbers", String(pageNumber));
+      return;
+    }
+    const fallback = preview.pageCount > 1 ? `1-${preview.pageCount}` : "1";
+    parameters.updateParameter(
+      "pageNumbers",
+      pageScope === "range" ? pageNumbers : fallback,
+    );
+  };
+
+  const ratioLabel =
+    ratioId === "free"
+      ? undefined
+      : t(`crop.ratio.${ratioId}`, ratioId.toUpperCase());
 
   return (
     <Stack gap="md" data-tour="crop-settings">
@@ -236,31 +309,18 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
       ) : (
         <>
           <Group justify="space-between" align="center" wrap="nowrap">
-            <Text size="sm" fw={600}>
+            <Text size="sm" fw={600} truncate>
               {t("crop.preview.title", "Crop area")}
             </Text>
-            <Group gap={4} wrap="nowrap">
-              <ActionIcon
-                variant="quiet"
-                accent="neutral"
-                size="sm"
-                onClick={handleReset}
-                disabled={disabled || isFullCrop}
-                title={t("crop.reset", "Reset to full page")}
-                aria-label={t("crop.reset", "Reset to full page")}
-              >
-                <Icon name="rotate-ccw" size="0.875rem" />
-              </ActionIcon>
-              <Button
-                variant="secondary"
-                size="sm"
-                leftSection={<Icon name="fullscreen" size={14} />}
-                onClick={() => setEditorOpen(true)}
-                disabled={disabled}
-              >
-                {t("crop.editor.open", "Expand")}
-              </Button>
-            </Group>
+            <Button
+              variant="secondary"
+              size="sm"
+              leftSection={<Icon name="fullscreen" size={14} />}
+              onClick={() => setEditorOpen(true)}
+              disabled={disabled}
+            >
+              {t("crop.editor.open", "Expand")}
+            </Button>
           </Group>
 
           <Box
@@ -278,6 +338,8 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
               disabled={disabled}
               readOnly={isTouch}
               onRequestExpand={isTouch ? () => setEditorOpen(true) : undefined}
+              gridEnabled={gridEnabled}
+              snapEnabled={snapEnabled}
               unit={unit}
               ariaLabel={
                 isTouch
@@ -292,6 +354,85 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
               }
             />
           </Box>
+
+          <Group justify="space-between" align="center" wrap="nowrap">
+            <Group gap={2} wrap="nowrap">
+              {preview.pageCount > 1 ? (
+                <>
+                  <ActionIcon
+                    variant="quiet"
+                    accent="neutral"
+                    size="sm"
+                    onClick={() => changePage(pageNumber - 1)}
+                    disabled={disabled || pageNumber <= 1}
+                    aria-label={t("crop.previousPage", "Previous page")}
+                  >
+                    <Icon name="chevron-left" size="0.875rem" />
+                  </ActionIcon>
+                  <Text size="xs" c="dimmed" className={classes.pageLabel}>
+                    {pageNumber} / {preview.pageCount}
+                  </Text>
+                  <ActionIcon
+                    variant="quiet"
+                    accent="neutral"
+                    size="sm"
+                    onClick={() => changePage(pageNumber + 1)}
+                    disabled={disabled || pageNumber >= preview.pageCount}
+                    aria-label={t("crop.nextPage", "Next page")}
+                  >
+                    <Icon name="chevron-right" size="0.875rem" />
+                  </ActionIcon>
+                </>
+              ) : (
+                <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                  {t("crop.history", "History")}
+                </Text>
+              )}
+            </Group>
+            <Group gap={2} wrap="nowrap">
+              <ActionIcon
+                variant="quiet"
+                accent="neutral"
+                size="sm"
+                onClick={history.undo}
+                disabled={disabled || !history.canUndo}
+                aria-label={t("crop.undoAria", "Undo crop change")}
+                title={t("crop.undoAria", "Undo crop change")}
+              >
+                <Icon name="undo-2" size="0.875rem" />
+              </ActionIcon>
+              <ActionIcon
+                variant="quiet"
+                accent="neutral"
+                size="sm"
+                onClick={history.redo}
+                disabled={disabled || !history.canRedo}
+                aria-label={t("crop.redoAria", "Redo crop change")}
+                title={t("crop.redoAria", "Redo crop change")}
+              >
+                <Icon name="redo-2" size="0.875rem" />
+              </ActionIcon>
+              <ActionIcon
+                variant="quiet"
+                accent="neutral"
+                size="sm"
+                onClick={handleReset}
+                disabled={disabled || isFullCrop}
+                title={t("crop.reset", "Reset to full page")}
+                aria-label={t("crop.reset", "Reset to full page")}
+              >
+                <Icon name="rotate-ccw" size="0.875rem" />
+              </ActionIcon>
+            </Group>
+          </Group>
+
+          <CropResultPreview
+            imageUrl={preview.imageUrl}
+            geometry={geometry}
+            cropArea={cropArea}
+            unit={unit}
+            ratioLabel={ratioLabel}
+          />
 
           <CropRatioPicker
             value={ratioId}
@@ -330,11 +471,33 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
         </>
       )}
 
-      <CropPageSelection
-        value={parameters.parameters.pageNumbers}
-        onChange={(value) => parameters.updateParameter("pageNumbers", value)}
-        disabled={disabled}
-      />
+      <Stack gap={6}>
+        <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+          {t("crop.scope.title", "Apply to")}
+        </Text>
+        <SegmentedControl
+          fullWidth
+          size="xs"
+          value={pageScope}
+          onChange={(value) => changeScope(value)}
+          ariaLabel={t("crop.scope.title", "Apply to")}
+          disabled={disabled}
+          options={[
+            { value: "all", label: t("crop.scope.all", "All pages") },
+            { value: "this", label: t("crop.scope.this", "This page") },
+            { value: "range", label: t("crop.scope.range", "Range") },
+          ]}
+        />
+        {pageScope === "range" && (
+          <CropPageSelection
+            value={parameters.parameters.pageNumbers}
+            onChange={(value) =>
+              parameters.updateParameter("pageNumbers", value)
+            }
+            disabled={disabled}
+          />
+        )}
+      </Stack>
 
       {geometry && (
         <CropEditorOverlay
@@ -350,6 +513,17 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           unit={unit}
           onUnitChange={setUnit}
           onReset={handleReset}
+          onUndo={history.undo}
+          onRedo={history.redo}
+          canUndo={history.canUndo}
+          canRedo={history.canRedo}
+          gridEnabled={gridEnabled}
+          snapEnabled={snapEnabled}
+          onToggleGrid={() => setGridEnabled((previous) => !previous)}
+          onToggleSnap={() => setSnapEnabled((previous) => !previous)}
+          pageNumber={pageNumber}
+          pageCount={preview.pageCount}
+          onPageChange={changePage}
           disabled={disabled}
         />
       )}

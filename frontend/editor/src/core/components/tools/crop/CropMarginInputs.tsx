@@ -19,8 +19,6 @@ import classes from "@app/components/tools/crop/CropMarginInputs.module.css";
 
 type Edge = "top" | "right" | "bottom" | "left";
 
-const EDGE_ORDER: Edge[] = ["top", "right", "bottom", "left"];
-
 interface CropMarginInputsProps {
   cropArea: Rectangle;
   geometry: CropPageGeometry;
@@ -159,40 +157,67 @@ export default function CropMarginInputs({
         </Group>
       </Group>
 
-      <div className={classes.grid}>
-        {EDGE_ORDER.map((edge) => (
+      <div className={classes.keypad}>
+        <div className={classes.cellTop}>
           <MarginField
-            key={edge}
-            testId={`crop-margin-${edge}`}
-            label={t(`crop.margins.${edge}`, edgeLabel(edge))}
-            value={toUnit(margins[edge], unit)}
+            testId="crop-margin-top"
+            label={t("crop.margins.top", "Top")}
+            value={toUnit(margins.top, unit)}
             unit={unit}
-            max={
-              toUnit(
-                (edge === "left" || edge === "right"
-                  ? displaySize.width
-                  : displaySize.height) - MIN_CROP_POINTS,
-                unit,
-              ) || 0
-            }
+            max={toUnit(displaySize.height - MIN_CROP_POINTS, unit) || 0}
             disabled={disabled}
-            onCommit={(value) => setEdge(edge, value)}
+            onCommit={(value) => setEdge("top", value)}
           />
-        ))}
+        </div>
+        <div className={classes.cellLeft}>
+          <MarginField
+            testId="crop-margin-left"
+            label={t("crop.margins.left", "Left")}
+            value={toUnit(margins.left, unit)}
+            unit={unit}
+            max={toUnit(displaySize.width - MIN_CROP_POINTS, unit) || 0}
+            disabled={disabled}
+            onCommit={(value) => setEdge("left", value)}
+          />
+        </div>
+        <div className={classes.cellCenter} aria-hidden="true">
+          <div className={classes.miniPage}>
+            <div
+              className={classes.miniCrop}
+              style={{
+                left: `${(margins.left / displaySize.width) * 100}%`,
+                top: `${(margins.top / displaySize.height) * 100}%`,
+                right: `${(margins.right / displaySize.width) * 100}%`,
+                bottom: `${(margins.bottom / displaySize.height) * 100}%`,
+              }}
+            />
+          </div>
+        </div>
+        <div className={classes.cellRight}>
+          <MarginField
+            testId="crop-margin-right"
+            label={t("crop.margins.right", "Right")}
+            value={toUnit(margins.right, unit)}
+            unit={unit}
+            max={toUnit(displaySize.width - MIN_CROP_POINTS, unit) || 0}
+            disabled={disabled}
+            onCommit={(value) => setEdge("right", value)}
+          />
+        </div>
+        <div className={classes.cellBottom}>
+          <MarginField
+            testId="crop-margin-bottom"
+            label={t("crop.margins.bottom", "Bottom")}
+            value={toUnit(margins.bottom, unit)}
+            unit={unit}
+            max={toUnit(displaySize.height - MIN_CROP_POINTS, unit) || 0}
+            disabled={disabled}
+            onCommit={(value) => setEdge("bottom", value)}
+          />
+        </div>
       </div>
-
-      <Text size="xs" c="dimmed" ta="center" className={classes.summary}>
-        {t("crop.margins.size", "Crop size")}{" "}
-        <strong>
-          {toUnit(display.width, unit)} × {toUnit(display.height, unit)} {unit}
-        </strong>
-      </Text>
     </Stack>
   );
-}
-
-function edgeLabel(edge: Edge): string {
-  return edge.charAt(0).toUpperCase() + edge.slice(1);
 }
 
 interface MarginFieldProps {
