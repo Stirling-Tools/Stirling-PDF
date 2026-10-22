@@ -2,16 +2,18 @@ import { getFontBaseUrl } from "@app/services/fontBaseUrl";
 import type { FontFallbackConfig, FontVariant } from "@embedpdf/engines";
 import { FontCharset } from "@embedpdf/models";
 
+const liberation = (family: "Sans" | "Serif" | "Mono"): FontVariant[] => [
+  { url: `Liberation${family}-Regular.ttf`, weight: 400 },
+  { url: `Liberation${family}-Bold.ttf`, weight: 700 },
+  { url: `Liberation${family}-Italic.ttf`, weight: 400, italic: true },
+  { url: `Liberation${family}-BoldItalic.ttf`, weight: 700, italic: true },
+];
+
 // The WASM PDFium build ships no standard-14 fonts, so a document's
 // non-embedded Helvetica or Arial is drawn with this face. It must share their
 // advance widths: a wider face overruns the PDF's glyph positions, swallowing
 // word spaces or pushing justified lines past the margin.
-const METRIC_COMPATIBLE_SANS: FontVariant[] = [
-  { url: "LiberationSans-Regular.ttf", weight: 400 },
-  { url: "LiberationSans-Bold.ttf", weight: 700 },
-  { url: "LiberationSans-Italic.ttf", weight: 400, italic: true },
-  { url: "LiberationSans-BoldItalic.ttf", weight: 700, italic: true },
-];
+const METRIC_COMPATIBLE_SANS = liberation("Sans");
 
 /**
  * Fonts the engine substitutes for characters missing from a document.
@@ -40,6 +42,12 @@ export function getLocalFontFallbackConfig(): FontFallbackConfig {
       [FontCharset.HANGEUL]: "NotoSansKR-Regular.ttf",
       [FontCharset.GB2312]: "NotoSansSC-Regular.ttf",
       [FontCharset.CHINESEBIG5]: "NotoSansTC-Regular.ttf",
+    },
+    // Times and Courier counterparts with matching widths; selected by the
+    // local @embedpdf/engines patch (scripts/patch-embedpdf-font-fallback.mjs).
+    fontFamilies: {
+      serif: liberation("Serif"),
+      monospace: liberation("Mono"),
     },
   };
 }

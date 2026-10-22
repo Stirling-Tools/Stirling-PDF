@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { FontCharset } from "@embedpdf/models";
-import type { FontEntry } from "@embedpdf/engines";
+import { FontFallbackManager, type FontEntry } from "@embedpdf/engines";
 import { getLocalFontFallbackConfig } from "@app/services/pdfiumFontFallback";
 
 const fontUrls = (entry: FontEntry | undefined): string[] =>
@@ -56,6 +56,49 @@ describe("pdfiumFontFallback", () => {
         { url: "LiberationSans-BoldItalic.ttf", weight: 700, italic: true },
       ]);
     }
+  });
+
+  // Exercises the local @embedpdf/engines patch; fails if an install skipped it.
+  it("selects serif and monospace faces by name, then by PDFium's pitch flags", () => {
+    const manager = new FontFallbackManager(getLocalFontFallbackConfig());
+    const internals = manager as unknown as {
+      mapFont(
+        weight: number,
+        italic: number,
+        charset: number,
+        pitchFamily: number,
+        face: string,
+      ): number;
+      fontHandles: Map<number, { url: string }>;
+    };
+    const fileFor = (charset: number, pitchFamily: number, face: string) => {
+      const handle = internals.mapFont(400, 0, charset, pitchFamily, face);
+      return internals.fontHandles.get(handle)?.url.split("/").pop();
+    };
+
+    expect(fileFor(FontCharset.ANSI, 0, "Times-Roman")).toBe(
+      "LiberationSerif-Regular.ttf",
+    );
+    expect(fileFor(FontCharset.ANSI, 0, "ABCDEF+CourierNewPSMT")).toBe(
+      "LiberationMono-Regular.ttf",
+    );
+    expect(fileFor(FontCharset.ANSI, 0, "Helvetica")).toBe(
+      "LiberationSans-Regular.ttf",
+    );
+    // Unknown names fall back to the serif (16) and fixed-pitch (1) flags.
+    expect(fileFor(FontCharset.ANSI, 16, "HouseSerif")).toBe(
+      "LiberationSerif-Regular.ttf",
+    );
+    expect(fileFor(FontCharset.EASTERNEUROPEAN, 1, "HouseMono")).toBe(
+      "LiberationMono-Regular.ttf",
+    );
+    expect(fileFor(FontCharset.ANSI, 0, "HouseSans")).toBe(
+      "LiberationSans-Regular.ttf",
+    );
+    // Non-Latin charsets keep their own faces whatever the flags say.
+    expect(fileFor(FontCharset.ARABIC, 16, "Times-Roman")).toBe(
+      "NotoSansArabic-Regular.ttf",
+    );
   });
 
   it("maps every charset with a face and leaves the rest to the default", () => {

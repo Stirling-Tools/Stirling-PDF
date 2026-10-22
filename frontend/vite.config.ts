@@ -1,5 +1,6 @@
 import react from "@vitejs/plugin-react-swc";
 import { compression, defineAlgorithm } from "vite-plugin-compression2";
+import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path, { resolve } from "node:path";
@@ -236,6 +237,22 @@ function isMarkdownPackage(pkg: string): boolean {
     MARKDOWN_PACKAGES.has(pkg) ||
     MARKDOWN_PACKAGE_PREFIXES.some((prefix) => pkg.startsWith(prefix))
   );
+}
+
+/** Applies the local @embedpdf/engines patch before the dev prebundle or a
+ *  build reads the engine, so installs that skipped lifecycle scripts patch or
+ *  fail loudly instead of shipping the unpatched font fallback. */
+function embedpdfFontFallbackPatchPlugin(): PluginOption {
+  return {
+    name: "patch-embedpdf-font-fallback",
+    config() {
+      execFileSync(
+        process.execPath,
+        [resolve(__dirname, "scripts/patch-embedpdf-font-fallback.mjs")],
+        { stdio: "inherit" },
+      );
+    },
+  };
 }
 
 function compressStaticCopyPlugin(): PluginOption {
@@ -574,6 +591,7 @@ export default defineConfig(async ({ mode, command }) => {
       __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
     },
     plugins: [
+      embedpdfFontFallbackPatchPlugin(),
       iconSvgr(),
       react(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
