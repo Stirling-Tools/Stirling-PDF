@@ -712,11 +712,9 @@ function TextRunOverlayImpl({
   // text that can wrap, because the overflow has somewhere else to go; a word
   // with no break in it has nowhere, so the cap stops protecting the page
   // margin and just hides what the user is typing.
-  // The box has to fit the glyphs the overlay will actually paint. The exact
-  // layout describes the engine's advances; the browser's own longest token can
-  // be wider for a face it substitutes, and taking only the engine width made
-  // the wrap box shrink under the painted word. Keep the larger floor whenever
-  // wrapping owns the width.
+  // The box has to fit the glyphs the overlay paints. The exact layout carries
+  // the engine's advances, but the browser's longest token can be wider for a
+  // substituted face; wrapping owns the width, so take the larger floor.
   const longestTokenWidth = wantWrap
     ? Math.max(
         exactMetrics?.longestToken ?? 0,

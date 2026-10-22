@@ -6,10 +6,8 @@ import path from "node:path";
 import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
 
 // The document's own face must survive an edit. Chrom Sans in this fixture is
-// a full embedded face, not a subset: replacing it with Helvetica for one new
-// character changed the paragraph under the overlay and only the save-time
-// re-read put the real face back. The model keeps the face, so the overlay and
-// the saved PDF agree.
+// a full embedded face, not a subset; it must stay selected through a mid-word
+// insert, and the saved PDF must reopen with the same family.
 const FIXTURE = path.join(
   import.meta.dirname,
   "../test-fixtures/paragraph-sample.pdf",

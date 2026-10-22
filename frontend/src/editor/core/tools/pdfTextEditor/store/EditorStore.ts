@@ -499,9 +499,9 @@ export class EditorStore {
       const structureChanged =
         editRun.paragraphLineSlots.length !== editSlots ||
         editRun.paragraphMemberPtrs.length !== editMembers;
-      // The partial pass is proven for upright PDF text. Synthesised base-14
-      // boxes, invisible OCR runs and rotated runs have their own emit paths;
-      // they keep the full page until each path is measured.
+      // Partial repaint covers upright, visible PDF text. Synthesised base-14
+      // boxes, invisible OCR runs and rotated runs have separate emit paths
+      // and keep the full page.
       const simpleText =
         !editRun.fontId.startsWith("base14:") &&
         !editRun.fontId.startsWith("device:") &&
@@ -520,11 +520,10 @@ export class EditorStore {
         page.markRasterDirty(editRun.bounds);
       }
     }
-    // Measure the edited pages before snapshotting. The overlay is the live
-    // editing surface, so its glyphs and the caret must land on the engine's
-    // pen positions in the same frame as the keystroke. Deferring this to the
-    // debounced tick left one frame laid out on browser advances - the caret
-    // visibly leads the text, then snaps back.
+    // Measure before snapshotting: the overlay is the live editing surface,
+    // so its glyphs and caret must carry the engine's pen positions in the
+    // same frame as the keystroke. The debounced tick is a frame too late and
+    // lays the text out on browser advances in the meantime.
     this.recaptureEditedRunPositions(revisions);
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
@@ -613,9 +612,9 @@ export class EditorStore {
     }
   }
 
-  // Publish fresh snapshots ONLY for runs whose positions moved. Re-snapshotting
-  // every run made the periodic tick re-render every overlay on every page per
-  // keystroke; reusing identities lets React skip the untouched ones.
+  // Publish fresh snapshots only for runs whose positions moved. Reusing the
+  // others' identities lets React skip their overlays instead of re-rendering
+  // every run on every page per tick.
   private refreshRunSnapshots(changedByPage: Map<number, Set<TextRun>>): void {
     const doc = this.doc;
     if (!doc) return;

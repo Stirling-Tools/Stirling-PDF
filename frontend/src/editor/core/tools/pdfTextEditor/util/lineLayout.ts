@@ -29,10 +29,9 @@ export function fitTokenAdvance(
   let letterSpacingPx = 0;
   if (charCount > 0) {
     const cap = MAX_TRACK_EM * Math.max(0, fontSizePx);
-    // CSS adds letter-spacing after every character, including the last one,
-    // so the full correction can ride on the glyphs. Keeping a residual in
-    // marginRight made the caret at a text node's end stop short of (or run
-    // past) the PDF pen by exactly that margin.
+    // CSS applies letter-spacing after every character, including the last,
+    // so the full correction can ride on the glyphs. A residual in marginRight
+    // leaves the end-of-text caret short of the PDF pen by that margin.
     const even = delta / charCount;
     letterSpacingPx = Math.max(-cap, Math.min(cap, even));
   }

@@ -2,10 +2,10 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 
-// DOCX-grade caret contract: the caret sits on the engine's pen position, not
-// on a browser-advance guess. The model must carry fresh char positions in the
-// same input event, and the overlay's visible glyph edge must agree with the
-// caret before the browser paints the next frame.
+// Caret contract: the caret sits on the engine's pen position, not a
+// browser-advance guess. The model carries fresh char positions in the same
+// input event, and the overlay's visible glyph edge agrees with the caret
+// before the browser paints the next frame.
 const MUSHROOM = path.join(
   import.meta.dirname,
   "../test-fixtures/mushroom-life.pdf",

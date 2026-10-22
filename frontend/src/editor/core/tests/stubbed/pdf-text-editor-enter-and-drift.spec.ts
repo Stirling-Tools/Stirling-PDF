@@ -174,7 +174,7 @@ test.describe("PDF text editor - Enter keeps the caret on the new line", () => {
     expect(after.split("\n")[2]).toBe("");
 
     // The next character has to land on the NEW line, not at the top of the
-    // run: the caret used to be dropped by the repaint that followed.
+    // run: the repaint that follows must not drop the caret.
     await page.keyboard.type("ZZ");
     await page.waitForTimeout(1500);
     expect((await modelTextOf(page, testId)).split("\n")[2]).toBe("ZZ");
@@ -260,7 +260,7 @@ test.describe("PDF text editor - the caret stays on the text while typing", () =
         gaps.push(best);
       }
     }
-    // The gap used to GROW with every keystroke - 7px, 14px, 21px here.
+    // Without the fit, the gap grows with every keystroke - 7px, 14px, 21px.
     for (const gap of gaps) {
       expect(
         gap,

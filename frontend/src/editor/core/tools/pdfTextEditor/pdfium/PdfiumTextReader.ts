@@ -164,8 +164,8 @@ interface CharGeometry {
   originX: number;
 }
 
-// Read every character's geometry once. Both consumers below need the same
-// characters, so doing this twice was pure duplicated WASM traffic. With
+// Read every character's geometry once; both consumers below need the same
+// characters, so reading them twice duplicates WASM traffic. With
 // `onlyRuns` the object scan still walks the page (FPDFText_GetTextObject is
 // the only way to key a character to an object), but the Unicode, loose-box
 // and origin reads - the expensive half of the JS-WASM round trip - are spent
