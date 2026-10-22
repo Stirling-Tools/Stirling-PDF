@@ -18,6 +18,7 @@ import type {
   PageSnapshot,
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
+import type { ImageReview } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
 interface Props {
   pages: PageSnapshot[];
@@ -27,10 +28,18 @@ interface Props {
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
+  /** Images needing attention; null when there is nothing to review. */
+  imageReview: ImageReview | null;
+  onSelectNextImageToReview: () => void;
 }
 
 /** Facts about the open document. Nothing here acts on a selection. */
-export function DocumentInspector({ pages, ...settings }: Props) {
+export function DocumentInspector({
+  pages,
+  imageReview,
+  onSelectNextImageToReview,
+  ...settings
+}: Props) {
   const { t } = useTranslation();
   const runs = pages.reduce((n, p) => n + p.runs.length, 0);
   const images = pages.reduce((n, p) => n + p.images.length, 0);
@@ -55,9 +64,79 @@ export function DocumentInspector({ pages, ...settings }: Props) {
           />
         </Stack>
       </Section>
+      {imageReview && (
+        <AccessibilitySection
+          review={imageReview}
+          onNext={onSelectNextImageToReview}
+        />
+      )}
       <FontsSection pages={pages} />
       <DocumentSettings {...settings} />
     </Stack>
+  );
+}
+
+function AccessibilitySection({
+  review,
+  onNext,
+}: {
+  review: ImageReview;
+  onNext: () => void;
+}) {
+  const { t } = useTranslation();
+  const pending = review.needsDescription + review.untagged;
+  return (
+    <Section testId="pdf-editor-document-accessibility">
+      <SectionLabel>
+        {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
+      </SectionLabel>
+      <Stack gap="xs">
+        <Stack gap={2} data-testid="pdf-editor-document-accessibility-summary">
+          {review.needsDescription > 0 && (
+            <Text size="xs" c="dimmed">
+              {t("pdfTextEditor.inspector.accessibility.remaining", {
+                count: review.needsDescription,
+                defaultValue: "{{count}} images need descriptions",
+              })}
+            </Text>
+          )}
+          {review.untagged > 0 && (
+            <Text size="xs" c="dimmed">
+              {t("pdfTextEditor.inspector.accessibility.untagged", {
+                count: review.untagged,
+                defaultValue:
+                  "{{count}} images aren't tagged, so they can't be described yet",
+              })}
+            </Text>
+          )}
+          {pending === 0 && (
+            <Text size="xs" c="dimmed">
+              {t(
+                "pdfTextEditor.inspector.accessibility.allDescribed",
+                "Every image is described or marked decorative.",
+              )}
+            </Text>
+          )}
+        </Stack>
+        {pending > 0 && (
+          <Button
+            size="sm"
+            variant="secondary"
+            accent="neutral"
+            fullWidth
+            justify="start"
+            leftSection={<Icon name="arrow-right" size={20} />}
+            onClick={onNext}
+            data-testid="pdf-editor-document-accessibility-next"
+          >
+            {t(
+              "pdfTextEditor.inspector.accessibility.nextImage",
+              "Next image to review",
+            )}
+          </Button>
+        )}
+      </Stack>
+    </Section>
   );
 }
 

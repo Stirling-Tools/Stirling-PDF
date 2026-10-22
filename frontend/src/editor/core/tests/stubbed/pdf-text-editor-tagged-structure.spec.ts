@@ -159,6 +159,7 @@ async function openFixture(page: import("@playwright/test").Page) {
 
 // `[data-testid^="pdf-editor-image-"]` also matches the hidden file input.
 const IMAGE = '[data-testid^="pdf-editor-image-p"]';
+const PNG = path.join(import.meta.dirname, "../test-fixtures/sample.png");
 
 test.describe("PDF text editor - tagged documents", () => {
   test("edited text stays in the structure tree", async ({ page }) => {
@@ -211,5 +212,66 @@ test.describe("PDF text editor - tagged documents", () => {
     await expect(page.getByTestId("pdf-editor-image-description")).toHaveValue(
       "Revenue by region, third quarter",
     );
+  });
+
+  test("an image without a description is flagged and reached from the document summary", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+    const image = page.locator(IMAGE).first();
+    const imageId = (await image.getAttribute("data-testid"))!.replace(
+      "pdf-editor-image-",
+      "",
+    );
+    const badge = page.getByTestId(`pdf-editor-image-attention-${imageId}`);
+    const summary = page.getByTestId(
+      "pdf-editor-document-accessibility-summary",
+    );
+    await expect(badge).toBeHidden();
+
+    await image.click();
+    await page.getByTestId("pdf-editor-image-description").fill("");
+    await expect(badge).toBeVisible();
+
+    // Escape from the Document tab clears the selection and leaves the tab open.
+    await page.getByTestId("pdf-editor-tab-document").click();
+    await page.keyboard.press("Escape");
+    await expect(summary).toHaveText("1 image needs a description");
+
+    await page.getByTestId("pdf-editor-document-accessibility-next").click();
+    const field = page.getByTestId("pdf-editor-image-description");
+    await expect(field).toHaveValue("");
+    await field.fill("Revenue by region");
+    await expect(badge).toBeHidden();
+
+    await page.getByTestId("pdf-editor-tab-document").click();
+    await expect(summary).toHaveText(
+      "Every image is described or marked decorative.",
+    );
+  });
+
+  test("an image inserted into a tagged document is flagged as untagged", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+    const images = page.locator(IMAGE);
+    await expect(images).toHaveCount(1);
+
+    await page
+      .locator('[data-testid="pdf-editor-image-input"]')
+      .setInputFiles(PNG);
+    await expect(images).toHaveCount(2);
+    await expect(
+      page.locator(
+        '[data-testid^="pdf-editor-image-attention-"][data-attention="untagged"]',
+      ),
+    ).toHaveCount(1);
+
+    await page.getByTestId("pdf-editor-tab-document").click();
+    await expect(
+      page.getByTestId("pdf-editor-document-accessibility-summary"),
+    ).toHaveText("1 image isn't tagged, so it can't be described yet");
   });
 });

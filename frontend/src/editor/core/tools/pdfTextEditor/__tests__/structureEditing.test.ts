@@ -26,7 +26,14 @@ import {
   HistoryStepError,
 } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
-import { imageAccessibility } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import {
+  imageAccessibility,
+  imageAttention,
+  nextImageNeedingAttention,
+  reviewImages,
+} from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import { InsertImageCommand } from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
+import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import {
   buildClassicPdf,
   streamBody,
@@ -308,6 +315,151 @@ describe("imageAccessibility", () => {
       kind: "blocked",
       blocker: "untagged",
       documentTagged: false,
+    });
+  });
+});
+
+/**
+ * Two pages of figures, every one an image: A (page 0, MCID 0) and C (page 1,
+ * MCID 0) have no description, B (page 0, MCID 1) has one.
+ */
+function figuresPdf(): Uint8Array {
+  const draw = (mcid: number, y: number) =>
+    `/Figure <</MCID ${mcid}>> BDC q 20 0 0 20 10 ${y} cm /Im1 Do Q EMC\n`;
+  const page = (num: number, contents: number, key: number) => ({
+    num,
+    body:
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents ${contents} 0 R ` +
+      `/StructParents ${key} /Resources << /XObject << /Im1 5 0 R >> >> >>`,
+  });
+  const figure = (num: number, pageNum: number, mcid: number, alt = "") => ({
+    num,
+    body: `<< /Type /StructElem /S /Figure /P 7 0 R /Pg ${pageNum} 0 R /K ${mcid}${alt} >>`,
+  });
+  return buildClassicPdf(
+    [
+      {
+        num: 1,
+        body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>",
+      },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>" },
+      page(3, 20, 0),
+      page(4, 21, 1),
+      {
+        num: 5,
+        body: streamBody(
+          "/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8",
+          "\x80",
+        ),
+      },
+      {
+        num: 6,
+        body: "<< /Type /StructTreeRoot /K 7 0 R /ParentTree 9 0 R /ParentTreeNextKey 2 >>",
+      },
+      {
+        num: 7,
+        body: "<< /Type /StructElem /S /Document /P 6 0 R /K [10 0 R 11 0 R 12 0 R] >>",
+      },
+      { num: 9, body: "<< /Nums [0 [10 0 R 11 0 R] 1 [12 0 R]] >>" },
+      figure(10, 3, 0),
+      figure(11, 3, 1, " /Alt (B)"),
+      figure(12, 4, 0),
+      { num: 20, body: streamBody("", draw(0, 150) + draw(1, 100)) },
+      { num: 21, body: streamBody("", draw(0, 150)) },
+    ],
+    1,
+  );
+}
+
+describe("reviewing images that need attention", () => {
+  async function pages(doc: EditorDocument): Promise<PageSnapshot[]> {
+    return [0, 1].map((pageIndex) => {
+      const page = doc.page(pageIndex);
+      PdfiumTextReader.populate(doc, page);
+      return {
+        pageIndex,
+        images: page.images.map((img) => img.snapshot()),
+      } as PageSnapshot;
+    });
+  }
+
+  test("counts the undescribed images across pages", async () => {
+    const doc = await open(figuresPdf());
+    expect(reviewImages(doc, await pages(doc))).toEqual({
+      needsDescription: 2,
+      untagged: 0,
+    });
+  });
+
+  test("walks to the next one in page order, wrapping round", async () => {
+    const doc = await open(figuresPdf());
+    const read = await pages(doc);
+    const [a, b] = read[0].images;
+    const [c] = read[1].images;
+    const next = (from: string | null) =>
+      nextImageNeedingAttention(doc, read, from)?.id;
+    expect(next(null)).toBe(a.id);
+    expect(next(a.id)).toBe(c.id);
+    expect(next(b.id)).toBe(c.id);
+    expect(next(c.id)).toBe(a.id);
+  });
+
+  test("drops an image once described, but not for a blank description", async () => {
+    const doc = await open(figuresPdf());
+    const read = await pages(doc);
+    const describe = (alt: string) =>
+      new HistoryStack().execute(
+        new SetAltTextCommand({ pageIndex: 0, mcid: 0, alt }),
+        doc,
+      );
+    describe("   ");
+    expect(reviewImages(doc, read).needsDescription).toBe(2);
+    describe("A bar chart");
+    expect(reviewImages(doc, read).needsDescription).toBe(1);
+    const [c] = read[1].images;
+    expect(nextImageNeedingAttention(doc, read, c.id)?.id).toBe(c.id);
+  });
+
+  test("flags an image inserted into a tagged document as untagged", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    const insert = new InsertImageCommand({
+      pageIndex: 0,
+      rgba: new Uint8ClampedArray([255, 0, 0, 255]),
+      pixelWidth: 1,
+      pixelHeight: 1,
+      x: 300,
+      y: 300,
+      width: 40,
+      height: 40,
+    });
+    history.execute(insert, doc);
+    const page = doc.page(0);
+    const inserted = page.images
+      .find((img) => img.id === insert.insertedImageId)!
+      .snapshot();
+    const read = [
+      { pageIndex: 0, images: page.images.map((img) => img.snapshot()) },
+    ] as PageSnapshot[];
+
+    expect(imageAttention(doc, inserted)).toBe("untagged");
+    expect(reviewImages(doc, read)).toEqual({
+      needsDescription: 0,
+      untagged: 1,
+    });
+    expect(nextImageNeedingAttention(doc, read, null)?.id).toBe(inserted.id);
+  });
+
+  test("leaves an untagged document's images out of the review", async () => {
+    const doc = await open(imagesPdf({ tagged: false }));
+    const page = doc.page(0);
+    PdfiumTextReader.populate(doc, page);
+    const read = [
+      { pageIndex: 0, images: page.images.map((img) => img.snapshot()) },
+    ] as PageSnapshot[];
+    expect(reviewImages(doc, read)).toEqual({
+      needsDescription: 0,
+      untagged: 0,
     });
   });
 });

@@ -1,66 +1,104 @@
 import { Stack, Text, Textarea } from "@mantine/core";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import {
   Section,
   SectionLabel,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
-import type { ImageAccessibility } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import {
+  attentionFor,
+  type ImageAccessibility,
+  type ImageReview,
+} from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
-/** The selected image's description, or why it cannot have one. */
+/**
+ * The selected image's description, or why it cannot have one, and a way on
+ * to the next image needing attention. `review` counts this image too.
+ */
 export function ImageAccessibilitySection({
   accessibility,
   onSetDescription,
+  review,
+  onNext,
 }: {
   accessibility: ImageAccessibility;
   onSetDescription: (text: string) => void;
+  review: ImageReview;
+  onNext: () => void;
 }) {
   const { t } = useTranslation();
+  const needsThis =
+    accessibility.kind === "describable" && !accessibility.description?.trim();
+  const othersPending =
+    review.needsDescription +
+    review.untagged -
+    (attentionFor(accessibility) ? 1 : 0);
   return (
     <Section testId="pdf-editor-image-accessibility">
       <SectionLabel>
         {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
       </SectionLabel>
-      {accessibility.kind === "describable" ? (
-        <Stack gap={4}>
-          <Textarea
-            label={t(
-              "pdfTextEditor.inspector.accessibility.description",
-              "Description",
-            )}
-            placeholder={t(
-              "pdfTextEditor.inspector.accessibility.descriptionPlaceholder",
-              "Describe what the image shows",
-            )}
-            value={accessibility.description ?? ""}
-            onChange={(e) => onSetDescription(e.currentTarget.value)}
-            autosize
-            minRows={2}
-            maxRows={6}
+      <Stack gap="xs">
+        {accessibility.kind === "describable" ? (
+          <Stack gap={4}>
+            <Textarea
+              label={t(
+                "pdfTextEditor.inspector.accessibility.description",
+                "Description",
+              )}
+              placeholder={t(
+                "pdfTextEditor.inspector.accessibility.descriptionPlaceholder",
+                "Describe what the image shows",
+              )}
+              value={accessibility.description ?? ""}
+              onChange={(e) => onSetDescription(e.currentTarget.value)}
+              autosize
+              minRows={2}
+              maxRows={6}
+              size="xs"
+              data-testid="pdf-editor-image-description"
+            />
+            <Text size="xs" c="dimmed">
+              {needsThis
+                ? t(
+                    "pdfTextEditor.inspector.accessibility.needsDescription",
+                    "Without a description, screen readers can only say there is an image here.",
+                  )
+                : t(
+                    "pdfTextEditor.inspector.accessibility.described",
+                    "Screen readers read this description in place of the image.",
+                  )}
+            </Text>
+          </Stack>
+        ) : (
+          <Text
             size="xs"
-            data-testid="pdf-editor-image-description"
-          />
-          <Text size="xs" c="dimmed">
-            {accessibility.description
-              ? t(
-                  "pdfTextEditor.inspector.accessibility.described",
-                  "Screen readers read this description in place of the image.",
-                )
-              : t(
-                  "pdfTextEditor.inspector.accessibility.needsDescription",
-                  "Without a description, screen readers can only say there is an image here.",
-                )}
+            c="dimmed"
+            data-testid="pdf-editor-image-accessibility-status"
+          >
+            {statusMessage(t, accessibility)}
           </Text>
-        </Stack>
-      ) : (
-        <Text
-          size="xs"
-          c="dimmed"
-          data-testid="pdf-editor-image-accessibility-status"
-        >
-          {statusMessage(t, accessibility)}
-        </Text>
-      )}
+        )}
+        {othersPending > 0 && (
+          <Button
+            size="sm"
+            variant="secondary"
+            accent="neutral"
+            fullWidth
+            justify="start"
+            leftSection={<Icon name="arrow-right" size={20} />}
+            onClick={onNext}
+            data-testid="pdf-editor-image-description-next"
+          >
+            {t(
+              "pdfTextEditor.inspector.accessibility.nextImage",
+              "Next image to review",
+            )}
+          </Button>
+        )}
+      </Stack>
     </Section>
   );
 }
