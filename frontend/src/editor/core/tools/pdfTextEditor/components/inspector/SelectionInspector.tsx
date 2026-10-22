@@ -77,6 +77,7 @@ export function SelectionInspector({
         <ImageAccessibilitySection
           accessibility={controller.imageAccessibility}
           onSetDescription={controller.onSetImageDescription}
+          onSetDecorative={controller.onSetImageDecorative}
           review={controller.imageReview}
           onNext={controller.onSelectNextImageToReview}
         />

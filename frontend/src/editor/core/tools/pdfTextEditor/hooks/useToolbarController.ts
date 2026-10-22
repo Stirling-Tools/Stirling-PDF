@@ -521,6 +521,7 @@ export function useToolbarController(
     externalEditSupported: isExternalImageEditSupported(),
     imageAccessibility: imageA11y.accessibility,
     onSetImageDescription: imageA11y.setDescription,
+    onSetImageDecorative: imageA11y.setDecorative,
     imageReview: imageA11y.review,
     onSelectNextImageToReview: imageA11y.selectNextImage,
     selectionAllLocked,

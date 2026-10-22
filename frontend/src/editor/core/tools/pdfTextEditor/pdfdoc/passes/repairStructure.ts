@@ -2,44 +2,26 @@
  * Repair the structure tree after PDFium regenerates a tagged page.
  */
 import {
-  deflate,
-  fromLatin1,
-  toLatin1,
-} from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
-import {
-  parseOps,
-  tokenize,
-} from "@editor/tools/pdfTextEditor/pdfdoc/contentOps";
+  ParentTreeWriter,
+  contentStreamObject,
+  elementKids,
+  pageSites,
+  streamsUsedByMoreThanOnePage,
+  type McidSite,
+} from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
 import {
   RawPdf,
-  arrayItems,
   referencedObject,
   setDictEntry,
-  spliceValue,
   type NumberTreeEntry,
-  type ValueSpan,
 } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   appendRevision,
   plainObject,
-  streamObject,
   type RevisionObject,
 } from "@editor/tools/pdfTextEditor/pdfdoc/revision";
 
 const REF = /^(\d+)\s+\d+\s+R$/;
-
-interface McidSite {
-  stream: number;
-  mcid: number;
-  /** Where the MCID's number is in the stream's text; null when a named property list holds it. */
-  number: { start: number; end: number } | null;
-}
-
-interface PageSites {
-  refs: number[];
-  texts: string[];
-  sites: McidSite[];
-}
 
 /** Changes to one element's /K for one page. */
 interface KidChanges {
@@ -76,7 +58,7 @@ export async function repairStructure(
   const sharedStreams = streamsUsedByMoreThanOnePage(pdf);
   const objects: RevisionObject[] = [];
   const elementBodies = new Map<number, string>();
-  const nodeSplices = new Map<number, { span: ValueSpan; text: string }[]>();
+  const parentTree = new ParentTreeWriter();
 
   for (const pageIndex of new Set(opts.pages)) {
     const pageNum = pdf.pageNumberAt(pageIndex);
@@ -94,28 +76,9 @@ export async function repairStructure(
     if (!repair) continue;
 
     for (const [num, text] of repair.streams) {
-      const raw = fromLatin1(text);
-      const packed = await deflate(raw);
-      objects.push({
-        num,
-        body: packed
-          ? streamObject("<< /Filter /FlateDecode >>", packed)
-          : streamObject("<< >>", raw),
-      });
+      objects.push(await contentStreamObject(num, text));
     }
-
-    const entry = repair.parentEntry;
-    const arrayRef = entry.span.text.match(REF);
-    if (arrayRef) {
-      objects.push({
-        num: parseInt(arrayRef[1], 10),
-        body: plainObject(repair.parentArray),
-      });
-    } else {
-      const splices = nodeSplices.get(entry.objNum) ?? [];
-      splices.push({ span: entry.span, text: repair.parentArray });
-      nodeSplices.set(entry.objNum, splices);
-    }
+    parentTree.set(repair.parentEntry, repair.parentArray);
 
     for (const [num, changes] of repair.elements) {
       const body = elementBodies.get(num) ?? pdf.objectBody(num);
@@ -124,14 +87,7 @@ export async function repairStructure(
     }
   }
 
-  for (const [num, splices] of nodeSplices) {
-    // Spans index the original body, so splice back to front.
-    let body = pdf.objectBody(num)!;
-    for (const s of splices.sort((a, b) => b.span.start - a.span.start)) {
-      body = spliceValue(body, s.span, s.text);
-    }
-    objects.push({ num, body: plainObject(body) });
-  }
+  objects.push(...parentTree.objects(pdf));
   for (const [num, body] of elementBodies) {
     objects.push({ num, body: plainObject(body) });
   }
@@ -227,79 +183,6 @@ async function planPage(
   };
 }
 
-/** The page's content streams and every MCID they carry, or null when a stream cannot be read. */
-async function pageSites(
-  pdf: RawPdf,
-  pageNum: number,
-): Promise<PageSites | null> {
-  const page = pdf.objectBody(pageNum);
-  const refs = page ? pdf.contentRefs(page) : [];
-  if (refs.length === 0) return null;
-  const texts: string[] = [];
-  for (const ref of refs) {
-    const data = await pdf.streamData(ref);
-    if (!data) return null;
-    texts.push(toLatin1(data));
-  }
-  const resources = pdf.pageInherited(pageNum, "Resources");
-  const properties = resources ? pdf.resolve(resources, "Properties") : null;
-  const namedMcid = (name: string): number | null => {
-    const list = properties ? pdf.resolve(properties, name) : null;
-    return list ? pdf.dictInt(list, "MCID") : null;
-  };
-  return {
-    refs,
-    texts,
-    sites: texts.flatMap((text, stream) => mcidSites(text, stream, namedMcid)),
-  };
-}
-
-/**
- * Every `BDC` carrying an MCID, in content order: inline (`/P <</MCID 0>> BDC`)
- * or through a named property list (`/P /MC0 BDC`), which PDFium keeps in that
- * form when it regenerates a page.
- */
-function mcidSites(
-  text: string,
-  stream: number,
-  namedMcid: (name: string) => number | null,
-): McidSite[] {
-  const sites: McidSite[] = [];
-  for (const op of parseOps(text)) {
-    if (op.op !== "BDC") continue;
-    const properties = op.operands[1];
-    if (properties?.startsWith("/")) {
-      const mcid = namedMcid(properties.slice(1));
-      if (mcid !== null) sites.push({ stream, mcid, number: null });
-      continue;
-    }
-    const tokens = tokenize(text.slice(op.start, op.end));
-    let depth = 0;
-    for (let i = 0; i < tokens.length; i++) {
-      const t = tokens[i].text;
-      if (t === "<<") depth += 1;
-      else if (t === ">>") depth -= 1;
-      else if (
-        depth === 1 &&
-        t === "/MCID" &&
-        /^\d+$/.test(tokens[i + 1]?.text ?? "")
-      ) {
-        const number = tokens[i + 1];
-        sites.push({
-          stream,
-          mcid: parseInt(number.text, 10),
-          number: {
-            start: op.start + number.start,
-            end: op.start + number.end,
-          },
-        });
-        break;
-      }
-    }
-  }
-  return sites;
-}
-
 /**
  * Apply `changes` to an element's /K. An integer kid names an MCID on the
  * element's own /Pg, so a new MCID on another page is written as an MCR.
@@ -309,12 +192,7 @@ function rewriteKids(
   body: string,
   changes: KidChanges,
 ): string | null {
-  const span = pdf.valueSpan(body, "K");
-  const kids = !span
-    ? []
-    : span.text.startsWith("[")
-      ? (arrayItems(span.text)?.map((k) => k.text) ?? null)
-      : [span.text];
+  const kids = elementKids(pdf, body);
   if (!kids) return null;
   const elementPage = pdf.dictRef(body, "Pg");
 
@@ -352,17 +230,4 @@ function rewriteKids(
     if (!placed.has(after)) out.push(...mcids.map(newKid));
   }
   return setDictEntry(body, "K", `[${out.join(" ")}]`);
-}
-
-function streamsUsedByMoreThanOnePage(pdf: RawPdf): Set<number> {
-  const seen = new Set<number>();
-  const shared = new Set<number>();
-  for (const pageNum of pdf.pageNumbers()) {
-    const body = pdf.objectBody(pageNum);
-    for (const ref of body ? new Set(pdf.contentRefs(body)) : []) {
-      if (seen.has(ref)) shared.add(ref);
-      seen.add(ref);
-    }
-  }
-  return shared;
 }

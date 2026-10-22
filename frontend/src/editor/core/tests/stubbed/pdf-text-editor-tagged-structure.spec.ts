@@ -274,4 +274,28 @@ test.describe("PDF text editor - tagged documents", () => {
       page.getByTestId("pdf-editor-document-accessibility-summary"),
     ).toHaveText("1 image isn't tagged, so it can't be described yet");
   });
+
+  test("an image marked decorative saves as decoration", async ({ page }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+
+    await page.locator(IMAGE).first().click();
+    const decorative = page.getByTestId("pdf-editor-image-decorative");
+    await expect(decorative).not.toBeChecked();
+    // The styled box hides its input, so the click goes to the label.
+    await page
+      .getByTestId("pdf-editor-image-accessibility")
+      .getByText("Decorative", { exact: true })
+      .click();
+    await expect(decorative).toBeChecked();
+    await expect(page.getByTestId("pdf-editor-image-description")).toBeHidden();
+    await saveAndReopen(page);
+
+    await page.locator(IMAGE).first().click();
+    await expect(
+      page.getByTestId("pdf-editor-image-accessibility-status"),
+    ).toHaveText("Marked as decorative, so screen readers skip it.");
+    await expect(decorative).toBeChecked();
+    await expect(decorative).toBeDisabled();
+  });
 });

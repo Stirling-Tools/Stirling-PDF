@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { SetAltTextCommand } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
+import { SetDecorativeCommand } from "@editor/tools/pdfTextEditor/commands/SetDecorativeCommand";
 import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import type {
   EditorStore,
@@ -12,6 +13,7 @@ import {
   reviewImages,
   type ImageAccessibility,
   type ImageReview,
+  type ImageTarget,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
 /**
@@ -54,6 +56,21 @@ export function useImageAccessibility(
     [store, accessibility],
   );
 
+  const setDecorative = useCallback(
+    (decorative: boolean) => {
+      const target = decorativeTarget(accessibility);
+      if (!target) return;
+      store.dispatch(
+        new SetDecorativeCommand({
+          pageIndex: target.pageIndex,
+          mcid: target.mcid,
+          decorative,
+        }),
+      );
+    },
+    [store, accessibility],
+  );
+
   const review = useMemo(
     (): ImageReview =>
       store.document
@@ -82,5 +99,20 @@ export function useImageAccessibility(
     );
   }, [store]);
 
-  return { accessibility, setDescription, review, selectNextImage };
+  return {
+    accessibility,
+    setDescription,
+    setDecorative,
+    review,
+    selectNextImage,
+  };
+}
+
+/** What a decorative mark addresses: an image that can be described, or one this session marked. */
+function decorativeTarget(
+  accessibility: ImageAccessibility | null,
+): ImageTarget | null {
+  if (accessibility?.kind === "describable") return accessibility;
+  if (accessibility?.kind === "decorative") return accessibility.pending;
+  return null;
 }

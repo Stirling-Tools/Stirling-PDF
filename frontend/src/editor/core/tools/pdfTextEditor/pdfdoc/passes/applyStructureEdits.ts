@@ -11,6 +11,8 @@ import {
   appendRevision,
   plainObject,
 } from "@editor/tools/pdfTextEditor/pdfdoc/revision";
+import { ParentTreeWriter } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
+import { markDecorative } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markDecorative";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 
 /** A change to the structure element that owns marked content `mcid` on a page. */
@@ -19,6 +21,8 @@ export interface StructureEdit {
   mcid: number;
   /** The new /Alt; null removes it. */
   alt: string | null;
+  /** Turn the element's content into an artifact and drop the element, its /Alt with it. */
+  decorative: boolean;
 }
 
 export interface StructureEditFailure {
@@ -65,10 +69,15 @@ export async function applyStructureEdits(
 
   const bodies = new Map<number, string>();
   const failures: StructureEditFailure[] = [];
+  const decorative = new Map<number, StructureEdit[]>();
   for (const edit of edits) {
     const owner = elementFor(pdf, treeRoot, edit);
     if (typeof owner === "string") {
       failures.push({ edit, reason: owner });
+      continue;
+    }
+    if (edit.decorative) {
+      decorative.set(owner, [...(decorative.get(owner) ?? []), edit]);
       continue;
     }
     const body = bodies.get(owner) ?? pdf.objectBody(owner)!;
@@ -85,12 +94,25 @@ export async function applyStructureEdits(
     }
     bodies.set(owner, updated);
   }
+
+  const parentTree = new ParentTreeWriter();
+  const { streams, failed } = await markDecorative(
+    pdf,
+    treeRoot,
+    new Set(decorative.keys()),
+    bodies,
+    parentTree,
+  );
+  for (const [num, reason] of failed) {
+    for (const edit of decorative.get(num)!) failures.push({ edit, reason });
+  }
   if (failures.length > 0) throw new StructureEditError(failures);
 
-  const out = appendRevision(
-    pdf,
-    [...bodies].map(([num, body]) => ({ num, body: plainObject(body) })),
-  );
+  const out = appendRevision(pdf, [
+    ...[...bodies].map(([num, body]) => ({ num, body: plainObject(body) })),
+    ...streams,
+    ...parentTree.objects(pdf),
+  ]);
   if (!out)
     throw fail("the file's cross-reference structure cannot be extended");
   return out;

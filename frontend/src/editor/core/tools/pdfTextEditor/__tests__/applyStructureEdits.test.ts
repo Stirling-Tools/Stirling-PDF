@@ -241,3 +241,125 @@ describe("applyStructureEdits on a real producer's output", () => {
     }
   });
 });
+
+async function pageContent(bytes: Uint8Array, pageIndex: number) {
+  const pdf = (await RawPdf.parse(bytes))!;
+  return toLatin1(
+    (await pdf.pageContent(pdf.pageNumberAt(pageIndex)!))!,
+  ).trim();
+}
+
+function parentArray(pdf: RawPdf, key: number): string {
+  const tree = pdf.parentTreeArray(7, key)!;
+  return `[${tree.items!.map((item) => item.text).join(" ")}]`;
+}
+
+/** `objects()` with the bodies in `overrides` swapped in. */
+function withBodies(overrides: Record<number, string>, base = objects()) {
+  return base.map((o) =>
+    o.num in overrides ? { ...o, body: overrides[o.num] } : o,
+  );
+}
+
+const DECORATE_FIGURE = {
+  pageIndex: 0,
+  mcid: 1,
+  alt: null,
+  decorative: true,
+} as const;
+
+describe("applyStructureEdits: marking decorative", () => {
+  test("retags the figure's content as an artifact and drops the figure", async () => {
+    const out = await applyStructureEdits(buildClassicPdf(objects(), 1), [
+      DECORATE_FIGURE,
+    ]);
+    expect(await pageContent(out, 0)).toBe(
+      "/P <</MCID 0>> BDC EMC /Artifact BMC 0 0 10 10 re f EMC",
+    );
+    expect(await pageContent(out, 1)).toBe(
+      "/Figure <</MCID 0>> BDC 0 0 10 10 re f EMC",
+    );
+    const pdf = (await RawPdf.parse(out))!;
+    expect(pdf.valueSpan(pdf.objectBody(9)!, "K")!.text).toBe(
+      "[10 0 R 12 0 R]",
+    );
+    expect(parentArray(pdf, 0)).toBe("[10 0 R null]");
+  });
+
+  test("retags a figure held in a named property list", async () => {
+    const bytes = buildClassicPdf(
+      withBodies({
+        3: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 5 0 R /StructParents 0 /Resources << /Properties << /MC0 << /MCID 1 >> >> >> >>",
+        5: streamBody(
+          "",
+          "/P <</MCID 0>> BDC EMC /Figure /MC0 BDC 0 0 10 10 re f EMC",
+        ),
+      }),
+      1,
+    );
+    const out = await applyStructureEdits(bytes, [DECORATE_FIGURE]);
+    expect(await pageContent(out, 0)).toBe(
+      "/P <</MCID 0>> BDC EMC /Artifact BMC 0 0 10 10 re f EMC",
+    );
+  });
+
+  test("retags every page a figure spans", async () => {
+    const bytes = buildClassicPdf(
+      withBodies(
+        {
+          11: "<< /Type /StructElem /S /Figure /P 9 0 R /Pg 3 0 R /K [1 << /Type /MCR /Pg 4 0 R /MCID 0 >>] >>",
+          9: "<< /Type /StructElem /S /Document /P 7 0 R /K [10 0 R 11 0 R] >>",
+        },
+        objects("<< /Nums [0 [10 0 R 11 0 R] 1 [11 0 R]] >>"),
+      ),
+      1,
+    );
+    const out = await applyStructureEdits(bytes, [DECORATE_FIGURE]);
+    expect(await pageContent(out, 1)).toBe("/Artifact BMC 0 0 10 10 re f EMC");
+    const pdf = (await RawPdf.parse(out))!;
+    expect(parentArray(pdf, 0)).toBe("[10 0 R null]");
+    expect(parentArray(pdf, 1)).toBe("[null]");
+  });
+
+  test("writes a description and a decorative mark in one save", async () => {
+    const out = await applyStructureEdits(buildClassicPdf(objects(), 1), [
+      DECORATE_FIGURE,
+      { pageIndex: 1, mcid: 0, alt: "Second", decorative: false },
+    ]);
+    expect(await elementBody(out, 12)).toContain("/Alt (Second)");
+    const pdf = (await RawPdf.parse(out))!;
+    expect(pdf.valueSpan(pdf.objectBody(9)!, "K")!.text).toBe(
+      "[10 0 R 12 0 R]",
+    );
+  });
+
+  test("refuses a figure whose page draws content another page also draws", async () => {
+    const bytes = buildClassicPdf(
+      withBodies({
+        4: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 5 0 R /StructParents 1 >>",
+      }),
+      1,
+    );
+    expect(await failuresOf(bytes, [DECORATE_FIGURE])).toEqual([
+      "its page draws content another page also draws",
+    ]);
+  });
+
+  test("refuses a figure with a child element", async () => {
+    const bytes = buildClassicPdf(
+      [
+        ...withBodies({
+          11: "<< /Type /StructElem /S /Figure /P 9 0 R /Pg 3 0 R /K [1 13 0 R] >>",
+        }),
+        {
+          num: 13,
+          body: "<< /Type /StructElem /S /Caption /P 11 0 R /Pg 3 0 R >>",
+        },
+      ],
+      1,
+    );
+    expect(await failuresOf(bytes, [DECORATE_FIGURE])).toEqual([
+      "its content is not all marked content on its pages",
+    ]);
+  });
+});

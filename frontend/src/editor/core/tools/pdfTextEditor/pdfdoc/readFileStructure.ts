@@ -1,4 +1,5 @@
 import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import { ownsOnlyMarkedContent } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
 import {
   RawPdf,
   referencedObject,
@@ -69,6 +70,7 @@ function readElement(
     type: applyRoleMap(pdf, roleMap, type),
     alt: text("Alt"),
     actualText: text("ActualText"),
+    onlyMarkedContent: ownsOnlyMarkedContent(pdf, body),
   };
 }
 

@@ -5,31 +5,44 @@ import type {
   PageSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 
+/** The page and marked content a structure edit to an image addresses. */
+export interface ImageTarget {
+  pageIndex: number;
+  mcid: number;
+}
+
 /** What can be said and done about one image's accessibility. */
 export type ImageAccessibility =
-  | { kind: "decorative" }
-  | { kind: "blocked"; blocker: DescriptionBlocker; documentTagged: boolean }
   | {
+      kind: "decorative";
+      /** Set when this session marked it, so the mark can be undone. */
+      pending: ImageTarget | null;
+    }
+  | { kind: "blocked"; blocker: DescriptionBlocker; documentTagged: boolean }
+  | (ImageTarget & {
       kind: "describable";
-      pageIndex: number;
-      mcid: number;
       description: string | null;
-    };
+      canBeDecorative: boolean;
+    });
 
 export function imageAccessibility(
   doc: EditorDocument,
   image: ImageObjectSnapshot,
 ): ImageAccessibility {
-  if (image.artifact) return { kind: "decorative" };
+  if (image.artifact) return { kind: "decorative", pending: null };
   if (image.mcid === undefined) return blocked(doc, "untagged");
   const structure = doc.structure(image.pageIndex);
   const blocker = structure.cannotDescribe(image.mcid);
   if (blocker) return blocked(doc, blocker);
+  const target = { pageIndex: image.pageIndex, mcid: image.mcid };
+  if (structure.decorative(image.mcid)) {
+    return { kind: "decorative", pending: target };
+  }
   return {
     kind: "describable",
-    pageIndex: image.pageIndex,
-    mcid: image.mcid,
+    ...target,
     description: structure.alt(image.mcid),
+    canBeDecorative: structure.cannotMarkDecorative(image.mcid) === null,
   };
 }
 

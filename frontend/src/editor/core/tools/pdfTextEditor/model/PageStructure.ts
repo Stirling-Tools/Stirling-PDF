@@ -9,13 +9,20 @@ export interface StructureElement {
    * pages apart, so there it can also list other pages' MCIDs.
    */
   mcids: number[];
+  /**
+   * True when the element's content is all marked content on its pages: no
+   * child elements, annotations or form XObject content.
+   */
+  onlyMarkedContent: boolean;
 }
 
 /** An unsaved change to an element, and the MCID the save addresses it by. */
 export interface StructureElementEdit {
   mcid: number;
-  /** The new /Alt; null removes it. */
+  /** The /Alt to save; null removes it. */
   alt: string | null;
+  /** Turn the element's content into an artifact and drop the element. */
+  decorative: boolean;
 }
 
 /**
@@ -29,6 +36,9 @@ export type ReadOnlyReason = "encrypted" | "unreadable";
 
 /** Why content cannot take a description. */
 export type DescriptionBlocker = "untagged" | "not-figure" | ReadOnlyReason;
+
+/** Why content cannot be marked decorative. */
+export type DecorativeBlocker = DescriptionBlocker | "mixed-content";
 
 /**
  * The structure elements of one page plus the session's unsaved edits to
@@ -71,6 +81,18 @@ export class PageStructure {
     return null;
   }
 
+  /** Why the content `mcid` marks cannot be marked decorative, or null when it can. */
+  cannotMarkDecorative(mcid: number): DecorativeBlocker | null {
+    const blocker = this.cannotDescribe(mcid);
+    if (blocker) return blocker;
+    return this.element(mcid)!.onlyMarkedContent ? null : "mixed-content";
+  }
+
+  /** True when the session has marked the element owning `mcid` decorative. */
+  decorative(mcid: number): boolean {
+    return this.editFor(mcid)?.decorative ?? false;
+  }
+
   /** The description as it will be saved: the session's edit, else the file's. */
   alt(mcid: number): string | null {
     const el = this.element(mcid);
@@ -83,6 +105,16 @@ export class PageStructure {
   editFor(mcid: number): StructureElementEdit | null {
     const el = this.element(mcid);
     return el ? (this.edits.get(el) ?? null) : null;
+  }
+
+  /** Set the description, keeping any decorative mark. Throws as setEdit does. */
+  setAlt(mcid: number, alt: string | null): void {
+    this.setEdit(mcid, { mcid, alt, decorative: this.decorative(mcid) });
+  }
+
+  /** Mark or unmark decorative, keeping the description. Throws as setEdit does. */
+  setDecorative(mcid: number, decorative: boolean): void {
+    this.setEdit(mcid, { mcid, alt: this.alt(mcid), decorative });
   }
 
   /** Throws when no element owns `mcid`: a command must not record an edit the save cannot address. */

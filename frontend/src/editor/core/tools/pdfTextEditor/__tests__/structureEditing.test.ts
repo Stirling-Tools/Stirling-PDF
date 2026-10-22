@@ -13,6 +13,8 @@ import {
   vi,
 } from "vitest";
 import { SetAltTextCommand } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
+import { SetDecorativeCommand } from "@editor/tools/pdfTextEditor/commands/SetDecorativeCommand";
+import { toLatin1 } from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import { StructureEditError } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
@@ -26,6 +28,7 @@ import {
   HistoryStepError,
 } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
+import { expectConsole } from "@editor/tests/failOnConsole";
 import {
   imageAccessibility,
   imageAttention,
@@ -147,11 +150,18 @@ describe("reading the structure tree", () => {
   test("lists each element with its type, description and MCIDs", async () => {
     const doc = await openSample();
     const elements = readPageStructure(doc.module, doc.page(0).pagePtr);
+    const element = (type: string, alt: string | null, mcids: number[]) => ({
+      type,
+      alt,
+      actualText: null,
+      mcids,
+      onlyMarkedContent: false,
+    });
     expect(elements).toEqual([
-      { type: "Document", alt: null, actualText: null, mcids: [] },
-      { type: "H1", alt: null, actualText: null, mcids: [0] },
-      { type: "P", alt: null, actualText: null, mcids: [1] },
-      { type: "Figure", alt: FIGURE_ALT, actualText: null, mcids: [2] },
+      element("Document", null, []),
+      element("H1", null, [0]),
+      element("P", null, [1]),
+      element("Figure", FIGURE_ALT, [2]),
     ]);
   });
 
@@ -240,13 +250,18 @@ function spanningPdf(slot0 = "8 0 R"): Uint8Array {
 describe("reading tags from the file's ParentTree", () => {
   test("gives each page's MCIDs to the element its ParentTree names", async () => {
     const structure = (await readFileStructure(spanningPdf()))!;
+    const element = (type: string, alt: string | null, mcids: number[]) => ({
+      type,
+      alt,
+      actualText: null,
+      mcids,
+      onlyMarkedContent: true,
+    });
     expect(structure.get(0)).toEqual([
-      { type: "Figure", alt: "Chart", actualText: null, mcids: [0] },
-      { type: "P", alt: null, actualText: null, mcids: [5] },
+      element("Figure", "Chart", [0]),
+      element("P", null, [5]),
     ]);
-    expect(structure.get(1)).toEqual([
-      { type: "P", alt: null, actualText: null, mcids: [0] },
-    ]);
+    expect(structure.get(1)).toEqual([element("P", null, [0])]);
   });
 
   test("describes the figure, not the paragraph that spans the page break", async () => {
@@ -282,6 +297,7 @@ describe("imageAccessibility", () => {
       pageIndex: 0,
       mcid: 0,
       description: "A grey square",
+      canBeDecorative: true,
     });
     new HistoryStack().execute(
       new SetAltTextCommand({ pageIndex: 0, mcid: 0, alt: "A dark square" }),
@@ -295,7 +311,10 @@ describe("imageAccessibility", () => {
   test("reads an artifact image as decorative", async () => {
     const doc = await open(imagesPdf());
     const [, rule] = await images(doc);
-    expect(imageAccessibility(doc, rule)).toEqual({ kind: "decorative" });
+    expect(imageAccessibility(doc, rule)).toEqual({
+      kind: "decorative",
+      pending: null,
+    });
   });
 
   test("blocks an image tagged as part of a paragraph", async () => {
@@ -470,6 +489,7 @@ describe("PageStructure", () => {
     alt: "old",
     actualText: null,
     mcids: [3, 4],
+    onlyMarkedContent: true,
   };
 
   test("holds one edit per element, whichever of its MCIDs addressed it", () => {
@@ -507,6 +527,28 @@ describe("PageStructure", () => {
     expect(s.cannotDescribe(9)).toBe("untagged");
   });
 
+  test("keeps the description when marked decorative, and the mark when described", () => {
+    const s = new PageStructure([figure]);
+    s.setAlt(3, "new");
+    s.setDecorative(4, true);
+    expect(s.pendingEdits()).toEqual([
+      { mcid: 4, alt: "new", decorative: true },
+    ]);
+    s.setAlt(3, "newer");
+    expect(s.decorative(3)).toBe(true);
+    s.setDecorative(3, false);
+    expect(s.alt(3)).toBe("newer");
+  });
+
+  test("refuses decorative for a figure with content besides marked content", () => {
+    expect(
+      new PageStructure([
+        { ...figure, onlyMarkedContent: false },
+      ]).cannotMarkDecorative(3),
+    ).toBe("mixed-content");
+    expect(new PageStructure([figure]).cannotMarkDecorative(3)).toBeNull();
+  });
+
   test("refuses every description when the save cannot write them", () => {
     expect(new PageStructure([figure], "encrypted").cannotDescribe(3)).toBe(
       "encrypted",
@@ -528,7 +570,7 @@ describe("SetAltTextCommand", () => {
     expect(doc.structureEdits()).toEqual([]);
     history.redo(doc);
     expect(doc.structureEdits()).toEqual([
-      { pageIndex: 0, mcid: FIGURE_MCID, alt: "New" },
+      { pageIndex: 0, mcid: FIGURE_MCID, alt: "New", decorative: false },
     ]);
   });
 
@@ -583,6 +625,82 @@ describe("SetAltTextCommand", () => {
   });
 });
 
+describe("SetDecorativeCommand", () => {
+  test("marks and unmarks a figure, undoably", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    history.execute(
+      new SetDecorativeCommand({
+        pageIndex: 0,
+        mcid: FIGURE_MCID,
+        decorative: true,
+      }),
+      doc,
+    );
+    expect(doc.structure(0).decorative(FIGURE_MCID)).toBe(true);
+    history.undo(doc);
+    expect(doc.structure(0).decorative(FIGURE_MCID)).toBe(false);
+    expect(doc.structureEdits()).toEqual([]);
+    history.redo(doc);
+    expect(doc.structureEdits()).toEqual([
+      { pageIndex: 0, mcid: FIGURE_MCID, alt: FIGURE_ALT, decorative: true },
+    ]);
+  });
+
+  test("refuses a paragraph", async () => {
+    const doc = await openSample();
+    expect(() =>
+      new HistoryStack().execute(
+        new SetDecorativeCommand({ pageIndex: 0, mcid: 1, decorative: true }),
+        doc,
+      ),
+    ).toThrow(HistoryStepError);
+    expect(doc.structureEdits()).toEqual([]);
+  });
+
+  test("saves the figure as an artifact, touching nothing it paints", async () => {
+    const original = new Uint8Array(await readFile(TAGGED_SAMPLE));
+    const doc = await open(original);
+    new HistoryStack().execute(
+      new SetDecorativeCommand({
+        pageIndex: 0,
+        mcid: FIGURE_MCID,
+        decorative: true,
+      }),
+      doc,
+    );
+    const saved = await savedBytes(doc);
+
+    const content = async (bytes: Uint8Array) => {
+      const pdf = (await RawPdf.parse(bytes))!;
+      return toLatin1((await pdf.pageContent(pdf.pageNumberAt(0)!))!);
+    };
+    expect(await content(saved)).toBe(
+      (await content(original)).replace(
+        `/Figure <</MCID ${FIGURE_MCID}>> BDC`,
+        "/Artifact BMC",
+      ),
+    );
+
+    const reopened = await open(saved);
+    const page = reopened.page(0);
+    PdfiumTextReader.populate(reopened, page);
+    const [image] = page.images.map((img) => img.snapshot());
+    expect(imageAccessibility(reopened, image)).toEqual({
+      kind: "decorative",
+      pending: null,
+    });
+    expect(reopened.structure(0).elements.map((e) => e.type)).not.toContain(
+      "Figure",
+    );
+    expect(
+      reviewImages(reopened, [
+        { pageIndex: 0, images: [image] },
+      ] as PageSnapshot[]),
+    ).toEqual({ needsDescription: 0, untagged: 0 });
+  });
+});
+
 describe("saving a description", () => {
   test("appends it to the opened file when nothing else changed", async () => {
     const doc = await openSample();
@@ -622,10 +740,14 @@ describe("saving a description", () => {
   test("fails the save rather than dropping an edit it cannot write", async () => {
     const doc = await openSample();
     vi.spyOn(doc, "structureEdits").mockReturnValue([
-      { pageIndex: 0, mcid: 42, alt: "x" },
+      { pageIndex: 0, mcid: 42, alt: "x", decorative: false },
     ]);
-    await expect(exportToBlob(doc, "sample.pdf")).rejects.toBeInstanceOf(
-      StructureEditError,
+    // The detail is logged for a bug report; the user gets a message they can act on.
+    expectConsole.error(/Could not write 1 tag edit/);
+    const error = await exportToBlob(doc, "sample.pdf").catch((e) => e);
+    expect(error.message).toBe(
+      "Your accessibility changes couldn't be saved, so the file wasn't saved. Undo them and try again.",
     );
+    expect(error.cause).toBeInstanceOf(StructureEditError);
   });
 });

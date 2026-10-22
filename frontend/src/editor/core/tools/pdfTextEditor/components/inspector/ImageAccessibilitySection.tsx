@@ -2,6 +2,7 @@ import { Stack, Text, Textarea } from "@mantine/core";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
+import { Checkbox } from "@editor/ui/Checkbox";
 import { Icon } from "@editor/ui/Icon";
 import {
   Section,
@@ -14,17 +15,20 @@ import {
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
 /**
- * The selected image's description, or why it cannot have one, and a way on
- * to the next image needing attention. `review` counts this image too.
+ * The selected image's description or decorative mark, or why it cannot have
+ * either, and a way on to the next image needing attention. `review` counts
+ * this image too.
  */
 export function ImageAccessibilitySection({
   accessibility,
   onSetDescription,
+  onSetDecorative,
   review,
   onNext,
 }: {
   accessibility: ImageAccessibility;
   onSetDescription: (text: string) => void;
+  onSetDecorative: (decorative: boolean) => void;
   review: ImageReview;
   onNext: () => void;
 }) {
@@ -81,6 +85,12 @@ export function ImageAccessibilitySection({
             {statusMessage(t, accessibility)}
           </Text>
         )}
+        {accessibility.kind !== "blocked" && (
+          <DecorativeToggle
+            accessibility={accessibility}
+            onSetDecorative={onSetDecorative}
+          />
+        )}
         {othersPending > 0 && (
           <Button
             size="sm"
@@ -100,6 +110,57 @@ export function ImageAccessibilitySection({
         )}
       </Stack>
     </Section>
+  );
+}
+
+function DecorativeToggle({
+  accessibility,
+  onSetDecorative,
+}: {
+  accessibility: Exclude<ImageAccessibility, { kind: "blocked" }>;
+  onSetDecorative: (decorative: boolean) => void;
+}) {
+  const { t } = useTranslation();
+  const checked = accessibility.kind === "decorative";
+  const blocked =
+    accessibility.kind === "decorative"
+      ? !accessibility.pending
+      : !accessibility.canBeDecorative;
+  return (
+    <Checkbox
+      label={t(
+        "pdfTextEditor.inspector.accessibility.decorativeLabel",
+        "Decorative",
+      )}
+      description={decorativeHint(t, checked, blocked)}
+      checked={checked}
+      disabled={blocked}
+      onChange={(e) => onSetDecorative(e.currentTarget.checked)}
+      data-testid="pdf-editor-image-decorative"
+    />
+  );
+}
+
+function decorativeHint(
+  t: TFunction,
+  checked: boolean,
+  blocked: boolean,
+): string {
+  if (!blocked) {
+    return t(
+      "pdfTextEditor.inspector.accessibility.decorativeHint",
+      "For borders, backgrounds and other images that carry no information.",
+    );
+  }
+  if (checked) {
+    return t(
+      "pdfTextEditor.inspector.accessibility.decorativeInFile",
+      "This image is marked decorative in the file.",
+    );
+  }
+  return t(
+    "pdfTextEditor.inspector.accessibility.mixedContent",
+    "This figure includes other content, so it can't be marked decorative here.",
   );
 }
 
