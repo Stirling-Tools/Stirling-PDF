@@ -27,7 +27,13 @@ class IssuerDiscoveryProbeTest {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext(
                 "/good/.well-known/openid-configuration",
-                exchange -> respond(exchange, 200, "{\"issuer\":\"x\"}"));
+                exchange -> respond(exchange, 200, "{\"issuer\":\"" + base + "/good\"}"));
+        server.createContext(
+                "/elsewhere/.well-known/openid-configuration",
+                exchange -> respond(exchange, 200, "{\"issuer\":\"" + base + "/good\"}"));
+        server.createContext(
+                "/numeric/.well-known/openid-configuration",
+                exchange -> respond(exchange, 200, "{\"issuer\":1}"));
         server.createContext(
                 "/empty/.well-known/openid-configuration",
                 exchange -> respond(exchange, 200, "{}"));
@@ -66,6 +72,16 @@ class IssuerDiscoveryProbeTest {
     @Test
     void aDocumentWithoutAnIssuer() {
         assertThat(probe.answersDiscovery(base + "/empty")).isFalse();
+    }
+
+    @Test
+    void aDocumentNamingAnotherIssuer() {
+        assertThat(probe.answersDiscovery(base + "/elsewhere")).isFalse();
+    }
+
+    @Test
+    void aDocumentWhoseIssuerIsNotText() {
+        assertThat(probe.answersDiscovery(base + "/numeric")).isFalse();
     }
 
     @Test

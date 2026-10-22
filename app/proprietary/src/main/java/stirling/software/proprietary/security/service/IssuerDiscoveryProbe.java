@@ -54,16 +54,19 @@ public class IssuerDiscoveryProbe {
     }
 
     /**
-     * True when {@code issuer} is an http(s) URL whose discovery document names an issuer. Never
-     * throws: an unreachable, slow or malformed issuer is simply false.
+     * True when {@code issuer} is an http(s) URL whose discovery document names that same issuer,
+     * compared without surrounding whitespace or trailing slashes, the form the setup wizard saves.
+     * Spring refuses to register a provider whose document names any other issuer, and that stops
+     * the server starting. Never throws: an unreachable, slow or malformed issuer is simply false.
      */
     public boolean answersDiscovery(String issuer) {
         if (issuer == null) {
             return false;
         }
+        String expectedIssuer = withoutTrailingSlashes(issuer.trim());
         URI discovery;
         try {
-            URI base = URI.create(withoutTrailingSlashes(issuer.trim()));
+            URI base = URI.create(expectedIssuer);
             String scheme =
                     base.getScheme() == null ? "" : base.getScheme().toLowerCase(Locale.ROOT);
             if (!scheme.equals("http") && !scheme.equals("https") || base.getHost() == null) {
@@ -84,8 +87,10 @@ public class IssuerDiscoveryProbe {
             if (response.statusCode() != 200) {
                 return false;
             }
-            JsonNode body = objectMapper.readTree(response.body());
-            return body.hasNonNull("issuer");
+            JsonNode advertisedIssuer = objectMapper.readTree(response.body()).get("issuer");
+            return advertisedIssuer != null
+                    && advertisedIssuer.isString()
+                    && expectedIssuer.equals(advertisedIssuer.stringValue());
         } catch (IOException e) {
             log.debug("Issuer discovery failed for {}: {}", discovery, e.getMessage());
             return false;
