@@ -8,6 +8,12 @@ import fs from "node:fs";
 
 test.skip(!!process.env.CI, "capture-only spec; not for CI");
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("stirling.crop.surface", "embedded");
+  });
+});
+
 const SHOT_DIR =
   process.env.SHOT_DIR ??
   path.join(import.meta.dirname, "../../../../screenshots/crop-ui");
