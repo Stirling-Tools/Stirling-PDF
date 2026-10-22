@@ -231,7 +231,7 @@ export function parseRectToCss(
 }
 
 /** CropBox / MediaBox coordinates for a page. */
-interface PageBox {
+export interface PageBox {
   left: number;
   bottom: number;
   right: number;
@@ -393,6 +393,41 @@ function closeDocumentNow(m: WrappedPdfiumModule, docPtr: number): void {
   }
 }
 
+function loadIntoHeap(
+  m: WrappedPdfiumModule,
+  data: ArrayBuffer | Uint8Array,
+  password?: string,
+): number {
+  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+  const len = bytes.length;
+  const ptr = m.pdfium.wasmExports.malloc(len);
+  // Copying to address 0 would hand PDFium garbage that it reports as a format error.
+  if (!ptr) throw new Error("Unable to allocate memory for this PDF");
+  copyToWasmHeap(m, bytes, ptr);
+
+  const docPtr = m.FPDF_LoadMemDocument(ptr, len, password ?? "");
+  if (!docPtr) {
+    m.pdfium.wasmExports.free(ptr);
+    throw new PdfiumOpenError(m.FPDF_GetLastError());
+  }
+  // Keep the buffer alive; freed by closeDocumentNow()
+  _docDataPtrs.set(docPtr, { module: m, ptr });
+  return docPtr;
+}
+
+/**
+ * Load a PDF the caller is going to modify. Unlike `openRawDocument` it never
+ * becomes the shared document, so read-only scans cannot see the edits and the
+ * edited copy is freed as soon as it is closed. Caller MUST call
+ * `closeRawDocument(docPtr)` when finished.
+ */
+export async function openRawDocumentForEditing(
+  data: ArrayBuffer | Uint8Array,
+): Promise<number> {
+  const m = await getPdfiumModule();
+  return loadIntoHeap(m, data);
+}
+
 /**
  * Load a PDF into PDFium memory and return the document pointer.
  * Caller MUST call `closeRawDocument(docPtr)` when finished.
@@ -417,20 +452,7 @@ export async function openRawDocument(
     sharedReleasePending = false;
   }
 
-  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
-  const len = bytes.length;
-  const ptr = m.pdfium.wasmExports.malloc(len);
-  // Copying to address 0 would hand PDFium garbage that it reports as a format error.
-  if (!ptr) throw new Error("Unable to allocate memory for this PDF");
-  copyToWasmHeap(m, bytes, ptr);
-
-  const docPtr = m.FPDF_LoadMemDocument(ptr, len, password ?? "");
-  if (!docPtr) {
-    m.pdfium.wasmExports.free(ptr);
-    throw new PdfiumOpenError(m.FPDF_GetLastError());
-  }
-  // Keep the buffer alive; freed by closeDocumentNow()
-  _docDataPtrs.set(docPtr, { module: m, ptr });
+  const docPtr = loadIntoHeap(m, data, password);
 
   if (!password && !sharedDocument) {
     // A scan still reading the previous document keeps it open; only adopt the
