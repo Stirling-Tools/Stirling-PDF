@@ -134,7 +134,7 @@ export function writeViewedPage(originalId: string, page: number): void {
  * A one-way fingerprint of the signed-in user. Owners are only ever compared, never read back, so
  * the account id itself never needs to reach storage. Falls back to a non-cryptographic digest
  * where SubtleCrypto is absent (a self-hosted instance served over plain http): the fingerprint
- * only has to tell two accounts sharing one tab apart, and the files it gates are reachable from
+ * only has to tell two accounts sharing one browser apart, and the files it gates are reachable from
  * My Files regardless, since IndexedDB is per-origin.
  */
 export async function fingerprintOwner(userId: string): Promise<string> {
