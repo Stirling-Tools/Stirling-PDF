@@ -15,14 +15,16 @@ import lombok.ToString;
 public class RemovePasswordRequest extends PDFPasswordRequest {
     @Schema(
             description =
-                    "Explicitly remove all passwords and restrictions, subject to the server owner-password policy. The password or sourcePassword authenticates the source; selective removal fields do not apply.",
+                    "Explicitly remove all passwords and restrictions, subject to the server"
+                        + " owner-password policy. The password or sourcePassword authenticates the"
+                        + " source; selective removal fields do not apply.",
             defaultValue = "false")
     private boolean removeAll;
 
     @Schema(
             description =
-                    "Permissions password to remove. Supplying this field enables selective removal;"
-                            + " leave blank to retain the permissions password.",
+                    "Permissions password to remove. Supplying this field enables selective"
+                            + " removal; leave blank to retain the permissions password.",
             format = "password")
     @ToString.Exclude
     private String ownerPassword;
@@ -30,9 +32,9 @@ public class RemovePasswordRequest extends PDFPasswordRequest {
     @Schema(
             description =
                     "Credential for opening the source, without selecting it for removal. Supplying"
-                            + " this field enables selective removal; password then selects the"
-                            + " opening password to remove and ownerPassword selects the permissions"
-                            + " password to remove. Blank selection fields keep their passwords.",
+                        + " this field enables selective removal; password then selects the opening"
+                        + " password to remove and ownerPassword selects the permissions password"
+                        + " to remove. Blank selection fields keep their passwords.",
             format = "password")
     @ToString.Exclude
     private String sourcePassword;
