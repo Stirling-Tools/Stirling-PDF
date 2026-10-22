@@ -48,6 +48,7 @@ import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
+import stirling.software.proprietary.util.SecretMasker;
 
 /**
  * Service for audit event creation, data collection, and persistence. Combines persistence logic
@@ -546,8 +547,11 @@ public class AuditService {
                         .forEach(
                                 i -> {
                                     if (vals[i] != null) {
-                                        // Convert objects to safe string representation
-                                        data.put("arg_" + names[i], safeToString(vals[i], 500));
+                                        data.put(
+                                                "arg_" + names[i],
+                                                safeToString(
+                                                        SecretMasker.maskValue(names[i], vals[i]),
+                                                        500));
                                     } else {
                                         data.put("arg_" + names[i], null);
                                     }
