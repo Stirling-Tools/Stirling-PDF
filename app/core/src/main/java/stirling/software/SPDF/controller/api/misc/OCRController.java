@@ -61,6 +61,9 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class OCRController {
 
+    // Tesseract's recommended minimum; more pixels cost time without improving recognition
+    private static final int OCR_RENDER_DPI = 300;
+
     private final ApplicationProperties applicationProperties;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -392,11 +395,14 @@ public class OCRController {
                         // Convert page to image
                         BufferedImage image;
 
-                        // Use global maximum DPI setting, fallback to 300 if not set
-                        int renderDpi = 300; // Default fallback
+                        // maxDPI is a safety ceiling for user-supplied values, not a target
+                        int renderDpi = OCR_RENDER_DPI;
                         if (applicationProperties != null
                                 && applicationProperties.getSystem() != null) {
-                            renderDpi = applicationProperties.getSystem().getMaxDPI();
+                            renderDpi =
+                                    Math.min(
+                                            renderDpi,
+                                            applicationProperties.getSystem().getMaxDPI());
                         }
                         final int dpi = renderDpi;
                         final int currentPageNum = pageNum;

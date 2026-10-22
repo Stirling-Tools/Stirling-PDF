@@ -1,7 +1,9 @@
 package stirling.software.proprietary.storage.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +18,14 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 
 public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
     Optional<StoredFile> findByIdAndOwner(Long id, User owner);
+
+    /** Files that expired before {@code cutoff}, in id order after {@code afterId}. */
+    @Query(
+            "SELECT f FROM StoredFile f "
+                    + "WHERE f.expiresAt < :cutoff AND f.id > :afterId "
+                    + "ORDER BY f.id")
+    List<StoredFile> findExpiredAfterId(
+            @Param("cutoff") LocalDateTime cutoff, @Param("afterId") Long afterId, Pageable page);
 
     @Query(
             "SELECT DISTINCT f FROM StoredFile f "
@@ -59,6 +69,15 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
     List<StoredFile> findByWorkflowSession(WorkflowSession workflowSession);
 
     List<StoredFile> findAllByOwner(User owner);
+
+    List<StoredFile> findAllByFolderIdAndOwner(UUID folderId, User owner);
+
+    /**
+     * A file's folder placement as a plain id. Reads the FK directly so callers outside a
+     * transaction never touch the lazy {@code folder} association.
+     */
+    @Query("SELECT sf.folder.id FROM StoredFile sf WHERE sf.id = :fileId")
+    Optional<UUID> findFolderIdByFileId(@Param("fileId") Long fileId);
 
     /**
      * Bulk lookup used by the folder-placement controller. Returns only files owned by {@code

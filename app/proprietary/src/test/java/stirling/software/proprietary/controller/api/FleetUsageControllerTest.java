@@ -10,11 +10,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -43,7 +46,7 @@ class FleetUsageControllerTest {
     @DisplayName("deployed reflects the user count, excluding the internal API user")
     void deployedFromUserCount() {
         when(userRepository.countByUsernameNot(anyString())).thenReturn(7L);
-        when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(false);
+        when(auditConfig.isLevelEnabled(AuditLevel.BASIC)).thenReturn(false);
 
         FleetUsageStats stats = controller.fleetStats();
 
@@ -52,20 +55,19 @@ class FleetUsageControllerTest {
     }
 
     @Test
-    @DisplayName("audit-derived figures are null when auditing is below STANDARD")
+    @DisplayName("audit-derived figures are null when auditing is disabled or below BASIC")
     void auditOffYieldsNulls() {
         when(userRepository.countByUsernameNot(anyString())).thenReturn(3L);
-        // Covers both disabled and the enabled-but-level=OFF/BASIC misconfig: isLevelEnabled
+        // Disabled recording must not be presented as zero activity. isLevelEnabled
         // is false, so no events can exist and we must report N/A, not a 0 from an empty table.
-        when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(false);
+        when(auditConfig.isLevelEnabled(AuditLevel.BASIC)).thenReturn(false);
 
         FleetUsageStats stats = controller.fleetStats();
 
         assertThat(stats.activeThisMonth()).isNull();
         assertThat(stats.pdfsProcessed()).isNull();
         verify(auditRepository, never())
-                .countDistinctPrincipalsBySourceExcludingTypeAfter(
-                        any(), any(), any(Instant.class));
+                .countDistinctPrincipalsBySourceAndTypeInAfter(any(), any(), any(Instant.class));
         verify(auditRepository, never())
                 .countByTypeInAndSourceAndTimestampAfter(anyList(), any(), any(Instant.class));
     }
@@ -74,28 +76,41 @@ class FleetUsageControllerTest {
     @DisplayName("audit-derived figures come from the repository when auditing is enabled")
     void auditOnReadsRepository() {
         when(userRepository.countByUsernameNot(anyString())).thenReturn(10L);
-        when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(true);
-        when(auditRepository.countDistinctPrincipalsBySourceExcludingTypeAfter(
-                        eq("WEB"), eq("UI_DATA"), any(Instant.class)))
+        when(auditConfig.isLevelEnabled(AuditLevel.BASIC)).thenReturn(true);
+        when(auditRepository.countDistinctPrincipalsBySourceAndTypeInAfter(
+                        eq("WEB"),
+                        eq(List.of("PDF_PROCESS", "FILE_OPERATION")),
+                        any(Instant.class)))
                 .thenReturn(4L);
         when(auditRepository.countByTypeInAndSourceAndTimestampAfter(
                         anyList(), eq("WEB"), any(Instant.class)))
                 .thenReturn(1234L);
 
+        Instant earliest = Instant.now().minus(30, ChronoUnit.DAYS);
         FleetUsageStats stats = controller.fleetStats();
 
         assertThat(stats.editorsDeployed()).isEqualTo(10L);
         assertThat(stats.activeThisMonth()).isEqualTo(4L);
         assertThat(stats.pdfsProcessed()).isEqualTo(1234L);
+        ArgumentCaptor<Instant> since = ArgumentCaptor.forClass(Instant.class);
+        verify(auditRepository)
+                .countByTypeInAndSourceAndTimestampAfter(
+                        eq(List.of("PDF_PROCESS", "FILE_OPERATION")), eq("WEB"), since.capture());
+        assertThat(since.getValue()).isBetween(earliest, Instant.now().minus(30, ChronoUnit.DAYS));
+        verify(auditRepository)
+                .countDistinctPrincipalsBySourceAndTypeInAfter(
+                        "WEB", List.of("PDF_PROCESS", "FILE_OPERATION"), since.getValue());
     }
 
     @Test
     @DisplayName("active editors are clamped to deployed (active is a subset)")
     void activeClampedToDeployed() {
         when(userRepository.countByUsernameNot(anyString())).thenReturn(2L);
-        when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(true);
-        when(auditRepository.countDistinctPrincipalsBySourceExcludingTypeAfter(
-                        eq("WEB"), eq("UI_DATA"), any(Instant.class)))
+        when(auditConfig.isLevelEnabled(AuditLevel.BASIC)).thenReturn(true);
+        when(auditRepository.countDistinctPrincipalsBySourceAndTypeInAfter(
+                        eq("WEB"),
+                        eq(List.of("PDF_PROCESS", "FILE_OPERATION")),
+                        any(Instant.class)))
                 .thenReturn(9L);
         when(auditRepository.countByTypeInAndSourceAndTimestampAfter(
                         anyList(), eq("WEB"), any(Instant.class)))

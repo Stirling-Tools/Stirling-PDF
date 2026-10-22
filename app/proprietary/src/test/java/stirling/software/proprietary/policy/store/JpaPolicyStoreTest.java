@@ -73,6 +73,35 @@ class JpaPolicyStoreTest {
     }
 
     @Test
+    void aLegacyBlobLiftsItsSurfaceFromTheOutputMarker() {
+        Policy pair =
+                new Policy(
+                        "pf1",
+                        "Processing folder: Downloads",
+                        "alice",
+                        true,
+                        List.of(),
+                        List.of(),
+                        new OutputSpec("folder", Map.of("surface", "processing-folder")));
+        Policy plain = new Policy("p1", "rotate", "alice", true, List.of(), List.of(), null);
+        when(repository.findById("pf1")).thenReturn(Optional.of(legacyEntityFor(pair)));
+        when(repository.findById("p1")).thenReturn(Optional.of(legacyEntityFor(plain)));
+
+        assertEquals(Policy.SURFACE_PROCESSING_FOLDER, store.get("pf1").orElseThrow().surface());
+        assertEquals(Policy.SURFACE_POLICY, store.get("p1").orElseThrow().surface());
+    }
+
+    /** The row as a pre-surface-field build wrote it: no {@code surface} in the JSON. */
+    private PolicyEntity legacyEntityFor(Policy policy) {
+        var node = (tools.jackson.databind.node.ObjectNode) objectMapper.valueToTree(policy);
+        node.remove("surface");
+        PolicyEntity entity = new PolicyEntity();
+        entity.setId(policy.id());
+        entity.setPolicyJson(node.toString());
+        return entity;
+    }
+
+    @Test
     void getDeserializesThePolicyFromJson() {
         Policy policy =
                 new Policy(

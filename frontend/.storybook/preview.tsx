@@ -50,7 +50,7 @@ import "@portal/theme/base.css";
 // async fetch (Storybook has no backend to serve /locales/). t(key) then renders
 // the shipped copy (e.g. "No sources connected yet") rather than the raw key.
 const localeModules = import.meta.glob<string>(
-  "../editor/public/locales/*/translation.toml",
+  "../public/locales/*/translation.toml",
   { query: "?raw", import: "default", eager: true },
 );
 
@@ -63,7 +63,7 @@ for (const [path, raw] of Object.entries(localeModules)) {
   if (!lng) continue;
   let translation: Record<string, unknown>;
   try {
-    translation = parseToml(raw) as Record<string, unknown>;
+    translation = parseToml(raw);
   } catch {
     translation = {};
   }

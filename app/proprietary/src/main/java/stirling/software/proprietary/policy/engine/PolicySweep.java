@@ -21,9 +21,15 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
  */
 final class PolicySweep implements ResolveContext {
 
+    private static final int MAX_BATCH_CLAIMS = 100;
+
     private final String policyId;
     private final SweepKind kind;
     private final ProcessedLedger ledger;
+
+    /** When set, the only identity this sweep may claim; null sweeps the whole policy. */
+    private final String target;
+
     private final Set<String> present = new HashSet<>();
     // Claim states loaded in bulk at reportPresent; a claim outside the prefetch falls back to a
     // single lookup. A stale entry cannot double-claim (the ledger re-checks every transition),
@@ -31,21 +37,46 @@ final class PolicySweep implements ResolveContext {
     private final Map<String, ClaimState> prefetched = new HashMap<>();
     private final Set<String> prefetchedIdentities = new HashSet<>();
     private boolean cleanupVetoed;
+    private int retried;
+    private int claimedCount;
 
-    PolicySweep(String policyId, SweepKind kind, ProcessedLedger ledger) {
+    PolicySweep(String policyId, SweepKind kind, ProcessedLedger ledger, String target) {
         this.policyId = policyId;
         this.kind = kind;
         this.ledger = ledger;
+        this.target = target;
     }
 
     @Override
     public synchronized boolean claim(String identity, String gate, Supplier<String> contentHash) {
+        // Refused here rather than after resolve: the sources still list normally, but a capped
+        // listing would otherwise spend its whole budget claiming other files and never reach the
+        // one file that was asked for.
+        if (target != null && !target.equals(identity)) {
+            return false;
+        }
+        if (kind == SweepKind.BATCH && claimedCount >= MAX_BATCH_CLAIMS) {
+            return false;
+        }
         ClaimState observed =
                 prefetchedIdentities.contains(identity)
                         ? prefetched.get(identity)
                         : ledger.statesFor(policyId, List.of(identity)).get(identity);
+        // A user-invoked sweep retries parked failures: the click usually follows fixing
+        // whatever failed them, and only the unattended watcher owes a poison file caution.
+        if (kind == SweepKind.USER
+                && observed != null
+                && observed.status() == ProcessedFileStatus.ERROR
+                && gate.equals(observed.gate())
+                && ledger.reclaimFailed(policyId, identity, gate)) {
+            retried++;
+            prefetchedIdentities.add(identity);
+            prefetched.put(identity, new ClaimState(ProcessedFileStatus.PROCESSING, gate, null));
+            return true;
+        }
         boolean claimed = ledger.claim(policyId, identity, gate, contentHash, observed);
         if (claimed) {
+            claimedCount++;
             // A nested source surfacing the same file later in this sweep sees it in flight
             // without another lookup.
             prefetchedIdentities.add(identity);
@@ -68,7 +99,7 @@ final class PolicySweep implements ResolveContext {
 
     @Override
     public synchronized void reportPresent(Collection<String> identities) {
-        if (kind == SweepKind.FULL) {
+        if (kind != SweepKind.LIGHT) {
             present.addAll(identities);
         }
         prefetched.putAll(ledger.statesFor(policyId, identities));
@@ -80,7 +111,7 @@ final class PolicySweep implements ResolveContext {
     }
 
     synchronized boolean cleanupAllowed() {
-        return kind == SweepKind.FULL && !cleanupVetoed;
+        return kind != SweepKind.LIGHT && !cleanupVetoed;
     }
 
     synchronized Set<String> presentIdentities() {
@@ -88,9 +119,9 @@ final class PolicySweep implements ResolveContext {
     }
 
     /**
-     * Summarise the sweep from state already in hand (no extra ledger reads): the prefetched rows
-     * were loaded before claiming, and successful claims flipped their entries to PROCESSING, so
-     * what remains DONE or ERROR is exactly what this sweep skipped.
+     * Summarise from prefetched ledger state updated with successful claims, without extra reads.
+     * Files deferred by the BATCH cap can have no ledger state: they count toward filesListed but
+     * none of the status totals, so those totals need not account for every listed file.
      */
     synchronized SweepOutcome outcome(List<String> runIds) {
         int alreadyProcessed = 0;
@@ -112,6 +143,7 @@ final class PolicySweep implements ResolveContext {
                 present.size(),
                 alreadyProcessed,
                 parked,
-                Math.max(0, processing - runIds.size()));
+                Math.max(0, processing - runIds.size()),
+                retried);
     }
 }

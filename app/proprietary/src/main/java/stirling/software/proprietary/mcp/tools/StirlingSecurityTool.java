@@ -4,6 +4,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import stirling.software.proprietary.mcp.McpToolAnnotations;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationCategory;
 
@@ -27,6 +28,11 @@ public class StirlingSecurityTool extends AbstractCategoryTool {
     }
 
     @Override
+    public String title() {
+        return "PDF security and signing";
+    }
+
+    @Override
     public String description() {
         return "Security-related PDF operations: password add/remove, redact, sanitize, certify"
                 + " / sign with cert, validate signature, add watermark. Call"
@@ -37,5 +43,11 @@ public class StirlingSecurityTool extends AbstractCategoryTool {
     @Override
     protected OperationCategory category() {
         return OperationCategory.SECURITY;
+    }
+
+    @Override
+    public McpToolAnnotations annotations() {
+        // timestamp-pdf contacts a timestamp authority.
+        return McpToolAnnotations.PRODUCES_FILE_OPEN_WORLD;
     }
 }

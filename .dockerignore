@@ -26,16 +26,16 @@ version_builds/
 node_modules/
 **/node_modules/
 frontend/node_modules/
-frontend/editor/dist/
-frontend/editor/playwright-report/
+frontend/dist/
+frontend/playwright-report/
 .npm/
 .yarn/
 
 # Tauri/desktop builds
 src-tauri/target/
 src-tauri/dist/
-frontend/editor/src-tauri/target/
-frontend/editor/src-tauri/dist/
+frontend/src-tauri/target/
+frontend/src-tauri/dist/
 
 # IDE and editor
 .idea/
@@ -86,6 +86,13 @@ commonforms-onnx/
 stirling/
 customFiles/
 configs/
+
+# Local dev runtime dirs created by bootRun under the module dir (hold the locked H2 DB,
+# downloaded models, logs); never build input. Root-level patterns above don't match these.
+**/configs/
+app/core/customFiles/
+app/core/logs/
+app/core/pipeline/
 
 # Claude Code workspace
 .claude/

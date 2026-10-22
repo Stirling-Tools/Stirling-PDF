@@ -1,0 +1,74 @@
+.pdf-editor-topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border-bottom: 0.0625rem solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
+  overflow: hidden;
+  flex: 0 0 auto;
+  container-type: inline-size;
+  container-name: pdfeditortoolbar;
+}
+
+.pdf-editor-topbar__lead,
+.pdf-editor-topbar__trail {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+}
+
+.pdf-editor-topbar__band {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  padding-bottom: 0.125rem;
+}
+
+.pdf-editor-topbar__file {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  max-width: 15rem;
+}
+
+.pdf-editor-topbar__filename {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.pdf-editor-topbar__dirty {
+  flex: 0 0 auto;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--c-warning);
+}
+
+@container pdfeditortoolbar (max-width: 62rem) {
+  .pdf-editor-topbar__filename {
+    display: none;
+  }
+}
+
+@container pdfeditortoolbar (max-width: 52rem) {
+  .pdf-editor-topbar__save-label {
+    display: none;
+  }
+}
+
+@media (max-width: 64rem) {
+  .pdf-editor-topbar__file {
+    max-width: 8rem;
+  }
+}

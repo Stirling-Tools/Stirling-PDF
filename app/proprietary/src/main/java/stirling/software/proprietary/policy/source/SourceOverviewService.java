@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
+import stirling.software.proprietary.policy.controller.ProcessingFolderController;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.util.SecretMasker;
@@ -34,7 +35,15 @@ public class SourceOverviewService {
     private final SourceDocCounter docCounter;
 
     public SourcesResponse overview() {
-        List<Source> sources = sourceAccessGuard.visibleFrom(sourceStore);
+        // Processing folders (source + policy pairs) are the editor's own surface, served by
+        // ProcessingFolderController; the portal's sources/pipelines views never see them.
+        List<Source> sources =
+                sourceAccessGuard.visibleFrom(sourceStore).stream()
+                        .filter(
+                                source ->
+                                        !ProcessingFolderController.SOURCE_TYPE.equals(
+                                                source.type()))
+                        .toList();
         List<Policy> policies = policyAccessGuard.visibleFrom(policyStore);
 
         Map<String, List<Policy>> referencesBySource = referencesBySource(policies);
@@ -117,14 +126,15 @@ public class SourceOverviewService {
 
     /**
      * Policies referencing each source id, across the caller's visible policies. A source counts
-     * whether a policy reads from it ({@code sourceIds}) or writes to it ({@code outputId}); a
-     * policy that does both counts once.
+     * whether a policy reads from it ({@code sourceIds}) or writes to it ({@link
+     * Policy#allOutputIds()}, which covers a routing rule's destination as well as the fallback
+     * output); a policy that does both counts once.
      */
     private static Map<String, List<Policy>> referencesBySource(List<Policy> policies) {
         Map<String, List<Policy>> bySource = new HashMap<>();
         for (Policy policy : policies) {
             Set<String> referenced = new LinkedHashSet<>(policy.sourceIds());
-            referenced.addAll(policy.outputIds());
+            referenced.addAll(policy.allOutputIds());
             for (String sourceId : referenced) {
                 bySource.computeIfAbsent(sourceId, key -> new ArrayList<>()).add(policy);
             }

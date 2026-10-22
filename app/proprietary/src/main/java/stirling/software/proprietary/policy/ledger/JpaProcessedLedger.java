@@ -119,6 +119,28 @@ public class JpaProcessedLedger implements ProcessedLedger {
     }
 
     @Override
+    public boolean reclaimFailed(String policyId, String identity, String gate) {
+        return repository.retryErrorAtGate(
+                        policyId, IdentityHasher.identityHash(identity), gate, nowMillis.get())
+                > 0;
+    }
+
+    @Override
+    public boolean forgetFailure(String policyId, String identity) {
+        return repository.deleteFailure(policyId, IdentityHasher.identityHash(identity)) > 0;
+    }
+
+    @Override
+    public boolean forget(String policyId, String identity) {
+        return repository.deleteSettled(policyId, IdentityHasher.identityHash(identity)) > 0;
+    }
+
+    @Override
+    public boolean anyInFlight(String policyId) {
+        return repository.existsByPolicyIdAndStatus(policyId, ProcessedFileStatus.PROCESSING);
+    }
+
+    @Override
     public void settle(
             String policyId,
             String identity,

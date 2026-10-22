@@ -48,6 +48,7 @@ import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
+import stirling.software.proprietary.util.SecretMasker;
 
 /**
  * Service for audit event creation, data collection, and persistence. Combines persistence logic
@@ -546,8 +547,11 @@ public class AuditService {
                         .forEach(
                                 i -> {
                                     if (vals[i] != null) {
-                                        // Convert objects to safe string representation
-                                        data.put("arg_" + names[i], safeToString(vals[i], 500));
+                                        data.put(
+                                                "arg_" + names[i],
+                                                safeToString(
+                                                        SecretMasker.maskValue(names[i], vals[i]),
+                                                        500));
                                     } else {
                                         data.put("arg_" + names[i], null);
                                     }
@@ -649,20 +653,23 @@ public class AuditService {
 
     /**
      * Whether the current license permits recording this event type. Enterprise records everything;
-     * without it only document-processing events (PDF_PROCESS, FILE_OPERATION) are captured,
-     * because they back the Documents tab that is open to every Processor user (still subject to
-     * audit being enabled at a level that includes them). Everything else stays Enterprise-only.
+     * without it document-processing and organization ownership events are captured, because they
+     * back the Documents tab that is open to every Processor user (still subject to audit being
+     * enabled at a level that includes them). Ownership recovery also needs a record on unlicensed
+     * deployments. Other event types stay Enterprise-only.
      */
     private boolean isLicensedToRecord(AuditEventType type) {
         return runningEE
                 || type == AuditEventType.PDF_PROCESS
-                || type == AuditEventType.FILE_OPERATION;
+                || type == AuditEventType.FILE_OPERATION
+                || type == AuditEventType.ORG_OWNERSHIP_CHANGE;
     }
 
     private boolean isLicensedToRecord(String type) {
         return runningEE
                 || AuditEventType.PDF_PROCESS.name().equals(type)
-                || AuditEventType.FILE_OPERATION.name().equals(type);
+                || AuditEventType.FILE_OPERATION.name().equals(type)
+                || AuditEventType.ORG_OWNERSHIP_CHANGE.name().equals(type);
     }
 
     /**

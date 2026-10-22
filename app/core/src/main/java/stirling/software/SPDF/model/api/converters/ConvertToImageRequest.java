@@ -11,6 +11,8 @@ import stirling.software.SPDF.model.api.PDFWithPageNums;
 @EqualsAndHashCode(callSuper = true)
 public class ConvertToImageRequest extends PDFWithPageNums {
 
+    public static final int DEFAULT_DPI = 300;
+
     @Schema(
             description = "The output image format",
             defaultValue = "png",
@@ -38,7 +40,7 @@ public class ConvertToImageRequest extends PDFWithPageNums {
             description = "The DPI (dots per inch) for the output image(s)",
             defaultValue = "300",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Integer dpi;
+    private Integer dpi = DEFAULT_DPI;
 
     @Schema(
             description = "Include annotations such as comments in the output image(s)",

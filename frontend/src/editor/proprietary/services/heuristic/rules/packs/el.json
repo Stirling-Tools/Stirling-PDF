@@ -1,0 +1,181 @@
+{
+  "version": 2,
+  "language": "el",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "τιμολόγιο", "weight": 24, "where": "title" },
+        { "text": "φόρος προστιθέμενης αξίας", "weight": 8 }
+      ]
+    },
+    {
+      "id": "purchase-order",
+      "phrases": [{ "text": "εντολή αγοράς", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "expense-report",
+      "phrases": [{ "text": "έξοδο", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [{ "text": "ισολογισμός", "weight": 12 }]
+    },
+    {
+      "id": "tax-return",
+      "phrases": [
+        { "text": "φορολογική δήλωση", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "tax-form",
+      "phrases": [
+        { "text": "φορολογική δήλωση", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "σύμβαση", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "διαθήκη", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "mortgage-document",
+      "phrases": [{ "text": "υποθήκη", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "resume",
+      "phrases": [
+        { "text": "βιογραφικό σημείωμα", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "ευρεσιτεχνία", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [{ "text": "διάγνωση", "weight": 10 }]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "εμβολιασμός", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [{ "text": "ερωτηματολόγιο", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        { "text": "δελτίο δεδομένων ασφάλειας", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [
+        { "text": "επιχειρηματικό σχέδιο", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "λευκή βίβλος", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "μνημόνιο", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "βίζα", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [{ "text": "συνταγή", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "αναφορά", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "επιστολή", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "άδεια", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "ακίνητο", "weight": 8 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "ηλεκτρονικό ταχυδρομείο", "weight": 8 }]
+    },
+    {
+      "id": "book-ebook",
+      "phrases": [{ "text": "πίνακας περιεχομένων", "weight": 6 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "περιοδικό", "weight": 10 }]
+    },
+    {
+      "id": "course-syllabus",
+      "phrases": [{ "text": "εξεταστέα ύλη", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "purchase-agreement",
+      "phrases": [{ "text": "πώληση", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "ασφάλεια", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "api-documentation",
+      "phrases": [{ "text": "διεπαφή προγραμματισμού εφαρμογών", "weight": 8 }]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "προϋπολογισμός", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "order-confirmation",
+      "phrases": [{ "text": "εντολή πώλησης", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "organization-chart",
+      "phrases": [{ "text": "οργανόγραμμα", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "case-study",
+      "phrases": [
+        { "text": "μελέτη περίπτωσης", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "διοικητικό συμβούλιο", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "επένδυση", "weight": 8 }]
+    },
+    {
+      "id": "grade-report",
+      "phrases": [{ "text": "έλεγχος", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "εργασία για το σπίτι", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "toc": [{ "pattern": "πίνακας\\ περιεχομένων" }],
+    "references": [{ "pattern": "βιβλιογραφία" }]
+  }
+}

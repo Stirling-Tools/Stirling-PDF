@@ -4,9 +4,9 @@ import { defineConfig, type OxlintGlobals } from "oxlint";
 // import scope. `no-restricted-imports` is repeated per scope on purpose:
 // oxlint REPLACES (does not merge) a rule across matching overrides, so each
 // scope must restate the full set of bans that apply to it.
-const APP_SOURCE = "editor/src/**/*.{js,mjs,jsx,ts,tsx}";
-const DESKTOP_SOURCE = "editor/src/desktop/**/*.{js,mjs,jsx,ts,tsx}";
-const CLOUD_SOURCE = "editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}";
+const APP_SOURCE = "src/**/*.{js,mjs,jsx,ts,tsx}";
+const DESKTOP_SOURCE = "src/editor/desktop/**/*.{js,mjs,jsx,ts,tsx}";
+const CLOUD_SOURCE = "src/editor/cloud/**/*.{js,mjs,jsx,ts,tsx}";
 
 // Shared import-ban building blocks -----------------------------------------
 
@@ -22,7 +22,7 @@ const aliasOverSrc = {
 const noTauriOutsideDesktop = {
   regex: "^@tauri-apps/",
   message:
-    "Tauri APIs are desktop-only. Review frontend/editor/DeveloperGuide.md for structure advice.",
+    "Tauri APIs are desktop-only. Review frontend/DeveloperGuide.md for structure advice.",
 };
 const cloudNoTauri = {
   regex: "^@tauri-apps/",
@@ -72,23 +72,11 @@ const modernGlobals: OxlintGlobals = {
   SuppressedError: "readonly",
 };
 
-// Folders not yet conformant to the stricter no-explicit-any rule
-const noExplicitAnyExcludes = [
-  "editor/src/core/components/shared/FilePickerModal.tsx",
-  "editor/src/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/tools/addStamp/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/viewer/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/contexts/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/hooks/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/services/pdfProcessingService.ts",
-  "editor/src/core/services/zipFileService.ts",
-  "editor/src/core/tools/annotate/useAnnotationSelection.ts",
-  "editor/src/core/types/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/utils/*.{js,mjs,jsx,ts,tsx}",
-];
-
 export default defineConfig({
-  plugins: ["typescript", "import"],
+  plugins: ["typescript", "import", "react"],
+  options: {
+    typeAware: true,
+  },
   categories: {
     correctness: "off",
   },
@@ -102,11 +90,11 @@ export default defineConfig({
     "playwright-report",
     "storybook-static",
     "test-results",
-    "editor/dist",
-    "editor/public",
-    "editor/src-tauri",
-    "editor/playwright-report",
-    "editor/test-results",
+    "dist",
+    "public",
+    "src-tauri",
+    "playwright-report",
+    "test-results",
   ],
   rules: {
     "constructor-super": "error",
@@ -196,12 +184,14 @@ export default defineConfig({
         allowInterfaces: "with-single-extends",
       },
     ],
+    "typescript/no-explicit-any": "error",
     "typescript/no-extra-non-null-assertion": "error",
     "typescript/no-misused-new": "error",
     "typescript/no-namespace": "error",
     "typescript/no-non-null-asserted-optional-chain": "error",
     "typescript/no-require-imports": "error",
     "typescript/no-this-alias": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
     "typescript/no-unnecessary-type-constraint": "error",
     "typescript/no-unsafe-declaration-merging": "error",
     "typescript/no-unsafe-function-type": "error",
@@ -209,6 +199,7 @@ export default defineConfig({
     "typescript/prefer-as-const": "error",
     "typescript/prefer-namespace-keyword": "error",
     "typescript/triple-slash-reference": "error",
+    "react/jsx-max-depth": ["error", { max: 8 }],
   },
   overrides: [
     {
@@ -251,8 +242,6 @@ export default defineConfig({
       // Node globals for build scripts, config files, and Storybook config.
       files: [
         "scripts/**/*.{js,ts,mjs,mts}",
-        "editor/scripts/**/*.{js,ts,mjs,mts}",
-        "editor/*.config.{js,ts,mjs}",
         "*.config.{js,ts,mjs}",
         ".storybook/*.{js,ts,mjs,mts,tsx}",
       ],
@@ -351,20 +340,19 @@ export default defineConfig({
     },
     {
       // Exempt from the shared-DS Mantine import ban (these layers may use
-      // Mantine directly): the shared DS itself wraps Mantine, stories/tests
-      // demo it, and prototypes are not shipped. Module-path bans still apply.
+      // Mantine directly): the shared DS itself wraps Mantine and stories/tests
+      // demo it. Module-path bans still apply.
       // The three named files are ARIA tablist/segmented controls that the
       // ESLint config exempted from the (now-dropped) raw-<button> and Mantine
       // rules. Comes after the scoped bans above so it wins for these files;
       // desktop/cloud keep theirs.
       files: [
-        "editor/src/core/ui/**/*.{js,mjs,jsx,ts,tsx}",
-        "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
+        "src/editor/core/ui/**/*.{js,mjs,jsx,ts,tsx}",
         "**/*.stories.{js,mjs,jsx,ts,tsx}",
         "**/*.test.{js,mjs,jsx,ts,tsx}",
-        "editor/src/core/components/shared/FileSelectorPicker.tsx",
-        "editor/src/core/components/filesPage/FileManagerView.tsx",
-        "editor/src/core/pages/HomePage.tsx",
+        "src/editor/core/components/shared/FileSelectorPicker.tsx",
+        "src/editor/core/components/filesPage/FileManagerView.tsx",
+        "src/editor/core/pages/HomePage.tsx",
       ],
       excludeFiles: [DESKTOP_SOURCE, CLOUD_SOURCE],
       rules: {
@@ -381,8 +369,8 @@ export default defineConfig({
       // are exempt from the shared-DS Mantine import ban; being desktop they also
       // keep the Tauri allowance.
       files: [
-        "editor/src/desktop/**/*.test.{js,mjs,jsx,ts,tsx}",
-        "editor/src/desktop/**/*.stories.{js,mjs,jsx,ts,tsx}",
+        "src/editor/desktop/**/*.test.{js,mjs,jsx,ts,tsx}",
+        "src/editor/desktop/**/*.stories.{js,mjs,jsx,ts,tsx}",
       ],
       rules: {
         "no-restricted-imports": [
@@ -394,19 +382,22 @@ export default defineConfig({
       },
     },
     {
-      // Stricter no-explicit-any, enabled everywhere in the editor app EXCEPT
-      // the folders that are not yet conformant (migrated incrementally).
-      files: [APP_SOURCE],
-      excludeFiles: noExplicitAnyExcludes,
+      // A provider stack nests one context per level in dependency order, so its
+      // depth counts providers rather than measuring how hard the tree is to read.
+      files: [
+        "src/editor/core/components/AppProviders.tsx",
+        "src/processor/proprietary/PortalProviders.tsx",
+        ".storybook/preview.tsx",
+      ],
       rules: {
-        "typescript/no-explicit-any": "error",
+        "react/jsx-max-depth": "off",
       },
     },
     {
       // Circular-import detection across the editor app source (the import
       // plugin resolves @app/* and the other tsconfig path aliases). Replaces
       // the previous dpdm pass.
-      files: ["editor/src/**/*.{ts,tsx}"],
+      files: ["src/**/*.{ts,tsx}"],
       rules: {
         "import/no-cycle": "error",
       },

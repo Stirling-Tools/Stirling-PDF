@@ -70,9 +70,26 @@ class BillableOperationClassifierTest {
 
     @Test
     void aiPathUnderContextPathIsAi() {
-        // A real context-path deployment still classifies: /<ctx>/api/v1/ai/** is AI.
+        // A real context-path deployment still classifies: /<ctx>/api/v1/ai/tools/** is AI.
         MockHttpServletRequest req = req("/stirling/api/v1/ai/tools/foo");
         req.setContextPath("/stirling");
         assertEquals(BillingCategory.AI, BillableOperationClassifier.categorize(req, false));
+    }
+
+    @Test
+    void aiEngineHealthIsBypassed() {
+        // Only the /tools/ namespace is billable AI; the engine's own health surface is not.
+        assertEquals(
+                BillingCategory.BYPASSED,
+                BillableOperationClassifier.categorize(req("/api/v1/ai/health"), false));
+    }
+
+    @Test
+    void aiOrchestrateIsBypassed() {
+        // Orchestrate is AI reasoning; its dispatched tools bill as AUTOMATION, not the call
+        // itself.
+        assertEquals(
+                BillingCategory.BYPASSED,
+                BillableOperationClassifier.categorize(req("/api/v1/ai/orchestrate"), false));
     }
 }

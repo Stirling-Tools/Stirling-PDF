@@ -16,6 +16,12 @@ class ClusterLicenseGateTest {
         Field f = ClusterLicenseGate.class.getDeclaredField("runningProOrHigher");
         f.setAccessible(true);
         f.set(gate, value);
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                gate,
+                "licenseChecker",
+                org.mockito.Mockito.mock(
+                        stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker
+                                .class));
     }
 
     private void invokeVerify(ClusterLicenseGate gate) throws Throwable {
@@ -26,6 +32,19 @@ class ClusterLicenseGateTest {
         } catch (InvocationTargetException e) {
             throw e.getCause();
         }
+    }
+
+    @Test
+    void offlineTeamCanBootForRecovery() throws Exception {
+        var gate = new ClusterLicenseGate();
+        injectRunningProOrHigher(gate, false);
+        var checker =
+                org.mockito.Mockito.mock(
+                        stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker
+                                .class);
+        org.mockito.Mockito.when(checker.isTeamOfflineExpired()).thenReturn(true);
+        org.springframework.test.util.ReflectionTestUtils.setField(gate, "licenseChecker", checker);
+        assertDoesNotThrow(() -> invokeVerify(gate));
     }
 
     @Test

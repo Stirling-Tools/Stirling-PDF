@@ -356,6 +356,48 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle a document that failed the compliance standard it was checked against.
+     *
+     * @param ex the ComplianceNotMetException
+     * @param request the HTTP servlet request
+     * @return ProblemDetail with HTTP 422 UNPROCESSABLE_ENTITY: the request was understood and the
+     *     service worked, the document simply does not meet the standard
+     */
+    @ExceptionHandler(ComplianceNotMetException.class)
+    public ResponseEntity<ProblemDetail> handleComplianceNotMet(
+            ComplianceNotMetException ex, HttpServletRequest request) {
+        logException("warn", "Compliance", request, ex, ex.getErrorCode());
+
+        String title =
+                getLocalizedMessage(
+                        "error.complianceNotMet.title", ErrorTitles.COMPLIANCE_NOT_MET_DEFAULT);
+        return createProblemDetailResponse(
+                ex, HttpStatus.UNPROCESSABLE_ENTITY, ErrorTypes.COMPLIANCE_NOT_MET, title, request);
+    }
+
+    /**
+     * Handle a damaged document that every available repair tool has declined.
+     *
+     * @param ex the PdfUnrepairableException
+     * @param request the HTTP servlet request
+     * @return ProblemDetail with HTTP 422 UNPROCESSABLE_ENTITY: the request was understood and the
+     *     tools ran, the document is simply beyond repair
+     */
+    @ExceptionHandler(PdfUnrepairableException.class)
+    public ResponseEntity<ProblemDetail> handlePdfUnrepairable(
+            PdfUnrepairableException ex, HttpServletRequest request) {
+        // A verdict on the document, not a fault on this server: without its own handler it fell to
+        // the catch-all, which answers 500 and logs at ERROR, so every refusal read as an outage.
+        logException("warn", "PDF Unrepairable", request, ex, ex.getErrorCode());
+
+        String title =
+                getLocalizedMessage(
+                        "error.pdfUnrepairable.title", ErrorTitles.PDF_UNREPAIRABLE_DEFAULT);
+        return createProblemDetailResponse(
+                ex, HttpStatus.UNPROCESSABLE_ENTITY, ErrorTypes.PDF_UNREPAIRABLE, title, request);
+    }
+
+    /**
      * Handle FFmpeg dependency missing errors when media conversion endpoints are invoked.
      *
      * @param ex the FfmpegRequiredException
@@ -372,6 +414,21 @@ public class GlobalExceptionHandler {
                         "error.ffmpegRequired.title", ErrorTitles.FFMPEG_REQUIRED_DEFAULT);
         return createProblemDetailResponse(
                 ex, HttpStatus.SERVICE_UNAVAILABLE, ErrorTypes.FFMPEG_REQUIRED, title, request);
+    }
+
+    /**
+     * A tool or runtime the deployment lacks: the FFmpeg case generalised. 503, not 500, because
+     * only the server is missing something and retries fail until it is installed.
+     */
+    @ExceptionHandler(ToolRequiredException.class)
+    public ResponseEntity<ProblemDetail> handleToolRequired(
+            ToolRequiredException ex, HttpServletRequest request) {
+        logException("warn", "Required tool unavailable", request, ex, ex.getErrorCode());
+
+        String title =
+                getLocalizedMessage("error.toolRequired.title", ErrorTitles.TOOL_REQUIRED_DEFAULT);
+        return createProblemDetailResponse(
+                ex, HttpStatus.SERVICE_UNAVAILABLE, ErrorTypes.TOOL_REQUIRED, title, request);
     }
 
     /**
@@ -1126,12 +1183,21 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleRuntimeException(
             RuntimeException ex, HttpServletRequest request) {
 
-        // Check if this RuntimeException wraps a typed exception from job execution
+        // Check if this RuntimeException wraps a typed exception from job execution.
+        //
+        // Must stay in step with the @ExceptionHandler methods above: Spring resolves on the type
+        // thrown, so a wrapped exception reaches this handler and never theirs. A subtype missing
+        // from this ladder falls to handleBaseApp, and the same failure answers 500 when it came
+        // through a job and its own status when it did not.
         Throwable cause = ex.getCause();
         if (cause instanceof BaseAppException appEx) {
             // Delegate to specific BaseAppException handlers
             if (appEx instanceof PdfPasswordException) {
                 return handlePdfPassword((PdfPasswordException) appEx, request);
+            } else if (appEx instanceof ComplianceNotMetException complianceEx) {
+                return handleComplianceNotMet(complianceEx, request);
+            } else if (appEx instanceof PdfUnrepairableException unrepairableEx) {
+                return handlePdfUnrepairable(unrepairableEx, request);
             } else if (appEx instanceof PdfCorruptedException
                     || appEx instanceof PdfEncryptionException
                     || appEx instanceof OutOfMemoryDpiException) {
@@ -1140,6 +1206,8 @@ public class GlobalExceptionHandler {
                 return handleGhostscriptException((GhostscriptException) appEx, request);
             } else if (appEx instanceof FfmpegRequiredException) {
                 return handleFfmpegRequired((FfmpegRequiredException) appEx, request);
+            } else if (appEx instanceof ToolRequiredException toolEx) {
+                return handleToolRequired(toolEx, request);
             } else {
                 return handleBaseApp(appEx, request);
             }
@@ -1440,6 +1508,7 @@ public class GlobalExceptionHandler {
         static final String PDF_PASSWORD = "/errors/pdf-password";
         static final String GHOSTSCRIPT = "/errors/ghostscript";
         static final String FFMPEG_REQUIRED = "/errors/ffmpeg-required";
+        static final String TOOL_REQUIRED = "/errors/tool-required";
         static final String OUT_OF_MEMORY_DPI = "/errors/out-of-memory-dpi";
         static final String PDF_CORRUPTED = "/errors/pdf-corrupted";
         static final String PDF_ENCRYPTION = "/errors/pdf-encryption";
@@ -1459,6 +1528,8 @@ public class GlobalExceptionHandler {
         static final String NOT_FOUND = "/errors/not-found";
         static final String INVALID_ARGUMENT = "/errors/invalid-argument";
         static final String IO_ERROR = "/errors/io-error";
+        static final String COMPLIANCE_NOT_MET = "/errors/compliance-not-met";
+        static final String PDF_UNREPAIRABLE = "/errors/pdf-unrepairable";
         static final String UNEXPECTED = "/errors/unexpected";
     }
 
@@ -1467,10 +1538,13 @@ public class GlobalExceptionHandler {
         static final String PDF_PASSWORD_DEFAULT = "PDF Password Required";
         static final String GHOSTSCRIPT_DEFAULT = "Ghostscript Processing Error";
         static final String FFMPEG_REQUIRED_DEFAULT = "FFmpeg Required";
+        static final String TOOL_REQUIRED_DEFAULT = "Required Tool Not Installed";
         static final String OUT_OF_MEMORY_DPI_DEFAULT = "Insufficient Memory for Image Rendering";
         static final String PDF_CORRUPTED_DEFAULT = "PDF File Corrupted";
         static final String PDF_ENCRYPTION_DEFAULT = "PDF Encryption Error";
         static final String APPLICATION_DEFAULT = "Application Error";
+        static final String COMPLIANCE_NOT_MET_DEFAULT = "Compliance Standard Not Met";
+        static final String PDF_UNREPAIRABLE_DEFAULT = "PDF Could Not Be Repaired";
         static final String CBR_FORMAT_DEFAULT = "Invalid CBR File Format";
         static final String CBZ_FORMAT_DEFAULT = "Invalid CBZ File Format";
         static final String EML_FORMAT_DEFAULT = "Invalid EML File Format";

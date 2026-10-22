@@ -10,10 +10,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -84,6 +86,16 @@ class FormFillControllerTest {
         doc.addPage(new PDPage(PDRectangle.A4));
         PDAcroForm acroForm = new PDAcroForm(doc);
         doc.getDocumentCatalog().setAcroForm(acroForm);
+        return doc;
+    }
+
+    private PDDocument createPdfWithTextField(String name, String value) {
+        PDDocument doc = createMinimalPdf();
+        PDAcroForm acroForm = doc.getDocumentCatalog().getAcroForm();
+        PDTextField field = new PDTextField(acroForm);
+        field.setPartialName(name);
+        field.getCOSObject().setString(COSName.V, value);
+        acroForm.getFields().add(field);
         return doc;
     }
 
@@ -181,6 +193,19 @@ class FormFillControllerTest {
             assertThat(response.getBody()).isNotNull();
             String csv = new String(response.getBody());
             assertThat(csv).contains("Field Name");
+        }
+
+        @Test
+        @DisplayName("keeps a field value a spreadsheet would evaluate as literal text")
+        void formulaFieldValueIsQuoted() throws Exception {
+            MockMultipartFile file = pdfFile();
+            PDDocument doc = createPdfWithTextField("note", "=SUM(A1:A2)");
+            when(pdfDocumentFactory.load(eq(file), eq(true))).thenReturn(doc);
+
+            ResponseEntity<byte[]> response = controller.extractCsv(file, null);
+
+            String csv = new String(response.getBody());
+            assertThat(csv).contains("\"'=SUM(A1:A2)\"").doesNotContain("\"=SUM(A1:A2)\"");
         }
 
         @Test

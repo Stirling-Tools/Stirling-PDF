@@ -94,6 +94,7 @@ public class PdfContentExtractor {
      */
     public String extractPageTextRaw(PDDocument document, int pageNumber) throws IOException {
         PDFTextStripper stripper = new PDFTextStripper();
+        stripper.setSortByPosition(true);
         stripper.setStartPage(pageNumber);
         stripper.setEndPage(pageNumber);
         String text = stripper.getText(document).trim();

@@ -1,0 +1,310 @@
+import { useEffect, useState } from "react";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
+import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
+import {
+  Paper,
+  Group,
+  Text,
+  Collapse,
+  Stack,
+  TextInput,
+  Textarea,
+  NumberInput,
+  TagsInput,
+  Anchor,
+} from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { useTranslation } from "react-i18next";
+import EditableSecretField from "@app/components/shared/EditableSecretField";
+import {
+  Provider,
+  ProviderField,
+} from "@app/components/shared/config/configSections/providerDefinitions";
+
+import { Icon, isIconName } from "@app/ui/Icon";
+interface ProviderCardProps {
+  provider: Provider;
+  isConfigured: boolean;
+  settings?: Record<string, unknown>;
+  onSave?: (settings: Record<string, unknown>) => void;
+  onDisconnect?: () => void;
+  onChange?: (settings: Record<string, unknown>) => void;
+  disabled?: boolean;
+  readOnly?: boolean;
+}
+
+// Shared default so an omitted `settings` prop keeps the same identity across
+// renders. An inline `settings = {}` would allocate a new object every render,
+// and the sync effect below lists `settings` as a dependency — so it would
+// re-run and setState on every render, looping until React bails out.
+const NO_SETTINGS: Record<string, unknown> = {};
+
+const asString = (value: unknown): string =>
+  typeof value === "string" ? value : "";
+
+export default function ProviderCard({
+  provider,
+  isConfigured,
+  settings = NO_SETTINGS,
+  onSave,
+  onDisconnect,
+  onChange,
+  disabled = false,
+  readOnly = false,
+}: ProviderCardProps) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+  const [localSettings, setLocalSettings] =
+    useState<Record<string, unknown>>(settings);
+
+  // Keep local settings in sync with incoming settings (values loaded from settings.yml)
+  // Update whenever parent settings change, whether expanded or not (important for Discard to work)
+  useEffect(() => {
+    setLocalSettings(settings);
+  }, [settings]);
+
+  // Initialize local settings with defaults when opening an unconfigured provider
+  const handleConnectToggle = () => {
+    if (!isConfigured && !expanded) {
+      // First time opening an unconfigured provider - initialize with defaults
+      // while preserving any values already present (from settings.yml)
+      const defaultSettings: Record<string, unknown> = { ...settings };
+      provider.fields.forEach((field) => {
+        if (field.defaultValue !== undefined) {
+          defaultSettings[field.key] =
+            defaultSettings[field.key] ?? field.defaultValue;
+        }
+      });
+      setLocalSettings(defaultSettings);
+    }
+    setExpanded(!expanded);
+  };
+
+  const handleFieldChange = (key: string, value: unknown) => {
+    if (disabled) return; // Block changes when disabled
+    const updated = { ...localSettings, [key]: value };
+    setLocalSettings(updated);
+    // Notify parent of changes if onChange callback provided
+    if (onChange) {
+      onChange(updated);
+    }
+  };
+
+  const handleSave = () => {
+    if (onSave) {
+      onSave(localSettings);
+    }
+    setExpanded(false);
+  };
+
+  const renderField = (field: ProviderField) => {
+    const raw = localSettings[field.key] ?? field.defaultValue;
+
+    switch (field.type) {
+      case "switch":
+        return (
+          <SettingsToggleRow
+            key={field.key}
+            label={field.label}
+            info={field.description}
+            checked={Boolean(raw)}
+            onChange={(checked) => handleFieldChange(field.key, checked)}
+            disabled={disabled}
+          />
+        );
+
+      case "password":
+        return (
+          <EditableSecretField
+            key={field.key}
+            label={field.label}
+            description={field.description}
+            placeholder={field.placeholder}
+            value={asString(raw)}
+            onChange={(newValue) => handleFieldChange(field.key, newValue)}
+            disabled={disabled}
+          />
+        );
+
+      case "textarea":
+        return (
+          <Textarea
+            key={field.key}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                {field.label}
+              </SettingsFieldLabel>
+            }
+            placeholder={field.placeholder}
+            value={asString(raw)}
+            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            disabled={disabled}
+          />
+        );
+
+      case "number":
+        return (
+          <NumberInput
+            key={field.key}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                {field.label}
+              </SettingsFieldLabel>
+            }
+            placeholder={field.placeholder}
+            value={
+              typeof raw === "number" || typeof raw === "string" ? raw : ""
+            }
+            onChange={(num) => handleFieldChange(field.key, num)}
+            disabled={disabled}
+            allowDecimal={false}
+          />
+        );
+
+      case "tags": {
+        const tagValue = Array.isArray(raw) ? raw.map((val) => `${val}`) : [];
+
+        return (
+          <TagsInput
+            key={field.key}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                {field.label}
+              </SettingsFieldLabel>
+            }
+            placeholder={field.placeholder}
+            value={tagValue}
+            onChange={(vals) => handleFieldChange(field.key, vals)}
+            disabled={disabled}
+          />
+        );
+      }
+
+      default:
+        return (
+          <TextInput
+            key={field.key}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                {field.label}
+              </SettingsFieldLabel>
+            }
+            placeholder={field.placeholder}
+            value={asString(raw)}
+            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            disabled={disabled}
+          />
+        );
+    }
+  };
+
+  const renderProviderIcon = () => {
+    // Image source: an absolute/relative path, a data: URI, or a full URL.
+    // Anything else is treated as a registry icon name.
+    if (/^(\/|\.\.?\/|data:|blob:|https?:)/.test(provider.icon)) {
+      return (
+        <img
+          src={provider.icon}
+          alt={provider.name}
+          style={{ width: "1.5rem", height: "1.5rem" }}
+        />
+      );
+    }
+    // Otherwise it names a registry icon.
+    return isIconName(provider.icon) ? (
+      <Icon name={provider.icon} size="1.5rem" />
+    ) : null;
+  };
+
+  return (
+    <Paper withBorder p="md" radius="md">
+      <Stack gap="md">
+        {/* Provider Header */}
+        <Group justify="space-between" wrap="nowrap">
+          <Group gap="sm" style={{ flex: 1, minWidth: 0 }}>
+            {renderProviderIcon()}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Text fw={600} size="sm">
+                {provider.name}
+              </Text>
+              <Text size="xs" c="dimmed" truncate>
+                {provider.scope}
+              </Text>
+            </div>
+          </Group>
+
+          <Group gap="xs" wrap="nowrap">
+            <Button
+              variant={isConfigured ? "tertiary" : "primary"}
+              size="sm"
+              onClick={
+                isConfigured
+                  ? () => setExpanded(!expanded)
+                  : handleConnectToggle
+              }
+              rightSection={
+                expanded ? (
+                  <Icon name="x" size="1rem" />
+                ) : isConfigured ? (
+                  <Icon name="chevron-down" size="1rem" />
+                ) : undefined
+              }
+            >
+              {isConfigured
+                ? expanded
+                  ? t("admin.close", "Close")
+                  : t("admin.expand", "Expand")
+                : expanded
+                  ? t("admin.close", "Close")
+                  : t("admin.settings.connections.connect", "Connect")}
+            </Button>
+          </Group>
+        </Group>
+
+        {/* Expandable Settings */}
+        <Collapse in={expanded}>
+          <Stack gap="md" mt="xs">
+            {/* Documentation Link */}
+            {provider.documentationUrl && (
+              <Anchor
+                href={provider.documentationUrl}
+                target="_blank"
+                size="xs"
+                c="var(--c-accent-text)"
+              >
+                {t(
+                  "admin.settings.connections.documentation",
+                  "View documentation",
+                )}{" "}
+                ↗
+              </Anchor>
+            )}
+
+            {provider.fields.map((field) => renderField(field))}
+
+            {!readOnly && (onSave || onDisconnect) && (
+              <Group justify="flex-end" mt="sm">
+                {onDisconnect && (
+                  <Button
+                    variant="secondary"
+                    accent="danger"
+                    size="sm"
+                    onClick={onDisconnect}
+                    disabled={disabled}
+                  >
+                    {t("admin.settings.connections.disconnect", "Disconnect")}
+                  </Button>
+                )}
+                {onSave && (
+                  <Button size="sm" onClick={handleSave} disabled={disabled}>
+                    {t("admin.settings.save", "Save Changes")}
+                  </Button>
+                )}
+              </Group>
+            )}
+          </Stack>
+        </Collapse>
+      </Stack>
+    </Paper>
+  );
+}

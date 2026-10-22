@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.accountlink.AccountLinkController.InstanceRow;
+import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -49,7 +51,8 @@ class AccountLinkControllerTest {
         // through the controller.
         controller =
                 new AccountLinkController(
-                        service, new LeaderTeamResolver(memberRepo, userRepository));
+                        service,
+                        new LeaderTeamResolver(new UserTeamResolver(memberRepo), userRepository));
         auth =
                 new AnonymousAuthenticationToken(
                         "k", "anonymousUser", List.of(new SimpleGrantedAuthority("ROLE_USER")));
@@ -77,8 +80,6 @@ class AccountLinkControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of());
-
             ResponseEntity<List<InstanceRow>> resp = controller.list(auth);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
@@ -93,7 +94,8 @@ class AccountLinkControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(member));
+            user.setTeam(member.getTeam());
+            when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(member));
 
             ResponseEntity<List<InstanceRow>> resp = controller.list(auth);
 
@@ -106,15 +108,22 @@ class AccountLinkControllerTest {
     void list_leader_readsOnlyTheCallersTeam() {
         User user = mockUser(42L);
         TeamMembership leader = membership(7L, TeamRole.LEADER);
-        when(service.list(7L)).thenReturn(List.of());
+        LinkedInstance instance = new LinkedInstance();
+        instance.setName("Production");
+        when(service.list(7L)).thenReturn(List.of(instance));
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(leader));
+            user.setTeam(leader.getTeam());
+            when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(leader));
 
             ResponseEntity<List<InstanceRow>> resp = controller.list(auth);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(resp.getBody())
+                    .singleElement()
+                    .extracting(InstanceRow::name)
+                    .isEqualTo("Production");
             // The team comes from the caller's membership, never from the request.
             verify(service).list(7L);
         }
@@ -128,7 +137,8 @@ class AccountLinkControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(leader));
+            user.setTeam(leader.getTeam());
+            when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(leader));
 
             ResponseEntity<Void> resp = controller.revoke(11L, auth);
 
@@ -144,11 +154,77 @@ class AccountLinkControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(leader));
+            user.setTeam(leader.getTeam());
+            when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(leader));
 
             ResponseEntity<Void> resp = controller.revoke(11L, auth);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Test
+    void rename_nonLeaderReturns403() {
+        User user = mockUser(42L);
+        TeamMembership member = membership(7L, TeamRole.MEMBER);
+        user.setTeam(member.getTeam());
+        when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(member));
+        try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
+            mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
+                    .thenReturn(user);
+
+            assertThat(
+                            controller
+                                    .rename(
+                                            11L,
+                                            new AccountLinkController.RenameRequest("London"),
+                                            auth)
+                                    .getStatusCode())
+                    .isEqualTo(HttpStatus.FORBIDDEN);
+            verifyNoInteractions(service);
+        }
+    }
+
+    @Test
+    void rename_usesTheCallersTeamAndReturnsNotFoundForUnownedInstances() {
+        User user = mockUser(42L);
+        TeamMembership leader = membership(7L, TeamRole.LEADER);
+        user.setTeam(leader.getTeam());
+        when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(leader));
+        when(service.rename(7L, 11L, "London")).thenReturn(true);
+        try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
+            mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
+                    .thenReturn(user);
+
+            assertThat(
+                            controller
+                                    .rename(
+                                            11L,
+                                            new AccountLinkController.RenameRequest("London"),
+                                            auth)
+                                    .getStatusCode())
+                    .isEqualTo(HttpStatus.NO_CONTENT);
+            assertThat(
+                            controller
+                                    .rename(
+                                            99L,
+                                            new AccountLinkController.RenameRequest("London"),
+                                            auth)
+                                    .getStatusCode())
+                    .isEqualTo(HttpStatus.NOT_FOUND);
+            verify(service).rename(7L, 11L, "London");
+        }
+    }
+
+    @Test
+    void renameRequest_limitsLabelLengthButAllowsClearingIt() {
+        try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+            var validator = factory.getValidator();
+            assertThat(validator.validate(new AccountLinkController.RenameRequest("a".repeat(256))))
+                    .hasSize(1);
+            assertThat(validator.validate(new AccountLinkController.RenameRequest("a".repeat(255))))
+                    .isEmpty();
+            assertThat(validator.validate(new AccountLinkController.RenameRequest(null))).isEmpty();
         }
     }
 

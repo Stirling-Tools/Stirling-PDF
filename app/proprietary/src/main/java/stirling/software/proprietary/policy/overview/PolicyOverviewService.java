@@ -22,9 +22,9 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 /**
  * Builds the unified Pipelines overview: one row per policy the caller's team owns, with its
  * sources resolved to live display names, its steps, and a trigger/output summary. This lists EVERY
- * policy - both pipelines built in the full builder and the friendly "suggested" policies - since
- * the two surfaces were merged (a policy is a pipeline the org requires). No catalogue filter any
- * more.
+ * policy: a pipeline built in the full builder and a friendly "suggested" policy are the same
+ * record underneath. Only processing folders are excluded - they share the engine but are the
+ * editor's own surface.
  */
 @Service
 @RequiredArgsConstructor
@@ -36,6 +36,8 @@ public class PolicyOverviewService {
     private final SourceAccessGuard sourceAccessGuard;
 
     public PoliciesOverviewResponse overview() {
+        // Processing folders are the editor's own surface (ProcessingFolderController); the
+        // portal's pipelines overview never sees them.
         List<Policy> policies = policyAccessGuard.visibleFrom(policyStore).stream().toList();
         Map<String, String> sourceNames = sourceNames();
 

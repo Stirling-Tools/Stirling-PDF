@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.trigger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -25,10 +26,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.MDC;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.SweepKind;
+import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -142,6 +145,22 @@ class FolderWatchTriggerTest {
 
         verify(policyRunner).runInput(a, a.inputs().get(0), SweepKind.FULL);
         verify(policyRunner).runInput(b, b.inputs().get(0), SweepKind.FULL);
+    }
+
+    @Test
+    void backgroundDispatchDoesNotImpersonateThePipelineCreator() {
+        Policy policy = folderWatch("pipeline", List.of(InputSpec.folder("/in")));
+        when(policyStore.findBindingsByTriggerType("folder-watch")).thenReturn(bindings(policy));
+        when(policyRunner.runInput(eq(policy), any(), eq(SweepKind.FULL)))
+                .thenAnswer(
+                        invocation -> {
+                            assertNull(MDC.get("auditPrincipal"));
+                            return new SweepOutcome(List.of(), 0, 0, 0, 0, 0);
+                        });
+
+        trigger.runAll();
+
+        verify(policyRunner).runInput(eq(policy), any(), eq(SweepKind.FULL));
     }
 
     @Test

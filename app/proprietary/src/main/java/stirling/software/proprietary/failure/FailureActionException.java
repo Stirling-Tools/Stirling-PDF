@@ -25,9 +25,20 @@ public class FailureActionException extends RuntimeException {
 
         /** Offered, but the client is what runs it, so refused rather than half-performed. */
         ACTION_NOT_DISPATCHABLE,
+        /**
+         * Declared and dispatchable, but aimed at an audience this caller is not in: a reviewer
+         * reads a colleague's row without being able to act on the document behind it.
+         */
+        ACTION_NOT_THEIRS,
 
         /** The event is already closed, so no further transition is possible. */
-        ALREADY_CLOSED
+        ALREADY_CLOSED,
+
+        /**
+         * Dispatched, but there was nothing to act on: the document is no longer parked as a
+         * failure, or its folder yielded no run. The event stays open.
+         */
+        NOTHING_TO_RUN
     }
 
     private final Reason reason;
@@ -50,7 +61,9 @@ public class FailureActionException extends RuntimeException {
             case EVENT_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case ACTION_NOT_RECOGNISED, ACTION_NOT_DECLARED, ACTION_NOT_DISPATCHABLE ->
                     HttpStatus.BAD_REQUEST;
-            case ALREADY_CLOSED -> HttpStatus.CONFLICT;
+            // Not a 404: the caller may legitimately read the row, they just may not do this.
+            case ACTION_NOT_THEIRS -> HttpStatus.FORBIDDEN;
+            case ALREADY_CLOSED, NOTHING_TO_RUN -> HttpStatus.CONFLICT;
         };
     }
 }

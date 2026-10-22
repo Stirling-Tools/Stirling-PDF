@@ -1,0 +1,41 @@
+/* The mode chooser reads as three cards, so the whole card has to behave like the control it is:
+   hoverable, focusable, and obviously the selected one. A bare border colour change was not enough
+   to tell at a glance which mode a server was in. */
+
+.ai-mode-option {
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    background-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.ai-mode-option:hover:not(.ai-mode-option--disabled) {
+  border-color: var(--c-border-strong);
+  background: var(--c-surface-raised);
+}
+
+.ai-mode-option--selected,
+.ai-mode-option--selected:hover {
+  border-color: var(--c-accent-text);
+  background: var(--c-surface-raised);
+  box-shadow: 0 0 0 1px var(--c-accent-text);
+}
+
+/* The radio is the focus target; lift the ring onto the card so keyboard position is visible. */
+.ai-mode-option:focus-within {
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--c-accent-text) 45%, transparent);
+}
+
+.ai-mode-option--disabled {
+  cursor: default;
+  background: var(--c-surface);
+}
+
+/* Fields belonging to the selected mode, set apart from the choice itself. */
+.ai-mode-option__body {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--c-border);
+}

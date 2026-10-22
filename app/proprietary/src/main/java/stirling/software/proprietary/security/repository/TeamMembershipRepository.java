@@ -1,19 +1,19 @@
 package stirling.software.proprietary.security.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.model.User;
 
-@Repository
 public interface TeamMembershipRepository extends JpaRepository<TeamMembership, Long> {
 
     /**
@@ -44,23 +44,17 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
     @Query("SELECT tm FROM TeamMembership tm JOIN FETCH tm.team WHERE tm.user.id = :userId")
     List<TeamMembership> findByUserId(@Param("userId") Long userId);
 
-    /**
-     * Resolve the single membership a user belongs to. In the PAYG design every user is owned by
-     * exactly one team — personal-team-for-new-signups, then optionally migrated when they accept
-     * an invite (the old personal team is deleted on accept). For diagnostic safety this picks the
-     * earliest-created row if multiple exist, but in steady state there is exactly one.
-     *
-     * <p>Returns both the team and its role so the PAYG wallet endpoint can answer "what does this
-     * user see?" in a single query rather than a list-then-filter dance.
-     *
-     * @param userId the user ID
-     * @return the user's primary membership, if any
-     */
+    /** Team ids alone, for callers that only need to know which rosters a user belongs to. */
     @Query(
-            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.team"
-                    + " WHERE tm.user.id = :userId"
-                    + " ORDER BY tm.createdAt ASC")
-    List<TeamMembership> findPrimaryMembership(@Param("userId") Long userId);
+            "SELECT tm.team.id FROM TeamMembership tm WHERE upper(tm.user.username) = upper(:username)")
+    List<Long> findTeamIdsByUsername(@Param("username") String username);
+
+    /** Usernames alone, ordered and limited by the database, for callers that need no entities. */
+    @Query(
+            "SELECT tm.user.username FROM TeamMembership tm WHERE tm.team.id IN :teamIds"
+                    + " AND tm.user.username IS NOT NULL ORDER BY tm.user.username")
+    List<String> findUsernamesByTeamIds(
+            @Param("teamIds") Collection<Long> teamIds, Pageable pageable);
 
     /**
      * Find all members with a specific role in a team

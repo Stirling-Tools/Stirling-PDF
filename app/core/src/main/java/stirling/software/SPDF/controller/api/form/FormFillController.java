@@ -43,6 +43,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.FormFieldWithCoordinates;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CsvSanitizer;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.TempFile;
@@ -280,7 +281,11 @@ public class FormFillController {
                 csvWriter.writeNext(header);
 
                 for (FormUtils.FormFieldInfo field : fields) {
-                    csvWriter.writeNext(new String[] {field.name(), field.value()});
+                    csvWriter.writeNext(
+                            new String[] {
+                                CsvSanitizer.sanitizeCell(field.name()),
+                                CsvSanitizer.sanitizeCell(field.value())
+                            });
                 }
             }
 

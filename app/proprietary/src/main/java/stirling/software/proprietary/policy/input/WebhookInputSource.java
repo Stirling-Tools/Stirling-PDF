@@ -21,6 +21,7 @@ import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
+import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.webhook.WebhookConfig;
 import stirling.software.proprietary.policy.webhook.WebhookIds;
 import stirling.software.proprietary.policy.webhook.WebhookSpool;
@@ -63,6 +64,13 @@ public class WebhookInputSource implements InputSource {
         prepared.put(WebhookConfig.WEBHOOK_ID_OPTION, WebhookIds.newWebhookId());
         prepared.put(WebhookConfig.SIGNING_SECRET_OPTION, WebhookIds.newSigningSecret());
         return prepared;
+    }
+
+    /** A webhook's ingress spool is shared by every policy bound to that source. */
+    @Override
+    public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
+            throws IOException {
+        return resolve(source.toInputSpec(), ctx);
     }
 
     @Override

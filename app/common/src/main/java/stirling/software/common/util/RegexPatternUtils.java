@@ -187,8 +187,13 @@ public final class RegexPatternUtils {
             log.trace("Compiled and cached regex pattern with flags {}: {}", flags, regex);
             return pattern;
         } catch (PatternSyntaxException e) {
-            log.error(
-                    "Invalid regex pattern: '{}' with flags {} - {}", regex, flags, e.getMessage());
+            // Patterns can be user input such as auto-redact search terms, so the pattern text
+            // stays out of the log; getMessage() would include it.
+            log.warn(
+                    "Invalid regex pattern with flags {}: {} near index {}",
+                    flags,
+                    e.getDescription(),
+                    e.getIndex());
             throw e;
         }
     }

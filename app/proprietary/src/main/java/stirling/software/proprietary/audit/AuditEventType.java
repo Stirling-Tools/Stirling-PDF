@@ -11,6 +11,8 @@ public enum AuditEventType {
     USER_FAILED_LOGIN("Failed login attempt"),
 
     // User/admin events - BASIC level
+    ORG_OWNERSHIP_CHANGE("Organization ownership changed"),
+
     USER_PROFILE_UPDATE("User or profile operation"),
 
     // System configuration events - STANDARD level

@@ -37,6 +37,7 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.util.DesktopClientUtils;
+import stirling.software.proprietary.security.util.RedirectBaseUrl;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -68,26 +69,8 @@ public class CustomOAuth2AuthenticationSuccessHandler
 
         boolean userExists = userService.usernameExistsIgnoreCase(username);
 
-        // Check if user is eligible for OAuth (grandfathered or system has paid license)
-        if (userExists) {
-            stirling.software.proprietary.security.model.User user =
-                    userService.findByUsernameIgnoreCase(username).orElse(null);
-
-            if (user != null && !licenseSettingsService.isOAuthEligible(user)) {
-                // User is not grandfathered and no paid license - block OAuth login
-                log.warn(
-                        "OAuth login blocked for existing user '{}' - not eligible (not grandfathered and no paid license)",
-                        username);
-                response.sendRedirect(
-                        request.getContextPath() + "/logout?oAuth2RequiresLicense=true");
-                return;
-            }
-        } else if (!licenseSettingsService.isOAuthEligible(null)) {
-            // No existing user and no paid license -> block auto creation
-            log.warn(
-                    "OAuth login blocked for new user '{}' - not eligible (no paid license for auto-creation)",
-                    username);
-            response.sendRedirect(request.getContextPath() + "/logout?oAuth2RequiresLicense=true");
+        if (!userExists && licenseSettingsService.wouldExceedLimit(1)) {
+            response.sendRedirect(request.getContextPath() + "/logout?maxUsersReached=true");
             return;
         }
 
@@ -129,10 +112,6 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 if (oauth2Properties.getBlockRegistration()
                         && !userService.usernameExistsIgnoreCase(username)) {
                     response.sendRedirect(contextPath + "/logout?oAuth2AdminBlockedUser=true");
-                    return;
-                }
-                if (!userExists && licenseSettingsService.wouldExceedLimit(1)) {
-                    response.sendRedirect(contextPath + "/logout?maxUsersReached=true");
                     return;
                 }
                 if (principal instanceof OAuth2User oAuth2User) {
@@ -216,13 +195,22 @@ public class CustomOAuth2AuthenticationSuccessHandler
             HttpServletResponse response,
             String contextPath,
             String jwt) {
-        String redirectPath = resolveRedirectPath(request, contextPath);
+        Optional<String> landingBase =
+                RedirectBaseUrl.landingBase(
+                        oauth2Properties.getRedirectBaseUrl(),
+                        applicationProperties.getSystem().getFrontendUrl());
+        // The SPA cookie path already includes the browser-side base path, so only add an origin.
+        boolean usesCookiePath =
+                !TauriOAuthUtils.isTauriState(request) && cookieRedirectPath(request) != null;
+        String pathPrefix = landingBase.isPresent() && !usesCookiePath ? "" : contextPath;
+        String redirectPath = resolveRedirectPath(request, pathPrefix);
+        Optional<String> configuredBase =
+                usesCookiePath ? landingBase.flatMap(RedirectBaseUrl::origin) : landingBase;
         String origin =
-                resolveForwardedOrigin(request)
-                        .orElseGet(
-                                () ->
-                                        resolveOriginFromReferer(request)
-                                                .orElseGet(() -> buildOriginFromRequest(request)));
+                configuredBase
+                        .or(() -> resolveForwardedOrigin(request))
+                        .or(() -> resolveOriginFromReferer(request))
+                        .orElseGet(() -> buildOriginFromRequest(request));
         clearRedirectCookie(response);
 
         // Extract nonce from state for CSRF validation in callback
@@ -241,11 +229,13 @@ public class CustomOAuth2AuthenticationSuccessHandler
         if (TauriOAuthUtils.isTauriState(request)) {
             return TauriOAuthUtils.defaultTauriCallbackPath(contextPath);
         }
+        String cookiePath = cookieRedirectPath(request);
+        return cookiePath != null ? cookiePath : TauriOAuthUtils.defaultCallbackPath(contextPath);
+    }
+
+    private String cookieRedirectPath(HttpServletRequest request) {
         String cookiePath = TauriOAuthUtils.extractRedirectPathFromCookie(request);
-        if (cookiePath != null && cookiePath.startsWith("/")) {
-            return cookiePath;
-        }
-        return TauriOAuthUtils.defaultCallbackPath(contextPath);
+        return cookiePath != null && cookiePath.startsWith("/") ? cookiePath : null;
     }
 
     private Optional<String> resolveForwardedOrigin(HttpServletRequest request) {

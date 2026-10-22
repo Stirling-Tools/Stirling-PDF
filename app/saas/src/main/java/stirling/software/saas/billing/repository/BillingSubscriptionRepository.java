@@ -7,12 +7,10 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.saas.billing.model.BillingSubscription;
 
 /** Read/write access to the Stripe subscription mirror table. */
-@Repository
 public interface BillingSubscriptionRepository extends JpaRepository<BillingSubscription, String> {
 
     List<BillingSubscription> findByUserId(UUID userId);

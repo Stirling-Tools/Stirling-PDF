@@ -17,6 +17,13 @@ class NoOpJobOwnershipServiceTest {
     }
 
     @Test
+    void explicitOwnersDoNotScopeJobsWhenLoginIsDisabled() {
+        NoOpJobOwnershipService ownership = new NoOpJobOwnershipService();
+        assertEquals("job", ownership.createScopedJobKey("job", "alice"));
+        assertEquals("job", ownership.createScopedJobKey("job", null));
+    }
+
+    @Test
     void getCurrentUserId_alwaysReturnsEmpty() {
         assertEquals(Optional.empty(), service.getCurrentUserId());
     }

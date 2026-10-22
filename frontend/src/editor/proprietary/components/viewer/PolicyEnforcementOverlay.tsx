@@ -1,0 +1,82 @@
+import { useState, useEffect, useRef } from "react";
+import { Tooltip } from "@mantine/core";
+import { Icon } from "@app/ui/Icon";
+import { useTranslation } from "react-i18next";
+import {
+  POLICY_IN_FLIGHT_STATUSES,
+  type PolicyRunRecord,
+} from "@app/components/policies/policyRunStore";
+import { policyAccentVar } from "@app/components/policies/policyStatus";
+import { isEnforcedPolicy } from "@app/services/policyStorage";
+import { PolicyEnforcingOverlay } from "@app/components/shared/PolicyEnforcingOverlay";
+import "@app/components/shared/PolicyBadges.css";
+
+interface Props {
+  runs: PolicyRunRecord[];
+}
+
+export function PolicyEnforcementOverlay({ runs }: Props) {
+  const { t } = useTranslation();
+  const [dismissed, setDismissed] = useState(false);
+  const prevRunId = useRef<string | undefined>(undefined);
+
+  const inFlight = runs.find(
+    (r) => POLICY_IN_FLIGHT_STATUSES.includes(r.status) || r.retrying,
+  );
+
+  // Reset dismissed when a new run starts (including retries, which replace the
+  // run record with a new runId even while inFlight stays truthy throughout).
+  useEffect(() => {
+    if (inFlight && inFlight.runId !== prevRunId.current) setDismissed(false);
+    prevRunId.current = inFlight?.runId;
+  }, [inFlight]);
+
+  if (!inFlight) return null;
+
+  const progress =
+    inFlight.currentStep != null && inFlight.stepCount
+      ? Math.round((inFlight.currentStep / inFlight.stepCount) * 100)
+      : undefined;
+
+  if (dismissed) {
+    // Overlay dismissed — collapsed to a corner badge (same design as the
+    // per-file policy badges, larger) so the user can read the PDF.
+    return (
+      <Tooltip
+        label={
+          isEnforcedPolicy(inFlight.policyKey)
+            ? t("policy.enforcingPolicyTitle", "Enforcing policy...")
+            : t("policy.enforcingPipelineTitle", "Enforcing pipeline...")
+        }
+        position="left"
+        withArrow
+      >
+        <span
+          className="policy-badge policy-badge--lg policy-badge--enforcing"
+          style={{
+            position: "absolute",
+            top: 16,
+            // Clear of the top-right corner itself: preview mode renders its
+            // close button there, and the badge must never swallow its clicks.
+            right: 56,
+            zIndex: 1100,
+            color: policyAccentVar(inFlight.policyKey),
+          }}
+        >
+          <Icon name="refresh-cw" size={16} />
+        </span>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <PolicyEnforcingOverlay
+      enforcing
+      zIndex={1100}
+      progress={progress}
+      onDismiss={() => setDismissed(true)}
+      accentVar={policyAccentVar(inFlight.policyKey)}
+      policyKey={inFlight.policyKey}
+    />
+  );
+}

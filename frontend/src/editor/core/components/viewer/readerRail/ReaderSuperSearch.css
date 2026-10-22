@@ -1,0 +1,26 @@
+/* Floated over the document, clear of the rail on the trailing edge. Centred on
+   the page the way the workbench bar's search is, so the shortcut lands where a
+   reader already looks for it. */
+.reader-super-search {
+  position: fixed;
+  top: calc(var(--nav-gutter) + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-popover);
+  display: flex;
+  justify-content: center;
+  width: min(100%, 28rem);
+  padding: 0 1rem;
+}
+
+.reader-super-search .super-search {
+  flex: 1 1 auto;
+  max-width: 26rem;
+}
+
+/* Painted, unlike the workbench bar's: here it sits on the page itself, which
+   carries its own colour. */
+.reader-super-search .super-search input {
+  background-color: var(--c-surface);
+  box-shadow: var(--shadow-lg);
+}

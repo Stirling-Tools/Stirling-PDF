@@ -50,6 +50,7 @@ import stirling.software.proprietary.policy.output.InlineOutputSink;
 import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
+import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 import tools.jackson.databind.json.JsonMapper;
@@ -104,7 +105,8 @@ class PolicyFailureAttributionTest {
                                 List.of(new AcknowledgeAction(store), new DismissAction(store))),
                         authority,
                         userService,
-                        props);
+                        props,
+                        policyStore);
 
         PolicyFailureRecorder recorder =
                 new PolicyFailureRecorder(
@@ -130,7 +132,7 @@ class PolicyFailureAttributionTest {
                         new PolicyAssetResolver(new InProcessPolicyAssetStore()));
 
         lenient()
-                .when(jobOwnershipService.createScopedJobKey(anyString()))
+                .when(jobOwnershipService.createScopedJobKey(anyString(), any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         lenient().when(resourceMonitor.shouldQueueJob(anyInt())).thenReturn(false);
         lenient().when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
@@ -166,7 +168,11 @@ class PolicyFailureAttributionTest {
                             sharedPolicy(),
                             PolicyInputs.of(List.of(pdf())),
                             PolicyProgressListener.NOOP,
-                            sourceId,
+                            sourceId == null
+                                    ? null
+                                    : new Source(
+                                            sourceId, "Input", "folder", Map.of(), true, "carol",
+                                            TEAM),
                             fileIdentity)
                     .completion()
                     .get(10, TimeUnit.SECONDS);
@@ -188,7 +194,7 @@ class PolicyFailureAttributionTest {
     private FileRunEvent asMember(String reader) {
         lenient().when(userService.getCurrentUsername()).thenReturn(reader);
         lenient().when(authority.canEditPolicies()).thenReturn(false);
-        List<FileRunEvent> visible = service.list(null, null, 10);
+        List<FileRunEvent> visible = service.list(null, false, null, 10);
         return visible.isEmpty() ? null : visible.getFirst();
     }
 
@@ -196,7 +202,7 @@ class PolicyFailureAttributionTest {
     private FileRunEvent asReviewer(String reader) {
         lenient().when(userService.getCurrentUsername()).thenReturn(reader);
         lenient().when(authority.canEditPolicies()).thenReturn(true);
-        return service.list(null, null, 10).getFirst();
+        return service.list(null, false, null, 10).getFirst();
     }
 
     @Nested
@@ -235,12 +241,15 @@ class PolicyFailureAttributionTest {
     class UnattendedSweep {
 
         @Test
-        void theRowIsRecordedWithNoActorWhileStillBillingTheOwner() throws Exception {
+        void theRowIsRecordedAgainstTheSourcesOwnerWhileStillBillingThePolicysOwner()
+                throws Exception {
+            // Two different people on purpose: alice owns the policy and pays for the sweep, carol
+            // owns the folder the documents came from and is the one who needs to hear about them.
             runAndFail(null, "src-watched-folder", "file-hash-1");
 
             assertThat(asReviewer("alice").actor())
-                    .as("a trigger-fired run has no user to name")
-                    .isNull();
+                    .as("an unattended run names the owner of the documents it pulled")
+                    .isEqualTo("carol");
         }
 
         @Test
@@ -253,9 +262,9 @@ class PolicyFailureAttributionTest {
         }
 
         @Test
-        void aMemberDoesNotInheritAnUnattendedFailureAsTheirOwn() throws Exception {
-            // An unowned row must not fall to whoever happens to be reading: with no actor there is
-            // nothing for a member's narrowed read to match.
+        void aMemberWhoOwnsNeitherTheSourceNorTheRunReadsNothing() throws Exception {
+            // The narrowed read matches on the actor, so naming the source's owner hands the row to
+            // that one person rather than to whoever happens to be reading.
             runAndFail(null, "src-watched-folder", "file-hash-1");
 
             assertThat(asMember("bob")).isNull();

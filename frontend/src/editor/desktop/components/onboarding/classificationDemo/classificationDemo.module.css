@@ -1,0 +1,474 @@
+/* Slide internals for the classification demo. The card chrome (header, progress, hero panel, footer)
+   comes from OnboardingSlideShell — everything here sits inside it. */
+
+/* ---- hero: app mark above a line of status text ---- */
+.processingHero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* An accent halo breathing behind the mark, so the pause between files reads as the app
+   working rather than waiting. Sits behind via ::before; the mark keeps its own motion. */
+.markGlow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.markGlow::before {
+  content: "";
+  position: absolute;
+  inset: -55%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    var(--c-primary-subtle) 0%,
+    transparent 70%
+  );
+  animation: classificationDemoGlow 2s ease-in-out infinite;
+}
+
+/* A highlight in the accent colour sweeps left-to-right across the muted label,
+   so the line reads as working rather than stuck. */
+.shimmer {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  background: linear-gradient(
+    90deg,
+    var(--c-text-muted) 0%,
+    var(--c-text-muted) 40%,
+    var(--c-accent-fg, var(--c-primary)) 50%,
+    var(--c-text-muted) 60%,
+    var(--c-text-muted) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: classificationDemoShimmer 1.8s linear infinite;
+}
+
+@keyframes classificationDemoGlow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes classificationDemoShimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+    background: none;
+    -webkit-text-fill-color: var(--c-text-muted);
+    color: var(--c-text-muted);
+  }
+
+  .markGlow::before {
+    animation: none;
+  }
+
+  /* Cancelled, not stilled: both entrances animate opacity, so `animation: none`
+     alone would strand the chart at the keyframe's starting opacity of 0. */
+  .chart,
+  .chartCentre {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .slice {
+    transition: none;
+  }
+}
+
+/* ---- progress counts ---- */
+.counts {
+  text-align: center;
+  color: var(--c-text-muted);
+  font-size: 14px;
+}
+
+.countsNumber {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--c-text);
+  margin-right: 6px;
+}
+
+/* ---- category ticker ---- */
+.ticker {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 999px;
+  background: var(--c-surface);
+  font-size: 13px;
+  color: var(--c-text);
+  /* New categories appear mid-sweep; fading them in stops the row from jumping. */
+  animation: classificationDemoChipIn 0.2s ease both;
+}
+
+@keyframes classificationDemoChipIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.chipDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chipCount {
+  color: var(--c-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A chip that drives the chart selection, rather than the read-only live tally. */
+.chipButton {
+  cursor: pointer;
+  font: inherit;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+.chipButton:hover {
+  border-color: var(--c-border-strong);
+}
+
+.chipSelected {
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle);
+}
+
+.resultTick {
+  color: var(--c-primary);
+  flex-shrink: 0;
+}
+
+/* ---- the follow-up batch offer, and the privacy note it mirrors ---- */
+.panel {
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 12px;
+  background: var(--c-surface-sunken);
+  padding: 14px 16px;
+}
+
+.panelTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text);
+  line-height: 1.4;
+}
+
+.panelBody {
+  font-size: 13px;
+  color: var(--c-text-muted);
+  margin-top: 4px;
+}
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: var(--c-surface-sunken);
+  font-size: 13px;
+  color: var(--c-text-muted);
+}
+
+.noteIcon {
+  color: var(--c-text-subtle);
+  flex-shrink: 0;
+}
+
+/* ---- workbench view: the sweep on the canvas rather than behind a dialog ---- */
+.view {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 32px;
+  overflow-y: auto;
+}
+
+/* Anchored to the canvas, not the content column, so it stays in the corner whether the
+   view is showing the narrow progress column or the full-width results. */
+.viewClose {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1;
+}
+
+/* The in-progress and error states are a single narrow column: there is one thing to
+   look at, so the canvas stays quiet rather than spreading it out. */
+.viewColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  width: 100%;
+  max-width: 560px;
+  text-align: center;
+}
+
+.viewHeading {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+  margin: 0;
+}
+
+.viewLead {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--c-text-muted);
+  margin: 0;
+}
+
+.viewActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ---- results: everything centred on one axis, widened to earn the canvas ---- */
+.results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+  max-width: 880px;
+}
+
+.resultsHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+/* Chart and detail share the row on a wide canvas and stack on a narrow one, so the
+   breakdown is never a lone column against empty space. */
+.resultsBody {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.resultsDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1 1 320px;
+  min-width: 280px;
+  max-width: 420px;
+}
+
+.resultsFooter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 560px;
+}
+
+/* ---- pie ---- */
+.chartWrap {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Spins up into place once, when the results first mount. Applied to the svg root, not
+   the slices, so it never fights the per-slice lift transform underneath it. */
+.chart {
+  width: 260px;
+  height: 260px;
+  overflow: visible;
+  transform-origin: center;
+  animation: classificationDemoChartIn 560ms cubic-bezier(0.34, 1.56, 0.64, 1)
+    both;
+}
+
+/* Overshoots slightly on the way in — the easing is a back-out curve, so the wheel
+   settles rather than stopping dead. */
+@keyframes classificationDemoChartIn {
+  from {
+    opacity: 0;
+    transform: rotate(-140deg) scale(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+/* Lands after the wheel has almost settled, so the number reads as the result of the
+   spin instead of riding along with it. */
+@keyframes classificationDemoCentreIn {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Each slice lifts along its own bisector, so the wheel reads as a stack of wedges
+   rather than a flat disc with one piece recoloured. */
+.slice {
+  cursor: pointer;
+  transform-origin: center;
+  transition:
+    transform 220ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 180ms ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.14));
+}
+
+.slice:hover,
+.slice:focus-visible {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.22));
+  outline: none;
+}
+
+.sliceDim {
+  opacity: 0.4;
+}
+
+/* Its own surface, since it sits over arbitrary slice hues. The pair a filled default
+   Button uses (.sui-acc-default), not --c-primary, which drifts with a custom accent. */
+.chartCentre {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--c-btn-solid);
+  color: var(--c-btn-inverse);
+  pointer-events: none;
+  animation: classificationDemoCentreIn 240ms cubic-bezier(0.32, 0.72, 0, 1)
+    300ms both;
+}
+
+.chartCentreNumber {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: inherit;
+  line-height: 1.1;
+}
+
+.chartCentreLabel {
+  font-size: 13px;
+  color: inherit;
+  opacity: 0.85;
+  max-width: 120px;
+  text-align: center;
+}
+
+/* ---- sub-category breakdown ---- */
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.breakdownRow {
+  display: grid;
+  grid-template-columns: minmax(90px, auto) 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--c-text);
+}
+
+.breakdownName {
+  text-align: left;
+}
+
+.breakdownBar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--c-surface-sunken);
+  overflow: hidden;
+}
+
+.breakdownFill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 220ms ease;
+}
+
+.breakdownCount {
+  color: var(--c-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdownHint {
+  font-size: 13px;
+  color: var(--c-text-subtle);
+  text-align: center;
+  margin: 0;
+}

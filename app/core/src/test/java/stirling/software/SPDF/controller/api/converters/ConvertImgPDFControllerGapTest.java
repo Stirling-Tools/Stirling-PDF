@@ -491,6 +491,54 @@ class ConvertImgPDFControllerGapTest {
         }
 
         @Test
+        @DisplayName("omitted dpi falls back to the documented default instead of throwing")
+        void nullDpiUsesDefault() throws Exception {
+            MockMultipartFile file = imagePdf(tinyPdfBytes(1));
+
+            ConvertToImageRequest request = new ConvertToImageRequest();
+            request.setFileInput(file);
+            request.setImageFormat("png");
+            request.setSingleOrMultiple("single");
+            request.setColorType("color");
+            request.setDpi(null);
+            request.setPageNumbers("all");
+            request.setIncludeAnnotations(false);
+
+            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
+                    .thenReturn(tinyDocument(1));
+
+            byte[] imageBytes = "png-image".getBytes();
+            ResponseEntity<byte[]> expected = ResponseEntity.ok(imageBytes);
+
+            try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
+                    MockedStatic<WebResponseUtils> wr =
+                            Mockito.mockStatic(WebResponseUtils.class)) {
+
+                pu.when(
+                                () ->
+                                        PdfUtils.convertFromPdf(
+                                                eq(pdfDocumentFactory),
+                                                any(byte[].class),
+                                                eq("PNG"),
+                                                eq(ImageType.RGB),
+                                                eq(true),
+                                                eq(ConvertToImageRequest.DEFAULT_DPI),
+                                                any(String.class),
+                                                eq(false)))
+                        .thenReturn(imageBytes);
+                wr.when(
+                                () ->
+                                        WebResponseUtils.bytesToWebResponse(
+                                                eq(imageBytes),
+                                                any(String.class),
+                                                any(MediaType.class)))
+                        .thenReturn(expected);
+
+                assertSame(expected, controller.convertToImage(request));
+            }
+        }
+
+        @Test
         @DisplayName("single-image PNG path returns the rendered bytes")
         void singleImagePng() throws Exception {
             byte[] pdfBytes = tinyPdfBytes(1);

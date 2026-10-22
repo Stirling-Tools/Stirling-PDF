@@ -88,6 +88,25 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, resp.getStatusCode());
     }
 
+    @Test
+    void handleToolRequired_returns_503_with_its_code() {
+        ToolRequiredException ex = new ToolRequiredException("no tesseract", "E042");
+        ResponseEntity<ProblemDetail> resp = handler.handleToolRequired(ex, request);
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, resp.getStatusCode());
+        assertEquals("E042", resp.getBody().getProperties().get("errorCode"));
+    }
+
+    @Test
+    void handleRuntimeException_unwraps_a_wrapped_tool_required_to_503() {
+        // AutoJobAspect wraps checked exceptions from a job in RuntimeException; the code and
+        // status must survive that, or a folder run's failure classifies as unrecognised.
+        RuntimeException wrapped =
+                new RuntimeException(new ToolRequiredException("no tesseract", "E042"));
+        ResponseEntity<ProblemDetail> resp = handler.handleRuntimeException(wrapped, request);
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, resp.getStatusCode());
+        assertEquals("E042", resp.getBody().getProperties().get("errorCode"));
+    }
+
     // ---- PDF and DPI exceptions ----
 
     @Test
@@ -273,6 +292,24 @@ class GlobalExceptionHandlerTest {
         RuntimeException ex = new RuntimeException("wrapped", cause);
         ResponseEntity<ProblemDetail> resp = handler.handleRuntimeException(ex, request);
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+    }
+
+    @Test
+    void handleRuntimeException_wrapping_PdfUnrepairableException_returns_422() {
+        // Repair runs as a job, so this is the path a real refusal takes. Answering 500 here and
+        // 422 when it is thrown directly would make one outcome two, by route alone.
+        PdfUnrepairableException cause = new PdfUnrepairableException("beyond repair", "E076");
+        RuntimeException ex = new RuntimeException("wrapped", cause);
+        ResponseEntity<ProblemDetail> resp = handler.handleRuntimeException(ex, request);
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, resp.getStatusCode());
+    }
+
+    @Test
+    void handlePdfUnrepairable_returns_422() {
+        PdfUnrepairableException ex = new PdfUnrepairableException("beyond repair", "E076");
+        ResponseEntity<ProblemDetail> resp = handler.handlePdfUnrepairable(ex, request);
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, resp.getStatusCode());
+        assertNotNull(resp.getBody());
     }
 
     @Test

@@ -1,0 +1,73 @@
+import React from "react";
+import { Select } from "@mantine/core";
+import { SlideConfig } from "@app/types/types";
+import { Icon } from "@app/ui/Icon";
+import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
+import i18n from "@app/i18n";
+import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
+
+interface SecurityCheckSlideProps {
+  selectedRole: "admin" | "user" | null;
+  onRoleSelect: (role: "admin" | "user" | null) => void;
+}
+
+export default function SecurityCheckSlide({
+  selectedRole,
+  onRoleSelect,
+}: SecurityCheckSlideProps): SlideConfig {
+  return {
+    key: "security-check",
+    title: i18n.t("onboarding.securityCheck.title", "Security Check"),
+    body: (
+      <div className={styles.securitySlideContent}>
+        <div className={styles.securityCard}>
+          <div className={styles.securityAlertRow}>
+            <Icon
+              name="circle-alert"
+              size={20}
+              style={{ color: "var(--color-red-dark)", flexShrink: 0 }}
+            />
+            <span>
+              {i18n.t(
+                "onboarding.securityCheck.message",
+                "The application has undergone significant changes recently. Your server admin's attention may be required. Please confirm your role to continue.",
+              )}
+            </span>
+          </div>
+
+          <Select
+            placeholder={i18n.t(
+              "onboarding.securityCheck.rolePlaceholder",
+              "Confirm your role",
+            )}
+            value={selectedRole}
+            data={[
+              {
+                value: "admin",
+                label: i18n.t("onboarding.securityCheck.roleAdmin", "Admin"),
+              },
+              {
+                value: "user",
+                label: i18n.t("onboarding.securityCheck.roleUser", "User"),
+              },
+            ]}
+            onChange={(value) =>
+              onRoleSelect((value as "admin" | "user") ?? null)
+            }
+            comboboxProps={{ withinPortal: true, zIndex: 5000 }}
+            styles={{
+              input: {
+                height: 48,
+                fontSize: 15,
+              },
+            }}
+          />
+        </div>
+      </div>
+    ),
+    background: {
+      gradientStops: ["#5B21B6", "#2563EB"],
+      circles: UNIFIED_CIRCLE_CONFIG,
+    },
+  };
+}

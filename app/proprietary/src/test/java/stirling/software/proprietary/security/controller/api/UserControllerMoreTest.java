@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,6 +31,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
+import stirling.software.proprietary.security.service.LoginLandingService;
 import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
@@ -48,6 +50,7 @@ class UserControllerMoreTest {
     @Mock private UserLicenseSettingsService licenseSettingsService;
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private TeamMembershipService teamMembershipService;
+    @Mock private LoginLandingService loginLandingService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -67,7 +70,11 @@ class UserControllerMoreTest {
                         Optional.of(emailService),
                         licenseSettingsService,
                         loginAttemptService,
-                        teamMembershipService);
+                        teamMembershipService,
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.service.OrgOwnerService.class),
+                        loginLandingService,
+                        new MockEnvironment());
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -253,7 +260,7 @@ class UserControllerMoreTest {
             Team defaultTeam = new Team();
             defaultTeam.setId(1L);
             defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-            when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+            when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                     .thenReturn(Optional.of(defaultTeam));
 
             mockMvc.perform(
@@ -410,10 +417,9 @@ class UserControllerMoreTest {
     class DeleteUser {
 
         @Test
-        @DisplayName("deletes another user and expires their sessions")
+        @DisplayName("delegates deletion and session expiry to the guarded service")
         void success() throws Exception {
             when(userService.usernameExistsIgnoreCase("bob")).thenReturn(true);
-            when(sessionRegistry.getAllSessions("bob", false)).thenReturn(java.util.List.of());
 
             mockMvc.perform(post("/api/v1/user/admin/deleteUser/bob").principal(auth("admin")))
                     .andExpect(status().isOk())
@@ -461,7 +467,7 @@ class UserControllerMoreTest {
             Team defaultTeam = new Team();
             defaultTeam.setId(1L);
             defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-            when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+            when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                     .thenReturn(Optional.of(defaultTeam));
 
             mockMvc.perform(

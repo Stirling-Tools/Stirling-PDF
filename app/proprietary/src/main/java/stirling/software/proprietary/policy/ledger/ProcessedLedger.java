@@ -52,6 +52,31 @@ public interface ProcessedLedger {
                 statesFor(policyId, List.of(identity)).get(identity));
     }
 
+    /**
+     * Take a parked failure back into PROCESSING at the same gate; only a user-invoked sweep calls
+     * this. False when the row is no longer a same-gate failure.
+     */
+    boolean reclaimFailed(String policyId, String identity, String gate);
+
+    /**
+     * Forget a parked failure so the next sweep claims the file fresh. Unlike {@link
+     * #reclaimFailed} the row is not put in flight, so any sweep picks it up. False when the row is
+     * not currently a failure.
+     */
+    boolean forgetFailure(String policyId, String identity);
+
+    /**
+     * Forget a settled row so the file reads as never processed — backs revert. An in-flight row
+     * stays; its run's settle would recreate it anyway. False when nothing was forgotten.
+     */
+    boolean forget(String policyId, String identity);
+
+    /**
+     * Whether any row is still {@link ProcessedFileStatus#PROCESSING}. A revert quiesces on this: a
+     * cancelled run flips terminal at once but settles only when its task ends.
+     */
+    boolean anyInFlight(String policyId);
+
     /** Record a claimed file's outcome at its final version ({@code finalContentHash} nullable). */
     void settle(
             String policyId,

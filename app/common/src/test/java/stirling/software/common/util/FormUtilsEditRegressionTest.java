@@ -908,4 +908,53 @@ class FormUtilsEditRegressionTest {
                     1, page, "a retyped field must stay on its own page, not move to the last");
         }
     }
+
+    @Test
+    void creatingAFieldKeepsTheLabelItWasGiven() throws IOException {
+        byte[] saved;
+        try (PDDocument document = new PDDocument()) {
+            setupForm(document);
+            FormUtils.addNewFields(
+                    document, List.of(labelledField("qa_added", "QA additional response", null)));
+            saved = save(document);
+        }
+
+        try (PDDocument reloaded = Loader.loadPDF(saved)) {
+            PDAcroForm acroForm = reloaded.getDocumentCatalog().getAcroForm(null);
+            PDField field = acroForm.getField("qa_added");
+            assertNotNull(field, "'qa_added' should exist");
+            assertEquals(
+                    "QA additional response",
+                    field.getAlternateFieldName(),
+                    "a created field must keep the label it was given");
+        }
+    }
+
+    @Test
+    void creatingAFieldWithATooltipStillStoresTheTooltip() throws IOException {
+        byte[] saved;
+        try (PDDocument document = new PDDocument()) {
+            setupForm(document);
+            FormUtils.addNewFields(
+                    document, List.of(labelledField("qa_added", "Ignored label", "Hover text")));
+            saved = save(document);
+        }
+
+        try (PDDocument reloaded = Loader.loadPDF(saved)) {
+            PDAcroForm acroForm = reloaded.getDocumentCatalog().getAcroForm(null);
+            PDField field = acroForm.getField("qa_added");
+            assertNotNull(field, "'qa_added' should exist");
+            assertEquals(
+                    "Hover text",
+                    field.getWidgets().get(0).getCOSObject().getString(COSName.TU),
+                    "an explicit tooltip must win over the label");
+        }
+    }
+
+    private static FormUtils.NewFormFieldDefinition labelledField(
+            String name, String label, String tooltip) {
+        return new FormUtils.NewFormFieldDefinition(
+                name, label, "text", 0, 50f, 700f, 200f, 20f, null, null, null, null, tooltip, null,
+                null, null, null, null);
+    }
 }

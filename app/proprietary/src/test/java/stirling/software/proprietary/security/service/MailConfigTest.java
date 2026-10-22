@@ -8,6 +8,7 @@ import java.util.Properties;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.mail.autoconfigure.MailProperties;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
@@ -17,6 +18,7 @@ import stirling.software.proprietary.security.configuration.MailConfig;
 class MailConfigTest {
 
     private ApplicationProperties.Mail mailProps;
+    private MailProperties springMail;
 
     @BeforeEach
     void initMailProperties() {
@@ -30,6 +32,8 @@ class MailConfigTest {
         when(mailProps.getSslEnable()).thenReturn(null);
         when(mailProps.getSslTrust()).thenReturn(null);
         when(mailProps.getSslCheckServerIdentity()).thenReturn(null);
+        springMail = new MailProperties();
+        springMail.getProperties().put("mail.smtp.timeout", "30000");
     }
 
     @Test
@@ -37,7 +41,7 @@ class MailConfigTest {
         ApplicationProperties appProps = mock(ApplicationProperties.class);
         when(appProps.getMail()).thenReturn(mailProps);
 
-        MailConfig config = new MailConfig(appProps);
+        MailConfig config = new MailConfig(appProps, springMail);
         JavaMailSender sender = config.javaMailSender();
 
         assertInstanceOf(JavaMailSenderImpl.class, sender);
@@ -69,7 +73,7 @@ class MailConfigTest {
         when(mailProps.getSslCheckServerIdentity()).thenReturn(true);
         when(appProps.getMail()).thenReturn(mailProps);
 
-        MailConfig config = new MailConfig(appProps);
+        MailConfig config = new MailConfig(appProps, springMail);
         JavaMailSenderImpl impl = (JavaMailSenderImpl) config.javaMailSender();
 
         Properties props = impl.getJavaMailProperties();
@@ -80,5 +84,21 @@ class MailConfigTest {
                 () -> assertEquals("true", props.getProperty("mail.smtp.ssl.enable")),
                 () -> assertEquals("*", props.getProperty("mail.smtp.ssl.trust")),
                 () -> assertEquals("true", props.getProperty("mail.smtp.ssl.checkserveridentity")));
+    }
+
+    @Test
+    void springMailPropertiesReachTheSender() {
+        springMail.getProperties().put("mail.smtp.connectiontimeout", "45000");
+        ApplicationProperties appProps = mock(ApplicationProperties.class);
+        when(appProps.getMail()).thenReturn(mailProps);
+
+        Properties props =
+                ((JavaMailSenderImpl) new MailConfig(appProps, springMail).javaMailSender())
+                        .getJavaMailProperties();
+
+        assertAll(
+                "inherited from spring.mail.properties",
+                () -> assertEquals("45000", props.getProperty("mail.smtp.connectiontimeout")),
+                () -> assertEquals("30000", props.getProperty("mail.smtp.timeout")));
     }
 }

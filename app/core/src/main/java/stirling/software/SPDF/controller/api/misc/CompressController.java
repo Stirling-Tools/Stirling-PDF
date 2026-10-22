@@ -951,8 +951,7 @@ public class CompressController {
         Double lineArtThreshold = request.getLineArtThreshold();
         Integer lineArtEdgeLevel = request.getLineArtEdgeLevel();
         if (expectedOutputSizeString == null && optimizeLevel == null) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    ExceptionUtils.ErrorCode.COMPRESSION_OPTIONS);
+            throw ExceptionUtils.createCompressionOptionsRequiredException();
         }
 
         Long expectedOutputSize = 0L;
@@ -1089,22 +1088,22 @@ public class CompressController {
                 }
             }
 
-            // Use original if optimized file is somehow larger or currentFile is invalid
             if (!Files.exists(currentFile)) {
                 log.warn("Optimized file missing or invalid. Using the original file instead.");
-                currentFile = originalFile;
-            }
-            long finalFileSize = Files.size(currentFile);
-            if (finalFileSize >= inputFileSize) {
-                log.warn(
-                        "Optimized file is larger than the original. Using the original file"
-                                + " instead.");
                 currentFile = originalFile;
             }
 
             String outputFilename =
                     GeneralUtils.generateFilename(
                             inputFile.getOriginalFilename(), "_Optimized.pdf");
+
+            // Return the upload byte for byte: re-saving it through PDFBox can grow it, and the
+            // frontend reports "could not be compressed further" by the size being unchanged.
+            if (Files.size(currentFile) >= inputFileSize) {
+                log.info("Compression did not reduce the file size. Returning the original file.");
+                tempFiles.remove(originalTempFile);
+                return WebResponseUtils.pdfFileToWebResponse(originalTempFile, outputFilename);
+            }
 
             try {
                 try (PDDocument document = pdfDocumentFactory.load(currentFile.toFile())) {
@@ -1405,10 +1404,15 @@ public class CompressController {
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
                                 .runCommandWithOutputHandling(command, null);
 
-                // Update current file to the QPDF output
+                long postQpdfSize = Files.size(qpdfOutputPath);
+                if (postQpdfSize >= preQpdfSize) {
+                    log.info(
+                            "QPDF output ({}) is not smaller than its input, keeping the input",
+                            GeneralUtils.formatBytes(postQpdfSize));
+                    return;
+                }
                 Files.copy(qpdfOutputPath, currentFile, StandardCopyOption.REPLACE_EXISTING);
 
-                long postQpdfSize = Files.size(currentFile);
                 double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
                 log.info(
                         "Post-QPDF file size: {} (reduced by {}%)",
@@ -1417,10 +1421,7 @@ public class CompressController {
 
             } catch (IOException e) {
                 if (returnCode != null && returnCode.getRc() != 3) {
-                    throw ExceptionUtils.createIOException(
-                            ExceptionUtils.ErrorCode.QPDF_COMPRESSION.getMessageKey(),
-                            ExceptionUtils.ErrorCode.QPDF_COMPRESSION.getDefaultMessage(),
-                            e);
+                    throw ExceptionUtils.createQpdfCompressionException(e);
                 }
                 // If QPDF fails, keep using the current file
                 log.warn("QPDF compression failed, continuing with current file", e);

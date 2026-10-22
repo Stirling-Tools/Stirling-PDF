@@ -78,6 +78,7 @@ public class ConnectRequest {
     @Column(name = "team_id")
     private Long teamId;
 
+    /** The current cloud owner who approved this handshake; populated on approval. */
     @Column(name = "approved_by_user_id")
     private Long approvedByUserId;
 

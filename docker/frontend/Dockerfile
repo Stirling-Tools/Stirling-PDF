@@ -11,18 +11,19 @@ RUN npm ci
 
 COPY frontend .
 
-# Generate material-symbols icon subset (normally done by task prepare:icons).
-RUN node editor/scripts/generate-icons.js
-
 # Defaults match prior behaviour. Supabase values are client-publishable build args.
 ARG STIRLING_FLAVOR=proprietary
 ARG VITE_BUILD_MODE=production
+# Include the processor (admin portal) route/chunk; false drops /processor and
+# the processor's settings sections from the built app.
+ARG VITE_INCLUDE_PORTAL=true
 ARG VITE_SUPABASE_URL=""
 # pragma: allowlist secret
 ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""
 
-# Build vite from editor/, output lands in editor/dist/.
+# Build vite from editor/, output lands in dist/.
 RUN set -eu; \
+    export UV_THREADPOOL_SIZE="${UV_THREADPOOL_SIZE:-16}"; \
     export STIRLING_FLAVOR="${STIRLING_FLAVOR}"; \
     if [ -n "${VITE_SUPABASE_URL}" ]; then export VITE_SUPABASE_URL="${VITE_SUPABASE_URL}"; fi; \
     if [ -n "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then export VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY="${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}"; fi; \
@@ -31,7 +32,7 @@ RUN set -eu; \
 # Stage 2: nginx
 FROM nginx:alpine@sha256:b0f7830b6bfaa1258f45d94c240ab668ced1b3651c8a222aefe6683447c7bf55
 
-COPY --from=build /app/editor/dist /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 COPY docker/frontend/nginx.conf /etc/nginx/nginx.conf
 COPY docker/frontend/entrypoint.sh /entrypoint.sh
 

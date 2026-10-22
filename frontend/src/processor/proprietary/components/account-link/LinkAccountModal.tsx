@@ -1,0 +1,304 @@
+import { useTranslation } from "react-i18next";
+import { useEffect, useRef, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { ExhaustedAccountLinkModal } from "@app/components/account-link/ExhaustedAccountLinkModal";
+import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
+import { Button } from "@app/ui";
+import { FlowModal } from "@app/portal/components/shared/FlowModal";
+import { StepModalHeader } from "@app/portal/components/shared/StepModalHeader";
+import { ConnectAskStep } from "@app/portal/components/account-link/connect/ConnectAskStep";
+import { ConnectHandoffGhost } from "@app/portal/components/account-link/connect/ConnectHandoffGhost";
+import {
+  ConnectCallbackView,
+  isRetryableOutcome,
+  type ConnectOutcome,
+} from "@app/portal/components/account-link/ConnectCallbackView";
+import { useConnectHandoff } from "@app/portal/hooks/useConnectHandoff";
+import { useUI, type LinkModalMode } from "@app/portal/contexts/UIContext";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import "@app/portal/views/ConnectCallback.css";
+
+/**
+ * Ordered, so a step's position in this list is its number and the list's length is the total.
+ * Adding or removing a step means editing this and its arm of `stepBody`, nothing else.
+ */
+const STEP_ORDER = ["ask", "handoff", "outcome"] as const;
+
+type StepId = (typeof STEP_ORDER)[number];
+
+interface Props {
+  failureContext?: AccountLinkBlockContext;
+  summary?: ReactNode;
+  open: boolean;
+  onClose: () => void;
+  /** "reauth" only re-establishes the browser session, so it stays one step with no pitch. */
+  mode?: LinkModalMode;
+  /** Published by the callback route; present means the admin is returning from Stirling. */
+  outcome?: ConnectOutcome | null;
+}
+
+/** Unmounting on close discards an interrupted handoff before the next attempt. */
+export function LinkAccountModalHost() {
+  const {
+    linkModalOpen,
+    linkModalMode,
+    linkModalFailureContext,
+    closeLinkModal,
+    connectOutcome,
+  } = useUI();
+  const isOwner = useAccountLinkOwner();
+  if (!linkModalOpen || (!isOwner && linkModalMode !== "exhausted"))
+    return null;
+  return (
+    <LinkAccountModal
+      open
+      mode={linkModalMode}
+      failureContext={linkModalFailureContext}
+      onClose={closeLinkModal}
+      outcome={connectOutcome}
+    />
+  );
+}
+
+/**
+ * The progress bar spans the redirect on purpose: the admin leaves on the hand-off and returns on
+ * the outcome step of the dialog they left, rather than being greeted by a different one.
+ */
+export function LinkAccountModal({
+  open,
+  onClose,
+  mode = "link",
+  outcome = null,
+  summary,
+  failureContext,
+}: Props) {
+  const { t } = useTranslation();
+  const isOwner = useAccountLinkOwner();
+  const navigate = useNavigate();
+  const trigger = useRef(document.activeElement);
+  useEffect(
+    () => () => {
+      if (
+        trigger.current instanceof HTMLElement &&
+        trigger.current.isConnected
+      ) {
+        trigger.current.focus({ preventScroll: true });
+      }
+    },
+    [],
+  );
+  const reauth =
+    mode === "reauth" ||
+    (outcome?.state === "linked" && !outcome.sessionRestored);
+  const exhausted = mode === "exhausted";
+  const handoff = useConnectHandoff(reauth);
+
+  // Busy outranks a stale outcome, or a retry sits on the old result until the browser leaves.
+  let step: StepId = "ask";
+  if (handoff.busy) step = "handoff";
+  else if (outcome && !handoff.error) step = "outcome";
+
+  const title = stepTitle();
+  const current = STEP_ORDER.indexOf(step) + 1;
+
+  // Re-auth is one step, so it carries no count and no progress bar.
+  const stepChrome = reauth
+    ? {}
+    : {
+        step: current,
+        total: STEP_ORDER.length,
+        stepLabel: t(
+          "portal.accountLink.connect.step",
+          "Step {{current}} of {{total}}",
+          {
+            current,
+            total: STEP_ORDER.length,
+          },
+        ),
+      };
+
+  if (exhausted && !reauth && step === "ask") {
+    return (
+      <ExhaustedAccountLinkModal
+        open={open}
+        onClose={onClose}
+        canLink={isOwner}
+        failureContext={failureContext}
+        onStart={isOwner ? handoff.begin : undefined}
+        onManagePipeline={(id) =>
+          navigate(
+            `${PORTAL_BASENAME}/pipelines${id ? `/${encodeURIComponent(id)}` : ""}`,
+          )
+        }
+      >
+        <ConnectAskStep
+          reauth={false}
+          exhausted
+          error={handoff.error}
+          summary={summary}
+        />
+      </ExhaustedAccountLinkModal>
+    );
+  }
+
+  return (
+    <FlowModal
+      open={open}
+      onClose={onClose}
+      label={title}
+      footer={stepFooter()}
+    >
+      <StepModalHeader
+        brand={t("portal.accountLink.modal.identity", "Stirling account")}
+        title={title}
+        {...stepChrome}
+        closeLabel={t("portal.accountLink.connect.close", "Close")}
+        onClose={onClose}
+      />
+      {stepBody()}
+    </FlowModal>
+  );
+
+  function stepTitle(): string {
+    if (reauth) {
+      return t("portal.accountLink.renewal.title", "Renew billing access");
+    }
+    if (step === "ask") {
+      return exhausted
+        ? t(
+            "portal.accountLink.modal.exhaustedTitle",
+            "Add more monthly credits",
+          )
+        : t(
+            "portal.accountLink.modal.linkTitle",
+            "Connect your Stirling account",
+          );
+    }
+    if (step === "handoff") {
+      return t("portal.accountLink.connect.handoff.title", "Connecting");
+    }
+    if (outcome?.state === "linked") {
+      return t("portal.accountLink.connect.done.title", "Connected");
+    }
+    return t("portal.accountLink.connect.done.pendingTitle", "Almost there");
+  }
+
+  function stepBody() {
+    switch (step) {
+      case "ask":
+        return (
+          <ConnectAskStep
+            reauth={reauth}
+            exhausted={exhausted}
+            error={handoff.error}
+          />
+        );
+      case "handoff":
+        return <ConnectHandoffGhost />;
+      case "outcome":
+        return outcome ? (
+          <ConnectCallbackView
+            mode={reauth ? "reauth" : "link"}
+            state={outcome.state}
+            sessionRestored={outcome.sessionRestored}
+            onDone={onClose}
+          />
+        ) : null;
+    }
+  }
+
+  function closeButton() {
+    return (
+      <Button variant="quiet" accent="neutral" onClick={onClose}>
+        {t("portal.accountLink.connect.close", "Close")}
+      </Button>
+    );
+  }
+
+  function retryButton(onRetry: () => void) {
+    return (
+      <Button variant="primary" onClick={onRetry}>
+        {t("portal.accountLink.connect.callback.retry", "Try again")}
+      </Button>
+    );
+  }
+
+  function stepFooter() {
+    if (step === "ask") {
+      const dismiss = reauth
+        ? t("portal.accountLink.modal.cancel", "Cancel")
+        : t("portal.accountLink.connect.notNow", "Not now");
+      const start = reauth
+        ? t("portal.accountLink.modal.continueReauth", "Sign in again")
+        : t("portal.accountLink.connect.start", "Connect Stirling account");
+      return (
+        <>
+          <Button variant="quiet" accent="neutral" onClick={onClose}>
+            {dismiss}
+          </Button>
+          <Button variant="primary" onClick={handoff.begin}>
+            {start}
+          </Button>
+        </>
+      );
+    }
+
+    // The request is out and the browser is leaving; Close so a stall is not a dead end.
+    if (step === "handoff") {
+      return (
+        <>
+          <span />
+          {closeButton()}
+        </>
+      );
+    }
+
+    // A retry over a call that has not answered is how you get two handshakes.
+    if (outcome?.state === "working") {
+      return (
+        <>
+          <span />
+          {closeButton()}
+        </>
+      );
+    }
+
+    // Still open: re-claim rather than spend the approval a leader gave by hand.
+    if (outcome?.reclaim) {
+      return (
+        <>
+          {closeButton()}
+          {retryButton(outcome.reclaim)}
+        </>
+      );
+    }
+
+    if (outcome?.state === "linked" && !outcome.sessionRestored) {
+      return (
+        <>
+          {closeButton()}
+          {retryButton(handoff.begin)}
+        </>
+      );
+    }
+
+    if (outcome && isRetryableOutcome(outcome.state)) {
+      return (
+        <>
+          {closeButton()}
+          {retryButton(handoff.begin)}
+        </>
+      );
+    }
+
+    return (
+      <>
+        <span />
+        <Button variant="primary" onClick={onClose}>
+          {t("portal.accountLink.connect.done.cta", "Done")}
+        </Button>
+      </>
+    );
+  }
+}

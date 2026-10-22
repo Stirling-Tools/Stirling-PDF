@@ -54,13 +54,15 @@ const result = run();
 if (result.status === 0) process.exit(0);
 
 if (result.status === ENGINE_BROKEN) {
-  process.stderr.write("comment-lint could not run, so comments in this turn were not checked.\n");
+  process.stderr.write(`comment-lint could not run, so comments in this turn were not checked.${reason(result)}\n`);
   process.exit(1);
 }
 
-// Anything else is Task itself failing, which means the check did not happen.
-if (result.status !== FOUND) {
-  process.stderr.write(`comment-lint did not run (task exit ${result.status}), so comments in this turn were not checked.\n`);
+// Anything else is Task itself failing, which means the check did not happen. A
+// findings exit carrying no findings is the same case: Task failed before the
+// linter ran, so blocking on it would name comments nobody can go and read.
+if (result.status !== FOUND || !result.output.trim()) {
+  process.stderr.write(`comment-lint did not run (task exit ${result.status}), so comments in this turn were not checked.${reason(result)}\n`);
   process.exit(1);
 }
 
@@ -68,6 +70,13 @@ if (result.status !== FOUND) {
 // it is passed through rather than rewritten.
 process.stderr.write(`${result.output.trim()}\n\nFix these before finishing.\n`);
 process.exit(2);
+
+// Task's stderr names the real failure, such as an executable missing from PATH,
+// which the captured pipe would otherwise swallow.
+function reason(result) {
+  const message = (result.error ?? "").trim();
+  return message ? `\n${message}` : "";
+}
 
 function readStdin() {
   try {
@@ -92,7 +101,9 @@ function taskCommand() {
   for (const candidate of candidates) {
     if (existsSync(candidate)) return { command: candidate, shell: false };
   }
-  return { command: process.platform === "win32" ? "task.cmd" : "task", shell: process.platform === "win32" };
+  // Bare name on win32 too: the shell resolves it through PATHEXT, so it finds
+  // task.exe, task.cmd or task.bat, whichever the installer shipped.
+  return { command: "task", shell: process.platform === "win32" };
 }
 
 function run() {
@@ -114,6 +125,6 @@ function run() {
     });
     return { status: 0, output };
   } catch (error) {
-    return { status: error.status ?? -1, output: error.stdout ?? "" };
+    return { status: error.status ?? -1, output: error.stdout ?? "", error: error.stderr ?? "" };
   }
 }

@@ -14,6 +14,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,6 +27,8 @@ import stirling.software.proprietary.accountlink.AccountLinkClient.ConnectClaimO
 import stirling.software.proprietary.accountlink.AccountLinkClient.ConnectClaimResult;
 import stirling.software.proprietary.accountlink.AccountLinkClient.ConnectRequestResult;
 import stirling.software.proprietary.accountlink.ConnectService.Phase;
+import stirling.software.proprietary.model.OrgOwner;
+import stirling.software.proprietary.service.OrgOwnerService;
 
 /** Unit tests for the instance half of the connect handshake. */
 @ExtendWith(MockitoExtension.class)
@@ -39,6 +43,7 @@ class ConnectServiceTest {
     @Mock private ConnectStateRepository stateRepo;
     @Mock private DeviceCredentialStore credentialStore;
     @Mock private EntitlementCache entitlementCache;
+    @Mock private OrgOwnerService owners;
 
     private ApplicationProperties applicationProperties;
     private ConnectService service;
@@ -46,13 +51,18 @@ class ConnectServiceTest {
     @BeforeEach
     void setUp() {
         applicationProperties = new ApplicationProperties();
+        OrgOwner owner = new OrgOwner();
+        owner.setOwnerUserId(1L);
+        owner.setAssignedAt(LocalDateTime.of(2026, 9, 1, 0, 0));
+        when(owners.requireCurrentOwner(any())).thenReturn(owner);
         service =
                 new ConnectService(
                         client,
                         stateRepo,
                         credentialStore,
                         entitlementCache,
-                        applicationProperties);
+                        applicationProperties,
+                        owners);
     }
 
     private void configureFrontendUrl(String url) {
@@ -76,6 +86,77 @@ class ConnectServiceTest {
                         anyString(),
                         // A first link carries no credential; that is what makes it a first link.
                         org.mockito.ArgumentMatchers.isNull());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void start_refusesThePreviewOriginMismatchBeforeContactingSaaS(boolean reauth)
+            throws Exception {
+        configureFrontendUrl("https://7952.ssl.stirlingpdf.cloud");
+        if (reauth) {
+            when(credentialStore.get()).thenReturn(Optional.of(credential(7L)));
+        }
+        ConnectService.CallbackHint hint =
+                new ConnectService.CallbackHint(
+                        "http://54.175.155.236:7952/account-link/callback?state=browser-state",
+                        "http://54.175.155.236:7952",
+                        "http://localhost:8080");
+
+        ConnectService.ConnectStatus result =
+                reauth ? service.startReauth(hint) : service.start("preview", hint);
+
+        assertThat(result.phase()).isEqualTo(Phase.CALLBACK_MISMATCH);
+        assertThat(result.authorizeUrl()).isNull();
+        verifyNoInteractions(client, stateRepo, entitlementCache);
+        verify(credentialStore, never()).save(anyString(), anyString(), any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "http://pdf.example.com/account-link/callback?state=browser-state",
+                "https://pdf.example.com:8443/account-link/callback?state=browser-state",
+                "https://pdf.example.com/base/account-link/callback?state=browser-state",
+                "https://other.example.com/account-link/callback?state=browser-state"
+            })
+    void start_refusesARewrittenBrowserCallback(String requested) throws Exception {
+        configureFrontendUrl("https://pdf.example.com");
+
+        ConnectService.ConnectStatus result =
+                service.start(
+                        "instance",
+                        new ConnectService.CallbackHint(
+                                requested, "https://pdf.example.com", null));
+
+        assertThat(result.phase()).isEqualTo(Phase.CALLBACK_MISMATCH);
+        assertThat(result.authorizeUrl()).isNull();
+        verifyNoInteractions(client, stateRepo);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void start_preservesBrowserStateWhenThePreviewAddressMatches(boolean reauth) throws Exception {
+        configureFrontendUrl("http://54.175.155.236:7952/");
+        if (reauth) {
+            when(credentialStore.get()).thenReturn(Optional.of(credential(7L)));
+        }
+        stubCreate();
+        String requested = "http://54.175.155.236:7952/account-link/callback?state=browser-state";
+        ConnectService.CallbackHint hint =
+                new ConnectService.CallbackHint(
+                        requested, "http://54.175.155.236:7952", "http://localhost:8080");
+
+        ConnectService.ConnectStatus result =
+                reauth ? service.startReauth(hint) : service.start("preview", hint);
+
+        assertThat(result.phase()).isEqualTo(Phase.PENDING);
+        assertThat(result.authorizeUrl()).isEqualTo(AUTHORIZE_URL);
+        ArgumentCaptor<String> callback = ArgumentCaptor.forClass(String.class);
+        verify(client).connectRequest(any(), callback.capture(), anyString(), anyString(), any());
+        assertThat(callback.getValue()).isEqualTo(requested);
+        ArgumentCaptor<ConnectState> saved = ArgumentCaptor.forClass(ConnectState.class);
+        verify(stateRepo).save(saved.capture());
+        assertThat(saved.getValue().getCallbackUrl()).isEqualTo(requested);
     }
 
     @Test
@@ -240,6 +321,31 @@ class ConnectServiceTest {
     }
 
     @Test
+    void complete_withoutAnOpenHandshakeRejectsEvenWhenTheInstanceIsLinked() {
+        when(credentialStore.get()).thenReturn(Optional.of(credential(7L)));
+        assertThat(service.complete(NONCE).phase()).isEqualTo(Phase.REJECTED);
+        verifyNoInteractions(credentialStore, client);
+    }
+
+    @Test
+    void configuredCallbackPreservesTheBrowserCorrelator() {
+        applicationProperties.getSystem().setFrontendUrl("https://pdf.example.com/base");
+        String callback = "https://pdf.example.com/base/account-link/callback?state=browser-state";
+        assertThat(
+                        service.resolveCallbackUrl(
+                                new ConnectService.CallbackHint(
+                                        callback, "https://pdf.example.com", null)))
+                .isEqualTo(callback);
+        assertThat(
+                        service.resolveCallbackUrl(
+                                new ConnectService.CallbackHint(
+                                        "https://other.example.com/account-link/callback?state=wrong",
+                                        null,
+                                        null)))
+                .isEqualTo("https://pdf.example.com/base/account-link/callback");
+    }
+
+    @Test
     void complete_whenSaaSHasNotCommittedTheApprovalKeepsTheHandshake() {
         when(stateRepo.findById(ConnectState.SINGLETON_ID))
                 .thenReturn(Optional.of(openHandshake()));
@@ -259,7 +365,7 @@ class ConnectServiceTest {
 
         assertThat(service.complete(NONCE).phase()).isEqualTo(Phase.UNAVAILABLE);
         verify(stateRepo, never()).delete(any());
-        verifyNoInteractions(credentialStore);
+        verify(credentialStore, never()).save(anyString(), anyString(), any());
     }
 
     @Test
@@ -271,7 +377,7 @@ class ConnectServiceTest {
 
         assertThat(service.complete(NONCE).phase()).isEqualTo(Phase.REJECTED);
         verify(stateRepo).delete(state);
-        verifyNoInteractions(credentialStore);
+        verify(credentialStore, never()).save(anyString(), anyString(), any());
     }
 
     @Test
@@ -315,6 +421,7 @@ class ConnectServiceTest {
     @Test
     void complete_onAConfirmedReauthKeepsTheExistingCredential() {
         ConnectState state = openHandshake();
+        state.setReauth(true);
         when(stateRepo.findById(ConnectState.SINGLETON_ID)).thenReturn(Optional.of(state));
         when(client.connectClaim(anyString(), anyString()))
                 .thenReturn(new ConnectClaimResult(ConnectClaimOutcome.CONFIRMED, null, null, 7L));
@@ -326,6 +433,18 @@ class ConnectServiceTest {
         // Nothing to store: a second credential would orphan the one we already hold.
         verify(credentialStore, never()).save(anyString(), anyString(), any());
         verify(stateRepo).delete(state);
+        verifyNoInteractions(owners);
+    }
+
+    @Test
+    void reauthCannotStoreANewCredentialEvenIfUpstreamGrantsOne() {
+        ConnectState state = openHandshake();
+        state.setReauth(true);
+        when(stateRepo.findById(ConnectState.SINGLETON_ID)).thenReturn(Optional.of(state));
+        when(client.connectClaim(anyString(), anyString()))
+                .thenReturn(new ConnectClaimResult(ConnectClaimOutcome.GRANTED, "dev", "sec", 7L));
+        assertThat(service.complete(NONCE).phase()).isEqualTo(Phase.REJECTED);
+        verifyNoInteractions(owners, credentialStore);
     }
 
     @Test
@@ -378,6 +497,8 @@ class ConnectServiceTest {
         state.setAuthorizeUrl("https://app.example.com/link?request=req-1");
         state.setCreatedAt(LocalDateTime.now());
         state.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+        state.setOwnerUserId(1L);
+        state.setOwnerAssignedAt(LocalDateTime.of(2026, 9, 1, 0, 0));
         return state;
     }
 
