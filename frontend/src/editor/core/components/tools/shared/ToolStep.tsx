@@ -58,7 +58,7 @@ const renderTooltipTitle = (
         pinOnClick={true}
       >
         <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
-          <Text fw={400} size="sm">
+          <Text component="span" fw={400} size="sm">
             {title}
           </Text>
           <Icon
@@ -72,7 +72,7 @@ const renderTooltipTitle = (
   }
 
   return (
-    <Text fw={500} size="sm">
+    <Text component="span" fw={500} size="sm">
       {title}
     </Text>
   );
@@ -121,9 +121,15 @@ const ToolStep = ({
             aria-expanded={!isCollapsed}
             onClick={onCollapsedClick}
           >
-            <Flex align="center" gap="sm">
+            <Flex component="span" align="center" gap="sm">
               {shouldShowNumber && (
-                <Text fw={500} size="sm" c="dimmed" mr="0.5rem">
+                <Text
+                  component="span"
+                  fw={500}
+                  size="sm"
+                  c="dimmed"
+                  mr="0.5rem"
+                >
                   {stepNumber}
                 </Text>
               )}
@@ -142,9 +148,15 @@ const ToolStep = ({
           </button>
         ) : (
           <Flex align="center" justify="space-between" mb="sm">
-            <Flex align="center" gap="sm">
+            <Flex component="span" align="center" gap="sm">
               {shouldShowNumber && (
-                <Text fw={500} size="sm" c="dimmed" mr="0.5rem">
+                <Text
+                  component="span"
+                  fw={500}
+                  size="sm"
+                  c="dimmed"
+                  mr="0.5rem"
+                >
                   {stepNumber}
                 </Text>
               )}
