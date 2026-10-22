@@ -1,6 +1,17 @@
 import { getFontBaseUrl } from "@app/services/fontBaseUrl";
-import type { FontFallbackConfig } from "@embedpdf/engines";
+import type { FontFallbackConfig, FontVariant } from "@embedpdf/engines";
 import { FontCharset } from "@embedpdf/models";
+
+// The WASM PDFium build ships no standard-14 fonts, so a document's
+// non-embedded Helvetica or Arial is drawn with this face. It must share their
+// advance widths: a wider face overruns the PDF's glyph positions, swallowing
+// word spaces or pushing justified lines past the margin.
+const METRIC_COMPATIBLE_SANS: FontVariant[] = [
+  { url: "LiberationSans-Regular.ttf", weight: 400 },
+  { url: "LiberationSans-Bold.ttf", weight: 700 },
+  { url: "LiberationSans-Italic.ttf", weight: 400, italic: true },
+  { url: "LiberationSans-BoldItalic.ttf", weight: 700, italic: true },
+];
 
 /**
  * Fonts the engine substitutes for characters missing from a document.
@@ -16,12 +27,12 @@ export function getLocalFontFallbackConfig(): FontFallbackConfig {
     baseUrl: getFontBaseUrl(),
     defaultFont: "NotoSans-Regular.ttf",
     fonts: {
-      [FontCharset.ANSI]: "NotoSans-Regular.ttf",
-      [FontCharset.DEFAULT]: "NotoSans-Regular.ttf",
-      [FontCharset.CYRILLIC]: "NotoSans-Regular.ttf",
-      [FontCharset.GREEK]: "NotoSans-Regular.ttf",
+      [FontCharset.ANSI]: METRIC_COMPATIBLE_SANS,
+      [FontCharset.DEFAULT]: METRIC_COMPATIBLE_SANS,
+      [FontCharset.CYRILLIC]: METRIC_COMPATIBLE_SANS,
+      [FontCharset.GREEK]: METRIC_COMPATIBLE_SANS,
       [FontCharset.VIETNAMESE]: "NotoSans-Regular.ttf",
-      [FontCharset.EASTERNEUROPEAN]: "NotoSans-Regular.ttf",
+      [FontCharset.EASTERNEUROPEAN]: METRIC_COMPATIBLE_SANS,
       [FontCharset.ARABIC]: "NotoSansArabic-Regular.ttf",
       [FontCharset.HEBREW]: "NotoSansHebrew-Regular.ttf",
       [FontCharset.THAI]: "NotoSansThai-Regular.ttf",
