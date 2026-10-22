@@ -27,12 +27,13 @@ import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 public class FileToPdf {
 
     // file: is never allowed, so WeasyPrint cannot read the server's filesystem.
-    static final String ALLOWED_PROTOCOLS = "data,http,https";
+    static final String SANITIZED_ALLOWED_PROTOCOLS = "data";
+    static final String UNSANITIZED_ALLOWED_PROTOCOLS = "data,http,https";
 
     private static final Pattern UNSAFE_NAME_CHARS = Pattern.compile("[^A-Za-z0-9._-]");
     private static final Pattern IMG_SRC =
             Pattern.compile(
-                    "(<img\\b[^>]*?\\bsrc\\s*=\\s*)(\"([^\"]*)\"|'([^']*)')",
+                    "(<img\\b[^>]*?\\bsrc\\s*=\\s*)(\"([^\"]*)\"|'([^']*)'|([^\\s\"'>]+))",
                     Pattern.CASE_INSENSITIVE);
     private static final Pattern NUMERIC_ENTITY = Pattern.compile("&#(x?)([0-9a-fA-F]+);");
     private static final Map<String, String> IMAGE_MIME_TYPES =
@@ -79,7 +80,10 @@ public class FileToPdf {
             command.add("-v");
             command.add("--pdf-forms");
             command.add("--allowed-protocols");
-            command.add(ALLOWED_PROTOCOLS);
+            command.add(
+                    customHtmlSanitizer.isDisabled()
+                            ? UNSANITIZED_ALLOWED_PROTOCOLS
+                            : SANITIZED_ALLOWED_PROTOCOLS);
             command.add(tempInputFile.getAbsolutePath());
             command.add(tempOutputFile.getAbsolutePath());
 

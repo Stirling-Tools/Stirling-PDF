@@ -63,7 +63,10 @@ public class CustomHtmlSanitizer {
                     .and(new HtmlPolicyBuilder().disallowElements("noscript").toFactory());
 
     public String sanitize(String html) {
-        boolean disableSanitize = applicationProperties.getSystem().isDisableSanitize();
-        return disableSanitize ? html : POLICY.sanitize(html);
+        return isDisabled() ? html : POLICY.sanitize(html);
+    }
+
+    public boolean isDisabled() {
+        return applicationProperties.getSystem().isDisableSanitize();
     }
 }

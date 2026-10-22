@@ -268,12 +268,23 @@ class FileToPdfMoreTest {
     class WeasyPrintInputTests {
 
         @Test
-        @DisplayName("HTML input runs with file: excluded from the allowed protocols")
+        @DisplayName("sanitized HTML input may only fetch data: URIs")
         void htmlRestrictsProtocols() throws Exception {
             CapturedRun run = run("<p>x</p>".getBytes(StandardCharsets.UTF_8), "page.html");
 
             int flag = run.command.indexOf("--allowed-protocols");
             assertThat(flag).isPositive();
+            assertThat(run.command.get(flag + 1)).isEqualTo("data");
+        }
+
+        @Test
+        @DisplayName("unsanitized HTML input may fetch http(s) but never file:")
+        void unsanitizedHtmlExcludesFileProtocol() throws Exception {
+            when(sanitizer.isDisabled()).thenReturn(true);
+
+            CapturedRun run = run("<p>x</p>".getBytes(StandardCharsets.UTF_8), "page.html");
+
+            int flag = run.command.indexOf("--allowed-protocols");
             assertThat(run.command.get(flag + 1)).isEqualTo("data,http,https");
         }
 
@@ -288,7 +299,7 @@ class FileToPdfMoreTest {
             CapturedRun run = run(zip, "bundle.zip");
 
             assertThat(run.command.get(run.command.size() - 2)).endsWith(".html");
-            assertThat(run.command).contains("--allowed-protocols", "data,http,https");
+            assertThat(run.command).contains("--allowed-protocols", "data");
             assertThat(run.html).isEqualTo("<p>main</p>");
         }
 
