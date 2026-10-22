@@ -13,6 +13,7 @@ import {
   useDataTableFilters,
 } from "@app/ui";
 import { formatRelativeTime } from "@app/utils/timeUtils";
+import { copyText } from "@app/utils/copyText";
 import type {
   FileRunEvent,
   FileRunEventScope,
@@ -111,9 +112,7 @@ export function FileRunEventList() {
 
   const copyLog = (event: FileRunEvent) => {
     if (!event.detail) return;
-    void navigator.clipboard.writeText(event.detail).catch(() => {
-      // No clipboard permission. Nothing worth an error of its own.
-    });
+    void copyText(event.detail);
   };
 
   const columns: DataTableColumn<FileRunEvent>[] = [

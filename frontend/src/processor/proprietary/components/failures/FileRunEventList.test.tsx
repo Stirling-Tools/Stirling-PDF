@@ -165,6 +165,31 @@ describe("FileRunEventList", () => {
     expect(screen.getAllByText("Copy error").length).toBeGreaterThan(0);
   });
 
+  it("copies the error over plain HTTP, where navigator.clipboard is undefined", async () => {
+    Object.defineProperty(window, "isSecureContext", {
+      configurable: true,
+      value: false,
+    });
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: undefined,
+    });
+    const execCommand = vi.fn(() => true);
+    Object.defineProperty(document, "execCommand", {
+      configurable: true,
+      value: execCommand,
+    });
+    fetchFileRunEvents.mockResolvedValue([event()]);
+
+    render(<FileRunEventList />);
+    await screen.findByText("Password-protected document");
+    fireEvent.click(screen.getByRole("button", { name: "View error" }));
+    const copyButtons = screen.getAllByRole("button", { name: "Copy error" });
+    fireEvent.click(copyButtons[copyButtons.length - 1]);
+
+    expect(execCommand).toHaveBeenCalledWith("copy");
+  });
+
   it("offers no View error on a row with no diagnostic to show", async () => {
     fetchFileRunEvents.mockResolvedValue([event({ detail: null })]);
 
