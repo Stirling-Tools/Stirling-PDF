@@ -295,7 +295,7 @@ export function PageView({
               return;
             }
             // Region too large or not usable: fall back to the full pass.
-            void renderFull();
+            if (!cancelled) void renderFull();
           })
           .catch(() => {
             if (!cancelled) void renderFull();
