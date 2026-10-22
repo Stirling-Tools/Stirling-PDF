@@ -28,28 +28,24 @@ const SUMMARY = "pdf-editor-document-accessibility-summary";
 const NEXT = "pdf-editor-document-accessibility-next";
 
 describe("DocumentInspector accessibility review", () => {
-  it("lists images needing descriptions and untagged ones, and moves to the next", () => {
+  it("counts images missing descriptions and untagged ones, and moves to the next", () => {
     const onNext = renderInspector({ needsDescription: 2, untagged: 1 });
-    const summary = screen.getByTestId(SUMMARY);
-    expect(summary).toHaveTextContent(`${KEY}.remaining`);
-    expect(summary).toHaveTextContent(`${KEY}.untagged`);
-    expect(summary).not.toHaveTextContent(`${KEY}.allDescribed`);
+    expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
+      `${KEY}.missingDescriptions2${KEY}.untaggedImages1`,
+    );
     fireEvent.click(screen.getByTestId(NEXT));
     expect(onNext).toHaveBeenCalledOnce();
   });
 
-  it("does not call a document with only untagged images done", () => {
+  it("offers the next image while any is untagged", () => {
     renderInspector({ needsDescription: 0, untagged: 1 });
-    const summary = screen.getByTestId(SUMMARY);
-    expect(summary).toHaveTextContent(`${KEY}.untagged`);
-    expect(summary).not.toHaveTextContent(`${KEY}.allDescribed`);
     expect(screen.getByTestId(NEXT)).toBeVisible();
   });
 
-  it("says when every image is dealt with", () => {
+  it("offers no next image once every image is dealt with", () => {
     renderInspector({ needsDescription: 0, untagged: 0 });
     expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
-      `${KEY}.allDescribed`,
+      `${KEY}.missingDescriptions0${KEY}.untaggedImages0`,
     );
     expect(screen.queryByTestId(NEXT)).not.toBeInTheDocument();
   });

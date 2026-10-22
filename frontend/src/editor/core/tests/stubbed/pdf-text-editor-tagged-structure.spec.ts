@@ -237,7 +237,9 @@ test.describe("PDF text editor - tagged documents", () => {
     // Escape from the Document tab clears the selection and leaves the tab open.
     await page.getByTestId("pdf-editor-tab-document").click();
     await page.keyboard.press("Escape");
-    await expect(summary).toHaveText("1 image needs a description");
+    await expect(summary).toHaveText(
+      /Missing descriptions\s*1\s*Untagged images\s*0/,
+    );
 
     await page.getByTestId("pdf-editor-document-accessibility-next").click();
     const field = page.getByTestId("pdf-editor-image-description");
@@ -247,8 +249,11 @@ test.describe("PDF text editor - tagged documents", () => {
 
     await page.getByTestId("pdf-editor-tab-document").click();
     await expect(summary).toHaveText(
-      "Every image is described or marked decorative.",
+      /Missing descriptions\s*0\s*Untagged images\s*0/,
     );
+    await expect(
+      page.getByTestId("pdf-editor-document-accessibility-next"),
+    ).toBeHidden();
   });
 
   test("an image inserted into a tagged document is flagged, then tagged by describing it", async ({
@@ -274,7 +279,7 @@ test.describe("PDF text editor - tagged documents", () => {
       "pdf-editor-document-accessibility-summary",
     );
     await expect(summary).toHaveText(
-      "1 image isn't tagged, so screen readers can't reach it",
+      /Missing descriptions\s*0\s*Untagged images\s*1/,
     );
 
     await images.nth(1).click();
@@ -307,10 +312,8 @@ test.describe("PDF text editor - tagged documents", () => {
     await saveAndReopen(page);
 
     await page.locator(IMAGE).first().click();
-    await expect(
-      page.getByTestId("pdf-editor-image-accessibility-status"),
-    ).toHaveText("Marked as decorative, so screen readers skip it.");
     await expect(decorative).toBeChecked();
+    await expect(page.getByTestId("pdf-editor-image-description")).toBeHidden();
 
     await page
       .getByTestId("pdf-editor-image-accessibility")

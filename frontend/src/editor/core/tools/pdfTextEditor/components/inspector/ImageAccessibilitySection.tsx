@@ -43,43 +43,55 @@ export function ImageAccessibilitySection({
         {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
       </SectionLabel>
       <Stack gap="xs">
-        {accessibility.kind === "describable" ? (
-          <Stack gap={4}>
-            <Textarea
-              label={t(
-                "pdfTextEditor.inspector.accessibility.description",
-                "Description",
-              )}
-              placeholder={t(
-                "pdfTextEditor.inspector.accessibility.descriptionPlaceholder",
-                "Describe what the image shows",
-              )}
-              value={accessibility.description ?? ""}
-              onChange={(e) => onSetDescription(e.currentTarget.value)}
-              autosize
-              minRows={2}
-              maxRows={6}
-              size="xs"
-              data-testid="pdf-editor-image-description"
-            />
-            <Text size="xs" c="dimmed">
-              {descriptionHint(t, accessibility)}
-            </Text>
-          </Stack>
-        ) : (
+        {accessibility.kind === "blocked" ? (
           <Text
             size="xs"
             c="dimmed"
             data-testid="pdf-editor-image-accessibility-status"
           >
-            {statusMessage(t, accessibility)}
+            {blockedMessage(t, accessibility)}
           </Text>
-        )}
-        {accessibility.kind !== "blocked" && (
-          <DecorativeToggle
-            accessibility={accessibility}
-            onSetDecorative={onSetDecorative}
-          />
+        ) : (
+          <>
+            {accessibility.kind === "describable" && (
+              <Textarea
+                label={t(
+                  "pdfTextEditor.inspector.accessibility.description",
+                  "Description",
+                )}
+                value={accessibility.description ?? ""}
+                onChange={(e) => onSetDescription(e.currentTarget.value)}
+                autosize
+                minRows={2}
+                maxRows={6}
+                size="xs"
+                data-testid="pdf-editor-image-description"
+              />
+            )}
+            <Checkbox
+              label={t(
+                "pdfTextEditor.inspector.accessibility.decorativeLabel",
+                "Decorative",
+              )}
+              description={
+                accessibility.kind === "describable" &&
+                !accessibility.canBeDecorative
+                  ? t(
+                      "pdfTextEditor.inspector.accessibility.mixedContent",
+                      "Figure includes other content",
+                    )
+                  : undefined
+              }
+              checked={accessibility.kind === "decorative"}
+              disabled={
+                accessibility.kind === "decorative"
+                  ? !accessibility.canUndecorate
+                  : !accessibility.canBeDecorative
+              }
+              onChange={(e) => onSetDecorative(e.currentTarget.checked)}
+              data-testid="pdf-editor-image-decorative"
+            />
+          </>
         )}
         {othersPending > 0 && (
           <Button
@@ -92,10 +104,7 @@ export function ImageAccessibilitySection({
             onClick={onNext}
             data-testid="pdf-editor-image-description-next"
           >
-            {t(
-              "pdfTextEditor.inspector.accessibility.nextImage",
-              "Next image to review",
-            )}
+            {t("pdfTextEditor.inspector.accessibility.nextImage", "Next image")}
           </Button>
         )}
       </Stack>
@@ -103,114 +112,35 @@ export function ImageAccessibilitySection({
   );
 }
 
-function DecorativeToggle({
-  accessibility,
-  onSetDecorative,
-}: {
-  accessibility: Exclude<ImageAccessibility, { kind: "blocked" }>;
-  onSetDecorative: (decorative: boolean) => void;
-}) {
-  const { t } = useTranslation();
-  const checked = accessibility.kind === "decorative";
-  const blocked =
-    accessibility.kind === "decorative"
-      ? !accessibility.canUndecorate
-      : !accessibility.canBeDecorative;
-  return (
-    <Checkbox
-      label={t(
-        "pdfTextEditor.inspector.accessibility.decorativeLabel",
-        "Decorative",
-      )}
-      description={decorativeHint(t, checked, blocked)}
-      checked={checked}
-      disabled={blocked}
-      onChange={(e) => onSetDecorative(e.currentTarget.checked)}
-      data-testid="pdf-editor-image-decorative"
-    />
-  );
-}
-
-function descriptionHint(
+function blockedMessage(
   t: TFunction,
-  accessibility: Extract<ImageAccessibility, { kind: "describable" }>,
+  accessibility: Extract<ImageAccessibility, { kind: "blocked" }>,
 ): string {
-  if (!accessibility.tagged) {
-    return t(
-      "pdfTextEditor.inspector.accessibility.untaggedHint",
-      "Screen readers can't reach this image yet. Describing it, or marking it decorative, adds it to the document's tags.",
-    );
-  }
-  if (!accessibility.description?.trim()) {
-    return t(
-      "pdfTextEditor.inspector.accessibility.needsDescription",
-      "Without a description, screen readers can only say there is an image here.",
-    );
-  }
-  return t(
-    "pdfTextEditor.inspector.accessibility.described",
-    "Screen readers read this description in place of the image.",
-  );
-}
-
-function decorativeHint(
-  t: TFunction,
-  checked: boolean,
-  blocked: boolean,
-): string {
-  if (!blocked) {
-    return t(
-      "pdfTextEditor.inspector.accessibility.decorativeHint",
-      "For borders, backgrounds and other images that carry no information.",
-    );
-  }
-  if (checked) {
-    return t(
-      "pdfTextEditor.inspector.accessibility.decorativeInFile",
-      "This image is marked decorative in the file.",
-    );
-  }
-  return t(
-    "pdfTextEditor.inspector.accessibility.mixedContent",
-    "This figure includes other content, so it can't be marked decorative here.",
-  );
-}
-
-function statusMessage(
-  t: TFunction,
-  accessibility: Exclude<ImageAccessibility, { kind: "describable" }>,
-): string {
-  if (accessibility.kind === "decorative") {
-    return t(
-      "pdfTextEditor.inspector.accessibility.decorative",
-      "Marked as decorative, so screen readers skip it.",
-    );
-  }
   switch (accessibility.blocker) {
     case "untagged":
       return accessibility.documentTagged
         ? t(
             "pdfTextEditor.inspector.accessibility.untaggedImage",
-            "This image isn't in the document's tags, so it can't be described yet.",
+            "Can't be tagged here",
           )
         : t(
             "pdfTextEditor.inspector.accessibility.untaggedDocument",
-            "This document has no accessibility tags, so its images can't be described yet.",
+            "Document has no tags",
           );
     case "not-figure":
       return t(
         "pdfTextEditor.inspector.accessibility.notFigure",
-        "This image is tagged as part of the text around it, so it can't have its own description.",
+        "Tagged as part of the text",
       );
     case "encrypted":
       return t(
         "pdfTextEditor.inspector.accessibility.encrypted",
-        "Descriptions can't be saved in an encrypted file.",
+        "Tags can't be edited in an encrypted file",
       );
     case "unreadable":
       return t(
         "pdfTextEditor.inspector.accessibility.unreadable",
-        "This file's tags can't be edited here.",
+        "This file's tags can't be edited",
       );
   }
 }

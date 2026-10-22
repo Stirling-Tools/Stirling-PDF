@@ -183,11 +183,11 @@ export function ImageHandle({
             attention === "untagged"
               ? t(
                   "pdfTextEditor.inspector.accessibility.untaggedBadge",
-                  "Not tagged, so screen readers can't reach it",
+                  "Not tagged",
                 )
               : t(
                   "pdfTextEditor.inspector.accessibility.needsDescriptionBadge",
-                  "Needs a description",
+                  "No description",
                 )
           }
         >

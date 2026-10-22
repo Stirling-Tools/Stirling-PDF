@@ -91,32 +91,21 @@ function AccessibilitySection({
         {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
       </SectionLabel>
       <Stack gap="xs">
-        <Stack gap={2} data-testid="pdf-editor-document-accessibility-summary">
-          {review.needsDescription > 0 && (
-            <Text size="xs" c="dimmed">
-              {t("pdfTextEditor.inspector.accessibility.remaining", {
-                count: review.needsDescription,
-                defaultValue: "{{count}} images need descriptions",
-              })}
-            </Text>
-          )}
-          {review.untagged > 0 && (
-            <Text size="xs" c="dimmed">
-              {t("pdfTextEditor.inspector.accessibility.untagged", {
-                count: review.untagged,
-                defaultValue:
-                  "{{count}} images aren't tagged, so screen readers can't reach them",
-              })}
-            </Text>
-          )}
-          {pending === 0 && (
-            <Text size="xs" c="dimmed">
-              {t(
-                "pdfTextEditor.inspector.accessibility.allDescribed",
-                "Every image is described or marked decorative.",
-              )}
-            </Text>
-          )}
+        <Stack gap={4} data-testid="pdf-editor-document-accessibility-summary">
+          <StatRow
+            label={t(
+              "pdfTextEditor.inspector.accessibility.missingDescriptions",
+              "Missing descriptions",
+            )}
+            value={review.needsDescription}
+          />
+          <StatRow
+            label={t(
+              "pdfTextEditor.inspector.accessibility.untaggedImages",
+              "Untagged images",
+            )}
+            value={review.untagged}
+          />
         </Stack>
         {pending > 0 && (
           <Button
@@ -129,10 +118,7 @@ function AccessibilitySection({
             onClick={onNext}
             data-testid="pdf-editor-document-accessibility-next"
           >
-            {t(
-              "pdfTextEditor.inspector.accessibility.nextImage",
-              "Next image to review",
-            )}
+            {t("pdfTextEditor.inspector.accessibility.nextImage", "Next image")}
           </Button>
         )}
       </Stack>

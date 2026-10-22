@@ -57,24 +57,16 @@ const untagged: ImageAccessibility = {
 };
 
 describe("ImageAccessibilitySection", () => {
-  it("edits the description and says it will be read out", () => {
+  it("edits the description", () => {
     const { onSetDescription } = renderSection(describable("Bar chart"));
     const field = screen.getByTestId(FIELD);
     expect(field).toHaveValue("Bar chart");
-    expect(screen.getByText(`${KEY}.described`)).toBeVisible();
     fireEvent.change(field, { target: { value: "Bar chart of revenue" } });
     expect(onSetDescription).toHaveBeenCalledWith("Bar chart of revenue");
   });
 
-  it("asks for a description when the image has none", () => {
-    renderSection(describable(null));
-    expect(screen.getByTestId(FIELD)).toHaveValue("");
-    expect(screen.getByText(`${KEY}.needsDescription`)).toBeVisible();
-  });
-
-  it("offers to describe an untagged image, saying that tags it", () => {
+  it("offers to describe an untagged image or mark it decorative", () => {
     const { onSetDescription } = renderSection(taggable);
-    expect(screen.getByText(`${KEY}.untaggedHint`)).toBeVisible();
     fireEvent.change(screen.getByTestId(FIELD), {
       target: { value: "A logo" },
     });
@@ -83,7 +75,6 @@ describe("ImageAccessibilitySection", () => {
   });
 
   it.each<[ImageAccessibility, string]>([
-    [{ kind: "decorative", canUndecorate: false }, "decorative"],
     [
       { kind: "blocked", blocker: "untagged", documentTagged: false },
       "untaggedDocument",
@@ -101,7 +92,7 @@ describe("ImageAccessibilitySection", () => {
       { kind: "blocked", blocker: "unreadable", documentTagged: true },
       "unreadable",
     ],
-  ])("explains why there is no field: %o", (accessibility, message) => {
+  ])("says why an image cannot be described: %o", (accessibility, message) => {
     renderSection(accessibility);
     expect(screen.queryByTestId(FIELD)).not.toBeInTheDocument();
     expect(
@@ -129,13 +120,17 @@ describe("ImageAccessibilitySection", () => {
       expect(onSetDecorative).toHaveBeenCalledWith(false);
     });
 
-    it.each<[ImageAccessibility, string]>([
-      [{ kind: "decorative", canUndecorate: false }, "decorativeInFile"],
-      [describable("Bar chart", false), "mixedContent"],
-    ])("cannot change %o, and says why", (accessibility, reason) => {
-      renderSection(accessibility);
+    it("cannot unmark a decorative image it cannot retag", () => {
+      renderSection({ kind: "decorative", canUndecorate: false });
+      expect(screen.getByTestId(DECORATIVE)).toBeChecked();
       expect(screen.getByTestId(DECORATIVE)).toBeDisabled();
-      expect(screen.getByText(`${KEY}.${reason}`)).toBeVisible();
+      expect(screen.queryByTestId(FIELD)).not.toBeInTheDocument();
+    });
+
+    it("cannot mark a figure with other content, and says why", () => {
+      renderSection(describable("Bar chart", false));
+      expect(screen.getByTestId(DECORATIVE)).toBeDisabled();
+      expect(screen.getByText(`${KEY}.mixedContent`)).toBeVisible();
     });
 
     it("is not offered for an image that cannot be described", () => {
