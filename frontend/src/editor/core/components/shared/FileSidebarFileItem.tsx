@@ -154,6 +154,9 @@ export interface FileItemProps {
   /** The PDF could not be parsed; the row offers Repair instead. */
   isDamaged?: boolean;
   onRepair?: (fileId: FileId) => void;
+  /** Bulk-selection mode: the row is a checkbox (`isSelected` is its checked
+   *  state, `onClick` toggles it) and the per-row actions are hidden. */
+  selectionMode?: boolean;
 }
 
 /** One kebab row. `disabledReason`, when set, greys the row out and says why. */
@@ -226,6 +229,7 @@ export const FileItem = React.memo(function FileItem({
   isUploadedToCloud = false,
   onVersionHistory,
   hasVersionHistory = false,
+  selectionMode = false,
 }: FileItemProps) {
   const { t } = useTranslation();
   const toolSkipReason = isToolSkipped
@@ -314,11 +318,17 @@ export const FileItem = React.memo(function FileItem({
         data-tool-skipped={isToolSkipped}
         title={toolSkipReason}
         aria-description={toolSkipReason}
-        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
+        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}${selectionMode ? " selection-mode" : ""}`}
         onClick={() => onClick(fileId)}
-        role="button"
+        role={selectionMode ? "checkbox" : "button"}
+        aria-checked={selectionMode ? isSelected : undefined}
         tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && onClick(fileId)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || (selectionMode && e.key === " ")) {
+            e.preventDefault();
+            onClick(fileId);
+          }
+        }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >

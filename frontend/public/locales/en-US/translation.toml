@@ -4833,6 +4833,13 @@ label = "File name"
 save = "Rename"
 title = "Rename file"
 
+[fileSidebar.selection]
+cancel = "Cancel selection"
+count = "{{count}} selected"
+delete = "Delete selected"
+selectAll = "Select all"
+start = "Select files"
+
 [filesPage]
 addedToLibrary = "Added to Stirling library"
 addingToLibrary = "Adding to Stirling library…"
