@@ -44,7 +44,6 @@ tasks:
   provisioner:
     desc: "Build installer provisioner"
     platforms: [windows]
-    dir: editor
     cmds:
       - node scripts/build-provisioner.mjs
 
@@ -52,7 +51,6 @@ tasks:
     desc: "Start Tauri desktop dev mode"
     deps: [prepare]
     ignore_error: true
-    dir: editor
     cmds:
       # Dev HTTP uses the packaged app origin instead of the Vite origin; keep this out of builds.
       - npx tauri dev --no-watch --features tauri-plugin-http/unsafe-headers
@@ -60,48 +58,42 @@ tasks:
   build:
     desc: "Build Tauri desktop app (production)"
     deps: [prepare]
-    dir: editor
     cmds:
       - npx tauri build
 
   build:dev:
     desc: "Build Tauri desktop app (dev, no bundling)"
     deps: [prepare]
-    dir: editor
     cmds:
       - npx tauri build --no-bundle
 
   build:dev:mac:
     desc: "Build Tauri desktop .app bundle (macOS)"
     deps: [prepare]
-    dir: editor
     cmds:
       - npx tauri build --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   build:dev:windows:
     desc: "Build Tauri desktop NSIS installer (Windows)"
     deps: [prepare]
-    dir: editor
     cmds:
       - npx tauri build --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   build:dev:linux:
     desc: "Build Tauri desktop AppImage (Linux)"
     deps: [prepare]
-    dir: editor
     cmds:
       - npx tauri build --bundles appimage --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   test:
     desc: "Run Tauri/Cargo tests"
     deps: [prepare]
-    dir: editor/src-tauri
+    dir: src-tauri
     cmds:
       - cargo test
 
   clean:
     desc: "Clean Tauri/Cargo build artifacts"
-    dir: editor
     cmds:
       - task: jlink:clean
       - cd src-tauri && cargo clean
@@ -123,7 +115,6 @@ tasks:
 
   jlink:verify:
     desc: "Fail the build if the bundled JRE is older than the app JAR requires"
-    dir: editor
     env:
       REQUIRED_JAVA: "{{.REQUIRED_JAVA}}"
     cmds:
@@ -144,12 +135,12 @@ tasks:
       # The bundle globs libs/*.jar, so an old jar left behind would ship too
       # (and could be selected as the backend). The script stages only the jar
       # this build just produced, replacing whatever the last build left there.
-      - node frontend/editor/scripts/stage-backend-jar.mjs app/core/build/libs frontend/editor/src-tauri/libs
+      - node frontend/scripts/stage-backend-jar.mjs app/core/build/libs frontend/src-tauri/libs
 
   jlink:runtime:
     desc: "Create custom JRE with jlink"
     deps: [jlink:jar]
-    dir: editor/src-tauri
+    dir: src-tauri
     cmds:
       - rm -rf runtime/jre
       - mkdir -p runtime
@@ -212,7 +203,7 @@ tasks:
 
   jlink:clean:
     desc: "Remove JLink runtime and bundled JARs"
-    dir: editor/src-tauri
+    dir: src-tauri
     cmds:
       - rm -rf libs runtime
 
@@ -225,7 +216,6 @@ tasks:
     desc: "Create universal (arm64+x86_64) JRE for the macOS Tauri build"
     deps: [jlink:jar]
     platforms: [darwin]
-    dir: editor
     env:
       JLINK_MODULES: "{{.JLINK_MODULES}}"
       OUTPUT_DIR: src-tauri/runtime/jre
