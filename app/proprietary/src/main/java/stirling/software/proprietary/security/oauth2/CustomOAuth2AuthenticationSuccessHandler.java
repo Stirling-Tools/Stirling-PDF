@@ -37,6 +37,7 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.util.DesktopClientUtils;
+import stirling.software.proprietary.security.util.RedirectBaseUrl;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -194,13 +195,22 @@ public class CustomOAuth2AuthenticationSuccessHandler
             HttpServletResponse response,
             String contextPath,
             String jwt) {
-        String redirectPath = resolveRedirectPath(request, contextPath);
+        Optional<String> landingBase =
+                RedirectBaseUrl.landingBase(
+                        oauth2Properties.getRedirectBaseUrl(),
+                        applicationProperties.getSystem().getFrontendUrl());
+        // The SPA cookie path already includes the browser-side base path, so only add an origin.
+        boolean usesCookiePath =
+                !TauriOAuthUtils.isTauriState(request) && cookieRedirectPath(request) != null;
+        String pathPrefix = landingBase.isPresent() && !usesCookiePath ? "" : contextPath;
+        String redirectPath = resolveRedirectPath(request, pathPrefix);
+        Optional<String> configuredBase =
+                usesCookiePath ? landingBase.flatMap(RedirectBaseUrl::origin) : landingBase;
         String origin =
-                resolveForwardedOrigin(request)
-                        .orElseGet(
-                                () ->
-                                        resolveOriginFromReferer(request)
-                                                .orElseGet(() -> buildOriginFromRequest(request)));
+                configuredBase
+                        .or(() -> resolveForwardedOrigin(request))
+                        .or(() -> resolveOriginFromReferer(request))
+                        .orElseGet(() -> buildOriginFromRequest(request));
         clearRedirectCookie(response);
 
         // Extract nonce from state for CSRF validation in callback
@@ -219,11 +229,13 @@ public class CustomOAuth2AuthenticationSuccessHandler
         if (TauriOAuthUtils.isTauriState(request)) {
             return TauriOAuthUtils.defaultTauriCallbackPath(contextPath);
         }
+        String cookiePath = cookieRedirectPath(request);
+        return cookiePath != null ? cookiePath : TauriOAuthUtils.defaultCallbackPath(contextPath);
+    }
+
+    private String cookieRedirectPath(HttpServletRequest request) {
         String cookiePath = TauriOAuthUtils.extractRedirectPathFromCookie(request);
-        if (cookiePath != null && cookiePath.startsWith("/")) {
-            return cookiePath;
-        }
-        return TauriOAuthUtils.defaultCallbackPath(contextPath);
+        return cookiePath != null && cookiePath.startsWith("/") ? cookiePath : null;
     }
 
     private Optional<String> resolveForwardedOrigin(HttpServletRequest request) {

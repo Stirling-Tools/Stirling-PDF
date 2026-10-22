@@ -966,7 +966,7 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should handle null redact color gracefully")
-        void handleNullRedactColor() {
+        void handleNullRedactColor() throws Exception {
             RedactPdfRequest request = createRedactPdfRequest();
             request.setListOfText("test");
             request.setRedactColor(null);
