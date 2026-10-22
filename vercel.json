@@ -25,7 +25,7 @@
       "root": "engine",
       "framework": "fastapi",
       "entrypoint": "asgi:app",
-      "installCommand": "uv sync --locked --no-install-project --group engine"
+      "installCommand": "uv sync --locked --no-install-project --group engine --python $VIRTUAL_ENV/bin/python"
     }
   },
   "rewrites": [
