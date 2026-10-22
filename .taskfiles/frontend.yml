@@ -536,6 +536,8 @@ tasks:
     vars:
       COVERAGE: '{{.COVERAGE | default .CI | default "false"}}'
       TEST_TIMEOUT: '{{.TEST_TIMEOUT | default "5000"}}'
+    env:
+      TEST_TIMEOUT: '{{.TEST_TIMEOUT}}'
     cmds:
       - >
         npx vitest run --root .{{.VITEST_JOBS}}
@@ -544,9 +546,9 @@ tasks:
         --coverage.reporter=text-summary
         --coverage.reporter=json-summary
         --coverage.reporter=html
-        --coverage.reportsDirectory=./coverage
-        {{if .TEST_TIMEOUT}}--testTimeout={{.TEST_TIMEOUT}}
-        --hookTimeout={{.TEST_TIMEOUT}}{{end}}{{end}}
+        --coverage.reportsDirectory=./coverage{{end}}
+        --testTimeout={{.TEST_TIMEOUT}}
+        --hookTimeout={{.TEST_TIMEOUT}}
 
   test:watch:
     desc: "Run tests in watch mode"
