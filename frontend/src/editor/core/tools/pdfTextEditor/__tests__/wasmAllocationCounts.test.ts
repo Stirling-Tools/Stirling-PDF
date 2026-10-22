@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
+  measureObjBoxPt,
   measureObjRightEdgePt,
   measureObjSpanPt,
 } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import { setCharcodesOn } from "@app/tools/pdfTextEditor/charcode/charcodeRegistry";
+import { readObjFill } from "@app/tools/pdfTextEditor/commands/SetColourCommand";
 
 interface Bounds {
   left: number;
@@ -13,7 +15,7 @@ interface Bounds {
 
 // Byte-addressed stub over a Float32 heap, mirroring the DisplayTransform
 // test's module stub so pointer arithmetic is exercised, not bypassed.
-function stubModule(boundsByPtr: Map<number, Bounds>) {
+function stubModule(boundsByPtr: Map<number, Bounds>, failMalloc = false) {
   const heapBuf = new ArrayBuffer(1024);
   const heapF32 = new Float32Array(heapBuf);
   const heapU8 = new Uint8Array(heapBuf);
@@ -26,6 +28,7 @@ function stubModule(boundsByPtr: Map<number, Bounds>) {
       wasmExports: {
         malloc: (n: number): number => {
           mallocs += 1;
+          if (failMalloc) return 0;
           const p = next;
           next += n;
           return p;
@@ -107,6 +110,28 @@ describe("edit-path wasm scratch allocations", () => {
     expect(stub.frees()).toBe(0);
   });
 
+  it("measureObjBoxPt reuses one block across every object and every call", () => {
+    const stub = stubModule(
+      new Map([
+        [1, { left: 5, right: 10 }],
+        [2, { left: 2, right: 20 }],
+      ]),
+    );
+    expect(measureObjBoxPt(stub.module, 1)).not.toBeNull();
+    const afterFirst = stub.mallocs();
+    expect(measureObjBoxPt(stub.module, 2)).not.toBeNull();
+    // One slot for the whole edit path, not one block per measured object.
+    expect(stub.mallocs()).toBe(afterFirst);
+    expect(stub.frees()).toBe(0);
+  });
+
+  it("measureObjBoxPt reports null for an unreadable object without freeing", () => {
+    const stub = stubModule(new Map());
+    expect(measureObjBoxPt(stub.module, 9)).toBeNull();
+    expect(stub.mallocs()).toBe(1);
+    expect(stub.frees()).toBe(0);
+  });
+
   it("setCharcodesOn allocates its scratch block once and reuses it across calls", () => {
     const stub = stubModule(new Map());
     expect(setCharcodesOn(stub.module, 1, [65, 66])).toBe(true);
@@ -114,5 +139,17 @@ describe("edit-path wasm scratch allocations", () => {
     expect(setCharcodesOn(stub.module, 1, [67, 68])).toBe(true);
     expect(stub.mallocs()).toBe(afterFirst);
     expect(stub.frees()).toBe(0);
+  });
+
+  // An allocation that fails inside a `try` has to reach that block's fallback
+  // rather than escape past it as a throw.
+  it("measureObjBoxPt returns null when the scratch allocation fails", () => {
+    const stub = stubModule(new Map([[1, { left: 5, right: 10 }]]), true);
+    expect(measureObjBoxPt(stub.module, 1)).toBeNull();
+  });
+
+  it("readObjFill returns null when the scratch allocation fails", () => {
+    const stub = stubModule(new Map(), true);
+    expect(readObjFill(stub.module, 1)).toBeNull();
   });
 });
