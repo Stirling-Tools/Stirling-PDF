@@ -376,11 +376,10 @@ public class WorkflowSessionService {
                             objectMapper.readValue(request.getParticipantMetadata(), Map.class);
                     participant.setParticipantMetadata(metadataMap);
                 } catch (JacksonException e) {
-                    log.warn(
-                            "Failed to parse participant metadata for {}, using empty map",
-                            request.getEmail(),
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Invalid participantMetadata: must be a valid JSON object",
                             e);
-                    participant.setParticipantMetadata(new HashMap<>());
                 }
             }
 

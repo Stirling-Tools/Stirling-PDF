@@ -38,6 +38,7 @@ import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.provider.StoredObject;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
+import stirling.software.proprietary.workflow.dto.ParticipantRequest;
 import stirling.software.proprietary.workflow.dto.SignDocumentRequest;
 import stirling.software.proprietary.workflow.dto.WorkflowCreationRequest;
 import stirling.software.proprietary.workflow.model.ParticipantStatus;
@@ -50,6 +51,7 @@ import stirling.software.proprietary.workflow.notification.SigningResponseEvent;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
 
+import tools.jackson.core.exc.StreamReadException;
 import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
@@ -417,6 +419,37 @@ class WorkflowSessionServiceTest {
     // -------------------------------------------------------------------------
     // createSession — validation guards
     // -------------------------------------------------------------------------
+
+    @Test
+    void addParticipants_rejectsMalformedParticipantMetadata() {
+        User owner = user("owner");
+
+        WorkflowSession session = new WorkflowSession();
+        session.setSessionId("session-1");
+        session.setOwner(owner);
+        session.setStatus(WorkflowStatus.IN_PROGRESS);
+
+        when(workflowSessionRepository.findBySessionIdForUpdate("session-1"))
+                .thenReturn(Optional.of(session));
+
+        ParticipantRequest request = new ParticipantRequest();
+        request.setEmail("participant@example.com");
+        request.setParticipantMetadata("{invalid json");
+
+        when(objectMapper.readValue("{invalid json", Map.class))
+                .thenThrow(new StreamReadException("Invalid JSON"));
+
+        ResponseStatusException exception =
+                org.junit.jupiter.api.Assertions.assertThrows(
+                        ResponseStatusException.class,
+                        () -> service.addParticipants("session-1", List.of(request), owner));
+
+        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(exception.getReason())
+                .isEqualTo("Invalid participantMetadata: must be a valid JSON object");
+
+        verify(workflowParticipantRepository, never()).save(any());
+    }
 
     private void stubSigningEnabled() {
         Storage storage = mock(Storage.class);
