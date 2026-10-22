@@ -56,6 +56,9 @@ const config: StorybookConfig = {
   // intercept network calls the same way the dev portal does.
   staticDirs: ["../public"],
   viteFinal: async (config) => {
+    // The auto-loaded app config's default publicDir is the same public/ that
+    // staticDirs copies.
+    config.publicDir = false;
     // Wire the @portal/* alias directly on the Storybook bundler so portal
     // story imports resolve without needing the portal's vite config.
     config.resolve = config.resolve ?? {};
