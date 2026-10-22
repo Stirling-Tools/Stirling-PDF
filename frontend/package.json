@@ -32,6 +32,12 @@
     "@embedpdf/plugin-tiling": "^2.15.1",
     "@embedpdf/plugin-viewport": "^2.15.1",
     "@embedpdf/plugin-zoom": "^2.15.1",
+    "@fontsource/allura": "^5.3.0",
+    "@fontsource/caveat": "^5.3.0",
+    "@fontsource/dancing-script": "^5.3.0",
+    "@fontsource/great-vibes": "^5.3.0",
+    "@fontsource/homemade-apple": "^5.3.0",
+    "@fontsource/mrs-saint-delafield": "^5.3.0",
     "@mantine/core": "^8.3.1",
     "@mantine/dates": "^8.3.1",
     "@mantine/dropzone": "^8.3.1",
@@ -53,7 +59,7 @@
     "@tauri-apps/plugin-shell": "^2.3.5",
     "@userback/widget": "^0.3.12",
     "autoprefixer": "^10.4.21",
-    "axios": "^1.15.0",
+    "axios": "^1.20.0",
     "d3": "^7.9.0",
     "i18next": "^26.3.6",
     "i18next-browser-languagedetector": "^8.2.1",
@@ -81,7 +87,7 @@
     "web-vitals": "^5.1.0"
   },
   "scripts": {
-    "docs:sync": "tsx editor/scripts/sync-portal-docs.mts",
+    "docs:sync": "tsx scripts/sync-portal-docs.mts",
     "update:minor": "node scripts/update-minor.js",
     "update:major": "npx npm-check-updates -u && npm install",
     "update:interactive": "npx npm-check-updates -i",
@@ -91,7 +97,7 @@
     "tauri:serve-dev-update": "bash scripts/dev-update-test/serve-update.sh",
     "tauri:test-update-e2e": "bash scripts/dev-update-test/test-update-e2e.sh",
     "tauri:test-update-e2e:install": "bash scripts/dev-update-test/test-update-e2e.sh --install",
-    "tauri:dev-with-update": "cd editor && npx tsx scripts/setup-env.mts --desktop && npx tauri dev --config src-tauri/tauri.conf.dev-update.json"
+    "tauri:dev-with-update": "npx tsx scripts/setup-env.mts --desktop && npx tauri dev --config src-tauri/tauri.conf.dev-update.json"
   },
   "browserslist": {
     "production": [
@@ -173,7 +179,7 @@
   },
   "msw": {
     "workerDirectory": [
-      "editor/public"
+      "public"
     ]
   }
 }

@@ -2,7 +2,7 @@
 name: comment-review
 description: >-
   Review and improve the code comments a PR or branch adds, against the standard in
-  devGuide/CODE_COMMENTS.md: cut the ones that restate the code, tighten the verbose
+  docs/developer/CODE_COMMENTS.md: cut the ones that restate the code, tighten the verbose
   ones, reframe what-comments into the why or the constraint, and add the contract
   docs the change left missing. Runs comment-lint for the mechanical rules first,
   then judges what a linter cannot: padding around one real fact, facts already
@@ -28,9 +28,9 @@ against where it forked from the main line. `--report-only` reports without edit
 
 ## The standard
 
-`AGENTS.md` section "Comments" is the short form; `devGuide/CODE_COMMENTS.md` is the
+`AGENTS.md` section "Comments" is the short form; `docs/developer/CODE_COMMENTS.md` is the
 authority, with the reasoning and the worked examples. **Read
-`devGuide/CODE_COMMENTS.md` before judging anything.** Do not work from memory of what
+`docs/developer/CODE_COMMENTS.md` before judging anything.** Do not work from memory of what
 a good comment is: the repo has already decided, and the four jobs (contract, why,
 hazard, map) are the whole permitted set.
 

@@ -1,6 +1,8 @@
 package stirling.software.SPDF.controller.api.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +22,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import stirling.software.SPDF.model.PDFText;
+import stirling.software.common.util.ExceptionUtils.ToolFailedException;
+import stirling.software.jpdfium.redact.RedactResult.PageResult;
 
 @DisplayName("TextRedactionService extra coverage")
 class TextRedactionServiceExtraTest {
@@ -71,6 +75,18 @@ class TextRedactionServiceExtraTest {
         }
 
         @Test
+        @DisplayName("case-sensitive search leaves text in another case alone")
+        void caseSensitiveRegex() throws IOException {
+            try (PDDocument doc = buildDoc("ticket FS-01 and fs-02")) {
+                Map<Integer, List<PDFText>> result =
+                        service.findTextToRedact(
+                                doc, new String[] {"[A-Z]{2}-\\d+"}, true, false, true);
+                assertThat(result.get(0)).hasSize(1);
+                assertThat(result.get(0).get(0).getText()).isEqualTo("FS-01");
+            }
+        }
+
+        @Test
         @DisplayName("two distinct literal terms both produce hits on the page")
         void twoDistinctTerms() throws IOException {
             try (PDDocument doc = buildDoc("alpha then bravo then charlie")) {
@@ -99,6 +115,42 @@ class TextRedactionServiceExtraTest {
                         service.findTextToRedact(doc, new String[] {"   ", "SECRET"}, false, false);
                 assertThat(result.get(0)).hasSize(1);
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("requireVerified")
+    class RequireVerified {
+
+        @Test
+        @DisplayName("passes when every page was verified, including pages with no matches")
+        void passesWhenEveryPageVerified() {
+            assertThatCode(
+                            () ->
+                                    TextRedactionService.requireVerified(
+                                            List.of(
+                                                    new PageResult(0, 1, 2),
+                                                    new PageResult(1, 1, 0))))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("names every page the engine could not verify, numbered from 1")
+        void namesEveryUnverifiedPage() {
+            assertThatThrownBy(
+                            () ->
+                                    TextRedactionService.requireVerified(
+                                            List.of(
+                                                    new PageResult(0, 1, 1),
+                                                    new PageResult(1, 1, -1),
+                                                    new PageResult(2, 1, 0),
+                                                    new PageResult(3, 1, -1))))
+                    .isInstanceOf(ToolFailedException.class)
+                    .hasMessageContaining("2, 4")
+                    .satisfies(
+                            e ->
+                                    assertThat(((ToolFailedException) e).getErrorCode())
+                                            .isEqualTo("E077"));
         }
     }
 }

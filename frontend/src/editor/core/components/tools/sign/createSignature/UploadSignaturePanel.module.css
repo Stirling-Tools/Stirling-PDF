@@ -1,0 +1,133 @@
+.dropArea {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dropzone {
+  border: 1.5px dashed var(--c-border-strong);
+  border-radius: 0.75rem;
+  background: var(--c-surface);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.dropzone:hover,
+.dropzone[data-accept] {
+  border-color: var(--c-primary);
+  background: var(--c-primary-tint);
+}
+
+.dropzone[data-reject] {
+  border-color: var(--c-danger);
+}
+
+.dropContent {
+  min-height: 9.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.dropIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--c-primary-tint);
+  color: var(--c-accent-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+.dropBrowse {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+}
+
+.dropHint {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--c-text-subtle);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 40rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.previewColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  font-size: 0.8125rem;
+  color: var(--c-text);
+}
+
+.fileName {
+  flex-grow: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileSize {
+  flex-shrink: 0;
+  color: var(--c-text-subtle);
+}
+
+.error {
+  font-size: 0.8125rem;
+  color: var(--c-danger);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.grow {
+  flex-grow: 1;
+}
+
+.rotateRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

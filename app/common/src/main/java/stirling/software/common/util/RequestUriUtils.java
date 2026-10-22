@@ -8,6 +8,10 @@ public class RequestUriUtils {
     private static final Pattern SHARE_LINK_PATTERN =
             Pattern.compile(
                     "^/share/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/?$");
+    // Share-link download (not /metadata or /accessed); token format as above
+    private static final Pattern SHARE_LINK_API_PATTERN =
+            Pattern.compile(
+                    "^/api/v1/storage/share-links/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
     // Invite tokens are 36-char lowercase UUIDs (UUID.randomUUID().toString()); match exactly
     private static final Pattern INVITE_LINK_PATTERN =
             Pattern.compile(
@@ -213,6 +217,8 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
                 // Share-link SPA bootstrap; data APIs remain protected
                 || SHARE_LINK_PATTERN.matcher(trimmedUri).matches()
+                // Share-link download; the service still demands login unless the link is public
+                || SHARE_LINK_API_PATTERN.matcher(trimmedUri).matches()
                 // Invite-accept SPA bootstrap; data APIs remain protected
                 || INVITE_LINK_PATTERN.matcher(trimmedUri).matches();
     }

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Portrait 16x20 page, centred unscaled: callers size it like any icon and get the same ink height. -->
+  <g transform="translate(4 2)">
+    <path d="M1.5 1H10.5L15 5.5V18.5Q15 19 14.5 19H1.5Q1 19 1 18.5V1.5Q1 1 1.5 1Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" />
+    <path d="M10.5 1V5.5H15Z" stroke="currentColor" stroke-width="1.3" fill="currentColor" fill-opacity="0.2" stroke-linejoin="round" />
+    <g opacity="0.7" stroke="currentColor" stroke-width="1">
+      <rect x="3" y="8" width="10" height="9" rx="0.5" />
+      <line x1="8" y1="8" x2="8" y2="17" />
+      <line x1="3" y1="11" x2="13" y2="11" />
+      <line x1="3" y1="14" x2="13" y2="14" />
+    </g>
+  </g>
+</svg>
