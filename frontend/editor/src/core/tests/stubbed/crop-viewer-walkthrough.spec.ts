@@ -174,6 +174,7 @@ test.describe("crop on the viewer", () => {
     await page.waitForFunction(() => window.innerWidth === 390);
     const cropOnPage = page.getByRole("button", { name: "Crop on page" });
     await expect(cropOnPage).toBeVisible({ timeout: 20_000 });
+    await page.screenshot({ path: shot("38_viewer_mobile_panel_dark") });
     await cropOnPage.click();
     const overlay = page.getByTestId("crop-viewer-overlay");
     await expect(overlay).toBeVisible({ timeout: 10_000 });
