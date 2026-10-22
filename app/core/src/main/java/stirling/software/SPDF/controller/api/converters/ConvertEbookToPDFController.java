@@ -114,43 +114,42 @@ public class ConvertEbookToPDFController {
         Path workingDirectory = tempFileManager.createTempDirectory();
         Path inputPath = workingDirectory.resolve(baseName + "." + lowerExtension);
         Path outputPath = workingDirectory.resolve(baseName + ".pdf");
-
-        try (InputStream inputStream = inputFile.getInputStream()) {
-            Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
-        }
-
-        List<String> command =
-                buildCalibreCommand(
-                        inputPath,
-                        outputPath,
-                        embedAllFonts,
-                        includeTableOfContents,
-                        includePageNumbers);
-        ProcessExecutorResult result =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
-                        .runCommandWithOutputHandling(command, workingDirectory.toFile());
-
-        if (result == null) {
-            throw new IllegalStateException("Calibre conversion returned no result");
-        }
-
-        if (result.getRc() != 0) {
-            String errorMessage = result.getMessages();
-            if (errorMessage == null || errorMessage.isBlank()) {
-                errorMessage = "Calibre conversion failed";
-            }
-            throw new IllegalStateException(errorMessage);
-        }
-
-        if (!Files.exists(outputPath) || Files.size(outputPath) == 0L) {
-            throw new IllegalStateException("Calibre did not produce a PDF output");
-        }
-
-        String outputFilename =
-                GeneralUtils.generateFilename(originalFilename, "_convertedToPDF.pdf");
-
         TempFile tempOut = null;
         try {
+            try (InputStream inputStream = inputFile.getInputStream()) {
+                Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            List<String> command =
+                    buildCalibreCommand(
+                            inputPath,
+                            outputPath,
+                            embedAllFonts,
+                            includeTableOfContents,
+                            includePageNumbers);
+            ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
+                            .runCommandWithOutputHandling(command, workingDirectory.toFile());
+
+            if (result == null) {
+                throw new IllegalStateException("Calibre conversion returned no result");
+            }
+
+            if (result.getRc() != 0) {
+                String errorMessage = result.getMessages();
+                if (errorMessage == null || errorMessage.isBlank()) {
+                    errorMessage = "Calibre conversion failed";
+                }
+                throw new IllegalStateException(errorMessage);
+            }
+
+            if (!Files.exists(outputPath) || Files.size(outputPath) == 0L) {
+                throw new IllegalStateException("Calibre did not produce a PDF output");
+            }
+
+            String outputFilename =
+                    GeneralUtils.generateFilename(originalFilename, "_convertedToPDF.pdf");
+
             tempOut = tempFileManager.createManagedTempFile(".pdf");
             if (optimizeForEbook) {
                 byte[] pdfBytes = Files.readAllBytes(outputPath);

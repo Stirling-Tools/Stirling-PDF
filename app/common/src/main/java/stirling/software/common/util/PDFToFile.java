@@ -101,7 +101,8 @@ public class PDFToFile {
                                         "-noframes",
                                         "-c",
                                         tempInputFile.getAbsolutePath(),
-                                        pdfBaseName));
+                                        "--",
+                                        outputBaseName(pdfBaseName)));
 
                 ProcessExecutorResult returnCode =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
@@ -198,7 +199,11 @@ public class PDFToFile {
                 List<String> command =
                         new ArrayList<>(
                                 Arrays.asList(
-                                        "pdftohtml", "-c", tempInputFile.toString(), pdfBaseName));
+                                        "pdftohtml",
+                                        "-c",
+                                        tempInputFile.toAbsolutePath().toString(),
+                                        "--",
+                                        outputBaseName(pdfBaseName)));
 
                 ProcessExecutorResult returnCode =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
@@ -210,17 +215,10 @@ public class PDFToFile {
                 try (OutputStream fos = Files.newOutputStream(finalOut.getPath());
                         ZipOutputStream zipOutputStream = new ZipOutputStream(fos)) {
                     for (File outputFile : outputFiles) {
-                        ZipEntry entry = new ZipEntry(outputFile.getName());
-                        zipOutputStream.putNextEntry(entry);
-                        try (FileInputStream fis = new FileInputStream(outputFile)) {
-                            IOUtils.copy(fis, zipOutputStream);
-                        } catch (IOException e) {
-                            log.error("Exception writing zip entry", e);
-                        }
+                        zipOutputStream.putNextEntry(new ZipEntry(outputFile.getName()));
+                        Files.copy(outputFile.toPath(), zipOutputStream);
                         zipOutputStream.closeEntry();
                     }
-                } catch (IOException e) {
-                    log.error("Exception writing zip", e);
                 }
             }
         } catch (Exception e) {
@@ -230,6 +228,10 @@ public class PDFToFile {
 
         return WebResponseUtils.fileToWebResponse(
                 finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    static String outputBaseName(String baseName) {
+        return baseName == null || baseName.isBlank() ? "document" : baseName;
     }
 
     public ResponseEntity<Resource> processPdfToOfficeFormat(

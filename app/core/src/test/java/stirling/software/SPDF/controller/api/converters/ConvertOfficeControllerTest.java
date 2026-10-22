@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -391,6 +392,38 @@ class ConvertOfficeControllerTest {
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessageContaining("exit 3");
             }
+        }
+
+        @Test
+        @DisplayName("failed conversion removes the work directory")
+        void failedConversionRemovesWorkDir() throws Exception {
+            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
+            when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
+            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
+            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
+                    .thenAnswer(inv -> inv.getArgument(0));
+
+            List<Path> workDirs = new ArrayList<>();
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                ProcessExecutorResult result = mockExecutor(pe, 1);
+                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
+                when(executor.runCommandWithOutputHandling(any(List.class)))
+                        .thenAnswer(
+                                inv -> {
+                                    List<String> command = inv.getArgument(0);
+                                    Path workDir = Path.of(command.getLast()).getParent();
+                                    workDirs.add(workDir);
+                                    Files.write(workDir.resolve("partial.tmp"), new byte[] {1});
+                                    return result;
+                                });
+
+                assertThatThrownBy(() -> controller.convertToPdf(docxFile("docx".getBytes())))
+                        .isInstanceOf(IllegalStateException.class);
+            }
+
+            assertThat(workDirs).hasSize(1);
+            assertThat(workDirs.getFirst().getFileName().toString()).startsWith("office2pdf_");
+            assertThat(workDirs.getFirst()).doesNotExist();
         }
 
         @Test

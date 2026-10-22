@@ -106,21 +106,23 @@ public class ConvertOfficeController {
             throw ExceptionUtils.createLibreOfficeRequiredException(extensionLower);
         }
 
-        // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
-        if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-            String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
-            String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
-            Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
-        } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
-            byte[] sanitized =
-                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
-            Files.write(inputPath, sanitized);
-        } else {
-            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
-        }
-
         Path libreOfficeProfile = null;
+        boolean converted = false;
         try {
+            // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
+            if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
+                String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
+                String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
+                Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
+            } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
+                byte[] sanitized =
+                        officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
+                Files.write(inputPath, sanitized);
+            } else {
+                Files.copy(
+                        inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+
             ProcessExecutorResult result = null;
             IOException unoconvertException = null;
 
@@ -205,8 +207,12 @@ public class ConvertOfficeController {
                 throw new IllegalStateException("Produced PDF is empty");
             }
 
+            converted = true;
             return outputPath.toFile();
         } finally {
+            if (!converted) {
+                FileUtils.deleteQuietly(workDir.toFile());
+            }
             // Clean up the temporary files
             try {
                 Files.deleteIfExists(inputPath);
