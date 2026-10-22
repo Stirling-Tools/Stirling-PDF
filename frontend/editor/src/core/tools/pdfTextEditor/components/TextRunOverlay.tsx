@@ -1120,8 +1120,10 @@ function TextRunOverlayImpl({
             : undefined,
         opacity: dragging ? 0.75 : 1,
         zIndex: dragging ? 20 : undefined,
-        // Only the opacity settle is animated.
-        transition: dragging ? "none" : "opacity 120ms ease-out",
+        // Only the tint and opacity settle are animated.
+        transition: dragging
+          ? "none"
+          : "box-shadow 140ms ease-out, opacity 120ms ease-out",
         // While focused: real glyphs in a CSS-stack approximation of the PDFium
         // font, so the user sees their input before the bitmap re-renders.
         fontFamily,
@@ -1147,13 +1149,18 @@ function TextRunOverlayImpl({
             : undefined,
         backgroundColor: showsGlyphs
           ? (maskColor ?? contrastingMaskFor(run.fill))
-          : highlighted
-            ? "rgba(255,217,0,0.45)"
-            : selected
-              ? "rgba(44,123,229,0.10)"
-              : hovered
-                ? "rgba(44,123,229,0.04)"
-                : "transparent",
+          : "transparent",
+        // Tint through an inset shadow rather than background-color: the
+        // opaque edit mask has to stay the page's colour, while the blue
+        // selection wash must survive the first keystroke instead of snapping
+        // to white. A 5% wash keeps the run visibly selected while editing.
+        boxShadow: highlighted
+          ? "inset 0 0 0 9999px rgba(255,217,0,0.45)"
+          : selected
+            ? `inset 0 0 0 9999px rgba(44,123,229,${showsGlyphs ? "0.05" : "0.10"})`
+            : hovered
+              ? "inset 0 0 0 9999px rgba(44,123,229,0.04)"
+              : "none",
         caretColor: toCssHex(run.fill),
         // Selected keeps a ring: the 10% tint alone is near-invisible over a
         // coloured band. Locked gets a muted ring so it does not read as
