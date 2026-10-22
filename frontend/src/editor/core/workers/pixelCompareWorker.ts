@@ -1,12 +1,14 @@
 /// <reference lib="webworker" />
 
-import {
-  GlobalWorkerOptions,
-  getDocument,
-  type PDFDocumentProxy,
-  type PDFPageProxy,
-} from "pdfjs-dist/legacy/build/pdf.mjs";
 import pixelmatch from "pixelmatch";
+import {
+  closeDocAndFreeBuffer,
+  getPdfiumModule,
+  getRawPageCount,
+  getRawPageSize,
+  openRawDocumentSafe,
+  renderPageBitmapFromDoc,
+} from "@app/services/pdfiumService";
 
 import type {
   PixelCompareWorkerPagePayload,
@@ -18,18 +20,6 @@ import { lossyEncodeOptions } from "@app/utils/canvasImageEncoding";
 
 declare const self: DedicatedWorkerGlobalScope;
 
-GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-  import.meta.url,
-).toString();
-
-// PDF.js' default canvas factory assumes a DOM (`document.createElement('canvas')`).
-// Inside a Web Worker there's no DOM, so we provide an OffscreenCanvas-based factory.
-interface CanvasAndContext {
-  canvas: OffscreenCanvas;
-  context: OffscreenCanvasRenderingContext2D;
-}
-
 interface ErrorStrings {
   canvasContextUnavailable: string;
 }
@@ -37,73 +27,6 @@ interface ErrorStrings {
 const DEFAULT_ERRORS: ErrorStrings = {
   canvasContextUnavailable: "Unable to acquire 2D canvas context.",
 };
-
-// pdfjs-dist 5.x expects CanvasFactory and FilterFactory to be **class constructors**
-// (it does `new CanvasFactory({ ownerDocument, enableHWA })` internally), so we build
-// the class on demand with request-scoped error strings captured in its closure.
-const createOffscreenCanvasFactory = (errorStrings: ErrorStrings) =>
-  class OffscreenCanvasFactory {
-    constructor(_opts?: { ownerDocument?: unknown; enableHWA?: boolean }) {
-      /* ownerDocument/enableHWA ignored — we always use OffscreenCanvas */
-    }
-
-    create(width: number, height: number): CanvasAndContext {
-      const canvas = new OffscreenCanvas(
-        Math.max(1, width),
-        Math.max(1, height),
-      );
-      const context = canvas.getContext("2d", { willReadFrequently: true });
-      if (!context) throw new Error(errorStrings.canvasContextUnavailable);
-      return { canvas, context };
-    }
-
-    reset(
-      canvasAndContext: CanvasAndContext,
-      width: number,
-      height: number,
-    ): void {
-      canvasAndContext.canvas.width = Math.max(1, width);
-      canvasAndContext.canvas.height = Math.max(1, height);
-    }
-
-    destroy(canvasAndContext: CanvasAndContext): void {
-      canvasAndContext.canvas.width = 0;
-      canvasAndContext.canvas.height = 0;
-      (canvasAndContext as { canvas: OffscreenCanvas | null }).canvas = null;
-      (
-        canvasAndContext as {
-          context: OffscreenCanvasRenderingContext2D | null;
-        }
-      ).context = null;
-    }
-  };
-
-// BaseFilterFactory's defaults already return "none" for every filter, which is what
-// we want in a worker (no DOM, no SVG). Re-declare the same no-op class so pdfjs can
-// instantiate it without hitting DOMFilterFactory's document.createElementNS calls.
-class NoopFilterFactory {
-  constructor(_opts?: { docId?: string; ownerDocument?: unknown }) {
-    /* noop */
-  }
-  addFilter() {
-    return "none";
-  }
-  addHCMFilter() {
-    return "none";
-  }
-  addAlphaFilter() {
-    return "none";
-  }
-  addLuminosityFilter() {
-    return "none";
-  }
-  addHighlightHCMFilter() {
-    return "none";
-  }
-  destroy(_keepHCM?: boolean) {
-    /* noop */
-  }
-}
 
 const CSS_DPI = 72;
 
@@ -123,33 +46,25 @@ const formatWarning = (
   );
 
 const renderPageToBitmap = async (
-  page: PDFPageProxy,
+  docPtr: number,
+  pageIndex: number,
   scale: number,
   targetWidth: number,
   targetHeight: number,
   errorStrings: ErrorStrings,
 ): Promise<{ imageData: ImageData; bitmap: ImageBitmap }> => {
-  const viewport = page.getViewport({ scale });
-  const renderedW = Math.max(1, Math.round(viewport.width));
-  const renderedH = Math.max(1, Math.round(viewport.height));
+  const rendered = await renderPageBitmapFromDoc(docPtr, pageIndex, scale);
 
   const canvas = new OffscreenCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error(errorStrings.canvasContextUnavailable);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, targetWidth, targetHeight);
-
-  const offsetX = Math.round((targetWidth - renderedW) / 2);
-  const offsetY = Math.round((targetHeight - renderedH) / 2);
-  ctx.save();
-  ctx.translate(offsetX, offsetY);
-  // pdfjs accepts OffscreenCanvas via canvas option
-  await page.render({
-    canvas: canvas as unknown as HTMLCanvasElement,
-    canvasContext: ctx as unknown as CanvasRenderingContext2D,
-    viewport,
-  }).promise;
-  ctx.restore();
+  ctx.putImageData(
+    rendered,
+    Math.round((targetWidth - rendered.width) / 2),
+    Math.round((targetHeight - rendered.height) / 2),
+  );
 
   const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
   const bitmap = canvas.transferToImageBitmap();
@@ -216,8 +131,8 @@ const createBlankRender = async (
 };
 
 const processPage = async (
-  baseDoc: PDFDocumentProxy,
-  compDoc: PDFDocumentProxy,
+  basePtr: number,
+  compPtr: number,
   pageNumber: number,
   basePages: number,
   compPages: number,
@@ -229,113 +144,120 @@ const processPage = async (
   const missingBase = pageNumber > basePages;
   const missingComparison = pageNumber > compPages;
 
-  const basePage = missingBase ? null : await baseDoc.getPage(pageNumber);
-  const compPage = missingComparison ? null : await compDoc.getPage(pageNumber);
-  try {
-    // Determine target dimensions from whichever side(s) exist. When only one side has
-    // this page, the blank side is rendered at the same canvas size so pixelmatch can
-    // flag every non-white pixel as a diff.
-    const baseViewport = basePage ? basePage.getViewport({ scale }) : null;
-    const compViewport = compPage ? compPage.getViewport({ scale }) : null;
+  // Points at scale 1; the /Rotate-aware box matches what the old viewport gave us.
+  const baseSize = missingBase
+    ? null
+    : await getRawPageSize(basePtr, pageNumber - 1);
+  const compSize = missingComparison
+    ? null
+    : await getRawPageSize(compPtr, pageNumber - 1);
 
-    const refWidth = baseViewport?.width ?? compViewport?.width ?? 1;
-    const refHeight = baseViewport?.height ?? compViewport?.height ?? 1;
-    const targetWidth = Math.max(
-      1,
-      Math.round(
-        Math.max(
-          baseViewport?.width ?? refWidth,
-          compViewport?.width ?? refWidth,
-        ),
+  const baseViewport = baseSize
+    ? { width: baseSize.width * scale, height: baseSize.height * scale }
+    : null;
+  const compViewport = compSize
+    ? { width: compSize.width * scale, height: compSize.height * scale }
+    : null;
+
+  // Determine target dimensions from whichever side(s) exist. When only one side has
+  // this page, the blank side is rendered at the same canvas size so pixelmatch can
+  // flag every non-white pixel as a diff.
+  const refWidth = baseViewport?.width ?? compViewport?.width ?? 1;
+  const refHeight = baseViewport?.height ?? compViewport?.height ?? 1;
+  const targetWidth = Math.max(
+    1,
+    Math.round(
+      Math.max(
+        baseViewport?.width ?? refWidth,
+        compViewport?.width ?? refWidth,
       ),
-    );
-    const targetHeight = Math.max(
-      1,
-      Math.round(
-        Math.max(
-          baseViewport?.height ?? refHeight,
-          compViewport?.height ?? refHeight,
-        ),
+    ),
+  );
+  const targetHeight = Math.max(
+    1,
+    Math.round(
+      Math.max(
+        baseViewport?.height ?? refHeight,
+        compViewport?.height ?? refHeight,
       ),
-    );
-    const sizeMismatch =
-      baseViewport && compViewport
-        ? Math.round(baseViewport.width) !== Math.round(compViewport.width) ||
-          Math.round(baseViewport.height) !== Math.round(compViewport.height)
-        : false;
+    ),
+  );
+  const sizeMismatch =
+    baseViewport && compViewport
+      ? Math.round(baseViewport.width) !== Math.round(compViewport.width) ||
+        Math.round(baseViewport.height) !== Math.round(compViewport.height)
+      : false;
 
-    const [base, comp] = await Promise.all([
-      basePage && baseViewport
-        ? renderPageToBitmap(
-            basePage,
-            scale,
-            targetWidth,
-            targetHeight,
-            errorStrings,
-          )
-        : createBlankRender(targetWidth, targetHeight, errorStrings),
-      compPage && compViewport
-        ? renderPageToBitmap(
-            compPage,
-            scale,
-            targetWidth,
-            targetHeight,
-            errorStrings,
-          )
-        : createBlankRender(targetWidth, targetHeight, errorStrings),
-    ]);
+  const [base, comp] = await Promise.all([
+    baseViewport
+      ? renderPageToBitmap(
+          basePtr,
+          pageNumber - 1,
+          scale,
+          targetWidth,
+          targetHeight,
+          errorStrings,
+        )
+      : createBlankRender(targetWidth, targetHeight, errorStrings),
+    compViewport
+      ? renderPageToBitmap(
+          compPtr,
+          pageNumber - 1,
+          scale,
+          targetWidth,
+          targetHeight,
+          errorStrings,
+        )
+      : createBlankRender(targetWidth, targetHeight, errorStrings),
+  ]);
 
-    const diffImage = new ImageData(targetWidth, targetHeight);
-    const diffCount = pixelmatch(
-      base.imageData.data,
-      comp.imageData.data,
-      diffImage.data,
-      targetWidth,
-      targetHeight,
-      {
-        threshold,
-        includeAA: true,
-        alpha: 0.3,
-        diffColor: colours.diffColor,
-        ...(colours.diffColorAlt ? { diffColorAlt: colours.diffColorAlt } : {}),
-      },
-    );
+  const diffImage = new ImageData(targetWidth, targetHeight);
+  const diffCount = pixelmatch(
+    base.imageData.data,
+    comp.imageData.data,
+    diffImage.data,
+    targetWidth,
+    targetHeight,
+    {
+      threshold,
+      includeAA: true,
+      alpha: 0.3,
+      diffColor: colours.diffColor,
+      ...(colours.diffColorAlt ? { diffColorAlt: colours.diffColorAlt } : {}),
+    },
+  );
 
-    const [baseBlob, comparisonBlob, diffBlob] = await Promise.all([
-      bitmapToBlob(base.bitmap, targetWidth, targetHeight, errorStrings),
-      bitmapToBlob(comp.bitmap, targetWidth, targetHeight, errorStrings),
-      diffDataToBlob(diffImage, targetWidth, targetHeight, errorStrings),
-    ]);
+  const [baseBlob, comparisonBlob, diffBlob] = await Promise.all([
+    bitmapToBlob(base.bitmap, targetWidth, targetHeight, errorStrings),
+    bitmapToBlob(comp.bitmap, targetWidth, targetHeight, errorStrings),
+    diffDataToBlob(diffImage, targetWidth, targetHeight, errorStrings),
+  ]);
 
-    const totalPixels = targetWidth * targetHeight;
+  const totalPixels = targetWidth * targetHeight;
 
-    const payload: PixelCompareWorkerPagePayload = {
-      pageNumber,
-      width: targetWidth,
-      height: targetHeight,
-      baseBlob,
-      comparisonBlob,
-      diffBlob,
+  const payload: PixelCompareWorkerPagePayload = {
+    pageNumber,
+    width: targetWidth,
+    height: targetHeight,
+    baseBlob,
+    comparisonBlob,
+    diffBlob,
+    diffPixels: diffCount,
+    totalPixels,
+    diffRatio: totalPixels > 0 ? diffCount / totalPixels : 0,
+    sizeMismatch,
+    ...(missingBase ? { missingBase: true } : {}),
+    ...(missingComparison ? { missingComparison: true } : {}),
+  };
+
+  return {
+    payload,
+    totals: {
       diffPixels: diffCount,
       totalPixels,
-      diffRatio: totalPixels > 0 ? diffCount / totalPixels : 0,
-      sizeMismatch,
-      ...(missingBase ? { missingBase: true } : {}),
-      ...(missingComparison ? { missingComparison: true } : {}),
-    };
-
-    return {
-      payload,
-      totals: {
-        diffPixels: diffCount,
-        totalPixels,
-        hasChanges: diffCount > 0,
-      },
-    };
-  } finally {
-    basePage?.cleanup();
-    compPage?.cleanup();
-  }
+      hasChanges: diffCount > 0,
+    },
+  };
 };
 
 const runPool = async <T>(
@@ -381,49 +303,29 @@ self.addEventListener(
       diffColorAlt,
     } = message.payload;
     const errorStrings: ErrorStrings = { ...DEFAULT_ERRORS, ...errorTemplates };
-    const OffscreenCanvasFactory = createOffscreenCanvasFactory(errorStrings);
     const colours: PixelMatchColours = { diffColor, diffColorAlt };
     const warnings: string[] = [];
     const scale = Math.max(0.5, dpi / CSS_DPI);
     const startedAt = performance.now();
 
-    let baseDoc: PDFDocumentProxy | null = null;
-    let compDoc: PDFDocumentProxy | null = null;
+    let basePtr: number | null = null;
+    let compPtr: number | null = null;
+    let pdfium: Awaited<ReturnType<typeof getPdfiumModule>> | null = null;
 
     try {
-      // Resolve pdfjs CMap/standard-font URLs against the worker's origin + subpath.
-      const assetsBase = new URL(
-        `${import.meta.env.BASE_URL}pdfjs/`,
-        self.location.origin,
-      ).toString();
-      const loaderOpts = (data: ArrayBuffer) =>
-        ({
-          data,
-          CanvasFactory: OffscreenCanvasFactory,
-          FilterFactory: NoopFilterFactory,
-          cMapUrl: `${assetsBase}cmaps/`,
-          cMapPacked: true,
-          standardFontDataUrl: `${assetsBase}standard_fonts/`,
-          // Force glyph-path rendering. The default path uses the FontFace / document.fonts
-          // APIs which reference `globalThis.document` — undefined in a DedicatedWorker, so
-          // text either silently fails to install or renders as placeholder glyphs.
-          disableFontFace: true,
-          useSystemFonts: false,
-          isEvalSupported: false,
-        }) as unknown as Parameters<typeof getDocument>[0];
-
       const [baseBuffer, comparisonBuffer] = await Promise.all([
         baseFile.arrayBuffer(),
         comparisonFile.arrayBuffer(),
       ]);
 
-      [baseDoc, compDoc] = await Promise.all([
-        getDocument(loaderOpts(baseBuffer)).promise,
-        getDocument(loaderOpts(comparisonBuffer)).promise,
+      pdfium = await getPdfiumModule();
+      [basePtr, compPtr] = await Promise.all([
+        openRawDocumentSafe(baseBuffer),
+        openRawDocumentSafe(comparisonBuffer),
       ]);
 
-      const basePages = baseDoc.numPages;
-      const compPages = compDoc.numPages;
+      const basePages = await getRawPageCount(basePtr);
+      const compPages = await getRawPageCount(compPtr);
       const sharedPages = Math.min(basePages, compPages);
 
       if (basePages !== compPages) {
@@ -461,8 +363,8 @@ self.addEventListener(
         async (pageNumber) => {
           post({ type: "progress", pageNumber, totalPages });
           return await processPage(
-            baseDoc as PDFDocumentProxy,
-            compDoc as PDFDocumentProxy,
+            basePtr as number,
+            compPtr as number,
             pageNumber,
             basePages,
             compPages,
@@ -499,15 +401,9 @@ self.addEventListener(
           : String(error ?? "Unknown error");
       post({ type: "error", message });
     } finally {
-      try {
-        if (baseDoc) await baseDoc.destroy();
-      } catch {
-        /* swallow */
-      }
-      try {
-        if (compDoc) await compDoc.destroy();
-      } catch {
-        /* swallow */
+      if (pdfium) {
+        if (basePtr !== null) closeDocAndFreeBuffer(pdfium, basePtr);
+        if (compPtr !== null) closeDocAndFreeBuffer(pdfium, compPtr);
       }
     }
   },

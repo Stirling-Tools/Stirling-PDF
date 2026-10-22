@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import {
   ensureLocalPdfAccess,
   clearPdfAccess,
@@ -8,9 +7,6 @@ import {
 
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 
-vi.mock("@app/services/pdfWorkerManager", () => ({
-  pdfWorkerManager: { createDocument: vi.fn(), destroyDocument: vi.fn() },
-}));
 vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
   ensureLocalPdfAccess: vi.fn(),
@@ -47,7 +43,6 @@ describe("large PDF encryption detection", () => {
 
       expect(await FileAnalyzer.isPDFEncrypted(file)).toBe(true);
       expect(ensureLocalPdfAccess).not.toHaveBeenCalled();
-      expect(pdfWorkerManager.createDocument).not.toHaveBeenCalled();
       expect(readAll).not.toHaveBeenCalled();
       expect(slices).toHaveBeenCalledTimes(2);
     },
@@ -57,7 +52,6 @@ describe("large PDF encryption detection", () => {
     const file = new File(["%PDF-1.7 /Encrypt 1 0 R"], "large.pdf");
     expect(await FileAnalyzer.isPDFEncrypted(file)).toBe(true);
     expect(ensureLocalPdfAccess).not.toHaveBeenCalled();
-    expect(pdfWorkerManager.createDocument).not.toHaveBeenCalled();
   });
 
   it("does not classify a large unmarked PDF as encrypted", async () => {
@@ -65,6 +59,5 @@ describe("large PDF encryption detection", () => {
     Object.defineProperty(file, "size", { value: LARGE_PDF_PARSE_LIMIT });
     expect(await FileAnalyzer.isPDFEncrypted(file)).toBe(false);
     expect(ensureLocalPdfAccess).not.toHaveBeenCalled();
-    expect(pdfWorkerManager.createDocument).not.toHaveBeenCalled();
   });
 });

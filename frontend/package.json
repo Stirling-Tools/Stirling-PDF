@@ -66,7 +66,6 @@
     "jszip": "^3.10.1",
     "license-report": "^6.8.5",
     "lucide-static": "^1.41.0",
-    "pdfjs-dist": "^5.4.149",
     "peerjs": "^1.5.5",
     "pixelmatch": "^7.1.0",
     "posthog-js": "^1.405.2",
@@ -112,6 +111,7 @@
     ]
   },
   "devDependencies": {
+    "pdfjs-dist": "^5.4.149",
     "@playwright/test": "^1.55.0",
     "@storybook/addon-a11y": "^9.1.20",
     "@storybook/addon-docs": "^9.1.20",

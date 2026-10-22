@@ -621,19 +621,6 @@ export default defineConfig(async ({ mode, command }) => {
             dest: "vendor/jscanify",
           },
           {
-            // pdfjs-dist CMap data for CJK / non-latin glyph mapping. Required
-            // when rendering PDFs inside workers where the default DOM fetch paths
-            // aren't available.
-            src: "node_modules/pdfjs-dist/cmaps/*",
-            dest: "pdfjs/cmaps",
-          },
-          {
-            // pdfjs-dist standard font data (Helvetica/Times/etc.) needed so
-            // workers can substitute non-embedded base 14 fonts without DOM access.
-            src: "node_modules/pdfjs-dist/standard_fonts/*",
-            dest: "pdfjs/standard_fonts",
-          },
-          {
             // Brand assets live in core; the editor serves them by URL, so
             // copy the set to the /modern-logo path its manifest, index.html
             // and useLogoAssets resolve against.
@@ -662,6 +649,9 @@ export default defineConfig(async ({ mode, command }) => {
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.
     worker: {
+      // The compare worker pulls the PDFium loader, which splits into its own
+      // chunks; IIFE workers cannot code-split.
+      format: "es",
       plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
       // Worker sub-builds do not inherit the main build's output options, so
       // without this a worker asset referenced from inside a worker is emitted
@@ -723,7 +713,6 @@ export default defineConfig(async ({ mode, command }) => {
             const pkg = packageNameOf(id);
             if (!pkg) return undefined;
 
-            if (pkg === "pdfjs-dist") return "vendor-pdfjs";
             // Only the lazily opened viewer needs the engine and the plugins;
             // the startup graph needs just the pdfium glue and the shared
             // enums, so they get their own chunks.

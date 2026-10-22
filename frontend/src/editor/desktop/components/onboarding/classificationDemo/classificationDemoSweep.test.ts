@@ -27,11 +27,6 @@ vi.mock("@app/services/heuristic/heuristicClassification", () => ({
 vi.mock("@app/services/automationMeter", () => ({
   meterAutomationRun: (...args: unknown[]) => meterAutomationRun(...args),
 }));
-vi.mock("@app/services/pdfWorkerManager", () => ({
-  pdfWorkerManager: {
-    getWorkerStats: () => ({ active: 10, max: 10, total: 10 }),
-  },
-}));
 import { requireAutomationSession } from "@app/services/serverAutomationSession";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import {
@@ -388,7 +383,6 @@ describe("runClassificationDemoSweep", () => {
 
       expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining("Classifying for a.pdf"),
-        { pdfWorkers: { active: 10, max: 10, total: 10 } },
       );
     });
 

@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import {
+  closeDocAndFreeBuffer,
+  getPdfiumModule,
+  getRawPageCount,
+  getRawPageRotation,
+  getRawPageSize,
+  openRawDocumentSafe,
+  renderPageBitmapFromDoc,
+} from "@app/services/pdfiumService";
 import type { PagePreview } from "@app/types/compare";
-
-const DISPLAY_SCALE = 1;
 
 const getDevicePixelRatio = () =>
   typeof window !== "undefined" ? window.devicePixelRatio : 1;
@@ -85,67 +91,60 @@ const renderPdfDocumentToImages = async (
   shouldAbort?: () => boolean,
 ): Promise<PagePreview[]> => {
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
-    disableAutoFetch: true,
-    disableStream: true,
-  });
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(arrayBuffer);
 
   try {
     const previews: PagePreview[] = [];
     const dpr = getDevicePixelRatio();
     const renderScale = Math.max(2, Math.min(3, dpr * 2));
-    onInitTotal?.(pdf.numPages);
+    const totalPages = await getRawPageCount(docPtr);
+    onInitTotal?.(totalPages);
 
     let batch: PagePreview[] = [];
     const shouldStop = () => Boolean(shouldAbort?.());
 
     for (
       let pageNumber = Math.max(1, startAtPage);
-      pageNumber <= pdf.numPages;
+      pageNumber <= totalPages;
       pageNumber += 1
     ) {
       if (shouldStop()) break;
-      const page = await pdf.getPage(pageNumber);
-      const displayViewport = page.getViewport({ scale: DISPLAY_SCALE });
-      const renderViewport = page.getViewport({ scale: renderScale });
+      const pageIndex = pageNumber - 1;
+      const displaySize = await getRawPageSize(docPtr, pageIndex);
+      const bitmap = await renderPageBitmapFromDoc(
+        docPtr,
+        pageIndex,
+        renderScale,
+      );
       const canvas = document.createElement("canvas");
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
       const context = canvas.getContext("2d");
 
-      canvas.width = Math.round(renderViewport.width);
-      canvas.height = Math.round(renderViewport.height);
-
-      if (!context) {
-        page.cleanup();
-        continue;
-      }
-
-      try {
-        await page.render({
-          canvasContext: context,
-          viewport: renderViewport,
-          canvas,
-        }).promise;
-        if (shouldStop()) break;
-
-        const preview: PagePreview = {
-          pageNumber,
-          width: Math.round(displayViewport.width),
-          height: Math.round(displayViewport.height),
-          rotation: (page.rotate || 0) % 360,
-          url: canvas.toDataURL(),
-        };
-        previews.push(preview);
-        if (onBatch) {
-          batch.push(preview);
-          if (batch.length >= batchSize) {
-            onBatch(batch);
-            batch = [];
+      if (context) {
+        try {
+          context.putImageData(bitmap, 0, 0);
+          if (shouldStop()) break;
+          const preview: PagePreview = {
+            pageNumber,
+            width: Math.round(displaySize.width),
+            height: Math.round(displaySize.height),
+            rotation: await getRawPageRotation(docPtr, pageIndex),
+            url: canvas.toDataURL(),
+          };
+          previews.push(preview);
+          if (onBatch) {
+            batch.push(preview);
+            if (batch.length >= batchSize) {
+              onBatch(batch);
+              batch = [];
+            }
           }
+        } finally {
+          canvas.width = 0;
+          canvas.height = 0;
         }
-      } finally {
-        page.cleanup();
-        canvas.width = 0;
-        canvas.height = 0;
       }
 
       if (shouldStop()) break;
@@ -154,7 +153,7 @@ const renderPdfDocumentToImages = async (
     if (onBatch && batch.length > 0) onBatch(batch);
     return previews;
   } finally {
-    pdfWorkerManager.destroyDocument(pdf);
+    closeDocAndFreeBuffer(m, docPtr);
   }
 };
 

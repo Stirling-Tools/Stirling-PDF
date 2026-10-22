@@ -1,12 +1,14 @@
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { appendWord as sharedAppendWord } from "@app/utils/textDiff";
 import { PARAGRAPH_SENTINEL } from "@app/types/compare";
 import type { StirlingFile } from "@app/types/fileContext";
-import type {
-  PDFPageProxy,
-  TextContent,
-  TextItem,
-} from "pdfjs-dist/types/src/display/api";
+import {
+  closeDocAndFreeBuffer,
+  extractPageTextItemsForReadAloudFromDoc,
+  getPdfiumModule,
+  getRawPageCount,
+  getRawPageSize,
+  openRawDocumentSafe,
+} from "@app/services/pdfiumService";
 import type {
   CompareChange,
   CompareDiffToken,
@@ -19,6 +21,15 @@ export interface TokenMetadata {
   page: number;
   paragraph: number;
   bbox: TokenBoundingBox | null;
+}
+
+interface CompareTextItem {
+  str: string;
+  transform: number[];
+  width: number;
+  height: number;
+  fontName?: string;
+  hasEOL?: boolean;
 }
 
 export interface ExtractedContent {
@@ -319,30 +330,59 @@ export const extractContentFromPdf = async (
   file: StirlingFile,
 ): Promise<ExtractedContent> => {
   const arrayBuffer = await file.arrayBuffer();
-  const pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer, {
-    disableAutoFetch: true,
-    disableStream: true,
-  });
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(arrayBuffer);
 
   try {
     const tokens: string[] = [];
     const metadata: TokenMetadata[] = [];
     const pageSizes: { width: number; height: number }[] = [];
     const paragraphs: CompareParagraph[] = [];
-    for (let pageIndex = 1; pageIndex <= pdfDoc.numPages; pageIndex += 1) {
-      const page: PDFPageProxy = await pdfDoc.getPage(pageIndex);
-      const viewport = page.getViewport({ scale: 1 });
-      const content: TextContent = await page.getTextContent({
-        disableCombineTextItems: true,
-      } as Parameters<PDFPageProxy["getTextContent"]>[0]);
-      const styles: Record<
-        string,
-        { fontFamily?: string; ascent?: number; descent?: number }
-      > = content.styles ?? {};
+    const pageCount = await getRawPageCount(docPtr);
+    for (let pageIndex = 1; pageIndex <= pageCount; pageIndex += 1) {
+      const size = await getRawPageSize(docPtr, pageIndex - 1);
+      const words = await extractPageTextItemsForReadAloudFromDoc(
+        docPtr,
+        pageIndex - 1,
+        1,
+      );
+      const viewportTransform = words[0]?.viewportTransform;
+      const viewport = {
+        width: size.width,
+        height: size.height,
+        convertToViewportPoint: (x: number, y: number): [number, number] => {
+          if (!viewportTransform) return [x, size.height - y];
+          const [a, b, c, d, e, f] = viewportTransform;
+          return [a * x + c * y + e, b * x + d * y + f];
+        },
+      };
+      const content = {
+        items: words.map((word) => ({
+          str: word.str,
+          // Uniform text matrix so fontScale falls out of the height.
+          transform: [
+            word.height,
+            0,
+            0,
+            word.height,
+            word.transform[4],
+            word.transform[5],
+          ],
+          width: word.width,
+          height: word.height,
+          fontName: undefined,
+          hasEOL: false,
+        })) satisfies CompareTextItem[],
+        styles: {} as Record<
+          string,
+          { fontFamily?: string; ascent?: number; descent?: number }
+        >,
+      };
 
+      const styles = content.styles;
       let paragraphIndex = 1;
       let paragraphBuffer = "";
-      let prevItem: TextItem | null = null;
+      let prevItem: CompareTextItem | null = null;
 
       pageSizes.push({ width: viewport.width, height: viewport.height });
 
@@ -357,7 +397,10 @@ export const extractContentFromPdf = async (
           .replace(/\s+/g, " ")
           .trim();
 
-      const isParagraphBreak = (curr: TextItem, prev: TextItem | null) => {
+      const isParagraphBreak = (
+        curr: CompareTextItem,
+        prev: CompareTextItem | null,
+      ) => {
         const hasHardBreak = "hasEOL" in curr && curr.hasEOL;
         if (hasHardBreak) return true;
         if (!prev) return false;
@@ -428,7 +471,7 @@ export const extractContentFromPdf = async (
         };
       };
 
-      for (const item of content.items as TextItem[]) {
+      for (const item of content.items as CompareTextItem[]) {
         if (!item?.str) {
           prevItem = null;
           continue;
@@ -661,6 +704,6 @@ export const extractContentFromPdf = async (
     }
     return { tokens, metadata, pageSizes, paragraphs };
   } finally {
-    pdfWorkerManager.destroyDocument(pdfDoc);
+    closeDocAndFreeBuffer(m, docPtr);
   }
 };

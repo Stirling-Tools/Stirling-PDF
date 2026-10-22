@@ -558,6 +558,21 @@ export async function getRawPageSize(
   return { width, height };
 }
 
+/** Quarter turns for a page, matching PDF.js `page.rotate % 360`. */
+export async function getRawPageRotation(
+  docPtr: number,
+  pageIndex: number,
+): Promise<number> {
+  const m = await getPdfiumModule();
+  const pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
+  if (!pagePtr) return 0;
+  try {
+    return ((m.FPDFPage_GetRotation(pagePtr) | 0) & 3) * 90;
+  } finally {
+    m.FPDF_ClosePage(pagePtr);
+  }
+}
+
 /**
  * Read a UTF-16LE string from PDFium memory at the given pointer up to `len`
  * bytes (including the trailing NUL pair).

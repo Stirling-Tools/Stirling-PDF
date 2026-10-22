@@ -21,7 +21,6 @@ import type {
 import { LABEL_FAMILIES } from "@app/data/classificationLabels";
 import { accentColor, accentCycleColor } from "@app/utils/accentColors";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 
 /** Names this run in the billing audit trail, so onboarding's sweep is distinguishable
  *  from classification on upload. */
@@ -76,7 +75,6 @@ async function beforeDeadline<T>(
   if (result === TIMED_OUT) {
     console.warn(
       `[classificationDemo] ${step} for ${subject} ran out of time; moving on`,
-      { pdfWorkers: pdfWorkerManager.getWorkerStats() },
     );
   }
   return result;

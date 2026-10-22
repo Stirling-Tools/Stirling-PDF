@@ -53,11 +53,6 @@ const onFileClick = vi.fn();
 const onPreviewRender = vi.fn();
 const handleToolSelect = vi.fn();
 
-const pdfWorker = vi.hoisted(() => ({
-  createDocument: vi.fn(),
-  destroyDocument: vi.fn(),
-}));
-
 function FilePreviews() {
   const eligibleFileIds = useToolEligibleFileIds();
   onPreviewRender();
@@ -130,9 +125,6 @@ vi.mock("@app/hooks/useEndpointConfig", () => ({
 vi.mock("@app/hooks/useBackendHealth", () => ({
   useBackendHealth: () => ({ isOnline: true }),
 }));
-vi.mock("@app/services/pdfWorkerManager", () => ({
-  pdfWorkerManager: pdfWorker,
-}));
 vi.mock("@app/services/pdfiumService", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@app/services/pdfiumService")>()),
   extractSignatures: vi.fn().mockResolvedValue([]),
@@ -196,7 +188,6 @@ vi.mock("@app/components/tools/convert/ConvertSettings", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  pdfWorker.createDocument.mockResolvedValue({ numPages: 0 });
   viewer.activeFileIndex = 0;
   navigation.workbench = "fileEditor";
   workspace.files = [
