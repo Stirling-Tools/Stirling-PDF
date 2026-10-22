@@ -92,6 +92,10 @@ describe("pdfiumFontFallback", () => {
     expect(fileFor(FontCharset.ANSI, 0, "CenturyGothic")).toBe(
       "LiberationSans-Regular.ttf",
     );
+    expect(fileFor(FontCharset.ANSI, 0, "Verdana")).toBe("DejaVuSans.ttf");
+    expect(fileFor(FontCharset.ANSI, 0, "Tahoma")).toBe(
+      "LiberationSans-Regular.ttf",
+    );
     // Unknown names fall back to the serif (16) and fixed-pitch (1) flags.
     expect(fileFor(FontCharset.ANSI, 16, "HouseSerif")).toBe(
       "LiberationSerif-Regular.ttf",

@@ -7,8 +7,6 @@ FROM node:25-alpine@sha256:e80397b81fa93888b5f855e8bef37d9b18d3c5eb38b8731fc23d6
 WORKDIR /app
 
 COPY frontend/package.json frontend/package-lock.json ./
-# postinstall patches @embedpdf/engines with this script.
-COPY frontend/scripts/patch-embedpdf-font-fallback.mjs ./scripts/
 RUN npm ci
 
 COPY frontend .

@@ -1,5 +1,9 @@
 import { getFontBaseUrl } from "@app/services/fontBaseUrl";
-import type { FontFallbackConfig, FontVariant } from "@embedpdf/engines";
+import type {
+  FontEntry,
+  FontFallbackConfig,
+  FontVariant,
+} from "@embedpdf/engines";
 import { FontCharset } from "@embedpdf/models";
 
 const liberation = (family: "Sans" | "Serif" | "Mono"): FontVariant[] => [
@@ -15,6 +19,11 @@ const liberation = (family: "Sans" | "Serif" | "Mono"): FontVariant[] => [
 // word spaces or pushing justified lines past the margin.
 const METRIC_COMPATIBLE_SANS = liberation("Sans");
 
+/** `fontFamilies` is read by the engine patch in scripts/embedpdfFontFallbackPatch.mts. */
+export type LocalFontFallbackConfig = FontFallbackConfig & {
+  fontFamilies: Record<"serif" | "monospace" | "wide", FontEntry>;
+};
+
 /**
  * Fonts the engine substitutes for characters missing from a document.
  *
@@ -24,7 +33,7 @@ const METRIC_COMPATIBLE_SANS = liberation("Sans");
  * is what keeps that CDN out of the render path. Charsets without a face
  * (SYMBOL) resolve to `defaultFont`.
  */
-export function getLocalFontFallbackConfig(): FontFallbackConfig {
+export function getLocalFontFallbackConfig(): LocalFontFallbackConfig {
   return {
     baseUrl: getFontBaseUrl(),
     defaultFont: "NotoSans-Regular.ttf",
@@ -43,11 +52,17 @@ export function getLocalFontFallbackConfig(): FontFallbackConfig {
       [FontCharset.GB2312]: "NotoSansSC-Regular.ttf",
       [FontCharset.CHINESEBIG5]: "NotoSansTC-Regular.ttf",
     },
-    // Times and Courier counterparts with matching widths; selected by the
-    // local @embedpdf/engines patch (scripts/patch-embedpdf-font-fallback.mjs).
+    // Times, Courier and Verdana counterparts with matching widths; selected
+    // by the local @embedpdf/engines patch (scripts/embedpdfFontFallbackPatch.mts).
     fontFamilies: {
       serif: liberation("Serif"),
       monospace: liberation("Mono"),
+      wide: [
+        { url: "DejaVuSans.ttf", weight: 400 },
+        { url: "DejaVuSans-Bold.ttf", weight: 700 },
+        { url: "DejaVuSans-Oblique.ttf", weight: 400, italic: true },
+        { url: "DejaVuSans-BoldOblique.ttf", weight: 700, italic: true },
+      ],
     },
   };
 }
