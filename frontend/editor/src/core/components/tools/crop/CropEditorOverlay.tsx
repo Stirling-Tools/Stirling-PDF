@@ -20,6 +20,7 @@ import CropCanvas, {
 } from "@app/components/tools/crop/CropCanvas";
 import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
 import CropMarginInputs from "@app/components/tools/crop/CropMarginInputs";
+import CropResultView from "@app/components/tools/crop/CropResultView";
 import CropRatioPicker, {
   ratioForPage,
   type CropRatioId,
@@ -77,6 +78,7 @@ export default function CropEditorOverlay({
   const [gridEnabled, setGridEnabled] = useState(true);
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [resultView, setResultView] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -180,84 +182,108 @@ export default function CropEditorOverlay({
             </Group>
             <Group gap={2} wrap="nowrap">
               <ActionIcon
-                variant={gridEnabled ? "secondary" : "quiet"}
+                variant={resultView ? "secondary" : "quiet"}
                 accent="neutral"
                 size="sm"
-                aria-label={t("crop.canvas.toggleGrid", "Toggle grid")}
-                aria-pressed={gridEnabled}
-                title={t("crop.canvas.toggleGrid", "Toggle grid")}
-                onClick={() => setGridEnabled((previous) => !previous)}
+                aria-label={t("crop.preview.toggle", "Preview result")}
+                aria-pressed={resultView}
+                title={t("crop.preview.toggle", "Preview result")}
+                onClick={() => setResultView((previous) => !previous)}
               >
-                <Icon name="layout-grid" size="0.875rem" />
-              </ActionIcon>
-              <ActionIcon
-                variant={snapEnabled ? "secondary" : "quiet"}
-                accent="neutral"
-                size="sm"
-                aria-label={t("crop.canvas.toggleSnap", "Toggle snapping")}
-                aria-pressed={snapEnabled}
-                title={t("crop.canvas.toggleSnap", "Toggle snapping")}
-                onClick={() => setSnapEnabled((previous) => !previous)}
-              >
-                <Icon name="magnet" size="0.875rem" />
+                <Icon name="eye" size="0.875rem" />
               </ActionIcon>
               <div className={classes.toolbarDivider} aria-hidden="true" />
-              <ActionIcon
-                variant="quiet"
-                accent="neutral"
-                size="sm"
-                aria-label={t("crop.canvas.zoomOut", "Zoom out")}
-                onClick={() => canvasRef.current?.zoomOut()}
-              >
-                <Icon name="zoom-out" size="0.875rem" />
-              </ActionIcon>
-              <button
-                ref={zoomLabelRef}
-                type="button"
-                className={classes.zoomLabel}
-                onClick={() => canvasRef.current?.fit()}
-                aria-label={t("crop.canvas.fitToPage", "Fit to page")}
-                title={t("crop.canvas.fitToPage", "Fit to page")}
-              >
-                100%
-              </button>
-              <ActionIcon
-                variant="quiet"
-                accent="neutral"
-                size="sm"
-                aria-label={t("crop.canvas.zoomIn", "Zoom in")}
-                onClick={() => canvasRef.current?.zoomIn()}
-              >
-                <Icon name="zoom-in" size="0.875rem" />
-              </ActionIcon>
+              {!resultView && (
+                <>
+                  <ActionIcon
+                    variant={gridEnabled ? "secondary" : "quiet"}
+                    accent="neutral"
+                    size="sm"
+                    aria-label={t("crop.canvas.toggleGrid", "Toggle grid")}
+                    aria-pressed={gridEnabled}
+                    title={t("crop.canvas.toggleGrid", "Toggle grid")}
+                    onClick={() => setGridEnabled((previous) => !previous)}
+                  >
+                    <Icon name="layout-grid" size="0.875rem" />
+                  </ActionIcon>
+                  <ActionIcon
+                    variant={snapEnabled ? "secondary" : "quiet"}
+                    accent="neutral"
+                    size="sm"
+                    aria-label={t("crop.canvas.toggleSnap", "Toggle snapping")}
+                    aria-pressed={snapEnabled}
+                    title={t("crop.canvas.toggleSnap", "Toggle snapping")}
+                    onClick={() => setSnapEnabled((previous) => !previous)}
+                  >
+                    <Icon name="magnet" size="0.875rem" />
+                  </ActionIcon>
+                  <div className={classes.toolbarDivider} aria-hidden="true" />
+                  <ActionIcon
+                    variant="quiet"
+                    accent="neutral"
+                    size="sm"
+                    aria-label={t("crop.canvas.zoomOut", "Zoom out")}
+                    onClick={() => canvasRef.current?.zoomOut()}
+                  >
+                    <Icon name="zoom-out" size="0.875rem" />
+                  </ActionIcon>
+                  <button
+                    ref={zoomLabelRef}
+                    type="button"
+                    className={classes.zoomLabel}
+                    onClick={() => canvasRef.current?.fit()}
+                    aria-label={t("crop.canvas.fitToPage", "Fit to page")}
+                    title={t("crop.canvas.fitToPage", "Fit to page")}
+                  >
+                    100%
+                  </button>
+                  <ActionIcon
+                    variant="quiet"
+                    accent="neutral"
+                    size="sm"
+                    aria-label={t("crop.canvas.zoomIn", "Zoom in")}
+                    onClick={() => canvasRef.current?.zoomIn()}
+                  >
+                    <Icon name="zoom-in" size="0.875rem" />
+                  </ActionIcon>
+                </>
+              )}
             </Group>
           </div>
 
           <div className={classes.body}>
             <div className={classes.canvasArea}>
-              <CropCanvas
-                ref={canvasRef}
-                expanded
-                showToolbar={false}
-                onZoomChange={(value) => {
-                  if (zoomLabelRef.current) {
-                    zoomLabelRef.current.textContent = `${Math.round(value * 100)}%`;
-                  }
-                }}
-                imageUrl={imageUrl}
-                geometry={geometry}
-                cropArea={cropArea}
-                onCropAreaChange={onCropAreaChange}
-                aspectRatio={aspectRatio}
-                disabled={disabled}
-                gridEnabled={gridEnabled}
-                snapEnabled={snapEnabled}
-                unit={unit}
-                ariaLabel={t(
-                  "crop.canvas.ariaLabel",
-                  "Crop area editor. Drag a handle to resize, drag inside to move, arrow keys nudge, Shift plus arrow keys resize.",
-                )}
-              />
+              {resultView ? (
+                <CropResultView
+                  imageUrl={imageUrl}
+                  geometry={geometry}
+                  cropArea={cropArea}
+                />
+              ) : (
+                <CropCanvas
+                  ref={canvasRef}
+                  expanded
+                  showToolbar={false}
+                  onZoomChange={(value) => {
+                    if (zoomLabelRef.current) {
+                      zoomLabelRef.current.textContent = `${Math.round(value * 100)}%`;
+                    }
+                  }}
+                  imageUrl={imageUrl}
+                  geometry={geometry}
+                  cropArea={cropArea}
+                  onCropAreaChange={onCropAreaChange}
+                  aspectRatio={aspectRatio}
+                  disabled={disabled}
+                  gridEnabled={gridEnabled}
+                  snapEnabled={snapEnabled}
+                  unit={unit}
+                  ariaLabel={t(
+                    "crop.canvas.ariaLabel",
+                    "Crop area editor. Drag a handle to resize, drag inside to move, arrow keys nudge, Shift plus arrow keys resize.",
+                  )}
+                />
+              )}
             </div>
 
             <aside className={classes.panel}>

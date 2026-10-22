@@ -15,6 +15,7 @@ import CropCanvas, {
 } from "@app/components/tools/crop/CropCanvas";
 import CropPageSelection from "@app/components/tools/crop/CropPageSelection";
 import CropEditorOverlay from "@app/components/tools/crop/CropEditorOverlay";
+import CropResultView from "@app/components/tools/crop/CropResultView";
 import { useCropPagePreview } from "@app/components/tools/crop/useCropPagePreview";
 import { useCropHistory } from "@app/components/tools/crop/useCropHistory";
 import { DEFAULT_CROP_AREA } from "@app/constants/cropConstants";
@@ -56,6 +57,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const [unit] = useState<CropUnit>("mm");
   const [ratioId, setRatioId] = useState<CropRatioId>("free");
   const [editorOpen, setEditorOpen] = useState(false);
+  const [showResult, setShowResult] = useState(false);
 
   const parametersRef = useRef(parameters);
   parametersRef.current = parameters;
@@ -264,31 +266,41 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           <Box
             className={classes.canvasFrame}
             style={{
-              aspectRatio: `${displaySize.width} / ${displaySize.height}`,
+              aspectRatio: showResult
+                ? `${display.width} / ${display.height}`
+                : `${displaySize.width} / ${displaySize.height}`,
             }}
           >
-            <CropCanvas
-              imageUrl={preview.imageUrl}
-              geometry={geometry}
-              cropArea={cropArea}
-              onCropAreaChange={applyArea}
-              aspectRatio={null}
-              disabled={disabled}
-              readOnly={isTouch}
-              onRequestExpand={() => setEditorOpen(true)}
-              unit={unit}
-              ariaLabel={
-                isTouch
-                  ? t(
-                      "crop.canvas.previewLabel",
-                      "Crop area preview. Activate Edit crop area to adjust it.",
-                    )
-                  : t(
-                      "crop.canvas.ariaLabel",
-                      "Crop area editor. Drag a handle to resize, drag inside to move, arrow keys nudge, Shift plus arrow keys resize.",
-                    )
-              }
-            />
+            {showResult ? (
+              <CropResultView
+                imageUrl={preview.imageUrl}
+                geometry={geometry}
+                cropArea={cropArea}
+              />
+            ) : (
+              <CropCanvas
+                imageUrl={preview.imageUrl}
+                geometry={geometry}
+                cropArea={cropArea}
+                onCropAreaChange={applyArea}
+                aspectRatio={null}
+                disabled={disabled}
+                readOnly={isTouch}
+                onRequestExpand={() => setEditorOpen(true)}
+                unit={unit}
+                ariaLabel={
+                  isTouch
+                    ? t(
+                        "crop.canvas.previewLabel",
+                        "Crop area preview. Activate Edit crop area to adjust it.",
+                      )
+                    : t(
+                        "crop.canvas.ariaLabel",
+                        "Crop area editor. Drag a handle to resize, drag inside to move, arrow keys nudge, Shift plus arrow keys resize.",
+                      )
+                }
+              />
+            )}
           </Box>
 
           <Group justify="space-between" align="center" wrap="nowrap">
@@ -305,15 +317,29 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
                 {percent}%
               </Text>
             </Group>
-            <Button
-              variant="secondary"
-              size="sm"
-              leftSection={<Icon name="fullscreen" size={14} />}
-              onClick={() => setEditorOpen(true)}
-              disabled={disabled}
-            >
-              {t("crop.edit", "Edit")}
-            </Button>
+            <Group gap={4} wrap="nowrap">
+              <ActionIcon
+                variant={showResult ? "secondary" : "quiet"}
+                accent="neutral"
+                size="sm"
+                aria-label={t("crop.preview.toggle", "Preview result")}
+                aria-pressed={showResult}
+                title={t("crop.preview.toggle", "Preview result")}
+                onClick={() => setShowResult((previous) => !previous)}
+                disabled={disabled}
+              >
+                <Icon name="eye" size="0.875rem" />
+              </ActionIcon>
+              <Button
+                variant="secondary"
+                size="sm"
+                leftSection={<Icon name="fullscreen" size={14} />}
+                onClick={() => setEditorOpen(true)}
+                disabled={disabled}
+              >
+                {t("crop.edit", "Edit")}
+              </Button>
+            </Group>
           </Group>
         </>
       )}

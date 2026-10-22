@@ -175,6 +175,20 @@ test.describe("crop ui walkthrough", () => {
         await capturePanel(page, `03_inset_${theme}`);
       });
 
+      test(`03b_result_${theme}`, async ({ page }) => {
+        await applyTheme(page, theme);
+        await openCrop(page);
+        await upload(page);
+        await dragSelectionHandle(page, "se", -70, -90);
+        await page
+          .getByRole("button", { name: /Preview result/i })
+          .first()
+          .click();
+        await expect(page.getByTestId("crop-result-view")).toBeVisible();
+        await settle(page);
+        await capturePanel(page, `03b_result_${theme}`);
+      });
+
       test(`04_ratio_${theme}`, async ({ page }) => {
         await applyTheme(page, theme);
         await openCrop(page);
@@ -222,6 +236,23 @@ test.describe("crop ui walkthrough", () => {
         await dragSelectionHandle(page, "se", -70, -90);
         await openEditor(page);
         await page.screenshot({ path: shot(`07_editor_${theme}`) });
+      });
+
+      test(`07b_editor_result_${theme}`, async ({ page }) => {
+        await applyTheme(page, theme);
+        await openCrop(page);
+        await upload(page);
+        await dragSelectionHandle(page, "se", -70, -90);
+        await openEditor(page);
+        await page
+          .getByTestId("crop-editor")
+          .getByRole("button", { name: /Preview result/i })
+          .click();
+        await expect(
+          page.getByTestId("crop-editor").getByTestId("crop-result-view"),
+        ).toBeVisible();
+        await settle(page);
+        await page.screenshot({ path: shot(`07b_editor_result_${theme}`) });
       });
 
       test(`08_editor_zoom_${theme}`, async ({ page }) => {

@@ -4314,6 +4314,10 @@ square = "Square"
 title = "Aspect ratio"
 wide = "16:9"
 
+[crop.preview]
+result = "Result"
+toggle = "Preview result"
+
 [crop.result]
 ofPage = "{{percent}}% of page"
 
