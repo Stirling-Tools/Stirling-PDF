@@ -496,9 +496,13 @@ export class EditorStore {
       // of the old and new boxes.
       const lineCount = editRun.text.split(/\r?\n/).length;
       const oldLineCount = editText.split(/\r?\n/).length;
+      // Member churn inside one visual line (a merged run becoming a fresh
+      // anchor) stays inside the union of the old and new boxes, so the region
+      // pass still covers it. A line count change cannot.
       const structureChanged =
-        editRun.paragraphLineSlots.length !== editSlots ||
-        editRun.paragraphMemberPtrs.length !== editMembers;
+        (editRun.paragraphLineSlots.length !== editSlots ||
+          editRun.paragraphMemberPtrs.length !== editMembers) &&
+        lineCount !== 1;
       // Partial repaint covers upright, visible PDF text. Synthesised base-14
       // boxes, invisible OCR runs and rotated runs have separate emit paths
       // and keep the full page.

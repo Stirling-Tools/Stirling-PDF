@@ -103,16 +103,20 @@ test("a full embedded face survives a mid-word insert and a save", async ({
 
   expect(await headingFont(page)).toBe(before);
   expect(family(await headingFont(page))).toBe(family(before));
-  // Chrom Sans has no bytes FontFace can load, so the overlay must not paint a
-  // substitute face over the bitmap while the caret is in the run.
-  const overlay = await page.evaluate((id) => {
-    const s = getComputedStyle(
-      document.querySelector<HTMLElement>(`[data-testid="${id}"]`)!,
-    );
-    return { color: s.color, background: s.backgroundColor };
-  }, testId);
-  expect(overlay.color).toBe("rgba(0, 0, 0, 0)");
-  expect(overlay.background).toBe("rgba(0, 0, 0, 0)");
+  // Chrom Sans has no bytes FontFace can load, so the overlay is only a
+  // transient stand-in: once the bitmap paints the edit it must hand the run
+  // back, even though the caret is still in it.
+  const overlayStyle = () =>
+    page.evaluate((id) => {
+      const s = getComputedStyle(
+        document.querySelector<HTMLElement>(`[data-testid="${id}"]`)!,
+      );
+      return { color: s.color, background: s.backgroundColor };
+    }, testId);
+  await expect
+    .poll(async () => (await overlayStyle()).color, { timeout: 5_000 })
+    .toBe("rgba(0, 0, 0, 0)");
+  expect((await overlayStyle()).background).toBe("rgba(0, 0, 0, 0)");
 
   const download = page.waitForEvent("download", { timeout: 60_000 });
   await page.getByTestId("pdf-editor-download").click();

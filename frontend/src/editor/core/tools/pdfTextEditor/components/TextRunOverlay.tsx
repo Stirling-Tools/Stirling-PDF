@@ -655,8 +655,14 @@ function TextRunOverlayImpl({
     // faceEpoch changes when a late FontFace finishes loading.
     [run.fontId, faceEpoch],
   );
+  // A face the overlay cannot reproduce is only a stand-in until the bitmap
+  // has painted the edit. Keeping it up while the user pauses is what made
+  // the text look sharper than the page underneath.
   const showsGlyphs =
-    (touched || (hasEdit && !pageCaughtUp)) && !invisible && overlayFaceReady;
+    !invisible &&
+    (overlayFaceReady
+      ? touched || (hasEdit && !pageCaughtUp)
+      : hasEdit && !pageCaughtUp);
 
   const exactMetrics = useMemo(
     () => (freshExact ? exactTextMetrics(freshExact.lines) : null),

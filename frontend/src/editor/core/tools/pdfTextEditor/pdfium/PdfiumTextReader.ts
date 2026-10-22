@@ -963,6 +963,17 @@ function readFontNameVia(
   return m.pdfium.UTF8ToString(buf);
 }
 
+/** Append bold/italic from /BaseFont when the family name omits the cut. */
+function withBaseFaceStyle(family: string, baseFace: string): string {
+  if (!baseFace) return family;
+  const hasBold = /bold|black|heavy|semibold|demi/i;
+  const hasItalic = /italic|oblique/i;
+  const bold = hasBold.test(baseFace) && !hasBold.test(family);
+  const italic = hasItalic.test(baseFace) && !hasItalic.test(family);
+  if (!bold && !italic) return family;
+  return `${family}-${bold ? "Bold" : ""}${italic ? "Italic" : ""}`;
+}
+
 function readFontFamily(
   m: WrappedPdfiumModule,
   fontPtr: number,
@@ -979,7 +990,12 @@ function readFontFamily(
   const nameRaw = familyRaw ?? baseRaw;
   if (nameRaw == null) return { family: "Unknown", subset: false };
   const tagged = SUBSET_TAG_RE.test(nameRaw);
-  const family = tagged ? nameRaw.slice(7) : nameRaw;
+  const baseFamily = tagged ? nameRaw.slice(7) : nameRaw;
+  // PDFium can report a substituted family ("Chrom Serif OTF") that carries no
+  // style, while /BaseFont still names the exact cut. The overlay needs that
+  // weight/italic to draw the same face as the bitmap.
+  const baseFace = baseRaw ? baseRaw.replace(SUBSET_TAG_RE, "") : "";
+  const family = withBaseFaceStyle(baseFamily, baseFace);
   if (tagged) return { family, subset: true };
   return { family, subset: baseRaw != null && SUBSET_TAG_RE.test(baseRaw) };
 }

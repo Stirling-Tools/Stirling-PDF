@@ -3,7 +3,6 @@ import { Box, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { PdfiumPageRenderer } from "@app/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
-import { isOverlayFaceReady } from "@app/tools/pdfTextEditor/util/embeddedFace";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
 import {
@@ -343,23 +342,13 @@ export function PageView({
           });
       }
     };
-    // Typing owns the overlay's glyphs; let the raster wait for a pause. The
-    // overlay stays up until `paintedRevision` catches the edit (see the run
-    // overlay), so a deferred bitmap can never show through.
-    const activeRun = window.document.activeElement?.closest?.(
-      '[data-testid^="pdf-editor-run-"]',
-    ) as HTMLElement | null;
-    const activeRunId = activeRun
-      ? activeRun.getAttribute("data-testid")?.replace("pdf-editor-run-", "")
-      : null;
-    const activeSnapshot = activeRunId
-      ? page.runs.find((run) => run.id === activeRunId)
-      : undefined;
-    // Defer the raster only when the overlay is an exact stand-in for the
-    // page's face. A substituted face must not cover the bitmap, so let the
-    // bitmap update immediately instead.
+    // Any focused run may be about to change: let the overlay paint the
+    // keystroke first, then hand the run back to the bitmap. Waiting out a
+    // pause also keeps the blocking raster off the typing path.
     const editing = Boolean(
-      activeSnapshot && isOverlayFaceReady(activeSnapshot.fontId),
+      window.document.activeElement?.closest?.(
+        '[data-testid^="pdf-editor-run-"]',
+      ),
     );
     const timer =
       editing && page.revision > 0
