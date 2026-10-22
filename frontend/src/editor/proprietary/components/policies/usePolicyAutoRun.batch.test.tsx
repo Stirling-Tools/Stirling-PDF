@@ -376,7 +376,7 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
           );
           expect(classification).toHaveLength(FILE_COUNT);
         },
-        { timeout: 8000, interval: 20 },
+        { timeout: TEST_TIMEOUT_MS, interval: 20 },
       );
     });
 

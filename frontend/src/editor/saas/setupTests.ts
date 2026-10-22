@@ -245,4 +245,5 @@ Object.defineProperty(global, "DOMMatrix", {
 });
 
 // Set global test timeout to prevent hangs
-vi.setConfig({ testTimeout: 5000, hookTimeout: 5000 });
+const testTimeout = Number(process.env.TEST_TIMEOUT ?? 5000);
+vi.setConfig({ testTimeout, hookTimeout: testTimeout });
