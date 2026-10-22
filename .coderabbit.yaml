@@ -19,7 +19,7 @@ knowledge_base:
       - files: "docs/developer/EXCEPTION_HANDLING_GUIDE.md"
         applyTo: "**/*.java,**/*.ts,**/*.tsx,**/*.js,**/*.jsx,**/*.py"
       # Frontend layering and override architecture.
-      - files: "frontend/editor/DeveloperGuide.md"
+      - files: "frontend/DeveloperGuide.md"
         applyTo: "frontend/**"
       # At-rest storage-encryption contract.
       - files: "docs/developer/STORAGE_ENCRYPTION_AT_REST.md"
