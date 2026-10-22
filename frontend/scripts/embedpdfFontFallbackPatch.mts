@@ -8,6 +8,17 @@
 // Applied while Vite reads the package (bundling, the dev prebundle, vitest),
 // never written to node_modules, so read-only installs and builds that skip
 // lifecycle scripts work unchanged.
+//
+// Upgrading @embedpdf/engines (any other version fails the build):
+// 1. Remove embedpdfFontFallbackPlugin() from vite.config.ts and
+//    vitest.config.ts, then run src/editor/core/services/pdfiumFontFallback.test.ts.
+// 2. If it passes, the engine selects fallback faces by family itself: delete
+//    this file and those two plugin entries. If it fails only because the
+//    engine names the option differently, move `fontFamilies` in
+//    pdfiumFontFallback.ts to that name and delete this file.
+// 3. Otherwise restore the plugin entries, check each EDITS anchor still occurs
+//    once in the new engine's dist files, then update EXPECTED_VERSION, bump
+//    PATCH_REVISION and re-run the test.
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { Plugin as EsbuildPlugin } from "esbuild";
@@ -65,8 +76,8 @@ const escapeNewlines = (text: string) => text.replace(/\n/g, "\\n");
 const fail = (file: string, reason: string): never => {
   throw new Error(
     `[embedpdf-font-fallback] ${path.basename(file)}: ${reason}. ` +
-      "Check whether the engine now selects fallback fonts by family; if not, " +
-      "re-verify every anchor in scripts/embedpdfFontFallbackPatch.mts.",
+      "Follow the upgrade steps at the top of " +
+      "frontend/scripts/embedpdfFontFallbackPatch.mts.",
   );
 };
 
