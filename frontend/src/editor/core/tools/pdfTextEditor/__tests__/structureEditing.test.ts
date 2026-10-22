@@ -509,15 +509,17 @@ describe("PageStructure", () => {
 
   test("holds one edit per element, whichever of its MCIDs addressed it", () => {
     const s = new PageStructure([figure]);
-    s.setEdit(3, { mcid: 3, alt: "new" });
+    s.setEdit(3, { mcid: 3, alt: "new", decorative: false });
     expect(s.alt(4)).toBe("new");
-    s.setEdit(4, { mcid: 4, alt: "newer" });
-    expect(s.pendingEdits()).toEqual([{ mcid: 4, alt: "newer" }]);
+    s.setEdit(4, { mcid: 4, alt: "newer", decorative: false });
+    expect(s.pendingEdits()).toEqual([
+      { mcid: 4, alt: "newer", decorative: false },
+    ]);
   });
 
   test("reads back the file's description once an edit is dropped", () => {
     const s = new PageStructure([figure]);
-    s.setEdit(3, { mcid: 3, alt: null });
+    s.setEdit(3, { mcid: 3, alt: null, decorative: false });
     expect(s.alt(3)).toBeNull();
     s.setEdit(3, null);
     expect(s.alt(3)).toBe("old");
@@ -526,15 +528,19 @@ describe("PageStructure", () => {
 
   test("refuses an edit no element can carry", () => {
     expect(() =>
-      new PageStructure([figure]).setEdit(9, { mcid: 9, alt: "x" }),
+      new PageStructure([figure]).setEdit(9, {
+        mcid: 9,
+        alt: "x",
+        decorative: false,
+      }),
     ).toThrow();
   });
 
   test("describes figures and formulas but not elements that hold text", () => {
     const s = new PageStructure([
       figure,
-      { type: "Formula", alt: null, actualText: null, mcids: [5] },
-      { type: "P", alt: null, actualText: null, mcids: [6] },
+      { ...figure, type: "Formula", alt: null, mcids: [5] },
+      { ...figure, type: "P", alt: null, mcids: [6] },
     ]);
     expect(s.cannotDescribe(3)).toBeNull();
     expect(s.cannotDescribe(5)).toBeNull();

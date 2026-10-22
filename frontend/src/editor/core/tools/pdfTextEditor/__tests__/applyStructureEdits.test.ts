@@ -96,9 +96,9 @@ describe("applyStructureEdits", () => {
   test("sets, replaces and removes /Alt on the elements the MCIDs resolve to", async () => {
     const bytes = buildClassicPdf(objects(), 1);
     const out = await applyStructureEdits(bytes, [
-      { pageIndex: 0, mcid: 0, alt: "Intro" },
-      { pageIndex: 0, mcid: 1, alt: null },
-      { pageIndex: 1, mcid: 0, alt: "Second figure" },
+      { pageIndex: 0, mcid: 0, alt: "Intro", decorative: false },
+      { pageIndex: 0, mcid: 1, alt: null, decorative: false },
+      { pageIndex: 1, mcid: 0, alt: "Second figure", decorative: false },
     ]);
     expect(await elementBody(out, 10)).toContain("/Alt (Intro)");
     expect(await elementBody(out, 11)).not.toContain("/Alt");
@@ -108,7 +108,7 @@ describe("applyStructureEdits", () => {
   test("appends a revision and leaves the original bytes in place", async () => {
     const bytes = buildClassicPdf(objects(), 1);
     const out = await applyStructureEdits(bytes, [
-      { pageIndex: 1, mcid: 0, alt: "x" },
+      { pageIndex: 1, mcid: 0, alt: "x", decorative: false },
     ]);
     expect(out.subarray(0, bytes.length)).toEqual(bytes);
     // Only the one element changed, so only it is appended.
@@ -118,8 +118,8 @@ describe("applyStructureEdits", () => {
 
   test("lets the later of two edits to one element win", async () => {
     const out = await applyStructureEdits(buildClassicPdf(objects(), 1), [
-      { pageIndex: 0, mcid: 1, alt: "first" },
-      { pageIndex: 0, mcid: 1, alt: "second" },
+      { pageIndex: 0, mcid: 1, alt: "first", decorative: false },
+      { pageIndex: 0, mcid: 1, alt: "second", decorative: false },
     ]);
     const body = await elementBody(out, 11);
     expect(body).toContain("/Alt (second)");
@@ -134,7 +134,7 @@ describe("applyStructureEdits", () => {
       { num: 22, body: "[10 0 R 11 0 R]" },
     ];
     const out = await applyStructureEdits(buildClassicPdf(tree, 1), [
-      { pageIndex: 0, mcid: 1, alt: "Found" },
+      { pageIndex: 0, mcid: 1, alt: "Found", decorative: false },
     ]);
     expect(await elementBody(out, 11)).toContain("/Alt (Found)");
   });
@@ -142,7 +142,7 @@ describe("applyStructureEdits", () => {
   test("extends a cross-reference-stream file", async () => {
     const bytes = buildXrefStreamPdf(objects(), 1);
     const out = await applyStructureEdits(bytes, [
-      { pageIndex: 0, mcid: 1, alt: "Streamed" },
+      { pageIndex: 0, mcid: 1, alt: "Streamed", decorative: false },
     ]);
     expect(await elementBody(out, 11)).toContain("/Alt (Streamed)");
     expect((await RawPdf.parse(out))?.usesXrefStream).toBe(true);
@@ -150,9 +150,9 @@ describe("applyStructureEdits", () => {
 
   test("names every edit it cannot write, and writes none of them", async () => {
     const reasons = await failuresOf(buildClassicPdf(objects(), 1), [
-      { pageIndex: 0, mcid: 1, alt: "fine on its own" },
-      { pageIndex: 5, mcid: 0, alt: "x" },
-      { pageIndex: 0, mcid: 7, alt: "x" },
+      { pageIndex: 0, mcid: 1, alt: "fine on its own", decorative: false },
+      { pageIndex: 5, mcid: 0, alt: "x", decorative: false },
+      { pageIndex: 0, mcid: 7, alt: "x", decorative: false },
     ]);
     expect(reasons).toEqual([
       "no such page",
@@ -166,7 +166,7 @@ describe("applyStructureEdits", () => {
     );
     expect(
       await failuresOf(buildClassicPdf(untaggedPage, 1), [
-        { pageIndex: 1, mcid: 0, alt: "x" },
+        { pageIndex: 1, mcid: 0, alt: "x", decorative: false },
       ]),
     ).toEqual(["the page has no /StructParents"]);
   });
@@ -177,7 +177,7 @@ describe("applyStructureEdits", () => {
     );
     expect(
       await failuresOf(buildClassicPdf(untagged, 1), [
-        { pageIndex: 0, mcid: 0, alt: "x" },
+        { pageIndex: 0, mcid: 0, alt: "x", decorative: false },
       ]),
     ).toEqual(["the file has no structure tree"]);
   });
@@ -189,7 +189,9 @@ describe("applyStructureEdits", () => {
     );
     const bytes = Uint8Array.from(encrypted, (c) => c.charCodeAt(0));
     expect(
-      await failuresOf(bytes, [{ pageIndex: 0, mcid: 0, alt: "x" }]),
+      await failuresOf(bytes, [
+        { pageIndex: 0, mcid: 0, alt: "x", decorative: false },
+      ]),
     ).toEqual(["the file is encrypted"]);
   });
 });
@@ -219,7 +221,12 @@ describe("applyStructureEdits on a real producer's output", () => {
   test("PDFium reads the new description from the saved file", async () => {
     const bytes = new Uint8Array(await readFile(TAGGED_SAMPLE));
     const out = await applyStructureEdits(bytes, [
-      { pageIndex: 0, mcid: 2, alt: "Revenue by region, \u00e9t\u00e9 2026" },
+      {
+        pageIndex: 0,
+        mcid: 2,
+        alt: "Revenue by region, \u00e9t\u00e9 2026",
+        decorative: false,
+      },
     ]);
 
     const doc = await EditorDocument.open(out);
