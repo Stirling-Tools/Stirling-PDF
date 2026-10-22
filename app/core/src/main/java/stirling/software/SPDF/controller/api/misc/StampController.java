@@ -142,17 +142,7 @@ public class StampController {
                         stampImageName);
             }
         } else if ("qr".equalsIgnoreCase(stampType)) {
-            if (stampText == null || stampText.isBlank()) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.stamp.qr.required",
-                        "Stamp text must be provided when stamp type is 'qr'");
-            }
-            if (stampText.getBytes(StandardCharsets.UTF_8).length > MAX_QR_CONTENT_BYTES) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.stamp.qr.tooLong",
-                        "QR code content must be at most {0} bytes of UTF-8 text",
-                        MAX_QR_CONTENT_BYTES);
-            }
+            requireEncodableQrContent(stampText);
         }
         String alphabet = request.getAlphabet();
         float fontSize = request.getFontSize();
@@ -183,6 +173,21 @@ public class StampController {
                     PDPage page = document.getPage(zeroBasedIndex);
                     PDRectangle pageSize = page.getMediaBox();
                     float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
+
+                    // Encoded before the content stream opens so a rejected expansion cannot
+                    // leave a half-written stream on the page.
+                    BitMatrix qrMatrix = null;
+                    if ("qr".equalsIgnoreCase(stampType)) {
+                        String qrContent =
+                                processStampText(
+                                        stampText,
+                                        pageIndex,
+                                        document.getNumberOfPages(),
+                                        pdfFileName,
+                                        document);
+                        requireEncodableQrContent(qrContent);
+                        qrMatrix = encodeQrCode(qrContent);
+                    }
 
                     PDPageContentStream contentStream =
                             new PDPageContentStream(
@@ -224,24 +229,10 @@ public class StampController {
                                 overrideX,
                                 overrideY,
                                 margin);
-                    } else if ("qr".equalsIgnoreCase(stampType)) {
-                        String qrContent =
-                                processStampText(
-                                        stampText,
-                                        pageIndex,
-                                        document.getNumberOfPages(),
-                                        pdfFileName,
-                                        document);
-                        if (qrContent.getBytes(StandardCharsets.UTF_8).length
-                                > MAX_QR_CONTENT_BYTES) {
-                            throw ExceptionUtils.createIllegalArgumentException(
-                                    "error.stamp.qr.tooLong",
-                                    "QR code content must be at most {0} bytes of UTF-8 text",
-                                    MAX_QR_CONTENT_BYTES);
-                        }
+                    } else if (qrMatrix != null) {
                         addQrStamp(
                                 contentStream,
-                                encodeQrCode(qrContent),
+                                qrMatrix,
                                 page,
                                 rotation,
                                 position,
@@ -545,6 +536,25 @@ public class StampController {
                 margin);
         contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);
         contentStream.restoreGraphicsState();
+    }
+
+    /**
+     * Rejects QR content that is blank or over the byte limit. Applied to the raw text and again to
+     * each page's expansion, since a placeholder can resolve to nothing (@author with no metadata)
+     * or grow the text past the limit (@filename).
+     */
+    private static void requireEncodableQrContent(String content) {
+        if (content == null || content.isBlank()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.stamp.qr.required",
+                    "Stamp text must be provided when stamp type is 'qr'");
+        }
+        if (content.getBytes(StandardCharsets.UTF_8).length > MAX_QR_CONTENT_BYTES) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.stamp.qr.tooLong",
+                    "QR code content must be at most {0} bytes of UTF-8 text",
+                    MAX_QR_CONTENT_BYTES);
+        }
     }
 
     private BitMatrix encodeQrCode(String content) {

@@ -330,15 +330,7 @@ class StampControllerMoreTest {
     @DisplayName("QR code stamp")
     class QrStamp {
 
-        @Test
-        @DisplayName("draws a QR code that decodes back to the resolved stamp text")
-        void qrStampDecodesToContent() throws Exception {
-            AddStampRequest req = baseRequest(pdfFile(1));
-            req.setStampType("qr");
-            req.setStampText("https://stirlingpdf.com/@filename");
-            req.setFontSize(200f);
-            req.setOpacity(1f);
-
+        private String stampAndDecodeQr(AddStampRequest req) throws Exception {
             BufferedImage rendered;
             try (InputStream is = stampController.addStamp(req).getBody().getInputStream();
                     PDDocument result = Loader.loadPDF(is.readAllBytes())) {
@@ -350,8 +342,53 @@ class StampControllerMoreTest {
             BinaryBitmap bitmap =
                     new BinaryBitmap(
                             new HybridBinarizer(new RGBLuminanceSource(width, height, pixels)));
-            assertThat(new QRCodeReader().decode(bitmap).getText())
-                    .isEqualTo("https://stirlingpdf.com/input");
+            return new QRCodeReader().decode(bitmap).getText();
+        }
+
+        @Test
+        @DisplayName("multi-byte content survives the UTF-8 round trip")
+        void qrStampEncodesUtf8() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("日本語 café ✓");
+            req.setFontSize(200f);
+            req.setOpacity(1f);
+            assertThat(stampAndDecodeQr(req)).isEqualTo("日本語 café ✓");
+        }
+
+        @Test
+        @DisplayName("a rotated QR code still decodes")
+        void rotatedQrStampDecodes() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("https://stirlingpdf.com/@filename");
+            req.setFontSize(200f);
+            req.setRotation(90f);
+            req.setOpacity(1f);
+            assertThat(stampAndDecodeQr(req)).isEqualTo("https://stirlingpdf.com/input");
+        }
+
+        @Test
+        @DisplayName("QR content whose placeholders resolve to nothing is rejected")
+        void rejectsContentExpandingToBlank() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("@author");
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("must be provided");
+        }
+
+        @Test
+        @DisplayName("draws a QR code that decodes back to the resolved stamp text")
+        void qrStampDecodesToContent() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("https://stirlingpdf.com/@filename");
+            req.setFontSize(200f);
+            req.setOpacity(1f);
+
+            assertThat(stampAndDecodeQr(req)).isEqualTo("https://stirlingpdf.com/input");
         }
 
         @Test
@@ -394,19 +431,7 @@ class StampControllerMoreTest {
             req.setFontSize(0f);
             req.setOpacity(1f);
 
-            BufferedImage rendered;
-            try (InputStream is = stampController.addStamp(req).getBody().getInputStream();
-                    PDDocument result = Loader.loadPDF(is.readAllBytes())) {
-                rendered = new PDFRenderer(result).renderImageWithDPI(0, 144);
-            }
-            int width = rendered.getWidth();
-            int height = rendered.getHeight();
-            int[] pixels = rendered.getRGB(0, 0, width, height, null, 0, width);
-            BinaryBitmap bitmap =
-                    new BinaryBitmap(
-                            new HybridBinarizer(new RGBLuminanceSource(width, height, pixels)));
-            assertThat(new QRCodeReader().decode(bitmap).getText())
-                    .isEqualTo("https://stirlingpdf.com/input");
+            assertThat(stampAndDecodeQr(req)).isEqualTo("https://stirlingpdf.com/input");
         }
 
         @Test
