@@ -115,11 +115,8 @@ public class FileToPdf {
             if (mainEntry == null) {
                 throw ExceptionUtils.createHtmlFileRequiredException();
             }
-            String html =
-                    sanitizeHtmlContent(
-                            Files.readString(entries.get(mainEntry), StandardCharsets.UTF_8),
-                            sanitizer);
-            return inlineLocalImages(html, mainEntry, entries);
+            String html = Files.readString(entries.get(mainEntry), StandardCharsets.UTF_8);
+            return sanitizeHtmlContent(inlineLocalImages(html, mainEntry, entries), sanitizer);
         }
     }
 
@@ -173,7 +170,10 @@ public class FileToPdf {
         Matcher matcher = IMG_SRC.matcher(html);
         StringBuilder out = new StringBuilder();
         while (matcher.find()) {
-            String raw = matcher.group(3) != null ? matcher.group(3) : matcher.group(4);
+            String raw =
+                    matcher.group(3) != null
+                            ? matcher.group(3)
+                            : matcher.group(4) != null ? matcher.group(4) : matcher.group(5);
             String dataUri = toDataUri(decodeHtmlAttribute(raw), baseDir, entries);
             String replacement =
                     dataUri == null ? matcher.group() : matcher.group(1) + "\"" + dataUri + "\"";

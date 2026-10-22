@@ -334,6 +334,22 @@ class FileToPdfMoreTest {
         }
 
         @Test
+        @DisplayName("archive images are inlined before sanitizing, so relative src survives it")
+        void imagesInlinedBeforeSanitizing() throws Exception {
+            byte[] zip =
+                    buildZip(
+                            new String[] {"index.html", "logo.png"},
+                            new String[] {"<img src=logo.png>", "PNGDATA"});
+
+            run(zip, "bundle.zip");
+
+            String expected =
+                    Base64.getEncoder().encodeToString("PNGDATA".getBytes(StandardCharsets.UTF_8));
+            Mockito.verify(sanitizer)
+                    .sanitize("<img src=\"data:image/png;base64," + expected + "\">");
+        }
+
+        @Test
         @DisplayName("image references outside the archive are left for WeasyPrint to refuse")
         void traversalImageNotInlined() throws Exception {
             String html = "<img src=\"../../tmp/canary.png\" />";
