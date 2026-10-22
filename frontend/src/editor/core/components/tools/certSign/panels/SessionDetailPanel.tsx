@@ -53,10 +53,11 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
 
   const handleAddParticipants = async (
     userIds: number[],
+    guestEmails: string[],
     defaultReason?: string,
   ) => {
     try {
-      await onAddParticipants(userIds, defaultReason);
+      await onAddParticipants(userIds, guestEmails, defaultReason);
       alert({
         alertType: "success",
         title: t("success"),

@@ -75,12 +75,14 @@ function Harness({
   initialFileSelected?: boolean;
 }) {
   const [ids, setIds] = useState(initialIds);
+  const [guestEmails, setGuestEmails] = useState<string[]>([]);
   const [date, setDate] = useState("2026-10-01");
   const [hasFile, setHasFile] = useState(initialFileSelected);
   return (
     <>
       <output aria-label="Date sent to API">{date}</output>
       <output aria-label="Selected participant IDs">{ids.join(",")}</output>
+      <output aria-label="Guest emails">{guestEmails.join(",")}</output>
       <CreateSessionFlow
         documentPicker={
           <button disabled={creating} onClick={() => setHasFile(!hasFile)}>
@@ -90,6 +92,8 @@ function Harness({
         selectedFiles={hasFile ? [{ name: "Document.pdf", size: 100 }] : []}
         selectedUserIds={ids}
         onSelectedUserIdsChange={setIds}
+        guestEmails={guestEmails}
+        onGuestEmailsChange={setGuestEmails}
         dueDate={date}
         onDueDateChange={setDate}
         creating={creating}
@@ -292,6 +296,31 @@ it.each([{ availableUsers: users }, { availableUsers: [users[0]] }])(
     ).toBeDisabled();
   },
 );
+
+it("sends to a signer invited by email without choosing any account", async () => {
+  const { user, onSubmit } = show();
+  const send = screen.getByRole("button", { name: "Send signing request" });
+  const email = screen.getByRole("textbox", { name: /Invite by email/ });
+  await user.type(email, "not-an-email{Enter}");
+  expect(screen.getByText("Enter a valid email address")).toBeInTheDocument();
+  expect(send).toBeDisabled();
+  await user.clear(email);
+  await user.type(email, "guest@example.com{Enter}");
+  expect(screen.getByLabelText("Guest emails")).toHaveTextContent(
+    "guest@example.com",
+  );
+  expect(screen.getByText("1 selected")).toBeInTheDocument();
+  await user.type(email, "GUEST@example.com");
+  await user.click(screen.getByRole("button", { name: "Add" }));
+  expect(screen.getByText("This email is already added")).toBeInTheDocument();
+  await user.click(send);
+  expect(onSubmit).toHaveBeenCalledOnce();
+  await user.click(
+    screen.getByRole("button", { name: "Remove guest@example.com" }),
+  );
+  expect(screen.getByLabelText("Guest emails")).toBeEmptyDOMElement();
+  expect(send).toBeDisabled();
+});
 
 it("keeps the owner selected while adding other participants", async () => {
   const { user } = show();
