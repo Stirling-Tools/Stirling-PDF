@@ -451,6 +451,35 @@ class WorkflowSessionServiceTest {
         verify(workflowParticipantRepository, never()).save(any());
     }
 
+    @Test
+    void addParticipants_rejectsNullParticipantMetadata() {
+        User owner = user("owner");
+
+        WorkflowSession session = new WorkflowSession();
+        session.setSessionId("session-1");
+        session.setOwner(owner);
+        session.setStatus(WorkflowStatus.IN_PROGRESS);
+
+        when(workflowSessionRepository.findBySessionIdForUpdate("session-1"))
+                .thenReturn(Optional.of(session));
+        when(objectMapper.readValue("null", Map.class)).thenReturn(null);
+
+        ParticipantRequest request = new ParticipantRequest();
+        request.setEmail("participant@example.com");
+        request.setParticipantMetadata("null");
+
+        ResponseStatusException exception =
+                org.junit.jupiter.api.Assertions.assertThrows(
+                        ResponseStatusException.class,
+                        () -> service.addParticipants("session-1", List.of(request), owner));
+
+        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(exception.getReason())
+                .isEqualTo("Invalid participantMetadata: must be a valid JSON object");
+
+        verify(workflowParticipantRepository, never()).save(any());
+    }
+
     private void stubSigningEnabled() {
         Storage storage = mock(Storage.class);
         Signing signing = mock(Signing.class);

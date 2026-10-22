@@ -374,6 +374,11 @@ public class WorkflowSessionService {
                     @SuppressWarnings("unchecked")
                     Map<String, Object> metadataMap =
                             objectMapper.readValue(request.getParticipantMetadata(), Map.class);
+                    if (metadataMap == null) {
+                        throw new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST,
+                                "Invalid participantMetadata: must be a valid JSON object");
+                    }
                     participant.setParticipantMetadata(metadataMap);
                 } catch (JacksonException e) {
                     throw new ResponseStatusException(
