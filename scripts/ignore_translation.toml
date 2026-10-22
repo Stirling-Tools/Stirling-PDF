@@ -308,6 +308,11 @@ ignore = [
     'validateSignature.downloadType.pdf',
 ]
 
+[gl_ES]
+ignore = [
+    'language.direction',
+]
+
 [hi_IN]
 ignore = [
     'language.direction',
