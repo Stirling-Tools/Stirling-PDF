@@ -31,7 +31,8 @@ export function useViewerWorkbenchBarButtons(
   isScaleCalibrationActive?: boolean,
   startScaleCalibration?: () => void,
   cancelScaleCalibration?: () => void,
-  readAloudActive?: boolean,
+  readAloudOpen?: boolean,
+  toggleReadAloud?: () => void,
 ) {
   const { t } = useTranslation();
   const viewer = useViewer();
@@ -43,7 +44,6 @@ export function useViewerWorkbenchBarButtons(
     hasLayers,
     isCommentsSidebarVisible,
     toggleCommentsSidebar,
-    isReadAloudSidebarVisible,
     isSearchInterfaceVisible,
     registerImmediatePanUpdate,
   } = viewer;
@@ -347,9 +347,9 @@ export function useViewerWorkbenchBarButtons(
         ariaLabel: readAloudLabel,
         section: "top" as const,
         order: 57,
-        active: isReadAloudSidebarVisible || Boolean(readAloudActive),
+        active: Boolean(readAloudOpen),
         onClick: () => {
-          viewer.toggleReadAloudSidebar();
+          toggleReadAloud?.();
         },
       },
       {
@@ -455,7 +455,6 @@ export function useViewerWorkbenchBarButtons(
     isAttachmentSidebarVisible,
     isLayerSidebarVisible,
     hasLayers,
-    isReadAloudSidebarVisible,
     isSearchInterfaceVisible,
     isPanning,
     searchLabel,
@@ -486,7 +485,8 @@ export function useViewerWorkbenchBarButtons(
     customScale,
     isScaleCalibrationActive,
     readAloudLabel,
-    readAloudActive,
+    readAloudOpen,
+    toggleReadAloud,
   ]);
 
   useWorkbenchBarButtons(viewerButtons);

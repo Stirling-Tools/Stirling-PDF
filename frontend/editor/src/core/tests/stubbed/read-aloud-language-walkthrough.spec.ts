@@ -198,7 +198,7 @@ async function openReadAloud(page: Page) {
   const button = page.getByRole("button", { name: /Read aloud/i }).first();
   await button.scrollIntoViewIfNeeded();
   await button.click();
-  await expect(page.locator(".read-aloud-player")).toBeVisible({
+  await expect(page.locator(".read-aloud-bar")).toBeVisible({
     timeout: 10_000,
   });
 }
@@ -273,7 +273,8 @@ test.describe("read aloud language walkthrough", () => {
     ).toBeVisible({ timeout: 10_000 });
     // Clicking the page must not take the controls away while audio is playing.
     await page.locator('[data-page-index="0"]').click();
-    await expect(page.locator(".read-aloud-player")).toBeVisible();
+    await expect(page.locator(".read-aloud-bar")).toBeVisible();
+    await page.getByRole("button", { name: "Voice options" }).click();
     await page.getByRole("textbox", { name: "Voice" }).click();
     await expect(page.getByRole("option").first()).toBeVisible();
     await page.mouse.move(0, 0);
@@ -314,7 +315,7 @@ test.describe("read aloud language walkthrough", () => {
     await shot(page, "05_english_tagged_light");
   });
 
-  test("06 mobile reader sidebar", async ({ page }, testInfo) => {
+  test("06 mobile reader bar", async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await stubSpeech(page);
     const pdf = await makePdf(testInfo.outputPath("lease-es.pdf"), SPANISH);
@@ -327,10 +328,8 @@ test.describe("read aloud language walkthrough", () => {
       timeout: 10_000,
     });
     await openReadAloud(page);
-    await expect(page.getByText("Detected Spanish")).toBeVisible({
-      timeout: 15_000,
-    });
-    await shot(page, "06_mobile_sidebar_light");
+    await expect(page.locator(".read-aloud-bar")).toBeVisible();
+    await shot(page, "06_mobile_bar_light");
   });
 
   test("07 advances pages and pauses without losing the cursor", async ({
@@ -408,7 +407,7 @@ test.describe("read aloud language walkthrough", () => {
     await shot(page, "10_english_tagged_dark");
   });
 
-  test("11 mobile sidebar dark", async ({ page }, testInfo) => {
+  test("11 mobile bar dark", async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await useDarkMode(page);
     await stubSpeech(page);
@@ -420,13 +419,11 @@ test.describe("read aloud language walkthrough", () => {
       timeout: 10_000,
     });
     await openReadAloud(page);
-    await expect(page.getByText("Detected Spanish")).toBeVisible({
-      timeout: 15_000,
-    });
-    await shot(page, "11_mobile_sidebar_dark");
+    await expect(page.locator(".read-aloud-bar")).toBeVisible();
+    await shot(page, "11_mobile_bar_dark");
   });
 
-  test("12 collapses to the right rail", async ({ page }, testInfo) => {
+  test("12 voice options change the voice", async ({ page }, testInfo) => {
     await stubSpeech(page);
     const pdf = await makePdf(testInfo.outputPath("lease-es.pdf"), SPANISH);
     await openViewer(page, pdf);
@@ -434,22 +431,16 @@ test.describe("read aloud language walkthrough", () => {
     await expect(page.getByText("Detected Spanish")).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("button", { name: "Play", exact: true }).click();
-    await expect(
-      page.getByRole("button", { name: "Pause", exact: true }),
-    ).toBeVisible({ timeout: 10_000 });
-    await page.getByRole("button", { name: "Collapse panel" }).click();
-    await expect(page.locator(".read-aloud-rail")).toBeVisible();
-    await expect(page.locator(".read-aloud-sidebar")).toHaveCount(0);
-    await expect(
-      page.getByRole("button", { name: "Pause", exact: true }),
-    ).toBeVisible();
-    await shot(page, "12_collapsed_rail_light");
-    await page.getByRole("button", { name: "Show controls" }).click();
-    await expect(page.locator(".read-aloud-player")).toBeVisible();
+    await page.getByRole("button", { name: "Voice options" }).click();
+    await page.getByRole("textbox", { name: "Voice" }).click();
+    await page.getByRole("option", { name: "Paulina (es-MX)" }).click();
+    await expect(page.getByRole("textbox", { name: "Voice" })).toHaveValue(
+      "Paulina (es-MX)",
+    );
+    await shot(page, "12_voice_options_light");
   });
 
-  test("13 read mode collapses the panel", async ({ page }, testInfo) => {
+  test("13 read mode keeps the player", async ({ page }, testInfo) => {
     await stubSpeech(page);
     const pdf = await makePdf(testInfo.outputPath("lease-es.pdf"), SPANISH);
     await openViewer(page, pdf);
@@ -462,7 +453,7 @@ test.describe("read aloud language walkthrough", () => {
       page.getByRole("button", { name: "Pause", exact: true }),
     ).toBeVisible({ timeout: 10_000 });
     await page.getByRole("button", { name: "Read mode", exact: true }).click();
-    await expect(page.locator(".read-aloud-rail")).toBeVisible();
+    await expect(page.locator(".read-aloud-bar")).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Pause", exact: true }),
     ).toBeVisible();
@@ -470,7 +461,7 @@ test.describe("read aloud language walkthrough", () => {
     await shot(page, "13_read_mode_light");
   });
 
-  test("14 collapsed rail dark", async ({ page }, testInfo) => {
+  test("14 voice options dark", async ({ page }, testInfo) => {
     await useDarkMode(page);
     await stubSpeech(page);
     const pdf = await makePdf(testInfo.outputPath("lease-es.pdf"), SPANISH);
@@ -479,13 +470,9 @@ test.describe("read aloud language walkthrough", () => {
     await expect(page.getByText("Detected Spanish")).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("button", { name: "Play", exact: true }).click();
-    await expect(
-      page.getByRole("button", { name: "Pause", exact: true }),
-    ).toBeVisible({ timeout: 10_000 });
-    await page.getByRole("button", { name: "Collapse panel" }).click();
-    await expect(page.locator(".read-aloud-rail")).toBeVisible();
-    await shot(page, "14_collapsed_rail_dark");
+    await page.getByRole("button", { name: "Voice options" }).click();
+    await expect(page.getByRole("textbox", { name: "Voice" })).toBeVisible();
+    await shot(page, "14_voice_options_dark");
   });
 
   test("15 read mode dark", async ({ page }, testInfo) => {
@@ -498,7 +485,7 @@ test.describe("read aloud language walkthrough", () => {
       timeout: 15_000,
     });
     await page.getByRole("button", { name: "Read mode", exact: true }).click();
-    await expect(page.locator(".read-aloud-rail")).toBeVisible();
+    await expect(page.locator(".read-aloud-bar")).toBeVisible();
     await expect(page.getByText("PDF Library")).toBeHidden({ timeout: 5_000 });
     await shot(page, "15_read_mode_dark");
   });

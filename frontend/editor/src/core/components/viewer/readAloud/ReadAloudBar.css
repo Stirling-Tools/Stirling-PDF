@@ -1,0 +1,74 @@
+/* Compact read-aloud transport. Mirrors the PDF toolbar card: layout and
+   theme tokens only, so light/dark and the accent stay consistent. */
+.read-aloud-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 4.25rem;
+  z-index: 999;
+  width: min(48rem, calc(100vw - 2rem));
+  padding: 0.5rem 0.65rem 0.45rem;
+  transform: translateX(-50%);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-bg-raised);
+  box-shadow: var(--shadow-md);
+}
+
+.read-aloud-bar__row {
+  min-width: 0;
+}
+
+.read-aloud-bar__brand {
+  flex: none;
+  color: var(--c-accent-text);
+}
+
+.read-aloud-bar__status {
+  flex: 1;
+  min-width: 0;
+}
+
+.read-aloud-bar__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.read-aloud-bar__row-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.read-aloud-bar__value {
+  font-variant-numeric: tabular-nums;
+}
+
+.read-aloud-bar__warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--c-warning) 35%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--c-warning-subtle);
+  color: var(--c-warning-solid);
+}
+
+.read-aloud-bar__warning .mantine-Text-root {
+  color: var(--c-text);
+}
+
+@media (max-width: 640px) {
+  .read-aloud-bar {
+    width: calc(100vw - 1rem);
+  }
+
+  .read-aloud-bar__status,
+  .read-aloud-bar__brand,
+  .read-aloud-bar__read-mode {
+    display: none;
+  }
+}

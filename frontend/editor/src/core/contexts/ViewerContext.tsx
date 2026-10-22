@@ -104,8 +104,6 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const [hasLayers, setHasLayers] = useState(false);
   const [isCommentsSidebarVisible, setIsCommentsSidebarVisible] =
     useState(false);
-  const [isReadAloudSidebarVisible, setIsReadAloudSidebarVisible] =
-    useState(false);
   const [highlightCommentRequest, setHighlightCommentRequest] = useState<{
     documentId: string;
     pageIndex: number;
@@ -259,14 +257,6 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const toggleCommentsSidebar = useCallback(() => {
     setIsCommentsSidebarVisible((prev) => !prev);
-  }, []);
-
-  const setReadAloudSidebarVisible = useCallback((visible: boolean) => {
-    setIsReadAloudSidebarVisible(visible);
-  }, []);
-
-  const toggleReadAloudSidebar = useCallback(() => {
-    setIsReadAloudSidebarVisible((prev) => !prev);
   }, []);
 
   const requestCommentFocus = useCallback(
@@ -496,9 +486,6 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       isCommentsSidebarVisible,
       setCommentsSidebarVisible,
       toggleCommentsSidebar,
-      isReadAloudSidebarVisible,
-      setReadAloudSidebarVisible,
-      toggleReadAloudSidebar,
       highlightCommentRequest,
       requestCommentFocus,
       clearHighlightCommentRequest,
@@ -588,9 +575,6 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       isCommentsSidebarVisible,
       setCommentsSidebarVisible,
       toggleCommentsSidebar,
-      isReadAloudSidebarVisible,
-      setReadAloudSidebarVisible,
-      toggleReadAloudSidebar,
       highlightCommentRequest,
       requestCommentFocus,
       clearHighlightCommentRequest,

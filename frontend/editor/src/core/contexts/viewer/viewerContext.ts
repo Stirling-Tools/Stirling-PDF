@@ -57,9 +57,6 @@ export interface ViewerContextType {
   isCommentsSidebarVisible: boolean;
   setCommentsSidebarVisible: (visible: boolean) => void;
   toggleCommentsSidebar: () => void;
-  isReadAloudSidebarVisible: boolean;
-  setReadAloudSidebarVisible: (visible: boolean) => void;
-  toggleReadAloudSidebar: () => void;
 
   /** Request focus or highlight of a comment card in the sidebar (opens sidebar, then scrolls + flashes or focuses input). */
   highlightCommentRequest: {
