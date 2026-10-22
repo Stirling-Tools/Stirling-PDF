@@ -6,7 +6,7 @@ import {
   dedupeDependencies,
   resolveLicenseDisplay,
 } from "@app/components/shared/config/configSections/licenseDisplay";
-import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- row expectations must follow the generated asset
+import frontendLicenses from "../../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- row expectations must follow the generated asset
 
 const expectedRows = dedupeDependencies(
   (frontendLicenses as { dependencies?: [] }).dependencies ?? [],
