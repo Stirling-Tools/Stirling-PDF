@@ -1,9 +1,8 @@
 /**
  * PdfiumFormProvider Frontend-only form data provider using PDFium WASM.
  *
- * Replaces the old pdf-lib based PdfLibFormProvider.  Extracts form fields
- * directly from the PDF byte stream via @embedpdf/pdfium WASM and fills
- * them without any backend calls.
+ * Extracts form fields directly from the PDF byte stream via @embedpdf/pdfium
+ * WASM and fills them without any backend calls.
  *
  * Used in normal viewer mode when the user views a PDF with form fields.
  *
@@ -25,15 +24,10 @@ import type {
   ButtonAction,
 } from "@app/tools/formFill/types";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
-import type { PDFDict } from "@cantoo/pdf-lib";
-
-interface PDFAcroField {
-  dict: PDFDict;
-  getWidgets?: () => Array<{ dict: PDFDict }>;
-}
-interface PDFFieldInternal {
-  acroField?: PDFAcroField;
-}
+import {
+  readAcroFormFieldInfo,
+  type AcroFormFieldInfo,
+} from "@app/tools/formFill/providers/acroFormFieldInfo";
 import {
   closeDocAndFreeBuffer,
   extractFormFields,
@@ -109,7 +103,7 @@ function toFormField(
     }
   }
 
-  // Use pdf-lib extracted export/display values when available
+  // Use the /Opt export/display values read from the AcroForm when available
   let options: string[] | null = optionLabels.length > 0 ? optionLabels : null;
   let displayOptions: string[] | null = null;
   if (optInfo && optInfo.exportValues.length > 0) {
@@ -153,17 +147,59 @@ export class PdfiumFormProvider implements IFormDataProvider {
         extractFormFields(arrayBuffer),
       );
 
-      // Enrich combo/listbox fields with export/display values from pdf-lib
-      const optMap = await this.extractDisplayOptions(
-        arrayBuffer,
-        pdfiumFields,
+      // Enrichment (choice options, button labels/actions) needs the AcroForm
+      // field tree, which the in-repo reader supplies without wasm. Read it
+      // only when a field can use it; a failed read leaves the pdfium field
+      // list untouched.
+      const needsAcroInfo = pdfiumFields.some(
+        (f) =>
+          f.type === PDF_FORM_FIELD_TYPE.COMBOBOX ||
+          f.type === PDF_FORM_FIELD_TYPE.LISTBOX ||
+          f.type === PDF_FORM_FIELD_TYPE.PUSHBUTTON,
       );
+      let acroInfo = new Map<string, AcroFormFieldInfo>();
+      if (needsAcroInfo) {
+        try {
+          acroInfo = await readAcroFormFieldInfo(arrayBuffer);
+        } catch (e) {
+          console.warn(
+            "[PdfiumFormProvider] Failed to read AcroForm field info:",
+            e,
+          );
+        }
+      }
 
-      // Enrich push buttons with label (/MK/CA) and action (/A) from pdf-lib
-      const buttonInfoMap = await this.extractButtonInfo(
-        arrayBuffer,
-        pdfiumFields,
-      );
+      const optMap = new Map<
+        string,
+        { exportValues: string[]; displayValues: string[] }
+      >();
+      const buttonInfoMap = new Map<
+        string,
+        { label?: string; action?: ButtonAction }
+      >();
+      for (const f of pdfiumFields) {
+        const info = acroInfo.get(f.name);
+        if (!info) continue;
+        if (
+          (f.type === PDF_FORM_FIELD_TYPE.COMBOBOX ||
+            f.type === PDF_FORM_FIELD_TYPE.LISTBOX) &&
+          info.exportValues
+        ) {
+          optMap.set(f.name, {
+            exportValues: info.exportValues,
+            displayValues: info.displayValues ?? info.exportValues,
+          });
+        }
+        if (
+          f.type === PDF_FORM_FIELD_TYPE.PUSHBUTTON &&
+          (info.label || info.action)
+        ) {
+          buttonInfoMap.set(f.name, {
+            label: info.label,
+            action: info.action,
+          });
+        }
+      }
 
       return pdfiumFields
         .filter((f) => f.widgets.length > 0)
@@ -178,274 +214,6 @@ export class PdfiumFormProvider implements IFormDataProvider {
       console.warn("[PdfiumFormProvider] Failed to extract form fields:", err);
       return [];
     }
-  }
-
-  /**
-   * Use pdf-lib to read /Opt arrays for combo/listbox fields.
-   * Returns a map of fieldName → { exportValues, displayValues }.
-   * PDFium only exposes display labels; pdf-lib can read the raw /Opt entries
-   * to separate [export, display] pairs.
-   */
-  private async extractDisplayOptions(
-    data: ArrayBuffer,
-    fields: PdfiumFormField[],
-  ): Promise<Map<string, { exportValues: string[]; displayValues: string[] }>> {
-    const result = new Map<
-      string,
-      { exportValues: string[]; displayValues: string[] }
-    >();
-    const comboOrList = fields.filter(
-      (f) =>
-        f.type === PDF_FORM_FIELD_TYPE.COMBOBOX ||
-        f.type === PDF_FORM_FIELD_TYPE.LISTBOX,
-    );
-    if (comboOrList.length === 0) return result;
-
-    try {
-      const {
-        PDFDocument,
-        PDFName,
-        PDFArray,
-        PDFString,
-        PDFHexString,
-        PDFDropdown,
-        PDFOptionList,
-      } = await import("@cantoo/pdf-lib");
-      const doc = await PDFDocument.load(data, {
-        ignoreEncryption: true,
-        throwOnInvalidObject: false,
-      });
-      const form = doc.getForm();
-
-      const decodeText = (obj: unknown): string => {
-        if (obj instanceof PDFString || obj instanceof PDFHexString)
-          return obj.decodeText();
-        return String(obj ?? "");
-      };
-
-      for (const pf of comboOrList) {
-        try {
-          const field = form.getField(pf.name);
-          if (
-            !(field instanceof PDFDropdown) &&
-            !(field instanceof PDFOptionList)
-          )
-            continue;
-
-          const acroDict = (field as unknown as PDFFieldInternal).acroField!
-            .dict;
-          const optRaw = acroDict.lookup(PDFName.of("Opt"));
-          if (!(optRaw instanceof PDFArray)) continue;
-
-          const exportValues: string[] = [];
-          const displayValues: string[] = [];
-          let hasDifference = false;
-
-          for (let i = 0; i < optRaw.size(); i++) {
-            try {
-              const entry = optRaw.lookup(i);
-              if (entry instanceof PDFArray && entry.size() >= 2) {
-                const exp = decodeText(entry.lookup(0));
-                const disp = decodeText(entry.lookup(1));
-                exportValues.push(exp);
-                displayValues.push(disp);
-                if (exp !== disp) hasDifference = true;
-              } else {
-                const val = decodeText(entry);
-                exportValues.push(val);
-                displayValues.push(val);
-              }
-            } catch {
-              continue;
-            }
-          }
-
-          if (exportValues.length > 0) {
-            result.set(pf.name, {
-              exportValues,
-              displayValues: hasDifference ? displayValues : exportValues,
-            });
-          }
-        } catch {
-          // Skip individual field errors
-        }
-      }
-    } catch (e) {
-      console.warn(
-        "[PdfiumFormProvider] Failed to extract display options:",
-        e,
-      );
-    }
-
-    return result;
-  }
-
-  /**
-   * Use pdf-lib to extract push button labels (/MK/CA) and actions (/A) for each button field.
-   * Returns a map of fieldName → { label?, action? }.
-   */
-  private async extractButtonInfo(
-    data: ArrayBuffer,
-    fields: PdfiumFormField[],
-  ): Promise<Map<string, { label?: string; action?: ButtonAction }>> {
-    const result = new Map<string, { label?: string; action?: ButtonAction }>();
-    const buttons = fields.filter(
-      (f) => f.type === PDF_FORM_FIELD_TYPE.PUSHBUTTON,
-    );
-    if (buttons.length === 0) return result;
-
-    try {
-      const {
-        PDFDocument,
-        PDFName,
-        PDFString,
-        PDFHexString,
-        PDFDict,
-        PDFNumber,
-      } = await import("@cantoo/pdf-lib");
-
-      const doc = await PDFDocument.load(data, {
-        ignoreEncryption: true,
-        throwOnInvalidObject: false,
-      });
-      const form = doc.getForm();
-
-      const decodeText = (obj: unknown): string | null => {
-        if (obj instanceof PDFString || obj instanceof PDFHexString)
-          return obj.decodeText();
-        if (obj instanceof PDFName)
-          return obj.asString() ?? String(obj).replace(/^\//, "");
-        return null;
-      };
-
-      const parseActionDict = (aObj: unknown): ButtonAction | null => {
-        if (!(aObj instanceof PDFDict)) return null;
-        // @cantoo/pdf-lib ships without individual .d.ts files so instanceof can't narrow `unknown`
-        const a = aObj;
-        const sObj = a.lookup(PDFName.of("S"));
-        if (!(sObj instanceof PDFName)) return null;
-        const actionType: string =
-          sObj.asString() ?? String(sObj).replace(/^\//, "");
-
-        switch (actionType) {
-          case "Named": {
-            const nObj = a.lookup(PDFName.of("N"));
-            const name =
-              nObj instanceof PDFName
-                ? (nObj.asString() ?? String(nObj).replace(/^\//, ""))
-                : "";
-            return { type: "named", namedAction: name };
-          }
-          case "JavaScript": {
-            const jsObj = a.lookup(PDFName.of("JS"));
-            const js = decodeText(jsObj) ?? jsObj?.toString() ?? "";
-            return { type: "javascript", javascript: js };
-          }
-          case "SubmitForm": {
-            const fObj = a.lookup(PDFName.of("F"));
-            let url = "";
-            if (fObj instanceof PDFDict) {
-              url = decodeText(fObj.lookup(PDFName.of("F"))) ?? "";
-            } else if (fObj) {
-              url = decodeText(fObj) ?? String(fObj);
-            }
-            const flagsObj = a.lookup(PDFName.of("Flags"));
-            const flags =
-              flagsObj instanceof PDFNumber ? flagsObj.asNumber() : 0;
-            return { type: "submitForm", url, submitFlags: flags };
-          }
-          case "ResetForm":
-            return { type: "resetForm" };
-          case "URI": {
-            const uriObj = a.lookup(PDFName.of("URI"));
-            return { type: "uri", url: decodeText(uriObj) ?? "" };
-          }
-          default:
-            return null;
-        }
-      };
-
-      const getMkCaption = (dict: PDFDict): string | null => {
-        try {
-          const mkObj = dict.lookup(PDFName.of("MK"));
-          if (!(mkObj instanceof PDFDict)) return null;
-          const caObj = mkObj.lookup(PDFName.of("CA"));
-          return decodeText(caObj);
-        } catch {
-          return null;
-        }
-      };
-
-      const getActionFromDict = (dict: PDFDict): ButtonAction | null => {
-        try {
-          return parseActionDict(dict.lookup(PDFName.of("A")));
-        } catch {
-          return null;
-        }
-      };
-
-      const buttonNames = new Set(buttons.map((b) => b.name));
-
-      for (const field of form.getFields()) {
-        const name = field.getName();
-        if (!buttonNames.has(name)) continue;
-
-        try {
-          const acroField = (field as unknown as PDFFieldInternal).acroField;
-          if (!acroField?.dict) continue;
-
-          const info: { label?: string; action?: ButtonAction } = {};
-
-          // Try widget dicts first (each widget can have its own /MK and /A)
-          const widgets = acroField.getWidgets?.() ?? [];
-          for (const widget of widgets) {
-            if (!info.label) {
-              const label = getMkCaption(widget.dict);
-              if (label) info.label = label;
-            }
-            if (!info.action) {
-              const action = getActionFromDict(widget.dict);
-              if (action) info.action = action;
-            }
-            if (info.label && info.action) break;
-          }
-
-          // Fall back to field-level dict
-          if (!info.label) {
-            const label = getMkCaption(acroField.dict);
-            if (label) info.label = label;
-          }
-          if (!info.action) {
-            const action = getActionFromDict(acroField.dict);
-            if (action) info.action = action;
-          }
-
-          // Also check /AA (Additional Actions) → /U (Mouse Up) if no /A found
-          if (!info.action) {
-            try {
-              const aaObj = acroField.dict.lookup(PDFName.of("AA"));
-              if (aaObj instanceof PDFDict) {
-                const uObj = aaObj.lookup(PDFName.of("U"));
-                const action = parseActionDict(uObj);
-                if (action) info.action = action;
-              }
-            } catch {
-              /* non-critical */
-            }
-          }
-
-          if (info.label || info.action) {
-            result.set(name, info);
-          }
-        } catch {
-          /* skip individual field errors */
-        }
-      }
-    } catch (e) {
-      console.warn("[PdfiumFormProvider] Failed to extract button info:", e);
-    }
-
-    return result;
   }
 
   async fillForm(

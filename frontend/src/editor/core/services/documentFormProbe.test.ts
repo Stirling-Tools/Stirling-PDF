@@ -15,8 +15,9 @@ import { documentHasFormFields } from "@app/services/documentFormProbe";
 import { readRawFormType } from "@app/services/pdfiumService";
 import { hasAcroForm } from "@app/utils/asciiBytes";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
+import { PdfFileReader } from "@app/utils/pdfObjectReader";
 
-// Copy into a jsdom-realm ArrayBuffer; pdf-lib rejects a Node-realm one.
+// Copy into a fresh ArrayBuffer so fixture bytes never alias the module cache.
 const fixtureBytes = (name: string): ArrayBuffer =>
   new Uint8Array(
     readFileSync(
@@ -43,35 +44,32 @@ describe("documentHasFormFields", () => {
     );
   });
 
-  it("falls back to PDFium when pdf-lib cannot parse the file", async () => {
-    const pdfLib = await import("@cantoo/pdf-lib");
-    const load = vi
-      .spyOn(pdfLib.PDFDocument, "load")
+  it("falls back to PDFium when the reader cannot parse the file", async () => {
+    const open = vi
+      .spyOn(PdfFileReader, "open")
       .mockRejectedValueOnce(new Error("unparseable"));
     const bytes = new TextEncoder().encode("%PDF-1.7").buffer;
     (readRawFormType as Mock).mockResolvedValue(1);
 
     expect(await documentHasFormFields(bytes)).toBe(true);
     expect(readRawFormType).toHaveBeenCalledTimes(1);
-    load.mockRestore();
+    open.mockRestore();
   });
 
   it("treats an unknown form type as a possible form", async () => {
-    const pdfLib = await import("@cantoo/pdf-lib");
-    const load = vi
-      .spyOn(pdfLib.PDFDocument, "load")
+    const open = vi
+      .spyOn(PdfFileReader, "open")
       .mockRejectedValueOnce(new Error("unparseable"));
     const bytes = new TextEncoder().encode("%PDF-1.7").buffer;
     (readRawFormType as Mock).mockResolvedValue(null);
 
     expect(await documentHasFormFields(bytes)).toBe(true);
-    load.mockRestore();
+    open.mockRestore();
   });
 
   it("does not open a large unparseable file in PDFium", async () => {
-    const pdfLib = await import("@cantoo/pdf-lib");
-    const load = vi
-      .spyOn(pdfLib.PDFDocument, "load")
+    const open = vi
+      .spyOn(PdfFileReader, "open")
       .mockRejectedValueOnce(new Error("unparseable"));
     const bytes = new TextEncoder().encode("%PDF-1.7").buffer;
 
@@ -79,6 +77,6 @@ describe("documentHasFormFields", () => {
       false,
     );
     expect(readRawFormType).not.toHaveBeenCalled();
-    load.mockRestore();
+    open.mockRestore();
   });
 });

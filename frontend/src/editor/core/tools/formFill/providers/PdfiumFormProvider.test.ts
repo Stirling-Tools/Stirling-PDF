@@ -1,5 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
 vi.mock("@app/services/documentBytesCache", () => ({
   getDocumentBytes: vi.fn(),
@@ -155,5 +157,106 @@ describe("PdfiumFormProvider", () => {
     const provider = new PdfiumFormProvider();
     const fields = await provider.fetchFields(new Blob([]));
     expect(fields).toEqual([]);
+  });
+
+  it("enriches a dropdown with the AcroForm export/display pairs", async () => {
+    const bytes = readFileSync(
+      path.join(
+        import.meta.dirname,
+        "../../../tests/test-fixtures/form-options-sample.pdf",
+      ),
+    );
+    (documentHasFormFields as Mock).mockResolvedValue(true);
+    (getDocumentBytes as Mock).mockResolvedValue(
+      bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+    );
+    (extractFormFields as Mock).mockResolvedValue([
+      {
+        name: "choice_1",
+        type: "COMBOBOX",
+        value: "one-value",
+        isChecked: false,
+        isReadOnly: false,
+        isRequired: false,
+        flags: 0,
+        options: [{ label: "PDFium label" }],
+        widgets: [
+          { pageIndex: 0, x: 48, y: 100, width: 192, height: 20, fontSize: 0 },
+        ],
+      },
+    ]);
+
+    const provider = new PdfiumFormProvider();
+    const fields = await provider.fetchFields(new Blob([bytes]));
+
+    expect(fields[0]).toMatchObject({
+      name: "choice_1",
+      options: ["one-value", "two-value", "plain"],
+      displayOptions: ["one-value", "Two Label", "plain"],
+    });
+  });
+
+  it("enriches a push button with its label and action", async () => {
+    const bytes = readFileSync(
+      path.join(
+        import.meta.dirname,
+        "../../../tests/test-fixtures/form-options-sample.pdf",
+      ),
+    );
+    (documentHasFormFields as Mock).mockResolvedValue(true);
+    (getDocumentBytes as Mock).mockResolvedValue(
+      bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+    );
+    (extractFormFields as Mock).mockResolvedValue([
+      {
+        name: "push_uri",
+        type: "PUSHBUTTON",
+        value: "",
+        isChecked: false,
+        isReadOnly: false,
+        isRequired: false,
+        flags: 0,
+        options: [],
+        widgets: [
+          { pageIndex: 0, x: 48, y: 100, width: 192, height: 20, fontSize: 0 },
+        ],
+      },
+    ]);
+
+    const provider = new PdfiumFormProvider();
+    const fields = await provider.fetchFields(new Blob([bytes]));
+
+    expect(fields[0]).toMatchObject({
+      name: "push_uri",
+      buttonLabel: "Ship it",
+      buttonAction: { type: "uri", url: "https://example.com/go" },
+    });
+  });
+
+  it("keeps the pdfium fields when the AcroForm read fails", async () => {
+    allowConsole.warn(/Failed to read AcroForm field info/);
+    (documentHasFormFields as Mock).mockResolvedValue(true);
+    (getDocumentBytes as Mock).mockResolvedValue(new ArrayBuffer(16));
+    (extractFormFields as Mock).mockResolvedValue([
+      {
+        name: "push_uri",
+        type: "PUSHBUTTON",
+        value: "",
+        isChecked: false,
+        isReadOnly: false,
+        isRequired: false,
+        flags: 0,
+        options: [],
+        widgets: [
+          { pageIndex: 0, x: 48, y: 100, width: 192, height: 20, fontSize: 0 },
+        ],
+      },
+    ]);
+
+    const provider = new PdfiumFormProvider();
+    const fields = await provider.fetchFields(new Blob([]));
+
+    expect(fields).toHaveLength(1);
+    expect(fields[0]).toMatchObject({ name: "push_uri", buttonLabel: null });
   });
 });

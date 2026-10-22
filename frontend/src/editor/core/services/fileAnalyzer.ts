@@ -1,9 +1,15 @@
 import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import {
+  getPdfiumModule,
+  openRawDocumentSafe,
+  closeDocAndFreeBuffer,
+  getRawPageCount,
+  PdfiumOpenError,
+  FPDF_ERR_PASSWORD,
+} from "@app/services/pdfiumService";
 import { getPdfAccess } from "@app/services/pdfAccessService";
-
 import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
-import type { PDFDocumentProxy } from "pdfjs-dist";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 
 export class FileAnalyzer {
   private static readonly SIZE_THRESHOLDS = {
@@ -32,29 +38,24 @@ export class FileAnalyzer {
     };
 
     try {
-      // Quick validation and page count estimation
-      const quickAnalysis = await this.quickPDFAnalysis(file);
-      analysis.estimatedPageCount = quickAnalysis.pageCount;
-      analysis.isEncrypted = quickAnalysis.isEncrypted;
-      analysis.isCorrupted = quickAnalysis.isCorrupted;
-
-      // Determine strategy based on file characteristics
-      analysis.recommendedStrategy = this.determineStrategy(
-        file.size,
-        quickAnalysis.pageCount,
-      );
-
-      // Estimate processing time
-      analysis.estimatedProcessingTime = this.estimateProcessingTime(
-        file.size,
-        quickAnalysis.pageCount,
-        analysis.recommendedStrategy,
-      );
-    } catch (error) {
-      console.error("File analysis failed:", error);
+      const quick = await this.quickPDFAnalysis(file);
+      analysis.estimatedPageCount = quick.pageCount;
+      analysis.isEncrypted = quick.isEncrypted;
+      analysis.isCorrupted = quick.isCorrupted;
+    } catch {
       analysis.isCorrupted = true;
-      analysis.recommendedStrategy = "metadata_only";
     }
+
+    analysis.recommendedStrategy = this.determineStrategy(
+      analysis.fileSize,
+      analysis.estimatedPageCount,
+    );
+
+    analysis.estimatedProcessingTime = this.estimateProcessingTime(
+      analysis.fileSize,
+      analysis.estimatedPageCount,
+      analysis.recommendedStrategy,
+    );
 
     return analysis;
   }
@@ -71,40 +72,37 @@ export class FileAnalyzer {
     isEncrypted: boolean;
     isCorrupted: boolean;
   }> {
-    let pdf: PDFDocumentProxy | undefined;
+    if (file.size >= LARGE_PDF_PARSE_LIMIT) {
+      return {
+        pageCount: 0,
+        isEncrypted: await looksEncryptedFromTrailer(file),
+        isCorrupted: false,
+      };
+    }
+
+    const m = await getPdfiumModule();
+    let docPtr: number | null = null;
     try {
-      // For small files, read the whole file
-      // For large files, try the whole file first (PDF.js needs the complete structure)
       const arrayBuffer = await file.arrayBuffer();
-
-      pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
-        stopAtErrors: false, // Don't stop at minor errors
-        verbosity: 0, // Suppress PDF.js warnings
-      });
-
-      const pageCount = pdf.numPages;
-
+      docPtr = await openRawDocumentSafe(arrayBuffer, "");
+      const pageCount = await getRawPageCount(docPtr);
       return {
         pageCount,
-        isEncrypted:
-          getPdfAccess(file)?.encrypted ??
-          (await pdf.getPermissions()) !== null,
+        isEncrypted: getPdfAccess(file)?.encrypted ?? false,
         isCorrupted: false,
       };
     } catch (error) {
-      // Try to determine if it's corruption vs encryption
-      const errorMessage =
-        error instanceof Error ? error.message.toLowerCase() : "";
       const isEncrypted =
-        errorMessage.includes("password") || errorMessage.includes("encrypted");
-
+        error instanceof PdfiumOpenError && error.code === FPDF_ERR_PASSWORD;
       return {
         pageCount: 0,
         isEncrypted,
-        isCorrupted: !isEncrypted, // If not encrypted, probably corrupted
+        isCorrupted: !isEncrypted,
       };
     } finally {
-      if (pdf) pdfWorkerManager.destroyDocument(pdf);
+      if (docPtr != null) {
+        closeDocAndFreeBuffer(m, docPtr);
+      }
     }
   }
 
