@@ -4,15 +4,20 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/ui/Tooltip";
 import UserSelector from "@app/components/shared/UserSelector";
+import { GuestSignerInput } from "@app/components/shared/signing/GuestSignerInput";
 
 /** Updates the request's participants directly; sending the request is the commit point. */
 export function SigningParticipantPicker({
   value,
   onChange,
+  guestEmails,
+  onGuestEmailsChange,
   disabled,
 }: {
   value: number[];
   onChange: (ids: number[]) => void;
+  guestEmails: string[];
+  onGuestEmailsChange: (emails: string[]) => void;
   disabled: boolean;
 }) {
   const { t } = useTranslation();
@@ -40,7 +45,7 @@ export function SigningParticipantPicker({
         </Group>
         <span className="signing-request__selection-count" role="status">
           {t("signWorkspace.participantsSelected", "{{count}} selected", {
-            count: value.length,
+            count: value.length + guestEmails.length,
           })}
         </span>
       </div>
@@ -49,6 +54,11 @@ export function SigningParticipantPicker({
         label={t("signWorkspace.chooseParticipants", "Choose participants")}
         value={value}
         onChange={onChange}
+        disabled={disabled}
+      />
+      <GuestSignerInput
+        value={guestEmails}
+        onChange={onGuestEmailsChange}
         disabled={disabled}
       />
     </section>

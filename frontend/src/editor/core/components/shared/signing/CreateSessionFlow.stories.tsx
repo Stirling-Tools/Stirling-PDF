@@ -14,6 +14,7 @@ function CreateSessionFlowDemo({
   initialFiles: FileState[];
 }) {
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [guestEmails, setGuestEmails] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState("");
 
   return (
@@ -22,6 +23,8 @@ function CreateSessionFlowDemo({
       selectedFiles={initialFiles}
       selectedUserIds={selectedUserIds}
       onSelectedUserIdsChange={setSelectedUserIds}
+      guestEmails={guestEmails}
+      onGuestEmailsChange={setGuestEmails}
       dueDate={dueDate}
       onDueDateChange={setDueDate}
       creating={false}
@@ -39,6 +42,8 @@ const meta = {
     selectedFiles: [mockFile],
     selectedUserIds: [],
     onSelectedUserIdsChange: () => {},
+    guestEmails: [],
+    onGuestEmailsChange: () => {},
     dueDate: "",
     onDueDateChange: () => {},
     creating: false,
@@ -65,6 +70,8 @@ export const Creating: Story = {
     selectedFiles: [mockFile],
     selectedUserIds: [1, 2],
     onSelectedUserIdsChange: () => {},
+    guestEmails: [],
+    onGuestEmailsChange: () => {},
     dueDate: "2026-08-01",
     onDueDateChange: () => {},
     creating: true,

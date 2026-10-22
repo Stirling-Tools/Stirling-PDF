@@ -4,11 +4,16 @@ import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import UserSelector from "@app/components/shared/UserSelector";
+import { GuestSignerInput } from "@app/components/shared/signing/GuestSignerInput";
 
 interface AddParticipantsFlowProps {
   opened: boolean;
   onClose: () => void;
-  onSubmit: (userIds: number[], defaultReason?: string) => Promise<void>;
+  onSubmit: (
+    userIds: number[],
+    guestEmails: string[],
+    defaultReason?: string,
+  ) => Promise<void>;
 }
 
 export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
@@ -18,11 +23,14 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
 }) => {
   const { t } = useTranslation();
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [guestEmails, setGuestEmails] = useState<string[]>([]);
   const [defaultReason, setDefaultReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const participantCount = selectedUserIds.length + guestEmails.length;
 
   const handleClose = () => {
     setSelectedUserIds([]);
+    setGuestEmails([]);
     setDefaultReason("");
     onClose();
   };
@@ -30,7 +38,11 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      await onSubmit(selectedUserIds, defaultReason.trim() || undefined);
+      await onSubmit(
+        selectedUserIds,
+        guestEmails,
+        defaultReason.trim() || undefined,
+      );
       handleClose();
     } catch (error) {
       console.error("Failed to add participants:", error);
@@ -59,6 +71,12 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
           )}
         />
 
+        <GuestSignerInput
+          value={guestEmails}
+          onChange={setGuestEmails}
+          disabled={submitting}
+        />
+
         <TextInput
           label={t("certSign.reason", "Default Reason")}
           description={t(
@@ -82,14 +100,14 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
             accent="success"
             onClick={handleSubmit}
             loading={submitting}
-            disabled={selectedUserIds.length === 0}
+            disabled={participantCount === 0}
             leftSection={<Icon name="plus" size={16} />}
           >
             {t(
               "certSign.collab.addParticipants.add",
               "Add {{count}} Participant(s)",
               {
-                count: selectedUserIds.length,
+                count: participantCount,
               },
             )}
           </Button>

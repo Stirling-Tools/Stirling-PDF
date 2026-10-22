@@ -19,6 +19,8 @@ interface CreateSessionFlowProps {
   selectedFiles: FileState[];
   selectedUserIds: number[];
   onSelectedUserIdsChange: (userIds: number[]) => void;
+  guestEmails: string[];
+  onGuestEmailsChange: (emails: string[]) => void;
   dueDate: string;
   onDueDateChange: (date: string) => void;
   creating: boolean;
@@ -30,6 +32,8 @@ export function CreateSessionFlow({
   selectedFiles,
   selectedUserIds,
   onSelectedUserIdsChange,
+  guestEmails,
+  onGuestEmailsChange,
   dueDate,
   onDueDateChange,
   creating,
@@ -49,11 +53,8 @@ export function CreateSessionFlow({
     includeSummaryPage: false,
   });
   const file = selectedFiles.length === 1 ? selectedFiles[0] : null;
-  const activeStep = !file
-    ? 0
-    : selectedUserIds.length === 0 && step === 2
-      ? 1
-      : step;
+  const hasParticipants = selectedUserIds.length + guestEmails.length > 0;
+  const activeStep = !file ? 0 : !hasParticipants && step === 2 ? 1 : step;
   const stepLabels = [
     t("signWorkspace.document", "Document"),
     t("signWorkspace.participants", "Participants"),
@@ -67,7 +68,7 @@ export function CreateSessionFlow({
     <Button
       size="md"
       fullWidth
-      disabled={!file || selectedUserIds.length === 0 || creating}
+      disabled={!file || !hasParticipants || creating}
       loading={creating}
       onClick={() => onSubmit(settings)}
     >
@@ -95,7 +96,7 @@ export function CreateSessionFlow({
                   disabled={
                     creating ||
                     (index > 0 && !file) ||
-                    (index > 1 && selectedUserIds.length === 0)
+                    (index > 1 && !hasParticipants)
                   }
                   onClick={() => setStep(index)}
                 >
@@ -118,6 +119,8 @@ export function CreateSessionFlow({
           <SigningParticipantPicker
             value={selectedUserIds}
             onChange={onSelectedUserIdsChange}
+            guestEmails={guestEmails}
+            onGuestEmailsChange={onGuestEmailsChange}
             disabled={creating}
           />
         </div>
@@ -240,8 +243,7 @@ export function CreateSessionFlow({
               size="md"
               fullWidth
               disabled={
-                creating ||
-                (activeStep === 0 ? !file : selectedUserIds.length === 0)
+                creating || (activeStep === 0 ? !file : !hasParticipants)
               }
               onClick={() => setStep(activeStep + 1)}
               rightSection={<Icon name="arrow-right" size={18} />}

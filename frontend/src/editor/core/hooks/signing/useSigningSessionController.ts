@@ -49,6 +49,7 @@ export interface SigningDetailData {
   onLoadSignedPdf: () => Promise<void>;
   onAddParticipants: (
     userIds: number[],
+    guestEmails: string[],
     defaultReason?: string,
   ) => Promise<void>;
   onRemoveParticipant: (participantId: number) => Promise<void>;
@@ -357,10 +358,14 @@ export function useSigningSessionController(
   const handleAddParticipants = async (
     sessionId: string,
     userIds: number[],
+    guestEmails: string[],
     defaultReason?: string,
   ) => {
-    const requests = userIds.map((userId) => ({
-      userId,
+    const requests = [
+      ...userIds.map((userId) => ({ userId })),
+      ...guestEmails.map((email) => ({ email })),
+    ].map((participant) => ({
+      ...participant,
       defaultReason: defaultReason || undefined,
       sendNotification: true,
     }));
@@ -542,8 +547,17 @@ export function useSigningSessionController(
           handleFinalize(session.sessionId, session.documentName),
         onLoadSignedPdf: () =>
           handleLoadSignedPdf(session.sessionId, session.documentName),
-        onAddParticipants: (userIds: number[], defaultReason?: string) =>
-          handleAddParticipants(session.sessionId, userIds, defaultReason),
+        onAddParticipants: (
+          userIds: number[],
+          guestEmails: string[],
+          defaultReason?: string,
+        ) =>
+          handleAddParticipants(
+            session.sessionId,
+            userIds,
+            guestEmails,
+            defaultReason,
+          ),
         onRemoveParticipant: (participantId: number) =>
           handleRemoveParticipant(session.sessionId, participantId),
         onDelete: () => handleDeleteSession(session.sessionId),
@@ -573,12 +587,13 @@ export function useSigningSessionController(
   const createSession = async (
     signatureSettings: SignatureSettings,
     selectedUserIds: number[],
+    guestEmails: string[],
     dueDate: string,
     document?: StirlingFile,
   ): Promise<boolean> => {
     const selectedFile =
       document ?? (selectedFiles.length === 1 ? selectedFiles[0] : null);
-    if (selectedUserIds.length === 0 || !selectedFile) {
+    if (selectedUserIds.length + guestEmails.length === 0 || !selectedFile) {
       return false;
     }
     setCreating(true);
@@ -594,6 +609,9 @@ export function useSigningSessionController(
       formData.append("documentName", selectedFile.name);
       selectedUserIds.forEach((userId, index) => {
         formData.append(`participantUserIds[${index}]`, userId.toString());
+      });
+      guestEmails.forEach((email, index) => {
+        formData.append(`participantEmails[${index}]`, email);
       });
       if (dueDate) formData.append("dueDate", dueDate);
       formData.append("notifyOnCreate", "true");

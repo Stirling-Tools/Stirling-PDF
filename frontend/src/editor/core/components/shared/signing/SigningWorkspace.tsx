@@ -79,6 +79,7 @@ export default function SigningWorkspace() {
   const [uploading, setUploading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [guestEmails, setGuestEmails] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState("");
   const [listRevision, setListRevision] = useState(0);
   const [opening, setOpening] = useState(false);
@@ -244,17 +245,26 @@ export default function SigningWorkspace() {
               selectedFiles={document ? [document] : []}
               selectedUserIds={selectedUserIds}
               onSelectedUserIdsChange={setSelectedUserIds}
+              guestEmails={guestEmails}
+              onGuestEmailsChange={setGuestEmails}
               dueDate={dueDate}
               onDueDateChange={setDueDate}
               creating={controller.creating || uploading}
               onSubmit={(settings) => {
                 if (!document) return;
                 void controller
-                  .createSession(settings, selectedUserIds, dueDate, document)
+                  .createSession(
+                    settings,
+                    selectedUserIds,
+                    guestEmails,
+                    dueDate,
+                    document,
+                  )
                   .then((ok) => {
                     if (!ok) return;
                     setShowCreate(false);
                     setSelectedUserIds([]);
+                    setGuestEmails([]);
                     setDueDate("");
                     setListRevision((revision) => revision + 1);
                   });
