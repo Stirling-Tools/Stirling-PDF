@@ -305,7 +305,7 @@ test.describe("PDF text editor - tagged documents", () => {
     // The styled box hides its input, so the click goes to the label.
     await page
       .getByTestId("pdf-editor-image-accessibility")
-      .getByText("Decorative", { exact: true })
+      .getByText("Decorative image", { exact: true })
       .click();
     await expect(decorative).toBeChecked();
     await expect(page.getByTestId("pdf-editor-image-description")).toBeHidden();
@@ -317,7 +317,7 @@ test.describe("PDF text editor - tagged documents", () => {
 
     await page
       .getByTestId("pdf-editor-image-accessibility")
-      .getByText("Decorative", { exact: true })
+      .getByText("Decorative image", { exact: true })
       .click();
     await expect(decorative).not.toBeChecked();
     const field = page.getByTestId("pdf-editor-image-description");

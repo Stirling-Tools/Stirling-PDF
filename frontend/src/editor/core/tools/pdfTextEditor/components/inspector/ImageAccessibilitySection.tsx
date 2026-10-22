@@ -1,6 +1,7 @@
 import { Stack, Text, Textarea } from "@mantine/core";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { Button } from "@editor/ui/Button";
 import { Checkbox } from "@editor/ui/Checkbox";
 import { Icon } from "@editor/ui/Icon";
@@ -39,7 +40,7 @@ export function ImageAccessibilitySection({
     (attentionFor(accessibility) ? 1 : 0);
   return (
     <Section testId="pdf-editor-image-accessibility">
-      <SectionLabel>
+      <SectionLabel info={<AccessibilityInfo />}>
         {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
       </SectionLabel>
       <Stack gap="xs">
@@ -53,25 +54,10 @@ export function ImageAccessibilitySection({
           </Text>
         ) : (
           <>
-            {accessibility.kind === "describable" && (
-              <Textarea
-                label={t(
-                  "pdfTextEditor.inspector.accessibility.description",
-                  "Description",
-                )}
-                value={accessibility.description ?? ""}
-                onChange={(e) => onSetDescription(e.currentTarget.value)}
-                autosize
-                minRows={2}
-                maxRows={6}
-                size="xs"
-                data-testid="pdf-editor-image-description"
-              />
-            )}
             <Checkbox
               label={t(
                 "pdfTextEditor.inspector.accessibility.decorativeLabel",
-                "Decorative",
+                "Decorative image",
               )}
               description={
                 accessibility.kind === "describable" &&
@@ -91,6 +77,21 @@ export function ImageAccessibilitySection({
               onChange={(e) => onSetDecorative(e.currentTarget.checked)}
               data-testid="pdf-editor-image-decorative"
             />
+            {accessibility.kind === "describable" && (
+              <Textarea
+                label={t(
+                  "pdfTextEditor.inspector.accessibility.description",
+                  "Image description",
+                )}
+                value={accessibility.description ?? ""}
+                onChange={(e) => onSetDescription(e.currentTarget.value)}
+                autosize
+                minRows={2}
+                maxRows={6}
+                size="xs"
+                data-testid="pdf-editor-image-description"
+              />
+            )}
           </>
         )}
         {othersPending > 0 && (
@@ -143,4 +144,50 @@ function blockedMessage(
         "This file's tags can't be edited",
       );
   }
+}
+
+/** What the section's controls are for, behind the (i) tool steps use. */
+function AccessibilityInfo() {
+  const { t } = useTranslation();
+  return (
+    <Tooltip
+      sidebarTooltip
+      pinOnClick
+      header={{
+        title: t(
+          "pdfTextEditor.inspector.accessibility.heading",
+          "Accessibility",
+        ),
+      }}
+      tips={[
+        {
+          title: t(
+            "pdfTextEditor.inspector.accessibility.decorativeLabel",
+            "Decorative image",
+          ),
+          description: t(
+            "pdfTextEditor.inspector.accessibility.decorativeInfo",
+            "Screen readers skip decorative images. Use it for borders, backgrounds and other images that carry no information.",
+          ),
+        },
+        {
+          title: t(
+            "pdfTextEditor.inspector.accessibility.description",
+            "Image description",
+          ),
+          description: t(
+            "pdfTextEditor.inspector.accessibility.descriptionInfo",
+            "Screen readers read this out in place of the image.",
+          ),
+        },
+      ]}
+    >
+      <span
+        style={{ display: "flex", color: "var(--icon-files-color)" }}
+        data-testid="pdf-editor-image-accessibility-info"
+      >
+        <Icon name="info" size={14} />
+      </span>
+    </Tooltip>
+  );
 }
