@@ -9,10 +9,7 @@ interface CropViewerSessionPublisherProps {
   geometryPageNumber: number;
   cropArea: Rectangle;
   pageNumber: number;
-  pageCount: number;
   aspectRatio: number | null;
-  gridEnabled: boolean;
-  snapEnabled: boolean;
   onApplyArea: (area: Rectangle, geometry: CropPageGeometry) => void;
   onPageChange: (page: number) => void;
 }
@@ -27,10 +24,7 @@ export default function CropViewerSessionPublisher({
   geometryPageNumber,
   cropArea,
   pageNumber,
-  pageCount,
   aspectRatio,
-  gridEnabled,
-  snapEnabled,
   onApplyArea,
   onPageChange,
 }: CropViewerSessionPublisherProps) {
@@ -48,10 +42,7 @@ export default function CropViewerSessionPublisher({
       geometryPageNumber,
       cropArea,
       pageNumber,
-      pageCount,
       aspectRatio,
-      gridEnabled,
-      snapEnabled,
       applyArea: onApplyArea,
       onPageChange,
     });
@@ -61,10 +52,7 @@ export default function CropViewerSessionPublisher({
     geometryPageNumber,
     cropArea,
     pageNumber,
-    pageCount,
     aspectRatio,
-    gridEnabled,
-    snapEnabled,
     onApplyArea,
     onPageChange,
   ]);

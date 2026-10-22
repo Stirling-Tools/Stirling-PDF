@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Group, Stack, Text } from "@mantine/core";
 import { Chip } from "@app/ui/Chip";
+import { Select } from "@app/ui/Select";
 import type { PageSize } from "@app/utils/cropPageGeometry";
 import classes from "@app/components/tools/crop/CropRatioPicker.module.css";
 
@@ -45,25 +46,52 @@ interface CropRatioPickerProps {
   value: CropRatioId;
   onChange: (id: CropRatioId) => void;
   disabled?: boolean;
+  /** One-row select for the tool panel; the editor keeps the chip grid. */
+  compact?: boolean;
 }
 
 export default function CropRatioPicker({
   value,
   onChange,
   disabled = false,
+  compact = false,
 }: CropRatioPickerProps) {
   const { t } = useTranslation();
+  const label = t("crop.ratio.title", "Aspect ratio");
+
+  if (compact) {
+    return (
+      <Stack gap={4}>
+        <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+          {label}
+        </Text>
+        <Select
+          options={CROP_RATIO_IDS.map((id) => ({
+            value: id,
+            label: t(`crop.ratio.${id}`, ratioLabel(id)),
+          }))}
+          value={value}
+          onChange={(next) => {
+            if (next && !disabled) onChange(next as CropRatioId);
+          }}
+          inputSize="sm"
+          aria-label={label}
+          disabled={disabled}
+        />
+      </Stack>
+    );
+  }
 
   return (
     <Stack gap={6}>
       <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-        {t("crop.ratio.title", "Aspect ratio")}
+        {label}
       </Text>
       <Group
         gap={4}
         wrap="wrap"
         role="group"
-        aria-label={t("crop.ratio.title", "Aspect ratio")}
+        aria-label={label}
         className={classes.grid}
       >
         {CROP_RATIO_IDS.map((id) => (

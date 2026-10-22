@@ -79,8 +79,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const [editorOpen, setEditorOpen] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [gridEnabled, setGridEnabled] = useState(false);
-  const [snapEnabled, setSnapEnabled] = useState(true);
+  const [marginsOpen, setMarginsOpen] = useState(false);
   const surfaceMode = useCropSurfaceMode();
 
   const lastGeometryRef = useRef<CropPageGeometry | null>(null);
@@ -339,10 +338,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           geometryPageNumber={geometryPageRef.current}
           cropArea={cropArea}
           pageNumber={pageNumber}
-          pageCount={preview.pageCount}
           aspectRatio={aspectRatio}
-          gridEnabled={gridEnabled}
-          snapEnabled={snapEnabled}
           onApplyArea={applyAreaTo}
           onPageChange={changePage}
         />
@@ -422,59 +418,17 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           {isMobile && !viewerSurface && sizeControls}
 
           {viewerSurface ? (
-            <>
-              <Box
-                className={classes.viewerHint}
-                data-testid="crop-viewer-hint"
+            isMobile && (
+              <Button
+                variant="primary"
+                size="sm"
+                leftSection={<Icon name="move" size={14} />}
+                onClick={() => requestMobileView("workbench")}
+                disabled={disabled}
               >
-                <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-                  <Icon name="move" size={16} />
-                  <Text size="xs">
-                    {t(
-                      "crop.viewer.hint",
-                      "Drag on the page to set the crop area.",
-                    )}
-                  </Text>
-                </Group>
-                <Group gap={2} wrap="nowrap">
-                  <ActionIcon
-                    variant={gridEnabled ? "secondary" : "quiet"}
-                    accent="neutral"
-                    size="sm"
-                    aria-label={t("crop.canvas.toggleGrid", "Toggle grid")}
-                    aria-pressed={gridEnabled}
-                    title={t("crop.canvas.toggleGrid", "Toggle grid")}
-                    onClick={() => setGridEnabled((previous) => !previous)}
-                    disabled={disabled}
-                  >
-                    <Icon name="layout-grid" size="0.875rem" />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant={snapEnabled ? "secondary" : "quiet"}
-                    accent="neutral"
-                    size="sm"
-                    aria-label={t("crop.canvas.toggleSnap", "Toggle snapping")}
-                    aria-pressed={snapEnabled}
-                    title={t("crop.canvas.toggleSnap", "Toggle snapping")}
-                    onClick={() => setSnapEnabled((previous) => !previous)}
-                    disabled={disabled}
-                  >
-                    <Icon name="magnet" size="0.875rem" />
-                  </ActionIcon>
-                </Group>
-              </Box>
-              {isMobile && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  leftSection={<Icon name="move" size={14} />}
-                  onClick={() => requestMobileView("workbench")}
-                  disabled={disabled}
-                >
-                  {t("crop.viewer.openPage", "Crop on page")}
-                </Button>
-              )}
-            </>
+                {t("crop.viewer.openPage", "Crop on page")}
+              </Button>
+            )
           ) : (
             <Box
               className={classes.canvasFrame}
@@ -524,19 +478,30 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
               {scopeControls}
               <Divider />
               <CropRatioPicker
+                compact
                 value={ratioId}
                 onChange={setRatioId}
                 disabled={disabled}
               />
-              <CropMarginInputs
-                cropArea={cropArea}
-                imageUrl={preview.imageUrl}
-                geometry={geometry}
-                onChange={applyArea}
-                unit={unit}
-                onUnitChange={setUnit}
-                disabled={disabled}
-              />
+              <Collapsible
+                open={marginsOpen}
+                onToggle={() => setMarginsOpen((previous) => !previous)}
+                header={
+                  <Text size="xs" fw={600} c="dimmed">
+                    {t("crop.margins.title", "Margins")}
+                  </Text>
+                }
+              >
+                <CropMarginInputs
+                  cropArea={cropArea}
+                  imageUrl={preview.imageUrl}
+                  geometry={geometry}
+                  onChange={applyArea}
+                  unit={unit}
+                  onUnitChange={setUnit}
+                  disabled={disabled}
+                />
+              </Collapsible>
               <Collapsible
                 open={advancedOpen}
                 onToggle={() => setAdvancedOpen((previous) => !previous)}

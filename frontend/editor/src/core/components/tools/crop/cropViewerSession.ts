@@ -13,10 +13,7 @@ export interface CropViewerSession {
   geometryPageNumber: number;
   cropArea: Rectangle;
   pageNumber: number;
-  pageCount: number;
   aspectRatio: number | null;
-  gridEnabled: boolean;
-  snapEnabled: boolean;
   applyArea: (area: Rectangle, geometry: CropPageGeometry) => void;
   onPageChange: (page: number) => void;
 }

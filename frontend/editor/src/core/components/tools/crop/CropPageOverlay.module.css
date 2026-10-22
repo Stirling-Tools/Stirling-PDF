@@ -28,24 +28,6 @@
   pointer-events: none;
 }
 
-.selectionGrid {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(
-      to right,
-      color-mix(in srgb, var(--c-primary) 14%, transparent) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--c-primary) 14%, transparent) 1px,
-      transparent 1px
-    );
-  background-size: 10% 10%;
-}
-
 .hole {
   position: absolute;
   box-shadow: 0 0 0 100vmax

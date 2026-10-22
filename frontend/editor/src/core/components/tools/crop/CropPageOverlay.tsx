@@ -442,10 +442,9 @@ export default function CropPageOverlay({
         x: display.width > 0 ? 4 / display.width : 0.002,
         y: display.height > 0 ? 4 / display.height : 0.002,
       };
-      const target =
-        current.snapEnabled && !ratio
-          ? { x: snapCoordinate(point.x), y: snapCoordinate(point.y) }
-          : point;
+      const target = ratio
+        ? point
+        : { x: snapCoordinate(point.x), y: snapCoordinate(point.y) };
 
       let rect: NormalizedRect;
       if (drag.kind === "draw") {
@@ -636,9 +635,6 @@ export default function CropPageOverlay({
           height: `${selection.height * 100}%`,
         }}
       >
-        {session.gridEnabled && (
-          <div className={classes.selectionGrid} aria-hidden="true" />
-        )}
         <span className={classes.sizeChip} aria-hidden="true">
           {selectionWidth.toFixed(selectionWidth >= 10 ? 0 : 1)} ×{" "}
           {selectionHeight.toFixed(selectionHeight >= 10 ? 0 : 1)} mm

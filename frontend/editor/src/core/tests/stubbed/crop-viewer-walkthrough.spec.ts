@@ -161,9 +161,9 @@ test.describe("crop on the viewer", () => {
     await page.screenshot({ path: shot("37_viewer_mobile_light") });
 
     await page.getByRole("button", { name: "Done" }).click();
-    await expect(page.getByTestId("crop-viewer-hint")).toBeVisible({
-      timeout: 10_000,
-    });
+    await expect(
+      page.getByRole("button", { name: "Crop on page" }),
+    ).toBeVisible({ timeout: 10_000 });
   });
 
   test("38_viewer_mobile_dark", async ({ page }) => {

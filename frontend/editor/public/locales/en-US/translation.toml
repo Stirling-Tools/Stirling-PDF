@@ -4348,7 +4348,6 @@ pt = "pt"
 [crop.viewer]
 ariaLabel = "Crop area on page {{page}}. Drag to draw, drag the selection to move, arrow keys nudge."
 done = "Done"
-hint = "Drag on the page to set the crop area."
 openPage = "Crop on page"
 
 [database]
