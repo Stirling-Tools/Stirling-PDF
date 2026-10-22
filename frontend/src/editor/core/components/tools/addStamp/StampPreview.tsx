@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
 import { getPdfPageInfo } from "@app/services/pdfiumService";
 import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
@@ -92,7 +93,7 @@ export default function StampPreview({
         return;
       }
       try {
-        const buffer = await file.arrayBuffer();
+        const buffer = await getDocumentBytes(file);
         const page = await getPdfPageInfo(buffer);
         // Unrotated points keep the preview aligned and avoid width/height swaps.
         const unrotated = page.rotation % 2 === 1;

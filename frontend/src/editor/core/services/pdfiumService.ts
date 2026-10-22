@@ -2,8 +2,8 @@
  * pdfiumService — Singleton PDFium WASM engine wrapper.
  *
  * Provides a thin, promise-based API on top of the @embedpdf/pdfium WASM
- * module.  Every other module that used to depend on @cantoo/pdf-lib for
- * low-level PDF object access should import helpers from here instead.
+ * module. Low-level PDF object access should import helpers from here instead
+ * of pulling in a second PDF engine.
  *
  * The engine is lazily initialised on the first call to `getEngine()`.
  * All PDFium C-API wrappers are available through `WrappedPdfiumModule`.
@@ -1505,6 +1505,33 @@ export async function addNewPage(
 /**
  * Get metadata from a document.
  */
+/** Info-dict tags from an already-open handle, so callers that need text and
+ *  metadata share one open instead of parsing the file twice. */
+export async function getMetadataFromDoc(
+  docPtr: number,
+): Promise<Record<string, string>> {
+  const m = await getPdfiumModule();
+  const tags = [
+    "Title",
+    "Author",
+    "Subject",
+    "Keywords",
+    "Creator",
+    "Producer",
+  ];
+  const meta: Record<string, string> = {};
+  for (const tag of tags) {
+    const len = m.FPDF_GetMetaText(docPtr, tag, 0, 0);
+    if (len > 0) {
+      const buf = m.pdfium.wasmExports.malloc(len);
+      m.FPDF_GetMetaText(docPtr, tag, buf, len);
+      meta[tag] = readUtf16(m, buf, len);
+      m.pdfium.wasmExports.free(buf);
+    }
+  }
+  return meta;
+}
+
 export async function getMetadata(
   data: ArrayBuffer | Uint8Array,
   password?: string,
@@ -1512,25 +1539,7 @@ export async function getMetadata(
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(data, password);
   try {
-    const tags = [
-      "Title",
-      "Author",
-      "Subject",
-      "Keywords",
-      "Creator",
-      "Producer",
-    ];
-    const meta: Record<string, string> = {};
-    for (const tag of tags) {
-      const len = m.FPDF_GetMetaText(docPtr, tag, 0, 0);
-      if (len > 0) {
-        const buf = m.pdfium.wasmExports.malloc(len);
-        m.FPDF_GetMetaText(docPtr, tag, buf, len);
-        meta[tag] = readUtf16(m, buf, len);
-        m.pdfium.wasmExports.free(buf);
-      }
-    }
-    return meta;
+    return await getMetadataFromDoc(docPtr);
   } finally {
     closeDocAndFreeBuffer(m, docPtr);
   }

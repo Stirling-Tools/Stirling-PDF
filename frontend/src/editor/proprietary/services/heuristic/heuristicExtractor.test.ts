@@ -11,7 +11,7 @@ const closeDocAndFreeBuffer = vi.fn();
 const getRawPageCount = vi.fn();
 const getRawPageSize = vi.fn();
 const extractPageTextItemsForReadAloudFromDoc = vi.fn();
-const getMetadata = vi.fn();
+const getMetadataFromDoc = vi.fn();
 
 vi.mock("@app/services/pdfiumService", () => ({
   getPdfiumModule: vi.fn().mockResolvedValue({}),
@@ -21,7 +21,7 @@ vi.mock("@app/services/pdfiumService", () => ({
   getRawPageSize: (...args: unknown[]) => getRawPageSize(...args),
   extractPageTextItemsForReadAloudFromDoc: (...args: unknown[]) =>
     extractPageTextItemsForReadAloudFromDoc(...args),
-  getMetadata: (...args: unknown[]) => getMetadata(...args),
+  getMetadataFromDoc: (...args: unknown[]) => getMetadataFromDoc(...args),
 }));
 
 import {
@@ -54,7 +54,7 @@ beforeEach(() => {
   extractPageTextItemsForReadAloudFromDoc
     .mockReset()
     .mockResolvedValue(words("Invoice", "total due"));
-  getMetadata.mockReset().mockResolvedValue({ Title: "T" });
+  getMetadataFromDoc.mockReset().mockResolvedValue({ Title: "T" });
 });
 afterEach(() => vi.useRealTimers());
 

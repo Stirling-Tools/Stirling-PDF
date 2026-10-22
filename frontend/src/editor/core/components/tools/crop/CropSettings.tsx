@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { Stack, Text, Box, Group, Center, Checkbox } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
@@ -46,7 +47,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
 
       try {
         // Get PDF dimensions from the actual file
-        const arrayBuffer = await selectedFile.arrayBuffer();
+        const arrayBuffer = await getDocumentBytes(selectedFile);
 
         const pageInfo = await getPdfPageInfo(arrayBuffer);
         const pdfWidth = pageInfo.width;

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import {
   defineCustomTool,
   useToolOperation,
@@ -41,7 +42,7 @@ async function buildAdjustedPdfForFile(
   params: AdjustContrastParameters,
 ): Promise<File> {
   const m = await getPdfiumModule();
-  const arrayBuffer = await file.arrayBuffer();
+  const arrayBuffer = await getDocumentBytes(file);
   const srcPtr = await openRawDocumentSafe(arrayBuffer, "");
   const pageCount = await getRawPageCount(srcPtr);
 

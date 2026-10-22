@@ -1,11 +1,4 @@
-import type {
-  PDFArray,
-  PDFDict,
-  PDFHexString,
-  PDFName,
-  PDFNumber,
-  PDFString,
-} from "@cantoo/pdf-lib";
+import { PdfFileReader, type PdfValue } from "@app/utils/pdfObjectReader";
 import type {
   MeasureScale,
   PageMeasureScales,
@@ -15,192 +8,172 @@ import type {
 import { getUnitFactor } from "@app/utils/measurementUtils";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
 
-type PdfMeasurementObjects = Pick<
-  typeof import("@cantoo/pdf-lib"),
-  | "PDFArray"
-  | "PDFDict"
-  | "PDFHexString"
-  | "PDFName"
-  | "PDFNumber"
-  | "PDFString"
->;
+type PdfDictMap = Map<string, PdfValue>;
 
-function asPdfArray(
-  value: unknown,
-  { PDFArray }: PdfMeasurementObjects,
-): PDFArray | null {
-  return value instanceof PDFArray ? value : null;
+const asDict = (value: PdfValue | undefined): PdfDictMap | undefined => {
+  if (value?.kind === "dict") return value.map;
+  if (value?.kind === "stream") return value.dict;
+  return undefined;
+};
+
+const asNumber = (value: PdfValue | undefined): number | null =>
+  value?.kind === "number" ? value.value : null;
+
+const asArray = (value: PdfValue | undefined): PdfValue[] | null =>
+  value?.kind === "array" ? value.items : null;
+
+async function dictAt(
+  reader: PdfFileReader,
+  dict: PdfDictMap | undefined,
+  key: string,
+): Promise<PdfDictMap | undefined> {
+  return asDict(await reader.dictGet(dict, key));
 }
 
-function asPdfDict(
-  value: unknown,
-  { PDFDict }: PdfMeasurementObjects,
-): PDFDict | null {
-  return value instanceof PDFDict ? value : null;
+async function numberAt(
+  reader: PdfFileReader,
+  dict: PdfDictMap | undefined,
+  key: string,
+): Promise<number | null> {
+  return asNumber(await reader.dictGet(dict, key));
 }
 
-function asPdfNumber(
-  value: unknown,
-  { PDFNumber }: PdfMeasurementObjects,
-): PDFNumber | null {
-  return value instanceof PDFNumber ? value : null;
-}
-
-function asPdfText(
-  value: unknown,
-  { PDFHexString, PDFName, PDFString }: PdfMeasurementObjects,
-): PDFHexString | PDFName | PDFString | null {
-  if (
-    value instanceof PDFString ||
-    value instanceof PDFHexString ||
-    value instanceof PDFName
-  ) {
-    return value;
-  }
+async function textAt(
+  reader: PdfFileReader,
+  dict: PdfDictMap | undefined,
+  key: string,
+): Promise<string | null> {
+  const value = await reader.dictGet(dict, key);
+  if (value?.kind === "name") return value.name;
+  if (value?.kind === "string") return (await reader.stringText(value)) ?? null;
   return null;
 }
 
-function lookupArray(
-  dict: PDFDict,
-  key: string,
-  pdfObjects: PdfMeasurementObjects,
-): PDFArray | null {
-  return asPdfArray(dict.lookup(pdfObjects.PDFName.of(key)), pdfObjects);
-}
-
-function lookupDict(
-  dict: PDFDict,
-  key: string,
-  pdfObjects: PdfMeasurementObjects,
-): PDFDict | null {
-  return asPdfDict(dict.lookup(pdfObjects.PDFName.of(key)), pdfObjects);
-}
-
-function lookupNumber(
-  dict: PDFDict,
-  key: string,
-  pdfObjects: PdfMeasurementObjects,
-): number | null {
-  return (
-    asPdfNumber(
-      dict.lookup(pdfObjects.PDFName.of(key)),
-      pdfObjects,
-    )?.asNumber() ?? null
+async function readBBox(
+  reader: PdfFileReader,
+  dict: PdfDictMap,
+): Promise<ViewportScale["bbox"]> {
+  const array = asArray(await reader.dictGet(dict, "BBox"));
+  if (!array || array.length < 4) return null;
+  const values = await Promise.all(
+    array.slice(0, 4).map((item) => reader.resolveValue(item)),
   );
-}
-
-function lookupText(
-  dict: PDFDict,
-  key: string,
-  pdfObjects: PdfMeasurementObjects,
-): string | null {
-  return (
-    asPdfText(
-      dict.lookup(pdfObjects.PDFName.of(key)),
-      pdfObjects,
-    )?.decodeText() ?? null
-  );
-}
-
-function readArrayNumber(
-  array: PDFArray,
-  index: number,
-  pdfObjects: PdfMeasurementObjects,
-): number | null {
-  return asPdfNumber(array.lookup(index), pdfObjects)?.asNumber() ?? null;
-}
-
-function readBBox(
-  bboxArray: PDFArray | null,
-  pdfObjects: PdfMeasurementObjects,
-): ViewportScale["bbox"] {
-  if (!bboxArray || bboxArray.size() < 4) {
-    return null;
-  }
-
-  const x0 = readArrayNumber(bboxArray, 0, pdfObjects);
-  const y0 = readArrayNumber(bboxArray, 1, pdfObjects);
-  const x1 = readArrayNumber(bboxArray, 2, pdfObjects);
-  const y1 = readArrayNumber(bboxArray, 3, pdfObjects);
-
-  if (x0 === null || y0 === null || x1 === null || y1 === null) {
-    return null;
-  }
-
+  const [x0, y0, x1, y1] = values.map(asNumber);
+  if (x0 === null || y0 === null || x1 === null || y1 === null) return null;
   return [x0, y0, x1, y1];
 }
 
-function parseScale(
-  measureDict: PDFDict | null,
-  pdfObjects: PdfMeasurementObjects,
-): MeasureScale | null {
+async function parseScale(
+  reader: PdfFileReader,
+  measureDict: PdfDictMap | undefined,
+): Promise<MeasureScale | null> {
   if (!measureDict) return null;
 
-  const fmtArray =
-    lookupArray(measureDict, "D", pdfObjects) ??
-    lookupArray(measureDict, "X", pdfObjects);
-  if (!fmtArray || fmtArray.size() === 0) return null;
+  const formats =
+    asArray(await reader.dictGet(measureDict, "D")) ??
+    asArray(await reader.dictGet(measureDict, "X"));
+  if (!formats || formats.length === 0) return null;
 
-  const firstFmt = asPdfDict(fmtArray.lookup(0), pdfObjects);
+  const firstFmt = asDict(await reader.resolveValue(formats[0]));
   if (!firstFmt) return null;
 
-  const factor = lookupNumber(firstFmt, "C", pdfObjects);
+  const factor = await numberAt(reader, firstFmt, "C");
   if (factor === null || factor <= 0) return null;
 
-  const unit = lookupText(firstFmt, "U", pdfObjects)?.trim().toLowerCase();
+  const unit = (await textAt(reader, firstFmt, "U"))?.trim().toLowerCase();
   if (!unit) return null;
 
   const baseFactor = getUnitFactor(unit);
   if (!baseFactor) return null;
 
-  const ratio = factor / baseFactor;
-  return { factor, ratio, unit };
+  return { factor, ratio: factor / baseFactor, unit };
+}
+
+/** Page dictionaries in document order, following the catalog's page tree. */
+async function readPageDicts(
+  reader: PdfFileReader,
+): Promise<{ dict: PdfDictMap; mediaBox?: number[] }[]> {
+  if (!reader.root) return [];
+  const catalog = asDict(
+    await reader.resolveValue({ kind: "ref", ref: reader.root }),
+  );
+  if (!catalog) return [];
+  const pagesRoot = catalog.get("Pages");
+  if (!pagesRoot) return [];
+
+  const pages: { dict: PdfDictMap; mediaBox?: number[] }[] = [];
+
+  const readBox = async (dict: PdfDictMap): Promise<number[] | undefined> => {
+    for (const key of ["MediaBox", "CropBox"]) {
+      const array = asArray(await reader.dictGet(dict, key));
+      if (!array || array.length < 4) continue;
+      const values = await Promise.all(
+        array.slice(0, 4).map((item) => reader.resolveValue(item)),
+      );
+      const numbers = values.map(asNumber);
+      if (numbers.every((n): n is number => n !== null)) return numbers;
+    }
+    return undefined;
+  };
+
+  const walk = async (
+    value: PdfValue,
+    inheritedBox?: number[],
+  ): Promise<void> => {
+    const dict = asDict(await reader.resolveValue(value));
+    if (!dict) return;
+    const typeValue = await reader.dictGet(dict, "Type");
+    const type = typeValue?.kind === "name" ? typeValue.name : undefined;
+    const mediaBox = (await readBox(dict)) ?? inheritedBox;
+
+    if (type === "Pages") {
+      const kids = asArray(await reader.dictGet(dict, "Kids"));
+      if (kids) for (const kid of kids) await walk(kid, mediaBox);
+      return;
+    }
+
+    // Leaf page (Type /Page is optional in the wild).
+    pages.push({ dict, mediaBox });
+  };
+
+  await walk(pagesRoot);
+  return pages;
 }
 
 export async function extractPageMeasureScales(
   file: Blob,
 ): Promise<PageMeasureScales | null> {
   try {
-    const pdfLib = await import("@cantoo/pdf-lib");
-    const { PDFDocument, PDFArray, PDFDict, PDFName } = pdfLib;
-    const pdfDoc = await PDFDocument.load(await getDocumentBytes(file), {
-      ignoreEncryption: true,
-    });
-
+    const bytes = new Uint8Array(await getDocumentBytes(file));
+    const reader = await PdfFileReader.open(bytes);
+    const pages = await readPageDicts(reader);
     const result: PageMeasureScales = new Map();
 
-    for (let i = 0; i < pdfDoc.getPageCount(); i++) {
-      const page = pdfDoc.getPage(i);
-      const pageHeight = page.getHeight();
+    for (let i = 0; i < pages.length; i++) {
+      const { dict: page, mediaBox } = pages[i];
+      const pageHeight = mediaBox ? Math.abs(mediaBox[3] - mediaBox[1]) : 0;
       const viewports: ViewportScale[] = [];
 
-      const vpObj = page.node.lookup(PDFName.of("VP"));
-      if (vpObj instanceof PDFArray) {
-        for (let j = 0; j < vpObj.size(); j++) {
-          const vpEntry = vpObj.lookup(j);
-          if (!(vpEntry instanceof PDFDict)) continue;
-
-          const scale = parseScale(
-            lookupDict(vpEntry, "Measure", pdfLib),
-            pdfLib,
+      const vpArray = asArray(await reader.dictGet(page, "VP"));
+      if (vpArray) {
+        for (const entryValue of vpArray) {
+          const entry = asDict(await reader.resolveValue(entryValue));
+          if (!entry) continue;
+          const scale = await parseScale(
+            reader,
+            await dictAt(reader, entry, "Measure"),
           );
           if (!scale) continue;
-
-          viewports.push({
-            bbox: readBBox(lookupArray(vpEntry, "BBox", pdfLib), pdfLib),
-            scale,
-          });
+          viewports.push({ bbox: await readBBox(reader, entry), scale });
         }
       }
 
       if (viewports.length === 0) {
-        const scale = parseScale(
-          lookupDict(page.node, "Measure", pdfLib),
-          pdfLib,
+        const scale = await parseScale(
+          reader,
+          await dictAt(reader, page, "Measure"),
         );
-        if (scale) {
-          viewports.push({ bbox: null, scale });
-        }
+        if (scale) viewports.push({ bbox: null, scale });
       }
 
       if (viewports.length > 0) {

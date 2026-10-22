@@ -7,7 +7,6 @@
   "proxy": "http://localhost:8080",
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^2.0.2",
-    "@cantoo/pdf-lib": "^2.8.2",
     "@dnd-kit/core": "^6.3.1",
     "@embedpdf/core": "^2.15.1",
     "@embedpdf/engines": "^2.14.4",
@@ -111,7 +110,7 @@
     ]
   },
   "devDependencies": {
-    "pdfjs-dist": "^5.4.149",
+    "@cantoo/pdf-lib": "^2.8.2",
     "@playwright/test": "^1.55.0",
     "@storybook/addon-a11y": "^9.1.20",
     "@storybook/addon-docs": "^9.1.20",

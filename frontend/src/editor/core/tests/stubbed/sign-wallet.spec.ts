@@ -479,18 +479,10 @@ test.describe("Sign tool signature wallet", () => {
     await page.getByTestId("unsaved-save").click();
     await expect(page).toHaveURL(/\/scale-pages$/);
     const bytes = await expectSavedSignatures(page, 1);
-    const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
-    const document = await getDocument({ data: bytes }).promise;
-    try {
-      const text = await (await document.getPage(1)).getTextContent();
-      const content = text.items
-        .map((item) => ("str" in item ? item.str : ""))
-        .join(" ");
-      expect(content).not.toContain("document for word");
-      expect(content).toContain("as");
-    } finally {
-      await document.destroy();
-    }
+    const { extractPdfText } = await import("@app/tests/helpers/pdfiumText");
+    const content = await extractPdfText(new Uint8Array(bytes));
+    expect(content).not.toContain("document for word");
+    expect(content).toContain("as");
   });
 
   test("deleting the last saved signature preserves document controls", async ({

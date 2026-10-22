@@ -8,13 +8,6 @@
       "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
     },
     {
-      "moduleName": "@cantoo/pdf-lib",
-      "moduleUrl": "https://github.com/cantoo-scribe/pdf-lib",
-      "moduleVersion": "2.8.2",
-      "moduleLicense": "MIT",
-      "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
-    },
-    {
       "moduleName": "@dnd-kit/core",
       "moduleUrl": "https://github.com/clauderic/dnd-kit",
       "moduleVersion": "6.3.1",

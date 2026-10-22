@@ -1,4 +1,5 @@
 import apiClient from "@app/services/apiClient";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { useTranslation } from "react-i18next";
 import {
   defineCustomTool,
@@ -19,7 +20,7 @@ async function resolveSelectionToCsv(
   expression: string,
   file: File,
 ): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
+  const arrayBuffer = await getDocumentBytes(file);
   const maxPages = await getPdfPageCount(arrayBuffer);
   const pages = parseSelection(expression || "", maxPages);
   return pages.join(",");

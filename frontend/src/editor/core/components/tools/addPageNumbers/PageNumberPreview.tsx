@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { useTranslation } from "react-i18next";
 import { AddPageNumbersParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
 import { getPdfPageInfo } from "@app/services/pdfiumService";
@@ -152,7 +153,7 @@ export default function PageNumberPreview({
         return;
       }
       try {
-        const buffer = await file.arrayBuffer();
+        const buffer = await getDocumentBytes(file);
         const page = await getPdfPageInfo(buffer);
         if (!cancelled) {
           setPageSize({ widthPts: page.width, heightPts: page.height });

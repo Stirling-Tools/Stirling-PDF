@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import {
   closeDocAndFreeBuffer,
   getPdfiumModule,
@@ -90,7 +91,7 @@ const renderPdfDocumentToImages = async (
   startAtPage: number = 1,
   shouldAbort?: () => boolean,
 ): Promise<PagePreview[]> => {
-  const arrayBuffer = await file.arrayBuffer();
+  const arrayBuffer = await getDocumentBytes(file);
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(arrayBuffer);
 

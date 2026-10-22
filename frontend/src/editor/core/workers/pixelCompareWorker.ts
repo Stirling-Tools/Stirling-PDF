@@ -17,6 +17,7 @@ import type {
   PixelCompareWorkerWarnings,
 } from "@app/types/compare";
 import { lossyEncodeOptions } from "@app/utils/canvasImageEncoding";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -314,8 +315,8 @@ self.addEventListener(
 
     try {
       const [baseBuffer, comparisonBuffer] = await Promise.all([
-        baseFile.arrayBuffer(),
-        comparisonFile.arrayBuffer(),
+        getDocumentBytes(baseFile),
+        getDocumentBytes(comparisonFile),
       ]);
 
       pdfium = await getPdfiumModule();

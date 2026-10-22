@@ -1,4 +1,5 @@
 import { appendWord as sharedAppendWord } from "@app/utils/textDiff";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import { PARAGRAPH_SENTINEL } from "@app/types/compare";
 import type { StirlingFile } from "@app/types/fileContext";
 import {
@@ -329,7 +330,7 @@ export const filterTokensForDiff = (
 export const extractContentFromPdf = async (
   file: StirlingFile,
 ): Promise<ExtractedContent> => {
-  const arrayBuffer = await file.arrayBuffer();
+  const arrayBuffer = await getDocumentBytes(file);
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(arrayBuffer);
 

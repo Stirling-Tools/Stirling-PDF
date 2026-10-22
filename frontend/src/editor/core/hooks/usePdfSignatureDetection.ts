@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import {
   extractSignatureFieldRects,
   extractSignatures,
@@ -28,7 +29,7 @@ export const usePdfSignatureDetection = (
 
       for (const file of files) {
         try {
-          const arrayBuffer = await file.arrayBuffer();
+          const arrayBuffer = await getDocumentBytes(file);
           const [signatures, fields] = await Promise.all([
             extractSignatures(arrayBuffer),
             extractSignatureFieldRects(arrayBuffer),

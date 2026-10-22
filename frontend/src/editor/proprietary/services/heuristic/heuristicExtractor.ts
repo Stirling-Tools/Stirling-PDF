@@ -4,7 +4,7 @@
 import {
   closeDocAndFreeBuffer,
   extractPageTextItemsForReadAloudFromDoc,
-  getMetadata,
+  getMetadataFromDoc,
   getPdfiumModule,
   getRawPageCount,
   getRawPageSize,
@@ -12,6 +12,7 @@ import {
   type ReadAloudTextItem,
 } from "@app/services/pdfiumService";
 import type { HeuristicDoc } from "@app/services/heuristic/types";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 
 const WINDOW_FIRST = 5;
 const WINDOW_LAST = 2;
@@ -133,7 +134,7 @@ export async function extractHeuristicDoc(
   const budgetMs = options.budgetMs ?? Number.POSITIVE_INFINITY;
   const bounded = Number.isFinite(budgetMs);
 
-  const arrayBuffer = await file.arrayBuffer();
+  const arrayBuffer = await getDocumentBytes(file);
   const m = await getPdfiumModule();
   const opening = openRawDocumentSafe(arrayBuffer);
 
@@ -191,7 +192,7 @@ export async function extractHeuristicDoc(
       );
     }
 
-    const rawMeta = await within(getMetadata(arrayBuffer), remaining());
+    const rawMeta = await within(getMetadataFromDoc(docPtr), remaining());
     const meta =
       rawMeta === TIMED_OUT
         ? {}
