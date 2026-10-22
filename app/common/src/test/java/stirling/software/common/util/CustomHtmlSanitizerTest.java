@@ -345,6 +345,26 @@ class CustomHtmlSanitizerTest {
     }
 
     @Test
+    void testSanitizePreservesPreformattedCodeBlocks() {
+        String sanitizedHtml =
+                customHtmlSanitizer.sanitize(
+                        "<pre><code class=\"language-js\">a\n  b</code></pre>");
+
+        assertEquals("<pre><code>a\n  b</code></pre>", sanitizedHtml);
+    }
+
+    @Test
+    void testSanitizeStripsDangerousContentInsidePre() {
+        String sanitizedHtml =
+                customHtmlSanitizer.sanitize(
+                        "<pre onclick=\"alert(1)\" style=\"background:url(http://evil/)\">"
+                                + "<code onmouseover=\"alert(2)\">x</code>"
+                                + "<script>alert(3)</script></pre>");
+
+        assertEquals("<pre><code>x</code></pre>", sanitizedHtml);
+    }
+
+    @Test
     void testSanitizeHandlesEmpty() {
         // Act
         String sanitizedHtml = customHtmlSanitizer.sanitize("");

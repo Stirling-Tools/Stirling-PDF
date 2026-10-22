@@ -63,6 +63,23 @@ class Type3FontLibraryTest {
         return m.invoke(library, args);
     }
 
+    private Object rawPayload(Class<?> type, String resource, String format, String base64)
+            throws Exception {
+        java.lang.reflect.Constructor<?> constructor = type.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        Object payload = constructor.newInstance();
+        java.lang.reflect.Field resourceField = type.getDeclaredField("resource");
+        resourceField.setAccessible(true);
+        resourceField.set(payload, resource);
+        java.lang.reflect.Field formatField = type.getDeclaredField("format");
+        formatField.setAccessible(true);
+        formatField.set(payload, format);
+        java.lang.reflect.Field base64Field = type.getDeclaredField("base64");
+        base64Field.setAccessible(true);
+        base64Field.set(payload, base64);
+        return payload;
+    }
+
     @Nested
     @DisplayName("initialise()")
     class Initialise {
@@ -197,6 +214,47 @@ class Type3FontLibraryTest {
             invokeInitialise(library);
 
             assertFalse(library.isLoaded());
+        }
+
+        @Test
+        @DisplayName("direct base64 payloads are not confused by a shared resource key")
+        void loadPayloadCached_directBase64_bypassesResourceCache() throws Exception {
+            Type3FontLibrary library =
+                    newLibrary(new DefaultResourceLoader(), new ApplicationProperties());
+            Class<?> rawType = Class.forName(Type3FontLibrary.class.getName() + "$RawPayload");
+            Object first = rawPayload(rawType, "type3/library/fonts/missing.ttf", "ttf", "AQID");
+            Object second = rawPayload(rawType, "type3/library/fonts/missing.ttf", "ttf", "BAUG");
+            Method method = Type3FontLibrary.class.getDeclaredMethod("loadPayloadCached", rawType);
+            method.setAccessible(true);
+
+            Type3FontLibraryPayload firstLoaded =
+                    (Type3FontLibraryPayload) method.invoke(library, first);
+            Type3FontLibraryPayload secondLoaded =
+                    (Type3FontLibraryPayload) method.invoke(library, second);
+
+            assertEquals("AQID", firstLoaded.getBase64());
+            assertEquals("BAUG", secondLoaded.getBase64());
+        }
+
+        @Test
+        @DisplayName("missing sibling resource keeps a valid direct payload")
+        void initialise_missingSiblingResource_keepsEntry() throws Exception {
+            String json =
+                    "[{\"id\":\"mixed\",\"label\":\"Mixed\","
+                            + "\"program\":{\"resource\":\"type3/library/fonts/missing.ttf\","
+                            + "\"format\":\"ttf\"},"
+                            + "\"webProgram\":{\"base64\":\"AQID\",\"format\":\"ttf\"}}]";
+            ResourceLoader loader = spy(new DefaultResourceLoader());
+            Resource indexResource = mock(Resource.class);
+            when(loader.getResource("classpath:/mixed.json")).thenReturn(indexResource);
+            when(indexResource.exists()).thenReturn(true);
+            when(indexResource.getInputStream())
+                    .thenReturn(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+
+            Type3FontLibrary library = newLibrary(loader, propsWithIndex("classpath:/mixed.json"));
+            invokeInitialise(library);
+
+            assertTrue(library.isLoaded());
         }
 
         @Test
