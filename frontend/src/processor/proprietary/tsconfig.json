@@ -1,0 +1,23 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": [
+        "../../editor/cloud/*",
+        "../../editor/proprietary/*",
+        "../../editor/core/*"
+      ],
+      "@app/portal/*": [
+        "../../editor/cloud/portal/*",
+        "../../editor/proprietary/portal/*",
+        "../../editor/core/portal/*",
+        "../../processor/proprietary/*"
+      ],
+      "@portal/*": ["../../processor/proprietary/*"],
+      "@cloud/*": ["../../editor/cloud/*"],
+      "@proprietary/*": ["../../editor/proprietary/*"],
+      "@core/*": ["../../editor/core/*"]
+    }
+  },
+  "include": ["../../global.d.ts", "."]
+}
