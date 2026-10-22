@@ -46,6 +46,7 @@ import CropMarginInputs from "@app/components/tools/crop/CropMarginInputs";
 import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
 import { useCropSurfaceMode } from "@app/components/tools/crop/cropViewerSession";
 import { useIsMobile } from "@app/hooks/useIsMobile";
+import { requestMobileView } from "@app/services/mobileViewBridge";
 import { Rectangle } from "@app/utils/cropCoordinates";
 import { useIsTouch } from "@app/hooks/useIsMobile";
 import classes from "@app/components/tools/crop/CropSettings.module.css";
@@ -229,7 +230,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const sizeLabel = `${widthMm.toFixed(widthMm >= 10 ? 0 : 1)} × ${heightMm.toFixed(
     heightMm >= 10 ? 0 : 1,
   )} mm`;
-  const viewerSurface = surfaceMode === "viewer" && !disabled && !isMobile;
+  const viewerSurface = surfaceMode === "viewer" && !disabled;
   const aspectRatio = ratioForPage(ratioId, displaySize);
   const sizeControls = (
     <Group justify="space-between" align="center" wrap="nowrap">
@@ -421,43 +422,59 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           {isMobile && !viewerSurface && sizeControls}
 
           {viewerSurface ? (
-            <Box className={classes.viewerHint} data-testid="crop-viewer-hint">
-              <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-                <Icon name="move" size={16} />
-                <Text size="xs">
-                  {t(
-                    "crop.viewer.hint",
-                    "Drag on the page to set the crop area.",
-                  )}
-                </Text>
-              </Group>
-              <Group gap={2} wrap="nowrap">
-                <ActionIcon
-                  variant={gridEnabled ? "secondary" : "quiet"}
-                  accent="neutral"
+            <>
+              <Box
+                className={classes.viewerHint}
+                data-testid="crop-viewer-hint"
+              >
+                <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+                  <Icon name="move" size={16} />
+                  <Text size="xs">
+                    {t(
+                      "crop.viewer.hint",
+                      "Drag on the page to set the crop area.",
+                    )}
+                  </Text>
+                </Group>
+                <Group gap={2} wrap="nowrap">
+                  <ActionIcon
+                    variant={gridEnabled ? "secondary" : "quiet"}
+                    accent="neutral"
+                    size="sm"
+                    aria-label={t("crop.canvas.toggleGrid", "Toggle grid")}
+                    aria-pressed={gridEnabled}
+                    title={t("crop.canvas.toggleGrid", "Toggle grid")}
+                    onClick={() => setGridEnabled((previous) => !previous)}
+                    disabled={disabled}
+                  >
+                    <Icon name="layout-grid" size="0.875rem" />
+                  </ActionIcon>
+                  <ActionIcon
+                    variant={snapEnabled ? "secondary" : "quiet"}
+                    accent="neutral"
+                    size="sm"
+                    aria-label={t("crop.canvas.toggleSnap", "Toggle snapping")}
+                    aria-pressed={snapEnabled}
+                    title={t("crop.canvas.toggleSnap", "Toggle snapping")}
+                    onClick={() => setSnapEnabled((previous) => !previous)}
+                    disabled={disabled}
+                  >
+                    <Icon name="magnet" size="0.875rem" />
+                  </ActionIcon>
+                </Group>
+              </Box>
+              {isMobile && (
+                <Button
+                  variant="primary"
                   size="sm"
-                  aria-label={t("crop.canvas.toggleGrid", "Toggle grid")}
-                  aria-pressed={gridEnabled}
-                  title={t("crop.canvas.toggleGrid", "Toggle grid")}
-                  onClick={() => setGridEnabled((previous) => !previous)}
+                  leftSection={<Icon name="move" size={14} />}
+                  onClick={() => requestMobileView("workbench")}
                   disabled={disabled}
                 >
-                  <Icon name="layout-grid" size="0.875rem" />
-                </ActionIcon>
-                <ActionIcon
-                  variant={snapEnabled ? "secondary" : "quiet"}
-                  accent="neutral"
-                  size="sm"
-                  aria-label={t("crop.canvas.toggleSnap", "Toggle snapping")}
-                  aria-pressed={snapEnabled}
-                  title={t("crop.canvas.toggleSnap", "Toggle snapping")}
-                  onClick={() => setSnapEnabled((previous) => !previous)}
-                  disabled={disabled}
-                >
-                  <Icon name="magnet" size="0.875rem" />
-                </ActionIcon>
-              </Group>
-            </Box>
+                  {t("crop.viewer.openPage", "Crop on page")}
+                </Button>
+              )}
+            </>
           ) : (
             <Box
               className={classes.canvasFrame}

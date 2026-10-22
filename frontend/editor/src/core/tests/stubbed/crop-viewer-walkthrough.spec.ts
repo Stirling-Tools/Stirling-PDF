@@ -132,4 +132,60 @@ test.describe("crop on the viewer", () => {
     await upload(page);
     await page.screenshot({ path: shot("36_viewer_default_dark") });
   });
+
+  test("37_viewer_mobile", async ({ page }) => {
+    await openCrop(page);
+    await upload(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForFunction(() => window.innerWidth === 390);
+    const cropOnPage = page.getByRole("button", { name: "Crop on page" });
+    await expect(cropOnPage).toBeVisible({ timeout: 20_000 });
+    await page.screenshot({ path: shot("37_viewer_mobile_panel_light") });
+
+    await cropOnPage.click();
+    const overlay = page.getByTestId("crop-viewer-overlay");
+    await expect(page.getByRole("tab", { name: "Workspace" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await expect(overlay).toBeVisible({ timeout: 10_000 });
+    const box = await overlay.boundingBox();
+    if (!box) throw new Error("crop overlay has no box");
+    await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.24);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.7, {
+      steps: 10,
+    });
+    await page.mouse.up();
+    await settle(page);
+    await page.screenshot({ path: shot("37_viewer_mobile_light") });
+
+    await page.getByRole("button", { name: "Done" }).click();
+    await expect(page.getByTestId("crop-viewer-hint")).toBeVisible({
+      timeout: 10_000,
+    });
+  });
+
+  test("38_viewer_mobile_dark", async ({ page }) => {
+    await enableDark(page);
+    await openCrop(page);
+    await upload(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForFunction(() => window.innerWidth === 390);
+    const cropOnPage = page.getByRole("button", { name: "Crop on page" });
+    await expect(cropOnPage).toBeVisible({ timeout: 20_000 });
+    await cropOnPage.click();
+    const overlay = page.getByTestId("crop-viewer-overlay");
+    await expect(overlay).toBeVisible({ timeout: 10_000 });
+    const box = await overlay.boundingBox();
+    if (!box) throw new Error("crop overlay has no box");
+    await page.mouse.move(box.x + box.width * 0.18, box.y + box.height * 0.2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.78, box.y + box.height * 0.72, {
+      steps: 10,
+    });
+    await page.mouse.up();
+    await settle(page);
+    await page.screenshot({ path: shot("38_viewer_mobile_dark") });
+  });
 });

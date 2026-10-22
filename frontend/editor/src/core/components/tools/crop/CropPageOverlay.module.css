@@ -14,6 +14,13 @@
   cursor: grabbing;
 }
 
+.mobileDone {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--space-2));
+  z-index: 2;
+}
+
 .shade {
   position: absolute;
   inset: 0;

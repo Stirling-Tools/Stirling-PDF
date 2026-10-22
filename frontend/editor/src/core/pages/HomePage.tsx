@@ -48,6 +48,7 @@ import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
+import { registerMobileViewSwitcher } from "@app/services/mobileViewBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
 import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
 import { SignMenu } from "@app/components/shared/signing/SignMenu";
@@ -460,6 +461,11 @@ export default function HomePage() {
       dismissSwipeHint();
     },
     [dismissSwipeHint],
+  );
+
+  useEffect(
+    () => registerMobileViewSwitcher(handleSelectMobileView),
+    [handleSelectMobileView],
   );
 
   // Mobile's bottom bar sets no view of its own, so leaving the library is the path

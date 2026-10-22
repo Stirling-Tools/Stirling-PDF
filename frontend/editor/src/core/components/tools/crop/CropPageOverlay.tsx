@@ -27,6 +27,9 @@ import {
 } from "@app/utils/cropPageGeometry";
 import type { Rectangle } from "@app/utils/cropCoordinates";
 import { useCropViewerSession } from "@app/components/tools/crop/cropViewerSession";
+import { useIsMobile } from "@app/hooks/useIsMobile";
+import { requestMobileView } from "@app/services/mobileViewBridge";
+import { Button } from "@app/ui/Button";
 import classes from "@app/components/tools/crop/CropPageOverlay.module.css";
 
 interface CropPageOverlayProps {
@@ -173,6 +176,7 @@ export default function CropPageOverlay({
 }: CropPageOverlayProps) {
   const { t } = useTranslation();
   const session = useCropViewerSession();
+  const isMobile = useIsMobile();
   const viewer = useViewer();
   const [target, setTarget] = useState<PageTarget | null>(null);
   const targetRef = useRef<PageTarget | null>(null);
@@ -181,6 +185,12 @@ export default function CropPageOverlay({
   const frameRef = useRef<number | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const scrollElRef = useRef<HTMLElement | null>(null);
+  const gestureFrameRef = useRef<number | null>(null);
+  const revealFrameRef = useRef<number | null>(null);
+  const pendingCommitRef = useRef<{
+    rect: NormalizedRect;
+    page: PageTarget;
+  } | null>(null);
   const effectiveGeometry =
     session && target && session.geometryPageNumber === target.pageNumber
       ? session.geometry
@@ -216,6 +226,17 @@ export default function CropPageOverlay({
       measure();
     });
   }, [measure]);
+
+  const measureUntilSettled = useCallback(() => {
+    if (revealFrameRef.current !== null) return;
+    let frames = 0;
+    const tick = () => {
+      scheduleMeasure();
+      frames += 1;
+      revealFrameRef.current = frames < 40 ? requestAnimationFrame(tick) : null;
+    };
+    revealFrameRef.current = requestAnimationFrame(tick);
+  }, [scheduleMeasure]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -279,6 +300,15 @@ export default function CropPageOverlay({
         ? new ResizeObserver(scheduleMeasure)
         : null;
     observer?.observe(container);
+    const intersection =
+      typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver((entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+              measureUntilSettled();
+            }
+          })
+        : null;
+    intersection?.observe(container);
     window.addEventListener("resize", scheduleMeasure);
 
     return () => {
@@ -286,15 +316,21 @@ export default function CropPageOverlay({
       unregisterRotation?.();
       container.removeEventListener("scroll", onScroll, true);
       observer?.disconnect();
+      intersection?.disconnect();
       window.removeEventListener("resize", scheduleMeasure);
       if (frameRef.current !== null) {
         cancelAnimationFrame(frameRef.current);
         frameRef.current = null;
       }
+      if (revealFrameRef.current !== null) {
+        cancelAnimationFrame(revealFrameRef.current);
+        revealFrameRef.current = null;
+      }
     };
   }, [
     containerRef,
     isActive,
+    measureUntilSettled,
     registerImmediateRotationUpdate,
     registerImmediateZoomUpdate,
     scheduleMeasure,
@@ -419,21 +455,36 @@ export default function CropPageOverlay({
         );
       }
 
-      commit(rect, page);
+      pendingCommitRef.current = { rect, page };
+      if (gestureFrameRef.current !== null) return;
+      gestureFrameRef.current = requestAnimationFrame(() => {
+        gestureFrameRef.current = null;
+        const pending = pendingCommitRef.current;
+        if (pending) commit(pending.rect, pending.page);
+      });
     },
     [commit, localPoint, session],
   );
-
-  const endDrag = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragRef.current) return;
-    event.preventDefault();
-    event.stopPropagation();
-    dragRef.current = null;
-    setDragging(false);
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-  }, []);
+  const endDrag = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!dragRef.current) return;
+      event.preventDefault();
+      event.stopPropagation();
+      dragRef.current = null;
+      setDragging(false);
+      if (gestureFrameRef.current !== null) {
+        cancelAnimationFrame(gestureFrameRef.current);
+        gestureFrameRef.current = null;
+      }
+      const pending = pendingCommitRef.current;
+      pendingCommitRef.current = null;
+      if (pending) commit(pending.rect, pending.page);
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    },
+    [commit],
+  );
 
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -540,6 +591,20 @@ export default function CropPageOverlay({
       onKeyDown={onKeyDown}
       data-dragging={dragging ? "true" : undefined}
     >
+      {isMobile && (
+        <Button
+          className={classes.mobileDone}
+          variant="primary"
+          size="sm"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            requestMobileView("tools");
+          }}
+        >
+          {t("crop.viewer.done", "Done")}
+        </Button>
+      )}
       <div className={classes.shade} aria-hidden="true">
         <div
           className={classes.hole}
