@@ -195,6 +195,8 @@ export interface PageSnapshot {
   dirty: boolean;
   /** Monotonic counter that increments on every commit. */
   revision: number;
+  /** Region the next bitmap pass must repaint; absent means the whole page. */
+  rasterDirty?: { x: number; y: number; width: number; height: number };
   runs: TextRunSnapshot[];
   images: ImageObjectSnapshot[];
   shapes: ShapeObjectSnapshot[];

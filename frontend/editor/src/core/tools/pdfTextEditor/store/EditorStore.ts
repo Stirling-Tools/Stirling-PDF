@@ -20,6 +20,7 @@ import {
   resetPerCharBranchPtrs,
 } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
+import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextCommand";
 import { AdoptTableCommand } from "@app/tools/pdfTextEditor/commands/AdoptTableCommand";
 import {
   adoptedTableId,
@@ -468,11 +469,34 @@ export class EditorStore {
   dispatch(cmd: Command): void {
     if (!this.doc) return;
     const revisions = this.captureRevisions();
+    const editTarget = cmd instanceof EditTextCommand ? cmd.target : null;
+    const editRun = editTarget
+      ? this.doc.page(editTarget.pageIndex).findRun(editTarget.runId)
+      : undefined;
+    const editBounds = editRun ? { ...editRun.bounds } : null;
+    const editLength = editRun?.text.length ?? 0;
+    if (!(cmd instanceof EditTextCommand)) {
+      // Any non-text change (font, colour, z-order, ...) can affect pixels
+      // outside a prior text region; repaint the whole page.
+      for (const page of this.doc.loadedPages()) page.rasterDirty = null;
+    }
     try {
       this.history.execute(cmd, this.doc);
     } catch (err) {
       this.recoverFromBrokenStep(err);
       return;
+    }
+    if (editTarget && editRun && this.doc) {
+      const page = this.doc.page(editTarget.pageIndex);
+      // A large rewrite can leave ink far outside the new bounds; repaint the
+      // page rather than chase it. Ordinary typing stays inside a small union
+      // of the old and new boxes.
+      if (Math.abs(editRun.text.length - editLength) > 16) {
+        page.rasterDirty = null;
+      } else {
+        if (editBounds) page.markRasterDirty(editBounds);
+        page.markRasterDirty(editRun.bounds);
+      }
     }
     // Measure the edited pages before snapshotting. The overlay is the live
     // editing surface, so its glyphs and the caret must land on the engine's
@@ -483,6 +507,12 @@ export class EditorStore {
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
     this.schedulePositionRefresh();
+  }
+
+  /** Clear a page's invalidated raster region once its bitmap has painted it. */
+  markRasterPainted(pageIndex: number, revision: number): void {
+    const page = this.doc?.page(pageIndex);
+    if (page && page.revision === revision) page.rasterDirty = null;
   }
 
   /** Recapture pen positions for every page this command actually changed. */
@@ -598,6 +628,7 @@ export class EditorStore {
     // text it had before the undo. Re-measure before publishing the snapshot,
     // or the overlay keeps the undone text's advances for one frame.
     this.recaptureEditedRunPositions(revisions);
+    for (const page of this.doc.loadedPages()) page.rasterDirty = null;
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
     this.schedulePositionRefresh();
@@ -613,6 +644,7 @@ export class EditorStore {
       return;
     }
     this.recaptureEditedRunPositions(revisions);
+    for (const page of this.doc.loadedPages()) page.rasterDirty = null;
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
     this.schedulePositionRefresh();
@@ -678,6 +710,7 @@ export class EditorStore {
         ...p,
         dirty: live.dirty,
         revision: live.revision,
+        rasterDirty: live.rasterDirty ?? undefined,
         runs: live.runs.map((run) => {
           const prev = prevById.get(run.id);
           if (prev && !run.dirty && sameRunSnapshot(prev, run)) return prev;

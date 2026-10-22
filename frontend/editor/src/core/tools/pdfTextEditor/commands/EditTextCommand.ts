@@ -170,6 +170,11 @@ export class EditTextCommand implements Command {
     this.nextText = opts.nextText;
   }
 
+  /** The run this command edits, for callers that need to scope a repaint. */
+  get target(): { pageIndex: number; runId: string } {
+    return { pageIndex: this.pageIndex, runId: this.runId };
+  }
+
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
@@ -394,6 +399,10 @@ export class EditTextCommand implements Command {
     const canReuseFont =
       run.containerPtr === 0 &&
       (safeChars ||
+        // A full face carries its own glyphs; try the source font before
+        // replacing the document's typeface. The emit path validates the
+        // read-back and falls back per word if the face cannot encode it.
+        !run.fontSubset ||
         charcodesResolveFully(
           m,
           candidateFontPtr,

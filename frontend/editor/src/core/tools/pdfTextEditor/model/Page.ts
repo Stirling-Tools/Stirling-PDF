@@ -42,6 +42,12 @@ export class Page {
   loaded: boolean;
   /** Monotonic version counter, bumped on every commit. */
   revision: number;
+  /**
+   * Region a text edit invalidated, in page points. Null means the next raster
+   * must redraw the whole page; a region lets the renderer repaint only the
+   * text that changed instead of blocking the main thread on the full page.
+   */
+  rasterDirty: { x: number; y: number; width: number; height: number } | null;
   // True when commands have mutated PDFium objects on this page but
   // `FPDFPage_GenerateContent` hasn't been called yet.
   needsGenerateContent: boolean;
@@ -71,6 +77,7 @@ export class Page {
     this.dirty = false;
     this.loaded = false;
     this.revision = 0;
+    this.rasterDirty = null;
     this.rules = [];
     this.fills = [];
     this.needsGenerateContent = false;
@@ -104,6 +111,36 @@ export class Page {
   markDirty(): void {
     this.dirty = true;
     this.revision += 1;
+  }
+
+  /** Union `rect` into the region the next raster has to repaint. */
+  markRasterDirty(rect: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }): void {
+    if (!(rect.width > 0) || !(rect.height > 0)) return;
+    const current = this.rasterDirty;
+    if (!current) {
+      this.rasterDirty = { ...rect };
+      return;
+    }
+    const left = Math.min(current.x, rect.x);
+    const bottom = Math.min(current.y, rect.y);
+    const right = Math.max(current.x + current.width, rect.x + rect.width);
+    const top = Math.max(current.y + current.height, rect.y + rect.height);
+    this.rasterDirty = {
+      x: left,
+      y: bottom,
+      width: right - left,
+      height: top - bottom,
+    };
+  }
+
+  /** Drop the invalidated region once a raster has painted it. */
+  clearRasterDirty(): void {
+    this.rasterDirty = null;
   }
 
   /** Bump the snapshot revision WITHOUT marking the page dirty. */

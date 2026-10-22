@@ -32,6 +32,8 @@ interface PageViewProps {
   onFirstVisible?: (pageIndex: number) => void;
   /** Fires when the page's bitmap finishes its first render. */
   onFirstRendered?: (pageIndex: number) => void;
+  /** Clear the page's invalidated raster region after it has been painted. */
+  onRasterPainted?: (pageIndex: number, revision: number) => void;
   scale: number;
   widthMode: import("@app/tools/pdfTextEditor/types").WidthMode;
   /** Show the page rulers and alignment guides. */
@@ -112,6 +114,7 @@ export function PageView({
   onTransformImage,
   onFirstVisible,
   onFirstRendered,
+  onRasterPainted,
 }: PageViewProps) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -250,44 +253,94 @@ export function PageView({
     }
     let cancelled = false;
     if (!canvas) return;
+    const surface = canvas;
     const renderPage = () => {
       setRendering(true);
       setRenderError(null);
-      PdfiumPageRenderer.render(
-        document,
-        document.page(page.pageIndex),
+      const renderRevision = page.revision;
+      const dirty = page.rasterDirty;
+      const target = document.page(page.pageIndex);
+      const expected = PdfiumPageRenderer.rasterSize(
+        page.width,
+        page.height,
         deviceScale,
-      )
-        .then((image) => {
-          if (cancelled || !canvasRef.current) return;
-          canvas.width = image.width;
-          canvas.height = image.height;
-          const ctx = canvas.getContext("2d");
-          if (ctx) ctx.putImageData(image, 0, 0);
-          setRendering(false);
-          setPaintedRevision(page.revision);
-          if (firstRenderedDocRef.current !== document) {
-            firstRenderedDocRef.current = document;
-            onFirstRendered?.(page.pageIndex);
-          }
+      );
+      // A small text edit only invalidates its own box. Repaint that region on
+      // top of the existing bitmap; the full-page pass is the expensive one.
+      if (
+        dirty &&
+        surface.width === expected.width &&
+        surface.height === expected.height
+      ) {
+        const pad = 6 * deviceScale;
+        void PdfiumPageRenderer.renderRegion(document, target, deviceScale, {
+          x: dirty.x * deviceScale - pad,
+          y: (page.height - dirty.y - dirty.height) * deviceScale - pad,
+          width: dirty.width * deviceScale + pad * 2,
+          height: dirty.height * deviceScale + pad * 2,
         })
-        .catch((err: unknown) => {
-          if (cancelled) return;
-          const msg =
-            err instanceof Error ? `${err.name}: ${err.message}` : String(err);
-          console.warn(
-            `[pdf-editor] page ${page.pageIndex} render failed`,
-            err,
-          );
-          setRendering(false);
-          setRenderError(msg);
-          // Flip the first-rendered flag on error too, so the loading
-          // overlay dismisses instead of leaving the user on a spinner.
-          if (firstRenderedDocRef.current !== document) {
-            firstRenderedDocRef.current = document;
-            onFirstRendered?.(page.pageIndex);
-          }
-        });
+          .then((partial) => {
+            if (cancelled || !canvasRef.current) return;
+            if (partial) {
+              const ctx = surface.getContext("2d");
+              if (ctx) ctx.putImageData(partial.image, partial.x, partial.y);
+              if (page.revision === renderRevision)
+                onRasterPainted?.(page.pageIndex, renderRevision);
+              setRendering(false);
+              setPaintedRevision(renderRevision);
+              if (firstRenderedDocRef.current !== document) {
+                firstRenderedDocRef.current = document;
+                onFirstRendered?.(page.pageIndex);
+              }
+              return;
+            }
+            // Region too large or not usable: fall back to the full pass.
+            void renderFull();
+          })
+          .catch(() => {
+            if (!cancelled) void renderFull();
+          });
+        return;
+      }
+      void renderFull();
+
+      function renderFull(): Promise<void> {
+        return PdfiumPageRenderer.render(document, target, deviceScale)
+          .then((image) => {
+            if (cancelled || !canvasRef.current) return;
+            surface.width = image.width;
+            surface.height = image.height;
+            const ctx = surface.getContext("2d");
+            if (ctx) ctx.putImageData(image, 0, 0);
+            if (page.revision === renderRevision)
+              onRasterPainted?.(page.pageIndex, renderRevision);
+            setRendering(false);
+            setPaintedRevision(renderRevision);
+            if (firstRenderedDocRef.current !== document) {
+              firstRenderedDocRef.current = document;
+              onFirstRendered?.(page.pageIndex);
+            }
+          })
+          .catch((err: unknown) => {
+            if (cancelled) return;
+            const msg =
+              err instanceof Error
+                ? `${err.name}: ${err.message}`
+                : String(err);
+            console.warn(
+              `[pdf-editor] page ${page.pageIndex} render failed`,
+              err,
+            );
+            setRendering(false);
+            setRenderError(msg);
+            // Flip the first-rendered flag on error too, so the loading
+            // overlay dismisses instead of leaving the user on a spinner.
+            if (firstRenderedDocRef.current !== document) {
+              firstRenderedDocRef.current = document;
+              onFirstRendered?.(page.pageIndex);
+            }
+          });
+      }
     };
     // Typing owns the overlay's glyphs; let the raster wait for a pause. The
     // overlay stays up until `paintedRevision` catches the edit (see the run

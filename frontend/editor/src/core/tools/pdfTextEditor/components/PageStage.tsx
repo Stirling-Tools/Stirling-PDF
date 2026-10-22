@@ -448,6 +448,9 @@ export function PageStage() {
                     onFirstRendered={(pageIndex) => {
                       if (pageIndex === 0) store.markFirstPageRendered();
                     }}
+                    onRasterPainted={(pageIndex, revision) =>
+                      store.markRasterPainted(pageIndex, revision)
+                    }
                   />
                 ) : null,
               )}

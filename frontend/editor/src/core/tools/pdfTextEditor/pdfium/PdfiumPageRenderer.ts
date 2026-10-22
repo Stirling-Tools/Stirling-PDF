@@ -10,6 +10,30 @@ const MAX_DPR = 3;
 // otherwise ask the wasm heap for gigabytes.
 const MAX_RASTER_PIXELS = 32_000_000;
 
+/** Copy a BGRA/RGBA PDFium bitmap into ImageData-ready pixels. */
+function copyBitmap(
+  m: EditorDocument["module"],
+  bitmapPtr: number,
+  w: number,
+  h: number,
+): Uint8ClampedArray<ArrayBuffer> {
+  const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
+  const stride = m.FPDFBitmap_GetStride(bitmapPtr);
+  const pixels = new Uint8ClampedArray(new ArrayBuffer(w * h * 4));
+  const heap = new Uint8Array(
+    (m.pdfium.wasmExports as unknown as { memory: WebAssembly.Memory }).memory
+      .buffer,
+    bufferPtr,
+    stride * h,
+  );
+  for (let y = 0; y < h; y++) {
+    const srcRow = y * stride;
+    const dstRow = y * w * 4;
+    pixels.set(heap.subarray(srcRow, srcRow + w * 4), dstRow);
+  }
+  return pixels;
+}
+
 /** Renders pages to bitmaps for the on-screen preview. */
 export class PdfiumPageRenderer {
   static rasterSize(
@@ -39,6 +63,85 @@ export class PdfiumPageRenderer {
       MAX_RASTER_PIXELS / Math.max(1, pageWidth * pageHeight),
     );
     return Math.max(0.25, Math.min(cssScale * ratio, cap));
+  }
+
+  /**
+   * Repaint only `rect` (raster pixels, top-left origin) of the page.
+   *
+   * The full-page pass is 100-250 ms on a dense page; a caret edit invalidates
+   * a few hundred pixels. PDFium renders the page shifted by `-x/-y` into a
+   * bitmap the size of the region, so the copy back is proportional to the
+   * edit, not the page. Returns null when the caller should just render the
+   * whole page (region too large, or no usable area).
+   */
+  static async renderRegion(
+    doc: EditorDocument,
+    page: Page,
+    scale: number,
+    rect: { x: number; y: number; width: number; height: number },
+  ): Promise<{ image: ImageData; x: number; y: number } | null> {
+    const m = doc.module;
+    const full = PdfiumPageRenderer.rasterSize(page.width, page.height, scale);
+    const x = Math.max(0, Math.floor(rect.x));
+    const y = Math.max(0, Math.floor(rect.y));
+    const right = Math.min(full.width, Math.ceil(rect.x + rect.width));
+    const bottom = Math.min(full.height, Math.ceil(rect.y + rect.height));
+    const w = right - x;
+    const h = bottom - y;
+    if (w < 1 || h < 1) return null;
+    // Past this the fixed setup cost is not worth the partial path.
+    if (w * h > full.width * full.height * 0.5) return null;
+
+    const bitmapPtr = m.FPDFBitmap_Create(w, h, 1);
+    try {
+      m.FPDFBitmap_FillRect(bitmapPtr, 0, 0, w, h, 0xffffffff);
+      m.FPDF_RenderPageBitmap(
+        bitmapPtr,
+        page.pagePtr,
+        -x,
+        -y,
+        full.width,
+        full.height,
+        0,
+        0x01 | 0x10,
+      );
+      const formEnv = doc.formEnvironment();
+      if (formEnv) {
+        doc.notifyFormPageLoaded(page);
+        const formMod = m as unknown as {
+          FPDF_FFLDraw?: (
+            env: number,
+            bitmap: number,
+            pagePtr: number,
+            startX: number,
+            startY: number,
+            sizeX: number,
+            sizeY: number,
+            rotate: number,
+            flags: number,
+          ) => void;
+        };
+        try {
+          formMod.FPDF_FFLDraw?.(
+            formEnv,
+            bitmapPtr,
+            page.pagePtr,
+            -x,
+            -y,
+            full.width,
+            full.height,
+            0,
+            0x01 | 0x10,
+          );
+        } catch {
+          /* content is already drawn; the form layer is additive */
+        }
+      }
+      const pixels = copyBitmap(m, bitmapPtr, w, h);
+      return { image: new ImageData(pixels, w, h), x, y };
+    } finally {
+      m.FPDFBitmap_Destroy(bitmapPtr);
+    }
   }
 
   static async render(
@@ -108,21 +211,7 @@ export class PdfiumPageRenderer {
         }
       }
 
-      const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
-      const stride = m.FPDFBitmap_GetStride(bitmapPtr);
-      const pixels = new Uint8ClampedArray(w * h * 4);
-      const heap = new Uint8Array(
-        (m.pdfium.wasmExports as unknown as { memory: WebAssembly.Memory })
-          .memory.buffer,
-        bufferPtr,
-        stride * h,
-      );
-      for (let y = 0; y < h; y++) {
-        const srcRow = y * stride;
-        const dstRow = y * w * 4;
-        pixels.set(heap.subarray(srcRow, srcRow + w * 4), dstRow);
-      }
-      return new ImageData(pixels, w, h);
+      return new ImageData(copyBitmap(m, bitmapPtr, w, h), w, h);
     } finally {
       m.FPDFBitmap_Destroy(bitmapPtr);
     }
