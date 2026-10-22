@@ -8,7 +8,7 @@ import { SidebarBase } from "@app/components/viewer/SidebarBase";
 import type { ReadAloudStore } from "@app/components/viewer/useViewerReadAloud";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ReadAloudPlayer } from "@app/components/viewer/readAloud/ReadAloudPlayer";
-import { ReadAloudMiniPlayer } from "@app/components/viewer/readAloud/ReadAloudMiniPlayer";
+import { ReadAloudRail } from "@app/components/viewer/readAloud/ReadAloudRail";
 
 interface ReadAloudSidebarProps {
   visible: boolean;
@@ -63,7 +63,7 @@ export function ReadAloudSidebar({
 
   if (collapsed) {
     return (
-      <ReadAloudMiniPlayer
+      <ReadAloudRail
         readAloud={readAloud}
         rightOffset={rightOffset}
         onExpand={onExpand}
@@ -91,7 +91,7 @@ export function ReadAloudSidebar({
             title={collapseLabel}
             onClick={onCollapse}
           >
-            <Icon name="chevron-down" size="1rem" />
+            <Icon name="chevron-right" size="1rem" />
           </ActionIcon>
         </Tooltip>
       }

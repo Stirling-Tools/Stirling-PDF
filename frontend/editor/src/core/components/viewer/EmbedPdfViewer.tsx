@@ -1849,6 +1849,7 @@ const EmbedPdfViewerContent = ({
 
   const sidebarWidthRem = 15;
   const commentsSidebarWidthRem = 15;
+  const readAloudRailWidthRem = 3;
   const rightOffsetBeforeReadAloud =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
@@ -1857,7 +1858,11 @@ const EmbedPdfViewerContent = ({
     (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
   const totalRightMargin =
     rightOffsetBeforeReadAloud +
-    (isReadAloudSidebarVisible && !readAloudCollapsed ? sidebarWidthRem : 0);
+    (isReadAloudSidebarVisible
+      ? readAloudCollapsed
+        ? readAloudRailWidthRem
+        : sidebarWidthRem
+      : 0);
 
   return (
     <Box

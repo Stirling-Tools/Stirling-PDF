@@ -11208,7 +11208,7 @@ tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,di
 [readAloud]
 title = "Read aloud"
 close = "Close read aloud"
-collapse = "Collapse to mini player"
+collapse = "Collapse panel"
 detecting = "Detecting document language…"
 expand = "Show controls"
 detectedLanguage = "Detected {{language}}"
