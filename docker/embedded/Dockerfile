@@ -55,7 +55,6 @@ RUN gradle dependencies --no-daemon || true
 
 COPY . .
 
-ARG PROTOTYPES_BUILD=false
 ARG STIRLING_FLAVOR=proprietary
 ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
 # Include the processor (admin portal) in the bundled editor; false leaves it out.
@@ -85,7 +84,6 @@ RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo li
       -PbuildWithFrontend=true \
       -PbuildWithPortal=${BUILD_PORTAL} \
       -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
-      -PprototypesMode=${PROTOTYPES_BUILD} \
       -PbundleOnnxRuntime=true \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
