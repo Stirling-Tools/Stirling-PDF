@@ -187,6 +187,42 @@ describe("record hygiene", () => {
     expect(readViewedPage("newest")).toBe(4);
   });
 
+  it("treats refused storage as no remembered page instead of throwing", () => {
+    const storage = Object.getPrototypeOf(localStorage);
+    const refuse = () => {
+      throw new Error("SecurityError");
+    };
+    const spies = [
+      vi.spyOn(storage, "getItem").mockImplementation(refuse),
+      vi.spyOn(storage, "setItem").mockImplementation(refuse),
+      vi.spyOn(storage, "removeItem").mockImplementation(refuse),
+    ];
+
+    expect(() => writeViewedPage("a", 7)).not.toThrow();
+    expect(readViewedPage("a")).toBeNull();
+
+    for (const spy of spies) spy.mockRestore();
+  });
+
+  it("ignores a stored page that is not a page number", () => {
+    localStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        v: 2,
+        fileIds: [],
+        pages: { a: 0, b: -3, c: 2.5, d: "4", e: 6 },
+      }),
+    );
+
+    expect(["a", "b", "c", "d"].map(readViewedPage)).toEqual([
+      null,
+      null,
+      null,
+      null,
+    ]);
+    expect(readViewedPage("e")).toBe(6);
+  });
+
   it("still records for a genuinely anonymous session", () => {
     // Core has no auth at all, so null is the normal owner there and must keep working.
     writeWorkbenchSession({
