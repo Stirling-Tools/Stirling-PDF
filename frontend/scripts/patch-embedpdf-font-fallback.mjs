@@ -4,11 +4,12 @@
 // flags PDFium passes, so a non-embedded Times or Courier renders in the sans
 // fallback with mismatched glyph widths. The patch adds an optional
 // `fontFamilies` config (serif/monospace) chosen from the face name, then from
-// those flags. Delete once upstream ships family selection
-// (embedpdf/embed-pdf-viewer#850).
+// those flags.
+// TODO(embedpdf/embed-pdf-viewer#850): delete once upstream selects fallback
+// faces by family.
 //
-// Runs from postinstall and from the Vite build. `--check` verifies without
-// writing and exits non-zero when any target is unpatched.
+// Runs from postinstall and from the Vite config hook, which fails the dev
+// server or build when the engine cannot be patched.
 import {
   existsSync,
   readFileSync,
@@ -20,9 +21,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const EXPECTED_VERSION = "2.15.1";
-const MARKER = "STIRLING_FONT_FAMILY_PATCH";
-const checkOnly = process.argv.includes("--check");
+const MARKER_BASE = "STIRLING_FONT_FAMILY_PATCH";
+// Bump with any change to the inserted code: an already patched tree cannot be
+// re-patched in place, and npm install does not refresh a satisfied dependency.
+const MARKER = `${MARKER_BASE}_v2`;
 const log = (msg) => console.error(`[patch-embedpdf-font-fallback] ${msg}`);
+// A version bump must not break `npm install` itself (Dependabot, lockfile
+// refreshes); the Vite hook and pdfiumFontFallback.test.ts still fail on it.
+const inPostinstall = process.env.npm_lifecycle_event === "postinstall";
 
 const enginesDir = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -42,7 +48,7 @@ if (installedVersion !== EXPECTED_VERSION) {
       "Check whether the new version selects fallback fonts by family; if not, " +
       "re-verify every anchor below before updating EXPECTED_VERSION.",
   );
-  process.exit(1);
+  process.exit(inPostinstall ? 0 : 1);
 }
 
 const distDir = path.join(enginesDir, "dist");
@@ -68,20 +74,23 @@ const targets = [
 ];
 const typesFile = path.join(distDir, "lib/pdfium/font-fallback.d.ts");
 
-// PDFium's pitch-family bits (FXFONT_FF_FIXEDPITCH, FXFONT_FF_ROMAN). The
-// inserted code avoids quotes other than double quotes and backslashes, so the
-// same text is valid inside the worker's single-quoted string.
+// Families apply to every charset configured with the ANSI face, so the config
+// alone decides which scripts get them. Compared by value: the worker receives
+// a structured clone of the config. Names win over PDFium's pitch-family bits
+// (FXFONT_FF_FIXEDPITCH = 1, FXFONT_FF_ROMAN = 16). The inserted code uses no
+// single quotes or backslashes, so the same text is valid inside the worker's
+// single-quoted string.
 const FAMILY_METHOD = `stirlingFamilyEntry(charset, pitchFamily, face) {
     // ${MARKER}
-    const families = this.fontConfig.fontFamilies;
-    if (!families || ![0, 1, 161, 204, 238].includes(charset)) return void 0;
+    const { fonts, fontFamilies: families } = this.fontConfig;
+    if (!families || fonts[charset] === void 0 || JSON.stringify(fonts[charset]) !== JSON.stringify(fonts[0])) return void 0;
     const raw = (face || "").toLowerCase();
     const name = (raw.includes("+") ? raw.slice(raw.indexOf("+") + 1) : raw).replace(/[^a-z]/g, "");
     const has = (prefixes) => prefixes.some((prefix) => name.startsWith(prefix));
     let family = null;
-    if (has(["courier", "consolas", "menlo", "monaco", "lucidaconsole", "liberationmono", "nimbusmono", "dejavusansmono", "notomono", "andalemono"])) family = "monospace";
-    else if (has(["helvetica", "arial", "liberationsans", "nimbussans", "notosans", "dejavusans", "calibri", "verdana", "tahoma", "segoe", "trebuchet"])) family = null;
-    else if (has(["times", "georgia", "cambria", "garamond", "bookantiqua", "palatino", "liberationserif", "nimbusroman", "dejavuserif", "notoserif", "century"])) family = "serif";
+    if (/mono(?!type)/.test(name) || has(["courier", "consolas", "menlo", "monaco", "lucidaconsole", "andale"])) family = "monospace";
+    else if (has(["helvetica", "arial", "liberationsans", "nimbussans", "notosans", "dejavusans", "calibri", "verdana", "tahoma", "segoe", "trebuchet", "centurygothic"])) family = null;
+    else if (has(["times", "georgia", "cambria", "garamond", "bookantiqua", "palatino", "liberationserif", "nimbusroman", "dejavuserif", "notoserif", "centuryschoolbook"])) family = "serif";
     else if (pitchFamily & 1) family = "monospace";
     else if (pitchFamily & 16) family = "serif";
     return family ? families[family] : void 0;
@@ -133,14 +142,34 @@ function patchSource(source, escaped) {
 const TYPES_FROM = "    fonts: Partial<Record<FontCharset, FontEntry>>;";
 const TYPES_TO = `${TYPES_FROM}
     /**
-     * ${MARKER}: fallbacks for Latin charsets chosen by the requested face name,
-     * then by PDFium's serif and fixed-pitch flags. Faces matching neither use
-     * \`fonts\`.
+     * ${MARKER}: fallbacks chosen by the requested face name, then by PDFium's
+     * serif and fixed-pitch flags, for every charset configured with the ANSI
+     * entry. Faces matching neither use \`fonts\`.
      */
     fontFamilies?: Partial<Record<"serif" | "monospace", FontEntry>>;`;
 
 let failed = false;
 let changed = false;
+
+/** Writes the patched text, or reports why it cannot. */
+function apply(rel, source, patch) {
+  if (source.includes(MARKER)) return;
+  if (source.includes(MARKER_BASE)) {
+    log(
+      `${rel} was patched by an older revision of this script; delete ` +
+        "node_modules/@embedpdf/engines and run `npm install` again.",
+    );
+    failed = true;
+    return;
+  }
+  const { out, error } = patch(source);
+  if (error) {
+    log(`${rel}: ${error}`);
+    failed = true;
+    return;
+  }
+  return out;
+}
 
 for (const { file, escaped } of targets) {
   const rel = path.relative(enginesDir, file);
@@ -149,38 +178,26 @@ for (const { file, escaped } of targets) {
     failed = true;
     continue;
   }
-  const source = readFileSync(file, "utf8");
-  if (source.includes(MARKER)) continue;
-  if (checkOnly) {
-    log(`${rel} is not patched`);
-    failed = true;
-    continue;
-  }
-  const { out, error } = patchSource(source, escaped);
-  if (error) {
-    log(`${rel}: ${error}`);
-    failed = true;
-    continue;
-  }
-  writeFileSync(file, out);
-  changed = true;
-}
-
-const types = readFileSync(typesFile, "utf8");
-if (!types.includes(MARKER)) {
-  if (checkOnly) {
-    log("font-fallback.d.ts is not patched");
-    failed = true;
-  } else if (types.split(TYPES_FROM).length - 1 !== 1) {
-    log("font-fallback.d.ts: FontFallbackConfig.fonts anchor not found");
-    failed = true;
-  } else {
-    writeFileSync(
-      typesFile,
-      types.replace(TYPES_FROM, () => TYPES_TO),
-    );
+  const out = apply(rel, readFileSync(file, "utf8"), (source) =>
+    patchSource(source, escaped),
+  );
+  if (out !== undefined) {
+    writeFileSync(file, out);
     changed = true;
   }
+}
+
+const typesOut = apply(
+  "font-fallback.d.ts",
+  readFileSync(typesFile, "utf8"),
+  (source) =>
+    source.split(TYPES_FROM).length - 1 === 1
+      ? { out: source.replace(TYPES_FROM, () => TYPES_TO) }
+      : { error: "FontFallbackConfig.fonts anchor not found" },
+);
+if (typesOut !== undefined) {
+  writeFileSync(typesFile, typesOut);
+  changed = true;
 }
 
 if (failed) process.exit(1);

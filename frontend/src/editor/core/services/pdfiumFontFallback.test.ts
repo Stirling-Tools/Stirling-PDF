@@ -85,6 +85,13 @@ describe("pdfiumFontFallback", () => {
     expect(fileFor(FontCharset.ANSI, 0, "Helvetica")).toBe(
       "LiberationSans-Regular.ttf",
     );
+    // Mono variants of sans families, and a sans face with a serif-like prefix.
+    expect(fileFor(FontCharset.ANSI, 0, "NotoSansMono-Regular")).toBe(
+      "LiberationMono-Regular.ttf",
+    );
+    expect(fileFor(FontCharset.ANSI, 0, "CenturyGothic")).toBe(
+      "LiberationSans-Regular.ttf",
+    );
     // Unknown names fall back to the serif (16) and fixed-pitch (1) flags.
     expect(fileFor(FontCharset.ANSI, 16, "HouseSerif")).toBe(
       "LiberationSerif-Regular.ttf",
