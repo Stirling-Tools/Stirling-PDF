@@ -33,8 +33,6 @@ export function ImageAccessibilitySection({
   onNext: () => void;
 }) {
   const { t } = useTranslation();
-  const needsThis =
-    accessibility.kind === "describable" && !accessibility.description?.trim();
   const othersPending =
     review.needsDescription +
     review.untagged -
@@ -65,15 +63,7 @@ export function ImageAccessibilitySection({
               data-testid="pdf-editor-image-description"
             />
             <Text size="xs" c="dimmed">
-              {needsThis
-                ? t(
-                    "pdfTextEditor.inspector.accessibility.needsDescription",
-                    "Without a description, screen readers can only say there is an image here.",
-                  )
-                : t(
-                    "pdfTextEditor.inspector.accessibility.described",
-                    "Screen readers read this description in place of the image.",
-                  )}
+              {descriptionHint(t, accessibility)}
             </Text>
           </Stack>
         ) : (
@@ -124,7 +114,7 @@ function DecorativeToggle({
   const checked = accessibility.kind === "decorative";
   const blocked =
     accessibility.kind === "decorative"
-      ? !accessibility.pending
+      ? !accessibility.canUndecorate
       : !accessibility.canBeDecorative;
   return (
     <Checkbox
@@ -138,6 +128,28 @@ function DecorativeToggle({
       onChange={(e) => onSetDecorative(e.currentTarget.checked)}
       data-testid="pdf-editor-image-decorative"
     />
+  );
+}
+
+function descriptionHint(
+  t: TFunction,
+  accessibility: Extract<ImageAccessibility, { kind: "describable" }>,
+): string {
+  if (!accessibility.tagged) {
+    return t(
+      "pdfTextEditor.inspector.accessibility.untaggedHint",
+      "Screen readers can't reach this image yet. Describing it, or marking it decorative, adds it to the document's tags.",
+    );
+  }
+  if (!accessibility.description?.trim()) {
+    return t(
+      "pdfTextEditor.inspector.accessibility.needsDescription",
+      "Without a description, screen readers can only say there is an image here.",
+    );
+  }
+  return t(
+    "pdfTextEditor.inspector.accessibility.described",
+    "Screen readers read this description in place of the image.",
   );
 }
 

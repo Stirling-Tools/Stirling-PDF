@@ -105,7 +105,7 @@ function AccessibilitySection({
               {t("pdfTextEditor.inspector.accessibility.untagged", {
                 count: review.untagged,
                 defaultValue:
-                  "{{count}} images aren't tagged, so they can't be described yet",
+                  "{{count}} images aren't tagged, so screen readers can't reach them",
               })}
             </Text>
           )}

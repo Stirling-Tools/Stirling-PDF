@@ -14,6 +14,10 @@ import {
 } from "vitest";
 import { SetAltTextCommand } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
 import { SetDecorativeCommand } from "@editor/tools/pdfTextEditor/commands/SetDecorativeCommand";
+import { TagImageCommand } from "@editor/tools/pdfTextEditor/commands/TagImageCommand";
+import { DeleteImageCommand } from "@editor/tools/pdfTextEditor/commands/DeleteImageCommand";
+import type { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import { readTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { toLatin1 } from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
@@ -257,11 +261,14 @@ describe("reading tags from the file's ParentTree", () => {
       mcids,
       onlyMarkedContent: true,
     });
-    expect(structure.get(0)).toEqual([
-      element("Figure", "Chart", [0]),
-      element("P", null, [5]),
-    ]);
-    expect(structure.get(1)).toEqual([element("P", null, [0])]);
+    expect(structure.get(0)).toEqual({
+      elements: [element("Figure", "Chart", [0]), element("P", null, [5])],
+      slotCount: 6,
+    });
+    expect(structure.get(1)).toEqual({
+      elements: [element("P", null, [0])],
+      slotCount: 1,
+    });
   });
 
   test("describes the figure, not the paragraph that spans the page break", async () => {
@@ -294,9 +301,8 @@ describe("imageAccessibility", () => {
     const [figure] = await images(doc);
     expect(imageAccessibility(doc, figure)).toEqual({
       kind: "describable",
-      pageIndex: 0,
-      mcid: 0,
       description: "A grey square",
+      tagged: true,
       canBeDecorative: true,
     });
     new HistoryStack().execute(
@@ -308,12 +314,21 @@ describe("imageAccessibility", () => {
     });
   });
 
-  test("reads an artifact image as decorative", async () => {
+  test("reads an artifact image as decorative, which retagging can undo", async () => {
     const doc = await open(imagesPdf());
     const [, rule] = await images(doc);
     expect(imageAccessibility(doc, rule)).toEqual({
       kind: "decorative",
-      pending: null,
+      canUndecorate: true,
+    });
+  });
+
+  test("cannot undo an artifact in an untagged document", async () => {
+    const doc = await open(imagesPdf({ tagged: false }));
+    const [, rule] = await images(doc);
+    expect(imageAccessibility(doc, rule)).toEqual({
+      kind: "decorative",
+      canUndecorate: false,
     });
   });
 
@@ -688,7 +703,7 @@ describe("SetDecorativeCommand", () => {
     const [image] = page.images.map((img) => img.snapshot());
     expect(imageAccessibility(reopened, image)).toEqual({
       kind: "decorative",
-      pending: null,
+      canUndecorate: true,
     });
     expect(reopened.structure(0).elements.map((e) => e.type)).not.toContain(
       "Figure",
@@ -749,5 +764,268 @@ describe("saving a description", () => {
       "Your accessibility changes couldn't be saved, so the file wasn't saved. Undo them and try again.",
     );
     expect(error.cause).toBeInstanceOf(StructureEditError);
+  });
+});
+
+describe("PageStructure: added figures", () => {
+  const paragraph = {
+    type: "P",
+    alt: null,
+    actualText: null,
+    mcids: [3],
+    onlyMarkedContent: true,
+  };
+
+  test("takes an MCID above every slot, added figure and marked content", () => {
+    const s = new PageStructure([paragraph], null, 5);
+    expect(s.freeMcid(2)).toBe(5);
+    expect(s.freeMcid(7)).toBe(8);
+    s.addFigure(5);
+    expect(s.freeMcid(2)).toBe(6);
+  });
+
+  test("lists added figures apart from edits to the file's elements", () => {
+    const s = new PageStructure([{ ...paragraph, type: "Figure" }], null, 5);
+    s.addFigure(5);
+    s.setAlt(5, "Logo");
+    s.setAlt(3, "Chart");
+    expect(s.pendingEdits()).toEqual([
+      { mcid: 3, alt: "Chart", decorative: false },
+    ]);
+    expect(s.addedFigures()).toEqual([{ mcid: 5, alt: "Logo" }]);
+    expect(() => s.setDecorative(5, true)).toThrow();
+    s.removeFigure(5);
+    expect(s.addedFigures()).toEqual([]);
+    expect(s.element(5)).toBeNull();
+  });
+
+  test("adds none where the page has no ParentTree array or is read-only", () => {
+    expect(
+      new PageStructure([paragraph], null, 5).cannotAddFigure(),
+    ).toBeNull();
+    expect(new PageStructure([]).cannotAddFigure()).toBe("untagged");
+    expect(new PageStructure([], "encrypted", 5).cannotAddFigure()).toBe(
+      "encrypted",
+    );
+  });
+});
+
+async function readPage(doc: EditorDocument) {
+  const page = doc.page(0);
+  PdfiumTextReader.populate(doc, page);
+  return page;
+}
+
+/** Insert a 20pt square image at (10, y) on page 0. */
+function insertImage(
+  doc: EditorDocument,
+  history: HistoryStack,
+  y: number,
+): ImageObject {
+  const insert = new InsertImageCommand({
+    pageIndex: 0,
+    rgba: new Uint8ClampedArray([255, 0, 0, 255]),
+    pixelWidth: 1,
+    pixelHeight: 1,
+    x: 10,
+    y,
+    width: 20,
+    height: 20,
+  });
+  history.execute(insert, doc);
+  return doc.page(0).findImage(insert.insertedImageId!)!;
+}
+
+const tagImage = (
+  image: ImageObject,
+  as: "figure" | "artifact",
+  alt?: string,
+) => new TagImageCommand({ pageIndex: 0, imageId: image.id, as, alt });
+
+const describable = (description: string | null) => ({
+  kind: "describable",
+  description,
+  tagged: true,
+  canBeDecorative: true,
+});
+
+describe("TagImageCommand", () => {
+  const marks = (doc: EditorDocument, image: ImageObject) =>
+    readTagMarks(doc.module, image.pdfiumObjPtr);
+
+  test("describes an inserted image as a new figure, undoably", async () => {
+    const doc = await open(imagesPdf());
+    await readPage(doc);
+    const history = new HistoryStack();
+    const image = insertImage(doc, history, 60);
+    history.execute(tagImage(image, "figure", "A logo"), doc);
+    expect(marks(doc, image)).toEqual([{ name: "Figure", mcid: 1 }]);
+    expect(imageAccessibility(doc, image.snapshot())).toEqual(
+      describable("A logo"),
+    );
+
+    history.undo(doc);
+    expect(marks(doc, image)).toEqual([]);
+    expect(imageAttention(doc, image.snapshot())).toBe("untagged");
+    expect(doc.structureEdits()).toEqual([]);
+
+    history.redo(doc);
+    expect(image.mcid).toBe(1);
+    expect(doc.structure(0).alt(1)).toBe("A logo");
+  });
+
+  test("undoes the typing that follows in the same step", async () => {
+    const doc = await open(imagesPdf());
+    await readPage(doc);
+    const history = new HistoryStack();
+    const image = insertImage(doc, history, 60);
+    history.execute(tagImage(image, "figure", "A"), doc);
+    history.execute(
+      new SetAltTextCommand({ pageIndex: 0, mcid: 1, alt: "A logo" }),
+      doc,
+    );
+    history.undo(doc);
+    expect(image.mcid).toBeNull();
+    expect(doc.structure(0).addedFigures()).toEqual([]);
+  });
+
+  test("un-decorates an artifact, restoring the mark on undo", async () => {
+    const doc = await open(imagesPdf());
+    const [, rule] = (await readPage(doc)).images;
+    const history = new HistoryStack();
+    history.execute(tagImage(rule, "figure"), doc);
+    expect(marks(doc, rule)).toEqual([{ name: "Figure", mcid: 1 }]);
+    expect(imageAccessibility(doc, rule.snapshot())).toEqual(describable(null));
+
+    history.undo(doc);
+    expect(marks(doc, rule)).toEqual([{ name: "Artifact", mcid: null }]);
+    expect(imageAccessibility(doc, rule.snapshot())).toEqual({
+      kind: "decorative",
+      canUndecorate: true,
+    });
+  });
+
+  test("marks an added figure decorative, dropping it and its description", async () => {
+    const doc = await open(imagesPdf());
+    await readPage(doc);
+    const history = new HistoryStack();
+    const image = insertImage(doc, history, 60);
+    history.execute(tagImage(image, "figure", "A logo"), doc);
+    history.execute(tagImage(image, "artifact"), doc);
+    expect(marks(doc, image)).toEqual([{ name: "Artifact", mcid: null }]);
+    expect(doc.structure(0).addedFigures()).toEqual([]);
+
+    history.undo(doc);
+    expect(doc.structure(0).addedFigures()).toEqual([
+      { mcid: 1, alt: "A logo" },
+    ]);
+  });
+
+  test("refuses content the file's elements own", async () => {
+    const doc = await open(imagesPdf());
+    const [figure] = (await readPage(doc)).images;
+    expect(() =>
+      new HistoryStack().execute(tagImage(figure, "artifact"), doc),
+    ).toThrow(HistoryStepError);
+    expect(marks(doc, figure)).toEqual([{ name: "Figure", mcid: 0 }]);
+  });
+
+  test("refuses an image in an untagged document", async () => {
+    const doc = await open(imagesPdf({ tagged: false }));
+    await readPage(doc);
+    const history = new HistoryStack();
+    const image = insertImage(doc, history, 60);
+    expect(() =>
+      history.execute(tagImage(image, "figure", "A logo"), doc),
+    ).toThrow(HistoryStepError);
+    expect(marks(doc, image)).toEqual([]);
+  });
+});
+
+describe("saving an added figure", () => {
+  async function reopen(bytes: Uint8Array) {
+    const doc = await open(bytes);
+    const page = await readPage(doc);
+    return { doc, images: page.images.map((img) => img.snapshot()) };
+  }
+
+  /** The page's elements in tree order, each as its description or else its type. */
+  const tree = (doc: EditorDocument) =>
+    readPageStructure(doc.module, doc.page(0).pagePtr).map(
+      (el) => el.alt ?? el.type,
+    );
+
+  test("puts an inserted image's figure after the content above it, every save", async () => {
+    const doc = await open(imagesPdf());
+    await readPage(doc);
+    const history = new HistoryStack();
+    const image = insertImage(doc, history, 60);
+    history.execute(tagImage(image, "figure", "A logo"), doc);
+
+    await savedBytes(doc);
+    const { doc: reopened, images } = await reopen(await savedBytes(doc));
+    const added = images.find((img) => img.mcid === 1)!;
+    expect(imageAccessibility(reopened, added)).toEqual(describable("A logo"));
+    expect(tree(reopened)).toEqual(["Document", "A grey square", "A logo"]);
+  });
+
+  test("puts a figure above all the page's tagged content first", async () => {
+    const doc = await open(imagesPdf());
+    await readPage(doc);
+    const history = new HistoryStack();
+    const image = insertImage(doc, history, 170);
+    history.execute(tagImage(image, "figure", "A logo"), doc);
+
+    const { doc: reopened } = await reopen(await savedBytes(doc));
+    expect(tree(reopened)).toEqual(["Document", "A logo", "A grey square"]);
+  });
+
+  test("saves an un-decorated artifact as a described figure", async () => {
+    const doc = await open(imagesPdf());
+    const [, rule] = (await readPage(doc)).images;
+    const history = new HistoryStack();
+    history.execute(tagImage(rule, "figure"), doc);
+    history.execute(
+      new SetAltTextCommand({ pageIndex: 0, mcid: 1, alt: "A divider" }),
+      doc,
+    );
+
+    const { doc: reopened, images } = await reopen(await savedBytes(doc));
+    expect(images.map((img) => imageAccessibility(reopened, img))).toEqual([
+      describable("A grey square"),
+      describable("A divider"),
+    ]);
+    expect(tree(reopened)).toEqual(["Document", "A grey square", "A divider"]);
+  });
+
+  test("saves an untagged image marked decorative as an artifact", async () => {
+    const doc = await open(imagesPdf());
+    await readPage(doc);
+    const history = new HistoryStack();
+    const image = insertImage(doc, history, 60);
+    history.execute(tagImage(image, "artifact"), doc);
+
+    const { doc: reopened, images } = await reopen(await savedBytes(doc));
+    expect(images.filter((img) => img.artifact)).toHaveLength(2);
+    expect(
+      reviewImages(reopened, [{ pageIndex: 0, images }] as PageSnapshot[]),
+    ).toEqual({ needsDescription: 0, untagged: 0 });
+    expect(tree(reopened)).toEqual(["Document", "A grey square"]);
+  });
+
+  test("leaves out the figure of an image deleted after it was described", async () => {
+    const doc = await open(imagesPdf());
+    await readPage(doc);
+    const history = new HistoryStack();
+    const image = insertImage(doc, history, 60);
+    history.execute(tagImage(image, "figure", "A logo"), doc);
+    history.execute(
+      new DeleteImageCommand({ pageIndex: 0, imageId: image.id }),
+      doc,
+    );
+    expect(doc.structureEdits()).toEqual([]);
+
+    const { doc: reopened } = await reopen(await savedBytes(doc));
+    expect(tree(reopened)).toEqual(["Document", "A grey square"]);
   });
 });

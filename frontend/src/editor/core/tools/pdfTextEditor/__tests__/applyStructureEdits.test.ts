@@ -363,3 +363,88 @@ describe("applyStructureEdits: marking decorative", () => {
     ]);
   });
 });
+
+describe("applyStructureEdits: adding figures", () => {
+  // Page 1 also draws content marked MCID 2 and 3, which no element owns.
+  function untaggedContent(parentTree?: string): Uint8Array {
+    return buildClassicPdf(
+      objects(parentTree).map((obj) =>
+        obj.num === 5
+          ? {
+              num: 5,
+              body: streamBody(
+                "",
+                "/P <</MCID 0>> BDC EMC /Figure <</MCID 1>> BDC 0 0 10 10 re f EMC " +
+                  "/Figure <</MCID 2>> BDC 0 0 5 5 re f EMC /Figure <</MCID 3>> BDC 0 0 2 2 re f EMC",
+              ),
+            }
+          : obj,
+      ),
+      1,
+    );
+  }
+  const figure = (mcid: number, after: number | null, alt = "Logo") => ({
+    pageIndex: 0,
+    mcid,
+    alt,
+    decorative: false,
+    newFigure: { after },
+  });
+  const documentKids = async (bytes: Uint8Array) =>
+    (await elementBody(bytes, 9)).match(/\/K \[([^\]]*)\]/)![1];
+
+  test("adds a figure after the element owning the content before it", async () => {
+    const out = await applyStructureEdits(untaggedContent(), [figure(2, 0)]);
+    expect(await documentKids(out)).toBe("10 0 R 13 0 R 11 0 R 12 0 R");
+    expect((await elementBody(out, 13)).trim()).toBe(
+      "<< /Type /StructElem /S /Figure /P 9 0 R /Pg 3 0 R /K 2 /Alt (Logo) >>",
+    );
+    expect(await elementBody(out, 7)).toContain(
+      "0 [10 0 R 11 0 R 13 0 R] 1 [12 0 R]",
+    );
+  });
+
+  test("places a figure before the page's first tagged content when nothing precedes it", async () => {
+    const out = await applyStructureEdits(untaggedContent(), [
+      figure(2, null, null as unknown as string),
+    ]);
+    expect(await documentKids(out)).toBe("13 0 R 10 0 R 11 0 R 12 0 R");
+    expect(await elementBody(out, 13)).not.toContain("/Alt");
+  });
+
+  test("places a figure after one added in the same save", async () => {
+    const out = await applyStructureEdits(untaggedContent(), [
+      figure(2, 1),
+      figure(3, 2),
+    ]);
+    expect(await documentKids(out)).toBe("10 0 R 11 0 R 13 0 R 14 0 R 12 0 R");
+  });
+
+  test("files a figure on a page with no tagged content in the document element", async () => {
+    const out = await applyStructureEdits(
+      untaggedContent("<< /Nums [0 [10 0 R 11 0 R] 1 [null]] >>"),
+      [{ ...figure(0, null), pageIndex: 1 }],
+    );
+    expect(await documentKids(out)).toBe("10 0 R 11 0 R 12 0 R 13 0 R");
+  });
+
+  test("adds a figure beside one marked decorative in the same save", async () => {
+    const out = await applyStructureEdits(untaggedContent(), [
+      figure(2, 1),
+      { pageIndex: 0, mcid: 1, alt: null, decorative: true },
+    ]);
+    expect(await documentKids(out)).toBe("10 0 R 13 0 R 12 0 R");
+    expect(await elementBody(out, 7)).toContain(
+      "0 [10 0 R null 13 0 R] 1 [12 0 R]",
+    );
+  });
+
+  test("refuses an MCID the page's content does not carry, or an element owns", async () => {
+    expect(
+      await failuresOf(untaggedContent(), [figure(7, 0), figure(1, 0)]),
+    ).toEqual([
+      "the page's content does not carry its MCID",
+      "another element owns its MCID",
+    ]);
+  });
+});

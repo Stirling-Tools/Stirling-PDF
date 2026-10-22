@@ -13,7 +13,6 @@ import {
   RawPdf,
   referencedObject,
   setDictEntry,
-  type NumberTreeEntry,
 } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   appendRevision,
@@ -33,9 +32,6 @@ interface KidChanges {
 
 interface PageRepair {
   streams: Map<number, string>;
-  /** Where the page's ParentTree array lives, and its replacement. */
-  parentEntry: NumberTreeEntry;
-  parentArray: string;
   elements: Map<number, KidChanges>;
 }
 
@@ -58,7 +54,7 @@ export async function repairStructure(
   const sharedStreams = streamsUsedByMoreThanOnePage(pdf);
   const objects: RevisionObject[] = [];
   const elementBodies = new Map<number, string>();
-  const parentTree = new ParentTreeWriter();
+  const parentTree = new ParentTreeWriter(pdf, treeRoot);
 
   for (const pageIndex of new Set(opts.pages)) {
     const pageNum = pdf.pageNumberAt(pageIndex);
@@ -68,7 +64,7 @@ export async function repairStructure(
       before && beforeNum !== null ? await pageSites(before, beforeNum) : null;
     const repair = await planPage(
       pdf,
-      treeRoot,
+      parentTree,
       pageNum,
       sharedStreams,
       new Set(beforeSites?.sites.map((s) => s.mcid)),
@@ -78,7 +74,6 @@ export async function repairStructure(
     for (const [num, text] of repair.streams) {
       objects.push(await contentStreamObject(num, text));
     }
-    parentTree.set(repair.parentEntry, repair.parentArray);
 
     for (const [num, changes] of repair.elements) {
       const body = elementBodies.get(num) ?? pdf.objectBody(num);
@@ -87,7 +82,7 @@ export async function repairStructure(
     }
   }
 
-  objects.push(...parentTree.objects(pdf));
+  objects.push(...parentTree.objects());
   for (const [num, body] of elementBodies) {
     objects.push({ num, body: plainObject(body) });
   }
@@ -96,25 +91,21 @@ export async function repairStructure(
   return appendRevision(pdf, objects);
 }
 
+/** Plan the page's repair, writing its ParentTree slots to `parentTree`. */
 async function planPage(
   pdf: RawPdf,
-  treeRoot: number,
+  parentTree: ParentTreeWriter,
   pageNum: number,
   sharedStreams: Set<number>,
   mcidsBefore: ReadonlySet<number>,
 ): Promise<PageRepair | null> {
-  const page = pdf.objectBody(pageNum);
-  const key = page ? pdf.dictInt(page, "StructParents") : null;
-  if (!page || key === null) return null;
+  const slots = parentTree.slots(pageNum);
+  if (!slots) return null;
   const read = await pageSites(pdf, pageNum);
   // Renumbering a stream another page also draws would corrupt that page.
   if (!read || read.refs.some((r) => sharedStreams.has(r))) return null;
   const { refs, texts, sites } = read;
 
-  const tree = pdf.parentTreeArray(treeRoot, key);
-  if (!tree?.items) return null;
-  const entry = tree.entry;
-  const slots = tree.items.map((item) => item.text);
   const owner = (mcid: number): number | null =>
     referencedObject(slots[mcid] ?? "");
 
@@ -175,12 +166,7 @@ async function planPage(
     streams.set(refs[stream], out);
   });
 
-  return {
-    streams,
-    parentEntry: entry,
-    parentArray: `[${slots.join(" ")}]`,
-    elements,
-  };
+  return { streams, elements };
 }
 
 /**

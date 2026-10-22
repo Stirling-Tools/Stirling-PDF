@@ -5,44 +5,75 @@ import type {
   PageSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 
-/** The page and marked content a structure edit to an image addresses. */
-export interface ImageTarget {
-  pageIndex: number;
-  mcid: number;
-}
-
 /** What can be said and done about one image's accessibility. */
 export type ImageAccessibility =
-  | {
-      kind: "decorative";
-      /** Set when this session marked it, so the mark can be undone. */
-      pending: ImageTarget | null;
-    }
+  | { kind: "decorative"; canUndecorate: boolean }
   | { kind: "blocked"; blocker: DescriptionBlocker; documentTagged: boolean }
-  | (ImageTarget & {
+  | {
       kind: "describable";
       description: string | null;
+      /** False for an image no element owns yet: describing it adds one. */
+      tagged: boolean;
       canBeDecorative: boolean;
-    });
+    };
 
 export function imageAccessibility(
   doc: EditorDocument,
   image: ImageObjectSnapshot,
 ): ImageAccessibility {
-  if (image.artifact) return { kind: "decorative", pending: null };
-  if (image.mcid === undefined) return blocked(doc, "untagged");
+  const retaggable = retaggableTag(doc, image) !== null;
+  if (image.artifact) return { kind: "decorative", canUndecorate: retaggable };
+  if (image.mcid === undefined) {
+    if (!retaggable) return blocked(doc, "untagged");
+    return {
+      kind: "describable",
+      description: null,
+      tagged: false,
+      canBeDecorative: true,
+    };
+  }
   const structure = doc.structure(image.pageIndex);
   const blocker = structure.cannotDescribe(image.mcid);
   if (blocker) return blocked(doc, blocker);
-  const target = { pageIndex: image.pageIndex, mcid: image.mcid };
   if (structure.decorative(image.mcid)) {
-    return { kind: "decorative", pending: target };
+    return { kind: "decorative", canUndecorate: true };
   }
   return {
     kind: "describable",
-    ...target,
     description: structure.alt(image.mcid),
-    canBeDecorative: structure.cannotMarkDecorative(image.mcid) === null,
+    tagged: true,
+    canBeDecorative:
+      retaggable || structure.cannotMarkDecorative(image.mcid) === null,
+  };
+}
+
+/** How an image is tagged, where TagImageCommand can change it. */
+export type RetaggableTag =
+  | { kind: "untagged" }
+  | { kind: "artifact" }
+  | { kind: "figure"; mcid: number; alt: string | null };
+
+/**
+ * The image's tag when TagImageCommand can change it: an image the page
+ * itself draws in a tagged document, that is untagged, an artifact, or a
+ * figure the session added. Null otherwise, for content the file's elements
+ * own among the rest.
+ */
+export function retaggableTag(
+  doc: EditorDocument,
+  image: ImageObjectSnapshot,
+): RetaggableTag | null {
+  if (!doc.isTagged() || image.inForm) return null;
+  const structure = doc.structure(image.pageIndex);
+  if (structure.cannotAddFigure()) return null;
+  if (image.mcid === undefined) {
+    return image.artifact ? { kind: "artifact" } : { kind: "untagged" };
+  }
+  if (!structure.isAdded(image.mcid)) return null;
+  return {
+    kind: "figure",
+    mcid: image.mcid,
+    alt: structure.alt(image.mcid),
   };
 }
 
@@ -70,6 +101,7 @@ export function attentionFor(
   accessibility: ImageAccessibility,
 ): ImageAttention | null {
   if (accessibility.kind === "describable") {
+    if (!accessibility.tagged) return "untagged";
     return accessibility.description?.trim() ? null : "needs-description";
   }
   if (

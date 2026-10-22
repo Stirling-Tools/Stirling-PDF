@@ -52,8 +52,12 @@ export class SetAltTextCommand implements Command {
     doc.page(this.pageIndex).bumpRevision();
   }
 
-  /** Keystrokes in one description field collapse into one undo step. */
   coalesceKey(): string {
-    return `${this.type}:${this.pageIndex}:${this.mcid}`;
+    return descriptionCoalesceKey(this.pageIndex, this.mcid);
   }
+}
+
+/** Keystrokes in one description field collapse into one undo step. */
+export function descriptionCoalesceKey(pageIndex: number, mcid: number) {
+  return `set-alt-text:${pageIndex}:${mcid}`;
 }

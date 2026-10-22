@@ -40,11 +40,16 @@ const describable = (
   canBeDecorative = true,
 ): ImageAccessibility => ({
   kind: "describable",
-  pageIndex: 0,
-  mcid: 2,
   description,
+  tagged: true,
   canBeDecorative,
 });
+const taggable: ImageAccessibility = {
+  kind: "describable",
+  description: null,
+  tagged: false,
+  canBeDecorative: true,
+};
 const untagged: ImageAccessibility = {
   kind: "blocked",
   blocker: "untagged",
@@ -67,8 +72,18 @@ describe("ImageAccessibilitySection", () => {
     expect(screen.getByText(`${KEY}.needsDescription`)).toBeVisible();
   });
 
+  it("offers to describe an untagged image, saying that tags it", () => {
+    const { onSetDescription } = renderSection(taggable);
+    expect(screen.getByText(`${KEY}.untaggedHint`)).toBeVisible();
+    fireEvent.change(screen.getByTestId(FIELD), {
+      target: { value: "A logo" },
+    });
+    expect(onSetDescription).toHaveBeenCalledWith("A logo");
+    expect(screen.getByTestId(DECORATIVE)).toBeEnabled();
+  });
+
   it.each<[ImageAccessibility, string]>([
-    [{ kind: "decorative", pending: null }, "decorative"],
+    [{ kind: "decorative", canUndecorate: false }, "decorative"],
     [
       { kind: "blocked", blocker: "untagged", documentTagged: false },
       "untaggedDocument",
@@ -103,10 +118,10 @@ describe("ImageAccessibilitySection", () => {
       expect(onSetDecorative).toHaveBeenCalledWith(true);
     });
 
-    it("unmarks an image this session marked", () => {
+    it("unmarks a decorative image", () => {
       const { onSetDecorative } = renderSection({
         kind: "decorative",
-        pending: { pageIndex: 0, mcid: 2 },
+        canUndecorate: true,
       });
       const box = screen.getByTestId(DECORATIVE);
       expect(box).toBeChecked();
@@ -115,7 +130,7 @@ describe("ImageAccessibilitySection", () => {
     });
 
     it.each<[ImageAccessibility, string]>([
-      [{ kind: "decorative", pending: null }, "decorativeInFile"],
+      [{ kind: "decorative", canUndecorate: false }, "decorativeInFile"],
       [describable("Bar chart", false), "mixedContent"],
     ])("cannot change %o, and says why", (accessibility, reason) => {
       renderSection(accessibility);
@@ -157,6 +172,12 @@ describe("ImageAccessibilitySection", () => {
       false,
     ],
     [
+      "only this one is untagged, and can be tagged",
+      taggable,
+      { needsDescription: 0, untagged: 1 },
+      false,
+    ],
+    [
       "another is untagged",
       describable("Done"),
       { needsDescription: 0, untagged: 1 },
@@ -164,7 +185,7 @@ describe("ImageAccessibilitySection", () => {
     ],
     [
       "a decorative image, one elsewhere",
-      { kind: "decorative", pending: null },
+      { kind: "decorative", canUndecorate: false },
       { needsDescription: 1, untagged: 0 },
       true,
     ],

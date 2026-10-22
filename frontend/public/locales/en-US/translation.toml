@@ -7439,10 +7439,11 @@ remaining_one = "{{count}} image needs a description"
 remaining_other = "{{count}} images need descriptions"
 saveFailed = "Your accessibility changes couldn't be saved, so the file wasn't saved. Undo them and try again."
 unreadable = "This file's tags can't be edited here."
-untagged_one = "{{count}} image isn't tagged, so it can't be described yet"
-untagged_other = "{{count}} images aren't tagged, so they can't be described yet"
+untagged_one = "{{count}} image isn't tagged, so screen readers can't reach it"
+untagged_other = "{{count}} images aren't tagged, so screen readers can't reach them"
 untaggedBadge = "Not tagged, so screen readers can't reach it"
 untaggedDocument = "This document has no accessibility tags, so its images can't be described yet."
+untaggedHint = "Screen readers can't reach this image yet. Describing it, or marking it decorative, adds it to the document's tags."
 untaggedImage = "This image isn't in the document's tags, so it can't be described yet."
 
 [pdfTextEditor.mobile]

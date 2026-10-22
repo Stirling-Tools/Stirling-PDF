@@ -1,19 +1,25 @@
 import { useCallback, useMemo } from "react";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import { SetAltTextCommand } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
 import { SetDecorativeCommand } from "@editor/tools/pdfTextEditor/commands/SetDecorativeCommand";
+import { TagImageCommand } from "@editor/tools/pdfTextEditor/commands/TagImageCommand";
 import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type {
   EditorStore,
   EditorViewState,
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
-import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
+import type {
+  ImageObjectSnapshot,
+  SelectionState,
+} from "@editor/tools/pdfTextEditor/types";
 import {
   imageAccessibility,
   nextImageNeedingAttention,
+  retaggableTag,
   reviewImages,
   type ImageAccessibility,
   type ImageReview,
-  type ImageTarget,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
 /**
@@ -26,49 +32,43 @@ export function useImageAccessibility(
   state: EditorViewState,
   selection: SelectionState,
 ) {
-  const accessibility = useMemo((): ImageAccessibility | null => {
-    const doc = store.document;
+  const image = useMemo((): ImageObjectSnapshot | null => {
     if (
-      !doc ||
       selection.imageIds.length !== 1 ||
       selection.runIds.length > 0 ||
       selection.shapeIds.length > 0
     )
       return null;
-    const image = state.pages
-      .flatMap((page) => page.images)
-      .find((img) => img.id === selection.imageIds[0]);
-    return image ? imageAccessibility(doc, image) : null;
-  }, [store, state.pages, selection]);
+    return (
+      state.pages
+        .flatMap((page) => page.images)
+        .find((img) => img.id === selection.imageIds[0]) ?? null
+    );
+  }, [state.pages, selection]);
+
+  const accessibility = useMemo((): ImageAccessibility | null => {
+    const doc = store.document;
+    return doc && image ? imageAccessibility(doc, image) : null;
+  }, [store, image]);
 
   const setDescription = useCallback(
     (text: string) => {
-      if (accessibility?.kind !== "describable") return;
-      store.dispatch(
-        new SetAltTextCommand({
-          pageIndex: accessibility.pageIndex,
-          mcid: accessibility.mcid,
-          // An emptied field removes the description rather than saving an empty one.
-          alt: text === "" ? null : text,
-        }),
-      );
+      if (!image || accessibility?.kind !== "describable") return;
+      // An emptied field removes the description rather than saving an empty one.
+      const command = describeCommand(image, text === "" ? null : text);
+      if (command) store.dispatch(command);
     },
-    [store, accessibility],
+    [store, image, accessibility],
   );
 
   const setDecorative = useCallback(
     (decorative: boolean) => {
-      const target = decorativeTarget(accessibility);
-      if (!target) return;
-      store.dispatch(
-        new SetDecorativeCommand({
-          pageIndex: target.pageIndex,
-          mcid: target.mcid,
-          decorative,
-        }),
-      );
+      const doc = store.document;
+      if (!doc || !image) return;
+      const command = decorativeCommand(doc, image, decorative);
+      if (command) store.dispatch(command);
     },
-    [store, accessibility],
+    [store, image],
   );
 
   const review = useMemo(
@@ -108,11 +108,47 @@ export function useImageAccessibility(
   };
 }
 
-/** What a decorative mark addresses: an image that can be described, or one this session marked. */
-function decorativeTarget(
-  accessibility: ImageAccessibility | null,
-): ImageTarget | null {
-  if (accessibility?.kind === "describable") return accessibility;
-  if (accessibility?.kind === "decorative") return accessibility.pending;
-  return null;
+function describeCommand(
+  image: ImageObjectSnapshot,
+  alt: string | null,
+): Command | null {
+  if (image.mcid !== undefined) {
+    return new SetAltTextCommand({
+      pageIndex: image.pageIndex,
+      mcid: image.mcid,
+      alt,
+    });
+  }
+  // Clearing the field of an image no element owns leaves it untagged.
+  if (alt === null) return null;
+  return new TagImageCommand({
+    pageIndex: image.pageIndex,
+    imageId: image.id,
+    as: "figure",
+    alt,
+  });
+}
+
+/**
+ * Content the file's elements own changes through its element; anything
+ * else is retagged.
+ */
+function decorativeCommand(
+  doc: EditorDocument,
+  image: ImageObjectSnapshot,
+  decorative: boolean,
+): Command | null {
+  if (retaggableTag(doc, image)) {
+    return new TagImageCommand({
+      pageIndex: image.pageIndex,
+      imageId: image.id,
+      as: decorative ? "artifact" : "figure",
+    });
+  }
+  if (image.mcid === undefined) return null;
+  return new SetDecorativeCommand({
+    pageIndex: image.pageIndex,
+    mcid: image.mcid,
+    decorative,
+  });
 }

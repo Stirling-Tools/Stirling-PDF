@@ -173,41 +173,75 @@ export async function contentStreamObject(
   };
 }
 
+interface PageSlots {
+  entry: NumberTreeEntry;
+  /** The slots as read, joined, to tell whether the edits changed them. */
+  read: string;
+  slots: string[];
+}
+
 /**
- * Collects replacements for pages' ParentTree arrays. An array written
- * directly in its number-tree node is spliced into that node, back to front,
- * so pages whose arrays share one node each keep their own span.
+ * The pages' ParentTree arrays as a save's edits leave them, shared by the
+ * passes that change them so no pass writes over another's slots. An array
+ * written directly in its number-tree node is spliced into that node, back to
+ * front, so pages whose arrays share one node each keep their own span.
  */
 export class ParentTreeWriter {
-  private readonly arrays = new Map<number, string>();
-  private readonly splices = new Map<
-    number,
-    { span: ValueSpan; text: string }[]
-  >();
+  private readonly pages = new Map<number, PageSlots | null>();
 
-  set(entry: NumberTreeEntry, array: string): void {
-    const arrayNum = referencedObject(entry.span.text);
-    if (arrayNum !== null) {
-      this.arrays.set(arrayNum, array);
-      return;
-    }
-    const splices = this.splices.get(entry.objNum) ?? [];
-    splices.push({ span: entry.span, text: array });
-    this.splices.set(entry.objNum, splices);
+  constructor(
+    private readonly pdf: RawPdf,
+    private readonly treeRoot: number,
+  ) {}
+
+  /**
+   * The page's slots as the edits so far leave them, for the caller to change
+   * in place; null when the page has no ParentTree array.
+   */
+  slots(pageNum: number): string[] | null {
+    if (!this.pages.has(pageNum))
+      this.pages.set(pageNum, this.readPage(pageNum));
+    return this.pages.get(pageNum)?.slots ?? null;
   }
 
-  objects(pdf: RawPdf): RevisionObject[] {
+  /** The changed arrays, or the nodes that hold them directly. */
+  objects(): RevisionObject[] {
+    const arrays = new Map<number, string>();
+    const splices = new Map<number, { span: ValueSpan; text: string }[]>();
+    for (const page of this.pages.values()) {
+      if (!page) continue;
+      const array = `[${page.slots.join(" ")}]`;
+      if (array === page.read) continue;
+      const arrayNum = referencedObject(page.entry.span.text);
+      if (arrayNum !== null) {
+        arrays.set(arrayNum, array);
+        continue;
+      }
+      const node = splices.get(page.entry.objNum) ?? [];
+      node.push({ span: page.entry.span, text: array });
+      splices.set(page.entry.objNum, node);
+    }
     const out: RevisionObject[] = [];
-    for (const [num, array] of this.arrays) {
+    for (const [num, array] of arrays) {
       out.push({ num, body: plainObject(array) });
     }
-    for (const [num, splices] of this.splices) {
-      let body = pdf.objectBody(num)!;
-      for (const s of splices.sort((a, b) => b.span.start - a.span.start)) {
+    for (const [num, node] of splices) {
+      let body = this.pdf.objectBody(num)!;
+      for (const s of node.sort((a, b) => b.span.start - a.span.start)) {
         body = spliceValue(body, s.span, s.text);
       }
       out.push({ num, body: plainObject(body) });
     }
     return out;
+  }
+
+  private readPage(pageNum: number): PageSlots | null {
+    const page = this.pdf.objectBody(pageNum);
+    const key = page ? this.pdf.dictInt(page, "StructParents") : null;
+    const tree =
+      key === null ? null : this.pdf.parentTreeArray(this.treeRoot, key);
+    if (!tree?.items) return null;
+    const slots = tree.items.map((item) => item.text);
+    return { entry: tree.entry, read: `[${slots.join(" ")}]`, slots };
   }
 }

@@ -4,7 +4,10 @@ import {
   type Command,
 } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { StructureElementEdit } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import type {
+  PageStructure,
+  StructureElementEdit,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
 
 /**
  * Mark or unmark the structure element owning `mcid` as decorative. Like a
@@ -28,10 +31,7 @@ export class SetDecorativeCommand implements Command {
     const structure = doc.structure(this.pageIndex);
     // Refused here, not at save: a mark the save cannot write would fail every
     // later save, the user's other edits included.
-    const refusal = this.decorative
-      ? structure.cannotMarkDecorative(this.mcid)
-      : structure.cannotDescribe(this.mcid);
-    if (refusal) {
+    if (this.refused(structure)) {
       throw new RolledBackError(
         new Error(
           i18n.t(
@@ -46,6 +46,16 @@ export class SetDecorativeCommand implements Command {
     }
     structure.setDecorative(this.mcid, this.decorative);
     doc.page(this.pageIndex).bumpRevision();
+  }
+
+  private refused(structure: PageStructure): boolean {
+    // An added figure has no element in the file to drop: TagImageCommand
+    // retags its content instead.
+    if (structure.isAdded(this.mcid)) return true;
+    const blocker = this.decorative
+      ? structure.cannotMarkDecorative(this.mcid)
+      : structure.cannotDescribe(this.mcid);
+    return blocker !== null;
   }
 
   revert(doc: EditorDocument): void {

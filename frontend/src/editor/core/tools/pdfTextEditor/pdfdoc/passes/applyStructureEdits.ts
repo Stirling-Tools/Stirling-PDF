@@ -12,6 +12,7 @@ import {
   plainObject,
 } from "@editor/tools/pdfTextEditor/pdfdoc/revision";
 import { ParentTreeWriter } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
+import { addFigures } from "@editor/tools/pdfTextEditor/pdfdoc/passes/addFigures";
 import { markDecorative } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markDecorative";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 
@@ -23,6 +24,11 @@ export interface StructureEdit {
   alt: string | null;
   /** Turn the element's content into an artifact and drop the element, its /Alt with it. */
   decorative: boolean;
+  /**
+   * Set when no element owns the content yet: add a Figure for it, after the
+   * element owning MCID `after` on the page (see NewFigure).
+   */
+  newFigure?: { after: number | null };
 }
 
 export interface StructureEditFailure {
@@ -70,7 +76,9 @@ export async function applyStructureEdits(
   const bodies = new Map<number, string>();
   const failures: StructureEditFailure[] = [];
   const decorative = new Map<number, StructureEdit[]>();
+  const figures = edits.filter((edit) => edit.newFigure);
   for (const edit of edits) {
+    if (edit.newFigure) continue;
     const owner = elementFor(pdf, treeRoot, edit);
     if (typeof owner === "string") {
       failures.push({ edit, reason: owner });
@@ -95,10 +103,21 @@ export async function applyStructureEdits(
     bodies.set(owner, updated);
   }
 
-  const parentTree = new ParentTreeWriter();
-  const { streams, failed } = await markDecorative(
+  const parentTree = new ParentTreeWriter(pdf, treeRoot);
+  // Before the decorative marks, so a figure placed beside an element they
+  // drop keeps its place among the kids that remain.
+  const unplaced = await addFigures(
     pdf,
     treeRoot,
+    figures.map((edit) => ({ ...edit, after: edit.newFigure!.after })),
+    bodies,
+    parentTree,
+  );
+  for (const [index, reason] of unplaced) {
+    failures.push({ edit: figures[index], reason });
+  }
+  const { streams, failed } = await markDecorative(
+    pdf,
     new Set(decorative.keys()),
     bodies,
     parentTree,
@@ -111,7 +130,7 @@ export async function applyStructureEdits(
   const out = appendRevision(pdf, [
     ...[...bodies].map(([num, body]) => ({ num, body: plainObject(body) })),
     ...streams,
-    ...parentTree.objects(pdf),
+    ...parentTree.objects(),
   ]);
   if (!out)
     throw fail("the file's cross-reference structure cannot be extended");

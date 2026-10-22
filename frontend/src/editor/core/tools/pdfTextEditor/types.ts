@@ -96,6 +96,8 @@ export interface ImageObjectSnapshot {
   mcid?: number;
   /** Marked as an artifact: decoration that assistive technology skips. */
   artifact?: boolean;
+  /** Drawn by a form XObject, whose marks are not the page's to change. */
+  inForm?: boolean;
 }
 
 // One ruling line the page draws, with the ink needed to reproduce it: a table

@@ -37,7 +37,6 @@ export interface DecorativeWrites {
  */
 export async function markDecorative(
   pdf: RawPdf,
-  treeRoot: number,
   elements: ReadonlySet<number>,
   bodies: Map<number, string>,
   parentTree: ParentTreeWriter,
@@ -55,11 +54,8 @@ export async function markDecorative(
   const shared = streamsUsedByMoreThanOnePage(pdf);
   const streams: Promise<RevisionObject>[] = [];
   for (const pageNum of pdf.pageNumbers()) {
-    const page = pdf.objectBody(pageNum);
-    const key = page ? pdf.dictInt(page, "StructParents") : null;
-    const tree = key === null ? null : pdf.parentTreeArray(treeRoot, key);
-    if (!tree?.items) continue;
-    const slots = tree.items.map((item) => item.text);
+    const slots = parentTree.slots(pageNum);
+    if (!slots) continue;
     const owners = new Map<number, number>();
     slots.forEach((slot, mcid) => {
       const num = referencedObject(slot);
@@ -86,7 +82,6 @@ export async function markDecorative(
       }
     });
     for (const mcid of owners.keys()) slots[mcid] = "null";
-    parentTree.set(tree.entry, `[${slots.join(" ")}]`);
   }
 
   for (const num of elements) {

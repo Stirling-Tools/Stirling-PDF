@@ -251,7 +251,7 @@ test.describe("PDF text editor - tagged documents", () => {
     );
   });
 
-  test("an image inserted into a tagged document is flagged as untagged", async ({
+  test("an image inserted into a tagged document is flagged, then tagged by describing it", async ({
     page,
   }) => {
     test.setTimeout(120_000);
@@ -263,19 +263,34 @@ test.describe("PDF text editor - tagged documents", () => {
       .locator('[data-testid="pdf-editor-image-input"]')
       .setInputFiles(PNG);
     await expect(images).toHaveCount(2);
-    await expect(
-      page.locator(
-        '[data-testid^="pdf-editor-image-attention-"][data-attention="untagged"]',
-      ),
-    ).toHaveCount(1);
+    const untagged = page.locator(
+      '[data-testid^="pdf-editor-image-attention-"][data-attention="untagged"]',
+    );
+    await expect(untagged).toHaveCount(1);
 
     await page.getByTestId("pdf-editor-tab-document").click();
-    await expect(
-      page.getByTestId("pdf-editor-document-accessibility-summary"),
-    ).toHaveText("1 image isn't tagged, so it can't be described yet");
+    await page.keyboard.press("Escape");
+    const summary = page.getByTestId(
+      "pdf-editor-document-accessibility-summary",
+    );
+    await expect(summary).toHaveText(
+      "1 image isn't tagged, so screen readers can't reach it",
+    );
+
+    await images.nth(1).click();
+    await page.getByTestId("pdf-editor-image-description").fill("A red square");
+    await expect(untagged).toHaveCount(0);
+    await saveAndReopen(page);
+
+    await page.locator(IMAGE).nth(1).click();
+    await expect(page.getByTestId("pdf-editor-image-description")).toHaveValue(
+      "A red square",
+    );
   });
 
-  test("an image marked decorative saves as decoration", async ({ page }) => {
+  test("an image marked decorative saves as decoration, and can be described again", async ({
+    page,
+  }) => {
     test.setTimeout(120_000);
     await openFixture(page);
 
@@ -296,6 +311,20 @@ test.describe("PDF text editor - tagged documents", () => {
       page.getByTestId("pdf-editor-image-accessibility-status"),
     ).toHaveText("Marked as decorative, so screen readers skip it.");
     await expect(decorative).toBeChecked();
-    await expect(decorative).toBeDisabled();
+
+    await page
+      .getByTestId("pdf-editor-image-accessibility")
+      .getByText("Decorative", { exact: true })
+      .click();
+    await expect(decorative).not.toBeChecked();
+    const field = page.getByTestId("pdf-editor-image-description");
+    await expect(field).toHaveValue("");
+    await field.fill("Revenue by region");
+    await saveAndReopen(page);
+
+    await page.locator(IMAGE).first().click();
+    await expect(page.getByTestId("pdf-editor-image-description")).toHaveValue(
+      "Revenue by region",
+    );
   });
 });
