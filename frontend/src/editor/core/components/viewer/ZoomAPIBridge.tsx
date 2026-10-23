@@ -2,35 +2,48 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { useZoom, ZoomMode } from "@embedpdf/plugin-zoom/react";
+import type { Point, ZoomLevel } from "@embedpdf/plugin-zoom";
 import { useSpread, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { useScroll } from "@embedpdf/plugin-scroll/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { useAllFiles, useFileSelection } from "@app/contexts/FileContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import type { ZoomAPIWrapper } from "@editor/contexts/viewer/viewerBridges";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { useAllFiles, useFileSelection } from "@editor/contexts/FileContext";
 import {
   determineAutoZoom,
   DEFAULT_FALLBACK_ZOOM,
   DEFAULT_VISIBILITY_THRESHOLD,
   useFitWidthResize,
-} from "@app/utils/viewerZoom";
-import { getFirstPageAspectRatioFromStub } from "@app/utils/pageMetadata";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+} from "@editor/utils/viewerZoom";
+import { getFirstPageAspectRatioFromStub } from "@editor/utils/pageMetadata";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 import {
   preferencesService,
   type ViewerZoomSetting,
-} from "@app/services/preferencesService";
+} from "@editor/services/preferencesService";
+
+function isFitMode(level: ZoomLevel): boolean {
+  return level === ZoomMode.FitWidth || level === ZoomMode.FitPage;
+}
 
 /**
  * Connects the PDF zoom plugin to the shared ViewerContext.
+ *
+ * A fit mode requested through the context's zoom API is the user's choice and
+ * stays put: the plugin re-fits it on resize, spread and rotation itself. Only
+ * the fit width this bridge lands on while auto-zooming is re-evaluated by the
+ * auto heuristic on resize and spread changes.
  */
 export function ZoomAPIBridge() {
   const activeDocumentId = useActiveDocumentId();
   const documentReady = useDocumentReady();
   const lastAutoZoomedRootIdRef = useRef<string | null>(null);
+  const explicitFitRef = useRef(false);
 
   // Don't render the inner component until we have a valid document ID and document is ready
   if (!activeDocumentId || !documentReady) {
@@ -42,6 +55,7 @@ export function ZoomAPIBridge() {
       key={activeDocumentId}
       documentId={activeDocumentId}
       lastAutoZoomedRootIdRef={lastAutoZoomedRootIdRef}
+      explicitFitRef={explicitFitRef}
     />
   );
 }
@@ -49,9 +63,11 @@ export function ZoomAPIBridge() {
 function ZoomAPIBridgeInner({
   documentId,
   lastAutoZoomedRootIdRef,
+  explicitFitRef,
 }: {
   documentId: string;
   lastAutoZoomedRootIdRef: React.MutableRefObject<string | null>;
+  explicitFitRef: React.MutableRefObject<boolean>;
 }) {
   const { provides: zoom, state: zoomState } = useZoom(documentId);
   const liveZoomState = zoom?.getState() ?? zoomState;
@@ -118,6 +134,11 @@ function ZoomAPIBridgeInner({
     setAutoZoomTick((tick) => tick + 1);
   }, []);
 
+  const rescheduleAutoZoom = useCallback(() => {
+    if (explicitFitRef.current) return;
+    scheduleAutoZoom();
+  }, [explicitFitRef, scheduleAutoZoom]);
+
   const requestFitWidth = useCallback(() => {
     if (zoomRef.current && checkSpreadReady()) {
       try {
@@ -140,15 +161,17 @@ function ZoomAPIBridgeInner({
       hasSetInitialZoom.current = false;
       lastAutoZoomedRootIdRef.current = null;
       lastAppliedZoom.current = null;
+      explicitFitRef.current = false;
       return;
     }
 
     // Only reset zoom when opening a genuinely different document, not on version increments
     if (activeFileRootId !== lastAutoZoomedRootIdRef.current) {
       lastAutoZoomedRootIdRef.current = activeFileRootId;
+      explicitFitRef.current = false;
       scheduleAutoZoom();
     }
-  }, [activeFileRootId, scheduleAutoZoom]);
+  }, [activeFileRootId, explicitFitRef, scheduleAutoZoom]);
 
   useEffect(() => {
     const currentSpreadMode = spreadMode ?? SpreadMode.None;
@@ -157,10 +180,10 @@ function ZoomAPIBridgeInner({
 
       if (zoomLevel === ZoomMode.FitWidth || zoomLevel === ZoomMode.Automatic) {
         requestFitWidth();
-        scheduleAutoZoom();
+        rescheduleAutoZoom();
       }
     }
-  }, [spreadMode, zoomLevel, scheduleAutoZoom, requestFitWidth]);
+  }, [spreadMode, zoomLevel, rescheduleAutoZoom, requestFitWidth]);
 
   const isManagedZoom =
     checkSpreadReady() &&
@@ -170,7 +193,7 @@ function ZoomAPIBridgeInner({
   useFitWidthResize({
     isManaged: isManagedZoom,
     requestFitWidth,
-    onDebouncedResize: scheduleAutoZoom,
+    onDebouncedResize: rescheduleAutoZoom,
   });
 
   useEffect(() => {
@@ -182,7 +205,7 @@ function ZoomAPIBridgeInner({
       return;
     }
 
-    if (hasSetInitialZoom.current) {
+    if (hasSetInitialZoom.current || explicitFitRef.current) {
       return;
     }
 
@@ -286,6 +309,7 @@ function ZoomAPIBridgeInner({
     autoZoomTick,
     spreadMode,
     triggerImmediateZoomUpdate,
+    explicitFitRef,
   ]);
 
   // Subscribe to zoom changes - use ref to avoid re-subscribing when zoom reference changes
@@ -303,7 +327,12 @@ function ZoomAPIBridgeInner({
     }
 
     zoomSubscriptionRef.current = zoom.onZoomChange(
-      (event: { newZoom?: number }) => {
+      (event: { newZoom?: number; level?: ZoomLevel }) => {
+        // Wheel, pinch and marquee zoom reach the plugin directly, so a numeric
+        // level, not the context API, is what ends an explicit fit.
+        if (typeof event?.level === "number") {
+          explicitFitRef.current = false;
+        }
         if (typeof event?.newZoom !== "number") {
           return;
         }
@@ -318,7 +347,22 @@ function ZoomAPIBridgeInner({
         zoomSubscriptionRef.current = null;
       }
     };
-  }, [zoom, triggerImmediateZoomUpdate]);
+  }, [zoom, triggerImmediateZoomUpdate, explicitFitRef]);
+
+  const contextZoomApi = useMemo<ZoomAPIWrapper>(
+    () => ({
+      zoomIn: () => zoomRef.current?.zoomIn(),
+      zoomOut: () => zoomRef.current?.zoomOut(),
+      toggleMarqueeZoom: () => zoomRef.current?.toggleMarqueeZoom(),
+      requestZoom: (level: ZoomLevel, center?: Point) => {
+        // Set from the requested mode, not just the fit ones: Automatic hands
+        // the fit back to the auto heuristic, so it has to clear the flag.
+        explicitFitRef.current = isFitMode(level);
+        zoomRef.current?.requestZoom(level, center);
+      },
+    }),
+    [explicitFitRef],
+  );
 
   // Extract primitive values to avoid dependency on object reference
   const zoomStateCurrentZoomLevel = liveZoomState?.currentZoomLevel;
@@ -339,17 +383,20 @@ function ZoomAPIBridgeInner({
       level: zoomLevel,
     };
 
-    triggerImmediateZoomUpdate(newState.zoomPercent);
-
+    // Registered before notifying, so a listener that reads getZoomState()
+    // sees the level this notification is about.
     registerBridge("zoom", {
       state: newState,
-      api: currentZoom,
+      api: contextZoomApi,
     });
+
+    triggerImmediateZoomUpdate(newState.zoomPercent);
   }, [
     zoomStateCurrentZoomLevel,
     zoomLevel,
     registerBridge,
     triggerImmediateZoomUpdate,
+    contextZoomApi,
   ]);
 
   return null;

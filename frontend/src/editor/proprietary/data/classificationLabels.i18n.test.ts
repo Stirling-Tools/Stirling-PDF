@@ -5,7 +5,7 @@ import { parse } from "smol-toml";
 import {
   DEFAULT_CLASSIFICATION_LABELS,
   LABEL_FAMILIES,
-} from "@app/data/classificationLabels";
+} from "@editor/data/classificationLabels";
 
 // Label and family names are rendered through `classification.labels.<id>` /
 // `classification.families.<id>`, with the built-in English name as the fallback.

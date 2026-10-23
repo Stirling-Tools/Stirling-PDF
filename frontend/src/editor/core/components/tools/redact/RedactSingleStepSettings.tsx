@@ -1,9 +1,9 @@
 import { Stack, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
-import RedactModeSelector from "@app/components/tools/redact/RedactModeSelector";
-import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput";
-import RedactAdvancedSettings from "@app/components/tools/redact/RedactAdvancedSettings";
+import { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
+import RedactModeSelector from "@editor/components/tools/redact/RedactModeSelector";
+import WordsToRedactInput from "@editor/components/tools/redact/WordsToRedactInput";
+import RedactAdvancedSettings from "@editor/components/tools/redact/RedactAdvancedSettings";
 
 interface RedactSingleStepSettingsProps {
   parameters: RedactParameters;

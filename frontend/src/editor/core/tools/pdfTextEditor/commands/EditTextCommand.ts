@@ -1,11 +1,11 @@
 import i18n from "i18next";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { PdfiumTextWriter } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { PdfiumTextWriter } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
 import {
   sampleBackground,
   measureScanInk,
-} from "@app/tools/pdfTextEditor/pdfium/BackgroundSampler";
+} from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   charcodesResolveFully,
   collectContainersByPtr,
@@ -20,7 +20,7 @@ import {
   warmOnPageAdvances,
   planLineOrigins,
   emitRunLines,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   bestFontPtrForText,
   applyParagraphEditPlan,
@@ -31,23 +31,26 @@ import {
   setObjText,
   type ParagraphEditPlan,
   type PartialEditPlan,
-} from "@app/tools/pdfTextEditor/commands/partialEdit";
+} from "@editor/tools/pdfTextEditor/commands/partialEdit";
 import {
   fallbackFamilyFor,
   fallbackFontIdFor,
-} from "@app/tools/pdfTextEditor/util/fontCapability";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
+} from "@editor/tools/pdfTextEditor/util/fontCapability";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type {
   ParagraphLineSlot,
   TextRun,
-} from "@app/tools/pdfTextEditor/model/TextRun";
-import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/model/TextRun";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import {
   captureScanEdit,
   isScanRun,
   renderScanEdit,
-} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 
 interface RevertLine {
   text: string;
@@ -1373,7 +1376,7 @@ function safeGetFont(
 }
 
 function snapshotRevertLines(
-  run: import("@app/tools/pdfTextEditor/model/TextRun").TextRun,
+  run: import("@editor/tools/pdfTextEditor/model/TextRun").TextRun,
   prevText: string,
 ): RevertLine[] {
   const lines = prevText.split(/\r?\n/);
@@ -1392,7 +1395,7 @@ function snapshotRevertLines(
 // Reconstruct `paragraphLineSlots` from the data the overlay loop just emitted.
 function buildSlotsFromOverlayEmit(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-  run: import("@app/tools/pdfTextEditor/model/TextRun").TextRun,
+  run: import("@editor/tools/pdfTextEditor/model/TextRun").TextRun,
   perLineEmits: Array<{
     ptrs: number[];
     texts: string[];
@@ -1401,7 +1404,7 @@ function buildSlotsFromOverlayEmit(
     y: number;
   }>,
   fontId: string,
-): import("@app/tools/pdfTextEditor/model/TextRun").ParagraphLineSlot[] {
+): import("@editor/tools/pdfTextEditor/model/TextRun").ParagraphLineSlot[] {
   const slots = [];
   let cursor = 0;
   for (const emit of perLineEmits) {

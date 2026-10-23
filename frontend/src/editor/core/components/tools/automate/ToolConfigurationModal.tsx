@@ -1,12 +1,12 @@
 import { Suspense, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Title, Group, Stack, Text, Alert, Loader } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Z_INDEX_AUTOMATE_MODAL } from "@app/styles/zIndex";
-import { Icon } from "@app/ui/Icon";
-import { ToolRegistry } from "@app/data/toolsTaxonomy";
-import { ToolId } from "@app/types/toolId";
-import { ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
+import { Button } from "@editor/ui/Button";
+import { Z_INDEX_AUTOMATE_MODAL } from "@editor/styles/zIndex";
+import { Icon } from "@editor/ui/Icon";
+import { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { ToolId } from "@editor/types/toolId";
+import { ErasedToolParams } from "@editor/hooks/tools/shared/toolOperationTypes";
 interface ToolConfigurationModalProps {
   opened: boolean;
   tool: {

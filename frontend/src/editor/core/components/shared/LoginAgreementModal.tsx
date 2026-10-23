@@ -18,19 +18,19 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import apiClient from "@app/services/apiClient";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useAuth } from "@app/auth/UseSession";
-import { withBasePath } from "@app/constants/app";
-import { Z_INDEX_SIGN_IN_MODAL } from "@app/styles/zIndex";
+import apiClient from "@editor/services/apiClient";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useAuth } from "@editor/auth/UseSession";
+import { withBasePath } from "@editor/constants/app";
+import { Z_INDEX_SIGN_IN_MODAL } from "@editor/styles/zIndex";
 
 // The markdown renderer (react-markdown + remark-gfm + micromark, ~120 KB gz)
 // is only needed when an administrator set a disclaimer, so the modal body
 // loads it as its own chunk.
 const LoginAgreementBody = lazy(
-  () => import("@app/components/shared/LoginAgreementBody"),
+  () => import("@editor/components/shared/LoginAgreementBody"),
 );
 
 /**

@@ -7,10 +7,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,6 +41,13 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -71,6 +81,10 @@ public class StampController {
     private static final Pattern CUSTOM_DATE_PATTERN = Pattern.compile("@date\\{([^}]{1,50})\\}");
     // Placeholder for escaped @ symbol (using Unicode private use area)
     private static final String ESCAPED_AT_PLACEHOLDER = "\uE000ESCAPED_AT\uE000";
+    // Counted in UTF-8 bytes, the unit QR byte mode is limited by. Must stay in sync with
+    // MAX_QR_CONTENT_BYTES in the frontend's useAddStampParameters.ts.
+    private static final int MAX_QR_CONTENT_BYTES = 1000;
+    private static final int QR_QUIET_ZONE_MODULES = 4;
 
     /**
      * Initialize data binder for multipart file uploads. This method registers a custom editor for
@@ -98,7 +112,7 @@ public class StampController {
             summary = "Add stamp to a PDF file",
             description =
                     "This endpoint adds a stamp to a given PDF file. Users can specify the stamp"
-                            + " type (text or image), rotation, opacity, width spacer, and height spacer.")
+                            + " type (text, image or qr), rotation, opacity, width spacer, and height spacer.")
     public ResponseEntity<Resource> addStamp(@ModelAttribute AddStampRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
@@ -127,6 +141,8 @@ public class StampController {
                         "stamp image file path",
                         stampImageName);
             }
+        } else if ("qr".equalsIgnoreCase(stampType)) {
+            requireEncodableQrContent(stampText);
         }
         String alphabet = request.getAlphabet();
         float fontSize = request.getFontSize();
@@ -157,6 +173,21 @@ public class StampController {
                     PDPage page = document.getPage(zeroBasedIndex);
                     PDRectangle pageSize = page.getMediaBox();
                     float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
+
+                    // Encoded before the content stream opens so a rejected expansion cannot
+                    // leave a half-written stream on the page.
+                    BitMatrix qrMatrix = null;
+                    if ("qr".equalsIgnoreCase(stampType)) {
+                        String qrContent =
+                                processStampText(
+                                        stampText,
+                                        pageIndex,
+                                        document.getNumberOfPages(),
+                                        pdfFileName,
+                                        document);
+                        requireEncodableQrContent(qrContent);
+                        qrMatrix = encodeQrCode(qrContent);
+                    }
 
                     PDPageContentStream contentStream =
                             new PDPageContentStream(
@@ -191,6 +222,17 @@ public class StampController {
                                 contentStream,
                                 stampImage,
                                 document,
+                                page,
+                                rotation,
+                                position,
+                                fontSize,
+                                overrideX,
+                                overrideY,
+                                margin);
+                    } else if (qrMatrix != null) {
+                        addQrStamp(
+                                contentStream,
+                                qrMatrix,
                                 page,
                                 rotation,
                                 position,
@@ -482,6 +524,122 @@ public class StampController {
         // Convert the BufferedImage to PDImageXObject
         PDImageXObject xobject = LosslessFactory.createFromImage(document, image);
 
+        enterStampBox(
+                contentStream,
+                page,
+                rotation,
+                position,
+                desiredPhysicalWidth,
+                desiredPhysicalHeight,
+                overrideX,
+                overrideY,
+                margin);
+        contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);
+        contentStream.restoreGraphicsState();
+    }
+
+    /**
+     * Rejects QR content that is blank or over the byte limit. Applied to the raw text and again to
+     * each page's expansion, since a placeholder can resolve to nothing (@author with no metadata)
+     * or grow the text past the limit (@filename).
+     */
+    private static void requireEncodableQrContent(String content) {
+        if (content == null || content.isBlank()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.stamp.qr.required",
+                    "Stamp text must be provided when stamp type is 'qr'");
+        }
+        if (content.getBytes(StandardCharsets.UTF_8).length > MAX_QR_CONTENT_BYTES) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.stamp.qr.tooLong",
+                    "QR code content must be at most {0} bytes of UTF-8 text",
+                    MAX_QR_CONTENT_BYTES);
+        }
+    }
+
+    private BitMatrix encodeQrCode(String content) {
+        Map<EncodeHintType, Object> hints = new EnumMap<>(EncodeHintType.class);
+        hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+        hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
+        hints.put(EncodeHintType.MARGIN, QR_QUIET_ZONE_MODULES);
+        try {
+            return new QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, 0, 0, hints);
+        } catch (WriterException e) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.stamp.qr.tooLong", "QR code content is too long to encode");
+        }
+    }
+
+    /**
+     * Draws the QR code as filled vector modules on a white square of {@code size} points, so it
+     * stays sharp at any zoom.
+     */
+    private void addQrStamp(
+            PDPageContentStream contentStream,
+            BitMatrix matrix,
+            PDPage page,
+            float rotation,
+            int position,
+            float size,
+            float overrideX,
+            float overrideY,
+            float margin)
+            throws IOException {
+        // Fall back the same way text stamps do when no usable size is given.
+        float effectiveSize = size > 0 ? size : 40f;
+        enterStampBox(
+                contentStream,
+                page,
+                rotation,
+                position,
+                effectiveSize,
+                effectiveSize,
+                overrideX,
+                overrideY,
+                margin);
+        contentStream.setNonStrokingColor(Color.WHITE);
+        contentStream.addRect(0, 0, effectiveSize, effectiveSize);
+        contentStream.fill();
+
+        int modules = matrix.getWidth();
+        float moduleSize = effectiveSize / modules;
+        contentStream.setNonStrokingColor(Color.BLACK);
+        for (int row = 0; row < modules; row++) {
+            float y = effectiveSize - (row + 1) * moduleSize;
+            int col = 0;
+            while (col < modules) {
+                if (!matrix.get(col, row)) {
+                    col++;
+                    continue;
+                }
+                int runStart = col;
+                while (col < modules && matrix.get(col, row)) {
+                    col++;
+                }
+                contentStream.addRect(
+                        runStart * moduleSize, y, (col - runStart) * moduleSize, moduleSize);
+            }
+        }
+        contentStream.fill();
+        contentStream.restoreGraphicsState();
+    }
+
+    /**
+     * Saves the graphics state and maps the box (0,0)-(width,height) onto the stamp's placement on
+     * the page, rotated about its lower-left corner. The caller draws inside that box and must then
+     * call {@code restoreGraphicsState()}.
+     */
+    private void enterStampBox(
+            PDPageContentStream contentStream,
+            PDPage page,
+            float rotation,
+            int position,
+            float desiredPhysicalWidth,
+            float desiredPhysicalHeight,
+            float overrideX,
+            float overrideY,
+            float margin)
+            throws IOException {
         PDRectangle pageSize = page.getMediaBox();
         float x, y;
 
@@ -507,8 +665,6 @@ public class StampController {
         contentStream.saveGraphicsState();
         contentStream.transform(Matrix.getTranslateInstance(x, y));
         contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));
-        contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);
-        contentStream.restoreGraphicsState();
     }
 
     private float calculatePositionX(

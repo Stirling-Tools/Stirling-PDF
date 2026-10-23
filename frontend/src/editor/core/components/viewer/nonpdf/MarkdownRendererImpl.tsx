@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 
 // The rendered page is a white sheet in both schemes, so syntax surfaces use
 // fixed light values instead of Mantine gray tokens that flip in dark mode.

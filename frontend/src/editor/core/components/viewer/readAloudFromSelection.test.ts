@@ -4,7 +4,7 @@ import type { PdfPageGeometry } from "@embedpdf/models";
 import {
   findReadAloudStartIndex,
   glyphPositionRatio,
-} from "@app/components/viewer/readAloudFromSelection";
+} from "@editor/components/viewer/readAloudFromSelection";
 
 describe("findReadAloudStartIndex", () => {
   const text = "The cat sat. The dog ran. The end";

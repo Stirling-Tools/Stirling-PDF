@@ -2,7 +2,7 @@ import React from "react";
 import { MantineProvider } from "@mantine/core";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { TextViewer } from "@app/components/viewer/nonpdf/TextViewer";
+import { TextViewer } from "@editor/components/viewer/nonpdf/TextViewer";
 
 const renderViewer = (ui: React.ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);

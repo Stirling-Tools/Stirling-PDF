@@ -3,15 +3,15 @@
  * policy built straight from the catalogue + seed data, so stories render the
  * same shapes the MSW handlers serve without standing up the whole API.
  */
-import { fromWirePolicy } from "@app/policies/codec";
-import { runsToActivity, runsToStats } from "@app/policies/runs";
+import { fromWirePolicy } from "@editor/policies/codec";
+import { runsToActivity, runsToStats } from "@editor/policies/runs";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
   type DecoratedPolicy,
   type PolicyState,
-} from "@portal/api/policies";
-import { seedPolicies, seedPolicyRuns } from "@portal/mocks/policies";
+} from "@processor/api/policies";
+import { seedPolicies, seedPolicyRuns } from "@processor/mocks/policies";
 
 export { POLICY_CATEGORIES, POLICY_CONFIG };
 

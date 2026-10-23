@@ -4,14 +4,14 @@ import type { TFunction } from "i18next";
 import {
   SpringAuthProvider,
   deriveDisplayName as deriveDisplayNameShared,
-} from "@app/auth/spring/UseSession";
-import { useAuth as useSharedAuth } from "@app/auth/context";
-import type { AuthUser } from "@app/auth/types";
+} from "@editor/auth/spring/UseSession";
+import { useAuth as useSharedAuth } from "@editor/auth/context";
+import type { AuthUser } from "@editor/auth/types";
 // Side-effect import: wires the editor's transport + platform seams into the
 // shared Spring engine before AppProviders mounts the provider below.
-import "@app/auth/configureSpringAuth";
+import "@editor/auth/configureSpringAuth";
 
-export type { AuthUser as User } from "@app/auth/types";
+export type { AuthUser as User } from "@editor/auth/types";
 
 /**
  * Editor display-name helper. Keeps the i18next `TFunction` signature the

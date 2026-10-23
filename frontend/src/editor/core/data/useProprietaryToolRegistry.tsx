@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { type ProprietaryToolRegistry } from "@app/data/toolsTaxonomy";
+import { type ProprietaryToolRegistry } from "@editor/data/toolsTaxonomy";
 
 /**
  * Proprietary tool registry extension.

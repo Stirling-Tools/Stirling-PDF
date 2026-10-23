@@ -17,10 +17,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-import { formatFileSize } from "@app/utils/fileUtils";
-import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
-import { NonPdfSearchBar } from "@app/components/viewer/nonpdf/NonPdfSearchBar";
-import { highlightMatches } from "@app/components/viewer/nonpdf/viewerSearch";
+import { formatFileSize } from "@editor/utils/fileUtils";
+import { renderMarkdown } from "@editor/components/viewer/nonpdf/MarkdownRenderer";
+import { NonPdfSearchBar } from "@editor/components/viewer/nonpdf/NonPdfSearchBar";
+import { highlightMatches } from "@editor/components/viewer/nonpdf/viewerSearch";
 
 interface TextViewerProps {
   file: File;

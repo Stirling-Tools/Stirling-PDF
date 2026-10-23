@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { Center, Group, Loader, Modal, Text } from "@mantine/core";
 
-import type { FileId } from "@app/types/file";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { fileStorage } from "@app/services/fileStorage";
-import { useFileActions } from "@app/contexts/file/fileHooks";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { useIndexedDBRevision } from "@app/contexts/IndexedDBContext";
-import { VersionTimeline } from "@app/components/filesPage/VersionTimeline";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { fileStorage } from "@editor/services/fileStorage";
+import { useFileActions } from "@editor/contexts/file/fileHooks";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { useIndexedDBRevision } from "@editor/contexts/IndexedDBContext";
+import { VersionTimeline } from "@editor/components/filesPage/VersionTimeline";
 
 interface VersionHistoryModalProps {
   opened: boolean;

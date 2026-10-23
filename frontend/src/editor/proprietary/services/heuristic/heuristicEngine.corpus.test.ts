@@ -5,8 +5,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   classifyHeuristic,
   ensureRulesLoaded,
-} from "@app/services/heuristic/heuristicEngine";
-import type { HeuristicDoc } from "@app/services/heuristic/types";
+} from "@editor/services/heuristic/heuristicEngine";
+import type { HeuristicDoc } from "@editor/services/heuristic/types";
 
 beforeAll(async () => {
   await ensureRulesLoaded();

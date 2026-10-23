@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Button, Card, Chip } from "@app/ui";
-import type { Playbook } from "@portal/api/docs";
-import { DocsSection } from "@core/components/docs/DocsSection";
+import { Button, Card, Chip } from "@editor/ui";
+import type { Playbook } from "@processor/api/docs";
+import { DocsSection } from "@editor-core/components/docs/DocsSection";
 
 export function PlaybooksSection({ playbooks }: { playbooks: Playbook[] }) {
   const { t } = useTranslation();

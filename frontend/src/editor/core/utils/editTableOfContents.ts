@@ -1,4 +1,4 @@
-import { generateId } from "@app/utils/generateId";
+import { generateId } from "@editor/utils/generateId";
 
 export interface BookmarkPayload {
   title: string;

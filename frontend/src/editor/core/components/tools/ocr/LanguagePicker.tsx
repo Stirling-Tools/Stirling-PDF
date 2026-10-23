@@ -5,11 +5,11 @@ import {
   getAutoOcrLanguage,
   getBrowserLanguagesForOcr,
   getOcrDisplayName,
-} from "@app/utils/languageMapping";
-import apiClient from "@app/services/apiClient";
+} from "@editor/utils/languageMapping";
+import apiClient from "@editor/services/apiClient";
 import DropdownListWithFooter, {
   DropdownItem,
-} from "@app/components/shared/DropdownListWithFooter";
+} from "@editor/components/shared/DropdownListWithFooter";
 
 export interface LanguageOption {
   value: string;

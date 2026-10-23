@@ -13,11 +13,11 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { BillingScreen } from "@app/billing/BillingScreen";
-import { ComparePlansModal } from "@app/billing/ComparePlansModal";
-import { freeWallet } from "@app/billing/walletFixtures";
+import { BillingScreen } from "@editor/billing/BillingScreen";
+import { ComparePlansModal } from "@editor/billing/ComparePlansModal";
+import { freeWallet } from "@editor/billing/walletFixtures";
 
-/** Both @app/ui controls the matrix uses are Mantine-backed, so they need its provider. */
+/** Both @editor/ui controls the matrix uses are Mantine-backed, so they need its provider. */
 const render = (ui: ReactNode) =>
   rtlRender(<MantineProvider>{ui}</MantineProvider>);
 

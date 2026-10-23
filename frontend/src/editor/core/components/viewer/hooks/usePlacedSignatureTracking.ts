@@ -8,9 +8,9 @@ import {
 import {
   useSignature,
   type PlacedSignature,
-} from "@app/contexts/SignatureContext";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+} from "@editor/contexts/SignatureContext";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
 
 const SIGNATURE_SUBJECT_PREFIXES = ["Digital Signature", "Text Signature"];
 

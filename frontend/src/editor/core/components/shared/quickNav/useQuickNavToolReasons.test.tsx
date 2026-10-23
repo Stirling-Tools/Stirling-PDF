@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuickNavToolReasons";
+import { useQuickNavToolReasons } from "@editor/components/shared/quickNav/useQuickNavToolReasons";
 
 const h = vi.hoisted(() => ({
   endpointStatus: {} as Record<string, boolean>,
@@ -11,7 +11,7 @@ const h = vi.hoisted(() => ({
   isAnonymous: false,
 }));
 
-vi.mock("@app/hooks/useEndpointConfig", () => ({
+vi.mock("@editor/hooks/useEndpointConfig", () => ({
   useMultipleEndpointsEnabled: () => ({
     endpointStatus: h.endpointStatus,
     endpointDetails: h.endpointDetails,
@@ -21,7 +21,7 @@ vi.mock("@app/hooks/useEndpointConfig", () => ({
   }),
 }));
 
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({
     config: null,
     loading: h.configLoading,
@@ -30,11 +30,11 @@ vi.mock("@app/contexts/AppConfigContext", () => ({
   }),
 }));
 
-vi.mock("@app/hooks/useGroupSigningEnabled", () => ({
+vi.mock("@editor/hooks/useGroupSigningEnabled", () => ({
   useGroupSigningEnabled: () => h.groupSigningEnabled,
 }));
 
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ isAnonymous: h.isAnonymous }),
 }));
 

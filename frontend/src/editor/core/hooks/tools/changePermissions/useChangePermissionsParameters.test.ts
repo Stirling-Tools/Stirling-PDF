@@ -4,7 +4,7 @@ import {
   useChangePermissionsParameters,
   defaultParameters,
   ChangePermissionsParameters,
-} from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
+} from "@editor/hooks/tools/changePermissions/useChangePermissionsParameters";
 
 describe("useChangePermissionsParameters", () => {
   test("should initialize with default parameters", () => {

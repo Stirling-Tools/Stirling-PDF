@@ -1,4 +1,4 @@
-import { apiClient } from "@portal/api/http";
+import { apiClient } from "@processor/api/http";
 
 /**
  * Free-editor fleet usage for the billing screen's editors-deployed row.

@@ -1,13 +1,13 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import type { MeasureScale, Measurement } from "@app/utils/measurementTypes";
+import type { MeasureScale, Measurement } from "@editor/utils/measurementTypes";
 import {
   POINT_TO_UNIT,
   convertUnit,
   generateScaleLabel,
   isImperialUnit,
-} from "@app/utils/measurementUtils";
+} from "@editor/utils/measurementUtils";
 
 export interface RulerPoint {
   x: number;

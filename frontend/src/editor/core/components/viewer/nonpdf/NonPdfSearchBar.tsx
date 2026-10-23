@@ -1,8 +1,8 @@
 import React from "react";
 import { Group, Text, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 
 interface NonPdfSearchBarProps {
   query: string;

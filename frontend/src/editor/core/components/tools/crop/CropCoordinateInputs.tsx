@@ -1,6 +1,6 @@
 import { Stack, Text, Group, NumberInput, Alert } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Rectangle, PDFBounds } from "@app/utils/cropCoordinates";
+import { Rectangle, PDFBounds } from "@editor/utils/cropCoordinates";
 
 interface CropCoordinateInputsProps {
   cropArea: Rectangle;

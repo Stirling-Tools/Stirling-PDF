@@ -8,15 +8,15 @@
  * Uses the same EPDF_RenderAnnotBitmap / FPDF_FFLDraw pipeline as
  * SignatureFieldOverlay to produce the button's native PDF appearance.
  */
-import { useStaleBakedFieldNames } from "@app/tools/formFill/FormFillContext";
+import { useStaleBakedFieldNames } from "@editor/tools/formFill/FormFillContext";
 import React, { useEffect, useMemo, useRef, useState, memo } from "react";
 import {
   renderButtonFieldAppearances,
   type SignatureFieldAppearance,
-} from "@app/services/pdfiumService";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { documentHasFormFields } from "@app/services/documentFormProbe";
-import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
+} from "@editor/services/pdfiumService";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import { documentHasFormFields } from "@editor/services/documentFormProbe";
+import { runPdfiumScan } from "@editor/services/pdfiumScanQueue";
 
 interface ButtonAppearanceOverlayProps {
   pageIndex: number;

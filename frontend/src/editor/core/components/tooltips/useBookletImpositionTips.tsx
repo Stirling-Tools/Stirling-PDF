@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@app/types/tips";
-import { BookletGuideDiagram } from "@app/components/tools/bookletImposition/BookletGuideDiagram";
+import { TooltipContent } from "@editor/types/tips";
+import { BookletGuideDiagram } from "@editor/components/tools/bookletImposition/BookletGuideDiagram";
 
 /** Booklet printing guidance, with diagrams supplementing the translated steps. */
 export const useBookletImpositionTips = (): TooltipContent => {

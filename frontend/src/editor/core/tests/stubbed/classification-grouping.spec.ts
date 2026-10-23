@@ -1,6 +1,6 @@
 import path from "path";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 
 // The sidebar groups files by the category in their `StirlingPDFClassification`
 // metadata; these specs exercise that seam with pre-labelled fixtures.

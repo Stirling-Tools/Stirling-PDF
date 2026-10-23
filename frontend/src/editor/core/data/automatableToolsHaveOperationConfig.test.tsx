@@ -8,8 +8,8 @@
  */
 import { describe, expect, test, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
-import { getToolSupportsAutomate } from "@app/data/toolsTaxonomy";
+import { useTranslatedToolCatalog } from "@editor/data/useTranslatedToolRegistry";
+import { getToolSupportsAutomate } from "@editor/data/toolsTaxonomy";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

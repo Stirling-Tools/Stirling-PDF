@@ -5,7 +5,7 @@ import {
   QueryClientProvider,
   useQuery,
 } from "@tanstack/react-query";
-import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
+import { DesktopQueryCacheReset } from "@editor/components/DesktopQueryCacheReset";
 
 type Listener = (config: { mode: string }) => void;
 type ServerListener = (state: { status: string }) => void;
@@ -13,7 +13,7 @@ type ServerListener = (state: { status: string }) => void;
 const modeListeners = new Set<Listener>();
 const serverListeners = new Set<ServerListener>();
 
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     subscribeToModeChanges: (listener: Listener) => {
       modeListeners.add(listener);
@@ -22,7 +22,7 @@ vi.mock("@app/services/connectionModeService", () => ({
   },
 }));
 
-vi.mock("@app/services/selfHostedServerMonitor", () => ({
+vi.mock("@editor/services/selfHostedServerMonitor", () => ({
   selfHostedServerMonitor: {
     subscribe: (listener: ServerListener) => {
       serverListeners.add(listener);

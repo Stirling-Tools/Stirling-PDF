@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useAuth } from "@app/auth/UseSession";
-import type { NavKey } from "@app/components/shared/config/types";
-import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
+import { useAuth } from "@editor/auth/UseSession";
+import type { NavKey } from "@editor/components/shared/config/types";
+import { useSaaSTeam } from "@editor/contexts/SaaSTeamContext";
 
 export interface ChecklistInviteTarget {
   /** True until the data behind `target` first settles; the checklist stays hidden

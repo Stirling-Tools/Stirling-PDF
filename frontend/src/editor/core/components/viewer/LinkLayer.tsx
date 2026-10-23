@@ -6,7 +6,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -18,11 +18,11 @@ import {
   PdfActionType,
   type PdfLinkAnnoObject,
 } from "@embedpdf/models";
-import { Z_INDEX_VIEWER_FLOATING_MENU } from "@app/styles/zIndex";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { openExternalTab } from "@app/platform/openExternalTab";
-import { getExternalHref } from "@app/utils/externalUrl";
+import { Z_INDEX_VIEWER_FLOATING_MENU } from "@editor/styles/zIndex";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { openExternalTab } from "@editor/platform/openExternalTab";
+import { getExternalHref } from "@editor/utils/externalUrl";
 
 // ---------------------------------------------------------------------------
 // Helpers

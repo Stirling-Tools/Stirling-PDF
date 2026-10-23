@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import {
   useBaseParameters,
   type BaseParametersHook,
-} from "@app/hooks/tools/shared/useBaseParameters";
-import { BookmarkNode } from "@app/utils/editTableOfContents";
+} from "@editor/hooks/tools/shared/useBaseParameters";
+import { BookmarkNode } from "@editor/utils/editTableOfContents";
 
 export interface EditTableOfContentsParameters {
   replaceExisting: boolean;

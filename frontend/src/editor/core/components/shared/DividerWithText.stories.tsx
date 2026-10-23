@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import DividerWithText from "@app/components/shared/DividerWithText";
+import DividerWithText from "@editor/components/shared/DividerWithText";
 
 /**
  * Horizontal rule, optionally with a centered text label (e.g. "or").

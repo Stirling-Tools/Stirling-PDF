@@ -1,23 +1,23 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { ExhaustedAccountLinkModal } from "@app/components/account-link/ExhaustedAccountLinkModal";
-import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
-import { Button } from "@app/ui";
-import { FlowModal } from "@app/portal/components/shared/FlowModal";
-import { StepModalHeader } from "@app/portal/components/shared/StepModalHeader";
-import { ConnectAskStep } from "@app/portal/components/account-link/connect/ConnectAskStep";
-import { ConnectHandoffGhost } from "@app/portal/components/account-link/connect/ConnectHandoffGhost";
+import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
+import { ExhaustedAccountLinkModal } from "@editor/components/account-link/ExhaustedAccountLinkModal";
+import type { AccountLinkBlockContext } from "@editor/services/accountLinkBlock";
+import { Button } from "@editor/ui";
+import { FlowModal } from "@editor/portal/components/shared/FlowModal";
+import { StepModalHeader } from "@editor/portal/components/shared/StepModalHeader";
+import { ConnectAskStep } from "@editor/portal/components/account-link/connect/ConnectAskStep";
+import { ConnectHandoffGhost } from "@editor/portal/components/account-link/connect/ConnectHandoffGhost";
 import {
   ConnectCallbackView,
   isRetryableOutcome,
   type ConnectOutcome,
-} from "@app/portal/components/account-link/ConnectCallbackView";
-import { useConnectHandoff } from "@app/portal/hooks/useConnectHandoff";
-import { useUI, type LinkModalMode } from "@app/portal/contexts/UIContext";
-import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
-import "@app/portal/views/ConnectCallback.css";
+} from "@editor/portal/components/account-link/ConnectCallbackView";
+import { useConnectHandoff } from "@editor/portal/hooks/useConnectHandoff";
+import { useUI, type LinkModalMode } from "@editor/portal/contexts/UIContext";
+import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
+import "@editor/portal/views/ConnectCallback.css";
 
 /**
  * Ordered, so a step's position in this list is its number and the list's length is the total.

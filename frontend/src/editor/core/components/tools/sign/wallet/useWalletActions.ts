@@ -2,19 +2,19 @@ import { useTranslation } from "react-i18next";
 import {
   useSignature,
   type PlacedSignature,
-} from "@app/contexts/SignatureContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import type { SavedSignature } from "@app/types/signature";
-import { PLACEMENT_ACTIVATION_DELAY } from "@app/constants/signConstants";
-import { uniqueName } from "@app/utils/uniqueName";
-import { defaultSignatureName } from "@app/components/tools/sign/createSignature/createTabs";
+} from "@editor/contexts/SignatureContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import type { SavedSignature } from "@editor/types/signature";
+import { PLACEMENT_ACTIVATION_DELAY } from "@editor/constants/signConstants";
+import { uniqueName } from "@editor/utils/uniqueName";
+import { defaultSignatureName } from "@editor/components/tools/sign/createSignature/createTabs";
 import type {
   CreatedSignature,
   SaveChoice,
-} from "@app/components/tools/sign/createSignature/types";
-import type { SignatureLibrary } from "@app/components/tools/sign/wallet/useSignatureLibrary";
-import type { SignaturePlacement } from "@app/components/tools/sign/wallet/useSignaturePlacement";
-import { DRAFT_KEY } from "@app/components/tools/sign/wallet/walletEntry";
+} from "@editor/components/tools/sign/createSignature/types";
+import type { SignatureLibrary } from "@editor/components/tools/sign/wallet/useSignatureLibrary";
+import type { SignaturePlacement } from "@editor/components/tools/sign/wallet/useSignaturePlacement";
+import { DRAFT_KEY } from "@editor/components/tools/sign/wallet/walletEntry";
 
 export function useWalletActions(
   library: SignatureLibrary,

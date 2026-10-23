@@ -21,22 +21,22 @@ const { fetchSnapshot, startAgreement, issueQuote } = vi.hoisted(() => ({
   issueQuote: vi.fn(),
 }));
 
-vi.mock("@app/portal/api/procurement", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/portal/api/procurement")>()),
+vi.mock("@editor/portal/api/procurement", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@editor/portal/api/procurement")>()),
   fetchSnapshot,
   startAgreement,
   issueQuote,
 }));
-vi.mock("@app/portal/contexts/usePortalLinked", () => ({
+vi.mock("@editor/portal/contexts/usePortalLinked", () => ({
   usePortalLinked: () => true,
 }));
 
 import {
   useProcurement,
   type ProcurementController,
-} from "@app/portal/components/procurement/useProcurement";
-import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
-import type { QuoteResult } from "@app/portal/api/procurement";
+} from "@editor/portal/components/procurement/useProcurement";
+import { SaasSessionRequiredError } from "@editor/portal/auth/portalSaasSession";
+import type { QuoteResult } from "@editor/portal/api/procurement";
 
 const SNAPSHOT = {
   dealId: 1,

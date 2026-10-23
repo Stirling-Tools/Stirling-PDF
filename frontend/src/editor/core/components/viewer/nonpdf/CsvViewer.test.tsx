@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   compareCsvValues,
   CsvViewer,
-} from "@app/components/viewer/nonpdf/CsvViewer";
+} from "@editor/components/viewer/nonpdf/CsvViewer";
 
 const renderViewer = (ui: React.ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);

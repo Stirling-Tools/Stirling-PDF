@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
+import { FolderNameDialog } from "@editor/components/filesPage/FolderNameDialog";
 
 const meta = {
   title: "FilesPage/FolderNameDialog",

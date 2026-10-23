@@ -1,5 +1,8 @@
-import { getPdfiumModule, saveRawDocument } from "@app/services/pdfiumService";
-import { copyRgbaToBgraHeap } from "@app/utils/pdfiumBitmapUtils";
+import {
+  getPdfiumModule,
+  saveRawDocument,
+} from "@editor/services/pdfiumService";
+import { copyRgbaToBgraHeap } from "@editor/utils/pdfiumBitmapUtils";
 
 export interface ImageToPdfOptions {
   imageResolution?: "full" | "reduced";

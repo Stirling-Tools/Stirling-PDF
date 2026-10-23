@@ -14,7 +14,7 @@ import type {
   PinchState,
   UseComparePanZoomOptions,
   UseComparePanZoomReturn,
-} from "@app/types/compare";
+} from "@editor/types/compare";
 
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 100000;
@@ -25,7 +25,7 @@ const ZOOM_STEP = 0.1;
 const DEFAULT_ROW_STRUCTURAL_EXTRA = 32;
 const DEFAULT_ROW_GAP = 8;
 
-// (Interfaces moved to @app/types/compare)
+// (Interfaces moved to @editor/types/compare)
 
 export const useComparePanZoom = ({
   basePages,

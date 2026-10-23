@@ -6,20 +6,20 @@ import {
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { qk } from "@app/query/keys";
+import { qk } from "@editor/query/keys";
 
 const get = vi.fn();
 let currentUserId: string | null = null;
 let authLoading = false;
 let isAnonymous = false;
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: {
     get: (...args: unknown[]) => get(...args),
   },
 }));
 
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({
     user: currentUserId ? { id: currentUserId } : null,
     loading: authLoading,
@@ -28,7 +28,7 @@ vi.mock("@app/auth/UseSession", () => ({
 }));
 
 const { usePortalAccess, usePortalAccessState } =
-  await import("@app/hooks/usePortalAccess");
+  await import("@editor/hooks/usePortalAccess");
 
 function meReturning(portalAccess: boolean) {
   return { data: { user: { portalAccess } } };

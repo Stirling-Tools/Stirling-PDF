@@ -20,14 +20,15 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { formatFileSize } from "@app/utils/fileUtils";
-import { NonPdfSearchBar } from "@app/components/viewer/nonpdf/NonPdfSearchBar";
+
+import { Icon } from "@editor/ui/Icon";
+import { formatFileSize } from "@editor/utils/fileUtils";
+import { NonPdfSearchBar } from "@editor/components/viewer/nonpdf/NonPdfSearchBar";
 import {
   findCsvMatches,
   highlightMatches,
-} from "@app/components/viewer/nonpdf/viewerSearch";
+} from "@editor/components/viewer/nonpdf/viewerSearch";
 
 // ─── CSV parser ───────────────────────────────────────────────────────────────
 

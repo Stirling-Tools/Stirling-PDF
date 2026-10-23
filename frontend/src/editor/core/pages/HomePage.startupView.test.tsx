@@ -4,26 +4,28 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
-import { AppProviders } from "@app/components/AppProviders";
-import HomePage from "@app/pages/HomePage";
-import SettingsPage from "@app/pages/SettingsPage";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { AppProviders } from "@editor/components/AppProviders";
+import HomePage from "@editor/pages/HomePage";
+import SettingsPage from "@editor/pages/SettingsPage";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import {
   useNavigationActions,
   useNavigationState,
-} from "@app/contexts/NavigationContext";
-import NavigationWarningModal from "@app/components/shared/NavigationWarningModal";
-import { QuickNavHostProvider } from "@app/contexts/QuickNavHostContext";
-import { QuickNavRailHost } from "@app/components/shared/quickNav/QuickNavRailHost";
-import { allowConsole } from "@app/tests/failOnConsole";
-import type { ToolId } from "@app/types/toolId";
+} from "@editor/contexts/NavigationContext";
+import NavigationWarningModal from "@editor/components/shared/NavigationWarningModal";
+import { QuickNavHostProvider } from "@editor/contexts/QuickNavHostContext";
+import { QuickNavRailHost } from "@editor/components/shared/quickNav/QuickNavRailHost";
+import { allowConsole } from "@editor/tests/failOnConsole";
+import type { ToolId } from "@editor/types/toolId";
 
-vi.mock("@app/hooks/useDocumentMeta", () => ({ useDocumentMeta: () => {} }));
+vi.mock("@editor/hooks/useDocumentMeta", () => ({ useDocumentMeta: () => {} }));
 // Document and tool panels are outside the navigation contract; loading them
 // under coverage can time out before the real pages and providers settle.
-vi.mock("@app/components/layout/Workbench", () => ({ default: () => null }));
-vi.mock("@app/components/tools/RightSidebar", () => ({ default: () => null }));
-vi.mock("@app/components/FileManager", () => ({ default: () => null }));
+vi.mock("@editor/components/layout/Workbench", () => ({ default: () => null }));
+vi.mock("@editor/components/tools/RightSidebar", () => ({
+  default: () => null,
+}));
+vi.mock("@editor/components/FileManager", () => ({ default: () => null }));
 
 const seen = { pathname: "", readerMode: false };
 let showPage: () => void = () => {};

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import GetPdfInfoReportView from "@app/components/tools/getPdfInfo/GetPdfInfoReportView";
-import type { PdfInfoReportData } from "@app/types/getPdfInfo";
+import GetPdfInfoReportView from "@editor/components/tools/getPdfInfo/GetPdfInfoReportView";
+import type { PdfInfoReportData } from "@editor/types/getPdfInfo";
 
 const filledData: PdfInfoReportData = {
   generatedAt: Date.now(),
