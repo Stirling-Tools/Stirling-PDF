@@ -3,9 +3,9 @@
  * Handles Google Drive file picker integration
  */
 
-import { loadScript } from "@app/utils/scriptLoader";
-import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
-import { AppConfig } from "@app/types/appConfig";
+import { loadScript } from "@editor/utils/scriptLoader";
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
+import { AppConfig } from "@editor/types/appConfig";
 
 // The GIS token client lets you reassign `callback` after init (to resolve the
 // per-request promise), but @types/google.accounts only models it on the config.

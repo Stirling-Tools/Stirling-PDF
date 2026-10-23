@@ -1,26 +1,26 @@
 import { useEffect, useState, useContext, useCallback, useRef } from "react";
-import { generateId } from "@app/utils/generateId";
+import { generateId } from "@editor/utils/generateId";
 import { useTranslation } from "react-i18next";
 
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { useNavigation } from "@app/contexts/NavigationContext";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfAccessService";
-import { BaseToolProps } from "@app/types/tool";
-import { useSignature } from "@app/contexts/SignatureContext";
-import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
-import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { useNavigation } from "@editor/contexts/NavigationContext";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import { BaseToolProps } from "@editor/types/tool";
+import { useSignature } from "@editor/contexts/SignatureContext";
+import { useAnnotation as useAnnotationContext } from "@editor/contexts/AnnotationContext";
+import { ViewerContext, useViewer } from "@editor/contexts/ViewerContext";
 import type {
   AnnotationToolId,
   AnnotationEvent,
   AnnotationSelection,
   AnnotationRect,
-} from "@app/components/viewer/viewerTypes";
-import { useAnnotationStyleState } from "@app/tools/annotate/useAnnotationStyleState";
-import { useAnnotationSelection } from "@app/tools/annotate/useAnnotationSelection";
-import { AnnotationPanel } from "@app/tools/annotate/AnnotationPanel";
-import { alert } from "@app/components/toast";
+} from "@editor/components/viewer/viewerTypes";
+import { useAnnotationStyleState } from "@editor/tools/annotate/useAnnotationStyleState";
+import { useAnnotationSelection } from "@editor/tools/annotate/useAnnotationSelection";
+import { AnnotationPanel } from "@editor/tools/annotate/AnnotationPanel";
+import { alert } from "@editor/components/toast";
 
 // Tools that require drawing/interacting with the PDF and should disable pan mode
 const DRAWING_TOOLS: AnnotationToolId[] = [

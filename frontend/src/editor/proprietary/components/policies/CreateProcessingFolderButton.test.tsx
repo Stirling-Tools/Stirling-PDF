@@ -1,18 +1,18 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CreateProcessingFolderButton } from "@app/components/policies/CreateProcessingFolderButton";
+import { CreateProcessingFolderButton } from "@editor/components/policies/CreateProcessingFolderButton";
 
 const { signedIn, open } = vi.hoisted(() => ({
   signedIn: { value: true },
   open: vi.fn(),
 }));
 
-vi.mock("@app/components/policies/usePoliciesEnabled", () => ({
+vi.mock("@editor/components/policies/usePoliciesEnabled", () => ({
   usePoliciesEnabled: () => signedIn.value,
 }));
 
-vi.mock("@app/hooks/useProcessingFolderCreation", () => ({
+vi.mock("@editor/hooks/useProcessingFolderCreation", () => ({
   useProcessingFolderCreation: () => ({ open, dialog: null }),
 }));
 

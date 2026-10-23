@@ -2,32 +2,32 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Banner, Button, CardRail, EmptyState, Skeleton } from "@app/ui";
-import { errorMessage } from "@portal/api/http";
-import { useSectionFlags } from "@portal/hooks/useAsync";
-import { usePipelines } from "@portal/queries/pipelines";
-import { usePoliciesOverview } from "@portal/queries/policies";
+import { Icon } from "@editor/ui/Icon";
+import { Banner, Button, CardRail, EmptyState, Skeleton } from "@editor/ui";
+import { errorMessage } from "@processor/api/http";
+import { useSectionFlags } from "@processor/hooks/useAsync";
+import { usePipelines } from "@processor/queries/pipelines";
+import { usePoliciesOverview } from "@processor/queries/policies";
 import {
   fetchPipeline,
   type PipelineView,
   type Policy,
-} from "@portal/api/pipelines";
+} from "@processor/api/pipelines";
 import {
   buildWireFromSetup,
   parseSimplePolicy,
   savePolicy,
   type CatalogueEntry,
   type PolicySetupResult,
-} from "@portal/api/policies";
-import { qk } from "@portal/queries/keys";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
-import { PipelineTemplateCard } from "@portal/components/pipelines/PipelineTemplateCard";
-import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
-import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
-import { useCanManagePolicies } from "@portal/queries/policyPermissions";
-import "@portal/views/Pipelines.css";
+} from "@processor/api/policies";
+import { qk } from "@processor/queries/keys";
+import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
+import { PipelinesTable } from "@processor/components/pipelines/PipelinesTable";
+import { PipelineTemplateCard } from "@processor/components/pipelines/PipelineTemplateCard";
+import { PolicySetupWizard } from "@processor/components/policies/PolicySetupWizard";
+import { useAiEngineEnabled } from "@processor/hooks/useAiEngineEnabled";
+import { useCanManagePolicies } from "@processor/queries/policyPermissions";
+import "@processor/views/Pipelines.css";
 
 /**
  * The unified Pipelines + Policies surface: a gallery of suggested-policy templates not yet set up,

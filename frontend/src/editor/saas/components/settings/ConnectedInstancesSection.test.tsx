@@ -8,7 +8,7 @@ import {
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
-import type { LinkedInstanceRow } from "@app/types/linkedInstance";
+import type { LinkedInstanceRow } from "@editor/types/linkedInstance";
 
 const state = vi.hoisted(() => ({
   get: vi.fn(),
@@ -18,13 +18,13 @@ const state = vi.hoisted(() => ({
   loading: false,
 }));
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: state.get, post: state.post, patch: state.patch },
 }));
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ user: { id: "owner-1" } }),
 }));
-vi.mock("@app/contexts/SaaSTeamContext", () => ({
+vi.mock("@editor/contexts/SaaSTeamContext", () => ({
   useSaaSTeam: () => ({
     currentTeam: { teamId: 7, name: "Northstar Studio" },
     isTeamLeader: state.owner,
@@ -41,7 +41,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import ConnectedInstancesSection from "@app/components/settings/ConnectedInstancesSection";
+import ConnectedInstancesSection from "@editor/components/settings/ConnectedInstancesSection";
 
 const instance: LinkedInstanceRow = {
   instanceId: 42,

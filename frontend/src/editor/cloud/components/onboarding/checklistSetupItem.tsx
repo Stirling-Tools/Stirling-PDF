@@ -1,5 +1,5 @@
 import { useCallback, useState, type ReactNode } from "react";
-import SaasOnboardingModal from "@app/components/onboarding/SaasOnboardingModal";
+import SaasOnboardingModal from "@editor/components/onboarding/SaasOnboardingModal";
 
 export interface ChecklistItem {
   id: string;

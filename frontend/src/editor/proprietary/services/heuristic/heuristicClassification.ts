@@ -1,12 +1,12 @@
 // Client-side classification entry point: extract the PDF, then classify it.
 
 import i18n from "i18next";
-import { classifyHeuristic } from "@app/services/heuristic/heuristicEngine";
+import { classifyHeuristic } from "@editor/services/heuristic/heuristicEngine";
 import {
   extractHeuristicDoc,
   type ExtractOptions,
-} from "@app/services/heuristic/heuristicExtractor";
-import type { HeuristicResult } from "@app/services/heuristic/types";
+} from "@editor/services/heuristic/heuristicExtractor";
+import type { HeuristicResult } from "@editor/services/heuristic/types";
 
 /** Classify a file in the browser. Throws if extraction fails: unreadable, non-PDF, or a
  *  `budgetMs` that runs out before any text is read. */

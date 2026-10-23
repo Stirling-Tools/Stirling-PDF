@@ -225,7 +225,7 @@ export const mantineTheme = createTheme({
   components: {
     // Mantine renders the modal/drawer dismiss control as an icon-only button
     // with no text, so without a name it is unreachable by screen reader. The
-    // app's own Modal wrapper (@app/ui/Modal) names itself; this covers the
+    // app's own Modal wrapper (@editor/ui/Modal) names itself; this covers the
     // components that still mount Mantine's Modal directly. Pass a translated
     // aria-label at the call site where the control means more than "close".
     Anchor: {

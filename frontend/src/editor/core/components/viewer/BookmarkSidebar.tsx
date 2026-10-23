@@ -8,21 +8,21 @@ import {
   NumberInput,
   Group,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useFileContext } from "@app/contexts/FileContext";
-import { isStirlingFile } from "@app/types/fileContext";
-import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import apiClient from "@app/services/apiClient";
-import { openExternalTab } from "@app/platform/openExternalTab";
-import { getExternalHref } from "@app/utils/externalUrl";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useFileContext } from "@editor/contexts/FileContext";
+import { isStirlingFile } from "@editor/types/fileContext";
+import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
+import apiClient from "@editor/services/apiClient";
+import { openExternalTab } from "@editor/platform/openExternalTab";
+import { getExternalHref } from "@editor/utils/externalUrl";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { SidebarBase } from "@app/components/viewer/SidebarBase";
-import "@app/components/viewer/BookmarkSidebar.css";
+import { Icon } from "@editor/ui/Icon";
+import { SidebarBase } from "@editor/components/viewer/SidebarBase";
+import "@editor/components/viewer/BookmarkSidebar.css";
 
 interface BookmarkSidebarProps {
   visible: boolean;

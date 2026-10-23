@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { AutomationConfig } from "@app/services/automationStorage";
-import { SuggestedAutomation } from "@app/types/automation";
-import { iconKeyForSuggestedAutomation } from "@app/components/tools/automate/suggestedAutomationIcon";
+import { AutomationConfig } from "@editor/services/automationStorage";
+import { SuggestedAutomation } from "@editor/types/automation";
+import { iconKeyForSuggestedAutomation } from "@editor/components/tools/automate/suggestedAutomationIcon";
 
 export interface SavedAutomation extends AutomationConfig {}
 
@@ -22,7 +22,7 @@ export function useSavedAutomations() {
       setLoading(true);
       setError(null);
       const { automationStorage } =
-        await import("@app/services/automationStorage");
+        await import("@editor/services/automationStorage");
       const automations = await automationStorage.getAllAutomations();
       setSavedAutomations(automations);
     } catch (err) {
@@ -42,7 +42,7 @@ export function useSavedAutomations() {
     async (id: string) => {
       try {
         const { automationStorage } =
-          await import("@app/services/automationStorage");
+          await import("@editor/services/automationStorage");
         await automationStorage.deleteAutomation(id);
         // Refresh the list after deletion
         refreshAutomations();
@@ -58,7 +58,7 @@ export function useSavedAutomations() {
     async (suggestedAutomation: SuggestedAutomation) => {
       try {
         const { automationStorage } =
-          await import("@app/services/automationStorage");
+          await import("@editor/services/automationStorage");
 
         // Convert suggested automation to saved automation format
         const savedAutomation = {
@@ -83,7 +83,7 @@ export function useSavedAutomations() {
     async (automation: ImportableAutomation): Promise<SavedAutomation> => {
       try {
         const { automationStorage } =
-          await import("@app/services/automationStorage");
+          await import("@editor/services/automationStorage");
         const saved = await automationStorage.saveAutomation(automation);
         refreshAutomations();
         return saved;

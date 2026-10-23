@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon, Button, FormField, Select } from "@app/ui";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon, Button, FormField, Select } from "@editor/ui";
 
 /**
  * Picks the saved source a pipeline delivers its output to. A destination is just a

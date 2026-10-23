@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import EmailPasswordForm from "@app/auth/ui/EmailPasswordForm";
-import OAuthButtons from "@app/auth/ui/OAuthButtons";
-import type { SupabaseLoginState } from "@app/auth/ui/useSupabaseLogin";
-import "@app/auth/ui/auth.css";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import EmailPasswordForm from "@editor/auth/ui/EmailPasswordForm";
+import OAuthButtons from "@editor/auth/ui/OAuthButtons";
+import type { SupabaseLoginState } from "@editor/auth/ui/useSupabaseLogin";
+import "@editor/auth/ui/auth.css";
 
 interface SupabaseLoginFormProps {
   /** Login state + handlers, from useSupabaseLogin. */

@@ -1,6 +1,6 @@
-import type { Tier } from "@portal/contexts/TierContext";
-import type { FileRunEventScope } from "@portal/api/fileRunEvents";
-import { pipelineQueryKeys } from "@app/policies/queryKeys";
+import type { Tier } from "@processor/contexts/TierContext";
+import type { FileRunEventScope } from "@processor/api/fileRunEvents";
+import { pipelineQueryKeys } from "@editor/policies/queryKeys";
 
 /**
  * The portal's TanStack Query keys, in one place. Convention:

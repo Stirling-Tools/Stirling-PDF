@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Spinner } from "@app/ui";
-import "@app/components/account-link/connect.css";
+import { Spinner } from "@editor/ui";
+import "@editor/components/account-link/connect.css";
 
 export function ConnectHandoffGhost() {
   const { t } = useTranslation();

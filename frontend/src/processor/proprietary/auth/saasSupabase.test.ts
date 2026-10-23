@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 // one Stirling Supabase env (VITE_SUPABASE_*), shared by every flavor.
 const configureSupabase = vi.fn();
 const getSupabaseClient = vi.fn(() => ({ __client: true }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   configureSupabase,
   getSupabaseClient,
 }));
@@ -24,7 +24,7 @@ describe("ensureSaasSupabase — configures the shared client from VITE_SUPABASE
     vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY", "anon-key");
     // Dynamic import so the module reads the stubbed env at load.
     const { ensureSaasSupabase, isSaasSupabaseConfigured } =
-      await import("@app/portal/auth/saasSupabase");
+      await import("@editor/portal/auth/saasSupabase");
     expect(isSaasSupabaseConfigured).toBe(true);
     const client = ensureSaasSupabase();
     expect(configureSupabase).toHaveBeenCalledWith({
@@ -39,7 +39,7 @@ describe("ensureSaasSupabase — configures the shared client from VITE_SUPABASE
     vi.stubEnv("VITE_SUPABASE_URL", "");
     vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY", "");
     const { ensureSaasSupabase, isSaasSupabaseConfigured } =
-      await import("@app/portal/auth/saasSupabase");
+      await import("@editor/portal/auth/saasSupabase");
     expect(isSaasSupabaseConfigured).toBe(false);
     expect(ensureSaasSupabase()).toBeNull();
     expect(configureSupabase).not.toHaveBeenCalled();

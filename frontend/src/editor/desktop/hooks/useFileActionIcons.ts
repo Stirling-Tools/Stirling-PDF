@@ -1,4 +1,4 @@
-import type { IconName } from "@app/ui/Icon";
+import type { IconName } from "@editor/ui/Icon";
 
 /**
  * File action icons for desktop builds.

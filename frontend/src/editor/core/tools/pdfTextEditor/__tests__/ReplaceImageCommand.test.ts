@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
-import { ReplaceImageCommand } from "@app/tools/pdfTextEditor/commands/ReplaceImageCommand";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
-import { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Affine, PageRect } from "@app/tools/pdfTextEditor/types";
+import { ReplaceImageCommand } from "@editor/tools/pdfTextEditor/commands/ReplaceImageCommand";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Affine, PageRect } from "@editor/tools/pdfTextEditor/types";
 
 const OLD_PTR = 42;
 /** 90-degree rotated placement: a naive (w,0,0,h,x,y) rebuild would flip it. */

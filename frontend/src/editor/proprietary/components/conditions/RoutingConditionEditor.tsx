@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { Input, Select } from "@app/ui";
-import { ClassificationConditionEditor } from "@app/components/conditions/ClassificationConditionEditor";
+import { Input, Select } from "@editor/ui";
+import { ClassificationConditionEditor } from "@editor/components/conditions/ClassificationConditionEditor";
 import {
   classificationCondition,
   documentFieldCondition,
   requiresClassification,
-} from "@app/data/classificationConditions";
-import type { MatchesAnyCondition } from "@app/conditions/types";
+} from "@editor/data/classificationConditions";
+import type { MatchesAnyCondition } from "@editor/conditions/types";
 
 interface RoutingConditionEditorProps {
   condition: MatchesAnyCondition;

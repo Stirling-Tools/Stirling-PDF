@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
-import ReorganizePagesSettings from "@app/components/tools/reorganizePages/ReorganizePagesSettings";
-import { useReorganizePagesParameters } from "@app/hooks/tools/reorganizePages/useReorganizePagesParameters";
-import { useReorganizePagesOperation } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import { useAccordionSteps } from "@editor/hooks/tools/shared/useAccordionSteps";
+import ReorganizePagesSettings from "@editor/components/tools/reorganizePages/ReorganizePagesSettings";
+import { useReorganizePagesParameters } from "@editor/hooks/tools/reorganizePages/useReorganizePagesParameters";
+import { useReorganizePagesOperation } from "@editor/hooks/tools/reorganizePages/useReorganizePagesOperation";
 
 const ReorganizePages = ({
   onPreviewFile,

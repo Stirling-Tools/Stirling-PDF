@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { StatTile } from "@app/ui/StatTile";
+import { StatTile } from "@editor/ui/StatTile";
 
 const meta: Meta<typeof StatTile> = {
   title: "Primitives/StatTile",

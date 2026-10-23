@@ -1,10 +1,10 @@
-import { test, expect } from "@app/tests/helpers/test-base";
+import { test, expect } from "@editor/tests/helpers/test-base";
 import {
   ensureCookieConsent,
   skipOnboarding,
   DEFAULT_TEST_USERNAME,
   DEFAULT_TEST_PASSWORD,
-} from "@app/tests/helpers/login";
+} from "@editor/tests/helpers/login";
 
 /**
  * Live-suite bootstrap. Two responsibilities:

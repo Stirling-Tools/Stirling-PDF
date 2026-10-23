@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SettingsMobileBackButton } from "@app/components/shared/config/SettingsMobileBackButton";
+import { SettingsMobileBackButton } from "@editor/components/shared/config/SettingsMobileBackButton";
 
 const meta = {
   title: "Shared/Config/SettingsMobileBackButton",

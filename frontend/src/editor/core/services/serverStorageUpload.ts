@@ -1,15 +1,15 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import {
   assertFilesNotBlocked,
   policySourceIds,
-} from "@app/services/policyFileGuard";
-import { fileStorage } from "@app/services/fileStorage";
+} from "@editor/services/policyFileGuard";
+import { fileStorage } from "@editor/services/fileStorage";
 import {
   buildHistoryBundle,
   buildSharePackage,
-} from "@app/services/serverStorageBundle";
-import type { FileId } from "@app/types/file";
-import type { StirlingFileStub } from "@app/types/fileContext";
+} from "@editor/services/serverStorageBundle";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 function resolveUpdatedAt(value: unknown): number {
   if (!value) {

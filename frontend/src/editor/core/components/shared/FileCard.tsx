@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Card, Stack, Text, Group, Badge, Box, Tooltip } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { StirlingFileStub } from "@app/types/fileContext";
-import { getFileSize, getFileDate } from "@app/utils/fileUtils";
-import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
-import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
+import { Icon } from "@editor/ui/Icon";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { getFileSize, getFileDate } from "@editor/utils/fileUtils";
+import { useFileThumbnail } from "@editor/hooks/useFileThumbnail";
+import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
+import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
 
 interface FileCardProps {
   file: File;

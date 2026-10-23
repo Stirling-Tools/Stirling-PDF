@@ -1,9 +1,9 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { LineGrouper } from "@app/tools/pdfTextEditor/pdfium/LineGrouper";
-import { ParagraphGrouper } from "@app/tools/pdfTextEditor/pdfium/ParagraphGrouper";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { LineGrouper } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
+import { ParagraphGrouper } from "@editor/tools/pdfTextEditor/pdfium/ParagraphGrouper";
 
 // Reproduces the "Plus Many More" two-column bulleted-list geometry from
 // public/samples/Sample.pdf page 3: bullets are separate text objects.

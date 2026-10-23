@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 
 /**
  * The figure is checkable against a real account, so it must be the wallet's and never a hardcoded
@@ -9,10 +9,10 @@ import { PortalTestProviders } from "@portal/test/TestQueryProvider";
  * screen confirming a free connection.
  */
 const { fetchWallet } = vi.hoisted(() => ({ fetchWallet: vi.fn() }));
-vi.mock("@portal/api/billing", () => ({ fetchWallet }));
+vi.mock("@processor/api/billing", () => ({ fetchWallet }));
 
-import { ConnectDoneSlide } from "@portal/components/account-link/connect/ConnectDoneSlide";
-import { freeWallet } from "@portal/components/billing/walletFixtures";
+import { ConnectDoneSlide } from "@processor/components/account-link/connect/ConnectDoneSlide";
+import { freeWallet } from "@processor/components/billing/walletFixtures";
 
 /** The shared fixture, wound down to the balance under test. */
 const wallet = (freeRemaining: number) => ({

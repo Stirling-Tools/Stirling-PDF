@@ -9,17 +9,17 @@
  */
 import React, { useCallback, useEffect, useRef } from "react";
 import { Box, Text, ScrollArea, Badge, Tooltip } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { useFormFill } from "@app/tools/formFill/FormFillContext";
-import { FieldInput } from "@app/tools/formFill/FieldInput";
+import { useFormFill } from "@editor/tools/formFill/FormFillContext";
+import { FieldInput } from "@editor/tools/formFill/FieldInput";
 import {
   FIELD_TYPE_ICON,
   FIELD_TYPE_COLOR,
-} from "@app/tools/formFill/fieldMeta";
-import type { FormField } from "@app/tools/formFill/types";
-import { Icon } from "@app/ui/Icon";
-import styles from "@app/tools/formFill/FormFill.module.css";
+} from "@editor/tools/formFill/fieldMeta";
+import type { FormField } from "@editor/tools/formFill/types";
+import { Icon } from "@editor/ui/Icon";
+import styles from "@editor/tools/formFill/FormFill.module.css";
 
 interface FormFieldSidebarProps {
   visible: boolean;

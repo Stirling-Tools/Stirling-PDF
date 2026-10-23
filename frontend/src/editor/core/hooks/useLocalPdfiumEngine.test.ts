@@ -9,7 +9,7 @@ vi.mock("@embedpdf/engines/pdfium-worker-engine", () => ({
 
 const mockStartEagerWasmCompilation = vi.fn();
 
-vi.mock("@app/services/wasmPrecompiler", () => ({
+vi.mock("@editor/services/wasmPrecompiler", () => ({
   startEagerWasmCompilation: () => mockStartEagerWasmCompilation(),
 }));
 
@@ -36,7 +36,7 @@ describe("useLocalPdfiumEngine", () => {
     mockCreatePdfiumEngine.mockReturnValue(engine);
 
     const { useLocalPdfiumEngine } =
-      await import("@app/hooks/useLocalPdfiumEngine");
+      await import("@editor/hooks/useLocalPdfiumEngine");
 
     const { result } = renderHook(() =>
       useLocalPdfiumEngine({ wasmUrl: WASM_URL }),
@@ -59,7 +59,7 @@ describe("useLocalPdfiumEngine", () => {
     mockCreatePdfiumEngine.mockReturnValue(engine);
 
     const { useLocalPdfiumEngine } =
-      await import("@app/hooks/useLocalPdfiumEngine");
+      await import("@editor/hooks/useLocalPdfiumEngine");
 
     const { unmount } = renderHook(() =>
       useLocalPdfiumEngine({ wasmUrl: WASM_URL }),
@@ -80,7 +80,7 @@ describe("useLocalPdfiumEngine", () => {
     mockCreatePdfiumEngine.mockReturnValue(engine);
 
     const { useLocalPdfiumEngine } =
-      await import("@app/hooks/useLocalPdfiumEngine");
+      await import("@editor/hooks/useLocalPdfiumEngine");
 
     const { unmount } = renderHook(() =>
       useLocalPdfiumEngine({ wasmUrl: WASM_URL }),
@@ -102,7 +102,7 @@ describe("useLocalPdfiumEngine", () => {
       .mockReturnValueOnce(noTask);
 
     const { useLocalPdfiumEngine } =
-      await import("@app/hooks/useLocalPdfiumEngine");
+      await import("@editor/hooks/useLocalPdfiumEngine");
 
     const first = renderHook(() => useLocalPdfiumEngine({ wasmUrl: WASM_URL }));
     await waitFor(() => {
@@ -131,7 +131,7 @@ describe("useLocalPdfiumEngine", () => {
     mockCreatePdfiumEngine.mockReturnValue(engine);
 
     const { useLocalPdfiumEngine } =
-      await import("@app/hooks/useLocalPdfiumEngine");
+      await import("@editor/hooks/useLocalPdfiumEngine");
 
     const { unmount } = renderHook(() =>
       useLocalPdfiumEngine({ wasmUrl: WASM_URL }),
@@ -158,7 +158,7 @@ describe("useLocalPdfiumEngine", () => {
     mockCreatePdfiumEngine.mockReturnValue(engine);
 
     const { useLocalPdfiumEngine } =
-      await import("@app/hooks/useLocalPdfiumEngine");
+      await import("@editor/hooks/useLocalPdfiumEngine");
 
     const { unmount } = renderHook(() =>
       useLocalPdfiumEngine({ wasmUrl: WASM_URL }),
@@ -180,7 +180,7 @@ describe("useLocalPdfiumEngine", () => {
       .mockReturnValueOnce(second);
 
     const { useLocalPdfiumEngine } =
-      await import("@app/hooks/useLocalPdfiumEngine");
+      await import("@editor/hooks/useLocalPdfiumEngine");
 
     const { result, rerender } = renderHook(
       ({ url }: { url: string }) => useLocalPdfiumEngine({ wasmUrl: url }),
@@ -206,7 +206,7 @@ describe("useLocalPdfiumEngine", () => {
     mockCreatePdfiumEngine.mockReturnValueOnce(recovered);
 
     const { useLocalPdfiumEngine } =
-      await import("@app/hooks/useLocalPdfiumEngine");
+      await import("@editor/hooks/useLocalPdfiumEngine");
 
     const { result, rerender } = renderHook(
       ({ url }: { url: string }) => useLocalPdfiumEngine({ wasmUrl: url }),

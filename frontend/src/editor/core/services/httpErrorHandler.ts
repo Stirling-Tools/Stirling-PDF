@@ -1,20 +1,20 @@
 // frontend/src/editor/core/services/httpErrorHandler.ts
-import { alert } from "@app/components/toast";
+import { alert } from "@editor/components/toast";
 import {
   broadcastErroredFiles,
   extractErrorFileIds,
   normalizeAxiosErrorData,
-} from "@app/services/errorUtils";
-import { showSpecialErrorToast } from "@app/services/specialErrorToasts";
+} from "@editor/services/errorUtils";
+import { showSpecialErrorToast } from "@editor/services/specialErrorToasts";
 import axios from "axios";
-import { handleSaaSError } from "@app/services/saasErrorInterceptor";
+import { handleSaaSError } from "@editor/services/saasErrorInterceptor";
 import {
   clampText,
   extractAxiosErrorMessage,
-} from "@app/services/httpErrorUtils";
-import { stripBasePath, withBasePath } from "@app/constants/app";
-import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
-import { reportAccountLinkBlock } from "@app/services/accountLinkBlock";
+} from "@editor/services/httpErrorUtils";
+import { stripBasePath, withBasePath } from "@editor/constants/app";
+import { isSafePostLoginRedirect } from "@editor/services/postLoginRedirect";
+import { reportAccountLinkBlock } from "@editor/services/accountLinkBlock";
 
 // Module-scoped state to reduce global variable usage
 const recentSpecialByEndpoint: Record<string, number> = {};

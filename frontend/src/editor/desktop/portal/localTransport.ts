@@ -1,8 +1,8 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import type {
   TauriHttpError,
   TauriHttpResponse,
-} from "@app/services/tauriHttpClient";
+} from "@editor/services/tauriHttpClient";
 
 function toResponse(res: TauriHttpResponse<ArrayBuffer>): Response {
   return new Response(res.data, {

@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 
 // The en-US fallback covers only keys missing from the active locale, so it must
 // not gate first paint; the app fetches it after the active language resolves.
