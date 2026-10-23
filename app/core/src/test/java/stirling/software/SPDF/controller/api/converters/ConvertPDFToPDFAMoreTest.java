@@ -593,4 +593,38 @@ class ConvertPDFToPDFAMoreTest {
             }
         }
     }
+
+    @Test
+    @DisplayName("failed LibreOffice PDF/A step removes its output directory")
+    void libreOfficeFailureRemovesOutputDir() throws Exception {
+        when(runtimePathConfig.getSOfficePath()).thenReturn("soffice");
+        Path input = tempDir.resolve("in.pdf");
+        Files.write(input, simplePdfBytes());
+        List<Path> outputDirs = new java.util.ArrayList<>();
+
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+            ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
+            pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE))
+                    .thenReturn(executor);
+            ProcessExecutorResult result = Mockito.mock(ProcessExecutorResult.class);
+            when(result.getRc()).thenReturn(1);
+            when(executor.runCommandWithOutputHandling(any()))
+                    .thenAnswer(
+                            inv -> {
+                                List<String> command = inv.getArgument(0);
+                                outputDirs.add(
+                                        Path.of(command.get(command.indexOf("--outdir") + 1)));
+                                return result;
+                            });
+
+            assertThatThrownBy(
+                            () ->
+                                    invokeInstance(
+                                            newController(), "runLibreOfficeConversion", input, 1))
+                    .isNotNull();
+        }
+
+        assertThat(outputDirs).hasSize(1);
+        assertThat(outputDirs.getFirst()).doesNotExist();
+    }
 }

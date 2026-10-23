@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -22,6 +23,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -802,6 +805,89 @@ class PDFToFileTest {
                             .getContentDisposition()
                             .toString()
                             .contains("document.docx"));
+        }
+    }
+
+    private List<String> runPdftohtmlCapturingCommand(String originalName, boolean markdown)
+            throws IOException, InterruptedException {
+        List<String> captured = new ArrayList<>();
+        List<File> workingDirs = new ArrayList<>();
+        try (MockedStatic<ProcessExecutor> mockedStaticProcessExecutor =
+                mockStatic(ProcessExecutor.class)) {
+            mockedStaticProcessExecutor
+                    .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML))
+                    .thenReturn(mockProcessExecutor);
+            when(mockProcessExecutor.runCommandWithOutputHandling(anyList(), any(File.class)))
+                    .thenAnswer(
+                            invocation -> {
+                                captured.addAll(invocation.getArgument(0));
+                                workingDirs.add(invocation.getArgument(1));
+                                return mockExecutorResult;
+                            });
+            MultipartFile pdfFile =
+                    new MockMultipartFile(
+                            "file",
+                            originalName,
+                            MediaType.APPLICATION_PDF_VALUE,
+                            "Fake PDF content".getBytes());
+            ResponseEntity<Resource> response =
+                    markdown
+                            ? pdfToFile.processPdfToMarkdown(pdfFile)
+                            : pdfToFile.processPdfToHtml(pdfFile);
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+        }
+        assertEquals(1, workingDirs.size());
+        assertEquals("--", captured.get(captured.size() - 2));
+        assertTrue(Path.of(captured.get(captured.size() - 3)).isAbsolute());
+        return captured;
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"-xml.pdf", "-stdout.pdf", "--help.pdf", "-q -o x.pdf"})
+    void processPdfToHtml_optionLikeFilenameIsNotPassedAsOption(String name)
+            throws IOException, InterruptedException {
+        List<String> command = runPdftohtmlCapturingCommand(name, false);
+        assertEquals(List.of("pdftohtml", "-c"), command.subList(0, 2));
+        assertEquals(name.substring(0, name.lastIndexOf('.')), command.getLast());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"-xml.pdf", "-stdout.pdf", "--help.pdf", "-q -o x.pdf"})
+    void processPdfToMarkdown_optionLikeFilenameIsNotPassedAsOption(String name)
+            throws IOException, InterruptedException {
+        List<String> command = runPdftohtmlCapturingCommand(name, true);
+        assertEquals(List.of("pdftohtml", "-s", "-noframes", "-c"), command.subList(0, 4));
+        assertEquals(name.substring(0, name.lastIndexOf('.')), command.getLast());
+    }
+
+    @Test
+    void processPdfToHtml_blankBaseNameStaysInsideOutputDir()
+            throws IOException, InterruptedException {
+        List<String> command = runPdftohtmlCapturingCommand(".pdf", false);
+        assertEquals("document", command.getLast());
+    }
+
+    @Test
+    void processPdfToHtml_zipWriteFailureIsNotReportedAsSuccess() throws Exception {
+        try (MockedStatic<ProcessExecutor> mockedStaticProcessExecutor =
+                mockStatic(ProcessExecutor.class)) {
+            mockedStaticProcessExecutor
+                    .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML))
+                    .thenReturn(mockProcessExecutor);
+            when(mockProcessExecutor.runCommandWithOutputHandling(anyList(), any(File.class)))
+                    .thenAnswer(
+                            invocation -> {
+                                File outputDir = invocation.getArgument(1);
+                                Files.createDirectory(outputDir.toPath().resolve("test.html"));
+                                return mockExecutorResult;
+                            });
+            MultipartFile pdfFile =
+                    new MockMultipartFile(
+                            "file",
+                            "test.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            "Fake PDF content".getBytes());
+            assertThrows(IOException.class, () -> pdfToFile.processPdfToHtml(pdfFile));
         }
     }
 }

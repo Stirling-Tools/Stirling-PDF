@@ -291,4 +291,33 @@ class ConvertEbookToPDFControllerTest {
             }
         }
     }
+
+    @Test
+    void convertEbookToPdf_calibreFailureRemovesWorkingDirectory() throws Exception {
+        when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
+
+        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "broken.epub", "application/epub+zip", "content".getBytes()));
+
+        Path workingDir = Files.createTempDirectory("ebook-convert-fail-test-");
+        when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
+
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+            ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
+            pe.when(() -> ProcessExecutor.getInstance(Processes.CALIBRE)).thenReturn(executor);
+            ProcessExecutorResult execResult = Mockito.mock(ProcessExecutorResult.class);
+            when(execResult.getRc()).thenReturn(1);
+            when(executor.runCommandWithOutputHandling(any(), any(File.class)))
+                    .thenReturn(execResult);
+
+            assertThrows(IllegalStateException.class, () -> controller.convertEbookToPdf(request));
+        } finally {
+            Files.deleteIfExists(workingDir);
+        }
+
+        Mockito.verify(tempFileManager).deleteTempDirectory(workingDir);
+        assertFalse(Files.exists(workingDir.resolve("broken.epub")));
+    }
 }
