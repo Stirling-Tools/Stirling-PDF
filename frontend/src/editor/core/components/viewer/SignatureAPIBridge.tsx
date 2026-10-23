@@ -401,6 +401,7 @@ export const SignatureAPIBridge = forwardRef<
           imageData: signatureData, // Try imageData field
           appearance: signatureData, // Try appearance field
         });
+        setSignaturesApplied(false);
       },
 
       activateDrawMode: () => {
@@ -551,6 +552,7 @@ export const SignatureAPIBridge = forwardRef<
       annotationApi,
       signatureConfig,
       placementSize,
+      setSignaturesApplied,
       applyStampDefaults,
       configureStampDefaults,
     ],
