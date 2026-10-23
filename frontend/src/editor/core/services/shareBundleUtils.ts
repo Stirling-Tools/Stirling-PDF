@@ -1,6 +1,6 @@
 import type JSZipClass from "jszip";
 
-import type { ShareBundleManifest } from "@app/services/serverStorageBundle";
+import type { ShareBundleManifest } from "@editor/services/serverStorageBundle";
 
 const MANIFEST_FILENAME = "stirling-share.json";
 

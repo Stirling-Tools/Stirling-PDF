@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { useServerExperience } from "@app/hooks/useServerExperience";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useServerExperience } from "@editor/hooks/useServerExperience";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 import {
   ONBOARDING_STEPS,
@@ -10,13 +10,13 @@ import {
   type OnboardingRuntimeState,
   type OnboardingConditionContext,
   DEFAULT_RUNTIME_STATE,
-} from "@app/components/onboarding/orchestrator/onboardingConfig";
+} from "@editor/components/onboarding/orchestrator/onboardingConfig";
 import {
   isOnboardingCompleted,
   markOnboardingCompleted,
   migrateFromLegacyPreferences,
-} from "@app/components/onboarding/orchestrator/onboardingStorage";
-import { useBypassOnboarding } from "@app/components/onboarding/useBypassOnboarding";
+} from "@editor/components/onboarding/orchestrator/onboardingStorage";
+import { useBypassOnboarding } from "@editor/components/onboarding/useBypassOnboarding";
 
 const AUTH_ROUTES = ["/login", "/signup", "/auth", "/invite"];
 const SESSION_TOUR_REQUESTED = "onboarding::session::tour-requested";

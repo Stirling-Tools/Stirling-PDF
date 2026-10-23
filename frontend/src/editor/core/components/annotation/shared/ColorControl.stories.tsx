@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ColorControl } from "@app/components/annotation/shared/ColorControl";
+import { ColorControl } from "@editor/components/annotation/shared/ColorControl";
 
 const meta: Meta<typeof ColorControl> = {
   title: "Annotation/ColorControl",

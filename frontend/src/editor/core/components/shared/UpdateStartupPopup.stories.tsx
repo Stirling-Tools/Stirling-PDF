@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { UpdateStartupPopup } from "@app/components/shared/UpdateStartupPopup";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import { UpdateStartupPopup } from "@editor/components/shared/UpdateStartupPopup";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
 
 /**
  * Startup update-check popup — renders null until an update is detected, so

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AdvancedOptionsStep from "@app/components/tools/changeMetadata/steps/AdvancedOptionsStep";
-import { defaultParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
-import { TrappedStatus } from "@app/types/metadata";
+import AdvancedOptionsStep from "@editor/components/tools/changeMetadata/steps/AdvancedOptionsStep";
+import { defaultParameters } from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { TrappedStatus } from "@editor/types/metadata";
 
 const meta = {
   title: "Tools/ChangeMetadata/Steps/AdvancedOptionsStep",

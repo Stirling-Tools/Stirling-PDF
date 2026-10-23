@@ -1,6 +1,6 @@
-import apiClient from "@app/services/apiClient";
-import { loadPolicies, updatePolicy } from "@app/services/policyStorage";
-import type { WirePolicy, WireEditorConfig } from "@app/policies/types";
+import apiClient from "@editor/services/apiClient";
+import { loadPolicies, updatePolicy } from "@editor/services/policyStorage";
+import type { WirePolicy, WireEditorConfig } from "@editor/policies/types";
 
 /** The overview fields needed to explain and manage active automation in a credit prompt. */
 export interface CreditPromptPipeline {

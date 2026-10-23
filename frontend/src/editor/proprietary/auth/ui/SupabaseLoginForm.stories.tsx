@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SupabaseLoginForm from "@app/auth/ui/SupabaseLoginForm";
-import type { SupabaseLoginState } from "@app/auth/ui/useSupabaseLogin";
-import "@app/auth/ui/auth.css";
+import SupabaseLoginForm from "@editor/auth/ui/SupabaseLoginForm";
+import type { SupabaseLoginState } from "@editor/auth/ui/useSupabaseLogin";
+import "@editor/auth/ui/auth.css";
 
 /**
  * Login form combining SSO buttons and email/password, driven by a

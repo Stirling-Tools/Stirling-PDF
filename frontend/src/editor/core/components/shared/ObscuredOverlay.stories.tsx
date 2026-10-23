@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ObscuredOverlay from "@app/components/shared/ObscuredOverlay";
+import ObscuredOverlay from "@editor/components/shared/ObscuredOverlay";
 
 const meta: Meta<typeof ObscuredOverlay> = {
   title: "Shared/ObscuredOverlay",

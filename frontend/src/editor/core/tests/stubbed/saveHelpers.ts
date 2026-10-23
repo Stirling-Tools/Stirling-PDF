@@ -1,4 +1,4 @@
-import { expect } from "@app/tests/helpers/stub-test-base";
+import { expect } from "@editor/tests/helpers/stub-test-base";
 import type { Download, Page } from "@playwright/test";
 
 /** Save helpers for the PDF text editor specs. */

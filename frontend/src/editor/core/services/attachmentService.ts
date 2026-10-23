@@ -1,4 +1,4 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import axios from "axios";
 import JSZip from "jszip";
 

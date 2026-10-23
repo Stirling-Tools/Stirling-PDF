@@ -1,4 +1,4 @@
-import type { IconName } from "@app/ui/Icon";
+import type { IconName } from "@editor/ui/Icon";
 
 /** Icon palette for saved automations and watched folders. The KEYS are
  * persisted (e.g. "SettingsIcon"), so only the values may change. */

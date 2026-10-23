@@ -8,36 +8,36 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
-import { Button } from "@app/ui/Button";
+import { useAuth } from "@editor/auth/UseSession";
+import { Button } from "@editor/ui/Button";
 import {
   useAllFiles,
   useFileManagement,
   useFileSelectors,
-} from "@app/contexts/FileContext";
-import { useHotkeys } from "@app/contexts/HotkeyContext";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+} from "@editor/contexts/FileContext";
+import { useHotkeys } from "@editor/contexts/HotkeyContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import {
   isRunInFlight,
   usePolicyRuns,
   type PolicyRunRecord,
-} from "@app/components/policies/policyRunStore";
+} from "@editor/components/policies/policyRunStore";
 import {
   getWorkspacePolicyBlocks,
   registerPolicyWorkspace,
   subscribePolicyFileUsage,
   policyFileUsageVersion,
   type PolicyRecoveryBlock,
-} from "@app/services/policyBlockRegistry";
-import { loadPolicies, onPoliciesChange } from "@app/services/policyStorage";
-import { loadPolicyCatalog } from "@app/services/policyCatalog";
-import { runPolicyOnFile } from "@app/services/policyDispatch";
-import { dispatchableFileId } from "@app/components/policies/policyLocalPass";
-import { fileStorage } from "@app/services/fileStorage";
-import type { PoliciesByKey } from "@app/types/policies";
-import type { FileId } from "@app/types/file";
-import "@app/components/policies/PolicyRecoveryGate.css";
+} from "@editor/services/policyBlockRegistry";
+import { loadPolicies, onPoliciesChange } from "@editor/services/policyStorage";
+import { loadPolicyCatalog } from "@editor/services/policyCatalog";
+import { runPolicyOnFile } from "@editor/services/policyDispatch";
+import { dispatchableFileId } from "@editor/components/policies/policyLocalPass";
+import { fileStorage } from "@editor/services/fileStorage";
+import type { PoliciesByKey } from "@editor/types/policies";
+import type { FileId } from "@editor/types/file";
+import "@editor/components/policies/PolicyRecoveryGate.css";
 
 /** Keeps the editor mounted but inaccessible until all open, failed inputs are recovered or closed. */
 export function PolicyRecoveryGate() {

@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
-import { extractAxiosErrorMessage } from "@app/services/httpErrorUtils";
-import { alert } from "@app/components/toast";
+import { extractAxiosErrorMessage } from "@editor/services/httpErrorUtils";
+import { alert } from "@editor/components/toast";
 import i18n from "i18next";
 
 /**

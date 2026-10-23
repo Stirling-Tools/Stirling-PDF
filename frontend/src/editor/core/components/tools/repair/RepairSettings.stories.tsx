@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import RepairSettings from "@app/components/tools/repair/RepairSettings";
-import { RepairParameters } from "@app/hooks/tools/repair/useRepairParameters";
+import RepairSettings from "@editor/components/tools/repair/RepairSettings";
+import { RepairParameters } from "@editor/hooks/tools/repair/useRepairParameters";
 
 const parameters: RepairParameters = {};
 

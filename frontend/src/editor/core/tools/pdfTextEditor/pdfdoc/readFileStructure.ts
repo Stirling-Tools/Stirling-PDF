@@ -1,6 +1,9 @@
-import type { StructureElement } from "@app/tools/pdfTextEditor/model/PageStructure";
-import { RawPdf, referencedObject } from "@app/tools/pdfTextEditor/pdfdoc/raw";
-import { decodeTextString } from "@app/tools/pdfTextEditor/pdfdoc/textString";
+import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  RawPdf,
+  referencedObject,
+} from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 
 type ElementInfo = Omit<StructureElement, "mcids">;
 

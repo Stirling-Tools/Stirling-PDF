@@ -1,4 +1,4 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 
 export async function fetchAdminSection<T>(sectionName: string): Promise<T> {
   const response = await apiClient.get<T>(

@@ -1,4 +1,4 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 
 /** Source overview fields needed to choose a saved processing destination. */
 export interface PolicySource {

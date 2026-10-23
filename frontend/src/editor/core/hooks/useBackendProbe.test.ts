@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
-import { useBackendProbe } from "@app/hooks/useBackendProbe";
+import { useBackendProbe } from "@editor/hooks/useBackendProbe";
 
 function backendResponse(status: number, body?: unknown): Response {
   return {

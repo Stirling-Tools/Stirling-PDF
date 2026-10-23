@@ -7,7 +7,7 @@ import {
   context,
   inProcessor,
   policyContext,
-} from "@app/components/notifications/resolutions/testSupport";
+} from "@editor/components/notifications/resolutions/testSupport";
 
 // Where each action sends the reader. Only the editor has the workbench contexts above it.
 
@@ -15,10 +15,12 @@ const retryWithPassword = vi.fn();
 const unlockLocalDocument = vi.fn();
 const repairDocuments = vi.fn();
 const retryWithFiles = vi.fn();
-vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
+vi.mock("@editor/services/notificationRetry", async (importOriginal) => ({
   // The real stashMatchesKind and retryInputIds: both are pure, and their guards are part of
   // what these tests exercise.
-  ...(await importOriginal<typeof import("@app/services/notificationRetry")>()),
+  ...(await importOriginal<
+    typeof import("@editor/services/notificationRetry")
+  >()),
   retryWithPassword: (...args: unknown[]) => retryWithPassword(...args),
   unlockLocalDocument: (...args: unknown[]) => unlockLocalDocument(...args),
   repairDocuments: (...args: unknown[]) => repairDocuments(...args),
@@ -28,7 +30,7 @@ vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
 const rerunPolicy = vi.fn();
 const rechainPolicyOnDocument = vi.fn();
 const canPlacePolicy = vi.fn();
-vi.mock("@app/services/notificationPolicyRetry", () => ({
+vi.mock("@editor/services/notificationPolicyRetry", () => ({
   canPlacePolicy: (...args: unknown[]) => canPlacePolicy(...args),
   rerunPolicy: (...args: unknown[]) => rerunPolicy(...args),
   rechainPolicyOnDocument: (...args: unknown[]) =>
@@ -37,13 +39,13 @@ vi.mock("@app/services/notificationPolicyRetry", () => ({
 
 const reportNotificationResolved = vi.fn();
 const reportKnownFailure = vi.fn();
-vi.mock("@app/services/failureReporting", () => ({
+vi.mock("@editor/services/failureReporting", () => ({
   reportKnownFailure: (...args: unknown[]) => reportKnownFailure(...args),
 }));
 
-vi.mock("@app/services/notifications", async () => ({
-  ...(await vi.importActual<typeof import("@app/services/notifications")>(
-    "@app/services/notifications",
+vi.mock("@editor/services/notifications", async () => ({
+  ...(await vi.importActual<typeof import("@editor/services/notifications")>(
+    "@editor/services/notifications",
   )),
   reportNotificationResolved: (...args: unknown[]) =>
     reportNotificationResolved(...args),
@@ -71,26 +73,26 @@ const h = vi.hoisted(() => ({
   getStirlingFileStub: vi.fn(),
 }));
 
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFileStub: (fileId: string) => h.getStirlingFileStub(fileId),
   },
 }));
 
 const { FileActionsContext, FileStoreContext } =
-  await import("@app/contexts/file/contexts");
+  await import("@editor/contexts/file/contexts");
 const { NavigationActionsContext } =
-  await import("@app/contexts/NavigationContext");
-const { ViewerContext } = await import("@app/contexts/ViewerContext");
+  await import("@editor/contexts/NavigationContext");
+const { ViewerContext } = await import("@editor/contexts/ViewerContext");
 const { useNotificationActions } =
-  await import("@app/components/notifications/notificationActions");
+  await import("@editor/components/notifications/notificationActions");
 
 const addStirlingFileStubs = vi.fn();
 const setActiveFileId = vi.fn();
 const setWorkbench = vi.fn();
 const setToolAndWorkbench = vi.fn();
 // createChildStub is stubbed too, so the test can name the version's id directly.
-vi.mock("@app/contexts/file/fileActions", () => ({
+vi.mock("@editor/contexts/file/fileActions", () => ({
   generateProcessedFileMetadata: () => Promise.resolve(null),
   createChildStub: (parent: { id: string }, _op: unknown, file: File) => ({
     ...parent,

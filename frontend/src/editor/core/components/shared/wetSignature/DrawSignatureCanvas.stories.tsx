@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { DrawSignatureCanvas } from "@app/components/shared/wetSignature/DrawSignatureCanvas";
+import { DrawSignatureCanvas } from "@editor/components/shared/wetSignature/DrawSignatureCanvas";
 
 const meta = {
   title: "Shared/WetSignature/DrawSignatureCanvas",

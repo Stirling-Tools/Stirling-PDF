@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CalendlyInline } from "@portal/components/procurement/CalendlyInline";
-import "@portal/views/Procurement.css";
+import { CalendlyInline } from "@processor/components/procurement/CalendlyInline";
+import "@processor/views/Procurement.css";
 
 const meta: Meta<typeof CalendlyInline> = {
   title: "Portal/Procurement/CalendlyInline",

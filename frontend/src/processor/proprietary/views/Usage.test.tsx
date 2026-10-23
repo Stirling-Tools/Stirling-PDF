@@ -1,4 +1,4 @@
-vi.mock("@app/portal/queries/infrastructure", () => ({
+vi.mock("@editor/portal/queries/infrastructure", () => ({
   useFleetStats: () => ({ data: null, loading: false, error: null }),
 }));
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -14,18 +14,18 @@ import type { ReactElement } from "react";
 import { StrictMode } from "react";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { UIProvider } from "@app/portal/contexts/UIContext";
-import { baseQueryOptions } from "@app/query/queryClient";
+import { UIProvider } from "@editor/portal/contexts/UIContext";
+import { baseQueryOptions } from "@editor/query/queryClient";
 import {
   resetTabVisibility,
   setTabHidden,
-} from "@app/tests/utils/tabVisibility";
-import type { ProcurementSnapshot } from "@app/portal/api/procurement";
-import type { LegacyBillingState } from "@app/types/legacyBilling";
-import { formatPeriodDate } from "@app/billing";
+} from "@editor/tests/utils/tabVisibility";
+import type { ProcurementSnapshot } from "@editor/portal/api/procurement";
+import type { LegacyBillingState } from "@editor/types/legacyBilling";
+import { formatPeriodDate } from "@editor/billing";
 
 const fetchCheckoutPricing = vi.hoisted(() => vi.fn());
-vi.mock("@app/portal/billing/stripe", () => ({ fetchCheckoutPricing }));
+vi.mock("@editor/portal/billing/stripe", () => ({ fetchCheckoutPricing }));
 
 const legacyBilling: LegacyBillingState = {
   subscriptions: [],
@@ -36,11 +36,11 @@ const legacyBilling: LegacyBillingState = {
   refresh: vi.fn(),
   openPortal: vi.fn(),
 };
-vi.mock("@app/hooks/useLegacySubscriptions", () => ({
+vi.mock("@editor/hooks/useLegacySubscriptions", () => ({
   useLegacySubscriptions: () => legacyBilling,
 }));
 
-// Usage renders Mantine-backed @app/ui components (e.g. the "Manage Payment"
+// Usage renders Mantine-backed @editor/ui components (e.g. the "Manage Payment"
 // Button in the subscribed header), which need a MantineProvider in the tree.
 function Location() {
   const location = useLocation();
@@ -93,7 +93,7 @@ vi.mock("react-i18next", () => ({
 const fetchWallet = vi.fn();
 const refreshWalletCache = vi.fn();
 const bundleFlow = { status: "none", refresh: vi.fn() };
-vi.mock("@app/portal/hooks/useBundleFlowState", () => ({
+vi.mock("@editor/portal/hooks/useBundleFlowState", () => ({
   useBundleFlowState: () => bundleFlow,
 }));
 const procurement = {
@@ -109,31 +109,31 @@ const procurement = {
   onStartTrial: vi.fn(),
   setOpen: vi.fn(),
 };
-vi.mock("@app/portal/components/procurement/useProcurement", () => ({
+vi.mock("@editor/portal/components/procurement/useProcurement", () => ({
   useProcurement: () => procurement,
 }));
-vi.mock("@app/portal/components/procurement/ProcurementBanner", () => ({
+vi.mock("@editor/portal/components/procurement/ProcurementBanner", () => ({
   ControlledDealStatusHero: ({ readOnly }: { readOnly: boolean }) => (
     <div data-testid="procurement-summary">
       {readOnly ? "Read-only deal" : "Enterprise deal"}
     </div>
   ),
 }));
-vi.mock("@app/portal/components/procurement/ProcurementFlow", () => ({
+vi.mock("@editor/portal/components/procurement/ProcurementFlow", () => ({
   ProcurementFlow: () => <div data-testid="procurement-flow" />,
 }));
-vi.mock("@app/portal/api/fleetStats", () => ({
+vi.mock("@editor/portal/api/fleetStats", () => ({
   fetchFleetStats: () => Promise.resolve(null),
 }));
-vi.mock("@app/portal/api/users", () => ({
+vi.mock("@editor/portal/api/users", () => ({
   fetchAdminEmail: () => Promise.resolve(null),
 }));
 const checkout = { openCheckout: vi.fn() };
 let checkoutEnabled = false;
-vi.mock("@app/contexts/CheckoutContext", () => ({
+vi.mock("@editor/contexts/CheckoutContext", () => ({
   useCheckoutOptional: () => (checkoutEnabled ? checkout : null),
 }));
-vi.mock("@app/portal/api/billing", () => ({
+vi.mock("@editor/portal/api/billing", () => ({
   fetchWallet: () => fetchWallet(),
   refreshWalletCache: () => refreshWalletCache(),
   fetchPaymentMethod: () => Promise.resolve(null),
@@ -141,15 +141,15 @@ vi.mock("@app/portal/api/billing", () => ({
   fetchInvoices: () => Promise.resolve([]),
 }));
 const fetchLocalUsage = vi.fn().mockResolvedValue(null);
-vi.mock("@app/portal/api/link", () => ({
+vi.mock("@editor/portal/api/link", () => ({
   fetchLocalUsage: () => fetchLocalUsage(),
   triggerLocalSync: () => Promise.resolve(),
 }));
-vi.mock("@app/portal/hooks/useStripePortal", () => ({
+vi.mock("@editor/portal/hooks/useStripePortal", () => ({
   useStripePortal: () => ({ opening: false, open: vi.fn(), error: null }),
 }));
 // Stub the plan views so the test doesn't depend on the full wallet shape.
-vi.mock("@app/portal/components/billing/FreePlanView", () => ({
+vi.mock("@editor/portal/components/billing/FreePlanView", () => ({
   FreePlanView: ({
     step,
     onActivationClosed,
@@ -164,26 +164,26 @@ vi.mock("@app/portal/components/billing/FreePlanView", () => ({
       </div>
     ) : null,
 }));
-vi.mock("@app/portal/components/billing/SubscribedPlanView", () => ({
+vi.mock("@editor/portal/components/billing/SubscribedPlanView", () => ({
   SubscribedPlanView: () => null,
 }));
 
-import { Usage } from "@app/portal/views/Usage";
+import { Usage } from "@editor/portal/views/Usage";
 import {
   portalSaasSessionRestored,
   withPortalSaasSession,
   SaasSessionRequiredError,
   resetPortalSaasSessionState,
-} from "@app/portal/auth/portalSaasSession";
+} from "@editor/portal/auth/portalSaasSession";
 
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => null,
 }));
-vi.mock("@app/portal/auth/saasSupabase", () => ({
+vi.mock("@editor/portal/auth/saasSupabase", () => ({
   ensureSaasSupabase: vi.fn(),
 }));
-import { BillingScreen } from "@app/billing/BillingScreen";
-import { freeWallet } from "@app/billing/walletFixtures";
+import { BillingScreen } from "@editor/billing/BillingScreen";
+import { freeWallet } from "@editor/billing/walletFixtures";
 
 describe("Usage — link-free wallet renderer", () => {
   // Enough of a wallet for BillingScreen to render; the bare {status} fixture predates it.

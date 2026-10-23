@@ -2,11 +2,11 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { TOOL_FORMATS, type ToolFormat } from "@app/types/toolIO";
+import { TOOL_FORMATS, type ToolFormat } from "@editor/types/toolIO";
 import {
   getToolFormatLabel,
   getToolFormatListLabel,
-} from "@app/utils/toolIOLabels";
+} from "@editor/utils/toolIOLabels";
 
 /** The en-US `[toolFormat]` block, read straight from the locale file. */
 function toolFormatLabels(): Record<string, string> {

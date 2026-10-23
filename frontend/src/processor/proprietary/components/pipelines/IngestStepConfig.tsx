@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Banner, FormField, Input, ToggleSwitch } from "@app/ui";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import type { IngestStepParams } from "@portal/components/pipelines/docparseStep";
+import { Banner, FormField, Input, ToggleSwitch } from "@editor/ui";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import type { IngestStepParams } from "@processor/components/pipelines/docparseStep";
 
 interface IngestStepConfigProps {
   parameters: IngestStepParams;

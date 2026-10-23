@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { BrandMark } from "@app/components/shared/BrandMark";
-import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
-import { useSecretClicks } from "@app/components/easterEgg/useSecretClicks";
+import { BrandMark } from "@editor/components/shared/BrandMark";
+import { useQuickNavHost } from "@editor/contexts/QuickNavHostContext";
+import { useSecretClicks } from "@editor/components/easterEgg/useSecretClicks";
 
 export interface QuickNavBrandProps {
   /** Returns the app you are in to its default state. */

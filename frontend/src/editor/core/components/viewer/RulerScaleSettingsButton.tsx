@@ -1,10 +1,10 @@
 import { useRef } from "react";
 import { Popover } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip, type TooltipProps } from "@app/components/shared/Tooltip";
-import { ScaleSettingsPanel } from "@app/components/viewer/ScaleSettingsPanel";
-import type { MeasureScale } from "@app/utils/measurementTypes";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip, type TooltipProps } from "@editor/components/shared/Tooltip";
+import { ScaleSettingsPanel } from "@editor/components/viewer/ScaleSettingsPanel";
+import type { MeasureScale } from "@editor/utils/measurementTypes";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 
 interface RulerScaleSettingsButtonProps {
   disabled?: boolean;

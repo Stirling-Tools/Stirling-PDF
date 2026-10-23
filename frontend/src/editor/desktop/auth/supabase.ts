@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { STIRLING_SAAS_URL, SUPABASE_KEY } from "@app/constants/connection";
+import { STIRLING_SAAS_URL, SUPABASE_KEY } from "@editor/constants/connection";
 
 /**
  * Supabase client for desktop application

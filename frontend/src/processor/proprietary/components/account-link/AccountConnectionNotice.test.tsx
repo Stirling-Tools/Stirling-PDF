@@ -3,7 +3,7 @@ import { beforeEach, describe, it, expect, vi } from "vitest";
 import {
   AccountConnectionNotice,
   AccountConnectionRefresh,
-} from "@app/portal/components/account-link/AccountConnectionNotice";
+} from "@editor/portal/components/account-link/AccountConnectionNotice";
 
 const mocks = vi.hoisted(() => ({
   link: {
@@ -20,25 +20,25 @@ const mocks = vi.hoisted(() => ({
   required: false,
   linkModalOpen: false,
 }));
-vi.mock("@app/portal/contexts/AccountLinkContext", () => ({
+vi.mock("@editor/portal/contexts/AccountLinkContext", () => ({
   useAccountLinkOptional: () => mocks.link,
 }));
-vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+vi.mock("@editor/portal/hooks/useAccountLinkOwner", () => ({
   useAccountLinkOwner: () => mocks.isOwner,
 }));
-vi.mock("@app/portal/hooks/usePortalSaasSession", () => ({
+vi.mock("@editor/portal/hooks/usePortalSaasSession", () => ({
   usePortalSaasSession: () => ({ required: mocks.required }),
 }));
-vi.mock("@app/portal/contexts/UIContext", () => ({
+vi.mock("@editor/portal/contexts/UIContext", () => ({
   useUI: () => ({ linkModalOpen: mocks.linkModalOpen }),
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ refetch: mocks.refetch }),
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));
-vi.mock("@app/ui", () => ({
+vi.mock("@editor/ui", () => ({
   Banner: ({
     title,
     children,

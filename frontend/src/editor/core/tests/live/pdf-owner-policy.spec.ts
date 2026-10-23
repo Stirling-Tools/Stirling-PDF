@@ -1,6 +1,9 @@
-import { inspectPdfProtection as inspect } from "@app/tests/helpers/pdf-protection";
-import { test, expect } from "@app/tests/helpers/test-base";
-import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
+import { inspectPdfProtection as inspect } from "@editor/tests/helpers/pdf-protection";
+import { test, expect } from "@editor/tests/helpers/test-base";
+import {
+  liveApiHeaders,
+  loadLiveAppConfig,
+} from "@editor/tests/helpers/live-api";
 import type { Page } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs/promises";

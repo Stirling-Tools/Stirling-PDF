@@ -11,8 +11,8 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { BillingScreen } from "@app/billing/BillingScreen";
-import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
+import { BillingScreen } from "@editor/billing/BillingScreen";
+import { freeWallet, subscribedWallet } from "@editor/billing/walletFixtures";
 
 it.each(["free", "team", "processor", "SERVER", "ENTERPRISE"] as const)(
   "includes OAuth SSO for the self-hosted %s plan",

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import RefreshModal from "@app/components/shared/config/configSections/apiKeys/RefreshModal";
+import RefreshModal from "@editor/components/shared/config/configSections/apiKeys/RefreshModal";
 
 /**
  * Confirmation modal shown before regenerating API keys, warning that

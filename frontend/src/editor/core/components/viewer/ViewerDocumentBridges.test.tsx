@@ -1,10 +1,10 @@
 import { useLayoutEffect } from "react";
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SpreadAPIBridge } from "@app/components/viewer/SpreadAPIBridge";
-import { ScrollAPIBridge } from "@app/components/viewer/ScrollAPIBridge";
-import { RotateAPIBridge } from "@app/components/viewer/RotateAPIBridge";
-import type { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { SpreadAPIBridge } from "@editor/components/viewer/SpreadAPIBridge";
+import { ScrollAPIBridge } from "@editor/components/viewer/ScrollAPIBridge";
+import { RotateAPIBridge } from "@editor/components/viewer/RotateAPIBridge";
+import type { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
 
 const activeDocument = vi.hoisted<{
   id: ReturnType<typeof useActiveDocumentId>;
@@ -37,11 +37,11 @@ const fixture = vi.hoisted(() => {
   };
 });
 
-vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
+vi.mock("@editor/components/viewer/useActiveDocumentId", () => ({
   useActiveDocumentId: () => activeDocument.id,
   useDocumentReady: () => true,
 }));
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({
     registerBridge: fixture.registerBridge,
     triggerImmediateSpreadUpdate: fixture.notify,

@@ -6,7 +6,7 @@ import type {
   MeasureScale,
   PagePoint,
   CalibrationMetadata,
-} from "@app/utils/measurementTypes";
+} from "@editor/utils/measurementTypes";
 
 // 1 PDF point in meters (1/72 inch)
 const POINT_TO_METERS = 0.0254 / 72;
