@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { describeToolOperation } from "@app/hooks/tools/shared/toolOperationDescriptor";
+import { describeToolOperation } from "@editor/hooks/tools/shared/toolOperationDescriptor";
 
 interface Params {
   a: number;

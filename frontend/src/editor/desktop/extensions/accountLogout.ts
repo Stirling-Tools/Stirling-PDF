@@ -1,6 +1,6 @@
-import { clearNotificationReadState } from "@app/hooks/useNotifications";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { suspendWorkbenchSession } from "@app/services/workbenchSession";
+import { clearNotificationReadState } from "@editor/hooks/useNotifications";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { suspendWorkbenchSession } from "@editor/services/workbenchSession";
 
 type SignOutFn = () => Promise<void>;
 

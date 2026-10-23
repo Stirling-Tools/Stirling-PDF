@@ -5,8 +5,8 @@ import {
   mockAppApis,
   seedCookieConsent,
   type MockAppApiOptions,
-} from "@app/tests/helpers/api-stubs";
-import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
+} from "@editor/tests/helpers/api-stubs";
+import { suppressNativeFilePicker } from "@editor/tests/helpers/ui-helpers";
 
 /**
  * Custom Playwright fixture for backend-free specs.
@@ -19,7 +19,7 @@ import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
  *   5. Has already navigated to `/` by default (set `autoGoto: false` to skip)
  *
  * Usage:
- *   import { test, expect } from "@app/tests/helpers/stub-test-base";
+ *   import { test, expect } from "@editor/tests/helpers/stub-test-base";
  *
  *   test("something", async ({ page }) => {
  *     // page is already at `/` with stubs installed

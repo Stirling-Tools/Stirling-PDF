@@ -1,23 +1,23 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import { measureObjSpanPt } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { measureObjSpanPt } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   type CellSpan,
   defaultCellStyle,
   type RowFill,
   TableModel,
-} from "@app/tools/pdfTextEditor/model/TableModel";
+} from "@editor/tools/pdfTextEditor/model/TableModel";
 import type {
   PageRect,
   RGBA,
   TableCellStyle,
   TableSnapshot,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 import {
   headerDiffers,
   type StyledCell,
   styleOfCells,
-} from "@app/tools/pdfTextEditor/util/tableStyle";
+} from "@editor/tools/pdfTextEditor/util/tableStyle";
 
 const FALLBACK_FONT_SIZE = 11;
 /** PDF text render mode 3 = invisible, which is what an OCR layer writes. */

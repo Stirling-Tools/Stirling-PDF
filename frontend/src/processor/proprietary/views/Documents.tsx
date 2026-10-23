@@ -1,15 +1,15 @@
 import type { TFunction } from "i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
-import { useTier } from "@portal/contexts/TierContext";
-import { useDocuments } from "@portal/queries/documents";
+import { Button } from "@editor/ui";
+import { useTier } from "@processor/contexts/TierContext";
+import { useDocuments } from "@processor/queries/documents";
 import {
   DOCUMENT_STATUS_LABEL,
   type ReviewDocument,
-} from "@portal/api/documents";
-import { ReviewQueue } from "@portal/components/documents/ReviewQueue";
-import "@portal/views/Documents.css";
+} from "@processor/api/documents";
+import { ReviewQueue } from "@processor/components/documents/ReviewQueue";
+import "@processor/views/Documents.css";
 
 function csvCell(value: string): string {
   return `"${value.replace(/"/g, '""')}"`;

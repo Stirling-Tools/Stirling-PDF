@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import "@app/ui/Tabs.css";
+import "@editor/ui/Tabs.css";
 
 export interface TabItem<K extends string = string> {
   /** Stable identifier for the tab. */

@@ -1,20 +1,20 @@
 import { useRef } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { Group, Menu, Popover, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { EditorFileSwitcher } from "@app/tools/pdfTextEditor/components/EditorFileSwitcher";
-import { FormatGroup } from "@app/tools/pdfTextEditor/components/toolbar/FormatGroup";
-import { ObjectGroup } from "@app/tools/pdfTextEditor/components/toolbar/ObjectGroup";
+import { Button } from "@editor/ui/Button";
+import { EditorFileSwitcher } from "@editor/tools/pdfTextEditor/components/EditorFileSwitcher";
+import { FormatGroup } from "@editor/tools/pdfTextEditor/components/toolbar/FormatGroup";
+import { ObjectGroup } from "@editor/tools/pdfTextEditor/components/toolbar/ObjectGroup";
 import {
   NO_SHRINK,
   ToolbarSeparator,
   type Controller,
-} from "@app/tools/pdfTextEditor/components/toolbar/toolbarShared";
-import { useEditorSession } from "@app/tools/pdfTextEditor/store/EditorSession";
-import { useElementWidth } from "@app/tools/pdfTextEditor/hooks/useElementWidth";
-import { modShortcut } from "@app/utils/hotkeys";
-import "@app/tools/pdfTextEditor/components/EditorTopBar.css";
+} from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
+import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import { useElementWidth } from "@editor/tools/pdfTextEditor/hooks/useElementWidth";
+import { modShortcut } from "@editor/utils/hotkeys";
+import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
 
 const COMPACT_BELOW_PX = 900;
 

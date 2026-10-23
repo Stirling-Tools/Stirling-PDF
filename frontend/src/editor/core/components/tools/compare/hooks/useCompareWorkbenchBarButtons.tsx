@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
-import { alert } from "@app/components/toast";
-import type { WorkbenchBarButtonWithAction } from "@app/hooks/useWorkbenchBarButtons";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+import { alert } from "@editor/components/toast";
+import type { WorkbenchBarButtonWithAction } from "@editor/hooks/useWorkbenchBarButtons";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
 
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 type Pane = "base" | "comparison";
 
 export interface UseCompareWorkbenchBarButtonsOptions {

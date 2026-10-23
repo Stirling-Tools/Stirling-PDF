@@ -9,22 +9,22 @@ import React, {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { SelectByNumberPopover } from "@app/components/pageTracks/SelectByNumberPopover";
-import { TrackNameField } from "@app/components/pageTracks/TrackNameField";
-import { FileId } from "@app/types/file";
-import { Track } from "@app/components/pageTracks/types";
-import { TrackThumbnailStore } from "@app/components/pageTracks/hooks/useTrackThumbnails";
-import { PageClickModifiers } from "@app/components/pageTracks/hooks/useTrackSelection";
-import TrackPageTile from "@app/components/pageTracks/TrackPageTile";
-import TrackPageViewModal from "@app/components/pageTracks/TrackPageViewModal";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { SelectByNumberPopover } from "@editor/components/pageTracks/SelectByNumberPopover";
+import { TrackNameField } from "@editor/components/pageTracks/TrackNameField";
+import { FileId } from "@editor/types/file";
+import { Track } from "@editor/components/pageTracks/types";
+import { TrackThumbnailStore } from "@editor/components/pageTracks/hooks/useTrackThumbnails";
+import { PageClickModifiers } from "@editor/components/pageTracks/hooks/useTrackSelection";
+import TrackPageTile from "@editor/components/pageTracks/TrackPageTile";
+import TrackPageViewModal from "@editor/components/pageTracks/TrackPageViewModal";
 import {
   TRACK_GEOMETRY,
   rootFontSizePx,
-} from "@app/components/pageTracks/constants";
-import styles from "@app/components/pageTracks/PageTracks.module.css";
+} from "@editor/components/pageTracks/constants";
+import styles from "@editor/components/pageTracks/PageTracks.module.css";
 
 export const trackDroppableId = (fileId: FileId) => `track:${fileId}`;
 /** Whole-track drop zone, used when a track header is being dragged. */

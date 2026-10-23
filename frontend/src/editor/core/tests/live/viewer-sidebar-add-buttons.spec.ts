@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@editor/tests/helpers/test-base";
+import { loginAndSetup } from "@editor/tests/helpers/login";
 
 import * as path from "path";
 import * as fs from "fs";

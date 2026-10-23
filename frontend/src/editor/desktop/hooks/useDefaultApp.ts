@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { defaultAppService } from "@app/services/defaultAppService";
-import { alert } from "@app/components/toast";
+import { defaultAppService } from "@editor/services/defaultAppService";
+import { alert } from "@editor/components/toast";
 
 export const useDefaultApp = () => {
   const { t } = useTranslation();

@@ -5,10 +5,10 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import type { ReactNode } from "react";
-import { SourceModal } from "@portal/components/sources/SourceModal";
-import { UIProvider } from "@portal/contexts/UIContext";
+import { SourceModal } from "@processor/components/sources/SourceModal";
+import { UIProvider } from "@processor/contexts/UIContext";
 
 // SourceModal reads useUI() (open settings) and useQueryClient (list
 // invalidation), so provide the query client + Mantine + the UI context.
@@ -32,7 +32,7 @@ const createSource = vi.fn();
 const fetchSource = vi.fn();
 const deleteSource = vi.fn();
 const isFolderAccessDeniedError = vi.fn();
-vi.mock("@portal/api/sources", () => ({
+vi.mock("@processor/api/sources", () => ({
   createSource: (s: unknown) => createSource(s),
   fetchSource: (id: string) => fetchSource(id),
   deleteSource: (id: string) => deleteSource(id),
@@ -41,7 +41,7 @@ vi.mock("@portal/api/sources", () => ({
 
 const fetchS3Connections = vi.fn();
 const createIntegration = vi.fn();
-vi.mock("@portal/api/integrations", () => ({
+vi.mock("@processor/api/integrations", () => ({
   fetchIntegrations: () => Promise.resolve([]),
   fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
   fetchS3Connections: () => fetchS3Connections(),

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AutomationImportModal from "@app/components/tools/automate/AutomationImportModal";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+import AutomationImportModal from "@editor/components/tools/automate/AutomationImportModal";
+import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
 
 const emptyToolRegistry: Partial<ToolRegistry> = {};
 

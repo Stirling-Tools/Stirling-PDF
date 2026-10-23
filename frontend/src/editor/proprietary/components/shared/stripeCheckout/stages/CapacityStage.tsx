@@ -8,11 +8,11 @@ import {
   NumberInput,
   Box,
 } from "@mantine/core";
-import "@app/components/shared/stripeCheckout/team-checkout.css";
-import { Button } from "@app/ui/Button";
+import "@editor/components/shared/stripeCheckout/team-checkout.css";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { PlanTier } from "@app/services/licenseService";
-import { formatPrice } from "@app/components/shared/stripeCheckout/utils/pricingUtils";
+import { PlanTier } from "@editor/services/licenseService";
+import { formatPrice } from "@editor/components/shared/stripeCheckout/utils/pricingUtils";
 import {
   USERS_PER_BLOCK,
   SELF_SERVE_MAX_BLOCKS,
@@ -20,7 +20,7 @@ import {
   usersForBlocks,
   blocksForUsers,
   shouldOfferEnterprise,
-} from "@app/components/shared/stripeCheckout/utils/capacity";
+} from "@editor/components/shared/stripeCheckout/utils/capacity";
 
 interface CapacityStageProps {
   /** The plan the buyer picked a billing period for; supplies block price and currency. */

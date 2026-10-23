@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
-import { useAuth } from "@app/auth";
-import { AuthContext } from "@app/auth/context";
-import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { ConnectAccountRail } from "@portal/components/ConnectAccountRail";
+import { useAuth } from "@editor/auth";
+import { AuthContext } from "@editor/auth/context";
+import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
+import { ConnectAccountRail } from "@processor/components/ConnectAccountRail";
 
 /**
  * Both halves of "can link but has not" come from outside the component, and the global mock answers

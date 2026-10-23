@@ -4,8 +4,8 @@ import type {
   TableCellSnapshot,
   TableCellStyle,
   TableSnapshot,
-} from "@app/tools/pdfTextEditor/types";
-import { BLACK } from "@app/tools/pdfTextEditor/model/Color";
+} from "@editor/tools/pdfTextEditor/types";
+import { BLACK } from "@editor/tools/pdfTextEditor/model/Color";
 
 /** How many grid tracks a cell covers. Absent means the ordinary 1x1. */
 export interface CellSpan {

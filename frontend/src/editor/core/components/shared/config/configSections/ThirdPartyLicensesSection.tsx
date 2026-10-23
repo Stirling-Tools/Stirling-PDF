@@ -16,11 +16,11 @@ import {
 } from "@mantine/core";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { isAxiosError } from "axios";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { useIsPhone } from "@app/hooks/useIsMobile";
-import apiClient from "@app/services/apiClient";
-import frontendLicenses from "../../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @app alias root
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { useIsPhone } from "@editor/hooks/useIsMobile";
+import apiClient from "@editor/services/apiClient";
+import frontendLicenses from "../../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @editor alias root
 import {
   dedupeDependencies,
   matchesLicenseQuery,
@@ -28,11 +28,11 @@ import {
   resolveLicenseDisplay,
   resolveModuleLicenseUrl,
   resolveModuleUrl,
-} from "@app/components/shared/config/configSections/licenseDisplay";
+} from "@editor/components/shared/config/configSections/licenseDisplay";
 import type {
   DependencyRow,
   LicenseAboutLink,
-} from "@app/components/shared/config/configSections/licenseDisplay";
+} from "@editor/components/shared/config/configSections/licenseDisplay";
 
 export interface Dependency {
   moduleName?: string;

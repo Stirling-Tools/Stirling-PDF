@@ -6,8 +6,8 @@ import {
   resolveLicenseDisplay,
   resolveModuleLicenseUrl,
   resolveModuleUrl,
-} from "@app/components/shared/config/configSections/licenseDisplay";
-import type { Dependency } from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
+} from "@editor/components/shared/config/configSections/licenseDisplay";
+import type { Dependency } from "@editor/components/shared/config/configSections/ThirdPartyLicensesSection";
 
 function dependency(
   moduleName: string,

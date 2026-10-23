@@ -6,9 +6,9 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
-import { PolicySetupWizard as SharedPolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
+import { PolicySetupWizard } from "@processor/components/policies/PolicySetupWizard";
+import { PolicySetupWizard as SharedPolicySetupWizard } from "@editor/components/policies/PolicySetupWizard";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
@@ -17,7 +17,7 @@ import {
   type DecoratedPolicy,
   type PolicySetupResult,
   type PipelineStep,
-} from "@portal/api/policies";
+} from "@processor/api/policies";
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: PortalTestProviders });
@@ -36,19 +36,19 @@ vi.mock("react-i18next", () => ({
 }));
 
 const fetchIntegrations = vi.fn();
-vi.mock("@portal/api/integrations", () => ({
+vi.mock("@processor/api/integrations", () => ({
   fetchIntegrations: () => fetchIntegrations(),
 }));
 
 const fetchSources = vi.fn();
-vi.mock("@portal/api/sources", () => ({
+vi.mock("@processor/api/sources", () => ({
   fetchSources: () => fetchSources(),
 }));
 
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
 
 const aiClassificationEnabled = { value: true };
-vi.mock("@app/hooks/useAiClassificationEnabled", () => ({
+vi.mock("@editor/hooks/useAiClassificationEnabled", () => ({
   useAiClassificationEnabled: () => aiClassificationEnabled.value,
 }));
 

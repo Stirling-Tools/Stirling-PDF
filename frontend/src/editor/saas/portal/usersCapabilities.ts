@@ -1,4 +1,4 @@
-import type { UsersCapabilities } from "@portal/api/usersCapabilities";
+import type { UsersCapabilities } from "@processor/api/usersCapabilities";
 
 /**
  * SaaS build: team-leader scope. No org-wide roster, no create-team, and no

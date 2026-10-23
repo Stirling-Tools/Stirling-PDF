@@ -1,13 +1,13 @@
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { QRCodeSVG } from "qrcode.react";
-import { useMobileTransferSession } from "@app/hooks/useMobileTransferSession";
-import { Banner } from "@app/ui/Banner";
-import { Icon } from "@app/ui/Icon";
-import type { MobileSignaturePayload } from "@app/components/tools/sign/MobileSignatureModal";
-import { parseMobileSignatureFile } from "@app/components/tools/sign/parseMobileSignatureFile";
-import { TransparentPreview } from "@app/components/tools/sign/createSignature/TransparentPreview";
-import styles from "@app/components/tools/sign/createSignature/PhoneSignaturePanel.module.css";
+import { useMobileTransferSession } from "@editor/hooks/useMobileTransferSession";
+import { Banner } from "@editor/ui/Banner";
+import { Icon } from "@editor/ui/Icon";
+import type { MobileSignaturePayload } from "@editor/components/tools/sign/MobileSignatureModal";
+import { parseMobileSignatureFile } from "@editor/components/tools/sign/parseMobileSignatureFile";
+import { TransparentPreview } from "@editor/components/tools/sign/createSignature/TransparentPreview";
+import styles from "@editor/components/tools/sign/createSignature/PhoneSignaturePanel.module.css";
 
 interface PhoneSignaturePanelProps {
   active: boolean;

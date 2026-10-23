@@ -1,7 +1,7 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 
 // The editor could reach an empty state it could not leave. Auto-open stood
 // down on its own memory of having opened a file, but that memory lives in a

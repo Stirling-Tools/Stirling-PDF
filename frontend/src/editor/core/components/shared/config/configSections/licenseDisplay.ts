@@ -1,4 +1,4 @@
-import type { Dependency } from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
+import type { Dependency } from "@editor/components/shared/config/configSections/ThirdPartyLicensesSection";
 
 interface LicenseDisplay {
   short: string;

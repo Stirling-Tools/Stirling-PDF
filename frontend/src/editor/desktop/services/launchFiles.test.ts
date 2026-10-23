@@ -13,7 +13,7 @@ import {
   endLoadingLaunchFiles,
   launchFilesPending,
   trackLaunchFilePop,
-} from "@app/services/launchFiles";
+} from "@editor/services/launchFiles";
 
 function deferred<T>() {
   let resolve!: (value: T) => void;

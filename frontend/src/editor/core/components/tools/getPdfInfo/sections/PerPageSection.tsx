@@ -7,10 +7,10 @@ import type {
   PdfPageInfo,
   PdfFontInfo,
   PdfImageInfo,
-} from "@app/types/getPdfInfo";
-import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
-import KeyValueList from "@app/components/tools/getPdfInfo/shared/KeyValueList";
-import { pdfInfoAccordionStyles } from "@app/components/tools/getPdfInfo/shared/accordionStyles";
+} from "@editor/types/getPdfInfo";
+import SectionBlock from "@editor/components/tools/getPdfInfo/shared/SectionBlock";
+import KeyValueList from "@editor/components/tools/getPdfInfo/shared/KeyValueList";
+import { pdfInfoAccordionStyles } from "@editor/components/tools/getPdfInfo/shared/accordionStyles";
 
 interface PerPageSectionProps {
   anchorId: string;

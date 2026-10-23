@@ -16,7 +16,7 @@ import {
   inflate,
   toLatin1,
   undoPngPredictor,
-} from "@app/tools/pdfTextEditor/pdfdoc/bytes";
+} from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
 
 /** No legitimate PDF object body runs longer than this. */
 const MAX_OBJECT_BYTES = 32 * 1024 * 1024;

@@ -1,11 +1,14 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { RGBA } from "@app/tools/pdfTextEditor/types";
-import { FontRef } from "@app/tools/pdfTextEditor/model/FontRef";
-import { parseTrueTypeCmap } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
-import { writeUtf16 } from "@app/services/pdfiumService";
-import { BASE_PATH } from "@app/constants/app";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { RGBA } from "@editor/tools/pdfTextEditor/types";
+import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
+import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import { writeUtf16 } from "@editor/services/pdfiumService";
+import { BASE_PATH } from "@editor/constants/app";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 /** Client-side Unicode fallback font. */
 // BASE_PATH-prefixed: a bare "/fonts/..." 404s on subpath deployments

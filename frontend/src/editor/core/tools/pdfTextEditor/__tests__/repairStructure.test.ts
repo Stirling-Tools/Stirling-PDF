@@ -13,18 +13,18 @@ import {
   vi,
 } from "vitest";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { toLatin1 } from "@app/tools/pdfTextEditor/pdfdoc/bytes";
-import { parseOps } from "@app/tools/pdfTextEditor/pdfdoc/contentOps";
-import { repairStructure } from "@app/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
-import { RawPdf, arrayItems } from "@app/tools/pdfTextEditor/pdfdoc/raw";
-import { copyTagMarks } from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import { exportToBlob } from "@app/tools/pdfTextEditor/util/exportPdf";
+import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { toLatin1 } from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
+import { parseOps } from "@editor/tools/pdfTextEditor/pdfdoc/contentOps";
+import { repairStructure } from "@editor/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
+import { RawPdf, arrayItems } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import { copyTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import {
   buildClassicPdf,
   streamBody,
   type FixtureObject,
-} from "@app/tools/pdfTextEditor/__tests__/pdfFixtures";
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 const TAGGED_SAMPLE = path.join(
   import.meta.dirname,

@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { usePoliciesList, usePolicyRuns } from "@portal/queries/policies";
-import { useSources } from "@portal/queries/sources";
-import type { AsyncState } from "@portal/hooks/useAsync";
+import { usePoliciesList, usePolicyRuns } from "@processor/queries/policies";
+import { useSources } from "@processor/queries/sources";
+import type { AsyncState } from "@processor/hooks/useAsync";
 import {
   assembleProcessorFlow,
   type ProcessorFlow,
-} from "@portal/api/processorFlow";
+} from "@processor/api/processorFlow";
 
 /**
  * Home's sources → policies → outcomes visualiser, composed from the shared

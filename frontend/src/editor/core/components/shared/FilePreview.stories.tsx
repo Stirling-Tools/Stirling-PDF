@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FilePreview from "@app/components/shared/FilePreview";
-import { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import FilePreview from "@editor/components/shared/FilePreview";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const mockFile: StirlingFileStub = {
   id: "file-1" as FileId,

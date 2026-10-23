@@ -8,13 +8,13 @@ import {
   Text,
   NumberInput,
 } from "@mantine/core";
-import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
-import { Icon } from "@app/ui/Icon";
-import styles from "@app/components/tools/addStamp/StampPreview.module.css";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { AddStampParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
+import { Icon } from "@editor/ui/Icon";
+import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface StampPositionFormattingSettingsProps {
   parameters: AddStampParameters;
@@ -33,6 +33,13 @@ const StampPositionFormattingSettings = ({
   showPositionGrid = false,
 }: StampPositionFormattingSettingsProps) => {
   const { t } = useTranslation();
+
+  const sizeLabel =
+    parameters.stampType === "qr"
+      ? t("AddStampRequest.qrCodeSize", "QR Code Size")
+      : parameters.stampType !== "text"
+        ? t("AddStampRequest.imageSize", "Image Size")
+        : t("AddStampRequest.fontSize", "Font Size");
 
   return (
     <Stack gap="md" justify="space-between">
@@ -108,20 +115,9 @@ const StampPositionFormattingSettings = ({
             <Icon name="droplet" size="1.1rem" />
           </ActionIcon>
         </Tooltip>
-        <Tooltip
-          content={
-            parameters.stampType === "image"
-              ? t("AddStampRequest.imageSize", "Image Size")
-              : t("AddStampRequest.fontSize", "Font Size")
-          }
-          position="top"
-        >
+        <Tooltip content={sizeLabel} position="top">
           <ActionIcon
-            aria-label={
-              parameters.stampType === "image"
-                ? t("AddStampRequest.imageSize", "Image Size")
-                : t("AddStampRequest.fontSize", "Font Size")
-            }
+            aria-label={sizeLabel}
             variant={
               parameters._activePill === "fontSize" ? "primary" : "secondary"
             }
@@ -136,11 +132,7 @@ const StampPositionFormattingSettings = ({
       {/* Single slider bound to selected pill */}
       {parameters._activePill === "fontSize" && (
         <Stack gap="xs">
-          <Text className={styles.labelText}>
-            {parameters.stampType === "image"
-              ? t("AddStampRequest.imageSize", "Image Size")
-              : t("AddStampRequest.fontSize", "Font Size")}
-          </Text>
+          <Text className={styles.labelText}>{sizeLabel}</Text>
           <Group className={styles.sliderGroup} align="center">
             <NumberInput
               value={parameters.fontSize}
@@ -229,7 +221,7 @@ const StampPositionFormattingSettings = ({
         </Stack>
       )}
 
-      {parameters.stampType !== "image" && (
+      {parameters.stampType === "text" && (
         <ColorInput
           label={t("AddStampRequest.customColor", "Custom Text Color")}
           value={parameters.customColor}

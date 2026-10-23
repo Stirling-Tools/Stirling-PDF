@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { IntegrationConfig } from "@portal/api/integrations";
-import { ConnectionModal } from "@portal/components/sources/ConnectionModal";
+import type { IntegrationConfig } from "@processor/api/integrations";
+import { ConnectionModal } from "@processor/components/sources/ConnectionModal";
 
 const EDIT_CONNECTION: IntegrationConfig = {
   id: 1,

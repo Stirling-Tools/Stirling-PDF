@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { FileContextState, FileId } from "@app/types/fileContext";
+import type { FileContextState, FileId } from "@editor/types/fileContext";
 
 const { invoke, open, readFile, storeStirlingFile } = vi.hoisted(() => ({
   invoke: vi.fn(),
@@ -10,33 +10,33 @@ const { invoke, open, readFile, storeStirlingFile } = vi.hoisted(() => ({
 vi.mock("@tauri-apps/api/core", () => ({ invoke, isTauri: () => true }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open }));
 vi.mock("@tauri-apps/plugin-fs", () => ({ readFile }));
-vi.mock("@app/services/localFolderStorage", () => ({
+vi.mock("@editor/services/localFolderStorage", () => ({
   directoryKey: (path: string) => path,
   localFolderStorage: {
     getAllFolders: async () => [{ directory: "/Downloads" }],
   },
 }));
-vi.mock("@core/services/localFolderStorage", () => ({
+vi.mock("@editor-core/services/localFolderStorage", () => ({
   directoryKey: (path: string) => path,
   localFolderStorage: {
     getAllFolders: async () => [{ directory: "/Downloads" }],
   },
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { storeStirlingFile, updateThumbnail: vi.fn() },
 }));
-vi.mock("@app/utils/thumbnailUtils", () => ({
+vi.mock("@editor/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata: vi.fn(),
 }));
-vi.mock("@app/services/fileAnalyzer", () => ({
+vi.mock("@editor/services/fileAnalyzer", () => ({
   FileAnalyzer: { isPDFEncrypted: async () => false },
 }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 
-import { addFiles } from "@app/contexts/file/fileActions";
-import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
-import { readDiskFile } from "@app/services/localFolderContents";
-import { captureDroppedFilePaths } from "@app/services/fileImportPaths";
+import { addFiles } from "@editor/contexts/file/fileActions";
+import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
+import { readDiskFile } from "@editor/services/localFolderContents";
+import { captureDroppedFilePaths } from "@editor/services/fileImportPaths";
 
 const PATH = "/Downloads/report.pdf";
 const BYTES = new Uint8Array([37, 80, 68, 70]);

@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { FrontendThirdPartyLicensesSection } from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
+import { FrontendThirdPartyLicensesSection } from "@editor/components/shared/config/configSections/ThirdPartyLicensesSection";
 import {
   dedupeDependencies,
   resolveLicenseDisplay,
-} from "@app/components/shared/config/configSections/licenseDisplay";
+} from "@editor/components/shared/config/configSections/licenseDisplay";
 import frontendLicenses from "../../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- row expectations must follow the generated asset
 
 const expectedRows = dedupeDependencies(
@@ -14,11 +14,11 @@ const expectedRows = dedupeDependencies(
 
 const viewport = vi.hoisted(() => ({ phone: false }));
 
-vi.mock("@app/hooks/useIsMobile", () => ({
+vi.mock("@editor/hooks/useIsMobile", () => ({
   useIsPhone: () => viewport.phone,
 }));
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: vi.fn() },
 }));
 

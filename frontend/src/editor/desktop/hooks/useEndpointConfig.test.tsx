@@ -8,15 +8,15 @@ import {
   type Mock,
 } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
   useEndpointEnabled,
   useMultipleEndpointsEnabled,
-} from "@app/hooks/useEndpointConfig";
-import apiClient from "@app/services/apiClient";
-import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
+} from "@editor/hooks/useEndpointConfig";
+import apiClient from "@editor/services/apiClient";
+import { useConversionCloudStatus } from "@editor/hooks/useConversionCloudStatus";
 
 /**
  * Characterisation tests for the desktop endpoint-availability hooks. They
@@ -35,12 +35,12 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => translation,
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("@app/i18n", () => ({
+vi.mock("@editor/i18n", () => ({
   default: { t: (_k: string, fallback?: string) => fallback ?? _k },
 }));
 
 // --- apiClient: one get() that dispatches on URL ---
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: vi.fn() },
 }));
 // Cast to a plain mock: the real get() is the tauri-http signature, but the
@@ -50,7 +50,7 @@ const mockGet = apiClient.get as unknown as Mock;
 // --- connection mode ---
 let mode: "saas" | "selfhosted" | "local" = "saas";
 let localProcessingOnly = false;
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCachedLocalProcessingOnly: () => localProcessingOnly,
     subscribeToModeChanges: () => () => {},
@@ -69,7 +69,7 @@ vi.mock("@app/services/connectionModeService", () => ({
 let backendStatus: "stopped" | "starting" | "healthy" | "unhealthy" = "healthy";
 let backendUrl: string | null = "http://127.0.0.1:8080";
 const backendListeners = new Set<(s: string) => void>();
-vi.mock("@app/services/tauriBackendService", () => ({
+vi.mock("@editor/services/tauriBackendService", () => ({
   tauriBackendService: {
     get isOnline() {
       return backendStatus === "healthy";
@@ -89,7 +89,7 @@ function setBackendStatus(next: typeof backendStatus) {
 // --- self-hosted monitor: replays state on subscribe, matching the real one ---
 let selfHostedStatus: "idle" | "checking" | "online" | "offline" = "online";
 const selfHostedListeners = new Set<(s: { status: string }) => void>();
-vi.mock("@app/services/selfHostedServerMonitor", () => ({
+vi.mock("@editor/services/selfHostedServerMonitor", () => ({
   selfHostedServerMonitor: {
     getSnapshot: () => ({
       status: selfHostedStatus,
@@ -112,7 +112,7 @@ function setSelfHostedStatus(next: typeof selfHostedStatus) {
 
 // --- local-support probe used only on the self-hosted-offline path ---
 const mockLocalSupport = vi.fn();
-vi.mock("@app/services/endpointAvailabilityService", () => ({
+vi.mock("@editor/services/endpointAvailabilityService", () => ({
   endpointAvailabilityService: {
     isEndpointSupportedLocally: (endpoint: string, url: string | null) =>
       mockLocalSupport(endpoint, url),

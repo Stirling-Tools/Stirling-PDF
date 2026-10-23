@@ -2,7 +2,7 @@ import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ConnectionConfig } from "@app/services/connectionModeService";
+import type { ConnectionConfig } from "@editor/services/connectionModeService";
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
@@ -10,13 +10,13 @@ const mocks = vi.hoisted(() => ({
   listeners: new Set<(config: ConnectionConfig) => void>(),
 }));
 
-vi.mock("@app/services/apiClient", () => ({ default: { get: mocks.get } }));
-vi.mock("@app/hooks/walletDevPreview", () => ({
+vi.mock("@editor/services/apiClient", () => ({ default: { get: mocks.get } }));
+vi.mock("@editor/hooks/walletDevPreview", () => ({
   getWalletDevPreview: () => null,
 }));
-vi.mock("@app/services/billing", () => ({ createPortalSession: vi.fn() }));
-vi.mock("@app/platform/openExternal", () => ({ openExternal: vi.fn() }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/billing", () => ({ createPortalSession: vi.fn() }));
+vi.mock("@editor/platform/openExternal", () => ({ openExternal: vi.fn() }));
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCachedMode: () => mocks.mode,
     getCurrentMode: async () => mocks.mode ?? "selfhosted",
@@ -27,8 +27,8 @@ vi.mock("@app/services/connectionModeService", () => ({
   },
 }));
 
-import { useWallet } from "@app/hooks/useWallet";
-import { createAppQueryClient } from "@app/query/queryClient";
+import { useWallet } from "@editor/hooks/useWallet";
+import { createAppQueryClient } from "@editor/query/queryClient";
 
 /** The hook reads through the shared cache, so it needs the app's own client. */
 function wrapper({ children }: { children: ReactNode }) {
