@@ -1,11 +1,11 @@
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { ToolFormatExtension } from "@app/types/toolIO";
-import { convertImageToPdf } from "@app/utils/imageToPdfUtils";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { ToolFormatExtension } from "@editor/types/toolIO";
+import { convertImageToPdf } from "@editor/utils/imageToPdfUtils";
 import {
   detectFileExtension,
   isPdfFile,
   splitFileName,
-} from "@app/utils/fileUtils";
+} from "@editor/utils/fileUtils";
 
 type FileLike = Pick<StirlingFileStub, "name" | "type">;
 

@@ -1,7 +1,7 @@
-import type { UsersBackend } from "@portal/api/usersBackend";
-import { apiClient } from "@portal/api/http";
-import { tryGetPortalQueryClient } from "@portal/queryClient";
-import { qk } from "@portal/queries/keys";
+import type { UsersBackend } from "@processor/api/usersBackend";
+import { apiClient } from "@processor/api/http";
+import { tryGetPortalQueryClient } from "@processor/queryClient";
+import { qk } from "@processor/queries/keys";
 import {
   ROLES,
   type AdminAuthConfig,
@@ -10,9 +10,9 @@ import {
   type PendingInvitation,
   type RoleId,
   type UsersResponse,
-} from "@portal/api/users";
-import type { Team } from "@portal/api/teams";
-import type { Tier } from "@portal/contexts/TierContext";
+} from "@processor/api/users";
+import type { Team } from "@processor/api/teams";
+import type { Tier } from "@processor/contexts/TierContext";
 
 /**
  * SaaS build: the Users page runs as a team leader against SaasTeamController

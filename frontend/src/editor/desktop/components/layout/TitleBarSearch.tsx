@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
-import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
-import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
-import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
+import SuperSearch from "@editor/components/shared/superSearch/SuperSearch";
+import { useEditorSearchScopes } from "@editor/hooks/useSuperSearch";
+import { useTitleBarStrip } from "@editor/contexts/TitleBarStripContext";
 
 /**
  * The single desktop Super Search instance, portalled into the title-bar strip.

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { TooltipContent } from "@app/components/shared/tooltip/TooltipContent";
-import type { TooltipTip } from "@app/types/tips";
+import { TooltipContent } from "@editor/components/shared/tooltip/TooltipContent";
+import type { TooltipTip } from "@editor/types/tips";
 
 const meta = {
   title: "Shared/Tooltip/TooltipContent",

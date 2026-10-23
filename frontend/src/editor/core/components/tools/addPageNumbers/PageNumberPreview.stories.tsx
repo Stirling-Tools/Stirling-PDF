@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import PageNumberPreview from "@app/components/tools/addPageNumbers/PageNumberPreview";
-import { defaultParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
+import PageNumberPreview from "@editor/components/tools/addPageNumbers/PageNumberPreview";
+import { defaultParameters } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
 
 const meta = {
   title: "Tools/AddPageNumbers/PageNumberPreview",

@@ -1,5 +1,5 @@
-import type { AppConfig } from "@app/types/appConfig";
-import type { LicenseInfo } from "@app/types/license";
+import type { AppConfig } from "@editor/types/appConfig";
+import type { LicenseInfo } from "@editor/types/license";
 
 interface WauResponse {
   trackingSince: string;

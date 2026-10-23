@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
+import { isSafePostLoginRedirect } from "@editor/services/postLoginRedirect";
 
 // Core default. Rejects off-origin forms and the auth routes every build has
 // (/login, /auth/…); Spring SSO routes are the proprietary override's concern.

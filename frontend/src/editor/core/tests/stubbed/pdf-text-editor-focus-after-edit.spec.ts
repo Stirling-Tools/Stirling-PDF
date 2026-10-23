@@ -1,7 +1,7 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
-import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 
 // Guards focus theft after an edit. A window selection outlives the blur that
 // ends an edit, and putting a range back into a contenteditable FOCUSES it, so

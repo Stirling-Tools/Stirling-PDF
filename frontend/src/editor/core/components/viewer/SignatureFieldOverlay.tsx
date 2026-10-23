@@ -11,17 +11,17 @@
  * For widgets without an appearance stream (unsigned fields, or fields whose
  * PDF writer didn't embed one), we fall back to a translucent badge overlay.
  */
-import { useStaleBakedFieldNames } from "@app/tools/formFill/FormFillContext";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { documentHasFormFields } from "@app/services/documentFormProbe";
-import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
+import { useStaleBakedFieldNames } from "@editor/tools/formFill/FormFillContext";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import { documentHasFormFields } from "@editor/services/documentFormProbe";
+import { runPdfiumScan } from "@editor/services/pdfiumScanQueue";
 import React, { useEffect, useMemo, useRef, useState, memo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   renderSignatureFieldAppearances,
   extractSignatures,
   type SignatureFieldAppearance,
-} from "@app/services/pdfiumService";
+} from "@editor/services/pdfiumService";
 
 interface SignatureFieldOverlayProps {
   pageIndex: number;

@@ -1,53 +1,53 @@
 import React, { useState, useCallback, useRef, useMemo } from "react";
 import { Text, Modal, Group, Loader, Stack, Tooltip } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import { alert } from "@app/components/toast";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { alert } from "@editor/components/toast";
 import { useTranslation } from "react-i18next";
-import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
-import { Icon } from "@app/ui/Icon";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
+import { Icon } from "@editor/ui/Icon";
 import {
   draggable,
   dropTargetForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { StirlingFileStub } from "@app/types/fileContext";
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { policyCategoryIcon } from "@editor/components/policies/policyCategoryIcon";
 import {
   PolicyBadges,
   type FileItemPolicyRef,
-} from "@app/components/shared/PolicyBadges";
-import { PolicyEnforcingOverlay } from "@app/components/shared/PolicyEnforcingOverlay";
-import { zipFileService } from "@app/services/zipFileService";
+} from "@editor/components/shared/PolicyBadges";
+import { PolicyEnforcingOverlay } from "@editor/components/shared/PolicyEnforcingOverlay";
+import { zipFileService } from "@editor/services/zipFileService";
 
-import styles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
-import { useFileContext } from "@app/contexts/FileContext";
+import styles from "@editor/components/fileEditor/FileEditorThumbnail.module.css";
+import { useFileContext } from "@editor/contexts/FileContext";
 import {
   useFileSelector,
   useFileSelectors,
-} from "@app/contexts/file/fileHooks";
-import { FileId } from "@app/types/file";
-import ToolChain from "@app/components/shared/ToolChain";
+} from "@editor/contexts/file/fileHooks";
+import { FileId } from "@editor/types/file";
+import ToolChain from "@editor/components/shared/ToolChain";
 import HoverActionMenu, {
   HoverAction,
-} from "@app/components/shared/HoverActionMenu";
-import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { CloseFilesConfirmModal } from "@app/components/shared/CloseFilesConfirmModal";
-import UploadToServerModal from "@app/components/shared/UploadToServerModal";
-import ShareFileModal from "@app/components/shared/ShareFileModal";
-import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { Tooltip as StirlingTooltip } from "@app/components/shared/Tooltip";
-import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
-import { truncateCenter } from "@app/utils/textUtils";
-import { FileEditorStatusDot } from "@app/components/fileEditor/FileEditorStatusDot";
-import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
-import { useDamagedFileRepair } from "@app/contexts/DamagedFileRepairContext";
+} from "@editor/components/shared/HoverActionMenu";
+import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportWithPolicy";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { CloseFilesConfirmModal } from "@editor/components/shared/CloseFilesConfirmModal";
+import UploadToServerModal from "@editor/components/shared/UploadToServerModal";
+import ShareFileModal from "@editor/components/shared/ShareFileModal";
+import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useFileThumbnail } from "@editor/hooks/useFileThumbnail";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { Tooltip as StirlingTooltip } from "@editor/components/shared/Tooltip";
+import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
+import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
+import { truncateCenter } from "@editor/utils/textUtils";
+import { FileEditorStatusDot } from "@editor/components/fileEditor/FileEditorStatusDot";
+import { useToolEligibleFileIds } from "@editor/contexts/ToolFileEligibilityContext";
+import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
 
 interface FileEditorThumbnailProps {
   file: StirlingFileStub;

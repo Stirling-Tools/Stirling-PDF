@@ -1,5 +1,5 @@
 /**
- * Billing data seam (@app/services/billing).
+ * Billing data seam (@editor/services/billing).
  *
  * Creating Stripe Checkout / Customer Portal sessions touches platform-specific
  * transport (saas: supabase-js web client; desktop: Tauri native HTTP with an

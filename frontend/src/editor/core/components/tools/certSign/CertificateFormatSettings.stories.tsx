@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import CertificateFormatSettings from "@app/components/tools/certSign/CertificateFormatSettings";
-import { defaultParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
+import CertificateFormatSettings from "@editor/components/tools/certSign/CertificateFormatSettings";
+import { defaultParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 
 const meta = {
   title: "Tools/CertSign/CertificateFormatSettings",

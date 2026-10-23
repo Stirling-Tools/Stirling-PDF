@@ -1,4 +1,4 @@
-import { isSafePostLoginRedirect as isSafeBaseRedirect } from "@core/services/postLoginRedirect";
+import { isSafePostLoginRedirect as isSafeBaseRedirect } from "@editor-core/services/postLoginRedirect";
 
 export function isSafePostLoginRedirect(path: unknown): path is string {
   if (!isSafeBaseRedirect(path)) return false;

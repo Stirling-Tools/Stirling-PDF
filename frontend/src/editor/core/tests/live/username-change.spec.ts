@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@editor/tests/helpers/test-base";
+import { loginAndSetup } from "@editor/tests/helpers/login";
 
 test.describe("22. Username Change Flow", () => {
   test.describe("22.1 Change Username", () => {

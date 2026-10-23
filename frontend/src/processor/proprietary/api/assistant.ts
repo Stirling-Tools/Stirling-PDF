@@ -1,4 +1,4 @@
-import { apiClient } from "@portal/api/http";
+import { apiClient } from "@processor/api/http";
 
 /** GET /v1/assistant/suggestions */
 export async function fetchAssistantSuggestions(): Promise<readonly string[]> {

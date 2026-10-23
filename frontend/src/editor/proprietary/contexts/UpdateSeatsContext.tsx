@@ -8,12 +8,12 @@ import React, {
 } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import licenseService from "@app/services/licenseService";
-import UpdateSeatsModal from "@app/components/shared/UpdateSeatsModal";
-import { userManagementService } from "@app/services/userManagementService";
-import { alert } from "@app/components/toast";
-import { useOptionalLicense } from "@app/contexts/LicenseContext";
-import { resyncExistingLicense } from "@app/utils/licenseCheckoutUtils";
+import licenseService from "@editor/services/licenseService";
+import UpdateSeatsModal from "@editor/components/shared/UpdateSeatsModal";
+import { userManagementService } from "@editor/services/userManagementService";
+import { alert } from "@editor/components/toast";
+import { useOptionalLicense } from "@editor/contexts/LicenseContext";
+import { resyncExistingLicense } from "@editor/utils/licenseCheckoutUtils";
 
 export interface UpdateSeatsOptions {
   onSuccess?: () => void;

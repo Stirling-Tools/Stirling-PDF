@@ -1,9 +1,9 @@
 import { Stack, Select, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
-import { TrappedStatus } from "@app/types/metadata";
-import CustomMetadataStep from "@app/components/tools/changeMetadata/steps/CustomMetadataStep";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { ChangeMetadataParameters } from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { TrappedStatus } from "@editor/types/metadata";
+import CustomMetadataStep from "@editor/components/tools/changeMetadata/steps/CustomMetadataStep";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface AdvancedOptionsStepProps {
   parameters: ChangeMetadataParameters;

@@ -1,7 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { CheckoutProvider, useCheckout } from "@app/contexts/CheckoutContext";
-import { expectConsole } from "@app/tests/failOnConsole";
+import {
+  CheckoutProvider,
+  useCheckout,
+} from "@editor/contexts/CheckoutContext";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 const mocks = vi.hoisted(() => ({
   getPlans: vi.fn(),
@@ -20,22 +23,24 @@ vi.mock("react-i18next", () => ({
     i18n: { language: "en-US" },
   }),
 }));
-vi.mock("@app/constants/planConstants", () => ({
+vi.mock("@editor/constants/planConstants", () => ({
   usePlanFeatures: () => mocks.features,
   usePlanHighlights: () => mocks.highlights,
 }));
-vi.mock("@app/contexts/LicenseContext", () => ({
+vi.mock("@editor/contexts/LicenseContext", () => ({
   useLicense: () => ({ refetchLicense: mocks.refetch }),
 }));
-vi.mock("@app/services/supabaseClient", () => ({ isSupabaseConfigured: true }));
-vi.mock("@app/utils/currencyDetection", () => ({
+vi.mock("@editor/services/supabaseClient", () => ({
+  isSupabaseConfigured: true,
+}));
+vi.mock("@editor/utils/currencyDetection", () => ({
   getPreferredCurrency: mocks.preferred,
 }));
-vi.mock("@app/components/toast", () => ({ alert: mocks.alert }));
-vi.mock("@app/services/userManagementService", () => ({
+vi.mock("@editor/components/toast", () => ({ alert: mocks.alert }));
+vi.mock("@editor/services/userManagementService", () => ({
   userManagementService: { getUsers: mocks.getUsers },
 }));
-vi.mock("@app/services/licenseService", () => ({
+vi.mock("@editor/services/licenseService", () => ({
   default: {
     getPlans: mocks.getPlans,
     getLicenseInfo: mocks.getLicenseInfo,
@@ -44,7 +49,7 @@ vi.mock("@app/services/licenseService", () => ({
   },
   mapLicenseToTier: () => "free",
 }));
-vi.mock("@app/components/shared/stripeCheckout", () => ({
+vi.mock("@editor/components/shared/stripeCheckout", () => ({
   StripeCheckout: () => <div role="dialog">Checkout</div>,
 }));
 

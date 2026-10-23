@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
-import { ChangePermissionsParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
+import ChangePermissionsSettings from "@editor/components/tools/changePermissions/ChangePermissionsSettings";
+import { ChangePermissionsParameters } from "@editor/hooks/tools/changePermissions/useChangePermissionsParameters";
 
 const mockParameters: ChangePermissionsParameters = {
   preventAssembly: false,

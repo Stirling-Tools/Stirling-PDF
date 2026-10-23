@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Button } from "@app/ui/Button";
-import { column, DataTable, type DataTableColumn } from "@app/ui/DataTable";
+import { Button } from "@editor/ui/Button";
+import { column, DataTable, type DataTableColumn } from "@editor/ui/DataTable";
 
 interface Region {
   id: string;

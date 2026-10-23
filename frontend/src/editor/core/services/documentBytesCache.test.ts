@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   getDocumentBytes,
   releaseDocumentBytes,
-} from "@app/services/documentBytesCache";
+} from "@editor/services/documentBytesCache";
 
 const bytesOf = (bytes: number[]): ArrayBuffer => new Uint8Array(bytes).buffer;
 

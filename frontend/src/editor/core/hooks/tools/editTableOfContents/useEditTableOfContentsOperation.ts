@@ -2,19 +2,19 @@ import { useTranslation } from "react-i18next";
 import {
   defineSingleFileTool,
   useToolOperation,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { EditTableOfContentsParameters } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsParameters";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
+import { EditTableOfContentsParameters } from "@editor/hooks/tools/editTableOfContents/useEditTableOfContentsParameters";
 import {
   hydrateBookmarkPayload,
   serializeBookmarkNodes,
   type BookmarkPayload,
-} from "@app/utils/editTableOfContents";
+} from "@editor/utils/editTableOfContents";
 
 const ENDPOINT =
   "/api/v1/general/edit-table-of-contents" satisfies ToolEndpoint;

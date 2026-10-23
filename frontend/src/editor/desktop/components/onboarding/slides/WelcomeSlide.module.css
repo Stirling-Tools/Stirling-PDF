@@ -1,5 +1,5 @@
 /* Own file, not the SaaS slides' module: this slide lives in core, and importing from
-   cloud/ breaks any build whose @app/* cascade has no cloud layer. */
+   cloud/ breaks any build whose @editor/* cascade has no cloud layer. */
 
 .lead {
   display: block;

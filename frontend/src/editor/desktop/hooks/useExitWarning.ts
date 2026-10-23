@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { message } from "@tauri-apps/plugin-dialog";
-import { useFileSelectors, useFileActions } from "@app/contexts/FileContext";
-import { downloadFile } from "@app/services/downloadService";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { useFileSelectors, useFileActions } from "@editor/contexts/FileContext";
+import { downloadFile } from "@editor/services/downloadService";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 import { useTranslation } from "react-i18next";
 
 export function useExitWarning() {

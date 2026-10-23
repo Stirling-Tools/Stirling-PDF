@@ -9,72 +9,72 @@ import { useTranslation } from "react-i18next";
 import type { SpreadMode } from "@embedpdf/plugin-spread/react";
 import type { ZoomLevel } from "@embedpdf/plugin-zoom/react";
 import { Box, Center, Text, Stack } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
 import {
   useAllFiles,
   useFileSelector,
   useFileSelectors,
   useFileActions,
-} from "@app/contexts/FileContext";
-import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
+} from "@editor/contexts/FileContext";
+import { useFileWithUrl } from "@editor/hooks/useFileWithUrl";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import type {
   DocumentRestoreEvent,
   DocumentRestoreRequest,
-} from "@app/components/viewer/DocumentRestoreBridge";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
-import { PdfProtectionStatus } from "@app/components/viewer/PdfProtectionStatus";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { canPrintPdf } from "@app/services/pdfPermissions";
-import { PdfPreviewUnlockGate } from "@app/components/viewer/PdfPreviewUnlockGate";
-import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
-import { ThumbnailSidebar } from "@app/components/viewer/ThumbnailSidebar";
-import { BookmarkSidebar } from "@app/components/viewer/BookmarkSidebar";
-import { AttachmentSidebar } from "@app/components/viewer/AttachmentSidebar";
-import { LayerSidebar } from "@app/components/viewer/LayerSidebar";
+} from "@editor/components/viewer/DocumentRestoreBridge";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { LocalEmbedPDF } from "@editor/components/viewer/LocalEmbedPDF";
+import { PdfProtectionStatus } from "@editor/components/viewer/PdfProtectionStatus";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { canPrintPdf } from "@editor/services/pdfPermissions";
+import { PdfPreviewUnlockGate } from "@editor/components/viewer/PdfPreviewUnlockGate";
+import { PdfViewerToolbar } from "@editor/components/viewer/PdfViewerToolbar";
+import { ThumbnailSidebar } from "@editor/components/viewer/ThumbnailSidebar";
+import { BookmarkSidebar } from "@editor/components/viewer/BookmarkSidebar";
+import { AttachmentSidebar } from "@editor/components/viewer/AttachmentSidebar";
+import { LayerSidebar } from "@editor/components/viewer/LayerSidebar";
 import {
   useNavigationGuard,
   useNavigationState,
-} from "@app/contexts/NavigationContext";
-import { useSignature } from "@app/contexts/SignatureContext";
-import { useRedaction } from "@app/contexts/RedactionContext";
-import type { RedactionPendingTrackerAPI } from "@app/components/viewer/RedactionPendingTracker";
+} from "@editor/contexts/NavigationContext";
+import { useSignature } from "@editor/contexts/SignatureContext";
+import { useRedaction } from "@editor/contexts/RedactionContext";
+import type { RedactionPendingTrackerAPI } from "@editor/components/viewer/RedactionPendingTracker";
 import type {
   SignaturePreview,
   SignatureOverlayAPI,
-} from "@app/components/viewer/viewerTypes";
-import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import { rememberPlainPdfExport } from "@app/services/pdfAccessService";
+} from "@editor/components/viewer/viewerTypes";
+import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
+import { rememberPlainPdfExport } from "@editor/services/pdfAccessService";
 import {
   isStirlingFile,
   getFormFillFileId,
   type StirlingFile,
   documentBytesReplaced,
   type DocumentIdentity,
-} from "@app/types/fileContext";
-import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
-import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
+} from "@editor/types/fileContext";
+import { useViewerWorkbenchBarButtons } from "@editor/components/viewer/useViewerWorkbenchBarButtons";
+import { StampPlacementOverlay } from "@editor/components/viewer/StampPlacementOverlay";
 import {
   RulerOverlay,
   type RulerOverlayHandle,
-} from "@app/components/viewer/RulerOverlay";
-import { useWheelZoom } from "@app/hooks/useWheelZoom";
-import { useFormFill } from "@app/tools/formFill/FormFillContext";
-import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
-import { useDocumentLoadWaiter } from "@app/components/viewer/useDocumentLoadWaiter";
+} from "@editor/components/viewer/RulerOverlay";
+import { useWheelZoom } from "@editor/hooks/useWheelZoom";
+import { useFormFill } from "@editor/tools/formFill/FormFillContext";
+import { FormSaveBar } from "@editor/tools/formFill/FormSaveBar";
+import { useDocumentLoadWaiter } from "@editor/components/viewer/useDocumentLoadWaiter";
 import {
   FORM_APPLY_EVENT,
   type FormApplyDetail,
-} from "@app/tools/formFill/formFillEvents";
-import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
-import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
-import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
-import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import { alert } from "@app/components/toast";
-import { useDamagedFileRepair } from "@app/contexts/DamagedFileRepairContext";
+} from "@editor/tools/formFill/formFillEvents";
+import { useViewerKeyCommand } from "@editor/hooks/useViewerKeyCommand";
+import { useMeasurementManager } from "@editor/hooks/useMeasurementManager";
+import { ScaleCalibrationDialog } from "@editor/components/viewer/ScaleCalibrationDialog";
+import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
+import { alert } from "@editor/components/toast";
+import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
 
 // ──────────────────────────────────────────────────────────────────────────────
 

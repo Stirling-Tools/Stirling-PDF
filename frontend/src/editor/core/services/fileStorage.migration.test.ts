@@ -3,8 +3,8 @@ import { describe, it, expect } from "vitest";
 import {
   legacyDerivedFromTool,
   type StoredStirlingFileRecord,
-} from "@app/services/fileStorage";
-import type { FileId } from "@app/types/file";
+} from "@editor/services/fileStorage";
+import type { FileId } from "@editor/types/file";
 
 /**
  * Backfill of `derivedFromTool` for files persisted before the field existed

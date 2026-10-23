@@ -3,7 +3,7 @@
  */
 
 import axios from "axios";
-import { normalizeAxiosErrorData } from "@app/services/errorUtils";
+import { normalizeAxiosErrorData } from "@editor/services/errorUtils";
 import i18n from "i18next";
 
 /** Signup gates are handled by the account modal and must not be reported as damaged files. */
