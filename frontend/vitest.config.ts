@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
+// oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+import { embedpdfFontFallbackPlugin } from "./scripts/embedpdfFontFallbackPatch.mts";
 
 const frontendPackage: { dependencies: Record<string, string> } = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
@@ -68,8 +70,11 @@ export default defineConfig({
           environment: "jsdom",
           globals: true,
           setupFiles: ["./src/editor/core/setupTests.ts"],
+          // Transformed rather than externalized, so the font fallback patch applies.
+          server: { deps: { inline: [/@embedpdf\/engines/] } },
         },
         plugins: [
+          embedpdfFontFallbackPlugin(),
           iconSvgr(),
           react(),
           tsconfigPaths({
@@ -93,7 +98,7 @@ export default defineConfig({
           iconSvgr(),
           react(),
           tsconfigPaths({
-            // Broad project so @app/@portal resolve in every editor file the
+            // Broad project so @editor/@processor resolve in every editor file the
             // portal tests pull in (core/ui, core, ...).
             projects: ["./tsconfig.processor.vite.json"],
           }),
@@ -148,7 +153,7 @@ export default defineConfig({
           ...TEST_DEFAULTS,
           // src/editor/saas = editor-saas layer; src/processor/saas = the portal's saas
           // overrides (sibling to src/processor/proprietary). Both build under the saas flavor,
-          // so both resolve @portal via the saas cascade (tsconfig.saas.vite.json).
+          // so both resolve @processor via the saas cascade (tsconfig.saas.vite.json).
           include: [
             "src/editor/saas/**/*.test.{ts,tsx}",
             "src/processor/saas/**/*.test.{ts,tsx}",

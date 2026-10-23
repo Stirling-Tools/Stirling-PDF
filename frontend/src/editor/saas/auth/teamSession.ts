@@ -1,5 +1,5 @@
 /**
- * saas (web) implementation of the @app/auth/teamSession seam.
+ * saas (web) implementation of the @editor/auth/teamSession seam.
  *
  * Wires the cloud {@link SaaSTeamContext} to the SaaS-only auth surface it used
  * to reach directly before the move to cloud/: the Supabase web session
@@ -10,11 +10,11 @@
  * pre-move saas SaaSTeamContext.
  */
 import { useCallback } from "react";
-import { useAuth } from "@app/auth/UseSession";
-import { isUserAnonymous } from "@app/auth/supabase";
-import type { TeamAuth } from "@cloud/auth/teamSession";
+import { useAuth } from "@editor/auth/UseSession";
+import { isUserAnonymous } from "@editor/auth/supabase";
+import type { TeamAuth } from "@editor-cloud/auth/teamSession";
 
-export type { TeamAuth } from "@cloud/auth/teamSession";
+export type { TeamAuth } from "@editor-cloud/auth/teamSession";
 
 export function useTeamAuth(): TeamAuth {
   const { user, refreshSession } = useAuth();

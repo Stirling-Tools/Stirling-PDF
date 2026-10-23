@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 
-import type { ToolId } from "@app/types/toolId";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+import type { ToolId } from "@editor/types/toolId";
+import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import ToolRegistryContext, {
   ToolRegistryCatalog,
-} from "@app/contexts/ToolRegistryContext";
-import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
+} from "@editor/contexts/ToolRegistryContext";
+import { useTranslatedToolCatalog } from "@editor/data/useTranslatedToolRegistry";
 
 interface ToolRegistryProviderProps {
   children: React.ReactNode;

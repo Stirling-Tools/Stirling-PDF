@@ -9,13 +9,13 @@ import {
 } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
-import { AppProviders } from "@app/components/AppProviders";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { usePreferences } from "@app/contexts/PreferencesContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { preferencesService } from "@app/services/preferencesService";
-import apiClient from "@app/services/apiClient";
-import type { AppConfig } from "@app/types/appConfig";
+import { AppProviders } from "@editor/components/AppProviders";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { preferencesService } from "@editor/services/preferencesService";
+import apiClient from "@editor/services/apiClient";
+import type { AppConfig } from "@editor/types/appConfig";
 
 const STORAGE_KEY = "stirlingpdf_preferences";
 const originalGet = apiClient.get.bind(apiClient);

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   sampleRunBackground,
   toOpaqueCss,
-} from "@app/tools/pdfTextEditor/util/canvasBackground";
+} from "@editor/tools/pdfTextEditor/util/canvasBackground";
 
 type Pixel = [number, number, number];
 

@@ -1,6 +1,6 @@
 import { Alert, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 interface LoginRequiredBannerProps {
   show: boolean;
 }

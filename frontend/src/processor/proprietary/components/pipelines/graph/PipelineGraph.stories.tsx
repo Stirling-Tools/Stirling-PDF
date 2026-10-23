@@ -7,7 +7,7 @@ import {
   type GraphNodeContent,
   type GraphSelection,
   type GraphStepContent,
-} from "@portal/components/pipelines/graph/PipelineGraph";
+} from "@processor/components/pipelines/graph/PipelineGraph";
 
 const meta: Meta<typeof PipelineGraph> = {
   title: "Portal/Pipelines/PipelineGraph",

@@ -1,4 +1,4 @@
-import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
+import { assertFilesNotBlocked } from "@editor/services/policyFileGuard";
 export interface DownloadRequest {
   data: Blob | File;
   filename: string;

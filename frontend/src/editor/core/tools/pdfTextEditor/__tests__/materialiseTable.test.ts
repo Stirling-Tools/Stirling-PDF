@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { MaterialiseTableCommand } from "@app/tools/pdfTextEditor/commands/MaterialiseTableCommand";
-import type { ScanColors } from "@app/tools/pdfTextEditor/util/scanSampling";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { MaterialiseTableCommand } from "@editor/tools/pdfTextEditor/commands/MaterialiseTableCommand";
+import type { ScanColors } from "@editor/tools/pdfTextEditor/util/scanSampling";
 
 // A fake PDFium that can MEASURE. The table-command fake reports "cannot
 // measure" so its callers take the fallback path; a rebuild has to fit emitted

@@ -1,5 +1,5 @@
 import type { ElementType, ReactNode, HTMLAttributes } from "react";
-import "@app/ui/Stack.css";
+import "@editor/ui/Stack.css";
 
 export type StackGap =
   | "0"

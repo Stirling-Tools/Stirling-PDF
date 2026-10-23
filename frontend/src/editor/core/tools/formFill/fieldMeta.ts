@@ -2,8 +2,8 @@
  * Shared field type metadata: icons and color mappings.
  * Used by FormFill, FormFieldSidebar, and any future form tools.
  */
-import type { FormFieldType } from "@app/tools/formFill/types";
-import type { IconName } from "@app/ui/Icon";
+import type { FormFieldType } from "@editor/tools/formFill/types";
+import type { IconName } from "@editor/ui/Icon";
 
 export const FIELD_TYPE_ICON: Record<FormFieldType, IconName> = {
   text: "type",

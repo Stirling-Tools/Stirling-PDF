@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { FileId } from "@app/types/file";
-import { expectConsole } from "@app/tests/failOnConsole";
+import type { FileId } from "@editor/types/file";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 import {
   requestDiskConflictChoice,
@@ -9,7 +9,7 @@ import {
   cancelDiskConflict,
   subscribeDiskConflicts,
   __resetDiskConflicts,
-} from "@app/services/diskConflictPrompt";
+} from "@editor/services/diskConflictPrompt";
 
 const req = (id: string, onUseDisk = vi.fn()) => ({
   fileId: id as FileId,

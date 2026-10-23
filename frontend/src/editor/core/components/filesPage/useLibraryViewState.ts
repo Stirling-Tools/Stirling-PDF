@@ -3,9 +3,9 @@ import type {
   FilesPageOriginFilter,
   FilesPageSortMode,
   FilesPageTab,
-} from "@app/contexts/FilesPageContext";
-import type { FileId } from "@app/types/file";
-import type { FolderId } from "@app/types/folder";
+} from "@editor/contexts/FilesPageContext";
+import type { FileId } from "@editor/types/file";
+import type { FolderId } from "@editor/types/folder";
 
 interface LibraryView {
   currentFolderId: FolderId | null;

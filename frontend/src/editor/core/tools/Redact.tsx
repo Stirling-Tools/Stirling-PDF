@@ -1,29 +1,29 @@
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef } from "react";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import RedactModeSelector from "@app/components/tools/redact/RedactModeSelector";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import RedactModeSelector from "@editor/components/tools/redact/RedactModeSelector";
 import {
   useRedactParameters,
   RedactMode,
-} from "@app/hooks/tools/redact/useRedactParameters";
-import { useRedactOperation } from "@app/hooks/tools/redact/useRedactOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+} from "@editor/hooks/tools/redact/useRedactParameters";
+import { useRedactOperation } from "@editor/hooks/tools/redact/useRedactOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 import {
   useRedactModeTips,
   useRedactWordsTips,
   useRedactAdvancedTips,
   useRedactManualTips,
-} from "@app/components/tooltips/useRedactTips";
-import RedactAdvancedSettings from "@app/components/tools/redact/RedactAdvancedSettings";
-import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput";
-import ManualRedactionControls from "@app/components/tools/redact/ManualRedactionControls";
+} from "@editor/components/tooltips/useRedactTips";
+import RedactAdvancedSettings from "@editor/components/tools/redact/RedactAdvancedSettings";
+import WordsToRedactInput from "@editor/components/tools/redact/WordsToRedactInput";
+import ManualRedactionControls from "@editor/components/tools/redact/ManualRedactionControls";
 import {
   useNavigationActions,
   useNavigationState,
-} from "@app/contexts/NavigationContext";
-import { useRedaction } from "@app/contexts/RedactionContext";
-import { useFileState } from "@app/contexts/file/fileHooks";
+} from "@editor/contexts/NavigationContext";
+import { useRedaction } from "@editor/contexts/RedactionContext";
+import { useFileState } from "@editor/contexts/file/fileHooks";
 
 const Redact = (props: BaseToolProps) => {
   const { t } = useTranslation();

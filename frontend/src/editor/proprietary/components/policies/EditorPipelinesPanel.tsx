@@ -1,20 +1,20 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Icon } from "@app/ui/Icon";
-import { usePortalAccess } from "@app/hooks/usePortalAccess";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
-import { saveEditorReturnPath } from "@app/services/workbenchSession";
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
+import { Icon } from "@editor/ui/Icon";
+import { usePortalAccess } from "@editor/hooks/usePortalAccess";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
+import { HAS_PORTAL } from "@editor/routes/hasPortal";
+import { saveEditorReturnPath } from "@editor/services/workbenchSession";
+import { policyCategoryIcon } from "@editor/components/policies/policyCategoryIcon";
 import {
   useEditorPipelines,
   type EditorPipeline,
   type EditorPipelines,
-} from "@app/components/policies/useEditorPipelines";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import "@app/components/policies/EditorPipelinesPanel.css";
+} from "@editor/components/policies/useEditorPipelines";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import "@editor/components/policies/EditorPipelinesPanel.css";
 
 const PIPELINES_PATH = `${PORTAL_BASENAME}/pipelines`;
 const ICON_SIZE = "1.05rem";

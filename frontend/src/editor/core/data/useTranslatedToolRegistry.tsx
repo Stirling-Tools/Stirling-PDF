@@ -1,8 +1,8 @@
 import { lazy, useMemo } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { devApiLink } from "@app/constants/links";
-import { reorganizePagesOperationConfig } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
+import { devApiLink } from "@editor/constants/links";
+import { reorganizePagesOperationConfig } from "@editor/hooks/tools/reorganizePages/useReorganizePagesOperation";
 import {
   SubcategoryId,
   ToolCategoryId,
@@ -10,61 +10,61 @@ import {
   RegularToolRegistry,
   SuperToolRegistry,
   LinkToolRegistry,
-} from "@app/data/toolsTaxonomy";
-import { isSuperToolId, isLinkToolId } from "@app/types/toolId";
+} from "@editor/data/toolsTaxonomy";
+import { isSuperToolId, isLinkToolId } from "@editor/types/toolId";
 import {
   asRegistryConfig,
   lazySettings,
-} from "@app/hooks/tools/shared/toolOperationTypes";
-import { adjustContrastOperationConfig } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
-import { getSynonyms } from "@app/utils/toolSynonyms";
-import { useProprietaryToolRegistry } from "@app/data/useProprietaryToolRegistry";
-import { classifyOperationConfig } from "@app/hooks/tools/classify/useClassifyOperation";
-import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
-import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
-import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
-import { removePasswordOperationConfig } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
-import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOperation";
-import { repairOperationConfig } from "@app/hooks/tools/repair/useRepairOperation";
-import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
-import { addStampOperationConfig } from "@app/components/tools/addStamp/useAddStampOperation";
-import { addAttachmentsOperationConfig } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
-import { createPortfolioOperationConfig } from "@app/hooks/tools/createPortfolio/useCreatePortfolioOperation";
-import { unlockPdfFormsOperationConfig } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
-import { autoFormDetectionOperationConfig } from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionOperation";
-import { singleLargePageOperationConfig } from "@app/hooks/tools/singleLargePage/useSingleLargePageOperation";
-import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
-import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
-import { removeCertificateSignOperationConfig } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
-import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
-import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
-import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
-import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
-import { mergeOperationConfig } from "@app/hooks/tools/merge/useMergeOperation";
-import { editTableOfContentsOperationConfig } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
-import { autoRenameOperationConfig } from "@app/hooks/tools/autoRename/useAutoRenameOperation";
-import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
-import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
-import { rotateOperationConfig } from "@app/hooks/tools/rotate/useRotateOperation";
-import { autoRotateOperationConfig } from "@app/hooks/tools/autoRotate/useAutoRotateOperation";
-import { changeMetadataOperationConfig } from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
-import { signOperationConfig } from "@app/hooks/tools/sign/useSignOperation";
-import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
-import { removeAnnotationsOperationConfig } from "@app/hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
-import { removeImageOperationConfig } from "@app/hooks/tools/removeImage/useRemoveImageOperation";
-import { pageLayoutOperationConfig } from "@app/hooks/tools/pageLayout/usePageLayoutOperation";
-import { extractImagesOperationConfig } from "@app/hooks/tools/extractImages/useExtractImagesOperation";
-import { replaceColorOperationConfig } from "@app/hooks/tools/replaceColor/useReplaceColorOperation";
-import { removePagesOperationConfig } from "@app/hooks/tools/removePages/useRemovePagesOperation";
-import { removeBlanksOperationConfig } from "@app/hooks/tools/removeBlanks/useRemoveBlanksOperation";
-import { overlayPdfsOperationConfig } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
-import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
-import { scannerImageSplitOperationConfig } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
-import { addPageNumbersOperationConfig } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
-import { extractPagesOperationConfig } from "@app/hooks/tools/extractPages/useExtractPagesOperation";
-import { ENDPOINTS as SPLIT_ENDPOINT_NAMES } from "@app/constants/splitConstants";
-import { ToolId } from "@app/types/toolId";
-import { CONVERT_SUPPORTED_FORMATS } from "@app/constants/convertSupportedFornats";
+} from "@editor/hooks/tools/shared/toolOperationTypes";
+import { adjustContrastOperationConfig } from "@editor/hooks/tools/adjustContrast/useAdjustContrastOperation";
+import { getSynonyms } from "@editor/utils/toolSynonyms";
+import { useProprietaryToolRegistry } from "@editor/data/useProprietaryToolRegistry";
+import { classifyOperationConfig } from "@editor/hooks/tools/classify/useClassifyOperation";
+import { compressOperationConfig } from "@editor/hooks/tools/compress/useCompressOperation";
+import { splitOperationConfig } from "@editor/hooks/tools/split/useSplitOperation";
+import { addPasswordOperationConfig } from "@editor/hooks/tools/addPassword/useAddPasswordOperation";
+import { removePasswordOperationConfig } from "@editor/hooks/tools/removePassword/useRemovePasswordOperation";
+import { sanitizeOperationConfig } from "@editor/hooks/tools/sanitize/useSanitizeOperation";
+import { repairOperationConfig } from "@editor/hooks/tools/repair/useRepairOperation";
+import { addWatermarkOperationConfig } from "@editor/hooks/tools/addWatermark/useAddWatermarkOperation";
+import { addStampOperationConfig } from "@editor/components/tools/addStamp/useAddStampOperation";
+import { addAttachmentsOperationConfig } from "@editor/hooks/tools/addAttachments/useAddAttachmentsOperation";
+import { createPortfolioOperationConfig } from "@editor/hooks/tools/createPortfolio/useCreatePortfolioOperation";
+import { unlockPdfFormsOperationConfig } from "@editor/hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
+import { autoFormDetectionOperationConfig } from "@editor/hooks/tools/autoFormDetection/useAutoFormDetectionOperation";
+import { singleLargePageOperationConfig } from "@editor/hooks/tools/singleLargePage/useSingleLargePageOperation";
+import { ocrOperationConfig } from "@editor/hooks/tools/ocr/useOCROperation";
+import { convertOperationConfig } from "@editor/hooks/tools/convert/useConvertOperation";
+import { removeCertificateSignOperationConfig } from "@editor/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
+import { changePermissionsOperationConfig } from "@editor/hooks/tools/changePermissions/useChangePermissionsOperation";
+import { certSignOperationConfig } from "@editor/hooks/tools/certSign/useCertSignOperation";
+import { timestampPdfOperationConfig } from "@editor/hooks/tools/timestampPdf/useTimestampPdfOperation";
+import { bookletImpositionOperationConfig } from "@editor/hooks/tools/bookletImposition/useBookletImpositionOperation";
+import { mergeOperationConfig } from "@editor/hooks/tools/merge/useMergeOperation";
+import { editTableOfContentsOperationConfig } from "@editor/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
+import { autoRenameOperationConfig } from "@editor/hooks/tools/autoRename/useAutoRenameOperation";
+import { flattenOperationConfig } from "@editor/hooks/tools/flatten/useFlattenOperation";
+import { redactOperationConfig } from "@editor/hooks/tools/redact/useRedactOperation";
+import { rotateOperationConfig } from "@editor/hooks/tools/rotate/useRotateOperation";
+import { autoRotateOperationConfig } from "@editor/hooks/tools/autoRotate/useAutoRotateOperation";
+import { changeMetadataOperationConfig } from "@editor/hooks/tools/changeMetadata/useChangeMetadataOperation";
+import { signOperationConfig } from "@editor/hooks/tools/sign/useSignOperation";
+import { cropOperationConfig } from "@editor/hooks/tools/crop/useCropOperation";
+import { removeAnnotationsOperationConfig } from "@editor/hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
+import { removeImageOperationConfig } from "@editor/hooks/tools/removeImage/useRemoveImageOperation";
+import { pageLayoutOperationConfig } from "@editor/hooks/tools/pageLayout/usePageLayoutOperation";
+import { extractImagesOperationConfig } from "@editor/hooks/tools/extractImages/useExtractImagesOperation";
+import { replaceColorOperationConfig } from "@editor/hooks/tools/replaceColor/useReplaceColorOperation";
+import { removePagesOperationConfig } from "@editor/hooks/tools/removePages/useRemovePagesOperation";
+import { removeBlanksOperationConfig } from "@editor/hooks/tools/removeBlanks/useRemoveBlanksOperation";
+import { overlayPdfsOperationConfig } from "@editor/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
+import { adjustPageScaleOperationConfig } from "@editor/hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
+import { scannerImageSplitOperationConfig } from "@editor/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
+import { addPageNumbersOperationConfig } from "@editor/components/tools/addPageNumbers/useAddPageNumbersOperation";
+import { extractPagesOperationConfig } from "@editor/hooks/tools/extractPages/useExtractPagesOperation";
+import { ENDPOINTS as SPLIT_ENDPOINT_NAMES } from "@editor/constants/splitConstants";
+import { ToolId } from "@editor/types/toolId";
+import { CONVERT_SUPPORTED_FORMATS } from "@editor/constants/convertSupportedFornats";
 
 export interface TranslatedToolCatalog {
   allTools: ToolRegistry;
@@ -86,7 +86,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       pdfTextEditor: {
         icon: <Icon name="square-pen" size="1.5rem" />,
         name: t("home.pdfTextEditor.title", "PDF Text Editor"),
-        component: lazy(() => import("@app/tools/pdfTextEditor/PdfTextEditor")),
+        component: lazy(
+          () => import("@editor/tools/pdfTextEditor/PdfTextEditor"),
+        ),
         description: t(
           "home.pdfTextEditor.desc",
           "Review and edit text and images in PDFs with grouped text editing and PDF regeneration",
@@ -119,7 +121,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       merge: {
         icon: <Icon name="copy-plus" size="1.5rem" />,
         name: t("home.merge.title", "Merge"),
-        component: lazy(() => import("@app/tools/Merge")),
+        component: lazy(() => import("@editor/tools/Merge")),
         description: t(
           "home.merge.desc",
           "Merge multiple PDFs into a single document",
@@ -130,7 +132,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["merge-pdfs"],
         operationConfig: asRegistryConfig(mergeOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/merge/MergeSettings"),
+          () => import("@editor/components/tools/merge/MergeSettings"),
         ),
         synonyms: getSynonyms(t, "merge"),
       },
@@ -138,7 +140,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       certSign: {
         icon: <Icon name="award" size="1.5rem" />,
         name: t("home.certSign.title", "Certificate Sign"),
-        component: lazy(() => import("@app/tools/CertSign")),
+        component: lazy(() => import("@editor/tools/CertSign")),
         description: t(
           "home.certSign.desc",
           "Sign PDF documents using digital certificates",
@@ -151,13 +153,13 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(certSignOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/certSign/CertSignAutomationSettings"),
+            import("@editor/components/tools/certSign/CertSignAutomationSettings"),
         ),
       },
       timestampPdf: {
         icon: <Icon name="clock" size="1.5rem" />,
         name: t("home.timestampPdf.title", "Timestamp PDF"),
-        component: lazy(() => import("@app/tools/TimestampPdf")),
+        component: lazy(() => import("@editor/tools/TimestampPdf")),
         description: t(
           "home.timestampPdf.desc",
           "Add an RFC 3161 document timestamp to prove when your PDF existed",
@@ -173,7 +175,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       sign: {
         icon: <Icon name="signature" size="1.5rem" />,
         name: t("home.sign.title", "Sign"),
-        component: lazy(() => import("@app/tools/Sign")),
+        component: lazy(() => import("@editor/tools/Sign")),
         description: t(
           "home.sign.desc",
           "Adds signature to PDF by drawing, text or image",
@@ -183,7 +185,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["sign"],
         operationConfig: asRegistryConfig(signOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/sign/SignSettings"),
+          () => import("@editor/components/tools/sign/SignSettings"),
         ), // TODO:: not all settings shown, suggested next tools shown
         synonyms: getSynonyms(t, "sign"),
         supportsAutomate: false, //TODO make support Sign
@@ -191,7 +193,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       addText: {
         icon: <Icon name="type" size="1.5rem" />,
         name: t("home.addText.title", "Add Text"),
-        component: lazy(() => import("@app/tools/AddText")),
+        component: lazy(() => import("@editor/tools/AddText")),
         description: t(
           "home.addText.desc",
           "Add custom text anywhere in your PDF",
@@ -207,7 +209,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       addImage: {
         icon: <Icon name="image" size="1.5rem" />,
         name: t("home.addImage.title", "Add Image"),
-        component: lazy(() => import("@app/tools/AddImage")),
+        component: lazy(() => import("@editor/tools/AddImage")),
         description: t("home.addImage.desc", "Add images anywhere in your PDF"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -220,7 +222,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       annotate: {
         icon: <Icon name="pencil" size="1.5rem" />,
         name: t("home.annotate.title", "Annotate"),
-        component: lazy(() => import("@app/tools/Annotate")),
+        component: lazy(() => import("@editor/tools/Annotate")),
         description: t(
           "home.annotate.desc",
           "Highlight, draw, add notes, and shapes directly in the viewer",
@@ -240,7 +242,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       addPassword: {
         icon: <Icon name="password" size="1.5rem" />,
         name: t("home.addPassword.title", "Add Password"),
-        component: lazy(() => import("@app/tools/AddPassword")),
+        component: lazy(() => import("@editor/tools/AddPassword")),
         description: t(
           "home.addPassword.desc",
           "Add password protection and restrictions to PDF files",
@@ -251,14 +253,15 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["add-password"],
         operationConfig: asRegistryConfig(addPasswordOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/addPassword/AddPasswordSettings"),
+          () =>
+            import("@editor/components/tools/addPassword/AddPasswordSettings"),
         ),
         synonyms: getSynonyms(t, "addPassword"),
       },
       watermark: {
         icon: <Icon name="watermark" size="1.5rem" />,
         name: t("home.watermark.title", "Add Watermark"),
-        component: lazy(() => import("@app/tools/AddWatermark")),
+        component: lazy(() => import("@editor/tools/AddWatermark")),
         maxFiles: -1,
         description: t(
           "home.watermark.desc",
@@ -270,14 +273,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(addWatermarkOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/addWatermark/AddWatermarkSingleStepSettings"),
+            import("@editor/components/tools/addWatermark/AddWatermarkSingleStepSettings"),
         ),
         synonyms: getSynonyms(t, "watermark"),
       },
       addStamp: {
         icon: <Icon name="stamp" size="1.5rem" />,
         name: t("home.addStamp.title", "Add Stamp to PDF"),
-        component: lazy(() => import("@app/tools/AddStamp")),
+        component: lazy(() => import("@editor/tools/AddStamp")),
         description: t(
           "home.addStamp.desc",
           "Add text or add image stamps at set locations",
@@ -290,13 +293,13 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(addStampOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/addStamp/AddStampAutomationSettings"),
+            import("@editor/components/tools/addStamp/AddStampAutomationSettings"),
         ),
       },
       sanitize: {
         icon: <Icon name="brush-cleaning" size="1.5rem" />,
         name: t("home.sanitize.title", "Sanitize"),
-        component: lazy(() => import("@app/tools/Sanitize")),
+        component: lazy(() => import("@editor/tools/Sanitize")),
         maxFiles: -1,
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
@@ -307,14 +310,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["sanitize-pdf"],
         operationConfig: asRegistryConfig(sanitizeOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/sanitize/SanitizeSettings"),
+          () => import("@editor/components/tools/sanitize/SanitizeSettings"),
         ),
         synonyms: getSynonyms(t, "sanitize"),
       },
       flatten: {
         icon: <Icon name="layers-minus" size="1.5rem" />,
         name: t("home.flatten.title", "Flatten"),
-        component: lazy(() => import("@app/tools/Flatten")),
+        component: lazy(() => import("@editor/tools/Flatten")),
         description: t(
           "home.flatten.desc",
           "Remove all interactive elements and forms from a PDF",
@@ -325,14 +328,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["flatten"],
         operationConfig: asRegistryConfig(flattenOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/flatten/FlattenSettings"),
+          () => import("@editor/components/tools/flatten/FlattenSettings"),
         ),
         synonyms: getSynonyms(t, "flatten"),
       },
       unlockPDFForms: {
         icon: <Icon name="file-lock-open" size="1.5rem" />,
         name: t("home.unlockPDFForms.title", "Unlock PDF Forms"),
-        component: lazy(() => import("@app/tools/UnlockPdfForms")),
+        component: lazy(() => import("@editor/tools/UnlockPdfForms")),
         description: t(
           "home.unlockPDFForms.desc",
           "Remove read-only property of form fields in a PDF document.",
@@ -348,7 +351,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       formFill: {
         icon: <Icon name="form-input" size="1.5rem" />,
         name: t("home.formFill.title", "Form Editor"),
-        component: lazy(() => import("@app/tools/formFill/FormFill")),
+        component: lazy(() => import("@editor/tools/formFill/FormFill")),
         description: t(
           "home.formFill.desc",
           "Fill, create, edit, and delete PDF form fields with a visual editor",
@@ -377,7 +380,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         icon: <Icon name="form-scan" size="1.5rem" />,
         name: t("home.autoFormDetection.title", "Auto Form Detection"),
         component: lazy(
-          () => import("@app/tools/autoFormDetection/AutoFormDetection"),
+          () => import("@editor/tools/autoFormDetection/AutoFormDetection"),
         ),
         description: t(
           "home.autoFormDetection.desc",
@@ -403,14 +406,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ],
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/autoFormDetection/AutoFormDetectionSettings"),
+            import("@editor/components/tools/autoFormDetection/AutoFormDetectionSettings"),
         ),
         supportsAutomate: true,
       },
       changePermissions: {
         icon: <Icon name="lock" size="1.5rem" />,
         name: t("home.changePermissions.title", "Change Permissions"),
-        component: lazy(() => import("@app/tools/ChangePermissions")),
+        component: lazy(() => import("@editor/tools/ChangePermissions")),
         description: t(
           "home.changePermissions.desc",
           "Change document restrictions and permissions",
@@ -422,14 +425,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(changePermissionsOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/changePermissions/ChangePermissionsSettings"),
+            import("@editor/components/tools/changePermissions/ChangePermissionsSettings"),
         ),
         synonyms: getSynonyms(t, "changePermissions"),
       },
       getPdfInfo: {
         icon: <Icon name="clipboard-check" size="1.5rem" />,
         name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
-        component: lazy(() => import("@app/tools/GetPdfInfo")),
+        component: lazy(() => import("@editor/tools/GetPdfInfo")),
         description: t(
           "home.getPdfInfo.desc",
           "Grabs any and all information possible on PDFs",
@@ -445,7 +448,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       validateSignature: {
         icon: <Icon name="badge-check" size="1.5rem" />,
         name: t("home.validateSignature.title", "Validate PDF Signature"),
-        component: lazy(() => import("@app/tools/ValidateSignature")),
+        component: lazy(() => import("@editor/tools/ValidateSignature")),
         description: t(
           "home.validateSignature.desc",
           "Verify digital signatures and certificates in PDF documents",
@@ -482,7 +485,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       changeMetadata: {
         icon: <Icon name="clipboard-list" size="1.5rem" />,
         name: t("home.changeMetadata.title", "Change Metadata"),
-        component: lazy(() => import("@app/tools/ChangeMetadata")),
+        component: lazy(() => import("@editor/tools/ChangeMetadata")),
         description: t(
           "home.changeMetadata.desc",
           "Change/Remove/Add metadata from a PDF document",
@@ -494,14 +497,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(changeMetadataOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/changeMetadata/ChangeMetadataSingleStep"),
+            import("@editor/components/tools/changeMetadata/ChangeMetadataSingleStep"),
         ),
         synonyms: getSynonyms(t, "changeMetadata"),
       },
       editTableOfContents: {
         icon: <Icon name="table-of-contents" size="1.5rem" />,
         name: t("home.editTableOfContents.title", "Edit Table of Contents"),
-        component: lazy(() => import("@app/tools/EditTableOfContents")),
+        component: lazy(() => import("@editor/tools/EditTableOfContents")),
         description: t(
           "home.editTableOfContents.desc",
           "Add or edit bookmarks and table of contents in PDF documents",
@@ -520,7 +523,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       crop: {
         icon: <Icon name="crop" size="1.5rem" />,
         name: t("home.crop.title", "Crop PDF"),
-        component: lazy(() => import("@app/tools/Crop")),
+        component: lazy(() => import("@editor/tools/Crop")),
         description: t(
           "home.crop.desc",
           "Crop a PDF to reduce its size (maintains text!)",
@@ -531,13 +534,13 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["crop"],
         operationConfig: asRegistryConfig(cropOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/crop/CropAutomationSettings"),
+          () => import("@editor/components/tools/crop/CropAutomationSettings"),
         ),
       },
       rotate: {
         icon: <Icon name="rotate-cw" size="1.5rem" />,
         name: t("home.rotate.title", "Rotate"),
-        component: lazy(() => import("@app/tools/Rotate")),
+        component: lazy(() => import("@editor/tools/Rotate")),
         description: t("home.rotate.desc", "Easily rotate your PDFs."),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -545,14 +548,15 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["rotate-pdf"],
         operationConfig: asRegistryConfig(rotateOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/rotate/RotateAutomationSettings"),
+          () =>
+            import("@editor/components/tools/rotate/RotateAutomationSettings"),
         ),
         synonyms: getSynonyms(t, "rotate"),
       },
       autoRotate: {
         icon: <Icon name="rotate-cw-square" size="1.5rem" />,
         name: t("home.autoRotate.title", "Auto Rotate"),
-        component: lazy(() => import("@app/tools/AutoRotate")),
+        component: lazy(() => import("@editor/tools/AutoRotate")),
         description: t(
           "home.autoRotate.desc",
           "Detect each page's orientation and rotate it upright automatically.",
@@ -564,28 +568,29 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(autoRotateOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/autoRotate/AutoRotateAutomationSettings"),
+            import("@editor/components/tools/autoRotate/AutoRotateAutomationSettings"),
         ),
         synonyms: getSynonyms(t, "autoRotate"),
       },
       split: {
         icon: <Icon name="scissors" size="1.5rem" />,
         name: t("home.split.title", "Split"),
-        component: lazy(() => import("@app/tools/Split")),
+        component: lazy(() => import("@editor/tools/Split")),
         description: t("home.split.desc", "Split PDFs into multiple documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         endpoints: Array.from(new Set(Object.values(SPLIT_ENDPOINT_NAMES))),
         operationConfig: asRegistryConfig(splitOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/split/SplitAutomationSettings"),
+          () =>
+            import("@editor/components/tools/split/SplitAutomationSettings"),
         ),
         synonyms: getSynonyms(t, "split"),
       },
       reorganizePages: {
         icon: <Icon name="move-item-down" size="1.5rem" />,
         name: t("home.reorganizePages.title", "Reorganize Pages"),
-        component: lazy(() => import("@app/tools/ReorganizePages")),
+        component: lazy(() => import("@editor/tools/ReorganizePages")),
         description: t(
           "home.reorganizePages.desc",
           "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control.",
@@ -597,13 +602,13 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "reorganizePages"),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/reorganizePages/ReorganizePagesSettings"),
+            import("@editor/components/tools/reorganizePages/ReorganizePagesSettings"),
         ),
       },
       scalePages: {
         icon: <Icon name="scan" size="1.5rem" />,
         name: t("home.scalePages.title", "Adjust page size/scale"),
-        component: lazy(() => import("@app/tools/AdjustPageScale")),
+        component: lazy(() => import("@editor/tools/AdjustPageScale")),
         description: t(
           "home.scalePages.desc",
           "Change the size/scale of a page and/or its contents.",
@@ -615,14 +620,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(adjustPageScaleOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/adjustPageScale/AdjustPageScaleSettings"),
+            import("@editor/components/tools/adjustPageScale/AdjustPageScaleSettings"),
         ),
         synonyms: getSynonyms(t, "scalePages"),
       },
       addPageNumbers: {
         icon: <Icon name="file-digit" size="1.5rem" />,
         name: t("home.addPageNumbers.title", "Add Page Numbers"),
-        component: lazy(() => import("@app/tools/AddPageNumbers")),
+        component: lazy(() => import("@editor/tools/AddPageNumbers")),
         description: t(
           "home.addPageNumbers.desc",
           "Add Page numbers throughout a document in a set location",
@@ -631,7 +636,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/addPageNumbers/AddPageNumbersAutomationSettings"),
+            import("@editor/components/tools/addPageNumbers/AddPageNumbersAutomationSettings"),
         ),
         maxFiles: -1,
         endpoints: ["add-page-numbers"],
@@ -641,7 +646,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       pageLayout: {
         icon: <Icon name="layout-dashboard" size="1.5rem" />,
         name: t("home.pageLayout.title", "Multi-Page Layout"),
-        component: lazy(() => import("@app/tools/PageLayout")),
+        component: lazy(() => import("@editor/tools/PageLayout")),
         description: t(
           "home.pageLayout.desc",
           "Merge multiple pages of a PDF document into a single page",
@@ -652,18 +657,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["multi-page-layout"],
         operationConfig: asRegistryConfig(pageLayoutOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/pageLayout/PageLayoutSettings"),
+          () =>
+            import("@editor/components/tools/pageLayout/PageLayoutSettings"),
         ),
         synonyms: getSynonyms(t, "pageLayout"),
       },
       bookletImposition: {
         icon: <Icon name="book-open" size="1.5rem" />,
         name: t("home.bookletImposition.title", "Booklet Imposition"),
-        component: lazy(() => import("@app/tools/BookletImposition")),
+        component: lazy(() => import("@editor/tools/BookletImposition")),
         operationConfig: asRegistryConfig(bookletImpositionOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/bookletImposition/BookletImpositionSettings"),
+            import("@editor/components/tools/bookletImposition/BookletImpositionSettings"),
         ),
         description: t(
           "home.bookletImposition.desc",
@@ -676,7 +682,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       pdfToSinglePage: {
         icon: <Icon name="single-page" size="1.5rem" />,
         name: t("home.pdfToSinglePage.title", "PDF to Single Large Page"),
-        component: lazy(() => import("@app/tools/SingleLargePage")),
+        component: lazy(() => import("@editor/tools/SingleLargePage")),
 
         description: t(
           "home.pdfToSinglePage.desc",
@@ -693,7 +699,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       addAttachments: {
         icon: <Icon name="paperclip" size="1.5rem" />,
         name: t("home.addAttachments.title", "Manage Attachments"),
-        component: lazy(() => import("@app/tools/AddAttachments")),
+        component: lazy(() => import("@editor/tools/AddAttachments")),
         description: t(
           "home.addAttachments.desc",
           "View, add, extract, rename, or delete embedded PDF attachments",
@@ -711,13 +717,13 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(addAttachmentsOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/addAttachments/AddAttachmentsSettings"),
+            import("@editor/components/tools/addAttachments/AddAttachmentsSettings"),
         ),
       },
       createPortfolio: {
         icon: <Icon name="library" size="1.5rem" />,
         name: t("home.createPortfolio.title", "Create Portfolio"),
-        component: lazy(() => import("@app/tools/CreatePortfolio")),
+        component: lazy(() => import("@editor/tools/CreatePortfolio")),
         description: t(
           "home.createPortfolio.desc",
           "Bundle multiple files into an Adobe PDF Portfolio",
@@ -730,7 +736,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(createPortfolioOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/createPortfolio/CreatePortfolioSettings"),
+            import("@editor/components/tools/createPortfolio/CreatePortfolioSettings"),
         ),
       },
 
@@ -739,7 +745,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       extractPages: {
         icon: <Icon name="upload" size="1.5rem" />,
         name: t("home.extractPages.title", "Extract Pages"),
-        component: lazy(() => import("@app/tools/ExtractPages")),
+        component: lazy(() => import("@editor/tools/ExtractPages")),
         description: t(
           "home.extractPages.desc",
           "Extract specific pages from a PDF document",
@@ -749,7 +755,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "extractPages"),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/extractPages/ExtractPagesSettings"),
+            import("@editor/components/tools/extractPages/ExtractPagesSettings"),
         ),
         operationConfig: asRegistryConfig(extractPagesOperationConfig),
         endpoints: ["rearrange-pages"],
@@ -757,7 +763,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       extractImages: {
         icon: <Icon name="images" size="1.5rem" />,
         name: t("home.extractImages.title", "Extract Images"),
-        component: lazy(() => import("@app/tools/ExtractImages")),
+        component: lazy(() => import("@editor/tools/ExtractImages")),
         description: t(
           "home.extractImages.desc",
           "Extract images from PDF documents",
@@ -769,7 +775,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(extractImagesOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/extractImages/ExtractImagesSettings"),
+            import("@editor/components/tools/extractImages/ExtractImagesSettings"),
         ),
         synonyms: getSynonyms(t, "extractImages"),
       },
@@ -779,7 +785,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       removePages: {
         icon: <Icon name="trash" size="1.5rem" />,
         name: t("home.removePages.title", "Remove Pages"),
-        component: lazy(() => import("@app/tools/RemovePages")),
+        component: lazy(() => import("@editor/tools/RemovePages")),
         description: t(
           "home.removePages.desc",
           "Remove specific pages from a PDF document",
@@ -791,13 +797,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "removePages"),
         operationConfig: asRegistryConfig(removePagesOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/removePages/RemovePagesSettings"),
+          () =>
+            import("@editor/components/tools/removePages/RemovePagesSettings"),
         ),
       },
       removeBlanks: {
         icon: <Icon name="file-x" size="1.5rem" />,
         name: t("home.removeBlanks.title", "Remove Blank Pages"),
-        component: lazy(() => import("@app/tools/RemoveBlanks")),
+        component: lazy(() => import("@editor/tools/RemoveBlanks")),
         description: t(
           "home.removeBlanks.desc",
           "Remove blank pages from PDF documents",
@@ -810,13 +817,13 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(removeBlanksOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/removeBlanks/RemoveBlanksSettings"),
+            import("@editor/components/tools/removeBlanks/RemoveBlanksSettings"),
         ),
       },
       removeAnnotations: {
         icon: <Icon name="annotation-off" size="1.5rem" />,
         name: t("home.removeAnnotations.title", "Remove Annotations"),
-        component: lazy(() => import("@app/tools/RemoveAnnotations")),
+        component: lazy(() => import("@editor/tools/RemoveAnnotations")),
         description: t(
           "home.removeAnnotations.desc",
           "Remove annotations and comments from PDF documents",
@@ -832,7 +839,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       removeImage: {
         icon: <Icon name="remove-selection" size="1.5rem" />,
         name: t("home.removeImage.title", "Remove Images"),
-        component: lazy(() => import("@app/tools/RemoveImage")),
+        component: lazy(() => import("@editor/tools/RemoveImage")),
         description: t(
           "home.removeImage.desc",
           "Remove all images from a PDF document",
@@ -848,7 +855,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       removePassword: {
         icon: <Icon name="lock-open-password" size="1.5rem" />,
         name: t("removePassword.title", "Remove Password"),
-        component: lazy(() => import("@app/tools/RemovePassword")),
+        component: lazy(() => import("@editor/tools/RemovePassword")),
         description: t(
           "home.removePassword.desc",
           "Remove the opening password, permissions password, or both.",
@@ -860,14 +867,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(removePasswordOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/removePassword/RemovePasswordSettings"),
+            import("@editor/components/tools/removePassword/RemovePasswordSettings"),
         ),
         synonyms: getSynonyms(t, "removePassword"),
       },
       removeCertSign: {
         icon: <Icon name="shield-off" size="1.5rem" />,
         name: t("home.removeCertSign.title", "Remove Certificate Sign"),
-        component: lazy(() => import("@app/tools/RemoveCertificateSign")),
+        component: lazy(() => import("@editor/tools/RemoveCertificateSign")),
         description: t(
           "home.removeCertSign.desc",
           "Remove digital signature from PDF documents",
@@ -886,7 +893,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       automate: {
         icon: <Icon name="automate" size="1.5rem" />,
         name: t("home.automate.title", "Automate"),
-        component: lazy(() => import("@app/tools/Automate")),
+        component: lazy(() => import("@editor/tools/Automate")),
         description: t(
           "home.automate.desc",
           "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks.",
@@ -902,7 +909,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       autoRename: {
         icon: <Icon name="whole-word" size="1.5rem" />,
         name: t("home.autoRename.title", "Auto Rename PDF File"),
-        component: lazy(() => import("@app/tools/AutoRename")),
+        component: lazy(() => import("@editor/tools/AutoRename")),
         maxFiles: -1,
         endpoints: ["auto-rename"],
         operationConfig: asRegistryConfig(autoRenameOperationConfig),
@@ -920,7 +927,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       adjustContrast: {
         icon: <Icon name="palette" size="1.5rem" />,
         name: t("home.adjustContrast.title", "Adjust Colors/Contrast"),
-        component: lazy(() => import("@app/tools/AdjustContrast")),
+        component: lazy(() => import("@editor/tools/AdjustContrast")),
         description: t(
           "home.adjustContrast.desc",
           "Adjust colors and contrast of PDF documents",
@@ -932,14 +939,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(adjustContrastOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/adjustContrast/AdjustContrastSingleStepSettings"),
+            import("@editor/components/tools/adjustContrast/AdjustContrastSingleStepSettings"),
         ),
         synonyms: getSynonyms(t, "adjustContrast"),
       },
       repair: {
         icon: <Icon name="wrench" size="1.5rem" />,
         name: t("home.repair.title", "Repair"),
-        component: lazy(() => import("@app/tools/Repair")),
+        component: lazy(() => import("@editor/tools/Repair")),
         description: t(
           "home.repair.desc",
           "Repair corrupted or damaged PDF files",
@@ -958,7 +965,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "home.scannerImageSplit.title",
           "Detect & Split Scanned Photos",
         ),
-        component: lazy(() => import("@app/tools/ScannerImageSplit")),
+        component: lazy(() => import("@editor/tools/ScannerImageSplit")),
         description: t(
           "home.scannerImageSplit.desc",
           "Detect and split scanned photos into separate pages",
@@ -970,14 +977,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(scannerImageSplitOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/scannerImageSplit/ScannerImageSplitSettings"),
+            import("@editor/components/tools/scannerImageSplit/ScannerImageSplitSettings"),
         ),
         synonyms: getSynonyms(t, "scannerImageSplit"),
       },
       overlayPdfs: {
         icon: <Icon name="overlay-pages" size="1.5rem" />,
         name: t("home.overlay-pdfs.title", "Overlay PDFs"),
-        component: lazy(() => import("@app/tools/OverlayPdfs")),
+        component: lazy(() => import("@editor/tools/OverlayPdfs")),
         description: t(
           "home.overlay-pdfs.desc",
           "Overlay one PDF on top of another",
@@ -988,13 +995,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(overlayPdfsOperationConfig),
         synonyms: getSynonyms(t, "overlay-pdfs"),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/overlayPdfs/OverlayPdfsSettings"),
+          () =>
+            import("@editor/components/tools/overlayPdfs/OverlayPdfsSettings"),
         ),
       },
       replaceColor: {
         icon: <Icon name="paint-bucket" size="1.5rem" />,
         name: t("home.replaceColor.title", "Replace & Invert Color"),
-        component: lazy(() => import("@app/tools/ReplaceColor")),
+        component: lazy(() => import("@editor/tools/ReplaceColor")),
         description: t(
           "home.replaceColor.desc",
           "Replace or invert colors in PDF documents",
@@ -1006,7 +1014,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(replaceColorOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@app/components/tools/replaceColor/ReplaceColorSettings"),
+            import("@editor/components/tools/replaceColor/ReplaceColorSettings"),
         ),
         synonyms: getSynonyms(t, "replaceColor"),
       },
@@ -1016,7 +1024,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       showJS: {
         icon: <Icon name="braces" size="1.5rem" />,
         name: t("home.showJS.title", "Show JavaScript"),
-        component: lazy(() => import("@app/tools/ShowJS")),
+        component: lazy(() => import("@editor/tools/ShowJS")),
         description: t(
           "home.showJS.desc",
           "Extract and display JavaScript code from PDF documents",
@@ -1116,7 +1124,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       compare: {
         icon: <Icon name="image-compare" size="1.5rem" />,
         name: t("home.compare.title", "Compare"),
-        component: lazy(() => import("@app/tools/Compare")),
+        component: lazy(() => import("@editor/tools/Compare")),
         description: t(
           "home.compare.desc",
           "Compare two PDF documents and highlight differences",
@@ -1151,7 +1159,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       compress: {
         icon: <Icon name="shrink" size="1.5rem" />,
         name: t("home.compress.title", "Compress"),
-        component: lazy(() => import("@app/tools/Compress")),
+        component: lazy(() => import("@editor/tools/Compress")),
         description: t(
           "home.compress.desc",
           "Compress PDFs to reduce their file size.",
@@ -1162,14 +1170,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["compress-pdf"],
         operationConfig: asRegistryConfig(compressOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/compress/CompressSettings"),
+          () => import("@editor/components/tools/compress/CompressSettings"),
         ),
         synonyms: getSynonyms(t, "compress"),
       },
       convert: {
         icon: <Icon name="file-convert" size="1.5rem" />,
         name: t("home.convert.title", "Convert"),
-        component: lazy(() => import("@app/tools/Convert")),
+        component: lazy(() => import("@editor/tools/Convert")),
         description: t(
           "home.convert.desc",
           "Convert files to and from PDF format",
@@ -1199,7 +1207,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
 
         operationConfig: asRegistryConfig(convertOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/convert/ConvertSettings"),
+          () => import("@editor/components/tools/convert/ConvertSettings"),
         ),
         synonyms: getSynonyms(t, "convert"),
       },
@@ -1207,7 +1215,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       ocr: {
         icon: <Icon name="scan-text" size="1.5rem" />,
         name: t("home.ocr.title", "OCR"),
-        component: lazy(() => import("@app/tools/OCR")),
+        component: lazy(() => import("@editor/tools/OCR")),
         description: t(
           "home.ocr.desc",
           "Extract text from scanned PDFs using Optical Character Recognition",
@@ -1218,14 +1226,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["ocr-pdf"],
         operationConfig: asRegistryConfig(ocrOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/ocr/OCRSettings"),
+          () => import("@editor/components/tools/ocr/OCRSettings"),
         ),
         synonyms: getSynonyms(t, "ocr"),
       },
       redact: {
         icon: <Icon name="redact" size="1.5rem" />,
         name: t("home.redact.title", "Redact"),
-        component: lazy(() => import("@app/tools/Redact")),
+        component: lazy(() => import("@editor/tools/Redact")),
         description: t(
           "home.redact.desc",
           "Permanently remove sensitive information from PDF documents",
@@ -1236,7 +1244,8 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["auto-redact"],
         operationConfig: asRegistryConfig(redactOperationConfig),
         automationSettings: lazySettings(
-          () => import("@app/components/tools/redact/RedactSingleStepSettings"),
+          () =>
+            import("@editor/components/tools/redact/RedactSingleStepSettings"),
         ),
         synonyms: getSynonyms(t, "redact"),
       },

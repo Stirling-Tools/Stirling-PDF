@@ -4,7 +4,7 @@ import {
   EXTENSION_TO_ENDPOINT,
   CONVERSION_MATRIX,
   TO_FORMAT_OPTIONS,
-} from "@app/constants/convertConstants";
+} from "@editor/constants/convertConstants";
 
 /**
  * Resolves the endpoint name for a given conversion

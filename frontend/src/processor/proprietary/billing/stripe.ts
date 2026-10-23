@@ -2,10 +2,10 @@ import type { Stripe } from "@stripe/stripe-js";
 import {
   getPortalSessionClient,
   ensurePortalSessionClient,
-} from "@app/portal/auth/sessionClient";
-import { invokeSaasFunction } from "@app/portal/auth/saasFunctions";
-import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
-import { getPreferredCurrency } from "@app/utils/currencyDetection";
+} from "@editor/portal/auth/sessionClient";
+import { invokeSaasFunction } from "@editor/portal/auth/saasFunctions";
+import { withPortalSaasSession } from "@editor/portal/auth/portalSaasSession";
+import { getPreferredCurrency } from "@editor/utils/currencyDetection";
 
 /**
  * Stripe checkout + portal sessions, minted via the SaaS Supabase edge

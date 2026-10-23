@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { loadScript, isScriptLoaded } from "@app/utils/scriptLoader";
+import { loadScript, isScriptLoaded } from "@editor/utils/scriptLoader";
 
 /** jsdom doesn't fetch external scripts, so we drive the load/error events ourselves. */
 function scriptEl(id: string): HTMLScriptElement {

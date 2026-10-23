@@ -1,7 +1,7 @@
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { ExportAPIBridge } from "@app/components/viewer/ExportAPIBridge";
-import type { ExportAPIWrapper } from "@app/contexts/viewer/viewerBridges";
+import { ExportAPIBridge } from "@editor/components/viewer/ExportAPIBridge";
+import type { ExportAPIWrapper } from "@editor/contexts/viewer/viewerBridges";
 
 const mock = vi.hoisted(() => ({
   saveAsCopy: vi.fn(),
@@ -14,10 +14,10 @@ vi.mock("@embedpdf/plugin-export/react", () => ({
     provides: mock.available ? { saveAsCopy: mock.saveAsCopy } : undefined,
   }),
 }));
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({ registerBridge: mock.register }),
 }));
-vi.mock("@app/components/viewer/hooks/useDocumentReady", () => ({
+vi.mock("@editor/components/viewer/hooks/useDocumentReady", () => ({
   useDocumentReady: () => mock.ready,
 }));
 beforeEach(() => {

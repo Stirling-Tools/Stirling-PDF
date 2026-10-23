@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import type { OwnershipTransferFlow } from "@app/components/shared/ownership/useOwnershipTransfer";
-import { Button } from "@app/ui/Button";
+import type { OwnershipTransferFlow } from "@editor/components/shared/ownership/useOwnershipTransfer";
+import { Button } from "@editor/ui/Button";
 
 /** Selects the next action from confirmed handover state; the hook serializes its execution. */
 export function OwnershipTransferActions({

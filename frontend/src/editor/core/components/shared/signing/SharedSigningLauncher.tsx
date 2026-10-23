@@ -1,10 +1,10 @@
 import { Badge, Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
-import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
-import { useOpenSigning } from "@app/hooks/signing/useOpenSigning";
+import { Icon } from "@editor/ui/Icon";
+import { useGroupSigningEnabled } from "@editor/hooks/useGroupSigningEnabled";
+import { useSigningSessions } from "@editor/hooks/signing/useSigningSessions";
+import { useOpenSigning } from "@editor/hooks/signing/useOpenSigning";
 
 /**
  * Content for the optional "Request signatures" step in the Sign tool: a short

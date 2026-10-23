@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import type { Location } from "react-router-dom";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
-import type { ToolId } from "@app/types/toolId";
-import { useNavigationUrlSync } from "@app/hooks/useUrlSync";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import type { ToolId } from "@editor/types/toolId";
+import { useNavigationUrlSync } from "@editor/hooks/useUrlSync";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 
 const h = vi.hoisted(() => ({
   location: {
@@ -21,8 +21,8 @@ vi.mock("react-router-dom", () => ({
   useLocation: () => h.location,
   useNavigate: () => h.navigate,
 }));
-vi.mock("@app/utils/scarfTracking", () => ({ firePixel: vi.fn() }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/utils/scarfTracking", () => ({ firePixel: vi.fn() }));
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { premiumEnabled: true } }),
 }));
 

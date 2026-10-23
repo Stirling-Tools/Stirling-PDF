@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import "@app/auth/ui/auth.css";
+import "@editor/auth/ui/auth.css";
 import { useTranslation } from "react-i18next";
 import { Checkbox, TextInput, PasswordInput } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { SignupFieldErrors } from "@app/routes/signup/SignupFormValidation";
+import { Button } from "@editor/ui/Button";
+import { SignupFieldErrors } from "@editor/routes/signup/SignupFormValidation";
 
 interface SignupFormProps {
   name?: string;

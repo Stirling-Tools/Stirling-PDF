@@ -1,18 +1,18 @@
 import React, { useEffect, useRef } from "react";
 import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
-import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
-import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
-import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
-import { saveOperationResults } from "@app/services/operationResultsSaveService";
-import { useFileActions, useFileSelectors } from "@app/contexts/FileContext";
-import i18n from "@app/i18n";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import ErrorNotification from "@editor/components/tools/shared/ErrorNotification";
+import ResultsPreview from "@editor/components/tools/shared/ResultsPreview";
+import { SuggestedToolsSection } from "@editor/components/tools/shared/SuggestedToolsSection";
+import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
+import { saveOperationResults } from "@editor/services/operationResultsSaveService";
+import { useFileActions, useFileSelectors } from "@editor/contexts/FileContext";
+import i18n from "@editor/i18n";
 
 /**
  * Nearest scrolling ancestor - in the right rail that is the tool panel's

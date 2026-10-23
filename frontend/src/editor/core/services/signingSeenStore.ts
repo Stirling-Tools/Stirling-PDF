@@ -1,7 +1,7 @@
 import {
   canReceiveSigningActivity,
   type SigningItem,
-} from "@app/utils/signingItems";
+} from "@editor/utils/signingItems";
 
 const STORAGE_PREFIX = "stirling.signing.seenActivity.";
 

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { markName } from "@portal/components/BrandMarks";
-import { CREATABLE_CONNECTION_TYPES } from "@portal/components/sources/connectionTypes";
+import { markName } from "@processor/components/BrandMarks";
+import { CREATABLE_CONNECTION_TYPES } from "@processor/components/sources/connectionTypes";
 import {
   COMING_SOON_SOURCE_TYPES,
   CREATABLE_SOURCE_TYPES,
-} from "@portal/components/sources/sourceTypes";
+} from "@processor/components/sources/sourceTypes";
 
 // These ids come back from the API and never appear as <Icon name> literals, so
 // nothing else checks that each one has artwork. The plug is only for ids the

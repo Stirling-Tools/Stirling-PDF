@@ -1,5 +1,5 @@
-import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
-import apiClient from "@app/services/apiClient";
+import { MfaSetupResponse } from "@editor/responses/Mfa/MfaResponse";
+import apiClient from "@editor/services/apiClient";
 
 export interface AccountData {
   username: string;

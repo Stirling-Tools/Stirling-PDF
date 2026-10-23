@@ -4,11 +4,11 @@ import {
   render as baseRender,
   screen,
 } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import {
   PipelineGraphToolbar,
   type PipelineGraphToolbarProps,
-} from "@portal/components/pipelines/PipelineGraphToolbar";
+} from "@processor/components/pipelines/PipelineGraphToolbar";
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: PortalTestProviders });

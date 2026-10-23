@@ -1,4 +1,4 @@
-import type { Condition } from "@app/conditions/types";
+import type { Condition } from "@editor/conditions/types";
 
 /** Whether the comparison has an input and operands ready to submit to ConditionValidator. */
 export function isConditionComplete(condition: Condition): boolean {

@@ -1,8 +1,8 @@
 // The tab's last editor session (open files, selection, view), so a processor switch or reload
 // does not cost the user their workbench. sessionStorage on purpose: per-tab, tabs never clobber.
 
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { stripBasePath } from "@app/constants/app";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { stripBasePath } from "@editor/constants/app";
 
 const SESSION_KEY = "stirling.workbench.session";
 /** Bumped when the record's shape or meaning changes, so an old one is discarded rather than

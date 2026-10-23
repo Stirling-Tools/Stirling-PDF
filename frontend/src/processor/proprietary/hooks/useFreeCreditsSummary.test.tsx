@@ -1,15 +1,18 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { LinkProvider, type LinkState } from "@app/portal/contexts/LinkContext";
-import { useFreeCreditsSummary } from "@app/portal/hooks/useFreeCreditsSummary";
+import {
+  LinkProvider,
+  type LinkState,
+} from "@editor/portal/contexts/LinkContext";
+import { useFreeCreditsSummary } from "@editor/portal/hooks/useFreeCreditsSummary";
 
 const ownership = vi.hoisted(() => ({ isOwner: true }));
-vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+vi.mock("@editor/portal/hooks/useAccountLinkOwner", () => ({
   useAccountLinkOwner: () => ownership.isOwner,
 }));
 const fetchWallet = vi.fn();
-vi.mock("@app/portal/api/billing", () => ({
+vi.mock("@editor/portal/api/billing", () => ({
   fetchWallet: () => fetchWallet(),
 }));
 

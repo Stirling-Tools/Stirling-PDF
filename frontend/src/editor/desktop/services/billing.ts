@@ -1,5 +1,5 @@
 /**
- * Desktop (Tauri) implementation of the @app/services/billing seam.
+ * Desktop (Tauri) implementation of the @editor/services/billing seam.
  *
  * Routes Stripe session/portal creation through the desktop supabase-js client's
  * functions.invoke with an EXPLICIT Authorization: Bearer header carrying the
@@ -12,24 +12,25 @@
  * server / tauri:// origin Stripe can't return to. We pass the app's deep-link
  * scheme (stirlingpdf://) so Stripe can bring the user back into the app.
  */
-import { authService } from "@app/services/authService";
+import { authService } from "@editor/services/authService";
 import type {
   CheckoutParams,
   CheckoutSession,
   PortalParams,
   PortalSession,
-} from "@cloud/services/billing";
+} from "@editor-cloud/services/billing";
 
 export type {
   CheckoutParams,
   CheckoutSession,
   PortalParams,
   PortalSession,
-} from "@cloud/services/billing";
+} from "@editor-cloud/services/billing";
 
 // Avoid a static import: it would pull the Supabase SDK onto the startup path
 // even for users who never open a billing flow.
-const loadSupabase = async () => (await import("@app/auth/supabase")).supabase;
+const loadSupabase = async () =>
+  (await import("@editor/auth/supabase")).supabase;
 
 /**
  * Deep-link the SaaS billing backend uses as Stripe's success/cancel/return

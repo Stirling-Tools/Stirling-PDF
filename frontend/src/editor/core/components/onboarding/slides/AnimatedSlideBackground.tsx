@@ -1,6 +1,6 @@
 import React from "react";
-import styles from "@app/components/onboarding/slides/AnimatedSlideBackground.module.css";
-import { AnimatedSlideBackgroundProps } from "@app/types/types";
+import styles from "@editor/components/onboarding/slides/AnimatedSlideBackground.module.css";
+import { AnimatedSlideBackgroundProps } from "@editor/types/types";
 
 type CircleStyles = React.CSSProperties & {
   "--circle-move-x"?: string;
