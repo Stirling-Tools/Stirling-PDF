@@ -2,7 +2,7 @@ import {
   PROPRIETARY_REGULAR_TOOL_IDS,
   PROPRIETARY_SUPER_TOOL_IDS,
   PROPRIETARY_LINK_TOOL_IDS,
-} from "@app/types/proprietaryToolId";
+} from "@editor/types/proprietaryToolId";
 
 export type ToolKind = "regular" | "super" | "link";
 

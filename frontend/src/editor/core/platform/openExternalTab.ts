@@ -1,7 +1,7 @@
 /**
- * core/web implementation of the @app/platform/openExternalTab seam.
+ * core/web implementation of the @editor/platform/openExternalTab seam.
  *
- * Distinct from @app/platform/openExternal: that seam is for "leave and return"
+ * Distinct from @editor/platform/openExternal: that seam is for "leave and return"
  * redirects (Stripe checkout), so its saas impl navigates the CURRENT tab. A PDF
  * link must never do that — it would tear the user out of their document — so
  * this seam always opens alongside the app. Desktop shadows it to escape the
@@ -11,7 +11,7 @@
  * URL to the browser, so it re-checks rather than trusting them: window.open on
  * a `javascript:` URL executes it in our own origin.
  */
-import { getExternalHref } from "@app/utils/externalUrl";
+import { getExternalHref } from "@editor/utils/externalUrl";
 
 export type OpenExternalTab = (url: string) => Promise<void>;
 

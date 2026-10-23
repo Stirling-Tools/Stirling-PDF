@@ -1,13 +1,13 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider, Menu } from "@mantine/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
-import type { FileId } from "@app/types/file";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { OpenInNewWindowMenuItem } from "@editor/components/filesPage/OpenInNewWindowMenuItem";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 const openInNewWindow = vi.fn();
 
-vi.mock("@app/extensions/openInNewWindow", () => ({
+vi.mock("@editor/extensions/openInNewWindow", () => ({
   useOpenInNewWindow: () => ({
     canOpenInNewWindow: () => true,
     openInNewWindow,

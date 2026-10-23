@@ -1,10 +1,10 @@
 import { useEffect } from "react";
-import { useUI } from "@app/portal/contexts/UIContext";
-import { useLink } from "@app/portal/contexts/LinkContext";
+import { useUI } from "@editor/portal/contexts/UIContext";
+import { useLink } from "@editor/portal/contexts/LinkContext";
 import {
   acknowledgeAccountLinkPrompt,
   useAccountLinkBlock,
-} from "@app/services/accountLinkBlock";
+} from "@editor/services/accountLinkBlock";
 
 /** Mount alongside the single link dialog; repeat failures leave the persistent rail in place. */
 export function useFreeTierExhaustedPrompt(enabled = true): void {

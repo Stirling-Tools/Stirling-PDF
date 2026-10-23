@@ -14,14 +14,14 @@ import {
   type Rotation,
   type Size,
 } from "@embedpdf/models";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useMeasurements } from "@app/contexts/MeasurementContext";
-import { useViewerIsPanning } from "@app/components/viewer/useViewerIsPanning";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useMeasurements } from "@editor/contexts/MeasurementContext";
+import { useViewerIsPanning } from "@editor/components/viewer/useViewerIsPanning";
 import type {
   MeasurementKind,
   MeasureScale,
   PagePoint,
-} from "@app/utils/measurementTypes";
+} from "@editor/utils/measurementTypes";
 import {
   MEASUREMENT_COLORS,
   formatArea,
@@ -33,22 +33,22 @@ import {
   pathLength,
   polygonArea,
   segmentLength,
-} from "@app/utils/measurementUtils";
+} from "@editor/utils/measurementUtils";
 import {
   describeMeasurement,
   viewAngle,
-} from "@app/utils/measurementDescription";
+} from "@editor/utils/measurementDescription";
 import {
   measurementEdges,
   snapPoint,
   type SnapGuide,
   type SnapResult,
-} from "@app/utils/measurementSnapping";
+} from "@editor/utils/measurementSnapping";
 import {
   RulerMeasurementLayer,
   type RulerDraft,
   type RulerRenderedMeasurement,
-} from "@app/components/viewer/RulerMeasurementLayer";
+} from "@editor/components/viewer/RulerMeasurementLayer";
 
 interface Point {
   x: number;

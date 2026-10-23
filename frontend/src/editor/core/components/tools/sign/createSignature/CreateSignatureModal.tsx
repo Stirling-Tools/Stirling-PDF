@@ -1,31 +1,31 @@
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Modal } from "@app/ui/Modal";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { uniqueName } from "@app/utils/uniqueName";
+import { Modal } from "@editor/ui/Modal";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { uniqueName } from "@editor/utils/uniqueName";
 import {
   PHONE_DRAWING_CLEANUP,
   cleanUpSignatureImage,
-} from "@app/utils/signatureImage";
-import type { MobileSignaturePayload } from "@app/components/tools/sign/MobileSignatureModal";
-import { DrawSignaturePanel } from "@app/components/tools/sign/createSignature/DrawSignaturePanel";
-import { TypeSignaturePanel } from "@app/components/tools/sign/createSignature/TypeSignaturePanel";
-import { UploadSignaturePanel } from "@app/components/tools/sign/createSignature/UploadSignaturePanel";
-import { PhoneSignaturePanel } from "@app/components/tools/sign/createSignature/PhoneSignaturePanel";
+} from "@editor/utils/signatureImage";
+import type { MobileSignaturePayload } from "@editor/components/tools/sign/MobileSignatureModal";
+import { DrawSignaturePanel } from "@editor/components/tools/sign/createSignature/DrawSignaturePanel";
+import { TypeSignaturePanel } from "@editor/components/tools/sign/createSignature/TypeSignaturePanel";
+import { UploadSignaturePanel } from "@editor/components/tools/sign/createSignature/UploadSignaturePanel";
+import { PhoneSignaturePanel } from "@editor/components/tools/sign/createSignature/PhoneSignaturePanel";
 import {
   SaveSignatureOptions,
   toSaveChoice,
   type SaveLibraryLimits,
   type SaveOptionsState,
-} from "@app/components/tools/sign/createSignature/SaveSignatureOptions";
+} from "@editor/components/tools/sign/createSignature/SaveSignatureOptions";
 import {
   CREATE_TAB_ICONS,
   createTabLabel,
   createTabs,
   defaultSignatureName,
-} from "@app/components/tools/sign/createSignature/createTabs";
+} from "@editor/components/tools/sign/createSignature/createTabs";
 import type {
   CreateTab,
   CreatedSignature,
@@ -33,9 +33,9 @@ import type {
   SignaturePanelHandle,
   TypePanelHandle,
   UploadPanelHandle,
-} from "@app/components/tools/sign/createSignature/types";
-import { useTabReadiness } from "@app/components/tools/sign/createSignature/useTabReadiness";
-import styles from "@app/components/tools/sign/createSignature/CreateSignatureModal.module.css";
+} from "@editor/components/tools/sign/createSignature/types";
+import { useTabReadiness } from "@editor/components/tools/sign/createSignature/useTabReadiness";
+import styles from "@editor/components/tools/sign/createSignature/CreateSignatureModal.module.css";
 
 interface CreateSignatureModalProps {
   initialTab: CreateTab;

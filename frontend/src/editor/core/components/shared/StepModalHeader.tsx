@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
 // No brand webfont is loaded, so the wordmark must be this SVG rather than styled text.
-import wordmarkLight from "@app/assets/brand/modern-logo/StirlingProcessorLogoBlackText.svg";
-import wordmarkDark from "@app/assets/brand/modern-logo/StirlingProcessorLogoWhiteText.svg";
-import "@app/components/shared/StepModalHeader.css";
+import wordmarkLight from "@editor/assets/brand/modern-logo/StirlingProcessorLogoBlackText.svg";
+import wordmarkDark from "@editor/assets/brand/modern-logo/StirlingProcessorLogoWhiteText.svg";
+import "@editor/components/shared/StepModalHeader.css";
 
 /**
  * Header for any stepped flow modal: identity row, step badge, progress bar, step title. Worn by

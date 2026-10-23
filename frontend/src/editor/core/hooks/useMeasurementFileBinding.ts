@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { useMeasurements } from "@app/contexts/MeasurementContext";
-import type { StirlingFile } from "@app/types/fileContext";
-import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
+import { useMeasurements } from "@editor/contexts/MeasurementContext";
+import type { StirlingFile } from "@editor/types/fileContext";
+import { isStirlingFile, getFormFillFileId } from "@editor/types/fileContext";
 
 type ViewerFile = StirlingFile | File | null | undefined;
 

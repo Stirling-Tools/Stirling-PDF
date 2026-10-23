@@ -5,18 +5,18 @@ import {
   POST_LOGIN_REDIRECT_STORAGE_KEY,
   setPostLoginRedirectPath,
   springAuth,
-} from "@app/auth/spring/springAuthClient";
-import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
-import apiClient from "@app/services/apiClient";
+} from "@editor/auth/spring/springAuthClient";
+import { startOAuthNavigation } from "@editor/extensions/oauthNavigation";
+import apiClient from "@editor/services/apiClient";
 // Side-effect: configures the shared Spring engine with the (mocked) apiClient
 // + oauthNavigation seam, so springAuth routes through the mocks below.
-import "@app/auth/configureSpringAuth";
-import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
+import "@editor/auth/configureSpringAuth";
+import { allowConsole, expectConsole } from "@editor/tests/failOnConsole";
 import { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 // Mock apiClient
-vi.mock("@app/services/apiClient");
-vi.mock("@app/extensions/oauthNavigation", () => ({
+vi.mock("@editor/services/apiClient");
+vi.mock("@editor/extensions/oauthNavigation", () => ({
   startOAuthNavigation: vi.fn().mockResolvedValue(false),
 }));
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 
 /** The bundled backend has no notification API; wait for the mode before polling. */
 export function useNotificationsAvailable(): boolean {

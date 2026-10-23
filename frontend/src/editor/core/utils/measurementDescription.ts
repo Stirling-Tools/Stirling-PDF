@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { Measurement, MeasureScale } from "@app/utils/measurementTypes";
+import type { Measurement, MeasureScale } from "@editor/utils/measurementTypes";
 import {
   formatLength,
   pathLength,
@@ -7,7 +7,7 @@ import {
   toViewPoint,
   type MeasurementFormatSettings,
   type PageView,
-} from "@app/utils/measurementUtils";
+} from "@editor/utils/measurementUtils";
 
 /**
  * Angle of a→b as the user sees it on a rotated page, in degrees

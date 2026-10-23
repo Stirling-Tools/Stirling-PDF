@@ -1,11 +1,11 @@
-import type { MeasurementDisplaySettings } from "@app/utils/measurementTypes";
+import type { MeasurementDisplaySettings } from "@editor/utils/measurementTypes";
 import {
   DEFAULT_MEASUREMENT_COLOR,
   DEFAULT_MEASUREMENT_STROKE_WIDTH,
   MAX_STROKE_WIDTH,
   MIN_STROKE_WIDTH,
   isSupportedUnit,
-} from "@app/utils/measurementUtils";
+} from "@editor/utils/measurementUtils";
 
 // Persist calibration unit preference across sessions
 const STORAGE_KEY_LAST_CALIBRATION_UNIT = "stirling_calibration_last_unit";

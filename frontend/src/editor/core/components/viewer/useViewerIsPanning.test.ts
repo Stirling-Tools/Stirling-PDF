@@ -1,11 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
-import { useViewerIsPanning } from "@app/components/viewer/useViewerIsPanning";
+import { useViewerIsPanning } from "@editor/components/viewer/useViewerIsPanning";
 
 let panListener: ((isPanning: boolean) => void) | null = null;
 let panningAtMount = false;
 
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({
     getPanState: () => ({ isPanning: panningAtMount }),
     registerImmediatePanUpdate: (listener: (isPanning: boolean) => void) => {

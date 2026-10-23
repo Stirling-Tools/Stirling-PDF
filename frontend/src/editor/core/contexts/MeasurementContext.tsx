@@ -17,7 +17,7 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
-import { useNavigationState } from "@app/contexts/NavigationContext";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
 import type {
   FileMeasureScales,
   Measurement,
@@ -26,7 +26,7 @@ import type {
   MeasureScale,
   PageMeasureScales,
   PagePoint,
-} from "@app/utils/measurementTypes";
+} from "@editor/utils/measurementTypes";
 import {
   loadSessionMap,
   normalizeFileScales,
@@ -36,12 +36,12 @@ import {
   resolveScale,
   saveSessionMap,
   type PageView,
-} from "@app/utils/measurementUtils";
+} from "@editor/utils/measurementUtils";
 import {
   getMeasurementDisplaySettings,
   setMeasurementDisplaySettings,
-} from "@app/utils/measurementPreferences";
-import { extractPageMeasureScales } from "@app/utils/pdfMeasurementExtraction";
+} from "@editor/utils/measurementPreferences";
+import { extractPageMeasureScales } from "@editor/utils/pdfMeasurementExtraction";
 
 export type MeasureMode = MeasurementKind | "calibrate";
 

@@ -1,4 +1,4 @@
-import "@app/ui/ProgressBar.css";
+import "@editor/ui/ProgressBar.css";
 
 export interface ProgressBarProps {
   /** 0–1. Values outside the range are clamped. */

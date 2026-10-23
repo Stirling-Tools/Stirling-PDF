@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 
 /** Zero-based index of the page the viewer is scrolled to. */
 export function useViewerCurrentPageIndex(): number {

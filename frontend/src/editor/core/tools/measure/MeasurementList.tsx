@@ -1,12 +1,15 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { Icon, type IconName } from "@app/ui/Icon";
-import { useMeasurements } from "@app/contexts/MeasurementContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import type { Measurement, MeasurementKind } from "@app/utils/measurementTypes";
-import { formatMeasurementValue } from "@app/utils/measurementUtils";
-import styles from "@app/tools/measure/Measure.module.css";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import { useMeasurements } from "@editor/contexts/MeasurementContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import type {
+  Measurement,
+  MeasurementKind,
+} from "@editor/utils/measurementTypes";
+import { formatMeasurementValue } from "@editor/utils/measurementUtils";
+import styles from "@editor/tools/measure/Measure.module.css";
 
 export const KIND_ICONS: Record<MeasurementKind, IconName> = {
   distance: "ruler",

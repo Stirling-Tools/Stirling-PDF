@@ -6,10 +6,10 @@ import {
   within,
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { FileGrid } from "@app/components/filesPage/FileGrid";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import type { FileId } from "@app/types/file";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { FileGrid } from "@editor/components/filesPage/FileGrid";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 /**
  * The grid's items are memoized so a selection click re-renders the cards whose
@@ -19,12 +19,12 @@ import type { StirlingFileStub } from "@app/types/fileContext";
  * so that regression fails here instead of in someone's 500-file folder.
  */
 
-// @app/ui wraps Mantine, so the provider has to be in the tree.
+// @editor/ui wraps Mantine, so the provider has to be in the tree.
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: MantineProvider });
 // Every card renders this exactly once, so its calls are a per-card render count.
 const badgeRenders: { n: number } = { n: 0 };
-vi.mock("@app/components/shared/PolicyBadges", () => ({
+vi.mock("@editor/components/shared/PolicyBadges", () => ({
   PolicyBadges: () => {
     badgeRenders.n += 1;
     return null;

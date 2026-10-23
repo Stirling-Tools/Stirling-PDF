@@ -1,16 +1,16 @@
 import { useEffect, useMemo } from "react";
-import EmbedPdfViewer from "@app/components/viewer/EmbedPdfViewer";
-import type { EmbedPdfViewerProps } from "@app/components/viewer/EmbedPdfViewer";
+import EmbedPdfViewer from "@editor/components/viewer/EmbedPdfViewer";
+import type { EmbedPdfViewerProps } from "@editor/components/viewer/EmbedPdfViewer";
 import {
   NonPdfViewerWrapper,
   type ViewerProps,
-} from "@app/components/viewer/NonPdfViewer";
-import { AttachmentSidebar } from "@app/components/viewer/AttachmentSidebar";
-import { usePortfolioSession } from "@app/components/viewer/hooks/usePortfolioSession";
-import { useAllFiles } from "@app/contexts/FileContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { isStirlingFile } from "@app/types/fileContext";
-import { isPdfFile } from "@app/utils/fileUtils";
+} from "@editor/components/viewer/NonPdfViewer";
+import { AttachmentSidebar } from "@editor/components/viewer/AttachmentSidebar";
+import { usePortfolioSession } from "@editor/components/viewer/hooks/usePortfolioSession";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { isStirlingFile } from "@editor/types/fileContext";
+import { isPdfFile } from "@editor/utils/fileUtils";
 
 export type { ViewerProps };
 

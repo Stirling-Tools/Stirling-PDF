@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
-import { snapPoint, type SnapOptions } from "@app/utils/measurementSnapping";
-import type { PagePoint } from "@app/utils/measurementTypes";
+import { snapPoint, type SnapOptions } from "@editor/utils/measurementSnapping";
+import type { PagePoint } from "@editor/utils/measurementTypes";
 
 const pt = (x: number, y: number, pageIndex = 0): PagePoint => ({
   pageIndex,

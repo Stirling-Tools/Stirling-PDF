@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useInteractionManagerCapability } from "@embedpdf/plugin-interaction-manager/react";
-import { useMeasurements } from "@app/contexts/MeasurementContext";
-import { useViewerIsPanning } from "@app/components/viewer/useViewerIsPanning";
+import { useMeasurements } from "@editor/contexts/MeasurementContext";
+import { useViewerIsPanning } from "@editor/components/viewer/useViewerIsPanning";
 
 /**
  * Pauses the viewer's own pointer handling while the Measure tool is drawing,

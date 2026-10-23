@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 
 /** Whether the viewer's pan mode is on, including when it already was at mount. */
 export function useViewerIsPanning(): boolean {

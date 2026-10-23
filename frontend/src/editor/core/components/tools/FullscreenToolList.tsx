@@ -6,17 +6,17 @@ import {
   getSubcategoryLabel,
   getSubcategoryColor,
   getSubcategoryIcon,
-} from "@app/data/toolsTaxonomy";
-import { ToolId } from "@app/types/toolId";
-import { useToolSections } from "@app/hooks/useToolSections";
-import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { Icon } from "@app/ui/Icon";
-import Badge from "@app/components/shared/Badge";
-import "@app/components/tools/ToolPanel.css";
-import DetailedToolItem from "@app/components/tools/fullscreen/DetailedToolItem";
-import CompactToolItem from "@app/components/tools/fullscreen/CompactToolItem";
-import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
+} from "@editor/data/toolsTaxonomy";
+import { ToolId } from "@editor/types/toolId";
+import { useToolSections } from "@editor/hooks/useToolSections";
+import NoToolsFound from "@editor/components/tools/shared/NoToolsFound";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { Icon } from "@editor/ui/Icon";
+import Badge from "@editor/components/shared/Badge";
+import "@editor/components/tools/ToolPanel.css";
+import DetailedToolItem from "@editor/components/tools/fullscreen/DetailedToolItem";
+import CompactToolItem from "@editor/components/tools/fullscreen/CompactToolItem";
+import { useFavoriteToolItems } from "@editor/hooks/tools/useFavoriteToolItems";
 
 interface FullscreenToolListProps {
   filteredTools: Array<{

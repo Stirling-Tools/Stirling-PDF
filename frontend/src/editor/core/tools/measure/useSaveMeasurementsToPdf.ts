@@ -1,14 +1,14 @@
 import { useCallback, useState } from "react";
-import { useMeasurements } from "@app/contexts/MeasurementContext";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useMeasurements } from "@editor/contexts/MeasurementContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import {
   useAllFiles,
   useFileContext,
   useFileSelectors,
-} from "@app/contexts/FileContext";
-import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import { formatMeasurementValue } from "@app/utils/measurementUtils";
-import { drawMeasurementsIntoPdf } from "@app/tools/measure/measurementDrawing";
+} from "@editor/contexts/FileContext";
+import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
+import { formatMeasurementValue } from "@editor/utils/measurementUtils";
+import { drawMeasurementsIntoPdf } from "@editor/tools/measure/measurementDrawing";
 
 /**
  * Draws the current file's measurements into a new version of the PDF, then

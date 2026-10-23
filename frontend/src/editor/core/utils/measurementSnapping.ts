@@ -7,7 +7,7 @@
  * previous point (then aligning along that ray with other vertices); x/y
  * alignment with other vertices; diagonal alignment; an existing edge.
  */
-import type { Measurement, PagePoint } from "@app/utils/measurementTypes";
+import type { Measurement, PagePoint } from "@editor/utils/measurementTypes";
 
 export interface SnapGuide {
   from: PagePoint;

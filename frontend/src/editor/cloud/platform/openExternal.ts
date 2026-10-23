@@ -1,5 +1,5 @@
 /**
- * Open-external-URL seam (@app/platform/openExternal).
+ * Open-external-URL seam (@editor/platform/openExternal).
  *
  * The cloud/ layer is the SHARED hosted experience consumed by BOTH the saas
  * (web) and desktop (Tauri) leaves. Opening a URL in the user's real browser

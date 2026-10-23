@@ -1,9 +1,9 @@
 import { useCallback, useMemo } from "react";
 import { Alert, Group, Loader, Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import type { GetPdfInfoOperationHook } from "@app/hooks/tools/getPdfInfo/useGetPdfInfoOperation";
-import { downloadFile } from "@app/services/downloadService";
+import type { GetPdfInfoOperationHook } from "@editor/hooks/tools/getPdfInfo/useGetPdfInfoOperation";
+import { downloadFile } from "@editor/services/downloadService";
 
 interface GetPdfInfoResultsProps {
   operation: GetPdfInfoOperationHook;

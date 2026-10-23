@@ -8,12 +8,12 @@ import {
   closeDocAndFreeBuffer,
   getPdfiumModule,
   openRawDocumentForEditing,
-} from "@app/services/pdfiumService";
+} from "@editor/services/pdfiumService";
 import {
   EncryptedPdfError,
   drawMeasurementsIntoPdf,
-} from "@app/tools/measure/measurementDrawing";
-import type { Measurement } from "@app/utils/measurementTypes";
+} from "@editor/tools/measure/measurementDrawing";
+import type { Measurement } from "@editor/utils/measurementTypes";
 
 // FPDF_PAGEOBJ_* in fpdf_edit.h.
 const TEXT_OBJECT = 1;

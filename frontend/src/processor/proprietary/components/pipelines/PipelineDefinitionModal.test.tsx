@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render as baseRender, screen } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import { PipelineDefinitionModal } from "@portal/components/pipelines/PipelineDefinitionModal";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
+import { PipelineDefinitionModal } from "@processor/components/pipelines/PipelineDefinitionModal";
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: PortalTestProviders });

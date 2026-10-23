@@ -1,25 +1,25 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import FitText from "@app/components/shared/FitText";
-import { NumberInput } from "@app/ui/NumberInput";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { Select } from "@app/ui/Select";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import FitText from "@editor/components/shared/FitText";
+import { NumberInput } from "@editor/ui/NumberInput";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { Select } from "@editor/ui/Select";
 import {
   useMeasurements,
   type ScaleTarget,
-} from "@app/contexts/MeasurementContext";
-import type { MeasureScale } from "@app/utils/measurementTypes";
+} from "@editor/contexts/MeasurementContext";
+import type { MeasureScale } from "@editor/utils/measurementTypes";
 import {
   calculateScaleFactor,
   convertUnit,
   generateScaleLabel,
   getUnitOptions,
   parsePresetRatio,
-} from "@app/utils/measurementUtils";
-import styles from "@app/tools/measure/Measure.module.css";
+} from "@editor/utils/measurementUtils";
+import styles from "@editor/tools/measure/Measure.module.css";
 
 const PRESET_SCALES = [
   "1:1",

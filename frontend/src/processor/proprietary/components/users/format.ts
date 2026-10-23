@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
-import type { AvatarTone, ChipAccent } from "@app/ui";
-import type { Member, RoleId } from "@portal/api/users";
-import { ROLE_TONE } from "@portal/api/users";
+import type { AvatarTone, ChipAccent } from "@editor/ui";
+import type { Member, RoleId } from "@processor/api/users";
+import { ROLE_TONE } from "@processor/api/users";
 
 /** Vivid tones cycled per-person so a big roster reads as distinct people. */
 const AVATAR_TONES: AvatarTone[] = ["blue", "purple", "green", "amber", "red"];

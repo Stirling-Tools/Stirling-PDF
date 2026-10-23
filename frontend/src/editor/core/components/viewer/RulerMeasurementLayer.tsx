@@ -3,8 +3,8 @@ import React from "react";
 import type {
   MeasurementKind,
   MeasurementLabelVisibility,
-} from "@app/utils/measurementTypes";
-import { polygonCentroid } from "@app/utils/measurementUtils";
+} from "@editor/utils/measurementTypes";
+import { polygonCentroid } from "@editor/utils/measurementUtils";
 
 export interface RulerPoint {
   x: number;

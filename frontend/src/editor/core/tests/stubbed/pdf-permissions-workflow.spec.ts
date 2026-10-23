@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import path from "node:path";
 import fs from "node:fs";
 import { PDFDocument } from "@cantoo/pdf-lib";

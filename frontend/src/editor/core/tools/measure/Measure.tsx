@@ -4,30 +4,30 @@
  * measurement exactly, holds the drawing scale, and saves into the PDF.
  */
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { alert } from "@app/components/toast";
-import { useMeasurements } from "@app/contexts/MeasurementContext";
-import type { BaseToolProps } from "@app/types/tool";
-import type { MeasurementKind } from "@app/utils/measurementTypes";
-import { formatMeasurementValue } from "@app/utils/measurementUtils";
-import { MeasureScaleCard } from "@app/tools/measure/MeasureScaleCard";
-import { MeasureSettings } from "@app/tools/measure/MeasureSettings";
-import { MeasurementInspector } from "@app/tools/measure/MeasurementInspector";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { alert } from "@editor/components/toast";
+import { useMeasurements } from "@editor/contexts/MeasurementContext";
+import type { BaseToolProps } from "@editor/types/tool";
+import type { MeasurementKind } from "@editor/utils/measurementTypes";
+import { formatMeasurementValue } from "@editor/utils/measurementUtils";
+import { MeasureScaleCard } from "@editor/tools/measure/MeasureScaleCard";
+import { MeasureSettings } from "@editor/tools/measure/MeasureSettings";
+import { MeasurementInspector } from "@editor/tools/measure/MeasurementInspector";
 import {
   KIND_ICONS,
   MeasurementList,
   kindLabel,
   useMeasurementNames,
-} from "@app/tools/measure/MeasurementList";
-import { useSaveMeasurementsToPdf } from "@app/tools/measure/useSaveMeasurementsToPdf";
-import { EncryptedPdfError } from "@app/tools/measure/measurementDrawing";
-import { useViewerCurrentPageIndex } from "@app/tools/measure/useViewerCurrentPageIndex";
-import styles from "@app/tools/measure/Measure.module.css";
+} from "@editor/tools/measure/MeasurementList";
+import { useSaveMeasurementsToPdf } from "@editor/tools/measure/useSaveMeasurementsToPdf";
+import { EncryptedPdfError } from "@editor/tools/measure/measurementDrawing";
+import { useViewerCurrentPageIndex } from "@editor/tools/measure/useViewerCurrentPageIndex";
+import styles from "@editor/tools/measure/Measure.module.css";
 
 const KINDS: MeasurementKind[] = ["distance", "perimeter", "area"];
 

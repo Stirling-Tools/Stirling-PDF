@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { column, DataTable, type DataTableColumn } from "@app/ui/DataTable";
+import { column, DataTable, type DataTableColumn } from "@editor/ui/DataTable";
 import {
   DataTableFilterBar,
   useDataTableFilters,
-} from "@app/ui/DataTableFilterBar";
+} from "@editor/ui/DataTableFilterBar";
 
 interface Incident {
   id: string;

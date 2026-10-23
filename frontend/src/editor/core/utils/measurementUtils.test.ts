@@ -18,14 +18,14 @@ import {
   resolveScale,
   toViewPoint,
   type PageView,
-} from "@app/utils/measurementUtils";
-import { viewAngle } from "@app/utils/measurementDescription";
+} from "@editor/utils/measurementUtils";
+import { viewAngle } from "@editor/utils/measurementDescription";
 import type {
   FileMeasureScales,
   MeasureScale,
   PageMeasureScales,
   PagePoint,
-} from "@app/utils/measurementTypes";
+} from "@editor/utils/measurementTypes";
 
 const pt = (x: number, y: number, pageIndex = 0): PagePoint => ({
   pageIndex,

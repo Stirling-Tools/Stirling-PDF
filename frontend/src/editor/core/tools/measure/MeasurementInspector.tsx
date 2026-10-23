@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { Input } from "@app/ui/Input";
-import { Slider } from "@app/ui/Slider";
-import { useMeasurements } from "@app/contexts/MeasurementContext";
-import type { Measurement } from "@app/utils/measurementTypes";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { Input } from "@editor/ui/Input";
+import { Slider } from "@editor/ui/Slider";
+import { useMeasurements } from "@editor/contexts/MeasurementContext";
+import type { Measurement } from "@editor/utils/measurementTypes";
 import {
   MAX_STROKE_WIDTH,
   MIN_STROKE_WIDTH,
@@ -17,12 +17,12 @@ import {
   segmentLength,
   toViewPoint,
   unitsPerPoint,
-} from "@app/utils/measurementUtils";
-import { describeMeasurement } from "@app/utils/measurementDescription";
-import { ColorSwatches } from "@app/tools/measure/ColorSwatches";
-import { NumberField } from "@app/tools/measure/NumberField";
-import { KIND_ICONS } from "@app/tools/measure/MeasurementList";
-import styles from "@app/tools/measure/Measure.module.css";
+} from "@editor/utils/measurementUtils";
+import { describeMeasurement } from "@editor/utils/measurementDescription";
+import { ColorSwatches } from "@editor/tools/measure/ColorSwatches";
+import { NumberField } from "@editor/tools/measure/NumberField";
+import { KIND_ICONS } from "@editor/tools/measure/MeasurementList";
+import styles from "@editor/tools/measure/Measure.module.css";
 
 /**
  * Decimals shown in the fields. Fixed rather than the label precision

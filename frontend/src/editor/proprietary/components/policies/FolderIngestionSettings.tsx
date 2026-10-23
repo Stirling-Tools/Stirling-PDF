@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Button, FormField, Input } from "@app/ui";
-import apiClient from "@app/services/apiClient";
-import type { PolicySetupConfigProps } from "@app/components/policies/PolicySetupWizard";
+import { Button, FormField, Input } from "@editor/ui";
+import apiClient from "@editor/services/apiClient";
+import type { PolicySetupConfigProps } from "@editor/components/policies/PolicySetupWizard";
 import {
   PolicyIngestionConfig,
   type IngestionDestination,
-} from "@app/components/policies/PolicyIngestionConfig";
-import { ingestChunkingConfigured } from "@app/policies/ingestOperation";
-import { policyStepFromWire } from "@app/policies/operations";
+} from "@editor/components/policies/PolicyIngestionConfig";
+import { ingestChunkingConfigured } from "@editor/policies/ingestOperation";
+import { policyStepFromWire } from "@editor/policies/operations";
 
 /** Folder ingestion settings for surfaces without Processor connection management. */
 export function FolderIngestionSettings({

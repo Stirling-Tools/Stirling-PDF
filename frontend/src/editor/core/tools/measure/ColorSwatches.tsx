@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { MEASUREMENT_COLORS } from "@app/utils/measurementUtils";
-import styles from "@app/tools/measure/Measure.module.css";
+import { MEASUREMENT_COLORS } from "@editor/utils/measurementUtils";
+import styles from "@editor/tools/measure/Measure.module.css";
 
 interface ColorSwatchesProps {
   value: string;

@@ -20,33 +20,33 @@ import {
   Mock,
 } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useConvertOperation } from "@app/hooks/tools/convert/useConvertOperation";
+import { useConvertOperation } from "@editor/hooks/tools/convert/useConvertOperation";
 import {
   ConvertParameters,
   defaultParameters,
-} from "@app/hooks/tools/convert/useConvertParameters";
-import { useRemovePasswordOperation } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
-import { useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
-import { adjustContrastOperationConfig } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
-import { defaultParameters as contrastParameters } from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
+} from "@editor/hooks/tools/convert/useConvertParameters";
+import { useRemovePasswordOperation } from "@editor/hooks/tools/removePassword/useRemovePasswordOperation";
+import { useToolOperation } from "@editor/hooks/tools/shared/useToolOperation";
+import { adjustContrastOperationConfig } from "@editor/hooks/tools/adjustContrast/useAdjustContrastOperation";
+import { defaultParameters as contrastParameters } from "@editor/hooks/tools/adjustContrast/useAdjustContrastParameters";
 import {
   FileContextProvider,
   useFileActions,
   useFileState,
-} from "@app/contexts/FileContext";
-import { NavigationProvider } from "@app/contexts/NavigationContext";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
+} from "@editor/contexts/FileContext";
+import { NavigationProvider } from "@editor/contexts/NavigationContext";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
 import { I18nextProvider } from "react-i18next";
-import i18n from "@app/i18n/config";
-import { createTestStirlingFile } from "@app/tests/utils/testFileHelpers";
-import { expectConsole } from "@app/tests/failOnConsole";
-import { fileStorage } from "@app/services/fileStorage";
-import * as thumbnailUtils from "@app/utils/thumbnailUtils";
+import i18n from "@editor/i18n/config";
+import { createTestStirlingFile } from "@editor/tests/utils/testFileHelpers";
+import { expectConsole } from "@editor/tests/failOnConsole";
+import { fileStorage } from "@editor/services/fileStorage";
+import * as thumbnailUtils from "@editor/utils/thumbnailUtils";
 import {
   StirlingFile,
   createNewStirlingFileStub,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 import { MantineProvider } from "@mantine/core";
 
 // Mock our apiClient service
@@ -65,15 +65,17 @@ vi.mock("../../services/apiClient", () => ({
 }));
 
 // Import the mocked apiClient
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import {
   inspectLocalPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfAccessService";
-import { notifyToolCompleted } from "@app/services/toolUsageTracker";
+} from "@editor/services/pdfAccessService";
+import { notifyToolCompleted } from "@editor/services/toolUsageTracker";
 const mockedApiClient = vi.mocked(apiClient, { deep: true });
-vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/services/pdfAccessService")
+  >()),
   inspectLocalPdfAccess: vi.fn(),
 }));
 

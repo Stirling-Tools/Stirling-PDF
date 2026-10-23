@@ -4,8 +4,8 @@ import type {
   PipelineView,
   PipelinesOverviewResponse,
   Policy,
-} from "@portal/api/pipelines";
-import { getCataloguePolicies } from "@portal/mocks/handlers/policies";
+} from "@processor/api/pipelines";
+import { getCataloguePolicies } from "@processor/mocks/handlers/policies";
 
 /**
  * Stateful mock for the Pipelines surface so the portal works fully offline with

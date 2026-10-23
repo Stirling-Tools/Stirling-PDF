@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Collapsible } from "@app/ui/Collapsible";
-import { Select } from "@app/ui/Select";
-import { Slider } from "@app/ui/Slider";
-import { ToggleSwitch } from "@app/ui/ToggleSwitch";
-import { useMeasurements } from "@app/contexts/MeasurementContext";
+import { Collapsible } from "@editor/ui/Collapsible";
+import { Select } from "@editor/ui/Select";
+import { Slider } from "@editor/ui/Slider";
+import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
+import { useMeasurements } from "@editor/contexts/MeasurementContext";
 import type {
   MeasurementLabelVisibility,
   MeasurementPrecision,
-} from "@app/utils/measurementTypes";
+} from "@editor/utils/measurementTypes";
 import {
   MAX_STROKE_WIDTH,
   MIN_STROKE_WIDTH,
   getUnitOptions,
-} from "@app/utils/measurementUtils";
-import { ColorSwatches } from "@app/tools/measure/ColorSwatches";
-import styles from "@app/tools/measure/Measure.module.css";
+} from "@editor/utils/measurementUtils";
+import { ColorSwatches } from "@editor/tools/measure/ColorSwatches";
+import styles from "@editor/tools/measure/Measure.module.css";
 
 const PRECISION_OPTIONS = ["auto", "0", "1", "2", "3", "4"];
 

@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { qk } from "@app/portal/queries/keys";
+import { qk } from "@editor/portal/queries/keys";
 
 const fetchWallet = vi.fn();
-vi.mock("@portal/api/billing", () => ({
+vi.mock("@processor/api/billing", () => ({
   fetchWallet: () => fetchWallet(),
 }));
 
-// Resolves to the SaaS override (src/portal-saas/contexts) via the @portal cascade.
-import { usePlanTier } from "@portal/contexts/usePlanTier";
+// Resolves to the SaaS override (src/portal-saas/contexts) via the @processor cascade.
+import { usePlanTier } from "@processor/contexts/usePlanTier";
 
 function Probe() {
   return <span data-testid="tier">{usePlanTier()}</span>;

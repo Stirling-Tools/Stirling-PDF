@@ -4,7 +4,7 @@ import {
   isToolEndpoint,
   objectToFormData,
   type ToolApiParams,
-} from "@app/hooks/tools/shared/toolApiMapping";
+} from "@editor/hooks/tools/shared/toolApiMapping";
 
 describe("isToolEndpoint", () => {
   test("accepts a generated endpoint and rejects an unknown path", () => {

@@ -7,9 +7,9 @@ import {
   saveRawDocument,
   writeUtf16,
   type PageBox,
-} from "@app/services/pdfiumService";
-import type { Measurement, PagePoint } from "@app/utils/measurementTypes";
-import { polygonCentroid } from "@app/utils/measurementUtils";
+} from "@editor/services/pdfiumService";
+import type { Measurement, PagePoint } from "@editor/utils/measurementTypes";
+import { polygonCentroid } from "@editor/utils/measurementUtils";
 
 export interface MeasurementToSave {
   measurement: Measurement;

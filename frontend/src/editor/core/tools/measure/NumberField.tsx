@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { NumberInput } from "@app/ui/NumberInput";
-import styles from "@app/tools/measure/Measure.module.css";
+import { NumberInput } from "@editor/ui/NumberInput";
+import styles from "@editor/tools/measure/Measure.module.css";
 
 const TYPED_DECIMALS = 6;
 
