@@ -127,10 +127,13 @@ export async function applyStructureEdits(
   }
   if (failures.length > 0) throw new StructureEditError(failures);
 
+  // Before `bodies` is read: it may merge an inline tree into one of them.
+  const parentTreeObjects = parentTree.objects(bodies);
+  if (!parentTreeObjects) throw fail("the ParentTree cannot be rewritten");
   const out = appendRevision(pdf, [
     ...[...bodies].map(([num, body]) => ({ num, body: plainObject(body) })),
     ...streams,
-    ...parentTree.objects(),
+    ...parentTreeObjects,
   ]);
   if (!out)
     throw fail("the file's cross-reference structure cannot be extended");

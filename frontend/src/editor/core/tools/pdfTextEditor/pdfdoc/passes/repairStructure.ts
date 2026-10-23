@@ -82,7 +82,9 @@ export async function repairStructure(
     }
   }
 
-  objects.push(...parentTree.objects());
+  const parentTreeObjects = parentTree.objects(elementBodies);
+  if (!parentTreeObjects) return null;
+  objects.push(...parentTreeObjects);
   for (const [num, body] of elementBodies) {
     objects.push({ num, body: plainObject(body) });
   }

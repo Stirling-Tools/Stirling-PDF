@@ -369,6 +369,21 @@ describe("applyStructureEdits: marking decorative", () => {
       "its content is not all marked content on its pages",
     ]);
   });
+
+  test("drops a top-level figure when the ParentTree is held in the StructTreeRoot", async () => {
+    const bytes = buildClassicPdf(
+      withBodies({
+        7: "<< /Type /StructTreeRoot /K [9 0 R 11 0 R] /ParentTree << /Nums [0 [10 0 R 11 0 R] 1 [12 0 R]] >> /ParentTreeNextKey 2 >>",
+        9: "<< /Type /StructElem /S /Document /P 7 0 R /K [10 0 R 12 0 R] >>",
+        11: "<< /Type /StructElem /S /Figure /P 7 0 R /Pg 3 0 R /K 1 >>",
+      }),
+      1,
+    );
+    const out = await applyStructureEdits(bytes, [DECORATE_FIGURE]);
+    const root = await elementBody(out, 7);
+    expect(root).toContain("/K [9 0 R]");
+    expect(root).toContain("/Nums [0 [10 0 R null] 1 [12 0 R]]");
+  });
 });
 
 describe("applyStructureEdits: adding figures", () => {
@@ -433,6 +448,27 @@ describe("applyStructureEdits: adding figures", () => {
       [{ ...figure(0, null), pageIndex: 1 }],
     );
     expect(await documentKids(out)).toBe("10 0 R 11 0 R 12 0 R 13 0 R");
+  });
+
+  test("files a figure in a StructTreeRoot that also holds the ParentTree", async () => {
+    const out = await applyStructureEdits(
+      buildClassicPdf(
+        [
+          ...withBodies(
+            {
+              7: "<< /Type /StructTreeRoot /K [9 0 R 8 0 R] /ParentTree << /Nums [0 [10 0 R 11 0 R] 1 [null]] >> /ParentTreeNextKey 2 >>",
+            },
+            objects(),
+          ),
+          { num: 8, body: "<< /Type /StructElem /S /Sect /P 7 0 R >>" },
+        ],
+        1,
+      ),
+      [{ ...figure(0, null), pageIndex: 1 }],
+    );
+    const root = await elementBody(out, 7);
+    expect(root).toContain("/K [9 0 R 8 0 R 13 0 R]");
+    expect(root).toContain("/Nums [0 [10 0 R 11 0 R] 1 [13 0 R]]");
   });
 
   test("adds a figure beside one marked decorative in the same save", async () => {

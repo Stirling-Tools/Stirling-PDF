@@ -14,6 +14,7 @@ import {
 import {
   arrayItems,
   referencedObject,
+  setDictEntry,
   spliceValue,
   type NumberTreeEntry,
   type RawPdf,
@@ -204,8 +205,12 @@ export class ParentTreeWriter {
     return this.pages.get(pageNum)?.slots ?? null;
   }
 
-  /** The changed arrays, or the nodes that hold them directly. */
-  objects(): RevisionObject[] {
+  /**
+   * The changed arrays, or the nodes that hold them directly. A node another
+   * pass already rewrote in `bodies` is merged there instead, so the revision
+   * does not carry the object twice. Null when such a node cannot be merged.
+   */
+  objects(bodies: Map<number, string>): RevisionObject[] | null {
     const arrays = new Map<number, string>();
     const splices = new Map<number, { span: ValueSpan; text: string }[]>();
     for (const page of this.pages.values()) {
@@ -230,9 +235,32 @@ export class ParentTreeWriter {
       for (const s of node.sort((a, b) => b.span.start - a.span.start)) {
         body = spliceValue(body, s.span, s.text);
       }
-      out.push({ num, body: plainObject(body) });
+      const edited = bodies.get(num);
+      if (edited === undefined) {
+        out.push({ num, body: plainObject(body) });
+        continue;
+      }
+      const merged = this.mergeInlineTree(num, body, edited);
+      if (!merged) return null;
+      bodies.set(num, merged);
     }
     return out;
+  }
+
+  /**
+   * `edited` with the /ParentTree of `spliced`. Spans index the original body,
+   * so they are applied there and the whole tree carried across. Only the
+   * StructTreeRoot can be both an element's parent and an inline tree's node:
+   * an indirect node is never an element.
+   */
+  private mergeInlineTree(
+    num: number,
+    spliced: string,
+    edited: string,
+  ): string | null {
+    if (num !== this.treeRoot) return null;
+    const tree = this.pdf.valueSpan(spliced, "ParentTree");
+    return tree ? setDictEntry(edited, "ParentTree", tree.text) : null;
   }
 
   private readPage(pageNum: number): PageSlots | null {
