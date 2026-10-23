@@ -278,15 +278,17 @@ function compressStaticCopyPlugin(): PluginOption {
       // The TTFs are only ever requested through the backend, which serves the
       // .br/.gz siblings and falls back to its own classpath copy of the raw
       // file. Shipping the raw set in dist would duplicate ~100 MB for nothing.
-      // NotoSans-Regular.ttf stays: the text editor's Unicode fallback fetches
-      // it directly, and static hosts have no classpath to fall back to.
+      // Kept: NotoSans-Regular.ttf, which the text editor's Unicode fallback
+      // fetches directly, and the viewer's Latin fallback faces
+      // (services/pdfiumFontFallback.ts). Static hosts have no classpath to
+      // fall back to.
+      const keptFonts =
+        /^(NotoSans-Regular|Liberation(Sans|Serif|Mono)-(Regular|Bold|Italic|BoldItalic)|DejaVuSans(-Bold|-Oblique|-BoldOblique)?)\.ttf$/;
       const fontsDir = path.join(distDir, "fonts");
       const fontEntries = await fs.readdir(fontsDir).catch(() => []);
       await Promise.all(
         fontEntries
-          .filter(
-            (name) => name.endsWith(".ttf") && name !== "NotoSans-Regular.ttf",
-          )
+          .filter((name) => name.endsWith(".ttf") && !keptFonts.test(name))
           .map((name) => fs.rm(path.join(fontsDir, name), { force: true })),
       );
     },
