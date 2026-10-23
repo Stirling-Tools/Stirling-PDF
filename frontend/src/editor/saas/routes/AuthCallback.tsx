@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { resolveLandingPath } from "@app/utils/loginLanding";
-import { supabase } from "@app/auth/supabase";
-import { Button } from "@app/ui/Button";
-import { withBasePath } from "@app/constants/app";
-import { readPendingConnect } from "@app/routes/pendingConnect";
-import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
-import { takePendingDestination } from "@app/services/pendingDestination";
-import { AuthShell } from "@app/auth/ui/AuthShell";
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import { Spinner } from "@app/ui/Spinner";
-import "@app/auth/ui/auth.css";
-import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import { resolveLandingPath } from "@editor/utils/loginLanding";
+import { supabase } from "@editor/auth/supabase";
+import { Button } from "@editor/ui/Button";
+import { withBasePath } from "@editor/constants/app";
+import { readPendingConnect } from "@editor/routes/pendingConnect";
+import { isSafePostLoginRedirect } from "@editor/services/postLoginRedirect";
+import { takePendingDestination } from "@editor/services/pendingDestination";
+import { AuthShell } from "@editor/auth/ui/AuthShell";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import { Spinner } from "@editor/ui/Spinner";
+import "@editor/auth/ui/auth.css";
+import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 interface CallbackState {
   status: "processing" | "success" | "error";

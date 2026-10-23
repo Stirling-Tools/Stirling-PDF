@@ -1,4 +1,4 @@
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 export interface AiEngineState {
   enabled: boolean;

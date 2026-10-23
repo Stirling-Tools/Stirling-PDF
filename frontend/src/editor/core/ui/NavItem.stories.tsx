@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { NavItem } from "@app/ui/NavItem";
-import { SectionDivider } from "@app/ui/SectionDivider";
+import { NavItem } from "@editor/ui/NavItem";
+import { SectionDivider } from "@editor/ui/SectionDivider";
 
 function Dot({ color = "var(--c-primary)" }: { color?: string }) {
   return (

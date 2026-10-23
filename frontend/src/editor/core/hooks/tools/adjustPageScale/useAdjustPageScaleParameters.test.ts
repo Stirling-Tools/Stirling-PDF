@@ -5,7 +5,7 @@ import {
   defaultParameters,
   PageSize,
   AdjustPageScaleParametersHook,
-} from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+} from "@editor/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 
 describe("useAdjustPageScaleParameters", () => {
   test("should initialize with default parameters", () => {

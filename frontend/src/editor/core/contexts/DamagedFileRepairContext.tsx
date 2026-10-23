@@ -9,12 +9,12 @@ import {
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { useRepairOperation } from "@app/hooks/tools/repair/useRepairOperation";
-import { defaultParameters } from "@app/hooks/tools/repair/useRepairParameters";
-import { useFileSelectors } from "@app/contexts/file/fileHooks";
-import { useToolWorkflowData } from "@app/contexts/ToolWorkflowContext";
-import { alert } from "@app/components/toast";
-import type { FileId } from "@app/types/file";
+import { useRepairOperation } from "@editor/hooks/tools/repair/useRepairOperation";
+import { defaultParameters } from "@editor/hooks/tools/repair/useRepairParameters";
+import { useFileSelectors } from "@editor/contexts/file/fileHooks";
+import { useToolWorkflowData } from "@editor/contexts/ToolWorkflowContext";
+import { alert } from "@editor/components/toast";
+import type { FileId } from "@editor/types/file";
 
 export interface DamagedFileRepair {
   /** Repairs the file in place: the output replaces it as a new version. */

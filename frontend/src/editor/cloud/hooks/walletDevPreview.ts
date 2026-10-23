@@ -1,5 +1,5 @@
 /**
- * Wallet dev-preview seam (@app/hooks/walletDevPreview).
+ * Wallet dev-preview seam (@editor/hooks/walletDevPreview).
  *
  * The cloud/ layer is the SHARED hosted experience consumed by BOTH the saas
  * (web) and desktop (Tauri) leaves, so it must stay platform-portable: it can't
@@ -17,7 +17,7 @@
  * default. Returning {@code null} from {@link getWalletDevPreview} is the
  * canonical "no dev preview active" signal.
  */
-import type { Wallet, WalletRole } from "@app/hooks/useWallet";
+import type { Wallet, WalletRole } from "@editor/hooks/useWallet";
 
 /**
  * The dev-preview side-channel {@link useWallet} consumes when rendered outside

@@ -1,4 +1,4 @@
-import { NavKey } from "@app/components/shared/config/types";
+import { NavKey } from "@editor/components/shared/config/types";
 
 /**
  * A single, searchable setting *row* on the settings page.

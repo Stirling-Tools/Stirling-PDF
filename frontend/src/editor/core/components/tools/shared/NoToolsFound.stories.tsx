@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
+import NoToolsFound from "@editor/components/tools/shared/NoToolsFound";
 
 const meta = {
   title: "Tools/Shared/NoToolsFound",

@@ -3,7 +3,7 @@ import { Blob as NodeBlob } from "node:buffer";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { readFieldBundle } from "@app/tools/formFill/fieldBundle";
+import { readFieldBundle } from "@editor/tools/formFill/fieldBundle";
 
 /**
  * Reads archives produced by the real backend (see FormFieldBundleTest), not by a JS lookalike.

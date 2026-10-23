@@ -1,8 +1,8 @@
-import { locateTable } from "@app/tools/pdfTextEditor/util/locateTable";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { emitStyledCellText } from "@app/tools/pdfTextEditor/commands/tableHelpers";
+import { locateTable } from "@editor/tools/pdfTextEditor/util/locateTable";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { emitStyledCellText } from "@editor/tools/pdfTextEditor/commands/tableHelpers";
 
 // Puts the first text into a previously-empty table cell: inserts a text run at
 // the cell's anchor and links it to the cell. Subsequent edits of that cell go

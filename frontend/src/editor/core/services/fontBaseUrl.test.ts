@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getApiBaseUrl } from "@app/services/apiClientConfig";
-import { getFontBaseUrl } from "@app/services/fontBaseUrl";
-import { BASE_PATH } from "@app/constants/app";
+import { getApiBaseUrl } from "@editor/services/apiClientConfig";
+import { getFontBaseUrl } from "@editor/services/fontBaseUrl";
+import { BASE_PATH } from "@editor/constants/app";
 
-vi.mock("@app/services/apiClientConfig", () => ({
+vi.mock("@editor/services/apiClientConfig", () => ({
   getApiBaseUrl: vi.fn(() => "/"),
 }));
 

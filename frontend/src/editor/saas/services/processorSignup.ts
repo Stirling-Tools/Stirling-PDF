@@ -1,4 +1,4 @@
-import type { PaygSignupRequiredDetail } from "@app/services/paygErrorInterceptor";
+import type { PaygSignupRequiredDetail } from "@editor/services/paygErrorInterceptor";
 
 /** Opens the shared Processor signup prompt while preserving the current editor session. */
 export function requestProcessorSignup(): void {

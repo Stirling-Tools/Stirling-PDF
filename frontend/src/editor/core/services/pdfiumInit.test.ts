@@ -11,7 +11,7 @@ const init = vi.hoisted(() => vi.fn());
 vi.mock("@embedpdf/pdfium", () => ({ init }));
 
 const wasmModule = vi.hoisted<WebAssembly.Module>(() => ({}));
-vi.mock("@app/services/wasmPrecompiler", () => ({
+vi.mock("@editor/services/wasmPrecompiler", () => ({
   pdfiumWasmModulePromise: Promise.resolve(wasmModule),
   startEagerWasmCompilation: () => {},
   pdfiumWasmUrl: "http://localhost/pdfium.wasm",
@@ -28,7 +28,7 @@ function emscriptenInit(
 
 async function loadService() {
   vi.resetModules();
-  return await import("@app/services/pdfiumService");
+  return await import("@editor/services/pdfiumService");
 }
 
 describe("pdfium bootstrap", () => {

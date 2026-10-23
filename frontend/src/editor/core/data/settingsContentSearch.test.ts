@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
-import { flattenTranslationStrings } from "@app/data/settingsContentSearch";
+import { flattenTranslationStrings } from "@editor/data/settingsContentSearch";
 
 describe("flattenTranslationStrings", () => {
   test("keeps plain strings and walks nested subtrees", () => {

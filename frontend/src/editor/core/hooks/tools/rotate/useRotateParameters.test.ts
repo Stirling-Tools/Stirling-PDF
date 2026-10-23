@@ -4,7 +4,7 @@ import {
   useRotateParameters,
   defaultParameters,
   normalizeAngle,
-} from "@app/hooks/tools/rotate/useRotateParameters";
+} from "@editor/hooks/tools/rotate/useRotateParameters";
 
 describe("useRotateParameters", () => {
   test("should initialize with default parameters", () => {

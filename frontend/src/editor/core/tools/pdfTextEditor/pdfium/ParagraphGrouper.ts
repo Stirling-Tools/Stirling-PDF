@@ -1,8 +1,8 @@
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type {
   ParagraphLineSlot,
   TextRun,
-} from "@app/tools/pdfTextEditor/model/TextRun";
+} from "@editor/tools/pdfTextEditor/model/TextRun";
 
 /** Cluster consecutive `LineGroup` representatives into "paragraphs". */
 const MIN_LINE_FACTOR = 0.6;

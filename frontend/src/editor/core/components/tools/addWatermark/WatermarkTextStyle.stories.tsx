@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import WatermarkTextStyle from "@app/components/tools/addWatermark/WatermarkTextStyle";
+import WatermarkTextStyle from "@editor/components/tools/addWatermark/WatermarkTextStyle";
 import {
   AddWatermarkParameters,
   defaultParameters,
-} from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+} from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 const meta: Meta<typeof WatermarkTextStyle> = {
   title: "AddWatermark/WatermarkTextStyle",

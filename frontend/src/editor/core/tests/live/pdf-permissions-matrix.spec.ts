@@ -1,7 +1,10 @@
-import { inspectPdfProtection as inspect } from "@app/tests/helpers/pdf-protection";
-import { test, expect } from "@app/tests/helpers/test-base";
-import { liveApiHeaders, loadLiveAppConfig } from "@app/tests/helpers/live-api";
-import { skipOnboarding } from "@app/tests/helpers/login";
+import { inspectPdfProtection as inspect } from "@editor/tests/helpers/pdf-protection";
+import { test, expect } from "@editor/tests/helpers/test-base";
+import {
+  liveApiHeaders,
+  loadLiveAppConfig,
+} from "@editor/tests/helpers/live-api";
+import { skipOnboarding } from "@editor/tests/helpers/login";
 import type { BrowserContext, Page } from "@playwright/test";
 import { PdfPermissionFlag } from "@embedpdf/models";
 import path from "node:path";

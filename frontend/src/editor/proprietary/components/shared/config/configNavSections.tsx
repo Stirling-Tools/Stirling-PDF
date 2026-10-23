@@ -5,43 +5,44 @@ import {
   useConfigNavSections as useCoreConfigNavSections,
   extendPreferences,
   ConfigNavSection,
-} from "@core/components/shared/config/configNavSections";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+} from "@editor-core/components/shared/config/configNavSections";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
 
 // Lazy, and rendered inside one Suspense below: these five pages are the bulk of
 // the settings tree, and pulling them all eagerly starved the i18n fetch on a
 // cold load, which left the whole page suspended.
 const AdminSystemSection = lazy(
   () =>
-    import("@app/components/shared/config/configSections/server/AdminSystemSection"),
+    import("@editor/components/shared/config/configSections/server/AdminSystemSection"),
 );
 const AdminSecurityPage = lazy(
   () =>
-    import("@app/components/shared/config/configSections/security/AdminSecurityPage"),
+    import("@editor/components/shared/config/configSections/security/AdminSecurityPage"),
 );
 const AdminAdvancedPage = lazy(
   () =>
-    import("@app/components/shared/config/configSections/advanced/AdminAdvancedPage"),
+    import("@editor/components/shared/config/configSections/advanced/AdminAdvancedPage"),
 );
 const AdminDatabasePage = lazy(
   () =>
-    import("@app/components/shared/config/configSections/advanced/AdminDatabasePage"),
+    import("@editor/components/shared/config/configSections/advanced/AdminDatabasePage"),
 );
 const AdminIntegrationsPage = lazy(
   () =>
-    import("@app/components/shared/config/configSections/security/AdminIntegrationsPage"),
+    import("@editor/components/shared/config/configSections/security/AdminIntegrationsPage"),
 );
 const AdminLegalPrivacyPage = lazy(
   () =>
-    import("@app/components/shared/config/configSections/security/AdminLegalPrivacyPage"),
+    import("@editor/components/shared/config/configSections/security/AdminLegalPrivacyPage"),
 );
 const AdminAiSection = lazy(
-  () => import("@app/components/shared/config/configSections/AdminAiSection"),
+  () =>
+    import("@editor/components/shared/config/configSections/AdminAiSection"),
 );
-import AccountCards from "@core/components/shared/config/configSections/preferences/AccountCards";
-import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
-import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
-import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
+import AccountCards from "@editor-core/components/shared/config/configSections/preferences/AccountCards";
+import AdminAuditSection from "@editor/components/shared/config/configSections/AdminAuditSection";
+import AdminUsageSection from "@editor/components/shared/config/configSections/AdminUsageSection";
+import ApiKeys from "@editor/components/shared/config/configSections/ApiKeys";
 
 /**
  * Self-hosted settings, grouped by who reaches for them and what they do there:
@@ -256,4 +257,4 @@ export type {
   ConfigNavSection,
   ConfigNavItem,
   ConfigColors,
-} from "@core/components/shared/config/configNavSections";
+} from "@editor-core/components/shared/config/configNavSections";

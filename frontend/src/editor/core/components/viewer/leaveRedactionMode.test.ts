@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { leaveRedactionMode } from "@app/components/viewer/leaveRedactionMode";
+import { leaveRedactionMode } from "@editor/components/viewer/leaveRedactionMode";
 
 describe("leaveRedactionMode", () => {
   it("ends redaction when redaction owns the interaction mode", () => {

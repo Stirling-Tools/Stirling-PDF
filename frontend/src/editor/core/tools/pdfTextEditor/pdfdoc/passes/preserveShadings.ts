@@ -22,19 +22,19 @@ import {
   deflate,
   fromLatin1,
   toLatin1,
-} from "@app/tools/pdfTextEditor/pdfdoc/bytes";
+} from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
 import {
   PATH_PAINTING,
   parseOps,
   TEXT_SHOWING,
-} from "@app/tools/pdfTextEditor/pdfdoc/contentOps";
-import { RawPdf, spliceValue } from "@app/tools/pdfTextEditor/pdfdoc/raw";
+} from "@editor/tools/pdfTextEditor/pdfdoc/contentOps";
+import { RawPdf, spliceValue } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   appendRevision,
   plainObject,
   streamObject,
   type RevisionObject,
-} from "@app/tools/pdfTextEditor/pdfdoc/revision";
+} from "@editor/tools/pdfTextEditor/pdfdoc/revision";
 
 const MARKED_CONTENT = new Set(["BDC", "BMC", "EMC", "MP", "DP"]);
 

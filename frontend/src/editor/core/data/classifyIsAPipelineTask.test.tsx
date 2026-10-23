@@ -9,11 +9,11 @@
  */
 import { describe, expect, test, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
-import { getExecutableTools } from "@app/hooks/tools/shared/toolAutomation";
-import { isToolEndpoint } from "@app/hooks/tools/shared/toolApiMapping";
-import { TOOL_IO } from "@app/types/toolIO";
-import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
+import { useTranslatedToolCatalog } from "@editor/data/useTranslatedToolRegistry";
+import { getExecutableTools } from "@editor/hooks/tools/shared/toolAutomation";
+import { isToolEndpoint } from "@editor/hooks/tools/shared/toolApiMapping";
+import { TOOL_IO } from "@editor/types/toolIO";
+import { filterToolRegistryByQuery } from "@editor/utils/toolSearch";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

@@ -1,36 +1,36 @@
 import { useCallback, useEffect, useMemo } from "react";
-import { TierBadge } from "@app/components/shared/config/TierBadge";
+import { TierBadge } from "@editor/components/shared/config/TierBadge";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { SettingsCard } from "@app/components/shared/config/SettingsCard";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
+import { SettingsCard } from "@editor/components/shared/config/SettingsCard";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
 import { Stack, Loader } from "@mantine/core";
-import { alert } from "@app/components/toast";
-import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
-import { useRestartServer } from "@app/components/shared/config/useRestartServer";
-import { useAdminSettings } from "@app/hooks/useAdminSettings";
-import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
-import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import { alert } from "@editor/components/toast";
+import RestartConfirmationModal from "@editor/components/shared/config/RestartConfirmationModal";
+import { useRestartServer } from "@editor/components/shared/config/useRestartServer";
+import { useAdminSettings } from "@editor/hooks/useAdminSettings";
+import { useSettingsDirty } from "@editor/hooks/useSettingsDirty";
+import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 import type {
   ConnectionsSettingsData,
   SecuritySettingsData,
-} from "@app/components/shared/config/configSections/security/securitySettingsTypes";
+} from "@editor/components/shared/config/configSections/security/securitySettingsTypes";
 import {
   fetchConnectionsSettings,
   fetchSecuritySettings,
   saveConnectionsSettings,
   saveSecuritySettings,
-} from "@app/components/shared/config/configSections/security/securitySettingsTransformers";
-import { useConnectionProviders } from "@app/components/shared/config/configSections/security/connectionProviders";
-import { AuthenticationCard } from "@app/components/shared/config/configSections/security/AuthenticationCard";
-import { SessionsJwtCard } from "@app/components/shared/config/configSections/security/SessionsJwtCard";
-import { LinkedServicesCard } from "@app/components/shared/config/configSections/security/LinkedServicesCard";
-import { UnlinkedServicesCard } from "@app/components/shared/config/configSections/security/UnlinkedServicesCard";
-import { SsoAutoLoginCard } from "@app/components/shared/config/configSections/security/SsoAutoLoginCard";
-import { HtmlUrlSecurityCard } from "@app/components/shared/config/configSections/security/HtmlUrlSecurityCard";
-import { AuditLoggingCard } from "@app/components/shared/config/configSections/security/AuditLoggingCard";
-import "@app/components/shared/config/configSections/security/AdminSecurityPage.css";
+} from "@editor/components/shared/config/configSections/security/securitySettingsTransformers";
+import { useConnectionProviders } from "@editor/components/shared/config/configSections/security/connectionProviders";
+import { AuthenticationCard } from "@editor/components/shared/config/configSections/security/AuthenticationCard";
+import { SessionsJwtCard } from "@editor/components/shared/config/configSections/security/SessionsJwtCard";
+import { LinkedServicesCard } from "@editor/components/shared/config/configSections/security/LinkedServicesCard";
+import { UnlinkedServicesCard } from "@editor/components/shared/config/configSections/security/UnlinkedServicesCard";
+import { SsoAutoLoginCard } from "@editor/components/shared/config/configSections/security/SsoAutoLoginCard";
+import { HtmlUrlSecurityCard } from "@editor/components/shared/config/configSections/security/HtmlUrlSecurityCard";
+import { AuditLoggingCard } from "@editor/components/shared/config/configSections/security/AuditLoggingCard";
+import "@editor/components/shared/config/configSections/security/AdminSecurityPage.css";
 
 /**
  * Sign-in and security, previously four nav rows. Unlike the AI fold these are

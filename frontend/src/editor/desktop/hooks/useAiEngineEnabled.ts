@@ -1,7 +1,7 @@
-import { useSaasAppConfig } from "@app/hooks/useSaasAppConfig";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
-import { useSaaSMode } from "@app/hooks/useSaaSMode";
+import { useSaasAppConfig } from "@editor/hooks/useSaasAppConfig";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
+import { useSaaSMode } from "@editor/hooks/useSaaSMode";
 
 /** AI availability comes from the connected server's configuration. */
 export function useAiEngineEnabled(): boolean {

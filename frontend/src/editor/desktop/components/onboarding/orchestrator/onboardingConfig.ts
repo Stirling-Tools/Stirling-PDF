@@ -13,7 +13,7 @@ export {
   ONBOARDING_STEPS,
   getStepById,
   getStepIndex,
-} from "@core/components/onboarding/orchestrator/onboardingConfig";
+} from "@editor-core/components/onboarding/orchestrator/onboardingConfig";
 
 export type {
   OnboardingStepId,
@@ -21,11 +21,11 @@ export type {
   OnboardingStep,
   OnboardingRuntimeState,
   OnboardingConditionContext,
-} from "@core/components/onboarding/orchestrator/onboardingConfig";
+} from "@editor-core/components/onboarding/orchestrator/onboardingConfig";
 
 // Import and override the default runtime state
-import { DEFAULT_RUNTIME_STATE as CORE_DEFAULT_RUNTIME_STATE } from "@core/components/onboarding/orchestrator/onboardingConfig";
-import type { OnboardingRuntimeState } from "@core/components/onboarding/orchestrator/onboardingConfig";
+import { DEFAULT_RUNTIME_STATE as CORE_DEFAULT_RUNTIME_STATE } from "@editor-core/components/onboarding/orchestrator/onboardingConfig";
+import type { OnboardingRuntimeState } from "@editor-core/components/onboarding/orchestrator/onboardingConfig";
 
 /**
  * Desktop default runtime state

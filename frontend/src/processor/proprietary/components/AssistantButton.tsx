@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { useUI } from "@portal/contexts/UIContext";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
-import "@portal/components/AssistantButton.css";
+import { useUI } from "@processor/contexts/UIContext";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import "@processor/components/AssistantButton.css";
 
 export function AssistantButton() {
   const { assistantOpen, toggleAssistant } = useUI();

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ProviderCard from "@app/components/shared/config/configSections/ProviderCard";
-import type { Provider } from "@app/components/shared/config/configSections/providerDefinitions";
+import ProviderCard from "@editor/components/shared/config/configSections/ProviderCard";
+import type { Provider } from "@editor/components/shared/config/configSections/providerDefinitions";
 
 const mockProvider: Provider = {
   id: "google",

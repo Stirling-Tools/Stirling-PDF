@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-import { StirlingFileStub } from "@app/types/fileContext";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
-import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
-import { getPdfAccess } from "@app/services/pdfAccessService";
-import { useFileManagement, useFileSelectors } from "@app/contexts/FileContext";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { useIndexedDB } from "@editor/contexts/IndexedDBContext";
+import { generateThumbnailForFile } from "@editor/utils/thumbnailUtils";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import {
+  useFileManagement,
+  useFileSelectors,
+} from "@editor/contexts/FileContext";
 
 /**
  * Hook for IndexedDB-aware thumbnail loading

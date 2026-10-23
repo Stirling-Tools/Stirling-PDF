@@ -12,7 +12,7 @@ import type { TFunction } from "i18next";
 import {
   AutoRotateReport as ReportData,
   AutoRotatePageResult,
-} from "@app/hooks/tools/autoRotate/useAutoRotateOperation";
+} from "@editor/hooks/tools/autoRotate/useAutoRotateOperation";
 
 interface AutoRotateReportProps {
   reports: { fileName: string; report: ReportData }[];

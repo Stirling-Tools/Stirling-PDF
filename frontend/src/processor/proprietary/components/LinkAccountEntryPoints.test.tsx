@@ -1,14 +1,14 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { LinkProvider } from "@app/portal/contexts/LinkContext";
-import { UIProvider, useUI } from "@app/portal/contexts/UIContext";
-import { LinkAccountFooterItem } from "@app/portal/components/LinkAccountFooterItem";
+import { LinkProvider } from "@editor/portal/contexts/LinkContext";
+import { UIProvider, useUI } from "@editor/portal/contexts/UIContext";
+import { LinkAccountFooterItem } from "@editor/portal/components/LinkAccountFooterItem";
 const flags = vi.hoisted(() => ({ isAdmin: true, orgOwner: true }));
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   useAuth: () => ({ ...flags, user: { orgOwner: flags.orgOwner } }),
 }));
-vi.mock("@app/portal/hooks/useConnectGate", () => ({
+vi.mock("@editor/portal/hooks/useConnectGate", () => ({
   useConnectGate: () => ({ gated: true, loading: false, connect: vi.fn() }),
 }));
 vi.mock("react-i18next", () => ({

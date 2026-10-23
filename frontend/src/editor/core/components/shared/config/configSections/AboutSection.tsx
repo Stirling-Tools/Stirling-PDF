@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { SettingsCard } from "@app/components/shared/config/SettingsCard";
-import HelpSection from "@app/components/shared/config/configSections/HelpSection";
-import LegalSection from "@app/components/shared/config/configSections/LegalSection";
+import { SettingsCard } from "@editor/components/shared/config/SettingsCard";
+import HelpSection from "@editor/components/shared/config/configSections/HelpSection";
+import LegalSection from "@editor/components/shared/config/configSections/LegalSection";
 import {
   BackendThirdPartyLicensesSection,
   FrontendThirdPartyLicensesSection,
-} from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
-import "@app/components/shared/config/configSections/AboutSection.css";
+} from "@editor/components/shared/config/configSections/ThirdPartyLicensesSection";
+import "@editor/components/shared/config/configSections/AboutSection.css";
 
 export interface AboutSectionProps {
   isAdmin: boolean;
