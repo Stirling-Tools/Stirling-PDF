@@ -10,13 +10,15 @@ const api = vi.hoisted(() => ({
   listPolicies: vi.fn(),
   userId: null as string | null,
 }));
-vi.mock("@app/services/policyApi", () => ({ listPolicies: api.listPolicies }));
+vi.mock("@editor/services/policyApi", () => ({
+  listPolicies: api.listPolicies,
+}));
 // Defaults to signed out, which is what the context default gives the tests below anyway.
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ user: api.userId ? { id: api.userId } : null }),
 }));
 
-import { usePolicies } from "@app/hooks/usePolicies";
+import { usePolicies } from "@editor/hooks/usePolicies";
 
 describe("usePolicies", () => {
   beforeEach(() => {

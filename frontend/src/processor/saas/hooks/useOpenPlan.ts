@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useUI } from "@portal/contexts/UIContext";
+import { useUI } from "@processor/contexts/UIContext";
 
 /**
  * SaaS processor: the settings page it hosts carries the same Plan section the

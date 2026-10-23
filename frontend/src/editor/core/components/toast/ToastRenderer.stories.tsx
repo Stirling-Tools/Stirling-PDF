@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ToastRenderer from "@app/components/toast/ToastRenderer";
-import { ToastProvider, useToast } from "@app/components/toast/ToastContext";
-import type { ToastOptions } from "@app/components/toast/types";
+import ToastRenderer from "@editor/components/toast/ToastRenderer";
+import { ToastProvider, useToast } from "@editor/components/toast/ToastContext";
+import type { ToastOptions } from "@editor/components/toast/types";
 
 // ToastRenderer takes no props — it renders whatever is in ToastContext. The
 // only way to exercise it is to seed toasts through the same provider/show()

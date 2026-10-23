@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import MergeSettings from "@app/components/tools/merge/MergeSettings";
-import MergeFileSorter from "@app/components/tools/merge/MergeFileSorter";
-import { useMergeParameters } from "@app/hooks/tools/merge/useMergeParameters";
-import { useMergeOperation } from "@app/hooks/tools/merge/useMergeOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useMergeTips } from "@app/components/tooltips/useMergeTips";
-import { useFileManagement, useAllFiles } from "@app/contexts/FileContext";
+import { Button } from "@editor/ui/Button";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import MergeSettings from "@editor/components/tools/merge/MergeSettings";
+import MergeFileSorter from "@editor/components/tools/merge/MergeFileSorter";
+import { useMergeParameters } from "@editor/hooks/tools/merge/useMergeParameters";
+import { useMergeOperation } from "@editor/hooks/tools/merge/useMergeOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useMergeTips } from "@editor/components/tooltips/useMergeTips";
+import { useFileManagement, useAllFiles } from "@editor/contexts/FileContext";
 import {
   useNavigationState,
   useNavigationActions,
-} from "@app/contexts/NavigationContext";
+} from "@editor/contexts/NavigationContext";
 
 const Merge = (props: BaseToolProps) => {
   const { t } = useTranslation();

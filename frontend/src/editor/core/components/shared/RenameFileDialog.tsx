@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Group, Modal, Stack, TextInput } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
-import { ILLEGAL_FILE_NAME_CHARS, splitFileName } from "@app/utils/fileUtils";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import {
+  ILLEGAL_FILE_NAME_CHARS,
+  splitFileName,
+} from "@editor/utils/fileUtils";
 
 interface RenameFileDialogProps {
   opened: boolean;

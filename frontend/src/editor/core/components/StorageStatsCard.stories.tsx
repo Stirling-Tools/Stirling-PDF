@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import StorageStatsCard from "@app/components/StorageStatsCard";
-import { StorageStats } from "@app/services/fileStorage";
+import StorageStatsCard from "@editor/components/StorageStatsCard";
+import { StorageStats } from "@editor/services/fileStorage";
 
 const storageStats: StorageStats = {
   used: 128 * 1024 * 1024,

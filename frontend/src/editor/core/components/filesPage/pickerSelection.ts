@@ -1,5 +1,5 @@
-import type { DiskFileEntry } from "@app/services/localFolderContents";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import type { DiskFileEntry } from "@editor/services/localFolderContents";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 export type PickerItem =
   | { kind: "stored"; stub: StirlingFileStub }

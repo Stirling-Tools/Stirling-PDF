@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import StampPreview from "@app/components/tools/addStamp/StampPreview";
-import { defaultParameters } from "@app/components/tools/addStamp/useAddStampParameters";
+import StampPreview from "@editor/components/tools/addStamp/StampPreview";
+import { defaultParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
 
 const meta = {
   title: "Tools/AddStamp/StampPreview",

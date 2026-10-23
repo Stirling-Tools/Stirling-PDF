@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@editor/tests/helpers/test-base";
+import { loginAndSetup } from "@editor/tests/helpers/login";
 
 /**
  * Automate is the "super tool" that lets a user chain multiple tools

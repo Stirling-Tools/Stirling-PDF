@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import licenseService from "@app/services/licenseService";
-import { useLicense } from "@app/contexts/LicenseContext";
-import { isSupabaseConfigured, supabase } from "@app/services/supabaseClient";
-import { alert } from "@app/components/toast";
+import licenseService from "@editor/services/licenseService";
+import { useLicense } from "@editor/contexts/LicenseContext";
+import {
+  isSupabaseConfigured,
+  supabase,
+} from "@editor/services/supabaseClient";
+import { alert } from "@editor/components/toast";
 
 interface ManageBillingButtonProps {
   returnUrl?: string;

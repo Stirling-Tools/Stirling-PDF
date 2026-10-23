@@ -1,1 +1,1 @@
-export { useDocumentReady } from "@app/components/viewer/useActiveDocumentId";
+export { useDocumentReady } from "@editor/components/viewer/useActiveDocumentId";

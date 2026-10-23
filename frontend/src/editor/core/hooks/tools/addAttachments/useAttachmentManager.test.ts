@@ -1,6 +1,6 @@
 import { describe, expect, test, vi, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useAttachmentManager } from "@app/hooks/tools/addAttachments/useAttachmentManager";
+import { useAttachmentManager } from "@editor/hooks/tools/addAttachments/useAttachmentManager";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -9,7 +9,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 const listAttachments = vi.fn();
-vi.mock("@app/services/attachmentService", () => ({
+vi.mock("@editor/services/attachmentService", () => ({
   listAttachments: (...args: unknown[]) => listAttachments(...args),
   applyBatchAttachmentOps: vi.fn(),
   extractAttachments: vi.fn(),
@@ -19,7 +19,7 @@ vi.mock("@app/services/attachmentService", () => ({
   ),
 }));
 
-vi.mock("@app/services/exportWithPolicy", () => ({
+vi.mock("@editor/services/exportWithPolicy", () => ({
   downloadFileWithPolicy: vi.fn(),
 }));
 

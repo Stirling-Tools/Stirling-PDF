@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { useAuth } from "@app/auth/UseSession";
-import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
-import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
-import { usePortalAccessState } from "@app/hooks/usePortalAccess";
-import { useSigningBadgeState } from "@app/hooks/signing/useSigningBadgeCount";
+import { useAuth } from "@editor/auth/UseSession";
+import { useQuickNavHost } from "@editor/contexts/QuickNavHostContext";
+import { useAccountIdentity } from "@editor/hooks/useAccountIdentity";
+import { usePortalAccessState } from "@editor/hooks/usePortalAccess";
+import { useSigningBadgeState } from "@editor/hooks/signing/useSigningBadgeCount";
 
 /** Publishes resolved account fields from the mounted view into the root cache. */
 export function useSyncQuickNavAccount(): void {

@@ -1,11 +1,11 @@
 import React from "react";
 import { Anchor, Group, Paper, Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useFooterInfo } from "@app/hooks/useFooterInfo";
-import { useCookieConsent } from "@app/hooks/useCookieConsent";
+import { Icon } from "@editor/ui/Icon";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useFooterInfo } from "@editor/hooks/useFooterInfo";
+import { useCookieConsent } from "@editor/hooks/useCookieConsent";
 
 interface LegalLink {
   key: string;

@@ -1,9 +1,9 @@
 import { Menu, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
-import { useAllFiles } from "@app/contexts/FileContext";
-import type { FileId } from "@app/types/file";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import type { FileId } from "@editor/types/file";
 
 interface Props {
   /** Workbench file the editor currently holds, when it came from one. */

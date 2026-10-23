@@ -4,19 +4,19 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
-import { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { toLatin1 } from "@app/tools/pdfTextEditor/pdfdoc/bytes";
+import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { toLatin1 } from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
 import {
   StructureEditError,
   applyStructureEdits,
-} from "@app/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
-import { RawPdf } from "@app/tools/pdfTextEditor/pdfdoc/raw";
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
+import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   buildClassicPdf,
   buildXrefStreamPdf,
   streamBody,
   type FixtureObject,
-} from "@app/tools/pdfTextEditor/__tests__/pdfFixtures";
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 const TAGGED_SAMPLE = path.join(
   import.meta.dirname,

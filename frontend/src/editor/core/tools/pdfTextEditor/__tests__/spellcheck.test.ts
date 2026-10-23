@@ -10,7 +10,7 @@ import {
   setSpellcheckLang,
   setSpellcheckPreference,
   subscribeSpellcheck,
-} from "@app/tools/pdfTextEditor/util/spellcheck";
+} from "@editor/tools/pdfTextEditor/util/spellcheck";
 
 const STORAGE_KEY = "stirling.pdfTextEditor.spellcheck";
 

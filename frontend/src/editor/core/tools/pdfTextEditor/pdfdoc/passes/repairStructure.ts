@@ -5,8 +5,11 @@ import {
   deflate,
   fromLatin1,
   toLatin1,
-} from "@app/tools/pdfTextEditor/pdfdoc/bytes";
-import { parseOps, tokenize } from "@app/tools/pdfTextEditor/pdfdoc/contentOps";
+} from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
+import {
+  parseOps,
+  tokenize,
+} from "@editor/tools/pdfTextEditor/pdfdoc/contentOps";
 import {
   RawPdf,
   arrayItems,
@@ -15,13 +18,13 @@ import {
   spliceValue,
   type NumberTreeEntry,
   type ValueSpan,
-} from "@app/tools/pdfTextEditor/pdfdoc/raw";
+} from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   appendRevision,
   plainObject,
   streamObject,
   type RevisionObject,
-} from "@app/tools/pdfTextEditor/pdfdoc/revision";
+} from "@editor/tools/pdfTextEditor/pdfdoc/revision";
 
 const REF = /^(\d+)\s+\d+\s+R$/;
 

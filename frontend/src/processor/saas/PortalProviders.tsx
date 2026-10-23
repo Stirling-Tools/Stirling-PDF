@@ -1,10 +1,10 @@
-import { TierProvider } from "@portal/contexts/TierContext";
-import { UIProvider } from "@portal/contexts/UIContext";
-import { PortalChrome } from "@portal/components/PortalChrome";
-import { LicenseProvider } from "@app/contexts/LicenseContext";
-import { StartupPrompts } from "@app/components/startup/StartupPrompts";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import { CheckoutProvider } from "@app/contexts/CheckoutContext";
+import { TierProvider } from "@processor/contexts/TierContext";
+import { UIProvider } from "@processor/contexts/UIContext";
+import { PortalChrome } from "@processor/components/PortalChrome";
+import { LicenseProvider } from "@editor/contexts/LicenseContext";
+import { StartupPrompts } from "@editor/components/startup/StartupPrompts";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { CheckoutProvider } from "@editor/contexts/CheckoutContext";
 
 /**
  * SaaS provider stack. There is no account-link layer: the signed-in account IS

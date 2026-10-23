@@ -1,24 +1,24 @@
 import { useCallback, useMemo } from "react";
-import { TierBadge } from "@app/components/shared/config/TierBadge";
+import { TierBadge } from "@editor/components/shared/config/TierBadge";
 import { useTranslation } from "react-i18next";
-import { SettingsCard } from "@app/components/shared/config/SettingsCard";
+import { SettingsCard } from "@editor/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
-import { alert } from "@app/components/toast";
-import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
-import { useRestartServer } from "@app/components/shared/config/useRestartServer";
-import { useAdminSettings } from "@app/hooks/useAdminSettings";
-import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
-import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
-import apiClient from "@app/services/apiClient";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import { alert } from "@editor/components/toast";
+import RestartConfirmationModal from "@editor/components/shared/config/RestartConfirmationModal";
+import { useRestartServer } from "@editor/components/shared/config/useRestartServer";
+import { useAdminSettings } from "@editor/hooks/useAdminSettings";
+import { useSettingsDirty } from "@editor/hooks/useSettingsDirty";
+import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
+import apiClient from "@editor/services/apiClient";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 import {
   DEFAULT_DATASOURCE,
   isEmbeddedH2Database,
   type DatasourceSettingsData,
-} from "@app/components/shared/config/configSections/advanced/advancedSettings";
-import { DatabaseConfigCard } from "@app/components/shared/config/configSections/advanced/DatabaseConfigCard";
-import { DatabaseBackupsCard } from "@app/components/shared/config/configSections/advanced/DatabaseBackupsCard";
-import "@app/components/shared/config/configSections/advanced/AdminAdvancedPage.css";
+} from "@editor/components/shared/config/configSections/advanced/advancedSettings";
+import { DatabaseConfigCard } from "@editor/components/shared/config/configSections/advanced/DatabaseConfigCard";
+import { DatabaseBackupsCard } from "@editor/components/shared/config/configSections/advanced/DatabaseBackupsCard";
+import "@editor/components/shared/config/configSections/advanced/AdminAdvancedPage.css";
 
 /**
  * Connecting a database and backing it up. Its own row rather than a card under

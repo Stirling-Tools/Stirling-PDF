@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { useBackendHealth } from "@app/hooks/useBackendHealth";
-import { useEndpointConfig } from "@app/hooks/useEndpointConfig";
-import { tauriBackendService } from "@app/services/tauriBackendService";
+import { useBackendHealth } from "@editor/hooks/useBackendHealth";
+import { useEndpointConfig } from "@editor/hooks/useEndpointConfig";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
 
 /**
  * Hook to initialize backend and monitor health

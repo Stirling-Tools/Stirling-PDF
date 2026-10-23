@@ -1,10 +1,10 @@
 import { Stack, Text, Group, Paper } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import SignatureSettingsInput, {
   SignatureSettings,
-} from "@app/components/tools/certSign/SignatureSettingsInput";
+} from "@editor/components/tools/certSign/SignatureSettingsInput";
 
 interface ConfigureSignatureDefaultsStepProps {
   settings: SignatureSettings;

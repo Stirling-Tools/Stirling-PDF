@@ -1,9 +1,9 @@
 import { Paper, Stack, Text } from "@mantine/core";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { useTheme } from "@app/components/shared/ThemeProvider";
-import LanguageSelector from "@app/components/shared/LanguageSelector";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { useTheme } from "@editor/components/shared/ThemeProvider";
+import LanguageSelector from "@editor/components/shared/LanguageSelector";
 
 /** How the app looks: theme and display language. Both write through at once. */
 export function AppearanceCard() {

@@ -1,8 +1,8 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { beforeEach, expect, it, vi } from "vitest";
-import SignRequestPanel from "@app/components/tools/certSign/panels/SignRequestPanel";
-import type { SigningRequestData } from "@app/hooks/signing/useSigningSessionController";
+import SignRequestPanel from "@editor/components/tools/certSign/panels/SignRequestPanel";
+import type { SigningRequestData } from "@editor/hooks/signing/useSigningSessionController";
 
 const { setOverlay, addFiles, t } = vi.hoisted(() => ({
   setOverlay: vi.fn(),
@@ -10,32 +10,35 @@ const { setOverlay, addFiles, t } = vi.hoisted(() => ({
   t: (key: string, fallback?: string) => fallback ?? key,
 }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t }) }));
-vi.mock("@app/contexts/SigningOverlayContext", () => ({
+vi.mock("@editor/contexts/SigningOverlayContext", () => ({
   useSigningOverlay: () => ({ setOverlay }),
 }));
-vi.mock("@app/contexts/file/fileHooks", () => ({
+vi.mock("@editor/contexts/file/fileHooks", () => ({
   useFileActions: () => ({ actions: { addFiles } }),
 }));
-vi.mock("@app/components/tools/certSign/panels/SignControlsPanel", () => ({
+vi.mock("@editor/components/tools/certSign/panels/SignControlsPanel", () => ({
   default: () => <div>Visible mark editor</div>,
 }));
-vi.mock("@app/components/tools/certSign/modals/CertificateConfigModal", () => ({
-  CertificateConfigModal: ({
-    opened,
-    signatureCount,
-    onClose,
-  }: {
-    opened: boolean;
-    signatureCount: number;
-    onClose: () => void;
-  }) =>
-    opened ? (
-      <div role="dialog" aria-label="Certificate">
-        <span>{signatureCount} visible marks</span>
-        <button onClick={onClose}>Cancel certificate</button>
-      </div>
-    ) : null,
-}));
+vi.mock(
+  "@editor/components/tools/certSign/modals/CertificateConfigModal",
+  () => ({
+    CertificateConfigModal: ({
+      opened,
+      signatureCount,
+      onClose,
+    }: {
+      opened: boolean;
+      signatureCount: number;
+      onClose: () => void;
+    }) =>
+      opened ? (
+        <div role="dialog" aria-label="Certificate">
+          <span>{signatureCount} visible marks</span>
+          <button onClick={onClose}>Cancel certificate</button>
+        </div>
+      ) : null,
+  }),
+);
 
 beforeEach(() => vi.clearAllMocks());
 

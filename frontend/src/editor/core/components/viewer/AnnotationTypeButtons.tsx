@@ -1,21 +1,21 @@
 import { useTranslation } from "react-i18next";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import type { PdfAnnotationObject } from "@embedpdf/models";
-import { OpacityControl } from "@app/components/annotation/shared/OpacityControl";
-import { WidthControl } from "@app/components/annotation/shared/WidthControl";
-import { PropertiesPopover } from "@app/components/annotation/shared/PropertiesPopover";
-import { ColorControl } from "@app/components/annotation/shared/ColorControl";
+import { OpacityControl } from "@editor/components/annotation/shared/OpacityControl";
+import { WidthControl } from "@editor/components/annotation/shared/WidthControl";
+import { PropertiesPopover } from "@editor/components/annotation/shared/PropertiesPopover";
+import { ColorControl } from "@editor/components/annotation/shared/ColorControl";
 import {
   DeleteButton,
   EditTextButton,
   AttachCommentButton,
   CommentButton,
   LinkButton,
-} from "@app/components/viewer/AnnotationMenuButtons";
+} from "@editor/components/viewer/AnnotationMenuButtons";
 import type {
   AnnotationMenuState,
   AnnotationMenuHandlers,
-} from "@app/components/viewer/useAnnotationMenuHandlers";
+} from "@editor/components/viewer/useAnnotationMenuHandlers";
 
 export interface AnnotationTypeButtonsProps
   extends AnnotationMenuState, AnnotationMenuHandlers {

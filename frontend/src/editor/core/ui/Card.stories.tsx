@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Card } from "@app/ui/Card";
-import { Button } from "@app/ui/Button";
-import { MetricCard } from "@app/ui/MetricCard";
-import { StatusBadge } from "@app/ui/StatusBadge";
+import { Card } from "@editor/ui/Card";
+import { Button } from "@editor/ui/Button";
+import { MetricCard } from "@editor/ui/MetricCard";
+import { StatusBadge } from "@editor/ui/StatusBadge";
 
 function CardBody({ color }: { color: string }) {
   return (

@@ -1,23 +1,23 @@
 import { useState } from "react";
 import { Badge, Collapse, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import {
   Section,
   SectionLabel,
   StatRow,
-} from "@app/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+} from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import {
   analyzePageFonts,
   type PageFont,
-} from "@app/tools/pdfTextEditor/util/pageFonts";
-import { DocumentSettings } from "@app/tools/pdfTextEditor/components/inspector/DocumentSettings";
+} from "@editor/tools/pdfTextEditor/util/pageFonts";
+import { DocumentSettings } from "@editor/tools/pdfTextEditor/components/inspector/DocumentSettings";
 import type {
   GroupingMode,
   PageSnapshot,
   WidthMode,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 
 interface Props {
   pages: PageSnapshot[];
