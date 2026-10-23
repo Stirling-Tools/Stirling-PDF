@@ -23,11 +23,14 @@ public class SignRequestSummaryDTO {
 
     @Schema(
             description =
-                    "Whether the participant's access has expired; independent of the advisory due date")
+                    "Whether the participant's access has expired; independent of the advisory due"
+                            + " date")
     private boolean accessExpired;
 
     @Schema(
             description =
-                    "Closed for this participant: inactive workflow, expired access, declined request or non-signing role. Submitted signatures stay active until the workflow closes.")
+                    "Closed for this participant: inactive workflow, expired access, declined"
+                        + " request or non-signing role. Submitted signatures stay active until the"
+                        + " workflow closes.")
     private boolean closed;
 }

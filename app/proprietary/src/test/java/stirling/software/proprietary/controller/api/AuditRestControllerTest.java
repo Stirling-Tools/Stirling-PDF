@@ -459,8 +459,8 @@ class AuditRestControllerTest {
         void fieldSelectedCsv() {
             String data =
                     "{\"path\":\"/api/v1/merge\",\"outcome\":\"success\","
-                            + "\"clientIp\":\"1.2.3.4\",\"result\":\"ok\","
-                            + "\"files\":[{\"name\":\"a.pdf\",\"pdfAuthor\":\"jo\",\"fileHash\":\"abc\"}]}";
+                        + "\"clientIp\":\"1.2.3.4\",\"result\":\"ok\","
+                        + "\"files\":[{\"name\":\"a.pdf\",\"pdfAuthor\":\"jo\",\"fileHash\":\"abc\"}]}";
             when(auditRepository.findAll())
                     .thenReturn(List.of(event(1L, "admin", "USER_LOGIN", data)));
 

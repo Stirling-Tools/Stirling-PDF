@@ -244,7 +244,10 @@ class EnterpriseProcessingHttpIntegrationTest {
                                 + "\r\nContent-Disposition: form-data; name=\"embedFonts\""
                                 + "\r\n\r\nfalse\r\n--"
                                 + BOUNDARY
-                                + "\r\nContent-Disposition: form-data; name=\"language\"\r\n\r\nen-US\r\n--"
+                                + "\r\n"
+                                + "Content-Disposition: form-data; name=\"language\"\r\n\r\n"
+                                + "en-US\r\n"
+                                + "--"
                                 + BOUNDARY
                                 + "--\r\n")
                         .getBytes(StandardCharsets.UTF_8));

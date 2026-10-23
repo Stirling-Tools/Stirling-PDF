@@ -58,8 +58,8 @@ public class ValkeyJobStore implements JobStore {
     // Value-guarded delete: never removes an index row a newer job already owns.
     private static final RedisScript<Long> DEL_INDEX_IF_OWNER =
             new DefaultRedisScript<>(
-                    "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1])"
-                            + " else return 0 end",
+                    "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del',"
+                            + " KEYS[1]) else return 0 end",
                     Long.class);
 
     // Non-cluster put(): hash, TTL and index rows in one round trip, so no torn write.

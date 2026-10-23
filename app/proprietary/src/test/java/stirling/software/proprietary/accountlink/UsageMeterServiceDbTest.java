@@ -95,7 +95,8 @@ class UsageMeterServiceDbTest {
     void legacyRowsCountAsOnePreviouslyChargedStep() {
         signatures.saveAndFlush(new MeteredInputSignature(PERIOD, "run:0", LocalDateTime.now()));
         jdbc.update(
-                "UPDATE account_link_metered_signature SET step_count = NULL, last_metered_at = NULL");
+                "UPDATE account_link_metered_signature SET step_count = NULL, last_metered_at ="
+                        + " NULL");
 
         accrue("run:0", 3, 2);
         assertThat(totalUnits()).isZero();

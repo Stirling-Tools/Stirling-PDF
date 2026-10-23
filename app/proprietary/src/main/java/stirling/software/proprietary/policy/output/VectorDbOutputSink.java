@@ -64,7 +64,8 @@ public class VectorDbOutputSink implements PolicyOutputSink {
                 || !"false".equals(String.valueOf(params.get("includeOriginal")))
                 || "true".equals(String.valueOf(params.get("exportMarkdown")))) {
             throw new IllegalArgumentException(
-                    "The final AI ingestion step must export chunks only, with the original PDF and Markdown excluded");
+                    "The final AI ingestion step must export chunks only, with the original PDF and"
+                            + " Markdown excluded");
         }
     }
 

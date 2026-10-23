@@ -101,7 +101,8 @@ public class PolicyValidator {
                     || Boolean.parseBoolean(String.valueOf(params.get("exportMarkdown")))
                     || "false".equalsIgnoreCase(String.valueOf(params.get("includeOriginal")))) {
                 throw new IllegalArgumentException(
-                        "Choose a file or database destination for chunk and Markdown exports. These files cannot be returned to the editor.");
+                        "Choose a file or database destination for chunk and Markdown exports."
+                                + " These files cannot be returned to the editor.");
             }
         }
     }

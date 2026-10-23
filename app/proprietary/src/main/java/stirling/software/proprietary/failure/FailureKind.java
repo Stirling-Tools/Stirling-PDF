@@ -202,7 +202,8 @@ public enum FailureKind {
             FailureScope.FILE,
             errorCodes("E054"),
             fallback(
-                    "A page in this document could not be drawn, so the pipeline could not finish."),
+                    "A page in this document could not be drawn, so the pipeline could not"
+                            + " finish."),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(OPEN_IN_TOOL, OWNER, OVERFLOW),

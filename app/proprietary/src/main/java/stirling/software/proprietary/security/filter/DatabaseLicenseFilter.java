@@ -51,6 +51,8 @@ public class DatabaseLicenseFilter extends OncePerRequestFilter {
         response.setContentType("application/json");
         response.getWriter()
                 .write(
-                        "{\"error\":\"SERVER_PLAN_REQUIRED\",\"message\":\"Link a paid Team account or install a Server or Enterprise licence to use this database.\"}");
+                        "{\"error\":\"SERVER_PLAN_REQUIRED\",\"message\":\"Link a paid Team account"
+                                + " or install a Server or Enterprise licence to use this"
+                                + " database.\"}");
     }
 }

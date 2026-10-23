@@ -46,7 +46,8 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
 
     /** Team ids alone, for callers that only need to know which rosters a user belongs to. */
     @Query(
-            "SELECT tm.team.id FROM TeamMembership tm WHERE upper(tm.user.username) = upper(:username)")
+            "SELECT tm.team.id FROM TeamMembership tm WHERE upper(tm.user.username) ="
+                    + " upper(:username)")
     List<Long> findTeamIdsByUsername(@Param("username") String username);
 
     /** Usernames alone, ordered and limited by the database, for callers that need no entities. */
@@ -64,7 +65,8 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
      * @return List of team memberships
      */
     @Query(
-            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.user WHERE tm.team.id = :teamId AND tm.role = :role")
+            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.user WHERE tm.team.id = :teamId AND"
+                    + " tm.role = :role")
     List<TeamMembership> findByTeamIdAndRole(
             @Param("teamId") Long teamId, @Param("role") TeamRole role);
 

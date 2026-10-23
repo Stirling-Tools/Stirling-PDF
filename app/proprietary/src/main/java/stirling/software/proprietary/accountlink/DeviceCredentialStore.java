@@ -85,7 +85,8 @@ public class DeviceCredentialStore {
                             if (owner.getHandoverTargetId() != null) {
                                 throw new org.springframework.web.server.ResponseStatusException(
                                         org.springframework.http.HttpStatus.CONFLICT,
-                                        "Finish or cancel the ownership transfer before changing the account link.");
+                                        "Finish or cancel the ownership transfer before changing"
+                                                + " the account link.");
                             }
                         });
     }

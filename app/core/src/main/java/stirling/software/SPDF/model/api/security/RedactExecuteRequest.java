@@ -16,22 +16,24 @@ public class RedactExecuteRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Exact strings to find and black out. One entry per phrase to redact."
-                            + " Best for known names, identifiers, and specific text found in the document.")
+                    "Exact strings to find and black out. One entry per phrase to redact. Best for"
+                            + " known names, identifiers, and specific text found in the document.")
     private List<String> textValues = new ArrayList<>();
 
     @Schema(
             description =
-                    "Regex patterns to match and redact. Each match anywhere in the document is blacked out."
-                            + " Uses Java/PCRE regex syntax. Well-suited for strings that follow known patterns, like"
-                            + " phone numbers, email addresses, national ID numbers, or"
-                            + " dates (which can appear with different separators, optional country codes,"
-                            + " etc.). For fixed known strings such as names, use textValues instead.")
+                    "Regex patterns to match and redact. Each match anywhere in the document is"
+                        + " blacked out. Uses Java/PCRE regex syntax. Well-suited for strings that"
+                        + " follow known patterns, like phone numbers, email addresses, national ID"
+                        + " numbers, or dates (which can appear with different separators, optional"
+                        + " country codes, etc.). For fixed known strings such as names, use"
+                        + " textValues instead.")
     private List<String> regexPatterns = new ArrayList<>();
 
     @Schema(
             description =
-                    "1-indexed page numbers to wipe entirely (all content removed from those pages).")
+                    "1-indexed page numbers to wipe entirely (all content removed from those"
+                            + " pages).")
     private List<Integer> wipePages = new ArrayList<>();
 
     @Schema(
@@ -44,12 +46,15 @@ public class RedactExecuteRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Rectangular areas to black out, each defined by a page number and bounding box coordinates.")
+                    "Rectangular areas to black out, each defined by a page number and bounding box"
+                            + " coordinates.")
     private List<ImageBox> imageBoxes = new ArrayList<>();
 
     @Schema(
             description =
-                    "1-indexed page numbers to redact all detected images from. Pass an empty list to redact images from every page. Omit or pass null to skip image redaction entirely.")
+                    "1-indexed page numbers to redact all detected images from. Pass an empty list"
+                            + " to redact images from every page. Omit or pass null to skip image"
+                            + " redaction entirely.")
     private List<Integer> redactImagePages;
 
     @Schema(description = "Redaction style options")
@@ -59,17 +64,17 @@ public class RedactExecuteRequest extends PDFFile {
             @Schema(
                             description =
                                     "A short, distinctive phrase (5–15 words) that marks where"
-                                            + " redaction begins (inclusive). Must appear verbatim in"
-                                            + " the document — e.g. a section heading or a unique"
-                                            + " sentence fragment.",
+                                        + " redaction begins (inclusive). Must appear verbatim in"
+                                        + " the document — e.g. a section heading or a unique"
+                                        + " sentence fragment.",
                             requiredMode = Schema.RequiredMode.REQUIRED,
                             minLength = 1)
                     String startString,
             @Schema(
                             description =
                                     "A short, distinctive phrase (5–15 words) that marks where"
-                                            + " redaction ends (inclusive). Must appear verbatim in the"
-                                            + " document. Shorter phrases match more reliably.",
+                                        + " redaction ends (inclusive). Must appear verbatim in the"
+                                        + " document. Shorter phrases match more reliably.",
                             requiredMode = Schema.RequiredMode.REQUIRED,
                             minLength = 1)
                     String endString) {
@@ -85,22 +90,26 @@ public class RedactExecuteRequest extends PDFFile {
                     int pageIndex,
             @Schema(
                             description =
-                                    "Left x coordinate of the redaction rectangle in PDF user-space points.",
+                                    "Left x coordinate of the redaction rectangle in PDF user-space"
+                                            + " points.",
                             requiredMode = Schema.RequiredMode.REQUIRED)
                     float x1,
             @Schema(
                             description =
-                                    "Top y coordinate of the redaction rectangle in PDF user-space points.",
+                                    "Top y coordinate of the redaction rectangle in PDF user-space"
+                                            + " points.",
                             requiredMode = Schema.RequiredMode.REQUIRED)
                     float y1,
             @Schema(
                             description =
-                                    "Right x coordinate of the redaction rectangle in PDF user-space points.",
+                                    "Right x coordinate of the redaction rectangle in PDF"
+                                            + " user-space points.",
                             requiredMode = Schema.RequiredMode.REQUIRED)
                     float x2,
             @Schema(
                             description =
-                                    "Bottom y coordinate of the redaction rectangle in PDF user-space points.",
+                                    "Bottom y coordinate of the redaction rectangle in PDF"
+                                            + " user-space points.",
                             requiredMode = Schema.RequiredMode.REQUIRED)
                     float y2) {}
 

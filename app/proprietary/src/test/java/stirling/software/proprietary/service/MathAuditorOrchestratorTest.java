@@ -122,17 +122,17 @@ class MathAuditorOrchestratorTest {
 
     private String requisitionJson(String needText, String needTables, String needOcr) {
         return """
-                {"type":"requisition","needText":%s,"needTables":%s,"needOcr":%s,
-                 "rationale":"check the totals"}
-                """
+        {"type":"requisition","needText":%s,"needTables":%s,"needOcr":%s,
+         "rationale":"check the totals"}
+        """
                 .formatted(needText, needTables, needOcr);
     }
 
     private String verdictJson(boolean clean) {
         return """
-                {"type":"verdict","sessionId":"s","discrepancies":[],"pagesExamined":[0,1],
-                 "roundsTaken":1,"summary":"all good","clean":%s,"unauditablePages":[]}
-                """
+        {"type":"verdict","sessionId":"s","discrepancies":[],"pagesExamined":[0,1],
+         "roundsTaken":1,"summary":"all good","clean":%s,"unauditablePages":[]}
+        """
                 .formatted(clean);
     }
 

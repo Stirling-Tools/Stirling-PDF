@@ -54,7 +54,7 @@ public class InternalApiClient {
     private static final Pattern ALLOWED_ENDPOINT_PATH =
             Pattern.compile(
                     "^/api/v1/(general|misc|security|convert|filter|integration|docparse)(/[A-Za-z0-9_-]+)+$"
-                            + "|^/api/v1/ai/tools(/[A-Za-z0-9_-]+)+$");
+                        + "|^/api/v1/ai/tools(/[A-Za-z0-9_-]+)+$");
 
     /**
      * Marker propagated on every internal sub-step dispatch so the saas PAYG interceptor classifies

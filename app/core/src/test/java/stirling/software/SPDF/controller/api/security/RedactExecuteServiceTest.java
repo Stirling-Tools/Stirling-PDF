@@ -71,7 +71,8 @@ class RedactExecuteServiceTest {
                             .isGreaterThanOrEqualTo(screenTopOfStart - 1f);
                     assertThat(block.getY2())
                             .as(
-                                    "block bottom must not extend past the end anchor's bottom (end is inclusive)")
+                                    "block bottom must not extend past the end anchor's bottom (end"
+                                            + " is inclusive)")
                             .isLessThanOrEqualTo(screenBottomOfEnd + 1f);
                     assertThat(block.getX2())
                             .as("block should not extend into a hypothetical right column")

@@ -58,9 +58,11 @@ public class JsonMapConverter implements AttributeConverter<Map<String, Object>,
                     log.warn(
                             "╔════════════════════════════════════════════════════════════════════╗");
                     log.warn(
-                            "║ WARNING: DOUBLE-ENCODED JSON DETECTED - LEGACY DATA FOUND         ║");
+                            "║ WARNING: DOUBLE-ENCODED JSON DETECTED - LEGACY DATA FOUND        "
+                                    + " ║");
                     log.warn(
-                            "║ This should not occur in newly created records.                   ║");
+                            "║ This should not occur in newly created records.                  "
+                                    + " ║");
                     log.warn(
                             "║ Data preview: {}",
                             dbData.length() > 100 ? dbData.substring(0, 100) + "..." : dbData);

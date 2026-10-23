@@ -328,7 +328,8 @@ public class FileStorageController {
             return Optional.of(response);
         } catch (IOException e) {
             log.warn(
-                    "Failed to create signed download URL for file {} (key: {}), falling back to streaming",
+                    "Failed to create signed download URL for file {} (key: {}), falling back to"
+                            + " streaming",
                     file.getId(),
                     file.getStorageKey(),
                     e);

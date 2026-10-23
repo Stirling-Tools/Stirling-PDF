@@ -370,7 +370,8 @@ public class ProcessExecutor {
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(
-                                                    "Error reader thread was interrupted due to timeout.");
+                                                    "Error reader thread was interrupted due to"
+                                                            + " timeout.");
                                         } catch (IOException e) {
                                             log.error("exception", e);
                                         }
@@ -395,7 +396,8 @@ public class ProcessExecutor {
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(
-                                                    "Error reader thread was interrupted due to timeout.");
+                                                    "Error reader thread was interrupted due to"
+                                                            + " timeout.");
                                         } catch (IOException e) {
                                             log.error("exception", e);
                                         }

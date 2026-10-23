@@ -130,7 +130,8 @@ public class WorkflowParticipantController {
     @Operation(
             summary = "Submit signature (wet signature and/or certificate)",
             description =
-                    "Participants submit their signature data and certificate information for signing")
+                    "Participants submit their signature data and certificate information for"
+                            + " signing")
     @PostMapping(
             value = "/submit-signature",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,

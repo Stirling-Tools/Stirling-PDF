@@ -120,7 +120,8 @@ public class CustomSaml2AuthenticationSuccessHandler
                         userExists && userService.isAuthenticationTypeByUsername(username, SAML2);
 
                 log.debug(
-                        "User status - Exists: {}, Has password: {}, Is SSO user: {}, Is SAML2 user: {}",
+                        "User status - Exists: {}, Has password: {}, Is SSO user: {}, Is SAML2"
+                                + " user: {}",
                         userExists,
                         hasPassword,
                         isSsoUser,
@@ -131,7 +132,8 @@ public class CustomSaml2AuthenticationSuccessHandler
                         && !isSsoUser
                         && saml2Properties.getAutoCreateUser()) {
                     log.debug(
-                            "User {} exists with password but is not an SSO user, redirecting to logout",
+                            "User {} exists with password but is not an SSO user, redirecting to"
+                                    + " logout",
                             username);
                     String origin = resolveOrigin();
                     response.sendRedirect(origin + "/logout?oAuth2AuthenticationErrorWeb=true");
@@ -144,7 +146,8 @@ public class CustomSaml2AuthenticationSuccessHandler
                             && (saml2Properties.getBlockRegistration()
                                     || !saml2Properties.getAutoCreateUser())) {
                         log.debug(
-                                "Registration blocked for new user '{}' (blockRegistration: {}, autoCreateUser: {})",
+                                "Registration blocked for new user '{}' (blockRegistration: {},"
+                                        + " autoCreateUser: {})",
                                 username,
                                 saml2Properties.getBlockRegistration(),
                                 saml2Properties.getAutoCreateUser());

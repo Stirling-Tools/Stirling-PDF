@@ -85,7 +85,8 @@ class AdminSettingsQueryPerfTest {
                         + (large.users() - small.users())
                         + " users added "
                         + delta
-                        + " SQL statements (expected <= 40). The roster endpoint still scales O(N).");
+                        + " SQL statements (expected <= 40). The roster endpoint still scales"
+                        + " O(N).");
         assertEquals(
                 0,
                 large.updates(),

@@ -22,17 +22,17 @@ class RoutingRuleTest {
         Policy policy =
                 mapper.readValue(
                         """
-                {
-                  "id": "p1", "name": "Route", "enabled": true, "required": false,
-                  "routingRules": [
-                    {"field": "classification.labels", "operator": "matches-any",
-                     "values": [" Invoice ", "receipt"], "outputId": "finance"},
-                    {"field": "document.extension", "operator": "matches-any",
-                     "values": ["docx"], "outputId": "office"}
-                  ],
-                  "outputIds": ["archive"]
-                }
-                """,
+                        {
+                          "id": "p1", "name": "Route", "enabled": true, "required": false,
+                          "routingRules": [
+                            {"field": "classification.labels", "operator": "matches-any",
+                             "values": [" Invoice ", "receipt"], "outputId": "finance"},
+                            {"field": "document.extension", "operator": "matches-any",
+                             "values": ["docx"], "outputId": "office"}
+                          ],
+                          "outputIds": ["archive"]
+                        }
+                        """,
                         Policy.class);
 
         assertThat(policy.routingRules())
@@ -65,13 +65,13 @@ class RoutingRuleTest {
         RoutingRule rule =
                 mapper.readValue(
                         """
-                {
-                  "condition": {"input": {"source": "document", "field": "document.extension"},
-                                "operator": "matches-any", "values": ["pdf"]},
-                  "field": "classification.labels", "operator": "matches-any",
-                  "values": ["invoice"], "outputId": "archive"
-                }
-                """,
+                        {
+                          "condition": {"input": {"source": "document", "field": "document.extension"},
+                                        "operator": "matches-any", "values": ["pdf"]},
+                          "field": "classification.labels", "operator": "matches-any",
+                          "values": ["invoice"], "outputId": "archive"
+                        }
+                        """,
                         RoutingRule.class);
 
         assertThat(rule.condition())
@@ -87,9 +87,9 @@ class RoutingRuleTest {
                         () ->
                                 mapper.readValue(
                                         """
-                {"field": "classification.labels", "operator": "not-equal",
-                 "values": ["invoice"], "outputId": "archive"}
-                """,
+                                        {"field": "classification.labels", "operator": "not-equal",
+                                         "values": ["invoice"], "outputId": "archive"}
+                                        """,
                                         RoutingRule.class))
                 .hasMessageContaining("condition operator");
     }
@@ -100,18 +100,18 @@ class RoutingRuleTest {
                         () ->
                                 mapper.readValue(
                                         """
-                {"condition": {"input": {"source": "document", "field": "document.sizeBytes"},
-                               "operator": "greater-than", "value": 100}, "outputId": "archive"}
-                """,
+                                        {"condition": {"input": {"source": "document", "field": "document.sizeBytes"},
+                                                       "operator": "greater-than", "value": 100}, "outputId": "archive"}
+                                        """,
                                         RoutingRule.class))
                 .hasMessageContaining("greater-than");
         assertThatThrownBy(
                         () ->
                                 mapper.readValue(
                                         """
-                {"condition": {"input": {"source": "step", "stepId": "lookup", "output": "code"},
-                               "operator": "matches-any", "values": ["REVIEW"]}, "outputId": "archive"}
-                """,
+                                        {"condition": {"input": {"source": "step", "stepId": "lookup", "output": "code"},
+                                                       "operator": "matches-any", "values": ["REVIEW"]}, "outputId": "archive"}
+                                        """,
                                         RoutingRule.class))
                 .hasMessageContaining("step");
     }

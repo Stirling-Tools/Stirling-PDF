@@ -18,7 +18,8 @@ public record LicensedStorageProvider(StorageProvider delegate, BooleanSupplier 
     public StoredObject store(User owner, MultipartFile file) throws IOException {
         if (!licensed.getAsBoolean())
             throw new IOException(
-                    "Paid storage is paused. Restore the Stirling account connection or a valid licence.");
+                    "Paid storage is paused. Restore the Stirling account connection or a valid"
+                            + " licence.");
         return delegate.store(owner, file);
     }
 

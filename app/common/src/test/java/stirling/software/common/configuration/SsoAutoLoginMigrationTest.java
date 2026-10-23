@@ -42,7 +42,11 @@ class SsoAutoLoginMigrationTest {
     void explicitSecurityFalseOverridesLegacyTrue() {
         YamlHelper source =
                 yaml(
-                        "security:\n  ssoAutoLogin: false\npremium:\n  proFeatures:\n    ssoAutoLogin: true");
+                        "security:\n"
+                                + "  ssoAutoLogin: false\n"
+                                + "premium:\n"
+                                + "  proFeatures:\n"
+                                + "    ssoAutoLogin: true");
         YamlHelper template = yaml("security:\n  ssoAutoLogin: false");
 
         new ConfigInitializer().migrateSsoAutoLoginToSecurity(source, template);
@@ -55,7 +59,12 @@ class SsoAutoLoginMigrationTest {
     void currentProKeyOverridesOlderKeysEvenWhenFalse() {
         YamlHelper source =
                 yaml(
-                        "premium:\n  proFeatures:\n    ssoAutoLogin: false\n    SSOAutoLogin: true\nenterpriseEdition:\n  SSOAutoLogin: true");
+                        "premium:\n"
+                                + "  proFeatures:\n"
+                                + "    ssoAutoLogin: false\n"
+                                + "    SSOAutoLogin: true\n"
+                                + "enterpriseEdition:\n"
+                                + "  SSOAutoLogin: true");
         YamlHelper template = yaml("security:\n  ssoAutoLogin: true");
 
         new ConfigInitializer().migrateSsoAutoLoginToSecurity(source, template);

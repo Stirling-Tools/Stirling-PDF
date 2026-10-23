@@ -20,7 +20,8 @@ import stirling.software.proprietary.security.model.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     @Query(
-            "SELECT u FROM User u JOIN u.authorities a WHERE a.authority = 'ROLE_ADMIN' AND (u.enabled IS NULL OR u.enabled = true) ORDER BY u.id ASC")
+            "SELECT u FROM User u JOIN u.authorities a WHERE a.authority = 'ROLE_ADMIN' AND"
+                    + " (u.enabled IS NULL OR u.enabled = true) ORDER BY u.id ASC")
     List<User> findEnabledAdminsByIdAsc();
 
     Optional<User> findByUsernameIgnoreCase(String username);
@@ -61,7 +62,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<Object[]> findSettingsByUserIds(@Param("ids") Collection<Long> ids);
 
     @Query(
-            "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
+            "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id ="
+                    + " :teamId")
     List<User> findAllByTeamId(@Param("teamId") Long teamId);
 
     /** Picker summaries without loading each user's eager authorities and team entities. */

@@ -90,7 +90,8 @@ public class AdminJobController {
                         : taskManager.cleanupOldJobs();
 
         log.info(
-                "Admin triggered job cleanup (force={}): removed {} jobs and {} files, {} remaining",
+                "Admin triggered job cleanup (force={}): removed {} jobs and {} files, {}"
+                        + " remaining",
                 force,
                 summary.jobsRemoved(),
                 summary.filesDeleted(),

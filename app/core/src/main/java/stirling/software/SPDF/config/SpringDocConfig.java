@@ -46,7 +46,12 @@ public class SpringDocConfig {
                                     openApi.getInfo()
                                             .title("Stirling PDF - Processing API")
                                             .description(
-                                                    "APIs for converting, editing, securing, and analysing PDF documents. Use these endpoints to automate common PDF tasks (like split, merge, convert, OCR) and plug them into your own apps and backend jobs."));
+                                                    "APIs for converting, editing, securing, and"
+                                                        + " analysing PDF documents. Use these"
+                                                        + " endpoints to automate common PDF tasks"
+                                                        + " (like split, merge, convert, OCR) and"
+                                                        + " plug them into your own apps and"
+                                                        + " backend jobs."));
                         })
                 .build();
     }
@@ -79,7 +84,9 @@ public class SpringDocConfig {
                                     openApi.getInfo()
                                             .title("Stirling PDF - Management API")
                                             .description(
-                                                    "Endpoints for authentication, user management, invitations, audit logging, and system configuration."));
+                                                    "Endpoints for authentication, user management,"
+                                                        + " invitations, audit logging, and system"
+                                                        + " configuration."));
                         })
                 .build();
     }
@@ -102,7 +109,8 @@ public class SpringDocConfig {
                                     openApi.getInfo()
                                             .title("Stirling PDF - System API")
                                             .description(
-                                                    "System information, UI metadata, job status, and file management endpoints."));
+                                                    "System information, UI metadata, job status,"
+                                                            + " and file management endpoints."));
                         })
                 .build();
     }

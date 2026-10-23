@@ -135,7 +135,8 @@ public class EntitlementCache {
                 // Unreachable / server error: keep the last known entitlement but stamp the attempt
                 // so requests back off; the persisted offline deadline still applies.
                 log.debug(
-                        "Entitlement refresh failed; reusing last known snapshot, backing off a TTL");
+                        "Entitlement refresh failed; reusing last known snapshot, backing off a"
+                                + " TTL");
                 snapshot =
                         new Snapshot(
                                 snapshot.entitlement(),
@@ -148,7 +149,8 @@ public class EntitlementCache {
             // Authoritative deny — block immediately rather than serving the stale entitled
             // snapshot.
             log.info(
-                    "Entitlement denied (HTTP {}); blocking billable work for the revoked credential",
+                    "Entitlement denied (HTTP {}); blocking billable work for the revoked"
+                            + " credential",
                     e.status());
             snapshot = successfulSnapshot(cred.get().getDeviceId(), REVOKED);
         }

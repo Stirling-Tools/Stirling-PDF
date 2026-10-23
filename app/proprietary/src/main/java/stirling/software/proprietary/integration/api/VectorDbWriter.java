@@ -39,7 +39,8 @@ public class VectorDbWriter {
             if (objectMapper.writeValueAsBytes(properties(target, documentId, chunk)).length
                     > MAX_CHUNK_BYTES) {
                 throw new IOException(
-                        "A chunk exceeds the 60000-byte indexing limit; reduce the ingestion chunk size");
+                        "A chunk exceeds the 60000-byte indexing limit; reduce the ingestion chunk"
+                                + " size");
             }
         }
         boolean weaviate = connection.vendor().equals("weaviate");
@@ -72,7 +73,8 @@ public class VectorDbWriter {
                 for (JsonNode item : result) {
                     if (!"SUCCESS".equals(item.path("result").path("status").asString())) {
                         throw new IOException(
-                                "Weaviate rejected a chunk; check the collection schema and vectorizer credentials");
+                                "Weaviate rejected a chunk; check the collection schema and"
+                                        + " vectorizer credentials");
                     }
                 }
             } else {
@@ -148,7 +150,8 @@ public class VectorDbWriter {
                         .getHost()
                         .equalsIgnoreCase(index.path("host").asString())) {
             throw new IOException(
-                    "Pinecone requires an integrated-embedding index with a matching index host and text field");
+                    "Pinecone requires an integrated-embedding index with a matching index host and"
+                            + " text field");
         }
     }
 
@@ -173,7 +176,8 @@ public class VectorDbWriter {
         boolean multiTenant = schema.path("multiTenancyConfig").path("enabled").asBoolean();
         if (multiTenant == target.namespace().equals("__default__")) {
             throw new IOException(
-                    "Set a tenant for a multi-tenant Weaviate collection; leave it empty for a single-tenant collection");
+                    "Set a tenant for a multi-tenant Weaviate collection; leave it empty for a"
+                            + " single-tenant collection");
         }
     }
 
@@ -255,7 +259,8 @@ public class VectorDbWriter {
             throw new IOException(
                     "Vector database returned HTTP "
                             + response.status()
-                            + "; check credentials, collection, text field and server-side embedding configuration");
+                            + "; check credentials, collection, text field and server-side"
+                            + " embedding configuration");
         }
     }
 

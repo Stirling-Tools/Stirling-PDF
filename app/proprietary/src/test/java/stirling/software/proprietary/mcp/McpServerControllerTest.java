@@ -220,7 +220,7 @@ class McpServerControllerTest {
         JsonNode body =
                 mapper.readTree(
                         "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\","
-                                + "\"params\":{\"name\":\"stirling_does_not_exist\",\"arguments\":{}}}");
+                            + "\"params\":{\"name\":\"stirling_does_not_exist\",\"arguments\":{}}}");
 
         ResponseEntity<?> response = controller.handle(body);
 
@@ -325,8 +325,8 @@ class McpServerControllerTest {
         JsonNode body =
                 mapper.readTree(
                         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
-                                + "\"params\":{\"protocolVersion\":\"2025-03-26\","
-                                + "\"clientInfo\":{\"name\":\"claude-ai\",\"version\":\"0.1.0\"}}}");
+                            + "\"params\":{\"protocolVersion\":\"2025-03-26\","
+                            + "\"clientInfo\":{\"name\":\"claude-ai\",\"version\":\"0.1.0\"}}}");
 
         controller.handle(body);
 
@@ -344,8 +344,8 @@ class McpServerControllerTest {
         JsonNode body =
                 mapper.readTree(
                         "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\","
-                                + "\"params\":{\"name\":\"stirling_describe_operation\","
-                                + "\"arguments\":{\"operation\":\"compress-pdf\",\"secret\":\"x\"}}}");
+                            + "\"params\":{\"name\":\"stirling_describe_operation\","
+                            + "\"arguments\":{\"operation\":\"compress-pdf\",\"secret\":\"x\"}}}");
 
         controller.handle(body);
 

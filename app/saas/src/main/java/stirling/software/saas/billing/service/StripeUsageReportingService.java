@@ -58,13 +58,15 @@ public class StripeUsageReportingService {
 
         if (supabaseUrl == null || supabaseUrl.isEmpty()) {
             log.error(
-                    "[USAGE-BILLING] supabase.url not configured; cannot report usage. Set SUPABASE_URL.");
+                    "[USAGE-BILLING] supabase.url not configured; cannot report usage. Set"
+                            + " SUPABASE_URL.");
             return false;
         }
 
         if (!supabaseConfig.isEdgeFunctionConfigured()) {
             log.error(
-                    "[USAGE-BILLING] Supabase edge function not configured (URL + secret required); cannot report usage.");
+                    "[USAGE-BILLING] Supabase edge function not configured (URL + secret required);"
+                            + " cannot report usage.");
             return false;
         }
 

@@ -388,7 +388,8 @@ class ConvertPDFToPDFAMoreTest {
 
         @Test
         @DisplayName(
-                "PDF/X with Ghostscript unavailable says the tool is missing, not that conversion failed")
+                "PDF/X with Ghostscript unavailable says the tool is missing, not that conversion"
+                        + " failed")
         void pdfXNoGhostscript() throws Exception {
             PdfToPdfARequest request = new PdfToPdfARequest();
             request.setFileInput(pdfFile());

@@ -41,7 +41,8 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
 
     @Schema(
             description =
-                    "Zero-padding width for page numbers (Bates Stamping). Set to 0 to disable padding",
+                    "Zero-padding width for page numbers (Bates Stamping). Set to 0 to disable"
+                            + " padding",
             minimum = "0",
             defaultValue = "0",
             requiredMode = RequiredMode.NOT_REQUIRED)

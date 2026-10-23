@@ -160,7 +160,8 @@ public class DocParseService {
             // cannot tell a scan from a genuinely empty file.
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
-                    "No extractable text: this document has no text layer. OCR it before ingesting.");
+                    "No extractable text: this document has no text layer. OCR it before"
+                            + " ingesting.");
         }
         String markdown = MarkdownBlocks.join(blocks);
         int pages = pagesCovered(blocks);

@@ -98,7 +98,7 @@ public class BlankPageController {
             summary = "Remove blank pages from a PDF file",
             description =
                     "This endpoint removes blank pages from a given PDF file. Users can specify the"
-                            + " threshold and white percentage to tune the detection of blank pages.")
+                        + " threshold and white percentage to tune the detection of blank pages.")
     public ResponseEntity<Resource> removeBlankPages(
             @ModelAttribute RemoveBlankPagesRequest request)
             throws IOException, InterruptedException {

@@ -181,7 +181,8 @@ public class EndpointConfiguration {
                     && disabledGroups.contains(group)
                     && entry.getValue().contains(endpoint)) {
                 log.debug(
-                        "isEndpointEnabled('{}') -> false (single tool group '{}' disabled, no alternatives)",
+                        "isEndpointEnabled('{}') -> false (single tool group '{}' disabled, no"
+                                + " alternatives)",
                         original,
                         group);
                 return false;
@@ -341,7 +342,8 @@ public class EndpointConfiguration {
                     String.join(", ", functionallyDisabledEndpoints));
         } else if (!disabledToolGroups.isEmpty()) {
             log.info(
-                    "No endpoints disabled despite missing tools - fallback implementations available");
+                    "No endpoints disabled despite missing tools - fallback implementations"
+                            + " available");
         }
     }
 

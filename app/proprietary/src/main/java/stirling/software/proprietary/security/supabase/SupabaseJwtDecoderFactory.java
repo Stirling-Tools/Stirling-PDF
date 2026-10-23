@@ -28,9 +28,9 @@ public class SupabaseJwtDecoderFactory {
     public JwtDecoder supabaseUserLoginJwtDecoder() {
         if (!properties.isJwtConfigured()) {
             log.warn(
-                    "security.supabase.user-login.enabled=true but issuer URL is not set;"
-                            + " producing a fail-closed JwtDecoder that rejects every token."
-                            + " Set security.supabase.user-login.issuer to enable real verification.");
+                    "security.supabase.user-login.enabled=true but issuer URL is not set; producing"
+                            + " a fail-closed JwtDecoder that rejects every token. Set"
+                            + " security.supabase.user-login.issuer to enable real verification.");
             return token -> {
                 throw new org.springframework.security.oauth2.jwt.JwtException(
                         "Supabase user-login issuer not configured");

@@ -45,7 +45,8 @@ public class PolicyOutputResolver {
                 .orElseThrow(
                         () ->
                                 new IllegalArgumentException(
-                                        "The output destination is missing, disabled, or unavailable"))
+                                        "The output destination is missing, disabled, or"
+                                                + " unavailable"))
                 .toOutputSpec();
     }
 }

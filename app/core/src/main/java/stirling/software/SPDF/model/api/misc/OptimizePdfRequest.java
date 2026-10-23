@@ -48,7 +48,8 @@ public class OptimizePdfRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Whether to convert images to high-contrast line art using ImageMagick. Default is false.",
+                    "Whether to convert images to high-contrast line art using ImageMagick. Default"
+                            + " is false.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "false")
     private Boolean lineArt = false;

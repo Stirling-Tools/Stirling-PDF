@@ -15,7 +15,9 @@ public class EditTableOfContentsRequest extends PDFFile {
             description = "Bookmark structure in JSON format",
             type = "string",
             example =
-                    "[{\\\"title\\\":\\\"Chapter 1\\\",\\\"pageNumber\\\":1,\\\"children\\\":[{\\\"title\\\":\\\"Section 1.1\\\",\\\"pageNumber\\\":2}]}]")
+                    "[{\\\"title\\\":\\\"Chapter"
+                        + " 1\\\",\\\"pageNumber\\\":1,\\\"children\\\":[{\\\"title\\\":\\\"Section"
+                        + " 1.1\\\",\\\"pageNumber\\\":2}]}]")
     private String bookmarkData;
 
     @Schema(

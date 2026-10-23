@@ -86,7 +86,7 @@ public class McpOperationExecutor {
                 return McpResponses.error(
                         mapper,
                         "This operation needs an input file. Pass 'file' as base64 (recommended for"
-                                + " most files), or 'fileId' from stirling_upload for large files.");
+                            + " most files), or 'fileId' from stirling_upload for large files.");
             }
             inputBytes = McpToolSupport.decodeBase64OrNull(base64);
             if (inputBytes == null) {
@@ -193,7 +193,8 @@ public class McpOperationExecutor {
                     McpResponses.textBlock(
                             mapper,
                             summary
-                                    + "Large result - fetch it with stirling_download {\"fileId\":\""
+                                    + "Large result - fetch it with stirling_download"
+                                    + " {\"fileId\":\""
                                     + fileId
                                     + "\"}, or pass this fileId to another operation."));
         } catch (IOException e) {

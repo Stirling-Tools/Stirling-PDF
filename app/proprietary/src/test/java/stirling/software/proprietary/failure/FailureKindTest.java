@@ -379,8 +379,8 @@ class FailureKindTest {
                                 "a null argument is a programming error, not something an owner or"
                                         + " reviewer can act on",
                         "E080",
-                                "MD5 unavailable is swallowed by its one caller for a fallback hash,"
-                                        + " so it never reaches a run");
+                                "MD5 unavailable is swallowed by its one caller for a fallback"
+                                        + " hash, so it never reaches a run");
 
         @Test
         void everyErrorCodeIsClaimedOrLeftUnclaimedForAStatedReason() {

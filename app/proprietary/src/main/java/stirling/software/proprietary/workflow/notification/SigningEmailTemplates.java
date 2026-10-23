@@ -282,31 +282,31 @@ final class SigningEmailTemplates {
             }
         }
         return """
-                <!doctype html>
-                <html lang="en">
-                <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <meta name="color-scheme" content="light only">
-                <meta name="supported-color-schemes" content="light only">
-                <title>%1$s</title>
-                </head>
-                <body style="margin:0;padding:0;background-color:%2$s;">
-                <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color:%2$s;">
-                <tr><td align="center" style="padding:32px 12px;">
-                <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%%;max-width:560px;background-color:%3$s;border:1px solid %4$s;border-radius:8px;">
-                <tr><td style="padding:28px 32px 0;"><img src="cid:%5$s" width="89" height="32" alt="Stirling" style="display:block;width:89px;height:32px;border:0;"></td></tr>
-                <tr><td style="padding:24px 32px 32px;font-family:%6$s;font-size:15px;line-height:1.6;color:%7$s;">
-                <h1 style="margin:0 0 16px;font-size:20px;line-height:1.3;font-weight:600;color:%7$s;">%1$s</h1>
-                %8$s%9$s
-                </td></tr>
-                <tr><td style="padding:16px 32px 20px;border-top:1px solid %4$s;font-family:%6$s;font-size:12px;line-height:1.5;color:%10$s;">%11$s</td></tr>
-                </table>
-                </td></tr>
-                </table>
-                </body>
-                </html>
-                """
+        <!doctype html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="color-scheme" content="light only">
+        <meta name="supported-color-schemes" content="light only">
+        <title>%1$s</title>
+        </head>
+        <body style="margin:0;padding:0;background-color:%2$s;">
+        <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color:%2$s;">
+        <tr><td align="center" style="padding:32px 12px;">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%%;max-width:560px;background-color:%3$s;border:1px solid %4$s;border-radius:8px;">
+        <tr><td style="padding:28px 32px 0;"><img src="cid:%5$s" width="89" height="32" alt="Stirling" style="display:block;width:89px;height:32px;border:0;"></td></tr>
+        <tr><td style="padding:24px 32px 32px;font-family:%6$s;font-size:15px;line-height:1.6;color:%7$s;">
+        <h1 style="margin:0 0 16px;font-size:20px;line-height:1.3;font-weight:600;color:%7$s;">%1$s</h1>
+        %8$s%9$s
+        </td></tr>
+        <tr><td style="padding:16px 32px 20px;border-top:1px solid %4$s;font-family:%6$s;font-size:12px;line-height:1.5;color:%10$s;">%11$s</td></tr>
+        </table>
+        </td></tr>
+        </table>
+        </body>
+        </html>
+        """
                 .formatted(
                         escape(heading),
                         BACKGROUND,

@@ -30,14 +30,16 @@ public class AddPasswordRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Credential for authenticating an existing protected source, separate from the new passwords. Omit to retain legacy add-password behaviour.",
+                    "Credential for authenticating an existing protected source, separate from the"
+                            + " new passwords. Omit to retain legacy add-password behaviour.",
             format = "password")
     @ToString.Exclude
     private String sourcePassword;
 
     @Schema(
             description =
-                    "Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.",
+                    "Change permissions while retaining existing passwords and encryption. A"
+                            + " supplied ownerPassword replaces the permissions password.",
             defaultValue = "false")
     private boolean preserveExisting;
 

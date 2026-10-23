@@ -160,7 +160,7 @@ class FormPayloadParserTest {
         void validModifications() {
             String json =
                     "[{\"targetName\":\"field1\",\"name\":\"newName\",\"label\":null,\"type\":null,"
-                            + "\"required\":null,\"multiSelect\":null,\"options\":null,\"defaultValue\":\"newVal\",\"tooltip\":null}]";
+                        + "\"required\":null,\"multiSelect\":null,\"options\":null,\"defaultValue\":\"newVal\",\"tooltip\":null}]";
             List<FormUtils.ModifyFormFieldDefinition> result =
                     FormPayloadParser.parseModificationDefinitions(objectMapper, json);
             assertThat(result).hasSize(1);

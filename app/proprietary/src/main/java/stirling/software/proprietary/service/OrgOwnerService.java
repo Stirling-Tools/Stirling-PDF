@@ -168,13 +168,16 @@ public class OrgOwnerService {
                                                                 .getRoleId()
                                                                 .equals(a.getAuthority()))) {
                             log.warn(
-                                    "Invalid STIRLING_ORG_OWNER_BREAK_GLASS user; ownership unchanged");
+                                    "Invalid STIRLING_ORG_OWNER_BREAK_GLASS user; ownership"
+                                            + " unchanged");
                         } else {
                             target.setEnabled(true);
                             promote(target);
                             assign(row, target, "BREAK_GLASS", "system:org-owner");
                             log.warn(
-                                    "Ownership recovery applied to {}. Remove STIRLING_ORG_OWNER_BREAK_GLASS before the next restart.",
+                                    "Ownership recovery applied to {}. Remove"
+                                            + " STIRLING_ORG_OWNER_BREAK_GLASS before the next"
+                                            + " restart.",
                                     target.getUsername());
                             return;
                         }
@@ -230,7 +233,8 @@ public class OrgOwnerService {
                                                     .getAuthentication())) {
                                 throw new ResponseStatusException(
                                         HttpStatus.BAD_REQUEST,
-                                        "Transfer organization ownership before changing this account.");
+                                        "Transfer organization ownership before changing this"
+                                                + " account.");
                             }
                         });
     }
@@ -253,7 +257,8 @@ public class OrgOwnerService {
                                 () ->
                                         new ResponseStatusException(
                                                 HttpStatus.CONFLICT,
-                                                "Organization owner is unavailable. Ask the operator to recover ownership."));
+                                                "Organization owner is unavailable. Ask the"
+                                                        + " operator to recover ownership."));
         User previous =
                 validOwner(row)
                         .orElseThrow(
@@ -306,7 +311,8 @@ public class OrgOwnerService {
         log.info("Organization owner is {} ({})", target.getUsername(), reason);
         if (target.isFirstLogin())
             log.warn(
-                    "Organization owner {} has not completed first login; complete setup or use operator recovery before transferring ownership",
+                    "Organization owner {} has not completed first login; complete setup or use"
+                            + " operator recovery before transferring ownership",
                     target.getUsername());
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {

@@ -46,7 +46,8 @@ public class AuditConfigurationProperties {
         this.captureOperationResults = auditConfig.isCaptureOperationResults();
 
         log.debug(
-                "Initialized audit configuration: enabled={}, level={}, retentionDays={} (0=infinite), fileHash={}, pdfAuthor={}, operationResults={}",
+                "Initialized audit configuration: enabled={}, level={}, retentionDays={}"
+                        + " (0=infinite), fileHash={}, pdfAuthor={}, operationResults={}",
                 this.enabled,
                 this.level,
                 this.retentionDays,

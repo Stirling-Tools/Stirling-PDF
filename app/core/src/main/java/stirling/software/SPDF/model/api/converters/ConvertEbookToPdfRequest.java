@@ -17,8 +17,8 @@ public class ConvertEbookToPdfRequest {
                             + " TXT, DOCX)",
             contentMediaType =
                     "application/epub+zip, application/x-mobipocket-ebook, application/x-azw3,"
-                            + " text/xml, text/plain,"
-                            + " application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        + " text/xml, text/plain,"
+                        + " application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile fileInput;
 

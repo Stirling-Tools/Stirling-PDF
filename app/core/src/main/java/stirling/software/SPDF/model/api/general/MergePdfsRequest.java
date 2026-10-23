@@ -35,14 +35,17 @@ public class MergePdfsRequest extends MultiplePDFFiles {
 
     @Schema(
             description =
-                    "Flag indicating whether to generate a table of contents for the merged PDF. If true, a table of contents will be created using the input filenames as chapter names.",
+                    "Flag indicating whether to generate a table of contents for the merged PDF. If"
+                        + " true, a table of contents will be created using the input filenames as"
+                        + " chapter names.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "false")
     private boolean generateToc = false;
 
     @Schema(
             description =
-                    "JSON array of client-provided IDs for each uploaded file (same order as fileInput)",
+                    "JSON array of client-provided IDs for each uploaded file (same order as"
+                            + " fileInput)",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String clientFileIds;
 }

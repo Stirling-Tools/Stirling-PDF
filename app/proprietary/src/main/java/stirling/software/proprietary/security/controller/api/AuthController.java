@@ -90,12 +90,14 @@ public class AuthController {
             // Check if username/password authentication is allowed
             if (!securityProperties.isUserPass()) {
                 log.warn(
-                        "Username/password login attempted but not allowed by current login method configuration");
+                        "Username/password login attempted but not allowed by current login method"
+                                + " configuration");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(
                                 Map.of(
                                         "error",
-                                        "Username/password authentication is not enabled. Please use the configured authentication method."));
+                                        "Username/password authentication is not enabled. Please"
+                                                + " use the configured authentication method."));
             }
 
             // Validate input parameters
@@ -292,7 +294,8 @@ public class AuthController {
      * @return Success message
      */
     @PreAuthorize(
-            "!@principalPolicy.isInternalApiUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
+            "!@principalPolicy.isInternalApiUser(authentication) &&"
+                    + " !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
@@ -319,7 +322,8 @@ public class AuthController {
      * @return New token information
      */
     @PreAuthorize(
-            "!@principalPolicy.isInternalApiUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
+            "!@principalPolicy.isInternalApiUser(authentication) &&"
+                    + " !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest request, HttpServletResponse response) {
         try {

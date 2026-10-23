@@ -327,7 +327,8 @@ public class PolicyRunner {
                                     (run, error) -> {
                                         if (error != null) {
                                             log.warn(
-                                                    "Could not finish run {} in source batch {} for policy {}",
+                                                    "Could not finish run {} in source batch {} for"
+                                                            + " policy {}",
                                                     handle.runId(),
                                                     storedSource.id(),
                                                     policy.id(),

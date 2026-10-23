@@ -77,7 +77,8 @@ public class PdfaAccessibilityService implements PdfaLevelAServiceInterface {
                                     + document.getNumberOfPages()
                                     + " pages, more than the "
                                     + MAX_TAGGABLE_PAGES
-                                    + " that can be tagged, so it was left at conformance level B.");
+                                    + " that can be tagged, so it was left at conformance level"
+                                    + " B.");
                     return new Result(pdfBytes, false, warnings);
                 }
                 TaggingOptions options =
@@ -107,7 +108,7 @@ public class PdfaAccessibilityService implements PdfaLevelAServiceInterface {
             if (taggingResult.isContentSuppressed()) {
                 warnings.add(
                         "Some text could not be tagged reliably and was marked as an artifact, so"
-                                + " no level A claim was written. The file remains valid at level B.");
+                            + " no level A claim was written. The file remains valid at level B.");
                 return new Result(tagged, false, warnings);
             }
 

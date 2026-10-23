@@ -245,8 +245,8 @@ public class MergeController {
             summary = "Merge multiple PDF files into one",
             description =
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
-                            + " file will contain all pages from the input files in the order they were"
-                            + " provided. Image inputs are converted to PDF pages before merging.")
+                        + " file will contain all pages from the input files in the order they were"
+                        + " provided. Image inputs are converted to PDF pages before merging.")
     public ResponseEntity<Resource> mergePdfs(
             @ModelAttribute MergePdfsRequest request,
             @RequestParam(value = "fileOrder", required = false) String fileOrder)

@@ -187,7 +187,8 @@ public class TempFileCleanupService {
                 || unregisteredDeletedCount > 0
                 || directoriesDeletedCount > 0) {
             log.info(
-                    "Scheduled cleanup complete. Deleted {} registered files, {} unregistered files, {} directories",
+                    "Scheduled cleanup complete. Deleted {} registered files, {} unregistered"
+                            + " files, {} directories",
                     registeredDeletedCount,
                     unregisteredDeletedCount,
                     directoriesDeletedCount);
@@ -383,7 +384,8 @@ public class TempFileCleanupService {
                                                 dirDeletedCount.incrementAndGet();
                                                 if (log.isDebugEnabled()) {
                                                     log.debug(
-                                                            "Deleted temp file during {} cleanup: {}",
+                                                            "Deleted temp file during {} cleanup:"
+                                                                    + " {}",
                                                             phase,
                                                             path);
                                                 }

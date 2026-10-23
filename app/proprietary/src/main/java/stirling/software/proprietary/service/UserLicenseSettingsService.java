@@ -217,8 +217,8 @@ public class UserLicenseSettingsService {
                 int pendingUpdated = userService.grandfatherPendingSsoUsersWithoutSession();
                 if (pendingUpdated > 0) {
                     log.warn(
-                            "OAuth GRANDFATHERING: Marked {} pending SSO users (no prior sessions) as"
-                                    + " grandfathered.",
+                            "OAuth GRANDFATHERING: Marked {} pending SSO users (no prior sessions)"
+                                    + " as grandfathered.",
                             pendingUpdated);
                 }
             }
@@ -253,7 +253,8 @@ public class UserLicenseSettingsService {
                                             DEFAULT_USER_LIMIT,
                                             (int) userService.getTotalUsersCount()));
             log.error(
-                    "Grandfathered user signature invalid or missing. Restoring locked count to {}.",
+                    "Grandfathered user signature invalid or missing. Restoring locked count to"
+                            + " {}.",
                     restoredCount);
             targetCount = restoredCount;
             targetSignature = generateSignature(targetCount, settings);
@@ -262,7 +263,8 @@ public class UserLicenseSettingsService {
             int signedCount = signedCountOpt.get();
             if (targetCount != signedCount) {
                 log.error(
-                        "Grandfathered user count ({}) was modified without signature update. Restoring to {}.",
+                        "Grandfathered user count ({}) was modified without signature update."
+                                + " Restoring to {}.",
                         targetCount,
                         signedCount);
                 targetCount = signedCount;

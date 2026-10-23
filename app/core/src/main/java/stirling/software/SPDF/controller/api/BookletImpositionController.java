@@ -54,8 +54,9 @@ public class BookletImpositionController {
             summary = "Create a booklet with proper page imposition",
             description =
                     "This operation combines page reordering for booklet printing with multi-page"
-                            + " layout. It rearranges pages in the correct order for booklet printing and"
-                            + " places multiple pages on each sheet for proper folding and binding.")
+                        + " layout. It rearranges pages in the correct order for booklet printing"
+                        + " and places multiple pages on each sheet for proper folding and"
+                        + " binding.")
     public ResponseEntity<Resource> createBookletImposition(
             @ModelAttribute BookletImpositionRequest request) throws IOException {
 
@@ -73,7 +74,8 @@ public class BookletImpositionController {
         // Validate pages per sheet for booklet - only 2-up landscape is proper booklet
         if (pagesPerSheet != 2) {
             throw new IllegalArgumentException(
-                    "Booklet printing uses 2 pages per side (landscape). For 4-up, use the N-up feature.");
+                    "Booklet printing uses 2 pages per side (landscape). For 4-up, use the N-up"
+                            + " feature.");
         }
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {

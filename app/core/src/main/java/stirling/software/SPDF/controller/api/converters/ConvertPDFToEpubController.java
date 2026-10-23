@@ -97,8 +97,8 @@ public class ConvertPDFToEpubController {
 
         if (!endpointConfiguration.isGroupEnabled(CALIBRE_GROUP)) {
             throw new IllegalStateException(
-                    "Calibre support is disabled. Enable the Calibre group or install Calibre to use"
-                            + " this feature.");
+                    "Calibre support is disabled. Enable the Calibre group or install Calibre to"
+                            + " use this feature.");
         }
 
         MultipartFile inputFile = request.getFileInput();

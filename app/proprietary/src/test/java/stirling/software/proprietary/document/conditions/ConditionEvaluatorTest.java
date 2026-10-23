@@ -30,8 +30,8 @@ class ConditionEvaluatorTest {
         JsonNode document =
                 facts(
                         """
-                {"document": {"extension": "DOCX", "pageCount": 12}}
-                """);
+                        {"document": {"extension": "DOCX", "pageCount": 12}}
+                        """);
 
         assertThat(
                         ConditionEvaluator.matches(

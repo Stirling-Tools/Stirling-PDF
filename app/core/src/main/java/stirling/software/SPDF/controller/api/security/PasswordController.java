@@ -78,11 +78,12 @@ public class PasswordController {
             summary = "Remove password from a PDF file",
             description =
                     "This endpoint removes the password from a protected PDF file while preserving"
-                            + " its document permissions. Users need to provide the existing"
-                            + " password. Optional ownerPassword, sourcePassword or retainedOpeningPassword"
-                            + " enable selective removal: nonempty password and ownerPassword select"
-                            + " which passwords to remove; blank selections retain them. removeAll explicitly removes all protection, subject to the owner-password policy. Source and"
-                            + " retained credentials never select removal.")
+                        + " its document permissions. Users need to provide the existing password."
+                        + " Optional ownerPassword, sourcePassword or retainedOpeningPassword"
+                        + " enable selective removal: nonempty password and ownerPassword select"
+                        + " which passwords to remove; blank selections retain them. removeAll"
+                        + " explicitly removes all protection, subject to the owner-password"
+                        + " policy. Source and retained credentials never select removal.")
     public ResponseEntity<Resource> removePassword(@ModelAttribute RemovePasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
@@ -188,7 +189,8 @@ public class PasswordController {
             if (!PdfSessionPermissions.isOwnerAuthenticated(document)) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "Verify the permissions password to retain it while removing the opening password");
+                        "Verify the permissions password to retain it while removing the opening"
+                                + " password");
             }
             var protection =
                     new StandardProtectionPolicy(
@@ -202,7 +204,8 @@ public class PasswordController {
             if (!PdfPasswordRoles.isOpeningPassword(document, retainedOpeningPassword)) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "Open the PDF with its opening password before removing only the permissions password");
+                        "Open the PDF with its opening password before removing only the"
+                                + " permissions password");
             }
             var protection =
                     new StandardProtectionPolicy(
@@ -234,7 +237,10 @@ public class PasswordController {
             summary = "Add password to a PDF file",
             description =
                     "This endpoint adds password protection to a PDF file. Users can specify a set"
-                            + " of permissions that should be applied to the file. sourcePassword authenticates an existing protected source; preserveExisting changes permissions while retaining existing credentials. Omitting these options preserves the existing add-password behaviour.")
+                        + " of permissions that should be applied to the file. sourcePassword"
+                        + " authenticates an existing protected source; preserveExisting changes"
+                        + " permissions while retaining existing credentials. Omitting these"
+                        + " options preserves the existing add-password behaviour.")
     public ResponseEntity<Resource> addPassword(@ModelAttribute AddPasswordRequest request)
             throws IOException {
         boolean explicitProtection =
@@ -273,7 +279,8 @@ public class PasswordController {
                     if (!PdfPasswordRoles.isOpeningPassword(document, credential)) {
                         throw new ResponseStatusException(
                                 HttpStatus.BAD_REQUEST,
-                                "Open the PDF with its opening password before replacing the permissions password");
+                                "Open the PDF with its opening password before replacing the"
+                                        + " permissions password");
                     }
                     reader = credential;
                 }
@@ -296,7 +303,8 @@ public class PasswordController {
             if (!permissions.isOwnerPermission() && (owner.isEmpty() || owner.equals(reader))) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "Restrictions require a nonempty permissions password different from the opening password");
+                        "Restrictions require a nonempty permissions password different from the"
+                                + " opening password");
             }
             if (owner.isEmpty() && reader.isEmpty()) {
                 throw new ResponseStatusException(
@@ -335,7 +343,8 @@ public class PasswordController {
                 if (PdfSessionPermissions.isOwnerAuthenticated(result)) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST,
-                            "The opening and permissions passwords must remain distinct after PDF encoding");
+                            "The opening and permissions passwords must remain distinct after PDF"
+                                    + " encoding");
                 }
             }
             return WebResponseUtils.pdfFileToWebResponse(output, filename);

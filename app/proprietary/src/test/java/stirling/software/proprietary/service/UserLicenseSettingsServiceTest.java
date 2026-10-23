@@ -386,7 +386,8 @@ class UserLicenseSettingsServiceTest {
         assertEquals(
                 false,
                 result,
-                "Non-grandfathered user without ENTERPRISE license should NOT be eligible for SAML");
+                "Non-grandfathered user without ENTERPRISE license should NOT be eligible for"
+                        + " SAML");
     }
 
     @Test
@@ -414,7 +415,8 @@ class UserLicenseSettingsServiceTest {
         assertEquals(
                 false,
                 result,
-                "New user with SERVER license should NOT be eligible for SAML (requires ENTERPRISE)");
+                "New user with SERVER license should NOT be eligible for SAML (requires"
+                        + " ENTERPRISE)");
     }
 
     @Test

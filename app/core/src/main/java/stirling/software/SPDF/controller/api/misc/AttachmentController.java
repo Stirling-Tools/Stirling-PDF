@@ -167,7 +167,8 @@ public class AttachmentController {
     @Operation(
             summary = "Extract attachments from PDF",
             description =
-                    "This endpoint extracts all embedded attachments from a PDF into a ZIP archive.")
+                    "This endpoint extracts all embedded attachments from a PDF into a ZIP"
+                            + " archive.")
     public ResponseEntity<Resource> extractAttachments(
             @ModelAttribute ExtractAttachmentsRequest request) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(request, true)) {
@@ -334,7 +335,9 @@ public class AttachmentController {
     @Operation(
             summary = "Batch process attachments in PDF",
             description =
-                    "This endpoint applies batch renames, deletions, and additions to PDF attachments in a single pass. Unknown rename or delete targets are skipped, so re-list attachments afterwards to reconcile.")
+                    "This endpoint applies batch renames, deletions, and additions to PDF"
+                            + " attachments in a single pass. Unknown rename or delete targets are"
+                            + " skipped, so re-list attachments afterwards to reconcile.")
     public ResponseEntity<Resource> batchProcessAttachments(
             @ModelAttribute BatchAttachmentRequest request) throws Exception {
         MultipartFile fileInput = request.getFileInput();

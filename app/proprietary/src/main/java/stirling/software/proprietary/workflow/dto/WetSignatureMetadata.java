@@ -95,7 +95,8 @@ public class WetSignatureMetadata {
                 || !data.startsWith("data:image/")
                 || !data.contains(";base64,")) {
             throw new IllegalArgumentException(
-                    "All wet signatures, including typed text, require a base64 image data URL with data:image/ prefix");
+                    "All wet signatures, including typed text, require a base64 image data URL with"
+                            + " data:image/ prefix");
         }
         if (page == null
                 || page < 0

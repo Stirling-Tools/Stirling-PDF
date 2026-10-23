@@ -373,8 +373,8 @@ class PipelineControllerGapTest {
             MultipartFile[] files = oneFile();
             String json =
                     "{\"name\":\"multi\",\"pipeline\":["
-                            + "{\"operation\":\"/api/v1/misc/repair\",\"parameters\":{}},"
-                            + "{\"operation\":\"/api/v1/security/sanitize-pdf\",\"parameters\":{}}]}";
+                        + "{\"operation\":\"/api/v1/misc/repair\",\"parameters\":{}},"
+                        + "{\"operation\":\"/api/v1/security/sanitize-pdf\",\"parameters\":{}}]}";
 
             // Stop after analytics by returning no input files.
             when(processor.generateInputFiles(files)).thenReturn(null);

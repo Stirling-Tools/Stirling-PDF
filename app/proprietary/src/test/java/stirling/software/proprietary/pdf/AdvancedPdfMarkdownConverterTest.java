@@ -183,10 +183,10 @@ class AdvancedPdfMarkdownConverterTest {
     void boldCjkParagraphIsNotPromotedToAHeading() {
         String paragraph =
                 "\u672c\u898f\u7d04\u306f\u3001\u5f53\u793e\u304c\u63d0\u4f9b\u3059\u308b"
-                        + "\u672c\u30b5\u30fc\u30d3\u30b9\u306e\u5229\u7528\u6761\u4ef6\u3092"
-                        + "\u5b9a\u3081\u308b\u3082\u306e\u3067\u3042\u308a\u3001\u5229\u7528"
-                        + "\u8005\u306e\u7686\u3055\u307e\u306b\u306f\u672c\u898f\u7d04\u306b"
-                        + "\u5f93\u3063\u3066\u3054\u5229\u7528\u3044\u305f\u3060\u304d\u307e\u3059\u3002";
+                    + "\u672c\u30b5\u30fc\u30d3\u30b9\u306e\u5229\u7528\u6761\u4ef6\u3092"
+                    + "\u5b9a\u3081\u308b\u3082\u306e\u3067\u3042\u308a\u3001\u5229\u7528"
+                    + "\u8005\u306e\u7686\u3055\u307e\u306b\u306f\u672c\u898f\u7d04\u306b"
+                    + "\u5f93\u3063\u3066\u3054\u5229\u7528\u3044\u305f\u3060\u304d\u307e\u3059\u3002";
         List<TextWord> words = cjkWords(paragraph, "NotoSansCJKjp-Bold");
         assertEquals(
                 "",
@@ -545,7 +545,8 @@ class AdvancedPdfMarkdownConverterTest {
         if (similarity < THRESHOLD) {
             fail(
                     String.format(
-                            "Markdown output differs from golden file '%s' by %.1f%% (threshold %.0f%%):%n%s",
+                            "Markdown output differs from golden file '%s' by %.1f%% (threshold"
+                                    + " %.0f%%):%n%s",
                             mdName,
                             (1.0 - similarity) * 100,
                             (1.0 - THRESHOLD) * 100,

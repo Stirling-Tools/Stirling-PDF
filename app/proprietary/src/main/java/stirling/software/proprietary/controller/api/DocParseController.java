@@ -101,11 +101,11 @@ public class DocParseController {
     @Operation(
             summary = "Chunk, embed, and index a document into the knowledge base (pipeline shape)",
             description =
-                    "Ingests the document into the engine's knowledge base under a stable documentId"
-                            + " (default: content hash). Returns a ZIP containing the original PDF"
-                            + " when includeOriginal is true and any selected markdown or chunks"
-                            + " JSONL exports. Pipelines unpack the ZIP for the next step. The"
-                            + " X-Stirling-Tool-Report header contains the ingest summary JSON.")
+                    "Ingests the document into the engine's knowledge base under a stable"
+                        + " documentId (default: content hash). Returns a ZIP containing the"
+                        + " original PDF when includeOriginal is true and any selected markdown or"
+                        + " chunks JSONL exports. Pipelines unpack the ZIP for the next step. The"
+                        + " X-Stirling-Tool-Report header contains the ingest summary JSON.")
     public ResponseEntity<Resource> ingest(@ModelAttribute IngestApiRequest request)
             throws IOException {
         if (!request.isIncludeOriginal()

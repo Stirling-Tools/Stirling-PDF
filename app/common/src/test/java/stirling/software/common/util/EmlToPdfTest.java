@@ -120,10 +120,10 @@ class EmlToPdfTest {
         void parseHtmlEmailWithStyling() throws IOException {
             String htmlBody =
                     "<html><head><style>.header{color:blue;font-weight:bold;}"
-                            + ".content{margin:10px;}.footer{font-size:12px;}</style></head>"
-                            + "<body><div class=\"header\">Important Notice</div>"
-                            + "<div class=\"content\">This is <strong>HTML content</strong> with styling.</div>"
-                            + "<div class=\"footer\">Best regards</div></body></html>";
+                        + ".content{margin:10px;}.footer{font-size:12px;}</style></head><body><div"
+                        + " class=\"header\">Important Notice</div><div class=\"content\">This is"
+                        + " <strong>HTML content</strong> with styling.</div><div"
+                        + " class=\"footer\">Best regards</div></body></html>";
 
             String emlContent =
                     createHtmlEmail(
@@ -286,11 +286,13 @@ class EmlToPdfTest {
         @DisplayName("Should handle complex nested HTML structures")
         void handleComplexNestedHtml() throws IOException {
             String complexHtml =
-                    "<html><head><title>Complex Email</title></head><body>"
-                            + "<div class=\"container\"><header><h1>Email Header</h1></header><main><section>"
-                            + "<p>Paragraph with <a href=\"https://example.com\">link</a></p><ul>"
-                            + "<li>List item 1</li><li>List item 2 with <em>emphasis</em></li></ul><table>"
-                            + "<tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr>"
+                    "<html><head><title>Complex Email</title></head><body><div"
+                            + " class=\"container\"><header><h1>Email"
+                            + " Header</h1></header><main><section><p>Paragraph with <a"
+                            + " href=\"https://example.com\">link</a></p><ul><li>List item"
+                            + " 1</li><li>List item 2 with"
+                            + " <em>emphasis</em></li></ul><table><tr><td>Cell 1</td><td>Cell"
+                            + " 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr>"
                             + "</table></section></main></div></body></html>";
 
             String emlContent =
@@ -346,7 +348,8 @@ class EmlToPdfTest {
                     This line breaks header format
                     Content-Type: text/plain
 
-                    Body content""";
+                    Body content\
+                    """;
 
             byte[] emlBytes = malformedEml.getBytes(StandardCharsets.UTF_8);
             EmlToPdfRequest request = createBasicRequest();
@@ -781,7 +784,13 @@ class EmlToPdfTest {
             String from, String to, String subject, String body, String charset) {
         return String.format(
                 Locale.ROOT,
-                "From: %s\nTo: %s\nSubject: %s\nDate: %s\nContent-Type: text/plain; charset=%s\nContent-Transfer-Encoding: 8bit\n\n%s",
+                "From: %s\n"
+                        + "To: %s\n"
+                        + "Subject: %s\n"
+                        + "Date: %s\n"
+                        + "Content-Type: text/plain; charset=%s\n"
+                        + "Content-Transfer-Encoding: 8bit\n\n"
+                        + "%s",
                 from,
                 to,
                 subject,
@@ -793,7 +802,11 @@ class EmlToPdfTest {
     private String createEmailWithCustomHeaders() {
         return String.format(
                 Locale.ROOT,
-                "From: sender@example.com\nDate: %s\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n\n%s",
+                "From: sender@example.com\n"
+                        + "Date: %s\n"
+                        + "Content-Type: text/plain; charset=UTF-8\n"
+                        + "Content-Transfer-Encoding: 8bit\n\n"
+                        + "%s",
                 getTimestamp(),
                 "This is an email body with some headers missing.");
     }
@@ -801,7 +814,13 @@ class EmlToPdfTest {
     private String createHtmlEmail(String from, String to, String subject, String htmlBody) {
         return String.format(
                 Locale.ROOT,
-                "From: %s\nTo: %s\nSubject: %s\nDate: %s\nContent-Type: text/html; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n\n%s",
+                "From: %s\n"
+                        + "To: %s\n"
+                        + "Subject: %s\n"
+                        + "Date: %s\n"
+                        + "Content-Type: text/html; charset=UTF-8\n"
+                        + "Content-Transfer-Encoding: 8bit\n\n"
+                        + "%s",
                 from,
                 to,
                 subject,
@@ -823,26 +842,27 @@ class EmlToPdfTest {
         return String.format(
                 Locale.ROOT,
                 """
-                    From: %s
-                    To: %s
-                    Subject: %s
-                    Date: %s
-                    Content-Type: multipart/mixed; boundary="%s"
+                From: %s
+                To: %s
+                Subject: %s
+                Date: %s
+                Content-Type: multipart/mixed; boundary="%s"
 
-                    --%s
-                    Content-Type: text/plain; charset=UTF-8
-                    Content-Transfer-Encoding: 8bit
+                --%s
+                Content-Type: text/plain; charset=UTF-8
+                Content-Transfer-Encoding: 8bit
 
-                    %s
+                %s
 
-                    --%s
-                    Content-Type: text/plain; charset=UTF-8
-                    Content-Disposition: attachment; filename="%s"
-                    Content-Transfer-Encoding: base64
+                --%s
+                Content-Type: text/plain; charset=UTF-8
+                Content-Disposition: attachment; filename="%s"
+                Content-Transfer-Encoding: base64
 
-                    %s
+                %s
 
-                    --%s--""",
+                --%s--\
+                """,
                 from,
                 to,
                 subject,
@@ -863,26 +883,27 @@ class EmlToPdfTest {
         return String.format(
                 Locale.ROOT,
                 """
-                    From: %s
-                    To: %s
-                    Subject: %s
-                    Date: %s
-                    Content-Type: multipart/mixed; boundary="%s"
+                From: %s
+                To: %s
+                Subject: %s
+                Date: %s
+                Content-Type: multipart/mixed; boundary="%s"
 
-                    --%s
-                    Content-Type: text/plain; charset=UTF-8
-                    Content-Transfer-Encoding: 8bit
+                --%s
+                Content-Type: text/plain; charset=UTF-8
+                Content-Transfer-Encoding: 8bit
 
-                    %s
+                %s
 
-                    --%s
-                    Content-Type: message/rfc822; name="%s"
-                    Content-Disposition: attachment; filename="%s"
-                    Content-Transfer-Encoding: base64
+                --%s
+                Content-Type: message/rfc822; name="%s"
+                Content-Disposition: attachment; filename="%s"
+                Content-Transfer-Encoding: base64
 
-                    %s
+                %s
 
-                    --%s--""",
+                --%s--\
+                """,
                 "outer@example.com",
                 "outer_recipient@example.com",
                 "Fwd: Inner Email Subject",
@@ -902,26 +923,27 @@ class EmlToPdfTest {
         return String.format(
                 Locale.ROOT,
                 """
-                    From: %s
-                    To: %s
-                    Subject: %s
-                    Date: %s
-                    MIME-Version: 1.0
-                    Content-Type: multipart/alternative; boundary="%s"
+                From: %s
+                To: %s
+                Subject: %s
+                Date: %s
+                MIME-Version: 1.0
+                Content-Type: multipart/alternative; boundary="%s"
 
-                    --%s
-                    Content-Type: text/plain; charset=UTF-8
-                    Content-Transfer-Encoding: 7bit
+                --%s
+                Content-Type: text/plain; charset=UTF-8
+                Content-Transfer-Encoding: 7bit
 
-                    %s
+                %s
 
-                    --%s
-                    Content-Type: text/html; charset=UTF-8
-                    Content-Transfer-Encoding: 7bit
+                --%s
+                Content-Type: text/html; charset=UTF-8
+                Content-Transfer-Encoding: 7bit
 
-                    %s
+                %s
 
-                    --%s--""",
+                --%s--\
+                """,
                 "sender@example.com",
                 "receiver@example.com",
                 "Multipart/Alternative Test",
@@ -937,7 +959,14 @@ class EmlToPdfTest {
     private String createQuotedPrintableEmail() {
         return String.format(
                 Locale.ROOT,
-                "From: %s\nTo: %s\nSubject: %s\nDate: %s\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: quoted-printable\n\n%s",
+                "From: %s\n"
+                        + "To: %s\n"
+                        + "Subject: %s\n"
+                        + "Date: %s\n"
+                        + "MIME-Version: 1.0\n"
+                        + "Content-Type: text/plain; charset=UTF-8\n"
+                        + "Content-Transfer-Encoding: quoted-printable\n\n"
+                        + "%s",
                 "sender@example.com",
                 "recipient@example.com",
                 "Quoted-Printable Test",
@@ -950,7 +979,14 @@ class EmlToPdfTest {
                 Base64.getEncoder().encodeToString(body.getBytes(StandardCharsets.UTF_8));
         return String.format(
                 Locale.ROOT,
-                "From: %s\nTo: %s\nSubject: %s\nDate: %s\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: base64\n\n%s",
+                "From: %s\n"
+                        + "To: %s\n"
+                        + "Subject: %s\n"
+                        + "Date: %s\n"
+                        + "MIME-Version: 1.0\n"
+                        + "Content-Type: text/plain; charset=UTF-8\n"
+                        + "Content-Transfer-Encoding: base64\n\n"
+                        + "%s",
                 "sender@example.com",
                 "recipient@example.com",
                 "Base64 Test",
@@ -963,27 +999,28 @@ class EmlToPdfTest {
         return String.format(
                 Locale.ROOT,
                 """
-                    From: %s
-                    To: %s
-                    Subject: %s
-                    Date: %s
-                    Content-Type: multipart/related; boundary="%s"
+                From: %s
+                To: %s
+                Subject: %s
+                Date: %s
+                Content-Type: multipart/related; boundary="%s"
 
-                    --%s
-                    Content-Type: text/html; charset=UTF-8
-                    Content-Transfer-Encoding: 8bit
+                --%s
+                Content-Type: text/html; charset=UTF-8
+                Content-Transfer-Encoding: 8bit
 
-                    %s
+                %s
 
-                    --%s
-                    Content-Type: image/png
-                    Content-Transfer-Encoding: base64
-                    Content-ID: <%s>
-                    Content-Disposition: inline; filename="image.png"
+                --%s
+                Content-Type: image/png
+                Content-Transfer-Encoding: base64
+                Content-ID: <%s>
+                Content-Disposition: inline; filename="image.png"
 
-                    %s
+                %s
 
-                    --%s--""",
+                --%s--\
+                """,
                 "sender@example.com",
                 "receiver@example.com",
                 "Inline Image Test",
@@ -1008,39 +1045,40 @@ class EmlToPdfTest {
         return String.format(
                 Locale.ROOT,
                 """
-                    From: %s
-                    To: %s
-                    Subject: %s
-                    Date: %s
-                    Content-Type: multipart/mixed; boundary="%s"
+                From: %s
+                To: %s
+                Subject: %s
+                Date: %s
+                Content-Type: multipart/mixed; boundary="%s"
 
-                    --%s
-                    Content-Type: multipart/related; boundary="related-%s"
+                --%s
+                Content-Type: multipart/related; boundary="related-%s"
 
-                    --related-%s
-                    Content-Type: text/html; charset=UTF-8
-                    Content-Transfer-Encoding: 8bit
+                --related-%s
+                Content-Type: text/html; charset=UTF-8
+                Content-Transfer-Encoding: 8bit
 
-                    %s
+                %s
 
-                    --related-%s
-                    Content-Type: image/png
-                    Content-Transfer-Encoding: base64
-                    Content-ID: <%s>
-                    Content-Disposition: inline; filename="image.png"
+                --related-%s
+                Content-Type: image/png
+                Content-Transfer-Encoding: base64
+                Content-ID: <%s>
+                Content-Disposition: inline; filename="image.png"
 
-                    %s
+                %s
 
-                    --related-%s--
+                --related-%s--
 
-                    --%s
-                    Content-Type: text/plain; charset=UTF-8
-                    Content-Disposition: attachment; filename="%s"
-                    Content-Transfer-Encoding: base64
+                --%s
+                Content-Type: text/plain; charset=UTF-8
+                Content-Disposition: attachment; filename="%s"
+                Content-Transfer-Encoding: base64
 
-                    %s
+                %s
 
-                    --%s--""",
+                --%s--\
+                """,
                 "sender@example.com",
                 "receiver@example.com",
                 "Mixed Attachments Test",

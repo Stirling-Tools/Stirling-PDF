@@ -275,7 +275,8 @@ public class VeraPDFService {
                     flavoursToValidate.add(flavour);
                 } else {
                     log.debug(
-                            "Ignoring detected PDF/A flavour {} because no PDF/A declaration exists in XMP",
+                            "Ignoring detected PDF/A flavour {} because no PDF/A declaration exists"
+                                    + " in XMP",
                             flavour.getId());
                 }
             } else if (PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_UA)

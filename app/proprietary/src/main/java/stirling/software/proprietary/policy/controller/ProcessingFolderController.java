@@ -637,14 +637,12 @@ public class ProcessingFolderController {
     @Operation(
             summary = "Restore every archived original in the folder",
             description =
-                    "Resets the folder: pauses it, cancels its in-flight runs and waits for"
-                            + " them to stop, copies each original kept under"
-                            + " .stirling back over its"
-                            + " processed file, retains the backups, and forgets the whole processed history —"
-                            + " failed files included — so everything reads as waiting"
-                            + " until it resumes. Only files of the watched directory itself"
-                            + " are touched, and a file mid-run is skipped rather than"
-                            + " raced.")
+                    "Resets the folder: pauses it, cancels its in-flight runs and waits for them to"
+                        + " stop, copies each original kept under .stirling back over its processed"
+                        + " file, retains the backups, and forgets the whole processed history —"
+                        + " failed files included — so everything reads as waiting until it"
+                        + " resumes. Only files of the watched directory itself are touched, and a"
+                        + " file mid-run is skipped rather than raced.")
     public RevertAllOutcome revertAllFiles(@PathVariable String id) {
         User user = currentUserOrNull();
         Policy policy = requireOwn(id, user);

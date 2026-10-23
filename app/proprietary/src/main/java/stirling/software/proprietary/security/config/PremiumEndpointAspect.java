@@ -29,7 +29,8 @@ public class PremiumEndpointAspect {
     }
 
     @Around(
-            "@annotation(stirling.software.proprietary.security.config.PremiumEndpoint) || @within(stirling.software.proprietary.security.config.PremiumEndpoint)")
+            "@annotation(stirling.software.proprietary.security.config.PremiumEndpoint) ||"
+                    + " @within(stirling.software.proprietary.security.config.PremiumEndpoint)")
     public Object checkPremiumAccess(ProceedingJoinPoint joinPoint) throws Throwable {
         if (!licenseService.isRunningProOrHigher()) {
             throw new ResponseStatusException(

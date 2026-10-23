@@ -53,8 +53,9 @@ public class KeygenEnterpriseLicenseService implements EnterpriseLicenseService 
         // caught at startup, not at the first trial/provision. (Flag off → Mock bean, never here.)
         if (!config.isConfigured()) {
             throw new IllegalStateException(
-                    "stirling.keygen.enabled=true but Keygen is not fully configured — set "
-                            + "STIRLING_KEYGEN_ACCOUNT_ID / _API_TOKEN / _POLICY_ID, or turn the flag off");
+                    "stirling.keygen.enabled=true but Keygen is not fully configured — set"
+                        + " STIRLING_KEYGEN_ACCOUNT_ID / _API_TOKEN / _POLICY_ID, or turn the flag"
+                        + " off");
         }
     }
 
