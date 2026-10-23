@@ -108,7 +108,7 @@ undoSuccess = "Åtgärden ångrades"
 unknown = "Okänt"
 unpin = "Lossa fil (ersätt efter verktygskörning)"
 unsavedChanges = "Du har osparade ändringar i din PDF."
-unsavedChangesBody = "Du har osparade ändringar i PDF-filen. Är du säker på att du vill lämna sidan?"
+unsavedChangesBody = "Du har osparade ändringar i din PDF. Är du säker på att du vill lämna?"
 unsavedChangesTitle = "Osparade ändringar"
 unsupported = "Stöds inte"
 username = "Användarnamn"
@@ -1037,7 +1037,7 @@ pageFormatKeep = "Behåll (ursprungliga dimensioner)"
 pageFormatLetter = "Letter (8,5 × 11 tum)"
 
 [admin.settings.connections.oauth2]
-label = "OAuth 2"
+label = "OAuth2"
 
 [admin.settings.connections.oauth2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första OAuth2-inloggningen"
@@ -1076,7 +1076,7 @@ description = "Det OAuth2-anspråk som ska användas som användarnamn (t.ex. em
 label = "Använd som användarnamn"
 
 [admin.settings.connections.saml2]
-label = "SAML 2"
+label = "SAML2"
 
 [admin.settings.connections.saml2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första SAML2-inloggningen"
@@ -5568,8 +5568,8 @@ location = "Plats:"
 logo = "Logotyp:"
 logoHidden = "Ingen logotyp"
 logoShown = "Stirling PDF-logotyp visas"
-participantCount_one = "{{count}} deltagare kommer att signera i ordning"
-participantCount_other = "{{count}} deltagare kommer att signera i ordning"
+participantCount_one = "{{count}} deltagare har valts"
+participantCount_other = "{{count}} deltagare har valts"
 participants = "Deltagare"
 reason = "Orsak:"
 send = "Skicka signeringsförfrågningar"
