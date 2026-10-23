@@ -7,16 +7,16 @@ import {
   isDeviceFontReady,
   loadDeviceFontInto,
   resetDeviceFontEmbedCache,
-} from "@app/tools/pdfTextEditor/util/deviceFontEmbed";
+} from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
   loadLocalFontBytes,
   pickLocalFontFace,
   resetLocalFontsCache,
-} from "@app/tools/pdfTextEditor/util/localFonts";
-import type { LocalFont } from "@app/tools/pdfTextEditor/util/localFonts";
-import type { FontRef } from "@app/tools/pdfTextEditor/model/FontRef";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
+} from "@editor/tools/pdfTextEditor/util/localFonts";
+import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
+import type { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 
 type QueryStub = () => Promise<unknown[]>;
 

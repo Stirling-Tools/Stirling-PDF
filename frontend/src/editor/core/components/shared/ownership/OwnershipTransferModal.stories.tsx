@@ -3,7 +3,7 @@ import {
   OwnershipTransferModal,
   type OwnershipStatus,
   type OwnershipTransferAdapter,
-} from "@app/components/shared/ownership/OwnershipTransferModal";
+} from "@editor/components/shared/ownership/OwnershipTransferModal";
 
 const ready: OwnershipStatus = {
   targetId: 2,

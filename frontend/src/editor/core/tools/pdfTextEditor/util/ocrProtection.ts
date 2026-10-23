@@ -1,8 +1,8 @@
 import type { TFunction } from "i18next";
-import { getPdfAccess } from "@app/services/pdfAccessService";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { detectSaveRisks } from "@app/tools/pdfTextEditor/util/documentRisks";
-import type { FileId } from "@app/types/file";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { detectSaveRisks } from "@editor/tools/pdfTextEditor/util/documentRisks";
+import type { FileId } from "@editor/types/file";
 
 /** Checks native encryption too: a disk-opened document may not have a FileContext ID yet. */
 export function getEditorOcrBlockedReason(

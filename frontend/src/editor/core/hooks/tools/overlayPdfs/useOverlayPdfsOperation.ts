@@ -3,18 +3,18 @@ import {
   useToolOperation,
   type ToolOperationConfig,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   validateOverlayPdfsParameters,
   type OverlayPdfsParameters,
   defaultParameters,
-} from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
+} from "@editor/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
 
 const ENDPOINT = "/api/v1/general/overlay-pdfs" satisfies ToolEndpoint;
 type OverlayPdfsApiParams = ToolApiParams[typeof ENDPOINT];

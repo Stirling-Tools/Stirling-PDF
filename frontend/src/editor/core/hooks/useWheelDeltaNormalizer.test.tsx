@@ -19,7 +19,7 @@ vi.mock("@embedpdf/plugin-zoom/react", () => ({
   }),
 }));
 
-import { useWheelDeltaNormalizer } from "@app/hooks/useWheelDeltaNormalizer";
+import { useWheelDeltaNormalizer } from "@editor/hooks/useWheelDeltaNormalizer";
 
 function makeViewport(): HTMLDivElement {
   const host = document.createElement("div");

@@ -1,4 +1,4 @@
-import type { AiEngineSettingsData } from "@app/components/shared/config/configSections/aiEngineSettings";
+import type { AiEngineSettingsData } from "@editor/components/shared/config/configSections/aiEngineSettings";
 
 /**
  * What every AI card needs from the page that owns them. The four AI sections

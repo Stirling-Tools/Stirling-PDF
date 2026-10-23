@@ -2,17 +2,17 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   fileOnlyMapping,
   objectToFormData,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   RemoveCertificateSignParameters,
   defaultParameters,
-} from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters";
+} from "@editor/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters";
 
 const ENDPOINT = "/api/v1/security/remove-cert-sign" satisfies ToolEndpoint;
 

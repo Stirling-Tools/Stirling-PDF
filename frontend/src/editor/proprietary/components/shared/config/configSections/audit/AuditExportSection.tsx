@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Card, Text, Group, Stack, Checkbox } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Button } from "@editor/ui/Button";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
-import auditService from "@app/services/auditService";
-import { Icon } from "@app/ui/Icon";
-import { useAuditFilters } from "@app/hooks/useAuditFilters";
-import AuditFiltersForm from "@app/components/shared/config/configSections/audit/AuditFiltersForm";
+import auditService from "@editor/services/auditService";
+import { Icon } from "@editor/ui/Icon";
+import { useAuditFilters } from "@editor/hooks/useAuditFilters";
+import AuditFiltersForm from "@editor/components/shared/config/configSections/audit/AuditFiltersForm";
 
 interface AuditExportSectionProps {
   loginEnabled?: boolean;

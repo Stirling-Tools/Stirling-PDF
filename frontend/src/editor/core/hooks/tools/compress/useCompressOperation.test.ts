@@ -3,11 +3,11 @@ import {
   buildCompressFormData,
   compressFromApiParams,
   compressToApiParams,
-} from "@app/hooks/tools/compress/useCompressOperation";
+} from "@editor/hooks/tools/compress/useCompressOperation";
 import {
   CompressParameters,
   defaultParameters,
-} from "@app/hooks/tools/compress/useCompressParameters";
+} from "@editor/hooks/tools/compress/useCompressParameters";
 
 const params = (
   overrides: Partial<CompressParameters>,

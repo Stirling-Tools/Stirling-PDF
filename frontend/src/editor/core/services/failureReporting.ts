@@ -1,4 +1,4 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 
 /**
  * Reports a tool failure the user hit in the editor, so it lands in the same queue

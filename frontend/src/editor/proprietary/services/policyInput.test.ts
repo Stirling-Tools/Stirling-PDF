@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { policyAcceptsFile } from "@app/services/policyInput";
-import type { PolicyState } from "@app/types/policies";
+import { policyAcceptsFile } from "@editor/services/policyInput";
+import type { PolicyState } from "@editor/types/policies";
 
 describe("policy input compatibility", () => {
   it.each<[PolicyState["firstOperation"], string, string, boolean]>([

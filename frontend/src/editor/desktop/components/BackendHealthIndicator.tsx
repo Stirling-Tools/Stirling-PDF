@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Tooltip, useMantineTheme, rem } from "@mantine/core";
-import { useBackendHealth } from "@app/hooks/useBackendHealth";
+import { useBackendHealth } from "@editor/hooks/useBackendHealth";
 
 interface BackendHealthIndicatorProps {
   className?: string;

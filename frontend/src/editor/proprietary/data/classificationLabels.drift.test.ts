@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
 import { describe, it, expect } from "vitest";
-import { DEFAULT_CLASSIFICATION_LABELS } from "@app/data/classificationLabels";
-import { isIconName } from "@app/ui/Icon";
+import { DEFAULT_CLASSIFICATION_LABELS } from "@editor/data/classificationLabels";
+import { isIconName } from "@editor/ui/Icon";
 
 // The classifier vocabulary is bundled in TWO places that must not drift:
 //  - this frontend JSON (source of truth for sidebar categories + display names)

@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { computeReadAloudHighlightRect } from "@app/components/viewer/readAloudHighlight";
+import { computeReadAloudHighlightRect } from "@editor/components/viewer/readAloudHighlight";
 import {
   READ_ALOUD_FROM_SELECTION_EVENT,
   findReadAloudStartIndex,
   type ReadAloudFromSelectionDetail,
-} from "@app/components/viewer/readAloudFromSelection";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useStopReadAloudOnNavigation } from "@app/components/viewer/useStopReadAloudOnNavigation";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { StirlingFile } from "@app/types/fileContext";
-import { ZINDEX } from "@app/constants/zIndex";
+} from "@editor/components/viewer/readAloudFromSelection";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useStopReadAloudOnNavigation } from "@editor/components/viewer/useStopReadAloudOnNavigation";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import { StirlingFile } from "@editor/types/fileContext";
+import { ZINDEX } from "@editor/constants/zIndex";
 
 interface TextItemWithGeometry {
   str: string;

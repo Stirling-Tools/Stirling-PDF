@@ -1,4 +1,4 @@
-import { NavKey } from "@app/components/shared/config/types";
+import { NavKey } from "@editor/components/shared/config/types";
 
 /**
  * A whole settings section (nav tab), described as pure data so the global
@@ -6,7 +6,7 @@ import { NavKey } from "@app/components/shared/config/types";
  *
  * This is the single source of truth for *which settings sections are
  * searchable* in a given build. It is intentionally **component-free**: the
- * always-mounted top bar imports it (via `@app/data/settingsSectionRegistry`)
+ * always-mounted top bar imports it (via `@editor/data/settingsSectionRegistry`)
  * to feed the super search, and pulling the heavy settings component tree in
  * here would defeat the lazy-loaded settings page.
  *

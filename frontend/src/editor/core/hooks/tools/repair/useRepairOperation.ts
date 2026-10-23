@@ -2,17 +2,17 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   fileOnlyMapping,
   objectToFormData,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   RepairParameters,
   defaultParameters,
-} from "@app/hooks/tools/repair/useRepairParameters";
-import { REPAIR_ENDPOINT } from "@app/constants/toolEndpoints";
+} from "@editor/hooks/tools/repair/useRepairParameters";
+import { REPAIR_ENDPOINT } from "@editor/constants/toolEndpoints";
 
 // Repair takes only a file; there are no request parameters to map.
 const { toApiParams, fromApiParams } = fileOnlyMapping();

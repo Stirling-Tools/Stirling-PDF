@@ -1,10 +1,10 @@
 import React from "react";
 import { Select } from "@mantine/core";
-import { SlideConfig } from "@app/types/types";
-import { Icon } from "@app/ui/Icon";
-import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
-import i18n from "@app/i18n";
-import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
+import { SlideConfig } from "@editor/types/types";
+import { Icon } from "@editor/ui/Icon";
+import { UNIFIED_CIRCLE_CONFIG } from "@editor/components/onboarding/slides/unifiedBackgroundConfig";
+import i18n from "@editor/i18n";
+import styles from "@editor/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 
 interface SecurityCheckSlideProps {
   selectedRole: "admin" | "user" | null;

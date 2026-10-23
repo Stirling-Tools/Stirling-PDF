@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { createViewerActions } from "@app/contexts/viewer/viewerActions";
-import type { ScrollState } from "@app/contexts/viewer/viewerBridges";
+import { createViewerActions } from "@editor/contexts/viewer/viewerActions";
+import type { ScrollState } from "@editor/contexts/viewer/viewerBridges";
 
 function makeActions(currentZoom: number, requestZoom = vi.fn()) {
   const actions = createViewerActions({

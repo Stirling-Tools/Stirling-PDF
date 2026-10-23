@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import "@app/ui/Surface.css";
-import "@app/ui/MetricCard.css";
+import "@editor/ui/Surface.css";
+import "@editor/ui/MetricCard.css";
 
 export type DeltaDirection = "up" | "down" | "flat";
 

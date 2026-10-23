@@ -1,5 +1,5 @@
-import { fromWirePolicy } from "@app/policies/codec";
-import { runsToActivity, runsToStats } from "@app/policies/runs";
+import { fromWirePolicy } from "@editor/policies/codec";
+import { runsToActivity, runsToStats } from "@editor/policies/runs";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
@@ -8,12 +8,12 @@ import {
   type PoliciesResponse,
   type PolicyState,
   type PolicyStatus,
-} from "@app/policies/catalog";
+} from "@editor/policies/catalog";
 import type {
   PolicyDecodedState,
   PolicyRunView,
   WirePolicy,
-} from "@app/policies/types";
+} from "@editor/policies/types";
 
 function decoratePolicy(
   decoded: PolicyDecodedState,

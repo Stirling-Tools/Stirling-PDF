@@ -1,10 +1,10 @@
 import React from "react";
-import FileStatusIndicator from "@app/components/tools/shared/FileStatusIndicator";
-import { StirlingFile } from "@app/types/fileContext";
-import i18n from "@app/i18n";
-import { useViewScopedFileStubs } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfAccessService";
+import FileStatusIndicator from "@editor/components/tools/shared/FileStatusIndicator";
+import { StirlingFile } from "@editor/types/fileContext";
+import i18n from "@editor/i18n";
+import { useViewScopedFileStubs } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
 
 export interface FilesToolStepProps {
   selectedFiles: StirlingFile[];

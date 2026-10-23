@@ -1,14 +1,14 @@
-import apiClient from "@app/services/apiClient";
-import { stripeAmountToMajor } from "@app/utils/stripeCurrency";
+import apiClient from "@editor/services/apiClient";
+import { stripeAmountToMajor } from "@editor/utils/stripeCurrency";
 import type {
   PlanFeaturesMap,
   PlanHighlightsMap,
-} from "@app/constants/planConstants";
-import type { LicenseInfo, PlanFeature } from "@app/types/license";
+} from "@editor/constants/planConstants";
+import type { LicenseInfo, PlanFeature } from "@editor/types/license";
 
 // Avoid a static import: it would pull the Supabase SDK onto the startup path of
 // every build, including installs that never reach billing.
-const loadSupabaseClient = () => import("@app/services/supabaseClient");
+const loadSupabaseClient = () => import("@editor/services/supabaseClient");
 
 export interface PlanTier {
   id: string;

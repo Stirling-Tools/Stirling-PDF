@@ -1,8 +1,8 @@
 import { act, render, waitFor, cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
+import { PdfPasswordBridge } from "@editor/components/viewer/PdfPasswordBridge";
 import { PdfErrorCode } from "@embedpdf/models";
-import type { FileId } from "@app/types/file";
+import type { FileId } from "@editor/types/file";
 
 const mock = vi.hoisted(() => ({
   retry: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock("@embedpdf/plugin-document-manager/react", () => ({
     provides: { retryDocument: mock.retry },
   }),
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useFileActions: () => ({
     actions: { openEncryptedUnlockPrompt: mock.prompt },
   }),

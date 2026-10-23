@@ -4,7 +4,7 @@ import {
   SidebarRefs,
   SidebarContextValue,
   SidebarProviderProps,
-} from "@app/types/sidebar";
+} from "@editor/types/sidebar";
 
 const SidebarContext = createContext<SidebarContextValue | undefined>(
   undefined,

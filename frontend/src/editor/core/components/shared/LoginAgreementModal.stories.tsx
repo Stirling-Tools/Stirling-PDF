@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import LoginAgreementModal from "@app/components/shared/LoginAgreementModal";
+import LoginAgreementModal from "@editor/components/shared/LoginAgreementModal";
 
 /**
  * Renders nothing by default: the modal only opens after fetching

@@ -1,11 +1,11 @@
 import { useEffect, useMemo } from "react";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import { usePreferences } from "@app/contexts/PreferencesContext";
-import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
-import FullscreenToolSurface from "@app/components/tools/FullscreenToolSurface";
-import { ToolId } from "@app/types/toolId";
-import type { ToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { useWorkbenchBar } from "@editor/contexts/WorkbenchBarContext";
+import FullscreenToolSurface from "@editor/components/tools/FullscreenToolSurface";
+import { ToolId } from "@editor/types/toolId";
+import type { ToolPanelGeometry } from "@editor/hooks/tools/useToolPanelGeometry";
 
 /** Derives whether the fullscreen tool picker is currently expanded. */
 export function useIsFullscreenExpanded(): boolean {

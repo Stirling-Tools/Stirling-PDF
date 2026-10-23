@@ -3,19 +3,19 @@ import {
   closeDocAndFreeBuffer,
   getPdfiumModule,
   openRawDocument,
-} from "@app/services/pdfiumService";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
+} from "@editor/services/pdfiumService";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   PageStructure,
   type StructureElement,
-} from "@app/tools/pdfTextEditor/model/PageStructure";
-import type { StructureEdit } from "@app/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
-import { readPageStructure } from "@app/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
-import { readFileStructure } from "@app/tools/pdfTextEditor/pdfdoc/readFileStructure";
-import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
-import { FontRef } from "@app/tools/pdfTextEditor/model/FontRef";
-import { prepareForEditing } from "@app/tools/pdfTextEditor/pdfdoc/prepareForEditing";
-import { releaseScratch } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
+import type { StructureEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
+import { readPageStructure } from "@editor/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
+import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
+import { prepareForEditing } from "@editor/tools/pdfTextEditor/pdfdoc/prepareForEditing";
+import { releaseScratch } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 // Lifetime-managed PDFium document wrapper for the PDF text editor. - Opens a
 // raw PDFium document pointer from bytes.

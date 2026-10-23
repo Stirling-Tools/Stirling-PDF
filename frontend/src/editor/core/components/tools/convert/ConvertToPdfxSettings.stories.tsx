@@ -1,11 +1,11 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ConvertToPdfxSettings from "@app/components/tools/convert/ConvertToPdfxSettings";
+import ConvertToPdfxSettings from "@editor/components/tools/convert/ConvertToPdfxSettings";
 import {
   ConvertParameters,
   defaultParameters,
-} from "@app/hooks/tools/convert/useConvertParameters";
-import { StirlingFile } from "@app/types/fileContext";
+} from "@editor/hooks/tools/convert/useConvertParameters";
+import { StirlingFile } from "@editor/types/fileContext";
 
 const meta = {
   title: "Tools/Convert/ConvertToPdfxSettings",

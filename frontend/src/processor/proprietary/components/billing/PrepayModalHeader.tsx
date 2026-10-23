@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
+import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
 
 /**
  * The prepay flows' stepped header — the prepaid wizard (activation → calculator → pay, of 3) and

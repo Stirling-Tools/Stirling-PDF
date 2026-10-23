@@ -2,7 +2,7 @@
 // Keep values identical to their original inline usages.
 
 // Re-export all core z-index constants
-export * from "@core/styles/zIndex";
+export * from "@editor-core/styles/zIndex";
 
 // SaaS-specific z-index constants
 export const Z_ANALYTICS_MODAL = 1301;

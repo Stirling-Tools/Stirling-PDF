@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import GroupedFormatDropdown from "@app/components/tools/convert/GroupedFormatDropdown";
+import GroupedFormatDropdown from "@editor/components/tools/convert/GroupedFormatDropdown";
 
 const documentOptions = [
   { value: "pdf", label: "PDF", group: "Document" },

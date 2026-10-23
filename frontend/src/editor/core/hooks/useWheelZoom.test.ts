@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { useWheelZoom } from "@app/hooks/useWheelZoom";
+import { useWheelZoom } from "@editor/hooks/useWheelZoom";
 
 describe("useWheelZoom", () => {
   it("triggers onZoomIn and prevents default when wheel deltaY reaches negative threshold with ctrlKey", () => {
