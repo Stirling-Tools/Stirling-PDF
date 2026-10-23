@@ -1,7 +1,7 @@
-import { useConfigNavSections } from "@app/components/shared/config/configNavSections";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
-import { BASE_SECTION_ALIASES } from "@app/data/settingsAliases";
+import { useConfigNavSections } from "@editor/components/shared/config/configNavSections";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import type { SettingsNav } from "@editor/components/settings/settingsNavTypes";
+import { BASE_SECTION_ALIASES } from "@editor/data/settingsAliases";
 
 export type { SettingsNav };
 

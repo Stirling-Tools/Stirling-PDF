@@ -1,17 +1,17 @@
 import {
   loadPolicies as loadServerPolicies,
   rawStoredPolicies as rawServerPolicies,
-} from "@proprietary/services/policyStorage";
+} from "@editor-proprietary/services/policyStorage";
 export {
   clearPolicies,
   updatePolicy,
   forgetPolicies,
   onPoliciesChange,
   POLICIES_CHANGE_EVENT,
-} from "@proprietary/services/policyStorage";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { authService } from "@app/services/authService";
-import type { PoliciesByKey } from "@app/types/policies";
+} from "@editor-proprietary/services/policyStorage";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { authService } from "@editor/services/authService";
+import type { PoliciesByKey } from "@editor/types/policies";
 
 function canReadPolicies(): boolean {
   const mode = connectionModeService.getCachedMode();

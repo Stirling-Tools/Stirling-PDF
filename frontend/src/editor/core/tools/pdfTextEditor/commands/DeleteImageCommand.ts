@@ -1,7 +1,7 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
-import type { ImageObjectSnapshot } from "@app/tools/pdfTextEditor/types";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import type { ImageObjectSnapshot } from "@editor/tools/pdfTextEditor/types";
 
 /** Remove an image object from a page. */
 export class DeleteImageCommand implements Command {

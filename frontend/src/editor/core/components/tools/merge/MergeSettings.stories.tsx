@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import MergeSettings from "@app/components/tools/merge/MergeSettings";
-import { MergeParameters } from "@app/hooks/tools/merge/useMergeParameters";
+import MergeSettings from "@editor/components/tools/merge/MergeSettings";
+import { MergeParameters } from "@editor/hooks/tools/merge/useMergeParameters";
 
 const meta = {
   title: "tools/merge/MergeSettings",

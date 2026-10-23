@@ -3,7 +3,7 @@ import { useCombobox } from "@mantine/core";
 import type {
   OwnershipStatus,
   OwnershipTransferProps,
-} from "@app/components/shared/ownership/ownershipTransfer.types";
+} from "@editor/components/shared/ownership/ownershipTransfer.types";
 
 function ownershipError(cause: unknown): string {
   if (!cause || typeof cause !== "object") return "UNKNOWN";

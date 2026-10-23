@@ -2,8 +2,8 @@
 // processor switch, reload or restart does not cost the user their workbench. localStorage, so it
 // outlives the tab: tabs share the one record and the last to write wins.
 
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { stripBasePath } from "@app/constants/app";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { stripBasePath } from "@editor/constants/app";
 
 const SESSION_KEY = "stirling.workbench.session";
 /** Bumped when the record's shape or meaning changes, so an old one is discarded rather than

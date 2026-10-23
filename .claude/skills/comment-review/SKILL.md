@@ -171,7 +171,7 @@ Give every inventoried comment exactly one verdict:
 Skip this step entirely under `--report-only`.
 
 Edit comments only. Match the file's convention: Javadoc summary fragments rather than
-"This method returns", JSDoc on the `@app/*` seams and layer boundaries with no
+"This method returns", JSDoc on the `@editor/*` seams and layer boundaries with no
 `@param` restating a typed signature, Python docstrings where the type does not carry
 the contract. Plain ASCII prose, no em dashes, no repeated bold lead-ins.
 

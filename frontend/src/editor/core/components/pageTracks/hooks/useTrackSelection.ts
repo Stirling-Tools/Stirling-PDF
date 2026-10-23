@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FileId } from "@app/types/file";
-import { TrackWorkspace, allPages } from "@app/components/pageTracks/types";
+import { FileId } from "@editor/types/file";
+import { TrackWorkspace, allPages } from "@editor/components/pageTracks/types";
 
 export interface PageClickModifiers {
   /** Extend the selection from the last clicked page in the same track. */

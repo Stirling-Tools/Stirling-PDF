@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { act, render } from "@testing-library/react";
-import { UIProvider, useUI } from "@app/portal/contexts/UIContext";
+import { UIProvider, useUI } from "@editor/portal/contexts/UIContext";
 
 /**
  * The context value is memoised, so every piece of state it exposes has to appear in the memo's

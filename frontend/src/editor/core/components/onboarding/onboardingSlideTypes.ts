@@ -1,5 +1,5 @@
-import type { SlideConfig } from "@app/types/types";
-import type { ButtonAccent } from "@app/ui/Button";
+import type { SlideConfig } from "@editor/types/types";
+import type { ButtonAccent } from "@editor/ui/Button";
 
 /**
  * Shared shape for onboarding slide flows. Both the core/editor flow and the

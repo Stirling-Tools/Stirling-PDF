@@ -13,7 +13,7 @@ const CLOUD_SOURCE = "src/editor/cloud/**/*.{js,mjs,jsx,ts,tsx}";
 const aliasOverRelative = {
   regex: "^\\.",
   message:
-    "Use a workspace alias (@app/* for editor, @portal/* for portal) instead of relative imports.",
+    "Use a workspace alias (@editor/* for editor, @processor/* for portal) instead of relative imports.",
 };
 const aliasOverSrc = {
   regex: "^src/",
@@ -27,15 +27,15 @@ const noTauriOutsideDesktop = {
 const cloudNoTauri = {
   regex: "^@tauri-apps/",
   message:
-    "cloud/ must stay platform-portable. Tauri APIs are desktop-only — reach native features via an @app/* seam (e.g. @app/platform/openExternal).",
+    "cloud/ must stay platform-portable. Tauri APIs are desktop-only — reach native features via an @editor/* seam (e.g. @editor/platform/openExternal).",
 };
 const cloudNoSupabase = {
   regex: "^@supabase/",
   message:
-    "cloud/ must stay platform-portable. Reach Supabase via an @app/* seam (e.g. @app/auth/supabase, @app/auth/session) provided per-platform in saas/ and desktop/.",
+    "cloud/ must stay platform-portable. Reach Supabase via an @editor/* seam (e.g. @editor/auth/supabase, @editor/auth/session) provided per-platform in saas/ and desktop/.",
 };
 
-// Shared-DS Button/SegmentedControl/Chip family must come from @app/ui, not
+// Shared-DS Button/SegmentedControl/Chip family must come from @editor/ui, not
 // Mantine. (The raw-<button> ban from the ESLint config used
 // no-restricted-syntax, which oxlint does not implement, so it is dropped.)
 const mantineDsPaths = [
@@ -49,19 +49,19 @@ const mantineDsPaths = [
       "FileButton",
     ],
     message:
-      'Use the shared Button (@app/ui/Button) instead of the Mantine button family. variant=primary|secondary|tertiary, accent=default|neutral|brand|ai|premium|danger|success|warning; an icon-only button is `<Button leftSection={…} aria-label="…" />`. If no variant fits, extend the shared Button rather than importing Mantine.',
+      'Use the shared Button (@editor/ui/Button) instead of the Mantine button family. variant=primary|secondary|tertiary, accent=default|neutral|brand|ai|premium|danger|success|warning; an icon-only button is `<Button leftSection={…} aria-label="…" />`. If no variant fits, extend the shared Button rather than importing Mantine.',
   },
   {
     name: "@mantine/core",
     importNames: ["SegmentedControl"],
     message:
-      "Use the shared SegmentedControl (@app/ui/SegmentedControl) instead of Mantine's.",
+      "Use the shared SegmentedControl (@editor/ui/SegmentedControl) instead of Mantine's.",
   },
   {
     name: "@mantine/core",
     importNames: ["Chip", "Pill"],
     message:
-      "Use the shared Chip (@app/ui/Chip) instead of Mantine's Chip/Pill.",
+      "Use the shared Chip (@editor/ui/Chip) instead of Mantine's Chip/Pill.",
   },
 ];
 
@@ -283,7 +283,7 @@ export default defineConfig({
       // The cloud/ layer is the SHARED hosted/SaaS experience consumed by BOTH
       // the saas and desktop leaves, so it must stay platform-portable: no
       // Supabase or Tauri directly, and no raw fetch/localStorage/sessionStorage
-      // - those arrive via @app/* seams that each leaf provides for its own
+      // - those arrive via @editor/* seams that each leaf provides for its own
       // platform. window.location and import.meta.env are banned below via the
       // no-restricted-properties.
       files: [CLOUD_SOURCE],
@@ -305,17 +305,17 @@ export default defineConfig({
           {
             name: "fetch",
             message:
-              "cloud/ must not call raw fetch — use @app/services/apiClient so each platform supplies its own transport.",
+              "cloud/ must not call raw fetch — use @editor/services/apiClient so each platform supplies its own transport.",
           },
           {
             name: "localStorage",
             message:
-              "cloud/ must not touch localStorage — use an @app/* storage seam so desktop/web can differ.",
+              "cloud/ must not touch localStorage — use an @editor/* storage seam so desktop/web can differ.",
           },
           {
             name: "sessionStorage",
             message:
-              "cloud/ must not touch sessionStorage — use an @app/* storage seam so desktop/web can differ.",
+              "cloud/ must not touch sessionStorage — use an @editor/* storage seam so desktop/web can differ.",
           },
         ],
         "no-restricted-properties": [
@@ -324,7 +324,7 @@ export default defineConfig({
             object: "window",
             property: "location",
             message:
-              "cloud/ must not touch window.location - use an @app/* seam (e.g. @app/platform/openExternal) so desktop/web can differ.",
+              "cloud/ must not touch window.location - use an @editor/* seam (e.g. @editor/platform/openExternal) so desktop/web can differ.",
           },
           {
             // Property-only: import.meta.env's object is a MetaProperty, which
@@ -333,7 +333,7 @@ export default defineConfig({
             // never env). cloud/ has no other `.env` access today.
             property: "env",
             message:
-              "cloud/ must not read import.meta.env - config comes from @app/constants/app / @app/platform seams, not env.",
+              "cloud/ must not read import.meta.env - config comes from @editor/constants/app / @editor/platform seams, not env.",
           },
         ],
       },
@@ -395,7 +395,7 @@ export default defineConfig({
     },
     {
       // Circular-import detection across the editor app source (the import
-      // plugin resolves @app/* and the other tsconfig path aliases). Replaces
+      // plugin resolves @editor/* and the other tsconfig path aliases). Replaces
       // the previous dpdm pass.
       files: ["src/**/*.{ts,tsx}"],
       rules: {

@@ -1,8 +1,8 @@
-export { default as StripeCheckout } from "@app/components/shared/stripeCheckout/StripeCheckout";
+export { default as StripeCheckout } from "@editor/components/shared/stripeCheckout/StripeCheckout";
 export type {
   StripeCheckoutProps,
   CheckoutStage,
   CheckoutState,
   PollingStatus,
   SavingsCalculation,
-} from "@app/components/shared/stripeCheckout/types/checkout";
+} from "@editor/components/shared/stripeCheckout/types/checkout";

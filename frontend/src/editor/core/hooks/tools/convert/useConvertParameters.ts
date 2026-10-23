@@ -6,20 +6,20 @@ import {
   type ColorType,
   type OutputOption,
   type FitOption,
-} from "@app/constants/convertConstants";
+} from "@editor/constants/convertConstants";
 import {
   getEndpointName as getEndpointNameUtil,
   getEndpointUrl,
   isImageFormat,
   isWebFormat,
   getAvailableToExtensions as getAvailableToExtensionsUtil,
-} from "@app/utils/convertUtils";
-import { detectFileExtension as detectFileExtensionUtil } from "@app/utils/fileUtils";
-import { BaseParameters } from "@app/types/parameters";
+} from "@editor/utils/convertUtils";
+import { detectFileExtension as detectFileExtensionUtil } from "@editor/utils/fileUtils";
+import { BaseParameters } from "@editor/types/parameters";
 import {
   useBaseParameters,
   BaseParametersHook,
-} from "@app/hooks/tools/shared/useBaseParameters";
+} from "@editor/hooks/tools/shared/useBaseParameters";
 import { useCallback, useMemo } from "react";
 
 export interface ConvertParameters extends BaseParameters {

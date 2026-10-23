@@ -3,13 +3,13 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Button, Card, Chip } from "@app/ui";
+import { Icon } from "@editor/ui/Icon";
+import { Button, Card, Chip } from "@editor/ui";
 import {
   DEFAULT_CLASSIFICATION_LABELS,
   LABEL_FAMILIES,
-} from "@app/data/classificationLabels";
-import "@app/components/policies/ClassificationLabelsSection.css";
+} from "@editor/data/classificationLabels";
+import "@editor/components/policies/ClassificationLabelsSection.css";
 
 export function ClassificationLabelsSection() {
   const { t } = useTranslation();

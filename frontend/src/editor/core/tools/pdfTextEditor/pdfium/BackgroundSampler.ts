@@ -1,6 +1,6 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { PageRect, RGBA } from "@app/tools/pdfTextEditor/types";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
 
 // Render the area of the page surrounding a text run and pick the dominant
 // background color.

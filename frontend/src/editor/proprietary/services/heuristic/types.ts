@@ -1,6 +1,6 @@
 // Shared types for the client-side heuristic (non-AI) document classifier.
 
-import type { ClassificationConfidence } from "@app/types/fileContext";
+import type { ClassificationConfidence } from "@editor/types/fileContext";
 
 /** Input document for the heuristic engine. */
 export interface HeuristicDoc {

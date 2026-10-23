@@ -11,7 +11,7 @@ import {
   OwnershipTransferModal,
   type OwnershipStatus,
   type OwnershipTransferAdapter,
-} from "@app/components/shared/ownership/OwnershipTransferModal";
+} from "@editor/components/shared/ownership/OwnershipTransferModal";
 
 vi.mock("react-i18next", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react-i18next")>();

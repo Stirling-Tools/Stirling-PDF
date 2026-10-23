@@ -13,26 +13,26 @@ import {
   Menu,
   Modal,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import {
   ColorPicker,
   ColorSwatchButton,
-} from "@app/components/annotation/shared/ColorPicker";
-import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
-import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
-import { DrawingControls } from "@app/components/annotation/shared/DrawingControls";
+} from "@editor/components/annotation/shared/ColorPicker";
+import { ImageUploader } from "@editor/components/annotation/shared/ImageUploader";
+import { SuggestedToolsSection } from "@editor/components/tools/shared/SuggestedToolsSection";
+import { DrawingControls } from "@editor/components/annotation/shared/DrawingControls";
 import type {
   AnnotationToolId,
   AnnotationAPI,
   SignatureAPI,
   AnnotationObject,
-} from "@app/components/viewer/viewerTypes";
-import type { ViewerContextType } from "@app/contexts/ViewerContext";
-import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
-import type { BuildToolOptionsExtras } from "@app/tools/annotate/useAnnotationStyleState";
+} from "@editor/components/viewer/viewerTypes";
+import type { ViewerContextType } from "@editor/contexts/ViewerContext";
+import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
+import type { BuildToolOptionsExtras } from "@editor/tools/annotate/useAnnotationStyleState";
 
-import { Icon, type IconName } from "@app/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 interface StyleState {
   inkColor: string;
   inkWidth: number;

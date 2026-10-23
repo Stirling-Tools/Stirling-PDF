@@ -31,7 +31,7 @@ import React, {
 } from "react";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { isAxiosError } from "axios";
-import { applyStagedGeometry } from "@app/tools/formFill/formCoordinateUtils";
+import { applyStagedGeometry } from "@editor/tools/formFill/formCoordinateUtils";
 import type {
   FormField,
   FormFillState,
@@ -41,14 +41,14 @@ import type {
   NewFieldDefinition,
   ModifyFieldDefinition,
   SkippedFieldEdit,
-} from "@app/tools/formFill/types";
-import { pendingIdFrom } from "@app/tools/formFill/pendingSelection";
-import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
-import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
-import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
-import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService";
-import { applyFieldEdits } from "@app/tools/formFill/formApi";
-import { mergeSignatureAppearances } from "@app/tools/formFill/formFieldMerge";
+} from "@editor/tools/formFill/types";
+import { pendingIdFrom } from "@editor/tools/formFill/pendingSelection";
+import type { IFormDataProvider } from "@editor/tools/formFill/providers/types";
+import { PdfBoxFormProvider } from "@editor/tools/formFill/providers/PdfBoxFormProvider";
+import { PdfiumFormProvider } from "@editor/tools/formFill/providers/PdfiumFormProvider";
+import { fetchSignatureFieldsWithAppearances } from "@editor/services/pdfiumService";
+import { applyFieldEdits } from "@editor/tools/formFill/formApi";
+import { mergeSignatureAppearances } from "@editor/tools/formFill/formFieldMerge";
 
 /** Marks a skip report as belonging to whichever document the commit just produced. */
 const PENDING_SKIP_REPORT = "__pending__";

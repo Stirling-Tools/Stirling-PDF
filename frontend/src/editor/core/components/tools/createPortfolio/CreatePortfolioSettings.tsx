@@ -5,7 +5,7 @@
  */
 import { Stack, Text, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { CreatePortfolioParameters } from "@app/hooks/tools/createPortfolio/useCreatePortfolioParameters";
+import { CreatePortfolioParameters } from "@editor/hooks/tools/createPortfolio/useCreatePortfolioParameters";
 
 interface CreatePortfolioSettingsProps {
   parameters: CreatePortfolioParameters;

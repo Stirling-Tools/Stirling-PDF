@@ -14,8 +14,8 @@ import {
 import {
   embedSignatureImages,
   flattenSignatures,
-} from "@app/utils/signatureFlattening";
-import type { SignatureAPI } from "@app/components/viewer/viewerTypes";
+} from "@editor/utils/signatureFlattening";
+import type { SignatureAPI } from "@editor/components/viewer/viewerTypes";
 
 const ONE_PIXEL_PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";

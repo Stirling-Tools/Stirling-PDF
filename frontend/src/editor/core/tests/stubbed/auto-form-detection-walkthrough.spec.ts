@@ -1,9 +1,9 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import {
   SETTINGS_SURFACE,
   revealPickerTool,
   uploadFiles,
-} from "@app/tests/helpers/ui-helpers";
+} from "@editor/tests/helpers/ui-helpers";
 import type { Page, Route } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs";

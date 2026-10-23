@@ -1,13 +1,13 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import type { FolderId } from "@app/types/folder";
+import type { StirlingFile, StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import type { FolderId } from "@editor/types/folder";
 
 const getStirlingFile = vi.fn();
 const updateFileMetadata = vi.fn();
 
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: (...args: unknown[]) => getStirlingFile(...args),
     updateFileMetadata: (...args: unknown[]) => updateFileMetadata(...args),
@@ -15,7 +15,7 @@ vi.mock("@app/services/fileStorage", () => ({
 }));
 
 const { copyNameFor, duplicateStoredFile } =
-  await import("@app/utils/duplicateFile");
+  await import("@editor/utils/duplicateFile");
 
 /**
  * A duplicate is byte-identical to its source, so everything derived from those

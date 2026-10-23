@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render } from "@testing-library/react";
-// Resolves to the SaaS override (src/portal-saas/contexts) via the @portal cascade.
-import { usePortalLinked } from "@portal/contexts/usePortalLinked";
+// Resolves to the SaaS override (src/portal-saas/contexts) via the @processor cascade.
+import { usePortalLinked } from "@processor/contexts/usePortalLinked";
 
 function Probe() {
   return <span data-testid="linked">{String(usePortalLinked())}</span>;

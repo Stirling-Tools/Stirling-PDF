@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { login, dismissWelcomeDialog } from "@app/tests/helpers/login";
+import { test, expect } from "@editor/tests/helpers/test-base";
+import { login, dismissWelcomeDialog } from "@editor/tests/helpers/login";
 
 test.describe("1. Authentication and Login", () => {
   test.describe("1.1 Login Page - Happy Path", () => {

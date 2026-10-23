@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import EditTableOfContentsSettings from "@app/components/tools/editTableOfContents/EditTableOfContentsSettings";
-import { BookmarkNode } from "@app/utils/editTableOfContents";
+import EditTableOfContentsSettings from "@editor/components/tools/editTableOfContents/EditTableOfContentsSettings";
+import { BookmarkNode } from "@editor/utils/editTableOfContents";
 
 const sampleBookmarks: BookmarkNode[] = [
   {

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SummarySection from "@app/components/tools/getPdfInfo/sections/SummarySection";
-import type { ParsedPdfSections } from "@app/types/getPdfInfo";
+import SummarySection from "@editor/components/tools/getPdfInfo/sections/SummarySection";
+import type { ParsedPdfSections } from "@editor/types/getPdfInfo";
 
 const fullSections: ParsedPdfSections = {
   basicInfo: {

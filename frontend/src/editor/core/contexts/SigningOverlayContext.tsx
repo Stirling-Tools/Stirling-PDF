@@ -2,7 +2,7 @@ import React, { createContext, useContext, useMemo, useState } from "react";
 import type {
   SignaturePreview,
   SignatureOverlayAPI,
-} from "@app/components/viewer/viewerTypes";
+} from "@editor/components/viewer/viewerTypes";
 
 /** Document and signature placement state shared by the signing workspace viewer and its controls. */
 export interface SigningOverlay {

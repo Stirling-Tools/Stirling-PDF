@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import DocumentDatesStep from "@app/components/tools/changeMetadata/steps/DocumentDatesStep";
+import DocumentDatesStep from "@editor/components/tools/changeMetadata/steps/DocumentDatesStep";
 import {
   ChangeMetadataParameters,
   defaultParameters,
-} from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
+} from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
 
 const meta = {
   title: "Tools/ChangeMetadata/DocumentDatesStep",

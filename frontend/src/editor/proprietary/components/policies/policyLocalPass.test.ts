@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { dispatchableFileId } from "@app/components/policies/policyLocalPass";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { dispatchableFileId } from "@editor/components/policies/policyLocalPass";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 // A locked classification came from the classification demo's sweep and must never reach the AI.
 // runPolicyOnFile takes only a DispatchableFileId, and this is its sole producer, so a

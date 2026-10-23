@@ -1,11 +1,11 @@
 import { act, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LastViewedPageBridge } from "@app/components/viewer/LastViewedPageBridge";
+import { LastViewedPageBridge } from "@editor/components/viewer/LastViewedPageBridge";
 import {
   readViewedPage,
   resumeWorkbenchSession,
   writeViewedPage,
-} from "@app/services/workbenchSession";
+} from "@editor/services/workbenchSession";
 
 const fixture = vi.hoisted(() => {
   const emitter = <T,>() => {

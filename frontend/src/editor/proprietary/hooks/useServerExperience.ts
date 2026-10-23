@@ -1,4 +1,4 @@
-import { useServerExperienceContext } from "@app/contexts/ServerExperienceContext";
+import { useServerExperienceContext } from "@editor/contexts/ServerExperienceContext";
 
 export function useServerExperience() {
   return useServerExperienceContext();

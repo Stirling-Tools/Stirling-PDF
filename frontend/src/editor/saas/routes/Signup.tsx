@@ -1,27 +1,27 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { signInAnonymously } from "@app/auth/supabase";
-import { useAuth } from "@app/auth/UseSession";
-import { useTranslation } from "@app/hooks/useTranslation";
-import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
-import { getBaseUrl, withBasePath } from "@app/constants/app";
-import { rememberPendingDestination } from "@app/services/pendingDestination";
-import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/auth/ui/auth.css";
-import "@app/routes/authShared/saas-auth.css";
-import { alert } from "@app/components/toast";
-import { Button } from "@app/ui/Button";
+import { signInAnonymously } from "@editor/auth/supabase";
+import { useAuth } from "@editor/auth/UseSession";
+import { useTranslation } from "@editor/hooks/useTranslation";
+import { useDocumentMeta } from "@editor/hooks/useDocumentMeta";
+import { getBaseUrl, withBasePath } from "@editor/constants/app";
+import { rememberPendingDestination } from "@editor/services/pendingDestination";
+import AuthLayout from "@editor/routes/authShared/AuthLayout";
+import "@editor/auth/ui/auth.css";
+import "@editor/routes/authShared/saas-auth.css";
+import { alert } from "@editor/components/toast";
+import { Button } from "@editor/ui/Button";
 
 // Import signup components
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import OAuthButtons from "@app/routes/login/OAuthButtons";
-import SignupForm from "@app/routes/signup/SignupForm";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import OAuthButtons from "@editor/routes/login/OAuthButtons";
+import SignupForm from "@editor/routes/signup/SignupForm";
 import {
   useSignupFormValidation,
   SignupFieldErrors,
-} from "@app/routes/signup/SignupFormValidation";
-import { useAuthService } from "@app/routes/signup/AuthService";
-import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
+} from "@editor/routes/signup/SignupFormValidation";
+import { useAuthService } from "@editor/routes/signup/AuthService";
+import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Signup() {
   const navigate = useNavigate();

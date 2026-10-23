@@ -1,26 +1,26 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
-import { AppProviders } from "@app/components/AppProviders";
+import { AppProviders } from "@editor/components/AppProviders";
 
 const state = vi.hoisted(() => ({
   getConfig: vi.fn(),
   monitor: vi.fn(),
   preload: vi.fn(),
 }));
-vi.mock("@proprietary/components/AppProviders", () => ({
+vi.mock("@editor-proprietary/components/AppProviders", () => ({
   AppProviders: ({ children }: { children: ReactNode }) => (
     <div>{children}</div>
   ),
 }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentConfig: state.getConfig,
     subscribeToModeChanges: () => () => {},
   },
   JWT_EXPIRED_PROMPTED_KEY: "expiry",
 }));
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: {
     isAuthenticated: async () => true,
     subscribeToAuth: () => () => {},
@@ -28,33 +28,33 @@ vi.mock("@app/services/authService", () => ({
     hasManagedSession: async () => false,
   },
 }));
-vi.mock("@app/services/tauriBackendService", () => ({
+vi.mock("@editor/services/tauriBackendService", () => ({
   tauriBackendService: {
     getBackendUrl: () => "http://localhost:8080",
     isOnline: true,
     subscribeToStatus: () => () => {},
   },
 }));
-vi.mock("@app/services/selfHostedServerMonitor", () => ({
+vi.mock("@editor/services/selfHostedServerMonitor", () => ({
   selfHostedServerMonitor: { stop: vi.fn() },
 }));
-vi.mock("@app/services/endpointAvailabilityService", () => ({
+vi.mock("@editor/services/endpointAvailabilityService", () => ({
   endpointAvailabilityService: { preloadEndpoints: state.preload },
 }));
-vi.mock("@app/hooks/useFirstLaunchCheck", () => ({
+vi.mock("@editor/hooks/useFirstLaunchCheck", () => ({
   useFirstLaunchCheck: () => ({ isFirstLaunch: false, setupComplete: true }),
 }));
-vi.mock("@app/hooks/useDesktopUpdatePopup", () => ({
+vi.mock("@editor/hooks/useDesktopUpdatePopup", () => ({
   useDesktopUpdatePopup: () => ({ state: {}, actions: {} }),
 }));
-vi.mock("@app/hooks/useBackendInitializer", () => ({
+vi.mock("@editor/hooks/useBackendInitializer", () => ({
   useBackendInitializer: state.monitor,
 }));
-vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => false,
 }));
 vi.mock("@tauri-apps/api/core", () => ({ isTauri: () => false }));
-vi.mock("@app/contexts/SaaSTeamContext", () => ({
+vi.mock("@editor/contexts/SaaSTeamContext", () => ({
   SaaSTeamProvider: ({ children }: { children: ReactNode }) => (
     <div>{children}</div>
   ),
@@ -70,7 +70,7 @@ vi.mock("@mantine/core", () => {
     Loader: () => null,
   };
 });
-vi.mock("@app/ui/Button", () => ({
+vi.mock("@editor/ui/Button", () => ({
   Button: ({
     children,
     onClick,
@@ -79,40 +79,44 @@ vi.mock("@app/ui/Button", () => ({
     onClick: () => void;
   }) => <button onClick={onClick}>{children}</button>,
 }));
-vi.mock("@app/components/SetupWizard", () => ({
+vi.mock("@editor/components/SetupWizard", () => ({
   SetupWizard: () => <div>Required sign-in</div>,
 }));
-vi.mock("@app/components/DesktopConfigSync", () => ({
+vi.mock("@editor/components/DesktopConfigSync", () => ({
   DesktopConfigSync: () => null,
 }));
-vi.mock("@app/components/DesktopQueryCacheReset", () => ({
+vi.mock("@editor/components/DesktopQueryCacheReset", () => ({
   DesktopQueryCacheReset: () => null,
 }));
-vi.mock("@app/components/DesktopBannerInitializer", () => ({
+vi.mock("@editor/components/DesktopBannerInitializer", () => ({
   DesktopBannerInitializer: () => null,
 }));
-vi.mock("@app/components/SaveShortcutListener", () => ({
+vi.mock("@editor/components/SaveShortcutListener", () => ({
   SaveShortcutListener: () => null,
 }));
-vi.mock("@app/components/LocalProcessingFolders", () => ({
+vi.mock("@editor/components/LocalProcessingFolders", () => ({
   LocalProcessingFolders: () => null,
 }));
-vi.mock("@app/components/shared/DiskConflictHost", () => ({
+vi.mock("@editor/components/shared/DiskConflictHost", () => ({
   DiskConflictHost: () => null,
 }));
-vi.mock("@app/components/DesktopOnboardingModal", () => ({
+vi.mock("@editor/components/DesktopOnboardingModal", () => ({
   DesktopOnboardingModal: () => null,
 }));
-vi.mock("@app/components/DesktopSaasOnboardingBootstrap", () => ({
+vi.mock("@editor/components/DesktopSaasOnboardingBootstrap", () => ({
   DesktopSaasOnboardingBootstrap: () => null,
 }));
 vi.mock(
-  "@app/components/onboarding/classificationDemo/ClassificationBackgroundRunner",
+  "@editor/components/onboarding/classificationDemo/ClassificationBackgroundRunner",
   () => ({ ClassificationBackgroundRunner: () => null }),
 );
-vi.mock("@app/components/UsageLimitModalHost", () => ({ default: () => null }));
-vi.mock("@app/components/SignInModal", () => ({ SignInModal: () => null }));
-vi.mock("@core/components/shared/UpdateModal", () => ({ default: () => null }));
+vi.mock("@editor/components/UsageLimitModalHost", () => ({
+  default: () => null,
+}));
+vi.mock("@editor/components/SignInModal", () => ({ SignInModal: () => null }));
+vi.mock("@editor-core/components/shared/UpdateModal", () => ({
+  default: () => null,
+}));
 
 it("initializes backend monitoring and endpoint preload after a gate retry recovers configuration", async () => {
   state.getConfig.mockRejectedValue(new Error("Store unavailable"));

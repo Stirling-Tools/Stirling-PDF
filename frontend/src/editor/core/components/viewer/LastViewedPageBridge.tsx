@@ -3,7 +3,7 @@ import { useScrollCapability } from "@embedpdf/plugin-scroll/react";
 import {
   readViewedPage,
   writeViewedPage,
-} from "@app/services/workbenchSession";
+} from "@editor/services/workbenchSession";
 
 interface LastViewedPageBridgeProps {
   /** Null remembers and restores nothing, e.g. for a preview file. */
