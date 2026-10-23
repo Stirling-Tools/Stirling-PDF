@@ -1,21 +1,21 @@
 import React from "react";
 import { Text, Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
-import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import HotkeyDisplay from "@editor/components/hotkeys/HotkeyDisplay";
+import FavoriteStar from "@editor/components/tools/toolPicker/FavoriteStar";
 import {
   ToolRegistryEntry,
   getSubcategoryColor,
-} from "@app/data/toolsTaxonomy";
+} from "@editor/data/toolsTaxonomy";
 import {
   getIconBackground,
   getIconStyle,
   getItemClasses,
   useToolMeta,
   resolveDisabledMessage,
-} from "@app/components/tools/fullscreen/shared";
-import { Button } from "@app/ui/Button";
+} from "@editor/components/tools/fullscreen/shared";
+import { Button } from "@editor/ui/Button";
 
 interface CompactToolItemProps {
   id: string;

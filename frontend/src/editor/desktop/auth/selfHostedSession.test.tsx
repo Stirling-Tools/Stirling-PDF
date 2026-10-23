@@ -1,19 +1,19 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
-import { configureSpringAuth } from "@app/auth/config";
-import { defaultPlatformBridge } from "@app/auth/spring/platformBridge";
-import * as desktopBridge from "@app/extensions/platformSessionBridge";
-import { springAuth } from "@app/auth/spring/springAuthClient";
-import { SpringAuthProvider } from "@app/auth/spring/UseSession";
-import { useAuth } from "@app/auth/context";
-import { authService } from "@app/services/authService";
+import { configureSpringAuth } from "@editor/auth/config";
+import { defaultPlatformBridge } from "@editor/auth/spring/platformBridge";
+import * as desktopBridge from "@editor/extensions/platformSessionBridge";
+import { springAuth } from "@editor/auth/spring/springAuthClient";
+import { SpringAuthProvider } from "@editor/auth/spring/UseSession";
+import { useAuth } from "@editor/auth/context";
+import { authService } from "@editor/services/authService";
 
 const state = vi.hoisted(() => ({ mode: "selfhosted" }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: { getCurrentMode: async () => state.mode },
 }));
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: {
     getUserInfo: vi.fn(),
     saveToken: vi.fn(),

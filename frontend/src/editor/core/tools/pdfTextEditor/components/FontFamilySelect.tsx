@@ -2,15 +2,15 @@ import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { Group, Select, Text, Tooltip } from "@mantine/core";
 import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import {
   groupByFamily,
   isLocalFontAccessSupported,
   listLocalFonts,
   loadedLocalFonts,
   subscribeLocalFonts,
-} from "@app/tools/pdfTextEditor/util/localFonts";
+} from "@editor/tools/pdfTextEditor/util/localFonts";
 
 export interface FontFamilyOption {
   value: string;

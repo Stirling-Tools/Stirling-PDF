@@ -9,10 +9,10 @@ import { act, render, waitFor } from "@testing-library/react";
 const { getLatestBundleQuote } = vi.hoisted(() => ({
   getLatestBundleQuote: vi.fn(),
 }));
-vi.mock("@portal/billing/stripe", () => ({ getLatestBundleQuote }));
+vi.mock("@processor/billing/stripe", () => ({ getLatestBundleQuote }));
 
-import { useBundleFlowState } from "@portal/hooks/useBundleFlowState";
-import type { LatestBundleQuote } from "@portal/billing/stripe";
+import { useBundleFlowState } from "@processor/hooks/useBundleFlowState";
+import type { LatestBundleQuote } from "@processor/billing/stripe";
 
 const baseQuote: LatestBundleQuote = {
   quoteId: 7,

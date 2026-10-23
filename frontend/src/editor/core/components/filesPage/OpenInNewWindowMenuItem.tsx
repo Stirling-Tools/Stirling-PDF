@@ -1,8 +1,8 @@
 import { Menu } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { StirlingFileStub } from "@app/types/fileContext";
-import { useOpenInNewWindow } from "@app/extensions/openInNewWindow";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { useOpenInNewWindow } from "@editor/extensions/openInNewWindow";
 
 interface OpenInNewWindowMenuItemProps {
   file: StirlingFileStub;

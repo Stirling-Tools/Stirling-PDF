@@ -3,25 +3,28 @@ import { useTranslation } from "react-i18next";
 import type {
   TextRunSnapshot,
   WidthMode,
-} from "@app/tools/pdfTextEditor/types";
-import { toCssHex } from "@app/tools/pdfTextEditor/model/Color";
-import type { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
+} from "@editor/tools/pdfTextEditor/types";
+import { toCssHex } from "@editor/tools/pdfTextEditor/model/Color";
+import type { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import {
   resolveLang,
   useSpellcheckPreference,
-} from "@app/tools/pdfTextEditor/util/spellcheck";
+} from "@editor/tools/pdfTextEditor/util/spellcheck";
 import {
   embeddedFaceFamily,
   onEmbeddedFaceLoaded,
-} from "@app/tools/pdfTextEditor/util/embeddedFace";
-import { nearestStandardFont } from "@app/tools/pdfTextEditor/util/fontFamily";
-import { fitTextToWidth, NO_FIT } from "@app/tools/pdfTextEditor/util/fitText";
+} from "@editor/tools/pdfTextEditor/util/embeddedFace";
+import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  fitTextToWidth,
+  NO_FIT,
+} from "@editor/tools/pdfTextEditor/util/fitText";
 import {
   sampleRunBackground,
   toOpaqueCss,
-} from "@app/tools/pdfTextEditor/util/canvasBackground";
-import { buildExactLines } from "@app/tools/pdfTextEditor/util/exactLayout";
-import { stackLineBoxes } from "@app/tools/pdfTextEditor/util/lineLayout";
+} from "@editor/tools/pdfTextEditor/util/canvasBackground";
+import { buildExactLines } from "@editor/tools/pdfTextEditor/util/exactLayout";
+import { stackLineBoxes } from "@editor/tools/pdfTextEditor/util/lineLayout";
 import {
   isLinePainted,
   normalizeContainerCaret,
@@ -33,16 +36,16 @@ import {
   refitEditedTokens,
   refitTokens,
   restoreCaretOffset,
-} from "@app/tools/pdfTextEditor/util/overlayPainter";
+} from "@editor/tools/pdfTextEditor/util/overlayPainter";
 import {
   cssFontShorthand,
   measureFontMetrics,
   measureLongestTokenWidth,
   measureMaxLineWidth,
   resetTextMetricsCache,
-} from "@app/tools/pdfTextEditor/util/textMetrics";
-import { MIN_WRAP_WIDTH_EM } from "@app/tools/pdfTextEditor/commands/ReflowWrapCommand";
-import "@app/tools/pdfTextEditor/components/TextRunOverlay.css";
+} from "@editor/tools/pdfTextEditor/util/textMetrics";
+import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import "@editor/tools/pdfTextEditor/components/TextRunOverlay.css";
 
 const RENDER_MODE_INVISIBLE = 3;
 
@@ -946,8 +949,8 @@ export function TextRunOverlay({
               { getActiveCharcodeStrategy },
               { prewarmBackendCacheForPage },
             ] = await Promise.all([
-              import("@app/tools/pdfTextEditor/charcode/CharcodeStrategy"),
-              import("@app/tools/pdfTextEditor/charcode/charcodeRegistry"),
+              import("@editor/tools/pdfTextEditor/charcode/CharcodeStrategy"),
+              import("@editor/tools/pdfTextEditor/charcode/charcodeRegistry"),
             ]);
             if (getActiveCharcodeStrategy() !== "backend") return;
             await prewarmBackendCacheForPage(run.pageIndex);

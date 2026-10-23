@@ -1,27 +1,27 @@
 import { useCallback, useRef } from "react";
 import axios, { type CancelTokenSource } from "axios"; // Real axios for static methods (CancelToken, isCancel)
-import apiClient from "@app/services/apiClient"; // Our configured instance
+import apiClient from "@editor/services/apiClient"; // Our configured instance
 import {
   processResponse,
   ResponseHandler,
-} from "@app/utils/toolResponseProcessor";
-import { isEmptyOutput } from "@app/services/errorUtils";
-import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
-import type { StirlingFile, FileId } from "@app/types/fileContext";
-import { isSignupRequiredError } from "@app/utils/toolErrorHandler";
-import { combineAbortSignals } from "@app/utils/combineAbortSignals";
+} from "@editor/utils/toolResponseProcessor";
+import { isEmptyOutput } from "@editor/services/errorUtils";
+import type { ProcessingProgress } from "@editor/hooks/tools/shared/useToolState";
+import type { StirlingFile, FileId } from "@editor/types/fileContext";
+import { isSignupRequiredError } from "@editor/utils/toolErrorHandler";
+import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
   changePdfSecurity,
-} from "@app/services/pdfSessionUnlock";
+} from "@editor/services/pdfSessionUnlock";
 import {
   inspectLocalPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
   pdfAccessLifetime,
   pdfAccessSessionLifetime,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
 /** An input that did not survive the batch, with the error it failed on. */
 export interface FailedInput {

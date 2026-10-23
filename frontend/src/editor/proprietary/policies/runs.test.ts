@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
-import { runsToStats, runsToActivity } from "@app/policies/runs";
-import type { PolicyRunView } from "@app/policies/types";
+import { runsToStats, runsToActivity } from "@editor/policies/runs";
+import type { PolicyRunView } from "@editor/policies/types";
 
 const MIN = 60000;
 const HOUR = 3600000;

@@ -3,8 +3,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import "fake-indexeddb/auto";
-import { indexedDBManager } from "@app/services/indexedDBManager";
-import type { RetryPayload } from "@app/services/notificationRetry";
+import { indexedDBManager } from "@editor/services/indexedDBManager";
+import type { RetryPayload } from "@editor/services/notificationRetry";
 
 // The stash survives a reload, cannot grow without bound, and never holds a password.
 
@@ -12,14 +12,14 @@ const getStirlingFileStub = vi.fn();
 const getStirlingFiles = vi.fn();
 const post = vi.fn();
 
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFileStub: (...args: unknown[]) => getStirlingFileStub(...args),
     getStirlingFiles: (...args: unknown[]) => getStirlingFiles(...args),
   },
 }));
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { post: (...args: unknown[]) => post(...args) },
 }));
 
@@ -35,7 +35,7 @@ const {
   retryWithPassword,
   stashMatchesKind,
   unlockLocalDocument,
-} = await import("@app/services/notificationRetry");
+} = await import("@editor/services/notificationRetry");
 
 /** Duplicated from the service, which keeps its storage details private. */
 const DB_NAME = "stirling-pdf-retry";

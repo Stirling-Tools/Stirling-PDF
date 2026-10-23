@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { ActionIcon, Button } from "@app/ui";
+import { ActionIcon, Button } from "@editor/ui";
 import { useTranslation } from "react-i18next";
-import { useUI } from "@portal/contexts/UIContext";
-import { useAsync } from "@portal/hooks/useAsync";
+import { useUI } from "@processor/contexts/UIContext";
+import { useAsync } from "@processor/hooks/useAsync";
 import {
   fetchAssistantSuggestions,
   getAssistantReply,
-} from "@portal/api/assistant";
-import { Icon } from "@app/ui/Icon";
-import "@portal/components/AssistantPanel.css";
+} from "@processor/api/assistant";
+import { Icon } from "@editor/ui/Icon";
+import "@processor/components/AssistantPanel.css";
 
 interface Message {
   id: number;

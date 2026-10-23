@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import "@app/ui/IconBadge.css";
+import "@editor/ui/IconBadge.css";
 
 export type IconBadgeAccent =
   | "blue"

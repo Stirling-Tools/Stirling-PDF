@@ -9,19 +9,19 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { createAppQueryClient } from "@app/query/queryClient";
-import { useFolderFileStates } from "@app/components/filesPage/useFolderFileStates";
-import type { MountedFileState } from "@app/hooks/useProcessingFolders";
+import { createAppQueryClient } from "@editor/query/queryClient";
+import { useFolderFileStates } from "@editor/components/filesPage/useFolderFileStates";
+import type { MountedFileState } from "@editor/hooks/useProcessingFolders";
 import {
   resetTabVisibility,
   setTabHidden,
-} from "@app/tests/utils/tabVisibility";
+} from "@editor/tests/utils/tabVisibility";
 
 const { listFiles } = vi.hoisted(() => ({
   listFiles: vi.fn<() => Promise<MountedFileState[]>>(),
 }));
 
-vi.mock("@app/hooks/useProcessingFolders", () => ({
+vi.mock("@editor/hooks/useProcessingFolders", () => ({
   useProcessingFolders: () => ({ listFiles }),
 }));
 

@@ -1,12 +1,15 @@
 import i18n from "i18next";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { RGBA } from "@app/tools/pdfTextEditor/types";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import {
   applyInkState,
   collectMemberPtrs,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 /** Render modes that paint an outline; 0 is fill-only, 3 is invisible. */
 const FILL_ONLY = 0;

@@ -1,17 +1,17 @@
 import { useCallback, useMemo } from "react";
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import { useTranslation } from "react-i18next";
 import {
   validateConvertParameters,
   ConvertParameters,
   defaultParameters,
-} from "@app/hooks/tools/convert/useConvertParameters";
-import { createFileFromApiResponse } from "@app/utils/fileResponseUtils";
+} from "@editor/hooks/tools/convert/useConvertParameters";
+import { createFileFromApiResponse } from "@editor/utils/fileResponseUtils";
 import {
   useToolOperation,
   defineCustomTool,
   CustomProcessorResult,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   getEndpointUrl,
   getEndpointName,
@@ -19,19 +19,19 @@ import {
   isWebFormat,
   isOfficeFormat,
   usesOfficeEngine,
-} from "@app/utils/convertUtils";
+} from "@editor/utils/convertUtils";
 import {
   isToolEndpoint,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
+} from "@editor/hooks/tools/shared/toolApiMapping";
 import {
   CONVERSION_ENDPOINTS,
   COLOR_TYPES,
   OUTPUT_OPTIONS,
   FIT_OPTIONS,
-} from "@app/constants/convertConstants";
-import { useToolCloudStatus } from "@app/hooks/useToolCloudStatus";
+} from "@editor/constants/convertConstants";
+import { useToolCloudStatus } from "@editor/hooks/useToolCloudStatus";
 
 // Static function that can be used by both the hook and automation executor
 export const shouldProcessFilesSeparately = (

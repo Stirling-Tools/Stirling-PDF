@@ -1,13 +1,13 @@
-import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type {
   PageRect,
   RGBA,
   TableCellStyle,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 import {
   familyOf,
   nearestStandardFont,
-} from "@app/tools/pdfTextEditor/util/fontFamily";
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 
 // Reads a table's existing text back into the style new cells should be written
 // in. PDF carries no table styling of its own, so "the column's style" is

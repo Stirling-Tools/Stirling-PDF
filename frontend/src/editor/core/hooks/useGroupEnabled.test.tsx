@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
-import { useGroupEnabled } from "@app/hooks/useGroupEnabled";
-import { fetchGroupEnabled } from "@app/api/config";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
+import { useGroupEnabled } from "@editor/hooks/useGroupEnabled";
+import { fetchGroupEnabled } from "@editor/api/config";
 
-vi.mock("@app/api/config", () => ({ fetchGroupEnabled: vi.fn() }));
+vi.mock("@editor/api/config", () => ({ fetchGroupEnabled: vi.fn() }));
 
 const mockFetch = vi.mocked(fetchGroupEnabled);
 

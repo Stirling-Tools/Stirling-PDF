@@ -3,7 +3,7 @@ import {
   mockAppApis,
   seedCookieConsent,
   skipOnboarding,
-} from "@app/tests/helpers/api-stubs";
+} from "@editor/tests/helpers/api-stubs";
 
 /**
  * The LoginAgreementModal (AppLayout) shows a blocking Accept/Decline disclaimer after login

@@ -1,4 +1,4 @@
-import type { FolderRecord } from "@app/types/folder";
+import type { FolderRecord } from "@editor/types/folder";
 
 export interface ProcessingFolderState {
   /** The processing record's own id — not the folder's. */

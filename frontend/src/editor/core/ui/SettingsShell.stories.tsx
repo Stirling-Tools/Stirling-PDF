@@ -1,7 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SettingsShell, type SettingsNavSection } from "@app/ui/SettingsShell";
-import { Button } from "@app/ui/Button";
+import {
+  SettingsShell,
+  type SettingsNavSection,
+} from "@editor/ui/SettingsShell";
+import { Button } from "@editor/ui/Button";
 
 const SECTIONS: SettingsNavSection[] = [
   {

@@ -16,18 +16,18 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useHotkeys } from "@app/contexts/HotkeyContext";
-import { ToolId } from "@app/types/toolId";
-import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useHotkeys } from "@editor/contexts/HotkeyContext";
+import { ToolId } from "@editor/types/toolId";
+import HotkeyDisplay from "@editor/components/hotkeys/HotkeyDisplay";
 import {
   bindingEquals,
   eventToBinding,
   HotkeyBinding,
-} from "@app/utils/hotkeys";
-import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+} from "@editor/utils/hotkeys";
+import { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
 
 const rowStyle: React.CSSProperties = {
   display: "flex",
