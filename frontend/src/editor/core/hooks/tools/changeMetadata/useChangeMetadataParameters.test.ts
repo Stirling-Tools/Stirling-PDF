@@ -2,8 +2,8 @@ import { renderHook, act } from "@testing-library/react";
 import {
   defaultParameters,
   useChangeMetadataParameters,
-} from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
-import { TrappedStatus } from "@app/types/metadata";
+} from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { TrappedStatus } from "@editor/types/metadata";
 import { describe, expect, test } from "vitest";
 
 describe("useChangeMetadataParameters", () => {

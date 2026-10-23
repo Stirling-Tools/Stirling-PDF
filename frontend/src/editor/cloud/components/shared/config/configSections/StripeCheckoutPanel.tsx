@@ -9,7 +9,7 @@
  * <pre>
  * // In UpgradeModal.tsx — only when the user advances to step 2:
  * const StripeCheckoutPanel = React.lazy(
- *   () => import("@app/components/shared/config/configSections/StripeCheckoutPanel"),
+ *   () => import("@editor/components/shared/config/configSections/StripeCheckoutPanel"),
  * );
  * </pre>
  *
@@ -29,7 +29,7 @@
  *
  * Stripe-touching code lives in Supabase edge functions, not the Java backend.
  * This panel no longer talks to Supabase directly — it mints the PAYG checkout
- * session through the {@code @app/services/billing} seam
+ * session through the {@code @editor/services/billing} seam
  * ({@link createCheckoutSession} with a {@code teamId}), which each platform
  * implements (web supabase client vs Tauri fetch). The seam drives the
  * {@code create-checkout-session} edge function.
@@ -64,14 +64,14 @@
  */
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { useAuth } from "@app/auth/UseSession";
+import { Button } from "@editor/ui/Button";
+import { useAuth } from "@editor/auth/UseSession";
 import {
   createCheckoutSession,
   getStripePublishableKey,
-} from "@app/services/billing";
-import { openExternal } from "@app/platform/openExternal";
-import { getWalletDevPreview } from "@app/hooks/walletDevPreview";
+} from "@editor/services/billing";
+import { openExternal } from "@editor/platform/openExternal";
+import { getWalletDevPreview } from "@editor/hooks/walletDevPreview";
 
 // Eager static imports here are OK because this whole module is itself lazy-
 // imported by the modal. They land in the same lazy chunk.

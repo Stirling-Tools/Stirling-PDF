@@ -4,14 +4,14 @@ const state = vi.hoisted(() => ({
   cached: undefined as boolean | undefined,
   load: vi.fn(),
 }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCachedLocalProcessingOnly: () => state.cached,
     getCurrentConfig: state.load,
     subscribeToModeChanges: () => () => {},
   },
 }));
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 
 beforeEach(() => {
   state.cached = undefined;

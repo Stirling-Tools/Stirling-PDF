@@ -1,8 +1,8 @@
 import { ReactNode } from "react";
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
 
 const posthogState = vi.hoisted(() => ({ loaded: false }));
 const posthogMock = vi.hoisted(() => ({
@@ -22,7 +22,7 @@ vi.mock("posthog-js", () => ({
   default: posthogMock,
 }));
 
-import { usePosthogTracking } from "@app/hooks/usePosthogTracking";
+import { usePosthogTracking } from "@editor/hooks/usePosthogTracking";
 
 describe("usePosthogTracking", () => {
   beforeEach(() => {
@@ -92,8 +92,8 @@ describe("usePosthogTracking", () => {
       { usePosthogTracking: useTracking },
       { AppConfigProvider: Provider },
     ] = await Promise.all([
-      import("@app/hooks/usePosthogTracking"),
-      import("@app/contexts/AppConfigContext"),
+      import("@editor/hooks/usePosthogTracking"),
+      import("@editor/contexts/AppConfigContext"),
     ]);
     const wrapper = ({ children }: { children: ReactNode }) => (
       <TestQueryProvider>

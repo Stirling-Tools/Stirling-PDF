@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useSettingsNav as useProprietarySettingsNav } from "@proprietary/components/settings/useSettingsNav";
-import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
-import { connectionModeService } from "@app/services/connectionModeService";
+import { useSettingsNav as useProprietarySettingsNav } from "@editor-proprietary/components/settings/useSettingsNav";
+import type { SettingsNav } from "@editor/components/settings/settingsNavTypes";
+import { connectionModeService } from "@editor/services/connectionModeService";
 
 export type { SettingsNav };
 

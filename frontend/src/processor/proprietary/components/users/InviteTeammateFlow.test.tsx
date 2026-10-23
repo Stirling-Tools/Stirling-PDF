@@ -1,9 +1,9 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { InviteTeammateForm } from "@portal/components/users/InviteTeammateFlow";
-import { createMember } from "@portal/api/users";
-import { usersBackend } from "@app/portal/usersBackend";
+import { InviteTeammateForm } from "@processor/components/users/InviteTeammateFlow";
+import { createMember } from "@processor/api/users";
+import { usersBackend } from "@editor/portal/usersBackend";
 
 const state = vi.hoisted(() => ({
   admin: true,
@@ -16,13 +16,13 @@ const state = vi.hoisted(() => ({
   full: false,
   refresh: vi.fn(),
 }));
-vi.mock("@portal/components/settings/PortalRosterHost", () => ({
+vi.mock("@processor/components/settings/PortalRosterHost", () => ({
   PortalRosterHost: () => null,
 }));
-vi.mock("@portal/contexts/TierContext", () => ({
+vi.mock("@processor/contexts/TierContext", () => ({
   useTier: () => ({ tier: "free" }),
 }));
-vi.mock("@app/portal/usersCapabilities", () => ({
+vi.mock("@editor/portal/usersCapabilities", () => ({
   usersCapabilities: {
     get listingRequiresAdmin() {
       return !state.saas;
@@ -36,7 +36,7 @@ vi.mock("@app/portal/usersCapabilities", () => ({
     emailInvite: true,
   },
 }));
-vi.mock("@portal/views/usersData", () => ({
+vi.mock("@processor/views/usersData", () => ({
   useUsersData: () => ({
     usersState: {
       loading: state.loading,
@@ -68,15 +68,15 @@ vi.mock("@portal/views/usersData", () => ({
     refresh: state.refresh,
   }),
 }));
-vi.mock("@portal/api/users", () => ({
+vi.mock("@processor/api/users", () => ({
   createMember: vi.fn().mockResolvedValue("alex"),
   fetchUsers: vi.fn(),
   ROLE_LABEL: { member: "Member", admin: "Admin" },
 }));
-vi.mock("@app/portal/usersBackend", () => ({
+vi.mock("@editor/portal/usersBackend", () => ({
   usersBackend: { inviteMember: vi.fn().mockResolvedValue({}) },
 }));
-vi.mock("@portal/api/access", () => ({ createGrant: vi.fn() }));
+vi.mock("@processor/api/access", () => ({ createGrant: vi.fn() }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, fallback?: string) => fallback ?? key,

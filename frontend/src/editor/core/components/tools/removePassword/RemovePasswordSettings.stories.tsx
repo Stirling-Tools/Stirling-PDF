@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 
-import RemovePasswordSettings from "@app/components/tools/removePassword/RemovePasswordSettings";
-import { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+import RemovePasswordSettings from "@editor/components/tools/removePassword/RemovePasswordSettings";
+import { RemovePasswordParameters } from "@editor/hooks/tools/removePassword/useRemovePasswordParameters";
 
 const parameters: RemovePasswordParameters = {
   password: "",

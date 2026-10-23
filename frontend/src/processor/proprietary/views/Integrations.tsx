@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   Banner,
   Button,
@@ -9,17 +9,17 @@ import {
   type DataTableColumn,
   type DataTableGroup,
   EmptyState,
-} from "@app/ui";
-import { errorMessage } from "@portal/api/http";
+} from "@editor/ui";
+import { errorMessage } from "@processor/api/http";
 import {
   deleteIntegration,
   fetchIntegrationCapabilities,
   fetchIntegrations,
   type IntegrationCapabilities,
   type IntegrationConfig,
-} from "@portal/api/integrations";
-import { BrandMark } from "@portal/components/BrandMarks";
-import { ConnectionModal } from "@portal/components/sources/ConnectionModal";
+} from "@processor/api/integrations";
+import { BrandMark } from "@processor/components/BrandMarks";
+import { ConnectionModal } from "@processor/components/sources/ConnectionModal";
 import {
   CONNECTION_CATEGORIES,
   CREATABLE_CONNECTION_TYPES,
@@ -27,11 +27,11 @@ import {
   presetConnectionTypes,
   type ConnectionCategory,
   type CreatableConnectionType,
-} from "@portal/components/sources/connectionTypes";
-import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
-import { COMING_SOON_SOURCE_TYPES } from "@portal/components/sources/sourceTypes";
-import "@portal/theme/surface.css";
-import "@portal/views/Integrations.css";
+} from "@processor/components/sources/connectionTypes";
+import { STEP_OPERATIONS } from "@processor/components/policies/stepOperations";
+import { COMING_SOON_SOURCE_TYPES } from "@processor/components/sources/sourceTypes";
+import "@processor/theme/surface.css";
+import "@processor/views/Integrations.css";
 
 /**
  * The integrations catalogue: everything Stirling can talk to, in one place.

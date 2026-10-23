@@ -4,12 +4,12 @@ import {
   getSplitEndpoint,
   splitFromApiParams,
   splitToApiParams,
-} from "@app/hooks/tools/split/useSplitOperation";
+} from "@editor/hooks/tools/split/useSplitOperation";
 import {
   SplitParameters,
   defaultParameters,
-} from "@app/hooks/tools/split/useSplitParameters";
-import { SPLIT_METHODS } from "@app/constants/splitConstants";
+} from "@editor/hooks/tools/split/useSplitParameters";
+import { SPLIT_METHODS } from "@editor/constants/splitConstants";
 
 const params = (overrides: Partial<SplitParameters>): SplitParameters => ({
   ...defaultParameters,

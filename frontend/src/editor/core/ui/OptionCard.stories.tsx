@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Icon } from "@app/ui/Icon";
-import { OptionCard } from "@app/ui/OptionCard";
+import { Icon } from "@editor/ui/Icon";
+import { OptionCard } from "@editor/ui/OptionCard";
 
 const setUp = (
   <>

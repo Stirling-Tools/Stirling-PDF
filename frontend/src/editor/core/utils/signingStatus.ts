@@ -1,10 +1,13 @@
 import type { TFunction } from "i18next";
-import type { SigningItem } from "@app/utils/signingItems";
-import { isSigningItemClosed, needsSignature } from "@app/utils/signingItems";
+import type { SigningItem } from "@editor/utils/signingItems";
+import {
+  isSigningItemClosed,
+  needsSignature,
+} from "@editor/utils/signingItems";
 import type {
   SessionSummary,
   SignRequestSummary,
-} from "@app/types/signingSession";
+} from "@editor/types/signingSession";
 
 export function signingStatus(
   item: SigningItem,

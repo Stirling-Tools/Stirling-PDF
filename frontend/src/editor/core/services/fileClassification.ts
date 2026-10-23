@@ -6,9 +6,9 @@
  * re-reading. Returns null for non-PDF / oversized / unclassified files.
  */
 
-import { fileStorage } from "@app/services/fileStorage";
-import { extractPDFMetadata } from "@app/services/pdfMetadataService";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { fileStorage } from "@editor/services/fileStorage";
+import { extractPDFMetadata } from "@editor/services/pdfMetadataService";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 export const CLASSIFICATION_METADATA_KEY = "StirlingPDFClassification";
 

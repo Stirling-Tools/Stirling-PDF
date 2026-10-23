@@ -1,9 +1,9 @@
-import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
+import SuperSearch from "@editor/components/shared/superSearch/SuperSearch";
 import {
   usePortalSearchResults,
   usePortalSearchScopes,
-} from "@portal/hooks/usePortalSearchResults";
-import "@portal/components/PortalSearchBar.css";
+} from "@processor/hooks/usePortalSearchResults";
+import "@processor/components/PortalSearchBar.css";
 
 /**
  * The portal face of the global super search — the same bar the editor's

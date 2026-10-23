@@ -14,14 +14,14 @@ import {
   Box,
   Paper,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
-import ButtonSelector from "@app/components/shared/ButtonSelector";
-import styles from "@app/components/tools/addStamp/StampPreview.module.css";
-import { getDefaultFontSizeForAlphabet } from "@app/components/tools/addStamp/StampPreviewUtils";
-import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
-import { alphabetOptions } from "@app/constants/addWatermarkConstants";
+import { Button } from "@editor/ui/Button";
+import { AddStampParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
+import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
+import { getDefaultFontSizeForAlphabet } from "@editor/components/tools/addStamp/StampPreviewUtils";
+import { useFileWithUrl } from "@editor/hooks/useFileWithUrl";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { alphabetOptions } from "@editor/constants/addWatermarkConstants";
 
 const STAMP_TEMPLATES = [
   {

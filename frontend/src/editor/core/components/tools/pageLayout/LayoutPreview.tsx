@@ -1,5 +1,5 @@
-import { PageLayoutParameters } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
-import { computeBoxes } from "@app/components/tools/pageLayout/utils/computeBoxes";
+import { PageLayoutParameters } from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
+import { computeBoxes } from "@editor/components/tools/pageLayout/utils/computeBoxes";
 
 export default function LayoutPreview({
   parameters,

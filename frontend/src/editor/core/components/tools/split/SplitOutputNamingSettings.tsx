@@ -3,9 +3,9 @@ import { useTranslation } from "react-i18next";
 import {
   type OutputNaming,
   SplitParameters,
-} from "@app/hooks/tools/split/useSplitParameters";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
-import { describeNamePattern } from "@app/components/tools/split/splitOutputNamePattern";
+} from "@editor/hooks/tools/split/useSplitParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { describeNamePattern } from "@editor/components/tools/split/splitOutputNamePattern";
 
 const OUTPUT_NAME_PRESETS = [
   { naming: "part", key: "split.outputNames.preset.part", pattern: "Part {n}" },

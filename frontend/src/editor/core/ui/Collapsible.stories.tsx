@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Collapsible } from "@app/ui/Collapsible";
+import { Collapsible } from "@editor/ui/Collapsible";
 
 const meta: Meta<typeof Collapsible> = {
   title: "Components/Collapsible",

@@ -1,25 +1,25 @@
 import { describe, it, expect, vi } from "vitest";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
   renderScanEdit,
   scanDrawnSize,
   type ScanEditState,
-} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
   emitTextLine,
   removeMemberPtrs,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 
-vi.mock("@app/tools/pdfTextEditor/commands/editTextHelpers", () => ({
+vi.mock("@editor/tools/pdfTextEditor/commands/editTextHelpers", () => ({
   emitTextLine: vi.fn(() => [21, 22, 23]),
   emitFillRect: () => 0,
   measureObjSpanPt: () => null,
   removeAndDestroyObject: vi.fn(),
   removeMemberPtrs: vi.fn(),
 }));
-vi.mock("@app/tools/pdfTextEditor/pdfium/BackgroundSampler", () => ({
+vi.mock("@editor/tools/pdfTextEditor/pdfium/BackgroundSampler", () => ({
   INK_SCALE: 1,
   sampleBackground: () => ({ fill: { r: 255, g: 255, b: 255, a: 255 } }),
 }));

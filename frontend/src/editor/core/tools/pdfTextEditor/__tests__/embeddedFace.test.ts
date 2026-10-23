@@ -5,7 +5,7 @@ import {
   onEmbeddedFaceLoaded,
   registerEmbeddedFace,
   resetEmbeddedFaces,
-} from "@app/tools/pdfTextEditor/util/embeddedFace";
+} from "@editor/tools/pdfTextEditor/util/embeddedFace";
 
 type PdfiumModule = Parameters<typeof registerEmbeddedFace>[0];
 

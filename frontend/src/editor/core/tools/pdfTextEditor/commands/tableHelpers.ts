@@ -1,18 +1,18 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { BLACK } from "@app/tools/pdfTextEditor/model/Color";
-import type { RGBA } from "@app/tools/pdfTextEditor/types";
-import type { RowFill } from "@app/tools/pdfTextEditor/model/TableModel";
-import { writeUtf16 } from "@app/services/pdfiumService";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { BLACK } from "@editor/tools/pdfTextEditor/model/Color";
+import type { RGBA } from "@editor/tools/pdfTextEditor/types";
+import type { RowFill } from "@editor/tools/pdfTextEditor/model/TableModel";
+import { writeUtf16 } from "@editor/services/pdfiumService";
 import {
   measureObjBoxPt,
   measureObjSpanPt,
   sanitizeForBase14,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 
 const LINE_RGB = { r: 0, g: 0, b: 0 } as const;
 const CELL_FAMILY = "Helvetica";

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { MoveToTeamModal } from "@portal/components/users/MoveToTeamModal";
-import type { Member } from "@portal/api/users";
-import type { Team } from "@portal/api/teams";
+import { MoveToTeamModal } from "@processor/components/users/MoveToTeamModal";
+import type { Member } from "@processor/api/users";
+import type { Team } from "@processor/api/teams";
 
 const MEMBER: Member = {
   id: "3",

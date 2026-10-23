@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Banner, EmptyState } from "@app/ui";
-import "@portal/theme/surface.css";
-import "@portal/components/pipelines/PipelineInspector.css";
+import { Icon } from "@editor/ui/Icon";
+import { Banner, EmptyState } from "@editor/ui";
+import "@processor/theme/surface.css";
+import "@processor/components/pipelines/PipelineInspector.css";
 
 export interface PipelineInspectorProps {
   /** Names what is selected, e.g. the step's tool or "Input". Absent when nothing is. */

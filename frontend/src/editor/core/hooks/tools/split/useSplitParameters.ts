@@ -2,12 +2,12 @@ import {
   SPLIT_METHODS,
   ENDPOINTS,
   type SplitMethod,
-} from "@app/constants/splitConstants";
-import { BaseParameters } from "@app/types/parameters";
+} from "@editor/constants/splitConstants";
+import { BaseParameters } from "@editor/types/parameters";
 import {
   useBaseParameters,
   BaseParametersHook,
-} from "@app/hooks/tools/shared/useBaseParameters";
+} from "@editor/hooks/tools/shared/useBaseParameters";
 
 /** How a split names its outputs; "" keeps each method's default naming. */
 export type OutputNaming =

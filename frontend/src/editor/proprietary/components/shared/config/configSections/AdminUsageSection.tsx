@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { SettingsEmptyState } from "@app/components/shared/config/SettingsEmptyState";
+import { SettingsEmptyState } from "@editor/components/shared/config/SettingsEmptyState";
 import { Stack, Group, Text, Loader, Alert, Card } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Button } from "@editor/ui/Button";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import usageAnalyticsService, {
   EndpointStatisticsResponse,
-} from "@app/services/usageAnalyticsService";
-import UsageAnalyticsChart from "@app/components/shared/config/configSections/usage/UsageAnalyticsChart";
-import UsageAnalyticsTable from "@app/components/shared/config/configSections/usage/UsageAnalyticsTable";
-import { Icon } from "@app/ui/Icon";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import EnterpriseRequiredBanner from "@app/components/shared/config/EnterpriseRequiredBanner";
+} from "@editor/services/usageAnalyticsService";
+import UsageAnalyticsChart from "@editor/components/shared/config/configSections/usage/UsageAnalyticsChart";
+import UsageAnalyticsTable from "@editor/components/shared/config/configSections/usage/UsageAnalyticsTable";
+import { Icon } from "@editor/ui/Icon";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import EnterpriseRequiredBanner from "@editor/components/shared/config/EnterpriseRequiredBanner";
 
 const AdminUsageSection: React.FC = () => {
   const { t } = useTranslation();

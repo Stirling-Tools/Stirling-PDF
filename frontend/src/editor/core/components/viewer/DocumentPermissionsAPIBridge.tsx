@@ -1,11 +1,11 @@
 import { useEffect, useMemo } from "react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 import {
   PdfPermissionFlag,
   DocumentPermissionsState,
   DocumentPermissionsAPIWrapper,
-} from "@app/contexts/viewer/viewerBridges";
+} from "@editor/contexts/viewer/viewerBridges";
 
 function hasPermissionFlag(
   permissions: number,

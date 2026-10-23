@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ToolSelector from "@app/components/tools/automate/ToolSelector";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+import ToolSelector from "@editor/components/tools/automate/ToolSelector";
+import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
 
 // ToolSelector only mounts ToolButton once a tool is selected or the dropdown
 // is opened with matches, and ToolButton needs Hotkey/ToolWorkflow/AppConfig

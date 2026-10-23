@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { mergeSignatureAppearances } from "@app/tools/formFill/formFieldMerge";
-import type { FormField } from "@app/tools/formFill/types";
+import { mergeSignatureAppearances } from "@editor/tools/formFill/formFieldMerge";
+import type { FormField } from "@editor/tools/formFill/types";
 
 function field(name: string, type: FormField["type"]): FormField {
   return {

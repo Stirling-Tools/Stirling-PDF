@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   applyNamePattern,
   describeNamePattern,
-} from "@app/components/tools/split/splitOutputNamePattern";
+} from "@editor/components/tools/split/splitOutputNamePattern";
 
 describe("applyNamePattern", () => {
   test.each([
