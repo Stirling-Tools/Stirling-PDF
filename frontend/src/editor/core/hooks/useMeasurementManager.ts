@@ -9,18 +9,18 @@ import type {
   Measurement,
   MeasureScale,
   PageMeasureScales,
-} from "@app/utils/measurementTypes";
-import type { RulerOverlayHandle } from "@app/components/viewer/RulerOverlay";
+} from "@editor/utils/measurementTypes";
+import type { RulerOverlayHandle } from "@editor/components/viewer/RulerOverlay";
 import {
   loadSessionMap,
   saveSessionMap,
   validateMeasureScale,
   validateMeasurement,
-} from "@app/utils/measurementUtils";
-import type { StirlingFile } from "@app/types/fileContext";
-import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
-import { extractPageMeasureScales } from "@app/utils/pdfMeasurementExtraction";
-import type { ScaleCalibrationMeasurement } from "@app/components/viewer/ScaleCalibrationDialog";
+} from "@editor/utils/measurementUtils";
+import type { StirlingFile } from "@editor/types/fileContext";
+import { isStirlingFile, getFormFillFileId } from "@editor/types/fileContext";
+import { extractPageMeasureScales } from "@editor/utils/pdfMeasurementExtraction";
+import type { ScaleCalibrationMeasurement } from "@editor/components/viewer/ScaleCalibrationDialog";
 
 // ─── Hook: useMeasurementManager ──────────────────────────────────────────────
 

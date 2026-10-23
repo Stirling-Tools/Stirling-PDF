@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ButtonSelector from "@app/components/shared/ButtonSelector";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 
 /** Reproduces the redaction "Mode" picker (Automatic / Manual). */
 const meta: Meta<typeof ButtonSelector> = {

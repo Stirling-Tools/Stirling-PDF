@@ -8,29 +8,29 @@ import {
   type ReactNode,
 } from "react";
 import { render, renderHook, screen, waitFor } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { SidebarProvider } from "@app/contexts/SidebarContext";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
+import { useTranslatedToolCatalog } from "@editor/data/useTranslatedToolRegistry";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { SidebarProvider } from "@editor/contexts/SidebarContext";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import {
   getExecutableTools,
   type WorkingToolStep,
-} from "@app/hooks/tools/shared/toolAutomation";
+} from "@editor/hooks/tools/shared/toolAutomation";
 import {
   asRegistryConfig,
   type ErasedToolParams,
   type ToolAutomationSettingsProps,
-} from "@app/hooks/tools/shared/toolOperationTypes";
-import ConvertSettings from "@app/components/tools/convert/ConvertSettings";
-import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
-import { defaultParameters as convertDefaults } from "@app/hooks/tools/convert/useConvertParameters";
-import ChangeMetadataSingleStep from "@app/components/tools/changeMetadata/ChangeMetadataSingleStep";
-import { defaultParameters as changeMetadataDefaults } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
-import OverlayPdfsSettings from "@app/components/tools/overlayPdfs/OverlayPdfsSettings";
-import { defaultParameters as overlayDefaults } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
-import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
+} from "@editor/hooks/tools/shared/toolOperationTypes";
+import ConvertSettings from "@editor/components/tools/convert/ConvertSettings";
+import { convertOperationConfig } from "@editor/hooks/tools/convert/useConvertOperation";
+import { defaultParameters as convertDefaults } from "@editor/hooks/tools/convert/useConvertParameters";
+import ChangeMetadataSingleStep from "@editor/components/tools/changeMetadata/ChangeMetadataSingleStep";
+import { defaultParameters as changeMetadataDefaults } from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import OverlayPdfsSettings from "@editor/components/tools/overlayPdfs/OverlayPdfsSettings";
+import { defaultParameters as overlayDefaults } from "@editor/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
+import { PipelineStepSettings } from "@processor/components/pipelines/PipelineStepSettings";
 
 // Override only useTranslation; keep the rest of react-i18next (initReactI18next et al.) real, so
 // the convert settings' transitive i18n setup still initializes.

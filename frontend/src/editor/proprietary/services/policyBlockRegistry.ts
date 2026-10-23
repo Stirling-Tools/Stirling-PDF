@@ -1,10 +1,10 @@
 import {
   getPolicyRunOutcomes,
   type PolicyRunOutcome,
-} from "@app/components/policies/policyRunStore";
-import { loadPolicies } from "@app/services/policyStorage";
-import { policySourceIds } from "@core/services/policyBlockRegistry";
-import type { StirlingFileStub } from "@app/types/fileContext";
+} from "@editor/components/policies/policyRunStore";
+import { loadPolicies } from "@editor/services/policyStorage";
+import { policySourceIds } from "@editor-core/services/policyBlockRegistry";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 export { policySourceIds };
 
 /** A failed policy and the open documents derived from its input. */

@@ -9,29 +9,29 @@ import {
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Chip } from "@app/ui/Chip";
-import { TextInput } from "@app/components/shared/TextInput";
-import { isMacLike } from "@app/utils/hotkeys";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+import { Button } from "@editor/ui/Button";
+import { Chip } from "@editor/ui/Chip";
+import { TextInput } from "@editor/components/shared/TextInput";
+import { isMacLike } from "@editor/utils/hotkeys";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
 import {
   useSuperSearch,
   SuperSearchResult,
   type SuperSearchQueryOptions,
   type SuperSearchScope,
   type UseSuperSearchResult,
-} from "@app/hooks/useSuperSearch";
+} from "@editor/hooks/useSuperSearch";
 import {
   parseSuperSearchQuery,
   rebuildSuperSearchQuery,
-} from "@app/components/shared/superSearch/superSearchFilters";
+} from "@editor/components/shared/superSearch/superSearchFilters";
 import {
   SUPER_SEARCH_FOCUS_EVENT,
   type SuperSearchFocusDetail,
-} from "@app/components/shared/superSearch/openSuperSearch";
-import "@app/components/shared/superSearch/SuperSearch.css";
+} from "@editor/components/shared/superSearch/openSuperSearch";
+import "@editor/components/shared/superSearch/SuperSearch.css";
 
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 /** Rows shown per group before a "show more" toggle reveals the rest. */
 const COLLAPSED_GROUP_SIZE = 5;
 

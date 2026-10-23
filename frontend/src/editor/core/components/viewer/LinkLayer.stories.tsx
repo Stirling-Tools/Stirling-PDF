@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { LinkLayer } from "@app/components/viewer/LinkLayer";
+import { LinkLayer } from "@editor/components/viewer/LinkLayer";
 
 // LinkLayer reads its link annotations from EmbedPDF's react context
 // (useDocumentState/useScroll/useAnnotation). Outside of a live <EmbedPDF>

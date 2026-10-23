@@ -1,12 +1,12 @@
 import { useEffect, type ReactNode } from "react";
-import { AuthProvider } from "@app/auth";
-import { useAuth } from "@app/auth/context";
-import { AuthProvider as SaasSessionProvider } from "@app/auth/UseSession";
-import { Spinner } from "@app/ui";
-import { stripBasePath, withBasePath } from "@app/constants/app";
-import { rememberPendingDestination } from "@app/services/pendingDestination";
-import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
-import { EDITOR_URL } from "@portal/auth/editorUrl";
+import { AuthProvider } from "@editor/auth";
+import { useAuth } from "@editor/auth/context";
+import { AuthProvider as SaasSessionProvider } from "@editor/auth/UseSession";
+import { Spinner } from "@editor/ui";
+import { stripBasePath, withBasePath } from "@editor/constants/app";
+import { rememberPendingDestination } from "@editor/services/pendingDestination";
+import { ensureSaasSupabase } from "@processor/auth/saasSupabase";
+import { EDITOR_URL } from "@processor/auth/editorUrl";
 
 function FullScreen({ children }: { children: ReactNode }) {
   return (

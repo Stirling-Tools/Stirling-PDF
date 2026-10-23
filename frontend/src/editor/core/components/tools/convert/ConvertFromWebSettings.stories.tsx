@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ConvertFromWebSettings from "@app/components/tools/convert/ConvertFromWebSettings";
+import ConvertFromWebSettings from "@editor/components/tools/convert/ConvertFromWebSettings";
 import {
   ConvertParameters,
   defaultParameters,
-} from "@app/hooks/tools/convert/useConvertParameters";
+} from "@editor/hooks/tools/convert/useConvertParameters";
 
 const meta: Meta<typeof ConvertFromWebSettings> = {
   title: "Tools/Convert/ConvertFromWebSettings",

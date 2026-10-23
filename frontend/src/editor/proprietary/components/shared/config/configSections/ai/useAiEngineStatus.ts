@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 
 /** Shape of GET /api/v1/ai/status. */
 export interface AiEngineStatusData {

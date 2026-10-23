@@ -3,16 +3,19 @@ import {
   defineCustomTool,
   useToolOperation,
   CustomProcessorResult,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   AdjustContrastParameters,
   defaultParameters,
-} from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
-import { applyAdjustmentsToCanvas } from "@app/components/tools/adjustContrast/utils";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { createFileFromApiResponse } from "@app/utils/fileResponseUtils";
-import { getPdfiumModule, saveRawDocument } from "@app/services/pdfiumService";
-import { copyRgbaToBgraHeap } from "@app/utils/pdfiumBitmapUtils";
+} from "@editor/hooks/tools/adjustContrast/useAdjustContrastParameters";
+import { applyAdjustmentsToCanvas } from "@editor/components/tools/adjustContrast/utils";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import { createFileFromApiResponse } from "@editor/utils/fileResponseUtils";
+import {
+  getPdfiumModule,
+  saveRawDocument,
+} from "@editor/services/pdfiumService";
+import { copyRgbaToBgraHeap } from "@editor/utils/pdfiumBitmapUtils";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
 async function renderPdfPageToCanvas(

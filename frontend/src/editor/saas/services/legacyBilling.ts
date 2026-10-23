@@ -1,9 +1,9 @@
-import { supabase } from "@app/auth/supabase";
-import apiClient from "@app/services/apiClient";
+import { supabase } from "@editor/auth/supabase";
+import apiClient from "@editor/services/apiClient";
 import type {
   LegacySubscription,
   LegacyTeamAllowance,
-} from "@app/types/legacyBilling";
+} from "@editor/types/legacyBilling";
 
 const plans: Record<string, LegacySubscription["plan"]> = {
   price_1SBckcP9mY5IAnSneeH0TJHs: "pro",

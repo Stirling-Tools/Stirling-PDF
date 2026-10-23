@@ -1,4 +1,4 @@
-import type { LegacyBillingState } from "@app/types/legacyBilling";
+import type { LegacyBillingState } from "@editor/types/legacyBilling";
 
 const empty: LegacyBillingState = {
   subscriptions: [],

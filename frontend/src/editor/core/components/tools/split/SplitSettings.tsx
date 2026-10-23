@@ -6,11 +6,11 @@ import {
   Text,
   Select,
 } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { SPLIT_METHODS } from "@app/constants/splitConstants";
-import { SplitParameters } from "@app/hooks/tools/split/useSplitParameters";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { SPLIT_METHODS } from "@editor/constants/splitConstants";
+import { SplitParameters } from "@editor/hooks/tools/split/useSplitParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 export interface SplitSettingsProps {
   parameters: SplitParameters;

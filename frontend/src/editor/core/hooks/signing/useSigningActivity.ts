@@ -1,11 +1,11 @@
 import { useMemo, useSyncExternalStore } from "react";
-import { useAuth } from "@app/auth/UseSession";
+import { useAuth } from "@editor/auth/UseSession";
 import {
   getSigningSeenVersion,
   hasUnseenSigningActivity,
   subscribeSigningSeen,
-} from "@app/services/signingSeenStore";
-import type { SigningItem, SigningMenuItem } from "@app/utils/signingItems";
+} from "@editor/services/signingSeenStore";
+import type { SigningItem, SigningMenuItem } from "@editor/utils/signingItems";
 
 /** Shares account-scoped unread indicators between the popover and expanded session table. */
 export function useSigningActivity(items: SigningItem[]): SigningMenuItem[] {

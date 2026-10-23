@@ -3,11 +3,11 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   PolicyExternalApiConfig,
   type ExternalApiParams,
-} from "@portal/components/policies/PolicyExternalApiConfig";
+} from "@processor/components/policies/PolicyExternalApiConfig";
 import {
   buildStepParameters,
   operationById,
-} from "@portal/components/policies/stepOperations";
+} from "@processor/components/policies/stepOperations";
 
 const meta: Meta<typeof PolicyExternalApiConfig> = {
   title: "Portal/Policies/PolicyExternalApiConfig",

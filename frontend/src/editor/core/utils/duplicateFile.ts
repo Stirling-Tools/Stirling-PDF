@@ -1,7 +1,7 @@
-import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import { fileStorage } from "@app/services/fileStorage";
-import { splitFileName } from "@app/utils/fileUtils";
+import type { StirlingFile, StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import { fileStorage } from "@editor/services/fileStorage";
+import { splitFileName } from "@editor/utils/fileUtils";
 
 /** The subset of `useFileHandler().addFiles` a duplicate needs. */
 type AddFilesFn = (

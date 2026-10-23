@@ -1,24 +1,24 @@
 import { useState } from "react";
 import { Group, Loader, Modal, Progress, Stack, Text } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import ShareManagementModal from "@app/components/shared/ShareManagementModal";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
-import { uploadHistoryChain } from "@app/services/serverStorageUpload";
-import { fileStorage } from "@app/services/fileStorage";
-import { alert } from "@app/components/toast";
-import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import ShareManagementModal from "@editor/components/shared/ShareManagementModal";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useAllFiles, useFileActions } from "@editor/contexts/FileContext";
+import { uploadHistoryChain } from "@editor/services/serverStorageUpload";
+import { fileStorage } from "@editor/services/fileStorage";
+import { alert } from "@editor/components/toast";
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
 import {
   POLICY_IN_FLIGHT_STATUSES,
   usePolicyRuns,
-} from "@app/components/policies/policyRunStore";
+} from "@editor/components/policies/policyRunStore";
 
 interface ViewerShareButtonProps {
   disabled?: boolean;

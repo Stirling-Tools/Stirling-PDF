@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Stack } from "@app/ui/Stack";
-import { Inline } from "@app/ui/Inline";
-import { Card } from "@app/ui/Card";
+import { Stack } from "@editor/ui/Stack";
+import { Inline } from "@editor/ui/Inline";
+import { Card } from "@editor/ui/Card";
 
 const meta: Meta<typeof Stack> = {
   title: "Primitives/Layout/Stack",

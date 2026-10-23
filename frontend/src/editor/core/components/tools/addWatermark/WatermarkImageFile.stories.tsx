@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import WatermarkImageFile from "@app/components/tools/addWatermark/WatermarkImageFile";
+import WatermarkImageFile from "@editor/components/tools/addWatermark/WatermarkImageFile";
 import {
   AddWatermarkParameters,
   defaultParameters,
-} from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+} from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 const meta = {
   title: "Tools/AddWatermark/WatermarkImageFile",

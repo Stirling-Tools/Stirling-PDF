@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SignatureCreationStep } from "@app/components/tools/certSign/steps/SignatureCreationStep";
+import { SignatureCreationStep } from "@editor/components/tools/certSign/steps/SignatureCreationStep";
 
 const meta = {
   title: "CertSign/Steps/SignatureCreationStep",

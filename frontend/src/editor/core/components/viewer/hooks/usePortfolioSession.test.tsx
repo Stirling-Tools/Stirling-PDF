@@ -1,11 +1,11 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { usePortfolioSession } from "@app/components/viewer/hooks/usePortfolioSession";
+import { usePortfolioSession } from "@editor/components/viewer/hooks/usePortfolioSession";
 
 const readPortfolioMembers = vi.hoisted(() => vi.fn());
 
-vi.mock("@app/utils/portfolioMembers", () => ({
+vi.mock("@editor/utils/portfolioMembers", () => ({
   readPortfolioMembers,
 }));
 

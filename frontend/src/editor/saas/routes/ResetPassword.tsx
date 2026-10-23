@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AuthLayout from "@app/routes/authShared/AuthLayout";
-import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import SuccessMessage from "@app/routes/login/SuccessMessage";
-import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
-import NavigationLink from "@app/routes/login/NavigationLink";
-import { supabase } from "@app/auth/supabase";
-import { absoluteWithBasePath } from "@app/constants/app";
-import { useTranslation } from "@app/hooks/useTranslation";
-import { Button } from "@app/ui/Button";
+import AuthLayout from "@editor/routes/authShared/AuthLayout";
+import LoginHeader from "@editor/routes/login/LoginHeader";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import SuccessMessage from "@editor/routes/login/SuccessMessage";
+import EmailPasswordForm from "@editor/routes/login/EmailPasswordForm";
+import NavigationLink from "@editor/routes/login/NavigationLink";
+import { supabase } from "@editor/auth/supabase";
+import { absoluteWithBasePath } from "@editor/constants/app";
+import { useTranslation } from "@editor/hooks/useTranslation";
+import { Button } from "@editor/ui/Button";
 
 export default function ResetPassword() {
   const { t } = useTranslation();

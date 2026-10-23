@@ -1,5 +1,5 @@
-import { apiClient } from "@portal/api/http";
-import type { FleetStats } from "@portal-proprietary/api/fleetStats";
+import { apiClient } from "@processor/api/http";
+import type { FleetStats } from "@processor-proprietary/api/fleetStats";
 
 export type { FleetStats };
 

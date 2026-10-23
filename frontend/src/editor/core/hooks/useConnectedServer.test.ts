@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { useConnectedServer } from "@app/hooks/useConnectedServer";
+import { useConnectedServer } from "@editor/hooks/useConnectedServer";
 
 describe("useConnectedServer (core)", () => {
   // Pins the stub: moving real logic in here would dark-ship the surfaces it gates

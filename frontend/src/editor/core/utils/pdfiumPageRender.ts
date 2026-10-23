@@ -9,7 +9,7 @@
 import {
   getPdfiumModule,
   type ExtendedPdfiumRuntime,
-} from "@app/services/pdfiumService";
+} from "@editor/services/pdfiumService";
 
 /** Row-by-row copy for padded strides, where rows are not contiguous. */
 function copyRows(

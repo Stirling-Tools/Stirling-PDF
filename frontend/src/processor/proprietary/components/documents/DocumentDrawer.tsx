@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Drawer, StatusBadge, Tabs, type TabItem } from "@app/ui";
+import { Drawer, StatusBadge, Tabs, type TabItem } from "@editor/ui";
 import {
   DOCUMENT_STATUS_LABEL,
   DOCUMENT_STATUS_TONE,
   type ReviewDocument,
-} from "@portal/api/documents";
-import { useTier } from "@portal/contexts/TierContext";
-import { ELEVATION_WINDOW_SECONDS } from "@portal/components/documents/format";
-import { DocumentOverview } from "@portal/components/documents/DocumentOverview";
-import { DocumentExtractions } from "@portal/components/documents/DocumentExtractions";
-import { DocumentAudit } from "@portal/components/documents/DocumentAudit";
-import { ElevationBanner } from "@portal/components/documents/ElevationBanner";
+} from "@processor/api/documents";
+import { useTier } from "@processor/contexts/TierContext";
+import { ELEVATION_WINDOW_SECONDS } from "@processor/components/documents/format";
+import { DocumentOverview } from "@processor/components/documents/DocumentOverview";
+import { DocumentExtractions } from "@processor/components/documents/DocumentExtractions";
+import { DocumentAudit } from "@processor/components/documents/DocumentAudit";
+import { ElevationBanner } from "@processor/components/documents/ElevationBanner";
 
 type SubTab = "overview" | "extractions" | "audit";
 

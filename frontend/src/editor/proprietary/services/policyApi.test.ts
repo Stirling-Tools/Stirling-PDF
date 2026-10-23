@@ -7,11 +7,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const post = vi.fn().mockResolvedValue({ data: { jobId: "run-1" } });
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { post: (...args: unknown[]) => post(...args) },
 }));
 
-const { runStoredPolicy } = await import("@app/services/policyApi");
+const { runStoredPolicy } = await import("@editor/services/policyApi");
 
 /** The multipart body the last call sent. */
 function sentForm(): FormData {

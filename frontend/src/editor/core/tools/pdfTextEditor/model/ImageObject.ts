@@ -2,7 +2,7 @@ import type {
   Affine,
   ImageObjectSnapshot,
   PageRect,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 
 export class ImageObject {
   readonly id: string;

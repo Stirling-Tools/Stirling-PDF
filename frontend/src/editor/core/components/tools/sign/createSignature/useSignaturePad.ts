@@ -6,8 +6,8 @@ import {
   type RefObject,
 } from "react";
 import SignaturePad from "signature_pad";
-import { trimCanvas } from "@app/utils/canvasImage";
-import { SIGNATURE_TRIM_PADDING } from "@app/utils/signatureImage";
+import { trimCanvas } from "@editor/utils/canvasImage";
+import { SIGNATURE_TRIM_PADDING } from "@editor/utils/signatureImage";
 
 export type PenWidth = "fine" | "medium" | "bold";
 

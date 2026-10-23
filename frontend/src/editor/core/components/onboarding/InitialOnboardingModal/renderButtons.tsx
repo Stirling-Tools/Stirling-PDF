@@ -1,15 +1,15 @@
 import React from "react";
 import { Group } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   ButtonDefinition,
   type FlowState,
-} from "@app/components/onboarding/onboardingFlowConfig";
-import type { LicenseNotice } from "@app/types/types";
-import type { ButtonAction } from "@app/components/onboarding/onboardingFlowConfig";
+} from "@editor/components/onboarding/onboardingFlowConfig";
+import type { LicenseNotice } from "@editor/types/types";
+import type { ButtonAction } from "@editor/components/onboarding/onboardingFlowConfig";
 
 interface SlideButtonsProps {
   slideDefinition: {

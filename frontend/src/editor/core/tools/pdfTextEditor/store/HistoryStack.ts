@@ -1,9 +1,9 @@
 import {
   RolledBackError,
   type Command,
-} from "@app/tools/pdfTextEditor/commands/Command";
-import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+} from "@editor/tools/pdfTextEditor/commands/Command";
+import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
 const DEFAULT_LIMIT = 200;
 
@@ -152,7 +152,7 @@ export class HistoryStack {
 
   /** Revert every command currently on the undo stack, in reverse order. */
   undoAll(
-    doc: import("@app/tools/pdfTextEditor/model/EditorDocument").EditorDocument,
+    doc: import("@editor/tools/pdfTextEditor/model/EditorDocument").EditorDocument,
   ): number {
     let count = 0;
     while (this.undoStack.length > 0) {

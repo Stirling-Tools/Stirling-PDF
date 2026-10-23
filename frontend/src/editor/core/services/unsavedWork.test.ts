@@ -4,7 +4,7 @@ import {
   registerUnsavedWorkChecker,
   hasUnsavedWork,
   __resetUnsavedWork,
-} from "@app/services/unsavedWork";
+} from "@editor/services/unsavedWork";
 
 beforeEach(() => __resetUnsavedWork());
 afterEach(() => vi.restoreAllMocks());
