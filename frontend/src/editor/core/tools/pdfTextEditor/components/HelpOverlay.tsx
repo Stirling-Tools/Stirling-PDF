@@ -78,7 +78,7 @@ export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
           ),
         },
         {
-          bindings: [{ code: "Delete" }, { code: "Backspace" }],
+          bindings: [{ code: "Delete" }],
           description: t(
             "pdfTextEditor.help.editing.deleteDesc",
             "Remove selected",

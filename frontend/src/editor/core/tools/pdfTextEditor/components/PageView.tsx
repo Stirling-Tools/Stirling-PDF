@@ -21,7 +21,7 @@ import { useDevicePixelRatio } from "@app/tools/pdfTextEditor/hooks/useDevicePix
 // While a text run is focused the overlay owns its glyphs, so the page raster
 // can wait for a typing pause. Re-rasterising a full page per keystroke is
 // work the user cannot even see.
-const TEXT_EDIT_RASTER_MS = 120;
+const TEXT_EDIT_RASTER_MS = 300;
 
 interface PageViewProps {
   document: EditorDocument;

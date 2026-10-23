@@ -33,6 +33,7 @@ import { stackLineBoxes } from "@app/tools/pdfTextEditor/util/lineLayout";
 import {
   isLinePainted,
   normalizeContainerCaret,
+  offsetAtPoint,
   type PaintLine,
   paintLines,
   paintPlainText,
@@ -552,7 +553,8 @@ function TextRunOverlayImpl({
     const el = ref.current;
     if (!el) return;
     const onBeforeInput = (event: Event) => {
-      const inputType = (event as InputEvent).inputType ?? "";
+      const inputEvent = event as InputEvent;
+      const inputType = inputEvent.inputType ?? "";
       if (inputType.startsWith("format")) event.preventDefault();
       // The browser keeps its OWN undo stack for a contenteditable, reachable
       // from the Edit menu and trackpad gestures. Letting it fire would rewrite
@@ -560,11 +562,66 @@ function TextRunOverlayImpl({
       // about the document. Undo/redo has to come through the command stack.
       if (inputType === "historyUndo" || inputType === "historyRedo") {
         event.preventDefault();
+        return;
       }
+      if (composingRef.current || inputEvent.isComposing) return;
+      // Cut must keep its native clipboard side effect; only the delete
+      // commands whose selection semantics differ across line blocks are
+      // rewritten here.
+      if (
+        inputType !== "deleteContentBackward" &&
+        inputType !== "deleteContentForward" &&
+        inputType !== "deleteWordBackward" &&
+        inputType !== "deleteWordForward"
+      ) {
+        return;
+      }
+
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+      const range = selection.getRangeAt(0);
+      const start = offsetAtPoint(el, range.startContainer, range.startOffset);
+      const end = offsetAtPoint(el, range.endContainer, range.endOffset);
+      if (start === null || end === null) return;
+      const current = readOverlayText(el);
+      let next: string | null = null;
+      let caret = start;
+      let keepSelection = false;
+      if (!selection.isCollapsed && end > start) {
+        // A selection that crosses a painted line ends in a different block.
+        // Native contenteditable delete stops at that block edge, removing
+        // the rest of the first line instead of the selected range. Leave the
+        // selection in place: a character typed before React commits must
+        // replace it, not land at its start.
+        next = current.slice(0, start) + current.slice(end);
+        keepSelection = true;
+      } else if (inputType === "deleteContentBackward" && start > 0) {
+        // Browsers delete the previous character here, keeping the line break;
+        // the model treats the break as a character, so remove it explicitly.
+        if (current[start - 1] === "\n") {
+          next = current.slice(0, start - 1) + current.slice(start);
+          caret = start - 1;
+        }
+      } else if (
+        inputType === "deleteContentForward" &&
+        start < current.length
+      ) {
+        if (current[start] === "\n") {
+          next = current.slice(0, start) + current.slice(start + 1);
+        }
+      }
+      if (next === null || next === current) return;
+
+      event.preventDefault();
+      if (!keepSelection) restoreCaretOffset(el, caret);
+      setTouched(true);
+      setEditTick((n) => n + 1);
+      editedAtRevisionRef.current = pageRevision ?? -1;
+      actions.edit(run.id, next);
     };
     el.addEventListener("beforeinput", onBeforeInput);
     return () => el.removeEventListener("beforeinput", onBeforeInput);
-  }, []);
+  }, [actions, pageRevision, run.id]);
 
   const paintOpts = {
     font,

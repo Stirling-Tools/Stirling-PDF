@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   isLinePainted,
+  offsetAtPoint,
   type PaintLine,
   paintLines,
   paintPlainText,
@@ -310,6 +311,24 @@ describe("plainCaretOffset - carets that are not in a text node", () => {
     selection.removeAllRanges();
     selection.addRange(range);
     expect(plainCaretOffset(el)).toBe("abc\nde".length);
+  });
+});
+
+describe("offsetAtPoint", () => {
+  it("maps both ends of a selection in different blocks", () => {
+    const el = host();
+    paintLines(el, [line("abc"), line("def")], OPTS);
+    const first = el.children[0].querySelector("span")!.firstChild!;
+    const second = el.children[1].querySelector("span")!.firstChild!;
+    expect(offsetAtPoint(el, first, 1)).toBe(1);
+    expect(offsetAtPoint(el, second, 2)).toBe(6);
+  });
+
+  it("maps container points to the same offsets as the painted text", () => {
+    const el = host();
+    paintLines(el, [line("abc"), line("de")], OPTS);
+    expect(offsetAtPoint(el, el, 1)).toBe(4);
+    expect(offsetAtPoint(el, el, 2)).toBe("abc\nde".length);
   });
 });
 

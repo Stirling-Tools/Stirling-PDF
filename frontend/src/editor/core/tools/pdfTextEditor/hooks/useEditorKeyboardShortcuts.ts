@@ -128,7 +128,11 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
         onEscape();
         return;
       }
-      // Mac keyboards have no Delete key; their ⌫ arrives as Backspace.
+      // Mac keyboards have no Delete key; their ⌫ arrives as Backspace. A
+      // selected text run can outlive the editable's focus (a toolbar click
+      // blurs it), and treating that Backspace as an object delete destroys a
+      // whole paragraph. Text runs need the explicit Delete key or the
+      // toolbar; Backspace still removes images and shapes.
       if (e.key === "Delete" || e.key === "Backspace") {
         if (isFocusInContentEditable()) return;
         const sel = store.selection.value;
@@ -138,6 +142,13 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           sel.shapeIds.length === 0
         )
           return;
+        if (
+          e.key === "Backspace" &&
+          (sel.runIds.length > 0 ||
+            (sel.imageIds.length === 0 && sel.shapeIds.length === 0))
+        ) {
+          return;
+        }
         e.preventDefault();
         onDelete();
         return;

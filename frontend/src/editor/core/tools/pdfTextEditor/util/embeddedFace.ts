@@ -63,8 +63,8 @@ export function isEmbeddedFaceReady(fontPtr: number): boolean {
 /**
  * Whether the overlay can draw this font faithfully. A `pdf:` face needs its
  * FontFace registered; other prefixes resolve to a face the browser already
- * has. When false, keep the page bitmap visible instead of substituting a
- * different face under the caret.
+ * has. When false, the overlay is only a transient stand-in until the bitmap
+ * paints the edit, because a substitute face would not match the page.
  */
 export function isOverlayFaceReady(fontId: string): boolean {
   if (!fontId.startsWith("pdf:")) return true;

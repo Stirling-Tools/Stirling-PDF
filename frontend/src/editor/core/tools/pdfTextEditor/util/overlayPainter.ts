@@ -269,6 +269,70 @@ export function readOverlayText(element: HTMLElement): string {
   return lines.join("\n").replace(/\u00A0/g, " ");
 }
 
+/**
+ * Model-text offset for any DOM point inside a run. Unlike `plainCaretOffset`,
+ * this also works for the two ends of a non-collapsed selection, so a delete
+ * can be applied to exactly the selected model range instead of letting the
+ * browser decide how block boundaries behave.
+ */
+export function offsetAtPoint(
+  el: HTMLElement,
+  node: Node | null,
+  offset: number,
+): number | null {
+  if (!node || (node !== el && !el.contains(node))) return null;
+  const blocks = lineBlocks(el);
+  if (blocks.length > 0 && el.querySelector("br") === null) {
+    if (node === el) {
+      const children = Array.from(el.childNodes);
+      const index = Math.max(0, Math.min(offset, children.length));
+      if (
+        children.every(
+          (c) => c instanceof HTMLElement && c.hasAttribute(LINE_ATTR),
+        )
+      ) {
+        let model = 0;
+        for (let i = 0; i < index; i += 1) model += lineLength(blocks[i]);
+        // Each line but the last has a model newline after it. At the very
+        // end there is no newline to count.
+        model += index;
+        if (index >= blocks.length) model -= 1;
+        return Math.max(0, model);
+      }
+    } else {
+      let before = 0;
+      for (const block of blocks) {
+        if (!block.contains(node)) {
+          before += lineLength(block) + 1;
+          continue;
+        }
+        const range = document.createRange();
+        try {
+          range.setStart(block, 0);
+          range.setEnd(node, offset);
+        } catch {
+          return null;
+        }
+        return before + range.toString().replace(/\u00A0/g, " ").length;
+      }
+    }
+  }
+  const range = document.createRange();
+  try {
+    range.setStart(el, 0);
+    range.setEnd(node, offset);
+  } catch {
+    return null;
+  }
+  const host = document.createElement("div");
+  host.appendChild(range.cloneContents());
+  return readOverlayText(host).length;
+}
+
+function lineLength(block: HTMLElement): number {
+  return (block.textContent ?? "").length;
+}
+
 export function isLinePainted(el: HTMLElement): boolean {
   return el.querySelector(`[${LINE_ATTR}]`) !== null;
 }
